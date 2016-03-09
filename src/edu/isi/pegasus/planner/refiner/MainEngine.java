@@ -26,7 +26,15 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.FileUtils;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.PlannerCache;
+import java.io.File;
+import java.io.IOException;
+import java.util.LinkedHashSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -45,7 +53,8 @@ public class MainEngine
      */
     public static final String CLEANUP_DIR  = "cleanup";
 
-   
+    public static String CATALOGS_DIR_BASENAME = "catalogs";
+    
     /**
      * The Original Dag object which is constructed by parsing the dag file.
      */
@@ -105,6 +114,7 @@ public class MainEngine
      * The handle to the node collapser.
      */
     private NodeCollapser mNodeCollapser;
+    
 
     
 
@@ -146,7 +156,13 @@ public class MainEngine
         
         String message = null;
         mRCBridge = new ReplicaCatalogBridge( mOriginalDag, mBag );
-
+        
+        //PM-1047 copy all catalog file sources to submit directory
+        copyCatalogFiles( mBag.getHandleToSiteStore(), 
+                          mBag.getHandleToTransformationCatalog(),
+                          mRCBridge,
+                          new File( this.mPOptions.getSubmitDirectory(), CATALOGS_DIR_BASENAME ));
+        
         //lock down on the workflow task metrics
         //the refinement process will not update them
         mOriginalDag.getWorkflowMetrics().lockTaskMetrics( true );
@@ -323,6 +339,40 @@ public class MainEngine
                  result.substring(0, result.lastIndexOf(delim)) :
                  result;
         return result;
+    }
+
+    private void copyCatalogFiles(SiteStore siteStore, TransformationCatalog transformationCatalog, ReplicaCatalogBridge replicaBridge, File directory) {
+        Set<File> sources = new LinkedHashSet();
+        sources.addAll( replicaBridge.getReplicaFileSources());
+        File tc = transformationCatalog.getFileSource();
+        if( tc != null ){
+            sources.add( tc );
+        }
+        File sc = siteStore.getFileSource();
+        if( sc != null ){
+            sources.add( sc );
+        }
+        
+        if( !directory.exists() ){
+            directory.mkdir();
+        }
+        
+        for( File source : sources ){
+            File copiedFile = null;
+            String failureReason = null;
+            try {
+                copiedFile = FileUtils.copy( source , directory);
+                mLogger.log( "Copied " + source + " to directory " + directory ,  
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+            } catch (IOException ex) {
+                failureReason = ex.getMessage();
+            }
+            if( copiedFile == null ){
+                mLogger.log( "Unable to copy file " + source + " to directory " + directory + " because " + failureReason,  
+                             LogManager.WARNING_MESSAGE_LEVEL );
+            }
+        }
+        
     }
 
 }

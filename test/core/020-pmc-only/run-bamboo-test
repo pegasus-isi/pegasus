@@ -26,7 +26,7 @@ if [ $RC -ne 0 ]; then
 fi
 
 echo "Running monitord..."
-pegasus-monitord -n -r $RUN_DIR/pmc-only-0.dag.dagman.out >$RUN_DIR/monitord.log 2>&1
+pegasus-monitord -N -r $RUN_DIR/pmc-only-0.dag.dagman.out >$RUN_DIR/monitord.log 2>&1
 RC=$?
 if [ $RC -ne 0 ]; then
     echo "Monitord failed"

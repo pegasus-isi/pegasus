@@ -23,7 +23,6 @@ Usage: pegasus-monitord [options] dagoutfile
 #  limitations under the License.
 ##
 
-# Import Python modules
 import os
 import re
 import sys
@@ -38,15 +37,6 @@ import datetime
 import optparse
 import traceback
 import subprocess
-
-root_logger = logging.getLogger()
-logger = logging.getLogger("pegasus-monitord")
-
-# Cached debugging state
-g_isdbg = 0
-
-# Ordered logging levels
-_LEVELS = [logging.ERROR, logging.WARN, logging.INFO, logging.DEBUG]
 
 # Save our own basename
 prog_base = os.path.split(sys.argv[0])[1]
@@ -66,13 +56,20 @@ from Pegasus.tools import properties
 from Pegasus.monitoring.workflow import Workflow, MONITORD_RECOVER_FILE
 from Pegasus.monitoring import notifications
 from Pegasus.monitoring import event_output as eo
-from Pegasus.monitoring import socket_interface
 
 # Prevent modules from printing out the same stupid warning over and over and over
 import warnings
 warnings.filterwarnings('default')
 
 utils.configureLogging()
+
+root_logger = logging.getLogger()
+logger = logging.getLogger("pegasus-monitord")
+
+# Ordered logging levels
+_LEVELS = [logger.ERROR, logger.WARNING, logger.INFO, logger.DEBUG, logger.TRACE]
+
+logger.info("pegasus-monitord starting - pid %d " % (os.getpid()))
 
 # Add SEEK_CUR to os if Python version < 2.5
 if sys.version_info < (2, 5):
@@ -88,9 +85,6 @@ os.environ['PEGASUS_PYTHON_DIR'] = pegasus_python_dir
 os.environ['PEGASUS_SHARE_DIR'] = pegasus_share_dir
 os.environ['PEGASUS_SCHEMA_DIR'] = pegasus_schema_dir
 
-# Compile our regular expressions
-
-# Used in process
 re_parse_dag_name = re.compile(r"Parsing (.+) ...$")
 re_parse_timestamp = re.compile(r"\s*(\d{1,2})\/(\d{1,2})(\/(\d{1,2}))?\s+(\d{1,2}):(\d{2}):(\d{2})")
 re_parse_iso_stamp = re.compile(r"^\s*(\d{4}).?(\d{2}).?(\d{2}).(\d{2}).?(\d{2}).?(\d{2})([.,]\d+)?([Zz]|[-+](\d{2}).?(\d{2}))")
@@ -114,10 +108,8 @@ re_parse_multiline_files = re.compile(r"All DAG node user log files:")
 re_parse_dagman_aborted  = re.compile(r"Received SIGUSR1")
 
 # Constants
-logbase = "monitord.log"                  # Basename of daemon logfile
-speak = "PMD/1.0"                         # Protocol version for our socket command-line interface
 MONITORD_WF_RETRY_FILE = "monitord.subwf" # filename for writing persistent sub-workflow retry information
-MAX_SLEEP_TIME = 10     	          # in seconds
+MAX_SLEEP_TIME = 10                       # in seconds
 SLEEP_WAIT_NOTIFICATION = 5               # in seconds
 DAGMAN_OUT_MAX_READ_SIZE = 32768          # at most the maximum bytes to read while parsing dagman.out file
 
@@ -134,29 +126,26 @@ follow_subworkflows = True      # Flag for tracking sub-workflows
 root_wf_id = None               # Workflow id of the root workflow
 replay_mode = 0                 # disable checking if DAGMan's pid is gone
 keep_state = 0                  # Flag for keeping a Workflow's state across several DAGMan start/stop cycles
-db_stats = 'no'                 # collect and print database stats at the end of execution
+db_stats = False                # collect and print database stats at the end of execution
 no_events = False               # Flag for disabling event output altogether
 event_dest = None               # URL containing the destination of the events
 dashboard_event_dest = None     # URL containing the destination of events for the dashboard
-encoding = None	                # Way to encode the data
+encoding = None                 # Way to encode the data
 monitord_exit_code = 0          # Exit code for pegasus-monitord
-socket_enabled = False          # Enable socket for real-time debugging
-start_server = False            # Keep track if socket server needs to be started
 do_notifications = True         # Flag to enable notifications
 skip_pid_check = False          # Flag to skip checking if a previous monitord is still running using the pid file
 monitord_notifications = None   # Notifications' manager class
 max_parallel_notifications = 10 # Maximum number of notifications we can do in parallel
-notifications_timeout = 0	# Time to wait for notification scripts to finish (0 means wait forever)
+notifications_timeout = 0       # Time to wait for notification scripts to finish (0 means wait forever)
 store_stdout_stderr = True      # Flag for storing jobs' stdout and stderr in our output
-fast_start_mode     = False     # Flag to indicate that only sleep once monitord has caught up with the dagman.out file
-
+fast_start_mode     = True     # Flag to indicate that only sleep once monitord has caught up with the dagman.out file
 wf_event_sink = None            # Where wf events go
-
-# Remaining variables
 out = None                      # .dag.dagman.out file from command-line
 run = None                      # run directory from command-line dagman.out file
-server = None                   # server socket
-sockfn = None                   # socket filename
+output_dir = None               # output_dir for all files written by monitord
+jsd = None                      # location of jobstate.log file
+millisleep = None               # emulated run mode delay
+adjustment = 0                  # time zone adjustment (@#~! Condor)
 
 #
 # --- at exit handlers -------------------------------------------------------------------
@@ -170,18 +159,6 @@ def delete_pid_file():
         os.unlink(pid_filename)
     except OSError:
         logger.error("cannot delete pid file %s" % (pid_filename))
-
-def socket_exit_handler():
-    """
-    This function closes the socket server, and removes the sockfn file.
-    """
-    if server is not None:
-        server.close()
-        try:
-            os.unlink(sockfn)
-        except OSError:
-            # Just be silent
-            pass
 
 def close_wf_retry_file():
     """
@@ -205,12 +182,12 @@ def finish_stampede_loader():
     It is used to make sure the loader has finished loading all data
     into the database. It will also produce stats for benchmarking.
     """
-    sinks = [wf_event_sink,dashboard_event_sink]
+    logger.info("DB flushing beginning")
+    sinks = [wf_event_sink, dashboard_event_sink]
     for sink in sinks:
         if sink is not None:
-            print (utils.isodate(time.time()) + " - pegasus-monitord - DB flushing beginning ").ljust(80, "-")
             try:
-                if db_stats == 'yes' and root_logger.getEffectiveLevel() > logging.INFO:
+                if db_stats and root_logger.getEffectiveLevel() > logging.INFO:
                     # Make sure log level is enough to display database
                     # benchmarking information
                     root_logger.setLevel(logging.INFO)
@@ -219,11 +196,9 @@ def finish_stampede_loader():
                 logger.warning("could not call the finish method "+\
                                    "in the nl loader class... exiting anyway")
                 logger.warning(traceback.format_exc())
+    logger.info("DB flushing ended")
 
-            print (utils.isodate(time.time()) + " - pegasus-monitord - DB flushing ended ").ljust(80, "-")
 
-
-# Workflow Entry Class
 class WorkflowEntry:
     """
     Class used to store one workflow entry
@@ -241,13 +216,6 @@ class WorkflowEntry:
     caught_up_with_dagman_out = False # indicates monitord has caught up with the dagman.out file
     dagman_out_appeared       = False # indicates whether dagman.out file has appeared or not
 
-output_dir = None                       # output_dir for all files written by monitord
-jsd = None				# location of jobstate.log file
-nodaemon = 0				# foreground mode
-logfile = None				# location of monitord.log file
-millisleep = None			# emulated run mode delay
-adjustment = 0				# time zone adjustment (@#~! Condor)
-
 # Parse command line options
 prog_usage = "usage: %s [options] workflow.dag.dagman.out" % (prog_base)
 prog_desc = """Mandatory arguments: outfile is the log file produced by Condor DAGMan, usually ending in the suffix ".dag.dagman.out"."""
@@ -256,16 +224,11 @@ parser = optparse.OptionParser(usage=prog_usage, description=prog_desc)
 
 parser.add_option("-a", "--adjust", action = "store", type = "int", dest = "adjustment",
 		  help = "adjust for time zone differences by i seconds, default 0")
-parser.add_option("-N", "--foreground", action = "store_const", const = 2, dest = "nodaemon",
-		  help = "(Condor) don't daemonize %s; go through motions as if" % (prog_base))
-parser.add_option("-n", "--no-daemon", action = "store_const", const = 1, dest = "nodaemon",
-		  help = "(debug) don't daemonize %s; keep it in the foreground" % (prog_base))
+parser.add_option("-N", "--condor-daemon", action="store_const", default=False, dest="condor_daemon",
+		  help = "Condor daemon mode. Used by pegasus-dagman.")
 parser.add_option("-j", "--job", action = "store", type = "string", dest = "jsd",
-		  help = "alternative job state file to write, default is %s in the workflow's directory"
+		  help = "Alternative job state file to write, default is %s in the workflow's directory"
 		  % (utils.jobbase))
-parser.add_option("-l", "--log", action = "store", type = "string", dest = "logfile",
-		  help = "alternative %s log file, default is %s in the workflow's directory"
-		  % (prog_base, logbase))
 parser.add_option("-o", "--output-dir", action = "store", type = "string", dest = "output_dir",
                   help = "provides an output directory for all monitord log files")
 parser.add_option("--conf", action = "store", type = "string", dest = "config_properties",
@@ -284,12 +247,10 @@ parser.add_option("-S", "--sim", action = "store", type = "int", dest = "millisl
 		  help = "Developer: simulate delays between reads by sleeping ms milliseconds")
 parser.add_option("-r", "--replay", action = "store_const", const = 1, dest = "replay_mode",
 		  help = "disables checking for DAGMan's pid while running %s" % (prog_base))
-parser.add_option("--db-stats", action = "store_const", const = "yes", dest = "db_stats",
+parser.add_option("--db-stats", action = "store_true", dest = "db_stats",
                   help = "collect and print database stats at the end")
 parser.add_option("--keep-state", action = "store_const", const = 1, dest = "keep_state",
                   help = "keep state across several DAGMan start/stop cycles (development option)")
-parser.add_option("--socket", action = "store_const", const = "yes", dest = "socket_enabled",
-                  help = "enables a socket interface for debugging")
 parser.add_option("--skip-stdout", action = "store_const", const = 0, dest = "skip_stdout",
                   help = "disables storing both stdout and stderr in our output")
 parser.add_option("-f", "--force", action = "store_const", const = 1, dest = "skip_pid_check",
@@ -329,12 +290,14 @@ out = os.path.abspath(out)
 
 # Infer run directory
 run = os.path.dirname(out)
+if not os.path.isdir(run):
+    logger.critical("Run directory does not exist")
+    exit(1)
+os.chdir(run)
 
 # Get the location of the properties file from braindump
 top_level_wf_params = utils.slurp_braindb(run)
 top_level_prop_file = None
-
-# Get properties tag from braindump
 if "properties" in top_level_wf_params:
     top_level_prop_file = top_level_wf_params["properties"]
     # Create the full path by using the submit_dir key from braindump
@@ -347,21 +310,30 @@ props.new(config_file=options.config_properties, rundir_propfile=top_level_prop_
 
 # PM-948 check to see if any addon command line
 # options are specified in properties
-addon_cmd_prop = props.property( "pegasus.monitord.arguments" )
+addon_cmd_prop = props.property("pegasus.monitord.arguments")
 addon_cmd_options = []
 if addon_cmd_prop is not None:
-    addon_cmd_options = addon_cmd_prop.split( " ")
+    addon_cmd_options = addon_cmd_prop.split(" ")
 
 cmd_options = sys.argv[1:] + addon_cmd_options
 
 # parse again with extra options that might
 # been specified in the properties file
-print "Final Command line options are %s " %cmd_options
+logger.info("Final Command line options are: %s" % cmd_options)
 (options, args) = parser.parse_args(cmd_options)
+
+# Set logging level
+if options.vb <= 0:
+    lvl = logger.INFO
+elif options.vb == 1:
+    lvl = logger.DEBUG
+else:
+    lvl = logger.TRACE
+root_logger.setLevel(lvl)
 
 # Resolve command-line options conflicts
 if options.event_dest is not None and options.no_events is not None:
-    logger.warning("the --no-events and --dest options conflict, please use only one of them")
+    logger.critical("the --no-events and --dest options conflict, please use only one of them")
     sys.exit(1)
 
 # Check if user wants to override pid checking
@@ -372,13 +344,9 @@ if options.skip_pid_check is not None:
 pid_filename = os.path.join(run, "monitord.pid")
 if not skip_pid_check and utils.pid_running(pid_filename):
     logger.critical("it appears that pegasus-monitord is still running on this workflow... exiting")
-    # Exit with exitcode 43
     sys.exit(43)
-# Create pid file
 utils.write_pid_file(pid_filename)
-# Make sure we delete it when we are done
 atexit.register(delete_pid_file)
-
 
 # Parse notification-related properties
 if int(props.property("pegasus.monitord.notifications.timeout") or -1) >= 0:
@@ -392,37 +360,20 @@ if not utils.make_boolean(props.property("pegasus.monitord.notifications") or 't
     do_notifications = False
 
 # Parse stdout/stderr disable parsing property
-
-# Copy command line options into our variables
 if utils.make_boolean(props.property("pegasus.monitord.stdout.disable.parsing") or 'false'):
     store_stdout_stderr = False
 
-if options.vb == 0:
-    lvl = logging.WARN
-elif options.vb == 1:
-    lvl = logging.INFO
-else:
-    lvl = logging.DEBUG
-
-# Set logging level
-root_logger.setLevel(lvl)
-# Cache whether debugging
-g_isdbg = root_logger.isEnabledFor(logging.DEBUG)
-
 if options.adjustment is not None:
     adjustment = options.adjustment
-if options.nodaemon is not None:
-    nodaemon = options.nodaemon
+condor_daemon = options.condor_daemon
 if options.jsd is not None:
     jsd = options.jsd
-if options.logfile is not None:
-    logfile = options.logfile
 if options.millisleep is not None:
     millisleep = options.millisleep
 if options.replay_mode is not None:
     replay_mode = options.replay_mode
     # Replay mode always runs in foreground
-    nodaemon = 1
+    condor_daemon = False
     # No notifications in replay mode
     do_notifications = False
 if options.no_notify is not None:
@@ -432,12 +383,12 @@ if options.notifications_max is not None:
     if max_parallel_notifications == 0:
         do_notifications = False
     if max_parallel_notifications < 0:
-        logger.critical("notifications-max must be integet >= 0")
+        logger.critical("notifications-max must be integer >= 0")
         sys.exit(1)
 if options.notifications_timeout is not None:
     notifications_timeout = options.notifications_timeout
     if notifications_timeout < 0:
-        logger.critical("notifications-timeout must be integet >= 0")
+        logger.critical("notifications-timeout must be integer >= 0")
         sys.exit(1)
     if notifications_timeout > 0 and notifications_timeout < 5:
         logger.warning("notifications-timeout set too low... notification scripts may not have enough time to complete... continuing anyway...")
@@ -457,8 +408,6 @@ if options.output_dir is not None:
     except OSError:
         logger.critical("cannot create directory %s. exiting..." % (output_dir))
         sys.exit(1)
-if options.socket_enabled is not None:
-    socket_enabled = options.socket_enabled
 if options.event_dest is None:
     if options.no_events is not None:
         # Turn off event generation
@@ -476,18 +425,18 @@ else:
     # Use command-line option
     event_dest = options.event_dest
 
-if options.fast_start is True:
-    fast_start_mode = True
+if options.fast_start is False:
+    fast_start_mode = False
 
 #check if specified in properties and override from options
-fast_start_property = "pegasus.monitord.fast_start"
-if props.property( fast_start_property ) is not None:
-    fast_start_mode = utils.make_boolean( props.property( fast_start_property ) )
+fast_start_property = props.property("pegasus.monitord.fast_start")
+if fast_start_property is not None:
+    fast_start_mode = utils.make_boolean(fast_start_property)
 
-
-#hardcoded for the time being
-#dashboard_event_dest = "sqlite:////tmp/workflow.db"
-dashboard_event_dest = connection.url_by_properties(options.config_properties, connection.DBType.MASTER, rundir_properties=top_level_prop_file)
+dashboard_event_dest = connection.url_by_properties(
+        options.config_properties,
+        connection.DBType.MASTER,
+        rundir_properties=top_level_prop_file)
 
 if options.enc is not None:
     # Get encoding from command-line options
@@ -496,14 +445,6 @@ else:
     if props.property("pegasus.monitord.encoding") is not None:
         # Get encoding from property
         encoding = props.property("pegasus.monitord.encoding")
-
-# Use default monitord logfile if user hasn't specified another file
-if logfile is None:
-    if output_dir is None:
-        logfile = os.path.join(run, logbase)
-    else:
-        logfile = os.path.join(run, output_dir, logbase)
-logfile = os.path.abspath(logfile)
 
 # Check if the user-provided jsd file is an absolute path, if so, we
 # disable recursive mode
@@ -516,14 +457,6 @@ if jsd is not None:
 #
 # --- functions ---------------------------------------------------------------------------
 #
-
-def systell(fh):
-    """
-    purpose: make things symmetric, have a systell for sysseek
-    paramtr: fh (IO): filehandle
-    returns: current file position
-    """
-    os.lseek(fh, 0, os.SEEK_CUR)
 
 def add(wf, jobid, event, sched_id=None, status=None):
     """
@@ -564,18 +497,12 @@ def add(wf, jobid, event, sched_id=None, status=None):
     # A DAGMAN_SUBMIT event requires a new job (unless this was
     # already done by a PRE_SCRIPT_STARTED event, but we let the
     # add_job function figure this out).
+    # DAGMAN_SUBMIT corresponds to lines in dagman.out matching  Submitting Condor Node *...
     if event == "DAGMAN_SUBMIT":
         wf._last_submitted_job = jobid
         my_job_submit_seq = wf.add_job(jobid, event)
 
-        # Nothing else to do... we should stop here...
-        return my_job_submit_seq
-
-    # A SUBMIT event brings sched id and job type information (it can also be
-    # a new job for us when there is no PRE_SCRIPT)
-    if event == "SUBMIT" or event == "SUBMIT_FAILED":
-        # Add job to our workflow (if not alredy there), will update sched_id in both cases
-        my_job_submit_seq = wf.add_job(jobid, event, sched_id=sched_id)
+        #PM-1068 parse the job submit file on DAGMAN_SUBMIT event instead of SUBMIT or SUBMIT_FAILED
 
         # Obtain planning information from the submit file when entering Condor,
         # Figure out how long the job _intends_ to run maximum
@@ -587,17 +514,26 @@ def add(wf, jobid, event, sched_id=None, status=None):
         # If not None, convert into seconds
         if my_time is not None:
             my_time = my_time * 60
-            logger.info("job %s requests %d s walltime" % (jobid, my_time))
+            logger.debug("job %s requests %d s walltime" % (jobid, my_time))
             wf._walltime[jobid] = my_time
         else:
-            logger.info("job %s does not request a walltime" % (jobid))
+            logger.debug("job %s does not request a walltime" % (jobid))
 
         # Remember the run-site
         if my_site is not None:
-            logger.info("job %s is planned for site %s" % (jobid, my_site))
+            logger.debug("job %s is planned for site %s" % (jobid, my_site))
             wf._job_site[jobid] = my_site
         else:
-            logger.info("job %s does not have a site information!" % (jobid))
+            logger.debug("job %s does not have a site information!" % (jobid))
+
+        # Nothing else to do... we should stop here...
+        return my_job_submit_seq
+
+    # A SUBMIT event brings sched id and job type information (it can also be
+    # a new job for us when there is no PRE_SCRIPT)
+    if event == "SUBMIT" or event == "SUBMIT_FAILED":
+        # Add job to our workflow (if not alredy there), will update sched_id in both cases
+        my_job_submit_seq = wf.add_job(jobid, event, sched_id=sched_id)
 
     # Get job_submit_seq if we don't already have it
     if my_job_submit_seq is None:
@@ -695,12 +631,13 @@ def process_dagman_out(wf, log_line):
     if timestamp_found:
         split_log_line = log_line.split(None, 3)
         if len(split_log_line) >= 3:
-            logger.debug("debug: ## %d: %s" % (wf._line, split_log_line[2][:64]))
+            logger.trace("debug: ## %d: %s" % (wf._line, split_log_line[2][:64]))
 
         # If in recovery mode, check if we reached the end of it
         # This is the DAGMan recovery mode . Not monitord recovery mode! Karan
         if wf._skipping_recovery_lines:
             if log_line.find("...done with RECOVERY mode") >= 0:
+                logger.info( "DONE with DAGMAN RECOVERY MODE")
                 wf._skipping_recovery_lines = False
             return
 
@@ -872,6 +809,7 @@ def process_dagman_out(wf, log_line):
             wf._multiline_file_flag = True
         elif log_line.find("Running in RECOVERY mode...") >= 0:
             # Entering recovery mode, skip lines until we reach the end
+            logger.info( "Enabling DAGMAN RECOVERY MODE")
             wf._skipping_recovery_lines = True
             return
         elif re_parse_dagman_aborted.search(log_line) is not None:
@@ -930,9 +868,6 @@ def prog_sigusr1_handler(signum, frame):
     """
     This function increases the log level to the next one.
     """
-    global g_isdbg
-    global start_server
-
     cur_level = root_logger.getEffectiveLevel()
 
     try:
@@ -943,18 +878,10 @@ def prog_sigusr1_handler(signum, frame):
         root_logger.setLevel(logging.INFO)
         logger.error("Unknown current level = %s, setting to INFO" % (cur_level))
 
-    g_isdbg = root_logger.isEnabledFor(logging.DEBUG)
-
-    # Check debugging socket
-    if not socket_enabled:
-        start_server = True
-
 def prog_sigusr2_handler(signum, frame):
     """
     This function decreases the log level to the previous one.
     """
-    global g_isdbg
-
     cur_level = root_logger.getEffectiveLevel()
 
     try:
@@ -965,47 +892,15 @@ def prog_sigusr2_handler(signum, frame):
         root_logger.setLevel(logging.WARN)
         logger.error("Unknown current level = %s, setting to WARN" % (cur_level))
 
-    g_isdbg = root_logger.isEnabledFor(logging.DEBUG)
 
 #
 # --- main ------------------------------------------------------------------------------
 #
 
-# Rotate log file, if it exists
-#PM-688 we don't rotate logs in monitord
-# pegasus-dagman rotates the log file
-#utils.rotate_log_file(logfile)
-
-# Turn into daemon process
-if nodaemon == 0:
-    utils.daemonize()
-    # Open logfile as stdout
-    try:
-        sys.stdout = open(logfile, "a", 0)
-    except IOError:
-        logger.critical("could not open %s!" % (logfile))
-        sys.exit(1)
-elif nodaemon == 2:
-    utils.keep_foreground()
-    # Open logfile as stdout
-    try:
-        sys.stdout = open(logfile, "a", 0)
-    except IOError:
-        logger.critical("could not open %s!" % (logfile))
-        sys.exit(1)
-else:
-    # Hack to make stdout unbuffered
-    sys.stdout = os.fdopen(sys.stdout.fileno(), "w", 0)
-
-# Close stdin
-sys.stdin.close()
-# dup stderr onto stdout
-sys.stderr = sys.stdout
-
-# Touch logfile with start event
-print
-print (utils.isodate(time.time()) + " - pegasus-monitord starting - pid %d " % (os.getpid())).ljust(80, "-")
-print
+if condor_daemon:
+    # This is the case when being called from pegasus-dagman
+    # Although we cannot set sid, we can still become process group leader
+    os.setpgid(0, 0)
 
 # Ignore dying shells
 signal.signal(signal.SIGHUP, prog_sighup_handler)
@@ -1061,8 +956,8 @@ else:
                 # If in replay mode or recovery mode and it is a DB,
                 # attempt to purge wf_uuid_first
                 eo.purge_wf_uuid_from_database(run, event_dest)
-        except:
-            logger.error(traceback.format_exc())
+        except Exception, e:
+            logger.exception(e)
             logger.error("error flushing previous wf_uuid from database... continuing...")
             logger.error("cannot create events output... disabling event output!")
             wf_event_sink = None
@@ -1081,8 +976,8 @@ else:
                 # If in replay mode or recovery mode and it is a DB,
                 # attempt to purge wf_uuid_first
                 eo.purge_wf_uuid_from_dashboard_database(run, dashboard_event_dest)
-        except:
-            logger.error(traceback.format_exc())
+        except Exception, e:
+            logger.exception(e)
             logger.error("error flushing previous wf_uuid from dashboard database... continuing...")
             logger.error("cannot create events output... disabling event output!")
             dashboard_event_dest = None
@@ -1090,55 +985,11 @@ else:
     if dashboard_event_dest is None:
         logger.error("cannot create dashboard events output... disabling dashboard event output!")
 
-# Say hello
-logger.info("starting, using pid %d" % (os.getpid()))
 if millisleep is not None:
     logger.info("using simulation delay of %d ms" % (millisleep))
 
 if fast_start_mode:
-    logger.info( "monitord started in fast start mode" )
-
-# Only create server socket if asked...
-if output_dir is None:
-    sockfn = os.path.join(os.path.dirname(out), "monitord.sock")
-else:
-    sockfn = os.path.join(os.path.dirname(out), output_dir, "monitord.sock")
-if socket_enabled:
-    # Create server socket for communication with site selector
-    server = socket_interface.server_socket(49152, 65536)
-    # Take care of closing socket when we exit
-    atexit.register(socket_exit_handler)
-
-    # Save our address so that site selectors know where to connect
-    if server is not None:
-        my_host, my_port = server.getsockname()
-        try:
-            OUT = open(sockfn, "w")
-            OUT.write("%s %d\n" % (my_host, my_port))
-        except IOError:
-            logger.warning("unable to write %s!" % (sockfn))
-        else:
-            OUT.close()
-
-# For future reference
-plus = ''
-if "LD_LIBRARY_PATH" in os.environ:
-    for my_path in os.environ["LD_LIBRARY_PATH"].split(':'):
-        logger.info("env: LD_LIBRARY_PATH%s=%s" % (plus, my_path))
-        plus = '+'
-
-if "GLOBUS_TCP_PORT_RANGE" in os.environ:
-    logger.info("env: GLOBUS_TCP_PORT_RANGE=%s" % (os.environ["GLOBUS_TCP_PORT_RANGE"]))
-else:
-    logger.info("env: GLOBUS_TCP_PORT_RANGE=")
-if "GLOBUS_TCP_SOURCE_RANGE" in os.environ:
-    logger.info("env: GLOBUS_TCP_SOURCE_RANGE=%s" % (os.environ["GLOBUS_TCP_SOURCE_RANGE"]))
-else:
-    logger.info("env: GLOBUS_TCP_SOURCE_RANGE=")
-if "GLOBUS_LOCATION" in os.environ:
-    logger.info("env: GLOBUS_LOCATION=%s" % (os.environ["GLOBUS_LOCATION"]))
-else:
-    logger.info("env: GLOBUS_LOCATION=")
+    logger.info("monitord started in fast start mode")
 
 # Build sub-workflow retry filename
 if output_dir is None:
@@ -1321,12 +1172,9 @@ while (len(wfs) > 0):
                     continue
 
         if workflow_entry.DMOF is not None:
-            # Say Hello
-            logger.debug("wake up and smell the silicon")
-
             try:
+                logger.trace("stating file: %s" % (workflow_entry.dagman_out))
                 f_stat = os.stat(workflow_entry.dagman_out)
-                logger.debug("stating file: %s" % (workflow_entry.dagman_out))
             except OSError:
                 # stat error
                 logger.critical("stat %s" % (workflow_entry.dagman_out))
@@ -1377,6 +1225,7 @@ while (len(wfs) > 0):
                     continue
 
                 # In replay mode, we can be a little more aggresive
+                # FIXME Why would you have to wait for 5 tries in replay mode?
                 if replay_mode and workflow_entry.ml_retries > 5:
                     # We are in replay mode, so we should have everything here
                     logger.info("no more action, stopping workflow %s" % (workflow_entry.dagman_out))
@@ -1414,7 +1263,7 @@ while (len(wfs) > 0):
 
                 if len(ml_rbuffer) < DAGMAN_OUT_MAX_READ_SIZE:
                     # PM-947 we have caught up with the workflow
-                    logger.info( "monitord has caught up with dagman out file %s" %(workflow_entry.dagman_out) )
+                    logger.debug("monitord has caught up with dagman out file %s" %(workflow_entry.dagman_out))
                     workflow_entry.caught_up_with_dagman_out = True
 
                 if len(ml_rbuffer) == 0:
@@ -1494,13 +1343,10 @@ while (len(wfs) > 0):
                                                    (parent_jobid, parent_jobseq, os.path.dirname(new_dagman_out)))
 
                         if millisleep is not None:
-                            if server is not None:
-                                socket_interface.check_request(server, wfs, millisleep / 1000.0)
-                            else:
-                                time.sleep(millisleep / 1000.0)
+                            time.sleep(millisleep / 1000.0)
 
                     ml_pos = workflow_entry.DMOF.tell()
-                    logger.info("processed chunk of %d byte" % (ml_pos - workflow_entry.ml_current -len(workflow_entry.ml_buffer)))
+                    logger.debug("processed chunk of %d bytes" % (ml_pos - workflow_entry.ml_current -len(workflow_entry.ml_buffer)))
                     workflow_entry.ml_current = ml_pos
                     workflow_entry.ml_retries = 0
                     # Write workflow progress for recovery mode
@@ -1510,9 +1356,8 @@ while (len(wfs) > 0):
 
     # End of main for loop, still in the while loop...
 
-    # Print number of workflows we currently have
-    logger.info("currently tracking %d workflow(s)..." % (len(wfs)))
-    
+    logger.trace("currently tracking %d workflow(s)..." % (len(wfs)))
+
     # Go through the workflows again, and finish any marked ones
     wf_index = 0
     while wf_index < len(wfs):
@@ -1532,37 +1377,9 @@ while (len(wfs) > 0):
             # Mode index to next workflow
             wf_index = wf_index + 1
 
-    # Check if we need to start the socket server
-    if not socket_enabled and start_server:
-        # Reset flag
-        start_server = False
-        
-        # Create server socket for communication with site selector
-        server = socket_interface.server_socket(49152, 65536)
-        # Take care of closing socket when we exit
-        atexit.register(socket_exit_handler)
-
-        # Save our address so that site selectors know where to connect
-        if server is not None:
-            # Socket open, make sure we set out socket_enabled flag
-            socket_enabled = True
-            my_host, my_port = server.getsockname()
-            try:
-                OUT = open(sockfn, "w")
-                OUT.write("%s %d\n" % (my_host, my_port))
-            except IOError:
-                logger.warning("unable to write %s!" % (sockfn))
-            else:
-                OUT.close()
-
-    # Periodically check for service requests
-    if server is not None:
-        socket_interface.check_request(server, wfs)
-
     # Service notifications once per while loop, in the future we can
     # move this into the for loop and service notifications more often
     if do_notifications == True and monitord_notifications is not None:
-        logger.info("servicing notifications...")
         monitord_notifications.service_notifications()
 
     # Skip sleeping, if we have no more workflow to track...
@@ -1572,6 +1389,12 @@ while (len(wfs) > 0):
     # All done... let's figure out how long to sleep...
     time_to_sleep = time.time() + MAX_SLEEP_TIME
     sleep_for_some_time = True
+
+    # Try to flush the sinks
+    for sink in (wf_event_sink, dashboard_event_sink):
+        if sink:
+            sink.flush()
+
     for workflow_entry in wfs:
         # PM-947 we want to sleep if either dagman out has not appeared or we have caught up with the dagman.out
         sleep_for_some_time = sleep_for_some_time and \
@@ -1580,8 +1403,8 @@ while (len(wfs) > 0):
         if workflow_entry.sleep_time < time_to_sleep:
             time_to_sleep = workflow_entry.sleep_time
 
-    # PM-947 Sleep if not in replay mode AND ( we have caught up with all workflows or are in default/normal mode)
-    if not replay_mode and ( sleep_for_some_time or not fast_start_mode):
+    # PM-947 Sleep if not in replay mode AND (we have caught up with all workflows or are in default/normal mode)
+    if not replay_mode and (sleep_for_some_time or not fast_start_mode):
         time_to_sleep = time_to_sleep - time.time()
         if time_to_sleep < 0:
             time_to_sleep = 0
@@ -1623,32 +1446,12 @@ if anomaly_handler_proc.is_alive():
 # --- Panorama extras end --------------------------------------------------------------------
 #
 
-if socket_enabled and server is not None:
-    # Finish trailing connection requests
-    while (socket_interface.check_request(server, wfs)):
-        pass
-    server.close()
-    server = None
-    try:
-        os.unlink(sockfn)
-    except OSError:
-        # Just be silent
-        pass
-
 if do_notifications == True and monitord_notifications is not None:
-    # Finish pending notifications
     logger.info("finishing notifications...")
     while monitord_notifications.has_active_notifications() or monitord_notifications.has_pending_notifications():
-        monitord_notifications.service_notifications()        
+        monitord_notifications.service_notifications()
         time.sleep(SLEEP_WAIT_NOTIFICATION)
-    logger.info("finishing notifications... done!")
 
-# done
-logger.info("finishing, exit with 0")
-
-# Touch logfile with end event
-print
-print (utils.isodate(time.time()) + " - pegasus-monitord ending - pid %d " % (os.getpid())).ljust(80, "-")
-print
+logger.info("monitord process %d exiting with 0" % os.getpid())
 
 sys.exit(0)

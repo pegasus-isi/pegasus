@@ -1355,6 +1355,39 @@ public class PegasusProperties implements Cloneable {
         return Boolean.parse( mProps.getProperty( PEGASUS_TRANSFER_WORKER_PACKAGE_PROPERTY ),
                               false );
     }
+    
+    /**
+     * A Boolean property to indicate whether to enforce strict checks against
+     * provided worker package for jobs in PegasusLite mode.
+     * if a job comes with worker package and it does not match fully with
+     * worker node architecture , it will revert to Pegasus download website.
+     * Default value is true. 
+     *
+     * Referred to by "pegasus.transfer.worker.package.strict" property.
+     *
+     * @return boolean value specified in the properties file,else
+     *         true in case of non boolean value being specified or
+     *         property not being set.
+     */
+    public boolean enforceStrictChecksForWorkerPackage() {
+        return Boolean.parse( mProps.getProperty( "pegasus.transfer.worker.package.strict" ),
+                              true );
+    }
+    
+    /**
+     * A Boolean property  to indicate whether a pegasus lite job is allowed to 
+     * download from Pegasus website. 
+     *
+     * Referred to by "pegasus.transfer.worker.package.autodownload" property.
+     *
+     * @return boolean value specified in the properties file,else
+     *         true in case of non boolean value being specified or
+     *         property not being set.
+     */
+    public boolean allowDownloadOfWorkerPackageFromPegasusWebsite() {
+        return Boolean.parse( mProps.getProperty( "pegasus.transfer.worker.package.autodownload" ),
+                              true );
+    }
 
     /**
      * Returns the arguments with which the transfer executable needs
@@ -1632,12 +1665,11 @@ public class PegasusProperties implements Cloneable {
      *
      * Referred to by the "pegasus.gridstart.kickstart.stat" property.
      *
-     * @return the boolean value specified in the property file,
-     *         else false if not specified or non boolean specified.
+     * @return value specified in the property file,
+     *         else null.
      */
-    public boolean doStatWithKickstart(){
-        return Boolean.parse( mProps.getProperty( "pegasus.gridstart.kickstart.stat"),
-                              false );
+    public String doStatWithKickstart(){
+        return   mProps.getProperty( "pegasus.gridstart.kickstart.stat") ;
     }
 
     /**

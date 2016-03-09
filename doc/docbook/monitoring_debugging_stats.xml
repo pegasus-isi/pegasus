@@ -201,7 +201,7 @@ working dir : /lfs1/work/pegasus/run0004
 
     <para>Pegasus plotting and statistics tools queries the Stampede database
     created by pegasus-monitord for generating the output.The stampede scheme
-    can be found <link linkend="stampede-schema">here</link>.</para>
+    can be found <link linkend="stampede_schema_overview">here</link>.</para>
 
     <para>The statistics and plotting tools use the following terminology for
     defining tasks, jobs etc. Pegasus takes in a DAX which is composed of
@@ -2339,7 +2339,7 @@ job.invoke('at_end', pegasus_home + "/libexec/notifications/email --to me@somewh
       invoked by <emphasis role="bold">pegasus-run</emphasis>, and tracks
       workflows in real-time. By default, it produces the jobstate.log file,
       and a SQLite database, which contains all the information listed in the
-      <link linkend="stampede-schema">Stampede schema</link>. When a workflow
+      <link linkend="stampede_schema_overview">Stampede schema</link>. When a workflow
       fails, and is re-submitted with a rescue DAG, <emphasis
       role="bold">pegasus-monitord</emphasis> will automatically pick up from
       where it left previously and continue to write the jobstate.log file and
@@ -2529,8 +2529,8 @@ job.invoke('at_end', pegasus_home + "/libexec/notifications/email --to me@somewh
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/stampede-schema-small.png"
-                       id="stampede-schema"/>
+            <imagedata fileref="images/stampede_schema_overview-small.png"
+                       id="stampede_schema_overview_figure"/>
           </imageobject>
         </mediaobject>
       </figure>

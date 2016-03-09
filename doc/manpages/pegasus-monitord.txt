@@ -12,16 +12,16 @@ Synopsis
 --------
 [verse]
 *pegasus-monitord* [*--help*|*-help*] [*--verbose*|*-v*]
-                 [*--adjust*|*-a* 'i'] [*--foreground*|*-N*]
-                 [*--no-daemon*|*-n*] [*--job*|*-j* 'jobstate.log file']
-                 [*--log*|*-l* 'logfile'] [*--conf* 'properties file']
+                 [*--adjust*|*-a* 'i'] [*--condor-daemon*|*-N*]
+                 [*--job*|*-j* 'jobstate.log file']
+                 [*--conf* 'properties file']
                  [*--no-recursive*] [*--no-database* | *--no-events*]
                  [*--replay*|*-r*] [*--no-notifications*]
                  [*--notifications-max* 'max_notifications']
                  [*--notifications-timeout* 'timeout']
                  [*--sim*|*-s* 'millisleep'] [*--db-stats*]
                  [*--skip-stdout*] [*--force*|*-f*]
-                 [*--socket*] [*--output-dir* | *-o* 'dir']
+                 [*--output-dir* | *-o* 'dir']
                  [*--dest*|*-d* 'PATH' or 'URL'] [*--encoding*|*-e* 'bp' | 'bson']
                  'DAGMan output file'
 
@@ -60,14 +60,9 @@ for incrementing and decrementing the log level.
 For adjusting time zone differences by 'i' seconds, default is 0.
 
 *-N*::
-*--foreground*::
-Do not daemonize *pegasus-monitord*, go through the motions as if 
-(Condor).
-
-*-n*::
-*--no-daemon*::
-Do not daemonize *pegasus-monitord*, keep it in the foreground (for 
-debugging).
+*--condor-daemon*::
+Condor daemon mode. This is used when monitord is invoked by pegasus-dagman.
+It just causes monitord to create a new process group.
 
 *-j* 'jobstate.log file'::
 *--job* 'jobstate.log file'::
@@ -80,13 +75,6 @@ alternative, non-absolute, filename is given with this option,
 directory with the filename provided by the user with this option. If an 
 absolute filename is provided and sub-workflows are found, a warning message
 will be printed and *pegasus-monitord* will not track any sub-workflows.
-
-*--log* 'logfile'::
-*--log-file* 'logfile'::
-Specifies an alternative 'logfile' to use instead of the 'monitord.log'
-file in the main workflow directory. Differently from the 'jobstate.log'
-file above, *pegasus-monitord* only generates one 'logfile'
-per execution (and not one per workflow and sub-workflow it tracks).
 
 *--conf* 'properties_file'::
 is an alternative file containing properties in the 'key=value'
@@ -168,14 +156,6 @@ from starting and running simultaneously (which would cause the bp
 file and database to be left in an unstable state). This option should
 noly be used when the user knows the previous instance of
 *pegasus-monitord* is *NOT* running anymore.
-
-*--socket*::
-This option causes *pegasus-monitord* to start a socket interface that 
-can be used for advanced debugging. The port number for connecting to
-*pegasus-monitord* can be found in the 'monitord.sock' file in the 
-workflow directory (the file is deleted when *pegasus-monitord*
-finishes). If not already started, the socket interface is also 
-created when *pegasus-monitord* receives a 'USR1' signal.
 
 *-o* 'dir'::
 *--ouput-dir* 'dir'::

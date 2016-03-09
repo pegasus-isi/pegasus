@@ -1,0 +1,18 @@
+tr wc {
+    site {{sitename}} {
+        pfn "/usr/bin/wc"
+        arch "x86_64"
+        os "linux"
+        type "INSTALLED"
+    }
+}
+
+tr split {
+    site {{sitename}} {
+        pfn "/usr/bin/split"
+        arch "x86_64"
+        os "linux"
+        type "INSTALLED"
+    }
+}
+

@@ -18,7 +18,6 @@ Functions for output pegasus-monitord events to various destinations.
 #  limitations under the License.
 ##
 
-# Import Python modules
 import os
 import sys
 import socket
@@ -27,10 +26,9 @@ import urlparse
 
 from Pegasus.tools import utils
 from Pegasus.netlogger import nlapi
-from Pegasus.db.modules import stampede_loader
-from Pegasus.db.modules import stampede_dashboard_loader
-from Pegasus.db.workflow.expunge import StampedeExpunge
-from Pegasus.db.workflow.expunge import DashboardExpunge
+from Pegasus.db.workflow_loader import WorkflowLoader
+from Pegasus.db.dashboard_loader import DashboardLoader
+from Pegasus.db import expunge
 
 log = logging.getLogger(__name__)
 
@@ -68,11 +66,7 @@ def purge_wf_uuid_from_database(rundir, output_db):
     if "wf_uuid" is None:
         return
 
-    e = StampedeExpunge(output_db, wf_uuid)
-    e.expunge()
-
-    # Done, make this connection go away
-    e = None
+    expunge.delete_workflow(output_db, wf_uuid)
 
 def purge_wf_uuid_from_dashboard_database(rundir, output_db):
     """
@@ -86,11 +80,7 @@ def purge_wf_uuid_from_dashboard_database(rundir, output_db):
     if "wf_uuid" is None:
         return
 
-    e = DashboardExpunge(output_db, wf_uuid)
-    e.expunge()
-
-    # Done, make this connection go away
-    e = None
+    expunge.delete_dashboard_workflow(output_db, wf_uuid)
 
 class OutputURL:
     """
@@ -136,7 +126,6 @@ class EventSink(object):
     """
     def __init__(self):
         self._log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
-        self._isdbg = self._log.isEnabledFor(logging.DEBUG)
 
     def send(self, event, kw):
         """
@@ -150,18 +139,8 @@ class EventSink(object):
         """
         pass
 
-class EmptySink(EventSink):
-    """
-    Empty class, doesn't do anything, events go nowhere...
-    Just a placeholder in case we need to do something different later...
-    """
-    def __init__(self):
-        super(EmptySink, self).__init__()
-
-    def send(self, event, kw):
-        pass
-
-    def close(self):
+    def flush(self):
+        "Clients call this to flush events to the sink"
         pass
 
 class DBEventSink(EventSink):
@@ -172,27 +151,24 @@ class DBEventSink(EventSink):
         self._namespace=namespace
         #pick the right database loader based on prefix
         if namespace == STAMPEDE_NS:
-            self._db = stampede_loader.Analyzer(dest, perf=db_stats, batch="yes", props=props, db_type=db_type)
+            self._db = WorkflowLoader(dest, perf=db_stats, batch=True, props=props, db_type=db_type)
         elif namespace == DASHBOARD_NS:
-            self._db = stampede_dashboard_loader.Analyzer(dest, perf=db_stats, batch="yes", props=props,
-                                                          db_type=db_type)
+            self._db = DashboardLoader(dest, perf=db_stats, batch=True, props=props, db_type=db_type)
         else:
             raise ValueError("Unknown namespace specified '%s'" % (namespace))
 
         super(DBEventSink, self).__init__()
-        
+
     def send(self, event, kw):
-        if self._isdbg:
-            self._log.debug("send.start event=%s" % (event))
+        self._log.trace("send.start event=%s", event)
         d = {'event' : self._namespace + event}
         for k, v in kw.iteritems():
             d[k.replace('__','.')] = v
-        self._db.notify(d)
-        if self._isdbg:
-            self._log.debug("send.end event=%s" % (event))
-        
+        self._db.process(d)
+        self._log.trace("send.end event=%s", event)
+
     def close(self):
-        self._log.debug("close.start")
+        self._log.trace("close.start")
         self._db.finish()
         self._log.debug("close.end")
 
@@ -212,6 +188,8 @@ class DBEventSink(EventSink):
     # --- Panorama extras end --------------------------------------------------------------------
     #
 
+    def flush(self):
+        self._db.flush()
 
 class FileEventSink(EventSink):
     """
@@ -220,22 +198,20 @@ class FileEventSink(EventSink):
     def __init__(self, path, restart=False, encoder=None, **kw):
         super(FileEventSink, self).__init__()
         if restart:
-            self._output = open(path, 'w')
+            self._output = open(path, 'w', 1)
         else:
-            self._output = open(path, 'a')
+            self._output = open(path, 'a', 1)
         self._encoder = encoder
 
     def send(self, event, kw):
-        if self._isdbg:
-            self._log.debug("send.start event=%s" % (event))
+        self._log.trace("send.start event=%s", event)
         self._output.write(self._encoder(event=event, **kw))
-        if self._isdbg:
-            self._log.debug("send.end event=%s" % (event))
+        self._log.trace("send.end event=%s", event)
 
     def close(self):
-        self._log.debug("close.start")
+        self._log.trace("close.start")
         self._output.close()
-        self._log.debug("close.end")
+        self._log.trace("close.end")
 
 class TCPEventSink(EventSink):
     """
@@ -248,16 +224,14 @@ class TCPEventSink(EventSink):
         self._sock.connect((host, port))
 
     def send(self, event, kw):
-        if self._isdbg:
-            self._log.debug("send.start event=%s" % (event))
+        self._log.trace("send.start event=%s", event)
         self._sock.send(self._encoder(event=event, **kw))
-        if self._isdbg:
-            self._log.debug("send.end event=%s" % (event))
+        self._log.trace("send.end event=%s", event)
 
     def close(self):
-        self._log.debug("close.start")
+        self._log.trace("close.start")
         self._sock.close()
-        self._log.debug("close.end")
+        self._log.trace("close.end")
 
 class AMQPEventSink(EventSink):
     """
@@ -282,41 +256,38 @@ class AMQPEventSink(EventSink):
 
     def send(self, event, kw):
         full_event = STAMPEDE_NS + event
-        if self._isdbg:
-            self._log.debug("send.start event=%s" % (full_event))
+        self._log.trace("send.start event=%s", full_event)
         data = self._encoder(event=event, **kw)
         self._channel.basic_publish(amqp.Message(body=data),
                                     exchange=self._exch, routing_key=self.DEFAULT_ROUTING_KEY)
-        if self._isdbg:
-            self._log.debug("send.end event=%s" % (event))
+        self._log.trace("send.end event=%s", event)
 
     def close(self):
-        self._log.debug("close.start")
+        self._log.trace("close.start")
         self._conn.close()
-        self._log.debug("close.end")
+        self._log.trace("close.end")
 
 def bson_encode(event, **kw):
     """
     Adapt bson.dumps() to NetLogger's Log.write() signature.
     """
     kw['event'] = STAMPEDE_NS + event
-    return bson.dumps(kw)        
+    return bson.dumps(kw)
 
-def create_wf_event_sink(dest, enc=None,prefix=STAMPEDE_NS, props=None, **kw):
+def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, **kw):
     """
     Create & return subclass of EventSink, chosen by value of 'dest'
     and parameterized by values (if any) in 'kw'.
     """
 
-    if( dest is None ):
+    if dest is None:
         return None
 
     url = OutputURL(dest)
-    
+
     # Pick an encoder
 
     def pick_encfn(enc_name, namespace ):
-        ##enc_name = url.query.get('enc', 'bp').lower()
         if enc_name is None or enc_name == 'bp':
             # NetLogger name=value encoding
             encfn = nlapi.Log(level=nlapi.Level.ALL, prefix=namespace)
@@ -356,6 +327,7 @@ def create_wf_event_sink(dest, enc=None,prefix=STAMPEDE_NS, props=None, **kw):
         # load the appropriate DBEvent on basis of prefix passed
         sink = DBEventSink(dest, namespace=prefix, props=props, **kw)
         _type, _name = "DB", dest
+
     log.info("output type=%s namespace=%s name=%s" % (_type, prefix, _name))
 
     return sink

@@ -14,6 +14,8 @@
 
 __author__ = 'Rajiv Mayani'
 
+import logging
+
 from datetime import datetime
 from time import localtime, strftime
 
@@ -30,6 +32,7 @@ from Pegasus.service.dashboard.dashboard import Dashboard, NoWorkflowsFoundError
 from Pegasus.service.dashboard.queries import MasterDBNotFoundError
 from Pegasus.service.dashboard import dashboard_routes
 
+log = logging.getLogger(__name__)
 
 @dashboard_routes.route('/')
 def redirect_to_index():
@@ -653,21 +656,25 @@ def page_not_found(error):
 
 @dashboard_routes.errorhandler(MasterDBNotFoundError)
 def master_database_missing(error):
+    log.exception(error)
     return render_template('error/master_database_missing.html')
 
 
 @dashboard_routes.errorhandler(StampedeDBNotFoundError)
 def stampede_database_missing(error):
+    log.exception(error)
     return render_template('error/stampede_database_missing.html')
 
 
 @dashboard_routes.errorhandler(DBAdminError)
 def database_migration_error(error):
+    log.exception(error)
     return render_template('error/database_migration_error.html')
 
 """
 @dashboard_routes.errorhandler(ServiceError)
 def error_response(error):
+    log.exception(error)
     if request.is_xhr:
         return json.dumps({
             'code': error.message.code,
@@ -679,5 +686,6 @@ def error_response(error):
 
 @dashboard_routes.errorhandler(Exception)
 def catch_all(error):
+    log.exception(error)
     return render_template('error/catch_all.html')
 """

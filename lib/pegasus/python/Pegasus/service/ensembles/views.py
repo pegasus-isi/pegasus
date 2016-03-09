@@ -6,7 +6,7 @@ from flask import g, url_for, make_response, request, send_file, json
 
 from Pegasus.db import connection
 from Pegasus.service.ensembles import emapp, api, auth
-from Pegasus.db.modules.ensembles import EMError, Ensembles, EnsembleWorkflowStates
+from Pegasus.db.ensembles import EMError, Ensembles, EnsembleWorkflowStates
 
 log = logging.getLogger(__name__)
 

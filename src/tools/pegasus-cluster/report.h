@@ -21,23 +21,12 @@
 #include <time.h>
 #include <sys/resource.h>
 
-extern
-int
-find_application( char* argv[] );
 /* purpose: find start of argv excluding kickstart
  * paramtr: argv (IN): invocation argument vector
  * returns: start of argv. Returns 0 if unsure.
  */
+extern int find_application(char* argv[]);
 
-extern
-ssize_t
-report( int progress, double start, double duration
-      , int status, char* argv[], struct rusage* use
-      , const char* special 
-#ifndef MONOTONICALLY_INCREASING
-      , size_t taskid
-#endif /* MONOTONICALLY_INCREASING */
-      );
 /* purpose: report what has just finished.
  * paramtr: progress (IN): file description open for writing
  *          start (IN): start time (no millisecond resolution)
@@ -49,5 +38,8 @@ report( int progress, double start, double duration
  *          taskid (IN): task number from input file. 
  * returns: number of bytes written onto "progress"
  */
+extern ssize_t report(int progress, double start, double duration,
+                      int status, char* argv[], struct rusage* use,
+                      const char* special, size_t taskid);
 
 #endif /* _REPORT_H */

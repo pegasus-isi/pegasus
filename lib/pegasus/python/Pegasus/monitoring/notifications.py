@@ -129,11 +129,10 @@ class Notifications:
         unless there are already too many notifications running in the
         system.
         """
-        logger.info("active notifications %d, pending notifications: %d"
-                    % (len(self._active_notifications), len(self._pending_notifications)))
 
         # Step 1: Look at existing notifications
         if len(self._active_notifications) > 0:
+            logger.info("active notifications: %d" % len(self._active_notifications))
             # We have active notifications, let's check on their statuses
             my_notif_index = 0
             while my_notif_index < len(self._active_notifications):
@@ -229,7 +228,7 @@ class Notifications:
         while len(self._pending_notifications) > 0:
             # Ok we have notifications to service...
             # print "pending notifications: %s" % (len(self._pending_notifications))
-            logger.debug("pending notifications: %s" % (len(self._pending_notifications)))
+            logger.info("pending notifications: %s" % (len(self._pending_notifications)))
 
             # Check if we have reached the maximum number of concurrent notifications
             if len(self._active_notifications) > self._max_parallel_notifications:

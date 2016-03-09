@@ -46,6 +46,7 @@ my $python_externals_dir = File::Spec->catdir( $base_dir, $lib, 'pegasus', 'exte
 my $php_dir	= File::Spec->catdir( $base_dir, $lib, 'pegasus', 'php' );
 my $js_dir	= File::Spec->catdir( $base_dir, $lib, 'pegasus', 'javascript' );
 my $schema_dir	= File::Spec->catdir( $share_dir, 'schema' );
+my $r_dir       = join("", sort(<$share_dir/r/*.tar.gz>));
 my $extra_classpath = '';
 
 # for development - running out of a source checkout
@@ -92,6 +93,7 @@ Arguments:
  --python             Print the directory to include into your PYTHONPATH.
  --python-externals   Print the directory to the external Python libraries.
  --schema             Print the directory containing schemas.
+ --r                  Print the path to the R DAX API source package.
  --classpath          Builds a classpath containing the Pegasus jars.
  --noeoln             Do not produce a end-of-line after output. This is useful
                       when being called from non-shell backticks in scripts.
@@ -315,6 +317,11 @@ EOF
         print $python_externals_dir;
         print "\n" if $eoln; 
         exit 0; 
+    }
+    , 'r' => sub {
+        print $r_dir;
+        print "\n" if $eoln;
+        exit 0;
     }
     , 'schema' => sub {
         print $schema_dir;

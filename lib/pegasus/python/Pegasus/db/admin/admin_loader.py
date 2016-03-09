@@ -4,6 +4,7 @@ import logging
 import datetime
 import glob
 import shutil
+import subprocess
 import time
 import sys
 import warnings
@@ -25,8 +26,9 @@ COMPATIBILITY = {
     '4.3.0': 1, '4.3.1': 1, '4.3.2': 1,
     '4.4.0': 2, '4.4.1': 2, '4.4.2': 2,
     '4.5.0': 4, '4.5.1': 4, '4.5.2': 4, '4.5.3': 4, '4.5.4': 5,
-    '4.6.0': 6,
-    '4.6.0panorama': 6
+    '4.6.0': 6, '4.6.1': 6,
+    '4.7.0': 6,
+    '4.7.0panorama': 6
 }
 #-------------------------------------------------------------------
 
@@ -77,7 +79,7 @@ def db_create(dburi, engine, db, pegasus_version=None, force=False, verbose=True
 
     v = -1
     if len(table_names) == 0:
-        engine.execute(db_version.insert(), version=CURRENT_DB_VERSION, version_number=CURRENT_DB_VERSION,
+        engine.execute(db_version.insert(), version=CURRENT_DB_VERSION, version_number=int(CURRENT_DB_VERSION),
                 version_timestamp=datetime.datetime.now().strftime("%s"))
         if verbose:
             print "Created Pegasus database in: %s" % dburi
@@ -393,6 +395,7 @@ def _check_version(db, version):
 def _update_version(db, version):
     v = DBVersion()
     v.version = version
+    v.version_number = int(version)
     v.version_timestamp = datetime.datetime.now().strftime("%s")
     if db:
         db.add(v)
@@ -400,7 +403,12 @@ def _update_version(db, version):
 
 
 def _backup_db(db):
+    """
+    Create a copy of the database (SQLite), or create a dump of the database into a .sql file (MySQL).
+    :param db: DB session object
+    """
     url = db.get_bind().url
+    # Backup SQLite databases
     if url.drivername == "sqlite":
         db_list = glob.glob(url.database + ".[0-9][0-9][0-9]")
         max_index = -1
@@ -411,7 +419,25 @@ def _backup_db(db):
         dest_file = url.database + ".%03d" % (max_index + 1)
         shutil.copy(url.database, dest_file)
         log.debug("Created backup database file at: %s" % dest_file)
-        pass
+
+    # Backup MySQL databases
+    elif url.drivername == "mysql":
+        log.info("Backing up MySQL database. This operation may take a while.")
+        dest_file = "%s-%s.sql" % (url.database, time.strftime('%Y%m%d-%H%M%S'))
+        # mysqldump command preparation
+        command = "mysqldump"
+        if url.username:
+            command += " -u %s" % url.username
+        if url.host:
+            command += " -h %s" % url.host
+        if url.password:
+            command += " --password=%s" % url.password
+        command += " %s > %s" % (url.database, dest_file)
+        try:
+            subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError, e:
+            raise DBAdminError(e.output)
+        log.debug("Created backup database file at: %s" % dest_file)
 
 
 def _verify_tables(db):

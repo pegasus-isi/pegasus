@@ -81,10 +81,17 @@ class Workflow(object):
 
     def configure(self):
         # The tutorial is a special case
-        if yesno("Do you want to generate the tutorial workflow?", "n"):
+        if yesno("Do you want to generate a tutorial workflow?", "n"):
             self.config = "tutorial"
             self.daxgen = "tutorial"
             self.sitename = "condorpool"
+            self.tutorial = optionlist("What tutorial workflow do you want?", [
+                ("Process", "process"),
+                ("Pipeline", "pipeline"),
+                ("Split", "split"),
+                ("Merge", "merge"),
+                ("Diamond", "diamond")
+            ])
             return
 
         # Determine which DAX generator API to use
@@ -108,17 +115,22 @@ class Workflow(object):
         self.mkdir("output")
 
         if self.config == "tutorial":
-            self.copy_template("tutorial/tc.txt", "tc.txt")
-            self.copy_template("tutorial/daxgen.py", "daxgen.py")
+            self.copy_template("%s/tc.txt" % self.tutorial, "tc.txt")
+            self.copy_template("%s/daxgen.py" % self.tutorial, "daxgen.py")
 
-            # Executables used by the tutorial
-            self.mkdir("bin")
-            self.copy_template("tutorial/transformation.py", "bin/preprocess", mode=0755)
-            self.copy_template("tutorial/transformation.py", "bin/findrange", mode=0755)
-            self.copy_template("tutorial/transformation.py", "bin/analyze", mode=0755)
+            if self.tutorial == "diamond":
 
-            # Tutorial input file
-            self.copy_template("tutorial/f.a", "input/f.a")
+                # Executables used by the diamond workflow
+                self.mkdir("bin")
+                self.copy_template("diamond/transformation.py", "bin/preprocess", mode=0755)
+                self.copy_template("diamond/transformation.py", "bin/findrange", mode=0755)
+                self.copy_template("diamond/transformation.py", "bin/analyze", mode=0755)
+
+                # Diamond input file
+                self.copy_template("diamond/f.a", "input/f.a")
+            elif self.tutorial == "split":
+                # Split workflow input file
+                self.copy_template("split/pegasus.html", "input/pegasus.html")
         else:
             self.copy_template("tc.txt", "tc.txt")
             if self.daxgen == "python":

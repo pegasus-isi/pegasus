@@ -224,6 +224,10 @@ static void helpMe(const AppInfo* run) {
             " -m I\tEnable an online monitoring with a I-seconds interval between measurements.\n"
             "     \tWorks only with the -Z option.\n"
 #endif
+            /* NOTE: If you add another flag to kickstart, please update
+             * the argument skipping logic in
+             * pegasus-cluster/report.c:find_application()
+             */
            );
 
     /* avoid printing of results in exit handler */
@@ -647,6 +651,10 @@ int main(int argc, char* argv[]) {
                 appinfo.killTimeout = K;
 
                 break;
+                /* NOTE: If you add another flag to kickstart, please update
+                 * the argument skipping logic in
+                 * pegasus-cluster/report.c:find_application()
+                 */
             case '-':
                 keeploop = 0;
                 break;

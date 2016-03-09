@@ -24,6 +24,7 @@
 #ifdef HAS_PAPI
 #include <papi.h>
 #endif
+#include <fnmatch.h>
 
 #include "interpose.h"
 #include "interpose_monitoring.h"
@@ -149,7 +150,7 @@ static int topen() {
 
     char *kickstart_prefix = getenv("KICKSTART_PREFIX");
     if (kickstart_prefix == NULL) {
-        printerr("Unable to open trace file: KICKSTART_PREFIX not set in environment");
+        printerr("Unable to open trace file: KICKSTART_PREFIX not set in environment\n");
         return -1;
     }
 
@@ -231,7 +232,7 @@ static void init_descriptors() {
     /* For each open descriptor, initialize the entry */
     DIR *fddir = opendir("/proc/self/fd");
     if (fddir == NULL) {
-        printerr("Unable to open /proc/self/fd: %s", strerror(errno));
+        printerr("Unable to open /proc/self/fd: %s\n", strerror(errno));
         goto unlock;
     }
 
@@ -249,7 +250,11 @@ static void init_descriptors() {
         char linkpath[BUFSIZ];
         int size = readlink(path, linkpath, BUFSIZ);
         if (size < 0) {
-            printerr("Unable to readlink %s: %s", path, strerror(errno));
+            printerr("Unable to readlink %s: %s\n", path, strerror(errno));
+            continue;
+        }
+        if (size == BUFSIZ) {
+            printerr("Unable to readlink %s: Real path is too long\n", path);
             continue;
         }
         linkpath[size] = '\0';
@@ -411,6 +416,10 @@ void _interpose_read_exe(char *exe, int maxsize) {
         exe[0] = '\0';
         return;
     }
+    if (size == BUFSIZ) {
+        printerr("Unable to readlink /proc/self/exe: Real path is too long\n");
+        return;
+    }
     exe[size] = '\0';
     return;
 
@@ -460,23 +469,6 @@ static void read_exe() {
 /* Return 1 if line begins with tok */
 static int startswith(const char *line, const char *tok) {
     return strstr(line, tok) == line;
-}
-
-/* Return 1 if line ends with tok */
-static int endswith(const char *line, const char *tok) {
-    int n = strlen(line);
-    int m = strlen(tok);
-    if (n < m) {
-        return 0;
-    }
-
-    for(int i=0; i<m; i++) {
-        if (line[n-i-1] != tok[m-i-1]) {
-            return 0;
-        }
-    }
-
-    return 1;
 }
 
 /* Read memory information from /proc/self/status */
@@ -600,6 +592,27 @@ static void read_io() {
     _interpose_fclose_untraced(f);
 }
 
+static int path_matches_patterns(const char *path, const char *patterns) {
+    char buf[BUFSIZ];
+    strncpy(buf, patterns, BUFSIZ);
+
+    char *sav;
+    char *token = strtok_r(buf, ":", &sav);
+    while (token != NULL) {
+        int result = fnmatch(token, path, 0);
+        if (result == 0) {
+            return 1;
+        } else if (result == FNM_NOMATCH) {
+            /* No match, do nothing */
+        } else {
+            printerr("fnmatch('%s', '%s', 0) failed: %s\n", token, path, strerror(errno));
+        }
+        token = strtok_r(NULL, ":", &sav);
+    }
+
+    return 0;
+}
+
 /* Determine which paths should be traced */
 static int should_trace(int fd, const char *path) {
     /* Trace all files */
@@ -607,17 +620,37 @@ static int should_trace(int fd, const char *path) {
         return 1;
     }
 
-    /* Don't trace stdio */
-    if (fd <= 2) {
-        return 0;
-    }
-
-    /* Trace files in the current working directory */
+    /* Only trace files in the current working directory */
     if (getenv("KICKSTART_TRACE_CWD") != NULL) {
         char *wd = getcwd(NULL, 0);
         int incwd = startswith(path, wd);
         free(wd);
         return incwd;
+    }
+
+    /* Ignore a list of patterns */
+    char *ignore = getenv("KICKSTART_TRACE_IGNORE");
+    if (ignore != NULL) {
+        if (path_matches_patterns(path, ignore)) {
+            return 0;
+        } else {
+            return 1;
+        }
+    }
+
+    /* Match a list of patterns */
+    char *match = getenv("KICKSTART_TRACE_MATCH");
+    if (match != NULL) {
+        if (path_matches_patterns(path, match)) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    /* Don't trace stdio */
+    if (fd <= 2) {
+        return 0;
     }
 
     /* Don't trace the trace log! */
@@ -633,24 +666,6 @@ static int should_trace(int fd, const char *path) {
         return 0;
     }
     if (s.st_mode & S_IFDIR) {
-        return 0;
-    }
-
-    /* Skip files with known extensions that we don't care about */
-    if (endswith(path, ".py") ||
-        endswith(path, ".pyc") ||
-        endswith(path, ".jar")) {
-        return 0;
-    }
-
-    /* Skip all the common system paths, which we don't care about */
-    if (startswith(path, "/lib") ||
-        startswith(path, "/usr") ||
-        startswith(path, "/dev") ||
-        startswith(path, "/etc") ||
-        startswith(path, "/proc")||
-        startswith(path, "/sys") ||
-        startswith(path, "/selinux")) {
         return 0;
     }
 

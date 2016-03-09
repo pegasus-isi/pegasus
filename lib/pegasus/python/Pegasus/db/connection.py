@@ -75,19 +75,17 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
     _validate(dburi)
 
     try:
-        log.info("Attempting to connect to: %s" % dburi)
+        log.debug("Connecting to: %s" % dburi)
         # parse connection properties
         connect_args = _parse_props(dburi, props, db_type, connect_args)
 
         engine = create_engine(dburi, echo=echo, pool_recycle=True, connect_args=connect_args)
         engine.connect()
-        log.info("Connected successfully established.")
 
     except exc.OperationalError, e:
         if "mysql" in dburi and "unknown database" in str(e).lower():
             raise ConnectionError("MySQL database should be previously created: %s (%s)" % (e.message, dburi))
         raise ConnectionError("%s (%s)" % (e.message, dburi))
-    
     except Exception, e:
         raise ConnectionError("%s (%s)" % (e.message, dburi))
 
@@ -119,7 +117,7 @@ def connect_by_submitdir(submit_dir, db_type, config_properties=None, echo=False
 
     
 def connect_by_properties(config_properties, db_type, cl_properties=None, echo=False, schema_check=True, create=False,
-                          pegasus_version=None, force=False):
+                          pegasus_version=None, force=False, verbose=True):
     """ Connect to the database from properties file and database type """
     props = properties.Properties()
     props.new(config_file=config_properties)
@@ -127,7 +125,7 @@ def connect_by_properties(config_properties, db_type, cl_properties=None, echo=F
 
     dburi = url_by_properties(config_properties, db_type, props=props)
     return connect(dburi, echo, schema_check, create=create, pegasus_version=pegasus_version, force=force,
-                   db_type=db_type, props=props)
+                   db_type=db_type, props=props, verbose=verbose)
 
 
 def url_by_submitdir(submit_dir, db_type, config_properties=None, top_dir=None, cl_properties=None):
@@ -229,7 +227,7 @@ def connect_to_master_db(user=None):
 @event.listens_for(Engine, "connect")
 def _set_sqlite_pragma(conn, record):
     if isinstance(conn, SQLite3Connection):
-        log.debug("Turning on foreign keys")
+        log.trace("Turning on foreign keys")
         cursor = conn.cursor()
         cursor.execute("PRAGMA foreign_keys=ON;")
         cursor.close()

@@ -4,18 +4,15 @@ import logging
 
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import DBAdminError
-from Pegasus.db.modules import SQLAlchemyInit
 from Pegasus.db.schema import *
 from Pegasus.db.errors import StampedeDBNotFoundError
 
 # Main stats class.
-class StampedeWorkflowStatistics(SQLAlchemyInit):
+class StampedeWorkflowStatistics(object):
     def __init__(self, connString=None, expand_workflow=True):
-        if connString is None:
-            raise ValueError("connString is required")
         self.log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
         try:
-            SQLAlchemyInit.__init__(self, connString)
+            self.session = connection.connect(connString)
         except (connection.ConnectionError, DBAdminError), e:
             self.log.exception(e)
             raise StampedeDBNotFoundError
@@ -542,7 +539,7 @@ class StampedeWorkflowStatistics(SQLAlchemyInit):
 
     def close(self):
         self.log.debug('close')
-        self.disconnect()
+        self.session.close()
 
     def set_job_filter(self, filter='all'):
         modes = ['all', 'nonsub', 'subwf', 'dax', 'dag', 'compute', 'stage-in-tx',

@@ -95,16 +95,13 @@ class Workflow:
 
         try:
             # Send event to corresponding sink
-            logger.debug( "Sending record to DB %s,%s" %(event, kwargs))
+            logger.trace("Sending record to DB %s, %s", event, kwargs)
             self._sink.send(event, kwargs)
-        except:
+        except Exception, e:
             # Error sending this event... disable the sink from now on...
-            logger.warning("NL-LOAD-ERROR --> %s - %s" % (self._wf_uuid,
-                                                          ((self._dax_label or "unknown") +
-                                                           "-" + (self._dax_index or "unknown"))))
-            logger.warning("error sending event: %s --> %s" % (event, kwargs))
-            logger.warning(traceback.format_exc())
-            logger.error( "Disabling database population for workflow %s in directory %s" %(self._wf_uuid, self._submit_dir or "unknown"))
+            logger.warning("error sending event for %s: %s, %s", self._wf_uuid, event, kwargs)
+            logger.exception(e)
+            logger.error("Disabling database population for workflow %s in directory %s", self._wf_uuid, self._submit_dir or "unknown")
             self._database_disabled = True
 
     def output_to_dashboard_db(self, event, kwargs):
@@ -589,7 +586,7 @@ class Workflow:
         # Send sub-workflow event to database
         self.output_to_db("xwf.map.subwf_job", kwargs)
 
-    def db_send_wf_state(self, state):
+    def db_send_wf_state(self, state, timestamp=None):
         """
         This function sends to the DB information about the current
         workflow state to both the stampede database and dashboard database
@@ -601,11 +598,14 @@ class Workflow:
         if state is None:
             return
 
+        if timestamp is None:
+            timestamp = self._current_timestamp
+
         # Start empty
         kwargs = {}
         # Make sure we include the wf_uuid
         kwargs["xwf__id"] = self._wf_uuid
-        kwargs["ts"] = self._current_timestamp
+        kwargs["ts"] = timestamp
         # Always decrement the restart count by 1
         kwargs["restart_count"] = self._restart_count - 1
         if state == "end":
@@ -640,12 +640,14 @@ class Workflow:
                 # we have two consecutive start events from DAGMAN log
                 # can happen in case of power failure or condor crashing.
                 # we insert a DAGMAN FINISHED event PM-723
+                # PM-1062 subtract 1 second from the timestamp
+                prev_wf_end_timestamp = self._current_timestamp - 1
                 logger.warning( "Consecutive workflow START events detected for workflow with condor id %s running in directory %s ." %
                                 ( self._dagman_condor_id, self._submit_dir ) +
-                                 " Inserting Workflow END event with timestamp %s" %( self._current_timestamp ))
+                                " Inserting Workflow END event with timestamp %s" %( prev_wf_end_timestamp ))
                 self._dagman_exit_code = UNKNOWN_FAILURE_CODE
-                self._JSDB.write("%d INTERNAL *** DAGMAN_FINISHED %s ***\n" % (self._current_timestamp, self._dagman_exit_code))
-                self.db_send_wf_state( "end" )
+                self._JSDB.write("%d INTERNAL *** DAGMAN_FINISHED %s ***\n" % (prev_wf_end_timestamp, self._dagman_exit_code))
+                self.db_send_wf_state(  "end", prev_wf_end_timestamp )
 
 
         if state == "start":
@@ -943,11 +945,6 @@ class Workflow:
                     self._enable_notifications = False
 
         # Say hello.... add start information to JSDB
-        my_now = int(time.time())
-        print "%d - %s - MONITORD_STARTED  - %s - %s" % (my_now,
-                                                         utils.isodate(my_now), self._wf_uuid,
-                                                         ((self._dax_label or "unknown") +
-                                                          "-" + (self._dax_index or "unknown")))
         self._JSDB.write("%d INTERNAL *** MONITORD_STARTED ***\n" % (self._workflow_start))
 
         # Write monitord.started file
@@ -956,6 +953,7 @@ class Workflow:
         else:
             my_start_file = os.path.join(self._output_dir, "%s-%s" % (self._wf_uuid, MONITORD_START_FILE))
 
+        my_now = int(time.time())
         utils.write_pid_file(my_start_file, my_now)
 
         # Remove monitord.done file, if it is there
@@ -1076,10 +1074,6 @@ class Workflow:
             my_recover_file = os.path.join(self._output_dir, "%s-%s" % (self._wf_uuid,
                                                                     MONITORD_RECOVER_FILE))
 
-        print "%d - %s - MONITORD_FINISHED - %s - %s" % (my_workflow_end,
-                                                         utils.isodate(my_workflow_end), self._wf_uuid,
-                                                         ((self._dax_label or "unknown") +
-                                                          "-" + (self._dax_index or "unknown")))
         self._JSDB.write("%d INTERNAL *** MONITORD_FINISHED %d ***\n" % (my_workflow_end, self._monitord_exit_code))
         self._JSDB.close()
 
@@ -1612,6 +1606,7 @@ class Workflow:
             else:
                 if my_job._main_job_exitcode is not None:
                     kwargs["exitcode"] = str(my_job._main_job_exitcode)
+
             if "name" in invocation_record:
                 kwargs["executable"] = invocation_record["name"]
             else:
@@ -1635,6 +1630,10 @@ class Workflow:
                 kwargs["level"] = "Error"
         else:
             kwargs["level"] = "Error"
+
+        # sanity check and log error about missing exitcode
+        if kwargs["exitcode"] is None:
+            logger.error( "Exitcode not set for task %s", kwargs )
 
         # Send job event to database
         self.output_to_db("inv.end", kwargs)
@@ -1776,9 +1775,9 @@ class Workflow:
             # Parsing the output file resulted in some info... let's parse it
 
             # Add job information to the Job class.
-            logger.info( "Starting extraction of job_info from job output file %s " %my_job_output_fn )
+            logger.debug("Starting extraction of job_info from job output file %s " % my_job_output_fn)
             my_invocation_found = my_job.extract_job_info(self._run_dir, my_output)
-            logger.info( "Completed extraction of job_info from job output file %s " %my_job_output_fn )
+            logger.debug("Completed extraction of job_info from job output file %s " % my_job_output_fn)
 
             if my_invocation_found:
                 # Loop through all records
@@ -2098,7 +2097,7 @@ class Workflow:
                                             my_job._site_name or '-',
                                             walltime or '-',
                                             job_submit_seq or '-')
-        logger.info("new state %s" % (my_line))
+        logger.debug("new state: %s" % (my_line))
 
         # Prepare for atomic append
         self._JSDB.write("%s\n" % (my_line))
@@ -2145,6 +2144,13 @@ class Workflow:
             self.db_send_task_start(my_job, "PRE_SCRIPT")
             self.db_send_task_end(my_job, "PRE_SCRIPT")
         elif job_state == "POST_SCRIPT_SUCCESS" or job_state == "POST_SCRIPT_FAILURE":
+
+            if my_job._main_job_exitcode is None:
+                #PM-1070 set the main exitcode to the postscript exitcode
+                #No JOB_TERMINATED OR JOB_SUCCESS OR JOB_FAILURE for this job instance
+                my_job._main_job_exitcode = my_job._post_script_exitcode
+                logger.warning( "Set main job exitcode for %s to post script failure code %s" %(my_job._exec_job_id, my_job._post_script_exitcode))
+
             #PM-793 we parse the job.out and .err files when postscript finishes
             self.parse_job_output(my_job, job_state)
 
@@ -2391,7 +2397,6 @@ class Workflow:
             my_retry = 0
 
         wf_retries[my_dagman_dir] = my_retry
-        #print "*** dagman dir %s retry value %s " %(my_dagman_dir,my_retry)
 
         # Compose directory... assuming replanning mode
         my_retry_dir = my_dagman_dir + ".%03d" % (my_retry)

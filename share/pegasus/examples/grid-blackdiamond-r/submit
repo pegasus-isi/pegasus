@@ -1,0 +1,76 @@
+#!/bin/bash
+
+set -e
+
+
+##################################################################################
+#
+#  Settings
+#
+CLUSTER_HOSTNAME="obelix.isi.edu"
+CLUSTER_SCHEDULER="condor"
+CLUSTER_WORK_DIR="/nfs/ccg4/scratch-6-months-purge"
+CLUSTER_PEGASUS_HOME="/ccg/software/pegasus/dev/trunk"
+CLUSTER_GLOBUS_LOCATION="/ccg/software/globus/default"
+##################################################################################
+
+
+TOPDIR=`pwd`
+
+# figure out where Pegasus is installed
+export PEGASUS_HOME=`which pegasus-plan | sed 's:/bin/pegasus-plan::'`
+if [ "x$PEGASUS_HOME" = "x" ]; then
+    echo "Unable to determine location of your Pegasus install"
+    echo "Please make sure pegasus-plan is in your path"
+    exit 1
+fi 
+
+if [ "x$GLOBUS_LOCATION" = "x" ]; then
+    echo "Please set GLOBUS_LOCATION to the location of your Pegasus install"
+    exit 1
+fi 
+
+# generate the input file
+echo "This is sample input to KEG" >f.a
+
+# generate the dax
+type Rscript >/dev/null 2>&1 || { echo >&2 "R is not available."; exit 1; }
+Rscript ./blackdiamond.R $CLUSTER_PEGASUS_HOME > blackdiamond.dax
+
+# create the site catalog
+cat >sites.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
+
+    <site  handle="local" arch="x86_64" os="LINUX">
+        <directory type="shared-scratch" path="$TOPDIR/scratch">
+            <file-server operation="all" url="file://$TOPDIR/scratch"/>
+        </directory>
+        <directory type="local-storage" path="$TOPDIR/outputs">
+            <file-server operation="all" url="file://$TOPDIR/outputs"/>
+        </directory>
+        <profile namespace="env" key="GLOBUS_LOCATION" >$GLOBUS_LOCATION</profile>
+    </site>
+
+    <site  handle="TestCluster" arch="x86_64" os="LINUX">
+        <grid  type="gt5" contact="$CLUSTER_HOSTNAME/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+        <grid  type="gt5" contact="$CLUSTER_HOSTNAME/jobmanager-$CLUSTER_SCHEDULER" scheduler="unknown" jobtype="compute"/>
+        <directory type="shared-scratch" path="$CLUSTER_WORK_DIR">
+            <file-server operation="all" url="gsiftp://$CLUSTER_HOSTNAME/$CLUSTER_WORK_DIR"/>
+        </directory>
+        <profile namespace="env" key="PEGASUS_HOME" >$CLUSTER_PEGASUS_HOME</profile>
+        <profile namespace="env" key="GLOBUS_LOCATION" >$CLUSTER_GLOBUS_LOCATION</profile>
+    </site>
+
+</sitecatalog>
+EOF
+
+# plan and submit the  workflow
+pegasus-plan \
+    --conf pegasusrc \
+    --sites TestCluster \
+    --output-site local \
+    --dir work \
+    --dax blackdiamond.dax \
+    --submit
+

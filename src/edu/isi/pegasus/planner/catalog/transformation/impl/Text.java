@@ -19,6 +19,7 @@ package edu.isi.pegasus.planner.catalog.transformation.impl;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.common.util.Boolean;
+import edu.isi.pegasus.common.util.FileUtils;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.util.VariableExpander;
 
@@ -937,7 +938,23 @@ public class Text extends Abstract
         }
 
     }
+    
+    /**
+     * Returns the file source.
+     * 
+     * @return the file source if it exists , else null
+     */
+    public java.io.File getFileSource(){
+        if( mTCFile != null ){
+            java.io.File f = new  java.io.File( mTCFile );
+            if( f.canRead() ){
+                return f;
+            }
+        }
+        return null;
+    }
 
+    
 
     /**
      * Logs the message to a logging stream. Currently does not log to any stream.

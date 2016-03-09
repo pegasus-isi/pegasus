@@ -46,6 +46,21 @@ function pegasus_lite_internal_wp_shipped()
     # was the job shipped with a Pegasus worker package?
     if ls $pegasus_lite_start_dir/pegasus-worker-*.tar.gz >/dev/null 2>&1; then
         pegasus_lite_log "The job contained a Pegasus worker package"
+    
+        if [ "X$pegasus_lite_enforce_strict_wp_check" = "Xtrue" ]; then
+            # make sure the provided worker package provided is for the this platform
+            system=$(pegasus_lite_get_system)
+            if [ $? = 0 ]; then
+                wp_name=`(cd $pegasus_lite_start_dir && ls pegasus-worker-*.tar.gz | head -n 1) 2>/dev/null`
+                if ! (echo "x$wp_name" | grep "$system") >/dev/null 2>&1 ; then
+                    pegasus_lite_log "Warning: worker package $wp_name does not seem to match the system $system"
+                    return 1
+                fi 
+            fi
+        else
+            pegasus_lite_log "Skipping sanity check of included worker package because pegasus.transfer.worker.package.strict=$pegasus_lite_enforce_strict_wp_check"
+        fi
+
         tar xzf $pegasus_lite_start_dir/pegasus-worker-*.tar.gz
         rm -f $pegasus_lite_start_dir/pegasus-worker-*.tar.gz
         unset PEGASUS_HOME
@@ -72,7 +87,7 @@ function pegasus_lite_internal_wp_in_env()
         detected_pegasus_bin=`dirname $detected_pegasus_bin`
 
         # does the version match?
-        if $detected_pegasus_bin/pegasus-config --version 2>/dev/null | grep -E "^${pegasus_lite_version_major}\.${pegasus_lite_version_minor}\." >/dev/null 2>/dev/null; then
+        if $detected_pegasus_bin/pegasus-config --version 2>/dev/null | grep -E "${pegasus_lite_version_major}\.${pegasus_lite_version_minor}\.${pegasus_lite_version_patch}\$" >/dev/null 2>/dev/null; then
             pegasus_lite_log "Using existing Pegasus binaries in $detected_pegasus_bin"
             return 0
         else
@@ -92,6 +107,11 @@ function pegasus_lite_internal_wp_in_env()
 function pegasus_lite_internal_wp_download() 
 {
     # fall back - download a worker package from download.pegasus.isi.edu
+
+    if [ "X$pegasus_lite_version_allow_wp_auto_download" != "Xtrue" ]; then
+        pegasus_lite_log "Not downloading a worker package because pegasus.transfer.worker.package.autodownload=$pegasus_lite_version_allow_wp_auto_download"
+        return 1
+    fi
 
     system=$(pegasus_lite_get_system)
     if [ $? != 0 ]; then
@@ -256,7 +276,7 @@ function pegasus_lite_get_system()
     # PM-781
     # This function is a replacement of the old release-tools/getsystem
     # and was moved here because we need the getsystem functionallity not
-    # only at build time, but at runtime fromt he jobs so that the jobs
+    # only at build time, but at runtime from the jobs so that the jobs
     # can determine what worker package is required.
 
     # The goal is to get a triple identify the system:

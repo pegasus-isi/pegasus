@@ -639,12 +639,12 @@ pegasus.data.configuration    HTCondorio</programlisting>
     </note>
 
     <tip>
-      <para>This guide covers PBS and SGE, but glite also works with other
+      <para>This guide covers PBS, SGE and Moab, but glite also works with other
       PBS-like batch systems, including LSF, SLURM, and others. If you need
       help configuring Pegasus and HTCondor to work with one of these systems,
       please contact pegasus-support@isi.edu. For the sake of brevity, the
       text below will say "PBS", but you should read that as "PBS or PBS-like
-      system such as SGE, LSF, SLURM and others".</para>
+      system such as SGE, Moab, LSF, SLURM and others".</para>
     </tip>
 
     <para>Glite needs to be able to talk directly with the batch system
@@ -668,16 +668,12 @@ pegasus.data.configuration    HTCondorio</programlisting>
       host.</para>
     </tip>
 
-    <para>In either case, you need to make a small modification to the
-    HTCondor glite installation that will be used to submit jobs to the PBS
-    system. You need to copy the
-    <literal>pbs_local_submit_attributes.sh</literal> and
-    <literal>sge_local_submit_attributes.sh</literal> files distributed with
-    Pegasus in <literal>share/pegasus/htcondor/glite</literal> to the
-    <literal>libexec/condor/glite/bin</literal> directory of the HTCondor
-    installation on the host that will submit jobs to PBS. These scripts
-    translate the profiles associated with the job into the correct job
-    requirements for the PBS system.</para>
+    <para>In either case, you need to modifiy the HTCondor glite installation
+    that will be used to submit jobs to the PBS system. To do this, run
+    the <literal>pegasus-configure-glite</literal> command. This command will
+    install all the required scripts to map Pegasus profiles to batch-system
+    specific job attributes, and add support for Moab. You may need to run it
+    as root depending on how you installed Condor.</para>
 
     <para>In order to configure a workflow to use glite you need to create an
     entry in your site catalog for the PBS cluster and set the following
@@ -693,8 +689,8 @@ pegasus.data.configuration    HTCondorio</programlisting>
       <listitem>
         <para><emphasis role="bold">condor</emphasis> profile <emphasis
         role="bold">grid_resource</emphasis> with value set to <emphasis
-        role="bold">pbs</emphasis> or <emphasis
-        role="bold">sge</emphasis>.</para>
+        role="bold">batch pbs</emphasis> or <emphasis role="bold">batch sge</emphasis>
+        or <emphasis role="bold">batch moab</emphasis>.</para>
       </listitem>
     </orderedlist>
 
@@ -727,7 +723,7 @@ pegasus.data.configuration    HTCondorio</programlisting>
 
         &lt;profile namespace="pegasus" key="style" &gt;glite&lt;/profile&gt;
 
-        &lt;profile namespace="condor" key="grid_resource"&gt;pbs&lt;/profile&gt;
+        &lt;profile namespace="condor" key="grid_resource"&gt;batch pbs&lt;/profile&gt;
         &lt;profile namespace="pegasus" key="queue"&gt;batch&lt;/profile&gt;
         &lt;profile namespace="pegasus" key="runtime"&gt;30000&lt;/profile&gt;
     &lt;/site&gt;
@@ -745,9 +741,9 @@ pegasus.data.configuration    HTCondorio</programlisting>
     <literal>+remote_cerequirements</literal> expression for an HTCondor glite
     job based on the Pegasus profiles associated with the job. This expression
     is passed to glite and used by the
-    <literal>pbs_local_submit_attributes.sh</literal> or
-    <literal>sge_local_submit_attributes.sh</literal> script to generate the
-    correct PBS or SGE submit script. An example
+    <literal>*_local_submit_attributes.sh</literal> scripts installed by
+    <literal>pegasus-configure-glite</literal> to generate the
+    correct batch submit script. An example
     <literal>+remote_cerequirements</literal> classad expression in the
     HTCondor submit file looks like this:</para>
 
@@ -759,32 +755,26 @@ pegasus.data.configuration    HTCondorio</programlisting>
     through to the remote job.</para>
 
     <para>The following sections document the mapping of Pegasus profiles to
-    PBS and SGE job requirements as implemented by Pegasus, HTCondor, and
+    batch system job requirements as implemented by Pegasus, HTCondor, and
     glite.</para>
 
-    <section id="glite_pbs">
-      <title>Setting PBS job requirements</title>
+    <section id="glite_mappings">
+      <title>Setting job requirements</title>
 
-      <para>The PBS job requirements are constructed based on the following
+      <para>The job requirements are constructed based on the following
       profiles:</para>
 
       <table>
-        <title>Mapping of Pegasus Profiles to PBS Job Requirements</title>
+        <title>Mapping of Pegasus Profiles to Job Requirements</title>
 
-        <tgroup cols="4">
+        <tgroup cols="6">
           <thead>
             <row>
               <entry align="center">Profile Key</entry>
-
-              <entry align="center">Key in
-              <literal>+remote_cerequirements</literal>
-              classad<para>(Generated by Pegasus in the Condor Submit
-              File)</para></entry>
-
-              <entry>Corresponding PBS Parameter in qsub file<para>(Generated
-              by
-              <literal>pbs_local_submit_attributes.sh</literal>)</para></entry>
-
+              <entry align="center">Key in +remote_cerequirements</entry>
+              <entry>PBS Parameter</entry>
+              <entry>SGE Parameter</entry>
+              <entry>Moab Parameter</entry>
               <entry>Description</entry>
             </row>
           </thead>
@@ -792,116 +782,113 @@ pegasus.data.configuration    HTCondorio</programlisting>
           <tbody>
             <row>
               <entry>pegasus.cores</entry>
-
               <entry>CORES</entry>
-
               <entry>n/a</entry>
-
+              <entry>-pe ompi</entry>
+              <entry>n/a</entry>
               <entry>Pegasus uses cores to calculate either nodes or ppn. If
               cores and ppn are specified, then nodes is computed. If cores
               and nodes is specified, then ppn is computed. If both nodes and
               ppn are specified, then cores is ignored. The resulting values
-              for nodes and ppn are used to set the job requirements. If
-              neither cores nor ppn is specified, then no requirements are set
-              in the PBS submit script.</entry>
+              for nodes and ppn are used to set the job requirements for PBS
+              and Moab. If neither nodes nor ppn is specified, then no
+              requirements are set in the PBS or Moab submit script. For SGE,
+              how the processes are distributed over nodes depends on how the
+              parallel environment has been configured; it is set to 'ompi'
+              by default.</entry>
             </row>
 
             <row>
               <entry>pegasus.nodes</entry>
-
               <entry>NODES</entry>
-
               <entry>-l nodes</entry>
-
+              <entry>n/a</entry>
+              <entry>-l nodes</entry>
               <entry>This specifies the number of nodes that the job should
-              use.</entry>
+              use. This is not used for SGE.</entry>
             </row>
 
             <row>
               <entry>pegasus.ppn</entry>
-
               <entry>PROCS</entry>
-
               <entry>-l ppn</entry>
-
+              <entry>n/a</entry>
+              <entry>-l ppn</entry>
               <entry>This specifies the number of processors per node that the
-              job should use.</entry>
+              job should use. This is not used for SGE.</entry>
             </row>
 
             <row>
               <entry>pegasus.runtime</entry>
-
               <entry>WALLTIME</entry>
-
               <entry>-l walltime</entry>
-
+              <entry>-l h_rt</entry>
+              <entry>-l walltime</entry>
               <entry>This specifies the maximum runtime for the job in
               seconds. It should be an integer value. Pegasus converts it to
-              the "hh:mm:ss" format required by PBS. The value is rounded
-              up to the next whole minute.</entry>
+              the "hh:mm:ss" format required by the batch system. The value is
+              rounded up to the next whole minute.</entry>
             </row>
 
             <row>
               <entry>pegasus.memory</entry>
-
               <entry>PER_PROCESS_MEMORY</entry>
-
               <entry>-l pmem</entry>
-
+              <entry>-l h_vmem</entry>
+              <entry>-l pmem</entry>
               <entry>This specifies the maximum amount of physical memory used
               by any process in the job. For example, if the job runs four
               processes and each requires up to 2 GB (gigabytes) of memory,
-              then this value should be set to "2gb". The corresponding PBS
-              directive would be "#PBS -l pmem=2gb".</entry>
+              then this value should be set to "2gb" for PBS and Moab, and "2G"
+              for SGE. The corresponding PBS directive would be
+              "#PBS -l pmem=2gb".</entry>
             </row>
 
             <row>
               <entry>pegasus.project</entry>
-
               <entry>PROJECT</entry>
-
               <entry>-A</entry>
-
+              <entry>n/a</entry>
+              <entry>-A</entry>
               <entry>Causes the job time to be charged to or associated with a
-              particular project/account.</entry>
+              particular project/account. This is not used for SGE.</entry>
             </row>
 
             <row>
               <entry>pegasus.queue</entry>
-
               <entry>n/a</entry>
-
               <entry>-q</entry>
-
+              <entry>-q</entry>
+              <entry>-q</entry>
               <entry>This specifies the queue for the job. This profile does
               not have a corresponding value in
               <literal>+remote_cerequirements</literal>. Instead, Pegasus sets
               the <literal>batch_queue</literal> key in the Condor submit
-              file, which gLite/blahp translates into the appropriate PBS
-              requirement.</entry>
+              file, which gLite/blahp translates into the appropriate batch
+              system requirement.</entry>
             </row>
 
             <row>
               <entry>globus.totalmemory</entry>
-
               <entry>TOTAL_MEMORY</entry>
-
               <entry>-l mem</entry>
-
+              <entry>n/a</entry>
+              <entry>-l mem</entry>
               <entry>The total memory that your job requires. It is usually
-              better to just specify the pegasus.memory profile.</entry>
+              better to just specify the pegasus.memory profile. This is not
+              mapped for SGE.</entry>
             </row>
 
             <row>
               <entry>pegasus.glite.arguments</entry>
-
               <entry>EXTRA_ARGUMENTS</entry>
-
-              <entry>The value is passed through and added to the qsub file
-              prefixed only by "#PBS"</entry>
-
+              <entry>prefixed by "#PBS"</entry>
+              <entry>prefixed by "#?"</entry>
+              <entry>prefixed by "#MSUB"</entry>
               <entry>This specifies the extra arguments that must appear in
-              the local PBS generated script for a job. These requirements
+              the generated submit script for a job. The value of this
+              profile is added to the submit script prefixed by the batch
+              system-specific value. These requirements
               override any requirements specified using other profiles. This
               is useful when you want to pass through special options to the
               underlying batch system. For example, on the USC cluster we use
@@ -916,118 +903,8 @@ pegasus.data.configuration    HTCondorio</programlisting>
       </table>
 
       <tip>
-        <para>The above key mappings are supported in Pegasus 4.6.0 or
-        later.</para>
-      </tip>
-    </section>
-
-    <section id="glite_sge">
-      <title>Setting SGE job requirements</title>
-
-      <para>The SGE job requirements are constructed based on the following
-      profiles:</para>
-
-      <table>
-        <title>Mapping of Pegasus Profiles to SGE Job Requirements</title>
-
-        <tgroup cols="4">
-          <thead>
-            <row>
-              <entry align="center">Profile Key</entry>
-
-              <entry align="center">Key in
-              <literal>+remote_cerequirements</literal>
-              classad<para>(Generated by Pegasus in the Condor Submit
-              File)</para></entry>
-
-              <entry>SGE Parameter in qsub file<para>(Generated by
-              <literal>sge_local_submit_attributes.sh</literal>)</para></entry>
-
-              <entry>Description</entry>
-            </row>
-          </thead>
-
-          <tbody>
-            <row>
-              <entry>pegasus.cores</entry>
-
-              <entry>CORES</entry>
-
-              <entry>value passed to the parallel environment defined to be
-              used. By default,
-              <literal>sge_local_submit_attributes.sh</literal> sets the
-              parallel environment to "-pe ompi"</entry>
-
-              <entry>The number of processors requried. How, the processors
-              are distributed over nodes is dependant on how the parallel
-              environment has been configured in SGE.</entry>
-            </row>
-
-            <row>
-              <entry>pegasus.runtime</entry>
-
-              <entry>WALLTIME</entry>
-
-              <entry>-l h_rt</entry>
-
-              <entry>The maximum runtime for the job in seconds. should be an
-              integer value. Pegasus converts it to hh:mm:ss format. From SGE
-              documentation: h_rt is hard runtime hh::min::ss (i.e. 12:00:00).
-              Requests a queue with a hard runtime in excess of the time
-              specified. The value is rounded up to the next whole minute.</entry>
-            </row>
-
-            <row>
-              <entry>pegasus.memory</entry>
-
-              <entry>PER_PROCESS_MEMORY</entry>
-
-              <entry>-l h_vmem</entry>
-
-              <entry>This specifies the maximum amount of physical memory used
-              by any process in the job. From SGE documentation: specify the
-              amount of memory required (e.g. 3G or 3500M) # (NOTE: This is
-              memory per processor slot. So if you ask for 2 processors total
-              memory will be 2 X hvmem_value) # hard limit of the maximum
-              amount of virtual memory available on every host assigned to the
-              job.</entry>
-            </row>
-
-            <row>
-              <entry>pegasus.queue</entry>
-
-              <entry>n/a</entry>
-
-              <entry>-q</entry>
-
-              <entry>This specifies the queue for the job. This profile does
-              not have a corresponding value in
-              <literal>+remote_cerequirements</literal>. Instead, Pegasus sets
-              the <literal>batch_queue</literal> key in the Condor submit
-              file, which gLite/blahp translates into the appropriate SGE
-              requirement.</entry>
-            </row>
-
-            <row>
-              <entry>pegasus.glite.arguments</entry>
-
-              <entry>EXTRA_ARGUMENTS</entry>
-
-              <entry>The value is passed through and added to the qsub file
-              prefixed only by "#?"</entry>
-
-              <entry>This specifies the extra arguments that must appear in
-              the local SGE generated script for a job. These requirements
-              override any requirements specified using other profiles. This
-              is useful when you want to pass through special options to the
-              underlying batch system.</entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </table>
-
-      <tip>
-        <para>The above key mappings are supported in Pegasus 4.6.0 or
+        <para>The above key mappings for PBS and SGE are supported in Pegasus
+        4.6.0 or later. The Moab mappings are supported in Pegasus 4.6.1 and
         later.</para>
       </tip>
     </section>

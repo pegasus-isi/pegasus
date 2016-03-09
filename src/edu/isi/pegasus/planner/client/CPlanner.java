@@ -260,9 +260,8 @@ public class CPlanner extends Executable{
             plannerException = rte;
             //catch all runtime exceptions including our own that
             //are thrown that may have chained causes
-            //cPlanner.log( convertException(rte, cPlanner.mLogger.getLevel() ),
-            //             LogManager.FATAL_MESSAGE_LEVEL );
-            cPlanner.log( rte.getMessage(), LogManager.FATAL_MESSAGE_LEVEL );
+            cPlanner.log( convertException(rte, cPlanner.mLogger.getLevel() ),
+                          LogManager.FATAL_MESSAGE_LEVEL );
             result = 1;
         }
         catch ( Exception e ) {
@@ -1659,6 +1658,9 @@ public class CPlanner extends Executable{
         
         /* load the catalog using the factory */
         catalog = SiteFactory.loadInstance( mProps );
+        
+        //PM-1047 we want to save the catalogs all around.
+        result.setFileSource( catalog.getFileSource() );
 
         Set<String> toLoad = new HashSet<String>( sites );
 

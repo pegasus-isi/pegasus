@@ -967,6 +967,13 @@ public class Directory implements ReplicaCatalog {
         c.list();
     }
 
-
+    /**
+     * Returns the file source.
+     * 
+     * @return the file source if it exists , else null
+     */
+    public java.io.File getFileSource(){
+        return null;
+    }
 }
 

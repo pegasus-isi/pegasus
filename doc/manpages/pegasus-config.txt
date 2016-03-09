@@ -14,7 +14,7 @@ Synopsis
 *pegasus-config* [*-h*] [*--help*] [*-V*] [*--version*] [*--noeoln*]
                [*--perl-dump*] [*--perl-hash*] [*--python-dump*] [*--sh-dump*]
                [*--bin*] [*--conf*] [*--java*] [*--perl*] [*--python*]
-               [*--python-externals*] [*--schema*] [*--classpath*]
+               [*--python-externals*] [*--r*] [*--schema*] [*--classpath*]
                [*--local-site*] [*--full-local*]
 
 
@@ -65,6 +65,9 @@ Print the directory to include into your PYTHONLIB.
 
 *--python-externals*::
 Print the directory to the external Python libraries.
+
+*--r*::
+Print the path to the R DAX API source package.
 
 *--schema*::
 Print the directory containing schemas.

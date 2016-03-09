@@ -341,4 +341,12 @@ public interface ReplicaCatalog extends Catalog
    * @return the number of removed entries.
    */
   public int clear();
+  
+  /**
+    * Returns the file source.
+    * 
+    * @return the file source if it exists , else null
+    */
+  public java.io.File getFileSource();
+ 
 }

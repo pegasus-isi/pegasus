@@ -27,6 +27,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.FileUtils;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -34,6 +35,7 @@ import edu.isi.pegasus.planner.parser.SiteCatalogXMLParser;
 import edu.isi.pegasus.planner.parser.SiteCatalogXMLParserFactory;
 import edu.isi.pegasus.planner.parser.StackBasedXMLParser;
 import java.io.File;
+import java.io.IOException;
 
 import java.util.HashSet;
 import java.util.List;
@@ -48,7 +50,7 @@ import java.util.Set;
  * The schemas can be found online at 
  * 
  * <pre>
- *  http://pegasus.isi.edu/schema/sc-3.0.xsd
+ *  http://pegasus.isi.edu/schema/sc-4.1.xsd
  *  http://pegasus.isi.edu/schema/sc-3.0.xsd
  * </pre>
  * 
@@ -248,7 +250,38 @@ public class XML implements SiteCatalog {
     public int remove( String handle ) throws SiteCatalogException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+    
+    /**
+     * Returns the File Source for the Site Catalog
+     * 
+     * @return path to the backend catalog file , else null
+     */
+    public File getFileSource( ){
+        return new File(mFilename);
+    }
+    
 
+    /**
+      * Copies the source backend to the directory passed. 
+      * 
+      * For database backends can return null
+      * 
+      * @param directory
+      * 
+      * @return path to the copied source file, else null.
+      */
+    public File copy( File directory ){
+        File copiedFile = null;
+        try {
+            copiedFile = FileUtils.copy( new File( mFilename ), directory);
+        } catch (IOException ex) {
+            mLogger.log( "Unable to copy site catalog file " + mFilename + 
+                         " to directory " + directory + " " + ex.getMessage(),
+                         LogManager.ERROR_MESSAGE_LEVEL );
+        }
+        return copiedFile;
+    }
+    
    /**
      * Returns the default path to the site catalog file.
      *

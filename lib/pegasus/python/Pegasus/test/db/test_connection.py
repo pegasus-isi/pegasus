@@ -32,7 +32,7 @@ class TestConnection(unittest.TestCase):
         filename = str(uuid.uuid4())
         _silentremove(filename)
         dburi = "jdbc:sqlite:%s" % filename
-        db = connection.connect(dburi, create=True)
+        db = connection.connect(dburi, create=True, verbose=False)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
         _remove(filename)
@@ -40,14 +40,14 @@ class TestConnection(unittest.TestCase):
         filename = "/tmp/" + str(uuid.uuid4())
         _silentremove(filename)
         dburi = "jdbc:sqlite:%s" % filename
-        db = connection.connect(dburi, create=True)
+        db = connection.connect(dburi, create=True, verbose=False)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
         _remove(filename)
         
         _silentremove(filename)
         dburi = "jdbc:sqlite:/%s" % filename
-        db = connection.connect(dburi, create=True)
+        db = connection.connect(dburi, create=True, verbose=False)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
         _remove(filename)
@@ -56,7 +56,7 @@ class TestConnection(unittest.TestCase):
         filename = str(uuid.uuid4())
         _silentremove(filename)
         dburi = "sqlite:///%s" % filename
-        db = connection.connect(dburi, echo=False, schema_check=True, create=True)
+        db = connection.connect(dburi, echo=False, schema_check=True, create=True, verbose=False)
         db.close()
         _remove(filename)
 

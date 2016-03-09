@@ -47,6 +47,8 @@ import edu.isi.pegasus.planner.cluster.JobAggregator;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
+import edu.isi.pegasus.common.util.Boolean;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -209,11 +211,7 @@ public class Kickstart implements GridStart {
      */
     private boolean mRegisterOutputs;
 
-    /**
-     * A boolean indicating whether to have worker node execution or not.
-     */
-    //boolean mWorkerNodeExecution;
-
+    
     /**
      * handle to PegasusConfiguration
      */
@@ -260,6 +258,7 @@ public class Kickstart implements GridStart {
      * Boolean indicating whether to disable invoke functionality.
      */
     private boolean mDisableInvokeFunctionality;
+    private boolean mDisableKickstartStatCompletely;
 
     /**
      * Initializes the GridStart implementation.
@@ -278,7 +277,7 @@ public class Kickstart implements GridStart {
                                                                                        mPOptions.getBasenamePrefix() ;
         mInvokeAlways = mProps.useInvokeInGridStart();
         mInvokeLength = mProps.getGridStartInvokeLength();
-        mDoStat       = mProps.doStatWithKickstart();
+        
         mGenerateLOF  = mProps.generateLOFFiles();
         mConcDAG      = dag;
         mSiteStore    = bag.getHandleToSiteStore();
@@ -297,7 +296,22 @@ public class Kickstart implements GridStart {
         mNoGridStartImpl.initialize( bag, dag );
         mUseFullPathToGridStart = true;
         mDisableInvokeFunctionality = mProps.disableInvokeInGridStart();
-        mRegisterOutputs = mProps.createRegistrationJobs();
+        
+        //PM-1060 we set stat based on whether a user 
+        //has specified a value or not
+        String value     = mProps.doStatWithKickstart();
+        mRegisterOutputs =  mProps.createRegistrationJobs();
+        mDisableKickstartStatCompletely = false;
+        if( value == null ){
+           //stat is disabled unless there is registration job
+           mDoStat = false;
+        }
+        else{
+            //user specified a stat value .
+            mDoStat = Boolean.parse( value, false );
+            mDisableKickstartStatCompletely = !mDoStat;
+        }
+        mLogger.log( "Kickstart Stating Disabled Completely - " + mDisableKickstartStatCompletely, LogManager.CONFIG_MESSAGE_LEVEL );
     }
 
      /**
@@ -347,7 +361,7 @@ public class Kickstart implements GridStart {
      *
      * @return boolean true if enabling was successful,else false.
      */
-    public boolean enable( AggregatedJob job,boolean isGlobusJob, Boolean first){
+    public boolean enable( AggregatedJob job, boolean isGlobusJob, boolean first){
          //boolean first = true;
         
         //get hold of the JobAggregator determined for this clustered job
@@ -1169,13 +1183,12 @@ public class Kickstart implements GridStart {
      * 
      * @param job
      * @param stat
-     * @param registerOutputs
-     * @param addPostscripts
      * @return 
      */
     protected String generateStatArgumentOptions(Job job, boolean stat, boolean registerOutputs, boolean addPostScript ) {
+        
         //sanity check
-        if ( !( stat || mRegisterOutputs )){
+        if ( !( stat || registerOutputs ) || this.mDisableKickstartStatCompletely){
             return "";
         }
         
@@ -1211,7 +1224,7 @@ public class Kickstart implements GridStart {
                     }
                 }
 
-                if( stat) {
+                if( stat ) {
                     //for cleanup jobs no generation of stats for output files
                     if (job.getJobType() != Job.CLEANUP_JOB) {
                         lof = generateListofFilenamesFile(job.getOutputFiles(),

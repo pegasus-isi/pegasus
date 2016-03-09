@@ -9,7 +9,7 @@
 
     <para><ulink url="http://pegasus.isi.edu">Pegasus WMS</ulink> is a
     configurable system for mapping and executing abstract application
-    workflows over a wide range of execution environment including a laptop, a
+    workflows over a wide range of execution environments including a laptop, a
     campus cluster, a Grid, or a commercial or academic cloud. Today, Pegasus
     runs workflows on Amazon EC2, Nimbus, Open Science Grid, the TeraGrid, and
     many campus clusters. One workflow can run on a single system or across a

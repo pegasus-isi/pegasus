@@ -110,7 +110,7 @@ class Parser:
         token = ""
 
         self._record_number += 1
-        logger.debug( "Started reading record number %d from kickstart file %s" %( self._record_number, self._kickstart_output_file))
+        logger.trace("Started reading record number %d from kickstart file %s" %( self._record_number, self._kickstart_output_file))
 
         # First, we find the beginning <invocation xmlns....
         while True:
@@ -200,8 +200,7 @@ class Parser:
 
         #end = end + len("</invocation>")
         invocation = "".join(buffer)
-        #print invocation
-        logger.debug( "Finished reading record number %d from kickstart file %s" %( self._record_number, self._kickstart_output_file))
+        logger.trace("Finished reading record number %d from kickstart file %s" %( self._record_number, self._kickstart_output_file))
         return invocation
         #return buffer[:end]
 

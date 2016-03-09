@@ -38,6 +38,7 @@ import org.griphyn.vdl.dbschema.DatabaseSchema;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.Boolean;
+import edu.isi.pegasus.common.util.FileUtils;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
@@ -2270,5 +2271,13 @@ if(!write) return false;
 
     }
     */
-
+   
+    /**
+     * Returns the file source.
+     * 
+     * @return the file source if it exists , else null
+     */
+    public java.io.File getFileSource(){
+        return null;
+    }
 }

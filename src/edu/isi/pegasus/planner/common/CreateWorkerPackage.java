@@ -17,14 +17,14 @@ package edu.isi.pegasus.planner.common;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
-import edu.isi.pegasus.common.util.FindExecutable;
-import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.StreamGobblerCallback;
+import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import java.io.File;
-import java.io.IOException;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.nio.channels.FileChannel;
 
 /**
  * Helper class to call out to pegasus-worker-create to create a pegasus 
@@ -44,94 +44,68 @@ public class CreateWorkerPackage {
    
     
     /**
-     * Creates the pegasus worker package and returns a File object pointing
-     * to the worker package created
-     * 
-     * @param directory
-     * 
-     * @return file object to created worker package
+     * Copies the worker package from the pegasus installation directory to 
+     * the submit directory.
+     *  
+     * @return file object to copied worker package
      * @throws RuntimeException in case of errors
      */
-    public File create(  ){
+    public File copy(  ){
         PlannerOptions options = mBag.getPlannerOptions();
         if( options == null ){
             throw new RuntimeException( "No planner options specified " + options );
         }
-        return this.create( new File( options.getSubmitDirectory()) );
+        return this.copy( new File( options.getSubmitDirectory()) );
     }
-   
+    
     /**
-     * Creates the pegasus worker package and returns a File object pointing
-     * to the worker package created
+     * Copies the worker package from the pegasus installation directory to 
+     * the directory passed
      * 
      * @param directory
-     * 
-     * @return file object to created worker package
+     * @return file object to copied worker package
      * @throws RuntimeException in case of errors
      */
-    public File create( File directory ){
-        String basename = "pegasus-worker-create";
-        File pegasusWorkerCreate = FindExecutable.findExec( basename );
-        //pegasusWorkerCreate = new File( "/lfs1/software/install/pegasus/pegasus-4.6.0dev/bin/pegasus-worker-create");
-        if( pegasusWorkerCreate == null ){
-            throw new RuntimeException( "Unable to find path to " + basename );
+    public File copy( File directory ){
+        //the source directory is in share/pegasus/worker-packages/
+        File shareDir = mBag.getPegasusProperties().getSharedDir();
+        File sourceDir = new File( shareDir, "worker-packages" );
+        if(! sourceDir.exists() ){
+            throw new RuntimeException( "Source directory for worker package does not exist " + sourceDir );
         }
         
-        //construct arguments for pegasus-db-admin
-        StringBuffer args = new StringBuffer();
-        args.append( directory.getAbsolutePath() );
-        String command = pegasusWorkerCreate.getAbsolutePath() + " " + args;
-        mLogger.log("Executing  " + command,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-            
-        File result = null;
-        try{
-            //set the callback and run the pegasus-run command
-            Runtime r = Runtime.getRuntime();
-            Process p = r.exec(command );
-            WorkerPackageCallback c = new WorkerPackageCallback( mLogger );
-
-            //spawn off the gobblers with the already initialized default callback
-            StreamGobbler ips =
-                new StreamGobbler( p.getInputStream(), c );
-            StreamGobbler eps =
-                new StreamGobbler( p.getErrorStream(), new DefaultStreamGobblerCallback(
-                                                             LogManager.ERROR_MESSAGE_LEVEL));
-
-            ips.start();
-            eps.start();
-
-            //wait for the threads to finish off
-            ips.join();
-            eps.join();
-
-            //get the status
-            int status = p.waitFor();
-
-            mLogger.log( basename + " exited with status " + status,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-
-            if( status != 0 ){
-                throw new RuntimeException( basename + " failed with non zero exit status " + command );
-            }
-            String workerPackage = c.getWorkerPackage();
-            result = new File( directory, workerPackage );
-            if( !result.exists() ){
-                throw new RuntimeException( "Worker package created does not exist " + result.getAbsolutePath() );
-            }
+        //construct the basename for the worker package on submit host
+        Version v = new Version();
+        StringBuffer basename = new StringBuffer();
+        basename.append( "pegasus-worker-" ).append( v.getVersion() ).append("-").append( v.getPlatform() ).append( ".tar.gz");
+        
+        File workerPackage = new File( sourceDir, basename.toString() );
+        if( !workerPackage.exists() || !workerPackage.canRead() ){
+            throw new RuntimeException( "Unable to find worker package at " + workerPackage );
         }
-        catch(IOException ioe){
-            mLogger.log("IOException while executing " + basename, ioe,
-                        LogManager.ERROR_MESSAGE_LEVEL);
-            throw new RuntimeException( "IOException while executing " + command , ioe );
-        }
-        catch( InterruptedException ie){
-            //ignore
-        }
-        return result;
+        
+        //copy the worker package to directory
+        File destFile = new File( directory, basename.toString() ); 
+        try {
+	    
+	    if ( ! directory.exists() ) directory.createNewFile();
+
+	    FileChannel fcSrc = null;
+	    FileChannel fcDst = null;
+	    try {
+	      fcSrc = new FileInputStream( workerPackage ).getChannel();
+	      fcDst = new FileOutputStream( destFile ).getChannel();
+	      fcDst.transferFrom(fcSrc, 0, fcSrc.size() );
+	    } finally {
+	      if ( fcSrc != null ) fcSrc.close();
+	      if ( fcDst != null ) fcDst.close(); 
+	    }
+	  } catch ( Exception e ) {
+              throw new RuntimeException( "Unable to copy worker package " + workerPackage + 
+                                          " to directory " + directory );
+	  }
+        return destFile;
     } 
-    
-     
 }
 
 /**
@@ -209,8 +183,8 @@ class WorkerPackageCallback implements StreamGobblerCallback {
     
         CreateWorkerPackage cw = new CreateWorkerPackage( bag);
         
-        File wp = cw.create( new File( "/tmp/") );
-        System.out.println( "Created worker package " + wp );
+        //File wp = cw.create( new File( "/tmp/") );
+        //System.out.println( "Created worker package " + wp );
     }
 }
 

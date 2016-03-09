@@ -1885,7 +1885,7 @@ Scope       :</emphasis> TC, SC, DAX, Properties
                   is also used for accounting purposes in the database while
                   generating statistics. It corresponds to the
                   multiplier_factor in the job_instance table described <link
-                  linkend="stampede-schema">here</link>.</entry>
+                  linkend="stampede_schema_overview">here</link>.</entry>
                 </row>
 
                 <row>
@@ -4120,6 +4120,45 @@ See Also    :</emphasis> pegasus.data.configuration</literallayout></entry>
 
               <row>
                 <entry><literallayout><emphasis role="bold"><emphasis
+                        role="bold">Property Key: </emphasis></emphasis>pegasus.transfer.worker.package.autodownload<emphasis
+                      role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.6.1
+<emphasis role="bold">Type        : </emphasis>Boolean<emphasis role="bold">
+Default     :</emphasis> true<emphasis role="bold">
+See Also    :</emphasis> pegasus.transfer.worker.package</literallayout></entry>
+
+                <entry>If PegasusLite does not find a worker package install
+                matching the pegasus lite job on the worker node, it
+                automatically downloads the correct worker package from the
+                Pegasus website. However, this can mask user errors in
+                configuration. This property can be set to false to disable
+                auto downloads.</entry>
+              </row>
+
+              <row>
+                <entry><literallayout><emphasis role="bold"><emphasis
+                        role="bold">Property Key: </emphasis></emphasis>pegasus.transfer.worker.package.strict<emphasis
+                      role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.6.1
+<emphasis role="bold">Type        : </emphasis>Boolean<emphasis role="bold">
+Default     :</emphasis> true<emphasis role="bold">
+See Also    :</emphasis> pegasus.transfer.worker.package</literallayout></entry>
+
+                <entry><para>In PegasusLite mode, the pegasus worker package
+                for the jobs is shipped along with the jobs. This property
+                controls whether PegasusLite will do a strict match against
+                the architecture and os on the local worker node, along with
+                pegasus version. If the strict match fails, then PegasusLite
+                will revert to the pegasus website to download the correct
+                worker package.</para></entry>
+              </row>
+
+              <row>
+                <entry><literallayout><emphasis role="bold"><emphasis
                         role="bold">Property Key: </emphasis></emphasis>pegasus.transfer.links<emphasis
                       role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
@@ -4561,6 +4600,21 @@ Scope       :</emphasis> Properties
               it's stdout and stderr. This property, can be used to turn of
               the database population.</entry>
             </row>
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.monitord.arguments<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.6
+<emphasis role="bold">Type        : </emphasis>String
+<emphasis role="bold">Default     :</emphasis> N/A</literallayout></entry>
+
+              <entry>This property specifies additional command-line arguments
+                  that should be passed to pegasus-monitord at startup. These
+                  additional arguments are appended to the arguments given to
+                  pegasus-monitord.</entry> </row>
+
           </tbody>
         </tgroup>
       </table>
@@ -4937,7 +4991,7 @@ pegasus.metrics.app.[arribute-name]       attribute-value
                     <term>InPlace</term>
 
                     <listitem>
-                      The default cleanup strategy. Adds cleanup nodes per level of the workflow.
+                       The default cleanup strategy. Adds cleanup nodes per level of the workflow. 
                     </listitem>
                   </varlistentry>
 
@@ -4945,7 +4999,7 @@ pegasus.metrics.app.[arribute-name]       attribute-value
                     <term>Constraint</term>
 
                     <listitem>
-                      Adds cleanup nodes to constraint the amount of storage space used by a workflow.
+                       Adds cleanup nodes to constraint the amount of storage space used by a workflow. 
                     </listitem>
                   </varlistentry>
                 </variablelist> </para> <para>Note that this property is
@@ -5078,7 +5132,8 @@ Scope       :</emphasis> Properties
               jobs may be deferred. If this property is set to False
               (default), all stage in jobs will be marked as executing on the
               current compute site and will be executed before any task. This
-              property has no effect when running in a multi site case.</para></entry>
+              property has no effect when running in a multi site
+              case.</para></entry>
             </row>
           </tbody>
         </tgroup>

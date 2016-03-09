@@ -17,7 +17,6 @@ import logging
 
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import DBAdminError
-from Pegasus.db.modules import SQLAlchemyInit
 from Pegasus.db.schema import *
 from Pegasus.db.errors import StampedeDBNotFoundError
 from sqlalchemy.orm.exc import *
@@ -29,7 +28,7 @@ class MasterDBNotFoundError (Exception):
     pass
 
 
-class MasterDatabase(SQLAlchemyInit):
+class MasterDatabase(object):
 
     def __init__(self, conn_string, debug=False):
         self._dbg = debug
@@ -38,9 +37,9 @@ class MasterDatabase(SQLAlchemyInit):
             raise ValueError('Connection string is required')
 
         try:
-            SQLAlchemyInit.__init__(self, conn_string)
+            self.session = connection.connect(conn_string)
         except connection.ConnectionError as e:
-            log.error(e)
+            log.exception(e)
             message = e
 
             while isinstance(message, Exception):
@@ -53,7 +52,7 @@ class MasterDatabase(SQLAlchemyInit):
 
     def close(self):
         log.debug('close')
-        self.disconnect()
+        self.session.close()
 
     def get_wf_db_url(self, wf_id):
         """
@@ -202,7 +201,7 @@ class MasterDatabase(SQLAlchemyInit):
         return q.one()
 
 
-class WorkflowInfo(SQLAlchemyInit):
+class WorkflowInfo(object):
 
     def __init__(self, conn_string=None, wf_id=None, wf_uuid=None, debug=False):
         self._dbg = debug
@@ -211,9 +210,9 @@ class WorkflowInfo(SQLAlchemyInit):
             raise ValueError('Connection string is required')
 
         try:
-            SQLAlchemyInit.__init__(self, conn_string)
+            self.session = connection.connect(conn_string)
         except connection.ConnectionError as e:
-            log.error(e)
+            log.exception(e)
             message = e
 
             while isinstance(message, Exception):
@@ -749,15 +748,19 @@ class WorkflowInfo(SQLAlchemyInit):
 
     def get_invocation_information(self, job_id, job_instance_id, invocation_id):
 
-        q = self.session.query(Task.task_id, Invocation.invocation_id, Invocation.abs_task_id, Invocation.start_time,
-                               Invocation.remote_duration, Invocation.remote_cpu_time, Invocation.exitcode,
-                               Invocation.transformation, Invocation.executable, Invocation.argv, JobInstance.work_dir)
+        q = self.session.query(JobInstance.work_dir)
+
+        q = q.join(Job, Job.job_id == JobInstance.job_id)
+        q = q.outerjoin(Task, Job.job_id == Task.job_id)
+        q = q.join(Invocation, JobInstance.job_instance_id == Invocation.job_instance_id)
+
         q = q.filter(Job.wf_id == self._wf_id)
         q = q.filter(Job.job_id == job_id)
         q = q.filter(JobInstance.job_instance_id == job_instance_id)
-        q = q.filter(Job.job_id == Task.job_id)
-        q = q.filter(Job.job_id == JobInstance.job_id)
-        q = q.filter(JobInstance.job_instance_id == Invocation.job_instance_id)
+
+        q = q.add_columns(Task.task_id, Invocation.invocation_id, Invocation.abs_task_id, Invocation.start_time,
+                          Invocation.remote_duration, Invocation.remote_cpu_time, Invocation.exitcode,
+                          Invocation.transformation, Invocation.executable, Invocation.argv)
 
         if invocation_id is None:
             q = q.filter(Invocation.task_submit_seq == 1)
@@ -777,4 +780,5 @@ class WorkflowInfo(SQLAlchemyInit):
 
     def close(self):
         log.debug('close')
-        self.disconnect()
+        self.session.close()
+

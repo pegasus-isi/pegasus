@@ -63,7 +63,7 @@ __author__ = "Mats Rynge <rynge@isi.edu>"
 # --- regular expressions -----------------------------------------------------
 
 re_parse_comment = re.compile(r'^# +[\w]+ +[\w]+ +([\w\-_]+)')
-re_parse_url = re.compile(r'([\w]+)://([\w\.\-:@]*)(/[\S ]*)?')
+re_parse_url = re.compile(r'([\w]+)://([\w\.\-:@#]*)(/[\S ]*)?')
 
 
 # --- classes -----------------------------------------------------------------
@@ -139,7 +139,7 @@ class PegasusURL:
     
     def get_url(self):
         # srm-copy is using broken urls - wants an extra / 
-        if self.proto == "srm":
+        if self.proto == "srm" or self.proto == "root":
             return "%s://%s/%s" % (self.proto, self.host, self.path)
         return "%s://%s%s" % (self.proto, self.host, self.path)
 
@@ -406,7 +406,7 @@ class Tools(object):
     
     _info = {}
 
-    def find(self, executable, version_arg=None, version_regex=None):
+    def find(self, executable, version_arg=None, version_regex=None, path_prepend=None):
 
         self.lock.acquire()
         try:
@@ -417,7 +417,7 @@ class Tools(object):
             
             logger.debug("Trying to detect availability/location of tool: %s"
                          %(executable))
-            
+
             # initialize the global tool info for this executable
             self._info[executable] = {}
             self._info[executable]['full_path'] = None
@@ -427,9 +427,22 @@ class Tools(object):
             self._info[executable]['version_patch'] = None
         
             # figure out the full path to the executable
-            full_path = backticks("which " + executable + " 2>/dev/null") 
-            full_path = full_path.rstrip('\n')
-            if full_path == "":
+            path_entries = os.environ["PATH"].split(":")
+            if "" in path_entries:
+                path_entries.remove("")
+            if path_prepend is not None:
+                for entry in path_prepend:
+                    path_entries.insert(0, entry)
+            
+            # now walk the path
+            full_path = None
+            for entry in path_entries:
+                full_path = entry + "/" + executable
+                if os.path.isfile(full_path) and os.access(full_path, os.X_OK):
+                    break
+                full_path = None
+            
+            if full_path == None:
                 logger.info("Command '%s' not found in the current environment"
                             %(executable))
                 self._info[executable] = None
@@ -825,7 +838,7 @@ class GridFtpHandler(TransferHandlerBase):
         if mkdirs_l[0].get_proto() == "gsiftp":
                 
             tools = Tools()
-            if tools.find("pegasus-gridftp") == None:
+            if tools.find("pegasus-gridftp", path_prepend=[prog_dir]) == None:
                 logger.error("Unable to do gsiftp mkdir because pegasus-gridftp could not be found")
                 return [[], mkdirs_l]
             
@@ -977,7 +990,7 @@ class GridFtpHandler(TransferHandlerBase):
         if removes_l[0].get_proto() == "gsiftp":
             
             tools = Tools()
-            if tools.find("pegasus-gridftp") == None:
+            if tools.find("pegasus-gridftp", path_prepend=[prog_dir]) == None:
                 logger.error("Unable to do gsiftp rm because pegasus-gridftp could not be found")
                 return [[], removes_l]
             
@@ -1260,10 +1273,12 @@ class HTTPHandler(TransferHandlerBase):
 
         # but only allow squid caching for the first try - after that go to
         # the source
-        if transfers[0].attempts > 1 and "http_proxy" in os.environ:
+        if transfers[0].attempts >= 1 and ('http_proxy' in env or 'http_proxy' in os.environ):
             logger.info("Disabling HTTP proxy due to previous failures")
-            del os.environ['http_proxy']
-            del env['http_proxy']
+            if 'http_proxy' in env:
+                del env['http_proxy']
+            if 'http_proxy' in os.environ:
+                del os.environ['http_proxy']
             
         if tools.find("wget", "--version", "([0-9]+\.[0-9]+)") is None and \
            tools.find("curl", "--version", " ([0-9]+\.[0-9]+)") is None:
@@ -1388,7 +1403,7 @@ class IRodsHandler(TransferHandlerBase):
                 prepare_local_dir(os.path.dirname(t.get_dst_path()))
                 cmd = "iget -v -f -r -T -K -N 4"
                 if len(t.get_src_host()) > 0 and t.attempts <= 1:
-                    cmd += " -R " + t.src_host
+                    cmd += " -R " + t.get_src_host()
                 cmd += " '" + t.get_src_path() + "'"
                 cmd += " '" + t.get_dst_path() + "'"
             else:
@@ -1563,8 +1578,8 @@ class S3Handler(TransferHandlerBase):
 
     def do_mkdirs(self, mkdir_l):
         tools = Tools()
-        if tools.find("pegasus-s3", "help", None) is None:
-            logger.error("Unable to do S3 transfers because return [[], mkdir_list found")
+        if tools.find("pegasus-s3", "help", None, [prog_dir]) is None:
+            logger.error("Unable to do S3 transfers because pegasus-s3 not found")
             return [[], mkdir_l]
 
         successful_l = []
@@ -1580,7 +1595,7 @@ class S3Handler(TransferHandlerBase):
             else:
                 raise RuntimeError("Unable to parse bucket: %s" % (bucket))
 
-            cmd = "pegasus-s3 mkdir"
+            cmd = tools.full_path("pegasus-s3") + " mkdir"
             if logger.isEnabledFor(logging.DEBUG):
                 cmd += " -v"
             cmd += " " + bucket
@@ -1599,7 +1614,7 @@ class S3Handler(TransferHandlerBase):
     def do_transfers(self, transfers):
     
         tools = Tools()
-        if tools.find("pegasus-s3", "help", None) is None:
+        if tools.find("pegasus-s3", "help", None, [prog_dir]) is None:
             logger.error("Unable to do S3 transfers because pegasus-s3 could not be found")
             return [[], transfers]
 
@@ -1615,16 +1630,16 @@ class S3Handler(TransferHandlerBase):
                (t.get_dst_proto() == "s3" or t.get_dst_proto() == "s3s"):
                 # s3 -> s3
                 env = self._s3_cred_env(t.get_src_site_label())
-                cmd = "pegasus-s3 cp -f -c '%s' '%s'" % (t.src_url(), t.dst_url())
+                cmd = tools.full_path("pegasus-s3") + " cp -f -c '%s' '%s'" % (t.src_url(), t.dst_url())
             elif t.get_dst_proto() == "file":
                 # this is a 'get'
                 env = self._s3_cred_env(t.get_src_site_label())
                 prepare_local_dir(os.path.dirname(t.get_dst_path()))
-                cmd = "pegasus-s3 get '%s' '%s'" % (t.src_url(), t.get_dst_path())
+                cmd = tools.full_path("pegasus-s3") + " get '%s' '%s'" % (t.src_url(), t.get_dst_path())
             else:
                 # this is a 'put'
                 env = self._s3_cred_env(t.get_dst_site_label())
-                cmd = "pegasus-s3 put -f -b '%s' '%s'" % (t.get_src_path(), t.dst_url())
+                cmd = tools.full_path("pegasus-s3") + " put -f -b '%s' '%s'" % (t.get_src_path(), t.dst_url())
 
             try:
                 tc = TimedCommand(cmd, env_overrides=env)
@@ -1643,7 +1658,7 @@ class S3Handler(TransferHandlerBase):
 
     def do_removes(self, removes_list):
         tools = Tools()
-        if tools.find("pegasus-s3", "help", None) is None:
+        if tools.find("pegasus-s3", "help", None, [prog_dir]) is None:
             logger.error("Unable to do S3 transfers because pegasus-s3 could not be found")
             return [[], removes_list]
         
@@ -1677,7 +1692,7 @@ class S3Handler(TransferHandlerBase):
            
         env = self._s3_cred_env(removes_list[0].get_site_label()) 
             
-        cmd = "pegasus-s3 rm -f"
+        cmd = tools.full_path("pegasus-s3") + " rm -f"
         if logger.isEnabledFor(logging.DEBUG):
             cmd += " -v"
         cmd += " -F " + tmp_name
@@ -1720,6 +1735,203 @@ class S3Handler(TransferHandlerBase):
                                " environment variables has to be set")
         check_cred_fs_permissions(env["S3CFG"])
         return env
+
+
+class GlobusOnlineHandler(TransferHandlerBase):
+    """
+    Handler for Globus Online transfers
+    """
+    
+    _name = "GlobusOnlineHandler"
+    _mkdir_cleanup_protocols = ["go", "go"]
+    _protocol_map = [
+                    "go->go",
+                    ]
+
+    def do_mkdirs(self, mkdir_l):
+        tools = Tools()
+        if tools.find("pegasus-globus-online", "help", None, [prog_dir]) is None:
+            logger.error("Unable to locate pegasus-globus-online in the $PATH")
+            return [[], mkdir_l]
+
+        successful_l = []
+        failed_l = []        
+        
+        r = re.search("(\w+)@([\w#]+)", mkdir_l[0].get_host())
+        if not r:
+            raise RuntimeError("Unable to determine username from URL")
+
+        env = self._creds(mkdir_l[0])
+        
+        spec = {"globus_username": r.group(1),
+                "endpoint": r.group(2),
+                "x509_proxy": env["X509_USER_PROXY"],
+                "files": list()}
+        
+        for t in mkdir_l:
+            spec["files"].append(t.get_path())
+        
+        logger.debug(json.dumps(spec, indent=2))
+        try:
+            tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".json")
+            tmp_file = os.fdopen(tmp_fd, "w+b")
+        except:
+            raise RuntimeError("Unable to create tmp file for pegasus-globus-online")
+        tmp_file.write(json.dumps(spec, indent=2))
+        tmp_file.close()
+
+        cmd = tools.full_path("pegasus-globus-online") + " --mkdir --file " + tmp_name
+        if logger.isEnabledFor(logging.DEBUG):
+            cmd += " --debug"
+        try:
+            tc = TimedCommand(cmd, env_overrides=env)
+            tc.run()
+            successful_l = list(mkdir_l)
+        except RuntimeError, err:
+            logger.error(err)
+            failed_l = list(mkdir_l)
+        
+        os.unlink(tmp_name)
+        
+        return [successful_l, failed_l]
+
+
+    def do_transfers(self, transfers_l):
+        tools = Tools()
+        if tools.find("pegasus-globus-online", "help", None, [prog_dir]) is None:
+            logger.error("Unable to locate pegasus-globus-online in the $PATH")
+            return [[], transfers_l]
+
+        successful_l = []
+        failed_l = []        
+        
+        # src
+        r = re.search("(\w+)@([\w#]+)", transfers_l[0].get_src_host())
+        if not r:
+            raise RuntimeError("Unable to determine username from URL")
+        globus_username = r.group(1)
+        src_ep = r.group(2)
+
+        # dst
+        r = re.search("(\w+)@([\w#]+)", transfers_l[0].get_dst_host())
+        if not r:
+            raise RuntimeError("Unable to determine username from URL")
+        dst_ep = r.group(2)
+
+        env = self._creds(transfers_l[0])
+        
+        spec = {"globus_username": globus_username,
+                "src_endpoint": src_ep,
+                "dst_endpoint": dst_ep,
+                "x509_proxy": env["X509_USER_PROXY"],
+                "files": list()}
+        
+        for t in transfers_l:
+            t_spec = {"src": t.get_src_path(), "dst": t.get_dst_path()}
+            spec["files"].append(t_spec)
+        
+        logger.debug(json.dumps(spec, indent=2))
+        try:
+            tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".json")
+            tmp_file = os.fdopen(tmp_fd, "w+b")
+        except:
+            raise RuntimeError("Unable to create tmp file for pegasus-globus-online")
+        tmp_file.write(json.dumps(spec, indent=2))
+        tmp_file.close()
+
+        cmd = tools.full_path("pegasus-globus-online") + " --transfer --file " + tmp_name
+        if logger.isEnabledFor(logging.DEBUG):
+            cmd += " --debug"
+        try:
+            tc = TimedCommand(cmd, env_overrides=env)
+            tc.run()
+            successful_l = list(transfers_l)
+        except RuntimeError, err:
+            logger.error(err)
+            failed_l = list(transfers_l)
+        
+        os.unlink(tmp_name)
+        
+        return [successful_l, failed_l]
+
+
+    def do_removes(self, removes_l):
+        
+        # recursive removes are not supported yet, so just mark them as success
+        if removes_l[0].get_recursive():
+            return [removes_l, []]
+        
+        tools = Tools()
+        if tools.find("pegasus-globus-online", "help", None, [prog_dir]) is None:
+            logger.error("Unable to locate pegasus-globus-online in the $PATH")
+            return [[], removes_l]
+
+        successful_l = []
+        failed_l = []        
+        
+        r = re.search("(\w+)@([\w#]+)", removes_l[0].get_host())
+        if not r:
+            raise RuntimeError("Unable to determine username from URL")
+
+        env = self._creds(removes_l[0])
+        
+        spec = {"globus_username": r.group(1),
+                "endpoint": r.group(2),
+                "x509_proxy": env["X509_USER_PROXY"],
+                "files": list()}
+        
+        for t in removes_l:
+            spec["files"].append(t.get_path())
+        
+        logger.debug(json.dumps(spec, indent=2))
+        try:
+            tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".json")
+            tmp_file = os.fdopen(tmp_fd, "w+b")
+        except:
+            raise RuntimeError("Unable to create tmp file for pegasus-globus-online")
+        tmp_file.write(json.dumps(spec, indent=2))
+        tmp_file.close()
+
+        cmd = tools.full_path("pegasus-globus-online") + " --remove --file " + tmp_name
+        if logger.isEnabledFor(logging.DEBUG):
+            cmd += " --debug"
+        try:
+            tc = TimedCommand(cmd, env_overrides=env)
+            tc.run()
+            successful_l = list(removes_l)
+        except RuntimeError, err:
+            logger.error(err)
+            failed_l = list(removes_l)
+        
+        os.unlink(tmp_name)
+        
+        return [successful_l, failed_l]
+
+
+
+    def _creds(self, sample_transfer):
+        """
+        The credential used for Globus Online is just to contact the service
+        """
+        
+        env_override = {}
+
+        if "X509_USER_PROXY" in os.environ:
+            env["X509_USER_PROXY"] = os.environ["X509_USER_PROXY"]
+        
+        # mkdirs and removes
+        if isinstance(sample_transfer, Mkdir) or isinstance(sample_transfer, Remove):
+            key = "X509_USER_PROXY_" + sample_transfer.get_site_label()
+            if key in os.environ:
+                env_override["X509_USER_PROXY"] = os.environ[key]
+            return env_override
+        
+        # must be a standard transfer
+        key = "X509_USER_PROXY_" + sample_transfer.get_src_site_label()
+        if key in os.environ:
+            env_override["X509_USER_PROXY"] = os.environ[key]
+   
+        return env_override
 
     
 
@@ -2563,6 +2775,7 @@ class SimilarWorkSet:
         self._available_handlers.append( HTTPHandler() )
         self._available_handlers.append( IRodsHandler() )
         self._available_handlers.append( S3Handler() )
+        self._available_handlers.append( GlobusOnlineHandler() )
         self._available_handlers.append( GSHandler() )
         self._available_handlers.append( GFALHandler() )
         self._available_handlers.append( ScpHandler() )
@@ -2884,61 +3097,39 @@ def env_setup():
     if "PATH" in os.environ:
         path = os.environ['PATH']
     path_entries = path.split(':')
+    if "" in path_entries:
+        path_entries.remove("")
     
-    # is /usr/bin in the path?
+    # is /usr/bin /bin in the path?
     if not("/usr/bin" in path_entries):
         path_entries.append("/usr/bin")
+    if not("/bin" in path_entries):
         path_entries.append("/bin")
 
     # fink on macos x
     if os.path.exists("/sw/bin") and not("/sw/bin" in path_entries):
         path_entries.append("/sw/bin")
     
-    # prepend the path pegasus-transfer was launched from - this ensures
-    # a consistent environment where all the Pegasus tools are picked
-    # up from the same location
-    try:
-        path_entries.remove(prog_dir)
-    except Exception:
-        pass
-    path_entries.insert(0, prog_dir)
-    
-    # if PEGASUS_HOME is set, prepend it to the PATH (we want it early to
-    # override other cruft)
-    if "PEGASUS_HOME" in os.environ:
-        try:
-            path_entries.remove(os.environ['PEGASUS_HOME'] + "/bin")
-        except Exception:
-            pass
-        path_entries.insert(0, os.environ['PEGASUS_HOME'] + "/bin")
-    
     # need LD_LIBRARY_PATH for Globus tools
     ld_library_path = ""
     if "LD_LIBRARY_PATH" in os.environ:
         ld_library_path = os.environ['LD_LIBRARY_PATH']
     ld_library_path_entries = ld_library_path.split(':')
+    if "" in ld_library_path_entries:
+        ld_library_path_entries.remove("")
 
-    # if GLOBUS_LOCATION is set, prepend it to the PATH and LD_LIBRARY_PATH 
-    # (we want it early to override other cruft)
+    # if GLOBUS_LOCATION is set, we might want to update PATH and LD_LIBRARY_PATH 
     if "GLOBUS_LOCATION" in os.environ:
-        try:
-            path_entries.remove(os.environ['GLOBUS_LOCATION'] + "/bin")
-        except Exception:
-            pass
-        path_entries.insert(0, os.environ['GLOBUS_LOCATION'] + "/bin")
-        try:
-            ld_library_path_entries.remove(
-                os.environ['GLOBUS_LOCATION'] + "/lib")
-        except Exception:
-            pass
-        ld_library_path_entries.insert(0, 
-                                       os.environ['GLOBUS_LOCATION'] + "/lib")
+        if os.environ["GLOBUS_LOCATION"] + "/bin" not in path_entries:
+            path_entries.append(os.environ['GLOBUS_LOCATION'] + "/bin")
+        if os.environ["GLOBUS_LOCATION"] + "/lib" not in ld_library_path_entries:
+            ld_library_path_entries.append(os.environ['GLOBUS_LOCATION'] + "/lib")
 
     os.environ['PATH'] = ":".join(path_entries)
     os.environ['LD_LIBRARY_PATH'] = ":".join(ld_library_path_entries)
     os.environ['DYLD_LIBRARY_PATH'] = ":".join(ld_library_path_entries)
-    logger.debug("PATH=" + os.environ['PATH'])
-    logger.debug("LD_LIBRARY_PATH=" + os.environ['LD_LIBRARY_PATH'])
+    logger.info("PATH=" + os.environ['PATH'])
+    logger.info("LD_LIBRARY_PATH=" + os.environ['LD_LIBRARY_PATH'])
 
     max_cmd_len = max_cmd_length()
     logger.debug("Maximum command line argument lenght to be used: %d" %(max_cmd_len))
