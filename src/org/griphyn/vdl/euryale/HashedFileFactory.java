@@ -14,11 +14,8 @@
  */
 package org.griphyn.vdl.euryale;
 
-import edu.isi.pegasus.common.util.Separator;
-import edu.isi.pegasus.common.util.Currently;
 import java.io.*;
 import java.util.*;
-import java.text.*;
 
 /**
  * This file factory generates a stream of submit files in a dynamically
@@ -237,6 +234,53 @@ public class HashedFileFactory extends FlatFileFactory {
         return mh_buffer.toString();
     }
 
+    /**
+     * Virtual constructor: Creates the next file with the given basename.
+     *
+     * @param basename is the filename to create. Don't specify dirs here.
+     * 
+     * @return a relative File structure (relative to the base directory)
+     * which points to the new file.
+     * @throws java.io.IOException
+     * 
+     * @see #getCount()
+     */
+    @Override
+    public File createRelativeFile(String basename)
+            throws IOException{
+        
+        File f = this.createFile(basename);       
+        
+        StringBuffer relative = new StringBuffer();
+        //figure out the relative path
+        //from the base directory
+        File base = this.getBaseDirectory();
+        Stack<String> s = new Stack();
+        File parent = null;
+        while( (parent = f.getParentFile()) != null ){
+            String child = f.getName();
+            s.push( child );
+            
+            if( parent.equals( base ) ){
+                //have the relative path created by 
+                //poping the stack
+                String comp = null;
+                while( !s.isEmpty() ){
+                    comp = s.pop();
+                    relative.append( comp );
+                    if( !s.empty() ){
+                        relative.append( File.separator );
+                    }
+                }
+                break;
+            }
+            
+            f = parent;
+        }
+        //System.out.println( relative );
+        return new File( relative.toString() );
+    }
+    
     /**
      * Creates the next file with the given basename. This is the factory
      * standard virtual constructor. Once invoked, the directory structure can

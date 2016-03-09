@@ -104,6 +104,22 @@ public class FlatFileFactory implements FileFactory {
             throws IOException {
         return createFlatFile(basename);
     }
+    
+    /**
+     * Virtual constructor: Creates the next file with the given basename.
+     *
+     * @param basename is the filename to create. Don't specify dirs here.
+     * 
+     * @return a relative File structure (relative to the base directory)
+     * which points to the new file.
+     * 
+     * @see #getCount()
+     */
+    public File createRelativeFile(String basename)
+            throws IOException{
+        m_count++;
+        return new File( basename);
+    }
 
     /**
      * Virtual constructor: Creates the next file with the given basename.

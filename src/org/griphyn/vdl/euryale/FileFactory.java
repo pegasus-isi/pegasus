@@ -27,7 +27,7 @@ import java.io.*;
  * @see DAX2DAG
  */
 public interface FileFactory {
-
+    
     /**
      * Virtual constructor: Creates the next file with the given basename.
      *
@@ -38,6 +38,19 @@ public interface FileFactory {
     public File createFile(String basename)
             throws IOException;
 
+    /**
+     * Virtual constructor: Creates the next file with the given basename.
+     *
+     * @param basename is the filename to create. Don't specify dirs here.
+     * 
+     * @return a relative File structure (relative to the base directory)
+     * which points to the new file.
+     * 
+     * @see #getCount()
+     */
+    public File createRelativeFile(String basename)
+            throws IOException;
+    
     /**
      * Returns the number of times the regular virtual constructor for
      * structured entries was called.
@@ -67,7 +80,7 @@ public interface FileFactory {
      * @see #createFlatFile( String )
      */
     public int getFlatCount();
-
+    
     /**
      * Resets the helper structures after changing layout parameters. You will
      * also need to call this function after you invoked the virtual

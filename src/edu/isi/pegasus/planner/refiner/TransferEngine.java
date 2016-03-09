@@ -2012,7 +2012,7 @@ public class TransferEngine extends Engine {
     protected String getRelativeSubmitDirectory(Job job) {
         String relative = null;
         try {
-            File f = mFactory.createFile("pegasus");
+            File f = mFactory.createRelativeFile("pegasus");
             //To-Do we have to determin the relative path from the base directory
             relative = f.getParent();
             mLogger.log("Directory for job " + job.getID() + " is " + relative,
