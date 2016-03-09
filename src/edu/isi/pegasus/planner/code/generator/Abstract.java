@@ -324,15 +324,24 @@ public abstract class Abstract implements CodeGenerator{
      */
     public PrintWriter getWriter( Job job ) throws IOException{
 //        String jobDir = job.getSubmitDirectory();
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
 
         //determine the absolute submit directory for the job
-//        sb.append( GridStart.getSubmitDirectory( mSubmitFileDir, job ));
+        //PM-833
+        
         sb.append( mSubmitFileDir );
-
+        if ( job.getRelativeSubmitDirectory() != null ){
+            sb.append( File.separator );
+            sb.append(job.getRelativeSubmitDirectory());
+        }
+        
+        
         //append the base name of the job
         sb.append( File.separatorChar ).append( getFileBaseName(job) );
 
+        //mLogger.log( "DEBUG ERROR submit dir for job " + job.getID() + " " + sb );
+      
+        
         // intialize the print stream to the file
         return new PrintWriter(new BufferedWriter(new FileWriter(sb.toString())));
     }
@@ -346,6 +355,9 @@ public abstract class Abstract implements CodeGenerator{
      */
     public String getFileBaseName(Job job){
         StringBuffer sb = new StringBuffer();
+        //PM-833
+        //sb.append( job.getSubmitDirectory() ).append( File.separator);
+        
         sb.append(job.jobName).append(".sub");
         return sb.toString();
     }

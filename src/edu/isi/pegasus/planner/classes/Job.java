@@ -439,6 +439,7 @@ public class Job extends Data implements GraphNodeContent{
      * The node label
      */
     private String mNodeLabel;
+    private String mSubmitDir;
 
     /**
      * Intialises the member variables.
@@ -2176,6 +2177,26 @@ public class Job extends Data implements GraphNodeContent{
                     break;
 
             }
+    }
+
+    /**
+     * Sets the relative submit directory for the job.
+     * The directory is relative to the top level directory where the workflow
+     * files are placed
+     * 
+     * @param dir   the directory
+     */
+    public void setRelativeSubmitDirectory(String dir) {
+        mSubmitDir = dir;
+    }
+
+    /**
+     * Returns the relative submit directory for the job.
+     * 
+     * @return 
+     */
+    public String getRelativeSubmitDirectory() {
+        return mSubmitDir;
     }
 
     

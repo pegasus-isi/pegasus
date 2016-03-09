@@ -76,6 +76,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.griphyn.vdl.euryale.HashedFileFactory;
 
 
 
@@ -227,6 +230,7 @@ public class TransferEngine extends Engine {
      * The output site where files need to be staged to.
      */
     private final String mOutputSite;
+    private HashedFileFactory mSubmitDirectoryCreator;
 
     /**
      * Overloaded constructor.
@@ -267,6 +271,8 @@ public class TransferEngine extends Engine {
 
         mWorkflowCache = this.initializeWorkflowCacheFile( reducedDag );
 
+        this.intializeDirectoryCreator();
+        
         //log some configuration messages
         mLogger.log("Transfer Refiner loaded is [" + mTXRefiner.getDescription() +
                             "]",LogManager.CONFIG_MESSAGE_LEVEL);
@@ -276,6 +282,38 @@ public class TransferEngine extends Engine {
                     "]",LogManager.CONFIG_MESSAGE_LEVEL);
     }
 
+    public void intializeDirectoryCreator(){
+         // create hashed, and levelled directories
+        try {
+            //we are interested in relative paths
+            mSubmitDirectoryCreator = new HashedFileFactory( mPOptions.getSubmitDirectory() );
+
+            //each job creates at creates the following files
+            //  - submit file
+            //  - out file
+            //  - error file
+            //  - prescript log
+            //  - the partition directory
+            mSubmitDirectoryCreator.setMultiplicator(5);
+
+            //we want a minimum of one level always for clarity
+            mSubmitDirectoryCreator.setLevels(1);
+
+            //for the time being and test set files per directory to 50
+            mSubmitDirectoryCreator.setFilesPerDirectory( 10 );
+            mSubmitDirectoryCreator.setLevelsFromTotals( 100 );
+            
+
+            mFactory = mSubmitDirectoryCreator;
+
+            
+
+        }
+        catch ( IOException e ) {
+            throw new RuntimeException(  e );
+        }
+    }
+    
     /**
      * Determines a particular created transfer pair has to be binned
      * for remote transfer or local.
@@ -400,8 +438,9 @@ public class TransferEngine extends Engine {
             GraphNode node = ( GraphNode )it.next();
             currentJob = (Job)node.getContent();
 
-            //set the staging site for the job
-            //currentJob.setStagingSiteHandle( getStagingSite( currentJob ) );
+            //PM-833 associate a directory with the job
+            //that is used to determine relative submit directory
+            currentJob.setRelativeSubmitDirectory( getRelativeSubmitDirectory( currentJob ) );
 
             //set the node depth as the level
             currentJob.setLevel( node.getDepth() );
@@ -1961,6 +2000,27 @@ public class TransferEngine extends Engine {
                 
             mLogger.log( message.toString() , LogManager.WARNING_MESSAGE_LEVEL );
         }
+    }
+
+    /**
+     * Returns the relative submit directory for the job from the top level
+     * submit directory where workflow files are written.
+     * 
+     * @param job
+     * @return 
+     */
+    protected String getRelativeSubmitDirectory(Job job) {
+        String relative = null;
+        try {
+            File f = mFactory.createFile("pegasus");
+            //To-Do we have to determin the relative path from the base directory
+            relative = f.getParent();
+            mLogger.log("Directory for job " + job.getID() + " is " + relative,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+        } catch (IOException ex) {
+            throw new RuntimeException( "Error while determining relative submit dir for job " + job.getID() , ex);
+        }
+        return relative;
     }
 
     
