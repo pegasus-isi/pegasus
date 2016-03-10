@@ -318,47 +318,53 @@ public abstract class Abstract implements CodeGenerator{
      * job information for the job.
      *
      * @param job  the job whose job information needs to be written.
+     * @param suffix
      *
      * @return  the writer to the open file.
      * @exception IOException if unable to open a write handle to the file.
      */
-    public PrintWriter getWriter( Job job ) throws IOException{
-//        String jobDir = job.getSubmitDirectory();
-        StringBuilder sb = new StringBuilder();
-
-        //determine the absolute submit directory for the job
-        //PM-833
-        
-        sb.append( mSubmitFileDir );
-        if ( job.getRelativeSubmitDirectory() != null ){
-            sb.append( File.separator );
-            sb.append(job.getRelativeSubmitDirectory());
-        }
-        
-        
+    public PrintWriter getWriter( Job job, String suffix  ) throws IOException{
+        StringBuilder sb = new StringBuilder();       
         //append the base name of the job
-        sb.append( File.separatorChar ).append( getFileBaseName(job) );
+        sb.append( File.separatorChar ).append( this.getFileFullPath(job, suffix) );
 
-        //mLogger.log( "DEBUG ERROR submit dir for job " + job.getID() + " " + sb );
-      
-        
         // intialize the print stream to the file
         return new PrintWriter(new BufferedWriter(new FileWriter(sb.toString())));
     }
 
     /**
+     * Returns the full path for a job file.
+     *
+     * @param job  the job whose job information needs to be written.
+     * @param suffix the suffix to be attached.
+     *
+     * @return  the full path for the file
+     */
+    public String getFileFullPath(Job job, String suffix ){
+        StringBuilder sb = new StringBuilder();
+        String relative = job.getRelativeSubmitDirectory();
+        //PM-833
+        sb.append( this.mSubmitFileDir ).append( File.separator);
+        if( relative != null ){
+            sb.append( relative ).append( File.separator);
+        }
+        
+        sb.append( this.getFileBaseName(job, suffix) );
+        return sb.toString();
+    }
+
+    
+    /**
      * Returns the basename of the file to which the job is written to.
      *
      * @param job  the job whose job information needs to be written.
+     * @param suffix the suffix to be attached.
      *
      * @return  the basename of the file.
      */
-    public String getFileBaseName(Job job){
-        StringBuffer sb = new StringBuffer();
-        //PM-833
-        //sb.append( job.getSubmitDirectory() ).append( File.separator);
-        
-        sb.append(job.jobName).append(".sub");
+    public String getFileBaseName(Job job, String suffix ){
+        StringBuilder sb = new StringBuilder();
+        sb.append(job.jobName).append( suffix );
         return sb.toString();
     }
 
