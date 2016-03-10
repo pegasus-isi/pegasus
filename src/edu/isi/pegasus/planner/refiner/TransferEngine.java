@@ -230,7 +230,7 @@ public class TransferEngine extends Engine {
      * The output site where files need to be staged to.
      */
     private final String mOutputSite;
-    private HashedFileFactory mSubmitDirectoryCreator;
+    
 
     /**
      * Overloaded constructor.
@@ -246,6 +246,9 @@ public class TransferEngine extends Engine {
                            List<Job> deletedLeafJobs){
         super( bag );
 
+        mFactory =  this.getSubmitDirectoryCreator();
+        bag.add(PegasusBag.PEGASUS_SUBMIT_DIR_FACTORY, mFactory );
+        
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mSRMServiceURLToMountPointMap = constructSiteToSRMServerMap( mProps );
         
@@ -271,8 +274,9 @@ public class TransferEngine extends Engine {
 
         mWorkflowCache = this.initializeWorkflowCacheFile( reducedDag );
 
-        this.intializeDirectoryCreator();
         
+                
+                
         //log some configuration messages
         mLogger.log("Transfer Refiner loaded is [" + mTXRefiner.getDescription() +
                             "]",LogManager.CONFIG_MESSAGE_LEVEL);
@@ -282,11 +286,11 @@ public class TransferEngine extends Engine {
                     "]",LogManager.CONFIG_MESSAGE_LEVEL);
     }
 
-    public void intializeDirectoryCreator(){
+    public FileFactory getSubmitDirectoryCreator(){
          // create hashed, and levelled directories
         try {
             //we are interested in relative paths
-            mSubmitDirectoryCreator = new HashedFileFactory( mPOptions.getSubmitDirectory() );
+            HashedFileFactory submitDirectoryCreator = new HashedFileFactory( mPOptions.getSubmitDirectory() );
 
             //each job creates at creates the following files
             //  - submit file
@@ -294,17 +298,17 @@ public class TransferEngine extends Engine {
             //  - error file
             //  - prescript log
             //  - the partition directory
-            mSubmitDirectoryCreator.setMultiplicator(5);
+            submitDirectoryCreator.setMultiplicator(5);
 
             //we want a minimum of one level always for clarity
-            mSubmitDirectoryCreator.setLevels(2);
+            submitDirectoryCreator.setLevels(2);
 
             //for the time being and test set files per directory to 50
             //mSubmitDirectoryCreator.setFilesPerDirectory( 10 );
             //mSubmitDirectoryCreator.setLevelsFromTotals( 100 );
             
 
-            mFactory = mSubmitDirectoryCreator;
+            return submitDirectoryCreator;
 
             
 

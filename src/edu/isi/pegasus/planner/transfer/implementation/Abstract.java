@@ -61,6 +61,10 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.transfer.Implementation;
 import edu.isi.pegasus.planner.transfer.Refiner;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.griphyn.vdl.euryale.FileFactory;
 
 /**
  * An abstract implementation that implements some of the common functions in
@@ -212,6 +216,11 @@ public abstract class Abstract implements Implementation{
      */
     protected PegasusConfiguration mPegasusConfiguration;
 
+    /**
+     * Handle to the Submit directory factory, that returns the relative
+     * submit directory for a job
+     */
+    protected FileFactory mSubmitDirFactory;
 
     /**
      * The overloaded constructor, that is called by the Factory to load the
@@ -224,7 +233,8 @@ public abstract class Abstract implements Implementation{
         mPOptions  = bag.getPlannerOptions();
         mLogger    = bag.getLogger();
         mSiteStore = bag.getHandleToSiteStore();        
-        mTCHandle = bag.getHandleToTransformationCatalog();
+        mTCHandle  = bag.getHandleToTransformationCatalog();
+        mSubmitDirFactory = bag.getSubmitDirFileFactory();
         
         //build up the set of disabled chmod sites
         mDisabledChmodSites = determineDisabledChmodSites( mProps.getChmodDisabledSites() );
@@ -1051,6 +1061,19 @@ public abstract class Abstract implements Implementation{
         job.condorVariables.checkKeyInNS(key,value);
     }
 
-
+    /**
+     * Calls out to the file factory to get a directory for the job
+     * 
+     * @return 
+     */
+    protected String getRelativeSubmitDir( ){
+        String dir = null;
+        try {
+            dir = this.mSubmitDirFactory.createRelativeFile( "pegasus" ).getParent();
+        } catch (IOException ex) {
+            throw new RuntimeException( "Exception while determining the relative submit directory", ex );
+        }
+        return dir;
+    }
 
 }
