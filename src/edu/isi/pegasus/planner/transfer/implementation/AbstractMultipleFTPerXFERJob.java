@@ -125,7 +125,7 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         txJob.setUniverse( GridGateway.JOB_TYPE.transfer.toString() );
         
         //PM-833 set the relative submit directory for the transfer
-        //job based on the compute job
+        //job based on the associated file factory
         txJob.setRelativeSubmitDirectory( this.getRelativeSubmitDir());
 
         TransformationCatalogEntry tcEntry = this.getTransformationCatalogEntry( tPool, jobClass );

@@ -830,6 +830,11 @@ public abstract class Abstract implements Implementation{
             arguments.append( " " );
             arguments.append( new PegasusURL( destURL.getValue() ).getPath()  );
         }
+        
+        //PM-833 set the relative submit directory for the transfer
+        //job based on the associated file factory
+        xBitJob.setRelativeSubmitDirectory( this.getRelativeSubmitDir());
+        
         xBitJob.jobName     = name;
         xBitJob.logicalName = Abstract.CHANGE_XBIT_TRANSFORMATION;
         xBitJob.namespace   = Abstract.XBIT_TRANSFORMATION_NS;
@@ -992,7 +997,8 @@ public abstract class Abstract implements Implementation{
     }
 
     /**
-     * Calls out to the file factory to get a directory for the job
+     * Calls out to the file factory to get a directory for a new
+     * job to be created.
      * 
      * @return 
      */
