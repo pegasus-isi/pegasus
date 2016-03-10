@@ -62,6 +62,7 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.transfer.Implementation;
 import edu.isi.pegasus.planner.transfer.Refiner;
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.griphyn.vdl.euryale.FileFactory;
@@ -754,6 +755,29 @@ public abstract class Abstract implements Implementation{
      * set on execution of this job. The site at which job is executed, is
      * determined from the site associated with the destination URL.
      *
+     * @param file  the <code>FileTransfer</code> containing the file that has
+     *              to be X Bit Set.
+     * @param name  the name that has to be assigned to the job.
+     *
+     * @return  the chmod job, else null if it is not able to be created
+     *          for some reason.
+     */
+    protected Job createSetXBitJob(FileTransfer file, String name){
+        NameValue destURL  = (NameValue)file.getDestURL();
+        String eSiteHandle = destURL.getKey();
+        Collection<FileTransfer> fts = new LinkedList();
+        fts.add(file);
+        return this.createSetXBitJob(fts, name, eSiteHandle);
+    }
+
+    
+    /**
+     * Creates a dirmanager job, that does a chmod on the file being staged.
+     * The file being staged should be of type executable. Though no explicit
+     * check is made for that. The staged file is the one whose X bit would be
+     * set on execution of this job. The site at which job is executed, is
+     * determined from the site associated with the destination URL.
+     *
      * @param files  the collection <code>FileTransfer</code> containing the file that has
      *              to be X Bit Set.
      * @param name  the name that has to be assigned to the job.
@@ -843,98 +867,7 @@ public abstract class Abstract implements Implementation{
 
 
 
-    /**
-     * Creates a dirmanager job, that does a chmod on the file being staged.
-     * The file being staged should be of type executable. Though no explicit
-     * check is made for that. The staged file is the one whose X bit would be
-     * set on execution of this job. The site at which job is executed, is
-     * determined from the site associated with the destination URL.
-     *
-     * @param file  the <code>FileTransfer</code> containing the file that has
-     *              to be X Bit Set.
-     * @param name  the name that has to be assigned to the job.
-     *
-     * @return  the chmod job, else null if it is not able to be created
-     *          for some reason.
-     */
-    protected Job createSetXBitJob(FileTransfer file, String name){
-        Job xBitJob = new Job();
-        TransformationCatalogEntry entry   = null;
-        NameValue destURL  = (NameValue)file.getDestURL();
-        String eSiteHandle = destURL.getKey();
-
-        List entries;
-        try {
-            entries= mTCHandle.lookup( Abstract.XBIT_TRANSFORMATION_NS,
-                                             Abstract.CHANGE_XBIT_TRANSFORMATION,
-                                             Abstract.XBIT_TRANSFORMATION_VERSION,
-                                             eSiteHandle, TCType.INSTALLED);
-        } catch (Exception e) {
-            //non sensical catching
-            mLogger.log("Unable to retrieve entries from TC " +
-                        e.getMessage(), LogManager.ERROR_MESSAGE_LEVEL );
-            return null;
-        }
-
-        entry = ( entries == null ) ?
-            this.defaultXBitTCEntry( eSiteHandle ): //try using a default one
-            (TransformationCatalogEntry) entries.get(0);
-
-        if( entry == null ){
-            //NOW THROWN AN EXCEPTION
-
-            //should throw a TC specific exception
-            StringBuffer error = new StringBuffer();
-            error.append("Could not find entry in tc for lfn ").
-                append( Separator.combine( Abstract.XBIT_TRANSFORMATION_NS,
-                                           Abstract.CHANGE_XBIT_TRANSFORMATION,
-                                           Abstract.XBIT_TRANSFORMATION_VERSION )).
-                append(" at site ").append( eSiteHandle );
-
-            mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
-            throw new RuntimeException( error.toString() );
-        }
-
-
-        SiteCatalogEntry eSite = mSiteStore.lookup( eSiteHandle );
-        String arguments = " -X -f " + new PegasusURL( destURL.getValue() ).getPath() ;
-
-        xBitJob.jobName     = name;
-        xBitJob.logicalName = Abstract.CHANGE_XBIT_TRANSFORMATION;
-        xBitJob.namespace   = Abstract.XBIT_TRANSFORMATION_NS;
-        xBitJob.version     = Abstract.XBIT_TRANSFORMATION_VERSION;
-        xBitJob.dvName      = Abstract.CHANGE_XBIT_TRANSFORMATION;
-        xBitJob.dvNamespace = Abstract.XBIT_DERIVATION_NS;
-        xBitJob.dvVersion   = Abstract.XBIT_DERIVATION_VERSION;
-        xBitJob.setUniverse( GridGateway.JOB_TYPE.auxillary.toString());
-
-
-        xBitJob.executable      = entry.getPhysicalTransformation();
-        xBitJob.executionPool   = eSiteHandle;
-        //PM-845 set staging site handle to same as execution site of compute job
-        xBitJob.setStagingSiteHandle( eSiteHandle );
-        
-        xBitJob.strargs         = arguments;
-        xBitJob.jobClass        = Job.CREATE_DIR_JOB;
-        xBitJob.jobID           = name;
-
-        //the profile information from the pool catalog needs to be
-        //assimilated into the job.
-        xBitJob.updateProfiles( eSite.getProfiles() );
-
-        //the profile information from the transformation
-        //catalog needs to be assimilated into the job
-        //overriding the one from pool catalog.
-        xBitJob.updateProfiles( entry );
-
-        //the profile information from the properties file
-        //is assimilated overidding the one from transformation
-        //catalog.
-        xBitJob.updateProfiles( mProps );
-
-        return xBitJob;
-    }
-
+    
 
     /**
      * Returns a default TC entry to be used in case entry is not found in the
