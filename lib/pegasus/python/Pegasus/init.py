@@ -113,8 +113,10 @@ class Workflow(object):
             ("Remote PBS Cluster with BOSCO and SSH", "bosco")
         ])
 
-        # Determine name of compute site
+        # Find out some information about the site
         self.sitename = query("What do you want to call your compute site?", "compute")
+        self.os = choice("What OS does your compute site have?", ["LINUX", "MACOSX"], self.os)
+        self.arch = choice("What architecture does your compute site have?", ["x86_64", "x86"], self.arch)
 
     def generate(self):
         os.makedirs(self.workflowdir)

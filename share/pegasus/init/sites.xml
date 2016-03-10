@@ -3,7 +3,7 @@
     xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
 
     <!-- The local site contains information about the submit host -->
-    <site handle="local" arch="{{arch}}" os="{{os}}">
+    <site handle="local">
 {% if config == "tutorial" %}
         <!-- This is where intermediate data will be stored -->
         <directory type="shared-scratch" path="{{workflowdir}}/scratch">
