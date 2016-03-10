@@ -527,7 +527,7 @@ public class CondorGenerator extends Abstract {
             
             
             mLogger.log("Written Submit file : " +
-                        getFileBaseName(job, SUBMIT_FILE_SUFFIX), LogManager.DEBUG_MESSAGE_LEVEL);
+                        this.getFileFullPath(job, SUBMIT_FILE_SUFFIX), LogManager.DEBUG_MESSAGE_LEVEL);
         }
         mLogger.logEventCompletion( LogManager.DEBUG_MESSAGE_LEVEL );
 
@@ -1952,7 +1952,7 @@ public class CondorGenerator extends Abstract {
         String jobName = job.jobName;
         String script = null;
         job.dagmanVariables.checkKeyInNS(Dagman.JOB_KEY,
-                                         getFileBaseName(job , SUBMIT_FILE_SUFFIX));
+                                         getFileFullPath(job , SUBMIT_FILE_SUFFIX));
         
         
         //remove the prescript arguments key
