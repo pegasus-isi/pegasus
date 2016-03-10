@@ -49,6 +49,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.File;
 import java.io.IOException;
+import org.griphyn.vdl.euryale.FileFactory;
 
 /**
  * Uses pegasus-transfer to do removal of the files on the remote sites.
@@ -135,6 +136,12 @@ public class Cleanup implements CleanupImplementation{
      * The handle to the logger.
      */
     private LogManager mLogger;
+    
+    /**
+     * Handle to the Submit directory factory, that returns the relative
+     * submit directory for a job
+     */
+    protected FileFactory mSubmitDirFactory;
 
     /**
      * A convenience method to return the complete transformation name being
@@ -168,6 +175,7 @@ public class Cleanup implements CleanupImplementation{
         mTCHandle        = bag.getHandleToTransformationCatalog(); 
         mLogger          = bag.getLogger();
         mPlannerCache     = bag.getHandleToPlannerCache();
+        mSubmitDirFactory = bag.getSubmitDirFileFactory();
     }
 
 
@@ -200,13 +208,18 @@ public class Cleanup implements CleanupImplementation{
         //by default execution site for a cleanup job is local unless
         //overridden because of File URL's in list of files to be cleaned
         String eSite = "local";
+        
+        //PM-833 set the relative submit directory for the transfer
+        //job based on the associated file factory
+        cJob.setRelativeSubmitDirectory( this.getRelativeSubmitDir());
 
         //prepare the stdin for the cleanup job
         String stdIn = id + ".in";
         try{
             BufferedWriter writer;
-            writer = new BufferedWriter( new FileWriter(
-                                           new File( mSubmitDirectory, stdIn ) ));
+            File directory = new File( this.mSubmitDirectory, cJob.getRelativeSubmitDirectory() );
+            writer = new BufferedWriter( new FileWriter( new File( directory, stdIn ) ));
+            
             
             writer.write("[\n");
             
@@ -461,4 +474,20 @@ public class Cleanup implements CleanupImplementation{
         return defaultTCEntry;
     }
 
+    
+    /**
+     * Calls out to the file factory to get a directory for a new
+     * job to be created.
+     * 
+     * @return 
+     */
+    protected String getRelativeSubmitDir( ){
+        String dir = null;
+        try {
+            dir = this.mSubmitDirFactory.createRelativeFile( "pegasus" ).getParent();
+        } catch (IOException ex) {
+            throw new RuntimeException( "Exception while determining the relative submit directory", ex );
+        }
+        return dir;
+    }
 }
