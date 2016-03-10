@@ -675,6 +675,10 @@ public abstract class Abstract implements Implementation{
         //construct noop keys
         newJob.setSiteHandle( "local" );
         
+        //PM-833 set the relative submit directory for the transfer
+        //job based on the associated file factory
+        newJob.setRelativeSubmitDirectory( this.getRelativeSubmitDir());
+        
         //PM-845
         //we need to set the staging site handle to compute job execution site
         //this is to ensure dependencies are added correctly when adding
