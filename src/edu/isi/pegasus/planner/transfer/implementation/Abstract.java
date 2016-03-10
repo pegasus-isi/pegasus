@@ -536,59 +536,6 @@ public abstract class Abstract implements Implementation{
         return added;
     }
 
-
-    /**
-     * Adds the dirmanager job to the workflow, that do a chmod on the files
-     * being staged.
-     *
-     * @param computeJob     the computeJob for which the files are
-     *                       being staged.
-     * @param execFiles      the executable files that are being staged.
-     * @param transferClass  the class of transfer job
-     * @param xbitIndex      index to be used for creating the name of XBitJob.
-     *
-     * @return the job object for the xBitJob
-     */
-    public Job createSetXBitJob( Job computeJob,
-                                   Collection<FileTransfer> execFiles,
-                                   int transferClass,
-                                   int xbitIndex ){
-
-        String computeJobName = computeJob.getName();
-        String site = computeJob.getSiteHandle();
-
-        
-        if(transferClass != Job.STAGE_IN_JOB){
-            //extra check. throw an exception
-            throw new RuntimeException( "Invalid Transfer Type (" +
-                                        transferClass +
-                                        ") for staging executable files for job " +
-                                        computeJob.getName()   );
-        }
-
-
-        //figure out whether we need to create a chmod or noop
-        boolean noop = this.disableChmodJobCreation( site );
-
-        //add setXBit jobs into the workflow
-        int counter = 0;
-
-        String xBitJobName = this.getSetXBitJobName( computeJobName, xbitIndex );//create a chmod job
-        Job xBitJob =  noop  ?
-                               this.createNoOPJob( xBitJobName, computeJob.getSiteHandle() ) : //create a NOOP chmod job
-                               this.createSetXBitJob( execFiles, xBitJobName, computeJob.getSiteHandle() ); //create a chmod job
-
-        if( xBitJob == null ){
-            //error occured while creating the job
-            throw new RuntimeException("Unable to create setXBitJob " +
-                                        "corresponding to  compute job " +
-                                        computeJobName );
-        }
-        return xBitJob;
-    }
-
-
-
     /**
      * Adds the dirmanager job to the workflow, that do a chmod on the files
      * being staged.
@@ -746,6 +693,56 @@ public abstract class Abstract implements Implementation{
 
         return newJob;
 
+    }
+    
+    /**
+     * Adds the dirmanager job to the workflow, that do a chmod on the files
+     * being staged.
+     *
+     * @param computeJob     the computeJob for which the files are
+     *                       being staged.
+     * @param execFiles      the executable files that are being staged.
+     * @param transferClass  the class of transfer job
+     * @param xbitIndex      index to be used for creating the name of XBitJob.
+     *
+     * @return the job object for the xBitJob
+     */
+    public Job createSetXBitJob( Job computeJob,
+                                   Collection<FileTransfer> execFiles,
+                                   int transferClass,
+                                   int xbitIndex ){
+
+        String computeJobName = computeJob.getName();
+        String site = computeJob.getSiteHandle();
+
+        
+        if(transferClass != Job.STAGE_IN_JOB){
+            //extra check. throw an exception
+            throw new RuntimeException( "Invalid Transfer Type (" +
+                                        transferClass +
+                                        ") for staging executable files for job " +
+                                        computeJob.getName()   );
+        }
+
+
+        //figure out whether we need to create a chmod or noop
+        boolean noop = this.disableChmodJobCreation( site );
+
+        //add setXBit jobs into the workflow
+        int counter = 0;
+
+        String xBitJobName = this.getSetXBitJobName( computeJobName, xbitIndex );//create a chmod job
+        Job xBitJob =  noop  ?
+                               this.createNoOPJob( xBitJobName, computeJob.getSiteHandle() ) : //create a NOOP chmod job
+                               this.createSetXBitJob( execFiles, xBitJobName, computeJob.getSiteHandle() ); //create a chmod job
+
+        if( xBitJob == null ){
+            //error occured while creating the job
+            throw new RuntimeException("Unable to create setXBitJob " +
+                                        "corresponding to  compute job " +
+                                        computeJobName );
+        }
+        return xBitJob;
     }
 
     /**
