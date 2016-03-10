@@ -2,6 +2,7 @@
 
 import os
 import sys
+import time
 from Pegasus.DAX3 import *
 
 # The name of the DAX file is the first argument
@@ -12,6 +13,10 @@ daxfile = sys.argv[1]
 
 # Create a abstract dag
 dax = ADAG("split")
+
+# Add some workflow-level metadata
+dax.metadata("creator", "%s@%s" % (os.getlogin(), os.uname()[1]))
+dax.metadata("created", time.ctime())
 
 webpage = File("pegasus.html")
 

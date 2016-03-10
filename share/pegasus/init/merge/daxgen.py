@@ -2,6 +2,7 @@
 
 import os
 import sys
+import time
 from Pegasus.DAX3 import *
 
 # The name of the DAX file is the first argument
@@ -11,6 +12,10 @@ if len(sys.argv) != 2:
 daxfile = sys.argv[1]
 
 dax = ADAG("merge")
+
+# Add some workflow-level metadata
+dax.metadata("creator", "%s@%s" % (os.getlogin(), os.uname()[1]))
+dax.metadata("created", time.ctime())
 
 dirs = ["/bin","/usr/bin","/usr/local/bin"]
 jobs = []
