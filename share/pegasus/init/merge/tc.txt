@@ -1,8 +1,8 @@
 tr ls {
     site {{sitename}} {
         pfn "/bin/ls"
-        arch "x86_64"
-        os "linux"
+        arch "{{arch}}"
+        os "{{os}}"
         type "INSTALLED"
     }
 }
@@ -10,8 +10,8 @@ tr ls {
 tr cat {
     site {{sitename}} {
         pfn "/bin/cat"
-        arch "x86_64"
-        os "linux"
+        arch "{{arch}}"
+        os "{{os}}"
         type "INSTALLED"
     }
 }

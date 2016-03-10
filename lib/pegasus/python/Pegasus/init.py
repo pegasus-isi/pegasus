@@ -65,6 +65,13 @@ class Workflow(object):
         self.properties = {}
         self.home = os.environ["HOME"]
         self.user = os.environ["USER"]
+        sysname, _, _, _, machine = os.uname()
+        if sysname == 'Darwin':
+            self.os = "MACOSX"
+        else:
+            # Probably Linux
+            self.os = upper(sysname)
+        self.arch = machine
 
     def copy_template(self, template, dest, mode=0644):
         "Copy template to dest in workflowdir with mode"

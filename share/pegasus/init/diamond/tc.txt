@@ -4,8 +4,8 @@
 tr preprocess {
     site {{sitename}} {
         pfn "{{workflowdir}}/bin/preprocess"
-        arch "x86_64"
-        os "linux"
+        arch "{{arch}}"
+        os "{{os}}"
         type "INSTALLED"
     }
 }
@@ -13,8 +13,8 @@ tr preprocess {
 tr findrange {
     site {{sitename}} {
         pfn "{{workflowdir}}/bin/findrange"
-        arch "x86_64"
-        os "linux"
+        arch "{{arch}}"
+        os "{{os}}"
         type "INSTALLED"
     }
 }
@@ -22,8 +22,8 @@ tr findrange {
 tr analyze {
     site {{sitename}} {
         pfn "{{workflowdir}}/bin/analyze"
-        arch "x86_64"
-        os "linux"
+        arch "{{arch}}"
+        os "{{os}}"
         type "INSTALLED"
     }
 }

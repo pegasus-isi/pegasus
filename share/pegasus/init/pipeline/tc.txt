@@ -1,8 +1,8 @@
 tr curl {
     site {{sitename}} {
         pfn "/usr/bin/curl"
-        arch "x86_64"
-        os "linux"
+        arch "{{arch}}"
+        os "{{os}}"
         type "INSTALLED"
     }
 }
@@ -10,8 +10,8 @@ tr curl {
 tr wc {
     site {{sitename}} {
         pfn "/usr/bin/wc"
-        arch "x86_64"
-        os "linux"
+        arch "{{arch}}"
+        os "{{os}}"
         type "INSTALLED"
     }
 }
