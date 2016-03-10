@@ -86,6 +86,7 @@
         <profile namespace="pegasus" key="project">MYPROJ123</profile>
 {% endif %}
         <!-- This profile tells Pegasus where the worker package is installed on the site -->
-        <profile namespace="env" key="PEGASUS_HOME">/usr</profile>
+        <!-- Without this, Pegasus will automatically stage a worker package to the site -->
+        <!-- <profile namespace="env" key="PEGASUS_HOME">/usr</profile> -->
     </site>
 </sitecatalog>
