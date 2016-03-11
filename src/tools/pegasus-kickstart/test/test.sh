@@ -459,6 +459,23 @@ function test_wrapper {
     return 0;
 }
 
+function test_metadata {
+    kickstart testmetadata.sh
+    rc=$?
+
+    if [ $rc -ne 0 ]; then
+        echo "Expected job to succeed"
+        return 1
+    fi
+
+    if ! [[ $(cat test.out) =~ "foo=bar" ]]; then
+        echo "Expected metadata in output"
+        return 1
+    fi
+
+    return 0;
+}
+
 # RUN THE TESTS
 run_test lotsofprocs
 run_test lotsofprocs_buffer
@@ -496,4 +513,5 @@ run_test test_prepend_path
 run_test test_missing_executable
 run_test test_not_executable
 run_test test_wrapper
+run_test test_metadata
 

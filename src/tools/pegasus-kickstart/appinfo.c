@@ -233,28 +233,30 @@ static size_t convert2XML(FILE *out, const AppInfo* run) {
     /* User-specified initial and final arbitrary <statcall> records */
     if (run->icount && run->initial) {
         for (i=0; i<run->icount; ++i) {
-            printXMLStatInfo(out, 2, "statcall", "initial", &run->initial[i], includeData, useCDATA);
+            printXMLStatInfo(out, 2, "statcall", "initial", &run->initial[i], includeData, useCDATA, 1);
         }
     }
     if (run->fcount && run->final) {
         for (i=0; i<run->fcount; ++i) {
-            printXMLStatInfo(out, 2, "statcall", "final", &run->final[i], includeData, useCDATA);
+            printXMLStatInfo(out, 2, "statcall", "final", &run->final[i], includeData, useCDATA, 1);
         }
     }
 
     /* Default <statcall> records */
-    printXMLStatInfo(out, 2, "statcall", "stdin", &run->input, includeData, useCDATA);
+    printXMLStatInfo(out, 2, "statcall", "stdin", &run->input, includeData, useCDATA, 1);
     updateStatInfo(&(((AppInfo*) run)->output));
-    printXMLStatInfo(out, 2, "statcall", "stdout", &run->output, includeData, useCDATA);
+    printXMLStatInfo(out, 2, "statcall", "stdout", &run->output, includeData, useCDATA, 1);
     updateStatInfo(&(((AppInfo*) run)->error));
-    printXMLStatInfo(out, 2, "statcall", "stderr", &run->error, includeData, useCDATA);
+    printXMLStatInfo(out, 2, "statcall", "stderr", &run->error, includeData, useCDATA, 1);
+    updateStatInfo(&(((AppInfo*) run)->metadata));
+    printXMLStatInfo(out, 2, "statcall", "metadata", &run->metadata, 1, useCDATA, 0);
 
     /* If the job failed, or if the user requested the full kickstart record */
     if (any_failure(run) || run->fullInfo) {
         /* Extra <statcall> records */
-        printXMLStatInfo(out, 2, "statcall", "kickstart", &run->kickstart, includeData, useCDATA);
+        printXMLStatInfo(out, 2, "statcall", "kickstart", &run->kickstart, includeData, useCDATA, 1);
         updateStatInfo(&(((AppInfo*) run)->logfile));
-        printXMLStatInfo(out, 2, "statcall", "logfile", &run->logfile, includeData, useCDATA);
+        printXMLStatInfo(out, 2, "statcall", "logfile", &run->logfile, includeData, useCDATA, 1);
 
         /* <environment> */
         fprintf(out, "  <environment>\n");
@@ -300,12 +302,8 @@ int initAppInfo(AppInfo* appinfo, int argc, char* const* argv) {
      *          argc (IN): from main()
      *          argv (IN): from main()
      */
-    size_t tempsize = getpagesize();
-    char* tempname = (char*) malloc(tempsize);
-    if (tempname == NULL) {
-        printerr("malloc: %s\n", strerror(errno));
-        return -1;
-    }
+    char tempname[BUFSIZ];
+    size_t tempsize = BUFSIZ;
 
     /* find a suitable directory for temporary files */
     const char* tempdir = getTempDir();
@@ -341,8 +339,9 @@ int initAppInfo(AppInfo* appinfo, int argc, char* const* argv) {
     /* default for stdlog */
     initStatInfoFromHandle(&appinfo->logfile, STDOUT_FILENO);
 
-    /* free pattern space */
-    free((void*) tempname);
+    /* metadata */
+    pattern(tempname, tempsize, tempdir, "/", "ks.meta.XXXXXX");
+    initStatInfoAsTemp(&appinfo->metadata, tempname);
 
     /* original argument vector */
     appinfo->argc = argc;
@@ -448,6 +447,7 @@ void deleteAppInfo(AppInfo* runinfo) {
     deleteStatInfo(&runinfo->error);
     deleteStatInfo(&runinfo->logfile);
     deleteStatInfo(&runinfo->kickstart);
+    deleteStatInfo(&runinfo->metadata);
 
     if (runinfo->icount && runinfo->initial) {
         for (i=0; i<runinfo->icount; ++i) {

@@ -557,6 +557,17 @@ is the suggested location of the latest XML schema describing the data
 on the submit host.
 
 
+[[METADATA]]
+Metadata
+--------
+Kickstart creates a file to which the job should write metadata "key=value"
+pairs. The contents of the file are inserted into the invocation record by
+Kickstart, and transferred with the job's stdio. If the job is run under
+Pegasus, then pegasus-monitord will parse this metadata and merge it with
+the metadata for the job in the Pegasus workflow database. Kickstart uses
+the environment variable *KICKSTART_METADATA* to tell the job to which file
+it should write its metadata.
+
 
 Environment Variables
 ---------------------
@@ -626,6 +637,11 @@ be a list of *fnmatch()* patterns separated by ':'.
 *KICKSTART_TRACE_IGNORE*
 This is the inverse of *KICKSTART_TRACE_MATCH*. Any files matching one of the
 patterns will be ignored, and all other files will be traced.
+
+*KICKSTART_METADATA*
+Kickstart passes this environment variable to the job. The value of the
+variable is the path to the metadata file to which the job should write its
+metadata. See the <<METADATA,*METADATA*>> section for more information.
 
 
 History

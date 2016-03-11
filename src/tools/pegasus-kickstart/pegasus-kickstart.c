@@ -361,6 +361,8 @@ int main(int argc, char* argv[]) {
     /* Set the PATH variable before we copy env into appinfo */
     set_path();
 
+    /* Tell the app where to write metadata */
+    setenv("KICKSTART_METADATA", appinfo.metadata.file.name, 1);
 
     /* register emergency exit handler */
     if (atexit(finish) == -1) {

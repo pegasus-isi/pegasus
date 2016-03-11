@@ -66,6 +66,7 @@ typedef struct {
     StatInfo       error;      /* stat() info for "error", if available */
     StatInfo       logfile;    /* stat() info for "logfile", if available */
     StatInfo       kickstart;  /* stat() info for this program, if available */
+    StatInfo       metadata;   /* stat() info for "metadata", if available */
 
     StatInfo*      initial;    /* stat() info for user-specified files. */
     size_t         icount;     /* size of initial array, may be 0 */
