@@ -406,51 +406,25 @@ static ProcInfo *processTraceFiles(const char *tempdir, const char *trace_file_p
 }
 
 /* Try to get a new environment for the child process that has the tracing vars */
-static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char *trace_file_prefix) {
-    int vars;
-
+static void set_tracing_environment(const char *tempdir, const char *trace_file_prefix) {
     /* If KICKSTART_PREFIX or LD_PRELOAD are already set then we can't trace */
-    for (vars=0; envp[vars] != NULL; vars++) {
-        if (startswith(envp[vars], "KICKSTART_PREFIX=")) {
-            return envp;
-        }
-        if (startswith(envp[vars], "LD_PRELOAD=")) {
-            return envp;
-        }
+    if (getenv("KICKSTART_PREFIX") != NULL || getenv("LD_PRELOAD") != NULL) {
+        return;
     }
 
+    /* Set LD_PRELOAD to the interpose library */
     /* If the interpose library can't be found, then we can't trace */
-    char libpath[BUFSIZ];
-    if (findInterposeLibrary(libpath, BUFSIZ) < 0) {
-        printerr("Cannot locate libinterpose.so\n");
-        return envp;
-    }
-
-    /* Set LD_PRELOAD to the intpose library */
     char ld_preload[BUFSIZ];
-    snprintf(ld_preload, BUFSIZ, "LD_PRELOAD=%s", libpath);
+    if (findInterposeLibrary(ld_preload, BUFSIZ) < 0) {
+        printerr("Cannot locate libinterpose.so\n");
+        return;
+    }
+    setenv("LD_PRELOAD", ld_preload, 1);
 
     /* Set KICKSTART_PREFIX to be tempdir/prefix */
     char kickstart_prefix[BUFSIZ];
-    snprintf(kickstart_prefix, BUFSIZ, "KICKSTART_PREFIX=%s/%s",
-             tempdir, trace_file_prefix);
-
-    /* Copy the environment variables to a new array */
-    char **newenvp = (char **)malloc(sizeof(char **)*(vars+3));
-    if (newenvp == NULL) {
-        printerr("malloc: %s\n", strerror(errno));
-        return envp;
-    }
-    for (vars=0; envp[vars] != NULL; vars++) {
-        newenvp[vars] = envp[vars];
-    }
-
-    /* Set the new variables */
-    newenvp[vars] = ld_preload;
-    newenvp[vars+1] = kickstart_prefix;
-    newenvp[vars+2] = NULL;
-
-    return newenvp;
+    snprintf(kickstart_prefix, BUFSIZ, "%s/%s", tempdir, trace_file_prefix);
+    setenv("KICKSTART_PREFIX", kickstart_prefix, 1);
 }
 
 /* Defined in pegasus-kickstart.c */
@@ -463,7 +437,7 @@ void propagate_signal(int sig) {
     }
 }
 
-int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
+int mysystem(AppInfo* appinfo, JobInfo* jobinfo) {
     /* purpose: emulate the system() libc call, but save utilization data.
      * paramtr: appinfo (IO): shared record of information
      *                        isPrinted (IO): reset isPrinted in child process!
@@ -481,10 +455,9 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
      *          input (IN): connect to stdin or share
      *          output (IN): connect to stdout or share
      *          error (IN): connect to stderr or share
-     *          envp (IN): vector with the parent's environment
      * returns:   -1: failure in mysystem processing, check errno
      *           126: connecting child to its new stdout failed
-     *           127: execve() call failed
+     *           127: execv() call failed
      *          else: status of child
      */
 
@@ -530,10 +503,10 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
         /* child */
         appinfo->isPrinted=1;
 
-        // If we are using library tracing, try to set the necessary
-        // environment variables
+        /* If we are using library tracing, try to set the necessary
+           environment variables */
         if (appinfo->enableLibTrace) {
-            envp = tryGetNewEnvironment(envp, tempdir, trace_file_prefix);
+            set_tracing_environment(tempdir, trace_file_prefix);
         }
 
         /* connect jobs stdio */
@@ -551,8 +524,8 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
             if (procChild()) _exit(126);
         }
 
-        execve(jobinfo->argv[0], (char* const*) jobinfo->argv, envp);
-        perror("execve");
+        execv(jobinfo->argv[0], (char* const*) jobinfo->argv);
+        perror("execv");
         _exit(127); /* executed in child process */
     } else {
         /* Track the current child process */

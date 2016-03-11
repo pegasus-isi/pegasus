@@ -44,8 +44,6 @@ typedef struct {
 
     char* const*   argv;       /* application executable and arguments */
     int            argc;       /* application CLI number of arguments */
-    char* const*   envp;       /* snapshot of environment */
-    size_t         envc;       /* size of the environment vector envp */
 
     char           ipv4[16];   /* host address of primary interface */
     char           prif[16];   /* name of primary interface NIC */ 
@@ -84,7 +82,6 @@ typedef struct {
 
 extern int initAppInfo(AppInfo* appinfo, int argc, char* const* argv);
 extern int printAppInfo(AppInfo* runinfo);
-extern void envIntoAppInfo(AppInfo* runinfo, char* envp[]);
 extern void deleteAppInfo(AppInfo* runinfo);
 
 #endif /* _APPINFO_H */

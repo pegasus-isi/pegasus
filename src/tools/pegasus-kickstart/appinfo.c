@@ -43,6 +43,8 @@
 #define XML_SCHEMA_URI "http://pegasus.isi.edu/schema/invocation"
 #define XML_SCHEMA_VERSION "2.3"
 
+extern char **environ;
+
 /* Return non-zero if any part of the job failed */
 static int any_failure(const AppInfo *run) {
     if (run->status) return 1;
@@ -255,23 +257,21 @@ static size_t convert2XML(FILE *out, const AppInfo* run) {
         printXMLStatInfo(out, 2, "statcall", "logfile", &run->logfile, includeData, useCDATA);
 
         /* <environment> */
-        if (run->envp && run->envc) {
-            fprintf(out, "  <environment>\n");
-            for (i=0; i < run->envc; ++i) {
-                char *key = run->envp[i];
-                char *s;
-                if (key && (s = strchr(key, '='))) {
-                    *s = '\0'; /* temporarily cut string here */
-                    fprintf(out, "    <env key=\"");
-                    xmlquote(out, key, strlen(key));
-                    fprintf(out, "\">");
-                    xmlquote(out, s+1, strlen(s+1));
-                    fprintf(out, "</env>\n");
-                    *s = '='; /* reset string to original */
-                }
+        fprintf(out, "  <environment>\n");
+        for (i=0; environ[i] != NULL; i++) {
+            char *key = environ[i];
+            char *s;
+            if (key && (s = strchr(key, '='))) {
+                *s = '\0'; /* temporarily cut string here */
+                fprintf(out, "    <env key=\"");
+                xmlquote(out, key, strlen(key));
+                fprintf(out, "\">");
+                xmlquote(out, s+1, strlen(s+1));
+                fprintf(out, "</env>\n");
+                *s = '='; /* reset string to original */
             }
-            fprintf(out, "  </environment>\n");
         }
+        fprintf(out, "  </environment>\n");
 
         /* <resource>  limits */
         printXMLLimitInfo(out, 2, &run->limits);
@@ -438,38 +438,6 @@ exit:
     return result;
 }
 
-void envIntoAppInfo(AppInfo* runinfo, char* envp[]) {
-    /* purpose: save a deep copy of the current environment
-     * paramtr: appinfo (IO): place to store the deep copy
-     *          envp (IN): current environment pointer */
-    /* only do something for an existing environment */
-    if (envp) {
-        char** dst;
-        char* const* src = envp;
-        size_t size = 0;
-        while (*src++) ++size;
-        runinfo->envp = (char**) calloc(size+1, sizeof(char*));
-        if (runinfo->envp == NULL) {
-            printerr("calloc: %s\n", strerror(errno));
-            return;
-        }
-        runinfo->envc = size;
-
-        dst = (char**) runinfo->envp;
-        for (src = envp; dst - runinfo->envp <= size; ++src, ++dst) {
-            if (*src == NULL) {
-                *dst = NULL;
-            } else {
-                *dst = strdup(*src);
-                if (*dst == NULL) {
-                    printerr("strdup: %s\n", strerror(errno));
-                    return;
-                }
-            }
-        }
-    }
-}
-
 void deleteAppInfo(AppInfo* runinfo) {
     size_t i;
 
@@ -497,17 +465,6 @@ void deleteAppInfo(AppInfo* runinfo) {
     deleteJobInfo(&runinfo->application);
     deleteJobInfo(&runinfo->postjob);
     deleteJobInfo(&runinfo->cleanup);
-
-    if (runinfo->envc && runinfo->envp) {
-        char** p;
-        for (p = (char**) runinfo->envp; *p; p++) { 
-            if (*p) free((void*) *p);
-        }
-
-        free((void*) runinfo->envp);
-        runinfo->envp = NULL;
-        runinfo->envc = 0;
-    }
 
     /* release system information */
     deleteMachineInfo(&runinfo->machine); 
