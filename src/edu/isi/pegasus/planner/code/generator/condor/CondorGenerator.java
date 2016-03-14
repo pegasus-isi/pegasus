@@ -527,7 +527,7 @@ public class CondorGenerator extends Abstract {
             
             
             mLogger.log("Written Submit file : " +
-                        this.getFileFullPath(job, SUBMIT_FILE_SUFFIX), LogManager.DEBUG_MESSAGE_LEVEL);
+                        job.getFileFullPath( this.mSubmitFileDir, SUBMIT_FILE_SUFFIX), LogManager.DEBUG_MESSAGE_LEVEL);
         }
         mLogger.logEventCompletion( LogManager.DEBUG_MESSAGE_LEVEL );
 
@@ -604,7 +604,7 @@ public class CondorGenerator extends Abstract {
         String dagname  = dag.getLabel();
         String dagindex = dag.getIndex();
         String dagcount = dag.getCount();
-        String subfilename = this.getFileBaseName( job , SUBMIT_FILE_SUFFIX );
+        String subfilename = job.getFileBaseName( SUBMIT_FILE_SUFFIX );
         String envStr = null;
 
         //initialize GridStart if required.
@@ -1952,7 +1952,7 @@ public class CondorGenerator extends Abstract {
         String jobName = job.jobName;
         String script = null;
         job.dagmanVariables.checkKeyInNS(Dagman.JOB_KEY,
-                                         getFileFullPath(job , SUBMIT_FILE_SUFFIX));
+                                         job.getFileFullPath( this.mSubmitFileDir , SUBMIT_FILE_SUFFIX));
         
         
         //remove the prescript arguments key

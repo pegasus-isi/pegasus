@@ -43,6 +43,7 @@ import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.namespace.Metadata;
+import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -2199,6 +2200,40 @@ public class Job extends Data implements GraphNodeContent{
         return mSubmitDir;
     }
 
+    /**
+     * Returns the full path for a job related file.
+     *
+     * @param submitDir  the submit directory where the .dag file for the workflow resides.
+     * @param suffix the suffix to be attached.
+     *
+     * @return  the full path for the file
+     */
+    public String getFileFullPath(String submitDir, String suffix ){
+        StringBuilder sb = new StringBuilder();
+        String relative = this.getRelativeSubmitDirectory();
+        //PM-833
+        sb.append( submitDir ).append( File.separator);
+        if( relative != null ){
+            sb.append( relative ).append( File.separator);
+        }
+        
+        sb.append( this.getFileBaseName( suffix) );
+        return sb.toString();
+    }
+
     
+    /**
+     * Returns the basename of the file to which the job is written to.
+     *
+     * @param suffix the suffix to be attached.
+     *
+     * @return  the basename of the file.
+     */
+    public String getFileBaseName( String suffix ){
+        StringBuilder sb = new StringBuilder();
+        sb.append( this.jobName).append( suffix );
+        return sb.toString();
+    }
+
 
 }

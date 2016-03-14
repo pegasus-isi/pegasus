@@ -326,49 +326,11 @@ public abstract class Abstract implements CodeGenerator{
     public PrintWriter getWriter( Job job, String suffix  ) throws IOException{
         StringBuilder sb = new StringBuilder();       
         //append the base name of the job
-        sb.append( File.separatorChar ).append( this.getFileFullPath(job, suffix) );
+        sb.append( File.separatorChar ).append( job.getFileFullPath( mSubmitFileDir, suffix) );
 
         // intialize the print stream to the file
         return new PrintWriter(new BufferedWriter(new FileWriter(sb.toString())));
     }
 
-    /**
-     * Returns the full path for a job file.
-     *
-     * @param job  the job whose job information needs to be written.
-     * @param suffix the suffix to be attached.
-     *
-     * @return  the full path for the file
-     */
-    public String getFileFullPath(Job job, String suffix ){
-        StringBuilder sb = new StringBuilder();
-        String relative = job.getRelativeSubmitDirectory();
-        //PM-833
-        sb.append( this.mSubmitFileDir ).append( File.separator);
-        if( relative != null ){
-            sb.append( relative ).append( File.separator);
-        }
-        
-        sb.append( this.getFileBaseName(job, suffix) );
-        return sb.toString();
-    }
-
     
-    /**
-     * Returns the basename of the file to which the job is written to.
-     *
-     * @param job  the job whose job information needs to be written.
-     * @param suffix the suffix to be attached.
-     *
-     * @return  the basename of the file.
-     */
-    public String getFileBaseName(Job job, String suffix ){
-        StringBuilder sb = new StringBuilder();
-        sb.append(job.jobName).append( suffix );
-        return sb.toString();
-    }
-
-    
-    
-
 }
