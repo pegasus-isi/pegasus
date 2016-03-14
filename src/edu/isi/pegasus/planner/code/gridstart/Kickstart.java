@@ -1263,7 +1263,7 @@ public class Kickstart implements GridStart {
     }
     
     /**
-     * Writes out the list of filenames file for the constituentJob.
+     * Writes out the list of filenames file for the job.
      *
      * @param files  the list of <code>PegasusFile</code> objects contains the files
      *               whose stat information is required.
