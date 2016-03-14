@@ -753,7 +753,7 @@ public class PegasusLite implements GridStart {
      * @return the file handle to the seqexec input file
      */
     protected File wrapJobWithPegasusLite(Job job, boolean isGlobusJob) {
-        File shellWrapper = new File( mSubmitDir, job.getID() + ".sh" );
+        File shellWrapper = new File( job.getFileFullPath( mSubmitDir,  ".sh" ));
 
         //PM-971 for auxillary jobs we don't need to worry about 
         //or compute any staging site directories
