@@ -2231,7 +2231,7 @@ public class Job extends Data implements GraphNodeContent{
      */
     public String getFileBaseName( String suffix ){
         StringBuilder sb = new StringBuilder();
-        sb.append( this.jobName).append( suffix );
+        sb.append( this.getID() ).append( suffix );
         return sb.toString();
     }
 
