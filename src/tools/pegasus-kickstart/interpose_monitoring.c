@@ -162,7 +162,7 @@ static void read_cpu_status(CpuUtilInfo *info, CpuUtilInfo *delta) {
         return;
     }
 
-    FILE *f = _interpose_fopen_untraced(statf,"r");
+    FILE *f = fopen(statf,"r");
     if (f == NULL) {
         perror("libinterpose: Unable to fopen /proc/self/stat");
         return;
@@ -182,7 +182,7 @@ static void read_cpu_status(CpuUtilInfo *info, CpuUtilInfo *delta) {
               "%*d %*u %*u %llu %*u %*d",
            &utime, &stime, &iowait);
 
-    _interpose_fclose_untraced(f);
+    fclose(f);
 
     /* Adjust by number of clock ticks per second */
     long clocks = sysconf(_SC_CLK_TCK);
@@ -212,7 +212,7 @@ static void read_mem_status(MemUtilInfo *info, MemUtilInfo *delta) {
         return;
     }
 
-    FILE *f = _interpose_fopen_untraced(statf, "r");
+    FILE *f = fopen(statf, "r");
     if (f == NULL) {
         perror("libinterpose: Unable to fopen /proc/self/status");
         return;
@@ -220,7 +220,7 @@ static void read_mem_status(MemUtilInfo *info, MemUtilInfo *delta) {
 
     MemUtilInfo new = {0, 0, 0};
     char line[BUFSIZ];
-    while (_interpose_fgets_untraced(line, BUFSIZ, f) != NULL) {
+    while (fgets(line, BUFSIZ, f) != NULL) {
         if (startswith(line,"VmSize")) {
             sscanf(line, "VmSize: %llu", &(new.vmSize));
         } else if (startswith(line,"VmRSS")) {
@@ -230,7 +230,7 @@ static void read_mem_status(MemUtilInfo *info, MemUtilInfo *delta) {
         }
     }
 
-    _interpose_fclose_untraced(f);
+    fclose(f);
 
     /* Compute the diff */
     delta->vmSize = new.vmSize - info->vmSize;
@@ -255,7 +255,7 @@ static void read_io_status(IoUtilInfo *info, IoUtilInfo *delta) {
         return;
     }
 
-    FILE *f = _interpose_fopen_untraced(iofile, "r");
+    FILE *f = fopen(iofile, "r");
     if (f == NULL) {
         printerr("Unable to fopen /proc/self/io: %s", strerror(errno));
         return;
@@ -263,7 +263,7 @@ static void read_io_status(IoUtilInfo *info, IoUtilInfo *delta) {
 
     IoUtilInfo new = { 0, 0, 0, 0, 0, 0, 0 };
     char line[BUFSIZ];
-    while (_interpose_fgets_untraced(line, BUFSIZ, f) != NULL) {
+    while (fgets(line, BUFSIZ, f) != NULL) {
         if (startswith(line, "rchar")) {
             sscanf(line, "rchar: %llu", &(new.rchar));
         } else if (startswith(line, "wchar")) {
@@ -281,7 +281,7 @@ static void read_io_status(IoUtilInfo *info, IoUtilInfo *delta) {
         }
     }
 
-    _interpose_fclose_untraced(f);
+    fclose(f);
 
     /* Compute the delta */
     delta->rchar = new.rchar - info->rchar;

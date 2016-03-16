@@ -136,6 +136,13 @@ typedef struct {
     pthread_key_t cleanup;
 } interpose_pthread_wrapper_arg;
 
+static FILE *fopen_untraced(const char *path, const char *mode);
+static int vfprintf_untraced(FILE *stream, const char *format, va_list ap);
+static char *fgets_untraced(char *s, int size, FILE *stream);
+static size_t fread_untraced(void *ptr, size_t size, size_t nmemb, FILE *stream);
+static int fclose_untraced(FILE *fp);
+static int dup_untraced(int fd);
+
 static pid_t gettid(void) {
     return (pid_t)syscall(SYS_gettid);
 }
@@ -153,7 +160,7 @@ static int topen() {
     char filename[BUFSIZ];
     snprintf(filename, BUFSIZ, "%s.%d", kickstart_prefix, getpid());
 
-    trace = _interpose_fopen_untraced(filename, "a");
+    trace = fopen_untraced(filename, "a");
     if (trace == NULL) {
         printerr("Unable to open trace file\n");
         return -1;
@@ -169,7 +176,7 @@ static int tprintf(const char *format, ...) {
     }
     va_list args;
     va_start(args, format);
-    int rc = _interpose_vfprintf_untraced(trace, format, args);
+    int rc = vfprintf_untraced(trace, format, args);
     va_end(args);
     return rc;
 }
@@ -182,7 +189,7 @@ static int tclose() {
 
     debug("Close trace file");
 
-    return _interpose_fclose_untraced(trace);
+    return fclose_untraced(trace);
 }
 
 /* Get the current time in seconds since the epoch */
@@ -341,7 +348,7 @@ static void read_cmdline() {
         return;
     }
 
-    FILE *f = _interpose_fopen_untraced(cmdline, "r");
+    FILE *f = fopen_untraced(cmdline, "r");
     if (f == NULL) {
         printerr("Unable to fopen /proc/self/cmdline: %s\n", strerror(errno));
         return;
@@ -351,7 +358,7 @@ static void read_cmdline() {
      * spaces, and with arguments containing spaces quoted. If the command is
      * longer than 1024 characters, then add '...' at the end. */
     char args[1024];
-    size_t asize = _interpose_fread_untraced(args, 1, 1024, f);
+    size_t asize = fread_untraced(args, 1, 1024, f);
     if (asize <= 0) {
         printerr("Error reading /proc/self/cmdline: %s\n", strerror(errno));
     } else {
@@ -400,7 +407,7 @@ static void read_cmdline() {
         free(result);
     }
 
-    _interpose_fclose_untraced(f);
+    fclose_untraced(f);
 }
 
 /* Read /proc/self/exe to get path to executable */
@@ -478,14 +485,14 @@ static void read_status() {
         return;
     }
 
-    FILE *f = _interpose_fopen_untraced(statf, "r");
+    FILE *f = fopen_untraced(statf, "r");
     if (f == NULL) {
         perror("libinterpose: Unable to fopen /proc/self/status");
         return;
     }
 
     char line[BUFSIZ];
-    while (_interpose_fgets_untraced(line, BUFSIZ, f) != NULL) {
+    while (fgets_untraced(line, BUFSIZ, f) != NULL) {
         if (startswith(line,"VmPeak")) {
             tprintf(line);
         } else if (startswith(line,"VmHWM")) {
@@ -493,7 +500,7 @@ static void read_status() {
         }
     }
 
-    _interpose_fclose_untraced(f);
+    fclose_untraced(f);
 }
 
 /* Read CPU usage */
@@ -518,7 +525,7 @@ static void read_stat() {
         return;
     }
 
-    FILE *f = _interpose_fopen_untraced(statf,"r");
+    FILE *f = fopen_untraced(statf,"r");
     if (f == NULL) {
         perror("libinterpose: Unable to fopen /proc/self/stat");
         return;
@@ -537,7 +544,7 @@ static void read_stat() {
               "%*d %*u %*u %llu %*u %*d",
               &iowait);
 
-    _interpose_fclose_untraced(f);
+    fclose_untraced(f);
 
     /* Adjust by number of clock ticks per second */
     long clocks = sysconf(_SC_CLK_TCK);
@@ -560,14 +567,14 @@ static void read_io() {
         return;
     }
 
-    FILE *f = _interpose_fopen_untraced(iofile, "r");
+    FILE *f = fopen_untraced(iofile, "r");
     if (f == NULL) {
         perror("libinterpose: Unable to fopen /proc/self/io");
         return;
     }
 
     char line[BUFSIZ];
-    while (_interpose_fgets_untraced(line, BUFSIZ, f) != NULL) {
+    while (fgets_untraced(line, BUFSIZ, f) != NULL) {
         if (startswith(line, "rchar")) {
             tprintf(line);
         } else if (startswith(line, "wchar")) {
@@ -585,7 +592,7 @@ static void read_io() {
         }
     }
 
-    _interpose_fclose_untraced(f);
+    fclose_untraced(f);
 }
 
 static int path_matches_patterns(const char *path, const char *patterns) {
@@ -1139,7 +1146,7 @@ static void __attribute__((constructor)) interpose_init(void) {
     /* dup stderr because the program might close it. This is
      * untraced because the descriptor table has not been
      * initialized yet */
-    myerr = _interpose_dup_untraced(STDERR_FILENO);
+    myerr = dup_untraced(STDERR_FILENO);
 
     /* Open the trace file */
     topen();
@@ -1208,7 +1215,7 @@ static inline void *osym(const char *name) {
 }
 
 /** INTERPOSED FUNCTIONS **/
-int _interpose_dup_untraced(int oldfd) {
+static int dup_untraced(int oldfd) {
     typeof(dup) *orig_dup = osym("dup");
     return (*orig_dup)(oldfd);
 }
@@ -1216,7 +1223,7 @@ int _interpose_dup_untraced(int oldfd) {
 int dup(int oldfd) {
     debug("dup");
 
-    int rc = _interpose_dup_untraced(oldfd);
+    int rc = dup_untraced(oldfd);
 
     if (rc >= 0) {
         trace_dup(oldfd, rc);
@@ -1371,7 +1378,7 @@ int creat64(const char *path, mode_t mode) {
     return rc;
 }
 
-FILE *_interpose_fopen_untraced(const char *path, const char *mode) {
+static FILE *fopen_untraced(const char *path, const char *mode) {
     typeof(fopen) *orig_fopen = osym("fopen");
     return (*orig_fopen)(path, mode);
 }
@@ -1379,7 +1386,7 @@ FILE *_interpose_fopen_untraced(const char *path, const char *mode) {
 FILE *fopen(const char *path, const char *mode) {
     debug("fopen");
 
-    FILE *f = _interpose_fopen_untraced(path, mode);
+    FILE *f = fopen_untraced(path, mode);
 
     if (f != NULL) {
         trace_open(path, fileno(f));
@@ -1440,7 +1447,7 @@ int close(int fd) {
     return rc;
 }
 
-int _interpose_fclose_untraced(FILE *fp) {
+static int fclose_untraced(FILE *fp) {
     typeof(fclose) *orig_fclose = osym("fclose");
     return (*orig_fclose)(fp);
 }
@@ -1453,7 +1460,7 @@ int fclose(FILE *fp) {
         fd = fileno(fp);
     }
 
-    int rc = _interpose_fclose_untraced(fp);
+    int rc = fclose_untraced(fp);
 
     if (fd >= 0) {
         trace_close(fd);
@@ -1488,7 +1495,7 @@ ssize_t write(int fd, const void *buf, size_t count) {
     return rc;
 }
 
-size_t _interpose_fread_untraced(void *ptr, size_t size, size_t nmemb, FILE *stream) {
+static size_t fread_untraced(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     typeof(fread) *orig_fread = osym("fread");
     return (*orig_fread)(ptr, size, nmemb, stream);
 }
@@ -1496,7 +1503,7 @@ size_t _interpose_fread_untraced(void *ptr, size_t size, size_t nmemb, FILE *str
 size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     debug("fread");
 
-    size_t rc = _interpose_fread_untraced(ptr, size, nmemb, stream);
+    size_t rc = fread_untraced(ptr, size, nmemb, stream);
 
     if (rc > 0) {
         /* rc is the number of objects written */
@@ -1684,7 +1691,7 @@ int fputc(int c, FILE *stream) {
     return rc;
 }
 
-char *_interpose_fgets_untraced(char *s, int size, FILE *stream) {
+static char *fgets_untraced(char *s, int size, FILE *stream) {
     typeof(fgets) *orig_fgets = osym("fgets");
     return (*orig_fgets)(s, size, stream);
 }
@@ -1692,7 +1699,7 @@ char *_interpose_fgets_untraced(char *s, int size, FILE *stream) {
 char *fgets(char *s, int size, FILE *stream) {
     debug("fgets");
 
-    char *ret = _interpose_fgets_untraced(s, size, stream);
+    char *ret = fgets_untraced(s, size, stream);
 
     if (ret != NULL) {
         trace_read(fileno(stream), strlen(ret));
@@ -1745,7 +1752,7 @@ int fscanf(FILE *stream, const char *format, ...) {
     return rc;
 }
 
-int _interpose_vfprintf_untraced(FILE *stream, const char *format, va_list ap) {
+static int vfprintf_untraced(FILE *stream, const char *format, va_list ap) {
     typeof(vfprintf) *orig_vfprintf = osym("vfprintf");
     return (*orig_vfprintf)(stream, format, ap);
 }
@@ -1753,7 +1760,7 @@ int _interpose_vfprintf_untraced(FILE *stream, const char *format, va_list ap) {
 int vfprintf(FILE *stream, const char *format, va_list ap) {
     debug("vfprintf");
 
-    int rc = _interpose_vfprintf_untraced(stream, format, ap);
+    int rc = vfprintf_untraced(stream, format, ap);
 
     if (rc > 0) {
         trace_write(fileno(stream), rc);
@@ -2224,7 +2231,6 @@ pid_t fork(void) {
      * case libinterpose is going to be reinitialized anyway. */
 
     typeof(fork) *orig_fork = osym("fork");
-
     pid_t rc = (*orig_fork)();
 
     if (rc == 0) {
