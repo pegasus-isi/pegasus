@@ -1759,7 +1759,7 @@ class Workflow:
 
             # Check if successful
             if my_parser._open_error == True and not my_job.is_noop_job():
-                logger.info("unable to read output file %s for job %s" % (my_job_output_fn, my_job._exec_job_id))
+                logger.error("unable to read output file %s for job %s" % (my_job_output_fn, my_job._exec_job_id))
 
         # Initialize task id counter
         my_task_id = 1
