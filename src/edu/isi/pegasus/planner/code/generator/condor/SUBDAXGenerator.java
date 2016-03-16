@@ -360,7 +360,10 @@ public class SUBDAXGenerator{
             //in case of innerRelative being ./ . We dont want inner relative
             //to compute to .// Instead we want it to compute to ././
             //innerRelative += File.separator + submit  ;
-            innerRelative =  new File( innerRelative, submit ).getPath();
+            //PM-833 insert factory based submit directory for dax job in between 
+            //innerRelative and submit
+            File dir = new File( innerRelative, job.getRelativeSubmitDirectory() );
+            innerRelative =  new File( dir, submit ).getPath();
             
             //options.setSubmitDirectory( mPegasusPlanOptions.getSubmitDirectory(), submit );
             options.setSubmitDirectory( innerBase, innerRelative );
@@ -453,6 +456,10 @@ public class SUBDAXGenerator{
                 options.setRelativeDirectory( options.getRelativeSubmitDirectory() );
             }
             else{
+                //PM-833 insert factory based submit directory for dax job in between 
+                //innerRelative and submit
+                baseRelativeExecDir = new File( baseRelativeExecDir, job.getRelativeSubmitDirectory() ).getAbsolutePath();
+                
                 //the else look should not be there.
                 //construct path from base relative exec dir
                 File innerRelativeExecDir = null;
@@ -568,11 +575,17 @@ public class SUBDAXGenerator{
             //submit directory is the submit directory of the DAX that is currently
             //being planned. The one that contains the DAX job.
             File submitDirectory = new File( mPegasusPlanOptions.getSubmitDirectory() );
+            //PM-833 assign the relative job submit directory as assigned
+            //by the file factory
+            submitDirectory = new File( submitDirectory, job.getRelativeSubmitDirectory() );
+            
             Job dagJob = constructDAGJob( job,
                                           submitDirectory,
                                           new File( options.getSubmitDirectory()),
                                           basenamePrefix.toString()
                                         );
+            //PM-833 make sure the condor submit file for dagman job is in the right directory
+            dagJob.setRelativeSubmitDirectory( job.getRelativeSubmitDirectory());
             
             //PM-846 add a +pegasus_execution_sites classad
             insertExecutionSitesClassAd( job, options.getExecutionSites() );
