@@ -23,13 +23,20 @@
 #include "interpose.h"
 #include "interpose_monitoring.h"
 
-extern pthread_mutex_t _interpose_io_mut;
-extern IoUtilInfo _interpose_io_util_info;
-
 static int monitor_running;
 static pthread_t monitor_thread;
 static pthread_mutex_t monitor_mutex;
 static pthread_cond_t monitor_cv;
+
+typedef struct {
+    unsigned long long rchar;
+    unsigned long long wchar;
+    unsigned long syscr;
+    unsigned long syscw;
+    unsigned long long read_bytes;
+    unsigned long long write_bytes;
+    unsigned long long cancelled_write_bytes;
+} IoUtilInfo;
 
 typedef struct {
     double utime;

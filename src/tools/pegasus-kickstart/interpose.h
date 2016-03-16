@@ -1,16 +1,6 @@
 #ifndef KICKSTART_INTERPOSE_H
 #define KICKSTART_INTERPOSE_H
 
-typedef struct {
-    unsigned long long rchar;
-    unsigned long long wchar;
-    unsigned long syscr;
-    unsigned long syscw;
-    unsigned long long read_bytes;
-    unsigned long long write_bytes;
-    unsigned long long cancelled_write_bytes;
-} IoUtilInfo;
-
 extern int myerr;
 
 #define printerr(fmt, ...) \
