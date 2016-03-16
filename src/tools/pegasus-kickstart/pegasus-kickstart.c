@@ -40,7 +40,6 @@
 #define show(s) (s ? s : "(undefined)")
 
 /* truly shared globals */
-extern char** environ;
 AppInfo appinfo; /* sigh, needs to be global for signal handlers */
 
 /* module local globals */
@@ -366,8 +365,8 @@ int main(int argc, char* argv[]) {
     /* Set the PATH variable before we copy env into appinfo */
     set_path();
 
-    /* remember environment that all jobs will see */
-    envIntoAppInfo(&appinfo, environ);
+    /* Tell the app where to write metadata */
+    setenv("KICKSTART_METADATA", appinfo.metadata.file.name, 1);
 
     /* register emergency exit handler */
     if (atexit(finish) == -1) {
@@ -793,7 +792,7 @@ REDIR:
     char *SETUP = getenv("KICKSTART_SETUP");
     if (SETUP == NULL) { SETUP = getenv("GRIDSTART_SETUP"); }
     if (prepareSideJob(&appinfo.setup, SETUP)) {
-        mysystem(&appinfo, &appinfo.setup, environ);
+        mysystem(&appinfo, &appinfo.setup);
     }
 
     /* possible pre job (skipped if timeout happens) */
@@ -802,14 +801,14 @@ REDIR:
         if (PREJOB == NULL) { PREJOB = getenv("GRIDSTART_PREJOB"); }
         if (prepareSideJob(&appinfo.prejob, PREJOB)) {
             /* there is a prejob to be executed */
-            status = mysystem(&appinfo, &appinfo.prejob, environ);
+            status = mysystem(&appinfo, &appinfo.prejob);
             result = obtainStatusCode(status);
         }
     }
 
     /* start main application (skipped if timeout happens) */
     if (result == 0 && alarmed == 0) {
-        status = mysystem(&appinfo, &appinfo.application, environ);
+        status = mysystem(&appinfo, &appinfo.application);
         result = obtainStatusCode(status);
     } else {
         /* actively invalidate main record */
@@ -821,7 +820,7 @@ REDIR:
         char *POSTJOB = getenv("KICKSTART_POSTJOB");
         if (POSTJOB == NULL) { POSTJOB = getenv("GRIDSTART_POSTJOB"); }
         if (prepareSideJob(&appinfo.postjob, POSTJOB)) {
-            status = mysystem(&appinfo, &appinfo.postjob, environ);
+            status = mysystem(&appinfo, &appinfo.postjob);
             result = obtainStatusCode(status);
         }
     }
@@ -833,7 +832,7 @@ REDIR:
     char *CLEANUP = getenv("KICKSTART_CLEANUP");
     if (CLEANUP == NULL) { CLEANUP = getenv("GRIDSTART_CLEANUP"); }
     if (prepareSideJob(&appinfo.cleanup, CLEANUP)) {
-        mysystem(&appinfo, &appinfo.cleanup, environ);
+        mysystem(&appinfo, &appinfo.cleanup);
     }
 
     /* stat post files */

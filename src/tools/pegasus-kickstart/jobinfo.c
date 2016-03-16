@@ -324,7 +324,7 @@ int printXMLJobInfo(FILE *out, int indent, const char* tag, const JobInfo* job) 
     fprintf(out, "</status>\n");
 
     /* <executable> */
-    printXMLStatInfo(out, indent+2, "statcall", NULL, &job->executable, 1, 0);
+    printXMLStatInfo(out, indent+2, "statcall", NULL, &job->executable, 1, 0, 1);
 
     /* alternative 1: new-style <argument-vector> */
     fprintf(out, "%*s<argument-vector", indent+2, "");

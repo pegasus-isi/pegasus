@@ -58,7 +58,8 @@ extern int initStatInfoFromHandle(StatInfo* statinfo, int descriptor);
 extern int updateStatInfo(StatInfo* statinfo);
 extern int addLFNToStatInfo(StatInfo* info, const char* lfn);
 extern size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
-                               const StatInfo* info, int includeData, int useCDATA);
+                               const StatInfo* info, int includeData, int useCDATA,
+                               int allowTruncate);
 extern void deleteStatInfo(StatInfo* statinfo);
 
 #endif /* _STATINFO_H */

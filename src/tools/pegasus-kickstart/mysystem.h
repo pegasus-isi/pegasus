@@ -19,33 +19,6 @@
 #include "statinfo.h"
 #include "jobinfo.h"
 
-// typedef struct {
-// 	char* kickstart_status_path;
-// 	char* socket_desc_buf;
-// } KickstartMonitoringInput;
-
-extern 
-int 
-mysystem( AppInfo* appinfo, JobInfo* jobinfo, char* envp[] );
-/* purpose: emulate the system() libc call, but save utilization data. 
- * paramtr: appinfo (IO): shared record of information
- *                        isPrinted (IO): only to reset isPrinted in child process!
- *                        input (IN): connect to stdin or share
- *                        output (IN): connect to stdout or share
- *                        error (IN): connect to stderr or share
- *          jobinfo (IO): updated record of job-specific information
- *                        argv (IN): assembled commandline
- *                        child (OUT): pid of child process
- *                        status (OUT): also returned as function result
- *                        saverr (OUT): will be set to value of errno
- *                        start (OUT): will be set to startup time
- *                        final (OUT): will be set to finish time after reap
- *                        use (OUT): rusage record from application call
- *          envp (IN): vector with the parent's environment
- * returns:   -1: failure in mysystem processing, check errno
- *           126: connecting child to its new stdout failed
- *           127: execve() call failed
- *          else: status of child
- */
+extern int mysystem(AppInfo* appinfo, JobInfo* jobinfo);
 
 #endif /* _MYSYSTEM_H */

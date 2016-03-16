@@ -339,7 +339,8 @@ int addLFNToStatInfo(StatInfo* info, const char* lfn) {
 }
 
 size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
-                        const StatInfo* info, int includeData, int useCDATA) {
+                        const StatInfo* info, int includeData, int useCDATA,
+                        int allowTruncate) {
     char *real = NULL;
 
     /* sanity check */
@@ -469,14 +470,22 @@ size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
         fprintf(out, "/>\n");
     }
 
+    /* if truncation is allowed, then the maximum amount of
+     * data that can be put into the invocation record is
+     * data_section_size, otherwise add the whole file
+     */
+    size_t fsize = info->info.st_size;
+    size_t dsize = fsize;
+    if (allowTruncate) {
+        dsize = data_section_size;
+    }
+
     /* data section from stdout and stderr of application */
     if (includeData &&
         info->source == IS_TEMP &&
         info->error == 0 &&
-        info->info.st_size && data_section_size > 0) {
+        fsize > 0 && dsize > 0) {
 
-        size_t dsize = data_section_size;
-        size_t fsize = info->info.st_size;
         fprintf(out, "%*s<data%s", indent+2, "",
                 (fsize > dsize ? " truncated=\"true\"" : ""));
         if (fsize > 0) {
