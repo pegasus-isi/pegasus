@@ -541,7 +541,7 @@ public class Kickstart implements GridStart {
 
                 //condor needs to pick up the constituentJob stdin and
                 //transfer it to the remote end
-                construct( job, "input" , submitDir + job.getStdIn() );
+                construct( job, "input" , job.getFileFullPath(submitDir, ".in") );
                 gridStartArgs.append("-i ").append("-").append(' ');
 
             } else {
