@@ -99,8 +99,7 @@ static int send_msg_to_kickstart(char *msg, char *host, char *port) {
 /* END SOCKET-BASED COMMUNICATION WITH KICKSTART */
 
 static int set_monitoring_params(int *mpi_rank, int *interval,
-        char **socket_host, char **socket_port, char **kickstart_pid,
-        char *hostname, char **job_id) {
+        char **socket_host, char **socket_port, char *hostname) {
 
     char *envptr = getenv("OMPI_COMM_WORLD_RANK");
     if (envptr == NULL) {
@@ -137,18 +136,10 @@ static int set_monitoring_params(int *mpi_rank, int *interval,
         return 1;
     }
 
-    if ((*kickstart_pid = getenv("KICKSTART_MON_PID")) == NULL) {
-        printerr("ERROR: KICKSTART_MON_PID not set in environment\n");
-        return 1;
-    }
-
     if (gethostname(hostname, BUFSIZ)) {
         printerr("ERROR: gethostname() failed: %s\n", strerror(errno));
         return 1;
     }
-
-    // we don't really care if this is NULL or not
-    *job_id = getenv("CONDOR_JOBID");
 
     return 0;
 }
@@ -369,9 +360,7 @@ void* _interpose_monitoring_thread_func(void* arg) {
     int interval = 60;
     unsigned long sequence = 0;
     char exec_name[BUFSIZ] = "";
-    char *kickstart_pid = NULL;
     char hostname[BUFSIZ] = "";
-    char *job_id = NULL;
     char msg[BUFSIZ] = "";
     char *monitoring_socket_host = NULL;
     char *monitoring_socket_port = NULL;
@@ -384,9 +373,8 @@ void* _interpose_monitoring_thread_func(void* arg) {
     MemUtilInfo mem_delta = { 0, 0, 0 };
     IoUtilInfo io_delta = { 0, 0, 0, 0, 0, 0, 0 };
 
-    if (set_monitoring_params(&mpi_rank, &interval,
-            &monitoring_socket_host, &monitoring_socket_port,
-            &kickstart_pid, hostname, &job_id)) {
+    if (set_monitoring_params(&mpi_rank, &interval, &monitoring_socket_host,
+                &monitoring_socket_port, hostname)) {
         printerr("ERROR: Unable to configure monitoring thread\n");
         goto exit;
     }
@@ -433,12 +421,12 @@ void* _interpose_monitoring_thread_func(void* arg) {
 #endif
 
         memset(msg, 0, sizeof(msg));
-        sprintf(msg, "ts=%d pid=%d seq=%lu job_id=%s kickstart_pid=%s executable=%s "
+        sprintf(msg, "ts=%d pid=%d seq=%lu executable=%s "
                      "hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
                      "iowait=%.3f vmSize=%llu vmRSS=%llu threads=%d "
                      "read_bytes=%llu write_bytes=%llu "
                      "rchar=%llu wchar=%llu syscr=%lu syscw=%lu %s\n",
-                     (int)timestamp, getpid(), sequence++, job_id, kickstart_pid, exec_name,
+                     (int)timestamp, getpid(), sequence++, exec_name,
                      hostname, mpi_rank, cpu_delta.utime, cpu_delta.stime,
                      cpu_delta.iowait, mem_delta.vmSize, mem_delta.vmRSS, mem_delta.threads,
                      io_delta.read_bytes, io_delta.write_bytes,
