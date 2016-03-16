@@ -70,7 +70,7 @@ class Workflow(object):
             self.os = "MACOSX"
         else:
             # Probably Linux
-            self.os = upper(sysname)
+            self.os = sysname.upper()
         self.arch = machine
 
     def copy_template(self, template, dest, mode=0644):
