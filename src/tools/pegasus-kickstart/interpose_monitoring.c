@@ -32,15 +32,15 @@ static pthread_mutex_t monitor_mutex;
 static pthread_cond_t monitor_cv;
 
 typedef struct {
-    double real_utime;
-    double real_stime;
-    double real_iowait;
+    double utime;
+    double stime;
+    double iowait;
 } CpuUtilInfo;
 
 typedef struct {
-    unsigned long long vmSize;
-    unsigned long long vmRSS;
-    unsigned long threads;
+    unsigned long long vmSize; /* peak vm size */
+    unsigned long long vmRSS; /* peak RSS */
+    int threads; /* delta of threads could be negative */
 } MemUtilInfo;
 
 static int startswith(const char *line, const char *tok) {
@@ -98,12 +98,11 @@ static int send_msg_to_kickstart(char *msg, char *host, char *port) {
 
 /* END SOCKET-BASED COMMUNICATION WITH KICKSTART */
 
-static int set_monitoring_params(int *mpi_rank, int *interval, char **socket_host, char **socket_port, 
-    char **kickstart_pid, char *hostname, char **job_id) 
-{
-    char *envptr = NULL;
+static int set_monitoring_params(int *mpi_rank, int *interval,
+        char **socket_host, char **socket_port, char **kickstart_pid,
+        char *hostname, char **job_id) {
 
-    envptr = getenv("OMPI_COMM_WORLD_RANK");
+    char *envptr = getenv("OMPI_COMM_WORLD_RANK");
     if (envptr == NULL) {
         envptr = getenv("ALPS_APP_PE");
         if (envptr == NULL) {
@@ -116,33 +115,35 @@ static int set_monitoring_params(int *mpi_rank, int *interval, char **socket_hos
             }
         }
     }
-    if (envptr != NULL) {
-        *mpi_rank = atoi(envptr) + 1;
+    if (envptr == NULL) {
+        *mpi_rank = 0;
+    } else {
+        *mpi_rank = atoi(envptr);
     }
 
     if ((envptr = getenv("KICKSTART_MON_INTERVAL")) == NULL) {
-        printerr("[Thread-%d] Couldn't read KICKSTART_MON_INTERVAL\n", *mpi_rank);
+        printerr("ERROR: KICKSTART_MON_INTERVAL not set in environment\n");
         return 1;
     }
     *interval = atoi(envptr);
 
     if ((*socket_host = getenv("KICKSTART_MON_HOST")) == NULL) {
-        printerr("[Thread-%d] Couldn't read KICKSTART_MON_HOST\n", *mpi_rank);
+        printerr("ERROR: KICKSTART_MON_HOST not set in environment\n");
         return 1;
     }
 
     if ((*socket_port = getenv("KICKSTART_MON_PORT")) == NULL) {
-        printerr("[Thread-%d] Couldn't read KICKSTART_MON_PORT\n", *mpi_rank);
+        printerr("ERROR: KICKSTART_MON_PORT not set in environment\n");
         return 1;
     }
 
     if ((*kickstart_pid = getenv("KICKSTART_MON_PID")) == NULL) {
-        printerr("KICKSTART_MON_PID not set in environment\n");
+        printerr("ERROR: KICKSTART_MON_PID not set in environment\n");
         return 1;
     }
 
     if (gethostname(hostname, BUFSIZ)) {
-        printerr("[Thread-%d] ERROR: couldn't get hostname: %s\n", *mpi_rank, strerror(errno));
+        printerr("ERROR: gethostname() failed: %s\n", strerror(errno));
         return 1;
     }
 
@@ -155,7 +156,7 @@ static int set_monitoring_params(int *mpi_rank, int *interval, char **socket_hos
 /* READING PERFORMANCE METRICS FUNCTIONS */
 
 /* Read /proc/self/stat to get CPU usage and returns a structure with this information */
-static void read_cpu_status(CpuUtilInfo *info) {
+static void read_cpu_status(CpuUtilInfo *info, CpuUtilInfo *delta) {
     char statf[] = "/proc/self/stat";
 
     /* If the stat file is missing, then just skip it */
@@ -188,20 +189,24 @@ static void read_cpu_status(CpuUtilInfo *info) {
     /* Adjust by number of clock ticks per second */
     long clocks = sysconf(_SC_CLK_TCK);
 
-    double real_utime;
-    double real_stime;
-    double real_iowait;
-    real_utime = ((double)utime) / clocks;
-    real_stime = ((double)stime) / clocks;
-    real_iowait = ((double)iowait) / clocks;
+    CpuUtilInfo new = {0.0, 0.0, 0.0};
+    new.utime = ((double)utime) / clocks;
+    new.stime = ((double)stime) / clocks;
+    new.iowait = ((double)iowait) / clocks;
 
-    info->real_utime = real_utime;
-    info->real_stime = real_stime;
-    info->real_iowait = real_iowait;
+    /* Compute the delta */
+    delta->utime = new.utime - info->utime;
+    delta->stime = new.stime - info->stime;
+    delta->iowait = new.iowait - info->iowait;
+
+    /* Save the new values */
+    info->utime = new.utime;
+    info->stime = new.stime;
+    info->iowait = new.iowait;
 }
 
 /* Read useful information from /proc/self/status and returns a structure with this information */
-static void read_mem_status(MemUtilInfo *info) {
+static void read_mem_status(MemUtilInfo *info, MemUtilInfo *delta) {
     char statf[] = "/proc/self/status";
 
     /* If the status file is missing, then just skip it */
@@ -215,35 +220,34 @@ static void read_mem_status(MemUtilInfo *info) {
         return;
     }
 
+    MemUtilInfo new = {0, 0, 0};
     char line[BUFSIZ];
-
     while (_interpose_fgets_untraced(line, BUFSIZ, f) != NULL) {
-
         if (startswith(line,"VmSize")) {
-            sscanf(line, "VmSize: %llu", &(info->vmSize));
-        } 
-        else if (startswith(line,"VmRSS")) {
-            sscanf(line, "VmRSS: %llu", &(info->vmRSS));
-        } 
-        else if (startswith(line,"Threads")) {
-            sscanf(line, "Threads: %lu", &(info->threads));
+            sscanf(line, "VmSize: %llu", &(new.vmSize));
+        } else if (startswith(line,"VmRSS")) {
+            sscanf(line, "VmRSS: %llu", &(new.vmRSS));
+        } else if (startswith(line,"Threads")) {
+            sscanf(line, "Threads: %d", &(new.threads));
         }
-
     }
 
     _interpose_fclose_untraced(f);
+
+    /* Compute the diff */
+    delta->vmSize = new.vmSize - info->vmSize;
+    delta->vmRSS = new.vmRSS - info->vmRSS;
+    delta->threads = new.threads - info->threads;
+
+    /* Save the new values */
+    info->vmSize = new.vmSize;
+    info->vmRSS = new.vmRSS;
+    info->threads = new.threads;
 }
 
 /* Read /proc/self/io to get I/O usage */
-static void read_io_status(IoUtilInfo *info) {
+static void read_io_status(IoUtilInfo *info, IoUtilInfo *delta) {
     char iofile[] = "/proc/self/io";
-
-    pthread_mutex_lock(&_interpose_io_mut);
-    info->rchar = _interpose_io_util_info.rchar;
-    info->wchar = _interpose_io_util_info.wchar;
-    info->syscw = _interpose_io_util_info.syscw;
-    info->syscr = _interpose_io_util_info.syscr;
-    pthread_mutex_unlock(&_interpose_io_mut);
 
     /* This proc file was added in Linux 2.6.20. It won't be
      * there on older kernels, or on kernels without task IO
@@ -255,36 +259,57 @@ static void read_io_status(IoUtilInfo *info) {
 
     FILE *f = _interpose_fopen_untraced(iofile, "r");
     if (f == NULL) {
-        perror("libinterpose: Unable to fopen /proc/self/io");
+        printerr("Unable to fopen /proc/self/io: %s", strerror(errno));
         return;
     }
 
+    IoUtilInfo new = { 0, 0, 0, 0, 0, 0, 0 };
     char line[BUFSIZ];
     while (_interpose_fgets_untraced(line, BUFSIZ, f) != NULL) {
         if (startswith(line, "rchar")) {
-            sscanf(line, "rchar: %llu", &(info->rchar));
+            sscanf(line, "rchar: %llu", &(new.rchar));
         } else if (startswith(line, "wchar")) {
-            sscanf(line, "wchar: %llu", &(info->wchar));
+            sscanf(line, "wchar: %llu", &(new.wchar));
         } else if (startswith(line,"syscr")) {
-            sscanf(line, "syscr: %lu", &(info->syscr));
+            sscanf(line, "syscr: %lu", &(new.syscr));
         } else if (startswith(line,"syscw")) {
-            sscanf(line, "syscw: %lu", &(info->syscw));
+            sscanf(line, "syscw: %lu", &(new.syscw));
         } else if (startswith(line,"read_bytes")) {
-            sscanf(line, "read_bytes: %llu", &(info->read_bytes));
+            sscanf(line, "read_bytes: %llu", &(new.read_bytes));
         } else if (startswith(line,"write_bytes")) {
-            sscanf(line, "write_bytes: %llu", &(info->write_bytes));
+            sscanf(line, "write_bytes: %llu", &(new.write_bytes));
         } else if (startswith(line,"cancelled_write_bytes")) {
-            sscanf(line, "cancelled_write_bytes: %llu", &(info->cancelled_write_bytes));
+            sscanf(line, "cancelled_write_bytes: %llu", &(new.cancelled_write_bytes));
         }
     }
 
     _interpose_fclose_untraced(f);
+
+    /* Compute the delta */
+    delta->rchar = new.rchar - info->rchar;
+    delta->wchar = new.wchar - info->wchar;
+    delta->syscr = new.syscr - info->syscr;
+    delta->syscw = new.syscw - info->syscw;
+    delta->read_bytes = new.read_bytes - info->read_bytes;
+    delta->write_bytes = new.write_bytes - info->write_bytes;
+    delta->cancelled_write_bytes = new.cancelled_write_bytes - info->cancelled_write_bytes;
+
+    /* Save the new values */
+    info->rchar = new.rchar;
+    info->wchar = new.wchar;
+    info->syscr = new.syscr;
+    info->syscw = new.syscw;
+    info->read_bytes = new.read_bytes;
+    info->write_bytes = new.write_bytes;
+    info->cancelled_write_bytes = new.cancelled_write_bytes;
 }
 
 #ifdef HAS_PAPI
 
 /* Read eventset, return 1 on failure, 0 on success */
-static int read_hardware_counters(int eventset, int *shared_nevents, int *shared_events, long long *shared_counters) {
+static int read_hardware_counters(int eventset, int *shared_nevents,
+        int *shared_events, long long *shared_counters) {
+
     int i, rc;
     int nevents = n_papi_events;
     int events[n_papi_events];
@@ -340,18 +365,29 @@ static int read_hardware_counters(int eventset, int *shared_nevents, int *shared
 void* _interpose_monitoring_thread_func(void* arg) {
     pthread_mutex_lock(&monitor_mutex);
 
-    int mpi_rank = 0, interval = 60;
-    time_t timestamp;
-    char exec_name[BUFSIZ] = "", *kickstart_pid = NULL, hostname[BUFSIZ] = "", *job_id = NULL, msg[BUFSIZ] = "";
-    char *monitoring_socket_host = NULL, *monitoring_socket_port = NULL;
+    int mpi_rank = 0;
+    int interval = 60;
+    unsigned long sequence = 0;
+    char exec_name[BUFSIZ] = "";
+    char *kickstart_pid = NULL;
+    char hostname[BUFSIZ] = "";
+    char *job_id = NULL;
+    char msg[BUFSIZ] = "";
+    char *monitoring_socket_host = NULL;
+    char *monitoring_socket_port = NULL;
+
     CpuUtilInfo cpu_info = { 0.0, 0.0, 0.0 };
     MemUtilInfo mem_info = { 0, 0, 0 };
     IoUtilInfo io_info = { 0, 0, 0, 0, 0, 0, 0 };
 
-    if (set_monitoring_params(&mpi_rank,  &interval,
-        &monitoring_socket_host, &monitoring_socket_port,
-        &kickstart_pid, hostname, &job_id) ) {
-        printerr("Unable to configure monitoring thread\n");
+    CpuUtilInfo cpu_delta = { 0.0, 0.0, 0.0 };
+    MemUtilInfo mem_delta = { 0, 0, 0 };
+    IoUtilInfo io_delta = { 0, 0, 0, 0, 0, 0, 0 };
+
+    if (set_monitoring_params(&mpi_rank, &interval,
+            &monitoring_socket_host, &monitoring_socket_port,
+            &kickstart_pid, hostname, &job_id)) {
+        printerr("ERROR: Unable to configure monitoring thread\n");
         goto exit;
     }
 
@@ -365,11 +401,12 @@ void* _interpose_monitoring_thread_func(void* arg) {
         pthread_cond_timedwait(&monitor_cv, &monitor_mutex, &timeout);
 
 
-        timestamp = time(NULL);
-        read_cpu_status(&cpu_info);
-        read_mem_status(&mem_info);
-        read_io_status(&io_info);
+        time_t timestamp = time(NULL);
         _interpose_read_exe(exec_name, BUFSIZ);
+
+        read_cpu_status(&cpu_info, &cpu_delta);
+        read_mem_status(&mem_info, &mem_delta);
+        read_io_status(&io_info, &io_delta);
 
         char counters_str[BUFSIZ] = "";
 #ifdef HAS_PAPI
@@ -396,19 +433,22 @@ void* _interpose_monitoring_thread_func(void* arg) {
 #endif
 
         memset(msg, 0, sizeof(msg));
-        sprintf(msg, "ts=%d event=workflow_trace level=INFO status=0 "
-                     "job_id=%s kickstart_pid=%s executable=%s hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
-                     "iowait=%.3f vmSize=%llu vmRSS=%llu threads=%lu read_bytes=%llu write_bytes=%llu "
-                     "syscr=%lu syscw=%lu %s\n",
-                     (int)timestamp, job_id, kickstart_pid, exec_name, hostname, mpi_rank,
-                     cpu_info.real_utime, cpu_info.real_stime, cpu_info.real_iowait,
-                     mem_info.vmSize, mem_info.vmRSS, mem_info.threads,
-                     io_info.rchar, io_info.wchar, io_info.syscr, io_info.syscw, counters_str);
+        sprintf(msg, "ts=%d pid=%d seq=%lu job_id=%s kickstart_pid=%s executable=%s "
+                     "hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
+                     "iowait=%.3f vmSize=%llu vmRSS=%llu threads=%d "
+                     "read_bytes=%llu write_bytes=%llu "
+                     "rchar=%llu wchar=%llu syscr=%lu syscw=%lu %s\n",
+                     (int)timestamp, getpid(), sequence++, job_id, kickstart_pid, exec_name,
+                     hostname, mpi_rank, cpu_delta.utime, cpu_delta.stime,
+                     cpu_delta.iowait, mem_delta.vmSize, mem_delta.vmRSS, mem_delta.threads,
+                     io_delta.read_bytes, io_delta.write_bytes,
+                     io_delta.rchar, io_delta.wchar,
+                     io_delta.syscr, io_delta.syscw, counters_str);
         if (send_msg_to_kickstart(msg, monitoring_socket_host, monitoring_socket_port)) {
             printerr("[Thread-%d] There was a problem sending a message to kickstart...\n", mpi_rank);
         }
 
-	/* Move this down here so that we always send one event before exiting */
+        /* Move this down here so that we always send one event before exiting */
         if (!monitor_running) {
             break;
         }
