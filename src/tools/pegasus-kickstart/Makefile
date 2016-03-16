@@ -1,7 +1,7 @@
 INSTALL = install
 RM = rm -f
 CC = gcc
-CFLAGS = -Wall -O2 -ggdb -std=gnu99 -I/ccg/software/papi/5.4.1/include -L/ccg/software/papi/5.4.1/lib
+CFLAGS = -Wall -O2 -ggdb -std=gnu99
 LD = $(CC)
 LDLIBS = -lm -lcurl -pthread
 LI_LDFLAGS = -ldl -pthread
@@ -39,15 +39,11 @@ endif
 ifeq (LINUX,${SYSTEM})
 ifeq (x86_64,${ARCH})
     TARGET += libinterpose.so
+    # TODO Replace this with pkg-config, which is supported in PAPI 5.4.1
     PAPI_SO=$(shell /sbin/ldconfig -p | grep libpapi.so)
     PAPI_H=$(shell ls /usr/include/papi.h)
     ifneq ($(PAPI_SO),)
         ifneq ($(PAPI_H),)
-            CFLAGS += -DHAS_PAPI
-            LI_LDFLAGS += -lpapi
-        endif
-
-        ifneq ($(shell ls /ccg/software/papi/5.4.1/include/papi.h),)
             CFLAGS += -DHAS_PAPI
             LI_LDFLAGS += -lpapi
         endif
