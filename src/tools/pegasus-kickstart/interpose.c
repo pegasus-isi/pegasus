@@ -117,7 +117,6 @@ static FILE* trace = NULL;
 #ifdef HAS_PAPI
 static int papi_ok = 0;
 
-/* XXX If you change this, change n_papi_events in interpose.h */
 char *papi_events[] = {
     "PAPI_TOT_INS",
     "PAPI_LD_INS",
@@ -128,6 +127,9 @@ char *papi_events[] = {
     "PAPI_L2_TCM",
     "PAPI_L1_TCM"
 };
+
+#define n_papi_events (sizeof(papi_events) / sizeof(char *))
+
 #endif
 
 typedef struct {

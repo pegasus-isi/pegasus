@@ -16,9 +16,5 @@ extern int myerr;
 
 void _interpose_read_exe(char *exe, int maxsize);
 
-#ifdef HAS_PAPI
-#define n_papi_events 8
-#endif
-
 #endif /* KICKSTART_INTERPOSE_H */
 

@@ -16,10 +16,6 @@
 #include <sys/time.h>
 #include <netinet/in.h>
 
-#ifdef HAS_PAPI
-#include <papi.h>
-#endif
-
 #include "interpose.h"
 #include "interpose_monitoring.h"
 
@@ -302,62 +298,6 @@ static void read_io_status(IoUtilInfo *info, IoUtilInfo *delta) {
     info->cancelled_write_bytes = new.cancelled_write_bytes;
 }
 
-#ifdef HAS_PAPI
-
-/* Read eventset, return 1 on failure, 0 on success */
-static int read_hardware_counters(int eventset, int *shared_nevents,
-        int *shared_events, long long *shared_counters) {
-
-    int i, rc;
-    int nevents = n_papi_events;
-    int events[n_papi_events];
-    long long counters[n_papi_events];
-
-    /* Get the events that were actually recorded */
-    rc = PAPI_list_events(eventset, events, &nevents);
-    if (rc != PAPI_OK) {
-        if (rc != PAPI_ENOEVST) {
-            printerr("ERROR: PAPI_list_events failed: %s\n", PAPI_strerror(rc));
-        }
-        return 1;
-    }
-
-    /* Initialize shared data structures if this is first read, otherwise
-     * verify that they match the shared data structures */
-    if (*shared_nevents <= 0) {
-        *shared_nevents = nevents;
-        for (i = 0; i < nevents; i++) {
-            shared_events[i] = events[i];
-        }
-    } else {
-        if (*shared_nevents != nevents) {
-            printerr("ERROR: event set %d had a different number of events\n", eventset);
-            return 1;
-        }
-        for (i = 0; i < nevents; i++) {
-            if (shared_events[i] != events[i]) {
-                printerr("ERROR: the PAPI event in position %d is different than the shared event\n", i);
-                return 1;
-            }
-        }
-    }
-
-    /* read and aggregate the counters */
-    rc = PAPI_read(eventset, counters);
-    if (rc != PAPI_OK) {
-        printerr("ERROR: No hardware counters or PAPI not supported: %s\n", PAPI_strerror(rc));
-        return 1;
-    }
-    for (i = 0; i < nevents; i++) {
-        /* We are summing up counters from different threads (eventsets) */
-        shared_counters[i] = shared_counters[i] + counters[i];
-    }
-
-    return 0;
-}
-
-#endif
-
 /* END READING PERFORMANCE METRICS FUNCTIONS */
 
 void* _interpose_monitoring_thread_func(void* arg) {
@@ -403,42 +343,18 @@ void* _interpose_monitoring_thread_func(void* arg) {
         read_mem_status(&mem_info, &mem_delta);
         read_io_status(&io_info, &io_delta);
 
-        char counters_str[BUFSIZ] = "";
-#ifdef HAS_PAPI
-        long long shared_counters[n_papi_events] = { 0 };
-        int shared_nevents = 0, shared_events[n_papi_events];
-
-        int k = 1;
-        while (read_hardware_counters(k, &shared_nevents, shared_events, shared_counters) == 0) {
-            k++;
-        }
-
-        memset(counters_str, 0, sizeof(counters_str));
-        for (int i = 0; i < shared_nevents; i++) {
-            char eventname[256];
-            int rc = PAPI_event_code_to_name(shared_events[i], eventname);
-            if (rc != PAPI_OK) {
-                printerr("ERROR: Could not get event name: %s\n", PAPI_strerror(rc));
-                break;
-            }
-            char counter_str[256];
-            sprintf(counter_str, "%s=%lld ", eventname, shared_counters[i]);
-            strcat(counters_str, counter_str);
-        }
-#endif
-
         memset(msg, 0, sizeof(msg));
         sprintf(msg, "ts=%d pid=%d seq=%lu executable=%s "
                      "hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
                      "iowait=%.3f vmSize=%llu vmRSS=%llu threads=%d "
                      "read_bytes=%llu write_bytes=%llu "
-                     "rchar=%llu wchar=%llu syscr=%lu syscw=%lu %s\n",
+                     "rchar=%llu wchar=%llu syscr=%lu syscw=%lu\n",
                      (int)timestamp, getpid(), sequence++, exec_name,
                      hostname, mpi_rank, cpu_delta.utime, cpu_delta.stime,
                      cpu_delta.iowait, mem_delta.vmSize, mem_delta.vmRSS, mem_delta.threads,
                      io_delta.read_bytes, io_delta.write_bytes,
                      io_delta.rchar, io_delta.wchar,
-                     io_delta.syscr, io_delta.syscw, counters_str);
+                     io_delta.syscr, io_delta.syscw);
         if (send_msg_to_kickstart(msg, monitoring_socket_host, monitoring_socket_port)) {
             printerr("[Thread-%d] There was a problem sending a message to kickstart...\n", mpi_rank);
         }
