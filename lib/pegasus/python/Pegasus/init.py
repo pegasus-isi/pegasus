@@ -135,6 +135,7 @@ class Workflow(object):
         elif self.tutorial_setup == "usc-hpcc":
             self.sitename = "usc-hpcc"
             self.config   = "glite"
+            self.properties["pegasus.job.aggregator"]="mpiexec"
         return
 
 
