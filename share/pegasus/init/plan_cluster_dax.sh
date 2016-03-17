@@ -19,8 +19,9 @@ pegasus-plan --conf pegasus.properties \
     --dir $DIR/submit \
     --input-dir $DIR/input \
     --output-dir $DIR/output \
-{% if config == "tutorial" %}
+{% if generate_tutorial == true %}
     --cleanup leaf \
+    --cluster label \
     --force \
 {% endif %}
     --sites {{sitename}} \
