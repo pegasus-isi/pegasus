@@ -1,5 +1,3 @@
-#define _GNU_SOURCE
-
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
@@ -10,7 +8,6 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <sys/syscall.h>
-#include <dlfcn.h>
 #include <pthread.h>
 #include <signal.h>
 #include <sys/time.h>
@@ -191,8 +188,7 @@ void _interpose_spawn_monitoring_thread() {
     pthread_cond_init(&monitor_cv, NULL);
     monitor_running = 1;
 
-    typeof(pthread_create) *orig_pthread_create = dlsym(RTLD_NEXT, "pthread_create");
-    int rc = (*orig_pthread_create)(&monitor_thread, NULL, _interpose_monitoring_thread_func, NULL);
+    int rc = pthread_create(&monitor_thread, NULL, _interpose_monitoring_thread_func, NULL);
     if (rc) {
         printerr("ERROR: could not spawn the monitoring thread; return code from pthread_create() is %d\n", rc);
         return;
