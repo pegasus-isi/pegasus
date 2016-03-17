@@ -32,10 +32,10 @@ tr pegasus::mpiexec{
         # in which the workflow runs on the cluster
         profile globus "jobtype" "mpi"
 
-	# This specifies the maximum runtime for the job in minutes. It
+	# This specifies the maximum runtime for the job in seconds. It
 	# should be an integer value. Pegasus converts it to the
 	# "hh:mm:ss" format required by PBS.
-        profile pegasus "walltime" "60"
+        profile pegasus "runtime" "600"
 
         # specfiy the ppn parameter.
         profile pegasus "ppn" "4"
