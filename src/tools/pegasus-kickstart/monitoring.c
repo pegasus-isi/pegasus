@@ -17,8 +17,6 @@
 #include "error.h"
 #include "monitoring.h"
 
-#define MSG_AGGR_FACTOR 1
-
 typedef struct {
     char *url;
     char *credentials;
@@ -120,12 +118,9 @@ static size_t write_callback(char *ptr, size_t size, size_t nmemb, void *userdat
 
 /* sending this message to rabbitmq */
 static void send_msg_to_mq(char* msg_buff, MonitoringThreadContext *ctx) {
-    char *payload = (char*) malloc(strlen(msg_buff) * sizeof(char) + BUFSIZ);
-
     CURL *curl = curl_easy_init();
     if (curl == NULL) {
-        printerr("[mon-thread] we couldn't initialize curl\n");
-        free(payload);
+        printerr("[mon-thread] Error initializing curl\n");
         return;
     }
 
@@ -136,13 +131,18 @@ static void send_msg_to_mq(char* msg_buff, MonitoringThreadContext *ctx) {
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
 
+    char payload[BUFSIZ];
+    if (snprintf(payload, BUFSIZ,
+        "{\"properties\":{},\"routing_key\":\"%s\",\"payload\":\"%s\",\"payload_encoding\":\"string\"}",
+        ctx->wf_uuid, msg_buff) >= BUFSIZ) {
+        printerr("[mon-thread] Message too large for buffer: %d\n", strlen(msg_buff));
+        return;
+    }
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
+
     struct curl_slist *http_header = NULL;
     http_header = curl_slist_append(http_header, "Content-Type: application/json");
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, http_header);
-
-    sprintf(payload, "{\"properties\":{},\"routing_key\":\"%s\",\"payload\":\"%s\",\"payload_encoding\":\"string\"}",
-        ctx->wf_uuid, msg_buff);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
 
     /* Perform the request, res will get the return code */
     CURLcode res = curl_easy_perform(curl);
@@ -155,8 +155,6 @@ static void send_msg_to_mq(char* msg_buff, MonitoringThreadContext *ctx) {
     /* always cleanup */
     curl_easy_cleanup(curl);
     curl_slist_free_all(http_header);
-
-    free(payload);
 }
 
 /* purpose: find an ephemeral port available on a machine for further socket-based communication;
@@ -234,8 +232,6 @@ void* monitoring_thread_func(void* arg) {
 
     printerr("[mon-thread] Starting monitoring loop...\n");
 
-    int msg_counter = 0, aggr_msg_buffer_offset = 0;
-    char aggr_msg_buffer[BUFSIZ * MSG_AGGR_FACTOR];
     while (1) {
 
         /* Poll signal_pipe and socket to see which one is readable */
@@ -300,31 +296,10 @@ void* monitoring_thread_func(void* arg) {
         snprintf(enriched_line, BUFSIZ, "%s wf_uuid=%s wf_label=%s dag_job_id=%s condor_job_id=%s xformation=%s task_id=%s",
             line, ctx->wf_uuid, ctx->wf_label, ctx->dag_job_id, ctx->condor_job_id, ctx->xformation, ctx->task_id);
 
-        // Aggregate messages
-        int n = snprintf(aggr_msg_buffer + aggr_msg_buffer_offset, BUFSIZ, "%s:delim1:", enriched_line);
-        if (n < 0 || n > BUFSIZ) {
-            printerr("[mon-thread] Error aggregating messages: snprintf: %s\n", strerror(errno));
-            goto next;
-        }
-        msg_counter += 1;
-        aggr_msg_buffer_offset += n;
-
-        // Send aggregated message
-        if (msg_counter == MSG_AGGR_FACTOR) {
-            send_msg_to_mq(aggr_msg_buffer, ctx);
-            msg_counter = 0;
-            aggr_msg_buffer_offset = 0;
-            memset(aggr_msg_buffer, 0, BUFSIZ * MSG_AGGR_FACTOR);
-        }
+        send_msg_to_mq(enriched_line, ctx);
 
 next:
         close(incoming_socket);
-    }
-
-    /* Send whatever messages are buffered up */
-    if (msg_counter > 0) {
-        printerr("[mon-thread] Sending final aggregated message with %d message(s)...\n", msg_counter);
-        send_msg_to_mq(aggr_msg_buffer, ctx);
     }
 
     printerr("[mon-thread] Monitoring thread exiting...\n");
