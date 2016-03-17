@@ -135,7 +135,9 @@ class Workflow(object):
         elif self.tutorial_setup == "usc-hpcc":
             self.sitename = "usc-hpcc"
             self.config   = "glite"
+            # for running the whole workflow as mpi job
             self.properties["pegasus.job.aggregator"]="mpiexec"
+            self.copy_template("plan_cluster_dax.sh", "plan_cluster_dax.sh", mode=0755)
         return
 
 
@@ -162,7 +164,6 @@ class Workflow(object):
             elif self.tutorial == "split":
                 # Split workflow input file
                 self.copy_template("split/pegasus.html", "input/pegasus.html")
-                self.copy_template("plan_cluster_dax.sh", "plan_cluster_dax.sh", mode=0755)
         else:
             self.copy_template("tc.txt", "tc.txt")
             if self.daxgen == "python":
