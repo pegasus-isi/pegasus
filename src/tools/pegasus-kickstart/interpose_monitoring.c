@@ -25,50 +25,52 @@ static pthread_t monitor_thread;
 static pthread_mutex_t monitor_mutex;
 static pthread_cond_t monitor_cv;
 
-static int prepare_socket(int *sockfd, char *monitoring_socket_host, char* monitoring_socket_port, struct sockaddr_in *serv_addr) {
-    int port_no = atoi(monitoring_socket_port);
-    struct sockaddr_in sa_addr;
-    struct hostent *server;
+static int send_msg_to_kickstart(char *msg, int size, char *host, char *port) {
+    struct addrinfo hints;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
 
-    if ((*sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        printerr("Error[getaddrinfo]: %s\n", strerror(errno));
+    struct addrinfo *servinfo;
+    int gaierr = getaddrinfo(host, port, &hints, &servinfo);
+    if (gaierr != 0) {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(gaierr));
         return -1;
     }
 
-    server = gethostbyname(monitoring_socket_host);
-    if (server == NULL) {
-        printerr("Error[gethostbyname]: no such host - %s\n", strerror(errno));
-        return -1;
-    }
-
-    bzero((char *) &sa_addr, sizeof(sa_addr));
-    sa_addr.sin_family = AF_INET;
-    bcopy((char *)server->h_addr, (char *)&sa_addr.sin_addr.s_addr, server->h_length);
-    sa_addr.sin_port = htons(port_no);
-
-    if (connect(*sockfd, (struct sockaddr *)&sa_addr, sizeof(sa_addr)) < 0) {
-        printerr("Error[connect]: %s\n", strerror(errno));
-        return -1;
-    }
-
-    return 0;
-}
-
-static int send_msg_to_kickstart(char *msg, char *host, char *port) {
     int sockfd;
-    struct sockaddr_in serv_addr;
+    struct addrinfo *p;
+    for (p = servinfo; p != NULL; p = p->ai_next) {
+        sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+        if (sockfd == -1) {
+            perror("socket");
+            continue;
+        }
 
-    if (prepare_socket(&sockfd, host, port, &serv_addr) == -1) {
-        printerr("Some error occured during socket preparation.\n");
-        return 1;
+        if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+            perror("connect");
+            close(sockfd);
+            continue;
+        }
+
+        // Successful connection
+        break;
     }
 
-    if (send(sockfd, msg, BUFSIZ, 0) < 0) {
-        printerr("Error during msg send.\n");
-        return 1;
+    freeaddrinfo(servinfo);
+
+    if (p == NULL) {
+        fprintf(stderr, "failed to connect\n");
+        return -1;
+    }
+
+    if (send(sockfd, msg, size, 0) < 0) {
+        printerr("Error during msg send: %s\n", strerror(errno));
+        return -1;
     }
 
     close(sockfd);
+
     return 0;
 }
 
@@ -124,19 +126,19 @@ void* _interpose_monitoring_thread_func(void* arg) {
     int mpi_rank = 0;
     int interval = 60;
     unsigned long sequence = 0;
-    char exec_name[BUFSIZ] = "";
+    char exe[BUFSIZ] = "";
     char hostname[BUFSIZ] = "";
     char msg[BUFSIZ] = "";
-    char *monitoring_socket_host = NULL;
-    char *monitoring_socket_port = NULL;
+    char *monitoring_host = NULL;
+    char *monitoring_port = NULL;
     ProcStats stats;
     ProcStats diff;
 
     procfs_stats_init(&stats);
     procfs_stats_init(&diff);
 
-    if (set_monitoring_params(&mpi_rank, &interval, &monitoring_socket_host,
-                &monitoring_socket_port, hostname)) {
+    if (set_monitoring_params(&mpi_rank, &interval, &monitoring_host,
+                &monitoring_port, hostname)) {
         printerr("ERROR: Unable to configure monitoring thread\n");
         goto exit;
     }
@@ -151,21 +153,19 @@ void* _interpose_monitoring_thread_func(void* arg) {
         pthread_cond_timedwait(&monitor_cv, &monitor_mutex, &timeout);
 
         time_t timestamp = time(NULL);
-        procfs_read_exe(getpid(), exec_name, BUFSIZ);
+        procfs_read_exe(getpid(), exe, BUFSIZ);
         procfs_read_stats_diff(getpid(), &stats, &diff);
 
-        memset(msg, 0, sizeof(msg));
-        sprintf(msg, "ts=%d pid=%d seq=%lu executable=%s "
-                     "hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
-                     "iowait=%.3f vmpeak=%llu rsspeak=%llu threads=%d "
-                     "read_bytes=%llu write_bytes=%llu "
-                     "rchar=%llu wchar=%llu syscr=%lu syscw=%lu\n",
-                     (int)timestamp, getpid(), sequence++, exec_name,
+        sprintf(msg, "ts=%d pid=%d seq=%lu exe=%s host=%s rank=%d "
+                     "utime=%.3f stime=%.3f iowait=%.3f vmpeak=%llu rsspeak=%llu "
+                     "threads=%d bread=%llu bwrite=%llu rchar=%llu wchar=%llu "
+                     "syscr=%lu syscw=%lu\n",
+                     (int)timestamp, getpid(), sequence++, exe,
                      hostname, mpi_rank, diff.utime, diff.stime,
                      diff.iowait, diff.vmpeak, diff.rsspeak, diff.threads,
-                     diff.read_bytes, diff.write_bytes,
-                     diff.rchar, diff.wchar, diff.syscr, diff.syscw);
-        if (send_msg_to_kickstart(msg, monitoring_socket_host, monitoring_socket_port)) {
+                     diff.read_bytes, diff.write_bytes, diff.rchar, diff.wchar,
+                     diff.syscr, diff.syscw);
+        if (send_msg_to_kickstart(msg, strlen(msg), monitoring_host, monitoring_port)) {
             printerr("[Thread-%d] There was a problem sending a message to kickstart...\n", mpi_rank);
         }
 

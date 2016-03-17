@@ -311,9 +311,7 @@ void* monitoring_thread_func(void* arg) {
 
         // Send aggregated message
         if (msg_counter == MSG_AGGR_FACTOR) {
-            printerr("[mon-thread] Sending aggregated message...\n");
             send_msg_to_mq(aggr_msg_buffer, ctx);
-
             msg_counter = 0;
             aggr_msg_buffer_offset = 0;
             memset(aggr_msg_buffer, 0, BUFSIZ * MSG_AGGR_FACTOR);
