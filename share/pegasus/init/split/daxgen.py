@@ -24,6 +24,7 @@ webpage = File("pegasus.html")
 split = Job("split")
 split.addArguments("-l","100","-a","1",webpage,"part.")
 split.uses(webpage, link=Link.INPUT)
+split.addProfile( Profile("pegasus","label","p1"))
 dax.addJob(split)
 
 # we do a parmeter sweep on the first 4 chunks created
@@ -34,6 +35,7 @@ for c in "abcd":
     count = File("count.txt.%s" % c)
 
     wc = Job("wc")
+    wc.addProfile( Profile("pegasus","label","p1"))
     wc.addArguments("-l",part)
     wc.setStdout(count)
     wc.uses(part, link=Link.INPUT)
