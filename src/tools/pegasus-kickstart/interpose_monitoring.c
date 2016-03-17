@@ -13,7 +13,7 @@
 #include <sys/time.h>
 #include <netinet/in.h>
 
-#include "interpose.h"
+#include "error.h"
 #include "interpose_monitoring.h"
 #include "procfs.h"
 
@@ -31,7 +31,7 @@ static int send_msg_to_kickstart(char *msg, int size, char *host, char *port) {
     struct addrinfo *servinfo;
     int gaierr = getaddrinfo(host, port, &hints, &servinfo);
     if (gaierr != 0) {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(gaierr));
+        printerr("getaddrinfo: %s\n", gai_strerror(gaierr));
         return -1;
     }
 
@@ -40,12 +40,12 @@ static int send_msg_to_kickstart(char *msg, int size, char *host, char *port) {
     for (p = servinfo; p != NULL; p = p->ai_next) {
         sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
         if (sockfd == -1) {
-            perror("socket");
+            printerr("socket: %s\n", strerror(errno));
             continue;
         }
 
         if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-            perror("connect");
+            printerr("connect: %s", strerror(errno));
             close(sockfd);
             continue;
         }
@@ -57,7 +57,7 @@ static int send_msg_to_kickstart(char *msg, int size, char *host, char *port) {
     freeaddrinfo(servinfo);
 
     if (p == NULL) {
-        fprintf(stderr, "failed to connect\n");
+        printerr("failed to connect to kickstart monitor: no suitable addr\n");
         return -1;
     }
 
@@ -126,16 +126,15 @@ void* _interpose_monitoring_thread_func(void* arg) {
     char exe[BUFSIZ] = "";
     char hostname[BUFSIZ] = "";
     char msg[BUFSIZ] = "";
-    char *monitoring_host = NULL;
-    char *monitoring_port = NULL;
+    char *mon_host = NULL;
+    char *mon_port = NULL;
     ProcStats stats;
     ProcStats diff;
 
     procfs_stats_init(&stats);
     procfs_stats_init(&diff);
 
-    if (set_monitoring_params(&mpi_rank, &interval, &monitoring_host,
-                &monitoring_port, hostname)) {
+    if (set_monitoring_params(&mpi_rank, &interval, &mon_host, &mon_port, hostname)) {
         printerr("ERROR: Unable to configure monitoring thread\n");
         goto exit;
     }
@@ -163,8 +162,9 @@ void* _interpose_monitoring_thread_func(void* arg) {
                      diff.iowait, diff.vmpeak, diff.rsspeak, diff.threads,
                      diff.read_bytes, diff.write_bytes, diff.rchar, diff.wchar,
                      diff.syscr, diff.syscw);
-        if (send_msg_to_kickstart(msg, strlen(msg), monitoring_host, monitoring_port)) {
-            printerr("[Thread-%d] There was a problem sending a message to kickstart...\n", mpi_rank);
+        if (send_msg_to_kickstart(msg, strlen(msg), mon_host, mon_port)) {
+            printerr("Process rank=%d pid=%d failed to send message to kickstart\n",
+                     mpi_rank, getpid());
         }
 
         /* Move this down here so that we always send one event before exiting */
@@ -190,7 +190,7 @@ void _interpose_spawn_monitoring_thread() {
 
     int rc = pthread_create(&monitor_thread, NULL, _interpose_monitoring_thread_func, NULL);
     if (rc) {
-        printerr("ERROR: could not spawn the monitoring thread; return code from pthread_create() is %d\n", rc);
+        printerr("Could not spawn the monitoring thread: %d %s\n", rc, strerror(errno));
         return;
     }
 }

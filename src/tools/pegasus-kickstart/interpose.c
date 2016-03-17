@@ -52,7 +52,18 @@
  *      mmap and assume that the total size being mapped is read/written
  */
 
-int myerr = STDERR_FILENO;
+static int myerr = STDERR_FILENO;
+
+#define printerr(fmt, ...) \
+    dprintf(myerr, "libinterpose[%d/%d]: %s[%d]: " fmt, \
+            getpid(), gettid(), __FILE__, __LINE__, ##__VA_ARGS__)
+
+#ifdef DEBUG
+#define debug(format, args...) \
+    dprintf(myerr, "libinterpose: " format "\n" , ##args)
+#else
+#define debug(format, args...)
+#endif
 
 typedef struct {
     char type;
