@@ -152,15 +152,16 @@ void* _interpose_monitoring_thread_func(void* arg) {
         timeout.tv_nsec = now.tv_usec * 1000UL;
         pthread_cond_timedwait(&monitor_cv, &monitor_mutex, &timeout);
 
-        time_t timestamp = time(NULL);
+        gettimeofday(&now, NULL);
+        double timestamp = now.tv_sec + ((double)now.tv_usec * 1e-6);
         procfs_read_exe(getpid(), exe, BUFSIZ);
         procfs_read_stats_diff(getpid(), &stats, &diff);
 
-        sprintf(msg, "ts=%d pid=%d seq=%lu exe=%s host=%s rank=%d "
+        sprintf(msg, "ts=%.3f pid=%d seq=%lu exe=%s host=%s rank=%d "
                      "utime=%.3f stime=%.3f iowait=%.3f vmpeak=%llu rsspeak=%llu "
                      "threads=%d bread=%llu bwrite=%llu rchar=%llu wchar=%llu "
                      "syscr=%lu syscw=%lu\n",
-                     (int)timestamp, getpid(), sequence++, exe,
+                     timestamp, getpid(), sequence++, exe,
                      hostname, mpi_rank, diff.utime, diff.stime,
                      diff.iowait, diff.vmpeak, diff.rsspeak, diff.threads,
                      diff.read_bytes, diff.write_bytes, diff.rchar, diff.wchar,
