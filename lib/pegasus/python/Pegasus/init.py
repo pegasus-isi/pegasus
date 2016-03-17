@@ -65,6 +65,7 @@ class Workflow(object):
         self.properties = {}
         self.home = os.environ["HOME"]
         self.user = os.environ["USER"]
+        self.generate_tutorial = False
         sysname, _, _, _, machine = os.uname()
         if sysname == 'Darwin':
             self.os = "MACOSX"
@@ -91,7 +92,8 @@ class Workflow(object):
         if yesno("Do you want to generate a tutorial workflow?", "n"):
             self.config = "tutorial"
             self.daxgen = "tutorial"
-            self.sitename = "condorpool"
+            self.generate_tutorial = True
+
             self.tutorial = optionlist("What tutorial workflow do you want?", [
                 ("Process", "process"),
                 ("Pipeline", "pipeline"),
@@ -99,6 +101,8 @@ class Workflow(object):
                 ("Merge", "merge"),
                 ("Diamond", "diamond")
             ])
+            self.tutorial_setup = choice("What environment is tutorial to be setup for?", ["submit-host","usc-hpcc"], "submit-host")
+            self.setup_tutorial()
             return
 
         # Determine which DAX generator API to use
@@ -118,12 +122,29 @@ class Workflow(object):
         self.os = choice("What OS does your compute site have?", ["LINUX", "MACOSX"], self.os)
         self.arch = choice("What architecture does your compute site have?", ["x86_64", "x86"], self.arch)
 
+    def setup_tutorial(self):
+        """
+        Set up tutorial for pre-defined computing environments
+        :return:
+        """
+        if self.tutorial_setup is None:
+            self.tutorial_setup = "submit-host"
+
+        if self.tutorial_setup == "submit=host":
+            self.sitename = "condorpool"
+        elif self.tutorial_setup == "usc-hpcc":
+            self.sitename = "usc-hpcc"
+            self.config   = "glite"
+        return
+
+
+
     def generate(self):
         os.makedirs(self.workflowdir)
         self.mkdir("input")
         self.mkdir("output")
 
-        if self.config == "tutorial":
+        if self.generate_tutorial:
             self.copy_template("%s/tc.txt" % self.tutorial, "tc.txt")
             self.copy_template("%s/daxgen.py" % self.tutorial, "daxgen.py")
 
