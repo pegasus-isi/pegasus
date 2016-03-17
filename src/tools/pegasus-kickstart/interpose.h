@@ -14,7 +14,5 @@ extern int myerr;
 #define debug(format, args...)
 #endif
 
-void _interpose_read_exe(char *exe, int maxsize);
-
 #endif /* KICKSTART_INTERPOSE_H */
 

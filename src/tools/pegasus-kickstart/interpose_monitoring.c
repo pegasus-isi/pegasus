@@ -18,39 +18,12 @@
 
 #include "interpose.h"
 #include "interpose_monitoring.h"
+#include "procfs.h"
 
 static int monitor_running;
 static pthread_t monitor_thread;
 static pthread_mutex_t monitor_mutex;
 static pthread_cond_t monitor_cv;
-
-typedef struct {
-    unsigned long long rchar;
-    unsigned long long wchar;
-    unsigned long syscr;
-    unsigned long syscw;
-    unsigned long long read_bytes;
-    unsigned long long write_bytes;
-    unsigned long long cancelled_write_bytes;
-} IoUtilInfo;
-
-typedef struct {
-    double utime;
-    double stime;
-    double iowait;
-} CpuUtilInfo;
-
-typedef struct {
-    unsigned long long vmSize; /* peak vm size */
-    unsigned long long vmRSS; /* peak RSS */
-    int threads; /* delta of threads could be negative */
-} MemUtilInfo;
-
-static int startswith(const char *line, const char *tok) {
-    return strstr(line, tok) == line;
-}
-
-/* SOCKET-BASED COMMUNICATION WITH KICKSTART */
 
 static int prepare_socket(int *sockfd, char *monitoring_socket_host, char* monitoring_socket_port, struct sockaddr_in *serv_addr) {
     int port_no = atoi(monitoring_socket_port);
@@ -99,8 +72,6 @@ static int send_msg_to_kickstart(char *msg, char *host, char *port) {
     return 0;
 }
 
-/* END SOCKET-BASED COMMUNICATION WITH KICKSTART */
-
 static int set_monitoring_params(int *mpi_rank, int *interval,
         char **socket_host, char **socket_port, char *hostname) {
 
@@ -147,159 +118,6 @@ static int set_monitoring_params(int *mpi_rank, int *interval,
     return 0;
 }
 
-/* READING PERFORMANCE METRICS FUNCTIONS */
-
-/* Read /proc/self/stat to get CPU usage and returns a structure with this information */
-static void read_cpu_status(CpuUtilInfo *info, CpuUtilInfo *delta) {
-    char statf[] = "/proc/self/stat";
-
-    /* If the stat file is missing, then just skip it */
-    if (access(statf, F_OK) < 0) {
-        return;
-    }
-
-    FILE *f = fopen(statf,"r");
-    if (f == NULL) {
-        perror("libinterpose: Unable to fopen /proc/self/stat");
-        return;
-    }
-
-    unsigned long utime, stime = 0;
-    unsigned long long iowait = 0; //delayacct_blkio_ticks
-
-    //pid comm state ppid pgrp session tty_nr tpgid flags minflt cminflt majflt
-    //cmajflt utime stime cutime cstime priority nice num_threads itrealvalue
-    //starttime vsize rss rsslim startcode endcode startstack kstkesp kstkeip
-    //signal blocked sigignore sigcatch wchan nswap cnswap exit_signal
-    //processor rt_priority policy delayacct_blkio_ticks guest_time cguest_time
-    fscanf(f, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu "
-              "%lu %*d %*d %*d %*d %*d %*d %*u %*u %*d %*u %*u "
-              "%*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*d "
-              "%*d %*u %*u %llu %*u %*d",
-           &utime, &stime, &iowait);
-
-    fclose(f);
-
-    /* Adjust by number of clock ticks per second */
-    long clocks = sysconf(_SC_CLK_TCK);
-
-    CpuUtilInfo new = {0.0, 0.0, 0.0};
-    new.utime = ((double)utime) / clocks;
-    new.stime = ((double)stime) / clocks;
-    new.iowait = ((double)iowait) / clocks;
-
-    /* Compute the delta */
-    delta->utime = new.utime - info->utime;
-    delta->stime = new.stime - info->stime;
-    delta->iowait = new.iowait - info->iowait;
-
-    /* Save the new values */
-    info->utime = new.utime;
-    info->stime = new.stime;
-    info->iowait = new.iowait;
-}
-
-/* Read useful information from /proc/self/status and returns a structure with this information */
-static void read_mem_status(MemUtilInfo *info, MemUtilInfo *delta) {
-    char statf[] = "/proc/self/status";
-
-    /* If the status file is missing, then just skip it */
-    if (access(statf, F_OK) < 0) {
-        return;
-    }
-
-    FILE *f = fopen(statf, "r");
-    if (f == NULL) {
-        perror("libinterpose: Unable to fopen /proc/self/status");
-        return;
-    }
-
-    MemUtilInfo new = {0, 0, 0};
-    char line[BUFSIZ];
-    while (fgets(line, BUFSIZ, f) != NULL) {
-        if (startswith(line,"VmSize")) {
-            sscanf(line, "VmSize: %llu", &(new.vmSize));
-        } else if (startswith(line,"VmRSS")) {
-            sscanf(line, "VmRSS: %llu", &(new.vmRSS));
-        } else if (startswith(line,"Threads")) {
-            sscanf(line, "Threads: %d", &(new.threads));
-        }
-    }
-
-    fclose(f);
-
-    /* Compute the diff */
-    delta->vmSize = new.vmSize - info->vmSize;
-    delta->vmRSS = new.vmRSS - info->vmRSS;
-    delta->threads = new.threads - info->threads;
-
-    /* Save the new values */
-    info->vmSize = new.vmSize;
-    info->vmRSS = new.vmRSS;
-    info->threads = new.threads;
-}
-
-/* Read /proc/self/io to get I/O usage */
-static void read_io_status(IoUtilInfo *info, IoUtilInfo *delta) {
-    char iofile[] = "/proc/self/io";
-
-    /* This proc file was added in Linux 2.6.20. It won't be
-     * there on older kernels, or on kernels without task IO
-     * accounting. If it is missing, just bail out.
-     */
-    if (access(iofile, F_OK) < 0) {
-        return;
-    }
-
-    FILE *f = fopen(iofile, "r");
-    if (f == NULL) {
-        printerr("Unable to fopen /proc/self/io: %s", strerror(errno));
-        return;
-    }
-
-    IoUtilInfo new = { 0, 0, 0, 0, 0, 0, 0 };
-    char line[BUFSIZ];
-    while (fgets(line, BUFSIZ, f) != NULL) {
-        if (startswith(line, "rchar")) {
-            sscanf(line, "rchar: %llu", &(new.rchar));
-        } else if (startswith(line, "wchar")) {
-            sscanf(line, "wchar: %llu", &(new.wchar));
-        } else if (startswith(line,"syscr")) {
-            sscanf(line, "syscr: %lu", &(new.syscr));
-        } else if (startswith(line,"syscw")) {
-            sscanf(line, "syscw: %lu", &(new.syscw));
-        } else if (startswith(line,"read_bytes")) {
-            sscanf(line, "read_bytes: %llu", &(new.read_bytes));
-        } else if (startswith(line,"write_bytes")) {
-            sscanf(line, "write_bytes: %llu", &(new.write_bytes));
-        } else if (startswith(line,"cancelled_write_bytes")) {
-            sscanf(line, "cancelled_write_bytes: %llu", &(new.cancelled_write_bytes));
-        }
-    }
-
-    fclose(f);
-
-    /* Compute the delta */
-    delta->rchar = new.rchar - info->rchar;
-    delta->wchar = new.wchar - info->wchar;
-    delta->syscr = new.syscr - info->syscr;
-    delta->syscw = new.syscw - info->syscw;
-    delta->read_bytes = new.read_bytes - info->read_bytes;
-    delta->write_bytes = new.write_bytes - info->write_bytes;
-    delta->cancelled_write_bytes = new.cancelled_write_bytes - info->cancelled_write_bytes;
-
-    /* Save the new values */
-    info->rchar = new.rchar;
-    info->wchar = new.wchar;
-    info->syscr = new.syscr;
-    info->syscw = new.syscw;
-    info->read_bytes = new.read_bytes;
-    info->write_bytes = new.write_bytes;
-    info->cancelled_write_bytes = new.cancelled_write_bytes;
-}
-
-/* END READING PERFORMANCE METRICS FUNCTIONS */
-
 void* _interpose_monitoring_thread_func(void* arg) {
     pthread_mutex_lock(&monitor_mutex);
 
@@ -311,14 +129,11 @@ void* _interpose_monitoring_thread_func(void* arg) {
     char msg[BUFSIZ] = "";
     char *monitoring_socket_host = NULL;
     char *monitoring_socket_port = NULL;
+    ProcStats stats;
+    ProcStats diff;
 
-    CpuUtilInfo cpu_info = { 0.0, 0.0, 0.0 };
-    MemUtilInfo mem_info = { 0, 0, 0 };
-    IoUtilInfo io_info = { 0, 0, 0, 0, 0, 0, 0 };
-
-    CpuUtilInfo cpu_delta = { 0.0, 0.0, 0.0 };
-    MemUtilInfo mem_delta = { 0, 0, 0 };
-    IoUtilInfo io_delta = { 0, 0, 0, 0, 0, 0, 0 };
+    procfs_stats_init(&stats);
+    procfs_stats_init(&diff);
 
     if (set_monitoring_params(&mpi_rank, &interval, &monitoring_socket_host,
                 &monitoring_socket_port, hostname)) {
@@ -335,26 +150,21 @@ void* _interpose_monitoring_thread_func(void* arg) {
         timeout.tv_nsec = now.tv_usec * 1000UL;
         pthread_cond_timedwait(&monitor_cv, &monitor_mutex, &timeout);
 
-
         time_t timestamp = time(NULL);
-        _interpose_read_exe(exec_name, BUFSIZ);
-
-        read_cpu_status(&cpu_info, &cpu_delta);
-        read_mem_status(&mem_info, &mem_delta);
-        read_io_status(&io_info, &io_delta);
+        procfs_read_exe(getpid(), exec_name, BUFSIZ);
+        procfs_read_stats_diff(getpid(), &stats, &diff);
 
         memset(msg, 0, sizeof(msg));
         sprintf(msg, "ts=%d pid=%d seq=%lu executable=%s "
                      "hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
-                     "iowait=%.3f vmSize=%llu vmRSS=%llu threads=%d "
+                     "iowait=%.3f vmpeak=%llu rsspeak=%llu threads=%d "
                      "read_bytes=%llu write_bytes=%llu "
                      "rchar=%llu wchar=%llu syscr=%lu syscw=%lu\n",
                      (int)timestamp, getpid(), sequence++, exec_name,
-                     hostname, mpi_rank, cpu_delta.utime, cpu_delta.stime,
-                     cpu_delta.iowait, mem_delta.vmSize, mem_delta.vmRSS, mem_delta.threads,
-                     io_delta.read_bytes, io_delta.write_bytes,
-                     io_delta.rchar, io_delta.wchar,
-                     io_delta.syscr, io_delta.syscw);
+                     hostname, mpi_rank, diff.utime, diff.stime,
+                     diff.iowait, diff.vmpeak, diff.rsspeak, diff.threads,
+                     diff.read_bytes, diff.write_bytes,
+                     diff.rchar, diff.wchar, diff.syscr, diff.syscw);
         if (send_msg_to_kickstart(msg, monitoring_socket_host, monitoring_socket_port)) {
             printerr("[Thread-%d] There was a problem sending a message to kickstart...\n", mpi_rank);
         }

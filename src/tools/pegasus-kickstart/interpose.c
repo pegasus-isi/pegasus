@@ -28,6 +28,7 @@
 
 #include "interpose.h"
 #include "interpose_monitoring.h"
+#include "procfs.h"
 
 /* TODO Unlocked I/O (e.g. fwrite_unlocked) */
 /* TODO Handle directories */
@@ -412,97 +413,34 @@ static void read_cmdline() {
     fclose_untraced(f);
 }
 
-/* Read /proc/self/exe to get path to executable */
-void _interpose_read_exe(char *exe, int maxsize) {
-    debug("Reading exe");
-    int size = readlink("/proc/self/exe", exe, maxsize);
-    if (size < 0) {
-        printerr("libinterpose: Unable to readlink /proc/self/exe: %s\n", strerror(errno));
-        exe[0] = '\0';
-        return;
-    }
-    if (size == BUFSIZ) {
-        printerr("Unable to readlink /proc/self/exe: Real path is too long\n");
-        return;
-    }
-    exe[size] = '\0';
-    return;
-
-    // if it is linux loader we need to read its first argument
-    // TODO we are looking for "ld-" in the whole string due to simplicity, but it will not work in some cases
-//    if( strstr(buffer, "ld-") != NULL ) {
-//        // so we read /proc/self/cmdline - it a string with \0 delimeter
-//        int fd = open("/proc/self/cmdline", O_RDONLY);
-//        if(fd < 0) {
-//            printerr("libinterpose: Unable to open /proc/self/cmdline: %s\n", strerror(errno));
-//        }
-//        else {
-//            // printerr("libinterpose: we opend cmdline file\n");
-//            int nbytesread = read(fd, buffer, BUFSIZ);
-//            if(nbytesread < 0) {
-//                printerr("libinterpose: Unable to read /proc/self/cmdline: %s\n", strerror(errno));
-//            }
-//            else {
-//                // printerr("libinterpose: we read: %s\n", buffer);
-//                char *buf_idx = buffer;
-//
-//                // we need to take only the first token without ld-
-//                while( strstr(buf_idx, "ld-") != NULL ) {
-//                    char* idx = index(buf_idx, 0);
-//                    if(idx != NULL) {
-//                        buf_idx = idx + 1;
-//                    }
-//                }
-//                strcpy(buffer, buf_idx);
-//            }
-//            // printerr("libinterpose: executable read from cmdline: %s\n", exe);
-//
-//            close(fd);
-//        }
-//    }
-//    if(executable_name != NULL) {
-//        strcpy(executable_name, buffer);
-//    }
-}
-
-static void read_exe() {
-    char exe[BUFSIZ];
-    _interpose_read_exe(exe, BUFSIZ);
-    tprintf("exe: %s\n", exe);
-}
-
 /* Return 1 if line begins with tok */
 static int startswith(const char *line, const char *tok) {
     return strstr(line, tok) == line;
 }
 
-/* Read memory information from /proc/self/status */
-static void read_status() {
-    debug("Reading status file");
+/* Read stats from procfs */
+static void read_procfs() {
+    ProcStats stats;
+    procfs_stats_init(&stats);
+    procfs_read_stats(getpid(), &stats);
 
-    char statf[] = "/proc/self/status";
+    tprintf("VmPeak: %llu\n", stats.vmpeak);
+    tprintf("VmHWM: %llu\n", stats.rsspeak);
+    tprintf("iowait: %.3lf\n", stats.iowait);
+    tprintf("rchar: %llu\n", stats.rchar);
+    tprintf("wchar: %llu\n", stats.wchar);
+    tprintf("syscr: %lu\n", stats.syscr);
+    tprintf("syscw: %lu\n", stats.syscw);
+    tprintf("read_bytes: %llu\n", stats.read_bytes);
+    tprintf("write_bytes: %llu\n", stats.write_bytes);
+    tprintf("cancelled_write_bytes: %llu\n", stats.cancelled_write_bytes);
 
-    /* If the status file is missing, then just skip it */
-    if (access(statf, F_OK) < 0) {
-        return;
+    char exe[BUFSIZ];
+    if (procfs_read_exe(getpid(), exe, BUFSIZ)) {
+        printerr("Error getting exe\n");
+    } else {
+        tprintf("exe: %s\n", exe);
     }
-
-    FILE *f = fopen_untraced(statf, "r");
-    if (f == NULL) {
-        perror("libinterpose: Unable to fopen /proc/self/status");
-        return;
-    }
-
-    char line[BUFSIZ];
-    while (fgets_untraced(line, BUFSIZ, f) != NULL) {
-        if (startswith(line,"VmPeak")) {
-            tprintf(line);
-        } else if (startswith(line,"VmHWM")) {
-            tprintf(line);
-        }
-    }
-
-    fclose_untraced(f);
 }
 
 /* Read CPU usage */
@@ -514,87 +452,6 @@ static void read_rusage() {
     }
     tprintf("utime: %.3lf\n", (double)ru.ru_utime.tv_sec + (double)ru.ru_utime.tv_usec/1.0e6);
     tprintf("stime: %.3lf\n", (double)ru.ru_stime.tv_sec + (double)ru.ru_stime.tv_usec/1.0e6);
-}
-
-/* Read /proc/self/stat to get performance stats */
-static void read_stat() {
-    debug("Reading stat file");
-
-    char statf[] = "/proc/self/stat";
-
-    /* If the stat file is missing, then just skip it */
-    if (access(statf, F_OK) < 0) {
-        return;
-    }
-
-    FILE *f = fopen_untraced(statf,"r");
-    if (f == NULL) {
-        perror("libinterpose: Unable to fopen /proc/self/stat");
-        return;
-    }
-
-    unsigned long long iowait = 0; //delayacct_blkio_ticks
-
-    //pid comm state ppid pgrp session tty_nr tpgid flags minflt cminflt majflt
-    //cmajflt utime stime cutime cstime priority nice num_threads itrealvalue
-    //starttime vsize rss rsslim startcode endcode startstack kstkesp kstkeip
-    //signal blocked sigignore sigcatch wchan nswap cnswap exit_signal
-    //processor rt_priority policy delayacct_blkio_ticks guest_time cguest_time
-    fscanf(f, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %*u "
-              "%*u %*d %*d %*d %*d %*d %*d %*u %*u %*d %*u %*u "
-              "%*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*d "
-              "%*d %*u %*u %llu %*u %*d",
-              &iowait);
-
-    fclose_untraced(f);
-
-    /* Adjust by number of clock ticks per second */
-    long clocks = sysconf(_SC_CLK_TCK);
-    double real_iowait = ((double)iowait) / clocks;
-
-    tprintf("iowait: %.3lf\n", real_iowait);
-}
-
-/* Read /proc/self/io to get I/O usage */
-static void read_io() {
-    debug("Reading io file");
-
-    char iofile[] = "/proc/self/io";
-
-    /* This proc file was added in Linux 2.6.20. It won't be
-     * there on older kernels, or on kernels without task IO 
-     * accounting. If it is missing, just bail out.
-     */
-    if (access(iofile, F_OK) < 0) {
-        return;
-    }
-
-    FILE *f = fopen_untraced(iofile, "r");
-    if (f == NULL) {
-        perror("libinterpose: Unable to fopen /proc/self/io");
-        return;
-    }
-
-    char line[BUFSIZ];
-    while (fgets_untraced(line, BUFSIZ, f) != NULL) {
-        if (startswith(line, "rchar")) {
-            tprintf(line);
-        } else if (startswith(line, "wchar")) {
-            tprintf(line);
-        } else if (startswith(line,"syscr")) {
-            tprintf(line);
-        } else if (startswith(line,"syscw")) {
-            tprintf(line);
-        } else if (startswith(line,"read_bytes")) {
-            tprintf(line);
-        } else if (startswith(line,"write_bytes")) {
-            tprintf(line);
-        } else if (startswith(line,"cancelled_write_bytes")) {
-            tprintf(line);
-        }
-    }
-
-    fclose_untraced(f);
 }
 
 static int path_matches_patterns(const char *path, const char *patterns) {
@@ -1193,11 +1050,8 @@ static void __attribute__((destructor)) interpose_fini(void) {
     fini_papi();
 #endif
 
-    read_exe();
-    read_status();
+    read_procfs();
     read_rusage();
-    read_stat();
-    read_io();
 
     tprintf("stop: %lf\n", get_time());
 

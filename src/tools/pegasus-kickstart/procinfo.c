@@ -32,6 +32,7 @@
 #include "utils.h"
 #include "syscall.h"
 #include "error.h"
+#include "procfs.h"
 
 #ifdef HAS_PTRACE
 
@@ -83,166 +84,47 @@ static double get_time() {
     return tv.tv_sec + ((double)tv.tv_usec / 1e6);
 }
 
-/* Read /proc/[pid]/exe */
-static int proc_read_exe(ProcInfo *item) {
-    char link[PATH_MAX];
-    char exe[PATH_MAX];
-    int size;
-    sprintf(link, "/proc/%d/exe", item->pid);
-    size = readlink(link, exe, PATH_MAX);
-    if (size < 0) {
-        printerr("readlink: %s\n", strerror(errno));
-        return -1;
-    }
-    exe[size] = '\0';
-    item->exe = strdup(exe);
-    if (item->exe == NULL) {
-        printerr("strdup: %s\n", strerror(errno));
-        return -1;
-    }
-    return size;
-}
+static int proc_read_procfs(ProcInfo *item) {
+    int result = 0;
 
-/* Return 1 if line begins with tok */
-static int startswith(const char *line, const char *tok) {
-    return strncmp(line, tok, strlen(tok)) == 0;
-}
-
-/* Read /proc/[pid]/status to get memory usage */
-static int proc_read_meminfo(ProcInfo *item) {
-    char statf[BUFSIZ];
-    if (sprintf(statf,"/proc/%d/status", item->pid) < 0) {
-        perror("sprintf");
-        return -1;
-    }
-
-    /* If the status file is missing, then just skip it */
-    if (access(statf, F_OK) < 0) {
-        return 0;
-    }
-
-    FILE *f = fopen(statf,"r");
-    if (f == NULL) {
-        perror("fopen");
-        return -1;
-    }
-
-    char line[BUFSIZ];
-    while (fgets(line, BUFSIZ, f) != NULL) {
-        if (startswith(line, "PPid")) {
-            sscanf(line,"PPid:%d\n",&(item->ppid));
-        } else if (startswith(line, "Threads")) {
-            sscanf(line,"Threads:%d\n",&(item->fin_threads));
-        } else if (startswith(line,"VmPeak")) {
-            sscanf(line,"VmPeak:%d kB\n",&(item->vmpeak));
-        } else if (startswith(line,"VmHWM")) {
-            sscanf(line,"VmHWM:%d kB\n",&(item->rsspeak));
+    char exe[BUFSIZ];
+    if (procfs_read_exe(item->pid, exe, BUFSIZ)) {
+        printerr("procfs_read_exe: %s\n", strerror(errno));
+        result = -1;
+    } else {
+        item->exe = strdup(exe);
+        if (item->exe == NULL) {
+            printerr("strdup: %s\n", strerror(errno));
+            result = -1;
         }
     }
 
-    if (ferror(f)) {
-        fclose(f);
-        return -1;
+    ProcStats stats;
+    procfs_stats_init(&stats);
+
+    if (procfs_read_stats(item->pid, &stats)) {
+        printerr("procfs_read_stats: %s\n", strerror(errno));
+        result = -1;
     }
 
-    return fclose(f);
+    item->ppid = stats.ppid;
+    item->rchar = stats.rchar;
+    item->wchar = stats.wchar;
+    item->syscr = stats.syscr;
+    item->syscw = stats.syscw;
+    item->read_bytes = stats.read_bytes;
+    item->write_bytes = stats.write_bytes;
+    item->cancelled_write_bytes = stats.cancelled_write_bytes;
+    item->utime = stats.utime;
+    item->stime = stats.stime;
+    item->iowait = stats.iowait;
+    item->vmpeak = stats.vmpeak;
+    item->rsspeak = stats.rsspeak;
+    item->fin_threads = stats.threads;
+
+    return result;
 }
 
-/* Read /proc/[pid]/stat to get CPU usage */
-static int proc_read_statinfo(ProcInfo *item) {
-    char statf[BUFSIZ];
-    if (sprintf(statf,"/proc/%d/stat", item->pid) < 0) {
-        perror("sprintf");
-        return -1;
-    }
-
-    /* If the stat file is missing, then just skip it */
-    if (access(statf, F_OK) < 0) {
-        return 0;
-    }
-
-    FILE *f = fopen(statf,"r");
-    if (f == NULL) {
-        perror("fopen");
-        return -1;
-    }
-
-    unsigned long utime, stime = 0;
-    unsigned long long iowait = 0; //delayacct_blkio_ticks
-
-    //pid comm state ppid pgrp session tty_nr tpgid flags minflt cminflt majflt
-    //cmajflt utime stime cutime cstime priority nice num_threads itrealvalue
-    //starttime vsize rss rsslim startcode endcode startstack kstkesp kstkeip
-    //signal blocked sigignore sigcatch wchan nswap cnswap exit_signal
-    //processor rt_priority policy delayacct_blkio_ticks guest_time cguest_time
-    fscanf(f, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu "
-              "%lu %*d %*d %*d %*d %*d %*d %*u %*u %*d %*u %*u "
-              "%*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*d "
-              "%*d %*u %*u %llu %*u %*d",
-           &utime, &stime, &iowait);
-
-    /* Adjust by number of clock ticks per second */
-    long clocks = sysconf(_SC_CLK_TCK);
-    item->utime = ((double)utime) / clocks;
-    item->stime = ((double)stime) / clocks;
-    item->iowait = ((double)iowait) / clocks;
-
-    if (ferror(f)) {
-        fclose(f);
-        return -1;
-    }
-
-    return fclose(f);
-}
-
-/* Read /proc/[pid]/io to get I/O usage */
-static int proc_read_io(ProcInfo *item) {
-    char iofile[BUFSIZ];
-    if (sprintf(iofile, "/proc/%d/io", item->pid) < 0) {
-        perror("sprintf");
-        return -1;
-    }
-
-    /* This proc file was added in Linux 2.6.20. It won't be
-     * there on older kernels, or on kernels without task IO 
-     * accounting. If it is missing, just bail out.
-     */
-    if (access(iofile, F_OK) < 0) {
-        return 0;
-    }
-
-    FILE *f = fopen(iofile, "r");
-    if (f == NULL) {
-        perror("fopen");
-        return -1;
-    }
-
-    char line[BUFSIZ];
-    while (fgets(line, BUFSIZ, f) != NULL) {
-        if (startswith(line, "rchar")) {
-            sscanf(line,"rchar: %"SCNu64"\n", &(item->rchar));
-        } else if (startswith(line, "wchar")) {
-            sscanf(line,"wchar: %"SCNu64"\n", &(item->wchar));
-        } else if (startswith(line,"syscr")) {
-            sscanf(line,"syscr: %"SCNu64"\n", &(item->syscr));
-        } else if (startswith(line,"syscw")) {
-            sscanf(line,"syscw: %"SCNu64"\n", &(item->syscw));
-        } else if (startswith(line,"read_bytes")) {
-            sscanf(line,"read_bytes: %"SCNu64"\n",&(item->read_bytes));
-        } else if (startswith(line,"write_bytes")) {
-            sscanf(line,"write_bytes: %"SCNu64"\n",&(item->write_bytes));
-        } else if (startswith(line,"cancelled_write_bytes")) {
-            sscanf(line,"cancelled_write_bytes: %"SCNu64"\n",&(item->cancelled_write_bytes));
-        }
-    }
-
-    if (ferror(f)) {
-        fclose(f);
-        return -1;
-    }
-
-    return fclose(f);
-}
 #endif
 
 int procChild() {
@@ -356,17 +238,8 @@ int procParentTrace(pid_t main, int *main_status, struct rusage *main_usage, Pro
                 if (event == PTRACE_EVENT_EXIT) {
                     /* Child exited, grab its final stats */
                     child->stop = get_time();
-                    if (proc_read_exe(child) < 0) {
-                        perror("proc_read_exe");
-                    }
-                    if (proc_read_meminfo(child) < 0) {
-                        perror("proc_read_meminfo");
-                    }
-                    if (proc_read_statinfo(child) < 0) {
-                        perror("proc_read_statinfo");
-                    }
-                    if (proc_read_io(child) < 0) {
-                        perror("proc_read_io");
+                    if (proc_read_procfs(child) < 0) {
+                        perror("proc_read_procfs");
                     }
 
                     /* If this is the main process, then get the exit status.

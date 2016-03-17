@@ -51,7 +51,9 @@ ifeq (x86_64,${ARCH})
 endif
     CFLAGS += $(shell getconf LFS_CFLAGS 2>>/dev/null)
     LDFLAGS += $(shell getconf LFS_LDFLAGS 2>>/dev/null)
-    OBJS += machine/linux.o syscall.o
+    OBJS += machine/linux.o
+    OBJS += syscall.o
+    OBJS += procfs.o
 endif
 
 CFLAGS += -D${SYSTEM}
@@ -68,8 +70,8 @@ all: $(TARGET)
 pegasus-kickstart: $(OBJS)
 	$(LD) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-libinterpose.so: interpose.c interpose_monitoring.c
-	$(CC) $(CFLAGS) -shared -fPIC -o libinterpose.so interpose.c interpose_monitoring.c $(LI_LDFLAGS)
+libinterpose.so: interpose.c interpose_monitoring.c procfs.c
+	$(CC) $(CFLAGS) -shared -fPIC -o libinterpose.so $^ $(LI_LDFLAGS)
 
 version.h:
 	$(CURDIR)/../../../release-tools/getversion --header > $(CURDIR)/version.h
