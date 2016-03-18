@@ -66,6 +66,7 @@ class Workflow(object):
         self.home = os.environ["HOME"]
         self.user = os.environ["USER"]
         self.generate_tutorial = False
+        self.tutorial_setup  = None
         sysname, _, _, _, machine = os.uname()
         if sysname == 'Darwin':
             self.os = "MACOSX"
@@ -101,7 +102,11 @@ class Workflow(object):
                 ("Merge", "merge"),
                 ("Diamond", "diamond")
             ])
-            self.tutorial_setup = choice("What environment is tutorial to be setup for?", ["submit-host","usc-hpcc"], "submit-host")
+            # determine the environment to setup tutorial for
+            self.tutorial_setup = optionlist("What environment is tutorial to be setup for?", [
+                ("Local Machine", "submit-host"),
+                ("USC HPCC Cluster", "usc-hpcc"),
+            ])
             self.setup_tutorial()
             return
 
@@ -110,7 +115,7 @@ class Workflow(object):
 
         # Determine what kind of site catalog we need to generate
         self.config = optionlist("What does your computing infrastructure look like?", [
-            ("Condor Pool", "condorpool"),
+            ("Local Machine", "condorpool"),
             ("Remote Cluster using Globus GRAM", "globus"),
             ("Remote Cluster using CREAMCE", "creamce"),
             ("Local PBS Cluster with Glite", "glite"),
