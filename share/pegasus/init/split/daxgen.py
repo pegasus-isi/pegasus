@@ -24,6 +24,8 @@ webpage = File("pegasus.html")
 split = Job("split")
 split.addArguments("-l","100","-a","1",webpage,"part.")
 split.uses(webpage, link=Link.INPUT)
+# associate the label with the job. all jobs with same label
+# are run with PMC when doing job clustering
 split.addProfile( Profile("pegasus","label","p1"))
 dax.addJob(split)
 
