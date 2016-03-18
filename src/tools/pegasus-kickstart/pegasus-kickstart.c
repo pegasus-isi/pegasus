@@ -780,8 +780,9 @@ REDIR:
         }
     }
 
-    /* If monitoring is enabled, start monitoring thread */
-    if (appinfo.enableLibTrace && monitoringInterval > 0) {
+    /* If monitoring is enabled, create new PG and start monitoring thread */
+    if (monitoringInterval > 0) {
+        setpgid(0, 0);
         if (start_monitoring_thread(monitoringInterval)) {
             printerr("ERROR: Unable to start monitoring thread\n");
             return 127;
@@ -845,7 +846,7 @@ REDIR:
     }
 
     /* If monitoring, stop monitoring thead */
-    if (appinfo.enableLibTrace && monitoringInterval > 0) {
+    if (monitoringInterval > 0) {
         if (stop_monitoring_thread()) {
             printerr("WARNING: Unable to stop monitoring thread\n");
         }

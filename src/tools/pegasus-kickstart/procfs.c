@@ -1,7 +1,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <dirent.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <assert.h>
 
+#include "error.h"
 #include "procfs.h"
 
 static int startswith(const char *line, const char *tok) {
@@ -20,7 +25,7 @@ static int procfs_read_cpu_stats(pid_t pid, ProcStats *stats) {
 
     FILE *f = fopen(statf,"r");
     if (f == NULL) {
-        fprintf(stderr, "Unable to fopen %s: %s", statf, strerror(errno));
+        printerr("Unable to fopen %s: %s\n", statf, strerror(errno));
         return -1;
     }
 
@@ -32,11 +37,11 @@ static int procfs_read_cpu_stats(pid_t pid, ProcStats *stats) {
     //starttime vsize rss rsslim startcode endcode startstack kstkesp kstkeip
     //signal blocked sigignore sigcatch wchan nswap cnswap exit_signal
     //processor rt_priority policy delayacct_blkio_ticks guest_time cguest_time
-    fscanf(f, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu "
-              "%lu %*d %*d %*d %*d %*d %*d %*u %*u %*d %*u %*u "
+    fscanf(f, "%*d %*s %c %d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu "
+              "%lu %*d %*d %*d %*d %d %*d %*u %*u %*d %*u %*u "
               "%*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*d "
               "%*d %*u %*u %llu %*u %*d",
-           &utime, &stime, &iowait);
+           &(stats->state), &(stats->ppid), &utime, &stime, &(stats->threads), &iowait);
 
     fclose(f);
 
@@ -62,20 +67,20 @@ static int procfs_read_mem_stats(pid_t pid, ProcStats *stats) {
 
     FILE *f = fopen(statf, "r");
     if (f == NULL) {
-        fprintf(stderr, "Unable to fopen %s: %s", statf, strerror(errno));
+        printerr("Unable to fopen %s: %s\n", statf, strerror(errno));
         return -1;
     }
 
     char line[BUFSIZ];
     while (fgets(line, BUFSIZ, f) != NULL) {
-        if (startswith(line, "PPid")) {
-            sscanf(line,"PPid:%d\n",&(stats->ppid));
-        } else if (startswith(line,"VmSize")) {
-            sscanf(line, "VmSize: %llu", &(stats->vmpeak));
-        } else if (startswith(line,"VmRSS")) {
-            sscanf(line, "VmRSS: %llu", &(stats->rsspeak));
-        } else if (startswith(line,"Threads")) {
-            sscanf(line, "Threads: %d", &(stats->threads));
+        if (startswith(line, "VmPeak")) {
+            sscanf(line, "VmPeak: %llu", &(stats->vmpeak));
+        } else if (startswith(line, "VmSize")) {
+            sscanf(line, "VmSize: %llu", &(stats->vm));
+        } else if (startswith(line, "VmHWM")) {
+            sscanf(line, "VmHWM: %llu", &(stats->rsspeak));
+        } else if (startswith(line, "VmRSS")) {
+            sscanf(line, "VmRSS: %llu", &(stats->rss));
         }
     }
 
@@ -99,7 +104,7 @@ static int procfs_read_io_stats(pid_t pid, ProcStats *stats) {
 
     FILE *f = fopen(iofile, "r");
     if (f == NULL) {
-        fprintf(stderr, "Unable to fopen %s: %s", iofile, strerror(errno));
+        printerr("Unable to fopen %s: %s\n", iofile, strerror(errno));
         return -1;
     }
 
@@ -127,6 +132,24 @@ static int procfs_read_io_stats(pid_t pid, ProcStats *stats) {
     return 0;
 }
 
+static int procfs_read_exe(pid_t pid, char *exe, int maxsize) {
+    char exefile[1024];
+    snprintf(exefile, 1024, "/proc/%d/exe", pid);
+    int size = readlink(exefile, exe, maxsize);
+    if (size < 0) {
+        printerr("Unable to readlink %s: %s\n", exefile, strerror(errno));
+        exe[0] = '\0';
+        return -1;
+    }
+    if (size == maxsize) {
+        printerr("Unable to readlink %s: Real path is too long\n", exefile);
+        exe[maxsize-1] = '\0';
+        return -1;
+    }
+    exe[size] = '\0';
+    return 0;
+}
+
 void procfs_stats_init(ProcStats *stats) {
     if (stats == NULL) {
         return;
@@ -135,10 +158,12 @@ void procfs_stats_init(ProcStats *stats) {
 }
 
 int procfs_read_stats(pid_t pid, ProcStats *stats) {
+    stats->pid = pid;
     int a = procfs_read_cpu_stats(pid, stats);
     int b = procfs_read_io_stats(pid, stats);
     int c = procfs_read_mem_stats(pid, stats);
-    if ((a + b + c) < 0) {
+    int d = procfs_read_exe(pid, stats->exe, sizeof(stats->exe));
+    if ((a + b + c + d) < 0) {
         return -1;
     }
     return 0;
@@ -155,7 +180,9 @@ int procfs_read_stats_diff(pid_t pid, ProcStats *prev, ProcStats *diff) {
     diff->utime = new.utime - prev->utime;
     diff->stime = new.stime - prev->stime;
     diff->iowait = new.iowait - prev->iowait;
+    diff->vm = new.vm - prev->vm;
     diff->vmpeak = new.vmpeak - prev->vmpeak;
+    diff->rss = new.rss - prev->rss;
     diff->rsspeak = new.rsspeak - prev->rsspeak;
     diff->threads = new.threads - prev->threads;
     diff->rchar = new.rchar - prev->rchar;
@@ -170,7 +197,9 @@ int procfs_read_stats_diff(pid_t pid, ProcStats *prev, ProcStats *diff) {
     prev->utime = new.utime;
     prev->stime = new.stime;
     prev->iowait = new.iowait;
+    prev->vm = new.vm;
     prev->vmpeak = new.vmpeak;
+    prev->rss = new.rss;
     prev->rsspeak = new.rsspeak;
     prev->threads = new.threads;
     prev->rchar = new.rchar;
@@ -184,21 +213,115 @@ int procfs_read_stats_diff(pid_t pid, ProcStats *prev, ProcStats *diff) {
     return result;
 }
 
-int procfs_read_exe(pid_t pid, char *exe, int maxsize) {
-    char exefile[1024];
-    snprintf(exefile, 1024, "/proc/%d/exe", pid);
-    int size = readlink(exefile, exe, maxsize);
-    if (size < 0) {
-        fprintf(stderr, "Unable to readlink %s: %s", exefile, strerror(errno));
-        exe[0] = '\0';
-        return -1;
+/* check to see if str is all decimal digits */
+static int isdigits(char *str) {
+    for (int i=0; str[i] != '\0'; i++) {
+        if (!isdigit(str[i])) {
+            return 0;
+        }
     }
-    if (size == maxsize) {
-        fprintf(stderr, "Unable to readlink %s: Real path is too long", exefile);
-        exe[maxsize-1] = '\0';
-        return -1;
+    return 1;
+}
+
+void procfs_read_stats_group(ProcStatsList **listptr) {
+    DIR *procdir = opendir("/proc");
+    if (procdir == NULL) {
+        printerr("Unable to open /proc: %s\n", strerror(errno));
+        return;
     }
-    exe[size] = '\0';
-    return 0;
+
+    int mypgid = getpgid(0);
+
+    ProcStatsList *prev = NULL;
+    ProcStatsList *cur = *listptr;
+
+    struct dirent *d;
+    for (d = readdir(procdir); d != NULL; d = readdir(procdir)) {
+        /* Make sure the name is all digits, indicating a process number */
+        if (!isdigits(d->d_name)) {
+            continue;
+        }
+
+        int pid = atoi(d->d_name);
+
+        /* Check to see if the process is in my process group */
+        int pgid = getpgid(pid);
+        if (pgid != mypgid) {
+            continue;
+        }
+
+        /* Get cur and prev to point at the right place in the list */
+        while (cur != NULL && cur->stats.pid < pid) {
+            /* We are skipping this process, so it must have exited */
+            cur->stats.state = 'X';
+            prev = cur;
+            cur = cur->next;
+        }
+
+        if (cur == NULL || cur->stats.pid != pid) {
+            /* We need to create a new entry for this process */
+            ProcStatsList *new = (ProcStatsList *)calloc(1, sizeof(ProcStatsList));
+            if (new == NULL) {
+                printerr("Unable to allocate stats list node: %s\n", strerror(errno));
+                return;
+            }
+
+            /* Add before cur */
+            new->next = cur;
+            cur = new;
+
+            if (prev == NULL) {
+                /* Add at beginning of list */
+                *listptr = new;
+            } else {
+                /* Add after prev */
+                prev->next = new;
+            }
+        }
+
+        assert(cur != NULL);
+
+        /* Get the stats for this process */
+        procfs_read_stats(pid, &(cur->stats));
+
+        /* Move pointers here to help track processes that have exited */
+        prev = cur;
+        cur = cur->next;
+    }
+
+    closedir(procdir);
+}
+
+/* Add up all the values in list and store them in result */
+void procfs_add_stats_list(ProcStatsList *list, ProcStats *result) {
+    assert(result != NULL);
+    procfs_stats_init(result);
+    for (ProcStatsList *cur = list; cur != NULL; cur = cur->next) {
+        ProcStats *stats = &(cur->stats);
+        result->utime += stats->utime;
+        result->stime += stats->stime;
+        result->iowait += stats->iowait;
+        result->read_bytes += stats->read_bytes;
+        result->write_bytes += stats->write_bytes;
+        result->rchar += stats->rchar;
+        result->wchar += stats->wchar;
+        result->syscr += stats->syscr;
+        result->syscw += stats->syscw;
+        if (stats->state != 'X') {
+            /* Only add memory and threads for running processes */
+            result->vm += stats->vm;
+            result->rss += stats->rss;
+            result->threads += stats->threads;
+            /* NOTE: vmpeak and rsspeak don't make sense to add up */
+        }
+    }
+}
+
+void procfs_free_stats_list(ProcStatsList *list) {
+    while (list != NULL) {
+        ProcStatsList *tmp = list;
+        list = list->next;
+        free(tmp);
+    }
 }
 

@@ -123,7 +123,6 @@ void* _interpose_monitoring_thread_func(void* arg) {
     int mpi_rank = 0;
     int interval = 60;
     unsigned long sequence = 0;
-    char exe[BUFSIZ] = "";
     char hostname[BUFSIZ] = "";
     char msg[BUFSIZ] = "";
     char *mon_host = NULL;
@@ -150,14 +149,13 @@ void* _interpose_monitoring_thread_func(void* arg) {
 
         gettimeofday(&now, NULL);
         double timestamp = now.tv_sec + ((double)now.tv_usec * 1e-6);
-        procfs_read_exe(getpid(), exe, BUFSIZ);
         procfs_read_stats_diff(getpid(), &stats, &diff);
 
         sprintf(msg, "ts=%.3f pid=%d seq=%lu exe=%s host=%s rank=%d "
                      "utime=%.3f stime=%.3f iowait=%.3f vmpeak=%llu rsspeak=%llu "
                      "threads=%d bread=%llu bwrite=%llu rchar=%llu wchar=%llu "
                      "syscr=%lu syscw=%lu\n",
-                     timestamp, getpid(), sequence++, exe,
+                     timestamp, getpid(), sequence++, stats.exe,
                      hostname, mpi_rank, diff.utime, diff.stime,
                      diff.iowait, diff.vmpeak, diff.rsspeak, diff.threads,
                      diff.read_bytes, diff.write_bytes, diff.rchar, diff.wchar,

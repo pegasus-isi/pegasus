@@ -13,9 +13,11 @@
 #include <pthread.h>
 #include <fcntl.h>
 #include <poll.h>
+#include <sys/timerfd.h>
 
 #include "error.h"
 #include "monitoring.h"
+#include "procfs.h"
 
 typedef struct {
     char *url;
@@ -27,6 +29,7 @@ typedef struct {
     char *xformation;
     char *task_id;
     int socket;
+    int interval;
 } MonitoringThreadContext;
 
 /* This pipe is used to send a shutdown message from the main thread to the
@@ -117,7 +120,7 @@ static size_t write_callback(char *ptr, size_t size, size_t nmemb, void *userdat
 }
 
 /* sending this message to rabbitmq */
-static void send_msg_to_mq(char* msg_buff, MonitoringThreadContext *ctx) {
+static void send_msg_to_mq(char *msg_buff, MonitoringThreadContext *ctx) {
     CURL *curl = curl_easy_init();
     if (curl == NULL) {
         printerr("[mon-thread] Error initializing curl\n");
@@ -135,7 +138,7 @@ static void send_msg_to_mq(char* msg_buff, MonitoringThreadContext *ctx) {
     if (snprintf(payload, BUFSIZ,
         "{\"properties\":{},\"routing_key\":\"%s\",\"payload\":\"%s\",\"payload_encoding\":\"string\"}",
         ctx->wf_uuid, msg_buff) >= BUFSIZ) {
-        printerr("[mon-thread] Message too large for buffer: %d\n", strlen(msg_buff));
+        printerr("[mon-thread] Message too large for buffer: %lu\n", strlen(msg_buff));
         return;
     }
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
@@ -211,6 +214,79 @@ error:
     return -1;
 }
 
+static int handle_client(MonitoringThreadContext *ctx) {
+
+    /* Accept a network connection and read the message */
+    struct sockaddr_in client_addr;
+    socklen_t client_add_len = sizeof(client_addr);
+    bzero((char *)&client_addr, sizeof(client_addr));
+    int incoming_socket = accept(ctx->socket, (struct sockaddr *)&client_addr, &client_add_len);
+    if (incoming_socket < 0) {
+        printerr("[mon-thread] ERROR[accept]: %s\n", strerror(errno));
+        if (errno == EINTR) {
+            goto next;
+        } else {
+            return -1;
+        }
+    }
+
+    char line[BUFSIZ];
+    int num_bytes = recv(incoming_socket, line, BUFSIZ, 0);
+    if (num_bytes < 0) {
+        printerr("[mon-thread] ERROR[recv]: %s\n", strerror(errno));
+        goto next;
+    }
+
+    // replace end line with a terminating character
+    char *pos;
+    if ((pos = strchr(line, '\n')) != NULL) {
+        *pos = '\0';
+    }
+
+    // a proper monitoring message should start with a timestamp
+    if (strstr(line, "ts=") != line) {
+        printerr("[mon-thread] ERROR: Message did not start with 'ts=': \n%s\n", line);
+        goto next;
+    }
+
+    // Add all the extra information
+    char enriched_line[BUFSIZ];
+    snprintf(enriched_line, BUFSIZ, "%s wf_uuid=%s wf_label=%s dag_job_id=%s condor_job_id=%s xformation=%s task_id=%s",
+        line, ctx->wf_uuid, ctx->wf_label, ctx->dag_job_id, ctx->condor_job_id, ctx->xformation, ctx->task_id);
+
+    send_msg_to_mq(enriched_line, ctx);
+
+next:
+    close(incoming_socket);
+    return 0;
+}
+
+static int handle_timeout(MonitoringThreadContext *ctx, ProcStatsList **listptr) {
+
+    /* Update the list of process stats */
+    procfs_read_stats_group(listptr);
+
+    ProcStats stats;
+    procfs_add_stats_list(*listptr, &stats);
+
+    char msg[BUFSIZ];
+    snprintf(msg, BUFSIZ, "wf_uuid=%s wf_label=%s dag_job_id=%s condor_job_id=%s "
+            "xformation=%s task_id=%s utime=%.3f stime=%.3f iowait=%.3f "
+            "vm=%llu rss=%llu threads=%d bread=%llu bwrite=%llu "
+            "rchar=%llu wchar=%llu syscr=%lu syscw=%lu",
+            ctx->wf_uuid, ctx->wf_label, ctx->dag_job_id, ctx->condor_job_id,
+            ctx->xformation, ctx->task_id,
+            stats.utime, stats.stime, stats.iowait, stats.vm, stats.rss,
+            stats.threads, stats.read_bytes, stats.write_bytes,
+            stats.rchar, stats.wchar, stats.syscr, stats.syscw);
+
+    fprintf(stdout, "%s\n", msg);
+
+    send_msg_to_mq(msg, ctx);
+
+    return 0;
+}
+
 /*
  * Main monitoring thread loop - it periodically read global trace file as sent this info somewhere, e.g. to another file
  * or to an external service.
@@ -227,21 +303,37 @@ void* monitoring_thread_func(void* arg) {
     printerr("[mon-thread] condor job id: %s\n", ctx->condor_job_id);
     printerr("[mon-thread] xformation: %s\n", ctx->xformation);
     printerr("[mon-thread] task id: %s\n", ctx->task_id);
+    printerr("[mon-thread] process group: %d\n", getpgid(0));
 
     curl_global_init(CURL_GLOBAL_ALL);
 
+    /* Create timer for monitoring interval */
+    int timer = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC);
+    struct itimerspec timercfg;
+    timercfg.it_value.tv_sec = 0; /* Fire immediately at start */
+    timercfg.it_value.tv_nsec = 1;
+    timercfg.it_interval.tv_sec = ctx->interval; /* Fire every interval seconds */
+    timercfg.it_interval.tv_nsec = 0;
+    if (timerfd_settime(timer, 0, &timercfg, NULL) < 0) {
+        printerr("[mon-thread] Error setting timerfd time: %s\n", strerror(errno));
+        pthread_exit(NULL);
+    }
+
     printerr("[mon-thread] Starting monitoring loop...\n");
 
-    while (1) {
+    ProcStatsList *stats = NULL;
 
-        /* Poll signal_pipe and socket to see which one is readable */
-        struct pollfd fds[2];
+    while (1) {
+        /* Poll signal_pipe, socket, and timer to see which one is readable */
+        struct pollfd fds[3];
         fds[0].fd = signal_pipe[0];
         fds[0].events = POLLIN;
         fds[1].fd = ctx->socket;
         fds[1].events = POLLIN;
-        if (poll(fds, 2, -1) <= 0) {
-            printerr("[mon-thread] Error polling socket and pipe: %s\n", strerror(errno));
+        fds[2].fd = timer;
+        fds[2].events = POLLIN;
+        if (poll(fds, 3, -1) <= 0) {
+            printerr("[mon-thread] Error polling: %s\n", strerror(errno));
             break;
         }
 
@@ -252,57 +344,34 @@ void* monitoring_thread_func(void* arg) {
          * clients left.
          */
         if (fds[0].revents & POLLIN) {
-            if (fds[1].revents & POLLIN) {
-                printerr("[mon-thread] WARNING: Oh no, we are leaving some clients behind!\n");
-            }
+            printerr("[mon-thread] Caught signal\n");
             break;
         }
 
-        /* Accept a network connection and read the message */
-        struct sockaddr_in client_addr;
-        socklen_t client_add_len = sizeof(client_addr);
-        bzero((char *)&client_addr, sizeof(client_addr));
-        int incoming_socket = accept(ctx->socket, (struct sockaddr *)&client_addr, &client_add_len);
-        if (incoming_socket < 0) {
-            printerr("[mon-thread] ERROR[accept]: %s\n", strerror(errno));
-            if (errno == EINTR) {
-                goto next;
-            } else {
+        /* Got a client connection */
+        if (fds[1].revents & POLLIN) {
+            if (handle_client(ctx) < 0) {
                 break;
             }
         }
 
-        char line[BUFSIZ];
-        int num_bytes = recv(incoming_socket, line, BUFSIZ, 0);
-        if (num_bytes < 0) {
-            printerr("[mon-thread] ERROR[recv]: %s\n", strerror(errno));
-            goto next;
+        /* Timer fired */
+        if (fds[2].revents & POLLIN) {
+            unsigned long long expirations = 0;
+            if (read(timer, &expirations, sizeof(expirations)) < 0) {
+                printerr("[mon-thread] timerfd read failed: %s\n", strerror(errno));
+            } else if (expirations > 1) {
+                printerr("[mon-thread] WARNING: timer expired %llu times\n", expirations);
+            }
+            if (handle_timeout(ctx, &stats) < 0) {
+                break;
+            }
         }
-
-        // replace end line with a terminating character
-        char *pos;
-        if ((pos = strchr(line, '\n')) != NULL) {
-            *pos = '\0';
-        }
-
-        // a proper monitoring message should start with a timestamp
-        if (strstr(line, "ts=") != line) {
-            printerr("[mon-thread] ERROR: Message did not start with 'ts=': \n%s\n", line);
-            goto next;
-        }
-
-        // Add all the extra information
-        char enriched_line[BUFSIZ];
-        snprintf(enriched_line, BUFSIZ, "%s wf_uuid=%s wf_label=%s dag_job_id=%s condor_job_id=%s xformation=%s task_id=%s",
-            line, ctx->wf_uuid, ctx->wf_label, ctx->dag_job_id, ctx->condor_job_id, ctx->xformation, ctx->task_id);
-
-        send_msg_to_mq(enriched_line, ctx);
-
-next:
-        close(incoming_socket);
     }
 
     printerr("[mon-thread] Monitoring thread exiting...\n");
+    procfs_free_stats_list(stats);
+    close(timer);
     close(ctx->socket);
     curl_global_cleanup();
     release_monitoring_context(ctx);
@@ -320,15 +389,12 @@ int start_monitoring_thread(int interval) {
     }
 
     /* Set the monitoring environment */
-    char envvar[BUFSIZ];
-    setenv("KICKSTART_MON", "enabled", 1);
-    snprintf(envvar, BUFSIZ, "%d", interval);
-    setenv("KICKSTART_MON_INTERVAL", envvar, 1);
-    snprintf(envvar, BUFSIZ, "%d", getpid());
-    setenv("KICKSTART_MON_PID", envvar, 1);
     setenv("KICKSTART_MON_HOST", socket_host, 1);
-    snprintf(envvar, BUFSIZ, "%d", socket_port);
+    char envvar[10];
+    snprintf(envvar, 10, "%d", socket_port);
     setenv("KICKSTART_MON_PORT", envvar, 1);
+
+    printf("size = %lu\n", sizeof(ProcStats));
 
     /* Set up parameters for the thread */
     MonitoringThreadContext *ctx = calloc(sizeof(MonitoringThreadContext), 1);
@@ -336,6 +402,7 @@ int start_monitoring_thread(int interval) {
         return -1;
     }
     ctx->socket = socket;
+    ctx->interval = interval;
 
     /* Create a pipe to signal between the main thread and the monitor thread */
     int rc = pipe(signal_pipe);

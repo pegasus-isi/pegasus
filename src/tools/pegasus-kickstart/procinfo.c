@@ -87,18 +87,6 @@ static double get_time() {
 static int proc_read_procfs(ProcInfo *item) {
     int result = 0;
 
-    char exe[BUFSIZ];
-    if (procfs_read_exe(item->pid, exe, BUFSIZ)) {
-        printerr("procfs_read_exe: %s\n", strerror(errno));
-        result = -1;
-    } else {
-        item->exe = strdup(exe);
-        if (item->exe == NULL) {
-            printerr("strdup: %s\n", strerror(errno));
-            result = -1;
-        }
-    }
-
     ProcStats stats;
     procfs_stats_init(&stats);
 
@@ -107,6 +95,11 @@ static int proc_read_procfs(ProcInfo *item) {
         result = -1;
     }
 
+    item->exe = strdup(stats.exe);
+    if (item->exe == NULL) {
+        printerr("strdup: %s\n", strerror(errno));
+        result = -1;
+    }
     item->ppid = stats.ppid;
     item->rchar = stats.rchar;
     item->wchar = stats.wchar;

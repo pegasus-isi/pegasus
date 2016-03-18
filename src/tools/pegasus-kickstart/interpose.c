@@ -435,6 +435,7 @@ static void read_procfs() {
     procfs_stats_init(&stats);
     procfs_read_stats(getpid(), &stats);
 
+    tprintf("exe: %s\n", stats.exe);
     tprintf("VmPeak: %llu\n", stats.vmpeak);
     tprintf("VmHWM: %llu\n", stats.rsspeak);
     tprintf("iowait: %.3lf\n", stats.iowait);
@@ -445,13 +446,6 @@ static void read_procfs() {
     tprintf("read_bytes: %llu\n", stats.read_bytes);
     tprintf("write_bytes: %llu\n", stats.write_bytes);
     tprintf("cancelled_write_bytes: %llu\n", stats.cancelled_write_bytes);
-
-    char exe[BUFSIZ];
-    if (procfs_read_exe(getpid(), exe, BUFSIZ)) {
-        printerr("Error getting exe\n");
-    } else {
-        tprintf("exe: %s\n", exe);
-    }
 }
 
 /* Read CPU usage */
@@ -1037,7 +1031,7 @@ static void __attribute__((constructor)) interpose_init(void) {
 #endif
 
     /* online monitoring */
-    _interpose_spawn_monitoring_thread();
+    //_interpose_spawn_monitoring_thread();
 }
 
 /* Library finalizer function */
@@ -1048,7 +1042,7 @@ static void __attribute__((destructor)) interpose_fini(void) {
     }
 
     /* online monitoring */
-    _interpose_stop_monitoring_thread();
+    //_interpose_stop_monitoring_thread();
 
     /* Look for descriptors not explicitly closed */
     for(int i=0; i<max_descriptors; i++) {
