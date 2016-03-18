@@ -7,6 +7,6 @@
 # For example:
 #data.txt  file:///tmp/data.txt         site="local"
 #data.txt  http://example.org/data.txt  site="example"
-{% if config == "tutorial" and tutorial == "split" %}
+{% if generate_tutorial == true and tutorial == "split" %}
 pegasus.html file://{{workflowdir}}/input/pegasus.html   site="local"
 {% endif %}
