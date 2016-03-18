@@ -189,7 +189,7 @@ class Workflow(object):
         self.copy_template("pegasus.properties", "pegasus.properties")
 
         if self.generate_tutorial:
-            sys.stdout.write("Pegasus Tutorial setup for example workflow - %s for execution on %s in directory %s"
+            sys.stdout.write("Pegasus Tutorial setup for example workflow - %s for execution on %s in directory %s\n"
                              % (self.tutorial, self.tutorial_setup, self.workflowdir))
 
 def usage():
