@@ -135,7 +135,7 @@ class Workflow(object):
         if self.tutorial_setup is None:
             self.tutorial_setup = "submit-host"
 
-        if self.tutorial_setup == "submit=host":
+        if self.tutorial_setup == "submit-host":
             self.sitename = "condorpool"
         elif self.tutorial_setup == "usc-hpcc":
             self.sitename = "usc-hpcc"
