@@ -17,19 +17,26 @@
 #include "interpose_monitoring.h"
 #include "procfs.h"
 
+static int mon_interval = 10;
+static char *mon_host = NULL;
+static char *mon_port = NULL;
 static int monitor_running;
 static pthread_t monitor_thread;
 static pthread_mutex_t monitor_mutex;
 static pthread_cond_t monitor_cv;
 
-static int send_msg_to_kickstart(char *msg, int size, char *host, char *port) {
+static int send_msg_to_kickstart(ProcStats *stats) {
+    if (mon_host == NULL || mon_port == NULL) {
+        return -1;
+    }
+
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_UNSPEC;
+    hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
 
     struct addrinfo *servinfo;
-    int gaierr = getaddrinfo(host, port, &hints, &servinfo);
+    int gaierr = getaddrinfo(mon_host, mon_port, &hints, &servinfo);
     if (gaierr != 0) {
         printerr("getaddrinfo: %s\n", gai_strerror(gaierr));
         return -1;
@@ -45,7 +52,7 @@ static int send_msg_to_kickstart(char *msg, int size, char *host, char *port) {
         }
 
         if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-            printerr("connect: %s", strerror(errno));
+            printerr("connect: %s\n", strerror(errno));
             close(sockfd);
             continue;
         }
@@ -61,7 +68,7 @@ static int send_msg_to_kickstart(char *msg, int size, char *host, char *port) {
         return -1;
     }
 
-    if (send(sockfd, msg, size, 0) < 0) {
+    if (send(sockfd, stats, sizeof(ProcStats), 0) < 0) {
         printerr("Error during msg send: %s\n", strerror(errno));
         return -1;
     }
@@ -71,98 +78,32 @@ static int send_msg_to_kickstart(char *msg, int size, char *host, char *port) {
     return 0;
 }
 
-static int set_monitoring_params(int *mpi_rank, int *interval,
-        char **socket_host, char **socket_port, char *hostname) {
-
-    char *envptr = getenv("OMPI_COMM_WORLD_RANK");
-    if (envptr == NULL) {
-        envptr = getenv("ALPS_APP_PE");
-        if (envptr == NULL) {
-            envptr = getenv("PMI_RANK");
-            if (envptr == NULL) {
-                envptr = getenv("PMI_ID");
-                if (envptr == NULL) {
-                    envptr = getenv("MPIRUN_RANK");
-                }
-            }
-        }
-    }
-    if (envptr == NULL) {
-        *mpi_rank = 0;
-    } else {
-        *mpi_rank = atoi(envptr);
-    }
-
-    if ((envptr = getenv("KICKSTART_MON_INTERVAL")) == NULL) {
-        printerr("ERROR: KICKSTART_MON_INTERVAL not set in environment\n");
-        return 1;
-    }
-    *interval = atoi(envptr);
-
-    if ((*socket_host = getenv("KICKSTART_MON_HOST")) == NULL) {
-        printerr("ERROR: KICKSTART_MON_HOST not set in environment\n");
-        return 1;
-    }
-
-    if ((*socket_port = getenv("KICKSTART_MON_PORT")) == NULL) {
-        printerr("ERROR: KICKSTART_MON_PORT not set in environment\n");
-        return 1;
-    }
-
-    if (gethostname(hostname, BUFSIZ)) {
-        printerr("ERROR: gethostname() failed: %s\n", strerror(errno));
-        return 1;
-    }
-
-    return 0;
+void interpose_send_stats(ProcStats *stats) {
+    send_msg_to_kickstart(stats);
 }
 
-void* _interpose_monitoring_thread_func(void* arg) {
+void *interpose_monitoring_thread_func(void* arg) {
     pthread_mutex_lock(&monitor_mutex);
 
-    int mpi_rank = 0;
-    int interval = 60;
-    unsigned long sequence = 0;
-    char hostname[BUFSIZ] = "";
-    char msg[BUFSIZ] = "";
-    char *mon_host = NULL;
-    char *mon_port = NULL;
     ProcStats stats;
-    ProcStats diff;
-
     procfs_stats_init(&stats);
-    procfs_stats_init(&diff);
-
-    if (set_monitoring_params(&mpi_rank, &interval, &mon_host, &mon_port, hostname)) {
-        printerr("ERROR: Unable to configure monitoring thread\n");
-        goto exit;
-    }
 
     while (monitor_running) {
 
         struct timeval now;
         struct timespec timeout;
         gettimeofday(&now, NULL);
-        timeout.tv_sec = now.tv_sec + interval;
+        timeout.tv_sec = now.tv_sec + mon_interval;
         timeout.tv_nsec = now.tv_usec * 1000UL;
         pthread_cond_timedwait(&monitor_cv, &monitor_mutex, &timeout);
 
-        gettimeofday(&now, NULL);
-        double timestamp = now.tv_sec + ((double)now.tv_usec * 1e-6);
-        procfs_read_stats_diff(getpid(), &stats, &diff);
+        procfs_read_stats(getpid(), &stats);
 
-        sprintf(msg, "ts=%.3f pid=%d seq=%lu exe=%s host=%s rank=%d "
-                     "utime=%.3f stime=%.3f iowait=%.3f vmpeak=%llu rsspeak=%llu "
-                     "threads=%d bread=%llu bwrite=%llu rchar=%llu wchar=%llu "
-                     "syscr=%lu syscw=%lu\n",
-                     timestamp, getpid(), sequence++, stats.exe,
-                     hostname, mpi_rank, diff.utime, diff.stime,
-                     diff.iowait, diff.vmpeak, diff.rsspeak, diff.threads,
-                     diff.read_bytes, diff.write_bytes, diff.rchar, diff.wchar,
-                     diff.syscr, diff.syscw);
-        if (send_msg_to_kickstart(msg, strlen(msg), mon_host, mon_port)) {
-            printerr("Process rank=%d pid=%d failed to send message to kickstart\n",
-                     mpi_rank, getpid());
+        /* TODO Get PAPI counters */
+
+        if (send_msg_to_kickstart(&stats)) {
+            printerr("Process %d failed to send message to kickstart\n",
+                     getpid());
         }
 
         /* Move this down here so that we always send one event before exiting */
@@ -171,42 +112,71 @@ void* _interpose_monitoring_thread_func(void* arg) {
         }
     }
 
-exit:
     pthread_mutex_unlock(&monitor_mutex);
 
     return NULL;
 }
 
-void _interpose_spawn_monitoring_thread() {
-    /* Only do this if monitoring is enabled */
-    if (getenv("KICKSTART_MON") == NULL) {
-        return;
-    }
+void interpose_spawn_monitoring_thread() {
     pthread_mutex_init(&monitor_mutex, NULL);
     pthread_cond_init(&monitor_cv, NULL);
-    monitor_running = 1;
 
-    int rc = pthread_create(&monitor_thread, NULL, _interpose_monitoring_thread_func, NULL);
-    if (rc) {
-        printerr("Could not spawn the monitoring thread: %d %s\n", rc, strerror(errno));
-        return;
-    }
-}
-
-void _interpose_stop_monitoring_thread() {
-    /* Only do this if monitoring is enabled */
+    /* Only proceed if monitoring is enabled */
     if (getenv("KICKSTART_MON") == NULL) {
         return;
     }
 
-    /* Signal the monitoring thread to shutdown */
     pthread_mutex_lock(&monitor_mutex);
-    monitor_running = 0;
-    pthread_cond_signal(&monitor_cv);
-    pthread_mutex_unlock(&monitor_mutex);
 
-    /* Wait for the monitoring thread */
-    pthread_join(monitor_thread, NULL);
+    /* XXX Save all the environment variables because the application might
+       change them later. */
+
+    char *env = getenv("KICKSTART_MON_HOST");
+    if (env == NULL) {
+        printerr("KICKSTART_MON_HOST not set\n");
+        exit(1);
+    }
+    mon_host = strdup(env);
+
+    env = getenv("KICKSTART_MON_PORT");
+    if (env == NULL) {
+        printerr("KICKSTART_MON_PORT not set\n");
+        exit(1);
+    }
+    mon_port = strdup(env);
+
+    env = getenv("KICKSTART_MON_INTERVAL");
+    if (env == NULL) {
+        printerr("KICKSTART_MON_INTERVAL not set\n");
+        exit(1);
+    }
+    mon_interval = atoi(env);
+
+    monitor_running = 1;
+    int rc = pthread_create(&monitor_thread, NULL, interpose_monitoring_thread_func, NULL);
+    if (rc) {
+        printerr("Could not spawn the monitoring thread: %d %s\n", rc, strerror(errno));
+        monitor_running = 0;
+    }
+
+    pthread_mutex_unlock(&monitor_mutex);
+}
+
+void interpose_stop_monitoring_thread() {
+    pthread_mutex_lock(&monitor_mutex);
+
+    if (monitor_running) {
+        /* Signal the monitoring thread to shutdown */
+        monitor_running = 0;
+        pthread_cond_signal(&monitor_cv);
+
+        pthread_mutex_unlock(&monitor_mutex);
+
+        /* Wait for the monitoring thread */
+        pthread_join(monitor_thread, NULL);
+    } else {
+        pthread_mutex_unlock(&monitor_mutex);
+    }
 
     pthread_cond_destroy(&monitor_cv);
     pthread_mutex_destroy(&monitor_mutex);

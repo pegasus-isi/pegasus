@@ -16,6 +16,7 @@
 #include <sys/timerfd.h>
 
 #include "error.h"
+#include "log.h"
 #include "monitoring.h"
 #include "procfs.h"
 
@@ -30,7 +31,7 @@ typedef struct {
     char *task_id;
     int socket;
     int interval;
-} MonitoringThreadContext;
+} MonitoringContext;
 
 /* This pipe is used to send a shutdown message from the main thread to the
  * monitoring thread */
@@ -39,7 +40,7 @@ static pthread_t monitoring_thread;
 
 // a util function for reading env variables by the main kickstart process
 // with monitoring endpoint data or set default values
-static int initialize_monitoring_context(MonitoringThreadContext *ctx) {
+static int initialize_monitoring_context(MonitoringContext *ctx) {
     char* envptr;
 
     envptr = getenv("KICKSTART_MON_ENDPOINT_URL");
@@ -101,7 +102,7 @@ static int initialize_monitoring_context(MonitoringThreadContext *ctx) {
     return 0;
 }
 
-static void release_monitoring_context(MonitoringThreadContext* ctx) {
+static void release_monitoring_context(MonitoringContext* ctx) {
     if (ctx == NULL) return;
     if (ctx->url != NULL) free(ctx->url);
     if (ctx->credentials != NULL) free(ctx->credentials);
@@ -120,7 +121,7 @@ static size_t write_callback(char *ptr, size_t size, size_t nmemb, void *userdat
 }
 
 /* sending this message to rabbitmq */
-static void send_msg_to_mq(char *msg_buff, MonitoringThreadContext *ctx) {
+static void send_msg_to_mq(char *msg_buff, MonitoringContext *ctx) {
     CURL *curl = curl_easy_init();
     if (curl == NULL) {
         printerr("[mon-thread] Error initializing curl\n");
@@ -170,7 +171,7 @@ static void send_msg_to_mq(char *msg_buff, MonitoringThreadContext *ctx) {
  */
 static int create_ephemeral_endpoint(char *kickstart_hostname, int *kickstart_port) {
 
-    int listenfd = socket(AF_INET, SOCK_STREAM, 0);
+    int listenfd = socket(AF_INET, SOCK_STREAM|SOCK_CLOEXEC, 0);
     if (listenfd < 0 ) {
         printerr("ERROR[socket]: %s\n", strerror(errno));
         return -1;
@@ -205,8 +206,6 @@ static int create_ephemeral_endpoint(char *kickstart_hostname, int *kickstart_po
     }
     *kickstart_port = ntohs(serv_addr.sin_port);
 
-    printerr("Host: %s Port: %d\n", kickstart_hostname, *kickstart_port);
-
     return listenfd;
 
 error:
@@ -214,12 +213,12 @@ error:
     return -1;
 }
 
-static int handle_client(MonitoringThreadContext *ctx) {
+static int handle_client(MonitoringContext *ctx) {
 
     /* Accept a network connection and read the message */
     struct sockaddr_in client_addr;
     socklen_t client_add_len = sizeof(client_addr);
-    bzero((char *)&client_addr, sizeof(client_addr));
+    memset(&client_addr, 0, sizeof(client_addr));
     int incoming_socket = accept(ctx->socket, (struct sockaddr *)&client_addr, &client_add_len);
     if (incoming_socket < 0) {
         printerr("[mon-thread] ERROR[accept]: %s\n", strerror(errno));
@@ -230,100 +229,98 @@ static int handle_client(MonitoringThreadContext *ctx) {
         }
     }
 
-    char line[BUFSIZ];
-    int num_bytes = recv(incoming_socket, line, BUFSIZ, 0);
-    if (num_bytes < 0) {
+    ProcStats stats;
+    int sz = recv(incoming_socket, &stats, sizeof(ProcStats), 0);
+    if (sz < 0) {
         printerr("[mon-thread] ERROR[recv]: %s\n", strerror(errno));
         goto next;
     }
-
-    // replace end line with a terminating character
-    char *pos;
-    if ((pos = strchr(line, '\n')) != NULL) {
-        *pos = '\0';
-    }
-
-    // a proper monitoring message should start with a timestamp
-    if (strstr(line, "ts=") != line) {
-        printerr("[mon-thread] ERROR: Message did not start with 'ts=': \n%s\n", line);
+    if (sz != sizeof(ProcStats)) {
+        printerr("Invalid message\n");
         goto next;
     }
 
-    // Add all the extra information
-    char enriched_line[BUFSIZ];
-    snprintf(enriched_line, BUFSIZ, "%s wf_uuid=%s wf_label=%s dag_job_id=%s condor_job_id=%s xformation=%s task_id=%s",
-        line, ctx->wf_uuid, ctx->wf_label, ctx->dag_job_id, ctx->condor_job_id, ctx->xformation, ctx->task_id);
-
-    send_msg_to_mq(enriched_line, ctx);
+    if (stats.host == 0) { // FIXME This should be non-zero
+        /* This is a message from libinterpose */
+        /* TODO Update the state of the local process in our list */
+        fprintf(stdout, "INTERPOSE pid=%d exe=%s utime=%.3f stime=%.3f iowait=%.3f "
+                "vm=%llu rss=%llu threads=%d bread=%llu bwrite=%llu "
+                "rchar=%llu wchar=%llu syscr=%lu syscw=%lu\n",
+                stats.pid, stats.exe, stats.utime, stats.stime, stats.iowait, stats.vm, stats.rss,
+                stats.threads, stats.read_bytes, stats.write_bytes,
+                stats.rchar, stats.wchar, stats.syscr, stats.syscw);
+    } else {
+        /* This is a message from another host */
+        /* TODO Update the state of the remote process in our list */
+        fprintf(stdout, "REMOTE pid=%d exe=%s utime=%.3f stime=%.3f iowait=%.3f "
+            "vm=%llu rss=%llu threads=%d bread=%llu bwrite=%llu "
+            "rchar=%llu wchar=%llu syscr=%lu syscw=%lu\n",
+            stats.pid, stats.exe, stats.utime, stats.stime, stats.iowait,
+            stats.vm, stats.rss,
+            stats.threads, stats.read_bytes, stats.write_bytes,
+            stats.rchar, stats.wchar, stats.syscr, stats.syscw);
+    }
 
 next:
     close(incoming_socket);
     return 0;
 }
 
-static int handle_timeout(MonitoringThreadContext *ctx, ProcStatsList **listptr) {
-
-    /* Update the list of process stats */
-    procfs_read_stats_group(listptr);
-
+static int send_report(MonitoringContext *ctx, ProcStatsList **listptr) {
     ProcStats stats;
-    procfs_add_stats_list(*listptr, &stats);
+    procfs_merge_stats_list(*listptr, &stats);
 
     char msg[BUFSIZ];
     snprintf(msg, BUFSIZ, "wf_uuid=%s wf_label=%s dag_job_id=%s condor_job_id=%s "
-            "xformation=%s task_id=%s utime=%.3f stime=%.3f iowait=%.3f "
+            "xformation=%s task_id=%s pid=%d exe=%s utime=%.3f stime=%.3f iowait=%.3f "
             "vm=%llu rss=%llu threads=%d bread=%llu bwrite=%llu "
             "rchar=%llu wchar=%llu syscr=%lu syscw=%lu",
             ctx->wf_uuid, ctx->wf_label, ctx->dag_job_id, ctx->condor_job_id,
-            ctx->xformation, ctx->task_id,
-            stats.utime, stats.stime, stats.iowait, stats.vm, stats.rss,
-            stats.threads, stats.read_bytes, stats.write_bytes,
+            ctx->xformation, ctx->task_id, stats.pid, stats.exe, stats.utime, stats.stime, stats.iowait,
+            stats.vm, stats.rss, stats.threads, stats.read_bytes, stats.write_bytes,
             stats.rchar, stats.wchar, stats.syscr, stats.syscw);
 
-    fprintf(stdout, "%s\n", msg);
+    fprintf(stdout, "LOCAL %s\n", msg);
+    fprintf(stdout, "%lu\n", sizeof(ProcStats));
 
     send_msg_to_mq(msg, ctx);
 
     return 0;
 }
 
-/*
- * Main monitoring thread loop - it periodically read global trace file as sent this info somewhere, e.g. to another file
- * or to an external service.
- * It parses any information from the global monitoring and calculates some mean values.
- */
 void* monitoring_thread_func(void* arg) {
-    MonitoringThreadContext *ctx = (MonitoringThreadContext *)arg;
+    MonitoringContext *ctx = (MonitoringContext *)arg;
 
-    printerr("[mon-thread] url: %s\n", ctx->url);
-    //printerr("[mon-thread] credentials: %s\n", ctx->credentials);
-    printerr("[mon-thread] wf uuid: %s\n", ctx->wf_uuid);
-    printerr("[mon-thread] wf label: %s\n", ctx->wf_label);
-    printerr("[mon-thread] dag job id: %s\n", ctx->dag_job_id);
-    printerr("[mon-thread] condor job id: %s\n", ctx->condor_job_id);
-    printerr("[mon-thread] xformation: %s\n", ctx->xformation);
-    printerr("[mon-thread] task id: %s\n", ctx->task_id);
-    printerr("[mon-thread] process group: %d\n", getpgid(0));
+    info("Monitoring thread starting...");
+    debug("url: %s", ctx->url);
+    debug("credentials: %s", ctx->credentials);
+    debug("wf uuid: %s", ctx->wf_uuid);
+    debug("wf label: %s", ctx->wf_label);
+    debug("dag job id: %s", ctx->dag_job_id);
+    debug("condor job id: %s", ctx->condor_job_id);
+    debug("xformation: %s", ctx->xformation);
+    debug("task id: %s", ctx->task_id);
+    debug("process group: %d", getpgid(0));
 
     curl_global_init(CURL_GLOBAL_ALL);
 
     /* Create timer for monitoring interval */
     int timer = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC);
     struct itimerspec timercfg;
-    timercfg.it_value.tv_sec = 0; /* Fire immediately at start */
-    timercfg.it_value.tv_nsec = 1;
+    timercfg.it_value.tv_sec = ctx->interval;
+    timercfg.it_value.tv_nsec = 0;
     timercfg.it_interval.tv_sec = ctx->interval; /* Fire every interval seconds */
     timercfg.it_interval.tv_nsec = 0;
     if (timerfd_settime(timer, 0, &timercfg, NULL) < 0) {
-        printerr("[mon-thread] Error setting timerfd time: %s\n", strerror(errno));
+        printerr("Error setting timerfd time: %s\n", strerror(errno));
         pthread_exit(NULL);
     }
 
-    printerr("[mon-thread] Starting monitoring loop...\n");
-
     ProcStatsList *stats = NULL;
 
-    while (1) {
+    int signalled = 0;
+    while (!signalled) {
+
         /* Poll signal_pipe, socket, and timer to see which one is readable */
         struct pollfd fds[3];
         fds[0].fd = signal_pipe[0];
@@ -333,19 +330,20 @@ void* monitoring_thread_func(void* arg) {
         fds[2].fd = timer;
         fds[2].events = POLLIN;
         if (poll(fds, 3, -1) <= 0) {
-            printerr("[mon-thread] Error polling: %s\n", strerror(errno));
+            printerr("Error polling: %s\n", strerror(errno));
             break;
         }
 
         /* If signal_pipe[0] is readable, then stop the thread. Note that you
-         * could theoretically have some clients waiting for accept(), but that
-         * is not possible because by the time we are stoping the thread,
+         * could theoretically have some clients waiting for accept(). That is
+         * not too likely because by the time we are stoping the thread,
          * wait() has returned in the main thread, so there shouldn't be any
-         * clients left.
+         * clients left, but if libinterpose is used, then it will send a
+         * last message when it exits, which might not arrive until later.
          */
         if (fds[0].revents & POLLIN) {
-            printerr("[mon-thread] Caught signal\n");
-            break;
+            debug("Monitoring thread caught signal");
+            signalled = 1;
         }
 
         /* Got a client connection */
@@ -353,23 +351,31 @@ void* monitoring_thread_func(void* arg) {
             if (handle_client(ctx) < 0) {
                 break;
             }
+
+            if (signalled) {
+                /* Must be the last process on libinterpose, send a message */
+                send_report(ctx, &stats);
+            }
         }
 
         /* Timer fired */
         if (fds[2].revents & POLLIN) {
             unsigned long long expirations = 0;
             if (read(timer, &expirations, sizeof(expirations)) < 0) {
-                printerr("[mon-thread] timerfd read failed: %s\n", strerror(errno));
+                error("timerfd read failed: %s\n", strerror(errno));
             } else if (expirations > 1) {
-                printerr("[mon-thread] WARNING: timer expired %llu times\n", expirations);
+                warn("timer expired %llu times\n", expirations);
             }
-            if (handle_timeout(ctx, &stats) < 0) {
-                break;
-            }
+
+            /* Update the list of process stats */
+            procfs_read_stats_group(&stats);
+
+            /* Send a monitoring message */
+            send_report(ctx, &stats);
         }
     }
 
-    printerr("[mon-thread] Monitoring thread exiting...\n");
+    info("Monitoring thread exiting");
     procfs_free_stats_list(stats);
     close(timer);
     close(ctx->socket);
@@ -379,6 +385,9 @@ void* monitoring_thread_func(void* arg) {
 }
 
 int start_monitoring_thread(int interval) {
+    /* Make sure the calling process is in its own process group */
+    setpgid(0, 0);
+
     /* Find a host and port to use */
     char socket_host[BUFSIZ];
     int socket_port;
@@ -388,16 +397,19 @@ int start_monitoring_thread(int interval) {
         return -1;
     }
 
+    /* TODO Determine whether to report to a higher-level kickstart, or to monitord, or to rabbitmq */
+
     /* Set the monitoring environment */
-    setenv("KICKSTART_MON_HOST", socket_host, 1);
     char envvar[10];
+    setenv("KICKSTART_MON", "1", 1);
+    snprintf(envvar, 10, "%d", interval);
+    setenv("KICKSTART_MON_INTERVAL", envvar, 1);
+    setenv("KICKSTART_MON_HOST", socket_host, 1);
     snprintf(envvar, 10, "%d", socket_port);
     setenv("KICKSTART_MON_PORT", envvar, 1);
 
-    printf("size = %lu\n", sizeof(ProcStats));
-
     /* Set up parameters for the thread */
-    MonitoringThreadContext *ctx = calloc(sizeof(MonitoringThreadContext), 1);
+    MonitoringContext *ctx = calloc(1, sizeof(MonitoringContext));
     if (initialize_monitoring_context(ctx) < 0) {
         return -1;
     }

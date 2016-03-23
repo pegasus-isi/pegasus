@@ -419,14 +419,25 @@ static int startswith(const char *line, const char *tok) {
 }
 
 /* Read stats from procfs */
-static void read_procfs() {
+static void report_stats() {
     ProcStats stats;
     procfs_stats_init(&stats);
     procfs_read_stats(getpid(), &stats);
 
+    /* This is better than what we get from /proc */
+    struct rusage ru;
+    if (getrusage(RUSAGE_SELF, &ru) < 0) {
+        printerr("Error getting resource usage: %s\n", strerror(errno));
+        return;
+    }
+    stats.utime = (double)ru.ru_utime.tv_sec + (double)ru.ru_utime.tv_usec/1.0e6;
+    stats.stime = (double)ru.ru_stime.tv_sec + (double)ru.ru_stime.tv_usec/1.0e6;
+
     tprintf("exe: %s\n", stats.exe);
     tprintf("VmPeak: %llu\n", stats.vmpeak);
     tprintf("VmHWM: %llu\n", stats.rsspeak);
+    tprintf("utime: %.3lf\n", stats.utime);
+    tprintf("stime: %.3lf\n", stats.stime);
     tprintf("iowait: %.3lf\n", stats.iowait);
     tprintf("rchar: %llu\n", stats.rchar);
     tprintf("wchar: %llu\n", stats.wchar);
@@ -435,17 +446,8 @@ static void read_procfs() {
     tprintf("read_bytes: %llu\n", stats.read_bytes);
     tprintf("write_bytes: %llu\n", stats.write_bytes);
     tprintf("cancelled_write_bytes: %llu\n", stats.cancelled_write_bytes);
-}
 
-/* Read CPU usage */
-static void read_rusage() {
-    struct rusage ru;
-    if (getrusage(RUSAGE_SELF, &ru) < 0) {
-        printerr("Error getting resource usage: %s\n", strerror(errno));
-        return;
-    }
-    tprintf("utime: %.3lf\n", (double)ru.ru_utime.tv_sec + (double)ru.ru_utime.tv_usec/1.0e6);
-    tprintf("stime: %.3lf\n", (double)ru.ru_stime.tv_sec + (double)ru.ru_stime.tv_usec/1.0e6);
+    interpose_send_stats(&stats);
 }
 
 static int path_matches_patterns(const char *path, const char *patterns) {
@@ -1023,7 +1025,7 @@ static void __attribute__((constructor)) interpose_init(void) {
 #endif
 
     /* online monitoring */
-    //_interpose_spawn_monitoring_thread();
+    interpose_spawn_monitoring_thread();
 }
 
 /* Library finalizer function */
@@ -1034,7 +1036,7 @@ static void __attribute__((destructor)) interpose_fini(void) {
     }
 
     /* online monitoring */
-    //_interpose_stop_monitoring_thread();
+    interpose_stop_monitoring_thread();
 
     /* Look for descriptors not explicitly closed */
     for(int i=0; i<max_descriptors; i++) {
@@ -1047,8 +1049,7 @@ static void __attribute__((destructor)) interpose_fini(void) {
     fini_papi();
 #endif
 
-    read_procfs();
-    read_rusage();
+    report_stats();
 
     tprintf("stop: %lf\n", get_time());
 

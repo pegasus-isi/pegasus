@@ -2,10 +2,13 @@
 #define KICKSTART_PROCFS_H
 
 #include <unistd.h>
+#include <netinet/in.h>
 
 typedef struct _ProcStats {
+    in_addr_t host;
     pid_t pid;
     pid_t ppid;
+    unsigned int rank;
     unsigned long long rchar;
     unsigned long long wchar;
     unsigned long syscr;
@@ -20,9 +23,19 @@ typedef struct _ProcStats {
     unsigned long long vm; /* current VM size */
     unsigned long long rsspeak; /* peak RSS */
     unsigned long long rss; /* current RSS */
-    int threads; /* diff of threads could be negative */
-    char exe[255];
-    char state;
+    unsigned int threads;
+#ifdef HAS_PAPI
+    long long PAPI_TOT_INS; /* Total instructions */
+    long long PAPI_LD_INS; /* Load instructions */
+    long long PAPI_SR_INS; /* Store instructions */
+    long long PAPI_FP_INS; /* Floating point instructions */
+    long long PAPI_FP_OPS; /* Floating point ops */
+    long long PAPI_L3_TCM; /* L3 cache misses */
+    long long PAPI_L2_TCM; /* L2 cache misses */
+    long long PAPI_L1_TCM; /* L1 cache misses */
+#endif
+    char exe[127];
+    char state; /* The current state of the process: 'X' is terminated. */
 } ProcStats;
 
 typedef struct _ProcStatsList {
@@ -32,9 +45,8 @@ typedef struct _ProcStatsList {
 
 void procfs_stats_init(ProcStats *stats);
 int procfs_read_stats(pid_t process, ProcStats *stats);
-int procfs_read_stats_diff(pid_t pid, ProcStats *prev, ProcStats *diff);
 void procfs_read_stats_group(ProcStatsList **listptr);
-void procfs_add_stats_list(ProcStatsList *list, ProcStats *result);
+void procfs_merge_stats_list(ProcStatsList *list, ProcStats *result);
 void procfs_free_stats_list(ProcStatsList *list);
 
 #endif

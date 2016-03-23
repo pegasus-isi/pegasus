@@ -5,9 +5,82 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 
 #include "error.h"
 #include "procfs.h"
+
+static int mpi_rank = -1;
+static in_addr_t hostaddr = 0;
+
+static in_addr_t gethostaddr() {
+    /* FIXME This should probably support ipv6 */
+    if (hostaddr != 0) {
+        return hostaddr;
+    }
+    char host[256];
+    if (gethostname(host, 256) < 0) {
+        printerr("gethostname: %s\n", strerror(errno));
+        return -1;
+    }
+
+    /* XXX Get IPv4 address */
+    struct addrinfo hints;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET; 
+    hints.ai_socktype = SOCK_STREAM;
+
+    struct addrinfo *servinfo;
+    int gaierr = getaddrinfo(host, NULL, &hints, &servinfo);
+    if (gaierr != 0) {
+        printerr("getaddrinfo: %s\n", gai_strerror(gaierr));
+        return -1;
+    }
+
+    /* XXX getaddrinfo returns a list, just get the first one */
+    struct sockaddr_in *p = (struct sockaddr_in *)(servinfo->ai_addr);
+    hostaddr = ntohl(p->sin_addr.s_addr);
+
+    freeaddrinfo(servinfo);
+
+    return hostaddr;
+}
+
+static int getmpirank() {
+    /* If we already looked, then return the value we got before */
+    if (mpi_rank >= 0) {
+        return mpi_rank;
+    }
+
+    /* Try to find a rank environment variable */
+    char *envptr = getenv("OMPI_COMM_WORLD_RANK");
+    if (envptr == NULL) {
+        envptr = getenv("ALPS_APP_PE");
+        if (envptr == NULL) {
+            envptr = getenv("PMI_RANK");
+            if (envptr == NULL) {
+                envptr = getenv("PMI_ID");
+                if (envptr == NULL) {
+                    envptr = getenv("MPIRUN_RANK");
+                }
+            }
+        }
+    }
+
+    if (envptr != NULL) {
+        mpi_rank = atoi(envptr);
+    } else {
+        /* If we didn't find anything, then don't look again */
+        mpi_rank = 0;
+    }
+
+    return mpi_rank;
+}
 
 static int startswith(const char *line, const char *tok) {
     return strstr(line, tok) == line;
@@ -38,7 +111,7 @@ static int procfs_read_cpu_stats(pid_t pid, ProcStats *stats) {
     //signal blocked sigignore sigcatch wchan nswap cnswap exit_signal
     //processor rt_priority policy delayacct_blkio_ticks guest_time cguest_time
     fscanf(f, "%*d %*s %c %d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu "
-              "%lu %*d %*d %*d %*d %d %*d %*u %*u %*d %*u %*u "
+              "%lu %*d %*d %*d %*d %u %*d %*u %*u %*d %*u %*u "
               "%*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*d "
               "%*d %*u %*u %llu %*u %*d",
            &(stats->state), &(stats->ppid), &utime, &stime, &(stats->threads), &iowait);
@@ -150,6 +223,7 @@ static int procfs_read_exe(pid_t pid, char *exe, int maxsize) {
     return 0;
 }
 
+
 void procfs_stats_init(ProcStats *stats) {
     if (stats == NULL) {
         return;
@@ -159,6 +233,9 @@ void procfs_stats_init(ProcStats *stats) {
 
 int procfs_read_stats(pid_t pid, ProcStats *stats) {
     stats->pid = pid;
+    stats->ppid = getppid();
+    stats->rank = getmpirank();
+    stats->host = gethostaddr();
     int a = procfs_read_cpu_stats(pid, stats);
     int b = procfs_read_io_stats(pid, stats);
     int c = procfs_read_mem_stats(pid, stats);
@@ -167,50 +244,6 @@ int procfs_read_stats(pid_t pid, ProcStats *stats) {
         return -1;
     }
     return 0;
-}
-
-int procfs_read_stats_diff(pid_t pid, ProcStats *prev, ProcStats *diff) {
-    ProcStats new;
-    procfs_stats_init(&new);
-
-    /* Read the latest values */
-    int result = procfs_read_stats(pid, &new);
-
-    /* Compute the delta */
-    diff->utime = new.utime - prev->utime;
-    diff->stime = new.stime - prev->stime;
-    diff->iowait = new.iowait - prev->iowait;
-    diff->vm = new.vm - prev->vm;
-    diff->vmpeak = new.vmpeak - prev->vmpeak;
-    diff->rss = new.rss - prev->rss;
-    diff->rsspeak = new.rsspeak - prev->rsspeak;
-    diff->threads = new.threads - prev->threads;
-    diff->rchar = new.rchar - prev->rchar;
-    diff->wchar = new.wchar - prev->wchar;
-    diff->syscr = new.syscr - prev->syscr;
-    diff->syscw = new.syscw - prev->syscw;
-    diff->read_bytes = new.read_bytes - prev->read_bytes;
-    diff->write_bytes = new.write_bytes - prev->write_bytes;
-    diff->cancelled_write_bytes = new.cancelled_write_bytes - prev->cancelled_write_bytes;
-
-    /* Save the new values */
-    prev->utime = new.utime;
-    prev->stime = new.stime;
-    prev->iowait = new.iowait;
-    prev->vm = new.vm;
-    prev->vmpeak = new.vmpeak;
-    prev->rss = new.rss;
-    prev->rsspeak = new.rsspeak;
-    prev->threads = new.threads;
-    prev->rchar = new.rchar;
-    prev->wchar = new.wchar;
-    prev->syscr = new.syscr;
-    prev->syscw = new.syscw;
-    prev->read_bytes = new.read_bytes;
-    prev->write_bytes = new.write_bytes;
-    prev->cancelled_write_bytes = new.cancelled_write_bytes;
-
-    return result;
 }
 
 /* check to see if str is all decimal digits */
@@ -293,9 +326,17 @@ void procfs_read_stats_group(ProcStatsList **listptr) {
 }
 
 /* Add up all the values in list and store them in result */
-void procfs_add_stats_list(ProcStatsList *list, ProcStats *result) {
+void procfs_merge_stats_list(ProcStatsList *list, ProcStats *result) {
     assert(result != NULL);
-    procfs_stats_init(result);
+    memset(result, 0, sizeof(ProcStats));
+
+    /* Use current process for all the identifying information */
+    result->host = gethostaddr();
+    result->pid = getpid();
+    result->ppid = getppid();
+    result->rank = getmpirank();
+    procfs_read_exe(result->pid, result->exe, sizeof(result->exe));
+
     for (ProcStatsList *cur = list; cur != NULL; cur = cur->next) {
         ProcStats *stats = &(cur->stats);
         result->utime += stats->utime;
