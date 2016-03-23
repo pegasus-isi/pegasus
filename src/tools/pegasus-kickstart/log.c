@@ -6,7 +6,9 @@
 
 #include "log.h"
 
-static LogLevel log_level = LOG_INFO;
+#define LOG_MAX 512
+
+static LogLevel log_level = LOG_WARN;
 
 static char *log_name = NULL;
 
@@ -15,6 +17,7 @@ static int log_output = STDERR_FILENO;
 static const char *log_levels[] = {
     "FATAL",
     "ERROR",
+    "WARNING",
     "INFO",
     "DEBUG",
     "TRACE"
@@ -47,9 +50,11 @@ int logprintf(LogLevel level, char *file, int line, const char *format, ...) {
         return 0;
     }
 
-    char logformat[1024];
-    if (snprintf(logformat, 1024, "%s[%d] %-5s %s:%d: %s\n", log_name, getpid(), log_levels[level], file, line, format) >= 1024) {
-        /* Truncated log message */
+    char logformat[LOG_MAX];
+    if (snprintf(logformat, LOG_MAX, "%s[%d] %s %s:%d: %s\n", log_name, getpid(),
+                 log_levels[level], file, line, format) >= LOG_MAX) {
+        warn("truncated log message follows");
+        logformat[LOG_MAX-1] = '\n';
     }
 
     va_list args;
