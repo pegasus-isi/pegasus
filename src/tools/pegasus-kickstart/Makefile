@@ -39,7 +39,7 @@ endif
 
 ifeq (LINUX,${SYSTEM})
 ifeq (x86_64,${ARCH})
-    TARGET += libinterpose.so
+    TARGET += libinterpose.so pegasus-monitor
     # TODO Replace this with pkg-config, which is supported in PAPI 5.4.1
     PAPI_SO=$(shell /sbin/ldconfig -p | grep libpapi.so)
     PAPI_H=$(shell ls /usr/include/papi.h)
@@ -69,6 +69,9 @@ SRCS=$(OBJS:.o=.c)
 all: $(TARGET)
 
 pegasus-kickstart: $(OBJS)
+	$(LD) $(LDFLAGS) $^ $(LDLIBS) -o $@
+
+pegasus-monitor: pegasus-monitor.o monitoring.o procfs.o log.o
 	$(LD) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 libinterpose.so: interpose.c interpose_monitoring.c procfs.c log.c
