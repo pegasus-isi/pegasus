@@ -31,6 +31,7 @@ OBJS+=invoke.o
 OBJS+=pegasus-kickstart.o
 OBJS+=procinfo.o
 OBJS+=monitoring.o
+OBJS+=log.o
 
 ifeq (DARWIN,${SYSTEM})
     OBJS += machine/darwin.o
@@ -70,7 +71,7 @@ all: $(TARGET)
 pegasus-kickstart: $(OBJS)
 	$(LD) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-libinterpose.so: interpose.c interpose_monitoring.c procfs.c
+libinterpose.so: interpose.c interpose_monitoring.c procfs.c log.c
 	$(CC) $(CFLAGS) -shared -fPIC -o libinterpose.so $^ $(LI_LDFLAGS)
 
 version.h:
