@@ -344,6 +344,8 @@ void set_path() {
 }
 
 int main(int argc, char* argv[]) {
+    log_set_name("pegasus-kickstart");
+
     size_t cwd_size = getpagesize();
     int status, result = 0;
     int i, j, keeploop;
@@ -354,8 +356,6 @@ int main(int argc, char* argv[]) {
     char* workdir = NULL;
     mylist_t initial;
     mylist_t final;
-
-    log_set_name("pegasus-kickstart");
 
     /* premature init with defaults */
     if (mylist_init(&initial)) return 43;
