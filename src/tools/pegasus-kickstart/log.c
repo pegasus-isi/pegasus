@@ -23,18 +23,18 @@ static const char *log_levels[] = {
     "TRACE"
 };
 
-void set_log_level(LogLevel level) {
+void log_set_level(LogLevel level) {
     if (level < LOG_FATAL || level > LOG_TRACE) {
         return;
     }
     log_level = level;
 }
 
-LogLevel get_log_level() {
+LogLevel log_get_level() {
     return log_level;
 }
 
-void set_log_name(const char *name) {
+void log_set_name(const char *name) {
     if (log_name != NULL) {
         free(log_name);
     }
@@ -45,7 +45,11 @@ void set_log_name(const char *name) {
     }
 }
 
-int logprintf(LogLevel level, char *file, int line, const char *format, ...) {
+void log_set_output(int fd) {
+    log_output = fd;
+}
+
+int log_printf(LogLevel level, char *file, int line, const char *format, ...) {
     if (level > log_level || level < LOG_FATAL) {
         return 0;
     }

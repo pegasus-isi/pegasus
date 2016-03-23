@@ -29,6 +29,8 @@
 #include "interpose.h"
 #include "interpose_monitoring.h"
 #include "procfs.h"
+#include "error.h"
+#include "log.h"
 
 /* TODO Unlocked I/O (e.g. fwrite_unlocked) */
 /* TODO Handle directories */
@@ -51,19 +53,6 @@
 /* TODO What about mmap? Probably nothing we can do besides interpose
  *      mmap and assume that the total size being mapped is read/written
  */
-
-static int myerr = STDERR_FILENO;
-
-#define printerr(fmt, ...) \
-    dprintf(myerr, "libinterpose[%d/%d]: %s[%d]: " fmt, \
-            getpid(), gettid(), __FILE__, __LINE__, ##__VA_ARGS__)
-
-#ifdef DEBUG
-#define debug(format, args...) \
-    dprintf(myerr, "libinterpose: " format "\n" , ##args)
-#else
-#define debug(format, args...)
-#endif
 
 typedef struct {
     char type;
@@ -1007,10 +996,13 @@ static void fini_papi() {
 static void __attribute__((constructor)) interpose_init(void) {
     mypid = getpid();
 
+    log_set_name("libinterpose");
+
     /* dup stderr because the program might close it. This is
      * untraced because the descriptor table has not been
      * initialized yet */
-    myerr = dup_untraced(STDERR_FILENO);
+    int myerr = dup_untraced(STDERR_FILENO);
+    log_set_output(myerr);
 
     /* Open the trace file */
     topen();

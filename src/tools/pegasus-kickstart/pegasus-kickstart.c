@@ -36,6 +36,7 @@
 #include "version.h"
 #include "ptrace.h"
 #include "monitoring.h"
+#include "log.h"
 
 #define show(s) (s ? s : "(undefined)")
 
@@ -353,6 +354,8 @@ int main(int argc, char* argv[]) {
     char* workdir = NULL;
     mylist_t initial;
     mylist_t final;
+
+    log_set_name("pegasus-kickstart");
 
     /* premature init with defaults */
     if (mylist_init(&initial)) return 43;
@@ -782,7 +785,6 @@ REDIR:
 
     /* If monitoring is enabled, create new PG and start monitoring thread */
     if (monitoringInterval > 0) {
-        setpgid(0, 0);
         if (start_monitoring_thread(monitoringInterval)) {
             printerr("ERROR: Unable to start monitoring thread\n");
             return 127;

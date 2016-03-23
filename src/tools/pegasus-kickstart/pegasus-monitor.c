@@ -9,7 +9,7 @@
 #include "log.h"
 
 int main(int argc, char **argv) {
-    set_log_name(argv[0]);
+    log_set_name("pegasus-monitor");
 
     /* Check arguments */
     if (argc < 2) {
