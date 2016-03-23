@@ -61,6 +61,12 @@ int log_printf(LogLevel level, char *file, int line, const char *format, ...) {
         logformat[LOG_MAX-1] = '\n';
     }
 
+    /* Old error messages come with an extra '\n' */
+    int len = strlen(logformat);
+    if (logformat[len-2] == '\n') {
+        logformat[len-1] = '\0';
+    }
+
     va_list args;
     va_start(args, format);
     int chars = vdprintf(log_output, logformat, args);
