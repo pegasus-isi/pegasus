@@ -923,7 +923,7 @@ pegasus.data.configuration    HTCondorio</programlisting>
   </section>
 
   <section id="bosco_sdsc">
-    <title>Remote PBS Cluster using Bosco and SSH</title>
+    <title>SDSC Comet with Bosco glideins</title>
 
     <para>Bosco documentation: <ulink url="https://twiki.opensciencegrid.org/bin/view/CampusGrids/BoSCO">https://twiki.opensciencegrid.org/bin/view/CampusGrids/BoSCO</ulink></para>
 
