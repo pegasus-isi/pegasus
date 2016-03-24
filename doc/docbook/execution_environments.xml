@@ -925,7 +925,7 @@ pegasus.data.configuration    HTCondorio</programlisting>
   <section id="bosco_sdsc">
     <title>Remote PBS Cluster using Bosco and SSH</title>
 
-    <para>Bosco documentation: <ulink url="https://twiki.opensciencegrid.org/bin/view/CampusGrids/BoSCO">https://twiki.opensciencegrid.org/bin/view/CampusGrids/BoSCO</ulink>
+    <para>Bosco documentation: <ulink url="https://twiki.opensciencegrid.org/bin/view/CampusGrids/BoSCO">https://twiki.opensciencegrid.org/bin/view/CampusGrids/BoSCO</ulink></para>
 
     <para>Bosco is part of the HTCondor system which allows you to set up
         a personal pool of resources brought in from a remote cluster. In 
