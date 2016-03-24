@@ -56,7 +56,6 @@ export irodsEnvFile=$HOME/.irods/irods_environment.json.IPlant
 
 
 for SUBTEST in \
-    irods \
     http \
     gridftp \
 ; do
