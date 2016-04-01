@@ -55,8 +55,8 @@ int log_printf(LogLevel level, char *file, int line, const char *format, ...) {
     }
 
     char logformat[LOG_MAX];
-    if (snprintf(logformat, LOG_MAX, "%s[%d] %s %s:%d: %s\n", log_name, getpid(),
-                 log_levels[level], file, line, format) >= LOG_MAX) {
+    if (snprintf(logformat, LOG_MAX, "%s[%d] %s:%d %s: %s\n", log_name, getpid(),
+                 file, line, log_levels[level], format) >= LOG_MAX) {
         warn("truncated log message follows");
         logformat[LOG_MAX-1] = '\n';
     }
