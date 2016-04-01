@@ -10,6 +10,7 @@
 
 int main(int argc, char **argv) {
     log_set_name("pegasus-monitor");
+    log_set_default_level();
 
     /* Check arguments */
     if (argc < 2) {

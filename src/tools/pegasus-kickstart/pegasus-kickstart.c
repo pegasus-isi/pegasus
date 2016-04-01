@@ -345,6 +345,7 @@ void set_path() {
 
 int main(int argc, char* argv[]) {
     log_set_name("pegasus-kickstart");
+    log_set_default_level();
 
     size_t cwd_size = getpagesize();
     int status, result = 0;

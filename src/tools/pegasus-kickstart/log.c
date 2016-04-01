@@ -23,6 +23,22 @@ static const char *log_levels[] = {
     "TRACE"
 };
 
+void log_set_default_level() {
+    char *envptr = getenv("KICKSTART_LOG_LEVEL");
+    if (envptr == NULL) {
+        return;
+    }
+
+    for (int i=LOG_FATAL; i<=LOG_TRACE; i++) {
+        if (strcasecmp(envptr, log_levels[i]) == 0) {
+            log_set_level(i);
+            return;
+        }
+    }
+
+    error("Invalid log level: %s", envptr);
+}
+
 void log_set_level(LogLevel level) {
     if (level < LOG_FATAL || level > LOG_TRACE) {
         return;

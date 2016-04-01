@@ -10,6 +10,7 @@ typedef enum _LogLevel {
     LOG_TRACE
 } LogLevel;
 
+void log_set_default_level();
 void log_set_level(LogLevel level);
 LogLevel log_get_level();
 void log_set_name(const char *name);
