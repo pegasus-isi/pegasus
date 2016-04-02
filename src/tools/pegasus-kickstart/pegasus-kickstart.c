@@ -674,6 +674,7 @@ int main(int argc, char* argv[]) {
                     fprintf(stderr, "ERROR: Invalid -m argument (0 to 3600 seconds): %s\n", temp);
                     return 127;
                 }
+                setenv("KICKSTART_MON_INTERVAL", temp, 1);
 
                 break;
             default:
@@ -786,7 +787,7 @@ REDIR:
 
     /* If monitoring is enabled, create new PG and start monitoring thread */
     if (monitoringInterval > 0) {
-        if (start_monitoring_thread(monitoringInterval)) {
+        if (start_monitoring_thread()) {
             printerr("ERROR: Unable to start monitoring thread\n");
             return 127;
         }

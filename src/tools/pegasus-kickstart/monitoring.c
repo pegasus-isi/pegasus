@@ -14,6 +14,7 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <sys/timerfd.h>
+#include <netdb.h>
 
 #include "error.h"
 #include "log.h"
@@ -43,50 +44,63 @@ static pthread_t monitoring_thread;
 static int initialize_monitoring_context(MonitoringContext *ctx) {
     char* envptr;
 
+    envptr = getenv("KICKSTART_MON_INTERVAL");
+    if (envptr == NULL) {
+        error("KICKSTART_MON_INTERVAL not specified\n");
+        return -1;
+    }
+    ctx->interval = atoi(envptr);
+
     envptr = getenv("KICKSTART_MON_ENDPOINT_URL");
     if (envptr == NULL) {
-        printerr("ERROR: KICKSTART_MON_ENDPOINT_URL not specified\n");
+        error("KICKSTART_MON_ENDPOINT_URL not specified\n");
         return -1;
     }
     ctx->url = strdup(envptr);
 
     envptr = getenv("KICKSTART_MON_ENDPOINT_CREDENTIALS");
     if (envptr == NULL) {
-        printerr("ERROR: KICKSTART_MON_ENDPOINT_CREDENTIALS not specified\n");
-        return -1;
+        warn("KICKSTART_MON_ENDPOINT_CREDENTIALS not specified\n");
+        ctx->credentials = NULL;
+    } else {
+        ctx->credentials = strdup(envptr);
     }
-    ctx->credentials = strdup(envptr);
 
     envptr = getenv("PEGASUS_WF_UUID");
     if (envptr == NULL) {
-        printerr("ERROR: PEGASUS_WF_UUID not specified\n");
-        return -1;
+        warn("PEGASUS_WF_UUID not specified\n");
+        ctx->wf_uuid = NULL;
+    } else {
+        ctx->wf_uuid = strdup(envptr);
     }
-    ctx->wf_uuid = strdup(envptr);
 
     envptr = getenv("PEGASUS_WF_LABEL");
     if (envptr == NULL) {
-        printerr("ERROR: PEGASUS_WF_LABEL not specified\n");
-        return -1;
+        warn("PEGASUS_WF_LABEL not specified\n");
+        ctx->wf_label = NULL;
+    } else {
+        ctx->wf_label = strdup(envptr);
     }
-    ctx->wf_label = strdup(envptr);
 
     envptr = getenv("PEGASUS_DAG_JOB_ID");
     if (envptr == NULL) {
-        printerr("ERROR: PEGASUS_DAG_JOB_ID not specified\n");
-        return -1;
+        warn("PEGASUS_DAG_JOB_ID not specified\n");
+        ctx->dag_job_id = NULL;
+    } else {
+        ctx->dag_job_id = strdup(envptr);
     }
-    ctx->dag_job_id = strdup(envptr);
 
     envptr = getenv("CONDOR_JOBID");
     if (envptr == NULL) {
-        printerr("ERROR: CONDOR_JOBID not specified\n");
-        return -1;
+        warn("CONDOR_JOBID not specified\n");
+        ctx->condor_job_id = NULL;
+    } else {
+        ctx->condor_job_id = strdup(envptr);
     }
-    ctx->condor_job_id = strdup(envptr);
 
     envptr = getenv("PEGASUS_XFORMATION");
     if (envptr == NULL) {
+        warn("PEGASUS_XFORMATION not specified\n");
         ctx->xformation = NULL;
     } else {
         ctx->xformation = strdup(envptr);
@@ -94,6 +108,7 @@ static int initialize_monitoring_context(MonitoringContext *ctx) {
 
     envptr = getenv("PEGASUS_TASK_ID");
     if (envptr == NULL) {
+        warn("PEGASUS_TASK_ID not specified\n");
         ctx->task_id = NULL;
     } else {
         ctx->task_id = strdup(envptr);
@@ -120,29 +135,20 @@ static size_t write_callback(char *ptr, size_t size, size_t nmemb, void *userdat
     return size * nmemb;
 }
 
-/* sending this message to rabbitmq */
-static void send_msg_to_mq(char *msg_buff, MonitoringContext *ctx) {
+static void send_http_msg(char *url, char *credentials, char *msg) {
     CURL *curl = curl_easy_init();
     if (curl == NULL) {
         printerr("[mon-thread] Error initializing curl\n");
         return;
     }
 
-    curl_easy_setopt(curl, CURLOPT_URL, ctx->url);
-    curl_easy_setopt(curl, CURLOPT_USERPWD, ctx->credentials);
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_USERPWD, credentials);
     curl_easy_setopt(curl, CURLOPT_POST, 1);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0); /* FIXME Not secure */
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0); /* FIXME Not secure */
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-
-    char payload[BUFSIZ];
-    if (snprintf(payload, BUFSIZ,
-        "{\"properties\":{},\"routing_key\":\"%s\",\"payload\":\"%s\",\"payload_encoding\":\"string\"}",
-        ctx->wf_uuid, msg_buff) >= BUFSIZ) {
-        printerr("[mon-thread] Message too large for buffer: %lu\n", strlen(msg_buff));
-        return;
-    }
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, msg);
 
     struct curl_slist *http_header = NULL;
     http_header = curl_slist_append(http_header, "Content-Type: application/json");
@@ -152,8 +158,8 @@ static void send_msg_to_mq(char *msg_buff, MonitoringContext *ctx) {
     CURLcode res = curl_easy_perform(curl);
     /* Check for errors */
     if (res != CURLE_OK) {
-        printerr("[mon-thread] an error occured while sending measurement: %s\n",
-            curl_easy_strerror(res));
+        error("an error occured while sending measurement: %s\n",
+              curl_easy_strerror(res));
     }
 
     /* always cleanup */
@@ -161,13 +167,123 @@ static void send_msg_to_mq(char *msg_buff, MonitoringContext *ctx) {
     curl_slist_free_all(http_header);
 }
 
+static void format_message(MonitoringContext *ctx, ProcStats *stats, char *buf, int size) {
+    /* TODO Change this to JSON format */
+    snprintf(buf, size, "ts=%lu wf_uuid=%s wf_label=%s dag_job_id=%s condor_job_id=%s "
+            "xformation=%s task_id=%s pid=%d exe=%s utime=%.3f stime=%.3f iowait=%.3f "
+            "vm=%llu rss=%llu threads=%d bread=%llu bwrite=%llu "
+            "rchar=%llu wchar=%llu syscr=%lu syscw=%lu",
+            stats->ts, ctx->wf_uuid, ctx->wf_label, ctx->dag_job_id, ctx->condor_job_id,
+            ctx->xformation, ctx->task_id, stats->pid, stats->exe, stats->utime, stats->stime, stats->iowait,
+            stats->vm, stats->rss, stats->threads, stats->read_bytes, stats->write_bytes,
+            stats->rchar, stats->wchar, stats->syscr, stats->syscw);
+}
+
+/* sending this message to rabbitmq */
+static void send_rabbitmq(MonitoringContext *ctx, ProcStats *stats) {
+    debug("Sending stats to rabbitmq endpoint");
+    char msg[BUFSIZ];
+    format_message(ctx, stats, msg, BUFSIZ);
+
+    char payload[BUFSIZ];
+    size_t size = snprintf(payload, BUFSIZ,
+        "{\"properties\":{},\"routing_key\":\"%s\",\"payload\":\"%s\",\"payload_encoding\":\"string\"}",
+        ctx->wf_uuid, msg);
+    if (size >= BUFSIZ) {
+        error("Message too large for buffer: %lu\n", size);
+        return;
+    }
+
+    /* Need to construct a new URL */
+    char url[128];
+    snprintf(url, 128, "https://%s", ctx->url + strlen("rabbitmq://"));
+
+    send_http_msg(url, ctx->credentials, payload);
+}
+
+static void send_http(MonitoringContext *ctx, ProcStats *stats) {
+    debug("Sending stats to http endpoint");
+    char msg[BUFSIZ];
+    format_message(ctx, stats, msg, BUFSIZ);
+    send_http_msg(ctx->url, ctx->credentials, msg);
+}
+
+int send_msg_to_kickstart(char *host, char *port, ProcStats *stats) {
+    if (host == NULL || port == NULL) {
+        return -1;
+    }
+
+    struct addrinfo hints;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+
+    struct addrinfo *servinfo;
+    int gaierr = getaddrinfo(host, port, &hints, &servinfo);
+    if (gaierr != 0) {
+        printerr("getaddrinfo: %s\n", gai_strerror(gaierr));
+        return -1;
+    }
+
+    int sockfd;
+    struct addrinfo *p;
+    for (p = servinfo; p != NULL; p = p->ai_next) {
+        sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+        if (sockfd == -1) {
+            printerr("socket: %s\n", strerror(errno));
+            continue;
+        }
+
+        if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+            printerr("connect: %s\n", strerror(errno));
+            close(sockfd);
+            continue;
+        }
+
+        // Successful connection
+        break;
+    }
+
+    freeaddrinfo(servinfo);
+
+    if (p == NULL) {
+        printerr("failed to connect to kickstart monitor: no suitable addr\n");
+        return -1;
+    }
+
+    if (send(sockfd, stats, sizeof(ProcStats), 0) < 0) {
+        printerr("Error during msg send: %s\n", strerror(errno));
+        return -1;
+    }
+
+    close(sockfd);
+
+    return 0;
+}
+
+static void send_kickstart(MonitoringContext *ctx, ProcStats *stats) {
+    debug("Sending stats to kickstart endpoint");
+
+    /* Get host and port from URL */
+    char host[128];
+    char port[16];
+    /* FIXME We should probably just do this once */
+    if (sscanf(ctx->url, "kickstart://%127[^:]:%15[0-9]", host, port) != 2) {
+        error("Unable to parse kickstart URL: %s", ctx->url);
+        return;
+    }
+
+    send_msg_to_kickstart(host, port, stats);
+}
+
+
 /* purpose: find an ephemeral port available on a machine for further socket-based communication;
  *          opens a new socket on an ephemeral port, returns this port number and hostname
  *          where kickstart will listen for monitoring information
  * paramtr: kickstart_hostname (OUT): a pointer where the hostname of the kickstart machine will be stored,
  *          kickstart_port (OUT): a pointer where the available ephemeral port number will be stored
- * returns:	0  success
- *		    -1 failure
+ * returns: 0  success
+ *          -1 failure
  */
 static int create_ephemeral_endpoint(char *kickstart_hostname, int *kickstart_port) {
 
@@ -213,9 +329,7 @@ error:
     return -1;
 }
 
-static int handle_client(MonitoringContext *ctx) {
-
-    /* Accept a network connection and read the message */
+static int handle_client(MonitoringContext *ctx, ProcStatsList **list) {
     struct sockaddr_in client_addr;
     socklen_t client_add_len = sizeof(client_addr);
     memset(&client_addr, 0, sizeof(client_addr));
@@ -240,50 +354,29 @@ static int handle_client(MonitoringContext *ctx) {
         goto next;
     }
 
-    if (stats.host == 0) { // FIXME This should be non-zero
-        /* This is a message from libinterpose */
-        /* TODO Update the state of the local process in our list */
-        fprintf(stdout, "INTERPOSE pid=%d exe=%s utime=%.3f stime=%.3f iowait=%.3f "
-                "vm=%llu rss=%llu threads=%d bread=%llu bwrite=%llu "
-                "rchar=%llu wchar=%llu syscr=%lu syscw=%lu\n",
-                stats.pid, stats.exe, stats.utime, stats.stime, stats.iowait, stats.vm, stats.rss,
-                stats.threads, stats.read_bytes, stats.write_bytes,
-                stats.rchar, stats.wchar, stats.syscr, stats.syscw);
-    } else {
-        /* This is a message from another host */
-        /* TODO Update the state of the remote process in our list */
-        fprintf(stdout, "REMOTE pid=%d exe=%s utime=%.3f stime=%.3f iowait=%.3f "
-            "vm=%llu rss=%llu threads=%d bread=%llu bwrite=%llu "
-            "rchar=%llu wchar=%llu syscr=%lu syscw=%lu\n",
-            stats.pid, stats.exe, stats.utime, stats.stime, stats.iowait,
-            stats.vm, stats.rss,
-            stats.threads, stats.read_bytes, stats.write_bytes,
-            stats.rchar, stats.wchar, stats.syscr, stats.syscw);
-    }
+    /* TODO Update the state of the local process in our list */
+    procfs_update_list(list, &stats);
 
 next:
     close(incoming_socket);
     return 0;
 }
 
-static int send_report(MonitoringContext *ctx, ProcStatsList **listptr) {
+/* Merge the stats we have and send them to the parent monitor */
+static int send_report(MonitoringContext *ctx, ProcStatsList *listptr) {
     ProcStats stats;
-    procfs_merge_stats_list(*listptr, &stats);
+    procfs_merge_stats_list(listptr, &stats, ctx->interval);
 
-    char msg[BUFSIZ];
-    snprintf(msg, BUFSIZ, "wf_uuid=%s wf_label=%s dag_job_id=%s condor_job_id=%s "
-            "xformation=%s task_id=%s pid=%d exe=%s utime=%.3f stime=%.3f iowait=%.3f "
-            "vm=%llu rss=%llu threads=%d bread=%llu bwrite=%llu "
-            "rchar=%llu wchar=%llu syscr=%lu syscw=%lu",
-            ctx->wf_uuid, ctx->wf_label, ctx->dag_job_id, ctx->condor_job_id,
-            ctx->xformation, ctx->task_id, stats.pid, stats.exe, stats.utime, stats.stime, stats.iowait,
-            stats.vm, stats.rss, stats.threads, stats.read_bytes, stats.write_bytes,
-            stats.rchar, stats.wchar, stats.syscr, stats.syscw);
-
-    fprintf(stdout, "LOCAL %s\n", msg);
-    fprintf(stdout, "%lu\n", sizeof(ProcStats));
-
-    send_msg_to_mq(msg, ctx);
+    if (strstr(ctx->url, "rabbitmq://") == ctx->url) {
+        send_rabbitmq(ctx, &stats);
+    } else if (strstr(ctx->url, "http://") == ctx->url ||
+               strstr(ctx->url, "https://") == ctx->url) {
+        send_http(ctx, &stats);
+    } else if (strstr(ctx->url, "kickstart://") == ctx->url) {
+        send_kickstart(ctx, &stats);
+    } else {
+        error("Unknown endpoint URL scheme: %s\n", ctx->url);
+    }
 
     return 0;
 }
@@ -316,7 +409,7 @@ void* monitoring_thread_func(void* arg) {
         pthread_exit(NULL);
     }
 
-    ProcStatsList *stats = NULL;
+    ProcStatsList *list = NULL;
 
     int signalled = 0;
     while (!signalled) {
@@ -348,13 +441,14 @@ void* monitoring_thread_func(void* arg) {
 
         /* Got a client connection */
         if (fds[1].revents & POLLIN) {
-            if (handle_client(ctx) < 0) {
+            trace("Got client connection");
+            if (handle_client(ctx, &list) < 0) {
                 break;
             }
 
             if (signalled) {
                 /* Must be the last process on libinterpose, send a message */
-                send_report(ctx, &stats);
+                send_report(ctx, list);
             }
         }
 
@@ -367,16 +461,18 @@ void* monitoring_thread_func(void* arg) {
                 warn("timer expired %llu times\n", expirations);
             }
 
+            trace("Timer expired");
+
             /* Update the list of process stats */
-            procfs_read_stats_group(&stats);
+            procfs_read_stats_group(&list);
 
             /* Send a monitoring message */
-            send_report(ctx, &stats);
+            send_report(ctx, list);
         }
     }
 
     info("Monitoring thread exiting");
-    procfs_free_stats_list(stats);
+    procfs_free_stats_list(list);
     close(timer);
     close(ctx->socket);
     curl_global_cleanup();
@@ -384,37 +480,33 @@ void* monitoring_thread_func(void* arg) {
     pthread_exit(NULL);
 }
 
-int start_monitoring_thread(int interval) {
+int start_monitoring_thread() {
     /* Make sure the calling process is in its own process group */
     setpgid(0, 0);
-
-    /* Find a host and port to use */
-    char socket_host[BUFSIZ];
-    int socket_port;
-    int socket = create_ephemeral_endpoint(socket_host, &socket_port);
-    if (socket < 0) {
-        printerr("Couldn't find an endpoint for communication with kickstart\n");
-        return -1;
-    }
-
-    /* TODO Determine whether to report to a higher-level kickstart, or to monitord, or to rabbitmq */
-
-    /* Set the monitoring environment */
-    char envvar[10];
-    setenv("KICKSTART_MON", "1", 1);
-    snprintf(envvar, 10, "%d", interval);
-    setenv("KICKSTART_MON_INTERVAL", envvar, 1);
-    setenv("KICKSTART_MON_HOST", socket_host, 1);
-    snprintf(envvar, 10, "%d", socket_port);
-    setenv("KICKSTART_MON_PORT", envvar, 1);
 
     /* Set up parameters for the thread */
     MonitoringContext *ctx = calloc(1, sizeof(MonitoringContext));
     if (initialize_monitoring_context(ctx) < 0) {
         return -1;
     }
-    ctx->socket = socket;
-    ctx->interval = interval;
+
+    /* Find a host and port to use */
+    char socket_host[BUFSIZ];
+    int socket_port;
+    ctx->socket = create_ephemeral_endpoint(socket_host, &socket_port);
+    if (ctx->socket < 0) {
+        error("Couldn't create endpoint for monitoring\n");
+        return -1;
+    }
+
+    /* Set the monitoring environment */
+    char envvar[128];
+    /* TODO If we are not aggregating, don't override this so that children
+     * will report to the same destination that we are. XXX Make sure that
+     * libinterpose can handle all the endpoint types first.
+     */
+    snprintf(envvar, 128, "kickstart://%s:%d", socket_host, socket_port);
+    setenv("KICKSTART_MON_ENDPOINT_URL", envvar, 1);
 
     /* Create a pipe to signal between the main thread and the monitor thread */
     int rc = pipe(signal_pipe);

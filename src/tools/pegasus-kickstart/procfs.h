@@ -2,9 +2,11 @@
 #define KICKSTART_PROCFS_H
 
 #include <unistd.h>
+#include <time.h>
 #include <netinet/in.h>
 
 typedef struct _ProcStats {
+    time_t ts;
     in_addr_t host;
     pid_t pid;
     pid_t ppid;
@@ -46,7 +48,8 @@ typedef struct _ProcStatsList {
 void procfs_stats_init(ProcStats *stats);
 int procfs_read_stats(pid_t process, ProcStats *stats);
 void procfs_read_stats_group(ProcStatsList **listptr);
-void procfs_merge_stats_list(ProcStatsList *list, ProcStats *result);
+void procfs_merge_stats_list(ProcStatsList *list, ProcStats *result, int interval);
 void procfs_free_stats_list(ProcStatsList *list);
+void procfs_update_list(ProcStatsList **listptr, ProcStats *stats);
 
 #endif

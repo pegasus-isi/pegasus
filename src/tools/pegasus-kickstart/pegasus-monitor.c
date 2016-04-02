@@ -18,14 +18,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    char *intervalstr = getenv("KICKSTART_MON_INTERVAL");
-    if (intervalstr == NULL) {
-        fprintf(stderr, "KICKSTART_MON_INTERVAL is not set in environment\n");
-        return 1;
-    }
-    int interval = atoi(intervalstr);
-
-    start_monitoring_thread(interval);
+    start_monitoring_thread();
 
     /* Launch application process */
     pid_t pid = fork();

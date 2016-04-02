@@ -232,6 +232,7 @@ void procfs_stats_init(ProcStats *stats) {
 }
 
 int procfs_read_stats(pid_t pid, ProcStats *stats) {
+    stats->ts = time(NULL);
     stats->pid = pid;
     stats->ppid = getppid();
     stats->rank = getmpirank();
@@ -326,11 +327,12 @@ void procfs_read_stats_group(ProcStatsList **listptr) {
 }
 
 /* Add up all the values in list and store them in result */
-void procfs_merge_stats_list(ProcStatsList *list, ProcStats *result) {
+void procfs_merge_stats_list(ProcStatsList *list, ProcStats *result, int interval) {
     assert(result != NULL);
     memset(result, 0, sizeof(ProcStats));
 
     /* Use current process for all the identifying information */
+    result->ts = time(NULL);
     result->host = gethostaddr();
     result->pid = getpid();
     result->ppid = getppid();
@@ -339,6 +341,7 @@ void procfs_merge_stats_list(ProcStatsList *list, ProcStats *result) {
 
     for (ProcStatsList *cur = list; cur != NULL; cur = cur->next) {
         ProcStats *stats = &(cur->stats);
+        trace("MERGING stats for %s into %s", stats->exe, result->exe);
         result->utime += stats->utime;
         result->stime += stats->stime;
         result->iowait += stats->iowait;
@@ -348,14 +351,20 @@ void procfs_merge_stats_list(ProcStatsList *list, ProcStats *result) {
         result->wchar += stats->wchar;
         result->syscr += stats->syscr;
         result->syscw += stats->syscw;
-        if (stats->state != 'X') {
-            /* Only add memory and threads for running processes */
+        /* Only add memory and threads for running processes we have seen recently */
+        /* TODO Make sure the time interval check is robust */
+        if (stats->state != 'X' && stats->ts >= result->ts - interval) {
             result->vm += stats->vm;
             result->rss += stats->rss;
             result->threads += stats->threads;
             /* NOTE: vmpeak and rsspeak don't make sense to add up */
         }
     }
+}
+
+void procfs_update_list(ProcStatsList **listptr, ProcStats *stats) {
+    /* TODO Find stats in list and update or add it */
+    warn("NOT UPDATING %d", stats->pid);
 }
 
 void procfs_free_stats_list(ProcStatsList *list) {

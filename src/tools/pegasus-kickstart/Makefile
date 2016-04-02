@@ -4,7 +4,7 @@ CC = gcc
 CFLAGS = -Wall -O2 -ggdb -std=gnu99
 LD = $(CC)
 LDLIBS = -lm -lcurl -pthread
-LI_LDFLAGS = -ldl -pthread
+LI_LDFLAGS = -ldl -lcurl -pthread
 SYSTEM = $(shell uname -s | tr '[a-z]' '[A-Z]' | tr -d '_ -/')
 ARCH = $(shell uname -m)
 TARGET = pegasus-kickstart
@@ -74,9 +74,8 @@ pegasus-kickstart: $(OBJS)
 pegasus-monitor: pegasus-monitor.o monitoring.o procfs.o log.o
 	$(LD) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-libinterpose.so: interpose.c interpose_monitoring.c procfs.c log.c
-	$(CC) $(CFLAGS) -shared -o libinterpose.so $^ -fPIC -fvisibility=hidden $(LI_LDFLAGS)
-	strip -s libinterpose.so
+libinterpose.so: interpose.c interpose_monitoring.c procfs.c log.c monitoring.c
+	$(CC) $(CFLAGS) -shared -o $@ $^ -fPIC -fvisibility=hidden $(LI_LDFLAGS)
 
 version.h:
 	$(CURDIR)/../../../release-tools/getversion --header > $(CURDIR)/version.h
