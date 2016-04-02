@@ -75,7 +75,8 @@ pegasus-monitor: pegasus-monitor.o monitoring.o procfs.o log.o
 	$(LD) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 libinterpose.so: interpose.c interpose_monitoring.c procfs.c log.c
-	$(CC) $(CFLAGS) -shared -fPIC -o libinterpose.so $^ $(LI_LDFLAGS)
+	$(CC) $(CFLAGS) -shared -o libinterpose.so $^ -fPIC -fvisibility=hidden $(LI_LDFLAGS)
+	strip -s libinterpose.so
 
 version.h:
 	$(CURDIR)/../../../release-tools/getversion --header > $(CURDIR)/version.h

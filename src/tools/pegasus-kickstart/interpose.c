@@ -1069,6 +1069,8 @@ static inline void *osym(const char *name) {
 }
 
 /** INTERPOSED FUNCTIONS **/
+#pragma GCC visibility push(default)
+
 static int dup_untraced(int oldfd) {
     typeof(dup) *orig_dup = osym("dup");
     return (*orig_dup)(oldfd);
@@ -2112,3 +2114,4 @@ void _exit(int rc) {
     abort();
 }
 
+#pragma GCC visibility pop
