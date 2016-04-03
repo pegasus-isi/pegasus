@@ -167,30 +167,113 @@ static void send_http_msg(char *url, char *credentials, char *msg) {
     curl_slist_free_all(http_header);
 }
 
-static void format_message(MonitoringContext *ctx, ProcStats *stats, char *buf, int size) {
-    /* TODO Change this to JSON format */
-    snprintf(buf, size, "ts=%lu wf_uuid=%s wf_label=%s dag_job_id=%s condor_job_id=%s "
-            "xformation=%s task_id=%s pid=%d exe=%s utime=%.3f stime=%.3f iowait=%.3f "
-            "vm=%llu rss=%llu threads=%d bread=%llu bwrite=%llu "
-            "rchar=%llu wchar=%llu syscr=%lu syscw=%lu",
-            stats->ts, ctx->wf_uuid, ctx->wf_label, ctx->dag_job_id, ctx->condor_job_id,
-            ctx->xformation, ctx->task_id, stats->pid, stats->exe, stats->utime, stats->stime, stats->iowait,
-            stats->vm, stats->rss, stats->threads, stats->read_bytes, stats->write_bytes,
-            stats->rchar, stats->wchar, stats->syscr, stats->syscw);
+static size_t json_encode(MonitoringContext *ctx, ProcStats *stats, char *buf, size_t maxsize) {
+    /* TODO Replace NULLs with proper JSON null */
+    size_t size = snprintf(buf, maxsize, 
+            "{\"ts\":%lu,"
+            "\"wf_uuid\":\"%s\","
+            "\"wf_label\":\"%s\","
+            "\"dag_job_id\":\"%s\","
+            "\"condor_job_id\":\"%s\","
+            "\"xformation\":\"%s\","
+            "\"task_id\":\"%s\","
+            "\"pid\":%d,"
+            "\"exe\":\"%s\","
+            "\"utime\":%.3f,"
+            "\"stime\":%.3f,"
+            "\"iowait\":%.3f,"
+            "\"vm\":%llu,"
+            "\"rss\":%llu,"
+            "\"threads\":%d,"
+            "\"bread\":%llu,"
+            "\"bwrite\":%llu,"
+            "\"rchar\":%llu,"
+            "\"wchar\":%llu,"
+            "\"syscr\":%lu,"
+            "\"syscw\":%lu}",
+            stats->ts,
+            ctx->wf_uuid == NULL ? "" : ctx->wf_uuid,
+            ctx->wf_label == NULL ? "" : ctx->wf_label,
+            ctx->dag_job_id == NULL ? "" : ctx->dag_job_id,
+            ctx->condor_job_id == NULL ? "" : ctx->condor_job_id,
+            ctx->xformation == NULL ? "" : ctx->xformation,
+            ctx->task_id == NULL ? "" : ctx->task_id,
+            stats->pid,
+            stats->exe,
+            stats->utime,
+            stats->stime,
+            stats->iowait,
+            stats->vm,
+            stats->rss,
+            stats->threads,
+            stats->read_bytes,
+            stats->write_bytes,
+            stats->rchar,
+            stats->wchar,
+            stats->syscr,
+            stats->syscw);
+
+    if (size >= maxsize) {
+        error("JSON too large for buffer: %d > %d", size, maxsize);
+        return -1;
+    }
+
+    return size;
 }
 
-/* sending this message to rabbitmq */
+static size_t base64_encode(const char *data, size_t input_length, char *encoded_data, size_t max_output) {
+    /* http://stackoverflow.com/questions/342409/how-do-i-base64-encode-decode-in-c */
+
+    size_t output_length = 4 * ((input_length + 2) / 3);
+    if (output_length >= max_output) {
+        error("base64 encoding exceeds output buffer: %d >= %d", output_length, max_output);
+        return -1;
+    }
+
+    char encoding_table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    for (int i=0, j=0; i < input_length; ) {
+        uint32_t octet_a = i < input_length ? (unsigned char)data[i++] : 0;
+        uint32_t octet_b = i < input_length ? (unsigned char)data[i++] : 0;
+        uint32_t octet_c = i < input_length ? (unsigned char)data[i++] : 0;
+
+        uint32_t triple = (octet_a << 0x10) + (octet_b << 0x08) + octet_c;
+
+        encoded_data[j++] = encoding_table[(triple >> 3 * 6) & 0x3F];
+        encoded_data[j++] = encoding_table[(triple >> 2 * 6) & 0x3F];
+        encoded_data[j++] = encoding_table[(triple >> 1 * 6) & 0x3F];
+        encoded_data[j++] = encoding_table[(triple >> 0 * 6) & 0x3F];
+    }
+
+    int mod_table[] = {0, 2, 1};
+    for (int i=0; i < mod_table[input_length % 3]; i++) {
+        encoded_data[output_length-1-i] = '=';
+    }
+
+    encoded_data[output_length] = '\0';
+
+    return output_length;
+}
+
 static void send_rabbitmq(MonitoringContext *ctx, ProcStats *stats) {
     debug("Sending stats to rabbitmq endpoint");
-    char msg[BUFSIZ];
-    format_message(ctx, stats, msg, BUFSIZ);
 
-    char payload[BUFSIZ];
-    size_t size = snprintf(payload, BUFSIZ,
-        "{\"properties\":{},\"routing_key\":\"%s\",\"payload\":\"%s\",\"payload_encoding\":\"string\"}",
-        ctx->wf_uuid, msg);
-    if (size >= BUFSIZ) {
-        error("Message too large for buffer: %lu\n", size);
+    char msg[1024];
+    if (json_encode(ctx, stats, msg, 1024) < 0) {
+        error("Unable to json encode message");
+        return;
+    }
+
+    char b64msg[1024];
+    if (base64_encode(msg, strlen(msg), b64msg, 1024) < 0) {
+        error("Unable to base64 encode message");
+        return;
+    }
+
+    char payload[1024];
+    if (snprintf(payload, 1024,
+        "{\"properties\":{},\"routing_key\":\"%s\",\"payload\":\"%s\",\"payload_encoding\":\"base64\"}",
+        ctx->wf_uuid, b64msg) >= 1024) {
+        error("RabbitMQ payload too large for buffer");
         return;
     }
 
@@ -203,8 +286,11 @@ static void send_rabbitmq(MonitoringContext *ctx, ProcStats *stats) {
 
 static void send_http(MonitoringContext *ctx, ProcStats *stats) {
     debug("Sending stats to http endpoint");
-    char msg[BUFSIZ];
-    format_message(ctx, stats, msg, BUFSIZ);
+    char msg[1024];
+    if (json_encode(ctx, stats, msg, 1024) < 0) {
+        error("Unable to json encode message");
+        return;
+    }
     send_http_msg(ctx->url, ctx->credentials, msg);
 }
 
