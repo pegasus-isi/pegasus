@@ -279,7 +279,11 @@ static void send_rabbitmq(MonitoringContext *ctx, ProcStats *stats) {
 
     /* Need to construct a new URL */
     char url[128];
-    snprintf(url, 128, "https://%s", ctx->url + strlen("rabbitmq://"));
+    if (strstr(ctx->url, "rabbitmqs://") == ctx->url) {
+        snprintf(url, 128, "https://%s", ctx->url + strlen("rabbitmqs://"));
+    } else {
+        snprintf(url, 128, "http://%s", ctx->url + strlen("rabbitmq://"));
+    }
 
     send_http_msg(url, ctx->credentials, payload);
 }
@@ -453,7 +457,8 @@ static int send_report(MonitoringContext *ctx, ProcStatsList *listptr) {
     ProcStats stats;
     procfs_merge_stats_list(listptr, &stats, ctx->interval);
 
-    if (strstr(ctx->url, "rabbitmq://") == ctx->url) {
+    if (strstr(ctx->url, "rabbitmq://") == ctx->url ||
+        strstr(ctx->url, "rabbitmqs://") == ctx->url) {
         send_rabbitmq(ctx, &stats);
     } else if (strstr(ctx->url, "http://") == ctx->url ||
                strstr(ctx->url, "https://") == ctx->url) {
