@@ -366,6 +366,28 @@ static void send_kickstart(MonitoringContext *ctx, ProcStats *stats) {
     send_msg_to_kickstart(host, port, stats);
 }
 
+static void send_file(MonitoringContext *ctx, ProcStats *stats) {
+
+    char msg[1024];
+    if (json_encode(ctx, stats, msg, 1024) < 0) {
+        error("Unable to json encode message");
+        return;
+    }
+
+    char *path = ctx->url + strlen("file://");
+    trace("Writing monitorint data to %s", path);
+
+    FILE *log = fopen(path, "a");
+    if (log == NULL) {
+        error("Unable to open monitoring log '%s': %s", path, strerror(errno));
+        return;
+    }
+
+    fprintf(log, "%s\n", msg);
+
+    fclose(log);
+}
+
 
 /* purpose: find an ephemeral port available on a machine for further socket-based communication;
  *          opens a new socket on an ephemeral port, returns this port number and hostname
@@ -465,6 +487,8 @@ static int send_report(MonitoringContext *ctx, ProcStatsList *listptr) {
         send_http(ctx, &stats);
     } else if (strstr(ctx->url, "kickstart://") == ctx->url) {
         send_kickstart(ctx, &stats);
+    } else if (strstr(ctx->url, "file://") == ctx->url) {
+        send_file(ctx, &stats);
     } else {
         error("Unknown endpoint URL scheme: %s\n", ctx->url);
     }
