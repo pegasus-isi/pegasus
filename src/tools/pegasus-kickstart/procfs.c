@@ -237,6 +237,7 @@ int procfs_read_stats(pid_t pid, ProcStats *stats) {
     stats->ppid = getppid();
     stats->rank = getmpirank();
     stats->host = gethostaddr();
+    stats->procs = 1;
     int a = procfs_read_cpu_stats(pid, stats);
     int b = procfs_read_io_stats(pid, stats);
     int c = procfs_read_mem_stats(pid, stats);
@@ -329,6 +330,7 @@ void procfs_merge_stats_list(ProcStatsList *list, ProcStats *result, int interva
         if (stats->ts >= result->ts - interval) {
             result->vm += stats->vm;
             result->rss += stats->rss;
+            result->procs += stats->procs;
             result->threads += stats->threads;
             /* NOTE: vmpeak and rsspeak don't make sense to add up */
         }
@@ -401,6 +403,7 @@ void procfs_list_update(ProcStatsList **list, ProcStats *stats) {
     item->stats.vm = stats->vm;
     item->stats.rsspeak = stats->rsspeak;
     item->stats.rss = stats->rss;
+    item->stats.procs = stats->procs;
     item->stats.threads = stats->threads;
 #ifdef HAS_PAPI
     item->stats.PAPI_TOT_INS = stats->PAPI_TOT_INS;

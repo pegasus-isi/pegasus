@@ -184,6 +184,7 @@ static size_t json_encode(MonitoringContext *ctx, ProcStats *stats, char *buf, s
             "\"iowait\":%.3f,"
             "\"vm\":%llu,"
             "\"rss\":%llu,"
+            "\"procs\":%d,"
             "\"threads\":%d,"
             "\"bread\":%llu,"
             "\"bwrite\":%llu,"
@@ -205,6 +206,7 @@ static size_t json_encode(MonitoringContext *ctx, ProcStats *stats, char *buf, s
             stats->iowait,
             stats->vm,
             stats->rss,
+            stats->procs,
             stats->threads,
             stats->read_bytes,
             stats->write_bytes,
@@ -375,7 +377,7 @@ static void send_file(MonitoringContext *ctx, ProcStats *stats) {
     }
 
     char *path = ctx->url + strlen("file://");
-    trace("Writing monitorint data to %s", path);
+    debug("Writing monitoring data to %s", path);
 
     FILE *log = fopen(path, "a");
     if (log == NULL) {

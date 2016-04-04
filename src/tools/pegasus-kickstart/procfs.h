@@ -25,6 +25,7 @@ typedef struct _ProcStats {
     unsigned long long vm; /* current VM size */
     unsigned long long rsspeak; /* peak RSS */
     unsigned long long rss; /* current RSS */
+    unsigned int procs;
     unsigned int threads;
 #ifdef HAS_PAPI
     long long PAPI_TOT_INS; /* Total instructions */
