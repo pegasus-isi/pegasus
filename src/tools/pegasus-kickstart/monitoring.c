@@ -50,9 +50,9 @@ static int initialize_monitoring_context(MonitoringContext *ctx) {
     }
     ctx->interval = atoi(envptr);
 
-    envptr = getenv("KICKSTART_MON_ENDPOINT_URL");
+    envptr = getenv("KICKSTART_MON_URL");
     if (envptr == NULL) {
-        error("KICKSTART_MON_ENDPOINT_URL not specified\n");
+        error("KICKSTART_MON_URL not specified\n");
         return -1;
     }
     ctx->url = strdup(envptr);

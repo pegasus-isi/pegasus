@@ -78,13 +78,13 @@ void interpose_spawn_monitoring_thread() {
 
     mon_interval = atoi(env);
 
-    env = getenv("KICKSTART_MON_ENDPOINT_URL");
+    env = getenv("KICKSTART_MON_URL");
     if (env == NULL) {
-        printerr("KICKSTART_MON_ENDPOINT_URL not set\n");
+        printerr("KICKSTART_MON_URL not set\n");
         exit(1);
     }
     if (sscanf(env, "kickstart://%127[^:]:%15[0-9]", mon_host, mon_port) != 2) {
-        error("Unable to parse kickstart URL: %s", env);
+        error("Unable to parse kickstart monitor URL: %s", env);
         exit(1);
     }
 
