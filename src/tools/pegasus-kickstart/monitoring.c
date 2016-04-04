@@ -390,6 +390,27 @@ static void send_file(MonitoringContext *ctx, ProcStats *stats) {
     fclose(log);
 }
 
+/* Merge the stats we have and send them to the parent monitor */
+static int send_report(MonitoringContext *ctx, ProcStatsList *listptr) {
+    ProcStats stats;
+    procfs_merge_stats_list(listptr, &stats, ctx->interval);
+
+    if (strstr(ctx->url, "rabbitmq://") == ctx->url ||
+        strstr(ctx->url, "rabbitmqs://") == ctx->url) {
+        send_rabbitmq(ctx, &stats);
+    } else if (strstr(ctx->url, "http://") == ctx->url ||
+               strstr(ctx->url, "https://") == ctx->url) {
+        send_http(ctx, &stats);
+    } else if (strstr(ctx->url, "kickstart://") == ctx->url) {
+        send_kickstart(ctx, &stats);
+    } else if (strstr(ctx->url, "file://") == ctx->url) {
+        send_file(ctx, &stats);
+    } else {
+        error("Unknown endpoint URL scheme: %s\n", ctx->url);
+    }
+
+    return 0;
+}
 
 /* purpose: find an ephemeral port available on a machine for further socket-based communication;
  *          opens a new socket on an ephemeral port, returns this port number and hostname
@@ -473,28 +494,6 @@ static int handle_client(MonitoringContext *ctx, ProcStatsList **list) {
 
 next:
     close(incoming_socket);
-    return 0;
-}
-
-/* Merge the stats we have and send them to the parent monitor */
-static int send_report(MonitoringContext *ctx, ProcStatsList *listptr) {
-    ProcStats stats;
-    procfs_merge_stats_list(listptr, &stats, ctx->interval);
-
-    if (strstr(ctx->url, "rabbitmq://") == ctx->url ||
-        strstr(ctx->url, "rabbitmqs://") == ctx->url) {
-        send_rabbitmq(ctx, &stats);
-    } else if (strstr(ctx->url, "http://") == ctx->url ||
-               strstr(ctx->url, "https://") == ctx->url) {
-        send_http(ctx, &stats);
-    } else if (strstr(ctx->url, "kickstart://") == ctx->url) {
-        send_kickstart(ctx, &stats);
-    } else if (strstr(ctx->url, "file://") == ctx->url) {
-        send_file(ctx, &stats);
-    } else {
-        error("Unknown endpoint URL scheme: %s\n", ctx->url);
-    }
-
     return 0;
 }
 
