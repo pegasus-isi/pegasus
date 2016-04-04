@@ -444,8 +444,8 @@ static int handle_client(MonitoringContext *ctx, ProcStatsList **list) {
         goto next;
     }
 
-    /* TODO Update the state of the local process in our list */
-    procfs_update_list(list, &stats);
+    /* Update the state of the process in our list */
+    procfs_list_update(list, &stats);
 
 next:
     close(incoming_socket);

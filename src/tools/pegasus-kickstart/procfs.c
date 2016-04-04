@@ -110,11 +110,11 @@ static int procfs_read_cpu_stats(pid_t pid, ProcStats *stats) {
     //starttime vsize rss rsslim startcode endcode startstack kstkesp kstkeip
     //signal blocked sigignore sigcatch wchan nswap cnswap exit_signal
     //processor rt_priority policy delayacct_blkio_ticks guest_time cguest_time
-    fscanf(f, "%*d %*s %c %d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu "
+    fscanf(f, "%*d %*s %*c %d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu "
               "%lu %*d %*d %*d %*d %u %*d %*u %*u %*d %*u %*u "
               "%*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*d "
               "%*d %*u %*u %llu %*u %*d",
-           &(stats->state), &(stats->ppid), &utime, &stime, &(stats->threads), &iowait);
+           &(stats->ppid), &utime, &stime, &(stats->threads), &iowait);
 
     fclose(f);
 
@@ -264,9 +264,9 @@ void procfs_read_stats_group(ProcStatsList **listptr) {
         return;
     }
 
+    in_addr_t host = gethostaddr();
     int mypgid = getpgid(0);
 
-    ProcStatsList *prev = NULL;
     ProcStatsList *cur = *listptr;
 
     struct dirent *d;
@@ -284,43 +284,16 @@ void procfs_read_stats_group(ProcStatsList **listptr) {
             continue;
         }
 
-        /* Get cur and prev to point at the right place in the list */
-        while (cur != NULL && cur->stats.pid < pid) {
-            /* We are skipping this process, so it must have exited */
-            cur->stats.state = 'X';
-            prev = cur;
-            cur = cur->next;
-        }
-
-        if (cur == NULL || cur->stats.pid != pid) {
-            /* We need to create a new entry for this process */
-            ProcStatsList *new = (ProcStatsList *)calloc(1, sizeof(ProcStatsList));
-            if (new == NULL) {
-                printerr("Unable to allocate stats list node: %s\n", strerror(errno));
-                return;
-            }
-
-            /* Add before cur */
-            new->next = cur;
-            cur = new;
-
-            if (prev == NULL) {
-                /* Add at beginning of list */
-                *listptr = new;
-            } else {
-                /* Add after prev */
-                prev->next = new;
-            }
+        /* XXX Since the pids appear in order, we save the starting point for the search */
+        cur = procfs_list_find(cur, host, pid);
+        if (*listptr == NULL) {
+            *listptr = cur;
         }
 
         assert(cur != NULL);
 
         /* Get the stats for this process */
         procfs_read_stats(pid, &(cur->stats));
-
-        /* Move pointers here to help track processes that have exited */
-        prev = cur;
-        cur = cur->next;
     }
 
     closedir(procdir);
@@ -353,7 +326,7 @@ void procfs_merge_stats_list(ProcStatsList *list, ProcStats *result, int interva
         result->syscw += stats->syscw;
         /* Only add memory and threads for running processes we have seen recently */
         /* TODO Make sure the time interval check is robust */
-        if (stats->state != 'X' && stats->ts >= result->ts - interval) {
+        if (stats->ts >= result->ts - interval) {
             result->vm += stats->vm;
             result->rss += stats->rss;
             result->threads += stats->threads;
@@ -362,9 +335,84 @@ void procfs_merge_stats_list(ProcStatsList *list, ProcStats *result, int interva
     }
 }
 
-void procfs_update_list(ProcStatsList **listptr, ProcStats *stats) {
-    /* TODO Find stats in list and update or add it */
-    warn("NOT UPDATING %d", stats->pid);
+/* Find list entry for (host,pid) or add one */
+ProcStatsList *procfs_list_find(ProcStatsList *list, in_addr_t host, pid_t pid) {
+    ProcStatsList *prev = NULL;
+    ProcStatsList *cur = list;
+
+    /* Find the right host, or the one this host comes before */
+    while (cur != NULL && cur->stats.host < host) {
+        prev = cur;
+        cur = cur->next;
+    }
+
+    /* Find the right process, or the one this process comes before */
+    while (cur != NULL && cur->stats.host == host && cur->stats.pid <= pid) {
+        if (cur->stats.pid == pid) {
+            /* Found it */
+            trace("Found monitoring entry for process %lu on %lu", pid, host);
+            return cur;
+        }
+        prev = cur;
+        cur = cur->next;
+    }
+
+    trace("Creating new monitoring entry for process %lu on %lu", pid, host);
+
+    /* We need to create a new entry for this process */
+    ProcStatsList *new = (ProcStatsList *)calloc(1, sizeof(ProcStatsList));
+    if (new == NULL) {
+        fatal("Unable to allocate monitoring stats list node: %s\n", strerror(errno));
+        exit(1);
+    }
+
+    /* Add to the list */
+    new->next = cur;
+    if (prev != NULL) {
+        prev->next = new;
+    }
+
+    /* Return the entry we created */
+    return new;
+}
+
+void procfs_list_update(ProcStatsList **list, ProcStats *stats) {
+    ProcStatsList *item = procfs_list_find(*list, stats->host, stats->pid);
+    if (*list == NULL) {
+        *list = item;
+    }
+    item->stats.pid = stats->pid;
+    item->stats.ts = stats->ts;
+    item->stats.host = stats->host;
+    item->stats.pid = stats->pid;
+    item->stats.ppid = stats->ppid;
+    item->stats.rank = stats->rank;
+    item->stats.rchar = stats->rchar;
+    item->stats.wchar = stats->wchar;
+    item->stats.syscr = stats->syscr;
+    item->stats.syscw = stats->syscw;
+    item->stats.read_bytes = stats->read_bytes;
+    item->stats.write_bytes = stats->write_bytes;
+    item->stats.cancelled_write_bytes = stats->cancelled_write_bytes;
+    item->stats.utime = stats->utime;
+    item->stats.stime = stats->stime;
+    item->stats.iowait = stats->iowait;
+    item->stats.vmpeak = stats->vmpeak;
+    item->stats.vm = stats->vm;
+    item->stats.rsspeak = stats->rsspeak;
+    item->stats.rss = stats->rss;
+    item->stats.threads = stats->threads;
+#ifdef HAS_PAPI
+    item->stats.PAPI_TOT_INS = stats->PAPI_TOT_INS;
+    item->stats.PAPI_LD_INS = stats->PAPI_LD_INS;
+    item->stats.PAPI_SR_INS = stats->PAPI_SR_INS;
+    item->stats.PAPI_FP_INS = stats->PAPI_FP_INS;
+    item->stats.PAPI_FP_OPS = stats->PAPI_FP_OPS;
+    item->stats.PAPI_L3_TCM = stats->PAPI_L3_TCM;
+    item->stats.PAPI_L2_TCM = stats->PAPI_L2_TCM;
+    item->stats.PAPI_L1_TCM = stats->PAPI_L1_TCM;
+#endif
+    strncpy(item->stats.exe, stats->exe, 128);
 }
 
 void procfs_free_stats_list(ProcStatsList *list) {

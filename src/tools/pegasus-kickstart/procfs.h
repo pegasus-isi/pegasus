@@ -36,8 +36,7 @@ typedef struct _ProcStats {
     long long PAPI_L2_TCM; /* L2 cache misses */
     long long PAPI_L1_TCM; /* L1 cache misses */
 #endif
-    char exe[127];
-    char state; /* The current state of the process: 'X' is terminated. */
+    char exe[128];
 } ProcStats;
 
 typedef struct _ProcStatsList {
@@ -50,6 +49,7 @@ int procfs_read_stats(pid_t process, ProcStats *stats);
 void procfs_read_stats_group(ProcStatsList **listptr);
 void procfs_merge_stats_list(ProcStatsList *list, ProcStats *result, int interval);
 void procfs_free_stats_list(ProcStatsList *list);
-void procfs_update_list(ProcStatsList **listptr, ProcStats *stats);
+ProcStatsList *procfs_list_find(ProcStatsList *list, in_addr_t host, pid_t pid);
+void procfs_list_update(ProcStatsList **list, ProcStats *stats);
 
 #endif
