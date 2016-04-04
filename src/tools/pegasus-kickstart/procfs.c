@@ -325,15 +325,15 @@ void procfs_merge_stats_list(ProcStatsList *list, ProcStats *result, int interva
         result->wchar += stats->wchar;
         result->syscr += stats->syscr;
         result->syscw += stats->syscw;
-        /* Only add memory and threads for running processes we have seen recently */
-        /* TODO Make sure the time interval check is robust */
+        /* Only add memory, threads and processes for processes we have seen recently */
         if (stats->ts >= result->ts - interval) {
+            trace("MERGING memory and threads/procs");
             result->vm += stats->vm;
             result->rss += stats->rss;
             result->procs += stats->procs;
             result->threads += stats->threads;
-            /* NOTE: vmpeak and rsspeak don't make sense to add up */
         }
+        /* NOTE: vmpeak and rsspeak don't make sense to add in any case */
     }
 }
 
