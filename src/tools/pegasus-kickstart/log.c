@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
 
 #include "log.h"
 
@@ -70,9 +71,14 @@ int log_printf(LogLevel level, char *file, int line, const char *format, ...) {
         return 0;
     }
 
+    time_t ts = time(NULL);
+    struct tm *now = localtime(&ts);
+    char timestamp[32];
+    strftime(timestamp, 32, "%FT%T%z", now);
+
     char logformat[LOG_MAX];
-    if (snprintf(logformat, LOG_MAX, "%s[%d] %s:%d %s: %s\n", log_name, getpid(),
-                 file, line, log_levels[level], format) >= LOG_MAX) {
+    if (snprintf(logformat, LOG_MAX, "%s %s[%d] %s:%d %s: %s\n", timestamp,
+                 log_name, getpid(), file, line, log_levels[level], format) >= LOG_MAX) {
         warn("truncated log message follows");
         logformat[LOG_MAX-1] = '\n';
     }
