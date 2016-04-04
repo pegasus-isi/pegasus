@@ -2,3 +2,4 @@ pegasus-kickstart
 pegasus-monitor
 version.h
 depends.mk
+.vagrant
