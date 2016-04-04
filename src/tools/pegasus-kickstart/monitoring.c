@@ -23,7 +23,6 @@
 
 typedef struct {
     char *url;
-    char *credentials;
     char *wf_label;
     char *wf_uuid;
     char *dag_job_id;
@@ -57,14 +56,6 @@ static int initialize_monitoring_context(MonitoringContext *ctx) {
         return -1;
     }
     ctx->url = strdup(envptr);
-
-    envptr = getenv("KICKSTART_MON_ENDPOINT_CREDENTIALS");
-    if (envptr == NULL) {
-        warn("KICKSTART_MON_ENDPOINT_CREDENTIALS not specified\n");
-        ctx->credentials = NULL;
-    } else {
-        ctx->credentials = strdup(envptr);
-    }
 
     envptr = getenv("PEGASUS_WF_UUID");
     if (envptr == NULL) {
@@ -120,7 +111,6 @@ static int initialize_monitoring_context(MonitoringContext *ctx) {
 static void release_monitoring_context(MonitoringContext* ctx) {
     if (ctx == NULL) return;
     if (ctx->url != NULL) free(ctx->url);
-    if (ctx->credentials != NULL) free(ctx->credentials);
     if (ctx->wf_uuid != NULL) free(ctx->wf_uuid);
     if (ctx->wf_label != NULL) free(ctx->wf_label);
     if (ctx->dag_job_id != NULL) free(ctx->dag_job_id);
@@ -135,7 +125,7 @@ static size_t write_callback(char *ptr, size_t size, size_t nmemb, void *userdat
     return size * nmemb;
 }
 
-static void send_http_msg(char *url, char *credentials, char *msg) {
+static void send_http_msg(char *url, char *msg) {
     CURL *curl = curl_easy_init();
     if (curl == NULL) {
         printerr("[mon-thread] Error initializing curl\n");
@@ -143,7 +133,6 @@ static void send_http_msg(char *url, char *credentials, char *msg) {
     }
 
     curl_easy_setopt(curl, CURLOPT_URL, url);
-    curl_easy_setopt(curl, CURLOPT_USERPWD, credentials);
     curl_easy_setopt(curl, CURLOPT_POST, 1);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0); /* FIXME Not secure */
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0); /* FIXME Not secure */
@@ -287,7 +276,7 @@ static void send_rabbitmq(MonitoringContext *ctx, ProcStats *stats) {
         snprintf(url, 128, "http://%s", ctx->url + strlen("rabbitmq://"));
     }
 
-    send_http_msg(url, ctx->credentials, payload);
+    send_http_msg(url, payload);
 }
 
 static void send_http(MonitoringContext *ctx, ProcStats *stats) {
@@ -297,7 +286,7 @@ static void send_http(MonitoringContext *ctx, ProcStats *stats) {
         error("Unable to json encode message");
         return;
     }
-    send_http_msg(ctx->url, ctx->credentials, msg);
+    send_http_msg(ctx->url, msg);
 }
 
 int send_msg_to_kickstart(char *host, char *port, ProcStats *stats) {
@@ -502,7 +491,6 @@ void* monitoring_thread_func(void* arg) {
 
     info("Monitoring thread starting...");
     debug("url: %s", ctx->url);
-    debug("credentials: %s", ctx->credentials);
     debug("wf uuid: %s", ctx->wf_uuid);
     debug("wf label: %s", ctx->wf_label);
     debug("dag job id: %s", ctx->dag_job_id);
