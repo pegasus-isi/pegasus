@@ -1020,7 +1020,7 @@ def get(args):
         # Just get the one key we need to download
         key = b.get_key(uri.key)
         if key is None:
-            raise Exception("No such key: %s" % uri.key)
+            raise Exception("No such key. If %s is a folder, try --recursive." % uri.key)
         keys = [key]
 
     start = time.time()
