@@ -97,6 +97,15 @@ Create the destination bucket if it does not already exist
 
 get Options
 ~~~~~~~~~~~
+*-r*::
+*--recursive*::
+Download all keys that begin with URL. If URL does not end with a "/", then
+one is added. For example, 'pegasus-s3 get s3://u@h/bucket/k' will be treated
+as 'pegasus-s3 get s3://u@h/bucket/k/' and will match 'bucket/k/foo' but not
+'bucket/key'. An entire bucket can be downloaded at once by just specifying
+the bucket name in URL. FILE is assumed to be a directory. If FILE is not
+specified, then './' is used.
+
 *-c* 'X'::
 *--chunksize*='X'::
 Set the chunk size for parallel downloads to X megabytes. A value of 0 will 

@@ -966,6 +966,8 @@ def get(args):
             "This parameter is only valid if the site supports ranged downloads "
             "and the --chunksize parameter is not 0. Otherwise parallel downloads are "
             "disabled.")
+    parser.add_option("-r", "--recursive", dest="recursive", action="store_true",
+        help="Get all keys that start with URL")
     options, args = parser.parse_args(args)
 
     if options.chunksize < 0 or options.chunksize > 1024:
@@ -981,13 +983,15 @@ def get(args):
 
     if uri.bucket is None:
         raise Exception("URL must contain a bucket: %s" % args[0])
-    if uri.key is None:
+    if uri.key is None and not options.recursive:
         raise Exception("URL must contain a key: %s" % args[0])
 
     if len(args) > 1:
-        outfile = fix_file(args[1])
+        output = fix_file(args[1])
+    elif uri.key is None:
+        output = "."
     else:
-        outfile = uri.key
+        output = uri.key
 
     info("Downloading %s" % uri)
 
@@ -1005,84 +1009,112 @@ def get(args):
     conn = get_connection(config, uri)
     b = Bucket(connection=conn, name=uri.bucket)
 
-    start = time.time()
+    if options.recursive:
+        # Add '/' to uri.key if it doesn't have one
+        if uri.key is not None and not uri.key.endswith("/"):
+            uri.key = uri.key + "/"
 
-    if (not ranged_downloads) or (options.chunksize == 0):
-        # Ranged downloads not supported, or chunking disabled
-        k = Key(bucket=b, name=uri.key)
-        k.get_contents_to_filename(outfile)
+        # Get all the keys in the bucket with prefix uri.key
+        keys = [k for k in b.list(uri.key)]
+    else:
+        # Just get the one key we need to download
+        key = b.get_key(uri.key)
+        if key is None:
+            raise Exception("No such key: %s" % uri.key)
+        keys = [key]
+
+    start = time.time()
+    size = 0
+
+    for key in keys:
+        if options.recursive:
+            if uri.key is None:
+                outfile = os.path.join(output, key.name)
+            else:
+                outfile = os.path.relpath(output + "/" + key.name[len(uri.key):])
+            outdir = os.path.dirname(outfile)
+
+            if not os.path.isdir(outdir):
+                os.makedirs(outdir)
+        else:
+            outfile = output
+            if os.path.isdir(outfile):
+                raise Exception("%s is a directory" % outfile)
+
+        info("Downloading %s to %s" % (key.name, outfile))
 
         # We need this for the performance report
-        size = k.size
-    else:
-        # Ranged downloads and chunking requested
+        size += key.size
 
-        # Get the size of the key
-        k = b.get_key(uri.key)
-        if k is None:
-            raise Exception("No such key: %s" % uri)
-        size = k.size
-
-        # Compute chunks
-        part_size = options.chunksize*MB
-        num_parts = int(math.ceil(size / float(part_size)))
-
-        if num_parts <= 1:
-            # No point if there is only one chunk
-            k.get_contents_to_filename(outfile)
+        if (not ranged_downloads) or (options.chunksize == 0):
+            # Ranged downloads not supported, or chunking disabled
+            key.get_contents_to_filename(outfile)
         else:
-            # Create the file and set it to the appropriate size.
-            f = open(outfile, "w+b")
-            f.seek(size-1)
-            f.write('\0')
-            f.close()
+            # Ranged downloads and chunking requested
 
-            # Create all the downloads
-            downloads = []
-            for i in range(0, num_parts):
-                dstart = i*part_size
-                dend = min(size, dstart+part_size-1)
-                down = PartialDownload(b, uri, outfile, i+1, num_parts, dstart, dend)
-                downloads.append(down)
+            # Compute chunks
+            part_size = options.chunksize*MB
+            num_parts = int(math.ceil(key.size / float(part_size)))
 
-            if options.parallel <= 1:
-                # Serial
-                for down in downloads:
-                    down()
+            if num_parts <= 1:
+                # No point if there is only one chunk
+                key.get_contents_to_filename(outfile)
             else:
-                # Parallel
+                # Create the file and set it to the appropriate size.
+                f = open(outfile, "w+b")
+                f.seek(key.size-1)
+                f.write('\0')
+                f.close()
 
-                # No sense forking more threads than there are chunks
-                nthreads = min(options.parallel, num_parts)
+                # Create all the downloads
+                downloads = []
+                for i in range(0, num_parts):
+                    dstart = i*part_size
+                    dend = min(key.size, dstart+part_size-1)
+                    down = PartialDownload(b, uri, outfile, i+1, num_parts, dstart, dend)
+                    downloads.append(down)
 
-                info("Starting parallel download with %d threads" % nthreads)
+                if options.parallel <= 1:
+                    # Serial
+                    for down in downloads:
+                        down()
+                else:
+                    # Parallel
 
-                # Queue up requests
-                queue = Queue.Queue()
-                for down in downloads:
-                    queue.put(down)
+                    # No sense forking more threads than there are chunks
+                    nthreads = min(options.parallel, num_parts)
 
-                # Fork threads
-                threads = []
-                for i in range(0, nthreads):
-                    t = WorkThread(queue)
-                    threads.append(t)
-                    t.start()
+                    info("Starting parallel download with %d threads" % nthreads)
 
-                # Wait for the threads
-                for t in threads:
-                    t.join()
-                    # If any of the threads encountered
-                    # an error, then we fail here
-                    if t.exception is not None:
-                        raise t.exception
+                    # Queue up requests
+                    queue = Queue.Queue()
+                    for down in downloads:
+                        queue.put(down)
+
+                    # Fork threads
+                    threads = []
+                    for i in range(0, nthreads):
+                        t = WorkThread(queue)
+                        threads.append(t)
+                        t.start()
+
+                    # Wait for the threads
+                    for t in threads:
+                        t.join()
+                        # If any of the threads encountered
+                        # an error, then we fail here
+                        if t.exception is not None:
+                            raise t.exception
 
     end = time.time()
     size = size / 1024.0
     elapsed = end - start
-    rate = size / elapsed
+    if elapsed > 0:
+        rate = size / elapsed
+    else:
+        rate = 0.0
 
-    info("Downloaded %0.1f KB in %0.6f seconds: %0.2f KB/s" % (size, elapsed, rate))
+    info("Downloaded %d keys of %0.1f KB in %0.6f seconds: %0.2f KB/s" % (len(keys), size, elapsed, rate))
 
 def main():
     if len(sys.argv) < 2:
