@@ -71,6 +71,10 @@ File containing a list of URLs to delete
 
 put Options
 ~~~~~~~~~~~
+*-r*::
+*--recursive*::
+Upload all files in the directory named FILE to keys with prefix URL.
+
 *-c* 'X'::
 *--chunksize*='X'::
 Set the chunk size for multipart uploads to X MB. A value of 0 
@@ -479,7 +483,7 @@ $ pegasus-s3 rmdir s3://user@amazon/mybucket
 
 Upload a file 'foo' to bucket 'bar':
 --------------
-$ pegasus-s3 putfoo s3://user@amazon/bar/foo
+$ pegasus-s3 put foo s3://user@amazon/bar/foo
 --------------
 
 Download an object 'foo' in bucket 'bar':
