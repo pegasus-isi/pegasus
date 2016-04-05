@@ -746,6 +746,7 @@ def put(args):
     if options.recursive:
         if os.path.isfile(path):
             infiles = [path]
+            options.recursive = False
         else:
             def subtree(dirname):
                 result = []
@@ -799,11 +800,18 @@ def put(args):
     start = time.time()
     totalsize = 0
     for infile in infiles:
+        name = os.path.basename(path)
         if options.recursive:
             relpath = os.path.relpath(infile, path)
-            keyname = os.path.join(uri.key, relpath)
+            if uri.key.endswith("/"):
+                keyname = uri.key + name + "/" + relpath
+            else:
+                keyname = os.path.join(uri.key, relpath)
         else:
-            keyname = uri.key
+            if uri.key.endswith("/"):
+                keyname = uri.key + name
+            else:
+                keyname = uri.key
         info("Uploading %s to %s" % (infile, keyname))
 
         # Make sure file is not too large for the service
@@ -1026,7 +1034,7 @@ def get(args):
     elif uri.key is None:
         output = "."
     else:
-        output = uri.key
+        output = os.path.basename(uri.key)
 
     info("Downloading %s" % uri)
 

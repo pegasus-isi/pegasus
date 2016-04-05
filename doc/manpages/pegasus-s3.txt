@@ -178,10 +178,11 @@ The *rm* subcommand deletes one or more keys from the storage service.
 *put*::
 The *put* subcommand stores the file specified by FILE in the storage service 
 under the bucket and key specified by URL. If the URL contains a bucket, 
-but not a key, then the file name is used as the key.
-+
-If a transient failure occurs, then the upload will be retried several 
-times before *pegasus-s3* gives up and fails.
+but not a key, then the file name is used as the key. If URL ends with a "/",
+then the file name is appended to the URL to create the key name (e.g.
+'pegasus-s3 put foo s3://u@h/bucket/key' will create a key called "key", while
+'pegasus-s3 put foo s3://u@h/bucket/key/' will create a key called "key/foo".
+The same is true of directories when used with the *-r*/*--recursive* option.
 +
 The *put* subcommand can do both chunked and parallel uploads if the service 
 supports multipart uploads (see *multipart_uploads* in the 
@@ -228,21 +229,17 @@ to remove it.
 *get*::
 The *get* subcommand retrieves an object from the storage service 
 identified by URL and stores it in the file specified by FILE. If 
-FILE is not specified, then the key is used as the file name (Note: if 
-the key has slashes, then the file name will be a relative subdirectory, 
-but *pegasus-s3* will not create the subdirectory if it does not exist).
-+
-If a transient failure occurs, then the download will be retried 
-several times before *pegasus-s3* gives up and fails.
+FILE is not specified, then the part of the key after the last "/"
+is used as the file name.
 +
 The *get* subcommand can do both chunked and parallel downloads if the 
 service supports ranged downloads (see *ranged_downloads* in the
 <<CONFIGURATION,*CONFIGURATION*>> section). Currently only Amazon 
 S3 has good support for ranged downloads. Eucalyptus Walrus supports 
-ranged downloads, but the current release, 1.6, is inconsistent with 
+ranged downloads, but version 1.6 is inconsistent with 
 the Amazon interface and has a bug that causes ranged downloads to hang 
 in some cases. It is recommended that ranged downloads not be used with 
-Eucalyptus until these issues are resolved.
+Walrus 1.6.
 +
 Chunked downloads can be used to reduce the probability of a 
 download failing. When a download is chunked, *pegasus-s3* issues 
