@@ -815,7 +815,7 @@ def put(args):
             else:
                 keyname = uri.key
 
-        info("Uploading %s to %s" % (infile, keyname))
+        info("Uploading %s to %s/%s" % (infile, uri.bucket, keyname))
 
         # Make sure file is not too large for the service
         size = os.stat(infile).st_size
@@ -1122,7 +1122,7 @@ def get(args):
             else:
                 outfile = output
 
-        info("Downloading %s to %s" % (key.name, outfile))
+        info("Downloading %s/%s to %s" % (uri.bucket, key.name, outfile))
 
         outfile = os.path.abspath(outfile)
 
