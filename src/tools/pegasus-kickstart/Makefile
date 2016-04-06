@@ -3,7 +3,7 @@ RM = rm -f
 CC = gcc
 CFLAGS = -Wall -O2 -ggdb -std=gnu99
 LD = $(CC)
-LDLIBS = -lm -lcurl -pthread
+LDLIBS = -lm
 LI_LDFLAGS = -ldl -lcurl -pthread
 SYSTEM = $(shell uname -s | tr '[a-z]' '[A-Z]' | tr -d '_ -/')
 ARCH = $(shell uname -m)
@@ -30,7 +30,6 @@ OBJS+=mylist.o
 OBJS+=invoke.o
 OBJS+=pegasus-kickstart.o
 OBJS+=procinfo.o
-OBJS+=monitoring.o
 OBJS+=log.o
 
 ifeq (DARWIN,${SYSTEM})
@@ -40,6 +39,8 @@ endif
 ifeq (LINUX,${SYSTEM})
 ifeq (x86_64,${ARCH})
     TARGET += libinterpose.so pegasus-monitor
+    OBJS += monitoring.o
+    LDLIBS += -lcurl -pthread
     # TODO Replace this with pkg-config, which is supported in PAPI 5.4.1
     PAPI_SO=$(shell /sbin/ldconfig -p | grep libpapi.so)
     PAPI_H=$(shell ls /usr/include/papi.h)

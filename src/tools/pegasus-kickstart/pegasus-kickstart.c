@@ -215,11 +215,11 @@ static void helpMe(const AppInfo* run) {
             " -K S\tSend KILL signal to job S seconds after a TERM signal. Default is %d.\n",
             run->killTimeout);
     fprintf(stderr, ""
+#ifdef LINUX
 #ifdef HAS_PTRACE
             " -t\tEnable resource usage tracing with ptrace\n"
             " -z\tEnable system call interposition to get files and I/O\n"
 #endif
-#ifdef LINUX
             " -Z\tEnable library call interposition to get files and I/O\n"
             " -m I\tEnable an online monitoring with a I-seconds interval between measurements.\n"
             "     \tWorks only with the -Z option.\n"
@@ -351,7 +351,9 @@ int main(int argc, char* argv[]) {
     int status, result = 0;
     int i, j, keeploop;
     int createDir = 0;
+#ifdef LINUX
     int monitoringInterval = 0;
+#endif
     char* temp;
     char* end;
     char* workdir = NULL;
@@ -591,16 +593,6 @@ int main(int argc, char* argv[]) {
                 }
                 appinfo.wf_stamp = noquote(argv[i][2] ? &argv[i][2] : argv[++i]);
                 break;
-            case 't':
-                appinfo.enableTracing++;
-                break;
-            case 'z':
-                appinfo.enableTracing++;
-                appinfo.enableSysTrace++;
-                break;
-            case 'Z':
-                appinfo.enableLibTrace++;
-                break;
             case 'w':
                 if (!argv[i][2] && argc <= i+1) {
                     fprintf(stderr, "ERROR: -w argument missing\n");
@@ -661,6 +653,19 @@ int main(int argc, char* argv[]) {
             case '-':
                 keeploop = 0;
                 break;
+#ifdef LINUX
+#ifdef HAS_PTRACE
+            case 't':
+                appinfo.enableTracing++;
+                break;
+            case 'z':
+                appinfo.enableTracing++;
+                appinfo.enableSysTrace++;
+                break;
+#endif
+            case 'Z':
+                appinfo.enableLibTrace++;
+                break;
             case 'm':
                 if (!argv[i][2] && argc <= i+1) {
                     fprintf(stderr, "ERROR: -m argument missing\n");
@@ -677,6 +682,7 @@ int main(int argc, char* argv[]) {
                 setenv("KICKSTART_MON_INTERVAL", temp, 1);
 
                 break;
+#endif
             default:
                 i -= 1;
                 keeploop = 0;
@@ -785,6 +791,7 @@ REDIR:
         }
     }
 
+#ifdef LINUX
     /* If monitoring is enabled, create new PG and start monitoring thread */
     if (monitoringInterval > 0) {
         if (start_monitoring_thread()) {
@@ -792,6 +799,7 @@ REDIR:
             return 127;
         }
     }
+#endif
 
     /* Our own initially: an independent setup job */
     char *SETUP = getenv("KICKSTART_SETUP");
@@ -849,12 +857,14 @@ REDIR:
         result = SIGALRM;
     }
 
+#ifdef LINUX
     /* If monitoring, stop monitoring thead */
     if (monitoringInterval > 0) {
         if (stop_monitoring_thread()) {
             printerr("WARNING: Unable to stop monitoring thread\n");
         }
     }
+#endif
 
     appinfo.status = result;
 
