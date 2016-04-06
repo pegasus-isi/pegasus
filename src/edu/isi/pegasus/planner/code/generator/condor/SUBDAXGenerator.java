@@ -856,6 +856,9 @@ public class SUBDAXGenerator{
        //scheduler universe instead of local universe
        job.condorVariables.construct( Condor.UNIVERSE_KEY, Condor.SCHEDULER_UNIVERSE );
        
+       //PM-1077 this classad ensures that schedd removes all the jobs in a sub 
+       //workflow when the parent DAGMan job is removed by pegasus-remove
+       job.condorVariables.construct("+OtherJobRemoveRequirements", "\"DAGManJobId =?= $(cluster)\"");
 
        //incorporate profiles from the transformation catalog
        //and properties for the time being. Not from the site catalog.
