@@ -743,26 +743,26 @@ def put(args):
     if not os.path.exists(path):
         raise Exception("No such file or directory: %s" % path)
 
+    # Get a list of all the files to transfer
     if options.recursive:
         if os.path.isfile(path):
             infiles = [path]
+            # We can turn off the recursive option if it is a single file
             options.recursive = False
-        else:
+        elif os.path.isdir(path):
             def subtree(dirname):
                 result = []
                 for name in os.listdir(dirname):
                     path = os.path.join(dirname, name)
                     if os.path.isfile(path):
                         result.append(path)
-                    else:
+                    elif os.path.isdir(path):
                         result.extend(subtree(path))
                 return result
-
             infiles = subtree(path)
     else:
         if os.path.isdir(path):
             raise Exception("%s is a directory. Try --recursive." % path)
-
         infiles = [path]
 
     # Validate URL
@@ -797,6 +797,8 @@ def put(args):
 
     b = Bucket(connection=conn, name=uri.bucket)
 
+    info("Uploading %d files" % len(infiles))
+
     start = time.time()
     totalsize = 0
     for infile in infiles:
@@ -804,7 +806,7 @@ def put(args):
         if options.recursive:
             relpath = os.path.relpath(infile, path)
             if uri.key.endswith("/"):
-                keyname = uri.key + name + "/" + relpath
+                keyname = os.path.join(uri.key, name, relpath)
             else:
                 keyname = os.path.join(uri.key, relpath)
         else:
@@ -812,6 +814,7 @@ def put(args):
                 keyname = uri.key + name
             else:
                 keyname = uri.key
+
         info("Uploading %s to %s" % (infile, keyname))
 
         # Make sure file is not too large for the service
