@@ -970,7 +970,7 @@ def rmup(args):
             info("Removing upload %s" % up.id)
             up.cancel_upload()
 
-def PartialDownload(bucket, uri, fname, part, parts, start, end):
+def PartialDownload(bucketname, keyname, fname, part, parts, start, end):
     def download():
         info("Downloading part %d of %d" % (part, parts))
         f = open(fname, "r+b")
@@ -984,7 +984,7 @@ def PartialDownload(bucket, uri, fname, part, parts, start, end):
                 f.seek(start, os.SEEK_SET)
                 # Need to use a different key object to each thread because
                 # the Key object in boto is not thread-safe
-                key = Key(bucket=bucket, name=uri.key)
+                key = Key(bucket=bucketname, name=keyname)
                 key.get_file(f, headers={"Range": "bytes=%d-%d" % (start, end)})
                 done = True
             except Exception as e:
@@ -1161,7 +1161,7 @@ def get(args):
                 for i in range(0, num_parts):
                     dstart = i*part_size
                     dend = min(key.size, dstart+part_size-1)
-                    down = PartialDownload(b, uri, outfile, i+1, num_parts, dstart, dend)
+                    down = PartialDownload(b, key.name, outfile, i+1, num_parts, dstart, dend)
                     downloads.append(down)
 
                 if options.parallel <= 1:
