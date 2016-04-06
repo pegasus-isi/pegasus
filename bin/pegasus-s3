@@ -145,7 +145,7 @@ def warn(message):
 
 def fix_file(url):
     if url.startswith("file://"):
-        url = os.path.abspath(url.replace("file:",""))
+        url = url.replace("file:","")
     return url
 
 def has_wildcards(string):
