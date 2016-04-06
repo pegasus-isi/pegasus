@@ -103,12 +103,13 @@ get Options
 ~~~~~~~~~~~
 *-r*::
 *--recursive*::
-Download all keys that begin with URL. If URL does not end with a "/", then
-one is added. For example, 'pegasus-s3 get s3://u@h/bucket/k' will be treated
-as 'pegasus-s3 get s3://u@h/bucket/k/' and will match 'bucket/k/foo' but not
-'bucket/key'. An entire bucket can be downloaded at once by just specifying
-the bucket name in URL. FILE is assumed to be a directory. If FILE is not
-specified, then './' is used.
+Download all keys that match URL exactly or begin with URL+"/". For example,
+'pegasus-s3 get -r s3://u@h/bucket/key' will match both 'key' and 'key/foo'
+but not 'keyfoo'. Since S3 allows names to exist as both keys (the bare 'key')
+and folders (the 'key' in 'key/foo'), but file systems do not, you will get
+an error when using *-r*/*--recursive* on a bucket that contains such
+duplicate names. An entire bucket can be downloaded at once by specifying
+only the bucket name in URL.
 
 *-c* 'X'::
 *--chunksize*='X'::
@@ -230,7 +231,13 @@ to remove it.
 The *get* subcommand retrieves an object from the storage service 
 identified by URL and stores it in the file specified by FILE. If 
 FILE is not specified, then the part of the key after the last "/"
-is used as the file name.
+is used as the file/directory name, and the results are placed in the
+current working directory. If FILE ends with a "/", then the last
+component of the key name is appended to FILE to create the output
+path (e.g. 'pegasus-s3 get s3://u@h/bucket/key /tmp/' will create a 
+file called '/tmp/key' while 'pegasus-s3 get s3://u@h/bucket/key /tmp/foo'
+will put the contents of 'key' in a file called '/tmp/foo'). The same
+is true of folders/directories with the *-r*/*--recursive* option.
 +
 The *get* subcommand can do both chunked and parallel downloads if the 
 service supports ranged downloads (see *ranged_downloads* in the

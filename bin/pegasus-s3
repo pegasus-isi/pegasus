@@ -1056,12 +1056,37 @@ def get(args):
     b = Bucket(connection=conn, name=uri.bucket)
 
     if options.recursive:
-        # Add '/' to uri.key if it doesn't have one
-        if uri.key is not None and not uri.key.endswith("/"):
-            uri.key = uri.key + "/"
+        # Get all the keys we need to download
 
-        # Get all the keys in the bucket with prefix uri.key
-        keys = [k for k in b.list(uri.key)]
+        def keyfilter(k):
+            if uri.key is None:
+                # We want all the keys in the bucket
+                return True
+
+            if uri.key.endswith("/"):
+                # The user specified a "folder", so we should only match keys
+                # in that "folder"
+                return k.name.startswith(uri.key)
+
+            if k.name == uri.key:
+                # Match bare keys in case they specify recursive, but there
+                # is a key that matches the specified path. Note that this
+                # could cause a problem in the case where they have a key
+                # called 'foo' and a "folder" called 'foo' in the same
+                # bucket. In a file system that can't happen, but it can
+                # happen in S3.
+                return True
+
+            if k.name.startswith(uri.key+"/"):
+                # All other keys in the "folder"
+                return True
+
+            return False
+
+        keys = filter(keyfilter, b.list(uri.key))
+
+        if len(keys) <= 1:
+            options.recursive = False
     else:
         # Just get the one key we need to download
         key = b.get_key(uri.key)
@@ -1069,34 +1094,44 @@ def get(args):
             raise Exception("No such key. If %s is a folder, try --recursive." % uri.key)
         keys = [key]
 
+    info("Downloading %d keys" % len(keys))
+
     start = time.time()
     totalsize = 0
     for key in keys:
         if options.recursive:
             if uri.key is None:
-                outfile = os.path.join(output, key.name)
+                # This means we are downloading the entire bucket
+                if output.endswith("/"):
+                    # In this case we need to include the bucket name
+                    outfile = os.path.join(output, b.name, key.name)
+                else:
+                    outfile = os.path.join(output, key.name)
             else:
-                relpath = key.name[len(uri.key):]
+                relpath = key.name[len(uri.key):].lstrip("/")
                 if output.endswith("/"):
                     name = os.path.basename(uri.key.rstrip("/"))
                     outfile = os.path.join(output, name, relpath)
                 else:
                     outfile = os.path.join(output, relpath)
         else:
+            # Only a single key is being downloaded
             if output.endswith("/"):
                 name = os.path.basename(key.name)
                 outfile = os.path.join(output, name)
             else:
                 outfile = output
-            if os.path.isdir(outfile):
-                raise Exception("%s is a directory" % outfile)
-
-        outdir = os.path.dirname(outfile)
-
-        if not os.path.isdir(outdir):
-            os.makedirs(outdir)
 
         info("Downloading %s to %s" % (key.name, outfile))
+
+        outfile = os.path.abspath(outfile)
+
+        if os.path.isdir(outfile):
+            raise Exception("%s is a directory" % outfile)
+
+        outdir = os.path.dirname(outfile)
+        if not os.path.isdir(outdir):
+            os.makedirs(outdir)
 
         # We need this for the performance report
         totalsize += key.size
