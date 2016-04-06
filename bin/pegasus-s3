@@ -852,7 +852,7 @@ def put(args):
 
                 # Request upload
                 info("Creating multipart upload")
-                upload = b.initiate_multipart_upload(uri.key)
+                upload = b.initiate_multipart_upload(k.name)
                 try:
                     # Create all uploads
                     uploads = []
