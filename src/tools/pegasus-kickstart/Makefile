@@ -38,9 +38,7 @@ endif
 
 ifeq (LINUX,${SYSTEM})
 ifeq (x86_64,${ARCH})
-    TARGET += libinterpose.so pegasus-monitor
-    OBJS += monitoring.o
-    LDLIBS += -lcurl -pthread
+    TARGET += libinterpose.so
     # TODO Replace this with pkg-config, which is supported in PAPI 5.4.1
     PAPI_SO=$(shell /sbin/ldconfig -p | grep libpapi.so)
     PAPI_H=$(shell ls /usr/include/papi.h)
@@ -51,11 +49,14 @@ ifeq (x86_64,${ARCH})
         endif
     endif
 endif
+    TARGET += pegasus-monitor
+    LDLIBS += -lcurl -pthread
     CFLAGS += $(shell getconf LFS_CFLAGS 2>>/dev/null)
     LDFLAGS += $(shell getconf LFS_LDFLAGS 2>>/dev/null)
     OBJS += machine/linux.o
     OBJS += syscall.o
     OBJS += procfs.o
+    OBJS += monitoring.o
 endif
 
 CFLAGS += -D${SYSTEM}
@@ -65,7 +66,7 @@ SRCS=$(OBJS:.o=.c)
 .PHONY: install clean test
 
 %.o : %.c
-	$(CC) $(CPPFLAGS) $(CFLAGS) $< -c -o $@
+	$(CC) $(CFLAGS) $< -c -o $@
 
 all: $(TARGET)
 
