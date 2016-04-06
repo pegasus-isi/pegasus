@@ -145,7 +145,7 @@ def warn(message):
 
 def fix_file(url):
     if url.startswith("file://"):
-        url = os.path.abspath(url.replace("file:",""))
+        url = url.replace("file:","")
     return url
 
 def has_wildcards(string):
@@ -723,6 +723,8 @@ def put(args):
         default=False, help="Create the destination bucket if it does not already exist")
     parser.add_option("-f", "--force", dest="force", action="store_true",
         default=False, help="Overwrite key if it already exists")
+    parser.add_option("-r", "--recursive", dest="recursive", action="store_true",
+        default=False, help="Treat FILE as a directory")
 
     options, args = parser.parse_args(args)
 
@@ -735,29 +737,43 @@ def put(args):
     if len(args) != 2:
         parser.error("Specify FILE and URL")
 
-    infile = fix_file(args[0])
+    path = fix_file(args[0])
     url = args[1]
 
-    if not os.path.isfile(infile):
-        raise Exception("No such file: %s" % infile)
+    if not os.path.exists(path):
+        raise Exception("No such file or directory: %s" % path)
+
+    # Get a list of all the files to transfer
+    if options.recursive:
+        if os.path.isfile(path):
+            infiles = [path]
+            # We can turn off the recursive option if it is a single file
+            options.recursive = False
+        elif os.path.isdir(path):
+            def subtree(dirname):
+                result = []
+                for name in os.listdir(dirname):
+                    path = os.path.join(dirname, name)
+                    if os.path.isfile(path):
+                        result.append(path)
+                    elif os.path.isdir(path):
+                        result.extend(subtree(path))
+                return result
+            infiles = subtree(path)
+    else:
+        if os.path.isdir(path):
+            raise Exception("%s is a directory. Try --recursive." % path)
+        infiles = [path]
 
     # Validate URL
     uri = parse_uri(url)
     if uri.bucket is None:
         raise Exception("URL for put must have a bucket: %s" % url)
     if uri.key is None:
-        uri.key = os.path.basename(infile)
+        uri.key = os.path.basename(path)
 
     config = get_config(options)
-
-    # Make sure file is not too large for the service
-    size = os.stat(infile).st_size
     max_object_size = config.getint(uri.site, "max_object_size")
-    if size > (max_object_size*GB):
-        raise Exception("File %s exceeds object size limit"
-        " (%sGB) of service" % (infile, max_object_size))
-
-    info("Uploading %s" % uri)
 
     # Does the site support multipart uploads?
     multipart_uploads = config.getboolean(uri.site, "multipart_uploads")
@@ -780,95 +796,125 @@ def put(args):
             conn.create_bucket(uri.bucket)
 
     b = Bucket(connection=conn, name=uri.bucket)
-    k = Key(bucket=b, name=uri.key)
 
-    # Make sure the key does not exist
-    if not options.force and k.exists():
-        raise Exception("Key exists: %s" % uri)
+    info("Uploading %d files" % len(infiles))
 
     start = time.time()
+    totalsize = 0
+    for infile in infiles:
+        name = os.path.basename(path)
+        if options.recursive:
+            relpath = os.path.relpath(infile, path)
+            if uri.key.endswith("/"):
+                keyname = os.path.join(uri.key, name, relpath)
+            else:
+                keyname = os.path.join(uri.key, relpath)
+        else:
+            if uri.key.endswith("/"):
+                keyname = uri.key + name
+            else:
+                keyname = uri.key
 
-    if (not multipart_uploads) or (options.chunksize==0):
-        # no multipart, or chunks disabled, just do it the simple way
-        k.set_contents_from_filename(infile)
-    else:
-        # Multipart supported, chunking requested
+        info("Uploading %s to %s/%s" % (infile, uri.bucket, keyname))
 
-        # The target chunk size is user-defined, but we may need
-        # to go larger if the file is big because the maximum number
-        # of chunks is 10,000. So the actual size of a chunk
-        # will range from 5MB to ~525MB if the maximum object size
-        # is 5 TB.
-        part_size = max(options.chunksize*MB, size/9999)
-        num_parts = int(math.ceil(size / float(part_size)))
+        # Make sure file is not too large for the service
+        size = os.stat(infile).st_size
+        if size > (max_object_size*GB):
+            raise Exception("File %s exceeds object size limit"
+            " (%sGB) of service" % (infile, max_object_size))
+        totalsize += size
 
-        if num_parts <= 1:
-            # Serial
+        k = Key(bucket=b, name=keyname)
+
+        # Make sure the key does not exist
+        if not options.force and k.exists():
+            raise Exception("Key exists: '%s'. Try --force." % k.name)
+
+        if (not multipart_uploads) or (options.chunksize==0):
+            # no multipart, or chunks disabled, just do it the simple way
             k.set_contents_from_filename(infile)
         else:
-            # Parallel
+            # Multipart supported, chunking requested
 
-            # Request upload
-            info("Creating multipart upload")
-            upload = b.initiate_multipart_upload(uri.key)
-            try:
-                # Create all uploads
-                uploads = []
-                for i in range(0, num_parts):
-                    length = min(size-(i*part_size), part_size)
-                    up = PartialUpload(upload, i+1, num_parts, infile, i*part_size, length)
-                    uploads.append(up)
+            # The target chunk size is user-defined, but we may need
+            # to go larger if the file is big because the maximum number
+            # of chunks is 10,000. So the actual size of a chunk
+            # will range from 5MB to ~525MB if the maximum object size
+            # is 5 TB.
+            part_size = max(options.chunksize*MB, size/9999)
+            num_parts = int(math.ceil(size / float(part_size)))
 
-                if options.parallel <= 1:
-                    # Serial
-                    for up in uploads:
-                        up()
-                else:
-                    # Parallel
+            if num_parts <= 1:
+                # Serial
+                k.set_contents_from_filename(infile)
+            else:
+                # Parallel
 
-                    # Queue up requests
-                    queue = Queue.Queue()
-                    for up in uploads:
-                        queue.put(up)
-
-                    # No sense forking more threads than there are chunks
-                    nthreads = min(options.parallel, num_parts)
-
-                    # Fork threads
-                    threads = []
-                    for i in range(0, nthreads):
-                        t = WorkThread(queue)
-                        threads.append(t)
-                        t.start()
-
-                    # Wait for the threads
-                    for t in threads:
-                        t.join()
-                        # If any of the threads encountered
-                        # an error, then we fail here
-                        if t.exception is not None:
-                            raise t.exception
-
-                info("Completing upload")
-                upload.complete_upload()
-            except Exception, e:
-                # If there is an error, then we need to try and abort
-                # the multipart upload so that it doesn't hang around
-                # forever on the server.
+                # Request upload
+                info("Creating multipart upload")
+                upload = b.initiate_multipart_upload(k.name)
                 try:
-                    info("Aborting multipart upload")
-                    upload.cancel_upload()
-                except Exception, f:
-                    sys.stderr.write("ERROR: Unable to abort multipart"
-                        " upload (use lsup/rmup): %s\n" % f)
-                raise e
+                    # Create all uploads
+                    uploads = []
+                    for i in range(0, num_parts):
+                        length = min(size-(i*part_size), part_size)
+                        up = PartialUpload(upload, i+1, num_parts, infile, i*part_size, length)
+                        uploads.append(up)
+
+                    if options.parallel <= 1:
+                        # Serial
+                        for up in uploads:
+                            up()
+                    else:
+                        # Parallel
+
+                        # Queue up requests
+                        queue = Queue.Queue()
+                        for up in uploads:
+                            queue.put(up)
+
+                        # No sense forking more threads than there are chunks
+                        nthreads = min(options.parallel, num_parts)
+
+                        # Fork threads
+                        threads = []
+                        for i in range(0, nthreads):
+                            t = WorkThread(queue)
+                            threads.append(t)
+                            t.start()
+
+                        # Wait for the threads
+                        for t in threads:
+                            t.join()
+                            # If any of the threads encountered
+                            # an error, then we fail here
+                            if t.exception is not None:
+                                raise t.exception
+
+                    info("Completing upload")
+                    upload.complete_upload()
+                except Exception, e:
+                    # If there is an error, then we need to try and abort
+                    # the multipart upload so that it doesn't hang around
+                    # forever on the server.
+                    try:
+                        info("Aborting multipart upload")
+                        upload.cancel_upload()
+                    except Exception, f:
+                        sys.stderr.write("ERROR: Unable to abort multipart"
+                            " upload (use lsup/rmup): %s\n" % f)
+                    raise e
 
     end = time.time()
-    size = size / 1024.0
+    totalsize = totalsize / 1024.0
     elapsed = end - start
-    rate = size / elapsed
+    if elapsed > 0:
+        rate = totalsize / elapsed
+    else:
+        rate = 0.0
 
-    info("Uploaded %0.1f KB in %0.6f seconds: %0.2f KB/s" % (size, elapsed, rate))
+    info("Uploaded %d files of %0.1f KB in %0.6f seconds: %0.2f KB/s" %
+            (len(infiles), totalsize, elapsed, rate))
 
 def lsup(args):
     parser = option_parser("lsup URL")
@@ -924,7 +970,7 @@ def rmup(args):
             info("Removing upload %s" % up.id)
             up.cancel_upload()
 
-def PartialDownload(bucket, uri, fname, part, parts, start, end):
+def PartialDownload(bucketname, keyname, fname, part, parts, start, end):
     def download():
         info("Downloading part %d of %d" % (part, parts))
         f = open(fname, "r+b")
@@ -938,7 +984,7 @@ def PartialDownload(bucket, uri, fname, part, parts, start, end):
                 f.seek(start, os.SEEK_SET)
                 # Need to use a different key object to each thread because
                 # the Key object in boto is not thread-safe
-                key = Key(bucket=bucket, name=uri.key)
+                key = Key(bucket=bucketname, name=keyname)
                 key.get_file(f, headers={"Range": "bytes=%d-%d" % (start, end)})
                 done = True
             except Exception as e:
@@ -966,6 +1012,8 @@ def get(args):
             "This parameter is only valid if the site supports ranged downloads "
             "and the --chunksize parameter is not 0. Otherwise parallel downloads are "
             "disabled.")
+    parser.add_option("-r", "--recursive", dest="recursive", action="store_true",
+        help="Get all keys that start with URL")
     options, args = parser.parse_args(args)
 
     if options.chunksize < 0 or options.chunksize > 1024:
@@ -981,13 +1029,15 @@ def get(args):
 
     if uri.bucket is None:
         raise Exception("URL must contain a bucket: %s" % args[0])
-    if uri.key is None:
+    if uri.key is None and not options.recursive:
         raise Exception("URL must contain a key: %s" % args[0])
 
     if len(args) > 1:
-        outfile = fix_file(args[1])
+        output = fix_file(args[1])
+    elif uri.key is None:
+        output = "./"
     else:
-        outfile = uri.key
+        output = os.path.basename(uri.key)
 
     info("Downloading %s" % uri)
 
@@ -1005,84 +1055,157 @@ def get(args):
     conn = get_connection(config, uri)
     b = Bucket(connection=conn, name=uri.bucket)
 
-    start = time.time()
+    if options.recursive:
+        # Get all the keys we need to download
 
-    if (not ranged_downloads) or (options.chunksize == 0):
-        # Ranged downloads not supported, or chunking disabled
-        k = Key(bucket=b, name=uri.key)
-        k.get_contents_to_filename(outfile)
+        def keyfilter(k):
+            if uri.key is None:
+                # We want all the keys in the bucket
+                return True
+
+            if uri.key.endswith("/"):
+                # The user specified a "folder", so we should only match keys
+                # in that "folder"
+                return k.name.startswith(uri.key)
+
+            if k.name == uri.key:
+                # Match bare keys in case they specify recursive, but there
+                # is a key that matches the specified path. Note that this
+                # could cause a problem in the case where they have a key
+                # called 'foo' and a "folder" called 'foo' in the same
+                # bucket. In a file system that can't happen, but it can
+                # happen in S3.
+                return True
+
+            if k.name.startswith(uri.key+"/"):
+                # All other keys in the "folder"
+                return True
+
+            return False
+
+        keys = filter(keyfilter, b.list(uri.key))
+
+        if len(keys) <= 1:
+            options.recursive = False
+    else:
+        # Just get the one key we need to download
+        key = b.get_key(uri.key)
+        if key is None:
+            raise Exception("No such key. If %s is a folder, try --recursive." % uri.key)
+        keys = [key]
+
+    info("Downloading %d keys" % len(keys))
+
+    start = time.time()
+    totalsize = 0
+    for key in keys:
+        if options.recursive:
+            if uri.key is None:
+                # This means we are downloading the entire bucket
+                if output.endswith("/"):
+                    # In this case we need to include the bucket name
+                    outfile = os.path.join(output, b.name, key.name)
+                else:
+                    outfile = os.path.join(output, key.name)
+            else:
+                relpath = key.name[len(uri.key):].lstrip("/")
+                if output.endswith("/"):
+                    name = os.path.basename(uri.key.rstrip("/"))
+                    outfile = os.path.join(output, name, relpath)
+                else:
+                    outfile = os.path.join(output, relpath)
+        else:
+            # Only a single key is being downloaded
+            if output.endswith("/"):
+                name = os.path.basename(key.name)
+                outfile = os.path.join(output, name)
+            else:
+                outfile = output
+
+        info("Downloading %s/%s to %s" % (uri.bucket, key.name, outfile))
+
+        outfile = os.path.abspath(outfile)
+
+        if os.path.isdir(outfile):
+            raise Exception("%s is a directory" % outfile)
+
+        outdir = os.path.dirname(outfile)
+        if not os.path.isdir(outdir):
+            os.makedirs(outdir)
 
         # We need this for the performance report
-        size = k.size
-    else:
-        # Ranged downloads and chunking requested
+        totalsize += key.size
 
-        # Get the size of the key
-        k = b.get_key(uri.key)
-        if k is None:
-            raise Exception("No such key: %s" % uri)
-        size = k.size
-
-        # Compute chunks
-        part_size = options.chunksize*MB
-        num_parts = int(math.ceil(size / float(part_size)))
-
-        if num_parts <= 1:
-            # No point if there is only one chunk
-            k.get_contents_to_filename(outfile)
+        if (not ranged_downloads) or (options.chunksize == 0):
+            # Ranged downloads not supported, or chunking disabled
+            key.get_contents_to_filename(outfile)
         else:
-            # Create the file and set it to the appropriate size.
-            f = open(outfile, "w+b")
-            f.seek(size-1)
-            f.write('\0')
-            f.close()
+            # Ranged downloads and chunking requested
 
-            # Create all the downloads
-            downloads = []
-            for i in range(0, num_parts):
-                dstart = i*part_size
-                dend = min(size, dstart+part_size-1)
-                down = PartialDownload(b, uri, outfile, i+1, num_parts, dstart, dend)
-                downloads.append(down)
+            # Compute chunks
+            part_size = options.chunksize*MB
+            num_parts = int(math.ceil(key.size / float(part_size)))
 
-            if options.parallel <= 1:
-                # Serial
-                for down in downloads:
-                    down()
+            if num_parts <= 1:
+                # No point if there is only one chunk
+                key.get_contents_to_filename(outfile)
             else:
-                # Parallel
+                # Create the file and set it to the appropriate size.
+                f = open(outfile, "w+b")
+                f.seek(key.size-1)
+                f.write('\0')
+                f.close()
 
-                # No sense forking more threads than there are chunks
-                nthreads = min(options.parallel, num_parts)
+                # Create all the downloads
+                downloads = []
+                for i in range(0, num_parts):
+                    dstart = i*part_size
+                    dend = min(key.size, dstart+part_size-1)
+                    down = PartialDownload(b, key.name, outfile, i+1, num_parts, dstart, dend)
+                    downloads.append(down)
 
-                info("Starting parallel download with %d threads" % nthreads)
+                if options.parallel <= 1:
+                    # Serial
+                    for down in downloads:
+                        down()
+                else:
+                    # Parallel
 
-                # Queue up requests
-                queue = Queue.Queue()
-                for down in downloads:
-                    queue.put(down)
+                    # No sense forking more threads than there are chunks
+                    nthreads = min(options.parallel, num_parts)
 
-                # Fork threads
-                threads = []
-                for i in range(0, nthreads):
-                    t = WorkThread(queue)
-                    threads.append(t)
-                    t.start()
+                    info("Starting parallel download with %d threads" % nthreads)
 
-                # Wait for the threads
-                for t in threads:
-                    t.join()
-                    # If any of the threads encountered
-                    # an error, then we fail here
-                    if t.exception is not None:
-                        raise t.exception
+                    # Queue up requests
+                    queue = Queue.Queue()
+                    for down in downloads:
+                        queue.put(down)
+
+                    # Fork threads
+                    threads = []
+                    for i in range(0, nthreads):
+                        t = WorkThread(queue)
+                        threads.append(t)
+                        t.start()
+
+                    # Wait for the threads
+                    for t in threads:
+                        t.join()
+                        # If any of the threads encountered
+                        # an error, then we fail here
+                        if t.exception is not None:
+                            raise t.exception
 
     end = time.time()
-    size = size / 1024.0
+    totalsize = totalsize / 1024.0
     elapsed = end - start
-    rate = size / elapsed
+    if elapsed > 0:
+        rate = totalsize / elapsed
+    else:
+        rate = 0.0
 
-    info("Downloaded %0.1f KB in %0.6f seconds: %0.2f KB/s" % (size, elapsed, rate))
+    info("Downloaded %d keys of %0.1f KB in %0.6f seconds: %0.2f KB/s" %
+            (len(keys), totalsize, elapsed, rate))
 
 def main():
     if len(sys.argv) < 2:

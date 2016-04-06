@@ -654,7 +654,7 @@ pegasus.data.configuration    HTCondorio</programlisting>
     local HTCondor can be used to submit jobs via glite (with some
     modifications described below). If you need to SSH to a different cluster
     head node in order to submit jobs to the PBS system, then you need to use
-    BOSCO, which is <link linkend="bosco"> documented in another
+    Bosco, which is <link linkend="bosco"> documented in another
     section</link>.</para>
 
     <tip>
@@ -922,19 +922,152 @@ pegasus.data.configuration    HTCondorio</programlisting>
     </section>
   </section>
 
-  <section id="bosco">
-    <title>Remote PBS Cluster using BOSCO and SSH</title>
+  <section id="bosco_sdsc">
+    <title>SDSC Comet with Bosco glideins</title>
 
-    <para><ulink url="http://bosco.opensciencegrid.org/about/">BOSCO</ulink>
+    <para>Bosco documentation: <ulink url="https://twiki.opensciencegrid.org/bin/view/CampusGrids/BoSCO">https://twiki.opensciencegrid.org/bin/view/CampusGrids/BoSCO</ulink></para>
+
+    <para>Bosco is part of the HTCondor system which allows you to set up
+        a personal pool of resources brought in from a remote cluster. In 
+        this section, we describe how to use Bosco to run glideins (pilot
+        jobs) dynamically on the SDSC Comet cluster. The glideins are 
+        submitted based on the demand of the user jobs in the pool.
+    </para>
+
+    <para>As your regular user, on the host you want to use as a workflow
+        submit host, download the latest version of HTCondor from the
+        <ulink url="https://research.cs.wisc.edu/htcondor/downloads/>">HTCondor Download page</ulink>.
+        At this point the latest version was 8.5.2 and we downloaded
+        condor-8.5.2-x86_64_RedHat6-stripped.tar.gz. Untar, and run the
+        installer:
+    </para>
+
+    <programlisting>
+$ tar xzf condor-8.5.2-x86_64_RedHat6-stripped.tar.gz
+$ cd condor-8.5.2-x86_64_RedHat6-stripped
+$ ./bosco_install
+...
+Created a script you can source to setup your Condor environment
+variables. This command must be run each time you log in or may
+be placed in your login scripts:
+   source /home/$USER/bosco/bosco_setenv
+    </programlisting>
+
+    <para>
+        Source the setup file as instructed, run
+        <emphasis>bosco_start</emphasis>, and then test that 
+        <emphasis>condor_q</emphasis> and <emphasis>condor_status</emphasis>
+        works.
+    </para>
+    
+    <programlisting>
+$ source /home/$USER/bosco/bosco_setenv
+$ condor_q
+
+-- Schedd: workflow.iu.xsede.org : 127.0.0.1:11000?...
+ ID      OWNER            SUBMITTED     RUN_TIME ST PRI SIZE CMD
+
+0 jobs; 0 completed, 0 removed, 0 idle, 0 running, 0 held, 0 suspended
+$ condor_status
+    </programlisting>
+
+    <para>
+        Let's tell Bosco about our SDSC Comet account:
+    </para>
+    
+    <programlisting>
+$ bosco_cluster -a YOUR_SDSC_USERNAME@comet-ln2.sdsc.edu pbs
+    </programlisting>
+
+    <para>
+        Bosco needs a little bit more information to be able to submit 
+        the glideins to Comet. Log in to your Comet account via ssh
+        (important - this step has to take place on Comet) and create
+        the <emphasis>~/bosco/glite/bin/pbs_local_submit_attributes.sh</emphasis>
+        file with the following content. You can find your allocation by 
+        running <emphasis>show_accounts</emphasis> and looking at the project
+        column.
+    </para>
+
+    <programlisting>
+echo "#PBS -q compute"
+echo "#PBS -l nodes=1:ppn=24"
+echo "#PBS -l walltime=24:00:00"
+echo "#PBS -A [YOUR_COMET_ALLOCATION]"
+    </programlisting>
+
+    <para>
+        Also chmod the file:
+    </para>
+    
+    <programlisting>
+$ chmod 755 ~/bosco/glite/bin/pbs_local_submit_attributes.sh
+    </programlisting>
+
+    <para>
+        Log out of Comet, and get back into the host and user Bosco was installed
+        into. We also need to edit a few files on that host. 
+        <emphasis>~/bosco/libexec/campus_factory/share/glidein_jobs/glidein_wrapper.sh</emphasis>
+        has a bug in some versions of HTCondor. Open up the file and make sure the
+        eval line in the beginning is below the unset/export HOME section. If that
+        is not the case, edit the file to look like:
+    </para>
+
+    <programlisting>
+#!/bin/sh 
+
+starting_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &amp;&amp; pwd )"
+
+# BLAHP does weird things with home directory
+unset HOME
+export HOME
+
+eval campus_factory_dir=$_campusfactory_CAMPUSFACTORY_LOCATION
+    </programlisting>
+
+    <para>
+        If the order of the HOME and eval statements are reversed in your file, change them
+        to look like the above. At the end of
+        <emphasis>~/bosco/libexec/campus_factory/share/glidein_jobs/glidein_condor_config</emphasis>
+        add:
+    </para>
+
+    <programlisting>
+# dynamic slots
+SLOT_TYPE_1 = cpus=100%,disk=100%,swap=100%
+SLOT_TYPE_1_PARTITIONABLE = TRUE
+NUM_SLOTS = 1
+NUM_SLOTS_TYPE_1 = 1
+    </programlisting>
+    
+    <para>
+        In the file <emphasis>~/bosco/libexec/campus_factory/share/glidein_jobs/job.submit.template</emphasis>
+        find the line reading:
+    </para>
+
+    <programlisting>
+         _condor_NUM_CPUS=1; \
+    </programlisting>
+
+    <para>
+        You should now have a functioning Bosco setup. Submit a Pegasus workflow.
+    </para>
+
+  </section>
+
+  <section id="bosco">
+    <title>Remote PBS Cluster using Bosco and SSH</title>
+
+    <para><ulink url="http://bosco.opensciencegrid.org/about/">Bosco</ulink>
     enables HTCondor to submit jobs to remote PBS clusters using SSH. This
     section describes how to specify a site catalog entry for a site that has
-    been configured for BOSCO job submissions.</para>
+    been configured for Bosco job submissions.</para>
 
-    <para>First, the site needs to be setup for BOSCO according to the <ulink
-    url="https://twiki.opensciencegrid.org/bin/view/CampusGrids/BoSCO"> BOSCO
-    documentation</ulink>. BOSCO uses glite to submit jobs to the PBS
+    <para>First, the site needs to be setup for Bosco according to the <ulink
+    url="https://twiki.opensciencegrid.org/bin/view/CampusGrids/BoSCO"> Bosco
+    documentation</ulink>. Bosco uses glite to submit jobs to the PBS
     scheduler on the remote cluster. You will also need to configure the glite
-    installed for BOSCO on the remote system according to the documentation in
+    installed for Bosco on the remote system according to the documentation in
     the <link linkend="glite">glite section</link> in order for the mapping of
     Pegasus profiles to PBS job requirements to work. In particular, you will
     need to install the <literal>pbs_local_submit_attributes.sh</literal> and
@@ -953,11 +1086,11 @@ pegasus.data.configuration    HTCondorio</programlisting>
 
       <listitem>
         <para>Specify the service information as grid gateways. This should
-        match what BOSCO provided when the cluster was set up.</para>
+        match what Bosco provided when the cluster was set up.</para>
       </listitem>
     </orderedlist>
 
-    <para>An example site catalog entry for a BOSCO site looks like
+    <para>An example site catalog entry for a Bosco site looks like
     this:</para>
 
     <programlisting>
@@ -968,7 +1101,7 @@ pegasus.data.configuration    HTCondorio</programlisting>
 
     &lt;site  handle="USC_HPCC_Bosco" arch="x86_64" os="LINUX"&gt;
 
-        &lt;!-- Specify the service information as grid gateways. This should match what BOSCO provided when the cluster
+        &lt;!-- Specify the service information as grid gateways. This should match what Bosco provided when the cluster
              was set up. --&gt;
         &lt;grid type="batch" contact="username@hpc-login2.usc.edu" scheduler="PBS" jobtype="compute"/&gt;
         &lt;grid type="batch" contact="username@hpc-login2.usc.edu" scheduler="PBS" jobtype="auxillary"/&gt;
@@ -993,9 +1126,9 @@ pegasus.data.configuration    HTCondorio</programlisting>
 
     <note>
       <para>It is recommended to have a submit node configured either as a
-      BOSCO submit node or a vanilla HTCondor node. You cannot have HTCondor
-      configured both as a BOSCO install and a traditional HTCondor submit
-      node at the same time as BOSCO will override the traditional HTCondor
+      Bosco submit node or a vanilla HTCondor node. You cannot have HTCondor
+      configured both as a Bosco install and a traditional HTCondor submit
+      node at the same time as Bosco will override the traditional HTCondor
       pool in the user environment.</para>
     </note>
 

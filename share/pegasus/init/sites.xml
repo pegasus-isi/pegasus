@@ -3,8 +3,8 @@
     xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
 
     <!-- The local site contains information about the submit host -->
-    <site handle="local" arch="{{arch}}" os="{{os}}">
-{% if config == "tutorial" %}
+    <site handle="local">
+{% if generate_tutorial == true %}
         <!-- This is where intermediate data will be stored -->
         <directory type="shared-scratch" path="{{workflowdir}}/scratch">
             <file-server operation="all" url="file://{{workflowdir}}/scratch"/>
@@ -28,6 +28,13 @@
 
 {% endif %}
 {% if config == "glite" or config == "bosco" %}
+{% if generate_tutorial == true and tutorial_setup == "usc-hpcc" %}
+         <!-- Scratch directory on the cluster -->
+        <directory type="shared-scratch" path="{{workflowdir}}/hpcc/scratch">
+            <file-server operation="all" url="file://{{workflowdir}}/hpcc/scratch"/>
+        </directory>
+
+{% else %}
         <grid type="batch" contact="username@cluster.example.edu" scheduler="PBS" jobtype="compute"/>
         <grid type="batch" contact="username@cluster.example.edu" scheduler="PBS" jobtype="auxillary"/>
 
@@ -35,6 +42,7 @@
         <directory type="shared-scratch" path="/path/to/cluster/scratch">
             <file-server operation="all" url="scp://username@cluster.example.edu/path/to/cluster/scratch"/>
         </directory>
+{% endif %}
 
 {% endif %}
 {% if config == "globus" or config == "creamce" %}
@@ -44,7 +52,7 @@
         </directory>
 
 {% endif %}
-{% if config == "tutorial" or config == "condorpool" %}
+{% if config == "condorpool" or  tutorial_setup == "submit-host"  %}
         <!-- These profiles tell Pegasus that the site is a plain Condor pool -->
         <profile namespace="pegasus" key="style">condor</profile>
         <profile namespace="condor" key="universe">vanilla</profile>
@@ -75,18 +83,28 @@
         <profile namespace="pegasus" key="style">ssh</profile>
 
 {% endif %}
+
 {% if config == "glite" or config == "bosco" %}
         <!-- This tells glite what scheduler to use. It can be 'pbs' or 'sge' -->
         <profile namespace="condor" key="grid_resource">pbs</profile>
 
         <!-- This tells glite what batch queue to submit jobs to -->
         <profile namespace="pegasus" key="queue">default</profile>
-
+	
+{% if generate_tutorial == true and tutorial_setup == "usc-hpcc" %}
+	<!--- This tells pegasus to have the auxillary jobs run on submit host 
+	      and not go through the local PBS queue -->
+	<profile namespace="pegasus"	key="auxillary.local">true</profile>
+               
+	<!-- This profile tells Pegasus where the worker package is installed on the site -->
+        <!-- Without this, Pegasus will automatically stage a worker package to the site -->
+        <profile namespace="env" key="PEGASUS_HOME">/home/rcf-proj/gmj/pegasus/SOFTWARE/pegasus/default</profile> 
+{% else %}
         <!-- This tells what account/project to use. It maps to the '-A' PBS argument. -->
         <profile namespace="pegasus" key="project">MYPROJ123</profile>
 {% endif %}
-        <!-- This profile tells Pegasus where the worker package is installed on the site -->
-        <!-- Without this, Pegasus will automatically stage a worker package to the site -->
-        <!-- <profile namespace="env" key="PEGASUS_HOME">/usr</profile> -->
+
+{% endif %}
+
     </site>
 </sitecatalog>
