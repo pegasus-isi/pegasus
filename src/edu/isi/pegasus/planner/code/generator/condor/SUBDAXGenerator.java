@@ -784,9 +784,10 @@ public class SUBDAXGenerator{
         StringBuffer sb = new StringBuffer();
 
         //PM-1077 some helpful arguments suggested by Kent 
-        sb.append(" -p 0 -Notification never ");
+        sb.append(" -p 0 ");
         
-        sb.append(" -f -l . -Debug 3").
+        sb.append(" -f -l . -Notification never").
+           append(" -Debug 3").
            append(" -Lockfile ").append( getBasename( basenamePrefix, ".dag.lock") ).
            append(" -Dag ").append( getBasename( basenamePrefix, ".dag"));
         
