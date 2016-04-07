@@ -673,8 +673,7 @@ public class SUBDAXGenerator{
                                        File directory,
                                        File subdaxDirectory,
                                        String basenamePrefix){
-        
-    
+       
         //for time being use the old functions.
         Job job = new DAXJob();
         //the parent directory where the submit file for condor dagman has to
@@ -784,7 +783,11 @@ public class SUBDAXGenerator{
         //initialdir has been specified for the job.
         StringBuffer sb = new StringBuffer();
 
-        sb.append(" -f -l . -Debug 3").
+        //PM-1077 some helpful arguments suggested by Kent 
+        sb.append(" -p 0 ");
+        
+        sb.append(" -f -l . -Notification never").
+           append(" -Debug 3").
            append(" -Lockfile ").append( getBasename( basenamePrefix, ".dag.lock") ).
            append(" -Dag ").append( getBasename( basenamePrefix, ".dag"));
         
@@ -859,6 +862,7 @@ public class SUBDAXGenerator{
        //PM-1077 this classad ensures that schedd removes all the jobs in a sub 
        //workflow when the parent DAGMan job is removed by pegasus-remove
        job.condorVariables.construct("+OtherJobRemoveRequirements", "\"DAGManJobId =?= $(cluster)\"");
+       job.condorVariables.construct( "on_exit_remove", "(ExitSignal =?= 11 || (ExitCode =!= UNDEFINED && ExitCode >=0 && ExitCode <= 2))");
 
        //incorporate profiles from the transformation catalog
        //and properties for the time being. Not from the site catalog.
