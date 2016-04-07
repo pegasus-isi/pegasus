@@ -1030,14 +1030,14 @@ def get(args):
     if uri.bucket is None:
         raise Exception("URL must contain a bucket: %s" % args[0])
     if uri.key is None and not options.recursive:
-        raise Exception("URL must contain a key: %s" % args[0])
+        raise Exception("URL must contain a key or use --recursive")
 
     if len(args) > 1:
         output = fix_file(args[1])
     elif uri.key is None:
         output = "./"
     else:
-        output = os.path.basename(uri.key)
+        output = os.path.basename(uri.key.rstrip("/"))
 
     info("Downloading %s" % uri)
 
@@ -1084,9 +1084,6 @@ def get(args):
             return False
 
         keys = filter(keyfilter, b.list(uri.key))
-
-        if len(keys) <= 1:
-            options.recursive = False
     else:
         # Just get the one key we need to download
         key = b.get_key(uri.key)
@@ -1099,32 +1096,32 @@ def get(args):
     start = time.time()
     totalsize = 0
     for key in keys:
-        if options.recursive:
-            if uri.key is None:
-                # This means we are downloading the entire bucket
-                if output.endswith("/"):
-                    # In this case we need to include the bucket name
-                    outfile = os.path.join(output, b.name, key.name)
-                else:
-                    outfile = os.path.join(output, key.name)
-            else:
-                relpath = key.name[len(uri.key):].lstrip("/")
-                if output.endswith("/"):
-                    name = os.path.basename(uri.key.rstrip("/"))
-                    outfile = os.path.join(output, name, relpath)
-                else:
-                    outfile = os.path.join(output, relpath)
-        else:
-            # Only a single key is being downloaded
+        if uri.key is None:
+            # This means we are downloading the entire bucket
             if output.endswith("/"):
-                name = os.path.basename(key.name)
-                outfile = os.path.join(output, name)
+                # In this case we need to include the bucket name
+                outfile = os.path.join(output, b.name, key.name)
             else:
-                outfile = output
+                outfile = os.path.join(output, key.name)
+        else:
+            relpath = key.name[len(uri.key):].lstrip("/")
+            if output.endswith("/"):
+                name = os.path.basename(uri.key.rstrip("/"))
+                outfile = os.path.join(output, name, relpath)
+            else:
+                outfile = os.path.join(output, relpath)
+            outfile = outfile.rstrip("/")
 
         info("Downloading %s/%s to %s" % (uri.bucket, key.name, outfile))
 
         outfile = os.path.abspath(outfile)
+
+        # This means that the key is a "folder", so we just need to create
+        # a directory for it
+        if key.name.endswith("/") and key.size == 0:
+            if not os.path.isdir(outfile):
+                os.makedirs(outfile)
+            continue
 
         if os.path.isdir(outfile):
             raise Exception("%s is a directory" % outfile)
