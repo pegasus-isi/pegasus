@@ -235,6 +235,17 @@ public class GliteTest {
         this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*CORES==\"([0-9]*)\".*", "40");
     }
     
+    @Test
+    public void testPBSPegasusCoresNodesPPNAllOnes() throws CondorStyleException{
+        Job j = new Job();
+        j.vdsNS.construct( Pegasus.CORES_KEY, "1" );
+        j.vdsNS.construct( Pegasus.NODES_KEY, "1" );
+        j.vdsNS.construct( Pegasus.PPN_KEY, "1" );
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*NODES==\"([0-9]*)\".*", "1");
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*PROCS==\"([0-9]*)\".*", "1");
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*CORES==\"([0-9]*)\".*", "1");
+    }
+    
     private void testWithRegex( Job j, String gridResource, String regex, String expected) throws CondorStyleException{
         String ce = gs.getCERequirementsForJob( j, gridResource );
         //System.out.println( ce );

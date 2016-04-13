@@ -430,12 +430,14 @@ public class GLite extends Abstract {
      * @param cores
      * @param nodes
      * @param ppn
+     * @param reason
      * 
      * @return 
      */
-    protected String invalidCombinationError( Job job, Integer cores, Integer nodes, Integer ppn  ){
+    protected String invalidCombinationError( Job job, Integer cores, Integer nodes, Integer ppn, String reason  ){
         StringBuffer sb = new StringBuffer();
         StringBuilder comb = new StringBuilder();
+        //Only two of (nodes, cores, ppn) should be specified for job
         sb.append( "Invalid combination of ");
         comb.append( "(" );
         if( cores != null ){
@@ -453,7 +455,10 @@ public class GLite extends Abstract {
         comb.append( ")" );
         sb.append( " ").append( comb );
         sb.append( " for job ").append(job.getID() );
-
+        if( reason != null ){
+            sb.append( " beacause ").append( reason );
+        }
+        
          return sb.toString();
     }
     
@@ -584,14 +589,14 @@ public class GLite extends Abstract {
                     int ppn = cores/nodes;
                     //sanity check
                     if( cores%nodes != 0 ){
-                        throw new CondorStyleException( invalidCombinationError ( job, cores, nodes, null) );
+                        throw new CondorStyleException( invalidCombinationError ( job, cores, nodes, null, "cores not perfectly divisible by nodes") );
                     }
                     if( ppnSet ){
                         //all three were set . check if derived value is same as
                         //existing
                         int existing = Integer.parseInt((String) job.globusRSL.get( Globus.XCOUNT_KEY) );
                         if( existing != ppn ){
-                            throw new CondorStyleException( invalidCombinationError ( job, cores, nodes, ppn) );
+                            throw new CondorStyleException( invalidCombinationError ( job, cores, nodes, ppn, "cores != nodes * ppn" ) );
                         }
                     }
                     else{
@@ -604,7 +609,7 @@ public class GLite extends Abstract {
                     int nodes = cores/ppn;
                     //sanity check
                     if( cores%ppn != 0 ){
-                        throw new CondorStyleException( invalidCombinationError ( job, cores, null, ppn));
+                        throw new CondorStyleException( invalidCombinationError ( job, cores, null, ppn, "cores not perfectly divisble by ppn"));
                     }
                     
                     if( nodesSet ){
@@ -612,7 +617,7 @@ public class GLite extends Abstract {
                         //existing
                         int existing = Integer.parseInt((String) job.globusRSL.get( Globus.HOST_COUNT_KEY) );
                         if( existing != nodes ){
-                            throw new CondorStyleException( invalidCombinationError ( job, cores, nodes, ppn) );
+                            throw new CondorStyleException( invalidCombinationError ( job, cores, nodes, ppn, "cores != nodes * ppn") );
                         }
                     }
                     else{
