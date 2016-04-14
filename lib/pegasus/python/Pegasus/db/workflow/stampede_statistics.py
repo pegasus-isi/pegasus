@@ -1060,7 +1060,7 @@ class StampedeStatistics(object):
         sq_5 = sq_5.filter(Workflow.wf_id == self._root_wf_id).subquery()
 
         sq_6 = self.session.query(func.max(Jobstate.jobstate_submit_seq).label('max_job_submit_seq'))
-        sq_6 = sq_6.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_6 = sq_6.filter(Jobstate.job_instance_id == job_instance_id)
         sq_6 = sq_6.subquery()
 
         sq_7 = self.session.query(Jobstate.state)
