@@ -611,8 +611,15 @@ public class GLite extends Abstract {
                     int nodes = cores/ppn;
                     //sanity check
                     if( cores%ppn != 0 ){
-                        throw new CondorStyleException( invalidCombinationError ( job, cores, null, ppn, 
-                                                                    "because cores not perfectly divisble by ppn."));
+                        //PM-1051 if they are not perfectly divisible just take the ceiling value.
+                        //accounts for case where ppn is specified in site catalog and cores associated
+                        //with job
+                        nodes = nodes + 1;
+                        StringBuilder message = new StringBuilder();
+                        message.append( "For job " ).append( job.getID() ).append( " with (cores,ppn) as ").
+                                append( "(").append( cores ).append( " , ").append( ppn ).append( "). ").
+                                append( "Set the nodes to be a ceiling of cores/ppn - ").append( nodes);
+                        mLogger.log( message.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
                     }
                     
                     if( nodesSet ){
