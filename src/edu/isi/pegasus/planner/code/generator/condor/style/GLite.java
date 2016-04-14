@@ -597,7 +597,7 @@ public class GLite extends Abstract {
                         //existing
                         int existing = Integer.parseInt((String) job.globusRSL.get( Globus.XCOUNT_KEY) );
                         if( existing != ppn ){
-                            throw new CondorStyleException( invalidCombinationError ( job, cores, nodes, ppn, 
+                            throw new CondorStyleException( invalidCombinationError ( job, cores, nodes, existing, 
                                             "do not satisfy cores = nodes * ppn. Please specify only two of (nodes, cores, ppn)." ) );
                         }
                     }
