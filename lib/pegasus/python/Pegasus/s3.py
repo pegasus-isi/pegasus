@@ -984,6 +984,25 @@ def PartialDownload(bucketname, keyname, fname, part, parts, start, end):
 
     return download
 
+def get_path_for_key(bucket, searchkey, key, output):
+    # We have to strip any trailing / off the keys so that they can match
+    # Also, if a key is None, then convert it to an empty string
+    key = "" if key is None else key.rstrip("/")
+    searchkey = "" if searchkey is None else searchkey.rstrip("/")
+
+    # If output ends with a /, then we need to add a name onto it
+    if output.endswith("/"):
+        name = bucket if searchkey == "" else os.path.basename(searchkey)
+        output = os.path.join(output, name)
+
+    if searchkey == key:
+        # If they are the same, then return the new output path
+        return output
+    else:
+        # Otherwise we need to compute the relative path and add it
+        relpath = os.path.relpath(key, searchkey)
+        return os.path.join(output, relpath)
+
 def get(args):
     parser = option_parser("get URL [FILE]")
     parser.add_option("-c", "--chunksize", dest="chunksize", action="store", type="int",
@@ -1082,21 +1101,7 @@ def get(args):
     start = time.time()
     totalsize = 0
     for key in keys:
-        if uri.key is None:
-            # This means we are downloading the entire bucket
-            if output.endswith("/"):
-                # In this case we need to include the bucket name
-                outfile = os.path.join(output, b.name, key.name)
-            else:
-                outfile = os.path.join(output, key.name)
-        else:
-            relpath = key.name[len(uri.key):].lstrip("/")
-            if output.endswith("/"):
-                name = os.path.basename(uri.key.rstrip("/"))
-                outfile = os.path.join(output, name, relpath)
-            else:
-                outfile = os.path.join(output, relpath)
-            outfile = outfile.rstrip("/")
+        outfile = get_path_for_key(b.name, uri.key, key.name, output)
 
         info("Downloading %s/%s to %s" % (uri.bucket, key.name, outfile))
 
