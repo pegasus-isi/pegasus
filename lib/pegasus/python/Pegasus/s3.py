@@ -690,6 +690,29 @@ def PartialUpload(up, part, parts, fname, offset, length):
         f.close()
     return upload
 
+def get_key_for_path(path, infile, outkey):
+    if outkey is None or outkey == "":
+        raise Exception("invalid key: '%s'" % outkey)
+
+    if not path.startswith("/"):
+        raise Exception("path '%s' should be absolute")
+
+    path = path.rstrip("/")
+    infile = infile.rstrip("/")
+
+    if not infile.startswith(path):
+        raise Exception("file '%s' is not relative to '%s'" % (infile, path))
+
+    if outkey.endswith("/"):
+        name = os.path.basename(path)
+        outkey = outkey + name
+
+    relpath = os.path.relpath(infile, path)
+    if relpath != ".":
+        return os.path.join(outkey, relpath)
+    else:
+        return outkey
+
 def put(args):
     parser = option_parser("put FILE URL")
     parser.add_option("-c", "--chunksize", dest="chunksize", action="store", type="int",
@@ -728,6 +751,10 @@ def put(args):
 
     if not os.path.exists(path):
         raise Exception("No such file or directory: %s" % path)
+
+    # We need the path to be absolute to make it easier to compute relative
+    # paths in the recursive mode of operation
+    path = os.path.abspath(path)
 
     # Get a list of all the files to transfer
     if options.recursive:
@@ -788,18 +815,7 @@ def put(args):
     start = time.time()
     totalsize = 0
     for infile in infiles:
-        name = os.path.basename(path)
-        if options.recursive:
-            relpath = os.path.relpath(infile, path)
-            if uri.key.endswith("/"):
-                keyname = os.path.join(uri.key, name, relpath)
-            else:
-                keyname = os.path.join(uri.key, relpath)
-        else:
-            if uri.key.endswith("/"):
-                keyname = uri.key + name
-            else:
-                keyname = uri.key
+        keyname = get_key_for_path(path, infile, uri.key)
 
         info("Uploading %s to %s/%s" % (infile, uri.bucket, keyname))
 
