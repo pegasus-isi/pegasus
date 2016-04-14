@@ -2258,6 +2258,12 @@ class Workflow:
         elif job_state == "POST_SCRIPT_FAILURE":
             self.db_send_job_brief(my_job, "post.end", -1)
 
+        if job_state == "SUBMIT_FAILED" or job_state == "GLOBUS_SUBMIT_FAILED" or job_state == "GRID_SUBMIT_FAILED":
+            #PM-1061 for any job submission failure case, set it as job stderr, so that
+            #it gets populated with the job instance end event
+            my_job._stderr_text = utils.quote( "Job submission failed because of HTCondor event %s" %job_state)
+            self.db_send_job_end(my_job, -1, True );
+
     def parse_job_sub_file(self, jobid, job_submit_seq):
         """
         This function calls a function in the Job class to parse
