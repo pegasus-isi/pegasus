@@ -597,7 +597,7 @@ public class GLite extends Abstract {
                         //existing
                         int existing = Integer.parseInt((String) job.globusRSL.get( Globus.XCOUNT_KEY) );
                         if( existing != ppn ){
-                            throw new CondorStyleException( invalidCombinationError ( job, cores, nodes, ppn, 
+                            throw new CondorStyleException( invalidCombinationError ( job, cores, nodes, existing, 
                                             "do not satisfy cores = nodes * ppn. Please specify only two of (nodes, cores, ppn)." ) );
                         }
                     }
@@ -621,19 +621,8 @@ public class GLite extends Abstract {
                                 append( "Set the nodes to be a ceiling of cores/ppn - ").append( nodes);
                         mLogger.log( message.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
                     }
+                    job.globusRSL.construct( Globus.HOST_COUNT_KEY, Integer.toString( nodes ) );
                     
-                    if( nodesSet ){
-                        //all three were set . check if derived value is same as
-                        //existing
-                        int existing = Integer.parseInt((String) job.globusRSL.get( Globus.HOST_COUNT_KEY) );
-                        if( existing != nodes ){
-                            throw new CondorStyleException( invalidCombinationError ( job, cores, nodes, ppn, 
-                                                "do not satisfy cores = nodes * ppn. Please specify only two of (nodes, cores, ppn).") );
-                        }
-                    }
-                    else{
-                        job.globusRSL.construct( Globus.HOST_COUNT_KEY, Integer.toString( nodes ) );
-                    }
                 }
             }
             else {
