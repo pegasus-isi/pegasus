@@ -55,10 +55,6 @@ cat >sites.xml <<EOF
 		<file-server  operation="all" url="file://$TOPDIR/work">
 		</file-server>
 	</directory>
-	<directory  path="$TOPDIR/outputs" type="shared-storage" free-size="" total-size="">
-		<file-server  operation="all" url="file://$TOPDIR/outputs">
-		</file-server>
-	</directory>
 	<profile namespace="pegasus" key="clusters.num" >1</profile>
 </site>
 </sitecatalog>
@@ -69,7 +65,6 @@ pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites condorpool \
     --dir work \
-    --output-site local \
     --input-dir $input_dir \
     --output-dir $output_dir \
     --dax blackdiamond.dax \
