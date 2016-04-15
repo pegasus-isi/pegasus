@@ -257,7 +257,7 @@ public class PegasusConfiguration {
                     //it with the output-dir value
                     Directory dir = new Directory();
                     dir.setType( Directory.TYPE.local_storage);
-                    dir.addFileServer( new FileServer( "file", "", "" ));
+                    dir.addFileServer( new FileServer( "file", "file://", "" ));
                     entry.addDirectory(dir);
                     storageDirectory = dir;
                 }
