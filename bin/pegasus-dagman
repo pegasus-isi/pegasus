@@ -181,6 +181,9 @@ if __name__ == "__main__":
     signal.signal(signal.SIGABRT, sighandler)
     signal.signal(signal.SIGUSR1, sighandler)
     signal.signal(signal.SIGUSR2, sighandler)
+
+    # This tells dagman to use our condor_submit wrapper
+    os.environ["_condor_DAGMAN_CONDOR_SUBMIT_EXE"] = find_prog("pegasus-submit-job",[bin_dir])
  
     copy_to_spool = is_dagman_copy_to_spool()
 

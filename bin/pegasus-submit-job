@@ -1,0 +1,27 @@
+#!/usr/bin/env python
+import os
+import sys
+
+# Construct the default arguments
+# TODO Find the real condor_submit
+args = sys.argv[:]
+args[0] = "condor_submit"
+
+# This should always be invoked from the submit dir
+submit_dir = os.getcwd()
+
+# The environment file should be in the submit_dir
+envfile = os.path.join(submit_dir, "monitord.env")
+if os.path.isfile(envfile):
+    f = open(envfile, "r")
+    for l in f:
+        l = l.strip()
+        if len(l) == 0 or l.startswith("#") or "=" not in l:
+            continue
+        key, val = l.split("=", 1)
+        os.environ[key.strip()] = val.strip()
+    f.close()
+
+# Call the real condor_submit
+os.execvp(args[0], args)
+
