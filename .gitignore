@@ -31,3 +31,4 @@ var
 *.a 
 .*.swp
 *.iml
+.vagrant

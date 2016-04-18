@@ -2,8 +2,8 @@ Vagrant.configure('2') do |config|
 
   config.vm.box = 'geerlingguy/centos7'
 
-  config.vm.define 'kickstart-dev', primary: true do |dev|
-    dev.vm.hostname = 'kickstart-dev'
+  config.vm.define 'pegasus-dev', primary: true do |dev|
+    dev.vm.hostname = 'pegasus-dev'
     #dev.vm.network :forwarded_port, :guest => 5000, :host => 5000
   end
 
@@ -13,7 +13,4 @@ Vagrant.configure('2') do |config|
   end
 
   config.vm.provision :shell, :path => 'Vagrantsetup.sh'
-
-  # Share the pegasus root dir at /vagrant
-  config.vm.synced_folder "../../..", "/vagrant"
 end
