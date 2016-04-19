@@ -1419,24 +1419,6 @@ while (len(wfs) > 0):
 #
 
 if online_monitor_proc.is_alive():
-
-    msg = ""
-    msg_counter = 5
-
-    while msg != "OK" and msg_counter > 0:
-        print "Main process: we are sending WORKFLOW_ENDED - ", msg_counter
-        parent_conn.send("WORKFLOW_ENDED")
-
-        msg_counter -= 1
-
-        if parent_conn.poll(60):
-            msg = parent_conn.recv()
-            print "online monitord sent: ", msg
-            if msg == "WAIT":
-                msg_counter += 1
-            # print "the second message from online monitord: ", parent_conn.recv()
-
-    print "online monitord - either we got OK message or msg counter is 0"
     online_monitor_proc.terminate()
 
 if anomaly_handler_proc.is_alive():

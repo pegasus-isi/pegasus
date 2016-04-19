@@ -26,8 +26,6 @@ class OnlineMonitord:
         self.event_sink = event_output.create_wf_event_sink(dburi)
         self.child_conn = child_conn
         self.influxdb_url = self.getconf("INFLUXDB_URL")
-        self.rabbitmq_url = self.getconf("KICKSTART_MON_ENDPOINT_URL")
-        self.rabbitmq_credentials = self.getconf("KICKSTART_MON_ENDPOINT_CREDENTIALS")
 
         self.aggregators = dict()
 
@@ -43,7 +41,7 @@ class OnlineMonitord:
 
     def start(self):
         self.setup_timeseries_db_conn()
-        self.start_consuming_mq_messages()
+        self.start_web_server()
 
     def setup_timeseries_db_conn(self):
         if self.influxdb_url is None:
@@ -66,6 +64,36 @@ class OnlineMonitord:
 
         self.influx_client.switch_database(self.wf_name)
         self.influx_client.switch_user(url.username, url.password)
+
+    def start_web_server(self):
+        from flask import Flask, request
+        import socket
+
+        # The endpoint is the workflow UUID
+        endpoint = "/" + self.wf_uuid
+
+        app = Flask(__name__)
+
+        @app.route(endpoint, methods=["POST"])
+        def post_monitoring_data():
+            print request.headers
+            print request.json
+            return "", 200
+
+        # Get a random port to use
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(('localhost', 0))
+        port = sock.getsockname()[1]
+        sock.close()
+
+        # Construct URL and write it to env file
+        url = "http://%s:%d%s" % (socket.gethostname(), port, endpoint)
+        f = open("monitord.env", "w")
+        f.write("KICKSTART_MON_URL=%s\n" % url)
+        f.close()
+
+        # Start flask server
+        app.run(host="0.0.0.0", port=port)
 
     def start_consuming_mq_messages(self):
         if self.rabbitmq_url is None or self.rabbitmq_credentials is None:
