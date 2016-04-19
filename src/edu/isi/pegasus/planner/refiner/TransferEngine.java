@@ -1347,7 +1347,7 @@ public class TransferEngine extends Engine {
                 sourceURL = selLoc.getPFN();
 
                 if( destPutURL == null || 
-                        symLinkSelectedLocation){ //if a destination has to be symlinked always recompute
+                        symLinkSelectedLocation){ //PM-1082 if a destination has to be symlinked always recompute
                     //no staging of executables case. 
                     //we construct destination URL to file.
                     StringBuffer destPFN = new StringBuffer();
