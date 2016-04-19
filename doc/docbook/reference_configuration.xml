@@ -5135,6 +5135,24 @@ Scope       :</emphasis> Properties
               property has no effect when running in a multi site
               case.</para></entry>
             </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold">Property Key: </emphasis>pegasus.file.cleanup.constraint.csv
+<emphasis role="bold">Profile  Key: </emphasis>N/A
+<emphasis role="bold">Scope       : </emphasis>Properties
+<emphasis role="bold">Since       : </emphasis>4.6.1
+<emphasis role="bold">Type        : </emphasis>String
+<emphasis role="bold">Default     : </emphasis>(no default)
+                  </literallayout></entry>
+
+              <entry><para>This property is used to specify a CSV file with a 
+              list of LFNs and their respective sizes in Bytes. The CSV file 
+              must be composed of two columns: <emphasis role="bold">filename
+              </emphasis> and <emphasis role="bold">length</emphasis>.
+              </para>
+              </entry>
+            </row>
+
           </tbody>
         </tgroup>
       </table>

@@ -42,7 +42,7 @@ public class Utilities {
     static Map<String, Long> sizes = null;
 
     public static long getFileSize(PegasusFile file) {
-        if (sizes == null) {
+        if (sizes == null || sizes.get(file.getLFN()) == null) {
             long fileSize = (long) file.getSize();
             return fileSize == -1 ? DEFAULT_FILE_SIZE : fileSize;
         }
@@ -72,6 +72,12 @@ public class Utilities {
         return sb.toString();
     }
 
+    /**
+     * Read file sizes from CSV file.
+     *
+     * @param csvName CSV file name.
+     * @throws IOException
+     */
     public static void loadHashMap(String csvName) throws IOException {
         final CellProcessor[] processors = new CellProcessor[]{null, null, null, null, new ParseLong()};
         CsvBeanReader beanReader = new CsvBeanReader(new FileReader(csvName), CsvPreference.STANDARD_PREFERENCE);
