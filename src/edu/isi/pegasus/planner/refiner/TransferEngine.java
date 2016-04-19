@@ -1319,6 +1319,9 @@ public class TransferEngine extends Engine {
             boolean bypassFirstLevelStaging = true;
 
             int candidateNum = 0; 
+            //PM-1082 we want to select only one destination put URL
+            //with preference for symlinks
+            String preferredDestPutURL = null;
             for( ReplicaCatalogEntry selLoc : candidateLocations.getPFNList()){
                 candidateNum++;
                 
@@ -1343,7 +1346,8 @@ public class TransferEngine extends Engine {
                 //the final source and destination url's to the file
                 sourceURL = selLoc.getPFN();
 
-                if( destPutURL == null ){
+                if( destPutURL == null || 
+                        symLinkSelectedLocation){ //if a destination has to be symlinked always recompute
                     //no staging of executables case. 
                     //we construct destination URL to file.
                     StringBuffer destPFN = new StringBuffer();
@@ -1359,6 +1363,7 @@ public class TransferEngine extends Engine {
                     }
                     destPFN.append( File.separator).append( lfn );
                     destPutURL = destPFN.toString();
+                    preferredDestPutURL = destPutURL;
                     destGetURL = dDirGetURL + File.separator + lfn;
                 }
             
@@ -1436,14 +1441,19 @@ public class TransferEngine extends Engine {
                 
                 //PM-1014 we want to track all candidate locations
                 ft.addSource( selLoc);
-
-                //to prevent duplicate destination urls
-                //and have only a single destination.
-                if(ft.getDestURL() == null)
-                    ft.addDestination(stagingSiteHandle,destPutURL);
            
             } //end of traversal of all candidate locations
-                
+            
+            //PM-1082 we want to add only one destination URL
+            //with preference for symlink destination URL
+            if(preferredDestPutURL == null){
+                throw new RuntimeException( "Unable to determine a destination put URL on staging site " + stagingSiteHandle + 
+                                            " for file " + lfn + " for job " + job.getID() );
+            }
+            else{
+                ft.addDestination(stagingSiteHandle,preferredDestPutURL);
+            }
+            
             if ( !bypassFirstLevelStaging ) {
                 //no bypass of input file staging. we need to add
                 //data stage in nodes for the lfn
