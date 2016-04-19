@@ -1884,7 +1884,9 @@ irodsPassword 'somesecretpassword'</programlisting>
         workflow, in addition to leaf cleanup nodes. The nodes remove files no
         longer required during execution. The added cleanup node guarantees
         limits on disk usage. File sizes are read from the
-        <emphasis role="bold">size</emphasis> flag in the DAX.</para>
+        <emphasis role="bold">size</emphasis> flag in the DAX, or from a 
+        CSV file (<link linkend="cleanup_props"><emphasis>
+        pegasus.file.cleanup.constraint.csv</emphasis></link>).</para>
       </listitem>
     </orderedlist>
 
