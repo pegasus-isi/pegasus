@@ -347,7 +347,7 @@ public class TransferEngine extends Engine {
                             //source site associated with file URL does
                             //not match the site attribute. remove the source url
                             mLogger.log( "Removing source url " + sourceURL + " associated with site " + sourceSite +
-                                         "for job " + job.getID(),
+                                         " for job " + job.getID(),
                                          LogManager.TRACE_MESSAGE_LEVEL );
                             it.remove();
                             remove = true;
@@ -1328,25 +1328,25 @@ public class TransferEngine extends Engine {
             ft.setTransferFlag(pf.getTransferFlag());
 
             ReplicaLocation candidateLocations = null;
-            if( nv == null ){
-                //select from the various replicas
-                candidateLocations =  mReplicaSelector.selectAndOrderReplicas( rl, 
-                                                                        executionSiteHandle,
-                                                                        runTransferOnLocalSite );
-                if( candidateLocations.getPFNCount() == 0 ){
-                    StringBuilder error = new StringBuilder();
-                    error.append( "Unable to select a Physical Filename (PFN) for file with logical filename (LFN) as ").
-                          append( rl.getLFN() ).append( " for preferred site " ).append( executionSiteHandle ).
-                          append( "with runTransferOnLocalSite - ").append( runTransferOnLocalSite ).
-                          append( " amongst ").append( rl.getPFNList() );
-                    throw new RuntimeException( error.toString() );
-                }
-            }
-            else{
-                //we have the replica already selected
+            if( nv != null ){
+                //we have the replica already selected as a result
+                //of executable staging
                 List rces = new LinkedList();
                 rces.add(  new ReplicaCatalogEntry( nv.getValue(), nv.getKey() ));
-                candidateLocations  = new ReplicaLocation( lfn, rces );
+                rl  = new ReplicaLocation( lfn, rces );
+            }
+            
+            //select from the various replicas
+            candidateLocations =  mReplicaSelector.selectAndOrderReplicas( rl, 
+                                                                    executionSiteHandle,
+                                                                    runTransferOnLocalSite );
+            if( candidateLocations.getPFNCount() == 0 ){
+                StringBuilder error = new StringBuilder();
+                error.append( "Unable to select a Physical Filename (PFN) for file with logical filename (LFN) as ").
+                      append( rl.getLFN() ).append( " for preferred site " ).append( executionSiteHandle ).
+                      append( "with runTransferOnLocalSite - ").append( runTransferOnLocalSite ).
+                      append( " amongst ").append( rl.getPFNList() );
+                throw new RuntimeException( error.toString() );
             }
             
             //check if we need to replace url prefix for 
