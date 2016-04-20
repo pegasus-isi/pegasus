@@ -1358,7 +1358,8 @@ public class TransferEngine extends Engine {
             int candidateNum = 0; 
             //PM-1082 we want to select only one destination put URL
             //with preference for symlinks
-            String preferredDestPutURL = null;
+            //assign to destPutURL to take care of executable staging
+            String preferredDestPutURL = destPutURL;
             for( ReplicaCatalogEntry selLoc : candidateLocations.getPFNList()){
                 candidateNum++;
                 
