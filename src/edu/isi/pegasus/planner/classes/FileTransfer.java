@@ -304,6 +304,19 @@ public class FileTransfer extends PegasusFile {
     }
     
     /**
+     * Returns number of source URL's associated with the FileTransfer
+     *
+     * @return count
+     */
+    public int getSourceURLCount(   ){
+        int count = 0;
+        for( String site: getSourceSites()){
+            count += this.getSourceURLs(site).size();
+        }
+        return count;
+    }
+    
+    /**
      * Returns a single source url associated with the transfer.
      * The source url returned is first entry from the key set of the
      * underlying map.
