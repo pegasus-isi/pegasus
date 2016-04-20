@@ -282,6 +282,7 @@ public class TransferEngine extends Engine {
      * 
      * @param job the associated compute job
      * @param ft  the file transfer created
+     * @param stagingSite  the staging site for the job
      * @return 
      */
     private boolean runTransferRemotely(Job job , SiteCatalogEntry stagingSite, FileTransfer ft) {
@@ -319,6 +320,42 @@ public class TransferEngine extends Engine {
                 }
         }
         return remote;
+    }
+    
+    /**
+     * Removes file URL's from FT sources that if the site attribute for it
+     * does not match site handle passed
+     * 
+     * @param job
+     * @param ft
+     * @param site 
+     */
+    public boolean removeFileURLFromSource( Job job, FileTransfer ft, String site ){
+        
+        boolean remove = false;
+        for( String sourceSite: ft.getSourceSites() ){
+                //traverse through all the URL's on that site
+                for( Iterator<ReplicaCatalogEntry> it = ft.getSourceURLs(sourceSite).iterator(); it.hasNext(); ){
+                    ReplicaCatalogEntry rce = it.next();
+                    String sourceURL = rce.getPFN();
+                    //if the source URL is a FILE URL and 
+                    //source site matches the destination site
+                    //then has to run remotely
+                    if( sourceURL != null && sourceURL.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
+                        
+                        if( !sourceSite.equalsIgnoreCase( site ) ){
+                            //source site associated with file URL does
+                            //not match the site attribute. remove the source url
+                            mLogger.log( "Removing source url " + sourceURL + " associated with site " + sourceSite +
+                                         "for job " + job.getID(),
+                                         LogManager.TRACE_MESSAGE_LEVEL );
+                            it.remove();
+                            remove = true;
+                        }
+                    }
+                }
+        }
+        return remove;
     }
     
     /**
@@ -1319,6 +1356,9 @@ public class TransferEngine extends Engine {
             boolean bypassFirstLevelStaging = true;
 
             int candidateNum = 0; 
+            //PM-1082 we want to select only one destination put URL
+            //with preference for symlinks
+            String preferredDestPutURL = null;
             for( ReplicaCatalogEntry selLoc : candidateLocations.getPFNList()){
                 candidateNum++;
                 
@@ -1343,7 +1383,8 @@ public class TransferEngine extends Engine {
                 //the final source and destination url's to the file
                 sourceURL = selLoc.getPFN();
 
-                if( destPutURL == null ){
+                if( destPutURL == null || 
+                        symLinkSelectedLocation){ //PM-1082 if a destination has to be symlinked always recompute
                     //no staging of executables case. 
                     //we construct destination URL to file.
                     StringBuffer destPFN = new StringBuffer();
@@ -1359,6 +1400,7 @@ public class TransferEngine extends Engine {
                     }
                     destPFN.append( File.separator).append( lfn );
                     destPutURL = destPFN.toString();
+                    preferredDestPutURL = destPutURL;
                     destGetURL = dDirGetURL + File.separator + lfn;
                 }
             
@@ -1436,14 +1478,19 @@ public class TransferEngine extends Engine {
                 
                 //PM-1014 we want to track all candidate locations
                 ft.addSource( selLoc);
-
-                //to prevent duplicate destination urls
-                //and have only a single destination.
-                if(ft.getDestURL() == null)
-                    ft.addDestination(stagingSiteHandle,destPutURL);
            
             } //end of traversal of all candidate locations
-                
+            
+            //PM-1082 we want to add only one destination URL
+            //with preference for symlink destination URL
+            if(preferredDestPutURL == null){
+                throw new RuntimeException( "Unable to determine a destination put URL on staging site " + stagingSiteHandle + 
+                                            " for file " + lfn + " for job " + job.getID() );
+            }
+            else{
+                ft.addDestination(stagingSiteHandle,preferredDestPutURL);
+            }
+            
             if ( !bypassFirstLevelStaging ) {
                 //no bypass of input file staging. we need to add
                 //data stage in nodes for the lfn
@@ -1451,6 +1498,15 @@ public class TransferEngine extends Engine {
                      !runTransferOnLocalSite ||
                      runTransferRemotely( job, stagingSite, ft ) ){ //check on the basis of constructed source URL whether to run remotely
 
+                    if( removeFileURLFromSource( job, ft, stagingSiteHandle ) ){
+                        //PM-1082 remote transfers ft can still have file url's 
+                        //not matching the staging site
+                        //sanity check
+                        if( ft.getSourceURLCount() == 0 ){
+                            throw new RuntimeException( "No source URL's available for stage-in( remote ) transfers for file " + 
+                                                        ft + " for job "  + job.getID());
+                        }
+                    }
                     //all symlink transfers and user specified remote transfers
                     remoteFileTransfers.add(ft);
                 }
