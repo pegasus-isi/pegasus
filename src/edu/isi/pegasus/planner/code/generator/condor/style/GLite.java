@@ -243,13 +243,6 @@ public class GLite extends Abstract {
             job.condorVariables.construct(  "batch_queue" , (String)job.globusRSL.get( "queue" ) );
         }
         
-        /*
-         PM-934 construct environment accordingly
-        */
-        job.condorVariables.construct( GLite.CONDOR_REMOTE_ENVIRONMENT_KEY, 
-                                       mEnvEscape.escape( job.envVariables ) );
-        job.envVariables.reset();
-
         /* do special handling for jobs scheduled to local site
          * as condor file transfer mechanism does not work
          * Special handling for the JPL cluster */
@@ -272,6 +265,16 @@ public class GLite extends Abstract {
         else {
             applyCredentialsForRemoteExec(job);
         }
+        
+        /*
+         PM-934 construct environment accordingly
+         PM-1084 +remote_environment should be created only after credentials
+                 have been figured out , as paths to remote credentials are set
+                 as environment variables.
+        */
+        job.condorVariables.construct( GLite.CONDOR_REMOTE_ENVIRONMENT_KEY, 
+                                       mEnvEscape.escape( job.envVariables ) );
+        job.envVariables.reset();
     }
 
 
