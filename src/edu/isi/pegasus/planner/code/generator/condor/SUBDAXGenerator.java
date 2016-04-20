@@ -784,7 +784,10 @@ public class SUBDAXGenerator{
         StringBuffer sb = new StringBuffer();
 
         //PM-1077 some helpful arguments suggested by Kent 
-        sb.append(" -p 0 ");
+        //PM-1085 add only if version detected is greater than 8.3.6
+        if( this.mCondorVersion >= CondorVersion.v_8_3_6 ){
+            sb.append(" -p 0 ");
+        }
         
         sb.append(" -f -l . -Notification never").
            append(" -Debug 3").
