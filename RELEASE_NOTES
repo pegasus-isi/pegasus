@@ -191,6 +191,47 @@ Bugs Fixed
      specified a –output-dir option. This is now fixed. The planner
      will create a default file server based entry for this case. 
 
+
+17) [PM-1082] – transfer jobs don’t have symlink destination URL even
+    though symlink is enabled 
+
+    In the case, where there are multiple candidate replica locations
+    ( some on preferred site and some on other sites), the destination
+    URL for the transfer jobs did not have a symlink URL. As a result
+    the data was never symlinked even though it was available locally
+    on the preferred site. 
+
+18) [PM-1083] – dashboard user home page requires a trailing /
+
+    To access a user home page on the dashboard, a trailing / needs to
+    be specified after the username in the URL. Dashboard was updated
+    to handle URL’s without trailing names. 
+
+19) [PM-1084] – credential handling for glite jobs
+
+    As part of credential handling the environment variable for the
+    staged credential was as environment key instead of the
+    +remote_environment classed key.  As a result transfer jobs
+    running via Glite submission failed as the appropriate environment
+    variable was not set. This is fixed now.
+
+20) [PM-1085] – -p 0 options for condor_dagman sub dax jobs result in
+    dagman ( 8.2.8) dying 
+
+    Pegasus updated to generate the dagman submit files for sub
+    workflows to be compatible with 8.5.x series.  However, the new
+    arguments added resulted in breaking workflows running with old
+    HTCondor versions. The offending argument is now set only if
+    condor version is more than 8.3.6
+
+21) [PM-1086] – Never symlink executables
+    
+    Pegasus adds chmod jobs to explicitly set the x bit of the
+    executables staged. If the executable is a symlinked executable,
+    then chmod fails. Symlinking is never triggered for staged
+    executables now. 
+ 
+
 ===============================
 Release Notes for PEGASUS 4.6.0
 ===============================
