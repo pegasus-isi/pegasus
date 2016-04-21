@@ -1364,7 +1364,10 @@ public class TransferEngine extends Engine {
                 candidateNum++;
                 
                 if ( symLinkSelectedLocation = 
-                        (mUseSymLinks && selLoc.getResourceHandle().equals( job.getStagingSiteHandle() )) ) {
+                        ( mUseSymLinks && 
+                          selLoc.getResourceHandle().equals( job.getStagingSiteHandle() ) &&
+                          !pf.isExecutable() //PM-1086 symlink only data files as chmod fails on symlinked file
+                        )  ) {
 
                     //resolve any srm url's that are specified
                     selLoc = replaceSourceProtocolFromURL( selLoc );
