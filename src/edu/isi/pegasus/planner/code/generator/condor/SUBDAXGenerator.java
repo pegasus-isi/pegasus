@@ -458,7 +458,7 @@ public class SUBDAXGenerator{
             else{
                 //PM-833 insert factory based submit directory for dax job in between 
                 //innerRelative and submit
-                baseRelativeExecDir = new File( baseRelativeExecDir, job.getRelativeSubmitDirectory() ).getAbsolutePath();
+                baseRelativeExecDir = new File( baseRelativeExecDir, job.getRelativeSubmitDirectory() ).getPath();
                 
                 //the else look should not be there.
                 //construct path from base relative exec dir
