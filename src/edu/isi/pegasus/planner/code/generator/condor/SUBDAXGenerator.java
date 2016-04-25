@@ -539,7 +539,10 @@ public class SUBDAXGenerator{
         //the log file for the prescript should be in the
         //submit directory of the outer level workflow
         StringBuffer log = new StringBuffer();
-        log.append( mPegasusPlanOptions.getSubmitDirectory() ).append( File.separator ).
+
+        //PM-1088 move to relative file path
+        //log.append( mPegasusPlanOptions.getSubmitDirectory() ).append( File.separator ).
+        log.append( "." ).append( File.separator ).
             append( job.getName() ).append( ".pre.log" );
         Job prescript = constructPegasusPlanPrescript( job, 
                                                           options,
@@ -976,10 +979,19 @@ public class SUBDAXGenerator{
      * @return the path to the cache file
      */
     protected String getCacheFile( PlannerOptions options, String label , String index ){
+        //PM-1088 move to relative submit directory 
+        String absolute = new File( options.getSubmitDirectory(),
+                           this.getWorkflowFileName(options, label, index, CACHE_FILE_SUFFIX) ).getAbsolutePath();
         
-        return new File( options.getSubmitDirectory(),
-                         this.getWorkflowFileName(options, label, index, CACHE_FILE_SUFFIX) ).getAbsolutePath();
-        
+        //PM-1088 move to relative submit directory 
+        //has to be relative to the submit directory of root/parent workflow ( the workflow on which pegasus-plan is right now)
+        //for example 
+        //Absolute :                 /work/pegasus-features/PM-833/local-hierarchy/dags/vahi/pegasus/local-hierarchy/run0033/local-hierarchy-0.cache
+        //Root Base submit directory /work/pegasus-features/PM-833/local-hierarchy/dags/vahi/pegasus/local-hierarchy/run0033
+        //Relative                   ./local-hierarchy-0.cache
+        String rootSubmitDir = this.mPegasusPlanOptions.getSubmitDirectory();
+        String relative = "."  + absolute.substring( absolute.indexOf( rootSubmitDir ) + rootSubmitDir.length() );
+        return relative;
     }
     
     /**
