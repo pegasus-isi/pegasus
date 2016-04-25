@@ -541,8 +541,7 @@ public class Kickstart implements GridStart {
 
                 //condor needs to pick up the constituentJob stdin and
                 //transfer it to the remote end
-                //PM-1088 move to relative paths in the .dag file
-                construct( job, "input" , job.getFileRelativePath( ".in") );
+                construct( job, "input" , job.getFileFullPath( submitDir, ".in") );
                 gridStartArgs.append("-i ").append("-").append(' ');
 
             } else {
@@ -563,8 +562,7 @@ public class Kickstart implements GridStart {
             mLogger.log("Detected WAW conflict for stdout",LogManager.WARNING_MESSAGE_LEVEL);
         }
         // the output of gridstart is propagated back to the submit host
-        //PM-1088 move to relative paths in the .dag file
-        construct(job,"output", job.getFileRelativePath( ".out") );
+        construct(job,"output", job.getFileFullPath( submitDir, ".out") );
 
 
         if (isGlobusJob) {
@@ -583,8 +581,7 @@ public class Kickstart implements GridStart {
             mLogger.log("Detected WAW conflict for stderr",LogManager.WARNING_MESSAGE_LEVEL);
         }
         // the error from gridstart is propagated back to the submit host
-        //PM-1088 move to relative paths in the .dag file
-        construct(job,"error",job.getFileRelativePath( ".err"));
+        construct(job,"error",job.getFileFullPath( submitDir, ".err"));
         if (isGlobusJob) {
             construct(job,"transfer_error","true");
         }

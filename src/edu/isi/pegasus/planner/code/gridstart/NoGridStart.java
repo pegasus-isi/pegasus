@@ -350,8 +350,7 @@ public class NoGridStart implements GridStart {
             }
         } else {
             // transfer output back to submit host, if unused
-            //PM-1088 move to relative paths in the .dag file
-            construct(job,"output", job.getFileRelativePath( ".out") );
+            construct(job,"output", job.getFileFullPath( submitDir, ".out") );
             if (isGlobusJob) {
                 construct(job,"transfer_output","true");
             }
@@ -365,7 +364,7 @@ public class NoGridStart implements GridStart {
             }
         } else {
             // transfer error back to submit host, if unused
-            construct(job,"error", job.getFileRelativePath( ".err"));
+            construct(job,"error", job.getFileFullPath( submitDir, ".err"));
             if (isGlobusJob) {
                 construct(job,"transfer_error","true");
             }
