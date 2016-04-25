@@ -1951,8 +1951,10 @@ public class CondorGenerator extends Abstract {
         StringBuffer rslString = new StringBuffer();
         String jobName = job.jobName;
         String script = null;
+        
+        //PM-1088 move to relative paths in the .dag file
         job.dagmanVariables.checkKeyInNS(Dagman.JOB_KEY,
-                                         job.getFileFullPath( this.mSubmitFileDir , SUBMIT_FILE_SUFFIX));
+                                         job.getFileRelativePath(SUBMIT_FILE_SUFFIX));
         
         
         //remove the prescript arguments key

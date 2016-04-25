@@ -2220,6 +2220,29 @@ public class Job extends Data implements GraphNodeContent{
         sb.append( this.getFileBaseName( suffix) );
         return sb.toString();
     }
+    
+     /**
+     * Returns the relative path for a job related file, relative to the 
+     * submit directory of the workflow
+     *
+     * @param suffix the suffix to be attached.
+     *
+     * @return  the full path for the file
+     */
+    public String getFileRelativePath(  String suffix ){
+        StringBuilder sb = new StringBuilder();
+        String relative = this.getRelativeSubmitDirectory();
+        
+        if( relative != null ){
+            sb.append( relative ).append( File.separator);
+        }
+        else{
+            sb.append( "." ).append( File.separator );
+        }
+        
+        sb.append( this.getFileBaseName( suffix) );
+        return sb.toString();
+    }
 
     
     /**
