@@ -602,8 +602,9 @@ public class SUBDAXGenerator{
             
             //set the prescript to the dag job
             //the executable is the wrapper now PM-667
-//            dagJob.setPreScript( job.getPreScriptPath(), job.getPreScriptArguments() );
-            dagJob.setPreScript( wrapper.getAbsolutePath(), job.getPreScriptArguments() );
+            //PM-1088 set the relative path to the base submit directory
+            File relativeWrapper = new File(dagJob.getRelativeSubmitDirectory(), wrapper.getName() );
+            dagJob.setPreScript( relativeWrapper.getPath(), job.getPreScriptArguments() );
             
             return dagJob;
         }
