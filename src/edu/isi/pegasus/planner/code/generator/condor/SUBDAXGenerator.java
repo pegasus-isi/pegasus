@@ -541,9 +541,7 @@ public class SUBDAXGenerator{
         //submit directory of the outer level workflow
         StringBuffer log = new StringBuffer();
 
-        //PM-1088 move to relative file path
-        //log.append( mPegasusPlanOptions.getSubmitDirectory() ).append( File.separator ).
-        log.append( "." ).append( File.separator ).
+        log.append( mPegasusPlanOptions.getSubmitDirectory() ).append( File.separator ).
             append( job.getName() ).append( ".pre.log" );
         Job prescript = constructPegasusPlanPrescript( job, 
                                                           options,
@@ -981,7 +979,6 @@ public class SUBDAXGenerator{
      * @return the path to the cache file
      */
     protected String getCacheFile( PlannerOptions options, String label , String index ){
-        //PM-1088 move to relative submit directory 
         String absolute = new File( options.getSubmitDirectory(),
                            this.getWorkflowFileName(options, label, index, CACHE_FILE_SUFFIX) ).getAbsolutePath();
         
@@ -991,9 +988,11 @@ public class SUBDAXGenerator{
         //Absolute :                 /work/pegasus-features/PM-833/local-hierarchy/dags/vahi/pegasus/local-hierarchy/run0033/local-hierarchy-0.cache
         //Root Base submit directory /work/pegasus-features/PM-833/local-hierarchy/dags/vahi/pegasus/local-hierarchy/run0033
         //Relative                   ./local-hierarchy-0.cache
-        String rootSubmitDir = this.mPegasusPlanOptions.getSubmitDirectory();
-        String relative = "."  + absolute.substring( absolute.indexOf( rootSubmitDir ) + rootSubmitDir.length() );
-        return relative;
+        //String rootSubmitDir = this.mPegasusPlanOptions.getSubmitDirectory();
+        //String relative = "."  + absolute.substring( absolute.indexOf( rootSubmitDir ) + rootSubmitDir.length() );
+        
+        //PM-1088 have to return absolute as prescript is executed in scratch dir not submit dir
+        return absolute;
     }
     
     /**
