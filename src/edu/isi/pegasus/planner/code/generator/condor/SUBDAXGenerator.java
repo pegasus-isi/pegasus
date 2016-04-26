@@ -518,10 +518,7 @@ public class SUBDAXGenerator{
         //refer to the parent workflow's properties file only instead.
         //Karan June 1, 2011
         String propertiesFile = this.mProps.getPropertiesInSubmitDirectory();
-        //PM-1088 we need only the basename
-        propertiesFile = "." + File.separator + new File( propertiesFile ).getName();
-
-
+        
         //check if a encompassing DAX to which the dax job belongs has a
         //replica store associated.
         if( !this.mDAG.getReplicaStore().isEmpty() ){
