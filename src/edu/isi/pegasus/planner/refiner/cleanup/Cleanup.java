@@ -40,7 +40,10 @@ import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.PlannerCache;
+
+import edu.isi.pegasus.planner.directory.Creator;
 import edu.isi.pegasus.planner.namespace.Dagman;
+
 import java.util.List;
 import java.util.Iterator;
 import java.util.HashSet;
@@ -49,7 +52,6 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.File;
 import java.io.IOException;
-import org.griphyn.vdl.euryale.FileFactory;
 
 /**
  * Uses pegasus-transfer to do removal of the files on the remote sites.
@@ -141,7 +143,7 @@ public class Cleanup implements CleanupImplementation{
      * Handle to the Submit directory factory, that returns the relative
      * submit directory for a job
      */
-    protected FileFactory mSubmitDirFactory;
+    protected Creator mSubmitDirFactory;
 
     /**
      * A convenience method to return the complete transformation name being
@@ -211,7 +213,7 @@ public class Cleanup implements CleanupImplementation{
         
         //PM-833 set the relative submit directory for the transfer
         //job based on the associated file factory
-        cJob.setRelativeSubmitDirectory( this.getRelativeSubmitDir());
+        cJob.setRelativeSubmitDirectory( this.mSubmitDirFactory.getRelativeDir(cJob));
 
         //prepare the stdin for the cleanup job
         String stdIn = id + ".in";
@@ -474,20 +476,4 @@ public class Cleanup implements CleanupImplementation{
         return defaultTCEntry;
     }
 
-    
-    /**
-     * Calls out to the file factory to get a directory for a new
-     * job to be created.
-     * 
-     * @return 
-     */
-    protected String getRelativeSubmitDir( ){
-        String dir = null;
-        try {
-            dir = this.mSubmitDirFactory.createRelativeFile( "pegasus" ).getParent();
-        } catch (IOException ex) {
-            throw new RuntimeException( "Exception while determining the relative submit directory", ex );
-        }
-        return dir;
-    }
 }

@@ -36,6 +36,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.directory.Creator;
+import java.io.File;
 import java.io.IOException;
 import org.griphyn.vdl.euryale.FileFactory;
 
@@ -116,7 +118,7 @@ public abstract  class Engine {
      * Handle to the Submit directory factory, that returns the relative
      * submit directory for a job
      */
-    protected FileFactory mSubmitDirFactory;
+    protected Creator mSubmitDirFactory;
     
     /**
      *
@@ -300,19 +302,5 @@ public abstract  class Engine {
         throw new RuntimeException( error.toString() );
     }
     
-    /**
-     * Calls out to the file factory to get a directory for a new
-     * job to be created.
-     * 
-     * @return 
-     */
-    protected String getRelativeSubmitDir( ){
-        String dir = null;
-        try {
-            dir = this.mSubmitDirFactory.createRelativeFile( "pegasus" ).getParent();
-        } catch (IOException ex) {
-            throw new RuntimeException( "Exception while determining the relative submit directory", ex );
-        }
-        return dir;
-    }
+   
 }

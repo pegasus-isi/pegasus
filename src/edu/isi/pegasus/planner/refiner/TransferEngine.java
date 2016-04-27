@@ -50,16 +50,22 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.common.util.FactoryException;
 
 import edu.isi.pegasus.common.util.PegasusURL;
+
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.PlannerCache;
+
+import edu.isi.pegasus.planner.directory.Creator;
+
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
+
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.transfer.mapper.OutputMapper;
 import edu.isi.pegasus.planner.transfer.mapper.OutputMapperFactory;
+import edu.isi.pegasus.planner.transfer.mapper.impl.Hashed;
 
 import org.griphyn.vdl.euryale.FileFactory;
 
@@ -76,9 +82,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.griphyn.vdl.euryale.HashedFileFactory;
 
 
 
@@ -184,10 +187,10 @@ public class TransferEngine extends Engine {
 
 
     /**
-     * The handle to the file factory, that is  used to create the top level
-     * directories for each of the partitions.
+     * The handle to the file factory, that is  used to create the directory
+     * where the job submit files will reside.
      */
-    private FileFactory mFactory;
+    private Creator mSubmitDirectoryCreator;
 
     
     /**
@@ -246,8 +249,9 @@ public class TransferEngine extends Engine {
                            List<Job> deletedLeafJobs){
         super( bag );
 
-        mFactory =  this.getSubmitDirectoryCreator();
-        bag.add(PegasusBag.PEGASUS_SUBMIT_DIR_FACTORY, mFactory );
+        mSubmitDirectoryCreator =  new edu.isi.pegasus.planner.directory.impl.Hashed();
+        mSubmitDirectoryCreator.initialize(bag, new File(mPOptions.getSubmitDirectory()));
+        bag.add(PegasusBag.PEGASUS_SUBMIT_DIR_FACTORY, mSubmitDirectoryCreator );
         
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mSRMServiceURLToMountPointMap = constructSiteToSRMServerMap( mProps );
@@ -285,7 +289,8 @@ public class TransferEngine extends Engine {
         mLogger.log("Output Mapper loaded is    [" + mOutputMapper.description() +
                     "]",LogManager.CONFIG_MESSAGE_LEVEL);
     }
-
+    
+    /*
     public FileFactory getSubmitDirectoryCreator(){
          // create hashed, and levelled directories
         try {
@@ -317,6 +322,7 @@ public class TransferEngine extends Engine {
             throw new RuntimeException(  e );
         }
     }
+    */
     
     /**
      * Determines a particular created transfer pair has to be binned
@@ -2014,9 +2020,22 @@ public class TransferEngine extends Engine {
      * @return 
      */
     protected String getRelativeSubmitDirectory(Job job) {
+        
         String relative = null;
         try {
-            File f = mFactory.createRelativeFile("pegasus");
+            File f =  mSubmitDirectoryCreator.getRelativeDir(job);
+            mLogger.log("Directory for job " + job.getID() + " is " + f,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            relative = f.getPath();
+        } catch ( Exception ex) {
+            throw new RuntimeException( "Error while determining relative submit dir for job " + job.getID() , ex);
+        }
+        return relative;
+        
+        /*
+        String relative = null;
+        try {
+            File f = mSubmitDirectoryCreator.createRelativeFile("pegasus");
             //To-Do we have to determin the relative path from the base directory
             relative = f.getParent();
             mLogger.log("Directory for job " + job.getID() + " is " + relative,
@@ -2025,6 +2044,7 @@ public class TransferEngine extends Engine {
             throw new RuntimeException( "Error while determining relative submit dir for job " + job.getID() , ex);
         }
         return relative;
+        */
     }
 
     

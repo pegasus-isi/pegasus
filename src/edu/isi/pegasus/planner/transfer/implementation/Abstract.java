@@ -53,6 +53,7 @@ import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.directory.Creator;
 
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Dagman;
@@ -63,9 +64,6 @@ import edu.isi.pegasus.planner.transfer.Implementation;
 import edu.isi.pegasus.planner.transfer.Refiner;
 import java.io.IOException;
 import java.util.LinkedList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.griphyn.vdl.euryale.FileFactory;
 
 /**
  * An abstract implementation that implements some of the common functions in
@@ -221,7 +219,7 @@ public abstract class Abstract implements Implementation{
      * Handle to the Submit directory factory, that returns the relative
      * submit directory for a job
      */
-    protected FileFactory mSubmitDirFactory;
+    protected Creator mSubmitDirFactory;
 
     /**
      * The overloaded constructor, that is called by the Factory to load the
@@ -677,7 +675,7 @@ public abstract class Abstract implements Implementation{
         
         //PM-833 set the relative submit directory for the transfer
         //job based on the associated file factory
-        newJob.setRelativeSubmitDirectory( this.getRelativeSubmitDir());
+        newJob.setRelativeSubmitDirectory( this.mSubmitDirFactory.getRelativeDir(newJob) );
         
         //PM-845
         //we need to set the staging site handle to compute job execution site
@@ -837,7 +835,7 @@ public abstract class Abstract implements Implementation{
         
         //PM-833 set the relative submit directory for the transfer
         //job based on the associated file factory
-        xBitJob.setRelativeSubmitDirectory( this.getRelativeSubmitDir());
+        xBitJob.setRelativeSubmitDirectory( this.mSubmitDirFactory.getRelativeDir( xBitJob));
         
         xBitJob.jobName     = name;
         xBitJob.logicalName = Abstract.CHANGE_XBIT_TRANSFORMATION;
@@ -998,22 +996,6 @@ public abstract class Abstract implements Implementation{
      */
     protected void construct(Job job, String key, String value){
         job.condorVariables.checkKeyInNS(key,value);
-    }
-
-    /**
-     * Calls out to the file factory to get a directory for a new
-     * job to be created.
-     * 
-     * @return 
-     */
-    protected String getRelativeSubmitDir( ){
-        String dir = null;
-        try {
-            dir = this.mSubmitDirFactory.createRelativeFile( "pegasus" ).getParent();
-        } catch (IOException ex) {
-            throw new RuntimeException( "Exception while determining the relative submit directory", ex );
-        }
-        return dir;
     }
 
 }

@@ -126,7 +126,7 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         
         //PM-833 set the relative submit directory for the transfer
         //job based on the associated file factory
-        txJob.setRelativeSubmitDirectory( this.getRelativeSubmitDir());
+        txJob.setRelativeSubmitDirectory( this.mSubmitDirFactory.getRelativeDir( txJob ));
 
         TransformationCatalogEntry tcEntry = this.getTransformationCatalogEntry( tPool, jobClass );
         if(tcEntry == null){

@@ -38,6 +38,7 @@ import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.code.gridstart.PegasusExitCode;
+import edu.isi.pegasus.planner.directory.Creator;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
@@ -47,7 +48,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import java.util.List;
-import org.griphyn.vdl.euryale.FileFactory;
 
 
 /**
@@ -149,7 +149,7 @@ public class DefaultImplementation implements Implementation {
      * Handle to the Submit directory factory, that returns the relative
      * submit directory for a job
      */
-    protected FileFactory mSubmitDirFactory;
+    protected Creator mSubmitDirFactory;
     
     /**
      * Intializes the class.
@@ -263,7 +263,7 @@ public class DefaultImplementation implements Implementation {
         
         //PM-833 set the relative submit directory for the transfer
         //job based on the associated file factory
-        newJob.setRelativeSubmitDirectory( this.getRelativeSubmitDir());
+        newJob.setRelativeSubmitDirectory( this.mSubmitDirFactory.getRelativeDir(newJob));
         
         //prepare the stdin
         String stdIn = name + ".in";
@@ -430,21 +430,5 @@ public class DefaultImplementation implements Implementation {
 
     }
 
-
-    /**
-     * Calls out to the file factory to get a directory for a new
-     * job to be created.
-     * 
-     * @return 
-     */
-    protected String getRelativeSubmitDir( ){
-        String dir = null;
-        try {
-            dir = this.mSubmitDirFactory.createRelativeFile( "pegasus" ).getParent();
-        } catch (IOException ex) {
-            throw new RuntimeException( "Exception while determining the relative submit directory", ex );
-        }
-        return dir;
-    }
 
 }

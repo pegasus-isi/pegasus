@@ -2190,6 +2190,17 @@ public class Job extends Data implements GraphNodeContent{
     public void setRelativeSubmitDirectory(String dir) {
         mSubmitDir = dir;
     }
+    
+    /**
+     * Sets the relative submit directory for the job.
+     * The directory is relative to the top level directory where the workflow
+     * files are placed
+     * 
+     * @param dir   the directory
+     */
+    public void setRelativeSubmitDirectory(File dir) {
+        mSubmitDir = dir.getPath();
+    }
 
     /**
      * Returns the relative submit directory for the job.

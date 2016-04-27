@@ -31,8 +31,8 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
+import edu.isi.pegasus.planner.directory.Creator;
 import java.util.Map;
-import org.griphyn.vdl.euryale.FileFactory;
 
 /**
  * A bag of objects that needs to be passed to various refiners.
@@ -204,7 +204,7 @@ public class PegasusBag
     /**
      * The handle to the file factory for the submit dir.
      */
-    private FileFactory mFileFactory;
+    private Creator mSubmitDirectoryCreator;
     
     /**
      * The default constructor.
@@ -312,8 +312,8 @@ public class PegasusBag
                 break;
                 
             case 12: //File Factory
-                if ( value != null && value instanceof FileFactory )
-                    mFileFactory = (FileFactory) value;
+                if ( value != null && value instanceof Creator )
+                    mSubmitDirectoryCreator = (Creator) value;
                 else
                     valid = false;
                 break;
@@ -403,7 +403,7 @@ public class PegasusBag
                 return this.mPMetrics;
                 
             case 12://FILE Factory
-                return this.mFileFactory;
+                return this.mSubmitDirectoryCreator;
                 
             default:
                 throw new RuntimeException(
@@ -510,8 +510,8 @@ public class PegasusBag
      * 
      * @return file factory
      */
-    public FileFactory getSubmitDirFileFactory(){
-        return ( FileFactory )get(PegasusBag.PEGASUS_SUBMIT_DIR_FACTORY );
+    public Creator getSubmitDirFileFactory(){
+        return ( Creator )get(PegasusBag.PEGASUS_SUBMIT_DIR_FACTORY );
     }
 
 
