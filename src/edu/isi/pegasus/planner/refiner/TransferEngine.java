@@ -185,14 +185,6 @@ public class TransferEngine extends Engine {
      */
     private ReplicaCatalog mWorkflowCache;
 
-
-    /**
-     * The handle to the file factory, that is  used to create the directory
-     * where the job submit files will reside.
-     */
-    private Creator mSubmitDirectoryCreator;
-
-    
     /**
      * Handle to an OutputMapper that tells what
      */
@@ -249,9 +241,9 @@ public class TransferEngine extends Engine {
                            List<Job> deletedLeafJobs){
         super( bag );
 
-        mSubmitDirectoryCreator =  new edu.isi.pegasus.planner.directory.impl.Hashed();
-        mSubmitDirectoryCreator.initialize(bag, new File(mPOptions.getSubmitDirectory()));
-        bag.add(PegasusBag.PEGASUS_SUBMIT_DIR_FACTORY, mSubmitDirectoryCreator );
+        mSubmitDirFactory =  new edu.isi.pegasus.planner.directory.impl.Hashed();
+        mSubmitDirFactory.initialize(bag, new File(mPOptions.getSubmitDirectory()));
+        bag.add(PegasusBag.PEGASUS_SUBMIT_DIR_FACTORY, mSubmitDirFactory );
         
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mSRMServiceURLToMountPointMap = constructSiteToSRMServerMap( mProps );
@@ -1990,7 +1982,7 @@ public class TransferEngine extends Engine {
         
         String relative = null;
         try {
-            File f =  mSubmitDirectoryCreator.getRelativeDir(job);
+            File f =  mSubmitDirFactory.getRelativeDir(job);
             mLogger.log("Directory for job " + job.getID() + " is " + f,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             relative = f.getPath();
