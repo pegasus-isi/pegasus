@@ -61,13 +61,13 @@ import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.directory.Creator;
 
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
+import edu.isi.pegasus.planner.directory.CreatorFactory;
 
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.transfer.mapper.OutputMapper;
 import edu.isi.pegasus.planner.transfer.mapper.OutputMapperFactory;
 import edu.isi.pegasus.planner.transfer.mapper.impl.Hashed;
 
-import org.griphyn.vdl.euryale.FileFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -241,8 +241,7 @@ public class TransferEngine extends Engine {
                            List<Job> deletedLeafJobs){
         super( bag );
 
-        mSubmitDirFactory =  new edu.isi.pegasus.planner.directory.impl.Hashed();
-        mSubmitDirFactory.initialize(bag, new File(mPOptions.getSubmitDirectory()));
+        mSubmitDirFactory =  CreatorFactory.loadInstance( bag,  new File(mPOptions.getSubmitDirectory()));
         bag.add(PegasusBag.PEGASUS_SUBMIT_DIR_FACTORY, mSubmitDirFactory );
         
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
