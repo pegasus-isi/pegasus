@@ -330,7 +330,26 @@ public class NoGridStart implements GridStart {
 */
         // handle stdin
         if (job.stdIn.length() > 0) {
-            construct(job,"input",submitDir + job.stdIn);
+            //PM-833 for planner added auxillary jobs pick the .in file from
+            //right submit directory
+            if (job.logicalName.equals(
+                edu.isi.pegasus.planner.transfer.implementation.Transfer.TRANSFORMATION_NAME)
+                || job.logicalName.equals(edu.isi.pegasus.planner.refiner.cleanup.Cleanup.TRANSFORMATION_NAME )
+                || job.logicalName.equals( edu.isi.pegasus.planner.refiner.createdir.DefaultImplementation.TRANSFORMATION_NAME )
+                || job.logicalName.equals(edu.isi.pegasus.planner.cluster.aggregator.SeqExec.
+                                         COLLAPSE_LOGICAL_NAME)
+                || job.logicalName.equals(edu.isi.pegasus.planner.cluster.aggregator.MPIExec.
+                                         COLLAPSE_LOGICAL_NAME)
+                                         ) {
+
+
+                //condor needs to pick up the constituentJob stdin and
+                //transfer it to the remote end
+                construct( job, "input" , job.getFileFullPath( submitDir, ".in") );
+            }
+            else{
+                construct(job,"input",submitDir + job.stdIn);
+            }
             if (isGlobusJob) {
                 //this needs to be true as you want the stdin
                 //to be transfered to the remote execution
