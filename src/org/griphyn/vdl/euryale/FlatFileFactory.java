@@ -118,7 +118,7 @@ public class FlatFileFactory implements FileFactory {
     public File createRelativeFile(String basename)
             throws IOException{
         m_count++;
-        return new File( basename);
+        return new File( ".", basename);
     }
 
     /**
