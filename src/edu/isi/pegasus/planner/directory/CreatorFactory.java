@@ -44,7 +44,7 @@ public class CreatorFactory {
      * The name of the class in the DEFAULT package, that corresponds to the
      * default site selector.
      */
-    public static final String DEFAULT_CREATOR = "Flat";
+    public static final String DEFAULT_CREATOR = "Hashed";
 
 
 
