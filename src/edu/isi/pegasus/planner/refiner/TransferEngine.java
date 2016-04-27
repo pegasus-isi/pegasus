@@ -290,39 +290,6 @@ public class TransferEngine extends Engine {
                     "]",LogManager.CONFIG_MESSAGE_LEVEL);
     }
     
-    /*
-    public FileFactory getSubmitDirectoryCreator(){
-         // create hashed, and levelled directories
-        try {
-            //we are interested in relative paths
-            HashedFileFactory submitDirectoryCreator = new HashedFileFactory( mPOptions.getSubmitDirectory() );
-
-            //each job creates at creates the following files
-            //  - submit file
-            //  - out file
-            //  - error file
-            //  - prescript log
-            //  - the partition directory
-            submitDirectoryCreator.setMultiplicator(5);
-
-            //we want a minimum of one level always for clarity
-            submitDirectoryCreator.setLevels(2);
-
-            //for the time being and test set files per directory to 50
-            //mSubmitDirectoryCreator.setFilesPerDirectory( 10 );
-            //mSubmitDirectoryCreator.setLevelsFromTotals( 100 );
-            
-
-            return submitDirectoryCreator;
-
-            
-
-        }
-        catch ( IOException e ) {
-            throw new RuntimeException(  e );
-        }
-    }
-    */
     
     /**
      * Determines a particular created transfer pair has to be binned
@@ -2032,19 +1999,6 @@ public class TransferEngine extends Engine {
         }
         return relative;
         
-        /*
-        String relative = null;
-        try {
-            File f = mSubmitDirectoryCreator.createRelativeFile("pegasus");
-            //To-Do we have to determin the relative path from the base directory
-            relative = f.getParent();
-            mLogger.log("Directory for job " + job.getID() + " is " + relative,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-        } catch (IOException ex) {
-            throw new RuntimeException( "Error while determining relative submit dir for job " + job.getID() , ex);
-        }
-        return relative;
-        */
     }
 
     
