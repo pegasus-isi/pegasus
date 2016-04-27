@@ -360,7 +360,10 @@ public class SUBDAXGenerator{
             //in case of innerRelative being ./ . We dont want inner relative
             //to compute to .// Instead we want it to compute to ././
             //innerRelative += File.separator + submit  ;
-            innerRelative =  new File( innerRelative, submit ).getPath();
+            //PM-833 insert factory based submit directory for dax job in between 
+            //innerRelative and submit
+            File dir = new File( innerRelative, job.getRelativeSubmitDirectory() );
+            innerRelative =  new File( dir, submit ).getPath();
             
             //options.setSubmitDirectory( mPegasusPlanOptions.getSubmitDirectory(), submit );
             options.setSubmitDirectory( innerBase, innerRelative );
@@ -453,6 +456,10 @@ public class SUBDAXGenerator{
                 options.setRelativeDirectory( options.getRelativeSubmitDirectory() );
             }
             else{
+                //PM-833 insert factory based submit directory for dax job in between 
+                //innerRelative and submit
+                baseRelativeExecDir = new File( baseRelativeExecDir, job.getRelativeSubmitDirectory() ).getPath();
+                
                 //the else look should not be there.
                 //construct path from base relative exec dir
                 File innerRelativeExecDir = null;
@@ -511,9 +518,7 @@ public class SUBDAXGenerator{
         //refer to the parent workflow's properties file only instead.
         //Karan June 1, 2011
         String propertiesFile = this.mProps.getPropertiesInSubmitDirectory();
-
-
-
+        
         //check if a encompassing DAX to which the dax job belongs has a
         //replica store associated.
         if( !this.mDAG.getReplicaStore().isEmpty() ){
@@ -532,6 +537,7 @@ public class SUBDAXGenerator{
         //the log file for the prescript should be in the
         //submit directory of the outer level workflow
         StringBuffer log = new StringBuffer();
+
         log.append( mPegasusPlanOptions.getSubmitDirectory() ).append( File.separator ).
             append( job.getName() ).append( ".pre.log" );
         Job prescript = constructPegasusPlanPrescript( job, 
@@ -568,11 +574,17 @@ public class SUBDAXGenerator{
             //submit directory is the submit directory of the DAX that is currently
             //being planned. The one that contains the DAX job.
             File submitDirectory = new File( mPegasusPlanOptions.getSubmitDirectory() );
+            //PM-833 assign the relative job submit directory as assigned
+            //by the file factory
+            submitDirectory = new File( submitDirectory, job.getRelativeSubmitDirectory() );
+            
             Job dagJob = constructDAGJob( job,
                                           submitDirectory,
                                           new File( options.getSubmitDirectory()),
                                           basenamePrefix.toString()
                                         );
+            //PM-833 make sure the condor submit file for dagman job is in the right directory
+            dagJob.setRelativeSubmitDirectory( job.getRelativeSubmitDirectory());
             
             //PM-846 add a +pegasus_execution_sites classad
             insertExecutionSitesClassAd( job, options.getExecutionSites() );
@@ -585,8 +597,9 @@ public class SUBDAXGenerator{
             
             //set the prescript to the dag job
             //the executable is the wrapper now PM-667
-//            dagJob.setPreScript( job.getPreScriptPath(), job.getPreScriptArguments() );
-            dagJob.setPreScript( wrapper.getAbsolutePath(), job.getPreScriptArguments() );
+            //PM-1088 set the relative path to the base submit directory
+            File relativeWrapper = new File(dagJob.getRelativeSubmitDirectory(), wrapper.getName() );
+            dagJob.setPreScript( relativeWrapper.getPath(), job.getPreScriptArguments() );
             
             return dagJob;
         }
@@ -973,10 +986,20 @@ public class SUBDAXGenerator{
      * @return the path to the cache file
      */
     protected String getCacheFile( PlannerOptions options, String label , String index ){
+        String absolute = new File( options.getSubmitDirectory(),
+                           this.getWorkflowFileName(options, label, index, CACHE_FILE_SUFFIX) ).getAbsolutePath();
         
-        return new File( options.getSubmitDirectory(),
-                         this.getWorkflowFileName(options, label, index, CACHE_FILE_SUFFIX) ).getAbsolutePath();
+        //PM-1088 move to relative submit directory 
+        //has to be relative to the submit directory of root/parent workflow ( the workflow on which pegasus-plan is right now)
+        //for example 
+        //Absolute :                 /work/pegasus-features/PM-833/local-hierarchy/dags/vahi/pegasus/local-hierarchy/run0033/local-hierarchy-0.cache
+        //Root Base submit directory /work/pegasus-features/PM-833/local-hierarchy/dags/vahi/pegasus/local-hierarchy/run0033
+        //Relative                   ./local-hierarchy-0.cache
+        //String rootSubmitDir = this.mPegasusPlanOptions.getSubmitDirectory();
+        //String relative = "."  + absolute.substring( absolute.indexOf( rootSubmitDir ) + rootSubmitDir.length() );
         
+        //PM-1088 have to return absolute as prescript is executed in scratch dir not submit dir
+        return absolute;
     }
     
     /**

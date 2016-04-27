@@ -101,6 +101,12 @@ public class CondorGenerator extends Abstract {
      * The default category for the sub dax jobs.
      */
     public static final String DEFAULT_SUBDAG_CATEGORY_KEY = "subwf";
+    
+    /**
+     * The default category for the sub dax jobs.
+     */
+    public static final String SUBMIT_FILE_SUFFIX = ".sub";
+    
 
     /**
      * The nice separator, define once, use often.
@@ -521,7 +527,7 @@ public class CondorGenerator extends Abstract {
             
             
             mLogger.log("Written Submit file : " +
-                        getFileBaseName(job), LogManager.DEBUG_MESSAGE_LEVEL);
+                        job.getFileFullPath( this.mSubmitFileDir, SUBMIT_FILE_SUFFIX), LogManager.DEBUG_MESSAGE_LEVEL);
         }
         mLogger.logEventCompletion( LogManager.DEBUG_MESSAGE_LEVEL );
 
@@ -598,7 +604,7 @@ public class CondorGenerator extends Abstract {
         String dagname  = dag.getLabel();
         String dagindex = dag.getIndex();
         String dagcount = dag.getCount();
-        String subfilename = this.getFileBaseName( job );
+        String subfilename = job.getFileBaseName( SUBMIT_FILE_SUFFIX );
         String envStr = null;
 
         //initialize GridStart if required.
@@ -649,7 +655,7 @@ public class CondorGenerator extends Abstract {
         // intialize the print stream to the file
         PrintWriter writer = null;
         try{
-            writer = getWriter(job);
+            writer = getWriter(job , SUBMIT_FILE_SUFFIX);
         }catch(IOException ioe ){
             throw new CodeGeneratorException( "IOException while writing submit file for job " +
                                               job.getName(), ioe);
@@ -1945,8 +1951,10 @@ public class CondorGenerator extends Abstract {
         StringBuffer rslString = new StringBuffer();
         String jobName = job.jobName;
         String script = null;
+        
+        //PM-1088 move to relative paths in the .dag file
         job.dagmanVariables.checkKeyInNS(Dagman.JOB_KEY,
-                                         getFileBaseName(job));
+                                         job.getFileRelativePath(SUBMIT_FILE_SUFFIX));
         
         
         //remove the prescript arguments key

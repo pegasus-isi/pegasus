@@ -20,11 +20,9 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.code.GridStart;
-import edu.isi.pegasus.planner.code.GridStartFactory;
 
 import edu.isi.pegasus.planner.code.POSTScript;
 
@@ -35,7 +33,6 @@ import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
-import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
 import edu.isi.pegasus.planner.transfer.SLS;
 
 
@@ -333,7 +330,26 @@ public class NoGridStart implements GridStart {
 */
         // handle stdin
         if (job.stdIn.length() > 0) {
-            construct(job,"input",submitDir + job.stdIn);
+            //PM-833 for planner added auxillary jobs pick the .in file from
+            //right submit directory
+            if (job.logicalName.equals(
+                edu.isi.pegasus.planner.transfer.implementation.Transfer.TRANSFORMATION_NAME)
+                || job.logicalName.equals(edu.isi.pegasus.planner.refiner.cleanup.Cleanup.TRANSFORMATION_NAME )
+                || job.logicalName.equals( edu.isi.pegasus.planner.refiner.createdir.DefaultImplementation.TRANSFORMATION_NAME )
+                || job.logicalName.equals(edu.isi.pegasus.planner.cluster.aggregator.SeqExec.
+                                         COLLAPSE_LOGICAL_NAME)
+                || job.logicalName.equals(edu.isi.pegasus.planner.cluster.aggregator.MPIExec.
+                                         COLLAPSE_LOGICAL_NAME)
+                                         ) {
+
+
+                //condor needs to pick up the constituentJob stdin and
+                //transfer it to the remote end
+                construct( job, "input" , job.getFileFullPath( submitDir, ".in") );
+            }
+            else{
+                construct(job,"input",submitDir + job.stdIn);
+            }
             if (isGlobusJob) {
                 //this needs to be true as you want the stdin
                 //to be transfered to the remote execution
@@ -353,7 +369,7 @@ public class NoGridStart implements GridStart {
             }
         } else {
             // transfer output back to submit host, if unused
-            construct(job,"output",submitDir + job.jobName + ".out");
+            construct(job,"output", job.getFileFullPath( submitDir, ".out") );
             if (isGlobusJob) {
                 construct(job,"transfer_output","true");
             }
@@ -367,7 +383,7 @@ public class NoGridStart implements GridStart {
             }
         } else {
             // transfer error back to submit host, if unused
-            construct(job,"error",submitDir + job.jobName + ".err");
+            construct(job,"error", job.getFileFullPath( submitDir, ".err"));
             if (isGlobusJob) {
                 construct(job,"transfer_error","true");
             }
@@ -384,13 +400,15 @@ public class NoGridStart implements GridStart {
             //generate the list of filenames file for the input and output files.
             if (! (job instanceof TransferJob)) {
                 generateListofFilenamesFile( job.getInputFiles(),
-                                             job.getID() + ".in.lof");
+                                             job,
+                                             ".in.lof");
             }
 
             //for cleanup jobs no generation of stats for output files
             if (job.getJobType() != Job.CLEANUP_JOB) {
                 generateListofFilenamesFile(job.getOutputFiles(),
-                                           job.getID() + ".out.lof");
+                                           job,
+                                           ".out.lof");
 
             }
         }///end of mGenerateLOF
@@ -578,27 +596,18 @@ public class NoGridStart implements GridStart {
         job.condorVariables.construct(key,value);
     }
 
-    /**
-     * Returns a string containing the arguments with which the exitcode
-     * needs to be invoked.
-     *
-     * @return the argument string.
-     */
-/*    private String getExitCodeArguments(){
-        return mProps.getPOSTScriptArguments();
-    }
-*/
+     
     /**
      * Writes out the list of filenames file for the job.
      *
      * @param files  the list of <code>PegasusFile</code> objects contains the files
      *               whose stat information is required.
-     *
-     * @param basename   the basename of the file that is to be created
+     * @param job     the job
+     * @param suffix  the suffix to be applied to files
      *
      * @return the full path to lof file created, else null if no file is written out.
      */
-     public String generateListofFilenamesFile( Set files, String basename ){
+     protected String generateListofFilenamesFile( Set files, Job job, String suffix ){
          //sanity check
          if ( files == null || files.isEmpty() ){
              return null;
@@ -607,26 +616,32 @@ public class NoGridStart implements GridStart {
          String result = null;
          //writing the stdin file
         try {
-            File f = new File( mSubmitDir, basename );
+            File f = new File( job.getFileFullPath(mSubmitDir, suffix) );
             FileWriter input;
             input = new FileWriter( f );
             PegasusFile pf;
             for( Iterator it = files.iterator(); it.hasNext(); ){
                 pf = ( PegasusFile ) it.next();
-                input.write( pf.getLFN() );
-                input.write( "\n" );
+                String lfn= pf.getLFN();
+                StringBuilder sb = new StringBuilder();
+                //to make sure that kickstart generates lfn attribute in statcall
+                //element
+                sb.append( lfn ).append( "=" ).
+                   append( lfn ).append(  "\n" );
+                input.write( sb.toString() );
             }
             //close the stream
             input.close();
             result = f.getAbsolutePath();
 
         } catch ( IOException e) {
-            mLogger.log("Unable to write the lof file " + basename, e ,
+            mLogger.log("Unable to write the lof file for job " + job.getID() + " with suffix " + suffix , e ,
                         LogManager.ERROR_MESSAGE_LEVEL);
         }
 
         return result;
      }
+
 
      /**
       * Adds contents to an output stream.

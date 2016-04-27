@@ -36,6 +36,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.directory.Creator;
+import java.io.File;
+import java.io.IOException;
+import org.griphyn.vdl.euryale.FileFactory;
 
 /**
  * The  class which is a superclass of all the various Engine classes. It
@@ -110,10 +114,14 @@ public abstract  class Engine {
      */
     protected PegasusBag mBag;
 
-
+    /**
+     * Handle to the Submit directory factory, that returns the relative
+     * submit directory for a job
+     */
+    protected Creator mSubmitDirFactory;
     
     /**
-     * A pratically nothing constructor !
+     *
      *
      *
      * @param bag      bag of initialization objects
@@ -125,6 +133,7 @@ public abstract  class Engine {
         mPOptions = bag.getPlannerOptions();
         mTCHandle = bag.getHandleToTransformationCatalog();
         mSiteStore= bag.getHandleToSiteStore();
+        mSubmitDirFactory = bag.getSubmitDirFileFactory();
         loadProperties();
     }
     
@@ -292,4 +301,6 @@ public abstract  class Engine {
               append( site );
         throw new RuntimeException( error.toString() );
     }
+    
+   
 }

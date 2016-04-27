@@ -675,7 +675,10 @@ public abstract class Abstract implements JobAggregator {
         try {
             BufferedWriter writer;
             String name = job.getID() + ".in";
-            stdin = new File(mDirectory, name );
+            
+            //PM-833 the .in file should be in the same directory where all job submit files go
+            File directory = new File( this.mDirectory, job.getRelativeSubmitDirectory() );
+            stdin = new File( directory, name );
             writer = new BufferedWriter(new FileWriter( stdin ) );
 
             //traverse throught the jobs to determine input/output files

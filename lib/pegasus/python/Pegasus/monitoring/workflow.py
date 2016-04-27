@@ -1743,7 +1743,7 @@ class Workflow:
         # If job is a subdag job, skip looking for its kickstart output
         if parse_kickstart:
             # Compose kickstart output file name (base is the filename before rotation)
-            my_job_output_fn_base = os.path.join(self._run_dir, my_job._exec_job_id) + ".out"
+            my_job_output_fn_base = os.path.join(my_job._job_submit_dir, my_job._exec_job_id) + ".out"
 
             # PM-793 if there is a postscript associated then a job has rotated stdout|stderr
             # OR we are in the PMC only mode where there are no postscripts associated, but
@@ -1759,7 +1759,7 @@ class Workflow:
 
             # Check if successful
             if my_parser._open_error == True and not my_job.is_noop_job():
-                logger.info("unable to read output file %s for job %s" % (my_job_output_fn, my_job._exec_job_id))
+                logger.error("unable to read output file %s for job %s" % (my_job_output_fn, my_job._exec_job_id))
 
         # Initialize task id counter
         my_task_id = 1
@@ -2006,8 +2006,11 @@ class Workflow:
                 logger.warning("trying to add job twice: %s, %s" % (jobid, my_job_submit_seq))
                 return
 
+            #PM-833 determine the job submit directory based on the path to the submit file
+            job_submit_dir = self.determine_job_submit_directory(jobid, self._job_info[jobid][0])
+
             # Create new job container
-            my_job = Job(self._wf_uuid, jobid, my_job_submit_seq)
+            my_job = Job(self._wf_uuid, jobid, job_submit_dir, my_job_submit_seq)
             # Set job state
             my_job._job_state = job_state
             my_job._job_state_timestamp = int(self._current_timestamp)
@@ -2247,11 +2250,28 @@ class Workflow:
         elif job_state == "POST_SCRIPT_FAILURE":
             self.db_send_job_brief(my_job, "post.end", -1)
 
+
         if job_state == "SUBMIT_FAILED" or job_state == "GLOBUS_SUBMIT_FAILED" or job_state == "GRID_SUBMIT_FAILED":
             #PM-1061 for any job submission failure case, set it as job stderr, so that
             #it gets populated with the job instance end event
             my_job._stderr_text = utils.quote( "Job submission failed because of HTCondor event %s" %job_state)
             self.db_send_job_end(my_job, -1, True );
+
+    def determine_job_submit_directory(self, job_id, submit_file):
+        """
+        Returns the submit directory where the job.out|.err files reside
+
+        :param job_id:       the job name
+        :param submit_file:  the path to the job submit file
+        :return:
+        """
+        if submit_file is None:
+            logger.error( "Submit file path not specified for job %s" %job_id)
+            return None
+
+        # return the directory component of the path
+        return os.path.dirname( submit_file )
+
 
     def parse_job_sub_file(self, jobid, job_submit_seq):
         """

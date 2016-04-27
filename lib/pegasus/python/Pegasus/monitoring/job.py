@@ -61,7 +61,7 @@ class Job:
     # get their values from the kickstart output file when a job
     # finished
 
-    def __init__(self, wf_uuid, name, job_submit_seq):
+    def __init__(self, wf_uuid, name, job_submit_dir, job_submit_seq):
         """
         This function initializes the job parameters with the
         information available when a job is detected in the
@@ -72,6 +72,7 @@ class Job:
         self._wf_uuid = wf_uuid
         self._exec_job_id = name
         self._job_submit_seq = job_submit_seq
+        self._job_submit_dir = job_submit_dir #the submit directory all the job related files exist
         self._sched_id = None
         self._site_name = None
         self._host_id = None

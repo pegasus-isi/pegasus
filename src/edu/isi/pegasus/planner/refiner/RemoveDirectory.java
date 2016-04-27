@@ -437,6 +437,10 @@ public class RemoveDirectory extends Engine {
             }
         }
         
+        //PM-833 set the relative submit directory for the transfer
+        //job based on the associated file factory
+        newJob.setRelativeSubmitDirectory( this.mSubmitDirFactory.getRelativeDir(newJob));
+        
         //PM-773
         if( additionalChecks ){
             String submitDir = mPOptions.getSubmitDirectory();
@@ -513,8 +517,8 @@ public class RemoveDirectory extends Engine {
         String stdIn = jobName + ".in";
         try{
             BufferedWriter writer;
-            writer = new BufferedWriter( new FileWriter(
-                                        new File( mSubmitDirectory, stdIn ) ));
+            File directory = new File( this.mSubmitDirectory, newJob.getRelativeSubmitDirectory() );
+            writer = new BufferedWriter( new FileWriter( new File( directory, stdIn ) ));
 
             writer.write("[\n");
             

@@ -50,18 +50,24 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.common.util.FactoryException;
 
 import edu.isi.pegasus.common.util.PegasusURL;
+
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.PlannerCache;
+
+import edu.isi.pegasus.planner.directory.Creator;
+
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
+import edu.isi.pegasus.planner.directory.CreatorFactory;
+
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.transfer.mapper.OutputMapper;
 import edu.isi.pegasus.planner.transfer.mapper.OutputMapperFactory;
+import edu.isi.pegasus.planner.transfer.mapper.impl.Hashed;
 
-import org.griphyn.vdl.euryale.FileFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -179,14 +185,6 @@ public class TransferEngine extends Engine {
      */
     private ReplicaCatalog mWorkflowCache;
 
-
-    /**
-     * The handle to the file factory, that is  used to create the top level
-     * directories for each of the partitions.
-     */
-    private FileFactory mFactory;
-
-    
     /**
      * Handle to an OutputMapper that tells what
      */
@@ -227,6 +225,7 @@ public class TransferEngine extends Engine {
      * The output site where files need to be staged to.
      */
     private final String mOutputSite;
+    
 
     /**
      * Overloaded constructor.
@@ -242,6 +241,9 @@ public class TransferEngine extends Engine {
                            List<Job> deletedLeafJobs){
         super( bag );
 
+        mSubmitDirFactory =  CreatorFactory.loadInstance( bag,  new File(mPOptions.getSubmitDirectory()));
+        bag.add(PegasusBag.PEGASUS_SUBMIT_DIR_FACTORY, mSubmitDirFactory );
+        
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mSRMServiceURLToMountPointMap = constructSiteToSRMServerMap( mProps );
         
@@ -267,6 +269,9 @@ public class TransferEngine extends Engine {
 
         mWorkflowCache = this.initializeWorkflowCacheFile( reducedDag );
 
+        
+                
+                
         //log some configuration messages
         mLogger.log("Transfer Refiner loaded is [" + mTXRefiner.getDescription() +
                             "]",LogManager.CONFIG_MESSAGE_LEVEL);
@@ -275,7 +280,8 @@ public class TransferEngine extends Engine {
         mLogger.log("Output Mapper loaded is    [" + mOutputMapper.description() +
                     "]",LogManager.CONFIG_MESSAGE_LEVEL);
     }
-
+    
+    
     /**
      * Determines a particular created transfer pair has to be binned
      * for remote transfer or local.
@@ -437,8 +443,9 @@ public class TransferEngine extends Engine {
             GraphNode node = ( GraphNode )it.next();
             currentJob = (Job)node.getContent();
 
-            //set the staging site for the job
-            //currentJob.setStagingSiteHandle( getStagingSite( currentJob ) );
+            //PM-833 associate a directory with the job
+            //that is used to determine relative submit directory
+            currentJob.setRelativeSubmitDirectory( getRelativeSubmitDirectory( currentJob ) );
 
             //set the node depth as the level
             currentJob.setLevel( node.getDepth() );
@@ -2021,6 +2028,28 @@ public class TransferEngine extends Engine {
                 
             mLogger.log( message.toString() , LogManager.WARNING_MESSAGE_LEVEL );
         }
+    }
+
+    /**
+     * Returns the relative submit directory for the job from the top level
+     * submit directory where workflow files are written.
+     * 
+     * @param job
+     * @return 
+     */
+    protected String getRelativeSubmitDirectory(Job job) {
+        
+        String relative = null;
+        try {
+            File f =  mSubmitDirFactory.getRelativeDir(job);
+            mLogger.log("Directory for job " + job.getID() + " is " + f,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            relative = f.getPath();
+        } catch ( Exception ex) {
+            throw new RuntimeException( "Error while determining relative submit dir for job " + job.getID() , ex);
+        }
+        return relative;
+        
     }
 
     

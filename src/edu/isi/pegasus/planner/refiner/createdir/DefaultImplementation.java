@@ -23,7 +23,6 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.PegasusFile;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.PegasusURL;
@@ -38,8 +37,8 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
-import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.code.gridstart.PegasusExitCode;
+import edu.isi.pegasus.planner.directory.Creator;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
@@ -48,7 +47,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import java.util.Iterator;
 import java.util.List;
 
 
@@ -148,6 +146,12 @@ public class DefaultImplementation implements Implementation {
     protected boolean mUseMkdir;
     
     /**
+     * Handle to the Submit directory factory, that returns the relative
+     * submit directory for a job
+     */
+    protected Creator mSubmitDirFactory;
+    
+    /**
      * Intializes the class.
      *
      * @param bag      bag of initialization objects
@@ -161,6 +165,8 @@ public class DefaultImplementation implements Implementation {
         //in case of staging of executables/worker package
         //we use mkdir directly
         mUseMkdir =  bag.getPegasusProperties().transferWorkerPackage();
+        
+        mSubmitDirFactory = bag.getSubmitDirFileFactory();
     }
     
     /**
@@ -255,11 +261,16 @@ public class DefaultImplementation implements Implementation {
             targetURL = directoryURL;
         }
         
+        //PM-833 set the relative submit directory for the transfer
+        //job based on the associated file factory
+        newJob.setRelativeSubmitDirectory( this.mSubmitDirFactory.getRelativeDir(newJob));
+        
         //prepare the stdin
         String stdIn = name + ".in";
         try{
             BufferedWriter f;
-            f = new BufferedWriter( new FileWriter( new File( mSubmitDirectory, stdIn ) ));
+            File directory = new File( this.mSubmitDirectory, newJob.getRelativeSubmitDirectory() );
+            f = new BufferedWriter( new FileWriter( new File( directory, stdIn ) ));
             
             f.write("[\n");
 
@@ -283,6 +294,7 @@ public class DefaultImplementation implements Implementation {
         }
 
         newJob.setStdIn( stdIn );
+        
 
         newJob.jobName = name;
         newJob.setTransformation( DefaultImplementation.TRANSFORMATION_NAMESPACE,
@@ -417,7 +429,6 @@ public class DefaultImplementation implements Implementation {
         return result;
 
     }
-
 
 
 }

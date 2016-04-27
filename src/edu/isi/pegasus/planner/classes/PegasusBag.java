@@ -31,6 +31,7 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
+import edu.isi.pegasus.planner.directory.Creator;
 import java.util.Map;
 
 /**
@@ -51,7 +52,7 @@ public class PegasusBag
     public static final String PEGASUS_INFO[] = {
         "pegasus-properties", "planner-options", "replica-catalog", "site-catalog",
         "transformation-catalog", "transformation-mapper", "pegasus-logger", "site-store",
-        "planner-cache", "worker-package-map", "uses-pmc" , "planner-metrics"
+        "planner-cache", "worker-package-map", "uses-pmc" , "planner-metrics", "pegasus-submit-dir-creator"
     };
 
 
@@ -130,6 +131,12 @@ public class PegasusBag
      * the planner metrics that are logged during the planning purpose
      */
     public static final Integer PLANNER_METRICS = new Integer( 11  );
+    
+    /**
+     * The handle to the file factory that is used to create the relative
+     * submit directories in the deep hierarchy structure.
+     */
+    public static final Integer PEGASUS_SUBMIT_DIR_FACTORY = new Integer( 12 );
 
     /**
      * The handle to the <code>PegasusProperties</code>.
@@ -193,6 +200,11 @@ public class PegasusBag
      * The planner metrics to use.
      */
     private PlannerMetrics mPMetrics;
+    
+    /**
+     * The handle to the file factory for the submit dir.
+     */
+    private Creator mSubmitDirectoryCreator;
     
     /**
      * The default constructor.
@@ -298,6 +310,14 @@ public class PegasusBag
                 else
                     valid = false;
                 break;
+                
+            case 12: //File Factory
+                if ( value != null && value instanceof Creator )
+                    mSubmitDirectoryCreator = (Creator) value;
+                else
+                    valid = false;
+                break;
+
 
             default:
                 throw new RuntimeException(
@@ -382,6 +402,9 @@ public class PegasusBag
             case 11://PLANNER METRICS
                 return this.mPMetrics;
                 
+            case 12://FILE Factory
+                return this.mSubmitDirectoryCreator;
+                
             default:
                 throw new RuntimeException(
                     " Wrong Pegasus Bag key. Please use one of the predefined Integer key types");
@@ -390,7 +413,7 @@ public class PegasusBag
 
 
     /**
-     * A convenice method to get PlannerOptions
+     * A convenience method to get PlannerOptions
      *
      * @return  the handle to options passed to the planner.
      */
@@ -400,7 +423,7 @@ public class PegasusBag
 
 
     /**
-     * A convenice method to get PegasusProperties
+     * A convenience method to get PegasusProperties
      *
      * @return  the handle to the properties.
      */
@@ -409,7 +432,7 @@ public class PegasusBag
     }
 
     /**
-     * A convenice method to get Logger/
+     * A convenience method to get Logger/
      *
      * @return  the handle to the logger.
      */
@@ -418,7 +441,7 @@ public class PegasusBag
     }
 
     /**
-     * A convenice method to get the handle to the site catalog.
+     * A convenience method to get the handle to the site catalog.
      *
      * @return  the handle to site catalog
      */
@@ -428,7 +451,7 @@ public class PegasusBag
     }*/
 
     /**
-     * A convenice method to get the handle to the site store
+     * A convenience method to get the handle to the site store
      *
      * @return  the handle to site store
      */
@@ -437,7 +460,7 @@ public class PegasusBag
     }
     
     /**
-     * A convenice method to get the handle to the planner cache
+     * A convenience method to get the handle to the planner cache
      *
      * @return  the handle to transient replica catalog
      */
@@ -446,7 +469,7 @@ public class PegasusBag
     }
     
     /**
-     * A convenice method to get the handle to the transformation catalog.
+     * A convenience method to get the handle to the transformation catalog.
      *
      * @return  the handle to transformation catalog
      */
@@ -456,7 +479,7 @@ public class PegasusBag
 
 
     /**
-     * A convenice method to get the handle to the transformation mapper.
+     * A convenience method to get the handle to the transformation mapper.
      *
      * @return  the handle to transformation catalog
      */
@@ -465,7 +488,7 @@ public class PegasusBag
     }
 
     /**
-     * A convenice method to get the worker package
+     * A convenience method to get the worker package
      *
      * @return  the handle to worker package map
      */
@@ -474,13 +497,23 @@ public class PegasusBag
     }
     
     /**
-     * A convenice method to return whether the planner used PMC or not
+     * A convenience method to return whether the planner used PMC or not
      * 
      * @return boolean indicating whether PMC was used or not
      */
     public boolean plannerUsesPMC(){
         return ( Boolean )get( PegasusBag.USES_PMC );
     }
+    
+    /**
+     * A convenience method to return the File Factory used
+     * 
+     * @return file factory
+     */
+    public Creator getSubmitDirFileFactory(){
+        return ( Creator )get(PegasusBag.PEGASUS_SUBMIT_DIR_FACTORY );
+    }
+
 
 
     /**
