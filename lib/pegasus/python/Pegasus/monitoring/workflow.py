@@ -2260,7 +2260,11 @@ class Workflow:
         :return:
         """
         if submit_file is None:
-            logger.error( "Submit file path not specified for job %s" %job_id)
+            #PM-833 only for pmc only case rely on the workflow dag file
+            if self._is_pmc_dag:
+                return self._run_dir
+            else:
+                logger.error( "Submit file path not specified for job %s" %job_id)
             return None
 
         # return the directory component of the path
