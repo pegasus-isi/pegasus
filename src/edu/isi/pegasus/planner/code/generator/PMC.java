@@ -160,7 +160,9 @@ public class PMC extends Abstract {
                 }
                 else{
                     //prepend the submit dirctory
-                    kickstartPreArgs.append( mSubmitFileDir ).append( File.separator).append( stdin );
+                    //PM-833 figure out the job submit directory
+                    String jobSubmitDirectory = new File( job.getFileFullPath( mSubmitFileDir, ".in" )).getParent();
+                    kickstartPreArgs.append( jobSubmitDirectory ).append( File.separator).append( stdin );
                 }
                 kickstartPreArgs.append(' ');
                 //reset stdin as we don't want
