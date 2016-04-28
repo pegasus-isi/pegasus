@@ -227,9 +227,33 @@ public class AggregatedJob extends Job implements Graph{
      * @return Iterator
      */
     public int numberOfConsitutentJobs(){
-//        return mConstituentJobs.size();
         return this.size();
     }
+    
+    /**
+     * Sets the relative submit directory for the job. The directory is relative
+     * to the top level directory where the workflow files are placed. It traverses 
+     * through the internal node list, to ensure constituent jobs that are clustered 
+     * jobs themselves are assigned the relative submit directory correctly.
+     * 
+     * @param dir   the directory
+     */
+    @Override
+    public void setRelativeSubmitDirectory(String dir) {
+       super.setRelativeSubmitDirectory( dir );
+       //PM-833 traverse through the internal list
+       for (Iterator it = this.nodeIterator();   it.hasNext(); ) {
+            GraphNode node = ( GraphNode )it.next();
+            Job constituentJob = (Job) node.getContent();
+            if( constituentJob instanceof AggregatedJob ){
+                //PM-833 we need to make sure clustered job part of larger
+                //cluster also has it set
+                ((AggregatedJob)constituentJob).setRelativeSubmitDirectory(dir);
+            }
+       }
+       
+    }
+    
     /**
      * Returns a textual description of the object.
      *
