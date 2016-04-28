@@ -128,7 +128,7 @@ cd $WORK_DIR
 
 # retrive all the src url's from the stage-in files
 set +e
-grep  -A 1 src stage_in*in | grep "[.*][://]" | sed s/stage_in.*in-// | grep -v "file://" 
+grep  -A 1 src_urls `find . -name 'stage_in*.in'` | grep site_label | grep -v "file://"
 EC=$?
 set -e
 
@@ -141,3 +141,4 @@ fi
 # now we are good to submit
 echo "Submitting the workflow for execution"
 pegasus-run $WORK_DIR
+
