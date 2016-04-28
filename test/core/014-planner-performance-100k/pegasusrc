@@ -1,0 +1,13 @@
+pegasus.catalog.site=XML3
+pegasus.catalog.site.file=sites.xml
+
+pegasus.dir.useTimestamp=true
+pegasus.dir.storage.deep=false
+
+pegasus.condor.logs.symlink = false
+
+pegasus.data.configuration = condorio
+
+#log memory usage at the end of	the planning process
+pegasus.log.memory.usage = true
+
