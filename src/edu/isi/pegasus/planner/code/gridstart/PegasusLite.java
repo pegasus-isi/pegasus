@@ -933,8 +933,11 @@ public class PegasusLite implements GridStart {
                 //file in the shell wrapper itself
                 sb.append( job.getRemoteExecutable() ).append( " " ).append( job.getArguments() );
                 sb.append( " << EOF" ).append( '\n' );
-
-                sb.append( slurpInFile( mSubmitDir, job.getStdIn() ) );
+                
+                //PM-833 figure out the job submit directory
+                String jobSubmitDirectory = job.getFileFullPath( mSubmitDir, ".in" );
+                
+                sb.append( slurpInFile( jobSubmitDirectory, job.getStdIn() ) );
                 sb.append( "EOF" ).append( '\n' );
 
                 //rest the jobs stdin
