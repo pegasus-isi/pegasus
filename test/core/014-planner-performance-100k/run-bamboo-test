@@ -1,0 +1,89 @@
+#!/bin/bash
+
+#######################################################################
+# settings
+
+# Max number of seconds allowed for the planner to plan the
+# dax - if these limit is exeeded, the test fails
+MAX_SECONDS=1800
+
+# Min number of seconds allowed for the planner to plan the
+# dax - if these limit is exeeded, the test fails. This is used
+# to detect big improvements in the planner which would mean it
+# is time to lower the upper (and lower) limits of this test
+MIN_SECONDS=300
+
+#######################################################################
+
+set -e
+
+TOPDIR=`pwd`
+
+export PYTHONPATH=`pegasus-config --python`
+./100k.py $REMOTE_PEGASUS_HOME > 100k.dax
+
+# create the site catalog
+cat >sites.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
+    <site handle="local" arch="x86_64" os="LINUX" osrelease="deb" osversion="8">
+        <head-fs>
+            <scratch>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/work"/>
+                    <internal-mount-point mount-point="$TOPDIR/work"/>
+                </shared>
+            </scratch>
+            <storage>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/outputs"/>
+                    <internal-mount-point mount-point="$TOPDIR/outputs"/>
+                </shared>
+            </storage>
+        </head-fs>
+    </site>
+    <site  handle="condorpool" arch="x86_64" os="LINUX">
+        <head-fs>
+            <scratch />
+            <storage />
+        </head-fs>
+        <profile namespace="pegasus" key="style" >condor</profile>
+        <profile namespace="condor" key="universe" >vanilla</profile>
+        <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
+    </site>
+</sitecatalog>
+EOF
+
+START_TS=`/bin/date +'%s'`
+
+# plan the workflow
+/usr/bin/time pegasus-plan \
+    --conf pegasusrc \
+    --sites condorpool \
+    --dir submit \
+    --output-site local \
+    --dax 100k.dax \
+    | tee plan.out
+
+
+END_TS=`/bin/date +'%s'`
+DURATION=$(($END_TS - $START_TS))
+echo
+echo "Planner took $DURATION seconds"
+echo "The lower limit was $MIN_SECONDS seconds"
+echo "The upper limit was $MAX_SECONDS seconds"
+echo
+
+if [ $DURATION -gt $MAX_SECONDS ]; then
+    echo "Error: Limit exceeded!"
+    exit 1
+fi
+
+if [ $DURATION -lt $MIN_SECONDS ]; then
+    echo "Error: Planning was faster than lower limit - time to lower limits!"
+    exit 1
+fi
+
+echo "Test passed!"
+exit 0
+
