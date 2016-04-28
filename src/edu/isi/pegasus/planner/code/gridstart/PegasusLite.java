@@ -935,7 +935,7 @@ public class PegasusLite implements GridStart {
                 sb.append( " << EOF" ).append( '\n' );
                 
                 //PM-833 figure out the job submit directory
-                String jobSubmitDirectory = job.getFileFullPath( mSubmitDir, ".in" );
+                String jobSubmitDirectory = new File( job.getFileFullPath( mSubmitDir, ".in" )).getParent();
                 
                 sb.append( slurpInFile( jobSubmitDirectory, job.getStdIn() ) );
                 sb.append( "EOF" ).append( '\n' );
