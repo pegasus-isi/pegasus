@@ -368,7 +368,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
                  	    this.log( element, name, value );                              
                         }
                         else if ( name.equals( "os" ) ){
-                            gw.setOS( SysInfo.OS.valueOf( value ) );
+                            gw.setOS( SysInfo.OS.valueOf( value.toLowerCase() ) );
                             this.log( element, name, value );                              
                         }
                         else if ( name.equals( "osrelease" ) ){
@@ -490,7 +490,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
                  	    this.log( element, name, value );                              
                         }
                         else if ( name.equals( "os") ){
-                            site.setOS( SysInfo.OS.valueOf( value ) );
+                            site.setOS( SysInfo.OS.valueOf( value.toLowerCase() ) );
                             this.log( element, name, value );                              
                         }
                         else if ( name.equals( "handle" ) ){
