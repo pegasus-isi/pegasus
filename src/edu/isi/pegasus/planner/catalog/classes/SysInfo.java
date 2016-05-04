@@ -32,7 +32,7 @@ public class SysInfo implements Cloneable {
      * Enumerates the new OS types supported in Pegasus.
      */
     public enum OS {
-        LINUX, SUNOS, AIX, MACOSX, WINDOWS
+        linux, sunos, aix, macosx, windows
     }
 
     /**
@@ -46,7 +46,7 @@ public class SysInfo implements Cloneable {
     /**
      * The default OS the entry is associated with if none is specified
      */
-    public static final OS DEFAULT_OS = OS.LINUX;
+    public static final OS DEFAULT_OS = OS.linux;
 
     /**
      * The default Architecture the entry is associated with if none is specified

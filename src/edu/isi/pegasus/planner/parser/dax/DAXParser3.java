@@ -1205,7 +1205,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 			tce = new TransformationCatalogEntry(executable.getNamespace(), executable.getName(), executable.getVersion());
 			SysInfo sysinfo = new SysInfo();
 			sysinfo.setArchitecture( SysInfo.Architecture.valueOf( executable.getArchitecture().toString().toLowerCase() ) );
-			sysinfo.setOS( SysInfo.OS.valueOf( executable.getOS().toString().toUpperCase() ) );
+			sysinfo.setOS( SysInfo.OS.valueOf( executable.getOS().toString().toLowerCase() ) );
 			sysinfo.setOSRelease( executable.getOsRelease() );
 			sysinfo.setOSVersion( executable.getOsVersion() );
 			sysinfo.setGlibc( executable.getGlibc() );

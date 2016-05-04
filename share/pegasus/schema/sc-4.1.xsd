@@ -203,10 +203,15 @@
         </xs:annotation>
         <xs:restriction base="xs:NMTOKENS">
             <xs:enumeration value="LINUX"/>
+	    <xs:enumeration value="linux"/>
             <xs:enumeration value="SUNOS"/>
+	    <xs:enumeration value="sunos"/>
             <xs:enumeration value="AIX"/>
+	    <xs:enumeration value="aix"/>
             <xs:enumeration value="MACOSX"/>
+	    <xs:enumeration value="macosx"/>
             <xs:enumeration value="WINDOWS"/>
+	    <xs:enumeration value="windows"/>
         </xs:restriction>
     </xs:simpleType>
     <xs:attributeGroup name="SystemInformationGroup">
