@@ -156,7 +156,7 @@ public class XMLTest {
         
         assertEquals( "osg", entry.getSiteHandle() );
         assertEquals( Architecture.x86, entry.getArchitecture());
-        assertEquals( OS.LINUX, entry.getOS() );
+        assertEquals( OS.linux, entry.getOS() );
         
         Directory directory = entry.getDirectory(Directory.TYPE.local_scratch);
         testDirectory( directory,
@@ -184,7 +184,7 @@ public class XMLTest {
         
         assertEquals( "unl", entry.getSiteHandle() );
         assertEquals( Architecture.x86, entry.getArchitecture());
-        assertEquals( OS.LINUX, entry.getOS() );
+        assertEquals( OS.linux, entry.getOS() );
         
         Directory directory = entry.getDirectory(Directory.TYPE.shared_scratch);
         testDirectory( directory,
@@ -211,7 +211,7 @@ public class XMLTest {
         
         assertEquals( "isi", entry.getSiteHandle() );
         assertEquals( Architecture.x86_64, entry.getArchitecture());
-        assertEquals( OS.LINUX, entry.getOS() );
+        assertEquals( OS.linux, entry.getOS() );
         
         Directory directory = entry.getDirectory(Directory.TYPE.shared_scratch);
         testDirectory( directory,

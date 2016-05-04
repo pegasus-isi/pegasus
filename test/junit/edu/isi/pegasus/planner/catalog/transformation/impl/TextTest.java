@@ -178,7 +178,7 @@ public class TextTest {
         assertEquals("Expected attribute ", "condorpool" ,      entry.getResourceId() );
         assertEquals("Expected attribute ", "/usr/bin/true" ,  entry.getPhysicalTransformation() );
         assertEquals( "Expected attribute ", Architecture.x86_64.toString(), info.getArchitecture().name() );
-        assertEquals( "Expected attribute ", OS.LINUX.toString(), info.getOS().name() );
+        assertEquals( "Expected attribute ", OS.linux.toString(), info.getOS().name() );
         testProfile( entry, Profile.METADATA, "key", "value" );
         testProfile( entry, Profile.METADATA, "appmodel", "myxform.aspen" );
         testProfile( entry, Profile.METADATA, "version", "3.0" );
