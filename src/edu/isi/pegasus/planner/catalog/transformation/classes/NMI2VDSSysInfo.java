@@ -81,10 +81,10 @@ public class NMI2VDSSysInfo {
         if( mNMIOSToVDSOSMap == null ){
             mNMIOSToVDSOSMap = new HashMap<SysInfo.OS,Os>();
             //mNMIOSToVDSOS.put( "rhas_3", Os.LINUX );
-            mNMIOSToVDSOSMap.put( SysInfo.OS.LINUX, Os.LINUX );
-            mNMIOSToVDSOSMap.put( SysInfo.OS.WINDOWS, Os.WINDOWS );
-            mNMIOSToVDSOSMap.put( SysInfo.OS.AIX, Os.AIX );
-            mNMIOSToVDSOSMap.put( SysInfo.OS.SUNOS, Os.SUNOS );
+            mNMIOSToVDSOSMap.put( SysInfo.OS.linux, Os.LINUX );
+            mNMIOSToVDSOSMap.put( SysInfo.OS.windows, Os.WINDOWS );
+            mNMIOSToVDSOSMap.put( SysInfo.OS.aix, Os.AIX );
+            mNMIOSToVDSOSMap.put( SysInfo.OS.sunos, Os.SUNOS );
         }
         return mNMIOSToVDSOSMap;
     }
