@@ -384,6 +384,7 @@ public class TransferEngine extends Engine {
      */
     public void addTransferNodes( ReplicaCatalogBridge rcb, PlannerCache plannerCache ) {
         mRCBridge = rcb;
+        mRCBridge.mSubmitDirFactory = this.mSubmitDirFactory;
         mPlannerCache = plannerCache;
 
         Job currentJob;
