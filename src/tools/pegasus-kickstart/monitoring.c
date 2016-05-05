@@ -609,7 +609,7 @@ int start_monitoring_thread() {
      * libinterpose can handle all the endpoint types first.
      */
     snprintf(envvar, 128, "kickstart://%s:%d", socket_host, socket_port);
-    setenv("KICKSTART_MON_ENDPOINT_URL", envvar, 1);
+    setenv("KICKSTART_MON_URL", envvar, 1);
 
     /* Create a pipe to signal between the main thread and the monitor thread */
     int rc = pipe(signal_pipe);
