@@ -78,7 +78,7 @@ public class SubmitMapperFactory {
 
             //figure out the implementing class
             //that needs to be instantiated.
-            className = properties.getSubmitDirectoryCreator();
+            className = properties.getSubmitDirectoryMapper();
             className = ( className == null || className.trim().length() < 2) ?
                           DEFAULT_CREATOR :
                           className;

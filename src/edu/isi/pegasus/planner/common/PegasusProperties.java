@@ -726,14 +726,14 @@ public class PegasusProperties implements Cloneable {
      * Returns the creator specified by the user to use for creating
      * submit directory for a job
      *
-     * Referred to by the "pegasus.dir.submit" property
+     * Referred to by the "pegasus.dir.submit.mapper" property
      *
      * @return the value specified in the properties file,
      *         else the default suffix.
      *
      */
-    public String getSubmitDirectoryCreator() {
-        return mProps.getProperty( "pegasus.dir.submit" );
+    public String getSubmitDirectoryMapper() {
+        return mProps.getProperty( "pegasus.dir.submit.mapper" );
     }
 
     
