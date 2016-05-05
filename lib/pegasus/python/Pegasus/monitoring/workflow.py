@@ -250,14 +250,15 @@ class Workflow:
         return (self._job_info[jobid][3] is not None )
 
 
-    def parse_in_file(self, jobname, tasks):
+    def parse_in_file(self, job, tasks):
         """
         This function parses the in file for a given job, reading the
         task information and adding to the dictionary of tasks. It
         returns True if parsing was successful, or None, if an error
         was found.
         """
-        in_file = os.path.join(self._run_dir, jobname) + ".in"
+        jobname = job._exec_job_id
+        in_file = os.path.join(job._job_submit_dir, jobname) + ".in"
 
         try:
             IN = open(in_file, "r")
@@ -1824,7 +1825,7 @@ class Workflow:
 
                 if len(my_tasks) > 0:
                     # Now, bring information from the .in file
-                    my_status = self.parse_in_file(my_job._exec_job_id, my_tasks)
+                    my_status = self.parse_in_file(my_job, my_tasks)
                     if my_status is True:
                         # Parsing the in file completed, now generate tasks by task order
                         for i in sorted(my_tasks):
