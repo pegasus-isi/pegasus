@@ -95,8 +95,6 @@ public class Hashed implements SubmitMapper{
         mLogger  = bag.getLogger();
         PlannerOptions options = bag.getPlannerOptions();
         
-        System.out.println( "Mapper properties " + properties );
-        
          // create hashed, and levelled directories
         try {
             //we are interested in relative paths
