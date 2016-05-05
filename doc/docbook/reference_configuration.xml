@@ -2357,6 +2357,44 @@ Scope       :</emphasis> Properties
 
             <row>
               <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.dir.submit.mapper<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.7
+<emphasis role="bold">Type        : </emphasis>Enumeration
+<emphasis role="bold">Values      :</emphasis> Flat|Hashed
+<emphasis role="bold">Default     :</emphasis> Hashed</literallayout></entry>
+
+              <entry>This property modifies determines how the directory for
+              job submit files are mapped on the submit host.<variablelist>
+                  <varlistentry>
+                    <term>Flat</term>
+
+                    <listitem>
+                       By default, Pegasus will place the output files in the storage directory specified in the site catalog for the output site. 
+                    </listitem>
+                  </varlistentry>
+
+                  <varlistentry>
+                    <term>Hashed</term>
+
+                    <listitem>
+                       This mapper results in the creation of a deep directory structure rooted at the submit directory. The base directory is the submit directory as determined from the planner options. By default, the directory structure created is two levels deep. To control behavior of this mapper, users can specify the following properties
+
+                      <screen>
+pegasus.dir.submit.mapper.hashed.levels     the number of directory levels used 
+                                            to accomodate the files. Defaults to 2.
+pegasus.dir.submit.mapper.hashed.multiplier the number of files associated with a job
+                                            in the submit directory. defaults to 5.
+</screen>
+                    </listitem>
+                  </varlistentry>
+                </variablelist></entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
                       role="bold">Property Key: </emphasis></emphasis>pegasus.dir.storage.mapper<emphasis
                     role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
@@ -4600,6 +4638,7 @@ Scope       :</emphasis> Properties
               it's stdout and stderr. This property, can be used to turn of
               the database population.</entry>
             </row>
+
             <row>
               <entry><literallayout><emphasis role="bold"><emphasis
                       role="bold">Property Key: </emphasis></emphasis>pegasus.monitord.arguments<emphasis
@@ -4611,10 +4650,10 @@ Scope       :</emphasis> Properties
 <emphasis role="bold">Default     :</emphasis> N/A</literallayout></entry>
 
               <entry>This property specifies additional command-line arguments
-                  that should be passed to pegasus-monitord at startup. These
-                  additional arguments are appended to the arguments given to
-                  pegasus-monitord.</entry> </row>
-
+              that should be passed to pegasus-monitord at startup. These
+              additional arguments are appended to the arguments given to
+              pegasus-monitord.</entry>
+            </row>
           </tbody>
         </tgroup>
       </table>
