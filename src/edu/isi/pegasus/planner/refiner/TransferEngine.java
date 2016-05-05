@@ -64,9 +64,9 @@ import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.directory.CreatorFactory;
 
 import edu.isi.pegasus.planner.namespace.Dagman;
-import edu.isi.pegasus.planner.transfer.mapper.OutputMapper;
-import edu.isi.pegasus.planner.transfer.mapper.OutputMapperFactory;
-import edu.isi.pegasus.planner.transfer.mapper.impl.Hashed;
+import edu.isi.pegasus.planner.mapper.OutputMapper;
+import edu.isi.pegasus.planner.mapper.OutputMapperFactory;
+import edu.isi.pegasus.planner.mapper.output.Hashed;
 
 
 import java.io.File;

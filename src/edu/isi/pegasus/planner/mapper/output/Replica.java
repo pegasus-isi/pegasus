@@ -13,9 +13,11 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.isi.pegasus.planner.transfer.mapper.impl;
+package edu.isi.pegasus.planner.mapper.output;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
@@ -23,46 +25,70 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 
-import edu.isi.pegasus.planner.transfer.mapper.MapperException;
-import edu.isi.pegasus.planner.transfer.mapper.OutputMapper;
-import java.io.File;
+import edu.isi.pegasus.planner.mapper.MapperException;
+import edu.isi.pegasus.planner.mapper.OutputMapper;
 
 import java.util.LinkedList;
 import java.util.List;
 
+import java.util.Properties;
+
+
 /**
- * A convenience mapper implementation that stages output files to a fixed
- * directory, specified using properties.  The URL set for this needs to be
- * logically consistent with the --output-site option passed to the planner.
+ * This class connects to a Replica Catalog backend to determine where an output
+ * file should be placed on the output site. At present the location on the output
+ * site returned is the first matching entry in the Replica Catalog.
+ * 
+ * By default, if no replica catalog backend is specified, the RC defaults to 
+ * Regex replica catalog backend.
  * 
  * To use this mapper, user needs to set the following properties
  * <pre>
- * pegasus.dir.storage.mapper            Fixed
- * pegasus.dir.storage.mapper.fixed.url  externally accessible URL to the directory 
- *                                       where output files need to be placed.
+ * pegasus.dir.storage.mapper               Replica
+ * pegasus.dir.storage.mapper.replica       <replica-catalog backend to use> 
+ * pegasus.dir.storage.mapper.replica.file  the RC file at the backend to use, \
+ *                                          if using a file based RC
  * </pre>
  * 
  * 
  * @author Karan Vahi
- *
  */
-public class Fixed implements OutputMapper {
+public class Replica implements OutputMapper {
 
     /**
-     * The prefix for the property subset for this mapper implementation
+     * The prefix for the property subset for connecting to the individual
+     *  catalogs.
      */
-    public static final String PROPERTY_PREFIX = "pegasus.dir.storage.mapper.fixed";
+    public static final String PROPERTY_PREFIX = "pegasus.dir.storage.mapper.replica";
+    
     
     /**
      * Short description.
      */
-    private static final String DESCRIPTION = "Fixed Directory mapper";
-    private static final String SHORT_NAME = "Fixed";
+    private static final String DESCRIPTION = "Replica Catalog Mapper";
+    
+    /**
+     * The name of the key that disables writing back to the cache file.
+     * Designates a static file. i.e. read only
+     */
+    public static final String READ_ONLY_KEY = "read.only";
+    
+    
+    /**
+     * The short name for this backend.
+     */
+    private static final String SHORT_NAME = "Replica";
+
+    /**
+     * The default replica catalog backend.
+     */
+    private String DEFAULT_REPLICA_BACKEND = "Regex";
     
     /**
      * The handle to the logger.
      */
     protected LogManager mLogger;
+    
     
     /**
      * Handle to the Site Catalog contents.
@@ -74,16 +100,13 @@ public class Fixed implements OutputMapper {
      */
     protected String mOutputSite;
     
-    /**
-     * Externally accessible URL
-     */
-    private String mDirectoryURL;
     
+    protected ReplicaCatalog mRCCatalog;
     
     /**
      * The default constructor.
      */
-    public Fixed(){
+    public Replica(){
         
     }
     
@@ -105,23 +128,34 @@ public class Fixed implements OutputMapper {
 
         if (!stageOut ){
             //no initialization and return
-            mLogger.log( "No initialization of Fixed Directory Mapper",
+            mLogger.log( "No initialization of StageOut Site Directory Factory",
                          LogManager.DEBUG_MESSAGE_LEVEL );
             return;
         }
         
-        String property = Fixed.PROPERTY_PREFIX + ".url";
-        mDirectoryURL = bag.getPegasusProperties().getProperty( property );
-        if( mDirectoryURL == null ){
-            throw new MapperException( "Unspecified property " + property );
-        }
+        Properties props = bag.getPegasusProperties().matchingSubset( PROPERTY_PREFIX, false );
+        String catalogImplementor = bag.getPegasusProperties().getProperty( Replica.PROPERTY_PREFIX );
        
+        //we only are reading not inserting any entries
+        props.setProperty( Replica.READ_ONLY_KEY, "true" );
+        
+        catalogImplementor = ( catalogImplementor == null ) ?
+                DEFAULT_REPLICA_BACKEND:
+                catalogImplementor;
+        try {
+            mRCCatalog = ReplicaFactory.loadInstance( catalogImplementor, props );
+        }
+        catch( Exception e ){
+            //log the connection error
+            throw new MapperException( "Unable to connect to replica catalog backend for output mapper " + catalogImplementor , e);
+        }
 
     }
     
     /**
      * Maps a LFN to a location on the filsystem of a site and returns a single
-     * externally accessible URL corresponding to that location. 
+     * externally accessible URL corresponding to that location. It queries the
+     * underlying Replica Catalog and returns the first matching PFN.
      * 
      * @param lfn          the lfn
      * @param site         the output site
@@ -139,7 +173,8 @@ public class Fixed implements OutputMapper {
     
     /**
      * Maps a LFN to a location on the filsystem of a site and returns a single
-     * externally accessible URL corresponding to that location. 
+     * externally accessible URL corresponding to that location. It queries the
+     * underlying Replica Catalog and returns the first matching PFN.
      * 
      * @param lfn          the lfn
      * @param site         the output site
@@ -152,13 +187,19 @@ public class Fixed implements OutputMapper {
      * @throws MapperException if unable to construct URL for any reason
      */
     public String map( String lfn, String site, FileServer.OPERATION operation, boolean existing ) throws MapperException{
-        StringBuilder url = new StringBuilder();
-        url.append( this.mDirectoryURL ).append( File.separator ).append( lfn );
-        return url.toString();
+        
+        //we just return the first matching URL
+        String url = mRCCatalog.lookup(lfn, site);
+        
+        if( url == null ){
+            throw new MapperException( this.getErrorMessagePrefix() + "Unable to retrive location from Mapper Replica Backend for lfn " + lfn );
+        }
+        
+        return url;
     }
     
     /**
-     * Maps a LFN to a location on the filesystem of a site and returns all the possible
+     * Maps a LFN to a location on the filsystem of a site and returns all the possible
      * equivalent externally accessible URL corresponding to that location. In case
      * of the replica backed only one URL is returned and that is the first 
      * matching PFN for the output site.
@@ -194,7 +235,7 @@ public class Fixed implements OutputMapper {
     }
 
     private String getShortName() {
-        return Fixed.SHORT_NAME;
+        return Replica.SHORT_NAME;
     }
     
     /**

@@ -34,7 +34,7 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Pegasus;
-import edu.isi.pegasus.planner.transfer.mapper.OutputMapperFactory;
+import edu.isi.pegasus.planner.mapper.OutputMapperFactory;
 
 /**
  * The site store contains the collection of sites backed by a HashMap.

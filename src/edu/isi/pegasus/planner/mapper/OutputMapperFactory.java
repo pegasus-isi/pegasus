@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package edu.isi.pegasus.planner.transfer.mapper;
+package edu.isi.pegasus.planner.mapper;
 
 
 import edu.isi.pegasus.planner.classes.ADag;
@@ -39,7 +39,7 @@ public class OutputMapperFactory {
      * loads.
      */
     public static final String DEFAULT_PACKAGE_NAME =
-        "edu.isi.pegasus.planner.transfer.mapper.impl";
+        "edu.isi.pegasus.planner.mapper.output";
     
     
     /**
