@@ -28,7 +28,7 @@ import java.util.List;
  *
  * @author vahi
  */
-public interface OutputMapper {
+public interface OutputMapper extends Mapper{
    
     /**
      * The version of the API of the Output Mapper
@@ -94,12 +94,7 @@ public interface OutputMapper {
      */
     public List<String> mapAll( String lfn, String site, FileServer.OPERATION operation) throws MapperException;
 
-    /**
-     * Returns a short description of the mapper.
-     * 
-     * @return 
-     */
-    public String description();
+   
     
     
 }

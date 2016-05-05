@@ -24,7 +24,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 
-import org.griphyn.vdl.euryale.FileFactory;
 import org.griphyn.vdl.euryale.HashedFileFactory;
 
 /**
@@ -51,6 +50,11 @@ public class Hashed implements SubmitMapper{
     public static final int DEFAULT_MULTIPLICATOR_FACTOR = 5;
     
     /**
+     * Short description.
+     */
+    private static final String DESCRIPTION = "Hashed Directory Mapper";
+    
+    /**
      * The property key that indicates the  number of levels to use
      */
     public static final String LEVELS_PROPERTY_KEY = "hashed.levels";
@@ -73,7 +77,7 @@ public class Hashed implements SubmitMapper{
     /**
      * The File Factory to use
      */
-    private FileFactory mFactory;
+    private HashedFileFactory mFactory;
     
     /**
      * Default constructor.
@@ -124,9 +128,7 @@ public class Hashed implements SubmitMapper{
             //for the time being and test set files per directory to 50
             //mSubmitDirectoryCreator.setFilesPerDirectory( 10 );
             //mSubmitDirectoryCreator.setLevelsFromTotals( 100 );
-            mLogger.log( "[Hashed Submit Mapper] Configured with multiplier " + multiplicator + " and levels as " + levels,
-                         LogManager.CONFIG_MESSAGE_LEVEL );
-         
+            
             mFactory = creator;
         }
         catch ( IOException e ) {
@@ -154,4 +156,16 @@ public class Hashed implements SubmitMapper{
         return f.getParentFile();
     }
     
+    /**
+     * Returns a short description of the mapper.
+     * 
+     * @return 
+     */
+    public String description(){
+        StringBuilder sb = new StringBuilder();
+        sb.append(  Hashed.DESCRIPTION ).
+           append( " with multiplier as " ).append( this.mFactory.getMultiplicator() ).
+           append( " and levels " ).append( this.mFactory.getLevels() );
+        return sb.toString();
+    }
 }

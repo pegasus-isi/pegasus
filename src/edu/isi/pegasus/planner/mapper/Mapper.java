@@ -23,4 +23,11 @@ package edu.isi.pegasus.planner.mapper;
  */
 public interface Mapper {
     
+    /**
+     * Returns a short description of the mapper.
+     * 
+     * @return 
+     */
+    public String description();
+    
 }

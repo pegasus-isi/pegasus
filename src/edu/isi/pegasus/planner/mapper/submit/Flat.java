@@ -35,6 +35,11 @@ import org.griphyn.vdl.euryale.VirtualFlatFileFactory;
 public class Flat implements SubmitMapper{
     
     /**
+     * Short description.
+     */
+    private static final String DESCRIPTION = "Flat Submit Directory Mapper";
+    
+    /**
      * The root of the directory tree under which other directories are created
      */
     private File mBaseDir;
@@ -93,6 +98,15 @@ public class Flat implements SubmitMapper{
             throw new RuntimeException( "Error while determining relative submit dir for job " + job.getID() , ex);
         }
         return f.getParentFile();
+    }
+    
+    /**
+     * Returns a short description of the mapper.
+     * 
+     * @return 
+     */
+    public String description(){
+        return  Flat.DESCRIPTION;
     }
     
 }
