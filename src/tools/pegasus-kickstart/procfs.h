@@ -37,6 +37,8 @@ typedef struct _ProcStats {
     long long PAPI_L2_TCM; /* L2 cache misses */
     long long PAPI_L1_TCM; /* L1 cache misses */
 #endif
+    unsigned long long bsend; /* Bytes sent on sockets (libinterpose only) */
+    unsigned long long brecv; /* Bytes recvd on sockets (libinterpose only) */
     char exe[128];
 } ProcStats;
 

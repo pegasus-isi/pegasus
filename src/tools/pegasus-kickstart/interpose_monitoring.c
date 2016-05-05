@@ -8,6 +8,7 @@
 #include <sys/time.h>
 
 #include "error.h"
+#include "interpose.h"
 #include "interpose_monitoring.h"
 #include "procfs.h"
 #include "monitoring.h"
@@ -28,7 +29,6 @@ void *interpose_monitoring_thread_func(void* arg) {
     pthread_mutex_lock(&monitor_mutex);
 
     ProcStats stats;
-    procfs_stats_init(&stats);
 
     while (monitor_running) {
 
@@ -39,9 +39,7 @@ void *interpose_monitoring_thread_func(void* arg) {
         timeout.tv_nsec = now.tv_usec * 1000UL;
         pthread_cond_timedwait(&monitor_cv, &monitor_mutex, &timeout);
 
-        procfs_read_stats(getpid(), &stats);
-
-        /* TODO Get PAPI counters */
+        gather_stats(&stats);
 
         if (send_msg_to_kickstart(mon_host, mon_port, &stats)) {
             printerr("Process %d failed to send message to kickstart\n",

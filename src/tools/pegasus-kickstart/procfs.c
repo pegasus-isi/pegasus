@@ -325,6 +325,8 @@ void procfs_merge_stats_list(ProcStatsList *list, ProcStats *result, int interva
         result->wchar += stats->wchar;
         result->syscr += stats->syscr;
         result->syscw += stats->syscw;
+        result->bsend += stats->bsend;
+        result->brecv += stats->brecv;
         /* Only add memory, threads and processes for processes we have seen recently */
         if (stats->ts >= result->ts - interval) {
             trace("MERGING memory and threads/procs");
@@ -415,6 +417,8 @@ void procfs_list_update(ProcStatsList **list, ProcStats *stats) {
     item->stats.PAPI_L2_TCM = stats->PAPI_L2_TCM;
     item->stats.PAPI_L1_TCM = stats->PAPI_L1_TCM;
 #endif
+    item->stats.bsend = stats->bsend;
+    item->stats.brecv = stats->brecv;
     strncpy(item->stats.exe, stats->exe, 128);
 }
 

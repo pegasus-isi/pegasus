@@ -28,7 +28,6 @@
 
 #include "interpose.h"
 #include "interpose_monitoring.h"
-#include "procfs.h"
 #include "error.h"
 #include "log.h"
 
@@ -73,6 +72,8 @@ const char DTYPE_SOCK = 2;
 static Descriptor *descriptors = NULL;
 static int max_descriptors = 0;
 static pthread_mutex_t descriptor_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+static unsigned long long bsend = 0;
+static unsigned long long brecv = 0;
 
 #define lock_descriptors() do { \
     trace("lock_descriptors"); \
@@ -226,6 +227,10 @@ static void trace_file(const char *path, int fd);
 static void init_descriptors() {
 
     lock_descriptors();
+
+    /* Reset bandwidth counters */
+    bsend = 0;
+    brecv = 0;
 
     /* Get file descriptor limit and allocate descriptor table */
     max_descriptors = 256;
@@ -418,11 +423,9 @@ static int startswith(const char *line, const char *tok) {
     return strstr(line, tok) == line;
 }
 
-/* Read stats from procfs */
-static void report_stats() {
-    ProcStats stats;
-    procfs_stats_init(&stats);
-    procfs_read_stats(getpid(), &stats);
+void gather_stats(ProcStats *stats) {
+    procfs_stats_init(stats);
+    procfs_read_stats(getpid(), stats);
 
     /* This is better than what we get from /proc */
     struct rusage ru;
@@ -430,8 +433,22 @@ static void report_stats() {
         printerr("Error getting resource usage: %s\n", strerror(errno));
         return;
     }
-    stats.utime = (double)ru.ru_utime.tv_sec + (double)ru.ru_utime.tv_usec/1.0e6;
-    stats.stime = (double)ru.ru_stime.tv_sec + (double)ru.ru_stime.tv_usec/1.0e6;
+    stats->utime = (double)ru.ru_utime.tv_sec + (double)ru.ru_utime.tv_usec/1.0e6;
+    stats->stime = (double)ru.ru_stime.tv_sec + (double)ru.ru_stime.tv_usec/1.0e6;
+
+    /* Get bandwidth counters */
+    lock_descriptors();
+    stats->bsend = bsend;
+    stats->brecv = brecv;
+    unlock_descriptors();
+
+    /* TODO Get PAPI counters */
+}
+
+/* Read stats from procfs */
+static void report_stats() {
+    ProcStats stats;
+    gather_stats(&stats);
 
     tprintf("exe: %s\n", stats.exe);
     tprintf("VmPeak: %llu\n", stats.vmpeak);
@@ -614,6 +631,10 @@ static void trace_read(int fd, ssize_t amount) {
     f->bread += amount;
     f->nread += 1;
 
+    if (f->type == DTYPE_SOCK) {
+        brecv += amount;
+    }
+
 unlock:
     unlock_descriptors();
 }
@@ -629,6 +650,10 @@ static void trace_write(int fd, ssize_t amount) {
     }
     f->bwrite += amount;
     f->nwrite += 1;
+
+    if (f->type == DTYPE_SOCK) {
+        bsend += amount;
+    }
 
 unlock:
     unlock_descriptors();
