@@ -1897,7 +1897,8 @@ class Workflow:
             return
 
         basename = "%s.in" %( job._exec_job_id )
-        input_file = os.path.join( self._run_dir, basename )
+        #PM-833 the .in file should be picked up from job submit directory
+        input_file = os.path.join( job._job_submit_dir, basename )
         logger.info( "Populating locations corresponding to succeeded registration job  %s " %input_file )
 
         try:
