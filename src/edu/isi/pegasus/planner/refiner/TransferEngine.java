@@ -241,8 +241,8 @@ public class TransferEngine extends Engine {
                            List<Job> deletedLeafJobs){
         super( bag );
 
-        mSubmitDirFactory =  SubmitMapperFactory.loadInstance( bag,  new File(mPOptions.getSubmitDirectory()));
-        bag.add(PegasusBag.PEGASUS_SUBMIT_DIR_FACTORY, mSubmitDirFactory );
+        mSubmitDirMapper =  SubmitMapperFactory.loadInstance( bag,  new File(mPOptions.getSubmitDirectory()));
+        bag.add(PegasusBag.PEGASUS_SUBMIT_DIR_FACTORY, mSubmitDirMapper );
         
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mSRMServiceURLToMountPointMap = constructSiteToSRMServerMap( mProps );
@@ -277,7 +277,7 @@ public class TransferEngine extends Engine {
                             "]",LogManager.CONFIG_MESSAGE_LEVEL);
         mLogger.log("ReplicaSelector loaded is  [" + mReplicaSelector.description() +
                     "]",LogManager.CONFIG_MESSAGE_LEVEL);
-        mLogger.log("Submit Directory Mapper loaded is    [" + mSubmitDirFactory.description() +
+        mLogger.log("Submit Directory Mapper loaded is    [" + mSubmitDirMapper.description() +
                     "]",LogManager.CONFIG_MESSAGE_LEVEL);
         mLogger.log("Output Mapper loaded is    [" + mOutputMapper.description() +
                     "]",LogManager.CONFIG_MESSAGE_LEVEL);
@@ -386,7 +386,7 @@ public class TransferEngine extends Engine {
      */
     public void addTransferNodes( ReplicaCatalogBridge rcb, PlannerCache plannerCache ) {
         mRCBridge = rcb;
-        mRCBridge.mSubmitDirFactory = this.mSubmitDirFactory;
+        mRCBridge.mSubmitDirMapper = this.mSubmitDirMapper;
         mPlannerCache = plannerCache;
 
         Job currentJob;
@@ -1984,7 +1984,7 @@ public class TransferEngine extends Engine {
         
         String relative = null;
         try {
-            File f =  mSubmitDirFactory.getRelativeDir(job);
+            File f =  mSubmitDirMapper.getRelativeDir(job);
             mLogger.log("Directory for job " + job.getID() + " is " + f,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             relative = f.getPath();

@@ -118,7 +118,7 @@ public abstract  class Engine {
      * Handle to the Submit directory factory, that returns the relative
      * submit directory for a job
      */
-    protected SubmitMapper mSubmitDirFactory;
+    protected SubmitMapper mSubmitDirMapper;
     
     /**
      *
@@ -133,7 +133,7 @@ public abstract  class Engine {
         mPOptions = bag.getPlannerOptions();
         mTCHandle = bag.getHandleToTransformationCatalog();
         mSiteStore= bag.getHandleToSiteStore();
-        mSubmitDirFactory = bag.getSubmitDirFileFactory();
+        mSubmitDirMapper = bag.getSubmitDirFileFactory();
         loadProperties();
     }
     
