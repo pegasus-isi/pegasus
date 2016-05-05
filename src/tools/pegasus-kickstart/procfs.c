@@ -408,14 +408,14 @@ void procfs_list_update(ProcStatsList **list, ProcStats *stats) {
     item->stats.procs = stats->procs;
     item->stats.threads = stats->threads;
 #ifdef HAS_PAPI
-    item->stats.PAPI_TOT_INS = stats->PAPI_TOT_INS;
-    item->stats.PAPI_LD_INS = stats->PAPI_LD_INS;
-    item->stats.PAPI_SR_INS = stats->PAPI_SR_INS;
-    item->stats.PAPI_FP_INS = stats->PAPI_FP_INS;
-    item->stats.PAPI_FP_OPS = stats->PAPI_FP_OPS;
-    item->stats.PAPI_L3_TCM = stats->PAPI_L3_TCM;
-    item->stats.PAPI_L2_TCM = stats->PAPI_L2_TCM;
-    item->stats.PAPI_L1_TCM = stats->PAPI_L1_TCM;
+    item->stats.totins = stats->totins;
+    item->stats.ldins = stats->ldins;
+    item->stats.srins = stats->srins;
+    item->stats.fpins = stats->fpins;
+    item->stats.fpops = stats->fpops;
+    item->stats.l3misses = stats->l3misses;
+    item->stats.l2misses = stats->l2misses;
+    item->stats.l1misses = stats->l1misses;
 #endif
     item->stats.bsend = stats->bsend;
     item->stats.brecv = stats->brecv;

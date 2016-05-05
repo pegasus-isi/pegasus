@@ -28,14 +28,14 @@ typedef struct _ProcStats {
     unsigned int procs;
     unsigned int threads;
 #ifdef HAS_PAPI
-    long long PAPI_TOT_INS; /* Total instructions */
-    long long PAPI_LD_INS; /* Load instructions */
-    long long PAPI_SR_INS; /* Store instructions */
-    long long PAPI_FP_INS; /* Floating point instructions */
-    long long PAPI_FP_OPS; /* Floating point ops */
-    long long PAPI_L3_TCM; /* L3 cache misses */
-    long long PAPI_L2_TCM; /* L2 cache misses */
-    long long PAPI_L1_TCM; /* L1 cache misses */
+    long long totins; /* Total instructions */
+    long long ldins; /* Load instructions */
+    long long srins; /* Store instructions */
+    long long fpins; /* Floating point instructions */
+    long long fpops; /* Floating point ops */
+    long long l3misses; /* L3 cache misses */
+    long long l2misses; /* L2 cache misses */
+    long long l1misses; /* L1 cache misses */
 #endif
     unsigned long long bsend; /* Bytes sent on sockets (libinterpose only) */
     unsigned long long brecv; /* Bytes recvd on sockets (libinterpose only) */

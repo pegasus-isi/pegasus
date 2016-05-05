@@ -181,7 +181,18 @@ static size_t json_encode(MonitoringContext *ctx, ProcStats *stats, char *buf, s
             "\"syscr\":%lu,"
             "\"syscw\":%lu,"
             "\"bsend\":%llu,"
-            "\"brecv\":%llu}",
+            "\"brecv\":%llu"
+#ifdef HAS_PAPI
+            ",\"totins\":%lld,"
+            "\"ldins\":%lld,"
+            "\"srins\":%lld,"
+            "\"fpins\":%lld,"
+            "\"fpops\":%lld,"
+            "\"l3misses\":%lld,"
+            "\"l2misses\":%lld,"
+            "\"l1misses\":%lld"
+#endif
+            "}",
             stats->ts,
             ctx->wf_uuid == NULL ? "" : ctx->wf_uuid,
             ctx->wf_label == NULL ? "" : ctx->wf_label,
@@ -205,7 +216,18 @@ static size_t json_encode(MonitoringContext *ctx, ProcStats *stats, char *buf, s
             stats->syscr,
             stats->syscw,
             stats->bsend,
-            stats->brecv);
+            stats->brecv
+#ifdef HAS_PAPI
+            ,stats->totins,
+            stats->ldins,
+            stats->srins,
+            stats->fpins,
+            stats->fpops,
+            stats->l3misses,
+            stats->l2misses,
+            stats->l1misses
+#endif
+        );
 
     if (size >= maxsize) {
         error("JSON too large for buffer: %d > %d", size, maxsize);

@@ -423,6 +423,58 @@ static int startswith(const char *line, const char *tok) {
     return strstr(line, tok) == line;
 }
 
+#ifdef HAS_PAPI
+static int read_papi(int eventset, ProcStats *stats) {
+    if (!papi_ok) {
+        return 1;
+    }
+
+    int i, rc;
+    int nevents = n_papi_events;
+    int events[n_papi_events];
+    long long counters[n_papi_events];
+
+    /* Get the events that were actually recorded */
+    rc = PAPI_list_events(eventset, events, &nevents);
+    if (rc != PAPI_OK) {
+        if (rc != PAPI_ENOEVST) {
+            printerr("ERROR: PAPI_list_events failed: %s\n", PAPI_strerror(rc));
+        }
+        return 1;
+    }
+
+    /* read and aggregate the counters */
+    rc = PAPI_read(eventset, counters);
+    if (rc != PAPI_OK) {
+        printerr("ERROR: No hardware counters or PAPI not supported: %s\n", PAPI_strerror(rc));
+        return 1;
+    }
+
+    /* Store in stats record */
+    for (i = 0; i < nevents; i++) {
+        if (events[i] == PAPI_TOT_INS) {
+            stats->totins = stats->totins + counters[i];
+        } else if (events[i] == PAPI_LD_INS) {
+            stats->ldins = stats->ldins + counters[i];
+        } else if (events[i] == PAPI_SR_INS) {
+            stats->srins = stats->srins + counters[i];
+        } else if (events[i] == PAPI_FP_INS) {
+            stats->fpins = stats->fpins + counters[i];
+        } else if (events[i] == PAPI_FP_OPS) {
+            stats->fpops = stats->fpops + counters[i];
+        } else if (events[i] == PAPI_L3_TCM) {
+            stats->l3misses = stats->l3misses + counters[i];
+        } else if (events[i] == PAPI_L2_TCM) {
+            stats->l2misses = stats->l2misses + counters[i];
+        } else if (events[i] == PAPI_L1_TCM) {
+            stats->l1misses = stats->l1misses + counters[i];
+        }
+    }
+
+    return 0;
+}
+#endif
+
 void gather_stats(ProcStats *stats) {
     procfs_stats_init(stats);
     procfs_read_stats(getpid(), stats);
@@ -442,7 +494,12 @@ void gather_stats(ProcStats *stats) {
     stats->brecv = brecv;
     unlock_descriptors();
 
-    /* TODO Get PAPI counters */
+    /* Get PAPI counters */
+#ifdef HAS_PAPI
+    for (int i=1; i<=tot_threads; i++) {
+        read_papi(i, stats);
+    }
+#endif
 }
 
 /* Read stats from procfs */
