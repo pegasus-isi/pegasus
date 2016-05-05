@@ -55,7 +55,7 @@ public class TextTest {
     private static final String EXPANDED_NAME        = "keg";
     private static final String EXPANDED_VERSION     = "version";
     private static final String EXPANDED_ARCH        = "x86_64";
-    private static final String EXPANDED_OS          = "LINUX";
+    private static final String EXPANDED_OS          = "linux";
     private static final String EXPANDED_KEG_PATH    = "file:///usr/bin/pegasus-keg";
     
     private PegasusBag mBag;
