@@ -22,15 +22,43 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.mapper.SubmitMapper;
 import java.io.File;
 import java.io.IOException;
+import java.util.Properties;
 
 import org.griphyn.vdl.euryale.FileFactory;
 import org.griphyn.vdl.euryale.HashedFileFactory;
 
 /**
- *
+ * A Hashed Submit Directory mapper that distributes the jobs across a hashed
+ * directory structure
+ * 
  * @author Karan Vahi
  */
 public class Hashed implements SubmitMapper{
+    
+    /**
+     * The property key that indicates the multiplicator factor
+     */
+    public static final String MULIPLICATOR_PROPERTY_KEY = "hashed.multiplier";
+    
+    /**
+     * //each job creates at creates the following files
+            //  - submit file
+            //  - out file
+            //  - error file
+            //  - prescript log
+            //  - the partition directory
+     */
+    public static final int DEFAULT_MULTIPLICATOR_FACTOR = 5;
+    
+    /**
+     * The property key that indicates the  number of levels to use
+     */
+    public static final String LEVELS_PROPERTY_KEY = "hashed.levels";
+    
+    /**
+     * The default number of levels.
+     */
+    public static final int DEFAULT_LEVELS = 2;
     
     /**
      * The root of the directory tree under which other directories are created
@@ -42,6 +70,9 @@ public class Hashed implements SubmitMapper{
      */
     private LogManager mLogger;
     
+    /**
+     * The File Factory to use
+     */
     private FileFactory mFactory;
     
     /**
@@ -51,30 +82,52 @@ public class Hashed implements SubmitMapper{
         
     }
 
-    public void initialize(PegasusBag bag, File base) {
+    
+    /**
+     * Initializes the submit mapper
+     * 
+     * @param bag           the bag of Pegasus objects
+     * @param properties    properties that can be used to control the behavior of the mapper
+     * @param base          the base directory relative to which all job directories are created
+     */
+    public void initialize(PegasusBag bag, Properties properties, File base) {
         mBaseDir = base;
         mLogger  = bag.getLogger();
         PlannerOptions options = bag.getPlannerOptions();
+        
+        System.out.println( "Mapper properties " + properties );
         
          // create hashed, and levelled directories
         try {
             //we are interested in relative paths
             HashedFileFactory creator = new HashedFileFactory( options.getSubmitDirectory() );
 
+            int multiplicator = Hashed.DEFAULT_MULTIPLICATOR_FACTOR;
+            if( properties.containsKey( Hashed.MULIPLICATOR_PROPERTY_KEY) ){
+                multiplicator = Integer.parseInt( properties.getProperty(MULIPLICATOR_PROPERTY_KEY));
+            }
+            
+            int levels = Hashed.DEFAULT_LEVELS;
+            if( properties.containsKey( Hashed.LEVELS_PROPERTY_KEY) ){
+                levels = Integer.parseInt( properties.getProperty(LEVELS_PROPERTY_KEY));
+            }
+            
             //each job creates at creates the following files
             //  - submit file
             //  - out file
             //  - error file
             //  - prescript log
             //  - the partition directory
-            creator.setMultiplicator(5);
+            creator.setMultiplicator( multiplicator );
 
             //we want a minimum of one level always for clarity
-            creator.setLevels(2);
+            creator.setLevels(levels);
 
             //for the time being and test set files per directory to 50
             //mSubmitDirectoryCreator.setFilesPerDirectory( 10 );
             //mSubmitDirectoryCreator.setLevelsFromTotals( 100 );
+            mLogger.log( "[Hashed Submit Mapper] Configured with multiplier " + multiplicator + " and levels as " + levels,
+                         LogManager.CONFIG_MESSAGE_LEVEL );
          
             mFactory = creator;
         }

@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
 import java.io.File;
+import java.util.Properties;
 
 
 /**
@@ -75,10 +76,10 @@ public class SubmitMapperFactory {
             if (properties == null) {
                 throw new RuntimeException("Invalid properties passed");
             }
-
+            
             //figure out the implementing class
             //that needs to be instantiated.
-            className = properties.getSubmitDirectoryMapper();
+            className = properties.getProperty( SubmitMapper.PROPERTY_PREFIX );
             className = ( className == null || className.trim().length() < 2) ?
                           DEFAULT_CREATOR :
                           className;
@@ -90,14 +91,16 @@ public class SubmitMapperFactory {
                          //load directly
                          className;
 
+            Properties mapperProps = properties.matchingSubset( SubmitMapper.PROPERTY_PREFIX, false );
+
             //try loading the class dynamically
             DynamicLoader dl = new DynamicLoader(className);
             creator = ( SubmitMapper ) dl.instantiate( new Object[ 0 ] );
-            creator.initialize( bag , base);
+            creator.initialize( bag , mapperProps, base);
         }
         catch(Exception e){
             //chain the exception caught into the appropriate Factory Exception
-            throw new SubmitMapperFactoryException( "Instantiating Creator ",
+            throw new SubmitMapperFactoryException( "Instantiating SubmitMapper ",
                                                      className, e );
         }
 

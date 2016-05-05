@@ -19,6 +19,7 @@ package edu.isi.pegasus.planner.mapper;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import java.io.File;
+import java.util.Properties;
 
 /**
  * The interface that maps a directory for a job.
@@ -27,8 +28,19 @@ import java.io.File;
  */
 public interface SubmitMapper extends Mapper {
     
+    /**
+     * Prefix for the property subset to use with this mapper.
+     */
+    public static final String PROPERTY_PREFIX = "pegasus.dir.submit.mapper";
     
-    public void initialize( PegasusBag bag, File base );
+    /**
+     * Initializes the submit mapper
+     * 
+     * @param bag           the bag of Pegasus objects
+     * @param properties    properties that can be used to control the behavior of the mapper
+     * @param base          the base directory relative to which all job directories are created
+     */
+    public void initialize( PegasusBag bag, Properties properties,  File base );
     
     public File getRelativeDir(Job job);
 

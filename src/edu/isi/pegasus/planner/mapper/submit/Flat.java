@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.mapper.SubmitMapper;
 import java.io.File;
 import java.io.IOException;
+import java.util.Properties;
 
 import org.griphyn.vdl.euryale.FileFactory;
 import org.griphyn.vdl.euryale.VirtualFlatFileFactory;
@@ -52,7 +53,14 @@ public class Flat implements SubmitMapper{
         
     }
 
-    public void initialize(PegasusBag bag, File base) {
+    /**
+     * Initializes the submit mapper
+     * 
+     * @param bag           the bag of Pegasus objects
+     * @param properties    properties that can be used to control the behavior of the mapper
+     * @param base          the base directory relative to which all job directories are created
+     */
+    public void initialize(PegasusBag bag, Properties properties, File base) {
         mBaseDir = base;
         mLogger  = bag.getLogger();
         PlannerOptions options = bag.getPlannerOptions();
