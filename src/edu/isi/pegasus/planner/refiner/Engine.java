@@ -36,7 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.directory.Creator;
+import edu.isi.pegasus.planner.mapper.Creator;
 import java.io.File;
 import java.io.IOException;
 import org.griphyn.vdl.euryale.FileFactory;

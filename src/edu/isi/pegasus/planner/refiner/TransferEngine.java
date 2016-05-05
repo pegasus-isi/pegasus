@@ -58,10 +58,10 @@ import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.PlannerCache;
 
-import edu.isi.pegasus.planner.directory.Creator;
+import edu.isi.pegasus.planner.mapper.Creator;
 
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
-import edu.isi.pegasus.planner.directory.CreatorFactory;
+import edu.isi.pegasus.planner.mapper.CreatorFactory;
 
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.mapper.OutputMapper;

@@ -13,24 +13,25 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.isi.pegasus.planner.directory.impl;
+package edu.isi.pegasus.planner.mapper.submit;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
-import edu.isi.pegasus.planner.directory.Creator;
+import edu.isi.pegasus.planner.mapper.Creator;
 import java.io.File;
 import java.io.IOException;
 
 import org.griphyn.vdl.euryale.FileFactory;
-import org.griphyn.vdl.euryale.HashedFileFactory;
+import org.griphyn.vdl.euryale.VirtualFlatFileFactory;
 
 /**
- *
+ * A Flat creator implementation that returns the base directory always.
+ * 
  * @author Karan Vahi
  */
-public class Hashed implements Creator{
+public class Flat implements Creator{
     
     /**
      * The root of the directory tree under which other directories are created
@@ -47,7 +48,7 @@ public class Hashed implements Creator{
     /**
      * Default constructor.
      */
-    public Hashed(){
+    public Flat(){
         
     }
 
@@ -59,24 +60,7 @@ public class Hashed implements Creator{
          // create hashed, and levelled directories
         try {
             //we are interested in relative paths
-            HashedFileFactory creator = new HashedFileFactory( options.getSubmitDirectory() );
-
-            //each job creates at creates the following files
-            //  - submit file
-            //  - out file
-            //  - error file
-            //  - prescript log
-            //  - the partition directory
-            creator.setMultiplicator(5);
-
-            //we want a minimum of one level always for clarity
-            creator.setLevels(2);
-
-            //for the time being and test set files per directory to 50
-            //mSubmitDirectoryCreator.setFilesPerDirectory( 10 );
-            //mSubmitDirectoryCreator.setLevelsFromTotals( 100 );
-         
-            mFactory = creator;
+            mFactory = new VirtualFlatFileFactory( options.getSubmitDirectory() );
         }
         catch ( IOException e ) {
             throw new RuntimeException(  e );

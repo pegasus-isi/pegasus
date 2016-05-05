@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package edu.isi.pegasus.planner.directory;
+package edu.isi.pegasus.planner.mapper;
 
 import edu.isi.pegasus.common.util.FactoryException;
 
