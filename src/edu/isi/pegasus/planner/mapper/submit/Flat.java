@@ -19,7 +19,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
-import edu.isi.pegasus.planner.mapper.Creator;
+import edu.isi.pegasus.planner.mapper.SubmitMapper;
 import java.io.File;
 import java.io.IOException;
 
@@ -31,7 +31,7 @@ import org.griphyn.vdl.euryale.VirtualFlatFileFactory;
  * 
  * @author Karan Vahi
  */
-public class Flat implements Creator{
+public class Flat implements SubmitMapper{
     
     /**
      * The root of the directory tree under which other directories are created

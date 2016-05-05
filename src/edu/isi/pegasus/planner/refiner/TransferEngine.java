@@ -58,10 +58,10 @@ import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.PlannerCache;
 
-import edu.isi.pegasus.planner.mapper.Creator;
+import edu.isi.pegasus.planner.mapper.SubmitMapper;
 
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
-import edu.isi.pegasus.planner.mapper.CreatorFactory;
+import edu.isi.pegasus.planner.mapper.SubmitMapperFactory;
 
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.mapper.OutputMapper;
@@ -241,7 +241,7 @@ public class TransferEngine extends Engine {
                            List<Job> deletedLeafJobs){
         super( bag );
 
-        mSubmitDirFactory =  CreatorFactory.loadInstance( bag,  new File(mPOptions.getSubmitDirectory()));
+        mSubmitDirFactory =  SubmitMapperFactory.loadInstance( bag,  new File(mPOptions.getSubmitDirectory()));
         bag.add(PegasusBag.PEGASUS_SUBMIT_DIR_FACTORY, mSubmitDirFactory );
         
         mUseSymLinks = mProps.getUseOfSymbolicLinks();

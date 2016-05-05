@@ -21,11 +21,11 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import java.io.File;
 
 /**
- * The interface that identifies a directory for a job.
+ * The interface that maps a directory for a job.
  *
  * @author Karan Vahi
  */
-public interface Creator {
+public interface SubmitMapper extends Mapper {
     
     
     public void initialize( PegasusBag bag, File base );

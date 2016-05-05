@@ -16,7 +16,6 @@
 package edu.isi.pegasus.planner.mapper;
 
 
-import edu.isi.pegasus.planner.mapper.Creator;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -26,20 +25,20 @@ import java.io.File;
 
 
 /**
- * A factory class to load the appropriate type of Directory Creator
- * specified by the user at runtime in properties. 
+ * A factory class to load the appropriate type of Directory SubmitMapper
+ specified by the user at runtime in properties. 
  * 
  * @author Karan Vahi
  * @version $Revision$
  */
 
-public class CreatorFactory {
+public class SubmitMapperFactory {
 
     /**
      * The default package where the all the implementing classes reside.
      */
     public static final String DEFAULT_PACKAGE_NAME =
-                                        "edu.isi.pegasus.planner.directory.impl";
+                                        "edu.isi.pegasus.planner.mapper.submit";
 
     /**
      * The name of the class in the DEFAULT package, that corresponds to the
@@ -58,19 +57,18 @@ public class CreatorFactory {
      * @param base   the base directory
      *
      * @return the instance of the class implementing this interface.
-     *
-     * @exception CreatorFactoryException that chains any error that
-     *            might occur during the instantiation
+     * @throws SubmitMapperFactoryException that chains any error that
+            might occur during the instantiation
      *
      * @see #DEFAULT_PACKAGE_NAME
      * @see #DEFAULT_CREATOR
      */
-    public static Creator loadInstance( PegasusBag bag, File base )
-                                         throws CreatorFactoryException {
+    public static SubmitMapper loadInstance( PegasusBag bag, File base )
+                                         throws SubmitMapperFactoryException {
 
         PegasusProperties properties = ( PegasusProperties )bag.get( PegasusBag.PEGASUS_PROPERTIES );
         String className = null;
-        Creator creator;
+        SubmitMapper creator;
 
         //sanity check
         try{
@@ -94,12 +92,12 @@ public class CreatorFactory {
 
             //try loading the class dynamically
             DynamicLoader dl = new DynamicLoader(className);
-            creator = ( Creator ) dl.instantiate( new Object[ 0 ] );
+            creator = ( SubmitMapper ) dl.instantiate( new Object[ 0 ] );
             creator.initialize( bag , base);
         }
         catch(Exception e){
             //chain the exception caught into the appropriate Factory Exception
-            throw new CreatorFactoryException( "Instantiating Creator ",
+            throw new SubmitMapperFactoryException( "Instantiating Creator ",
                                                      className, e );
         }
 

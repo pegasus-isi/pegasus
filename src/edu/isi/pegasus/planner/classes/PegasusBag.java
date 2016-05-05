@@ -31,7 +31,7 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
-import edu.isi.pegasus.planner.mapper.Creator;
+import edu.isi.pegasus.planner.mapper.SubmitMapper;
 import java.util.Map;
 
 /**
@@ -204,7 +204,7 @@ public class PegasusBag
     /**
      * The handle to the file factory for the submit dir.
      */
-    private Creator mSubmitDirectoryCreator;
+    private SubmitMapper mSubmitDirectoryCreator;
     
     /**
      * The default constructor.
@@ -312,8 +312,8 @@ public class PegasusBag
                 break;
                 
             case 12: //File Factory
-                if ( value != null && value instanceof Creator )
-                    mSubmitDirectoryCreator = (Creator) value;
+                if ( value != null && value instanceof SubmitMapper )
+                    mSubmitDirectoryCreator = (SubmitMapper) value;
                 else
                     valid = false;
                 break;
@@ -510,8 +510,8 @@ public class PegasusBag
      * 
      * @return file factory
      */
-    public Creator getSubmitDirFileFactory(){
-        return ( Creator )get(PegasusBag.PEGASUS_SUBMIT_DIR_FACTORY );
+    public SubmitMapper getSubmitDirFileFactory(){
+        return ( SubmitMapper )get(PegasusBag.PEGASUS_SUBMIT_DIR_FACTORY );
     }
 
 

@@ -25,7 +25,7 @@ import edu.isi.pegasus.common.util.FactoryException;
  * @version $Revision$
  */
 
-public class CreatorFactoryException extends FactoryException {
+public class SubmitMapperFactoryException extends FactoryException {
 
     /**
      * The default classname that is associated with the exception.
@@ -42,7 +42,7 @@ public class CreatorFactoryException extends FactoryException {
      *
      * @see #DEFAULT_NAME
      */
-    public CreatorFactoryException( String msg ) {
+    public SubmitMapperFactoryException( String msg ) {
         super( msg );
         mClassname = this.DEFAULT_NAME;
     }
@@ -55,7 +55,7 @@ public class CreatorFactoryException extends FactoryException {
      * @param classname the name of class that was trying to be instantiated or
      *                  some other signifier like module name.
      */
-    public CreatorFactoryException(String msg, String classname) {
+    public SubmitMapperFactoryException(String msg, String classname) {
         super( msg , classname );
     }
 
@@ -73,7 +73,7 @@ public class CreatorFactoryException extends FactoryException {
      *
      * @see #DEFAULT_NAME
      */
-    public CreatorFactoryException(String msg, Throwable cause) {
+    public SubmitMapperFactoryException(String msg, Throwable cause) {
         super(msg, cause);
         mClassname = this.DEFAULT_NAME;
     }
@@ -90,7 +90,7 @@ public class CreatorFactoryException extends FactoryException {
      * value is permitted, and indicates that the cause is nonexistent or
      * unknown.
      */
-    public CreatorFactoryException(String msg,
+    public SubmitMapperFactoryException(String msg,
                                            String classname,
                                            Throwable cause) {
         super( msg, cause );
