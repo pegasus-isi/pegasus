@@ -15,6 +15,8 @@
  */
 package edu.isi.pegasus.planner.transfer.mapper;
 
+import edu.isi.pegasus.planner.mapper.OutputMapperFactory;
+import edu.isi.pegasus.planner.mapper.OutputMapper;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;

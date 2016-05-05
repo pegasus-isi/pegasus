@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.isi.pegasus.planner.directory;
+package edu.isi.pegasus.planner.mapper;
 
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -22,23 +22,24 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
 import java.io.File;
+import java.util.Properties;
 
 
 /**
- * A factory class to load the appropriate type of Directory Creator
- * specified by the user at runtime in properties. 
+ * A factory class to load the appropriate type of Directory SubmitMapper
+ specified by the user at runtime in properties. 
  * 
  * @author Karan Vahi
  * @version $Revision$
  */
 
-public class CreatorFactory {
+public class SubmitMapperFactory {
 
     /**
      * The default package where the all the implementing classes reside.
      */
     public static final String DEFAULT_PACKAGE_NAME =
-                                        "edu.isi.pegasus.planner.directory.impl";
+                                        "edu.isi.pegasus.planner.mapper.submit";
 
     /**
      * The name of the class in the DEFAULT package, that corresponds to the
@@ -57,29 +58,28 @@ public class CreatorFactory {
      * @param base   the base directory
      *
      * @return the instance of the class implementing this interface.
-     *
-     * @exception CreatorFactoryException that chains any error that
-     *            might occur during the instantiation
+     * @throws SubmitMapperFactoryException that chains any error that
+            might occur during the instantiation
      *
      * @see #DEFAULT_PACKAGE_NAME
      * @see #DEFAULT_CREATOR
      */
-    public static Creator loadInstance( PegasusBag bag, File base )
-                                         throws CreatorFactoryException {
+    public static SubmitMapper loadInstance( PegasusBag bag, File base )
+                                         throws SubmitMapperFactoryException {
 
         PegasusProperties properties = ( PegasusProperties )bag.get( PegasusBag.PEGASUS_PROPERTIES );
         String className = null;
-        Creator creator;
+        SubmitMapper creator;
 
         //sanity check
         try{
             if (properties == null) {
                 throw new RuntimeException("Invalid properties passed");
             }
-
+            
             //figure out the implementing class
             //that needs to be instantiated.
-            className = properties.getSubmitDirectoryCreator();
+            className = properties.getProperty( SubmitMapper.PROPERTY_PREFIX );
             className = ( className == null || className.trim().length() < 2) ?
                           DEFAULT_CREATOR :
                           className;
@@ -91,14 +91,16 @@ public class CreatorFactory {
                          //load directly
                          className;
 
+            Properties mapperProps = properties.matchingSubset( SubmitMapper.PROPERTY_PREFIX, false );
+
             //try loading the class dynamically
             DynamicLoader dl = new DynamicLoader(className);
-            creator = ( Creator ) dl.instantiate( new Object[ 0 ] );
-            creator.initialize( bag , base);
+            creator = ( SubmitMapper ) dl.instantiate( new Object[ 0 ] );
+            creator.initialize( bag , mapperProps, base);
         }
         catch(Exception e){
             //chain the exception caught into the appropriate Factory Exception
-            throw new CreatorFactoryException( "Instantiating Creator ",
+            throw new SubmitMapperFactoryException( "Instantiating SubmitMapper ",
                                                      className, e );
         }
 

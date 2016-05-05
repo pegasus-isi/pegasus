@@ -13,8 +13,9 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.isi.pegasus.planner.transfer.mapper;
+package edu.isi.pegasus.planner.mapper;
 
+import edu.isi.pegasus.planner.mapper.MapperException;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -27,7 +28,7 @@ import java.util.List;
  *
  * @author vahi
  */
-public interface OutputMapper {
+public interface OutputMapper extends Mapper{
    
     /**
      * The version of the API of the Output Mapper
@@ -93,12 +94,7 @@ public interface OutputMapper {
      */
     public List<String> mapAll( String lfn, String site, FileServer.OPERATION operation) throws MapperException;
 
-    /**
-     * Returns a short description of the mapper.
-     * 
-     * @return 
-     */
-    public String description();
+   
     
     
 }

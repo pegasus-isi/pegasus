@@ -626,7 +626,7 @@ public class ReplicaCatalogBridge
         
         //PM-833 set the relative submit directory for the regustration
         //job based on the associated file factory
-        newJob.setRelativeSubmitDirectory( this.mSubmitDirFactory.getRelativeDir( newJob ));
+        newJob.setRelativeSubmitDirectory( this.mSubmitDirMapper.getRelativeDir( newJob ));
         //PM-833 the .in file is written in the same directory 
         //where the submit file for the job will be written out
         File dir = new File(mPOptions.getSubmitDirectory(), newJob.getRelativeSubmitDirectory() );

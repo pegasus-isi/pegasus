@@ -41,7 +41,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.PlannerCache;
 
-import edu.isi.pegasus.planner.directory.Creator;
+import edu.isi.pegasus.planner.mapper.SubmitMapper;
 import edu.isi.pegasus.planner.namespace.Dagman;
 
 import java.util.List;
@@ -143,7 +143,7 @@ public class Cleanup implements CleanupImplementation{
      * Handle to the Submit directory factory, that returns the relative
      * submit directory for a job
      */
-    protected Creator mSubmitDirFactory;
+    protected SubmitMapper mSubmitDirFactory;
 
     /**
      * A convenience method to return the complete transformation name being

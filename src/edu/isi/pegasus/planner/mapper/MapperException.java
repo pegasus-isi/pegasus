@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package edu.isi.pegasus.planner.transfer.mapper;
+package edu.isi.pegasus.planner.mapper;
 
 import edu.isi.pegasus.planner.cluster.*;
 

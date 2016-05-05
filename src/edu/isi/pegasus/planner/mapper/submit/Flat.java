@@ -13,15 +13,16 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.isi.pegasus.planner.directory.impl;
+package edu.isi.pegasus.planner.mapper.submit;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
-import edu.isi.pegasus.planner.directory.Creator;
+import edu.isi.pegasus.planner.mapper.SubmitMapper;
 import java.io.File;
 import java.io.IOException;
+import java.util.Properties;
 
 import org.griphyn.vdl.euryale.FileFactory;
 import org.griphyn.vdl.euryale.VirtualFlatFileFactory;
@@ -31,7 +32,12 @@ import org.griphyn.vdl.euryale.VirtualFlatFileFactory;
  * 
  * @author Karan Vahi
  */
-public class Flat implements Creator{
+public class Flat implements SubmitMapper{
+    
+    /**
+     * Short description.
+     */
+    private static final String DESCRIPTION = "Flat Submit Directory Mapper";
     
     /**
      * The root of the directory tree under which other directories are created
@@ -52,7 +58,14 @@ public class Flat implements Creator{
         
     }
 
-    public void initialize(PegasusBag bag, File base) {
+    /**
+     * Initializes the submit mapper
+     * 
+     * @param bag           the bag of Pegasus objects
+     * @param properties    properties that can be used to control the behavior of the mapper
+     * @param base          the base directory relative to which all job directories are created
+     */
+    public void initialize(PegasusBag bag, Properties properties, File base) {
         mBaseDir = base;
         mLogger  = bag.getLogger();
         PlannerOptions options = bag.getPlannerOptions();
@@ -85,6 +98,15 @@ public class Flat implements Creator{
             throw new RuntimeException( "Error while determining relative submit dir for job " + job.getID() , ex);
         }
         return f.getParentFile();
+    }
+    
+    /**
+     * Returns a short description of the mapper.
+     * 
+     * @return 
+     */
+    public String description(){
+        return  Flat.DESCRIPTION;
     }
     
 }

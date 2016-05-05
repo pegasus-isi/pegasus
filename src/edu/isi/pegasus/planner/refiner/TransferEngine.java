@@ -58,15 +58,15 @@ import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.PlannerCache;
 
-import edu.isi.pegasus.planner.directory.Creator;
+import edu.isi.pegasus.planner.mapper.SubmitMapper;
 
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
-import edu.isi.pegasus.planner.directory.CreatorFactory;
+import edu.isi.pegasus.planner.mapper.SubmitMapperFactory;
 
 import edu.isi.pegasus.planner.namespace.Dagman;
-import edu.isi.pegasus.planner.transfer.mapper.OutputMapper;
-import edu.isi.pegasus.planner.transfer.mapper.OutputMapperFactory;
-import edu.isi.pegasus.planner.transfer.mapper.impl.Hashed;
+import edu.isi.pegasus.planner.mapper.OutputMapper;
+import edu.isi.pegasus.planner.mapper.OutputMapperFactory;
+import edu.isi.pegasus.planner.mapper.output.Hashed;
 
 
 import java.io.File;
@@ -241,8 +241,8 @@ public class TransferEngine extends Engine {
                            List<Job> deletedLeafJobs){
         super( bag );
 
-        mSubmitDirFactory =  CreatorFactory.loadInstance( bag,  new File(mPOptions.getSubmitDirectory()));
-        bag.add(PegasusBag.PEGASUS_SUBMIT_DIR_FACTORY, mSubmitDirFactory );
+        mSubmitDirMapper =  SubmitMapperFactory.loadInstance( bag,  new File(mPOptions.getSubmitDirectory()));
+        bag.add(PegasusBag.PEGASUS_SUBMIT_DIR_FACTORY, mSubmitDirMapper );
         
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mSRMServiceURLToMountPointMap = constructSiteToSRMServerMap( mProps );
@@ -276,6 +276,8 @@ public class TransferEngine extends Engine {
         mLogger.log("Transfer Refiner loaded is [" + mTXRefiner.getDescription() +
                             "]",LogManager.CONFIG_MESSAGE_LEVEL);
         mLogger.log("ReplicaSelector loaded is  [" + mReplicaSelector.description() +
+                    "]",LogManager.CONFIG_MESSAGE_LEVEL);
+        mLogger.log("Submit Directory Mapper loaded is    [" + mSubmitDirMapper.description() +
                     "]",LogManager.CONFIG_MESSAGE_LEVEL);
         mLogger.log("Output Mapper loaded is    [" + mOutputMapper.description() +
                     "]",LogManager.CONFIG_MESSAGE_LEVEL);
@@ -421,7 +423,7 @@ public class TransferEngine extends Engine {
      */
     public void addTransferNodes( ReplicaCatalogBridge rcb, PlannerCache plannerCache ) {
         mRCBridge = rcb;
-        mRCBridge.mSubmitDirFactory = this.mSubmitDirFactory;
+        mRCBridge.mSubmitDirMapper = this.mSubmitDirMapper;
         mPlannerCache = plannerCache;
 
         Job currentJob;
@@ -2042,7 +2044,7 @@ public class TransferEngine extends Engine {
         
         String relative = null;
         try {
-            File f =  mSubmitDirFactory.getRelativeDir(job);
+            File f =  mSubmitDirMapper.getRelativeDir(job);
             mLogger.log("Directory for job " + job.getID() + " is " + f,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             relative = f.getPath();

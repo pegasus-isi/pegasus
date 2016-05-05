@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.isi.pegasus.planner.transfer.mapper;
+package edu.isi.pegasus.planner.mapper;
 
 /**
  * An empty interface for all transfer Mappers that determine where a File 
@@ -22,5 +22,12 @@ package edu.isi.pegasus.planner.transfer.mapper;
  * @author Karan Vahi
  */
 public interface Mapper {
+    
+    /**
+     * Returns a short description of the mapper.
+     * 
+     * @return 
+     */
+    public String description();
     
 }

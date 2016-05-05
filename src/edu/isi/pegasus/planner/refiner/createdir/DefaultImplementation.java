@@ -38,7 +38,7 @@ import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.code.gridstart.PegasusExitCode;
-import edu.isi.pegasus.planner.directory.Creator;
+import edu.isi.pegasus.planner.mapper.SubmitMapper;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
@@ -149,7 +149,7 @@ public class DefaultImplementation implements Implementation {
      * Handle to the Submit directory factory, that returns the relative
      * submit directory for a job
      */
-    protected Creator mSubmitDirFactory;
+    protected SubmitMapper mSubmitDirFactory;
     
     /**
      * Intializes the class.

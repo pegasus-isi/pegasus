@@ -53,7 +53,7 @@ import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import edu.isi.pegasus.planner.directory.Creator;
+import edu.isi.pegasus.planner.mapper.SubmitMapper;
 
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Dagman;
@@ -219,7 +219,7 @@ public abstract class Abstract implements Implementation{
      * Handle to the Submit directory factory, that returns the relative
      * submit directory for a job
      */
-    protected Creator mSubmitDirFactory;
+    protected SubmitMapper mSubmitDirFactory;
 
     /**
      * The overloaded constructor, that is called by the Factory to load the

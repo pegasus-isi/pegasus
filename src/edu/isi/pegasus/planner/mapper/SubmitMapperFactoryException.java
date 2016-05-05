@@ -1,5 +1,5 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ *  Copyright 2007-2016 University Of Southern California
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -14,29 +14,27 @@
  *  limitations under the License.
  */
 
-
-package edu.isi.pegasus.planner.transfer.mapper;
-
+package edu.isi.pegasus.planner.mapper;
 
 import edu.isi.pegasus.common.util.FactoryException;
 
 /**
- * Class to notify of failures while instantiating Output Mappers.
+ * Class to notify of failures while instantiating Creator implementations.
  *
  * @author Karan Vahi
  * @version $Revision$
  */
 
-public class OutputMapperFactoryException extends FactoryException {
+public class SubmitMapperFactoryException extends FactoryException {
 
     /**
      * The default classname that is associated with the exception.
      */
-    public static final String DEFAULT_NAME = "Output Mapper";
+    public static final String DEFAULT_NAME = "Directory Creator";
 
 
     /**
-     * Constructs a <code>OutputMapperFactoryException</code> with no detail
+     * Constructs a <code>CreatorFactoryException</code> with no detail
      * message. The associated classname is set to value specified by
      * <code>DEFAULT_NAME</code>.
      *
@@ -44,27 +42,26 @@ public class OutputMapperFactoryException extends FactoryException {
      *
      * @see #DEFAULT_NAME
      */
-    public OutputMapperFactoryException( String msg ) {
+    public SubmitMapperFactoryException( String msg ) {
         super( msg );
         mClassname = this.DEFAULT_NAME;
     }
 
     /**
-     * Constructs a <code>OutputMapperFactoryException</code> with the specified detailed
+     * Constructs a <code>CreatorFactoryException</code> with the specified detailed
      * message.
      *
      * @param msg       is the detailed message.
      * @param classname the name of class that was trying to be instantiated or
      *                  some other signifier like module name.
      */
-    public OutputMapperFactoryException( String msg,
-                                                   String classname) {
+    public SubmitMapperFactoryException(String msg, String classname) {
         super( msg , classname );
     }
 
 
     /**
-     * Constructs a <code>OutputMapperFactoryException</code> with the
+     * Constructs a <code>CreatorFactoryException</code> with the
      * specified detailed message and a cause. The associated classname is set
      * to value specified by <code>DEFAULT_NAME</code>.
      *
@@ -76,15 +73,14 @@ public class OutputMapperFactoryException extends FactoryException {
      *
      * @see #DEFAULT_NAME
      */
-    public OutputMapperFactoryException(String msg,
-                                                  Throwable cause) {
+    public SubmitMapperFactoryException(String msg, Throwable cause) {
         super(msg, cause);
         mClassname = this.DEFAULT_NAME;
     }
 
 
     /**
-     * Constructs a <code>OutputMapperFactoryException</code> with the
+     * Constructs a <code>CreatorFactoryException</code> with the
      * specified detailed message and a cause.
      *
      * @param msg       is the detailed message that is to be logged.
@@ -94,9 +90,9 @@ public class OutputMapperFactoryException extends FactoryException {
      * value is permitted, and indicates that the cause is nonexistent or
      * unknown.
      */
-    public OutputMapperFactoryException(String msg,
-                                                  String classname,
-                                                  Throwable cause) {
+    public SubmitMapperFactoryException(String msg,
+                                           String classname,
+                                           Throwable cause) {
         super( msg, cause );
         mClassname = classname;
     }

@@ -13,13 +13,14 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.isi.pegasus.planner.transfer.mapper.impl;
+package edu.isi.pegasus.planner.mapper.output;
 
 
+import edu.isi.pegasus.planner.mapper.output.AbstractFileFactoryBasedMapper;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
-import edu.isi.pegasus.planner.transfer.mapper.MapperException;
+import edu.isi.pegasus.planner.mapper.MapperException;
 
 import java.io.IOException;
 

@@ -439,7 +439,7 @@ public class RemoveDirectory extends Engine {
         
         //PM-833 set the relative submit directory for the transfer
         //job based on the associated file factory
-        newJob.setRelativeSubmitDirectory( this.mSubmitDirFactory.getRelativeDir(newJob));
+        newJob.setRelativeSubmitDirectory( this.mSubmitDirMapper.getRelativeDir(newJob));
         
         //PM-773
         if( additionalChecks ){
