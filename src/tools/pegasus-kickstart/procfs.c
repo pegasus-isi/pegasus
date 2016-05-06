@@ -325,6 +325,16 @@ void procfs_merge_stats_list(ProcStatsList *list, ProcStats *result, int interva
         result->wchar += stats->wchar;
         result->syscr += stats->syscr;
         result->syscw += stats->syscw;
+#ifdef HAS_PAPI
+        result->totins += stats->totins;
+        result->ldins += stats->ldins;
+        result->srins += stats->srins;
+        result->fpins += stats->fpins;
+        result->fpops += stats->fpops;
+        result->l3misses += stats->l3misses;
+        result->l2misses += stats->l2misses;
+        result->l1misses += stats->l1misses;
+#endif
         result->bsend += stats->bsend;
         result->brecv += stats->brecv;
         /* Only add memory, threads and processes for processes we have seen recently */
