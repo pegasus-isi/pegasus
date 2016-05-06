@@ -39,7 +39,7 @@ def redirect_to_index():
     return redirect(url_for('.index'))
 
 
-@dashboard_routes.route('/u/<username>/', strict_slashes=False)
+@dashboard_routes.route('/u/<username>/')
 def index(username):
     """
     List all workflows from the master database.

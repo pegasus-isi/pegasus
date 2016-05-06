@@ -38,5 +38,10 @@ cache = Cache(app)
 from Pegasus.service.base import BooleanConverter
 app.url_map.converters['boolean'] = BooleanConverter
 
+#
+# Relax trailing slash requirement
+#
+app.url_map.strict_slashes = False
+
 from Pegasus.service import auth, filters, dashboard, monitoring
 
