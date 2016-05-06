@@ -21,18 +21,6 @@
 #include "monitoring.h"
 #include "procfs.h"
 
-typedef struct {
-    char *url;
-    char *wf_label;
-    char *wf_uuid;
-    char *dag_job_id;
-    char *condor_job_id;
-    char *xformation;
-    char *task_id;
-    int socket;
-    int interval;
-} MonitoringContext;
-
 /* This pipe is used to send a shutdown message from the main thread to the
  * monitoring thread */
 static int signal_pipe[2];
@@ -40,7 +28,7 @@ static pthread_t monitoring_thread;
 
 // a util function for reading env variables by the main kickstart process
 // with monitoring endpoint data or set default values
-static int initialize_monitoring_context(MonitoringContext *ctx) {
+int initialize_monitoring_context(MonitoringContext *ctx) {
     char* envptr;
 
     envptr = getenv("KICKSTART_MON_INTERVAL");
@@ -108,7 +96,7 @@ static int initialize_monitoring_context(MonitoringContext *ctx) {
     return 0;
 }
 
-static void release_monitoring_context(MonitoringContext* ctx) {
+void release_monitoring_context(MonitoringContext* ctx) {
     if (ctx == NULL) return;
     if (ctx->url != NULL) free(ctx->url);
     if (ctx->wf_uuid != NULL) free(ctx->wf_uuid);
@@ -314,7 +302,7 @@ static void send_http(MonitoringContext *ctx, ProcStats *stats) {
     send_http_msg(ctx->url, msg);
 }
 
-int send_msg_to_kickstart(char *host, char *port, ProcStats *stats) {
+static int send_msg_to_kickstart(char *host, char *port, ProcStats *stats) {
     if (host == NULL || port == NULL) {
         return -1;
     }
@@ -404,27 +392,31 @@ static void send_file(MonitoringContext *ctx, ProcStats *stats) {
     fclose(log);
 }
 
-/* Merge the stats we have and send them to the parent monitor */
-static int send_report(MonitoringContext *ctx, ProcStatsList *listptr) {
-    ProcStats stats;
-    procfs_merge_stats_list(listptr, &stats, ctx->interval);
-
+int send_monitoring_report(MonitoringContext *ctx, ProcStats *stats) {
     if (strstr(ctx->url, "rabbitmq://") == ctx->url ||
         strstr(ctx->url, "rabbitmqs://") == ctx->url) {
-        send_rabbitmq(ctx, &stats);
+        send_rabbitmq(ctx, stats);
     } else if (strstr(ctx->url, "http://") == ctx->url ||
                strstr(ctx->url, "https://") == ctx->url) {
-        send_http(ctx, &stats);
+        send_http(ctx, stats);
     } else if (strstr(ctx->url, "kickstart://") == ctx->url) {
-        send_kickstart(ctx, &stats);
+        send_kickstart(ctx, stats);
     } else if (strstr(ctx->url, "file://") == ctx->url) {
-        send_file(ctx, &stats);
+        send_file(ctx, stats);
     } else {
         error("Unknown endpoint URL scheme: %s\n", ctx->url);
     }
 
     return 0;
 }
+
+/* Merge the stats we have and send them to the parent monitor */
+static int send_merged_monitoring_report(MonitoringContext *ctx, ProcStatsList *listptr) {
+    ProcStats stats;
+    procfs_merge_stats_list(listptr, &stats, ctx->interval);
+    return send_monitoring_report(ctx, &stats);
+}
+
 
 /* purpose: find an ephemeral port available on a machine for further socket-based communication;
  *          opens a new socket on an ephemeral port, returns this port number and hostname
@@ -577,7 +569,7 @@ void* monitoring_thread_func(void* arg) {
 
             if (signalled) {
                 /* Must be the last process on libinterpose, send a message */
-                send_report(ctx, list);
+                send_merged_monitoring_report(ctx, list);
             }
         }
 
@@ -596,9 +588,12 @@ void* monitoring_thread_func(void* arg) {
             procfs_read_stats_group(&list);
 
             /* Send a monitoring message */
-            send_report(ctx, list);
+            send_merged_monitoring_report(ctx, list);
         }
     }
+
+    /* Send a final monitoring message */
+    send_merged_monitoring_report(ctx, list);
 
     info("Monitoring thread exiting");
     procfs_free_stats_list(list);

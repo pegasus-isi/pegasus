@@ -13,51 +13,41 @@
 #include "procfs.h"
 #include "monitoring.h"
 
-static int mon_interval = 10;
-static char mon_host[128];
-static char mon_port[16];
 static int monitor_running;
 static pthread_t monitor_thread;
 static pthread_mutex_t monitor_mutex;
 static pthread_cond_t monitor_cv;
 
-void interpose_send_stats(ProcStats *stats) {
-    send_msg_to_kickstart(mon_host, mon_port, stats);
-}
-
 void *interpose_monitoring_thread_func(void* arg) {
     pthread_mutex_lock(&monitor_mutex);
 
-    ProcStats stats;
+    MonitoringContext *ctx = (MonitoringContext *)arg;
 
     while (monitor_running) {
-
         struct timeval now;
         struct timespec timeout;
         gettimeofday(&now, NULL);
-        timeout.tv_sec = now.tv_sec + mon_interval;
+        timeout.tv_sec = now.tv_sec + ctx->interval;
         timeout.tv_nsec = now.tv_usec * 1000UL;
         pthread_cond_timedwait(&monitor_cv, &monitor_mutex, &timeout);
 
+        ProcStats stats;
         gather_stats(&stats);
 
-        if (send_msg_to_kickstart(mon_host, mon_port, &stats)) {
+        if (send_monitoring_report(ctx, &stats)) {
             printerr("Process %d failed to send message to kickstart\n",
                      getpid());
         }
-
-        /* Move this down here so that we always send one event before exiting */
-        if (!monitor_running) {
-            break;
-        }
     }
+
+    release_monitoring_context(ctx);
 
     pthread_mutex_unlock(&monitor_mutex);
 
     return NULL;
 }
 
-void interpose_spawn_monitoring_thread() {
+void interpose_start_monitoring_thread() {
     pthread_mutex_init(&monitor_mutex, NULL);
     pthread_cond_init(&monitor_cv, NULL);
 
@@ -73,21 +63,13 @@ void interpose_spawn_monitoring_thread() {
      * the application might change them later. For example, the application
      * might be pegasus-monitor or pegasus-kickstart. 
      */
-
-    mon_interval = atoi(env);
-
-    env = getenv("KICKSTART_MON_URL");
-    if (env == NULL) {
-        printerr("KICKSTART_MON_URL not set\n");
-        exit(1);
-    }
-    if (sscanf(env, "kickstart://%127[^:]:%15[0-9]", mon_host, mon_port) != 2) {
-        error("Unable to parse kickstart monitor URL: %s", env);
-        exit(1);
+    MonitoringContext *ctx = calloc(1, sizeof(MonitoringContext));
+    if (initialize_monitoring_context(ctx) < 0) {
+        return;
     }
 
     monitor_running = 1;
-    int rc = pthread_create(&monitor_thread, NULL, interpose_monitoring_thread_func, NULL);
+    int rc = pthread_create(&monitor_thread, NULL, interpose_monitoring_thread_func, ctx);
     if (rc) {
         printerr("Could not spawn the monitoring thread: %d %s\n", rc, strerror(errno));
         monitor_running = 0;

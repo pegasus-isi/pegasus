@@ -520,8 +520,6 @@ static void report_stats() {
     tprintf("read_bytes: %llu\n", stats.read_bytes);
     tprintf("write_bytes: %llu\n", stats.write_bytes);
     tprintf("cancelled_write_bytes: %llu\n", stats.cancelled_write_bytes);
-
-    interpose_send_stats(&stats);
 }
 
 static int path_matches_patterns(const char *path, const char *patterns) {
@@ -1108,7 +1106,7 @@ static void __attribute__((constructor)) interpose_init(void) {
 #endif
 
     /* online monitoring */
-    interpose_spawn_monitoring_thread();
+    interpose_start_monitoring_thread();
 }
 
 /* Library finalizer function */
