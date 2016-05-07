@@ -25,6 +25,7 @@
  * monitoring thread */
 static int signal_pipe[2];
 static pthread_t monitoring_thread;
+static int monitor_running;
 
 // a util function for reading env variables by the main kickstart process
 // with monitoring endpoint data or set default values
@@ -592,9 +593,6 @@ void* monitoring_thread_func(void* arg) {
         }
     }
 
-    /* Send a final monitoring message */
-    send_merged_monitoring_report(ctx, list);
-
     info("Monitoring thread exiting");
     procfs_free_stats_list(list);
     close(timer);
@@ -605,6 +603,8 @@ void* monitoring_thread_func(void* arg) {
 }
 
 int start_monitoring_thread() {
+    monitor_running = 0;
+
     /* Make sure the calling process is in its own process group */
     setpgid(0, 0);
 
@@ -654,6 +654,8 @@ int start_monitoring_thread() {
         return rc;
     }
 
+    monitor_running = 1;
+
     return 0;
 }
 
@@ -667,11 +669,15 @@ int stop_monitoring_thread() {
     }
 
     /* Wait for the monitoring thread */
-    pthread_join(monitoring_thread, NULL);
+    if (monitor_running) {
+        pthread_join(monitoring_thread, NULL);
+    }
 
     /* Close the pipe */
     close(signal_pipe[0]);
     close(signal_pipe[1]);
+
+    monitor_running = 0;
 
     return 0;
 }
