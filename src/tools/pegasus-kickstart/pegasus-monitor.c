@@ -8,14 +8,29 @@
 #include "monitoring.h"
 #include "log.h"
 
+void usage(char *argv) {
+    fprintf(stderr, "Usage: %s [-i interval] application [args...]\n", argv);
+    exit(1);
+}
+
 int main(int argc, char **argv) {
     log_set_name("pegasus-monitor");
     log_set_default_level();
 
     /* Check arguments */
     if (argc < 2) {
-        fprintf(stderr, "Usage: %s application [args...]\n", argv[0]);
-        return 1;
+        usage(argv[0]);
+    }
+
+    /* Did they specify the interval? */
+    int argoffset = 1;
+    if (argv[1][0] == '-') {
+        /* Check for common issues */
+        if (argv[1][1] != 'i' || argc < 4) {
+            usage(argv[0]);
+        }
+        setenv("KICKSTART_MON_INTERVAL", argv[2], 1);
+        argoffset = 3;
     }
 
     start_monitoring_thread();
@@ -26,7 +41,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Error forking process: %s\n", strerror(errno));
         return 1;
     } else if (pid == 0) {
-        execvp(argv[1], &argv[1]);
+        execvp(argv[argoffset], &argv[argoffset]);
         fprintf(stderr, "execvp: %s\n", strerror(errno));
         _exit(1);
     }
