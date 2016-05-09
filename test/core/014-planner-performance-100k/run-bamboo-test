@@ -58,6 +58,7 @@ START_TS=`/bin/date +'%s'`
 
 # plan the workflow
 /usr/bin/time pegasus-plan \
+    -v \
     --conf pegasusrc \
     --sites condorpool \
     --dir submit \
