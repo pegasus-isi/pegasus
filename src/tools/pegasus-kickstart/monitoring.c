@@ -147,7 +147,7 @@ static void send_http_msg(char *url, char *msg) {
 
 static size_t json_encode(MonitoringContext *ctx, ProcStats *stats, char *buf, size_t maxsize) {
     size_t size = snprintf(buf, maxsize,
-            "{\"ts\":%lu,"
+            "{\"ts\":%.6lf,"
             "\"wf_uuid\":\"%s\","
             "\"wf_label\":\"%s\","
             "\"dag_job_id\":\"%s\","

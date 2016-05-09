@@ -6,7 +6,7 @@
 #include <netinet/in.h>
 
 typedef struct _ProcStats {
-    time_t ts;
+    double ts;
     in_addr_t host;
     pid_t pid;
     pid_t ppid;

@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -84,6 +85,12 @@ static int getmpirank() {
 
 static int startswith(const char *line, const char *tok) {
     return strstr(line, tok) == line;
+}
+
+static double get_time() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec + ((double)tv.tv_usec / 1e6);
 }
 
 /* Read /proc/self/stat to get CPU usage and returns a structure with this information */
@@ -232,7 +239,7 @@ void procfs_stats_init(ProcStats *stats) {
 }
 
 int procfs_read_stats(pid_t pid, ProcStats *stats) {
-    stats->ts = time(NULL);
+    stats->ts = get_time();
     stats->pid = pid;
     stats->ppid = getppid();
     stats->rank = getmpirank();
@@ -306,7 +313,7 @@ void procfs_merge_stats_list(ProcStatsList *list, ProcStats *result, int interva
     memset(result, 0, sizeof(ProcStats));
 
     /* Use current process for all the identifying information */
-    result->ts = time(NULL);
+    result->ts = get_time();
     result->host = gethostaddr();
     result->pid = getpid();
     result->ppid = getppid();
@@ -338,7 +345,7 @@ void procfs_merge_stats_list(ProcStatsList *list, ProcStats *result, int interva
         result->bsend += stats->bsend;
         result->brecv += stats->brecv;
         /* Only add memory, threads and processes for processes we have seen recently */
-        if (stats->ts >= result->ts - interval) {
+        if (stats->ts > result->ts - interval) {
             trace("MERGING memory and threads/procs");
             result->vm += stats->vm;
             result->rss += stats->rss;
