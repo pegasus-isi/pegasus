@@ -557,15 +557,18 @@ public class GLite extends Abstract {
         //of Pegasus profile keys before doing any translation
         
         mCondorG.handleResourceRequirements(job);
+
+        gridResource = gridResource.replace("batch ", "");
         
         //sanity check
-        if( (!(gridResource.equals( "pbs") || gridResource.equals( "sge") ))){
-            //if it is not pbs or sge . log a warning.
-            mLogger.log( "Glite mode supports only pbs or sge submission. Will use PBS style attributes for job " + 
-                          job.getID() + " with grid resource " + gridResource,
+        if( ! (gridResource.equals("pbs") || 
+               gridResource.equals("sge") ||
+               gridResource.equals("slurm") ) ) {
+            //if it is not one of the support types, log a warning but use PBS.
+            mLogger.log( "Glite mode supports only pbs, sge or slurm submission. Will use PBS style attributes for job " + 
+                         job.getID() + " with grid resource " + gridResource,
                          LogManager.WARNING_MESSAGE_LEVEL );
             gridResource = "pbs";
-            
         }
         
         if ( gridResource.equals( "pbs" ) ){
@@ -656,6 +659,32 @@ public class GLite extends Abstract {
                 }
                 else if( nodesSet || ppnSet ){ 
                     throw new CondorStyleException( "Either cores or ( nodes and ppn) need to be set for SGE submission for job " + job.getID() );
+                    
+                }
+                //default case nothing specified 
+            }
+
+        }
+        else if ( gridResource.equals( "slurm" )){
+            //for SLURM case
+            boolean coresSet = job.globusRSL.containsKey( Globus.COUNT_KEY );
+            boolean nodesSet = job.globusRSL.containsKey( Globus.HOST_COUNT_KEY );
+            boolean ppnSet   = job.globusRSL.containsKey( Globus.XCOUNT_KEY );
+            
+            if( coresSet ){
+                //then that is what SLURM really needs. 
+                //ignore other values.
+            }
+            else{
+                //we need to attempt to arrive at a value or specify a default value
+                if( nodesSet && ppnSet ){
+                    //set cores to multiple
+                    int nodes = Integer.parseInt((String) job.globusRSL.get( Globus.HOST_COUNT_KEY));
+                    int ppn   = Integer.parseInt((String) job.globusRSL.get( Globus.XCOUNT_KEY));
+                    job.globusRSL.construct( Globus.COUNT_KEY, Integer.toString( nodes*ppn ) );
+                }
+                else if( nodesSet || ppnSet ){ 
+                    throw new CondorStyleException( "Either cores or ( nodes and ppn) need to be set for SLURM submission for job " + job.getID() );
                     
                 }
                 //default case nothing specified 
