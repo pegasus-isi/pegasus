@@ -1056,8 +1056,6 @@ if wf._monitord_exit_code == 0:
 #
 # --- online monitoring begin --------------------------------------------------------------------
 #
-print "Starting an online monitoring process..."
-
 from multiprocessing import Process, Pipe
 from Pegasus.service.monitoring.online_monitoring import OnlineMonitord
 from Pegasus.service.monitoring.anomaly_handler import AnomalyHandler
@@ -1072,8 +1070,7 @@ def online_monitoring_proc(wf_label, wf_uuid, event_sink, child_conn):
 def anomaly_handling_proc(wf_label, wf_uuid, event_sink):
     utils.configureLogging()
     anomaly_handler = AnomalyHandler(wf_label, wf_uuid, event_sink)
-    anomaly_handler.setup_mq_conn()
-    anomaly_handler.start_consuming_mq_messages()
+    anomaly_handler.start()
 
 # start an OS process for the online monitoring feature
 online_monitor_proc = Process(target=online_monitoring_proc, args=(wf._dax_label, wf._wf_uuid, event_dest, child_conn))
@@ -1081,14 +1078,6 @@ online_monitor_proc.start()
 
 anomaly_handler_proc = Process(target=anomaly_handling_proc, args=(wf._dax_label, wf._wf_uuid, event_dest))
 anomaly_handler_proc.start()
-
-# time.sleep(10)
-
-# print "Main process: we are sending WORKFLOW_ENDED In the beginning"
-# parent_conn.send("WORKFLOW_ENDED")
-# msg = parent_conn.recv()
-# print "In return we got: '", msg, "'"
-
 
 #
 # --- online monitoring end --------------------------------------------------------------------
