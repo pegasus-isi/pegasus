@@ -1,0 +1,7 @@
+#! /bin/bash 
+
+set -e 
+
+export JIRA_ITEM="PM-1097" 
+
+pegasus-kickstart $@ 
