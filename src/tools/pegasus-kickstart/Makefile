@@ -85,6 +85,7 @@ version.h:
 install: $(TARGET)
 	$(INSTALL) -m 0755 pegasus-kickstart $(prefix)/bin
 ifeq (LINUX,${SYSTEM})
+	$(INSTALL) -m 0755 pegasus-monitor $(prefix)/bin
 ifeq (x86_64,${ARCH})
 	mkdir -p $(libdir)
 	$(INSTALL) -m 0755 libinterpose.so $(libdir)
