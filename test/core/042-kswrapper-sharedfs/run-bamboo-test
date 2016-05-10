@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+set -o pipefail
 
 # this variable is expanded by the planner when
 # parsing in the sites.xml file in the conf directory
@@ -51,12 +52,9 @@ WORK_DIR=`cat plan.out | grep pegasus-run | sed -E 's/.*pegasus-run[ ]+//'`
 #check if planner did the right things
 for SUB in `find ${WORK_DIR} -name "*sub" -exec grep -l -P "pegasus_site\s*=\s*\"condorpool\"" {} \;` ; do
 
-    set +e
-    grep -E '\bexecutable' $SUB | grep $KICKSTART_WRAPPER 1> /dev/null 2>&1
-    EC=$?
-    set -e
-
-    if [ $EC -ne 0 ]; then
+    if grep -E '\bexecutable' $SUB | grep $KICKSTART_WRAPPER 1> /dev/null 2>&1 ; then
+	:
+    else
 	echo "Job $SUB not launched by kickstart-wrapper"
 	exit 1
     fi
