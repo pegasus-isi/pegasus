@@ -1,5 +1,4 @@
 import os
-import sys
 import logging
 import time
 
@@ -10,20 +9,11 @@ from Pegasus.shadowq.wfmonitor import WorkflowMonitor
 from Pegasus.shadowq.provision import Provisioner
 from Pegasus.shadowq.messaging import ManifestListener, RequestPublisher
 
-__all__ = ["main"]
-
 log = logging.getLogger(__name__)
 
-def main():
-    if len(sys.argv) != 2:
-        print "Usage: %s DAGFILE" % sys.argv[0]
-        exit(1)
-
-    utils.configureLogging(logging.INFO)
-
+def start(dag_file):
     log.info("Shadow queue starting...")
 
-    dag_file = sys.argv[1]
     dag_file = os.path.join(os.getcwd(), dag_file)
     dag_file = os.path.abspath(dag_file)
 
@@ -78,6 +68,10 @@ def main():
     log.info("Interval: %d", interval)
     log.info("Makespan: %d", makespan)
     log.info("Deadline: %d", deadline)
+
+    if amqp_url is None:
+        log.error("SHADOWQ_AMQP_URL not specified in environment")
+        exit(1)
 
     listener = ManifestListener(amqp_url, sliceid)
     listener.start()

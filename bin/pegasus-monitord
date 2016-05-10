@@ -1072,12 +1072,20 @@ def anomaly_handling_proc(wf_label, wf_uuid, event_sink):
     anomaly_handler = AnomalyHandler(wf_label, wf_uuid, event_sink)
     anomaly_handler.start()
 
+def shadowq_proc(dag_file):
+    utils.configureLogging()
+    from Pegasus.shadowq import main
+    main.start(dag_file)
+
 # start an OS process for the online monitoring feature
 online_monitor_proc = Process(target=online_monitoring_proc, args=(wf._dax_label, wf._wf_uuid, event_dest, child_conn))
 online_monitor_proc.start()
 
 anomaly_handler_proc = Process(target=anomaly_handling_proc, args=(wf._dax_label, wf._wf_uuid, event_dest))
 anomaly_handler_proc.start()
+
+shadow_queue_proc = Process(target=shadowq_proc, args=(top_level_wf_params["dag"],))
+shadow_queue_proc.start()
 
 #
 # --- online monitoring end --------------------------------------------------------------------
