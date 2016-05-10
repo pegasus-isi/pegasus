@@ -793,7 +793,7 @@ public class Kickstart implements GridStart {
         else if( mDynamicDeployment &&
                  job.runInWorkDirectory()  && ! mPegasusConfiguration.jobSetupForWorkerNodeExecution(job ) ){
 
-            //worker package deployment 
+            //worker package deployment for sharedfs
             //pick up the path from the transformation catalog of
             //dynamic deployment
             //in case of pegasus lite mode, we dont look up here.
@@ -828,9 +828,10 @@ public class Kickstart implements GridStart {
             //the vanilla case where kickstart is pre installed.
             TransformationCatalogEntry entry = this.getTransformationCatalogEntry( job.getSiteHandle() );
             
+            String ksProfilePath = (String)job.vdsNS.get( Pegasus.GRIDSTART_PATH_KEY );
             String ksPath = ( entry == null )?
                              //rely on the path determined from profiles 
-                             (String)job.vdsNS.get( Pegasus.GRIDSTART_PATH_KEY ):
+                             ksProfilePath:
                              //the tc entry has highest priority
                              entry.getPhysicalTransformation();
 
@@ -847,9 +848,23 @@ public class Kickstart implements GridStart {
             else{
                 //pegasus lite case. we dont want to rely on site catalog
                 //constructed path
+                
+                /* commented out for PM-1097
                 ksPath = ( ksPath == null )?
                           this.EXECUTABLE_BASENAME ://use the basename
                           ksPath;
+                */
+                if ( ksPath == null ){
+                          ksPath = this.EXECUTABLE_BASENAME ;//use the basename
+                }
+                else{
+                    //PM-1097 check again to see if user had different gs profile set
+                    if ( ksProfilePath != null ){
+                        //we prefer the kickstart path as determined from profile
+                        //only for PegasusLite case.
+                        ksPath = ksProfilePath;
+                    }
+                }
             }
             
             //sanity check 
