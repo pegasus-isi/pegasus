@@ -1,0 +1,7 @@
+preprocess_ID0000001 90.0
+analyze_ID0000004 90.0
+findrange_ID0000003 90.0
+findrange_ID0000002 90.0
+stage_in_local_pegasus_0_0 2.0
+create_dir_diamond_0_pegasus 0.0
+stage_out_local_pegasus_2_0 2.0

@@ -1,0 +1,105 @@
+#!/usr/bin/env python
+import sys
+import os
+import subprocess
+
+# Use pegasus-config to find our lib path
+bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
+pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python"
+lib_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python-externals"
+lib_ext_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+
+# Insert this directory in our search path
+sys.path.insert(0, lib_ext_dir)
+sys.path.insert(0, lib_dir)
+
+import time
+
+from Pegasus.shadowq.joblog import JobLog, JobLogEvent
+from Pegasus.shadowq.jobstate import JSLog, JSLogEvent
+
+if len(sys.argv) != 2:
+    print "Usage: %s SUBMIT_DIR" % __file__
+    exit(1)
+
+submitdir = sys.argv[1]
+
+braindump = {}
+braindump_file = os.path.join(submitdir, "braindump.txt")
+for l in open(braindump_file, "r"):
+    l = l.strip()
+    if len(l) == 0 or l.startswith("#"):
+        continue
+    key, value = l.split(" ", 1)
+    braindump[key] = value
+
+# Time zone correction (20140720T101853-0400)
+runtz = int(braindump["timestamp"][-5:]) / 100 * 3600
+localtz = time.altzone
+tzcorrection = localtz + runtz
+
+# Get actual start times of all the jobs from condor job log
+actual_start_times = {}
+joblog_file = os.path.join(submitdir, braindump["condor_log"])
+for rec in JobLog(joblog_file):
+    if rec.event == JobLogEvent.EXECUTE:
+        actual_start_times[rec.job_name] = rec.ts - tzcorrection
+
+# Get actual start times of all the jobs from the jobstate log
+#actual_start_times = {}
+#jslog_file = os.path.join(submitdir, "jobstate.log")
+#for rec in JSLog(jslog_file):
+#    if rec.event == JSLogEvent.EXECUTE:
+#        actual_start_times[rec.job_name] = time.mktime(rec.ts)
+
+# Get the simulation times from the shadowq trace
+sqtrace_file = os.path.join(submitdir, "shadowq.trace")
+sim_starts = []
+for l in open(sqtrace_file, "r"):
+    sim_start, sim_duration, estimated_finish_time = [float(f) for f in l.split()]
+    sim_starts.append(sim_start)
+
+# Get the estimated job start times from the shadowq log
+sqlog_file = os.path.join(submitdir, "shadowq.log")
+sqlog = open(sqlog_file, "r").readlines()
+i = 0
+sim = 0
+estimated_start_times = {}
+while i < len(sqlog):
+    if "Simulation starting..." in sqlog[i]:
+        if sim >= len(sim_starts):
+            # There was an unfinished simulation at the end of the log
+            break
+        sim_start = sim_starts[sim]
+        while "Simulation finished" not in sqlog[i]:
+            if sqlog[i].endswith("RUNNING\n"):
+                rec = sqlog[i].split()
+                job_name = rec[-2]
+                job_start = float(rec[-3])
+                if job_name not in estimated_start_times:
+                    estimated_start_times[job_name] = []
+                estimated_start_times[job_name].append([sim, sim_start, job_start])
+            i += 1
+        sim += 1
+    i += 1
+
+# Now merge everything together
+print "category job_name time error"
+for job_name, actual_start_time in actual_start_times.items():
+    if job_name.startswith("stage_in"):
+        category = "stage_in"
+    elif job_name.startswith("stage_out"):
+        category = "stage_out"
+    elif job_name.startswith("create_dir"):
+        category = "createdir"
+    elif job_name.startswith("clean"):
+        category = "cleanup"
+    else:
+        category = "compute"
+    for sim, sim_start, job_start in estimated_start_times[job_name]:
+        estimated_start_time = job_start
+        err = abs(estimated_start_time - actual_start_time)
+        time = -(actual_start_time - sim_start)
+        print category, job_name, time, err
+

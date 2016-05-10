@@ -1,6 +1,10 @@
 boto
 pysqlite2
 sqlalchemy
+sleekxmpp
+pyasn1
+pyasn1_modules
+dns
 *.egg-info
 *.egg
 MANIFEST.in
