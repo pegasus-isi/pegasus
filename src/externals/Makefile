@@ -43,6 +43,7 @@ endif
 PACKAGES+=influxdb
 PACKAGES+=pika
 PACKAGES+=dateutil
+PACKAGES+=six
 
 PYOPENSSL_ARGS=
 ifeq ($(OSID),macos10)
@@ -94,6 +95,7 @@ $(LIBDIR)/ordereddict.py: ordereddict-1.1.tar.gz
 $(LIBDIR)/influxdb: influxdb-2.12.0.tar.gz
 $(LIBDIR)/pika: pika-0.10.0.tar.gz
 $(LIBDIR)/dateutil: python-dateutil-2.4.2.tar.gz
+$(LIBDIR)/six: six-1.10.0.tar.gz
 
 clean:
 	rm -rf $(EXTDIR)
