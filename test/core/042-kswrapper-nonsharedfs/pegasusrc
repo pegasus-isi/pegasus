@@ -1,0 +1,17 @@
+pegasus.catalog.site.file=./conf/sites.xml
+
+pegasus.data.configuration = nonsharedfs
+
+pegasus.catalog.replica  File
+pegasus.catalog.replica.file ./conf/rc.data
+
+pegasus.dir.useTimestamp = true
+
+
+# we want kickstart to always report environment
+pegasus.gridstart.arguments = -f
+
+
+
+
+
