@@ -106,6 +106,7 @@ class Workflow(object):
             self.tutorial_setup = optionlist("What environment is tutorial to be setup for?", [
                 ("Local Machine", "submit-host"),
                 ("USC HPCC Cluster", "usc-hpcc"),
+                ("OSG from ISI submit node", "osg")
             ])
             self.setup_tutorial()
             return
@@ -142,6 +143,9 @@ class Workflow(object):
             self.config   = "glite"
             # for running the whole workflow as mpi job
             self.properties["pegasus.job.aggregator"]="mpiexec"
+        elif self.tutorial_setup == "osg":
+            self.sitename = "osg"
+            self.os = "linux"
         return
 
 
