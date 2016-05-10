@@ -318,39 +318,19 @@ public abstract class Abstract implements CodeGenerator{
      * job information for the job.
      *
      * @param job  the job whose job information needs to be written.
+     * @param suffix
      *
      * @return  the writer to the open file.
      * @exception IOException if unable to open a write handle to the file.
      */
-    public PrintWriter getWriter( Job job ) throws IOException{
-//        String jobDir = job.getSubmitDirectory();
-        StringBuffer sb = new StringBuffer();
-
-        //determine the absolute submit directory for the job
-//        sb.append( GridStart.getSubmitDirectory( mSubmitFileDir, job ));
-        sb.append( mSubmitFileDir );
-
+    public PrintWriter getWriter( Job job, String suffix  ) throws IOException{
+        StringBuilder sb = new StringBuilder();       
         //append the base name of the job
-        sb.append( File.separatorChar ).append( getFileBaseName(job) );
+        sb.append( File.separatorChar ).append( job.getFileFullPath( mSubmitFileDir, suffix) );
 
         // intialize the print stream to the file
         return new PrintWriter(new BufferedWriter(new FileWriter(sb.toString())));
     }
 
-    /**
-     * Returns the basename of the file to which the job is written to.
-     *
-     * @param job  the job whose job information needs to be written.
-     *
-     * @return  the basename of the file.
-     */
-    public String getFileBaseName(Job job){
-        StringBuffer sb = new StringBuffer();
-        sb.append(job.jobName).append(".sub");
-        return sb.toString();
-    }
-
     
-    
-
 }

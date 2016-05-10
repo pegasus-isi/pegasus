@@ -45,6 +45,7 @@ execute_job() {
     # purpose: executes a job in a subshell
     # paramtr: $jobname (IN): the name of the job to execute
     #          $dir (IN):     the directory in which to execute the job
+    #          $submit_dir(IN): the submit directory where the job .out|.err goes
     #          $exec (IN):    the executable to be invoked
     #          $args (IN):    the arg string for the executable
     #          $stdin (IN):   the stdin for the job. Pass "" if no stdin.
@@ -55,18 +56,19 @@ execute_job() {
 
     #sanity check
     check_predefined_variables
-    if [ $# -lt 5 ] ; then
-	echo "execute_job requires at a minimum 5 arguments"
+    if [ $# -lt 6 ] ; then
+	echo "execute_job requires at a minimum 6 arguments"
 	exit 1
     fi
       
     jobname=$1
     dir=$2
-    exec=$3
-    args=$4
-    stdin=$5
+    submit_dir=$3
+    exec=$4
+    args=$5
+    stdin=$6
 
-    shift 5
+    shift 6
 
     create_jobstate_log_entry  $jobname SUBMIT
     create_jobstate_log_entry  $jobname EXECUTE
@@ -91,8 +93,8 @@ execute_job() {
 	done;
 
 	echo "Executing JOB $exec $args" 
-	jobout="${PEGASUS_SUBMIT_DIR}/${jobname}.out"
-	joberr="${PEGASUS_SUBMIT_DIR}/${jobname}.err"
+	jobout="${submit_dir}/${jobname}.out"
+	joberr="${submit_dir}/${jobname}.err"
 
 	if [ "X${stdin}" = "X" ]; then
 	    #execute the job without setting the stdin
@@ -161,8 +163,8 @@ execute_post_script() {
 	done;
 
 	echo "Executing POSTSCRIPT $exec $args" 
-	jobout="${PEGASUS_SUBMIT_DIR}/${jobname}.post.out"
-	joberr="${PEGASUS_SUBMIT_DIR}/${jobname}.post.err"
+	jobout="${dir}/${jobname}.post.out"
+	joberr="${dir}/${jobname}.post.err"
 
 	if [ "X${stdin}" = "X" ]; then
 	    #execute the job without setting the stdin

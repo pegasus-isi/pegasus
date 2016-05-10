@@ -274,7 +274,7 @@ public class TransformationCatalogTextParser {
 
                 case TransformationCatalogReservedWord.OS:
                     value = getQuotedValue( "os" );
-                    sysinfo.setOS( SysInfo.OS.valueOf( value.toUpperCase() ) );
+                    sysinfo.setOS( SysInfo.OS.valueOf( value.toLowerCase() ) );
                 break;
                 
                 case TransformationCatalogReservedWord.OSRELEASE:

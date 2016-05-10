@@ -261,11 +261,15 @@ public class Shell extends Abstract {
         POSTScript ps       = mGridStartFactory.loadPOSTScript( job, gridStart );
         boolean constructed = ps.construct( job, Dagman.POST_SCRIPT_KEY );
 
+        //PM-833 determine the job submit directory and use it for the 
+        //calls to execute job and postscript
+        String submitDirectory = new File( job.getFileFullPath( mSubmitFileDir, ".in" )).getParent();
+        
         //generate call to executeJob
-        writeString( generateCallToExecuteJob( job, execDir, this.mSubmitFileDir ) );
+        writeString( generateCallToExecuteJob( job, execDir, submitDirectory ) );
         if( constructed ){
             //execute postscript and check for exitcode
-            writeString( generateCallToExecutePostScript( job, mSubmitFileDir ) );
+            writeString( generateCallToExecutePostScript( job, submitDirectory ) );
             writeString( generateCallToCheckExitcode( job, JOBSTATE_POST_SCRIPT_PREFIX ) );
         }
         else{
@@ -331,8 +335,11 @@ public class Shell extends Abstract {
         //This setting should happen only in Condor Generator
         String executable = (String) job.dagmanVariables.get( Dagman.POST_SCRIPT_KEY );
         StringBuilder args = new StringBuilder();
+        String jobStdout = (String)job.dagmanVariables.get( Dagman.OUTPUT_KEY) ;
+        //PM-833 we take the basename as job is run in the exact submit directory
+        jobStdout = new File( jobStdout).getName();
         args.append( (String)job.dagmanVariables.get( Dagman.POST_SCRIPT_ARGUMENTS_KEY ) ).
-             append( " " ).append( (String)job.dagmanVariables.get( Dagman.OUTPUT_KEY)  ); 
+             append( " " ).append( jobStdout ); 
         
         String arguments = args.toString();
 
@@ -389,6 +396,7 @@ public class Shell extends Abstract {
         sb.append( "execute_job" ).append( " " ).
            append( job.getID() ).append( " " ).//the job id
            append( directory ).append( " " ).    //the directory in which we want the job to execute
+           append( submitDirectory ).append( " " ).//the submit directory where the job.out |.err files go
            append( executable ).append( " " ). //the executable to be invoked
            append( "\"" ).append( arguments ).append( "\"" ).append( " " );//the arguments
 
@@ -403,7 +411,7 @@ public class Shell extends Abstract {
                 sb.append( stdin );
             }
             else{
-                sb.append( this.mSubmitFileDir ).append( File.separator ).append( stdin );
+                sb.append( submitDirectory ).append( File.separator ).append( stdin );
             }
         }
         sb.append( " " );

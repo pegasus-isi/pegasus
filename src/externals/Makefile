@@ -1,11 +1,11 @@
 SHELL := /bin/bash
 
 ifndef $(prefix)
-    prefix=$(shell cd $(CURDIR)/../.. && pwd)
+    prefix:=$(shell cd $(CURDIR)/../.. && pwd)
 endif
 
-PYTHON=$(shell $(CURDIR)/../../release-tools/get-system-python)
-OSID=$(shell $(CURDIR)/../../release-tools/getosid)
+PYTHON:=$(shell $(CURDIR)/../../release-tools/get-system-python)
+OSID:=$(shell $(CURDIR)/../../release-tools/getosid)
 
 EXTDIR=$(prefix)/lib/pegasus/externals
 LIBDIR=$(EXTDIR)/python
@@ -28,9 +28,7 @@ PACKAGES+=requests
 PACKAGES+=itsdangerous.py
 PACKAGES+=boto
 PACKAGES+=pam.py
-ifeq ($(shell $(CURDIR)/pyopenssl.sh),Yes)
-    PACKAGES+=OpenSSL
-endif
+PACKAGES+=OpenSSL
 PACKAGES+=plex
 ifeq ($(shell which pg_config),)
     $(warning WARNING: pg_config not found: skipping python postgresql library)
@@ -46,6 +44,14 @@ PACKAGES+=influxdb
 PACKAGES+=pika
 PACKAGES+=dateutil
 
+PYOPENSSL_ARGS=
+ifeq ($(OSID),macos10)
+    OPENSSL:=$(shell brew --prefix openssl)
+    ifneq ($(OPENSSL),)
+        PYOPENSSL_ARGS=-I $(OPENSSL)/include -L $(OPENSSL)/lib
+    endif
+endif
+
 all: $(addprefix $(LIBDIR)/,$(PACKAGES))
 
 $(LIBDIR)/%:
@@ -54,6 +60,7 @@ $(LIBDIR)/%:
 	mkdir -p $(LIBDIR) &&\
 	tar xzf $< &&\
 	pushd $(TARNAME) > /dev/null &&\
+	if [ -d "OpenSSL" ]; then $(PYTHON) setup.py build_ext $(PYOPENSSL_ARGS) > /dev/null; fi &&\
 	$(PYTHON) setup.py install_lib -d $(LIBDIR) > /dev/null &&\
 	popd > /dev/null &&\
 	rm -rf $(TARNAME) &&\
@@ -77,7 +84,8 @@ ifeq ($(OSID),rhel5)
     $(LIBDIR)/OpenSSL: pyOpenSSL-0.12.tar.gz
 else
     # 0.12 does not work on deb7 because of missing SSLv2_method
-    $(LIBDIR)/OpenSSL: pyOpenSSL-0.13.tar.gz
+    # 0.13 has been patched to work with newer versions of openssl (see patch file)
+    $(LIBDIR)/OpenSSL: pyOpenSSL-0.13-patched.tar.gz
 endif
 $(LIBDIR)/plex: plex-2.0.0dev.tar.gz
 $(LIBDIR)/MySQLdb: MySQL-python-1.2.5.tar.gz

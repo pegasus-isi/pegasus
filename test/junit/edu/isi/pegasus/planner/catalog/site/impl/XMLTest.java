@@ -63,7 +63,7 @@ public class XMLTest {
     
     private static final String EXPANDED_SITE        = "bamboo";
     private static final String EXPANDED_ARCH        = "x86_64";
-    private static final String EXPANDED_OS          = "LINUX";
+    private static final String EXPANDED_OS          = "linux";
     private static final String EXPANDED_DIRECTORY_TYPE   = Directory.TYPE.shared_scratch.toString();
     private static final String EXPANDED_INTERNAL_MOUNT_POINT        = "/bamboo/scratch";
     private static final String EXPANDED_EXTERNAL_MOUNT_POINT     = "gsiftp://cartman.isi.edu/bamboo/scratch";
@@ -156,7 +156,7 @@ public class XMLTest {
         
         assertEquals( "osg", entry.getSiteHandle() );
         assertEquals( Architecture.x86, entry.getArchitecture());
-        assertEquals( OS.LINUX, entry.getOS() );
+        assertEquals( OS.linux, entry.getOS() );
         
         Directory directory = entry.getDirectory(Directory.TYPE.local_scratch);
         testDirectory( directory,
@@ -184,7 +184,7 @@ public class XMLTest {
         
         assertEquals( "unl", entry.getSiteHandle() );
         assertEquals( Architecture.x86, entry.getArchitecture());
-        assertEquals( OS.LINUX, entry.getOS() );
+        assertEquals( OS.linux, entry.getOS() );
         
         Directory directory = entry.getDirectory(Directory.TYPE.shared_scratch);
         testDirectory( directory,
@@ -211,7 +211,7 @@ public class XMLTest {
         
         assertEquals( "isi", entry.getSiteHandle() );
         assertEquals( Architecture.x86_64, entry.getArchitecture());
-        assertEquals( OS.LINUX, entry.getOS() );
+        assertEquals( OS.linux, entry.getOS() );
         
         Directory directory = entry.getDirectory(Directory.TYPE.shared_scratch);
         testDirectory( directory,

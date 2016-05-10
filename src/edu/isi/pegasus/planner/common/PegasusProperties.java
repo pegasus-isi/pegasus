@@ -179,7 +179,6 @@ public class PegasusProperties implements Cloneable {
     public static final String DEFAULT_DAGMAN_MAX_PRE_VALUE = "1";
 
     
-
     /**
      * An enum defining The scope for cleanup algorithm
      */
@@ -722,6 +721,7 @@ public class PegasusProperties implements Cloneable {
     public String getExecDirectory() {
         return mProps.getProperty( "pegasus.dir.exec", DEFAULT_EXEC_DIR );
     }
+    
     
     /**
      * Returns the the path to the logs directory on the submit host.

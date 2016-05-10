@@ -50,18 +50,24 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.common.util.FactoryException;
 
 import edu.isi.pegasus.common.util.PegasusURL;
+
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.PlannerCache;
-import edu.isi.pegasus.planner.common.PegasusConfiguration;
-import edu.isi.pegasus.planner.namespace.Dagman;
-import edu.isi.pegasus.planner.transfer.mapper.OutputMapper;
-import edu.isi.pegasus.planner.transfer.mapper.OutputMapperFactory;
 
-import org.griphyn.vdl.euryale.FileFactory;
+import edu.isi.pegasus.planner.mapper.SubmitMapper;
+
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
+import edu.isi.pegasus.planner.mapper.SubmitMapperFactory;
+
+import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.mapper.OutputMapper;
+import edu.isi.pegasus.planner.mapper.OutputMapperFactory;
+import edu.isi.pegasus.planner.mapper.output.Hashed;
+
 
 import java.io.File;
 import java.io.IOException;
@@ -179,14 +185,6 @@ public class TransferEngine extends Engine {
      */
     private ReplicaCatalog mWorkflowCache;
 
-
-    /**
-     * The handle to the file factory, that is  used to create the top level
-     * directories for each of the partitions.
-     */
-    private FileFactory mFactory;
-
-    
     /**
      * Handle to an OutputMapper that tells what
      */
@@ -227,6 +225,7 @@ public class TransferEngine extends Engine {
      * The output site where files need to be staged to.
      */
     private final String mOutputSite;
+    
 
     /**
      * Overloaded constructor.
@@ -242,6 +241,9 @@ public class TransferEngine extends Engine {
                            List<Job> deletedLeafJobs){
         super( bag );
 
+        mSubmitDirMapper =  SubmitMapperFactory.loadInstance( bag,  new File(mPOptions.getSubmitDirectory()));
+        bag.add(PegasusBag.PEGASUS_SUBMIT_DIR_FACTORY, mSubmitDirMapper );
+        
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mSRMServiceURLToMountPointMap = constructSiteToSRMServerMap( mProps );
         
@@ -267,21 +269,28 @@ public class TransferEngine extends Engine {
 
         mWorkflowCache = this.initializeWorkflowCacheFile( reducedDag );
 
+        
+                
+                
         //log some configuration messages
         mLogger.log("Transfer Refiner loaded is [" + mTXRefiner.getDescription() +
                             "]",LogManager.CONFIG_MESSAGE_LEVEL);
         mLogger.log("ReplicaSelector loaded is  [" + mReplicaSelector.description() +
                     "]",LogManager.CONFIG_MESSAGE_LEVEL);
+        mLogger.log("Submit Directory Mapper loaded is    [" + mSubmitDirMapper.description() +
+                    "]",LogManager.CONFIG_MESSAGE_LEVEL);
         mLogger.log("Output Mapper loaded is    [" + mOutputMapper.description() +
                     "]",LogManager.CONFIG_MESSAGE_LEVEL);
     }
-
+    
+    
     /**
      * Determines a particular created transfer pair has to be binned
      * for remote transfer or local.
      * 
      * @param job the associated compute job
      * @param ft  the file transfer created
+     * @param stagingSite  the staging site for the job
      * @return 
      */
     private boolean runTransferRemotely(Job job , SiteCatalogEntry stagingSite, FileTransfer ft) {
@@ -319,6 +328,42 @@ public class TransferEngine extends Engine {
                 }
         }
         return remote;
+    }
+    
+    /**
+     * Removes file URL's from FT sources that if the site attribute for it
+     * does not match site handle passed
+     * 
+     * @param job
+     * @param ft
+     * @param site 
+     */
+    public boolean removeFileURLFromSource( Job job, FileTransfer ft, String site ){
+        
+        boolean remove = false;
+        for( String sourceSite: ft.getSourceSites() ){
+                //traverse through all the URL's on that site
+                for( Iterator<ReplicaCatalogEntry> it = ft.getSourceURLs(sourceSite).iterator(); it.hasNext(); ){
+                    ReplicaCatalogEntry rce = it.next();
+                    String sourceURL = rce.getPFN();
+                    //if the source URL is a FILE URL and 
+                    //source site matches the destination site
+                    //then has to run remotely
+                    if( sourceURL != null && sourceURL.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
+                        
+                        if( !sourceSite.equalsIgnoreCase( site ) ){
+                            //source site associated with file URL does
+                            //not match the site attribute. remove the source url
+                            mLogger.log( "Removing source url " + sourceURL + " associated with site " + sourceSite +
+                                         " for job " + job.getID(),
+                                         LogManager.TRACE_MESSAGE_LEVEL );
+                            it.remove();
+                            remove = true;
+                        }
+                    }
+                }
+        }
+        return remove;
     }
     
     /**
@@ -378,6 +423,7 @@ public class TransferEngine extends Engine {
      */
     public void addTransferNodes( ReplicaCatalogBridge rcb, PlannerCache plannerCache ) {
         mRCBridge = rcb;
+        mRCBridge.mSubmitDirMapper = this.mSubmitDirMapper;
         mPlannerCache = plannerCache;
 
         Job currentJob;
@@ -400,8 +446,9 @@ public class TransferEngine extends Engine {
             GraphNode node = ( GraphNode )it.next();
             currentJob = (Job)node.getContent();
 
-            //set the staging site for the job
-            //currentJob.setStagingSiteHandle( getStagingSite( currentJob ) );
+            //PM-833 associate a directory with the job
+            //that is used to determine relative submit directory
+            currentJob.setRelativeSubmitDirectory( getRelativeSubmitDirectory( currentJob ) );
 
             //set the node depth as the level
             currentJob.setLevel( node.getDepth() );
@@ -1291,25 +1338,25 @@ public class TransferEngine extends Engine {
             ft.setTransferFlag(pf.getTransferFlag());
 
             ReplicaLocation candidateLocations = null;
-            if( nv == null ){
-                //select from the various replicas
-                candidateLocations =  mReplicaSelector.selectAndOrderReplicas( rl, 
-                                                                        executionSiteHandle,
-                                                                        runTransferOnLocalSite );
-                if( candidateLocations.getPFNCount() == 0 ){
-                    StringBuilder error = new StringBuilder();
-                    error.append( "Unable to select a Physical Filename (PFN) for file with logical filename (LFN) as ").
-                          append( rl.getLFN() ).append( " for preferred site " ).append( executionSiteHandle ).
-                          append( "with runTransferOnLocalSite - ").append( runTransferOnLocalSite ).
-                          append( " amongst ").append( rl.getPFNList() );
-                    throw new RuntimeException( error.toString() );
-                }
-            }
-            else{
-                //we have the replica already selected
+            if( nv != null ){
+                //we have the replica already selected as a result
+                //of executable staging
                 List rces = new LinkedList();
                 rces.add(  new ReplicaCatalogEntry( nv.getValue(), nv.getKey() ));
-                candidateLocations  = new ReplicaLocation( lfn, rces );
+                rl  = new ReplicaLocation( lfn, rces );
+            }
+            
+            //select from the various replicas
+            candidateLocations =  mReplicaSelector.selectAndOrderReplicas( rl, 
+                                                                    executionSiteHandle,
+                                                                    runTransferOnLocalSite );
+            if( candidateLocations.getPFNCount() == 0 ){
+                StringBuilder error = new StringBuilder();
+                error.append( "Unable to select a Physical Filename (PFN) for file with logical filename (LFN) as ").
+                      append( rl.getLFN() ).append( " for preferred site " ).append( executionSiteHandle ).
+                      append( "with runTransferOnLocalSite - ").append( runTransferOnLocalSite ).
+                      append( " amongst ").append( rl.getPFNList() );
+                throw new RuntimeException( error.toString() );
             }
             
             //check if we need to replace url prefix for 
@@ -1319,11 +1366,18 @@ public class TransferEngine extends Engine {
             boolean bypassFirstLevelStaging = true;
 
             int candidateNum = 0; 
+            //PM-1082 we want to select only one destination put URL
+            //with preference for symlinks
+            //assign to destPutURL to take care of executable staging
+            String preferredDestPutURL = destPutURL;
             for( ReplicaCatalogEntry selLoc : candidateLocations.getPFNList()){
                 candidateNum++;
                 
                 if ( symLinkSelectedLocation = 
-                        (mUseSymLinks && selLoc.getResourceHandle().equals( job.getStagingSiteHandle() )) ) {
+                        ( mUseSymLinks && 
+                          selLoc.getResourceHandle().equals( job.getStagingSiteHandle() ) &&
+                          !pf.isExecutable() //PM-1086 symlink only data files as chmod fails on symlinked file
+                        )  ) {
 
                     //resolve any srm url's that are specified
                     selLoc = replaceSourceProtocolFromURL( selLoc );
@@ -1343,7 +1397,8 @@ public class TransferEngine extends Engine {
                 //the final source and destination url's to the file
                 sourceURL = selLoc.getPFN();
 
-                if( destPutURL == null ){
+                if( destPutURL == null || 
+                        symLinkSelectedLocation){ //PM-1082 if a destination has to be symlinked always recompute
                     //no staging of executables case. 
                     //we construct destination URL to file.
                     StringBuffer destPFN = new StringBuffer();
@@ -1359,6 +1414,7 @@ public class TransferEngine extends Engine {
                     }
                     destPFN.append( File.separator).append( lfn );
                     destPutURL = destPFN.toString();
+                    preferredDestPutURL = destPutURL;
                     destGetURL = dDirGetURL + File.separator + lfn;
                 }
             
@@ -1436,14 +1492,19 @@ public class TransferEngine extends Engine {
                 
                 //PM-1014 we want to track all candidate locations
                 ft.addSource( selLoc);
-
-                //to prevent duplicate destination urls
-                //and have only a single destination.
-                if(ft.getDestURL() == null)
-                    ft.addDestination(stagingSiteHandle,destPutURL);
            
             } //end of traversal of all candidate locations
-                
+            
+            //PM-1082 we want to add only one destination URL
+            //with preference for symlink destination URL
+            if(preferredDestPutURL == null){
+                throw new RuntimeException( "Unable to determine a destination put URL on staging site " + stagingSiteHandle + 
+                                            " for file " + lfn + " for job " + job.getID() );
+            }
+            else{
+                ft.addDestination(stagingSiteHandle,preferredDestPutURL);
+            }
+            
             if ( !bypassFirstLevelStaging ) {
                 //no bypass of input file staging. we need to add
                 //data stage in nodes for the lfn
@@ -1451,6 +1512,15 @@ public class TransferEngine extends Engine {
                      !runTransferOnLocalSite ||
                      runTransferRemotely( job, stagingSite, ft ) ){ //check on the basis of constructed source URL whether to run remotely
 
+                    if( removeFileURLFromSource( job, ft, stagingSiteHandle ) ){
+                        //PM-1082 remote transfers ft can still have file url's 
+                        //not matching the staging site
+                        //sanity check
+                        if( ft.getSourceURLCount() == 0 ){
+                            throw new RuntimeException( "No source URL's available for stage-in( remote ) transfers for file " + 
+                                                        ft + " for job "  + job.getID());
+                        }
+                    }
                     //all symlink transfers and user specified remote transfers
                     remoteFileTransfers.add(ft);
                 }
@@ -1961,6 +2031,28 @@ public class TransferEngine extends Engine {
                 
             mLogger.log( message.toString() , LogManager.WARNING_MESSAGE_LEVEL );
         }
+    }
+
+    /**
+     * Returns the relative submit directory for the job from the top level
+     * submit directory where workflow files are written.
+     * 
+     * @param job
+     * @return 
+     */
+    protected String getRelativeSubmitDirectory(Job job) {
+        
+        String relative = null;
+        try {
+            File f =  mSubmitDirMapper.getRelativeDir(job);
+            mLogger.log("Directory for job " + job.getID() + " is " + f,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            relative = f.getPath();
+        } catch ( Exception ex) {
+            throw new RuntimeException( "Error while determining relative submit dir for job " + job.getID() , ex);
+        }
+        return relative;
+        
     }
 
     

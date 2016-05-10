@@ -76,10 +76,10 @@ public class VDSSysInfo2NMI {
         //singleton access
         if( mVDSOSToNMIOS == null ){
             mVDSOSToNMIOS = new HashMap();
-            mVDSOSToNMIOS.put( Os.LINUX, SysInfo.OS.LINUX );
-            mVDSOSToNMIOS.put( Os.AIX, SysInfo.OS.AIX );
-            mVDSOSToNMIOS.put( Os.SUNOS, SysInfo.OS.SUNOS );
-            mVDSOSToNMIOS.put( Os.WINDOWS, SysInfo.OS.WINDOWS );
+            mVDSOSToNMIOS.put( Os.LINUX, SysInfo.OS.linux );
+            mVDSOSToNMIOS.put( Os.AIX, SysInfo.OS.aix );
+            mVDSOSToNMIOS.put( Os.SUNOS, SysInfo.OS.sunos );
+            mVDSOSToNMIOS.put( Os.WINDOWS, SysInfo.OS.windows );
         }
         return mVDSOSToNMIOS;
     }

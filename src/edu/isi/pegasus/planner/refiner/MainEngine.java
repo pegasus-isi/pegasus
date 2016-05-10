@@ -33,8 +33,6 @@ import edu.isi.pegasus.planner.classes.PlannerCache;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 
 /**
@@ -182,6 +180,8 @@ public class MainEngine
         mLogger.logEventCompletion();
 
         //intialize the deployment engine
+        //requried to setup the TC with the deployed worker package
+        //executable locations
         DeployWorkerPackage deploy = DeployWorkerPackage.loadDeployWorkerPackage( mBag );
         deploy.initialize( mReducedDag );
 

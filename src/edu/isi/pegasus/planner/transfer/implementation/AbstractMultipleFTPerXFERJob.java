@@ -123,6 +123,10 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         txJob.jobName = txJobName;
         txJob.executionPool = tPool;
         txJob.setUniverse( GridGateway.JOB_TYPE.transfer.toString() );
+        
+        //PM-833 set the relative submit directory for the transfer
+        //job based on the associated file factory
+        txJob.setRelativeSubmitDirectory( this.mSubmitDirFactory.getRelativeDir( txJob ));
 
         TransformationCatalogEntry tcEntry = this.getTransformationCatalogEntry( tPool, jobClass );
         if(tcEntry == null){
@@ -404,8 +408,13 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         //writing the stdin file
         FileWriter stdIn;
         String basename = job.getName() + ".in";
-        stdIn = new FileWriter(new File(mPOptions.getSubmitDirectory(),
-                                        basename));
+        
+        //PM-833 the .in file is written in the same directory 
+        //where the submit file for the job will be written out
+        File dir = new File(mPOptions.getSubmitDirectory(), job.getRelativeSubmitDirectory() );
+        
+        stdIn = new FileWriter(new File( dir,
+                                         basename));
         writeStdInAndAssociateCredentials(job, stdIn, files, stagingSite, jobClass );
         //close the stdin stream
         stdIn.close();

@@ -75,7 +75,7 @@ public class HierarchicalDiamonds {
 
         // Add a preprocess job
         Job j1 = new Job("j1", "pegasus", "preprocess", "4.0");
-        j1.addArgument("-a preprocess -T 60 -i ").addArgument(fa);
+        j1.addArgument("-a preprocess -T 120 -i ").addArgument(fa);
         j1.addArgument("-o ").addArgument(fb1);
         j1.addArgument(" ").addArgument(fb2);
         j1.uses(fa, File.LINK.INPUT);
@@ -85,7 +85,7 @@ public class HierarchicalDiamonds {
 
         // Add left Findrange job
         Job j2 = new Job("j2", "pegasus", "findrange", "4.0");
-        j2.addArgument("-a findrange -T 60 -i ").addArgument(fb1);
+        j2.addArgument("-a findrange -T 120 -i ").addArgument(fb1);
         j2.addArgument("-o ").addArgument(fc1);
         j2.uses(fb1, File.LINK.INPUT);
         j2.uses(fc1, File.LINK.OUTPUT);
@@ -96,15 +96,11 @@ public class HierarchicalDiamonds {
         subdax.addPhysicalFile("file://" + cwd + "/sub.dax", "local");
         dax.addFile(subdax);
         DAX j3 = new DAX("j3", subdax.getName());
-        //j3.addArgument("-a findrange -T 60 -i ").addArgument(fb2);
-        //j3.addArgument("-o ").addArgument(fc2);
-        //j3.uses(fb2, File.LINK.INPUT);
-        //j3.uses(fc2, File.LINK.OUTPUT);
         dax.addDAX(j3);
 
         // Add analyze job
         Job j4 = new Job("j4", "pegasus", "analyze", "4.0");
-        j4.addArgument("-a analyze -T 60 -i ").addArgument(fc1);
+        j4.addArgument("-a analyze -T 120 -i ").addArgument(fc1);
         j4.addArgument("-o ").addArgument(fd);
         j4.uses(fc1, File.LINK.INPUT);
         j4.uses(fd, File.LINK.OUTPUT);
@@ -154,7 +150,7 @@ public class HierarchicalDiamonds {
 
         // Add a preprocess job
         Job s1 = new Job("s1", "pegasus", "preprocess", "4.0");
-        s1.addArgument("-a preprocess -T 60 -i ").addArgument(fa);
+        s1.addArgument("-a preprocess -T 120 -i ").addArgument(fa);
         s1.addArgument("-o ").addArgument(fb1);
         s1.addArgument(" ").addArgument(fb2);
         s1.uses(fa, File.LINK.INPUT);
@@ -164,7 +160,7 @@ public class HierarchicalDiamonds {
 
         // Add left Findrange job
         Job s2 = new Job("s2", "pegasus", "findrange", "4.0");
-        s2.addArgument("-a findrange -T 60 -i ").addArgument(fb1);
+        s2.addArgument("-a findrange -T 120 -i ").addArgument(fb1);
         s2.addArgument("-o ").addArgument(fc1);
         s2.uses(fb1, File.LINK.INPUT);
         s2.uses(fc1, File.LINK.OUTPUT);
@@ -172,7 +168,7 @@ public class HierarchicalDiamonds {
 
         // Add right Findrange job
         Job s3 = new Job("s3", "pegasus", "findrange", "4.0");
-        s3.addArgument("-a findrange -T 60 -i ").addArgument(fb2);
+        s3.addArgument("-a findrange -T 120 -i ").addArgument(fb2);
         s3.addArgument("-o ").addArgument(fc2);
         s3.uses(fb2, File.LINK.INPUT);
         s3.uses(fc2, File.LINK.OUTPUT);
@@ -180,7 +176,7 @@ public class HierarchicalDiamonds {
 
         // Add analyze job
         Job s4 = new Job("s4", "pegasus", "analyze", "4.0");
-        s4.addArgument("-a analyze -T 60 -i ").addArgument(fc1);
+        s4.addArgument("-a analyze -T 120 -i ").addArgument(fc1);
         s4.addArgument(" ").addArgument(fc2);
         s4.addArgument("-o ").addArgument(fd);
         s4.uses(fc1, File.LINK.INPUT);

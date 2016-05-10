@@ -541,7 +541,7 @@ public class Kickstart implements GridStart {
 
                 //condor needs to pick up the constituentJob stdin and
                 //transfer it to the remote end
-                construct( job, "input" , submitDir + job.getStdIn() );
+                construct( job, "input" , job.getFileFullPath( submitDir, ".in") );
                 gridStartArgs.append("-i ").append("-").append(' ');
 
             } else {
@@ -562,7 +562,7 @@ public class Kickstart implements GridStart {
             mLogger.log("Detected WAW conflict for stdout",LogManager.WARNING_MESSAGE_LEVEL);
         }
         // the output of gridstart is propagated back to the submit host
-        construct(job,"output",submitDir + job.jobName + ".out");
+        construct(job,"output", job.getFileFullPath( submitDir, ".out") );
 
 
         if (isGlobusJob) {
@@ -581,7 +581,7 @@ public class Kickstart implements GridStart {
             mLogger.log("Detected WAW conflict for stderr",LogManager.WARNING_MESSAGE_LEVEL);
         }
         // the error from gridstart is propagated back to the submit host
-        construct(job,"error",submitDir + job.jobName + ".err");
+        construct(job,"error",job.getFileFullPath( submitDir, ".err"));
         if (isGlobusJob) {
             construct(job,"transfer_error","true");
         }
@@ -652,13 +652,13 @@ public class Kickstart implements GridStart {
             //generate the list of filenames file for the input and output files.
             if (! (job instanceof TransferJob)) {
                  generateListofFilenamesFile( job.getInputFiles(),
-                                              job.getID() + ".in.lof");
+                                              job, ".in.lof");
             }
 
             //for cleanup jobs no generation of stats for output files
             if (job.getJobType() != Job.CLEANUP_JOB) {
                 generateListofFilenamesFile(job.getOutputFiles(),
-                                            job.getID() + ".out.lof");
+                                            job, ".out.lof");
 
             }
         }///end of mGenerateLOF
@@ -795,7 +795,7 @@ public class Kickstart implements GridStart {
         else if( mDynamicDeployment &&
                  job.runInWorkDirectory()  && ! mPegasusConfiguration.jobSetupForWorkerNodeExecution(job ) ){
 
-            //worker package deployment 
+            //worker package deployment for sharedfs
             //pick up the path from the transformation catalog of
             //dynamic deployment
             //in case of pegasus lite mode, we dont look up here.
@@ -830,9 +830,10 @@ public class Kickstart implements GridStart {
             //the vanilla case where kickstart is pre installed.
             TransformationCatalogEntry entry = this.getTransformationCatalogEntry( job.getSiteHandle() );
             
+            String ksProfilePath = (String)job.vdsNS.get( Pegasus.GRIDSTART_PATH_KEY );
             String ksPath = ( entry == null )?
                              //rely on the path determined from profiles 
-                             (String)job.vdsNS.get( Pegasus.GRIDSTART_PATH_KEY ):
+                             ksProfilePath:
                              //the tc entry has highest priority
                              entry.getPhysicalTransformation();
 
@@ -849,9 +850,23 @@ public class Kickstart implements GridStart {
             else{
                 //pegasus lite case. we dont want to rely on site catalog
                 //constructed path
+                
+                /* commented out for PM-1097
                 ksPath = ( ksPath == null )?
                           this.EXECUTABLE_BASENAME ://use the basename
                           ksPath;
+                */
+                if ( ksPath == null ){
+                          ksPath = this.EXECUTABLE_BASENAME ;//use the basename
+                }
+                else{
+                    //PM-1097 check again to see if user had different gs profile set
+                    if ( ksProfilePath != null ){
+                        //we prefer the kickstart path as determined from profile
+                        //only for PegasusLite case.
+                        ksPath = ksProfilePath;
+                    }
+                }
             }
             
             //sanity check 
@@ -1215,7 +1230,8 @@ public class Kickstart implements GridStart {
                 //generate the list of filenames file for the input and output files.
                 if (! (job instanceof TransferJob) && stat ) {
                     lof = generateListofFilenamesFile(job.getInputFiles(),
-                                                      job.getID() + ".in.lof");
+                                                      job,
+                                                      ".in.lof");
                     if (lof != null) {
                         File file = new File(lof);
                         job.condorVariables.addIPFileForTransfer(lof);
@@ -1229,8 +1245,9 @@ public class Kickstart implements GridStart {
                 if( stat ) {
                     //for cleanup jobs no generation of stats for output files
                     if (job.getJobType() != Job.CLEANUP_JOB) {
-                        lof = generateListofFilenamesFile(job.getOutputFiles(),
-                                                          job.getID() + ".out.lof");
+                        lof = generateListofFilenamesFile( job.getOutputFiles(),
+                                                           job,
+                                                           ".out.lof");
                         if (lof != null) {
                             File file = new File(lof);
                             job.condorVariables.addIPFileForTransfer(lof);
@@ -1263,16 +1280,16 @@ public class Kickstart implements GridStart {
     }
     
     /**
-     * Writes out the list of filenames file for the constituentJob.
+     * Writes out the list of filenames file for the job.
      *
      * @param files  the list of <code>PegasusFile</code> objects contains the files
      *               whose stat information is required.
-     *
-     * @param basename   the basename of the file that is to be created
+     * @param job     the job
+     * @param suffix  the suffix to be applied to files
      *
      * @return the full path to lof file created, else null if no file is written out.
      */
-     protected String generateListofFilenamesFile( Set files, String basename ){
+     protected String generateListofFilenamesFile( Set files, Job job, String suffix ){
          //sanity check
          if ( files == null || files.isEmpty() ){
              return null;
@@ -1281,7 +1298,7 @@ public class Kickstart implements GridStart {
          String result = null;
          //writing the stdin file
         try {
-            File f = new File( mSubmitDir, basename );
+            File f = new File( job.getFileFullPath(mSubmitDir, suffix) );
             FileWriter input;
             input = new FileWriter( f );
             PegasusFile pf;
@@ -1300,7 +1317,7 @@ public class Kickstart implements GridStart {
             result = f.getAbsolutePath();
 
         } catch ( IOException e) {
-            mLogger.log("Unable to write the lof file " + basename, e ,
+            mLogger.log("Unable to write the lof file for job " + job.getID() + " with suffix " + suffix , e ,
                         LogManager.ERROR_MESSAGE_LEVEL);
         }
 

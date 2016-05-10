@@ -623,16 +623,24 @@ public class ReplicaCatalogBridge
             tc = (TransformationCatalogEntry) tcentries.get(0);
         }
         newJob.setRemoteExecutable( tc.getPhysicalTransformation() );
-        newJob.setArguments( this.generateRepJobArgumentString( site, regJobName, files ) );
-//        newJob.setUniverse( Engine.REGISTRATION_UNIVERSE );
+        
+        //PM-833 set the relative submit directory for the regustration
+        //job based on the associated file factory
+        newJob.setRelativeSubmitDirectory( this.mSubmitDirMapper.getRelativeDir( newJob ));
+        //PM-833 the .in file is written in the same directory 
+        //where the submit file for the job will be written out
+        File dir = new File(mPOptions.getSubmitDirectory(), newJob.getRelativeSubmitDirectory() );
+        
+        newJob.setArguments( this.generateRepJobArgumentString( site, dir, regJobName, files ) );
         newJob.setUniverse( GridGateway.JOB_TYPE.register.toString() );
         newJob.setSiteHandle( tc.getResourceId() );
         newJob.setJobType( Job.REPLICA_REG_JOB );
         newJob.setVDSSuperNode( job.getName() );
+        
+        
 
         //the profile information from the pool catalog needs to be
         //assimilated into the job.
-//        newJob.updateProfiles( mPoolHandle.getPoolProfile( newJob.getSiteHandle() ) );
         newJob.updateProfiles( mSiteStore.lookup( newJob.getSiteHandle() ).getProfiles() );
 
         //add any notifications specified in the transformation
@@ -743,6 +751,7 @@ public class ReplicaCatalogBridge
      * mappings.
      *
      * @param site     the <code>SiteCatalogEntry</code> object
+     * @param dir      the directory where the .in file should be written to
      * @param regJob   The name of the registration job.
      *
      * @param files Collection of <code>FileTransfer</code> objects containing the
@@ -751,7 +760,7 @@ public class ReplicaCatalogBridge
      *
      * @return the argument string.
      */
-    private String generateRepJobArgumentString( SiteCatalogEntry site, String regJob, Collection files ) {
+    private String generateRepJobArgumentString( SiteCatalogEntry site, File dir, String regJob, Collection files ) {
         StringBuffer arguments = new StringBuffer();
 
         //select a LRC. disconnect here. It should be select a RC.
@@ -801,7 +810,7 @@ public class ReplicaCatalogBridge
         
         //append the insert option
         arguments.append( "--insert" ).append( " " ).
-                  append( this.generateMappingsFile( regJob, files ) );
+                  append( this.generateMappingsFile( regJob, dir, files ) );
 
         return arguments.toString();
 
@@ -843,6 +852,7 @@ public class ReplicaCatalogBridge
      * by the user when running Pegasus. The name of the file is regJob+.in
      *
      * @param regJob   The name of the registration job.
+     * @param dir      the directory where .in file should be written to
      * @param files    Collection of <code>FileTransfer</code>objects containing the
      *                 information about source and destURLs. The destination
      *                 URLs would be our PFNs.
@@ -850,14 +860,13 @@ public class ReplicaCatalogBridge
      * @return String corresponding to the path of the the file containig the
      *                mappings in the appropriate format.
      */
-    private String generateMappingsFile( String regJob, Collection files ) {
+    private String generateMappingsFile( String regJob, File dir, Collection files ) {
         String fileName = regJob + ".in";
         File f = null;
-        String submitFileDir = mPOptions.getSubmitDirectory();
 
         //writing the stdin file
         try {
-            f = new File( submitFileDir, fileName );
+            f = new File( dir, fileName );
             FileWriter stdIn = new FileWriter( f );
 
             for(Iterator it = files.iterator();it.hasNext();){

@@ -11,6 +11,11 @@ fi
 
 TOPDIR=`pwd`
 
+# determine TEST_NAME to setup site catalog 
+TESTDIR=$(cd $testdir && pwd)
+TEST_NAME=`basename $TESTDIR`
+
+
 # generate the input file
 echo "This is sample input to KEG" >f.a
 
@@ -49,14 +54,14 @@ cat >sites.xml <<EOF
         <grid  type="gt5" contact="obelix.isi.edu/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
         <grid  type="gt5" contact="obelix.isi.edu/jobmanager-condor" scheduler="Condor" jobtype="compute"/>
 
-        <directory type="shared-scratch" path="/nfs/ccg4/scratch-purge-no-backups/CCG/scratch">
-            <file-server operation="all" url="gsiftp://obelix.isi.edu/nfs/ccg4/scratch-purge-no-backups/CCG/scratch"/>
+        <directory type="shared-scratch" path="/nfs/ccg4/scratch-purge-no-backups/CCG/${TEST_NAME}/scratch">
+            <file-server operation="all" url="gsiftp://obelix.isi.edu/nfs/ccg4/scratch-purge-no-backups/CCG/${TEST_NAME}/scratch"/>
         </directory>
-        <directory type="local-storage" path="/nfs/ccg4/scratch-purge-no-backups/CCG/outputs">
-            <file-server operation="all" url="gsiftp://obelix.isi.edu/nfs/ccg4/scratch-purge-no-backups/CCG/outputs"/>
+        <directory type="local-storage" path="/nfs/ccg4/scratch-purge-no-backups/CCG/${TEST_NAME}/outputs">
+            <file-server operation="all" url="gsiftp://obelix.isi.edu/nfs/ccg4/scratch-purge-no-backups/CCG/${TEST_NAME}/outputs"/>
         </directory>
         <profile namespace="pegasus" key="clusters.num">1</profile>
-        
+        <profile namespace="env" key="PEGASUS_HOME">/usr</profile>
     </site>
 
 

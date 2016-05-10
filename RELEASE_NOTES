@@ -1,4 +1,236 @@
-$Id
+===============================
+Release Notes for PEGASUS 4.6.1
+===============================
+We are happy to announce the release of Pegasus 4.6.1.  Pegasus 4.6.1
+is a minor release of Pegasus and includes improvements and bug fixes
+to the 4.6.0 release 
+
+New features and Improvements in 4.6.1 are 
+
+    - support for MOAB submissions via glite. A new tool called
+      pegasus-configure-glite helps users setup their HTCondor GLite
+      directory for use with Pegasus 
+    - pegasus-s3 now allows for downloading and uploading folders to
+      and from S3
+    - initial support for globus online in pegasus-transfer
+      planner automatically copies the user catalog files into a
+      directory called catalogs in the submit directory. 
+    - changes to how worker package staging occurs for compute jobs.
+
+New Features
+--------------
+1) [PM-1045] – There is a new command line tool
+   pegasus-configure-glite that automatically installs the Pegasus
+   shipped glite local attributes script to the condor glite
+   installation directory 
+
+2) [PM-1044] – Added glite scripts for moab submissions via the Glite
+   interface 
+
+3) [PM-1054] – kickstart has an option to ignore files in lib
+   interpose.
+
+   This is triggered by setting the environment variables
+   KICKSTART_TRACE_MATCH and KICKSTART_TRACE_IGNORE. The MATCH version
+   only traces files that match the patterns, and the IGNORE version
+   does NOT trace files that match the patterns. Only one of the two
+   can be specified. 
+
+4) [PM-1058] -pegasus can be now installed via homebrew on MACOSX 
+   For details refer to documentation at
+   https://pegasus.isi.edu/documentation/macosx.php 
+
+5) [PM-1075] – pegasus-s3 to be able to download all files in a folder 
+
+   pegasus-s3 has a –recursive option to allow users to download all
+   files from a folder in S3 or upload all files from a local
+   directory to S3 bucket. 
+
+6) [PM-680] – Add support for GlobusOnline to pegasus-transfer
+   Details on how to configure can be found at
+   https://pegasus.isi.edu/docs/4.6.1/transfer.php#transfer_globus_online 
+
+7) [PM-1043] – Improve CSV file read for Storage Constraints algorithm
+
+8) [PM-1047] – Pegasus saves all the catalog files in submit dir in a
+   directory named catalogs. This enables for easier debugging later on
+   as everything is saved in the submit directory. 
+
+Improvements
+--------------
+1) [PM-1043] – Improve CSV file read for Storage Constraints algorithm
+
+2) [PM-1057] – PegasusLite worker package download improvements
+   Pegasus exposes two additional properties to control behavior of
+   worker package staging for jobs. Users can use these to control
+   whether a PegasusLite job downloads a worker package from the
+   pegasus website or not , in case the shipped worker package does
+   not match the node architecture. 
+
+   pegasus.transfer.worker.package.strict – enforce strict checks
+   against provided worker package. if a job comes with worker package
+   and it does not match fully with worker node architecture , it
+   falls down to pegasus download website. Default value is true. 
+   pegasus.transfer.worker.package.autodownload – a boolean property
+   to indicate whether a pegasus lite job is allowed to download from
+   pegasus website. Defaults to true. 
+
+3) [PM-1059] – Implement backup for MySQL databases
+
+4) [PM-1060] – expose a way to turn off kickstart stat options
+
+5) [PM-1063] – improve performance for inserts into database replica catalog
+
+6) [PM-1067] – pegasus-cluster -R should report the finish time and
+   duration, not the start time and duration 
+
+7) [PM-1078] – pegasus-statistics should take comma separated list of
+   values for -s option 
+
+8) [PM-1073] – condor_q changes in 8.5.x will affect pegasus-status
+
+   pegasus-status was updated to account for changes in the condor_q
+   output in the 8.5 series 
+
+Bugs Fixed
+--------------
+1) [PM-1077] – pegasus-remove on hierarchal workflows results in jobs
+   from the sub workflows still in the condor queue
+
+   DAGMan no longer condor_rm jobs in a workflow itself. Instead it
+   relies on condor schedd to do it. Pegasus generated sub workflow
+   description files did not trigger this . As a result,
+   pegasus-remove on a top level workflow still resulted in jobs from
+   the sub workflows to be in the condor queue. This is now
+   fixed. Pegasus generated dagman submit files have the right
+   expressions specified. 
+
+2) [PM-997] – pyOpenSSL v0.13 does not work with new version of
+   openssl (1.0.2d) and El Captain 
+
+3) [PM-1048] – PegasusLite should do a full version check for
+   pre-installed worker packages 
+
+   PegasusLite does a full check ( including the patch version) with
+   the pegasus version installed on the node, when determining whether
+   to use the preinstalled version on the node or not. 
+
+4) [PM-1050] – pegasus-plan should not fail if -D arguments don’t
+   appear first
+
+5) [PM-1051] – Error missing when nodes, cores, and ppn are all
+   specified 
+
+   In 4.6.0 release, there was a bug where the error message thrown (
+   when user specified an invalid combination of task requirements)
+   was incorrect. This is fixed, and error messages have been improved
+   to also indicate a reason 
+
+6) [PM-1053] – pegasus-cluster does not know about new Kickstart
+   arguments
+
+7) [PM-1055] – Interleaved libinterpose records
+
+8) [PM-1061] – pegasus-analyzer should detect and report on failed job
+   submissions 
+
+   pegasus-monitord did not populate the stampede workflow database
+   with information about job submission failures. As a result,
+   pegasus-analyzer for the cases where a job failed because of job
+   submission errors did not report any helpful information as to why
+   the job failed. This is now fixed. 
+
+9) [PM-1062] – pegasus dashboard shows some workflows twice
+
+   In the case where HTCondor crashes on a submit node, DAGMan logs
+   may miss a workflow end event. When monitord detects consecutive
+   start events, it creates and inserts a workflow end event. The end
+   event had the same timestamp as the new start event, because of
+   which underlying dashboard query retrieved multiple rows.  This was
+   fixed by setting the timestamp for the artificial end event to be
+   one second less than the second start event. 
+
+10) [PM-1064] – pegasus-transfer prepends to PATH
+
+    pegasus-transfer used to prepend the system path with other
+    internal determined lookup directories based on environment
+    variables such as GLOBUS_LOCATION. As a result, in some cases,
+    user preferred copy of executables were not picked up. This is now
+    fixed. 
+
+11) [PM-1066] – wget errors because of network issues
+    pegasus-transfer now sets the OSG_SQUID_LOCATION/http_proxy
+    setting only for the first wget attempt
+
+12) [PM-1068] – monitord fails when trying to open a job error file in
+    a workflow with condor recovery 
+
+    monitord parses the job submit file whenever it notices job
+    submission log by DAGMan. This is done to avoid the case, where
+    because of HTCondor recovery a job may not have a ULOG_ job
+    submission event, because of which the internal state of the job
+    maybe uninitialized. 
+
+13) [PM-1069] – Dashboard invocation page gives an error if the task
+    has no invocation record 
+
+    Dashboard did not display invocation records for Pegasus added
+    auxiliary jobs in the workflow. This was due to a bug in the query
+    that is now fixed. 
+
+14) [PM-1070] – monitord should handle case where jobs have missing
+    JOB_FAILURE/JOB_TERMINATED events 
+
+15) [PM-1072] – Worker package staging issues on OSX
+
+16) [PM-1081] – pegasus-plan complains if output dir is set but site
+     catalog entry for local site does not storage directory specified 
+
+     pegasus-plan complained if a storage directory was not specified
+     in the site catalog entry for site “local”, even if a user
+     specified a –output-dir option. This is now fixed. The planner
+     will create a default file server based entry for this case. 
+
+
+17) [PM-1082] – transfer jobs don’t have symlink destination URL even
+    though symlink is enabled 
+
+    In the case, where there are multiple candidate replica locations
+    ( some on preferred site and some on other sites), the destination
+    URL for the transfer jobs did not have a symlink URL. As a result
+    the data was never symlinked even though it was available locally
+    on the preferred site. 
+
+18) [PM-1083] – dashboard user home page requires a trailing /
+
+    To access a user home page on the dashboard, a trailing / needs to
+    be specified after the username in the URL. Dashboard was updated
+    to handle URL’s without trailing names. 
+
+19) [PM-1084] – credential handling for glite jobs
+
+    As part of credential handling the environment variable for the
+    staged credential was as environment key instead of the
+    +remote_environment classed key.  As a result transfer jobs
+    running via Glite submission failed as the appropriate environment
+    variable was not set. This is fixed now.
+
+20) [PM-1085] – -p 0 options for condor_dagman sub dax jobs result in
+    dagman ( 8.2.8) dying 
+
+    Pegasus updated to generate the dagman submit files for sub
+    workflows to be compatible with 8.5.x series.  However, the new
+    arguments added resulted in breaking workflows running with old
+    HTCondor versions. The offending argument is now set only if
+    condor version is more than 8.3.6
+
+21) [PM-1086] – Never symlink executables
+    
+    Pegasus adds chmod jobs to explicitly set the x bit of the
+    executables staged. If the executable is a symlinked executable,
+    then chmod fails. Symlinking is never triggered for staged
+    executables now. 
+ 
 
 ===============================
 Release Notes for PEGASUS 4.6.0

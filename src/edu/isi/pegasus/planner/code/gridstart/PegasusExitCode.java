@@ -135,7 +135,12 @@ public class PegasusExitCode implements POSTScript  {
     public boolean construct( Job job, String key ) {
         String postscript = mExitParserPath;
 
-        job.dagmanVariables.construct( Dagman.OUTPUT_KEY, (String)job.condorVariables.get("output"));
+        //PM-1088 set the relative path in the .dag
+        //in the condor submit file output has to be fully qualified path
+        //because of initialdir behavior
+        String output = (String)job.condorVariables.get("output");
+        String relative = "." + output.substring( output.indexOf( mSubmitDir ) + mSubmitDir.length());
+        job.dagmanVariables.construct( Dagman.OUTPUT_KEY, relative);
 
 
         StringBuffer defaultOptions = new StringBuffer();

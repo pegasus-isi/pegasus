@@ -150,6 +150,10 @@ Install Xcode and the Xcode command-line tools.
 
 Install homebrew and the following homebrew packages:
 
+* ant
+* openssl
+* asciidoc (optional, required for manpages and docs)
+* fop (optional, required for docs)
 * mysql (optional, required to access MySQL databases)
 * postgresql (optional, required to access PostgreSQL databases)
 

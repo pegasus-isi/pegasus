@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python2.7
 
 """
 Pegasus Metadata is a tool to query metadata collected by Pegasus workflows.
@@ -255,7 +255,7 @@ def main():
     parent_parser.add_argument('-v', '--verbose', default=0, action='count', help='Logging verbosity')
     parent_parser.add_argument('submit_dir', nargs='?', default='.', help='Workflow submit directory')
 
-    parser = argparse.ArgumentParser(description='Pegasus Metadata Query Tool', parents=[parent_parser])
+    parser = argparse.ArgumentParser(description='Pegasus Metadata Query Tool')
     sub_parser = parser.add_subparsers(title='Metadata types', description='Types of metadata that can be queried')
 
     # Workflow Metadata Options

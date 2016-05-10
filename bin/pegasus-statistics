@@ -1008,9 +1008,9 @@ def main():
     parser.add_option("-c","--conf", action = "store", type = "string", dest = "config_properties", default=None,
                       help = "Specifies the properties file to use. This option overrides all other property files.")
     parser.add_option("-s", "--statistics-level", action="store", dest="statistics_level",
-                      choices=['all', 'summary', 'wf_stats', 'jb_stats', 'tf_stats', 'ti_stats'],
+                      # choices=['all', 'summary', 'wf_stats', 'jb_stats', 'tf_stats', 'ti_stats'],
                       default='summary',
-                      help = "Valid levels are: all,summary,wf_stats,jb_stats,tf_stats,ti_stats; Default is '%default'.")
+                      help="Comma separated list. Valid levels are: all,summary,wf_stats,jb_stats,tf_stats,ti_stats; Default is '%default'.")
     parser.add_option("-t", "--time-filter", action = "store", dest = "time_filter",
                       choices=['day', 'hour'], default='day',
                       help = "Valid levels are: day,hour; Default is '%default'.")
@@ -1030,6 +1030,15 @@ def main():
 
     # Parse command line options
     (options, args) = parser.parse_args()
+
+    options.statistics_level = set([t.lower().strip() for t in options.statistics_level.split(',')])
+
+    if not options.statistics_level:
+        options.statistics_level = set(['summary'])
+
+    sl = options.statistics_level - set(['all', 'summary', 'wf_stats', 'jb_stats', 'tf_stats', 'ti_stats'])
+    if sl:
+        sys.stderr.write("Invalid value(s) for statistics_level, ignoring %s\n" % ','.join(sl))
 
     # Multiple workflow is set to true if there are multiple positional arguments.
     multiple_wf = options.multiple_wf
@@ -1106,26 +1115,28 @@ def main():
     global calc_ti_stats
     sl = options.statistics_level
     logger.info("Statistics level is %s" % sl)
-    if sl == 'all':
+    if 'all' in sl:
         calc_wf_stats = True
         calc_wf_summary = True
         calc_tf_stats = True
         calc_ti_stats = True
         if not multiple_wf:
             calc_jb_stats = True
-    elif sl =='summary':
+
+    if 'summary' in sl:
         calc_wf_summary = True
-    elif sl =='wf_stats':
+
+    if 'wf_stats' in sl:
         calc_wf_stats = True
-    elif sl == 'jb_stats':
+
+    if 'jb_stats' in sl:
         if multiple_wf:
             logger.fatal('Job breakdown statistics cannot be computed over multiple workflows')
             sys.exit(1)
         calc_jb_stats = True
-    elif sl == 'tf_stats':
+
+    if 'tf_stats' in sl:
         calc_tf_stats = True
-    else:
-        calc_ti_stats = True
 
     global file_type
     file_type = options.filetype

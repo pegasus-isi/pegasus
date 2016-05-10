@@ -243,13 +243,6 @@ public class GLite extends Abstract {
             job.condorVariables.construct(  "batch_queue" , (String)job.globusRSL.get( "queue" ) );
         }
         
-        /*
-         PM-934 construct environment accordingly
-        */
-        job.condorVariables.construct( GLite.CONDOR_REMOTE_ENVIRONMENT_KEY, 
-                                       mEnvEscape.escape( job.envVariables ) );
-        job.envVariables.reset();
-
         /* do special handling for jobs scheduled to local site
          * as condor file transfer mechanism does not work
          * Special handling for the JPL cluster */
@@ -272,6 +265,16 @@ public class GLite extends Abstract {
         else {
             applyCredentialsForRemoteExec(job);
         }
+        
+        /*
+         PM-934 construct environment accordingly
+         PM-1084 +remote_environment should be created only after credentials
+                 have been figured out , as paths to remote credentials are set
+                 as environment variables.
+        */
+        job.condorVariables.construct( GLite.CONDOR_REMOTE_ENVIRONMENT_KEY, 
+                                       mEnvEscape.escape( job.envVariables ) );
+        job.envVariables.reset();
     }
 
 
@@ -430,12 +433,14 @@ public class GLite extends Abstract {
      * @param cores
      * @param nodes
      * @param ppn
+     * @param reason
      * 
      * @return 
      */
-    protected String invalidCombinationError( Job job, Integer cores, Integer nodes, Integer ppn  ){
+    protected String invalidCombinationError( Job job, Integer cores, Integer nodes, Integer ppn, String reason  ){
         StringBuffer sb = new StringBuffer();
         StringBuilder comb = new StringBuilder();
+        //Only two of (nodes, cores, ppn) should be specified for job
         sb.append( "Invalid combination of ");
         comb.append( "(" );
         if( cores != null ){
@@ -451,9 +456,12 @@ public class GLite extends Abstract {
             comb.append( ppn ).append( "," );
         }
         comb.append( ")" );
-        sb.append( " ").append( comb );
         sb.append( " for job ").append(job.getID() );
-
+        sb.append( " ").append( comb );
+        if( reason != null ){
+            sb.append( " ").append( reason );
+        }
+        
          return sb.toString();
     }
     
@@ -549,15 +557,18 @@ public class GLite extends Abstract {
         //of Pegasus profile keys before doing any translation
         
         mCondorG.handleResourceRequirements(job);
+
+        gridResource = gridResource.replace("batch ", "");
         
         //sanity check
-        if( (!(gridResource.equals( "pbs") || gridResource.equals( "sge") ))){
-            //if it is not pbs or sge . log a warning.
-            mLogger.log( "Glite mode supports only pbs or sge submission. Will use PBS style attributes for job " + 
-                          job.getID() + " with grid resource " + gridResource,
+        if( ! (gridResource.equals("pbs") || 
+               gridResource.equals("sge") ||
+               gridResource.equals("slurm") ) ) {
+            //if it is not one of the support types, log a warning but use PBS.
+            mLogger.log( "Glite mode supports only pbs, sge or slurm submission. Will use PBS style attributes for job " + 
+                         job.getID() + " with grid resource " + gridResource,
                          LogManager.WARNING_MESSAGE_LEVEL );
             gridResource = "pbs";
-            
         }
         
         if ( gridResource.equals( "pbs" ) ){
@@ -584,14 +595,16 @@ public class GLite extends Abstract {
                     int ppn = cores/nodes;
                     //sanity check
                     if( cores%nodes != 0 ){
-                        throw new CondorStyleException( invalidCombinationError ( job, cores, nodes, null) );
+                        throw new CondorStyleException( invalidCombinationError ( job, cores, nodes, null,
+                                                                "because cores not perfectly divisible by nodes.") );
                     }
                     if( ppnSet ){
                         //all three were set . check if derived value is same as
                         //existing
                         int existing = Integer.parseInt((String) job.globusRSL.get( Globus.XCOUNT_KEY) );
                         if( existing != ppn ){
-                            throw new CondorStyleException( invalidCombinationError ( job, cores, nodes, ppn) );
+                            throw new CondorStyleException( invalidCombinationError ( job, cores, nodes, existing, 
+                                            "do not satisfy cores = nodes * ppn. Please specify only two of (nodes, cores, ppn)." ) );
                         }
                     }
                     else{
@@ -604,20 +617,18 @@ public class GLite extends Abstract {
                     int nodes = cores/ppn;
                     //sanity check
                     if( cores%ppn != 0 ){
-                        throw new CondorStyleException( invalidCombinationError ( job, cores, null, ppn));
+                        //PM-1051 if they are not perfectly divisible just take the ceiling value.
+                        //accounts for case where ppn is specified in site catalog and cores associated
+                        //with job
+                        nodes = nodes + 1;
+                        StringBuilder message = new StringBuilder();
+                        message.append( "For job " ).append( job.getID() ).append( " with (cores,ppn) as ").
+                                append( "(").append( cores ).append( " , ").append( ppn ).append( "). ").
+                                append( "Set the nodes to be a ceiling of cores/ppn - ").append( nodes);
+                        mLogger.log( message.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
                     }
+                    job.globusRSL.construct( Globus.HOST_COUNT_KEY, Integer.toString( nodes ) );
                     
-                    if( nodesSet ){
-                        //all three were set . check if derived value is same as
-                        //existing
-                        int existing = Integer.parseInt((String) job.globusRSL.get( Globus.HOST_COUNT_KEY) );
-                        if( existing != nodes ){
-                            throw new CondorStyleException( invalidCombinationError ( job, cores, nodes, ppn) );
-                        }
-                    }
-                    else{
-                        job.globusRSL.construct( Globus.HOST_COUNT_KEY, Integer.toString( nodes ) );
-                    }
                 }
             }
             else {
@@ -648,6 +659,32 @@ public class GLite extends Abstract {
                 }
                 else if( nodesSet || ppnSet ){ 
                     throw new CondorStyleException( "Either cores or ( nodes and ppn) need to be set for SGE submission for job " + job.getID() );
+                    
+                }
+                //default case nothing specified 
+            }
+
+        }
+        else if ( gridResource.equals( "slurm" )){
+            //for SLURM case
+            boolean coresSet = job.globusRSL.containsKey( Globus.COUNT_KEY );
+            boolean nodesSet = job.globusRSL.containsKey( Globus.HOST_COUNT_KEY );
+            boolean ppnSet   = job.globusRSL.containsKey( Globus.XCOUNT_KEY );
+            
+            if( coresSet ){
+                //then that is what SLURM really needs. 
+                //ignore other values.
+            }
+            else{
+                //we need to attempt to arrive at a value or specify a default value
+                if( nodesSet && ppnSet ){
+                    //set cores to multiple
+                    int nodes = Integer.parseInt((String) job.globusRSL.get( Globus.HOST_COUNT_KEY));
+                    int ppn   = Integer.parseInt((String) job.globusRSL.get( Globus.XCOUNT_KEY));
+                    job.globusRSL.construct( Globus.COUNT_KEY, Integer.toString( nodes*ppn ) );
+                }
+                else if( nodesSet || ppnSet ){ 
+                    throw new CondorStyleException( "Either cores or ( nodes and ppn) need to be set for SLURM submission for job " + job.getID() );
                     
                 }
                 //default case nothing specified 

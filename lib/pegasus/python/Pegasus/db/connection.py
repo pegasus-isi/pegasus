@@ -137,12 +137,7 @@ def url_by_submitdir(submit_dir, db_type, config_properties=None, top_dir=None, 
 
     # From the submit dir, we need the wf_uuid
     # Getting values from the submit_dir braindump file
-    top_level_wf_params = _parse_top_level_wf_params(submit_dir)
-
-    # Load the top-level braindump now if top_dir is not None
-    if top_dir is not None:
-        # Getting values from the top_dir braindump file
-        top_level_wf_params = _parse_top_level_wf_params(top_dir)
+    top_level_wf_params = _parse_top_level_wf_params(submit_dir, top_dir)
 
     # Get the location of the properties file from braindump
     top_level_prop_file = None
@@ -342,14 +337,10 @@ def _get_workflow_uri(props=None, submit_dir=None, top_dir=None):
             return dburi
 
     top_level_wf_params = None
-    if submit_dir:
+    if submit_dir or top_dir:
         # From the submit dir, we need the wf_uuid
         # Getting values from the submit_dir braindump file
-        top_level_wf_params = _parse_top_level_wf_params(submit_dir)
-
-    if top_dir:
-        # Getting values from the top_dir braindump file
-        top_level_wf_params = _parse_top_level_wf_params(top_dir)
+        top_level_wf_params = _parse_top_level_wf_params(submit_dir, top_dir)
 
     if not top_level_wf_params:
         return None
@@ -439,16 +430,38 @@ def _get_timeout_property(props, prop_name1, prop_name2):
     return None
 
 
-def _parse_top_level_wf_params(dir):
+def _parse_top_level_wf_params(submit_dir, top_dir):
     """
     Parse the top level workflow parameters.
-    :param dir: path of the directory
+    :param submit_dir: path of the directory
+    :param top_dir: path to the workflow top directory
     :return: top level workflow parameters
     """
+    top_level_wf_params = None
+    dir = submit_dir
+    if top_dir:
+        dir = top_dir
+
     top_level_wf_params = utils.slurp_braindb(dir)
 
     # Return if we cannot parse the braindump.txt file
     if not top_level_wf_params:
-        raise ConnectionError("File 'braindump.txt' not found in %s" % (dir))
+        raise ConnectionError("File 'braindump.txt' not found in %s." % dir)
+
+    if top_level_wf_params["root_wf_uuid"] == top_level_wf_params["wf_uuid"]:
+        return top_level_wf_params
+
+    while True:
+        dir = os.path.abspath(os.path.join(os.path.abspath(dir), '..'))
+        if dir == os.path.realpath('/..'):
+            top_level_wf_params = None
+            break
+
+        top_level_wf_params = utils.slurp_braindb(dir)
+        if top_level_wf_params and top_level_wf_params["root_wf_uuid"] == top_level_wf_params["wf_uuid"]:
+            break
+
+    if not top_level_wf_params:
+        raise ConnectionError("Unable to find file 'braindump.txt' in parent folders.")
 
     return top_level_wf_params

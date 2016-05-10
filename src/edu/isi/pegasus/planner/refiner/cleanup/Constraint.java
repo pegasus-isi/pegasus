@@ -130,7 +130,8 @@ public class Constraint extends AbstractCleanupStrategy {
         availableSpacePerSite = new HashMap<String, Long>();
         maxAvailableSpacePerSite = new HashMap<String, Long>();
         deferStageins = (mProps.getProperty("pegasus.file.cleanup.constraint.deferstageins") != null);
-        // check if we want to keep the possibility of reading sizes from a CSV file
+        
+        // read file sizes from a CSV file
         String CSVName = System.getProperty("pegasus.file.cleanup.constraint.csv");
         if (CSVName != null) {
             try {

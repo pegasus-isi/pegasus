@@ -39,6 +39,7 @@ import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.code.gridstart.PegasusExitCode;
 import edu.isi.pegasus.planner.common.CreateWorkerPackage;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
+import edu.isi.pegasus.planner.mapper.SubmitMapper;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
@@ -258,8 +259,8 @@ public class DeployWorkerPackage
         //singleton access
         if( mOSToNMIOSReleaseAndVersion == null ){
             mOSToNMIOSReleaseAndVersion = new HashMap();
-            mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.LINUX, "rhel_6" );
-            mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.MACOSX, "macos_10" );
+            mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.linux, "rhel_6" );
+            mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.macosx, "macos_10" );
         }
         return mOSToNMIOSReleaseAndVersion;
     }
@@ -395,10 +396,11 @@ public class DeployWorkerPackage
 
         //load the transfer setup implementation
         //To DO . specify type for loading
+        /* PM-833
         mSetupTransferImplementation = ImplementationFactory.loadInstance(
                                                           bag,
                                                           ImplementationFactory.TYPE_SETUP );
-        
+        */
         mUserSpecifiedSourceLocation = mProps.getBaseSourceURLForSetupTransfers();
         mUseUserSpecifiedSourceLocation =
                   !( mUserSpecifiedSourceLocation == null || mUserSpecifiedSourceLocation.trim().length()== 0 );
@@ -454,8 +456,9 @@ public class DeployWorkerPackage
         TransformationSelector txSelector = TransformationSelector.loadTXSelector( mProps.getTXSelectorMode() );
 
         mDefaultTransferRefiner = RefinerFactory.loadInstance( DeployWorkerPackage.DEFAULT_REFINER, mBag, scheduledDAG ) ;
+        /* PM-833
         mSetupTransferImplementation.setRefiner( mDefaultTransferRefiner );
-
+        */
 
         if( mTransferWorkerPackage && !deploymentSites[0].isEmpty() ){
             //PM-810 for sharedfs case, worker package transfer can only happen
@@ -753,10 +756,10 @@ public class DeployWorkerPackage
          String osrelease = result.getOSRelease();
          if( osrelease.startsWith( "rhel" ) || osrelease.startsWith( "deb" ) || osrelease.startsWith( "ubuntu" ) ||
                 osrelease.startsWith( "fc" ) || osrelease.startsWith( "suse" ) ){
-            result.setOS(SysInfo.OS.LINUX );
+            result.setOS(SysInfo.OS.linux );
          }
          else if( osrelease.startsWith( "macos" ) ){
-            result.setOS(SysInfo.OS.MACOSX );
+            result.setOS(SysInfo.OS.macosx );
          }
 
 
@@ -780,6 +783,13 @@ public class DeployWorkerPackage
     public ADag addSetupNodes( ADag dag ){
         Mapper m = mBag.getHandleToTransformationMapper();
         
+        //PM-833 we need to instantiate the setup tx implementation
+        //to ensure it has the right submit directory creator associated
+        //load the transfer setup implementation
+        mSetupTransferImplementation = ImplementationFactory.loadInstance(
+                                                          this.mBag,
+                                                          ImplementationFactory.TYPE_SETUP );
+        mSetupTransferImplementation.setRefiner( mDefaultTransferRefiner );
 
         //boolean addUntarJobs = !mWorkerNodeExecution;
 
@@ -1539,7 +1549,7 @@ public class DeployWorkerPackage
         String osRelease = sysinfo.getOSRelease();
         String osVersion = sysinfo.getOSVersion();
         //for mac there is only single OSRelease
-        osRelease = ( sysinfo.getOS() == SysInfo.OS.MACOSX ) ? "macos" : osRelease;
+        osRelease = ( sysinfo.getOS() == SysInfo.OS.macosx ) ? "macos" : osRelease;
         
         String osReleaseAndVersion = null;
         if ( ( osRelease != null && osRelease.length() != 0 ) &&

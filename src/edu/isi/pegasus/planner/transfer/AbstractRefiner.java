@@ -27,6 +27,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 import java.util.Collection;
 import edu.isi.pegasus.planner.classes.FileTransfer;
+import edu.isi.pegasus.planner.mapper.SubmitMapper;
 
 import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
 import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
@@ -107,6 +108,11 @@ public abstract class AbstractRefiner implements Refiner{
      */
     protected XMLProducer mXMLStore;
 
+    /**
+     * Handle to the Submit directory factory, that returns the relative
+     * submit directory for a job
+     */
+    protected SubmitMapper mSubmitDirFactory;
 
     /**
      * The overloaded constructor.
@@ -124,7 +130,7 @@ public abstract class AbstractRefiner implements Refiner{
         mTPT.buildState();
         mRemoteTransfers = new RemoteTransfer( mProps );
         mRemoteTransfers.buildState();
-
+        mSubmitDirFactory = bag.getSubmitDirFileFactory();
         mXMLStore        = XMLProducerFactory.loadXMLProducer( mProps );
     }
 

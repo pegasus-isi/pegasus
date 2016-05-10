@@ -251,8 +251,20 @@ public class PegasusConfiguration {
                 storageDirectory = entry.getDirectory( Directory.TYPE.shared_storage );
             }
             if( storageDirectory == null || storageDirectory.isEmpty()){
-                //now throw an error
-                throw new RuntimeException( "No storage directory specified for output site " + outputSite );
+                if( outputSite.equals( "local") ){
+                    //PM-1081 create a default storage directory for local site
+                    //with a stub file server. follow up code will update
+                    //it with the output-dir value
+                    Directory dir = new Directory();
+                    dir.setType( Directory.TYPE.local_storage);
+                    dir.addFileServer( new FileServer( "file", "file://", "" ));
+                    entry.addDirectory(dir);
+                    storageDirectory = dir;
+                }
+                else{
+                    //now throw an error
+                    throw new RuntimeException( "No storage directory specified for output site " + outputSite );
+                }
             }
 
             boolean append = ( directory.startsWith( File.separator ) )?

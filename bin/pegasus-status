@@ -1077,6 +1077,19 @@ sub condor_q(\%\%\@;%) {
 	my $condor_q = find_exec('condor_q')
 	  || die "FATAL: Unable to find 'condor_q' in your PATH.\n";
 
+	# HTCondor 8.5 changed the default behavior of condor_q. Now we have 
+	# to determine if we have a condor_q pre or post the changes, and 
+	# add the correct flags
+	my $qargs = "";
+	open(Q, "$condor_q -help|");
+	while (<Q>) {
+		if (m/nobatch/) {
+			$qargs = " -allusers -nobatch";
+			last;
+		}
+	}
+	close Q;
+
 	if ( defined $main::cache && $main::cache ) {
 
 		# see --cache flag -- THIS IS ONLY FOR DEBUGGING
@@ -1085,8 +1098,8 @@ sub condor_q(\%\%\@;%) {
 	else {
 
 		# FIXME: 'condor_q' is expensive. Find better restrictions!
-		warn "# $condor_q -l $main::user $constraint\n" if $main::debug;
-		open( Q, "$condor_q -l $main::user $constraint|" )
+		warn "# $condor_q $qargs -l $main::user $constraint\n" if $main::debug;
+		open( Q, "$condor_q $qargs -l $main::user $constraint|" )
 		  || die
 		  "FATAL: Unable to execute $condor_q -l $main::user $constraint: $!\n";
 	}

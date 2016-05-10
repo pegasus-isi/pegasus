@@ -40,7 +40,10 @@ import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.PlannerCache;
+
+import edu.isi.pegasus.planner.mapper.SubmitMapper;
 import edu.isi.pegasus.planner.namespace.Dagman;
+
 import java.util.List;
 import java.util.Iterator;
 import java.util.HashSet;
@@ -135,6 +138,12 @@ public class Cleanup implements CleanupImplementation{
      * The handle to the logger.
      */
     private LogManager mLogger;
+    
+    /**
+     * Handle to the Submit directory factory, that returns the relative
+     * submit directory for a job
+     */
+    protected SubmitMapper mSubmitDirFactory;
 
     /**
      * A convenience method to return the complete transformation name being
@@ -168,6 +177,7 @@ public class Cleanup implements CleanupImplementation{
         mTCHandle        = bag.getHandleToTransformationCatalog(); 
         mLogger          = bag.getLogger();
         mPlannerCache     = bag.getHandleToPlannerCache();
+        mSubmitDirFactory = bag.getSubmitDirFileFactory();
     }
 
 
@@ -200,13 +210,18 @@ public class Cleanup implements CleanupImplementation{
         //by default execution site for a cleanup job is local unless
         //overridden because of File URL's in list of files to be cleaned
         String eSite = "local";
+        
+        //PM-833 set the relative submit directory for the transfer
+        //job based on the associated file factory
+        cJob.setRelativeSubmitDirectory( this.mSubmitDirFactory.getRelativeDir(cJob));
 
         //prepare the stdin for the cleanup job
         String stdIn = id + ".in";
         try{
             BufferedWriter writer;
-            writer = new BufferedWriter( new FileWriter(
-                                           new File( mSubmitDirectory, stdIn ) ));
+            File directory = new File( this.mSubmitDirectory, cJob.getRelativeSubmitDirectory() );
+            writer = new BufferedWriter( new FileWriter( new File( directory, stdIn ) ));
+            
             
             writer.write("[\n");
             

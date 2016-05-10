@@ -67,14 +67,19 @@ pegasus-plan \
 
 WORK_DIR=`cat plan.out | grep pegasus-run | sed -E 's/.*pegasus-run[ ]+//'`
 
-#check if planner did the right thing
-if [ ls "$WORK_DIR/stage_in_remote_*in" 1> /dev/null 2>&1 ]; then
+# check if planner did the right thing
+set +e
+find $WORK_DIR -name "stage_in_remote*.in" | grep -e ".*" 1> /dev/null 2>&1
+EC=$?
+set -e
+
+if [ $EC -ne 0 ]; then 
     echo "Planner did not create any remote stagein jobs"
     exit 1
 fi
 
 set +e
-grep  'f.a1\b' $WORK_DIR/stage_in_remote*in 1> /dev/null 2>&1
+grep 'f.a1\b' `find $WORK_DIR -name "stage_in_remote*in"`  1> /dev/null 2>&1
 EC=$?
 set -e
 
@@ -85,7 +90,7 @@ if [ $EC -ne 0 ]; then
 fi
 
 set +e
-grep  'f.a\b' $WORK_DIR/stage_in_local*in 1> /dev/null 2>&1
+grep 'f.a\b' `find $WORK_DIR -name "stage_in_local*in"` 1> /dev/null 2>&1
 EC=$?
 set -e
 

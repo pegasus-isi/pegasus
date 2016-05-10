@@ -26,49 +26,66 @@ import java.io.*;
  *
  * @see DAX2DAG
  */
-public interface FileFactory 
-{
-  /**
-   * Virtual constructor: Creates the next file with the given basename. 
-   * @param basename is the filename to create. Don't specify dirs here.
-   * @return a File structure which points to the new file.
-   * @see #getCount()
-   */
-  public File createFile( String basename )
-    throws IOException;
+public interface FileFactory {
+    
+    /**
+     * Virtual constructor: Creates the next file with the given basename.
+     *
+     * @param basename is the filename to create. Don't specify dirs here.
+     * @return a File structure which points to the new file.
+     * @see #getCount()
+     */
+    public File createFile(String basename)
+            throws IOException;
 
-  /**
-   * Returns the number of times the regular virtual constructor for
-   * structured entries was called.
-   * @return the count for createFile invocations.
-   * @see #createFile( String )
-   */
-  public int getCount();
+    /**
+     * Virtual constructor: Creates the next file with the given basename.
+     *
+     * @param basename is the filename to create. Don't specify dirs here.
+     * 
+     * @return a relative File structure (relative to the base directory)
+     * which points to the new file.
+     * 
+     * @see #getCount()
+     */
+    public File createRelativeFile(String basename)
+            throws IOException;
+    
+    /**
+     * Returns the number of times the regular virtual constructor for
+     * structured entries was called.
+     *
+     * @return the count for createFile invocations.
+     * @see #createFile( String )
+     */
+    public int getCount();
 
-  /**
-   * Virtual constructor: Creates the next file with the given basename
-   * which is guaranteed to be created in the base directory, and never
-   * in any structured directories that child classes may implement. 
-   * @param basename is the filename to create. Don't specify dirs here.
-   * @return a File structure which points to the new file.
-   * @see #getFlatCount()
-   */
-  public File createFlatFile( String basename )
-    throws IOException;
+    /**
+     * Virtual constructor: Creates the next file with the given basename which
+     * is guaranteed to be created in the base directory, and never in any
+     * structured directories that child classes may implement.
+     *
+     * @param basename is the filename to create. Don't specify dirs here.
+     * @return a File structure which points to the new file.
+     * @see #getFlatCount()
+     */
+    public File createFlatFile(String basename)
+            throws IOException;
 
-  /**
-   * Returns the number of times the virtual constructor for flat files
-   * was called.
-   * @return the count for createFlatFile invocations.
-   * @see #createFlatFile( String )
-   */
-  public int getFlatCount();
-
-  /**
-   * Resets the helper structures after changing layout parameters. You
-   * will also need to call this function after you invoked the virtual
-   * constructors, but want to change parameter pertaining to the
-   * directory structure. The file counters will also be reset!
-   */
-  public void reset();
+    /**
+     * Returns the number of times the virtual constructor for flat files was
+     * called.
+     *
+     * @return the count for createFlatFile invocations.
+     * @see #createFlatFile( String )
+     */
+    public int getFlatCount();
+    
+    /**
+     * Resets the helper structures after changing layout parameters. You will
+     * also need to call this function after you invoked the virtual
+     * constructors, but want to change parameter pertaining to the directory
+     * structure. The file counters will also be reset!
+     */
+    public void reset();
 }

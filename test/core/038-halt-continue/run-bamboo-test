@@ -89,11 +89,12 @@ cd $RUN_DIR
 # wait for subworkflow to start
 echo `date`": Waiting for subworkflow to start..."
 COUNT=0
-while [ ! -e subdiamond_j3 -a $COUNT -lt 5 ]; do
+FOUND=`find . -name subdiamond_j3 | wc -l`
+while [ $FOUND = 0 -a $COUNT -lt 10 ]; do
     COUNT=$(($COUNT + 1))
+    FOUND=`find . -name subdiamond_j3 | wc -l`
     sleep 60s
 done
-sleep 60s
 
 echo
 echo `date`": subworkflow has started, sending halt command..."
