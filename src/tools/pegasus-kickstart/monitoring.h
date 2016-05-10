@@ -11,6 +11,8 @@ typedef struct {
     char *condor_job_id;
     char *xformation;
     char *task_id;
+    char *site;
+    char *hostname;
     int socket;
     int interval;
 } MonitoringContext;

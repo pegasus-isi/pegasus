@@ -94,6 +94,22 @@ int initialize_monitoring_context(MonitoringContext *ctx) {
         ctx->task_id = strdup(envptr);
     }
 
+    envptr = getenv("PEGASUS_SITE");
+    if (envptr == NULL) {
+        warn("PEGASUS_SITE not specified\n");
+        ctx->site = NULL;
+    } else {
+        ctx->site = strdup(envptr);
+    }
+
+    char hostname[BUFSIZ];
+    if (gethostname(hostname, BUFSIZ)) {
+        printerr("ERROR[gethostname]: %s\n", strerror(errno));
+        ctx->hostname = NULL;
+    } else {
+        ctx->hostname = strdup(hostname);
+    }
+
     return 0;
 }
 
@@ -148,6 +164,8 @@ static void send_http_msg(char *url, char *msg) {
 static size_t json_encode(MonitoringContext *ctx, ProcStats *stats, char *buf, size_t maxsize) {
     size_t size = snprintf(buf, maxsize,
             "{\"ts\":%.6lf,"
+            "\"hostname\":\"%s\","
+            "\"site\":\"%s\","
             "\"wf_uuid\":\"%s\","
             "\"wf_label\":\"%s\","
             "\"dag_job_id\":\"%s\","
@@ -156,6 +174,7 @@ static size_t json_encode(MonitoringContext *ctx, ProcStats *stats, char *buf, s
             "\"task_id\":\"%s\","
             "\"pid\":%d,"
             "\"exe\":\"%s\","
+            "\"rank\":%d,"
             "\"utime\":%.3f,"
             "\"stime\":%.3f,"
             "\"iowait\":%.3f,"
@@ -183,6 +202,8 @@ static size_t json_encode(MonitoringContext *ctx, ProcStats *stats, char *buf, s
 #endif
             "}",
             stats->ts,
+            ctx->hostname == NULL ? "" : ctx->hostname,
+            ctx->site == NULL ? "" : ctx->site,
             ctx->wf_uuid == NULL ? "" : ctx->wf_uuid,
             ctx->wf_label == NULL ? "" : ctx->wf_label,
             ctx->dag_job_id == NULL ? "" : ctx->dag_job_id,
@@ -191,6 +212,7 @@ static size_t json_encode(MonitoringContext *ctx, ProcStats *stats, char *buf, s
             ctx->task_id == NULL ? "" : ctx->task_id,
             stats->pid,
             stats->exe,
+            stats->rank,
             stats->utime,
             stats->stime,
             stats->iowait,

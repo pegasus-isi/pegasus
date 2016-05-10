@@ -221,9 +221,9 @@ class OnlineMonitord:
         value["wf_uuid"] = message["wf_uuid"]
         value["sched_id"] = message["condor_job_id"]
         value["dag_job_id"] = message["dag_job_id"]
-        value["hostname"] = None #message["hostname"]
-        value["exec_name"] = message["exe"]
-        value["kickstart_pid"] = 0
+        value["hostname"] = message["hostname"] or None
+        value["exec_name"] = message["exe"] or None
+        value["kickstart_pid"] = message["pid"]
         value["ts"] = message["ts"]
         value["stime"] = message["stime"]
         value["utime"] = message["utime"]
@@ -237,7 +237,7 @@ class OnlineMonitord:
         value["threads"] = message["threads"]
         value["bytes_transferred"] = message["bsend"] + message["brecv"]
         value["transfer_duration"] = None
-        value["site"] = None
+        value["site"] = message["site"] or None
         value["totins"] = message.get("totins", None)
         value["fpops"] = message.get("fpops", None)
         value["fpins"] = message.get("fpins", None)
