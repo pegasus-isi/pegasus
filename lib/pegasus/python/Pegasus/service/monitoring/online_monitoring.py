@@ -63,6 +63,11 @@ class OnlineMonitord:
         self.influx_client.switch_user(url.username, url.password)
 
     def start_web_server(self):
+        # This is how you could eventually have kickstart report directly to
+        # monitord. This starts a web API, and then writes the address to
+        # the monitord.env file, which is picked up by pegasus-submit-job
+        # and passed to the environment of condor_submit, where it can be
+        # incorporated into the job environment using $ENV() classad exprs.
         from flask import Flask, request
         import socket
 
