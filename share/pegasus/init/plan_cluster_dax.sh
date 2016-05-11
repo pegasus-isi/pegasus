@@ -21,9 +21,16 @@ pegasus-plan --conf pegasus.properties \
     --output-dir $DIR/output \
 {% if generate_tutorial == true %}
     --cleanup leaf \
+{% if tutorial_setup == "usc-hpcc" %}
     --cluster label \
+{% else %}
+    --cluster horizontal \
+{% endif %}
     --force \
 {% endif %}
     --sites {{sitename}} \
+{% if staging_site is not none %}
+    --staging-site {{staging_site}} \
+{% endif %}
     --submit
 

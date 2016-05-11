@@ -67,6 +67,7 @@ class Workflow(object):
         self.user = os.environ["USER"]
         self.generate_tutorial = False
         self.tutorial_setup  = None
+        self.staging_site    = None
         sysname, _, _, _, machine = os.uname()
         if sysname == 'Darwin':
             self.os = "MACOSX"
@@ -95,18 +96,25 @@ class Workflow(object):
             self.daxgen = "tutorial"
             self.generate_tutorial = True
 
-            self.tutorial = optionlist("What tutorial workflow do you want?", [
-                ("Process", "process"),
-                ("Pipeline", "pipeline"),
-                ("Split", "split"),
-                ("Merge", "merge"),
-                ("Diamond", "diamond")
-            ])
             # determine the environment to setup tutorial for
             self.tutorial_setup = optionlist("What environment is tutorial to be setup for?", [
                 ("Local Machine", "submit-host"),
                 ("USC HPCC Cluster", "usc-hpcc"),
+                ("OSG from ISI submit node", "osg")
             ])
+
+            # figure out what example options to provide
+            examples = [
+                ("Process", "process"),
+                ("Pipeline", "pipeline"),
+                ("Split", "split"),
+                ("Merge", "merge")
+            ]
+            if self.tutorial_setup != "osg":
+                examples.append( ("Diamond", "diamond"))
+
+            self.tutorial = optionlist("What tutorial workflow do you want?", examples)
+
             self.setup_tutorial()
             return
 
@@ -142,6 +150,11 @@ class Workflow(object):
             self.config   = "glite"
             # for running the whole workflow as mpi job
             self.properties["pegasus.job.aggregator"]="mpiexec"
+        elif self.tutorial_setup == "osg":
+            self.sitename = "osg"
+            self.os = "linux"
+            if not yesno("Do you want to use Condor file transfers", "yes"):
+                self.staging_site = "isi_workflow"
         return
 
 
@@ -168,8 +181,7 @@ class Workflow(object):
             elif self.tutorial == "split":
                 # Split workflow input file
                 self.copy_template("split/pegasus.html", "input/pegasus.html")
-                if self.tutorial_setup == "usc-hpcc":
-                    self.copy_template("plan_cluster_dax.sh", "plan_cluster_dax.sh", mode=0755)
+                self.copy_template("plan_cluster_dax.sh", "plan_cluster_dax.sh", mode=0755)
         else:
             self.copy_template("tc.txt", "tc.txt")
             if self.daxgen == "python":

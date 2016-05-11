@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
+    xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.1.xsd" version="4.1">
 
     <!-- The local site contains information about the submit host -->
     <site handle="local">
@@ -106,5 +106,30 @@
 
 {% endif %}
 
+{% if generate_tutorial == true and tutorial_setup == "osg" %}
+	<profile namespace="pegasus" key="style" >condor</profile>
+        <profile namespace="condor" key="universe" >vanilla</profile>
+        <profile namespace="condor" key="requirements">OSGVO_OS_STRING == "RHEL 6" &amp;&amp; Arch == "X86_64" &amp;&amp;  HAS_MODULES == True</profile>
+        <profile namespace="condor" key="+ProjectName">"PegasusTraining"</profile>
+
+{% endif %}
+       <!-- This profile tells Pegasus to create two clustered jobs
+            per level of the workflow, when horizontal clustering is
+            enabled -->
+	<profile namespace="pegasus" key="clusters.num" >2</profile>
+
     </site>
+
+{% if generate_tutorial == true and tutorial_setup == "osg" %}
+    <site  handle="isi_workflow" arch="x86_64" os="LINUX">
+        <!-- we are going to use workflow for jobs to stage in data
+	    from and stage data out, when it executes on OSG -->	     
+        <directory type="shared-scratch" path="/local-scratch/http/${USER}/staging">
+            <file-server operation="get"  url="http://workflow.isi.edu/scratch/${USER}/staging"/>
+            <file-server operation="put"   url="scp://${USER}@workflow.isi.edu/local-scratch/http/${USER}/staging"/>
+        </directory>
+        <profile namespace="pegasus"  key="SSH_PRIVATE_KEY">${HOME}/.ssh/workflow</profile>
+    </site>
+{% endif %}
+
 </sitecatalog>
