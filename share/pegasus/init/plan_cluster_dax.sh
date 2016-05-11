@@ -26,7 +26,7 @@ pegasus-plan --conf pegasus.properties \
 {% endif %}
     --sites {{sitename}} \
 {% if staging_site is defined %}
-    --staging-site {{staging_site}}
+    --staging-site {{staging_site}} \
 {% endif %}
 
     --submit
