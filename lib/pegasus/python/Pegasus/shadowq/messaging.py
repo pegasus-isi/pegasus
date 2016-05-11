@@ -1,9 +1,9 @@
-import pika
-import pika.connection
 import sys
 import threading
 import logging
 import json
+
+from Pegasus.tools import amqp
 
 log = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ class ManifestListener(threading.Thread):
         self.status = None
 
         # Connect
-        self.connection = pika.BlockingConnection(pika.connection.URLParameters(self.url))
+        self.connection = amqp.connect(self.url)
         self.channel = self.connection.channel()
 
         # Declare the exchange
@@ -62,7 +62,7 @@ class RequestPublisher(object):
         self.wf_uuid = wf_uuid
         self.request_queue = request_queue
 
-        self.connection = pika.BlockingConnection(pika.connection.URLParameters(self.url))
+        self.connection = amqp.connect(self.url)
         self.channel = self.connection.channel()
         self.channel.queue_declare(queue=self.request_queue)
 

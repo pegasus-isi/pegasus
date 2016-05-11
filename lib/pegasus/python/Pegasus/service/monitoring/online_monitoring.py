@@ -1,18 +1,12 @@
-import pika
 from influxdb.influxdb08 import InfluxDBClient
 from influxdb.influxdb08.client import InfluxDBClientError
-import datetime
-import sys
 import urlparse
-import urllib
 import os
 import logging
-import ssl
-import time
-import copy
 import json
 
 from Pegasus.monitoring import event_output
+from Pegasus.tools import amqp
 
 log = logging.getLogger(__name__)
 
@@ -24,7 +18,7 @@ class OnlineMonitord:
         self.event_sink = event_output.create_wf_event_sink(dburi)
         self.child_conn = child_conn
         self.influxdb_url = self.getconf("INFLUXDB_URL")
-        self.rabbitmq_url = self.getconf("KICKSTART_MON_URL")
+        self.amqp_url = self.getconf("PEGASUS_AMQP_URL")
         self.influx_client = None
 
     def getconf(self, name):
@@ -98,22 +92,11 @@ class OnlineMonitord:
         app.run(host="0.0.0.0", port=port)
 
     def start_consuming_mq_messages(self):
-        if self.rabbitmq_url is None or not self.rabbitmq_url.startswith("rabbitmq"):
+        if self.amqp_url is None:
             log.error("Unable to connect to RabbitMQ")
             return
 
-        url = urlparse.urlparse(self.rabbitmq_url)
-        virtual_host, exchange_name = url.path.split("/")[3:5]
-        creds = pika.PlainCredentials(url.username, url.password)
-        virtual_host = urllib.unquote(virtual_host) # Replace %2F with /
-
-        parameters = pika.ConnectionParameters(host=url.hostname,
-                                               port=url.port - 10000, # 15671 to 5671
-                                               ssl=(url.scheme == "rabbitmqs"),
-                                               ssl_options={"cert_reqs": ssl.CERT_NONE},
-                                               virtual_host=virtual_host,
-                                               credentials=creds)
-        mq_conn = pika.BlockingConnection(parameters)
+        mq_conn = amqp.connect(self.amqp_url)
 
         mq_channel = mq_conn.channel()
 
@@ -121,7 +104,7 @@ class OnlineMonitord:
         mq_channel.queue_declare(queue=self.wf_name, auto_delete=True, exclusive=True)
 
         # bind the queue to the monitoring exchange
-        mq_channel.queue_bind(queue=self.wf_name, exchange=exchange_name, routing_key=self.wf_uuid)
+        mq_channel.queue_bind(queue=self.wf_name, exchange="monitoring", routing_key=self.wf_uuid)
 
         message_count = None
         db_is_processing_events = False

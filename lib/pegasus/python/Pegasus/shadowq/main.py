@@ -60,7 +60,6 @@ def start(dag_file):
     estimates = os.getenv("SHADOWQ_ESTIMATES", None)
     interval = int(os.getenv("SHADOWQ_PROVISIONER_INTERVAL", 120))
     makespan = int(os.getenv("SHADOWQ_MAKESPAN", 0))
-    amqp_url = os.getenv("SHADOWQ_AMQP_URL")
     sliceid = os.getenv("SHADOWQ_SLICEID")
 
     deadline = time.time() + makespan
@@ -69,8 +68,9 @@ def start(dag_file):
     log.info("Makespan: %d", makespan)
     log.info("Deadline: %d", deadline)
 
+    amqp_url = os.getenv("PEGASUS_AMQP_URL")
     if amqp_url is None:
-        log.error("SHADOWQ_AMQP_URL not specified in environment")
+        log.error("PEGASUS_AMQP_URL not specified in environment")
         exit(1)
 
     listener = ManifestListener(amqp_url, sliceid)

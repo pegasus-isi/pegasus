@@ -1,18 +1,15 @@
-import pika
-import urlparse
 import os
-import ssl
 import json
-import urllib
 import logging
 
 from Pegasus.monitoring import event_output as eo
+from Pegasus.tools import amqp
 
 log = logging.getLogger(__name__)
 
 class AnomalyHandler:
     def __init__(self, wf_label, wf_uuid, dburi):
-        self.rabbitmq_url = self.getconf("PEGASUS_ANOMALIES_URL")
+        self.amqp_url = self.getconf("PEGASUS_AMQP_URL")
         self.wf_label = wf_label
         self.wf_uuid = wf_uuid
         self.queue_name = "anomalies:" + wf_label + ":" + wf_uuid
@@ -30,23 +27,11 @@ class AnomalyHandler:
         self.start_consuming_mq_messages()
 
     def start_consuming_mq_messages(self):
-        if self.rabbitmq_url is None:
-            log.warning("Unable to connect to RabbitMQ")
+        if self.amqp_url is None:
+            log.error("Unable to connect to RabbitMQ")
             return None
 
-        url = urlparse.urlparse(self.rabbitmq_url)
-        virtual_host, exchange_name = url.path.split("/")[3:5]
-        virtual_host = urllib.unquote(virtual_host) # Replace %2F with /
-        credentials = pika.PlainCredentials(url.username, url.password)
-
-        parameters = pika.ConnectionParameters(host=url.hostname,
-                                               port=url.port - 10000,
-                                               ssl=(url.scheme == "rabbitmqs"),
-                                               ssl_options={"cert_reqs": ssl.CERT_NONE},
-                                               virtual_host=virtual_host,
-                                               credentials=credentials)
-
-        mq_conn = pika.BlockingConnection(parameters)
+        mq_conn = amqp.connect(self.amqp_url)
 
         mq_channel = mq_conn.channel()
 
@@ -54,7 +39,7 @@ class AnomalyHandler:
         mq_channel.queue_declare(queue=self.queue_name, auto_delete=True, exclusive=True)
 
         # bind the queue to the monitoring exchange
-        mq_channel.queue_bind(queue=self.queue_name, exchange=exchange_name, routing_key=self.wf_uuid)
+        mq_channel.queue_bind(queue=self.queue_name, exchange="anomalies", routing_key=self.wf_uuid)
 
         mq_channel.basic_consume(self.on_message, self.queue_name, exclusive=True)
 
