@@ -96,19 +96,25 @@ class Workflow(object):
             self.daxgen = "tutorial"
             self.generate_tutorial = True
 
-            self.tutorial = optionlist("What tutorial workflow do you want?", [
-                ("Process", "process"),
-                ("Pipeline", "pipeline"),
-                ("Split", "split"),
-                ("Merge", "merge"),
-                ("Diamond", "diamond")
-            ])
             # determine the environment to setup tutorial for
             self.tutorial_setup = optionlist("What environment is tutorial to be setup for?", [
                 ("Local Machine", "submit-host"),
                 ("USC HPCC Cluster", "usc-hpcc"),
                 ("OSG from ISI submit node", "osg")
             ])
+
+            # figure out what example options to provide
+            examples = [
+                ("Process", "process"),
+                ("Pipeline", "pipeline"),
+                ("Split", "split"),
+                ("Merge", "merge")
+            ]
+            if self.tutorial_setup != "osg":
+                examples.append( ("Diamond", "diamond"))
+
+            self.tutorial = optionlist("What tutorial workflow do you want?", examples)
+
             self.setup_tutorial()
             return
 
