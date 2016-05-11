@@ -121,7 +121,7 @@
     </site>
 
 {% if generate_tutorial == true and tutorial_setup == "osg" %}
-<site  handle="isi_workflow" arch="x86_64" os="LINUX">
+    <site  handle="isi_workflow" arch="x86_64" os="LINUX">
         <!-- we are going to use workflow for jobs to stage in data
 	    from and stage data out, when it executes on OSG -->	     
         <directory type="shared-scratch" path="/local-scratch/http/${USER}/staging">
