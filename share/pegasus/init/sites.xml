@@ -113,6 +113,18 @@
         <profile namespace="condor" key="+ProjectName">"PegasusTraining"</profile>
 
 {% endif %}
-
     </site>
+
+{% if generate_tutorial == true and tutorial_setup == "osg" %}
+<site  handle="isi_workflow" arch="x86_64" os="LINUX">
+        <!-- we are going to use workflow for jobs to stage in data
+	    from and stage data out, when it executes on OSG -->	     
+        <directory type="shared-scratch" path="/local-scratch/http/${USER}/staging">
+            <file-server operation="get"  url="http://workflow.isi.edu/scratch/${USER}/staging"/>
+            <file-server operation="put"   url="scp://${USER}@workflow.isi.edu/local-scratch/http/${USER}/staging"/>
+        </directory>
+        <profile namespace="pegasus"  key="SSH_PRIVATE_KEY">${HOME}/.ssh/workflow</profile>
+    </site>
+{% endif %}
+
 </sitecatalog>

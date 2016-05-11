@@ -67,6 +67,7 @@ class Workflow(object):
         self.user = os.environ["USER"]
         self.generate_tutorial = False
         self.tutorial_setup  = None
+        self.staging_site    = None
         sysname, _, _, _, machine = os.uname()
         if sysname == 'Darwin':
             self.os = "MACOSX"
@@ -146,6 +147,8 @@ class Workflow(object):
         elif self.tutorial_setup == "osg":
             self.sitename = "osg"
             self.os = "linux"
+            if not yesno("Do you want to use Condor file transfers", "yes"):
+                self.staging_site = "isi_workflow"
         return
 
 
