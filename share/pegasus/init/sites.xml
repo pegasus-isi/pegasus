@@ -113,6 +113,11 @@
         <profile namespace="condor" key="+ProjectName">"PegasusTraining"</profile>
 
 {% endif %}
+       <!-- This profile tells Pegasus to create two clustered jobs
+            per level of the workflow, when horizontal clustering is
+            enabled -->
+	<profile namespace="pegasus" key="clusters.num" >2</profile>
+
     </site>
 
 {% if generate_tutorial == true and tutorial_setup == "osg" %}
