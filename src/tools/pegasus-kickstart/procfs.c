@@ -345,7 +345,7 @@ void procfs_merge_stats_list(ProcStatsList *list, ProcStats *result, int interva
         result->bsend += stats->bsend;
         result->brecv += stats->brecv;
         /* Only add memory, threads and processes for processes we have seen recently */
-        if (stats->ts > result->ts - interval) {
+        if (stats->ts > result->ts - interval - interval) {
             trace("MERGING memory and threads/procs");
             result->vm += stats->vm;
             result->rss += stats->rss;
