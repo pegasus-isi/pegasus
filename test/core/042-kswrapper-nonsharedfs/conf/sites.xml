@@ -25,7 +25,7 @@
         </directory>
        <profile namespace="pegasus" key="style">condor</profile>
        <profile namespace="condor" key="universe">vanilla</profile>
-       <profile namespace="pegasus" key="gridstart.path">${KICKSTART_WRAPPER}</profile>
+       <profile namespace="pegasus" key="gridstart.path">${KS_WRAPPER}</profile>
    </site>
 
 </sitecatalog>
