@@ -664,10 +664,6 @@ public class ReplicaCatalogBridge
            newJob.dagmanVariables.construct( Dagman.CATEGORY_KEY, DEFAULT_REGISTRATION_CATEGORY_KEY );
        }
 
-        //in order to make sure that COG picks the default proxy
-        //correctly through condor
-        newJob.condorVariables.construct( "getenv", "true" );
-
         return newJob;
     }
 
