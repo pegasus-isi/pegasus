@@ -5,7 +5,10 @@
 #include <time.h>
 #include <netinet/in.h>
 
+typedef enum { PROCFS, INTERPOSE, MERGED } ProcType;
+
 typedef struct _ProcStats {
+    ProcType type;
     double ts;
     in_addr_t host;
     pid_t pid;
@@ -52,7 +55,7 @@ int procfs_read_stats(pid_t process, ProcStats *stats);
 void procfs_read_stats_group(ProcStatsList **listptr);
 void procfs_merge_stats_list(ProcStatsList *list, ProcStats *result, int interval);
 void procfs_free_stats_list(ProcStatsList *list);
-ProcStatsList *procfs_list_find(ProcStatsList *list, in_addr_t host, pid_t pid);
+ProcStatsList *procfs_list_find(ProcStatsList **list, in_addr_t host, pid_t pid);
 void procfs_list_update(ProcStatsList **list, ProcStats *stats);
 
 #endif

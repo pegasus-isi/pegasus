@@ -479,6 +479,8 @@ void gather_stats(ProcStats *stats) {
     procfs_stats_init(stats);
     procfs_read_stats(getpid(), stats);
 
+    stats->type = INTERPOSE;
+
     /* This is better than what we get from /proc */
     struct rusage ru;
     if (getrusage(RUSAGE_SELF, &ru) < 0) {

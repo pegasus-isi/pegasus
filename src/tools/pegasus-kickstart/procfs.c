@@ -239,6 +239,7 @@ void procfs_stats_init(ProcStats *stats) {
 }
 
 int procfs_read_stats(pid_t pid, ProcStats *stats) {
+    stats->type = PROCFS;
     stats->ts = get_time();
     stats->pid = pid;
     stats->ppid = getppid();
@@ -275,8 +276,6 @@ void procfs_read_stats_group(ProcStatsList **listptr) {
     in_addr_t host = gethostaddr();
     int mypgid = getpgid(0);
 
-    ProcStatsList *cur = *listptr;
-
     struct dirent *d;
     for (d = readdir(procdir); d != NULL; d = readdir(procdir)) {
         /* Make sure the name is all digits, indicating a process number */
@@ -292,13 +291,11 @@ void procfs_read_stats_group(ProcStatsList **listptr) {
             continue;
         }
 
-        /* XXX Since the pids appear in order, we save the starting point for the search */
-        cur = procfs_list_find(cur, host, pid);
-        if (*listptr == NULL) {
-            *listptr = cur;
-        }
+        ProcStatsList *cur = procfs_list_find(listptr, host, pid);
 
         assert(cur != NULL);
+
+        debug("Reading stats for %d\n", pid);
 
         /* Get the stats for this process */
         procfs_read_stats(pid, &(cur->stats));
@@ -313,6 +310,7 @@ void procfs_merge_stats_list(ProcStatsList *list, ProcStats *result, int interva
     memset(result, 0, sizeof(ProcStats));
 
     /* Use current process for all the identifying information */
+    result->type = MERGED;
     result->ts = get_time();
     result->host = gethostaddr();
     result->pid = getpid();
@@ -346,7 +344,6 @@ void procfs_merge_stats_list(ProcStatsList *list, ProcStats *result, int interva
         result->brecv += stats->brecv;
         /* Only add memory, threads and processes for processes we have seen recently */
         if (stats->ts > result->ts - interval - interval) {
-            trace("MERGING memory and threads/procs");
             result->vm += stats->vm;
             result->rss += stats->rss;
             result->procs += stats->procs;
@@ -357,9 +354,9 @@ void procfs_merge_stats_list(ProcStatsList *list, ProcStats *result, int interva
 }
 
 /* Find list entry for (host,pid) or add one */
-ProcStatsList *procfs_list_find(ProcStatsList *list, in_addr_t host, pid_t pid) {
+ProcStatsList *procfs_list_find(ProcStatsList **list, in_addr_t host, pid_t pid) {
     ProcStatsList *prev = NULL;
-    ProcStatsList *cur = list;
+    ProcStatsList *cur = *list;
 
     /* Find the right host, or the one this host comes before */
     while (cur != NULL && cur->stats.host < host) {
@@ -389,7 +386,11 @@ ProcStatsList *procfs_list_find(ProcStatsList *list, in_addr_t host, pid_t pid) 
 
     /* Add to the list */
     new->next = cur;
-    if (prev != NULL) {
+    if (prev == NULL) {
+        /* Add it to the start of the list */
+        *list = new;
+    } else {
+        /* Add it somewhere in the middle or the end */
         prev->next = new;
     }
 
@@ -398,10 +399,23 @@ ProcStatsList *procfs_list_find(ProcStatsList *list, in_addr_t host, pid_t pid) 
 }
 
 void procfs_list_update(ProcStatsList **list, ProcStats *stats) {
-    ProcStatsList *item = procfs_list_find(*list, stats->host, stats->pid);
-    if (*list == NULL) {
-        *list = item;
+    ProcStatsList *item = procfs_list_find(list, stats->host, stats->pid);
+    if (item->stats.type > stats->type) {
+        /* This is complicated. There are three types: procfs, interpose and
+         * merged. Interpose provides the most accurate information for a
+         * given process, so we prefer that over procfs, however, merged
+         * represents several processes, so we can't override that with
+         * interpose records. The result is that we don't prefer the more
+         * accurate interpose information for processes that send merged
+         * records, but that is OK because the only processes that send
+         * merged info are pegasus-kickstart and pegasus-monitor, so we
+         * don't care too much. It would be better if there were a way
+         * to disable interpose for pegasus-kickstart and pegasus-monitor.
+         */
+        debug("Skipping lower-priority update for process %d\n", stats->pid);
+        return;
     }
+    item->stats.type = stats->type;
     item->stats.pid = stats->pid;
     item->stats.ts = stats->ts;
     item->stats.host = stats->host;
