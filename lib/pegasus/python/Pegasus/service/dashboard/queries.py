@@ -724,7 +724,8 @@ class WorkflowInfo(object):
 
         q = q.join(Job, Job.job_id == JobInstance.job_id)
         q = q.outerjoin(Task, Job.job_id == Task.job_id)
-        q = q.join(Invocation, JobInstance.job_instance_id == Invocation.job_instance_id)
+        q = q.join(Invocation, and_(JobInstance.job_instance_id == Invocation.job_instance_id, and_(
+            or_(Task.abs_task_id == None, and_(Task.abs_task_id != None, Task.abs_task_id == Invocation.abs_task_id)))))
 
         q = q.filter(Job.wf_id == self._wf_id)
         q = q.filter(Job.job_id == job_id)
