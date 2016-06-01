@@ -1084,6 +1084,12 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
               <entry>staging files using scp</entry>
             </row>
+            
+            <row>
+              <entry>gsiscp</entry>
+
+              <entry>staging files using gsiscp and X509</entry>
+            </row>
 
             <row>
               <entry>iget</entry>
