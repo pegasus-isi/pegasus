@@ -2485,7 +2485,247 @@ class ScpHandler(TransferHandlerBase):
             filtered += line + "\n"
         if len(filtered) > 0:
             logger.info(filtered)
+       
+
+class GSIScpHandler(TransferHandlerBase):
+    """
+    Uses gsiscp to copy to/from remote hosts
+    """
+
+    _name = "GSIScpHandler"
+    _mkdir_cleanup_protocols = ["gsiscp"]
+    _protocol_map = ["gsiscp->file", "file->gsiscp"]
+    
+    _base_args = " -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+    
+    def do_mkdirs(self, mkdir_list):    
         
+        tools = Tools()
+        if tools.find("gsissh", "-V", "(.*)") is None:
+            logger.error("Unable to do gsiscp mkdir because gsissh could not be found")
+            return [[], mkdir_list]
+
+        successful_l = []
+        failed_l = []
+        for t in mkdir_list:
+            cmd = tools.full_path("gsissh")
+            cmd += self._base_args
+        
+            # split up the host into host/port components
+            host = self._extract_hostname(t.get_host())
+            port = self._extract_port(t.get_host())
+                
+            cmd += " -p " + str(port)
+            cmd += " " + host
+            cmd += " '/bin/mkdir -p " + t.get_path() + "'"
+            tc = TimedCommand(cmd, log_outerr=False, env_overrides=self._gsi_creds(t))
+            try:
+                tc.run()
+            except Exception, err:
+                logger.error(err)
+                self._log_filter_ssh_output(tc.get_outerr())
+                failed_l.append(t)
+                continue
+            self._log_filter_ssh_output(tc.get_outerr())
+            successful_l.append(t)
+            
+        return [successful_l, failed_l]
+
+
+    def do_transfers(self, transfers):
+        global remote_dirs_created
+        successful_l = []
+        failed_l = []
+        
+        tools = Tools()
+        if tools.find("gsiscp", "-V", "(.*)") is None:
+            logger.error("Unable to do gsiscp mkdir because gsiscp could not be found")
+            return [[], mkdir_list]
+
+        # number of transfers to group depends on the maximum allowed command line lenght
+        max_transfers_in_group = max_cmd_len / 500
+
+        # limit the size of the groups to keep command lines short
+        for t_group in self._similar_groups(transfers, max_transfers_in_group = max_transfers_in_group):
+        
+            t_base = t_group[0]
+        
+            cmd = tools.full_path("gsiscp")
+            cmd += " -r -B"
+            cmd += self._base_args
+            t_start = time.time()
+            try:
+                if t_base.get_dst_proto() == "file":
+                    # scp -> file
+                    cmd += " -P " + self._extract_port(t_base.get_src_host())
+                    prepare_local_dir(os.path.dirname(t_base.get_dst_path()))
+                    # scp wants escaped remote paths, even with quotes
+                    for t in t_group:
+                        src_path = re.sub(' ', '\\ ', t.get_src_path())
+                        cmd += " '" + self._extract_hostname(t.get_src_host()) + ":" + src_path + "'"
+                    if len(t_group) > 1:
+                        cmd += " '" + os.path.dirname(t_base.get_dst_path()) + "/'"
+                    else:
+                        cmd += " '" + t_base.get_dst_path() + "'"
+                else:
+                    # file -> scp
+                    mkdir_key = "scp://" + self._extract_hostname(t_base.get_dst_host()) + ":" \
+                              + os.path.dirname(t_base.get_dst_path())
+                    if not mkdir_key in remote_dirs_created:
+                        self._prepare_scp_dir(t_base.get_dst_site_label(),
+                                              t_base.get_dst_host(),
+                                              os.path.dirname(t_base.get_dst_path()))
+                        remote_dirs_created[mkdir_key] = True
+                    
+                    cmd += " -P " + self._extract_port(t_base.get_dst_host())
+                    
+                    for t in t_group:                  
+                        cmd += " '" + t.get_src_path() + "'"
+                    
+                    # scp wants escaped remote paths, even with quotes
+                    dst_path = re.sub(' ', '\\ ', t_base.get_dst_path())
+                    if len(t_group) > 1:
+                        cmd += " '" + self._extract_hostname(t_base.get_dst_host()) + ":" + os.path.dirname(dst_path) + "/'"
+                    else:
+                        cmd += " '" + self._extract_hostname(t_base.get_dst_host()) + ":" + dst_path + "'"
+                    
+                    stats_add(t.get_src_path())
+                    
+                t_start = time.time()
+                tc = TimedCommand(cmd, log_outerr=False, env_overrides=self._gsi_creds(t_base))
+                tc.run()    
+            except RuntimeError, err:
+                self._log_filter_ssh_output(tc.get_outerr())
+                logger.error(err)
+                for t in t_group:
+                    self._post_transfer_attempt(t, False, t_start)
+                    failed_l.append(t)
+                continue
+            self._log_filter_ssh_output(tc.get_outerr())
+            for t in t_group:
+                self._post_transfer_attempt(t, True, t_start)
+                successful_l.append(t)
+        
+        return [successful_l, failed_l]    
+
+
+    def do_removes(self, transfers_l):
+        successful_l = []
+        failed_l = []
+
+        tools = Tools()
+        if tools.find("gsissh", "-V", "(.*)") is None:
+            logger.error("Unable to do gsiscp mkdir because gsissh could not be found")
+            return [[], mkdir_list]
+
+        # number of removes to group depends on the maximum allowed command line lenght
+        max_transfers_in_group = max_cmd_len / 500
+
+        # limit the size of the groups to keep command lines short
+        for t_group in self._similar_groups(transfers_l, max_transfers_in_group = max_transfers_in_group):
+
+            t_base = t_group[0]
+
+            cmd = tools.full_path("gsissh")
+            cmd += self._base_args
+        
+            # split up the host into host/port components
+            host = self._extract_hostname(t_base.get_host())
+            port = self._extract_port(t_base.get_host())
+                
+            cmd += " -p " + str(port)
+            cmd += " " + host
+            cmd += " '/bin/rm -f"
+            if t_base.get_recursive():
+                cmd += " -r"
+            for t in t_group:
+                cmd += " \"" + t.get_path() + "\""
+            cmd += "'"
+            tc = TimedCommand(cmd, log_outerr=False, env_overrides=self._gsi_creds(t_base))
+            try:
+                tc.run()
+            except Exception, err:
+                logger.error(err)
+                self._log_filter_ssh_output(tc.get_outerr())
+                for t in t_group:
+                    failed_l.append(t)
+                continue
+            self._log_filter_ssh_output(tc.get_outerr())
+            for t in t_group:
+                successful_l.append(t)
+            
+        return [successful_l, failed_l]
+
+
+    def _prepare_scp_dir(self, rsite, rhost, rdir):
+        """
+        makes sure a local path exists before putting files into it
+        """
+        cmd = "gsissh"
+        cmd += self._base_args
+        cmd += " -p " + self._extract_port(rhost)
+        cmd += " " + self._extract_hostname(rhost) + " '/bin/mkdir -p " + rdir + "'"
+        tc = TimedCommand(cmd, log_outerr=False)
+        try:
+            tc.run()
+        except:
+            # let the real command show the error
+            pass
+        self._log_filter_ssh_output(tc.get_outerr())
+
+
+    def _extract_hostname(self, host):
+        """
+        returns only the host component (strips :...)
+        """
+        return re.sub(':.*', '', host)
+
+    
+    def _extract_port(self, host):
+        """
+        returns the port to connect to, defaults to 22
+        """
+        port = "22"
+        r = re.search(':([0-9]+)', host)
+        if r:
+            port = r.group(1)
+        return str(port)
+    
+    
+    def _log_filter_ssh_output(self, output):
+        filtered = ""
+        for line in output.split("\n"):
+            line = line.rstrip()
+            if re.search("Could not create directory|Permanently added", line) is not None:
+                continue
+            filtered += line + "\n"
+        if len(filtered) > 0:
+            logger.info(filtered)
+
+
+    def _gsi_creds(self, sample_transfer):
+        
+        env_override = {}
+        
+        # mkdirs and removes
+        if isinstance(sample_transfer, Mkdir) or isinstance(sample_transfer, Remove):
+            key = "X509_USER_PROXY_" + sample_transfer.get_site_label()
+            if key in os.environ:
+                env_override["X509_USER_PROXY"] = os.environ[key]
+            return env_override
+        
+        # must be a standard transfer
+        if sample_transfer.get_src_proto() == "file":
+            key = "X509_USER_PROXY_" + sample_transfer.get_src_site_label()
+            if key in os.environ:
+                env_override["X509_USER_PROXY"] = os.environ[key]
+        else:
+            key = "X509_USER_PROXY_" + sample_transfer.get_dst_site_label()
+            if key in os.environ:
+                env_override["X509_USER_PROXY"] = os.environ[key]
+   
+        return env_override
+
 
 class StashHandler(TransferHandlerBase):
     """
@@ -2772,6 +3012,7 @@ class SimilarWorkSet:
         self._available_handlers.append( GSHandler() )
         self._available_handlers.append( GFALHandler() )
         self._available_handlers.append( ScpHandler() )
+        self._available_handlers.append( GSIScpHandler() )
         self._available_handlers.append( StashHandler() )
         self._available_handlers.append( SymlinkHandler() )
 

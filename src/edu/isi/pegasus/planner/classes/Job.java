@@ -806,6 +806,16 @@ public class Job extends Data implements GraphNodeContent{
                 url.startsWith( "go" ) ){
             this.addCredentialType( site, CredentialHandler.TYPE.x509   );
         }
+        else if( url.startsWith( "gsiscp" ) ){
+        	// is this the correct place to verify the URL?
+        	if (url.indexOf("@") == -1) {
+        		throw new RuntimeException("Detected a gsiscp transfer without" +
+        				" username. Please specify a username in the URL." +
+        				" For example:" +
+        				" gsiftp://username@somehost.org:22/path/file");
+        	}
+            this.addCredentialType( site, CredentialHandler.TYPE.x509 );
+        }
         else if( url.startsWith( "sshftp" ) ){
         	// is this the correct place to verify the URL?
         	if (url.indexOf("@") == -1) {
