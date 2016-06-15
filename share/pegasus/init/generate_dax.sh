@@ -10,4 +10,6 @@ exec perl daxgen.pl "$@"
 CLASSPATH=$(pegasus-config --classpath)
 javac -cp $CLASSPATH DAXGen.java
 exec java -cp .:$CLASSPATH DAXGen "$@"
+{% elif daxgen == "r" %}
+exec Rscript daxgen.R "$@"
 {% endif %}

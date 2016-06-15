@@ -119,7 +119,7 @@ class Workflow(object):
             return
 
         # Determine which DAX generator API to use
-        self.daxgen = choice("What DAX generator API do you want to use?", ["python","perl","java"], "python")
+        self.daxgen = choice("What DAX generator API do you want to use?", ["python","perl","java","r"], "python")
 
         # Determine what kind of site catalog we need to generate
         self.config = optionlist("What does your computing infrastructure look like?", [
@@ -190,6 +190,8 @@ class Workflow(object):
                 self.copy_template("daxgen/daxgen.pl", "daxgen.pl")
             elif self.daxgen == "java":
                 self.copy_template("daxgen/DAXGen.java", "DAXGen.java")
+            elif self.daxgen == "r":
+                self.copy_template("daxgen/daxgen.R", "daxgen.R")
             else:
                 assert False
 
