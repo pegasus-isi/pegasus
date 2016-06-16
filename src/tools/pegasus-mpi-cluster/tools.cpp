@@ -161,7 +161,7 @@ struct cpuinfo get_host_cpuinfo() {
             if (sscanf(rec.c_str(), "physical id\t: %d", &new_physical_id) != 1) {
                 myfailures("Error reading 'physical id' field from /proc/cpuinfo");
             }
-            if (new_physical_id != last_physical_id) {
+            if (new_physical_id > last_physical_id) {
                 c.sockets += 1;
                 last_physical_id = new_physical_id;
                 new_socket = true;
