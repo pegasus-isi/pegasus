@@ -466,6 +466,16 @@ public class CondorGenerator extends Abstract {
                 mLogger.log( sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
             }
 
+            //PM-1105 assign a DAGMAN priority that mirrors the condor
+            //job priority if set, only if DAGMAN priority is not already set
+            if( !job.dagmanVariables.containsKey( Dagman.PRIORITY_KEY) ){
+                //check again if condor priority is set and mirror it
+                if( job.condorVariables.containsKey( Condor.PRIORITY_KEY)){
+                    job.dagmanVariables.construct( Dagman.PRIORITY_KEY, 
+                                                   (String)job.condorVariables.get(Condor.PRIORITY_KEY) );
+                }
+            }
+           
                  
             if( job instanceof DAGJob ){
                 //SUBDAG EXTERNAL  B  inner.dag
