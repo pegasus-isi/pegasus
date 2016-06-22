@@ -157,10 +157,31 @@ public abstract class Abstract implements CondorStyle {
                     continue;
                 }
                 
+                //make sure we can have a path to credential
+                String credentialPath = handler.getPath( siteHandle );
+                if ( credentialPath == null ){
+                    this.complainForCredential( job, handler.getProfileKey(), siteHandle );
+                }
                 
                 switch(credType) {
-
                     case x509:
+                        //check if x509userproxy not already set. can be set
+                        //as part of credentials for job submission
+                        if ( job.condorVariables.containsKey( Condor.X509USERPROXY_KEY) ){
+                            //we can transfer the credential only via condor file io
+                            //sanity check to to make sure not same as already set
+                            String existing = (String)job.condorVariables.get( Condor.X509USERPROXY_KEY);
+                            if( !existing.equals( credentialPath)){
+                                job.condorVariables.addIPFileForTransfer( credentialPath );
+                            }
+                        }
+                        else{
+                            //set the x509userproxy key directly
+                            job.condorVariables.construct( Condor.X509USERPROXY_KEY, credentialPath );
+                        }
+                        job.envVariables.construct(handler.getEnvironmentVariable( siteHandle ), handler.getBaseName( siteHandle ) );
+                        break;
+                        
                     case irods:
                     case s3:
                     case boto:
@@ -168,11 +189,11 @@ public abstract class Abstract implements CondorStyle {
                     case ssh:
                         // transfer using condor file transfer, and advertise in env
                         // but first make sure it is specified in our environment
-                        String path = handler.getPath( siteHandle );
+                        /*String path = handler.getPath( siteHandle );
                         if ( path == null ){
                             this.complainForCredential( job, handler.getProfileKey(), siteHandle );
-                        }
-                        job.condorVariables.addIPFileForTransfer( path );
+                        }*/
+                        job.condorVariables.addIPFileForTransfer( credentialPath );
                         job.envVariables.construct(handler.getEnvironmentVariable( siteHandle ), handler.getBaseName( siteHandle ) );
                         break;
 
@@ -256,7 +277,7 @@ public abstract class Abstract implements CondorStyle {
         }
         switch( cred ) {
             case x509:
-                job.condorVariables.construct("x509userproxy", path );
+                job.condorVariables.construct( Condor.X509USERPROXY_KEY, path );
                 break;
             default:
                 //only job submission via x509 is explicitly supported
