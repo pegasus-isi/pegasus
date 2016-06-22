@@ -7,14 +7,14 @@
   <section id="replica_selection">
     <title>Replica Selection</title>
 
-    <para>Each job in the DAX maybe associated with input LFN&amp;rsquor;s
-    denoting the files that are required for the job to run. To determine the
-    physical replica (PFN) for a LFN, Pegasus queries the Replica catalog to
-    get all the PFN&amp;rsquor;s (replicas) associated with a LFN. The Replica
-    Catalog may return multiple PFN's for each of the LFN's queried. Hence,
-    Pegasus needs to select a single PFN amongst the various PFN's returned
-    for each LFN. This process is known as replica selection in Pegasus. Users
-    can specify the replica selector to use in the properties file.</para>
+    <para>Each job in the DAX maybe associated with input LFN's denoting the
+    files that are required for the job to run. To determine the physical
+    replica (PFN) for a LFN, Pegasus queries the Replica catalog to get all
+    the PFN's (replicas) associated with a LFN. The Replica Catalog may return
+    multiple PFN's for each of the LFN's queried. Hence, Pegasus needs to
+    select a single PFN amongst the various PFN's returned for each LFN. This
+    process is known as replica selection in Pegasus. Users can specify the
+    replica selector to use in the properties file.</para>
 
     <para>This document describes the various Replica Selection Strategies in
     Pegasus.</para>
@@ -153,10 +153,10 @@ pegasus.selector.replica.regex.rank.2                       gsiftp://example\.is
         having a particular replica, then a random site is selected amongst
         these preferred sites.</para>
 
-        <para>A bad site for a compute site X, is a site from which
-        replica&amp;rsquor;s should not be staged. The reason of not accessing
-        replica from a bad site can vary from the link being down, to the user
-        not having permissions on that site&amp;rsquor;s data.</para>
+        <para>A bad site for a compute site X, is a site from which replicas
+        should not be staged. The reason of not accessing replica from a bad
+        site can vary from the link being down, to the user not having
+        permissions on that site's data.</para>
 
         <para>The good | bad sites are specified by the following
         properties</para>
@@ -1084,7 +1084,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
               <entry>staging files using scp</entry>
             </row>
-            
+
             <row>
               <entry>gsiscp</entry>
 
@@ -1527,58 +1527,52 @@ exec /usr/bin/ssh $extra_opts $port_str $remote_host $remote_program
       <emphasis>sshftp://username@host/foo/bar.txt</emphasis> in your
       workflows.</para>
     </section>
-    
+
     <section id="transfer_globus_online">
       <title>Globus Online</title>
 
-      <para><ulink url="http://globus.org">Globus Online</ulink> is a transfer service
-          with features such as policy based connection management and automatic
-          failure detection and recovery. Pegasus has limited the support for Globus
-          Online transfers.
-      </para>
+      <para><ulink url="http://globus.org">Globus Online</ulink> is a transfer
+      service with features such as policy based connection management and
+      automatic failure detection and recovery. Pegasus has limited the
+      support for Globus Online transfers.</para>
 
-      <para>If you want to use Globus Online in your workflow, all data has to be
-          accessible via a Globus Online endpoint. You can not mix Globus Online
-          endpoints with other protocols. For most users, this means they will 
-          have to create an endpoint for their submit host and probably modify
-          both the replica catalog and DAX generator so that all URLs in the
-          workflow are for Globus Online endpoints.
-      </para>
+      <para>If you want to use Globus Online in your workflow, all data has to
+      be accessible via a Globus Online endpoint. You can not mix Globus
+      Online endpoints with other protocols. For most users, this means they
+      will have to create an endpoint for their submit host and probably
+      modify both the replica catalog and DAX generator so that all URLs in
+      the workflow are for Globus Online endpoints.</para>
 
-      <para>There are two levels of credentials required. One is for the workflow
-          to use the Globus Online API, which is handled by a X.509 proxy. The
-          second level is for the endpoints, which the user will have have 
-          manage via the Globus Online web interface. The required steps are:
-      </para>
-          
+      <para>There are two levels of credentials required. One is for the
+      workflow to use the Globus Online API, which is handled by a X.509
+      proxy. The second level is for the endpoints, which the user will have
+      have manage via the Globus Online web interface. The required steps
+      are:</para>
+
       <orderedlist>
-          <listitem>
-              <para>Using the <ulink url="https://docs.globus.org/cli/">CLI interface</ulink>,
-                  update your user profile, and add your X.509 DN.
-              </para>
-          </listitem>
-          <listitem>
-              <para>In the Globus Online web interface, under Endpoints,
-                  find the endpoints you need for the
-                  workflow, and activate them. Note that you should
-                  activate them for the whole duration of the workflow
-                  or you will have to regularly log in and re-activate
-                  the endpoints during workflow execution.
-              </para>
-          </listitem>
+        <listitem>
+          <para>Using the <ulink url="https://docs.globus.org/cli/">CLI
+          interface</ulink>, update your user profile, and add your X.509
+          DN.</para>
+        </listitem>
+
+        <listitem>
+          <para>In the Globus Online web interface, under Endpoints, find the
+          endpoints you need for the workflow, and activate them. Note that
+          you should activate them for the whole duration of the workflow or
+          you will have to regularly log in and re-activate the endpoints
+          during workflow execution.</para>
+        </listitem>
       </orderedlist>
 
       <para>URLs for Globus Online endpoint data follows the following scheme:
-          <emphasis>go://[globus_username]@[endpoint]/[path]</emphasis>.
-          For example, for a user with the Globus Online username
-          <emphasis>bob</emphasis> and his private endpoint 
-          <emphasis>bob#researchdata</emphasis> and a file
-          <emphasis>/home/bsmith/experiment/1.dat</emphasis>, the URL would be:
-          <emphasis>go://bob@bob#researchdata/home/bsmith/experiment/1.dat</emphasis>
-      </para>
-
+      <emphasis>go://[globus_username]@[endpoint]/[path]</emphasis>. For
+      example, for a user with the Globus Online username
+      <emphasis>bob</emphasis> and his private endpoint
+      <emphasis>bob#researchdata</emphasis> and a file
+      <emphasis>/home/bsmith/experiment/1.dat</emphasis>, the URL would be:
+      <emphasis>go://bob@bob#researchdata/home/bsmith/experiment/1.dat</emphasis></para>
     </section>
-
   </section>
 
   <section id="cred_staging">
@@ -1889,9 +1883,9 @@ irodsPassword 'somesecretpassword'</programlisting>
         cleanup nodes to constraint the amount of storage space used by a
         workflow, in addition to leaf cleanup nodes. The nodes remove files no
         longer required during execution. The added cleanup node guarantees
-        limits on disk usage. File sizes are read from the
-        <emphasis role="bold">size</emphasis> flag in the DAX, or from a 
-        CSV file (<link linkend="cleanup_props"><emphasis>
+        limits on disk usage. File sizes are read from the <emphasis
+        role="bold">size</emphasis> flag in the DAX, or from a CSV file (<link
+        linkend="cleanup_props"><emphasis>
         pegasus.file.cleanup.constraint.csv</emphasis></link>).</para>
       </listitem>
     </orderedlist>

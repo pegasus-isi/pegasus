@@ -139,9 +139,8 @@ Valid clustering techniques are horizontal and label.</programlisting></para>
 
                 <para>The clusters.size factor denotes how many jobs need to
                 be merged into a single clustered job. It is specified via the
-                use of a PEGASUS namespace profile key
-                &amp;ldquo;clusters.size&amp;rdquor;. for e.g. if at a
-                particular level, say 4 jobs referring to logical
+                use of a PEGASUS namespace profile key 'clusters.size'. for
+                e.g. if at a particular level, say 4 jobs referring to logical
                 transformation B have been scheduled to a siteX. The
                 clusters.size factor associated with job B for siteX is say 3.
                 This will result in 2 clustered jobs, one composed of 3 jobs
@@ -194,15 +193,14 @@ tr C {
 
                 <para>The clusters.num factor denotes how many clustered jobs
                 does the user want to see per level per site. It is specified
-                via the use of a PEGASUS namespace profile key
-                &amp;ldquo;clusters.num&amp;rdquor;. for e.g. if at a
-                particular level, say 4 jobs referring to logical
-                transformation B have been scheduled to a siteX. The
-                &amp;ldquo;clusters.num&amp;rdquor; factor associated with job
-                B for siteX is say 3. This will result in 3 clustered jobs,
-                one composed of 2 jobs and others of a single job each. The
-                clusters.num factor in the transformation catalog can be
-                specified as follows</para>
+                via the use of a PEGASUS namespace profile key 'clusters.num'.
+                for e.g. if at a particular level, say 4 jobs referring to
+                logical transformation B have been scheduled to a siteX. The
+                'clusters.num' factor associated with job B for siteX is say
+                3. This will result in 3 clustered jobs, one composed of 2
+                jobs and others of a single job each. The clusters.num factor
+                in the transformation catalog can be specified as
+                follows</para>
 
                 <programlisting># multiple line text-based transformation catalog: 2014-09-30T16:06:23.397-07:00
 tr B {
@@ -246,10 +244,9 @@ tr B {
 
                 <para>In the above case the jobs referring to logical
                 transformation B scheduled on siteX will be clustered on the
-                basis of &amp;ldquo;clusters.num&amp;rdquor; value. Hence, if
-                there are 4 jobs referring to logical transformation B
-                scheduled to siteX, then 3 clustered jobs will be
-                created.</para>
+                basis of 'clusters.num' value. Hence, if there are 4 jobs
+                referring to logical transformation B scheduled to siteX, then
+                3 clustered jobs will be created.</para>
 
                 <figure>
                   <title>Clustering by clusters.num</title>
@@ -690,8 +687,8 @@ siteX    pegasus::seqexec     /usr/pegasus/bin/pegasus-cluster INSTALLED       I
             </table>
 
             <para>Refer to the pegasus-mpi-cluster man page in the <link
-            linkend="cli">command line tools chapter</link> to
-            know more about PMC and how it schedules individual tasks.</para>
+            linkend="cli">command line tools chapter</link> to know more about
+            PMC and how it schedules individual tasks.</para>
 
             <para>It is recommended to have a pegasus::mpiexec entry in the
             transformation catalog to specify the path to PMC on the remote
@@ -1259,13 +1256,13 @@ tr B {
           <row>
             <entry><literallayout>stage-in </literallayout></entry>
 
-            <entry>data stage-in jobs </entry>
+            <entry>data stage-in jobs</entry>
           </row>
 
           <row>
             <entry><literallayout>stage-out</literallayout></entry>
 
-            <entry>data stage-out jobs </entry>
+            <entry>data stage-out jobs</entry>
           </row>
 
           <row>
