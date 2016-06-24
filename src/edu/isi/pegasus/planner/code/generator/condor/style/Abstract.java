@@ -173,13 +173,19 @@ public abstract class Abstract implements CondorStyle {
                             String existing = (String)job.condorVariables.get( Condor.X509USERPROXY_KEY);
                             if( !existing.equals( credentialPath)){
                                 job.condorVariables.addIPFileForTransfer( credentialPath );
+                                job.envVariables.construct(handler.getEnvironmentVariable( siteHandle ), handler.getBaseName( siteHandle ) );
                             }
                         }
                         else{
-                            //set the x509userproxy key directly
+                            //PM-1099 set the x509userproxy key directly
+                            //we don's set the environment variable based on site name
+                            //as for GRAM submissions, the proxy is renmaed by GRAM on the
+                            //remote end tp the x509_user_proxy when placed in ~/.globus/job 
+                            //directory. GRAM then sets X509_USER_PROXY env variable to reflect
+                            //the path to the proxy.
                             job.condorVariables.construct( Condor.X509USERPROXY_KEY, credentialPath );
                         }
-                        job.envVariables.construct(handler.getEnvironmentVariable( siteHandle ), handler.getBaseName( siteHandle ) );
+                        
                         break;
                         
                     case irods:
