@@ -33,7 +33,7 @@ def query(question, default=None):
             sys.stdout.write("%s [%s]: " % (question, default))
         else:
             sys.stdout.write("%s: " % question)
-        answer = sys.stdin.readline().strip()
+        answer = sys.stdin.readline().strip().replace(' ', '_')
         if answer == "":
             if default:
                 return default
