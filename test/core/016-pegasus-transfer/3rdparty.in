@@ -1,7 +1,7 @@
 [
  { "type": "transfer",
    "id": 1,
-   "src_urls": [ { "site_label": "ISI_Cartman", "url": "gsiftp://cartman.isi.edu/lfs1/pegasus-transfer-testing/originals/large-file.dat" } ],
+   "src_urls": [ { "site_label": "ISI_Cartman", "url": "gsiftp://colo-vm63.isi.edu/lfs1/pegasus-transfer-testing/originals/large-file.dat" } ],
    "dest_urls": [ { "site_label": "ISI_Obelix", "url": "gsiftp://obelix.isi.edu/data/scratch/ptesting/transfer-tests/large-file.dat" } ] 
  }
 ]

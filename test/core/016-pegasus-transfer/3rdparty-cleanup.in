@@ -8,6 +8,6 @@
 {
     "id": 2,
     "type": "remove",
-    "target": { "site_label": "CCG", "url": "gsiftp://cartman.isi.edu/lfs1/pegasus-transfer-testing/tmp/large-file.dat", "recursive": "False" } 
+    "target": { "site_label": "CCG", "url": "gsiftp://colo-vm63.isi.edu/lfs1/pegasus-transfer-testing/tmp/large-file.dat", "recursive": "False" } 
 }
 ]
