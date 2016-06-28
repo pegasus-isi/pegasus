@@ -16,12 +16,12 @@
 
   <site handle="cartman-data">
     <directory type="shared-scratch" path="${TOPDIR}/staging-site/scratch/${TEST_NAME}">
-            <file-server operation="all"  url="gsiftp://cartman.isi.edu/${TOPDIR}/staging-site/scratch/${TEST_NAME}"/>
+            <file-server operation="all"  url="gsiftp://colo-vm63.isi.edu/${TOPDIR}/staging-site/scratch/${TEST_NAME}"/>
     </directory>
   </site>
   <site handle="condorpool" arch="x86_64" os="LINUX">
         <directory type="shared-scratch" path="/nfs/ccg4/scratch-purge-no-backups/${TEST_NAME}">
-            <file-server operation="all"  url="gsiftp://cartman.isi.edu/nfs/ccg4/scratch-purge-no-backups/${TEST_NAME}"/>
+            <file-server operation="all"  url="gsiftp://colo-vm63.isi.edu/nfs/ccg4/scratch-purge-no-backups/${TEST_NAME}"/>
         </directory>
        <profile namespace="pegasus" key="style">condor</profile>
        <profile namespace="condor" key="universe">vanilla</profile>

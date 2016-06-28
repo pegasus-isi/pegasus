@@ -488,6 +488,8 @@ public class Transfer   implements SLS {
         String sourceDir = workerNodeDirectory;
 
         PegasusFile pf;
+        String stagingSite = job.getStagingSiteHandle();
+        String computeSite = job.getSiteHandle();
 
         //To do. distinguish the sls file from the other input files
         for( Iterator it = files.iterator(); it.hasNext(); ){
@@ -506,12 +508,22 @@ public class Transfer   implements SLS {
 
             //destination
             url = new StringBuffer();
-/*
-            url.append( destURLPrefix ).append( File.separator );
-            url.append( destDir ).append( File.separator );
- */
-            //on the head node
-            url.append( mSiteStore.getExternalWorkDirectoryURL(stagingSiteServer, job.getStagingSiteHandle() ));
+            
+            if( mUseSymLinks && computeSite.equals( stagingSite) ){
+                //PM-1108 symlinking is turned on and the compute site for
+                //the job is the same the staging site. This means that
+                //the shared-scratch directory used on the staging site is locally
+                //accessible to the compute nodes. So we can go directly via the
+                //filesystem to copy the file
+                url.append( PegasusURL.FILE_URL_SCHEME ).append( "//" ).
+                    append( stagingSiteDirectory );
+            }
+            else{
+                //PM-1108 we go through the external file server interface, since
+                //staging site is remote to the compute site
+                //on the head node
+                url.append( mSiteStore.getExternalWorkDirectoryURL(stagingSiteServer, job.getStagingSiteHandle() ));
+            }
             url.append( File.separator ).append( pf.getLFN() );
             
             ft.addDestination( job.getStagingSiteHandle(), url.toString() );

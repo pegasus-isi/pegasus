@@ -19,12 +19,12 @@ montage_location: /ccg/software/montage/Montage_v3.3_mats
 name:             CCG
 globus_location:  /ccg/software/globus/5.0.4
 montage_location: /ccg/software/montage/Montage_v3.3_mats
-gridftp_server:   cartman.isi.edu
+gridftp_server:   colo-vm63.isi.edu
 work_dir:         /nfs/ccg4/scratch-purge-no-backups/bamboo/galactic-plane-test
 
 [output]
 name:             CCG_Data
 storage_proto:    gridftp
-storage_url:      gsiftp://cartman.isi.edu
+storage_url:      gsiftp://colo-vm63.isi.edu
 storage_mount:    /nfs/ccg4/scratch-purge-no-backups/bamboo/outputs
 

@@ -32,13 +32,13 @@ cat >sites.xml <<EOF
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="file" url="gsiftp://cartman.isi.edu/" mount-point="$TOPDIR/work"/>
+                    <file-server protocol="file" url="gsiftp://colo-vm63.isi.edu/" mount-point="$TOPDIR/work"/>
                     <internal-mount-point mount-point="$TOPDIR/work"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
-                    <file-server protocol="file" url="gsiftp://cartman.isi.edu/" mount-point="$TOPDIR/outputs"/>
+                    <file-server protocol="file" url="gsiftp://colo-vm63.isi.edu/" mount-point="$TOPDIR/outputs"/>
                     <internal-mount-point mount-point="$TOPDIR/outputs"/>
                 </shared>
             </storage>
@@ -49,13 +49,13 @@ cat >sites.xml <<EOF
        <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://cartman.isi.edu" mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/scratch"/>
+                    <file-server protocol="gsiftp" url="gsiftp://colo-vm63.isi.edu" mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/scratch"/>
                     <internal-mount-point mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/scratch"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://cartman.isi.edu" mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/outputs"/>
+                    <file-server protocol="gsiftp" url="gsiftp://colo-vm63.isi.edu" mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/outputs"/>
                     <internal-mount-point mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/outputs"/>
                 </shared>
             </storage>
