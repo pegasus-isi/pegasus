@@ -148,7 +148,8 @@ public class GLite extends Abstract {
         { Globus.COUNT_KEY ,     "+NodeNumber" }, //pegasus.cores
         { Globus.HOST_COUNT_KEY, "+HostNumber" }, //pegasus.nodes
         { Globus.XCOUNT_KEY,     "+SMPGranularity" }, //pegasus.ppn
-        { Globus.PROJECT_KEY,    "+BatchProject" } //pegasus.project
+        { Globus.PROJECT_KEY,    "+BatchProject" }, //pegasus.project
+        { Globus.MAX_WALLTIME_KEY, "+BatchWallclock" } //pegasus.runtime specify in seconds
     };
     
     /**
