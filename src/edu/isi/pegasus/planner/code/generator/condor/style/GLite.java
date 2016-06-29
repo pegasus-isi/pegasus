@@ -759,8 +759,14 @@ public class GLite extends Abstract {
             String blahpDirective = GLOBUS_BLAHP_DIRECTIVES_MAPPING[i][1];
             
             if( job.globusRSL.containsKey( globusKey )){
-                //count is pegasus.cores
-                job.condorVariables.construct( blahpDirective, (String)job.globusRSL.get( globusKey) );
+                String value = (String)job.globusRSL.get( globusKey);
+                if( globusKey.equals( Globus.PROJECT_KEY) ){
+                    //value has to be quoted
+                    value = "\"" + value + "\"";
+                }
+               
+                job.condorVariables.construct( blahpDirective, value );
+                
             }
         }
         return;
