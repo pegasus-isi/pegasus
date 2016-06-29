@@ -923,6 +923,7 @@ def print_wf_transformation_stats(stats, workflow_id, dax_label, fmt):
                 content[i] = content[i].ljust(max_length[i])
 
         if fmt == "csv":
+            columns = transformation_stats_col_name_csv
             content = [workflow_id, dax_label] + content
 
         if not header_printed:
