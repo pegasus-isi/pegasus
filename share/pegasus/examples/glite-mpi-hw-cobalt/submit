@@ -1,0 +1,109 @@
+#!/bin/bash
+
+set -e
+
+TOP_DIR=`pwd`
+
+# pegasus bin directory 
+BIN_DIR=`pegasus-config --bin`
+
+LOCAL_CLUSTER_PEGASUS_HOME=`dirname $BIN_DIR`
+
+# unique directory for this run
+RUN_ID=`/bin/date +'%F_%H%M%S'`
+RUN_DIR=$TOP_DIR/work/$RUN_ID
+mkdir -p $RUN_DIR
+
+echo
+echo "Work directory: $RUN_DIR"
+echo
+
+cd $RUN_DIR
+
+cp $TOP_DIR/pegasusrc .
+cp $TOP_DIR/pegasus-mpi-hw .
+
+
+# generate the input file
+echo "This is sample input to pegasus-mpi-hw" > f.in
+
+# generate the wrapper around the MPI executable
+# For submitting MPI jobs directly through condor without GRAM                                                                                                                                                                                               
+# we need to refer to wrapper that calls mpiexec with                                                                                                                                                                                                        
+# the mpi executable         
+#echo
+#echo "Creating the wrapper for mpi job"
+#mpiexec=`which mpiexec`
+#cat > mpi-hello-world-wrapper <<EOF
+#!/bin/bash
+
+## before launching the job switch to the directory that
+## pegasus created for the workflow
+#cd \$PEGASUS_SCRATCH_DIR
+#$mpiexec `pwd`/pegasus-mpi-hw "\$@"
+#EOF
+#chmod +x  ./mpi-hello-world-wrapper
+
+# generate the dax
+echo 
+echo "Generating the DAX"
+export PYTHONPATH=`pegasus-config --python`
+$TOP_DIR/mpi-hw.py  > mpi-hw.dax
+
+# create the site catalog
+echo 
+echo "Generating the Site Catalog"
+
+cat >sites.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
+
+    <site  handle="local" arch="x86" os="LINUX">
+        <!-- the base directory where workflow jobs will execute for local site -->
+        <directory type="shared-scratch" path="$TOP_DIR/work">
+            <file-server operation="all" url="file://$TOP_DIR/work"/>
+        </directory>
+
+        <!-- the directory where outputs will be placed  -->
+        <directory type="local-storage" path="$TOP_DIR/outputs">
+            <file-server operation="all" url="file://$TOP_DIR/outputs"/>
+        </directory>
+    </site>
+
+    <site  handle="alcf" arch="ppc_64" os="LINUX">
+        
+        <!-- the base directory where workflow jobs will execute on ALCF cluster -->
+        <directory type="shared-scratch" path="$TOP_DIR/ALCF/shared-scratch">
+            <file-server operation="all" url="file://$TOP_DIR/ALCF/shared-scratch"/>
+        </directory>
+
+        <profile namespace="env" key="PEGASUS_HOME">$LOCAL_CLUSTER_PEGASUS_HOME</profile>
+
+        <!-- tells pegasus to submit workflow directly to the
+             underlying cluster without going through GRAM -->
+        <profile namespace="pegasus" key="style" >glite</profile>
+        <profile namespace="pegasus" key="auxillary.local" >true</profile>
+
+        <!-- the underlying cluster is of type cobalt -->
+        <profile namespace="condor" key="grid_resource">batch cobalt</profile>
+
+        
+    </site>
+
+</sitecatalog>
+EOF
+
+# plan and submit the  workflow
+echo 
+echo "Planning and submitting the workflow"
+
+pegasus-plan \
+    --conf pegasusrc \
+    --sites alcf \
+    --output-site local \
+    --dir dags \
+    --dax mpi-hw.dax \
+    -v \
+    --nocleanup \
+
+
