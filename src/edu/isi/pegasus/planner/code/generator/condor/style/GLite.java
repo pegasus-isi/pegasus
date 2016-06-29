@@ -135,6 +135,24 @@ public class GLite extends Abstract {
     public static final String PBS_GRID_RESOURCE = "pbs";
     
     /**
+     * The internal mapping of globus keys to BLAHP directives.
+     * <pre>
+     * Pegasus Profile Key     Batch Key in Condor submit file    Comment from Jaime
+     * pegasus.cores           +NodeNumber	 		This is the number of cpus you want
+     * pegasus.nodes           +HostNumber			This is the number of hosts you want
+     * pegasus.ppn             +SMPGranularity		    	This is the number of processes per host you want
+     * pegasus.project         +BatchProject			The project to use
+     * </pre>
+     */
+    public static final String GLOBUS_BLAHP_DIRECTIVES_MAPPING[][] =  {
+        { Globus.COUNT_KEY ,     "+NodeNumber" }, //pegasus.cores
+        { Globus.HOST_COUNT_KEY, "+HostNumber" }, //pegasus.nodes
+        { Globus.XCOUNT_KEY,     "+SMPGranularity" }, //pegasus.ppn
+        { Globus.PROJECT_KEY,    "+BatchProject" }, //pegasus.project
+        { Globus.MAX_WALLTIME_KEY, "+BatchWallclock" } //pegasus.runtime specify in seconds
+    };
+    
+    /**
      * Handle to escaping class for environment variables
      */
     private CondorEnvironmentEscape mEnvEscape;
@@ -212,6 +230,16 @@ public class GLite extends Abstract {
         if( gridResource == null  ){
             throw new CondorStyleException( missingKeyError( job, Condor.GRID_RESOURCE_KEY ) );
         }
+        String batchSystem = gridResource.replace("batch ", "");
+        
+        if( ! supportedBatchSystem( batchSystem ) ){
+            //if it is not one of the support types, log a warning but use PBS.
+            mLogger.log( "Glite mode supports only pbs, sge , slurm or cobalt submission. Will use PBS style attributes for job " + 
+                         job.getID() + " with grid resource " + gridResource,
+                         LogManager.WARNING_MESSAGE_LEVEL );
+            batchSystem = "pbs";
+        }
+        
 
 
         job.condorVariables.construct( GLite.CONDOR_REMOTE_DIRECTORY_KEY,
@@ -233,11 +261,14 @@ public class GLite extends Abstract {
         //PM-950 looks like it works now. for pegasus lite modes we need
         //the planner to be able to set it to true
         //job.condorVariables.construct( Condor.TRANSFER_EXECUTABLE_KEY, "false" );
+        
+        
 
         /* convert some condor keys and globus keys to remote ce requirements
          +remote_cerequirements = blah */
-        job.condorVariables.construct( "+remote_cerequirements", getCERequirementsForJob( job, gridResource) );
-
+        job.condorVariables.construct( "+remote_cerequirements", getCERequirementsForJob( job, batchSystem) );
+        generateBLAHPDirectives( job , batchSystem );
+        
         /* retrieve some keys from globus rsl and convert to gLite format */
         if( job.globusRSL.containsKey( "queue" ) ){
             job.condorVariables.construct(  "batch_queue" , (String)job.globusRSL.get( "queue" ) );
@@ -308,13 +339,13 @@ public class GLite extends Abstract {
      * All the env profiles are translated to MYENV
      *
      * @param job
-     * @param gridResource
+     * @param batchSystem
      *
      * @return the value to the expression and it is condor quoted
      *
      * @throws CondorStyleException in case of condor quoting error
      */
-    protected String getCERequirementsForJob( Job job, String gridResource ) throws CondorStyleException {
+    protected String getCERequirementsForJob( Job job, String batchSystem ) throws CondorStyleException {
         StringBuffer value = new StringBuffer();
 
         /* append the job name */
@@ -339,7 +370,7 @@ public class GLite extends Abstract {
             addSubExpression( value, "QUEUE", (String)job.globusRSL.get( "queue" ) );
         }
 
-        this.handleResourceRequirements( job , gridResource );
+        this.handleResourceRequirements(job , batchSystem );
 
         /* the globus key hostCount is NODES */
         if( job.globusRSL.containsKey( "hostcount" ) ){
@@ -549,29 +580,16 @@ public class GLite extends Abstract {
      * local attributes shell script for the LRMS.
      * 
      * @param job 
-     * @param gridResource   the grid resource associated with the job. 
+     * @param batchSystem   the grid resource associated with the job. 
      *                       can be pbs | sge.
      */
-    protected void handleResourceRequirements( Job job, String gridResource) throws CondorStyleException {
+    protected void handleResourceRequirements( Job job, String batchSystem) throws CondorStyleException {
         //PM-962 we update the globus RSL keys on basis
         //of Pegasus profile keys before doing any translation
         
         mCondorG.handleResourceRequirements(job);
-
-        gridResource = gridResource.replace("batch ", "");
         
-        //sanity check
-        if( ! (gridResource.equals("pbs") || 
-               gridResource.equals("sge") ||
-               gridResource.equals("slurm") ) ) {
-            //if it is not one of the support types, log a warning but use PBS.
-            mLogger.log( "Glite mode supports only pbs, sge or slurm submission. Will use PBS style attributes for job " + 
-                         job.getID() + " with grid resource " + gridResource,
-                         LogManager.WARNING_MESSAGE_LEVEL );
-            gridResource = "pbs";
-        }
-        
-        if ( gridResource.equals( "pbs" ) ){
+        if ( batchSystem.equals( "pbs" ) || batchSystem.equals( "cobalt") ){
             //check for cores / count if set
             boolean coresSet = job.globusRSL.containsKey( Globus.COUNT_KEY );
             boolean nodesSet = job.globusRSL.containsKey( Globus.HOST_COUNT_KEY );
@@ -584,7 +602,7 @@ public class GLite extends Abstract {
                 if ( !( nodesSet || ppnSet ) ){
                     //neither nodes or ppn are set
                     //cannot do any translation
-                    throw new CondorStyleException( "Cannot translate to PBS attributes. Only cores " + 
+                    throw new CondorStyleException( "Cannot translate to " + batchSystem + " attributes. Only cores " + 
                                                      cores + " specified for job " + job.getID());
                 }
                 
@@ -639,7 +657,7 @@ public class GLite extends Abstract {
             }
             
         }
-        else if ( gridResource.equals( "sge" )){
+        else if ( batchSystem.equals( "sge" )){
             //for SGE case
             boolean coresSet = job.globusRSL.containsKey( Globus.COUNT_KEY );
             boolean nodesSet = job.globusRSL.containsKey( Globus.HOST_COUNT_KEY );
@@ -665,7 +683,7 @@ public class GLite extends Abstract {
             }
 
         }
-        else if ( gridResource.equals( "slurm" )){
+        else if ( batchSystem.equals( "slurm" )){
             //for SLURM case
             boolean coresSet = job.globusRSL.containsKey( Globus.COUNT_KEY );
             boolean nodesSet = job.globusRSL.containsKey( Globus.HOST_COUNT_KEY );
@@ -693,10 +711,67 @@ public class GLite extends Abstract {
         }
         else{
             //unreachable code
-            throw new CondorStyleException( "Invalid grid resource associated for job " + job.getID() + " " + gridResource );
+            throw new CondorStyleException( "Invalid grid resource associated for job " + job.getID() + " " + batchSystem );
         }
     }
     
+    /**
+     * Returns whether the batch system is supported or not.
+     * 
+     * @param batchSystem
+     * @return 
+     */
+    protected boolean supportedBatchSystem(String batchSystem) {
+        return ( batchSystem == null )?
+                false:
+                batchSystem.equals( "pbs" ) || 
+                batchSystem.equals( "sge" ) ||
+                batchSystem.equals( "slurm" ) ||
+                batchSystem.equals( "cobalt" ) ;
+    }
+    
+    /**
+     * Generates BLAHP directives for the job.  The following mapping is followed
+     * from the pegasus task requirement profiles
+     * 
+     * <pre>
+     * Pegasus Profile Key     Batch Key in Condor submit file    Comment from Jaime
+     * pegasus.cores           +NodeNumber	 		This is the number of cpus you want
+     * pegasus.nodes           +HostNumber			This is the number of hosts you want
+     * pegasus.ppn             +SMPGranularity		    	This is the number of processes per host you want
+     * pegasus.project         +BatchProject			The project to use
+     * </pre>
+     * 
+     * @param job
+     * @param batchSystem 
+     */
+    private void generateBLAHPDirectives(Job job, String batchSystem) {
+        //sanity check
+        /*generate blahp directives only for cobalt
+         * till we verify it works for blahp backends in condor
+        */
+        if(!batchSystem.equals( "cobalt") ){
+            return;
+        }
+        
+        for(int i = 0; i < GLite.GLOBUS_BLAHP_DIRECTIVES_MAPPING.length; i++){
+            String globusKey = GLOBUS_BLAHP_DIRECTIVES_MAPPING[i][0];
+            String blahpDirective = GLOBUS_BLAHP_DIRECTIVES_MAPPING[i][1];
+            
+            if( job.globusRSL.containsKey( globusKey )){
+                String value = (String)job.globusRSL.get( globusKey);
+                if( globusKey.equals( Globus.PROJECT_KEY) ){
+                    //value has to be quoted
+                    value = "\"" + value + "\"";
+                }
+               
+                job.condorVariables.construct( blahpDirective, value );
+                
+            }
+        }
+        return;
+    }
+
     public static void main(String[] args ){
         GLite gl = new GLite();
         
@@ -707,5 +782,8 @@ public class GLite extends Abstract {
         System.out.println( "169 mins is " + gl.pbsFormattedTimestamp( "169") );
         System.out.println( "1690 mins is " + gl.pbsFormattedTimestamp( "1690") );
     }
+
+    
+    
 
 }
