@@ -589,7 +589,7 @@ public class GLite extends Abstract {
         
         mCondorG.handleResourceRequirements(job);
         
-        if ( batchSystem.equals( "pbs" ) || batchSystem.equals( "cobalt") ){
+        if ( batchSystem.equals( "pbs" ) || batchSystem.equals( "cobalt") || batchSystem.equals( "moab")){
             //check for cores / count if set
             boolean coresSet = job.globusRSL.containsKey( Globus.COUNT_KEY );
             boolean nodesSet = job.globusRSL.containsKey( Globus.HOST_COUNT_KEY );
@@ -727,6 +727,7 @@ public class GLite extends Abstract {
                 batchSystem.equals( "pbs" ) || 
                 batchSystem.equals( "sge" ) ||
                 batchSystem.equals( "slurm" ) ||
+                batchSystem.equals( "moab" ) ||
                 batchSystem.equals( "cobalt" ) ;
     }
     
