@@ -33,12 +33,16 @@ mpi_hw_job.uses(fout, link=Link.OUTPUT)
 mpi_hw_job.addProfile( Profile( "globus", "jobtype", "mpi"))
 
 # add profiles indicating PBS specific parameters for HPCC
-# the globus key hostCount is NODES
-mpi_hw_job.addProfile( Profile("globus", "hostcount", "1" ))
+# pegasus.nodes corresponds to PBS -l nodes
+mpi_hw_job.addProfile( Profile("pegasus", "nodes", "1" ))
+
 # the globus key xcount is PROCS or PPN
-mpi_hw_job.addProfile( Profile("globus", "xcount", "16" ))    
-#  the globus key maxwalltime is WALLTIME in minutes
-mpi_hw_job.addProfile( Profile("globus", "maxwalltime", "120"))
+# pegasus.ppn corresponds to PBS-l ppn
+mpi_hw_job.addProfile( Profile("pegasus", "ppn", "16" ))    
+
+# pegasus.runtime corresponds to PBS -l walltime  
+# pegasus.runtime specified in seconds
+mpi_hw_job.addProfile( Profile("pegasus", "runtime", "120"))
 mpi_hw_wf.addJob(mpi_hw_job)
 
 # Write the DAX to stdout
