@@ -766,7 +766,7 @@ pegasus.data.configuration    HTCondorio</programlisting>
       <table>
         <title>Mapping of Pegasus Profiles to Job Requirements</title>
 
-        <tgroup cols="6">
+        <tgroup cols="7">
           <thead>
             <row>
               <entry align="center">Profile Key</entry>
@@ -778,6 +778,8 @@ pegasus.data.configuration    HTCondorio</programlisting>
               <entry>SGE Parameter</entry>
 
               <entry>Moab Parameter</entry>
+
+              <entry>Cobalt Parameter</entry>
 
               <entry>Description</entry>
             </row>
@@ -794,6 +796,8 @@ pegasus.data.configuration    HTCondorio</programlisting>
               <entry>-pe ompi</entry>
 
               <entry>n/a</entry>
+
+              <entry>--proccount cores</entry>
 
               <entry>Pegasus uses cores to calculate either nodes or ppn. If
               cores and ppn are specified, then nodes is computed. If cores
@@ -818,6 +822,8 @@ pegasus.data.configuration    HTCondorio</programlisting>
 
               <entry>-l nodes</entry>
 
+              <entry>-n nodes</entry>
+
               <entry>This specifies the number of nodes that the job should
               use. This is not used for SGE.</entry>
             </row>
@@ -833,6 +839,8 @@ pegasus.data.configuration    HTCondorio</programlisting>
 
               <entry>-l ppn</entry>
 
+              <entry>--mode c[ppn]</entry>
+
               <entry>This specifies the number of processors per node that the
               job should use. This is not used for SGE.</entry>
             </row>
@@ -847,6 +855,8 @@ pegasus.data.configuration    HTCondorio</programlisting>
               <entry>-l h_rt</entry>
 
               <entry>-l walltime</entry>
+
+              <entry>-t walltime</entry>
 
               <entry>This specifies the maximum runtime for the job in
               seconds. It should be an integer value. Pegasus converts it to
@@ -865,6 +875,8 @@ pegasus.data.configuration    HTCondorio</programlisting>
 
               <entry>-l pmem</entry>
 
+              <entry>n/a</entry>
+
               <entry>This specifies the maximum amount of physical memory used
               by any process in the job. For example, if the job runs four
               processes and each requires up to 2 GB (gigabytes) of memory,
@@ -878,11 +890,13 @@ pegasus.data.configuration    HTCondorio</programlisting>
 
               <entry>PROJECT</entry>
 
-              <entry>-A</entry>
+              <entry>-A project_name</entry>
 
               <entry>n/a</entry>
 
-              <entry>-A</entry>
+              <entry>-A project_name</entry>
+
+              <entry>-A project_name</entry>
 
               <entry>Causes the job time to be charged to or associated with a
               particular project/account. This is not used for SGE.</entry>
@@ -898,6 +912,8 @@ pegasus.data.configuration    HTCondorio</programlisting>
               <entry>-q</entry>
 
               <entry>-q</entry>
+
+              <entry/>
 
               <entry>This specifies the queue for the job. This profile does
               not have a corresponding value in
@@ -918,6 +934,8 @@ pegasus.data.configuration    HTCondorio</programlisting>
 
               <entry>-l mem</entry>
 
+              <entry>n/a</entry>
+
               <entry>The total memory that your job requires. It is usually
               better to just specify the pegasus.memory profile. This is not
               mapped for SGE.</entry>
@@ -933,6 +951,8 @@ pegasus.data.configuration    HTCondorio</programlisting>
               <entry>prefixed by "#?"</entry>
 
               <entry>prefixed by "#MSUB"</entry>
+
+              <entry>n/a</entry>
 
               <entry>This specifies the extra arguments that must appear in
               the generated submit script for a job. The value of this profile
@@ -1289,6 +1309,7 @@ pegasus.transfer.worker.package = true
   </section>
 </chapter>
 <?xxe-serial-numbers iq2ifwj5 vahi
+iq2nanhq vahi
 (1z141z5 (1z141z6) (1z141z7) (1z141z8 (1z141z9) (1z141za (1z141zb))
 (1z141zc (1z141zd)) (1z141ze) (1z141zf (1z141zg) (1z141zh))) (1z141zi
 (1z141zj) (1z141zk) (1z141zl (1z141zm) (1z141zn (1z141zo (1z141zp))))
@@ -1319,27 +1340,28 @@ pegasus.transfer.worker.package = true
 (1z1424e (1z1424f) (1z1424g) (1z1424h) (1z1424i)) (1z1424j (1z1424k))
 (1z1424l) (1z1424m) (1z1424n (1z1424o) (1z1424p) (1z1424q (1z1424r)
 (1z1424s (1z1424t (1z1424u (1z1424v) (1z1424w) (1z1424x) (1z1424y)
-(1z1424z) (1z14250))) (1z14251 (1z14252 (1z14253) (1z14254) (1z14255)
-(1z14256) (1z14257) (1z14258)) (1z14259 (1z1425a) (1z1425b) (1z1425c)
-(1z1425d) (1z1425e) (1z1425f)) (1z1425g (1z1425h) (1z1425i) (1z1425j)
-(1z1425k) (1z1425l) (1z1425m)) (1z1425n (1z1425o) (1z1425p) (1z1425q)
-(1z1425r) (1z1425s) (1z1425t)) (1z1425u (1z1425v) (1z1425w) (1z1425x)
-(1z1425y) (1z1425z) (1z14260)) (1z14261 (1z14262) (1z14263) (1z14264)
-(1z14265) (1z14266) (1z14267)) (1z14268 (1z14269) (1z1426a) (1z1426b)
-(1z1426c) (1z1426d) (1z1426e (1z1426f) (1z1426g))) (1z1426h (1z1426i)
-(1z1426j) (1z1426k) (1z1426l) (1z1426m) (1z1426n)) (1z1426o (1z1426p)
-(1z1426q) (1z1426r) (1z1426s) (1z1426t) (1z1426u))))) (1z1426v (1z1426w)))
-(1z1426x (1z1426y) (1z1426z (1z14270) (1z14271) (1z14272)))) (1z14273
-(1z14274) (1z14275 (1z14276)) (1z14277) (1z14278 (1z14279)) (1z1427a)
-(1z1427b (1z1427c) (1z1427d) (1z1427e)) (1z1427f) (1z1427g) (1z1427h)
-(1z1427i (1z1427j) (1z1427k)) (1z1427l) (1z1427m) (1z1427n) (1z1427o
-(1z1427p)) (1z1427q) (1z1427r (1z1427s)) (1z1427t) (1z1427u (1z1427v))
-(1z1427w) (1z1427x)) (1z1427y (1z1427z) (1z14280 (1z14281)) (1z14282
-(1z14283) (1z14284) (1z14285) (1z14286) (1z14287)) (1z14288) (1z14289
-(1z1428a (1z1428b (1z1428c) (1z1428d) (1z1428e))) (1z1428f (1z1428g)))
-(1z1428h) (1z1428i) (1z1428j (1z1428k)) (1z1428l)) (1z1428m (1z1428n)
-(1z1428o) (1z1428p (1z1428q (1z1428r)) (1z1428s (1z1428t)) (1z1428u
-(1z1428v))) (1z1428w (1z1428x))) (1z1428y (1z1428z) (1z14290 (1z14291))
-(1z14292 (1z14293) (1z14294) (1z14295) (1z14296)) (1z14297) (1z14298)
-(1z14299) (1z1429a (1z1429b)) (1z1429c (1z1429d))) (1z1429e (1z1429f)
-(1z1429g (1z1429h (1z1429i) (1z1429j)))))?>
+(1z1424z) (3y283y9) (1z14250))) (1z14251 (1z14252 (1z14253) (1z14254)
+(1z14255) (1z14256) (1z14257) (3y283ya) (1z14258)) (1z14259 (1z1425a)
+(1z1425b) (1z1425c) (1z1425d) (1z1425e) (3y283yb) (1z1425f)) (1z1425g
+(1z1425h) (1z1425i) (1z1425j) (1z1425k) (1z1425l) (3y283yc) (1z1425m))
+(1z1425n (1z1425o) (1z1425p) (1z1425q) (1z1425r) (1z1425s) (3y283yd)
+(1z1425t)) (1z1425u (1z1425v) (1z1425w) (1z1425x) (1z1425y) (1z1425z)
+(3y283ye) (1z14260)) (1z14261 (1z14262) (1z14263) (1z14264) (1z14265)
+(1z14266) (3y283yf) (1z14267)) (1z14268 (1z14269) (1z1426a) (1z1426b)
+(1z1426c) (1z1426d) (3y283yg) (1z1426e (1z1426f) (1z1426g))) (1z1426h
+(1z1426i) (1z1426j) (1z1426k) (1z1426l) (1z1426m) (3y283yh) (1z1426n))
+(1z1426o (1z1426p) (1z1426q) (1z1426r) (1z1426s) (1z1426t) (3y283yi)
+(1z1426u))))) (1z1426v (1z1426w))) (1z1426x (1z1426y) (1z1426z (1z14270)
+(1z14271) (1z14272)))) (1z14273 (1z14274) (1z14275 (1z14276)) (1z14277)
+(1z14278 (1z14279)) (1z1427a) (1z1427b (1z1427c) (1z1427d) (1z1427e))
+(1z1427f) (1z1427g) (1z1427h) (1z1427i (1z1427j) (1z1427k)) (1z1427l)
+(1z1427m) (1z1427n) (1z1427o (1z1427p)) (1z1427q) (1z1427r (1z1427s))
+(1z1427t) (1z1427u (1z1427v)) (1z1427w) (1z1427x)) (1z1427y (1z1427z)
+(1z14280 (1z14281)) (1z14282 (1z14283) (1z14284) (1z14285) (1z14286)
+(1z14287)) (1z14288) (1z14289 (1z1428a (1z1428b (1z1428c) (1z1428d)
+(1z1428e))) (1z1428f (1z1428g))) (1z1428h) (1z1428i) (1z1428j (1z1428k))
+(1z1428l)) (1z1428m (1z1428n) (1z1428o) (1z1428p (1z1428q (1z1428r))
+(1z1428s (1z1428t)) (1z1428u (1z1428v))) (1z1428w (1z1428x))) (1z1428y
+(1z1428z) (1z14290 (1z14291)) (1z14292 (1z14293) (1z14294) (1z14295)
+(1z14296)) (1z14297) (1z14298) (1z14299) (1z1429a (1z1429b)) (1z1429c
+(1z1429d))) (1z1429e (1z1429f) (1z1429g (1z1429h (1z1429i) (1z1429j)))))?>
