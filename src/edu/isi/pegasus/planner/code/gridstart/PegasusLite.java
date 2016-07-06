@@ -801,7 +801,9 @@ public class PegasusLite implements GridStart {
             sb.append( '\n' );
 
             sb.append( "# cleanup in case of failures" ).append( '\n' );
-            sb.append( "trap pegasus_lite_exit INT TERM EXIT" ).append( '\n' );
+            sb.append( "trap pegasus_lite_signal_int INT" ).append( '\n' );
+            sb.append( "trap pegasus_lite_signal_term TERM" ).append( '\n' );
+            sb.append( "trap pegasus_lite_exit EXIT" ).append( '\n' );
             sb.append( '\n' );
 
             appendStderrFragment( sb, "Setting up workdir" );
