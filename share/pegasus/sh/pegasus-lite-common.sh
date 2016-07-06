@@ -246,23 +246,42 @@ function pegasus_lite_init()
 }
 
 
+function pegasus_lite_signal_int()
+{
+    # remember the fact until we call the EXIT function
+    caught_signal_name="INT"
+    caught_signal_num=2
+}
+
+function pegasus_lite_signal_term()
+{
+    # remember the fact until we call the EXIT function
+    caught_signal_name="TERM"
+    caught_signal_num=15
+}
+
+
 function pegasus_lite_exit()
 {
     rc=$?
-    if [ "x$rc" = "x" ]; then
-        rc=0
-    fi
-
-    if [ "x$job_ec" != "x" ];then
-	if [ $job_ec != 0 ];then
-	    pegasus_lite_log "Job failed with exitcode $job_ec"
-	    rc=$job_ec
-	fi
-    fi
-	
-
-    if [ $rc != 0 ]; then
-        pegasus_lite_log "FAILURE: Last command exited with $rc"
+    if [ "x$caught_signal_name" != "x" ]; then
+        # if we got a signal, always fail the job
+        pegasus_lite_log "Caught $caught_signal_name signal! Aborting..."
+        rc=$(($caught_signal_num + 128))
+    elif [ "x$rc" = "x" ]; then
+        # when would this actually happen?
+        pegasus_lite_log "Unable to determine real exit code!"
+        rc=1
+    elif [ $rc -gt 0 ]; then
+        pegasus_lite_log "Last command exited with $rc"
+    else
+        # normal exit
+        if [ "x$job_ec" != "x" ];then
+            if [ $job_ec != 0 ];then
+                pegasus_lite_log "Job failed with exitcode $job_ec"
+                rc=$job_ec
+            fi
+        fi
     fi
 
     if [ "x$pegasus_lite_work_dir_created" = "x1" ]; then
