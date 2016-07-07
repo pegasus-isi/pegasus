@@ -1,40 +1,40 @@
 # src 0 ISI_Cartman
-gsiftp://cartman.isi.edu/lfs1/pegasus-transfer-testing/out/medium-files/a.txt
+gsiftp://colo-vm63.isi.edu/lfs1/pegasus-transfer-testing/out/medium-files/a.txt
 # dst 0 ISI_Obelix
 gsiftp://obelix.isi.edu/data/scratch/ptesting/transfer-tests/medium-files/a.txt
 # src 0 ISI_Cartman
-gsiftp://cartman.isi.edu/lfs1/pegasus-transfer-testing/out/medium-files/b.txt
+gsiftp://colo-vm63.isi.edu/lfs1/pegasus-transfer-testing/out/medium-files/b.txt
 # dst 0 ISI_Obelix
 gsiftp://obelix.isi.edu/data/scratch/ptesting/transfer-tests/medium-files/b.txt
 # src 0 ISI_Cartman
-gsiftp://cartman.isi.edu/lfs1/pegasus-transfer-testing/out/medium-files/c.txt
+gsiftp://colo-vm63.isi.edu/lfs1/pegasus-transfer-testing/out/medium-files/c.txt
 # dst 0 ISI_Obelix
 gsiftp://obelix.isi.edu/data/scratch/ptesting/transfer-tests/medium-files/c.txt
 # src 0 ISI_Cartman
-gsiftp://cartman.isi.edu/lfs1/pegasus-transfer-testing/out/medium-files/d.txt
+gsiftp://colo-vm63.isi.edu/lfs1/pegasus-transfer-testing/out/medium-files/d.txt
 # dst 0 ISI_Obelix
 gsiftp://obelix.isi.edu/data/scratch/ptesting/transfer-tests/medium-files/d.txt
 # src 0 ISI_Cartman
-gsiftp://cartman.isi.edu/lfs1/pegasus-transfer-testing/out/medium-files/e.txt
+gsiftp://colo-vm63.isi.edu/lfs1/pegasus-transfer-testing/out/medium-files/e.txt
 # dst 0 ISI_Obelix
 gsiftp://obelix.isi.edu/data/scratch/ptesting/transfer-tests/medium-files/e.txt
 # src 0 ISI_Cartman
-gsiftp://cartman.isi.edu/lfs1/pegasus-transfer-testing/out/medium-files/f.txt
+gsiftp://colo-vm63.isi.edu/lfs1/pegasus-transfer-testing/out/medium-files/f.txt
 # dst 0 ISI_Obelix
 gsiftp://obelix.isi.edu/data/scratch/ptesting/transfer-tests/medium-files/f.txt
 # src 0 ISI_Cartman
-gsiftp://cartman.isi.edu/lfs1/pegasus-transfer-testing/out/medium-files/g.txt
+gsiftp://colo-vm63.isi.edu/lfs1/pegasus-transfer-testing/out/medium-files/g.txt
 # dst 0 ISI_Obelix
 gsiftp://obelix.isi.edu/data/scratch/ptesting/transfer-tests/medium-files/g.txt
 # src 0 ISI_Cartman
-gsiftp://cartman.isi.edu/lfs1/pegasus-transfer-testing/out/medium-files/h.txt
+gsiftp://colo-vm63.isi.edu/lfs1/pegasus-transfer-testing/out/medium-files/h.txt
 # dst 0 ISI_Obelix
 gsiftp://obelix.isi.edu/data/scratch/ptesting/transfer-tests/medium-files/h.txt
 # src 0 ISI_Cartman
-gsiftp://cartman.isi.edu/lfs1/pegasus-transfer-testing/out/medium-files/i.txt
+gsiftp://colo-vm63.isi.edu/lfs1/pegasus-transfer-testing/out/medium-files/i.txt
 # dst 0 ISI_Obelix
 gsiftp://obelix.isi.edu/data/scratch/ptesting/transfer-tests/medium-files/i.txt
 # src 0 ISI_Cartman
-gsiftp://cartman.isi.edu/lfs1/pegasus-transfer-testing/out/medium-files/j.txt
+gsiftp://colo-vm63.isi.edu/lfs1/pegasus-transfer-testing/out/medium-files/j.txt
 # dst 0 ISI_Obelix
 gsiftp://obelix.isi.edu/data/scratch/ptesting/transfer-tests/medium-files/j.txt

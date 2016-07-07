@@ -61,7 +61,7 @@ cat > sites.xml <<EOF
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://cartman.isi.edu" mount-point="${TOPDIR}/staging-site/scratch"/>
+                    <file-server protocol="gsiftp" url="gsiftp://colo-vm63.isi.edu" mount-point="${TOPDIR}/staging-site/scratch"/>
                     <internal-mount-point mount-point="${TOPDIR}/staging-site/scratch"/>
                 </shared>
             </scratch>

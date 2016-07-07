@@ -44,7 +44,7 @@ cat >sites.xml <<EOF
 
      <site  handle="staging" arch="x86_64" os="LINUX">
         <directory type="shared-scratch" path="/nfs/ccg4/scratch-purge-no-backups">
-            <file-server operation="all" url="gsiftp://cartman.isi.edu/nfs/ccg4/scratch-purge-no-backups"/>
+            <file-server operation="all" url="gsiftp://colo-vm63.isi.edu/nfs/ccg4/scratch-purge-no-backups"/>
         </directory>
     </site>
 

@@ -43,7 +43,7 @@ cat > sites.xml <<EOF
 </site>
 <site handle="condorpool" arch="x86_64" os="LINUX" >
         <directory  path="${CONDOR_POOL_SHARED_FS}/shared-scratch" type="shared-scratch" free-size="" total-size="">
-             <file-server  operation="all" url="gsiftp://cartman.isi.edu/${CONDOR_POOL_SHARED_FS}/shared-scratch">
+             <file-server  operation="all" url="gsiftp://colo-vm63.isi.edu/${CONDOR_POOL_SHARED_FS}/shared-scratch">
                 </file-server> 
         </directory>           
         <profile namespace="condor" key="universe" >vanilla</profile>

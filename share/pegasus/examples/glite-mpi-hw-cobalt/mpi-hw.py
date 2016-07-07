@@ -10,15 +10,15 @@ mpi_hw_wf = ADAG("mpi-hello-world")
 
 # Add input file to the DAX-level replica catalog
 fin = File("fin")
-fin.addPFN(PFN("file://" + os.getcwd() + "/f.in", "hpcc"))
+fin.addPFN(PFN("file://" + os.getcwd() + "/f.in", "alcf"))
 mpi_hw_wf.addFile(fin)
         
 # Add executables to the DAX-level transformation catalog
 # For submitting MPI jobs directly through condor without GRAM
 # we need to refer to wrapper that calls mpiexec with 
 # the mpi executable
-e_mpi_hw = Executable(namespace="pegasus", name="mpihw", os="linux", arch="x86_64", installed=True)
-e_mpi_hw.addPFN(PFN("file://" + os.getcwd() + "/mpi-hello-world-wrapper", "hpcc"))
+e_mpi_hw = Executable(namespace="pegasus", name="mpihw", os="linux", arch="ppc_64", installed=True)
+e_mpi_hw.addPFN(PFN("file://" + os.getcwd() + "/pegasus-mpi-hw", "alcf"))
 mpi_hw_wf.addExecutable(e_mpi_hw)
 
 
@@ -32,17 +32,22 @@ mpi_hw_job.uses(fout, link=Link.OUTPUT)
 # tell pegasus it is an MPI job
 mpi_hw_job.addProfile( Profile( "globus", "jobtype", "mpi"))
 
-# add profiles indicating PBS specific parameters for HPCC
-# pegasus.nodes corresponds to PBS -l nodes
-mpi_hw_job.addProfile( Profile("pegasus", "nodes", "1" ))
+# add profiles indicating Cobalt specific parameters for ALCF
 
-# the globus key xcount is PROCS or PPN
-# pegasus.ppn corresponds to PBS-l ppn
+# pegasus.cores translates to BLAHP directive +NodeNumber
+mpi_hw_job.addProfile( Profile("pegasus", "cores", "16" ))
+
+# pegasus.nodes translates to BLAHP directive +HostNumber
+mpi_hw_job.addProfile( Profile("pegasus", "nodes", "1" ))    
+
+# pegasus.ppn translates to BLAHP directive +SmpGranularity
 mpi_hw_job.addProfile( Profile("pegasus", "ppn", "16" ))    
 
-# pegasus.runtime corresponds to PBS -l walltime  
-# pegasus.runtime specified in seconds
-mpi_hw_job.addProfile( Profile("pegasus", "runtime", "120"))
+# pegasus.project translates to BLAHP directive +BatchProject
+mpi_hw_job.addProfile( Profile("pegasus", "project", "Vendor_Support" ))    
+
+# pegasus.runtime is walltime in seconds. converted to +BatchWallclock in minutes
+mpi_hw_job.addProfile( Profile("pegasus", "runtime", "300"))
 mpi_hw_wf.addJob(mpi_hw_job)
 
 # Write the DAX to stdout

@@ -72,14 +72,20 @@ tr pegasus::mpiexec {
         os "linux"
         type "INSTALLED"
         profile globus "jobtype" "mpi"
-        profile globus "maxwalltime" "2880"
+
+        # specify the maxruntime in seconds
+        profile globus "runtime" "2880"
+
         # specfiy the ppn parameter.
-        profile globus "xcount" "16:IB"
+        profile pegasus "ppn" "16"
+
         # specify the nodes parameter
-        profile globus "hostcount" "1"
+        profile pegasus  "nodes" "1"
+
         #specify the pmem parameter
-        profile globus "maxmemory" "1gb"
-        #specify the mem parameter
+        profile pegasus "memory" "1gb"
+
+        #specify the total mem parameter
         profile globus "totalmemory" "16gb"
     }
 }
