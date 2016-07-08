@@ -34,12 +34,11 @@
     <section>
       <title>Download VM Image</title>
 
-      <para>Next, download the Pegasus Tutorial VM from the Pegasus download page: <ulink
-            url="http://pegasus.isi.edu/downloads">http://pegasus.isi.edu/downloads</ulink>
-      </para>
+      <para>Next, download the Pegasus Tutorial VM from the Pegasus download
+      page: <ulink
+      url="http://pegasus.isi.edu/downloads">http://pegasus.isi.edu/downloads</ulink></para>
 
-      <para>Unzip the downloaded file and move the <literal>.vmdk</literal>
-      file it contains to somewhere that you can find it later.</para>
+      <para>Move the downloaded file somewhere that you can find later.</para>
     </section>
 
     <section>
@@ -59,7 +58,7 @@
         </mediaobject>
       </figure>
 
-      <para>Click on the "New" button. The "Create New Virtual Machine Wizard"
+      <para>Click on File &gt; Import Appliance, and Appliance Import Wizard
       will appear:</para>
 
       <figure>
@@ -73,7 +72,10 @@
         </mediaobject>
       </figure>
 
-      <para>Click "Continue" to get to the VM Name and OS Type step:</para>
+      <para>Click the folder icon and locate the .ova file that you downloaded
+      earlier.</para>
+
+      <para>Click "Continue" to get to the "Appliance Settings" Page:</para>
 
       <figure>
         <title>VM Name and OS Type</title>
@@ -86,16 +88,8 @@
         </mediaobject>
       </figure>
 
-      <para>In the Name field type "Pegasus Tutorial". Set the Operating
-      System to "Linux" and the Version to "Red Hat (64 bit)".</para>
-
-      <warning>
-        <para>Make sure to select "Red Hat (64 bit)" as the Version. If this
-        is incorrect the virtual machine may not be able to start.</para>
-      </warning>
-
-      <para>Click "Continue" to get to the Memory step. You can leave this at
-      the default of 512 MB.</para>
+      <para>Click "Import". You will get back to the welcome screen showing
+      the new virtual machine:</para>
 
       <figure>
         <title>Memory</title>
@@ -103,52 +97,6 @@
         <mediaobject>
           <imageobject>
             <imagedata contentdepth="100%" fileref="images/vm_vb_04.png"
-                       scalefit="1" width="100%"/>
-          </imageobject>
-        </mediaobject>
-      </figure>
-
-      <para>Click "Continue" again to get to the "Virtual Hard Disk"
-      step:</para>
-
-      <figure>
-        <title>Virtual Hard Disk</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata contentdepth="100%" fileref="images/vm_vb_05.png"
-                       scalefit="1" width="100%"/>
-          </imageobject>
-        </mediaobject>
-      </figure>
-
-      <para>Leave "Start-up Disk" checked. Choose "Use existing hard disk".
-      Click the folder icon and locate the .vmdk file that you downloaded
-      earlier.</para>
-
-      <para>When you have selected the .vmdk file, choose "Open" and then
-      click "Continue" to get to the Summary page:</para>
-
-      <figure>
-        <title>Summary</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata contentdepth="100%" fileref="images/vm_vb_06.png"
-                       scalefit="1" width="100%"/>
-          </imageobject>
-        </mediaobject>
-      </figure>
-
-      <para>Click "Create". You will get back to the welcome screen showing
-      the new virtual machine:</para>
-
-      <figure>
-        <title>Welcome Screen with new virtual machine</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata contentdepth="100%" fileref="images/vm_vb_07.png"
                        scalefit="1" width="100%"/>
           </imageobject>
         </mediaobject>
@@ -162,7 +110,7 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata contentdepth="100%" fileref="images/vm_vb_08.png"
+            <imagedata contentdepth="100%" fileref="images/vm_vb_05.png"
                        scalefit="1" width="100%"/>
           </imageobject>
         </mediaobject>
@@ -171,9 +119,9 @@
       <para>Log in as user "<emphasis role="bold">tutorial</emphasis>" with
       password "<emphasis role="bold">pegasus</emphasis>".</para>
 
-      <para>After you log in you can return to the <link
-      linkend="tutorial">tutorial chapter</link> to complete the
-      tutorial.</para>
+      <para>After you log in, Click the Terminal Icon, to open a Terminal. You
+      can return to the <link linkend="tutorial">tutorial chapter</link> to
+      complete the tutorial.</para>
     </section>
 
     <section>
@@ -403,7 +351,6 @@
 The authenticity of host 'ec2-50-112-45-59.us-west-2.compute.amazonaws.com (50.112.45.59)' can't be established.
 RSA key fingerprint is 56:b0:11:ba:8f:98:ba:dd:75:f6:3c:09:ef:b9:2a:ac.
 Are you sure you want to continue connecting (yes/no)? <emphasis role="bold">yes</emphasis>
-tutorial's password: <emphasis role="bold">pegasus</emphasis>
 [tutorial@localhost ~]$ </programlisting>
 
       <para>where “ec2-50-112-45-59.us-west-2.compute.amazonaws.com” is the
@@ -452,5 +399,4 @@ tutorial's password: <emphasis role="bold">pegasus</emphasis>
       </figure>
     </section>
   </section>
-
 </appendix>
