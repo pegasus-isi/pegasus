@@ -42,6 +42,7 @@ import java.util.regex.Pattern;
 import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.common.util.Escape;
+import edu.isi.pegasus.common.util.VariableExpander;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
@@ -111,6 +112,11 @@ public class Regex implements ReplicaCatalog {
     boolean m_readonly;
 
     /**
+     * Handle to pegasus variable expander
+     */
+    private VariableExpander mVariableExpander;
+    
+    /**
      * Default empty constructor creates an object that is not yet connected to
      * any database. You must use support methods to connect before this
      * instance becomes usable.
@@ -124,6 +130,7 @@ public class Regex implements ReplicaCatalog {
         m_lfn_pattern = null;
         m_filename = null;
         m_readonly = false;
+        mVariableExpander = new VariableExpander();
     }
 
     /**
@@ -328,8 +335,17 @@ public class Regex implements ReplicaCatalog {
                 LineNumberReader lnr = new LineNumberReader(new FileReader(f));
                 String line;
                 while ((line = lnr.readLine()) != null) {
-                    if (line.length() == 0 || line.charAt(0) == '#')
+                    if (line.length() == 0 || line.charAt(0) == '#'){
                         continue;
+                    }
+                    //PM-1112 expand the line before parsing
+                    try{
+                        line = mVariableExpander.expand(line);
+                    }
+                    catch( RuntimeException e ){
+                        //rethrow again
+                        throw new RuntimeException( "Error while expanding contents of file based rc at line number " + lnr.getLineNumber() , e );
+                    }
                     parse(line, lnr.getLineNumber());
                 }
                 lnr.close();
