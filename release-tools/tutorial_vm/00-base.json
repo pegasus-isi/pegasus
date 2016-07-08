@@ -1,0 +1,62 @@
+{
+  "variables": {
+    "iso_url": "http://mirrors.syringanetworks.net/centos/7/isos/x86_64",
+    "iso_name" : "CentOS-7-x86_64-Minimal-1511.iso",
+    "ks_cfg": "base",
+    "out_file": "base",
+    "vm_version": ""
+  },
+  "builders": [
+    {
+      "type": "virtualbox-iso",
+      "boot_command": [
+        "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/{{ user `ks_cfg` }}.cfg<enter><wait>"
+      ],
+      "boot_wait": "10s",
+      "disk_size": 10240,
+      "guest_os_type": "RedHat_64",
+      "http_directory": "http",
+      "iso_checksum_type": "sha256",
+      "iso_checksum_url": "{{ user `iso_url` }}/sha256sum.txt",
+      "iso_url": "{{ user `iso_url` }}/{{ user `iso_name` }}",
+      "ssh_username": "root",
+      "ssh_password": "pegasus",
+      "ssh_port": 22,
+      "ssh_wait_timeout": "45m",
+      "shutdown_command": "/sbin/halt -h --poweroff",
+      "guest_additions_mode": "disable",
+      "headless": true,
+      "virtualbox_version_file": ".vbox_version",
+      "output_directory": "output/base",
+      "vm_name": "{{ user `out_file` }}",
+      "vboxmanage": [
+        [ "modifyvm", "{{ .Name }}", "--cpus", "1" ],
+        [ "modifyvm", "{{ .Name }}", "--memory", "1024" ],
+        [ "modifyvm", "{{ .Name }}", "--clipboard", "bidirectional" ]
+      ]
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "start_retry_timeout": "5m",
+      "environment_vars": [
+        "USERNAME=tutorial",
+        "PASSWD=pegasus",
+        "URL=http://download.pegasus.isi.edu/pegasus/{{ user `vm_version` }}/pegasus-{{ user `vm_version` }}-1.el7.x86_64.rpm"
+      ],
+      "scripts": [
+        "scripts/user.sh",
+        "scripts/pegasus.sh",
+        "scripts/update.sh"
+      ]
+    },
+    {
+      "type": "shell",
+      "pause_before": "1m",
+      "inline": [
+        "sleep 5"
+      ]
+    }
+  ]
+}
