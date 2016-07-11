@@ -465,14 +465,18 @@ public class CondorGenerator extends Abstract {
                         append( " to " ).append( job.getID() );
                 mLogger.log( sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
             }
-
-            //PM-1105 assign a DAGMAN priority that mirrors the condor
-            //job priority if set, only if DAGMAN priority is not already set
-            if( !job.dagmanVariables.containsKey( Dagman.PRIORITY_KEY) ){
-                //check again if condor priority is set and mirror it
-                if( job.condorVariables.containsKey( Condor.PRIORITY_KEY)){
-                    job.dagmanVariables.construct( Dagman.PRIORITY_KEY, 
-                                                   (String)job.condorVariables.get(Condor.PRIORITY_KEY) );
+            
+            // HTCondor ticket 5749 . We can assign DAG priorities only if
+            // detected condor version is greater than 8.5.7
+            if( mCondorVersion >= CondorVersion.v_8_5_7 ){
+                //PM-1105 assign a DAGMAN priority that mirrors the condor
+                //job priority if set, only if DAGMAN priority is not already set
+                if( !job.dagmanVariables.containsKey( Dagman.PRIORITY_KEY) ){
+                    //check again if condor priority is set and mirror it
+                    if( job.condorVariables.containsKey( Condor.PRIORITY_KEY)){
+                        job.dagmanVariables.construct( Dagman.PRIORITY_KEY, 
+                                                       (String)job.condorVariables.get(Condor.PRIORITY_KEY) );
+                    }
                 }
             }
            
