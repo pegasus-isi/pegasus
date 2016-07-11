@@ -52,6 +52,12 @@ public class CondorVersion {
     public static final long v_8_3_6 = CondorVersion.numericValue( "8.3.6" );
     
     /**
+     * Predefined Constant for condor version 8.5.7
+     */
+    public static final long v_8_5_7 = CondorVersion.numericValue( "8.5.7" );
+    
+    
+    /**
      * The maximum number of components version can have. MAJOR, MINOR, PATCH
      */
     private static final  int MAX_NUMBER_OF_VERSION_COMPONENTS = 3;
