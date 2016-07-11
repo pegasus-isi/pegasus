@@ -1,0 +1,38 @@
+# This is the transformation catalog. It lists information about each of the
+# executables that are used by the workflow.
+
+tr e.wrapper {
+	site local {
+	    pfn "{{workflowdir}}/bin/epa-wrapper.sh"
+	    arch "{{arch}}"
+	    os "{{os}}"
+	    type "STAGEABLE"
+	}
+}
+
+tr e.setup {
+	site local {
+	    pfn "{{workflowdir}}/bin/setupvar.R"
+	    arch "{{arch}}"
+	    os "{{os}}"
+	    type "STAGEABLE"
+	}
+}
+
+tr e.WA {
+	site local {
+        pfn "{{workflowdir}}/bin/weighted.average.R"
+        arch "{{arch}}"
+        os "{{os}}"
+        type "STAGEABLE"
+    }
+}
+
+tr e.cp {
+	site local {
+        pfn "{{workflowdir}}/bin/cumulative.percentiles.R"
+        arch "{{arch}}"
+        os "{{os}}"
+        type "STAGEABLE"
+    }
+}
