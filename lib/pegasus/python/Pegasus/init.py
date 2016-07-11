@@ -107,7 +107,8 @@ class Workflow(object):
                 ("Process", "process"),
                 ("Pipeline", "pipeline"),
                 ("Split", "split"),
-                ("Merge", "merge")
+                ("Merge", "merge"),
+                ("EPA (requires R)", "r-epa")
             ]
             if self.tutorial_setup != "osg":
                 examples.append( ("Diamond", "diamond"))
@@ -165,7 +166,10 @@ class Workflow(object):
 
         if self.generate_tutorial:
             self.copy_template("%s/tc.txt" % self.tutorial, "tc.txt")
-            self.copy_template("%s/daxgen.py" % self.tutorial, "daxgen.py")
+            if self.tutorial == "r-epa":
+                self.copy_template("%s/daxgen.R" % self.tutorial, "daxgen.R")
+            else:
+                self.copy_template("%s/daxgen.py" % self.tutorial, "daxgen.py")
 
             if self.tutorial == "diamond":
 
@@ -181,6 +185,15 @@ class Workflow(object):
                 # Split workflow input file
                 self.copy_template("split/pegasus.html", "input/pegasus.html")
                 self.copy_template("plan_cluster_dax.sh", "plan_cluster_dax.sh", mode=0755)
+
+            elif self.tutorial == "r-epa":
+                # Executables used by the R-EPA workflow
+                self.mkdir("bin")
+                self.copy_template("r-epa/epa-wrapper.sh", "bin/epa-wrapper.sh", mode=0755)
+                self.copy_template("r-epa/setupvar.R", "bin/setupvar.R", mode=0755)
+                self.copy_template("r-epa/weighted.average.R", "bin/weighted.average.R", mode=0755)
+                self.copy_template("r-epa/cumulative.percentiles.R", "bin/cumulative.percentiles.R", mode=0755)
+
         else:
             self.copy_template("tc.txt", "tc.txt")
             if self.daxgen == "python":
