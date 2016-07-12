@@ -399,23 +399,30 @@ def file_browser(username, root_wf_id, wf_id):
     return 'Error', 500
 
 
-@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/files', methods=['GET'])
-def file_list(username, root_wf_id, wf_id):
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/files/', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/files/<path:path>', methods=['GET'])
+def file_list(username, root_wf_id, wf_id, path=''):
     try:
         dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id=wf_id)
         details = dashboard.get_workflow_details(wf_id)
         submit_dir = details.submit_dir
 
         if os.path.isdir(submit_dir):
-            folders = {}
+            dest = os.path.join(submit_dir, path)
 
-            for folder, sub_folders, files in os.walk(submit_dir):
-                folder = '/' + folder.replace(submit_dir, '', 1).lstrip('/')
-                folders[folder] = {'D': [], 'F': files}
+            if os.path.isfile(dest):
+                return '', 204
 
-                for sub_folder in sub_folders:
-                    full_sub_folder = os.path.normpath(os.path.join(folder, sub_folder))
-                    folders[folder]['D'].append(full_sub_folder)
+            folders = {
+                'dirs': [],
+                'files': []
+            }
+
+            for entry in os.listdir(dest):
+                if os.path.isdir(os.path.join(dest, entry)):
+                    folders['dirs'].append(os.path.normpath(os.path.join(path, entry)))
+                else:
+                    folders['files'].append(os.path.normpath(os.path.join(path, entry)))
 
             return json.dumps(folders), 200, {'Content-Type': 'application/json'}
 
