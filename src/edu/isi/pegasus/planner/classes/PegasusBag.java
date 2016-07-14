@@ -31,6 +31,7 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
+import edu.isi.pegasus.planner.mapper.StagingMapper;
 import edu.isi.pegasus.planner.mapper.SubmitMapper;
 import java.util.Map;
 
@@ -137,6 +138,13 @@ public class PegasusBag
      * submit directories in the deep hierarchy structure.
      */
     public static final Integer PEGASUS_SUBMIT_DIR_FACTORY = new Integer( 12 );
+    
+    
+    /**
+     * The handle to the file factory that is used to create the relative
+     *  directories on the staging site
+     */
+    public static final Integer PEGASUS_STAGING_MAPPER = new Integer( 13 );
 
     /**
      * The handle to the <code>PegasusProperties</code>.
@@ -202,9 +210,14 @@ public class PegasusBag
     private PlannerMetrics mPMetrics;
     
     /**
-     * The handle to the file factory for the submit dir.
+     * The handle to the submit mapper
      */
     private SubmitMapper mSubmitDirectoryCreator;
+    
+    /**
+     * The handle to the staging mapper
+     */
+    private StagingMapper mStagingMapper;
     
     /**
      * The default constructor.
@@ -311,9 +324,16 @@ public class PegasusBag
                     valid = false;
                 break;
                 
-            case 12: //File Factory
+            case 12: //Submit Mapper
                 if ( value != null && value instanceof SubmitMapper )
                     mSubmitDirectoryCreator = (SubmitMapper) value;
+                else
+                    valid = false;
+                break;
+             
+            case 13: //Staging Mapper
+                if ( value != null && value instanceof StagingMapper )
+                    mStagingMapper = (StagingMapper) value;
                 else
                     valid = false;
                 break;
@@ -402,8 +422,11 @@ public class PegasusBag
             case 11://PLANNER METRICS
                 return this.mPMetrics;
                 
-            case 12://FILE Factory
+            case 12://Submit Mapper
                 return this.mSubmitDirectoryCreator;
+                
+            case 13://Staging Mapper
+                return this.mStagingMapper;
                 
             default:
                 throw new RuntimeException(
@@ -513,6 +536,15 @@ public class PegasusBag
     public SubmitMapper getSubmitDirFileFactory(){
         return ( SubmitMapper )get(PegasusBag.PEGASUS_SUBMIT_DIR_FACTORY );
     }
+    
+    /**
+     * A convenience method to return the Staging Mapper
+     * 
+     * @return staging mapper
+     */
+    public StagingMapper getStagingMapper() {
+        return ( StagingMapper )get(PegasusBag.PEGASUS_STAGING_MAPPER );
+    }
 
 
 
@@ -534,4 +566,6 @@ public class PegasusBag
         return k;
 
     }
+
+    
 }

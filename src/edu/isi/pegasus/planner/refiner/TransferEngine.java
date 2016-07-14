@@ -253,6 +253,9 @@ public class TransferEngine extends Engine {
         mSubmitDirMapper =  SubmitMapperFactory.loadInstance( bag,  new File(mPOptions.getSubmitDirectory()));
         bag.add(PegasusBag.PEGASUS_SUBMIT_DIR_FACTORY, mSubmitDirMapper );
         
+        mStagingMapper = StagingMapperFactory.loadInstance(bag);
+        bag.add(PegasusBag.PEGASUS_STAGING_MAPPER, mStagingMapper );
+        
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mSRMServiceURLToMountPointMap = constructSiteToSRMServerMap( mProps );
         
@@ -275,7 +278,6 @@ public class TransferEngine extends Engine {
 
         mOutputSite    = mPOptions.getOutputSite(); 
         mOutputMapper  = OutputMapperFactory.loadInstance( reducedDag, bag);
-        mStagingMapper = StagingMapperFactory.loadInstance(bag);
 
         mWorkflowCache = this.initializeWorkflowCacheFile( reducedDag );
 
