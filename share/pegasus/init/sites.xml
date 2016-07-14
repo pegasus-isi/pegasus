@@ -52,7 +52,7 @@
         </directory>
 
 {% endif %}
-{% if config == "condorpool" or  tutorial_setup == "submit-host"  %}
+{% if config == "condorpool" or  tutorial_setup == "submit-host" or tutorial_setup == "xsede-bosco" %}
         <!-- These profiles tell Pegasus that the site is a plain Condor pool -->
         <profile namespace="pegasus" key="style">condor</profile>
         <profile namespace="condor" key="universe">vanilla</profile>

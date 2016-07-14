@@ -99,7 +99,8 @@ class Workflow(object):
             self.tutorial_setup = optionlist("What environment is tutorial to be setup for?", [
                 ("Local Machine", "submit-host"),
                 ("USC HPCC Cluster", "usc-hpcc"),
-                ("OSG from ISI submit node", "osg")
+                ("OSG from ISI submit node", "osg"),
+                ("XSEDE, with Bosco", "xsede-bosco")
             ])
 
             # figure out what example options to provide
@@ -154,6 +155,8 @@ class Workflow(object):
             self.os = "linux"
             if not yesno("Do you want to use Condor file transfers", "y"):
                 self.staging_site = "isi_workflow"
+        elif self.tutorial_setup == "xsede-bosco":
+            self.sitename = "condorpool"
         return
 
 
