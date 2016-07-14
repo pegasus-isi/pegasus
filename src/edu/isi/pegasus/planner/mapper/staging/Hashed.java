@@ -15,10 +15,7 @@
  */
 package edu.isi.pegasus.planner.mapper.staging;
 
-import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.mapper.MapperException;
@@ -81,7 +78,7 @@ public class Hashed extends Abstract{
      * files don't get staged multiple times to the same staging site, if they 
      * are required by more than one job.
      */
-    private Map<String,Map<String,String>> mSiteLFNAddOnMap;
+    private Map<String,Map<String,File>> mSiteLFNAddOnMap;
     
     /**
      * We track last seen job as this mapper assigns files per job encountered.
@@ -99,7 +96,7 @@ public class Hashed extends Abstract{
      */
     public void initialize( PegasusBag bag, Properties properties ){
         super.initialize(bag, properties);
-        mSiteLFNAddOnMap = new HashMap<String,Map<String,String>>();
+        mSiteLFNAddOnMap = new HashMap<String,Map<String,File>>();
         
          // create hashed, and levelled directories
         try {
@@ -161,7 +158,8 @@ public class Hashed extends Abstract{
                                            ex);
             }
         }
-        return this.mLastAddon;
+        
+        return trackAndRetrieveLFNAddOn( site.getSiteHandle(), lfn, mLastAddon);
     }
 
     
@@ -182,11 +180,11 @@ public class Hashed extends Abstract{
      * 
      * @return  the actual addon to use. Returns existing addon if exists on site
      */
-    private String trackAndRetrieveLFNAddOn( String site, String lfn, String addOn ){
-        String actualAddon = addOn;
+    private File trackAndRetrieveLFNAddOn( String site, String lfn, File addOn ){
+        File actualAddon = addOn;
         if(  mSiteLFNAddOnMap.containsKey( site )  ){
-            Map<String,String> m = mSiteLFNAddOnMap.get( site );
-            String existing = m.get( lfn );
+            Map<String,File> m = mSiteLFNAddOnMap.get( site );
+            File existing = m.get( lfn );
             if( existing == null ){
                 //no existing addon tracked for LFN
                 m.put( lfn, addOn );
@@ -196,8 +194,8 @@ public class Hashed extends Abstract{
             }
         }
         else{           
-            Map<String,String> m = new HashMap();
-            m.put( lfn, addOn );
+            Map<String,File> m = new HashMap();
+            m.put( lfn, addOn);
             mSiteLFNAddOnMap.put( site, m );
         }
         return actualAddon;
