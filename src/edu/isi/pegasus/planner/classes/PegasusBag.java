@@ -138,7 +138,7 @@ public class PegasusBag
      * The handle to the file factory that is used to create the relative
      * submit directories in the deep hierarchy structure.
      */
-    public static final Integer PEGASUS_SUBMIT_DIR_FACTORY = new Integer( 12 );
+    public static final Integer PEGASUS_SUBMIT_MAPPER = new Integer( 12 );
     
     
     /**
@@ -213,7 +213,7 @@ public class PegasusBag
     /**
      * The handle to the submit mapper
      */
-    private SubmitMapper mSubmitDirectoryCreator;
+    private SubmitMapper mSubmitMapper;
     
     /**
      * The handle to the staging mapper
@@ -327,7 +327,7 @@ public class PegasusBag
                 
             case 12: //Submit Mapper
                 if ( value != null && value instanceof SubmitMapper )
-                    mSubmitDirectoryCreator = (SubmitMapper) value;
+                    mSubmitMapper = (SubmitMapper) value;
                 else
                     valid = false;
                 break;
@@ -424,7 +424,7 @@ public class PegasusBag
                 return this.mPMetrics;
                 
             case 12://Submit Mapper
-                return this.mSubmitDirectoryCreator;
+                return this.mSubmitMapper;
                 
             case 13://Staging Mapper
                 return this.mStagingMapper;
@@ -534,8 +534,8 @@ public class PegasusBag
      * 
      * @return file factory
      */
-    public SubmitMapper getSubmitDirFileFactory(){
-        return ( SubmitMapper )get(PegasusBag.PEGASUS_SUBMIT_DIR_FACTORY );
+    public SubmitMapper getSubmitMapper(){
+        return ( SubmitMapper )get(PegasusBag.PEGASUS_SUBMIT_MAPPER );
     }
     
     /**

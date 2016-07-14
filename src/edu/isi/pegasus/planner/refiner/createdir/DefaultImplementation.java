@@ -166,7 +166,7 @@ public class DefaultImplementation implements Implementation {
         //we use mkdir directly
         mUseMkdir =  bag.getPegasusProperties().transferWorkerPackage();
         
-        mSubmitDirFactory = bag.getSubmitDirFileFactory();
+        mSubmitDirFactory = bag.getSubmitMapper();
     }
     
     /**

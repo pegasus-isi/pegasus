@@ -177,7 +177,7 @@ public class Cleanup implements CleanupImplementation{
         mTCHandle        = bag.getHandleToTransformationCatalog(); 
         mLogger          = bag.getLogger();
         mPlannerCache     = bag.getHandleToPlannerCache();
-        mSubmitDirFactory = bag.getSubmitDirFileFactory();
+        mSubmitDirFactory = bag.getSubmitMapper();
     }
 
 

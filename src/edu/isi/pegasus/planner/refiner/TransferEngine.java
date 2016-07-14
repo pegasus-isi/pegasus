@@ -251,7 +251,7 @@ public class TransferEngine extends Engine {
         super( bag );
 
         mSubmitDirMapper =  SubmitMapperFactory.loadInstance( bag,  new File(mPOptions.getSubmitDirectory()));
-        bag.add(PegasusBag.PEGASUS_SUBMIT_DIR_FACTORY, mSubmitDirMapper );
+        bag.add(PegasusBag.PEGASUS_SUBMIT_MAPPER, mSubmitDirMapper );
         
         mStagingMapper = StagingMapperFactory.loadInstance(bag);
         bag.add(PegasusBag.PEGASUS_STAGING_MAPPER, mStagingMapper );

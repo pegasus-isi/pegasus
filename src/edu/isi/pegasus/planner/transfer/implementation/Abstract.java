@@ -233,7 +233,7 @@ public abstract class Abstract implements Implementation{
         mLogger    = bag.getLogger();
         mSiteStore = bag.getHandleToSiteStore();        
         mTCHandle  = bag.getHandleToTransformationCatalog();
-        mSubmitDirFactory = bag.getSubmitDirFileFactory();
+        mSubmitDirFactory = bag.getSubmitMapper();
         
         //build up the set of disabled chmod sites
         mDisabledChmodSites = determineDisabledChmodSites( mProps.getChmodDisabledSites() );
