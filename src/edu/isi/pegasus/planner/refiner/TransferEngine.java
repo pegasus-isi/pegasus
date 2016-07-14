@@ -1824,7 +1824,7 @@ public class TransferEngine extends Engine {
                                           FileServer.OPERATION operation ,
                                           File addOn,
                                           String lfn ){
-        return mStagingMapper.map(job, addOn, lfn, entry,  operation);
+        return mStagingMapper.map(job, addOn, entry,  operation, lfn );
         
     }
     /**
