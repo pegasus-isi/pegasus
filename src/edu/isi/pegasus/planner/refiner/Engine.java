@@ -133,7 +133,7 @@ public abstract  class Engine {
         mPOptions = bag.getPlannerOptions();
         mTCHandle = bag.getHandleToTransformationCatalog();
         mSiteStore= bag.getHandleToSiteStore();
-        mSubmitDirMapper = bag.getSubmitDirFileFactory();
+        mSubmitDirMapper = bag.getSubmitMapper();
         loadProperties();
     }
     
