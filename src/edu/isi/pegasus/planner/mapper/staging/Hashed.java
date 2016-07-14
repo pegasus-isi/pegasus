@@ -22,8 +22,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.mapper.MapperException;
-import edu.isi.pegasus.planner.mapper.StagingMapper;
-import static edu.isi.pegasus.planner.refiner.TransferEngine.REFINER_NAME;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -38,7 +37,7 @@ import org.griphyn.vdl.euryale.VirtualHashedFileFactory;
  *
  * @author Karan Vahi
  */
-public class Hashed implements StagingMapper{
+public class Hashed extends Abstract{
     
     /**
      * The property key that indicates the multiplicator factor
@@ -58,7 +57,7 @@ public class Hashed implements StagingMapper{
     /**
      * Short description.
      */
-    private static final String DESCRIPTION = "Hashed Directory Mapper";
+    private static final String DESCRIPTION = "Hashed Directory Staging Mapper";
     
     /**
      * The property key that indicates the  number of levels to use
@@ -70,15 +69,6 @@ public class Hashed implements StagingMapper{
      */
     public static final int DEFAULT_LEVELS = 2;
     
-    /**
-     * The root of the directory tree under which other directories are created
-     */
-    private File mBaseDir;
-    
-    /**
-     * Handle to the logger
-     */
-    private LogManager mLogger;
     
     /**
      * The File Factory to use
@@ -99,7 +89,7 @@ public class Hashed implements StagingMapper{
     private String mLastSeenJobID;
     private File mLastAddon;
     
-    private SiteStore mSiteStore;
+   
 
     /**
      * Initializes the submit mapper
@@ -108,8 +98,7 @@ public class Hashed implements StagingMapper{
      * @param properties    properties that can be used to control the behavior of the mapper
      */
     public void initialize( PegasusBag bag, Properties properties ){
-        mLogger  = bag.getLogger();
-        mSiteStore = bag.getHandleToSiteStore();
+        super.initialize(bag, properties);
         mSiteLFNAddOnMap = new HashMap<String,Map<String,String>>();
         
          // create hashed, and levelled directories
@@ -175,46 +164,13 @@ public class Hashed implements StagingMapper{
         return this.mLastAddon;
     }
 
+    
     /**
-     * Maps a LFN to a location on the filesystem of a site and returns a single
-     * externally accessible URL corresponding to that location.
-     * 
-     * 
-     * @param job
-     * @param addOn
-     * @param site         the staging site
-     * @param operation    whether we want a GET or a PUT URL
-     * @param lfn          the lfn
-     * 
-     * @return the URL to file that was mapped
-     * 
-     * @throws MapperException if unable to construct URL for any reason
+     * Returns description of mapper.
+     * @return 
      */
-    public String map(  Job job, File addOn,  SiteCatalogEntry site, FileServer.OPERATION operation, String lfn  )  throws MapperException{
-        StringBuffer url = new StringBuffer();
-
-        FileServer getServer = site.selectHeadNodeScratchSharedFileServer( operation );
-        String siteHandle = site.getSiteHandle();
-        if( getServer == null ){
-            this.complainForScratchFileServer(job, operation, siteHandle);
-        }
-
-        url.append( getServer.getURLPrefix() ).
-            append( mSiteStore.getExternalWorkDirectory(getServer, siteHandle ));
-        
-        //check if we already have placed this file on the staging site
-        //use that addOn then.
-        url.append( File.separatorChar ).append( addOn );
-        
-        if( lfn != null ){
-            url.append( File.separatorChar ).append( lfn );
-        }
-
-        return url.toString();
-    }
-
     public String description() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return Hashed.DESCRIPTION;
     }
     
     /**
@@ -247,39 +203,6 @@ public class Hashed implements StagingMapper{
         return actualAddon;
     }
 
-     /**
-     * Complains for a missing head node file server on a site for a job
-     *
-     * @param job       the job
-     * @param operation the operation
-     * @param site      the site
-     */
-    private void complainForScratchFileServer( Job job,
-                                                FileServer.OPERATION operation,
-                                                String site) {
-        this.complainForScratchFileServer( job.getID(), operation, site);
-    }
-
-    /**
-     * Complains for a missing head node file server on a site for a job
-     *
-     * @param jobname  the name of the job
-     * @param operation the file server operation
-     * @param site     the site
-     */
-    private void complainForScratchFileServer( String jobname,
-                                                FileServer.OPERATION operation,
-                                                String site) {
-        StringBuffer error = new StringBuffer();
-        error.append( "[" ).append( REFINER_NAME ).append( "] ");
-        if( jobname != null ){
-            error.append( "For job (" ).append( jobname).append( ")." );
-        }
-        error.append( " File Server not specified for shared-scratch filesystem for site: ").
-              append( site );
-        throw new RuntimeException( error.toString() );
-
-    }
-
+     
    
 }
