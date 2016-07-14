@@ -21,6 +21,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import java.util.Properties;
 
 
@@ -41,10 +42,14 @@ public class StagingMapperFactory {
                                         "edu.isi.pegasus.planner.mapper.staging";
 
     /**
-     * The name of the class in the DEFAULT package, that corresponds to the
-     * default site selector.
+     * The name of the class that corresponds to the Hashed Staging Mapper
      */
-    public static final String DEFAULT_STAGING_MAPPER = "Hashed";
+    public static final String HASHED_STAGING_MAPPER = "Hashed";
+    
+    /**
+     * he name of the class that corresponds to the Flat Staging Mapper
+     */
+    public static final String FLAT_STAGING_MAPPER = "Flat";
 
 
 
@@ -60,7 +65,7 @@ public class StagingMapperFactory {
             might occur during the instantiation
      *
      * @see #DEFAULT_PACKAGE_NAME
-     * @see #DEFAULT_STAGING_MAPPER
+     * @see #HASHED_STAGING_MAPPER
      */
     public static StagingMapper loadInstance( PegasusBag bag )
                                          throws StagingMapperFactoryException {
@@ -75,11 +80,21 @@ public class StagingMapperFactory {
                 throw new RuntimeException("Invalid properties passed");
             }
             
+            //figure out the default  mapper
+            //we use Hashed as default only if pegasus.data.configuration is nonsharedfs
+            String dfault = properties.getProperty( PegasusConfiguration.PEGASUS_CONFIGURATION_PROPERTY_KEY);
+            if( dfault == null ){
+                dfault = FLAT_STAGING_MAPPER;
+            }
+            else if( dfault.equalsIgnoreCase( PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE ) ){
+                dfault = HASHED_STAGING_MAPPER;
+            }
+            
             //figure out the implementing class
             //that needs to be instantiated.
             className = properties.getProperty( StagingMapper.PROPERTY_PREFIX );
             className = ( className == null || className.trim().length() < 2) ?
-                          DEFAULT_STAGING_MAPPER :
+                          dfault :
                           className;
 
             //prepend the package name if required
