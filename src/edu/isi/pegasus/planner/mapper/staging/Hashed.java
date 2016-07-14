@@ -162,6 +162,25 @@ public class Hashed extends Abstract{
         return trackAndRetrieveLFNAddOn( site.getSiteHandle(), lfn, mLastAddon);
     }
 
+    /**
+     * Returns a virtual relative directory for the job that has been mapped already. 
+     * 
+     * @param site 
+     * @param lfn   the lfn
+     * 
+     * @return 
+     */
+    public File getRelativeDirectory( String site, String lfn ){
+        File addOn = null;
+        if(  mSiteLFNAddOnMap.containsKey( site )  ){
+            Map<String,File> m = mSiteLFNAddOnMap.get( site );
+            addOn = m.get( lfn );
+        }
+        if( addOn == null ){
+            throw new MapperException( this.description() + " unable to retrieve relative directory for lfn " + lfn + " on site " + site);
+        }
+        return addOn;
+    }
     
     /**
      * Returns description of mapper.

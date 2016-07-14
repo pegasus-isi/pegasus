@@ -101,7 +101,20 @@ public class Flat extends Abstract {
         }
         
         return addOn;
-     }
+    }
+    
+    /**
+     * Returns a virtual relative directory for the job that has been mapped already. 
+     * 
+     * @param site
+     * @param lfn   the lfn
+     * 
+     * @return 
+     */
+    public File getRelativeDirectory( String site, String lfn ){
+        return new File(".");
+    }
+    
     
     /**
      * Returns a short description of the mapper.

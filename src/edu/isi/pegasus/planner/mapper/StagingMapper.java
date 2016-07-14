@@ -60,6 +60,16 @@ public interface StagingMapper extends Mapper {
     public File mapToRelativeDirectory(Job job, SiteCatalogEntry site, String lfn );
     
     /**
+     * Returns a virtual relative directory for the job that has been mapped already. 
+     * 
+     * @param site
+     * @param lfn   the lfn
+     * 
+     * @return 
+     */
+    public File getRelativeDirectory( String site, String lfn );
+    
+    /**
      * Maps a LFN to a location on the filsystem of a site and returns a single
      * externally accessible URL corresponding to that location.
      * 
