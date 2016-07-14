@@ -44,6 +44,7 @@ import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.namespace.ENV;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.mapper.StagingMapper;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import java.io.File;
@@ -158,6 +159,11 @@ public class Transfer   implements SLS {
      */
     protected boolean mUseSymLinks;
     
+    /**
+     * Handle to the staging mapper to determine addon's for LFN's per site.
+     */
+    protected StagingMapper mStagingMapper;
+    
 
     /**
      * The default constructor.
@@ -176,6 +182,7 @@ public class Transfer   implements SLS {
         mLogger     = bag.getLogger();
         mSiteStore  = bag.getHandleToSiteStore();
         mTCHandle   = bag.getHandleToTransformationCatalog();
+        mStagingMapper = bag.getStagingMapper();
         mExtraArguments = mProps.getSLSTransferArguments();
         mStageSLSFile = mProps.stageSLSFilesViaFirstLevelStaging();
         mBypassStagingForInputs = mProps.bypassFirstLevelStagingForInputs();
@@ -414,6 +421,9 @@ public class Transfer   implements SLS {
                 else{
                     url.append( mSiteStore.getExternalWorkDirectoryURL(stagingSiteServer, stagingSite ));
                 }
+                //PM-833 append the relative staging site add on directory
+                url.append( File.separator).append( mStagingMapper.getRelativeDirectory(stagingSite, lfn) );
+                
                 url.append( File.separator ).append( lfn );
                 ft.addSource( stagingSite, url.toString() );
             }
@@ -488,10 +498,12 @@ public class Transfer   implements SLS {
         String sourceDir = workerNodeDirectory;
 
         PegasusFile pf;
+        String stagingSite = job.getStagingSiteHandle();
 
         //To do. distinguish the sls file from the other input files
         for( Iterator it = files.iterator(); it.hasNext(); ){
             pf = ( PegasusFile ) it.next();
+            String lfn = pf.getLFN();
 
             FileTransfer ft = new FileTransfer();
             //ensure that right type gets associated, especially
@@ -501,7 +513,7 @@ public class Transfer   implements SLS {
             //source
             StringBuffer url = new StringBuffer();
             url.append( "file://" ).append( sourceDir ).append( File.separator ).
-                append( pf.getLFN() );
+                append( lfn );
             ft.addSource( job.getSiteHandle(), url.toString() );
 
             //destination
@@ -511,10 +523,13 @@ public class Transfer   implements SLS {
             url.append( destDir ).append( File.separator );
  */
             //on the head node
-            url.append( mSiteStore.getExternalWorkDirectoryURL(stagingSiteServer, job.getStagingSiteHandle() ));
-            url.append( File.separator ).append( pf.getLFN() );
+            url.append( mSiteStore.getExternalWorkDirectoryURL(stagingSiteServer, stagingSite));
+            //PM-833 append the relative staging site add on directory
+            url.append( File.separator).append( mStagingMapper.getRelativeDirectory(stagingSite, lfn) );
+                
+            url.append( File.separator ).append( lfn );
             
-            ft.addDestination( job.getStagingSiteHandle(), url.toString() );
+            ft.addDestination( stagingSite, url.toString() );
 
             result.add(ft);
 
