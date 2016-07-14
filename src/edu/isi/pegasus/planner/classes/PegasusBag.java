@@ -53,7 +53,8 @@ public class PegasusBag
     public static final String PEGASUS_INFO[] = {
         "pegasus-properties", "planner-options", "replica-catalog", "site-catalog",
         "transformation-catalog", "transformation-mapper", "pegasus-logger", "site-store",
-        "planner-cache", "worker-package-map", "uses-pmc" , "planner-metrics", "pegasus-submit-dir-creator"
+        "planner-cache", "worker-package-map", "uses-pmc" , "planner-metrics", 
+        "submit-mapper", "staging-mapper"
     };
 
 
