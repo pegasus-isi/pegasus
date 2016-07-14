@@ -1742,7 +1742,7 @@ $adag-&gt;toXML( \*STDOUT, '', $xmlns );</programlisting>
       <orderedlist>
           <listitem>
               <para>Command line using <code>R CMD</code> and 
-              <code>pegasus-config</code>:</para>
+              <code>pegasus-config</code> (R version &gt;= 3.2):</para>
               <programlisting>R CMD install `pegasus-config --r`</programlisting>
           </listitem>
           <listitem>
