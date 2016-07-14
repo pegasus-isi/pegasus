@@ -761,9 +761,12 @@ public class TransferEngine extends Engine {
             throw new RuntimeException( mLogMsg );
         }
 
+        //PM-833 figure out the addOn component just once per lfn
+        File addOn = mStagingMapper.mapToRelativeDirectory(job, stagingSite, lfn);
+            
         //the get
-        String sharedScratchGetURL = this.getURLOnSharedScratch( stagingSite, job, OPERATION.get, lfn );
-        String sharedScratchPutURL = this.getURLOnSharedScratch( stagingSite, job, OPERATION.put, lfn );
+        String sharedScratchGetURL = this.getURLOnSharedScratch( stagingSite, job, OPERATION.get, addOn, lfn );
+        String sharedScratchPutURL = this.getURLOnSharedScratch( stagingSite, job, OPERATION.put, addOn, lfn );
 
         //in the planner cache we track the output files put url on staging site
         trackInPlannerCache( lfn, sharedScratchPutURL, stagingSiteHandle );
@@ -964,6 +967,7 @@ public class TransferEngine extends Engine {
             String sourceURI = null;
             
             //PM-590 Stricter checks
+            /* PM-833
             String thirdPartyDestPutURI = this.getURLOnSharedScratch( destSite, job, OPERATION.put, null );
 
 
@@ -975,17 +979,35 @@ public class TransferEngine extends Engine {
                 thirdPartyDestPutURI :
                 //construct for normal transfer
                 "file://" + mSiteStore.getInternalWorkDirectory( destSiteHandle, destRemoteDir );
-
+            */
 
             for (Iterator fileIt = pJob.getOutputFiles().iterator(); fileIt.hasNext(); ){
                 PegasusFile pf = (PegasusFile) fileIt.next();
                 String outFile = pf.getLFN();
 
                if( job.getInputFiles().contains( pf ) ){
+
+                   //PM-833 figure out the addOn component just once per lfn
+                   String lfn = pf.getLFN();
+                   File addOn = mStagingMapper.mapToRelativeDirectory(job, destSite, lfn);
+                   String thirdPartyDestPutURL = this.getURLOnSharedScratch(destSite, job, OPERATION.put, addOn, lfn);
+
+
+                   //definite inconsitency as url prefix and mount point
+                   //are not picked up from the same server
+                   boolean localTransfer = runTransferOnLocalSite( destSite, thirdPartyDestPutURL, Job.INTER_POOL_JOB );
+                   String destURL = localTransfer ?
+                                            //construct for third party transfer
+                                            thirdPartyDestPutURL :
+                                            //construct for normal transfer
+                                            "file://" + mSiteStore.getInternalWorkDirectory( destSiteHandle, destRemoteDir ) + File.separator + addOn;
+
+                   
                     String sourceURL     = null;
-                    String destURL       = destURI + File.separator + outFile;
+                    /* PM-833 String destURL       = destURI + File.separator + outFile;
                     String thirdPartyDestURL = thirdPartyDestPutURI + File.separator +
                                            outFile;
+                    */
                     FileTransfer ft      = new FileTransfer(outFile,pJob.jobName);
                     ft.setSize( pf.getSize() );
                     ft.addDestination(destSiteHandle,destURL);
@@ -994,10 +1016,10 @@ public class TransferEngine extends Engine {
                     //for the cleanup algorithm
                     //only the destination is tracked as source will have been
                     //tracked for the parent jobs
-                    trackInPlannerCache( outFile, thirdPartyDestURL, destSiteHandle );
+                    trackInPlannerCache( outFile, thirdPartyDestPutURL, destSiteHandle );
 
                     //in the workflow cache we track the get URL for the outfile
-                    String thirdPartyDestGetURL = this.getURLOnSharedScratch( destSite, job, OPERATION.get, outFile );
+                    String thirdPartyDestGetURL = this.getURLOnSharedScratch( destSite, job, OPERATION.get, addOn, outFile );
                     trackInWorkflowCache( outFile, thirdPartyDestGetURL, destSiteHandle );
 
                     //add all the possible source urls iterating through
@@ -1022,7 +1044,7 @@ public class TransferEngine extends Engine {
                         
                             sourceURL = sourceURI + File.separator + outFile;
 
-                            if(!(sourceURL.equalsIgnoreCase(thirdPartyDestURL))){
+                            if(!(sourceURL.equalsIgnoreCase(thirdPartyDestPutURL))){
                                 //add the source url only if it does not match to
                                 //the third party destination url
                                 ft.addSource(pJob.getStagingSiteHandle(), sourceURL);
@@ -1731,12 +1753,15 @@ public class TransferEngine extends Engine {
         for( Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ){
             PegasusFile pf = (PegasusFile) it.next();
             String lfn = pf.getLFN();
+            
+            //PM-833 figure out the addOn component just once per lfn
+            File addOn = mStagingMapper.mapToRelativeDirectory(job, stagingSiteEntry, lfn);
 
             //construct the URL to track in planner cache
-            String stagingSitePutURL = this.getURLOnSharedScratch( stagingSiteEntry, job, OPERATION.put, lfn);
+            String stagingSitePutURL = this.getURLOnSharedScratch( stagingSiteEntry, job, OPERATION.put, addOn, lfn);
             trackInPlannerCache( lfn, stagingSitePutURL, stagingSiteEntry.getSiteHandle() );
 
-            String stagingSiteGetURL = this.getURLOnSharedScratch( stagingSiteEntry, job, OPERATION.get, lfn);
+            String stagingSiteGetURL = this.getURLOnSharedScratch( stagingSiteEntry, job, OPERATION.get, addOn, lfn);
             trackInWorkflowCache( lfn, stagingSiteGetURL, stagingSiteEntry.getSiteHandle() );
 
         }
@@ -1837,7 +1862,7 @@ public class TransferEngine extends Engine {
      *
      * @return  the URL
      */
-    private String getURLOnSharedScratch( SiteCatalogEntry entry ,
+    private String getURLOnSharedScratchOriginal( SiteCatalogEntry entry ,
                                           Job job,
                                           FileServer.OPERATION operation ,
                                           String lfn ){
