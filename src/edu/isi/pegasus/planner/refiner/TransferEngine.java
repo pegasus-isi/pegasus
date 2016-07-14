@@ -66,6 +66,8 @@ import edu.isi.pegasus.planner.mapper.SubmitMapperFactory;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.mapper.OutputMapper;
 import edu.isi.pegasus.planner.mapper.OutputMapperFactory;
+import edu.isi.pegasus.planner.mapper.StagingMapper;
+import edu.isi.pegasus.planner.mapper.StagingMapperFactory;
 import edu.isi.pegasus.planner.mapper.output.Hashed;
 
 
@@ -186,9 +188,16 @@ public class TransferEngine extends Engine {
     private ReplicaCatalog mWorkflowCache;
 
     /**
-     * Handle to an OutputMapper that tells what
+     * Handle to an OutputMapper that tells where to place the files on the
+     * output site.
      */
     private OutputMapper mOutputMapper;
+    
+    /**
+     * Handle to an Staging Mapper that tells where to place the files on the
+     * shared scratch space on the staging site.
+     */
+    private StagingMapper mStagingMapper;
     
     /**
      * The working directory relative to the mount point of the execution pool.
@@ -264,8 +273,9 @@ public class TransferEngine extends Engine {
             throw new FactoryException("Transfer Engine ", e);
         }
 
-        mOutputSite   =  mPOptions.getOutputSite(); 
-        mOutputMapper = OutputMapperFactory.loadInstance( reducedDag, bag);
+        mOutputSite    = mPOptions.getOutputSite(); 
+        mOutputMapper  = OutputMapperFactory.loadInstance( reducedDag, bag);
+        mStagingMapper = StagingMapperFactory.loadInstance(bag);
 
         mWorkflowCache = this.initializeWorkflowCacheFile( reducedDag );
 
@@ -1203,6 +1213,7 @@ public class TransferEngine extends Engine {
         //sDirURL would be the url to the source directory.
         //dDirPutURL would be the url to the destination directoy
         //and is always a networked url.
+/* for PM-833
         String dDirPutURL = this.getURLOnSharedScratch( stagingSite, job, OPERATION.put, null );
         String dDirGetURL = this.getURLOnSharedScratch( stagingSite, job, OPERATION.get, null );
         String sDirURL = null;
@@ -1221,7 +1232,7 @@ public class TransferEngine extends Engine {
             :
             //use the default pull mode
             fileDestDir;
-
+*/
 
         for( Iterator it = searchFiles.iterator(); it.hasNext(); ){
             String sourceURL = null,destPutURL = null, destGetURL =null;
@@ -1231,6 +1242,29 @@ public class TransferEngine extends Engine {
 
             String lfn     = pf.getLFN();
             NameValue nv   = null;
+            
+            //PM-833 figure out the addOn component just once per lfn
+            File addOn = mStagingMapper.mapToRelativeDirectory(job, stagingSite, lfn);
+            
+            destPutURL = this.getURLOnSharedScratch( stagingSite, job, OPERATION.put, addOn, lfn );
+            destGetURL = this.getURLOnSharedScratch( stagingSite, job, OPERATION.get, addOn, lfn );
+            String sDirURL = null;
+            String sAbsPath = null;
+            String dAbsPath = mSiteStore.getInternalWorkDirectory( stagingSiteHandle, eRemoteDir ) + File.separator + addOn;
+        
+        
+            //file dest dir is destination dir accessed as a file URL
+            String fileDestDir = scheme + "://" + dAbsPath;
+                
+            //check if the execution pool is third party or not
+            boolean runTransferOnLocalSite = runTransferOnLocalSite( stagingSite, destPutURL, Job.STAGE_IN_JOB);
+            String destDir = ( runTransferOnLocalSite ) ?
+                //use the full networked url to the directory
+                destPutURL
+                :
+                //use the default pull mode
+                fileDestDir;
+            
 
             //see if the pf is infact an instance of FileTransfer
             if( pf instanceof FileTransfer ){
@@ -1356,6 +1390,7 @@ public class TransferEngine extends Engine {
                 if( destPutURL == null ){
                     //no staging of executables case. 
                     //we construct destination URL to file.
+                    /* PM-833
                     StringBuffer destPFN = new StringBuffer();
                     if( symLinkSelectedLocation ){
                         //we use the file URL location to dest dir
@@ -1370,6 +1405,13 @@ public class TransferEngine extends Engine {
                     destPFN.append( File.separator).append( lfn );
                     destPutURL = destPFN.toString();
                     destGetURL = dDirGetURL + File.separator + lfn;
+                    */
+                    if( symLinkSelectedLocation ){
+                        //we use the file URL location to dest dir
+                        //in case we are symlinking
+                        //destPFN.append( fileDestDir );
+                        destPutURL =  this.replaceProtocolFromURL( destPutURL );
+                    }
                 }
             
 
@@ -1382,7 +1424,8 @@ public class TransferEngine extends Engine {
                 //match the directory url knowing that lfn and
                 //(source and dest pool) are same
                 try{
-                    if(sourceURL.equalsIgnoreCase(dDirPutURL + File.separator + lfn)||
+                    //PM-833if(sourceURL.equalsIgnoreCase(dDirPutURL + File.separator + lfn)||
+                    if(sourceURL.equalsIgnoreCase( destPutURL )||
                          ( selLoc.getResourceHandle().equalsIgnoreCase( stagingSiteHandle ) &&
                            lfn.equals( sourceURL.substring(sourceURL.lastIndexOf(File.separator) + 1)) &&
                            //sAbsPath.equals( dAbsPath )
@@ -1766,6 +1809,24 @@ public class TransferEngine extends Engine {
          mWorkflowCache.insert( lfn, pfn, site );
     }
 
+    /**
+     * Returns a URL on the shared scratch of the staging site
+     *
+     * @param entry         the SiteCatalogEntry for the associated stagingsite
+     * @param job           the job
+     * @param operation     the FileServer operation for which we need the URL
+     * @param lfn           the LFN can be null to get the path to the directory
+     *
+     * @return  the URL
+     */
+    private String getURLOnSharedScratch( SiteCatalogEntry entry ,
+                                          Job job,
+                                          FileServer.OPERATION operation ,
+                                          File addOn,
+                                          String lfn ){
+        return mStagingMapper.map(job, addOn, lfn, entry,  operation);
+        
+    }
     /**
      * Returns a URL on the shared scratch of the staging site
      *

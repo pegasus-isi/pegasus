@@ -97,7 +97,7 @@ public class Hashed implements StagingMapper{
      * We track last seen job as this mapper assigns files per job encountered.
      */
     private String mLastSeenJobID;
-    private String mLastAddon;
+    private File mLastAddon;
     
     private SiteStore mSiteStore;
 
@@ -110,13 +110,13 @@ public class Hashed implements StagingMapper{
     public void initialize( PegasusBag bag, Properties properties ){
         mLogger  = bag.getLogger();
         mSiteStore = bag.getHandleToSiteStore();
-        Map<String,String> m = new HashMap();
+        mSiteLFNAddOnMap = new HashMap<String,Map<String,String>>();
         
          // create hashed, and levelled directories
         try {
             //we are interested in relative paths only
             //the intial path is determined from the site catalog entries
-            HashedFileFactory creator = new VirtualHashedFileFactory( "" );
+            HashedFileFactory creator = new VirtualHashedFileFactory( "." );
 
             int multiplicator = Hashed.DEFAULT_MULTIPLICATOR_FACTOR;
             if( properties.containsKey( Hashed.MULIPLICATOR_PROPERTY_KEY) ){
@@ -151,20 +151,46 @@ public class Hashed implements StagingMapper{
     }
     
     /**
+     * Returns a virtual relative directory for the job. 
+     * 
+     * @param job   the job
+     * @param site  site catalog entry
+     * @param lfn   the lfn
+     * 
+     * @return 
+     */
+    public File mapToRelativeDirectory(Job job, SiteCatalogEntry site, String lfn) {
+        //figure out the addon
+        if( this.mLastSeenJobID == null || !job.getID().equals( this.mLastSeenJobID ) ){
+            //we create a new add on as a new job encountered
+            this.mLastSeenJobID = job.getID();
+            try {
+                this.mLastAddon = this.mFactory.createRelativeFile(lfn).getParentFile();
+            } catch (IOException ex) {
+                throw new MapperException( "Unable to determine relative shared scratch directory for LFN " + lfn +
+                                           " on site " + site,
+                                           ex);
+            }
+        }
+        return this.mLastAddon;
+    }
+
+    /**
      * Maps a LFN to a location on the filesystem of a site and returns a single
      * externally accessible URL corresponding to that location.
      * 
      * 
      * @param job
-     * @param lfn          the lfn
+     * @param addOn
      * @param site         the staging site
      * @param operation    whether we want a GET or a PUT URL
+     * @param lfn          the lfn
      * 
      * @return the URL to file that was mapped
      * 
      * @throws MapperException if unable to construct URL for any reason
      */
-    public String map(  Job job, String lfn  , SiteCatalogEntry site, FileServer.OPERATION operation ) throws MapperException{
+    public String map(  Job job, File addOn,  SiteCatalogEntry site, FileServer.OPERATION operation, String lfn  )  throws MapperException{
         StringBuffer url = new StringBuffer();
 
         FileServer getServer = site.selectHeadNodeScratchSharedFileServer( operation );
@@ -176,22 +202,9 @@ public class Hashed implements StagingMapper{
         url.append( getServer.getURLPrefix() ).
             append( mSiteStore.getExternalWorkDirectory(getServer, siteHandle ));
         
-        //figure out the addon
-        if( this.mLastSeenJobID == null || !job.getID().equals( this.mLastSeenJobID ) ){
-            //we create a new add on as a new job encountered
-            this.mLastSeenJobID = job.getID();
-            try {
-                this.mLastAddon = this.mFactory.createRelativeFile(lfn).getParent();
-            } catch (IOException ex) {
-                throw new MapperException( "Unable to determine relative shared scratch directory for LFN " + lfn +
-                                           " on site " + site,
-                                           ex);
-            }
-        }
-        
         //check if we already have placed this file on the staging site
         //use that addOn then.
-        url.append( File.separatorChar ).append( trackAndRetrieveLFNAddOn(siteHandle, lfn, mLastAddon) );
+        url.append( File.separatorChar ).append( addOn );
         
         if( lfn != null ){
             url.append( File.separatorChar ).append( lfn );
@@ -268,4 +281,5 @@ public class Hashed implements StagingMapper{
 
     }
 
+   
 }
