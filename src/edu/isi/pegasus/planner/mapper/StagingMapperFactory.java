@@ -82,11 +82,9 @@ public class StagingMapperFactory {
             
             //figure out the default  mapper
             //we use Hashed as default only if pegasus.data.configuration is nonsharedfs
-            String dfault = properties.getProperty( PegasusConfiguration.PEGASUS_CONFIGURATION_PROPERTY_KEY);
-            if( dfault == null ){
-                dfault = FLAT_STAGING_MAPPER;
-            }
-            else if( dfault.equalsIgnoreCase( PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE ) ){
+            String value = properties.getProperty( PegasusConfiguration.PEGASUS_CONFIGURATION_PROPERTY_KEY);
+            String dfault = FLAT_STAGING_MAPPER;
+            if( value != null && value.equalsIgnoreCase( PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE ) ){
                 dfault = HASHED_STAGING_MAPPER;
             }
             
