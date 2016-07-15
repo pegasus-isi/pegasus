@@ -1300,6 +1300,13 @@ public class TransferEngine extends Engine {
                 nv = ((FileTransfer)pf).getSourceURL();
                 
                 NameValue destNV = ((FileTransfer)pf).removeDestURL();
+                
+                //PM-833 we have to explicity set the remote executable
+                //especially for the staging of executables in sharedfs
+                if( lfn.equalsIgnoreCase( job.getStagedExecutableBaseName() )){
+                    job.setRemoteExecutable(  dAbsPath + File.separator + lfn );
+                }
+                
 /* PM-833
                 if( destNV == null ){
                     //the source URL was specified in the DAX
