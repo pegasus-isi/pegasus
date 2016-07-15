@@ -570,7 +570,7 @@ public class InterPoolEngine extends Engine implements Refiner {
 */
             //PM-833 for executable staging set the executable only to basename only
             //should work in all data configurations
-            job.setRemoteExecutable( job.getStagedExecutableBaseName() );
+            job.setRemoteExecutable(  "." + File.separator + job.getStagedExecutableBaseName() );
             
             //setting the job type of the job to
             //denote the executable is being staged
