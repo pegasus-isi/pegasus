@@ -650,6 +650,8 @@ public class InterPoolEngine extends Engine implements Refiner {
                         //accessible url
                         fTx.addSource(tcEntry.getResourceId(),
                                       tcEntry.getPhysicalTransformation());
+                        
+/* PM-833 handle staging site paths only in TransferEngine
                         //the destination url is the working directory for
                         //pool where it needs to be staged to
                         //always creating a third party transfer URL
@@ -671,7 +673,7 @@ public class InterPoolEngine extends Engine implements Refiner {
 
                         fTx.addDestination( stagingSiteHandle,
                                             externalStagedPath.toString() );
-
+*/
                         dependantExecutables.add( fTx );
 
                         //the jobs executable is the path to where
