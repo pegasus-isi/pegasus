@@ -1493,6 +1493,8 @@ public class TransferEngine extends Engine {
                         //destPFN.append( fileDestDir );
                         destPutURL =  this.replaceProtocolFromURL( destPutURL );
                     }
+                    //ensures symlinked location gets picked up
+                    preferredDestPutURL = destPutURL;
                 }
             
 
