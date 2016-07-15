@@ -1300,14 +1300,16 @@ public class TransferEngine extends Engine {
                 nv = ((FileTransfer)pf).getSourceURL();
                 
                 NameValue destNV = ((FileTransfer)pf).removeDestURL();
+/* PM-833
                 if( destNV == null ){
                     //the source URL was specified in the DAX
                     //no transfer of executables case
                     throw new RuntimeException( "Unreachable code . Signifies error in internal logic " );
                 }
                 else{
+*/
                     //staging of executables case
-                    destPutURL = destNV.getValue();
+//PM-833                    destPutURL = destNV.getValue();
                     destPutURL = (runTransferOnLocalSite( stagingSite, destPutURL, Job.STAGE_IN_JOB))?
                                //the destination URL is already third party
                                //enabled. use as it is
@@ -1317,7 +1319,7 @@ public class TransferEngine extends Engine {
                                
                     //for time being for this case the get url is same as put url
                     destGetURL = destPutURL;
-                }
+//PM-833                }
             }
             else{
                 //query the replica services and get hold of pfn

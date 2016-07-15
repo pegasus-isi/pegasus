@@ -543,6 +543,8 @@ public class InterPoolEngine extends Engine implements Refiner {
             //accessible url
             fTx.addSource(entry.getResourceId(),
                            entry.getPhysicalTransformation());
+
+/* PM-833 handle staging site paths only in TransferEngine
             StringBuffer externalStagedPath = new StringBuffer();
 
 
@@ -565,6 +567,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                                 + File.separator + job.getStagedExecutableBaseName();
 
             job.setRemoteExecutable(  internalStagedPath );
+*/
             
             //setting the job type of the job to
             //denote the executable is being staged
