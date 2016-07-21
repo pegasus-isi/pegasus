@@ -549,11 +549,7 @@ public class CPlanner extends Executable{
                 String launchDir = System.getProperty("user.dir") ;
                 mLogger.log( "The directory in which the planner was launched " + launchDir,
                               LogManager.CONFIG_MESSAGE_LEVEL );
-                mLogger.log( "The base submit directory for the planner " + baseDir,
-                              LogManager.CONFIG_MESSAGE_LEVEL );
-                mLogger.log( "The relative submit directory for the planner " + relativeSubmitDir,
-                              LogManager.CONFIG_MESSAGE_LEVEL );
-
+                
                 if ( !mPOptions.getForceReplan() ) {
                     //if --force-replan is not set handle
                     //rescue dags
@@ -629,6 +625,10 @@ public class CPlanner extends Executable{
             //keep the name that the user passed
             relativeExecDir = mPOptions.getRandomDir();
         }
+        mLogger.log( "The base submit directory for the workflow        " + baseDir,
+                              LogManager.CONFIG_MESSAGE_LEVEL );
+        mLogger.log( "The relative submit directory for the workflow    " + relativeSubmitDir,
+                              LogManager.CONFIG_MESSAGE_LEVEL );
         mLogger.log( "The relative execution directory for the workflow " + relativeExecDir,
                               LogManager.CONFIG_MESSAGE_LEVEL );
         mPOptions.setRandomDir( relativeExecDir );
