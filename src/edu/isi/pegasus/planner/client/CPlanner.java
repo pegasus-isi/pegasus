@@ -619,7 +619,6 @@ public class CPlanner extends Executable{
             //to go with default name which is the flow id
             //for the workflow unless a basename is specified.
             relativeExecDir = getRandomDirectory(orgDag);
-            //PM-1113mPOptions.setRandomDir(getRandomDirectory(orgDag));
         } 
         else if ( mPOptions.getRandomDir() != null ) {
             //keep the name that the user passed
@@ -632,24 +631,7 @@ public class CPlanner extends Executable{
         mLogger.log( "The relative execution directory for the workflow " + relativeExecDir,
                               LogManager.CONFIG_MESSAGE_LEVEL );
         mPOptions.setRandomDir( relativeExecDir );
-        /*
-        else if ( mPOptions.getRelativeDirectory() != null ) {
-            //the relative-dir option  is used to construct
-            //the remote directory name
-            mPOptions.setRandomDir( mPOptions.getRelativeDirectory() );
-        }
         
-        else  if ( relativeSubmitDir != null ) {
-            //the relative directory constructed on the submit host
-            //is the one required for remote sites
-            mPOptions.setRandomDir( relativeSubmitDir );
-
-            //also for time being set the relative dir option to
-            //same as the relative submit directory.
-            //the staging site directory is still dictated by --relative-dir
-            mPOptions.setRelativeDirectory( relativeSubmitDir );
-        }
-        */
         //before starting the refinement process load
         //the stampede event generator and generate events for the dax
         generateStampedeEventsForAbstractWorkflow( orgDag, mBag );
