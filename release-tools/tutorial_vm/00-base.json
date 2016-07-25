@@ -48,7 +48,8 @@
       "scripts": [
         "scripts/user.sh",
         "scripts/pegasus.sh",
-        "scripts/update.sh"
+        "scripts/update.sh",
+        "scripts/sleep.sh"
       ]
     },
     {
