@@ -53,18 +53,13 @@
       "type": "shell",
       "start_retry_timeout": "5m",
       "scripts": [
-        "scripts/update.sh"
+        "scripts/update.sh",
+        "scripts/sleep.sh"
       ]
     },
     {
       "type": "shell",
       "pause_before": "1m",
-      "inline": [
-        "sleep 5"
-        ]
-    },
-    {
-      "type": "shell",
       "environment_vars": [
         "USERNAME=tutorial"
       ],
