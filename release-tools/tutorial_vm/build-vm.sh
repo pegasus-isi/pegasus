@@ -35,7 +35,7 @@ fi
 # Step 1: Build Base Box
 #-----------------------
 
-BASE_OUT_FILE='output/base/pegasus-tutorial-base-vm.ovf'
+BASE_OUT_FILE="output/base/pegasus-tutorial-base-vm-${VM_VERSION}.ovf"
 
 packer build -var "iso_url=${URL}" \
              -var "iso_name=${ISO_NAME}" \
