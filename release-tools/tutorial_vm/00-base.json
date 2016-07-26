@@ -48,15 +48,7 @@
       "scripts": [
         "scripts/user.sh",
         "scripts/pegasus.sh",
-        "scripts/update.sh",
-        "scripts/sleep.sh"
-      ]
-    },
-    {
-      "type": "shell",
-      "pause_before": "1m",
-      "inline": [
-        "sleep 5"
+        "scripts/update.sh"
       ]
     }
   ]

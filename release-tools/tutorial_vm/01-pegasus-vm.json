@@ -53,8 +53,7 @@
       "type": "shell",
       "start_retry_timeout": "5m",
       "scripts": [
-        "scripts/update.sh",
-        "scripts/sleep.sh"
+        "scripts/update.sh"
       ]
     },
     {
