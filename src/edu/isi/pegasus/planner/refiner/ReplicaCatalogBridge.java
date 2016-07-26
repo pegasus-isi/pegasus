@@ -439,7 +439,7 @@ public class ReplicaCatalogBridge
 
         
         //check in the main replica catalog
-        if ( this.mDAXReplicaStore.isEmpty() &&
+        if ( ( this.mDAXReplicaStore.isEmpty() && mDirectoryReplicaStore.isEmpty()) &&
                 ( mRCDown || mReplicaCatalog == null )) {
             mLogger.log("Replica Catalog is either down or connection to it was never opened ",
                         LogManager.WARNING_MESSAGE_LEVEL);
