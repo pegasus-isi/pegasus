@@ -6,5 +6,6 @@ set -e
 yum -y update
 
 echo "Rebooting"
-reboot
+sh -c 'sleep 5 ; reboot' &
+killall sshd
 sleep 60
