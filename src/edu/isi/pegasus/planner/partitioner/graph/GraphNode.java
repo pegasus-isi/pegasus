@@ -304,6 +304,16 @@ public class GraphNode extends Data {
     public void setColor( int color ){
         mColor = color;
     }
+    
+    /**
+     * Gets the color of the node to the color specified
+     *
+     * @return
+     */
+    public int getColor( ){
+        return mColor;
+    }
+
 
 
     /**
