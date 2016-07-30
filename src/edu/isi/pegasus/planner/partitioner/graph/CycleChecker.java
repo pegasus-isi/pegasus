@@ -53,64 +53,52 @@ public class CycleChecker {
             GraphNode node = ( GraphNode )it.next();
             node.setColor( GraphNode.WHITE_COLOR );
         }
-
-        //add roots to the stack
-        for( Iterator<GraphNode> it = mDAG.getRoots().iterator(); it.hasNext(); ){
-            GraphNode node = ( GraphNode )it.next();
-            node.setColor( GraphNode.WHITE_COLOR);
-            stack.push( node );
-        }
         
-        //keep tracked of the reversed
-        Stack<GraphNode>visited = new Stack();
-        
-        
-        if( stack.isEmpty() ){
+        if( mDAG.getRoots().isEmpty() ){
             //sanity check if there is a cycle at the whole dag level
             //roots will return empty
-            throw new RuntimeException( "cycle in the whole workflow");
+            return true;
         }
-        
-        while( !stack.isEmpty() ){
-            GraphNode node = stack.pop();
-            node.setColor( GraphNode.GRAY_COLOR );
-            boolean allChidrenBlack = true;
-            for( Iterator it = node.getChildren().iterator(); it.hasNext(); ){
-                GraphNode child = (GraphNode)it.next();
-                int color = child.getColor();
-                switch( color ){
-                    case GraphNode.GRAY_COLOR:
-                        mCyclicEdge = new NameValue( node.getID() , child.getID() );
-                        return true;
-                    case GraphNode.WHITE_COLOR:
-                        allChidrenBlack = false;
-                        //System.out.println( "Pushed node on stack " + child.getID());
-                        stack.push( child );
-                        break;
-                    default:
-                        break;
-                }
-                        
-            }
-            if( allChidrenBlack ){
-                //System.out.println( "Colored node black A " + node.getID() );
-                node.setColor( GraphNode.BLACK_COLOR );
-            }
-            else{
-                visited.push(node);
+
+        //start the DFS
+        for( Iterator<GraphNode> it = mDAG.getRoots().iterator(); it.hasNext(); ){
+            GraphNode node = ( GraphNode )it.next();
+            if( dfsVisitForCycleDetection( node ) ){
+                return true;
             }
         }
-        
-        //all the nodes in visited stack are painted black
-        while( !visited.isEmpty() ){
-            GraphNode node = visited.pop();
-            node.setColor( GraphNode.BLACK_COLOR );
-            //System.out.println( "Colored node black B " + node.getID() );
-        }
-        
         
         return false;
     }
+    
+    public boolean dfsVisitForCycleDetection( GraphNode node ){
+        
+        node.setColor( GraphNode.GRAY_COLOR );
+        //System.out.println( "Colored node GREY  " + node.getID());
+
+        for( Iterator it = node.getChildren().iterator(); it.hasNext(); ){
+            GraphNode child = (GraphNode)it.next();
+
+            int color = child.getColor();
+            switch( color ){
+                case GraphNode.GRAY_COLOR:
+                    mCyclicEdge = new NameValue( node.getID() , child.getID() );
+                    return true;
+                case GraphNode.WHITE_COLOR:
+                    //System.out.println( "Recursive call for node " + child.getID());
+                    if( dfsVisitForCycleDetection( child ) ){
+                        return true;
+                    }
+                default:
+                    break;
+            }
+        }
+        //traversed all the children recursively
+        System.out.println( "Colored node Black " + node.getID());
+        node.setColor( GraphNode.BLACK_COLOR );
+        return false;
+    }
+        
     
     /**
      * Returns the detected cyclic edge if , hasCycles returns true
@@ -132,10 +120,41 @@ public class CycleChecker {
         g.addEdge( "A", "B");
         g.addEdge( "B", "C");
         g.addEdge( "C", "D");
-        g.addEdge( "D", "A");
+        g.addEdge( "B", "D");
         
         CycleChecker c = new CycleChecker(g);
-        c.hasCycles();
+        if ( c.hasCycles() ){
+            System.err.println( "Graph has cycles with edge " + c.getCyclicEdge() );
+        }
+        else{
+            System.out.println( "Graph has no cycles");
+        }
+        System.out.println( " --------------------------------------- ");
+     
+        
+        g = new MapGraph();
+        for( int i=1; i<=6;i++){
+            g.addNode( new GraphNode( "j"+i, "j"+i));
+        }
+        g.addEdge( "j1", "j2");
+        g.addEdge( "j1", "j3");
+        g.addEdge( "j2", "j4");
+        g.addEdge( "j3", "j4");
+        g.addEdge( "j4", "j5");
+        g.addEdge( "j4", "j6");
+        g.addEdge( "j6", "j2");
+        
+        
+        c = new CycleChecker(g);
+        if ( c.hasCycles() ){
+            System.err.println( " C has cycles with edge " + c.getCyclicEdge() );
+        }
+        else{
+            System.out.println( "Graph has no cycles");
+        }
+        System.out.println( " --------------------------------------- ");
+        
+        
     }
     
 }
