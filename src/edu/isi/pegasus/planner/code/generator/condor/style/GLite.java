@@ -276,16 +276,23 @@ public class GLite extends Abstract {
         }
         
         //PM-1116 set the task requirements as environment variables
-        //we only take value of Pegasus profile if corresponding
-        //globus profile is not set
         Globus  rsl = job.globusRSL;
+        
         for( Map.Entry<String,String> entry : Globus.rslToEnvProfiles().entrySet()){
             String rslKey = entry.getKey();
             String envKey = entry.getValue();
             
             if( rsl.containsKey(rslKey)  ){
-                //one to one mapping
-                job.envVariables.construct( envKey, (String)rsl.get(rslKey));
+                String value = (String)rsl.get(rslKey);
+                if( rslKey.equals( Globus.MAX_WALLTIME_KEY)){
+                    //handle runtime key as a special case as, as a globus profile it is in minutes
+                    //and we want in seconds
+                    long runtime = Long.parseLong( value ) * 60;
+                    value = Long.toString(runtime);
+                }
+                
+                job.envVariables.construct( envKey, value);
+                
             }
         }
         
