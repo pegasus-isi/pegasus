@@ -72,7 +72,28 @@ public class Globus extends Namespace {
         }
         return mRSLToPegasus;
     }
+    
+    
+    private static Map<String,String> mRSLToENV;
 
+    /**
+     * Maps Globus RSL keys to corresponding Env Profile Keys
+     * 
+     * @return 
+     */
+    public static Map<String,String> rslToEnvProfiles(){
+        if( mRSLToENV == null ){
+            mRSLToENV = new HashMap();
+            mRSLToENV.put( Globus.MAX_MEMORY_KEY, "PEGASUS_MEMORY");
+            mRSLToENV.put( Globus.MAX_WALLTIME_KEY, "PEGASUS_RUNTIME" );
+            mRSLToENV.put( Globus.COUNT_KEY, "PEGASUS_CORES" );
+            mRSLToENV.put( Globus.HOST_COUNT_KEY, "PEGASUS_NODES") ;
+            mRSLToENV.put( Globus.XCOUNT_KEY, "PEGASUS_PPN");
+            mRSLToENV.put( Globus.QUEUE_KEY, "PEGASUS_QUEUE" );
+            mRSLToENV.put( Globus.PROJECT_KEY, "PEGASUS_PROJECT" );
+        }
+        return mRSLToENV;
+    }
     
     /**
      * Key indicating the number of cores to be used
