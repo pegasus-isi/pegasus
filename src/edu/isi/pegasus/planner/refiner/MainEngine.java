@@ -169,7 +169,7 @@ public class MainEngine
         //check for cyclic dependencies
         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_CYCLIC_DEPENDENCY_CHECK, LoggingKeys.DAX_ID, abstractWFName );
         if( mOriginalDag.hasCycles() ){
-            NameValue nv = mReducedDag.getCyclicEdge();
+            NameValue nv = mOriginalDag.getCyclicEdge();
             throw new RuntimeException( "Cyclic dependency detected " + nv.getKey() + " -> " + nv.getValue() );
         }
         mLogger.logEventCompletion();
