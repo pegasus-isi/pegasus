@@ -83,6 +83,7 @@ public class CycleChecker {
             switch( color ){
                 case GraphNode.GRAY_COLOR:
                     mCyclicEdge = new NameValue( node.getID() , child.getID() );
+                    //System.out.println( "Cycic Edge  " + mCyclicEdge.getKey() + "->" + mCyclicEdge.getValue());
                     return true;
                 case GraphNode.WHITE_COLOR:
                     //System.out.println( "Recursive call for node " + child.getID());
@@ -118,9 +119,10 @@ public class CycleChecker {
         g.addNode( new GraphNode("D", "D"));
         
         g.addEdge( "A", "B");
-        g.addEdge( "B", "C");
+        g.addEdge( "A", "C");
         g.addEdge( "C", "D");
         g.addEdge( "B", "D");
+        g.addEdge( "D", "A");
         
         CycleChecker c = new CycleChecker(g);
         if ( c.hasCycles() ){
