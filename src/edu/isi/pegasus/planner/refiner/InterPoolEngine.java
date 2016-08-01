@@ -281,7 +281,7 @@ public class InterPoolEngine extends Engine implements Refiner {
             if ( site == null ) {
                 error = new StringBuffer();
                 error.append( "Site Selector could not map the job " ).
-                        append( job.getCompleteTCName() ).append( " to any of the execution sites " ).
+                        append( job.getCompleteTCName() ).append( " with id ").append( job.getID() ).append( " to any of the execution sites " ).
                         append( sites ).append( " using the Transformation Mapper (" ).append( this.mTCMapper.getMode() ).
                         append( ")" ).
                         append( "\n" ).
@@ -301,6 +301,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                 error = new StringBuffer();
                 error.append( "Site Selector (" ).append( mSiteSelector.description() ).
                       append( ") could not map job " ).append( job.getCompleteTCName() ).
+                      append( " with id ").append( job.getID() ).
                       append( " to any site" );
                 mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL );
                 throw new RuntimeException( error.toString() );

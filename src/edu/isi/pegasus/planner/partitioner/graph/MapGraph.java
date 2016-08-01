@@ -21,6 +21,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.planner.classes.NameValue;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -51,6 +52,11 @@ public class MapGraph implements Graph{
      * The handle to the logging manager.
      */
     private LogManager mLogger;
+    
+    /**
+     * Handle to the cycle checker
+     */
+    private CycleChecker mCycleChecker;
 
     /**
      * The default constructor.
@@ -70,6 +76,7 @@ public class MapGraph implements Graph{
     public MapGraph( boolean preserveInsertionOrder ){
         mStore = ( preserveInsertionOrder ) ? new LinkedHashMap(): new HashMap();
         mLogger =  LogManagerFactory.loadSingletonInstance();
+        mCycleChecker = new CycleChecker(this);
     }
 
 
@@ -362,7 +369,23 @@ public class MapGraph implements Graph{
         return new TopologicalSortIterator( this );
     }
 
-
+    /**
+     * Returns a boolean indicating whether a graph has cyclic edges or not.
+     * 
+     * @return boolean
+     */
+    public boolean hasCycles(){
+        return this.mCycleChecker.hasCycles();
+    }
+    
+    /**
+     * Returns the detected cyclic edge if , hasCycles returns true
+     * 
+     * @return 
+     */
+    public NameValue getCyclicEdge(){
+        return this.mCycleChecker.getCyclicEdge();
+    }
 
     /**
      * The textual representation of the graph node.

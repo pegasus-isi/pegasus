@@ -431,5 +431,22 @@ public class AggregatedJob extends Job implements Graph{
     public boolean isEmpty() {
         return this.mGraphImplementor.isEmpty();
     }
-
+    
+    /**
+     * Returns a boolean indicating whether a graph has cyclic edges or not.
+     * 
+     * @return boolean
+     */
+    public boolean hasCycles(){
+        return this.mGraphImplementor.hasCycles();
+    }
+    
+    /**
+     * Returns the detected cyclic edge if , hasCycles returns true
+     * 
+     * @return 
+     */
+    public NameValue getCyclicEdge(){
+        return this.mGraphImplementor.getCyclicEdge();
+    }
 }

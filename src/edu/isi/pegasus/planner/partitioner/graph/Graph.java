@@ -17,6 +17,7 @@
 package edu.isi.pegasus.planner.partitioner.graph;
 
 
+import edu.isi.pegasus.planner.classes.NameValue;
 import java.util.Iterator;
 import java.util.List;
 
@@ -35,7 +36,7 @@ public interface Graph
     /**
      * The version number associated with this Graph API.
      */
-    public static final String VERSION = "1.5";
+    public static final String VERSION = "1.6";
 
 
     /**
@@ -168,5 +169,20 @@ public interface Graph
      * @return boolean
      */
     public boolean isEmpty();
+    
+    
+    /**
+     * Returns a boolean indicating whether a graph has cyclic edges or not.
+     * 
+     * @return boolean
+     */
+    public boolean hasCycles();
+    
+    /**
+     * Returns the detected cyclic edge if , hasCycles returns true
+     * 
+     * @return 
+     */
+    public NameValue getCyclicEdge();
 
 }

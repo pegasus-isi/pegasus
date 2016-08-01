@@ -29,6 +29,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.FileUtils;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PlannerCache;
 import java.io.File;
 import java.io.IOException;
@@ -164,6 +165,15 @@ public class MainEngine
         //lock down on the workflow task metrics
         //the refinement process will not update them
         mOriginalDag.getWorkflowMetrics().lockTaskMetrics( true );
+        
+        //check for cyclic dependencies
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_CYCLIC_DEPENDENCY_CHECK, LoggingKeys.DAX_ID, abstractWFName );
+        if( mOriginalDag.hasCycles() ){
+            NameValue nv = mReducedDag.getCyclicEdge();
+            throw new RuntimeException( "Cyclic dependency detected " + nv.getKey() + " -> " + nv.getValue() );
+        }
+        mLogger.logEventCompletion();
+        
 
         mRedEng     = new DataReuseEngine( mOriginalDag, mBag );
         mReducedDag = mRedEng.reduceWorkflow(mOriginalDag, mRCBridge );
@@ -171,7 +181,7 @@ public class MainEngine
         //unmark arg strings
         //unmarkArgs();
         mOriginalDag = null;
-
+       
         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_SITESELECTION, LoggingKeys.DAX_ID, abstractWFName );
         mIPEng = new InterPoolEngine( mReducedDag, mBag );
         mIPEng.determineSites();
