@@ -94,7 +94,7 @@ public class CycleChecker {
             }
         }
         //traversed all the children recursively
-        System.out.println( "Colored node Black " + node.getID());
+        //System.out.println( "Colored node Black " + node.getID());
         node.setColor( GraphNode.BLACK_COLOR );
         return false;
     }
