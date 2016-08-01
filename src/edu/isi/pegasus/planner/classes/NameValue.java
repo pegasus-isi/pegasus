@@ -53,7 +53,7 @@ implements Comparable{
      * @param name  corresponds to the name in the NameValue pair.
      * @param value corresponds to the value for the name in the NameValue pair.
      */
-    public NameValue(String name,String value){
+   public NameValue(String name,String value){
         this.name  = name;
         this.value = value;
     }
@@ -94,6 +94,25 @@ implements Comparable{
         return this.value;
     }
 
+    /**
+     * Check if the system information matches.
+     *
+     * @param obj to be compared.
+     *
+     * @return boolean
+     */
+    public boolean equals(Object obj) {
+        boolean result = false;
+        if( obj instanceof NameValue ){
+            NameValue nv = (NameValue)obj;
+
+            result = this.getKey().equals(nv.getKey() ) &&
+                     this.getValue().equals(nv.getValue() ) ;
+        }
+        return result;
+    }
+
+    
    /**
      * Returns a copy of this object
      *

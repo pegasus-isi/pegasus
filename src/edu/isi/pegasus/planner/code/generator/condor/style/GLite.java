@@ -34,6 +34,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorEnvironmentEscape;
 import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import java.util.Map;
 
 /**
  * This implementation enables a job to be submitted via gLite to a
@@ -272,6 +273,27 @@ public class GLite extends Abstract {
         /* retrieve some keys from globus rsl and convert to gLite format */
         if( job.globusRSL.containsKey( "queue" ) ){
             job.condorVariables.construct(  "batch_queue" , (String)job.globusRSL.get( "queue" ) );
+        }
+        
+        //PM-1116 set the task requirements as environment variables
+        Globus  rsl = job.globusRSL;
+        
+        for( Map.Entry<String,String> entry : Globus.rslToEnvProfiles().entrySet()){
+            String rslKey = entry.getKey();
+            String envKey = entry.getValue();
+            
+            if( rsl.containsKey(rslKey)  ){
+                String value = (String)rsl.get(rslKey);
+                if( rslKey.equals( Globus.MAX_WALLTIME_KEY)){
+                    //handle runtime key as a special case as, as a globus profile it is in minutes
+                    //and we want in seconds
+                    long runtime = Long.parseLong( value ) * 60;
+                    value = Long.toString(runtime);
+                }
+                
+                job.envVariables.construct( envKey, value);
+                
+            }
         }
         
         /* do special handling for jobs scheduled to local site
