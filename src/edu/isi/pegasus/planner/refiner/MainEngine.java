@@ -167,6 +167,15 @@ public class MainEngine
         //lock down on the workflow task metrics
         //the refinement process will not update them
         mOriginalDag.getWorkflowMetrics().lockTaskMetrics( true );
+        
+        //check for cyclic dependencies
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_CYCLIC_DEPENDENCY_CHECK, LoggingKeys.DAX_ID, abstractWFName );
+        if( mOriginalDag.hasCycles() ){
+            NameValue nv = mReducedDag.getCyclicEdge();
+            throw new RuntimeException( "Cyclic dependency detected " + nv.getKey() + " -> " + nv.getValue() );
+        }
+        mLogger.logEventCompletion();
+        
 
         mRedEng     = new DataReuseEngine( mOriginalDag, mBag );
         mReducedDag = mRedEng.reduceWorkflow(mOriginalDag, mRCBridge );
@@ -174,16 +183,7 @@ public class MainEngine
         //unmark arg strings
         //unmarkArgs();
         mOriginalDag = null;
-        
-        //check for cyclic dependencies
-        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_CYCLIC_DEPENDENCY_CHECK, LoggingKeys.DAX_ID, abstractWFName );
-        if( mReducedDag.hasCycles() ){
-            NameValue nv = mReducedDag.getCyclicEdge();
-            throw new RuntimeException( "Cyclic dependency detected " + nv.getKey() + " -> " + nv.getValue() );
-        }
-        mLogger.logEventCompletion();
-        
-
+       
         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_SITESELECTION, LoggingKeys.DAX_ID, abstractWFName );
         mIPEng = new InterPoolEngine( mReducedDag, mBag );
         mIPEng.determineSites();
