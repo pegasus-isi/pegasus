@@ -201,6 +201,7 @@ class Workflow(object):
                 self.copy_template( "%s/pegasus-mpi-hw.c" % self.tutorial , "pegasus-mpi-hw.c")
                 self.copy_template( "%s/Makefile" % self.tutorial, "Makefile")
                 self.copy_template( "%s/mpi-hello-world-wrapper" % self.tutorial, "bin/mpi-hello-world-wrapper", mode=0755)
+                self.copy_template( "split/pegasus.html", "input/f.in")
         else:
             self.copy_template("tc.txt", "tc.txt")
             if self.daxgen == "python":
