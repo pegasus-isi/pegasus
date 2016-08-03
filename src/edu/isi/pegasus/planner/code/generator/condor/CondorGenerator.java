@@ -467,8 +467,8 @@ public class CondorGenerator extends Abstract {
             }
             
             // HTCondor ticket 5749 . We can assign DAG priorities only if
-            // detected condor version is greater than 8.5.7
-            if( mCondorVersion >= CondorVersion.v_8_5_7 ){
+            // detected condor version is greater than 8.5.6
+            if( mCondorVersion >= CondorVersion.v_8_5_6 ){
                 //PM-1105 assign a DAGMAN priority that mirrors the condor
                 //job priority if set, only if DAGMAN priority is not already set
                 if( !job.dagmanVariables.containsKey( Dagman.PRIORITY_KEY) ){
