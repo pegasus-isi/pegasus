@@ -21,7 +21,7 @@ dax.metadata("created", time.ctime())
 
 # Add input file to the DAX-level replica catalog
 fin = File("fin")
-fin.addPFN(PFN("file://" + os.getcwd() + "./input/f.in", "bluewaters"))
+fin.addPFN(PFN("file://" + os.getcwd() + "/input/f.in", "bluewaters"))
 dax.addFile(fin)
         
 
