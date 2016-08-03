@@ -67,6 +67,7 @@ class Workflow(object):
         self.user = os.environ["USER"]
         self.generate_tutorial = False
         self.tutorial_setup  = None
+        self.compute_queue = "default"
         sysname, _, _, _, machine = os.uname()
         if sysname == 'Darwin':
             self.os = "MACOSX"
@@ -100,7 +101,8 @@ class Workflow(object):
                 ("Local Machine", "submit-host"),
                 ("USC HPCC Cluster", "usc-hpcc"),
                 ("OSG from ISI submit node", "osg"),
-                ("XSEDE, with Bosco", "xsede-bosco")
+                ("XSEDE, with Bosco", "xsede-bosco"),
+                ("Bluewaters, with Glite", "bw-glite")
             ])
 
             # figure out what example options to provide
@@ -112,6 +114,9 @@ class Workflow(object):
             ]
             if self.tutorial_setup != "osg":
                 examples.append( ("Diamond", "diamond"))
+
+            if self.tutorial_setup == "bw-glite":
+                examples.append( ("MPI Hello World", "mpi-hw" ))
 
             self.tutorial = optionlist("What tutorial workflow do you want?", examples)
 
@@ -148,6 +153,7 @@ class Workflow(object):
         elif self.tutorial_setup == "usc-hpcc":
             self.sitename = "usc-hpcc"
             self.config   = "glite"
+            self.compute_queue = "default"
             # for running the whole workflow as mpi job
             self.properties["pegasus.job.aggregator"]="mpiexec"
         elif self.tutorial_setup == "osg":
@@ -157,6 +163,10 @@ class Workflow(object):
                 self.staging_site = "isi_workflow"
         elif self.tutorial_setup == "xsede-bosco":
             self.sitename = "condorpool"
+        elif self.tutorial_setup == "bw-glite":
+            self.sitename = "bluewaters"
+            self.config   = "glite"
+            self.compute_queue = "normal"
         return
 
 
@@ -184,6 +194,13 @@ class Workflow(object):
                 # Split workflow input file
                 self.copy_template("split/pegasus.html", "input/pegasus.html")
                 self.copy_template("plan_cluster_dax.sh", "plan_cluster_dax.sh", mode=0755)
+            elif self.tutorial == "mpi-hw":
+                # copy the mpi wrapper, c code and mpi example
+                # Executables used by the mpi-hw workflow
+                self.mkdir("bin")
+                self.copy_template( "%s/pegasus-mpi-hw.c" % self.tutorial , "pegasus-mpi-hw.c")
+                self.copy_template( "%s/Makefile" % self.tutorial, "Makefile")
+                self.copy_template( "%s/mpi-hello-world-wrapper" % self.tutorial, "bin/mpi-hello-world-wrapper", mode=0755)
         else:
             self.copy_template("tc.txt", "tc.txt")
             if self.daxgen == "python":

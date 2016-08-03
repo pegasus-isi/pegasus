@@ -1,0 +1,16 @@
+# This is the transformation catalog. It lists information about each of the
+# executables that are used by the workflow.
+
+
+# For submitting MPI jobs directly through condor 
+# we need a wrapper that does the aprun on the executable
+
+
+tr pegasus::mpihw {
+    site {{sitename}} {
+        pfn "{{workflowdir}}/bin/mpi-hello-world-wrapper"
+        arch "{{arch}}"
+        os "{{os}}"
+        type "INSTALLED"
+    }
+}

@@ -28,10 +28,10 @@
 
 {% endif %}
 {% if config == "glite" or config == "bosco" %}
-{% if generate_tutorial == true and tutorial_setup == "usc-hpcc" %}
+{% if generate_tutorial == true and (tutorial_setup == "usc-hpcc" or tutorial_setup== "bw-glite") %}
          <!-- Scratch directory on the cluster -->
-        <directory type="shared-scratch" path="{{workflowdir}}/hpcc/scratch">
-            <file-server operation="all" url="file://{{workflowdir}}/hpcc/scratch"/>
+        <directory type="shared-scratch" path="{{workflowdir}}/{{sitename}}/scratch">
+            <file-server operation="all" url="file://{{workflowdir}}/{{sitename}}/scratch"/>
         </directory>
 
 {% else %}
@@ -89,16 +89,22 @@
         <profile namespace="condor" key="grid_resource">pbs</profile>
 
         <!-- This tells glite what batch queue to submit jobs to -->
-        <profile namespace="pegasus" key="queue">default</profile>
+        <profile namespace="pegasus" key="queue">{{self.compute_queue}}</profile>
 	
-{% if generate_tutorial == true and tutorial_setup == "usc-hpcc" %}
+{% if generate_tutorial == true %}
 	<!--- This tells pegasus to have the auxillary jobs run on submit host 
 	      and not go through the local PBS queue -->
-	<profile namespace="pegasus"	key="auxillary.local">true</profile>
-               
+	<profile namespace="pegasus" key="auxillary.local">true</profile>
+{% endif %}
+
+{% if tutorial_setup == "usc-hpcc" %}
 	<!-- This profile tells Pegasus where the worker package is installed on the site -->
         <!-- Without this, Pegasus will automatically stage a worker package to the site -->
-        <profile namespace="env" key="PEGASUS_HOME">/home/rcf-proj/gmj/pegasus/SOFTWARE/pegasus/default</profile> 
+        <profile namespace="env"   key="PEGASUS_HOME">/home/rcf-proj/gmj/pegasus/SOFTWARE/pegasus/default</profile> 
+{% elif tutorial_setup == "bw-glite" %}
+	<!-- This profile tells Pegasus where the worker package is installed on the site -->
+        <!-- Without this, Pegasus will automatically stage a worker package to the site -->
+        <profile namespace="env"  key="PEGASUS_HOME">/mnt/a/u/training/instr006/SOFTWARE/install/pegasus/default</profile> 
 {% else %}
         <!-- This tells what account/project to use. It maps to the '-A' PBS argument. -->
         <profile namespace="pegasus" key="project">MYPROJ123</profile>
