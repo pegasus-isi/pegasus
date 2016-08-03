@@ -52,9 +52,9 @@ public class CondorVersion {
     public static final long v_8_3_6 = CondorVersion.numericValue( "8.3.6" );
     
     /**
-     * Predefined Constant for condor version 8.5.7
+     * Predefined Constant for condor version 8.5.6
      */
-    public static final long v_8_5_7 = CondorVersion.numericValue( "8.5.7" );
+    public static final long v_8_5_6 = CondorVersion.numericValue( "8.5.6" );
     
     
     /**
