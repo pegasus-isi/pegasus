@@ -10,17 +10,9 @@ mpi_hw_wf = ADAG("mpi-hello-world")
 
 # Add input file to the DAX-level replica catalog
 fin = File("fin")
-fin.addPFN(PFN("file://" + os.getcwd() + "/f.in", "bluewaters"))
+fin.addPFN(PFN("file://" + os.getcwd() + "./input/f.in", "bluewaters"))
 mpi_hw_wf.addFile(fin)
         
-# Add executables to the DAX-level transformation catalog
-# For submitting MPI jobs directly through condor without GRAM
-# we need to refer to wrapper that calls mpiexec with 
-# the mpi executable
-e_mpi_hw = Executable(namespace="pegasus", name="mpihw", os="linux", arch="x86_64", installed=True)
-e_mpi_hw.addPFN(PFN("file://" + os.getcwd() + "/mpi-hello-world-wrapper", "bluewaters"))
-mpi_hw_wf.addExecutable(e_mpi_hw)
-
 
 # Add the mpi hello world job
 mpi_hw_job = Job(namespace="pegasus", name="mpihw" )
@@ -32,19 +24,16 @@ mpi_hw_job.uses(fout, link=Link.OUTPUT)
 # tell pegasus it is an MPI job
 mpi_hw_job.addProfile( Profile( "globus", "jobtype", "mpi"))
 
-# add profiles indicating Cobalt specific parameters for BLUEWATERS
+# add profiles indicating PBS specific parameters for BLUEWATERS
 
-# pegasus.cores translates to BLAHP directive +NodeNumber
+# pegasus.cores 
 mpi_hw_job.addProfile( Profile("pegasus", "cores", "32" ))
-
-# pegasus.nodes translates to BLAHP directive +HostNumber
+# pegasus.nodes 
 mpi_hw_job.addProfile( Profile("pegasus", "nodes", "2" ))    
-
-# pegasus.ppn translates to BLAHP directive +SmpGranularity
+# pegasus.ppn 
 mpi_hw_job.addProfile( Profile("pegasus", "ppn", "16" ))    
 
-
-# pegasus.runtime is walltime in seconds. converted to +BatchWallclock in minutes
+# pegasus.runtime is walltime in seconds. 
 mpi_hw_job.addProfile( Profile("pegasus", "runtime", "300"))
 mpi_hw_wf.addJob(mpi_hw_job)
 
