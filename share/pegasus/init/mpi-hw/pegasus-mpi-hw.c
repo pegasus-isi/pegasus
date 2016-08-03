@@ -17,6 +17,7 @@ static void master( int );
 static void worker( int );
 
 static char* outputFile = NULL;
+static char* inputFile  = NULL;
 
 int main(int argc, char **argv){
   int rank;
@@ -36,8 +37,10 @@ int main(int argc, char **argv){
          case 'o':
 	  outputFile = optarg;
 	  break;
-
-        default: //similar to h
+         case 'i':
+	   inputFile = optarg;
+	   break;
+         default: //similar to h
 	  usage( argv );
 	  break;
       }
@@ -49,12 +52,19 @@ int main(int argc, char **argv){
       fprintf ( stderr, "\n");
       return 1;
     }
-  
+
+    if( inputFile == NULL){
+      fprintf( stderr, "[Master] input file is a required option\n");
+      usage( argv );
+      return 1;
+     }
     if( outputFile == NULL){
-      fprintf( stderr, "[Master] output file is a required option\n");
+      fprintf( stderr, "[Master] input file is a required option\n");
       usage( argv );
       return 1;
     }
+
+    fprintf( stdout, "[Master] input file passed on command line %s ", inputFile );
     fprintf( stdout, "[Master] output file passed on command line %s ", outputFile );
     cwd = getcwd( NULL, 2048 );
     fprintf( stdout, "[Master] job was launched in directory %s ", cwd );

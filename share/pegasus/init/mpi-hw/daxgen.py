@@ -20,7 +20,7 @@ dax.metadata("creator", "%s@%s" % (os.getlogin(), os.uname()[1]))
 dax.metadata("created", time.ctime())
 
 # Add input file to the DAX-level replica catalog
-fin = File("fin")
+fin = File("f.in")
 fin.addPFN(PFN("file://" + os.getcwd() + "/input/f.in", "bluewaters"))
 dax.addFile(fin)
         
@@ -28,6 +28,7 @@ dax.addFile(fin)
 # Add the mpi hello world job
 mpi_hw_job = Job(namespace="pegasus", name="mpihw" )
 fout = File("f.out")
+mpi_hw_job.addArguments("-i ", fin )
 mpi_hw_job.addArguments("-o ", fout )
 mpi_hw_job.uses(fin, link=Link.INPUT)
 mpi_hw_job.uses(fout, link=Link.OUTPUT)
