@@ -13,20 +13,16 @@ if len(sys.argv) != 2:
 daxfile = sys.argv[1]
 
 # Create a abstract dag
-dax = ADAG("split")
+dax = ADAG("mpi-hello-world")
 
 # Add some workflow-level metadata
 dax.metadata("creator", "%s@%s" % (os.getlogin(), os.uname()[1]))
 dax.metadata("created", time.ctime())
 
-
-# Create a abstract dag
-mpi_hw_wf = ADAG("mpi-hello-world")
-
 # Add input file to the DAX-level replica catalog
 fin = File("fin")
 fin.addPFN(PFN("file://" + os.getcwd() + "./input/f.in", "bluewaters"))
-mpi_hw_wf.addFile(fin)
+dax.addFile(fin)
         
 
 # Add the mpi hello world job
@@ -50,10 +46,10 @@ mpi_hw_job.addProfile( Profile("pegasus", "ppn", "16" ))
 
 # pegasus.runtime is walltime in seconds. 
 mpi_hw_job.addProfile( Profile("pegasus", "runtime", "300"))
-mpi_hw_wf.addJob(mpi_hw_job)
+dax.addJob(mpi_hw_job)
 
 # Write the DAX to stdout
-#mpi_hw_wf.writeXML(sys.stdout)
+#dax.writeXML(sys.stdout)
 
 f = open(daxfile, "w")
 dax.writeXML(f)
