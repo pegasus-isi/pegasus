@@ -89,7 +89,7 @@
         <profile namespace="condor" key="grid_resource">pbs</profile>
 
         <!-- This tells glite what batch queue to submit jobs to -->
-        <profile namespace="pegasus" key="queue">{{self.compute_queue}}</profile>
+        <profile namespace="pegasus" key="queue">{{compute_queue}}</profile>
 	
 {% if generate_tutorial == true %}
 	<!--- This tells pegasus to have the auxillary jobs run on submit host 
