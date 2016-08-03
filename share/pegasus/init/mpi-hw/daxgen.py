@@ -3,6 +3,21 @@
 from Pegasus.DAX3 import *
 import sys
 import os
+import time
+from Pegasus.DAX3 import *
+
+# The name of the DAX file is the first argument
+if len(sys.argv) != 2:
+        sys.stderr.write("Usage: %s DAXFILE\n" % (sys.argv[0]))
+        sys.exit(1)
+daxfile = sys.argv[1]
+
+# Create a abstract dag
+dax = ADAG("split")
+
+# Add some workflow-level metadata
+dax.metadata("creator", "%s@%s" % (os.getlogin(), os.uname()[1]))
+dax.metadata("created", time.ctime())
 
 
 # Create a abstract dag
@@ -38,5 +53,8 @@ mpi_hw_job.addProfile( Profile("pegasus", "runtime", "300"))
 mpi_hw_wf.addJob(mpi_hw_job)
 
 # Write the DAX to stdout
-mpi_hw_wf.writeXML(sys.stdout)
+#mpi_hw_wf.writeXML(sys.stdout)
 
+f = open(daxfile, "w")
+dax.writeXML(f)
+f.close()
