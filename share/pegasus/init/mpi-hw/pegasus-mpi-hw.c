@@ -32,7 +32,7 @@ int main(int argc, char **argv){
     int    c;
     FILE   *fin;
     char *cwd;
-    while ((c = getopt(argc, argv, "ho:")) != -1) {
+    while ((c = getopt(argc, argv, "ho:i:")) != -1) {
       switch (c) {    
          case 'o':
 	  outputFile = optarg;
