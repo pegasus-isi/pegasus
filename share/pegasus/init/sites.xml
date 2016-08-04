@@ -13,6 +13,9 @@
         <directory type="shared-storage" path="{{workflowdir}}/output">
             <file-server operation="all" url="file://{{workflowdir}}/output"/>
         </directory>
+{% if generate_tutorial == true and tutorial_setup == "bw-glite" %}
+	<profile namespace="env" key="JAVA_HOME">${JAVA_HOME}</profile>
+{% endif %}
 {% endif %}
     </site>
 
