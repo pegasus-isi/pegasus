@@ -10,3 +10,6 @@
 {% if generate_tutorial == true and tutorial == "split" %}
 pegasus.html file://{{workflowdir}}/input/pegasus.html   site="local"
 {% endif %}
+{% if generate_tutorial == true and tutorial == "split" %}
+f.inl file://{{workflowdir}}/input/f.in   site="local"
+{% endif %}
