@@ -21,8 +21,12 @@ dax.metadata("created", time.ctime())
 
 # Add input file to the DAX-level replica catalog
 fin = File("f.in")
-fin.addPFN(PFN("file://" + os.getcwd() + "/input/f.in", "bluewaters"))
-dax.addFile(fin)
+
+# optional if you want to put the file locations in the DAX
+# for tutorial we are picking up from --input-dir option to
+# pegasus-plan
+# fin.addPFN(PFN("file://" + os.getcwd() + "/input/f.in", "bluewaters"))
+# dax.addFile(fin)
         
 
 # Add the mpi hello world job
