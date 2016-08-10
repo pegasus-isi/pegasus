@@ -116,7 +116,7 @@ class Workflow(object):
                 examples.append( ("Diamond", "diamond"))
 
             if self.tutorial_setup == "bw-glite":
-                examples.append( ("MPI Hello World", "mpi-hw" ))
+                examples.append( ("MPI Hello World", "y" ))
 
             self.tutorial = optionlist("What tutorial workflow do you want?", examples)
 
