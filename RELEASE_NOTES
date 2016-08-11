@@ -29,6 +29,9 @@ New Features
    documentation has details on how the pegasus task requirement
    profiles map to Cobalt
    parameters. https://pegasus.isi.edu/docs/4.6.2/glite.php#glite_mappings 
+   
+   To use HTCondor on Mira, please contact the HTCondor team to point
+   you to the latest supported HTCondor installation on the system. 
 
 4) [PM-1096] - Update Pegasus' glite support to include SLURM
 
