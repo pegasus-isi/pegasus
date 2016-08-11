@@ -1,4 +1,116 @@
 ===============================
+Release Notes for Pegasus 4.6.2
+===============================
+We are happy to announce the release of Pegasus 4.6.2.  Pegasus 4.6.2
+is a minor release of Pegasus and includes improvements and bug fixes
+to the 4.6.1 release. 
+ 
+New features and Improvements in 4.6.2 are
+
+- support for kickstart wrappers that can setup a user environment 
+- support for Cobalt and SLURM schedulers via the Glite interfaces 
+- ability to do local copy of files in PegasusLite to staging site, if
+  the compute and staging site is same 
+- support for setting up Pegasus Tutorial on Bluewaters using
+  pegasus-init 
+
+New Features
+--------------
+
+1) [PM-1095] - pegasus-service init script
+
+2) [PM-1101] - Add support for gsiscp transfers
+   These will work like the scp ones, but with x509 auth instead of
+   ssh public keys. 
+
+3) [PM-1110] - put in support for cobalt scheduler at ALCF
+   Pegasus was updated to use the HTCondor Blahp support. ALCF has a
+   cobalt scheduler to schedule jobs to the BlueGene system. The
+   documentation has details on how the pegasus task requirement
+   profiles map to Cobalt
+   parameters. https://pegasus.isi.edu/docs/4.6.2/glite.php#glite_mappings 
+
+4) [PM-1096] - Update Pegasus' glite support to include SLURM
+
+5) [PM-1115] - Pegasus to check for cyclic dependencies in the DAG
+
+   Pegasus now checks for cyclic dependencies that may exist in the
+   DAX or are as a result of adding edges automatically based on data
+   depedencies 
+
+6) [PM-1116] - pass task resource requirements as environment
+   variables for job wrappers to pick up 
+   The task resource requirements are also passed as environment
+   variables for the jobs in the GLITE style. This ensures that job
+   wrappers can pick up task requirement profiles as environment
+   variables. 
+
+Improvements
+--------------
+
+1) [PM-1078] - pegasus-statistics should take comma separated list of
+   values for -s option 
+
+2) [PM-1105] - Mirror job priorities to DAGMan node priorities
+
+   The job priorities associated with jobs in the workflow are now
+   also associated as DAGMan node priorities, provided that HTCondor
+   version is 8.5.7 or higher. 
+
+3) [PM-1108] - Ability to do local copy of files in PegasusLite to
+    staging site, if the compute and staging site is same 
+    
+    The optimization implemented is implemented in the Planner's
+    pegasus lite generation code, where when constructing the
+    destination URL's for the output site it checks for 
+    a) symlinking is turned on
+    b) compute site for the job and staging site for job are same.
+
+    This means that the shared-scratch directory used on the staging
+    site is locally accessible to the compute nodes. So we can go
+    directly via the filesystem to copy the file. So instead of
+    creating a gsiftp url , will create a file url in pegasuslite
+    wrappers for the jobs running on local site. 
+
+4) [PM-1112] - enable variable expansion for regex based replica
+   catalog 
+
+   Variable expansion for Regex based replica catalogs was not
+   supported earlier. This is fixed now. 
+
+5) [PM-1117] - Support for tutorial via pegasus-init on Bluewaters
+   pegasus-init was updated to support running tutorial examples on
+   Bluewaters. To use this, users need to logon to the bleaters login
+   node and run pegasus-init. The assumption is that HTCondor is
+   running on the login node either in user space or root. 
+
+6) [PM-1111] - pegasus planner and api's should have support for ppc64
+as architecture type 
+
+Bugs Fixed
+--------------
+
+1) [PM-1087] - dashboard and pegasus-metadata don't query for sub
+   workflows 
+
+2) [PM-1089] - connect_by_submitdir should seek for braindump.txt in
+   the workflow root folder 
+
+3) [PM-1093] - disconnect in site catalog and DAX schema for specifying OSType
+
+4) [PM-1099] - x509 credentials should be transferred using
+   x509userproxy 
+
+5) [PM-1100] - Typo in rsquot, ldquot and rdquot
+
+6) [PM-1106] - pegasus-init should not allow (or should handle) spaces
+   in site name 
+
+7) [PM-1107] - pegasuslite signal handler race condition 
+
+8) [PM-1113] - make planner directory options behavior more consistent
+
+===============================
 Release Notes for PEGASUS 4.6.1
 ===============================
 We are happy to announce the release of Pegasus 4.6.1.  Pegasus 4.6.1
