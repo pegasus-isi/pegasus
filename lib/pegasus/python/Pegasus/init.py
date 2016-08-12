@@ -1,6 +1,6 @@
 import sys
 import os
-import stat
+import pwd
 from jinja2 import Environment, FileSystemLoader
 
 def choice(question, options, default):
@@ -64,7 +64,7 @@ class Workflow(object):
         self.sharedir = sharedir
         self.properties = {}
         self.home = os.environ["HOME"]
-        self.user = os.environ["USER"]
+        self.user = pwd.getpwuid(os.getuid())[0]
         self.generate_tutorial = False
         self.tutorial_setup  = None
         self.compute_queue = "default"
