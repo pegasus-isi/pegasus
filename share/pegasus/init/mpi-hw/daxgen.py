@@ -2,6 +2,7 @@
 
 from Pegasus.DAX3 import *
 import sys
+import pwd
 import os
 import time
 from Pegasus.DAX3 import *
@@ -12,11 +13,13 @@ if len(sys.argv) != 2:
         sys.exit(1)
 daxfile = sys.argv[1]
 
+USER = pwd.getpwuid(os.getuid())[0]
+
 # Create a abstract dag
 dax = ADAG("mpi-hello-world")
 
 # Add some workflow-level metadata
-dax.metadata("creator", "%s@%s" % (os.getlogin(), os.uname()[1]))
+dax.metadata("creator", "%s@%s" % (USER, os.uname()[1]))
 dax.metadata("created", time.ctime())
 
 # Add input file to the DAX-level replica catalog
@@ -27,7 +30,7 @@ fin = File("f.in")
 # pegasus-plan
 # fin.addPFN(PFN("file://" + os.getcwd() + "/input/f.in", "bluewaters"))
 # dax.addFile(fin)
-        
+
 
 # Add the mpi hello world job
 mpi_hw_job = Job(namespace="pegasus", name="mpihw" )
@@ -42,14 +45,14 @@ mpi_hw_job.addProfile( Profile( "globus", "jobtype", "mpi"))
 
 # add profiles indicating PBS specific parameters for BLUEWATERS
 
-# pegasus.cores 
+# pegasus.cores
 mpi_hw_job.addProfile( Profile("pegasus", "cores", "32" ))
-# pegasus.nodes 
-mpi_hw_job.addProfile( Profile("pegasus", "nodes", "2" ))    
-# pegasus.ppn 
-mpi_hw_job.addProfile( Profile("pegasus", "ppn", "16" ))    
+# pegasus.nodes
+mpi_hw_job.addProfile( Profile("pegasus", "nodes", "2" ))
+# pegasus.ppn
+mpi_hw_job.addProfile( Profile("pegasus", "ppn", "16" ))
 
-# pegasus.runtime is walltime in seconds. 
+# pegasus.runtime is walltime in seconds.
 mpi_hw_job.addProfile( Profile("pegasus", "runtime", "300"))
 dax.addJob(mpi_hw_job)
 
