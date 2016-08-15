@@ -1,6 +1,6 @@
 {
   "variables": {
-    "iso_url": "http://mirrors.syringanetworks.net/centos/7/isos/x86_64",
+    "iso_url": "http://mirrors.usc.edu/pub/linux/distributions/centos/7/isos/x86_64"
     "iso_name" : "CentOS-7-x86_64-Minimal-1511.iso",
     "ks_cfg": "base",
     "out_file": "base",
