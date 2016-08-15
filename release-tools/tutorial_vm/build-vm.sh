@@ -16,7 +16,7 @@ fi
 export AWS_PROFILE='vm-import@pegasus'
 export AWS_DEFAULT_PROFILE=${AWS_PROFILE}
 
-URL='http://mirrors.syringanetworks.net/centos/7/isos/x86_64'
+URL='http://mirrors.usc.edu/pub/linux/distributions/centos/7/isos/x86_64'
 ISO=`curl --silent ${URL}/sha256sum.txt | grep 'Minimal'`
 ISO_NAME=`echo $ISO | cut -d' ' -f2`
 
