@@ -75,6 +75,7 @@ packer build -var "base_ovf_path=${BASE_OUT_FILE}" \
 #----------------------------------------------------
 
 echo "scp ${VBOX_OUT_FILE} download.pegasus.isi.edu:/srv/download.pegasus.isi.edu/public_html/pegasus/${VM_VERSION}/"
+chmod 644 ${VBOX_OUT_FILE}
 scp ${VBOX_OUT_FILE} download.pegasus.isi.edu:/srv/download.pegasus.isi.edu/public_html/pegasus/${VM_VERSION}/
 
 
