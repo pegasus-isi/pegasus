@@ -3,39 +3,48 @@
 set -e
 
 REPO_DIR=`mktemp -d`
-REMOTE_REPO=download.pegasus.isi.edu:/data/webspace/download.pegasus.isi.edu/wms/download/debian
+REMOTE_REPO=download.pegasus.isi.edu:/srv/download.pegasus.isi.edu/public_html/pegasus
 
-rm -rf $REPO_DIR
-rsync -a -v -e ssh $REMOTE_REPO/ $REPO_DIR/
+for OS in debian ubuntu; do
 
-# debian
-for DIST in squeeze wheezy; do
-
-    for ARCH in i386 amd64; do
-
-        if [ ! -e dists/$DIST/main/binary-$ARCH ]; then
-            continue
-        fi
-
-        echo
-        echo "Updating Debian packages list for $DIST-$ARCH"
-        cd $REPO_DIR
-        dpkg-scanpackages --arch $ARCH dists/$DIST/main/binary-$ARCH/ /dev/null \
-            >dists/$DIST/main/binary-$ARCH/Packages
-        cd $REPO_DIR/dists/$DIST/main/binary-$ARCH/
-        gzip -9c Packages >Packages.gz
-        bzip2 -9 -k -f Packages
+    rm -rf $REPO_DIR/$OS
+    mkdir -p $REPO_DIR/$OS
+    echo "rsync -a -v -e ssh $REMOTE_REPO/$OS/. $REPO_DIR/$OS/"
+    rsync -a -v -e ssh $REMOTE_REPO/$OS/. $REPO_DIR/$OS/
+        
+    cd $REPO_DIR/$OS
+    
+    for DIST in `cd dists && ls`; do
+    
+        cd $REPO_DIR/$OS
+    
+        for ARCH in i386 amd64; do
+    
+            if [ ! -e dists/$DIST/main/binary-$ARCH ]; then
+                continue
+            fi
+    
+            echo
+            echo "Updating Debian packages list for $DIST-$ARCH"
+            cd $REPO_DIR/$OS
+            dpkg-scanpackages --arch $ARCH dists/$DIST/main/binary-$ARCH/ /dev/null \
+                >dists/$DIST/main/binary-$ARCH/Packages
+            cd $REPO_DIR/$OS/dists/$DIST/main/binary-$ARCH/
+            gzip -9c Packages >Packages.gz
+            bzip2 -9 -k -f Packages
+        done
+    
+        # generate a release file and sign the repository 
+        cd $REPO_DIR/$OS/dists/$DIST
+        apt-ftparchive -o APT::FTPArchive::Release::Codename=$DIST release . >Release
+        rm -f Release.gpg
+        gpg -abs -o Release.gpg Release
+    
     done
-
-    # generate a release file and sign the repository 
-    cd $REPO_DIR/dists/$DIST
-    apt-ftparchive -o APT::FTPArchive::Release::Codename=$DIST release . >Release
-    rm -f Release.gpg
-    gpg -abs -o Release.gpg Release
+    
+    rsync -a -v -e ssh $REPO_DIR/$OS/. $REMOTE_REPO/$OS/
 
 done
-
-rsync -a -v -e ssh $REPO_DIR/ $REMOTE_REPO/
 
 rm -rf $REPO_DIR
 

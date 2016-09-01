@@ -268,6 +268,7 @@ st_workflowstate = Table('workflowstate', metadata,
     Column('timestamp', NUMERIC(precision=16,scale=6), nullable=False, primary_key=True, default=time.time()),
     Column('restart_count', INT, nullable=False),
     Column('status', INT, nullable=True),
+    Column('reason', TEXT, nullable=True),
     **table_keywords
 )
 
@@ -425,6 +426,7 @@ st_jobstate = Table('jobstate', metadata,
     Column('state', VARCHAR(255), nullable=False, primary_key=True),
     Column('timestamp', NUMERIC(precision=16,scale=6), nullable=False, primary_key=True, default=time.time()),
     Column('jobstate_submit_seq', INT, nullable=False, primary_key=True),
+    Column('reason', TEXT, nullable=True),
     **table_keywords
 )
 
