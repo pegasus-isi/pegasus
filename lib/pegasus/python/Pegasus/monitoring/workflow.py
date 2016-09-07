@@ -806,6 +806,7 @@ class Workflow:
         self._walltime = {}                     # jid --> walltime
         self._job_site = {}                     # last site a job was planned for
         self._last_known_state = None           # last known state of the workflow. updated whenever change_wf_state is called
+        self._last_known_job = None             # last know job, used for tracking job held reason PM-749
         self._is_pmc_dag = False                # boolean to track whether monitord is parsing a PMC DAG i.e pmc-only mode of Pegasus
 
         self.init_clean()
@@ -2082,6 +2083,11 @@ class Workflow:
             return
         # Got it
         my_job = self._jobs[jobid, job_submit_seq]
+
+        # PM-749 track last job name
+        if job_state is not None:
+            self._last_known_job = my_job
+
 
         # Check for the out of order submit event case
         if my_job._sched_id is None and sched_id is not None:

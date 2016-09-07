@@ -102,6 +102,7 @@ re_parse_condor_logfile = re.compile(r"Condor log will be written to ([^,]+)")
 re_parse_condor_logfile_insane = re.compile(r"\d{2}\s{3,}(\S+)")
 re_parse_multiline_files = re.compile(r"All DAG node user log files:")
 re_parse_dagman_aborted  = re.compile(r"Received SIGUSR1")
+re_parse_job_held        = re.compile(r"\s*Hold reason:(.*)")
 
 # Constants
 MONITORD_WF_RETRY_FILE = "monitord.subwf" # filename for writing persistent sub-workflow retry information
@@ -813,6 +814,17 @@ def process_dagman_out(wf, log_line):
             #eventually the dagman exit line will trigger failure in the DB
             logger.warning("DAGMan was aborted for workflow running in directory %s" %wf._run_dir )
             return
+        elif re_parse_job_held.search(log_line) is not None:
+            #PM-749  figure out reason for job held
+            my_expr = re_parse_job_held.search(log_line)
+            my_held_reason = my_expr.group(1)
+
+            # figure out which job  was held
+            # the log line has no info. so try to fallback on last job
+            last_job = wf._last_known_job
+            if( last_job is None or last_job._job_state != "JOB_HELD"):
+                logger.error( "Last known job %s is not held. Parsed  held job with reason %s " %( last_job,my_held_reason ))
+            #print "JOB HELD REASON %s " %my_held_reason
     else:
         # Could not parse timestamp
         logger.info( "time stamp format not recognized" )
