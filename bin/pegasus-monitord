@@ -455,7 +455,7 @@ if jsd is not None:
 # --- functions ---------------------------------------------------------------------------
 #
 
-def add(wf, jobid, event, sched_id=None, status=None):
+def add(wf, jobid, event, sched_id=None, status=None, reason=None):
     """
     This function processes events related to jobs' state changes. It
     creates a new job, when needed, and by calling the workflow's
@@ -542,7 +542,7 @@ def add(wf, jobid, event, sched_id=None, status=None):
         return None
 
     # Make sure job has the updated state
-    wf.update_job_state(jobid, sched_id, my_job_submit_seq, event, status, my_time)
+    wf.update_job_state(jobid, sched_id, my_job_submit_seq, event, status, my_time, reason)
 
     return my_job_submit_seq
 
@@ -824,7 +824,12 @@ def process_dagman_out(wf, log_line):
             last_job = wf._last_known_job
             if( last_job is None or last_job._job_state != "JOB_HELD"):
                 logger.error( "Last known job %s is not held. Parsed  held job with reason %s " %( last_job,my_held_reason ))
-            #print "JOB HELD REASON %s " %my_held_reason
+
+            #PM-749 insert a new JOB_HELD_REASON event that connects to held job
+            my_event = "JOB_HELD_REASON"
+            my_jobid = last_job._exec_job_id
+            my_sched_id = last_job._sched_id
+            my_job_submit_seq = add(wf, my_jobid, my_event, sched_id=my_sched_id, reason=my_held_reason)
     else:
         # Could not parse timestamp
         logger.info( "time stamp format not recognized" )

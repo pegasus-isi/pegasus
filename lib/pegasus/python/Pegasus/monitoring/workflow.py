@@ -2068,7 +2068,7 @@ class Workflow:
         # Everything done
         return
 
-    def update_job_state(self, jobid, sched_id, job_submit_seq, job_state, status, walltime):
+    def update_job_state(self, jobid, sched_id, job_submit_seq, job_state, status, walltime, reason=None ):
         """
         This function updates a	job's state, and also writes
         a line in our jobstate.out file.
@@ -2101,6 +2101,10 @@ class Workflow:
         # Make status a string so we can print properly
         if status is not None:
             status = str(status)
+
+        # if there is a reason format it
+        if reason is not None:
+            reason = "(" + reason + ")"
 
         # Create content -- use one space only
         my_line = "%d %s %s %s %s %s %d" % (self._current_timestamp, jobid, job_state,
