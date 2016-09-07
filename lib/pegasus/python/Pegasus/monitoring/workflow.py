@@ -1181,10 +1181,16 @@ class Workflow:
         # jobid is in another state, return None
         return None
 
-    def db_send_job_brief(self, my_job, event, status=None):
+    def db_send_job_brief(self, my_job, event, status=None, reason=None):
         """
         This function sends to the DB basic state events for a
         particular job
+
+        :param my_job:
+        :param event:
+        :param status:
+        :param reason: reason for the job state event
+        :return:
         """
         # Check if database is configured
         if self._sink is None:
@@ -1199,6 +1205,7 @@ class Workflow:
         kwargs["job_inst__id"] = my_job._job_submit_seq
         kwargs["ts"] = my_job._job_state_timestamp
         kwargs["js__id"] = my_job._job_state_seq
+        kwargs["reason"] = reason
         if my_job._sched_id is not None:
             kwargs["sched__id"] = my_job._sched_id
         if status is not None:
@@ -2084,7 +2091,7 @@ class Workflow:
         # Got it
         my_job = self._jobs[jobid, job_submit_seq]
 
-        # PM-749 track last job name
+        # PM-749 track last job
         if job_state is not None:
             self._last_known_job = my_job
 
@@ -2101,10 +2108,6 @@ class Workflow:
         # Make status a string so we can print properly
         if status is not None:
             status = str(status)
-
-        # if there is a reason format it
-        if reason is not None:
-            reason = "(" + reason + ")"
 
         # Create content -- use one space only
         my_line = "%d %s %s %s %s %s %d" % (self._current_timestamp, jobid, job_state,
@@ -2247,8 +2250,9 @@ class Workflow:
             my_job._main_job_exitcode = 1
             self.db_send_job_brief( my_job, "abort.info")
             self.db_send_job_end(my_job, -1, True );
-        elif job_state == "JOB_HELD":
-            self.db_send_job_brief(my_job, "held.start")
+        elif job_state == "JOB_HELD_REASON":
+            #PM-749 we send the JOB_HELD event once we know the reason for it.
+            self.db_send_job_brief(my_job, "held.start", reason=reason)
         elif job_state == "JOB_EVICTED":
             self.db_send_job_brief(my_job, "main.term", -1)
         elif job_state == "JOB_RELEASED":
