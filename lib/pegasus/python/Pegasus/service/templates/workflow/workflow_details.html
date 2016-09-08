@@ -397,7 +397,7 @@ $(document).ready(function () {
                         </tr>
                         <tr>
                             <th>Progress</th>
-                            <td>{{ workflow.state }}</td>
+                            <td>{{ workflow.state }}{%  if workflow.reason %}'{{ workflow.reason }}'{% endif %}</td>
                         </tr>
                         <tr>
                             <th>Submit Host</th>

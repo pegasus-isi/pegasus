@@ -260,7 +260,7 @@ class WorkflowInfo(object):
                                      (ws.status == 0, 'Successful'),
                                      (ws.status != 0, 'Failed')],
                                     else_='Undefined').label('state'),
-                               ws.timestamp)
+                               ws.reason, ws.timestamp)
 
         q = q.filter(w.wf_id == self._wf_id)
         q = q.filter(w.wf_id == ws.wf_id)
