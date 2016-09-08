@@ -37,6 +37,19 @@ logger = logging.getLogger(__name__)
 # Optional imports, only generate 'warnings' if they fail
 NLSimpleParser = None
 
+def get_numeric_version( major, minor, patch):
+    """
+
+    :param major:
+    :param minor:
+    :param patch:
+    :return: int version
+    """
+
+    version = "%02d%02d%02d" %(major, minor, patch)
+    return int(version)
+
+
 try:
     from Pegasus.netlogger.parsers.base import NLSimpleParser
 except:
@@ -54,6 +67,7 @@ re_parse_planner_args = re.compile(r"\s*-Dpegasus.log.\*=(\S+)\s.*", re.IGNORECA
 re_parse_pegasuslite_ec = re.compile(r'^PegasusLite: exitcode (\d+)$', re.MULTILINE)
 #re_parse_register_input_files = re.compile(r'^([a-zA-z\.\d\\_-]+)\s+([\w]+://[\w\.\-:@]*/[\S ]*)\s+(\w=\".*\")*')
 
+
 # Constants
 MONITORD_START_FILE = "monitord.started"   # filename for writing when monitord starts
 MONITORD_DONE_FILE = "monitord.done"       # filename for writing when monitord finishes
@@ -63,6 +77,7 @@ PRESCRIPT_TASK_ID = -1                     # id for prescript tasks
 POSTSCRIPT_TASK_ID = -2                    # id for postscript tasks
 MAX_OUTPUT_LENGTH = 2**16-1                # in bytes, maximum we can put into the database for job's stdout and stderr
 UNKNOWN_FAILURE_CODE = 2                   # unknown failure code when inserting an END event betweeen consecutive workflow start events
+CONDOR_VERSION_8_3_3 = get_numeric_version( 8,3,3 )
 
 # Other variables
 condor_dagman_executable = None	# condor_dagman binary location
@@ -778,6 +793,7 @@ class Workflow:
         self._user = None
         self._grid_dn = None
         self._planner_version = None
+        self._dagman_version  = None            # dagman version as integer
         self._last_submitted_job = None
         self._jobs_map = {}
         self._jobs = {}
@@ -2124,6 +2140,11 @@ class Workflow:
             # Not generating events and notifcations, nothing else to do
             return
 
+        # PM-749 only if condor version > 8.3.3 we look for JOB_HELD_REASON state
+        job_held_state = "JOB_HELD"
+        if self._dagman_version >= CONDOR_VERSION_8_3_3:
+            job_held_state = "JOB_HELD_REASON"
+
         # PM-793 only parse job output here if a postscript is NOT associated with
         # the job in the .dag file
         # OR we are in the PMC only mode where there are no postscripts associated
@@ -2250,8 +2271,8 @@ class Workflow:
             my_job._main_job_exitcode = 1
             self.db_send_job_brief( my_job, "abort.info")
             self.db_send_job_end(my_job, -1, True );
-        elif job_state == "JOB_HELD_REASON":
-            #PM-749 we send the JOB_HELD event once we know the reason for it.
+        elif job_state == job_held_state: # JOB_HELD_REASON or JOB_HELD states
+            # PM-749 we send the JOB_HELD event once we know the reason for it.
             self.db_send_job_brief(my_job, "held.start", reason=reason)
         elif job_state == "JOB_EVICTED":
             self.db_send_job_brief(my_job, "main.term", -1)
@@ -2461,3 +2482,29 @@ class Workflow:
         my_dagman_out = os.path.join(my_retry_dir, my_dagman_file)
 
         return my_dagman_out
+
+    def set_dagman_version( self, major, minor, patch):
+        """
+        Sets the dagman version
+
+        :param major:
+        :param minor:
+        :param patch:
+        :return:
+        """
+        try:
+            self._dagman_version = get_numeric_version(major, minor, patch)
+        except:
+            # failsafe. default to 8.3.3
+            self._dagman_version = CONDOR_VERSION_8_3_3
+
+    def get_dagman_version( self):
+        """
+        Return the dagman version as integer
+
+        :return:
+        """
+        return self._dagman_version
+
+# End of Workflow Class
+
