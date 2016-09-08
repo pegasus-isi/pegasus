@@ -37,18 +37,6 @@ logger = logging.getLogger(__name__)
 # Optional imports, only generate 'warnings' if they fail
 NLSimpleParser = None
 
-def get_numeric_version( major, minor, patch):
-    """
-
-    :param major:
-    :param minor:
-    :param patch:
-    :return: int version
-    """
-
-    version = "%02d%02d%02d" %(major, minor, patch)
-    return int(version)
-
 
 try:
     from Pegasus.netlogger.parsers.base import NLSimpleParser
@@ -77,7 +65,6 @@ PRESCRIPT_TASK_ID = -1                     # id for prescript tasks
 POSTSCRIPT_TASK_ID = -2                    # id for postscript tasks
 MAX_OUTPUT_LENGTH = 2**16-1                # in bytes, maximum we can put into the database for job's stdout and stderr
 UNKNOWN_FAILURE_CODE = 2                   # unknown failure code when inserting an END event betweeen consecutive workflow start events
-CONDOR_VERSION_8_3_3 = get_numeric_version( 8,3,3 )
 
 # Other variables
 condor_dagman_executable = None	# condor_dagman binary location
@@ -94,6 +81,22 @@ class Workflow:
     """
     # Class variables, used to send link parent jobs to sub workflows
     wf_list = {}
+
+    @staticmethod
+    def get_numeric_version( major, minor, patch):
+        """
+
+        :param major:
+        :param minor:
+        :param patch:
+        :return: int version
+        """
+
+        version = "%02d%02d%02d" %(major, minor, patch)
+        return int(version)
+
+    # class level variable constant
+    CONDOR_VERSION_8_3_3 = get_numeric_version.__func__( 8,3,3 )
 
     def output_to_db(self, event, kwargs):
         """
@@ -2142,7 +2145,7 @@ class Workflow:
 
         # PM-749 only if condor version > 8.3.3 we look for JOB_HELD_REASON state
         job_held_state = "JOB_HELD"
-        if self._dagman_version >= CONDOR_VERSION_8_3_3:
+        if self._dagman_version >= Workflow.CONDOR_VERSION_8_3_3:
             job_held_state = "JOB_HELD_REASON"
 
         # PM-793 only parse job output here if a postscript is NOT associated with
@@ -2493,10 +2496,10 @@ class Workflow:
         :return:
         """
         try:
-            self._dagman_version = get_numeric_version(major, minor, patch)
+            self._dagman_version = Workflow.get_numeric_version(major, minor, patch)
         except:
             # failsafe. default to 8.3.3
-            self._dagman_version = CONDOR_VERSION_8_3_3
+            self._dagman_version = Workflow.CONDOR_VERSION_8_3_3
 
     def get_dagman_version( self):
         """
@@ -2505,6 +2508,10 @@ class Workflow:
         :return:
         """
         return self._dagman_version
+
+
+
+
 
 # End of Workflow Class
 
