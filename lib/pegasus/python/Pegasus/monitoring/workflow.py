@@ -97,6 +97,7 @@ class Workflow:
 
     # class level variable constant
     CONDOR_VERSION_8_3_3 = get_numeric_version.__func__( 8,3,3 )
+    CONDOR_VERSION_8_2_8 = get_numeric_version.__func__( 8,2,8 ) # last stable release that did not report held job reasons
 
     def output_to_db(self, event, kwargs):
         """
@@ -2498,8 +2499,8 @@ class Workflow:
         try:
             self._dagman_version = Workflow.get_numeric_version(major, minor, patch)
         except:
-            # failsafe. default to 8.3.3
-            self._dagman_version = Workflow.CONDOR_VERSION_8_3_3
+            # failsafe. default to 8.2.8 last stable release that did not report held job reasons
+            self._dagman_version = Workflow.CONDOR_VERSION_8_2_8
 
     def get_dagman_version( self):
         """
