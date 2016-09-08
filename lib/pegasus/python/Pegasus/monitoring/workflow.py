@@ -606,7 +606,7 @@ class Workflow:
         # Send sub-workflow event to database
         self.output_to_db("xwf.map.subwf_job", kwargs)
 
-    def db_send_wf_state(self, state, timestamp=None):
+    def db_send_wf_state(self, state, timestamp=None, reason=None):
         """
         This function sends to the DB information about the current
         workflow state to both the stampede database and dashboard database
@@ -626,6 +626,7 @@ class Workflow:
         # Make sure we include the wf_uuid
         kwargs["xwf__id"] = self._wf_uuid
         kwargs["ts"] = timestamp
+        kwargs["reason"] = reason
         # Always decrement the restart count by 1
         kwargs["restart_count"] = self._restart_count - 1
         if state == "end":
@@ -681,8 +682,9 @@ class Workflow:
         if self.check_notifications() == True and self._notifications_manager is not None:
             self._notifications_manager.process_workflow_notifications(self, state)
 
-        self.db_send_wf_state(state)
+        self.db_send_wf_state( state, reason=self._current_state_reason )
         self._last_known_state = state
+        self._current_state_reason = None # PM-1121 reset state reason after we have pushed to db
 
     def start_wf(self):
         """
@@ -826,6 +828,7 @@ class Workflow:
         self._walltime = {}                     # jid --> walltime
         self._job_site = {}                     # last site a job was planned for
         self._last_known_state = None           # last known state of the workflow. updated whenever change_wf_state is called
+        self._current_state_reason = None       # the reason if any for the current known state of the workflow
         self._last_known_job = None             # last know job, used for tracking job held reason PM-749
         self._is_pmc_dag = False                # boolean to track whether monitord is parsing a PMC DAG i.e pmc-only mode of Pegasus
 

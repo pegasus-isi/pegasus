@@ -814,9 +814,10 @@ def process_dagman_out(wf, log_line):
             wf._skipping_recovery_lines = True
             return
         elif re_parse_dagman_aborted.search(log_line) is not None:
-            #dagman was aborted. just log in monitord log
-            #eventually the dagman exit line will trigger failure in the DB
+            # PM-767 dagman was aborted. just log in monitord log
+            # eventually the dagman exit line will trigger failure in the DB
             logger.warning("DAGMan was aborted for workflow running in directory %s" %wf._run_dir )
+            wf._current_state_reason = "DAGMan aborted as it received SIGUSR1 signal."
             return
         elif re_parse_job_held.search(log_line) is not None:
             # PM-749  figure out reason for job held
