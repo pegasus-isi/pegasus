@@ -2,13 +2,13 @@ Source: pegasus
 Section: science
 Priority: extra
 Maintainer: Pegasus Development Team <pegasus-support@isi.edu>
-Build-Depends: debhelper (>= 7), ant, openjdk-7-jdk | openjdk-6-jdk, perl, python, asciidoc, xsltproc, fop
+Build-Depends: debhelper (>= 7), ant, openjdk-8-jdk | openjdk-7-jdk | openjdk-6-jdk, perl, python, asciidoc, xsltproc, fop
 Standards-Version: 3.9.4
 Homepage: http://pegasus.isi.edu
 
 Package: pegasus
 Architecture: any
-Depends: openjdk-7-jre | openjdk-7-jre-headless | openjdk-6-jre | openjdk-6-jre-headless,
+Depends: openjdk-8-jre | openjdk-8-jre-headless | openjdk-7-jre | openjdk-7-jre-headless | openjdk-6-jre | openjdk-6-jre-headless,
   perl, python, ${shlibs:Depends}, ${misc:Depends}
 Recommends: condor, globus
 Description: Workflow management system for HTCondor, Grid, and Clouds
