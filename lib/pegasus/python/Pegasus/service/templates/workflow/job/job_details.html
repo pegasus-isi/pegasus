@@ -212,7 +212,7 @@
                     <th class="job_table_width" style="text-transform: capitalize;">{{ state.state|replace('_', '
                         ')|capitalize }}
                     </th>
-                    <td>{{ state.timestamp }} ( {{ state.interval|time_to_str }} )</td>
+                    <td>{{ state.timestamp }} ( {{ state.interval|time_to_str }} ){% if state.reason %} - {{ state.reason }}{% endif %}</td>
                 </tr>
                 {% endfor %}
             </table>

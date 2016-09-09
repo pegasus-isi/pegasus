@@ -317,7 +317,7 @@ class WorkflowInfo(object):
 
     def get_job_states(self, job_id, job_instance_id):
 
-        q = self.session.query(Jobstate.state, Jobstate.timestamp)
+        q = self.session.query(Jobstate.state, Jobstate.reason, Jobstate.timestamp)
         q = q.filter(Job.wf_id == self._wf_id)
         q = q.filter(Job.job_id == job_id)
         q = q.filter(JobInstance.job_instance_id == job_instance_id)
