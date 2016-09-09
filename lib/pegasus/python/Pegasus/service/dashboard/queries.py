@@ -113,7 +113,7 @@ class MasterDatabase(object):
                                w.submit_dir, w.planner_arguments,
                                w.user, w.grid_dn, w.planner_version,
                                w.dax_label, w.dax_version, w.db_url, w.archived,
-                               state)
+                               ws.reason, ws.status, state)
 
         q = q.filter(w.wf_id == ws.wf_id)
         q = q.filter(ws.wf_id == qmax.c.wf_id)

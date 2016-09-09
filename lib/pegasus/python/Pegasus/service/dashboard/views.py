@@ -49,8 +49,12 @@ def index(username):
         args = __get_datatables_args()
         if request.is_xhr:
             count, filtered, workflows, totals = dashboard.get_root_workflow_list(**args)
+
             __update_label_link(workflows)
             __update_timestamp(workflows)
+
+            for workflow in workflows:
+                workflow.state = (workflow.state + ' (%s)' % workflow.reason) if workflow.status > 0 and workflow.reason else workflow.state
         else:
             totals = dashboard.get_root_workflow_list(counts_only=True, **args)
 
