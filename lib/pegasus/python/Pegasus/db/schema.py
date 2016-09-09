@@ -562,6 +562,7 @@ pg_workflowstate = Table('master_workflowstate', metadata,
     Column('timestamp', NUMERIC(precision=16,scale=6), nullable=False, primary_key=True),
     Column('restart_count', INT, nullable=False),
     Column('status', INT, nullable=True),
+    Column('reason', TEXT, nullable=True),
     **table_keywords
 )
 
