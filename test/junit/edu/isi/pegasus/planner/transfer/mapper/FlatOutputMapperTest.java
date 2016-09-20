@@ -20,6 +20,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.FileServerType;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.util.LinkedList;
@@ -53,9 +54,12 @@ public class FlatOutputMapperTest {
     
     private TestSetup mTestSetup;
     
+    private static int mTestNum;
+    
     
     @BeforeClass
     public static void setUpClass() {
+        mTestNum = 1;
     }
     
     @AfterClass
@@ -93,11 +97,10 @@ public class FlatOutputMapperTest {
      * Test of the Flat Output Mapper.
      */
     @Test
-    public void test() {
+    public void testWithoutDeepStorage() {
         
-        int set = 1;
         //test with no deep storage structure enabled
-        mLogger.logEventStart( "test.output.mapper.Flat", "set", Integer.toString(set++) );
+        mLogger.logEventStart( "test.output.mapper.Flat", "set", Integer.toString(mTestNum++) );
         mProps.setProperty( OutputMapperFactory.PROPERTY_KEY, "Flat" );
         OutputMapper mapper = OutputMapperFactory.loadInstance( new ADag(), mBag );
         
@@ -115,29 +118,111 @@ public class FlatOutputMapperTest {
         assertArrayEquals( expected, pfns.toArray() );
         mLogger.logEventCompletion();
         
+        
+    }
+    
+    @Test
+    public void testWithDeepStorage(){
+        
         ////test with  deep storage structure enabled
         //set property to enable deep storage, where relative submit directory is added
-        mLogger.logEventStart( "test.output.mapper.Flat", "set", Integer.toString(set++) );
-        mBag.getPlannerOptions().setRelativeDirectory( "deep" );
+        mLogger.logEventStart( "test.output.mapper.Flat", "set", Integer.toString(mTestNum++) );
+        PlannerOptions options = mBag.getPlannerOptions();
+        
+        //by default planner only sets relative submit directory internally
+        String relativeDir = "relative-submit";
+        options.setRelativeSubmitDirectory( relativeDir );
+        options.setRelativeDirectory( null );
+        
         mProps.setProperty( "pegasus.dir.storage.deep", "true" );
+        String lfn    = "f.a";
         SiteStore store = mBag.getHandleToSiteStore();
         store.setForPlannerUse(mProps,mBag.getPlannerOptions() );
-        mapper = OutputMapperFactory.loadInstance( new ADag(), mBag );
+        OutputMapper mapper = OutputMapperFactory.loadInstance( new ADag(), mBag );
         
         String deepPFN    = mapper.map( lfn, "local", FileServerType.OPERATION.put );
         assertEquals( lfn + " not mapped to right location " ,
-                      "file:///test/junit/output/mapper/blackdiamond/outputs/deep/f.a", deepPFN );
+                      "file:///test/junit/output/mapper/blackdiamond/outputs/" + relativeDir + "/f.a", deepPFN );
         
         deepPFN = mapper.map( lfn, "local", FileServerType.OPERATION.get );
         assertEquals( lfn + " not mapped to right location " ,
-                      "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/deep/f.a", deepPFN );
+                      "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/" + relativeDir + "/f.a", deepPFN );
         
         List<String> deepPFNS = mapper.mapAll( lfn, "local", FileServerType.OPERATION.get);
-        String[] expectedDeepPFNS = { "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/deep/f.a" };
+        String[] expectedDeepPFNS = { "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/" + relativeDir + "/f.a" };
         assertArrayEquals( expectedDeepPFNS, deepPFNS.toArray() );
         mLogger.logEventCompletion();
+        
     }
 
+    @Test
+    public void testWithDeepStorageRelativeDir(){
+        
+        ////test with  deep storage structure enabled
+        //set property to enable deep storage, where relative submit directory is added
+        mLogger.logEventStart( "test.output.mapper.Flat", "set", Integer.toString(mTestNum++) );
+        PlannerOptions options = mBag.getPlannerOptions();
+        
+        //by default planner only sets relative submit directory internally
+        String relativeDir = "relative";
+        options.setRelativeSubmitDirectory( null );
+        options.setRelativeDirectory( relativeDir );
+        
+        mProps.setProperty( "pegasus.dir.storage.deep", "true" );
+        String lfn    = "f.a";
+        SiteStore store = mBag.getHandleToSiteStore();
+        store.setForPlannerUse(mProps,mBag.getPlannerOptions() );
+        OutputMapper mapper = OutputMapperFactory.loadInstance( new ADag(), mBag );
+        
+        String deepPFN    = mapper.map( lfn, "local", FileServerType.OPERATION.put );
+        assertEquals( lfn + " not mapped to right location " ,
+                      "file:///test/junit/output/mapper/blackdiamond/outputs/" + relativeDir + "/f.a", deepPFN );
+        
+        deepPFN = mapper.map( lfn, "local", FileServerType.OPERATION.get );
+        assertEquals( lfn + " not mapped to right location " ,
+                      "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/" + relativeDir + "/f.a", deepPFN );
+        
+        List<String> deepPFNS = mapper.mapAll( lfn, "local", FileServerType.OPERATION.get);
+        String[] expectedDeepPFNS = { "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/" + relativeDir + "/f.a" };
+        assertArrayEquals( expectedDeepPFNS, deepPFNS.toArray() );
+        mLogger.logEventCompletion();
+        
+    }
+    
+    @Test
+    public void testWithDeepStorageRelativeDirs(){
+        
+        ////test with  deep storage structure enabled
+        //set property to enable deep storage, where relative submit directory is added
+        mLogger.logEventStart( "test.output.mapper.Flat", "set", Integer.toString(mTestNum++) );
+        PlannerOptions options = mBag.getPlannerOptions();
+        
+        //by default planner only sets relative submit directory internally
+        //should pick up relative-exec
+        String relativeDir = "relative-exec";
+        options.setRelativeSubmitDirectory( "relative-submit" );
+        options.setRelativeDirectory( relativeDir );
+        
+        mProps.setProperty( "pegasus.dir.storage.deep", "true" );
+        String lfn    = "f.a";
+        SiteStore store = mBag.getHandleToSiteStore();
+        store.setForPlannerUse(mProps,mBag.getPlannerOptions() );
+        OutputMapper mapper = OutputMapperFactory.loadInstance( new ADag(), mBag );
+        
+        String deepPFN    = mapper.map( lfn, "local", FileServerType.OPERATION.put );
+        assertEquals( lfn + " not mapped to right location " ,
+                      "file:///test/junit/output/mapper/blackdiamond/outputs/" + relativeDir + "/f.a", deepPFN );
+        
+        deepPFN = mapper.map( lfn, "local", FileServerType.OPERATION.get );
+        assertEquals( lfn + " not mapped to right location " ,
+                      "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/" + relativeDir + "/f.a", deepPFN );
+        
+        List<String> deepPFNS = mapper.mapAll( lfn, "local", FileServerType.OPERATION.get);
+        String[] expectedDeepPFNS = { "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/" + relativeDir + "/f.a" };
+        assertArrayEquals( expectedDeepPFNS, deepPFNS.toArray() );
+        mLogger.logEventCompletion();
+        
+    }
     
     @After
     public void tearDown() {
