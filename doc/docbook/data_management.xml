@@ -1845,10 +1845,10 @@ irodsPassword 'somesecretpassword'</programlisting>
     <section>
       <title>Effect of pegasus.dir.storage.deep</title>
 
-      <para>For Fixed and Hashed output mappers, the base directory to which
+      <para>For Flat and Hashed output mappers, the base directory to which
       the add on component is added is determined by the property
       pegasus.dir.storage.deep . The output directory on the output site is
-      determined from the site catalog. </para>
+      determined from the site catalog.</para>
 
       <para>If pegasus.dir.storage.deep is set to true, then to this base
       directory, a relative directory is appended i.e. $storage_base = $base +
