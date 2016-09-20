@@ -1841,6 +1841,23 @@ irodsPassword 'somesecretpassword'</programlisting>
         is <link linkend="rc-regex">here</link>.</para>
       </listitem>
     </orderedlist>
+
+    <section>
+      <title>Effect of pegasus.dir.storage.deep</title>
+
+      <para>For Fixed and Hashed output mappers, the base directory to which
+      the add on component is added is determined by the property
+      pegasus.dir.storage.deep . The output directory on the output site is
+      determined from the site catalog. </para>
+
+      <para>If pegasus.dir.storage.deep is set to true, then to this base
+      directory, a relative directory is appended i.e. $storage_base = $base +
+      $relative_directory. The relative directory is computed on the basis of
+      the --relative-dir option. If that is not set, then defaults to the
+      relative submit directory for the workflow ( usually
+      $user/$vogroup/$label/runxxxx ).This is the base directory that is
+      passed to the storage mappers.</para>
+    </section>
   </section>
 
   <section id="data_cleanup">
