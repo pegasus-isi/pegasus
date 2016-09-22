@@ -1759,6 +1759,55 @@ irodsPassword 'somesecretpassword'</programlisting>
     </section>
   </section>
 
+  <section id="ref_staging_mapper">
+    <title>Staging Mappers</title>
+
+    <para>Starting 4.7 release, Pegasus has support for staging mappers in the
+    <emphasis role="bold">nonsharedfs</emphasis> data configuration. The
+    staging mappers determine what sub directory on the staging site a job
+    will be associated with. Before, the introduction of staging mappers, all
+    files associated with the jobs scheduled for a particular site landed in
+    the same directory on the staging site. As a result, for large workflows
+    this could degrade filesystem performance on the staging servers. </para>
+
+    <para>To configure the staging mapper, you need to specify the following
+    property</para>
+
+    <programlisting>pegasus.dir.staging.mapper  &lt;name of the mapper to use&gt;</programlisting>
+
+    <para>The following mappers are supported currently, with Hashed being the
+    default .</para>
+
+    <orderedlist>
+      <listitem>
+        <para><emphasis role="bold">Flat</emphasis> : This mapper results in
+        Pegasus placing all the job submit files in the staging site directory
+        as determined from the Site Catalog and planner options. This can
+        result in too many files in one directory for large workflows, and was
+        the only option before Pegasus 4.7.0 release. </para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Hashed</emphasis> : This mapper results in
+        the creation of a deep directory structure rooted at the staging site
+        directory created by the create dir jobs. The binning is at the job
+        level, and not at the file level i.e each job will push out it's
+        outputs to the same directory on the staging site, independent of the
+        number of output files. To control behavior of this mapper, users can
+        specify the following properties </para>
+
+        <screen>pegasus.dir.staging.mapper.hashed.levels     the number of directory levels used to accomodate the files. Defaults to 2.
+pegasus.dir.staging.mapper.hashed.multiplier the number of files associated with a job in the submit directory. defaults to 5.
+</screen>
+      </listitem>
+    </orderedlist>
+
+    <note>
+      <para>The staging mappers are only triggered if
+      pegasus.data.configuration is set to nonsharedfs</para>
+    </note>
+  </section>
+
   <section id="ref_output_mapper">
     <title>Output Mappers</title>
 
