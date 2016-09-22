@@ -13,13 +13,12 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.isi.pegasus.planner.transfer.mapper;
+package edu.isi.pegasus.planner.mapper.output;
 
 import edu.isi.pegasus.planner.mapper.OutputMapperFactory;
 import edu.isi.pegasus.planner.mapper.OutputMapper;
 import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServerType;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -36,16 +35,16 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 
 /**
- * A JUnit Test to test the Replica Output Mapper interface.
+ * A JUnit Test to test the output mapper interface.
  *
  * @author Karan Vahi
  */
-public class ReplicaOutputMapperTest  {
-   
+public class FixedOutputMapperTest {
+    
     /**
      * The properties used for this test.
      */
-    private static final String PROPERTIES_BASENAME="replica.properties";
+    private static final String PROPERTIES_BASENAME="fixed.properties";
     
     private PegasusBag mBag;
     
@@ -84,10 +83,6 @@ public class ReplicaOutputMapperTest  {
         
         mBag.add( PegasusBag.PLANNER_OPTIONS, mTestSetup.loadPlannerOptions() );
         
-        List<String> sites = new LinkedList();
-        sites.add( "*" );
-        SiteStore store = mTestSetup.loadSiteStoreFromFile(mProps, mLogger, sites);
-        mBag.add( PegasusBag.SITE_STORE, store );
         mLogger.logEventCompletion();
     }
 
@@ -99,41 +94,29 @@ public class ReplicaOutputMapperTest  {
         
         int set = 1;
         //test with no deep storage structure enabled
-        mLogger.logEventStart( "test.output.mapper.Replica", "set", Integer.toString(set++) );
-        mProps.setProperty( OutputMapperFactory.PROPERTY_KEY, "Replica" );
+        mLogger.logEventStart( "test.output.mapper.Fixed", "set", Integer.toString(set++) );
+        mProps.setProperty( OutputMapperFactory.PROPERTY_KEY, "Fixed" );
         OutputMapper mapper = OutputMapperFactory.loadInstance( new ADag(), mBag );
         
-        for( FileServer.OPERATION operation : FileServer.OPERATION.values() ){
-            //replica mapper maps all operations to the same pfn
-            String lfn    = "f.a1";
-            String expected= "gsiftp://corbusier.isi.edu/Volumes/data/output/nonregex/" + lfn;
-            String pfn    = mapper.map( lfn, "local", operation);
-            assertEquals( lfn + " not mapped to right location " , expected, pfn );
-            String[] expectedPFNS = {pfn};
-            List<String>pfns    = mapper.mapAll( lfn, "local", operation);
-            assertArrayEquals( expectedPFNS, pfns.toArray() );
-        }
+        String lfn    = "f.a";
+        String pfn    = mapper.map( lfn, "local", FileServerType.OPERATION.put );
+        assertEquals( lfn + " not mapped to right location " ,
+                      "gsiftp://outputs.isi.edu/shared/outputs/f.a", pfn );
+        
+        pfn = mapper.map( lfn, "local", FileServerType.OPERATION.get );
+        assertEquals( lfn + " not mapped to right location " ,
+                      "gsiftp://outputs.isi.edu/shared/outputs/f.a", pfn );
+        
+        List<String> pfns = mapper.mapAll( lfn, "local", FileServerType.OPERATION.get);
+        String[] expected = { "gsiftp://outputs.isi.edu/shared/outputs/f.a" };
+        assertArrayEquals( expected, pfns.toArray() );
         mLogger.logEventCompletion();
         
-        //test to make sure that PFN constructed from regex works fine
-        mLogger.logEventStart( "test.output.mapper.Replica", "set", Integer.toString(set++) );
-        for( int i = 2; i <= 10; i++ ){
-            String lfn = "f.a" + i; 
-            for( FileServer.OPERATION operation : FileServer.OPERATION.values() ){
-                //replica mapper maps all operations to the same pfn
-                String expected= "gsiftp://corbusier.isi.edu/Volumes/data/output/" + lfn;
-                String pfn    = mapper.map( lfn, "local", operation);
-                assertEquals( lfn + " not mapped to right location " , expected, pfn );
-                String[] expectedPFNS = {pfn};
-                List<String>pfns    = mapper.mapAll( lfn, "local", operation);
-                assertArrayEquals( expectedPFNS, pfns.toArray() );
-            }
-        }
-        mLogger.logEventCompletion();
         
     }
 
-     @After
+    
+    @After
     public void tearDown() {
         mLogger = null;
         mProps  = null;
@@ -141,21 +124,16 @@ public class ReplicaOutputMapperTest  {
         mTestSetup = null;
     }
 
-    
     /**
      * Returns the list of property keys that should be sanitized
      * 
      * @return List<String>
      */
     protected List<String> getPropertyKeysForSanitization(){
-        List<String> keys =new LinkedList();
-        keys.add( "pegasus.dir.storage.mapper.replica.file" );
+        List<String> keys = new LinkedList();
         keys.add( PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY );
         return keys;
     }
-
-
-   
 
     
     
