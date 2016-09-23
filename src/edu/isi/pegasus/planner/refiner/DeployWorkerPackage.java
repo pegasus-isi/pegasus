@@ -274,9 +274,7 @@ public class DeployWorkerPackage
     private static Set<String> supportedOSReleaseAndVersions(){
         if( mSupportedOSReleaseVersions == null ){
             mSupportedOSReleaseVersions = new HashSet();
-            mSupportedOSReleaseVersions.add( "rhel_5" );
             mSupportedOSReleaseVersions.add( "rhel_6" );
-            mSupportedOSReleaseVersions.add( "deb_6" );
             mSupportedOSReleaseVersions.add( "deb_7" );
             mSupportedOSReleaseVersions.add( "deb_8" );
             mSupportedOSReleaseVersions.add( "macos_10" );
