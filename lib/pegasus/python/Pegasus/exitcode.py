@@ -12,7 +12,7 @@ from optparse import OptionParser
 from Pegasus.cluster import RecordParser
 
 # temporary log files
-tmp_log_name = '_exit-code-' + ''.join(random.choice(string.ascii_lowercase) for i in range(12))
+tmp_log_name = '_exit-code-' + ''.join(random.choice(string.ascii_lowercase) for i in range(30))
 std_out = open(tmp_log_name + '.out', 'w')
 std_err = open(tmp_log_name + '.err', 'w')
 log = OrderedDict([('name', None), ('timestamp', None), ('exitcode', None), ('app_exitcode', None), ('retry', None),
