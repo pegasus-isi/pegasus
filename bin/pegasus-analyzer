@@ -144,6 +144,7 @@ success = 0					# Number of successful jobs
 failed = 0					# Number of failed jobs
 unsubmitted = 0					# Number of unsubmitted jobs
 unknown = 0					# Number of jobs in an unknown state
+held    = 0                 # number of held jobs
 failed_jobs = []				# List of jobs that failed
 unknown_jobs = []				# List of jobs that neither succeeded nor failed
 
@@ -911,6 +912,7 @@ def print_top_summary():
     print_console( " Total jobs         : % 6d (%3.2f%%)" % (total, 100 * (1.0 * total/(total or 1))) )
     print_console( " # jobs succeeded   : % 6d (%3.2f%%)" % (success, 100 * (1.0 * success/(total or 1))) )
     print_console( " # jobs failed      : % 6d (%3.2f%%)" % (failed, 100 * (1.0 * failed/(total or 1))) )
+    print_console( " # jobs held        : % 6d (%3.2f%%)" % (held, 100 * (1.0 * unsubmitted/(total or 1))) )
     print_console( " # jobs unsubmitted : % 6d (%3.2f%%)" % (unsubmitted, 100 * (1.0 * unsubmitted/(total or 1))) )
     if unknown > 0:
         print_console( " # jobs unknown     : % 6d (%3.2f%%)" % (unknown, 100 * (1.0 * unknown/(total or 1)))  )
@@ -1044,7 +1046,7 @@ def analyze_db(config_properties):
     """
     This function runs the analyzer using data from the database.
     """
-    global total, success, failed, unsubmitted, unknown
+    global total, success, failed, unsubmitted, unknown, held
 
     # Get the database URL
     try:
@@ -1078,6 +1080,9 @@ def analyze_db(config_properties):
     total_success_failed = workflow_stats.get_total_succeeded_failed_jobs_status()
     success = total_success_failed.succeeded
     failed = total_success_failed.failed
+
+    held = workflow_stats.get_total_held_jobs()
+
 
     # PM-1039
     if success is None:

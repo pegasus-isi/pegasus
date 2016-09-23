@@ -418,6 +418,32 @@ class StampedeStatistics(object):
 
         return q.one()
 
+    def get_total_held_jobs(self):
+        """
+        SELECT DISTINCT count(  job_instance_id) FROM
+                                jobstate j JOIN   ( SELECT max(job_instance_id) as maxid FROM job_instance GROUP BY job_id) max_ji ON j.job_instance_id=max_ji.maxid
+                                WHERE j.state = 'JOB_HELD';
+        """
+
+        sq_1 = self.session.query(func.max(JobInstance.job_instance_id).label('max_ji_id'), JobInstance.job_id.label('jobid'))
+
+        if self._expand and self._is_root_wf:
+            sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
+        elif self._expand and not self._is_root_wf:
+            sq_1 = sq_1.filter(Workflow.wf_id.in_ (self._wfs))
+        else:
+            sq_1 = sq_1.filter(Workflow.wf_id == self._wfs[0])
+
+        sq_1 = sq_1.filter(Workflow.wf_id == Job.wf_id)
+        sq_1 = sq_1.filter(Job.job_id == JobInstance.job_id)
+        sq_1 = sq_1.group_by(JobInstance.job_id).subquery()
+
+        q = self.session.query(distinct(Jobstate.job_instance_id.label('last_job_instance')))
+
+        q = q.filter( Jobstate.state == 'JOB_HELD')
+        q = q.join( sq_1, Jobstate.job_instance_id == sq_1.c.max_ji_id)
+        return q.count()
+
     def get_total_succeeded_jobs_status(self):
         """
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totalsucceededjobs
