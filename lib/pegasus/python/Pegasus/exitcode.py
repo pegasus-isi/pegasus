@@ -1,11 +1,26 @@
+import datetime
+import io
+import json
 import sys
+import random
 import re
 import os
+import string
+from collections import OrderedDict
 from optparse import OptionParser
 
 from Pegasus.cluster import RecordParser
 
+# temporary log files
+tmp_log_name = '_exit-code-' + ''.join(random.choice(string.ascii_lowercase) for i in range(12))
+std_out = open(tmp_log_name + '.out', 'w')
+std_err = open(tmp_log_name + '.err', 'w')
+log = OrderedDict([('name', None), ('timestamp', None), ('exitcode', None), ('app_exitcode', None), ('retry', None),
+                   ('std_out', None), ('std_err', None)])
+
+
 class JobFailed(Exception): pass
+
 
 def rotate_file(outfile, errfile):
     """Rename .out and .err files to .out.XXX and .err.XXX where XXX
@@ -23,8 +38,8 @@ def rotate_file(outfile, errfile):
 
     # Find next file in sequence
     retry = None
-    for i in range(0,1000):
-        candidate = "%s.%03d" % (outfile,i)
+    for i in range(0, 1000):
+        candidate = "%s.%03d" % (outfile, i)
         if not os.path.isfile(candidate):
             retry = i
             break
@@ -34,18 +49,20 @@ def rotate_file(outfile, errfile):
         raise JobFailed("%s has been renamed too many times!" % (outfile))
 
     basename = outfile[:-4]
+    log['retry'] = retry
 
     # rename .out to .out.000
-    newout = "%s.out.%03d" % (basename,retry)
-    os.rename(outfile,newout)
+    newout = "%s.out.%03d" % (basename, retry)
+    os.rename(outfile, newout)
 
     # rename .err to .err.000 if it exists
     newerr = None
     if os.path.isfile(errfile):
-        newerr = "%s.err.%03d" % (basename,retry)
-        os.rename(errfile,newerr)
+        newerr = "%s.err.%03d" % (basename, retry)
+        os.rename(errfile, newerr)
 
     return newout, newerr
+
 
 def readfile(filename):
     # If the file does not exits, return empty string
@@ -57,6 +74,7 @@ def readfile(filename):
         return f.read()
     finally:
         f.close()
+
 
 def find_cluster_summary(txt):
     "Find and return the cluster summary record if it exists"
@@ -70,14 +88,15 @@ def find_cluster_summary(txt):
         if e < 0:
             raise JobFailed("Invalid cluster-summary record")
 
-        return RecordParser(txt[b:e+1]).parse()
+        return RecordParser(txt[b:e + 1]).parse()
 
-    # If we found a cluster-task, but no cluster-summary, then theres a problem
+    # If we found a cluster-task, but no cluster-summary, then there is a problem
     b = txt.find("[cluster-task")
     if b >= 0:
         raise JobFailed("cluster-summary is missing")
 
     return None
+
 
 def check_cluster_summary(record):
     "Make sure that the cluster-summary record is OK"
@@ -113,8 +132,8 @@ def check_cluster_summary(record):
 
     return 0
 
-def check_kickstart_records(txt):
 
+def check_kickstart_records(txt):
     # Check the exitcodes of all kickstart records
     regex = re.compile(r'raw="(-?[0-9]+)"')
     succeeded = 0
@@ -126,8 +145,11 @@ def check_kickstart_records(txt):
         if e < 0: raise JobFailed("mismatched <status>")
         e = e + len("</status>")
         m = regex.search(txt[b:e])
-        if m: raw = int(m.group(1))
-        else: raise JobFailed("<status> was missing valid 'raw' attribute")
+        if m:
+            raw = int(m.group(1))
+            log['app_exitcode'] = raw
+        else:
+            raise JobFailed("<status> was missing valid 'raw' attribute")
         if raw != 0:
             raise JobFailed("task exited with raw status %d" % raw)
         succeeded = succeeded + 1
@@ -137,6 +159,7 @@ def check_kickstart_records(txt):
         raise JobFailed("No successful kickstart records")
 
     return 0
+
 
 def unquote_message(message):
     def genchars():
@@ -164,8 +187,10 @@ def unquote_message(message):
 
     return "".join(output)
 
+
 def unquote_messages(messages):
     return [unquote_message(m) for m in messages]
+
 
 def has_any_failure_messages(stdio, messages):
     """Return true if any of the messages appear in the files"""
@@ -180,6 +205,7 @@ def has_any_failure_messages(stdio, messages):
                 return True
 
     return False
+
 
 def has_all_success_messages(stdio, messages):
     """Return true if any of the messages don't appear in the files"""
@@ -200,19 +226,20 @@ def has_all_success_messages(stdio, messages):
 
     return True
 
+
 def get_errfile(outfile):
     """Get the stderr file name given the stdout file name"""
     i = outfile.rfind(".out")
     left = outfile[0:i]
     right = ""
     if i + 5 < len(outfile):
-        right = outfile[i+4:]
+        right = outfile[i + 4:]
     errfile = left + ".err" + right
     return errfile
 
+
 def exitcode(outfile, status=None, rename=True,
              failure_messages=[], success_messages=[]):
-
     if not os.path.isfile(outfile):
         raise JobFailed("%s does not exist" % outfile)
 
@@ -224,6 +251,7 @@ def exitcode(outfile, status=None, rename=True,
 
     # First, check exitcode supplied by DAGMan, if any
     if status is not None:
+        log['app_exitcode'] = status
         if status != 0:
             raise JobFailed("dagman reported non-zero exitcode: %d" % status)
 
@@ -254,34 +282,63 @@ def exitcode(outfile, status=None, rename=True,
         if status is None:
             check_kickstart_records(stdout)
 
+
+def _log_error(err_msg):
+    std_err.write(err_msg + '\n')
+
+
+def _log_info(info_msg):
+    std_out.write(info_msg + '\n')
+
+
+def _write_logs():
+    # reading std_out and std_err files
+    std_out.close()
+    std_err.close()
+
+    with open(std_out.name, 'r') as sout:
+        log['std_out'] = sout.read()
+    with open(std_err.name, 'r') as serr:
+        log['std_err'] = serr.read()
+
+    # writing to log file (concurrency safe)
+    with io.open('pegasus-exitcode.log', 'a', encoding='utf8') as outfile:
+        res = json.dumps(log, ensure_ascii=False)
+        outfile.write(unicode(res + '\n'))
+
+    # cleaning temporary files
+    os.remove(std_out.name)
+    os.remove(std_err.name)
+
+
 def main(args):
     usage = "Usage: %prog [options] job.out"
     parser = OptionParser(usage)
 
     parser.add_option("-r", "--return", action="store", type="int",
-        dest="status", metavar="R",
-        help="Return code reported by DAGMan. This can be specified in a "
-             "DAG using the $RETURN variable.")
+                      dest="status", metavar="R",
+                      help="Return code reported by DAGMan. This can be specified in a "
+                           "DAG using the $RETURN variable.")
     parser.add_option("-n", "--no-rename", action="store_false",
-        dest="rename", default=True,
-        help="Don't rename kickstart.out and .err to .out.XXX and .err.XXX. "
-             "Useful for testing.")
+                      dest="rename", default=True,
+                      help="Don't rename kickstart.out and .err to .out.XXX and .err.XXX. "
+                           "Useful for testing.")
     parser.add_option("-f", "--failure-message", action="append",
-        dest="failure_messages", default=[],
-        help="Failure message to find in job stdout/stderr. If this "
-             "message exists in the stdout/stderr of the job, then the "
-             "job will be considered a failure no matter what other "
-             "output exists. If multiple failure messages are provided, "
-             "then none of them can exist in the output or the job is "
-             "considered a failure.")
+                      dest="failure_messages", default=[],
+                      help="Failure message to find in job stdout/stderr. If this "
+                           "message exists in the stdout/stderr of the job, then the "
+                           "job will be considered a failure no matter what other "
+                           "output exists. If multiple failure messages are provided, "
+                           "then none of them can exist in the output or the job is "
+                           "considered a failure.")
     parser.add_option("-s", "--success-message", action="append",
-        dest="success_messages", default=[],
-        help="Success message to find in job stdout/stderr. If this "
-             "message does not exist in the stdout/stderr of the job, "
-             "then the job will be considered a failure no matter what "
-             "other output exists. If multiple success messages are "
-             "provided, then they must all exist in the output or "
-             "the job is considered a failure.")
+                      dest="success_messages", default=[],
+                      help="Success message to find in job stdout/stderr. If this "
+                           "message does not exist in the stdout/stderr of the job, "
+                           "then the job will be considered a failure no matter what "
+                           "other output exists. If multiple success messages are "
+                           "provided, then they must all exist in the output or "
+                           "the job is considered a failure.")
 
     (options, args) = parser.parse_args(args)
 
@@ -291,11 +348,17 @@ def main(args):
     outfile = args[0]
 
     try:
+        log['name'] = outfile
+        log['timestamp'] = datetime.datetime.now().isoformat()
         exitcode(outfile, status=options.status, rename=options.rename,
                  failure_messages=options.failure_messages,
                  success_messages=options.success_messages)
+        log['exitcode'] = 0
+        _write_logs()
         sys.exit(0)
     except JobFailed, jf:
+        _log_error(str(jf))
+        log['exitcode'] = 1
         print jf
+        _write_logs()
         sys.exit(1)
-
