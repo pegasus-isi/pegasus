@@ -275,10 +275,12 @@ public class DeployWorkerPackage
         if( mSupportedOSReleaseVersions == null ){
             mSupportedOSReleaseVersions = new HashSet();
             mSupportedOSReleaseVersions.add( "rhel_6" );
+            mSupportedOSReleaseVersions.add( "rhel_7" );
             mSupportedOSReleaseVersions.add( "deb_7" );
             mSupportedOSReleaseVersions.add( "deb_8" );
+            mSupportedOSReleaseVersions.add( "ubuntu_14" );
+            mSupportedOSReleaseVersions.add( "ubuntu_16" );
             mSupportedOSReleaseVersions.add( "macos_10" );
-            
         }
         return mSupportedOSReleaseVersions;
     }
