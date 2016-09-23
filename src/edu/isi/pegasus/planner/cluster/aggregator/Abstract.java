@@ -184,7 +184,7 @@ public abstract class Abstract implements JobAggregator {
         setDirectory( bag.getPlannerOptions().getSubmitDirectory() );
 
         mGridStartFactory = new GridStartFactory();
-        mGridStartFactory.initialize( mBag, dag );
+        mGridStartFactory.initialize( mBag, dag, null );
 
 
     }

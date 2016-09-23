@@ -277,7 +277,7 @@ public class CondorGenerator extends Abstract {
      * The handle to the GridStart Factory.
      */
     protected GridStartFactory mGridStartFactory;
-
+   
     /**
      * A boolean indicating whether grid start has been initialized or not.
      */
@@ -351,6 +351,8 @@ public class CondorGenerator extends Abstract {
             mLogger.log( "Condor Version detected is " + mCondorVersion ,
                          LogManager.DEBUG_MESSAGE_LEVEL );
         }
+        
+        
     }
 
 
@@ -370,7 +372,9 @@ public class CondorGenerator extends Abstract {
     public Collection<File> generateCode( ADag dag ) throws CodeGeneratorException{
         if ( mInitializeGridStart ){
             mConcreteWorkflow = dag;
-            mGridStartFactory.initialize( mBag, dag );
+            mGridStartFactory.initialize( mBag, 
+                                          dag,
+                                          this.getDAGFilename(mConcreteWorkflow, POSTSCRIPT_LOG_SUFFIX ) );
             mInitializeGridStart = false;
         }
         
@@ -624,7 +628,9 @@ public class CondorGenerator extends Abstract {
         //initialize GridStart if required.
         if ( mInitializeGridStart ){
             mConcreteWorkflow = dag;
-            mGridStartFactory.initialize( mBag, dag );
+            mGridStartFactory.initialize( mBag, 
+                                          dag,
+                                          this.getDAGFilename(mConcreteWorkflow, POSTSCRIPT_LOG_SUFFIX ) );
             mInitializeGridStart = false;
         }
 

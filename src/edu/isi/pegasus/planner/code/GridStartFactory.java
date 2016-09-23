@@ -205,6 +205,11 @@ public class GridStartFactory {
      * A boolean indicating that the factory has been initialized.
      */
     private boolean mInitialized;
+    
+    /**
+     * path to the log file to which postscripts should log
+     */
+    private String mPostScriptLoG;
 
     /**
      * The default constructor.
@@ -221,12 +226,14 @@ public class GridStartFactory {
      *
      * @param bag   the bag of objects that is used for initialization.
      * @param dag   the concrete dag so far.
+     * @param postScriptLog  path to the log file to which postscripts should log
      */
-    public void initialize( PegasusBag bag, ADag dag ){
+    public void initialize( PegasusBag bag, ADag dag, String postScriptLog ){
         mBag       = bag;
         mProps     = bag.getPegasusProperties();
         mSubmitDir = bag.getPlannerOptions().getSubmitDirectory() ;
         mDAG       = dag;
+        mPostScriptLoG = postScriptLog;
 //        mPostScriptScope = mProps.getPOSTScriptScope();
 
         //load all the known implementations and initialize them
@@ -383,6 +390,7 @@ public class GridStartFactory {
                                        mSubmitDir,
                                        //mProps.getPOSTScriptPath( postScriptType ),
                                        job.dagmanVariables.getPOSTScriptPath( postScriptType ),
+                                       mPostScriptLoG,
                                        className );
             this.registerPOSTScript( postScriptType, (POSTScript)obj );
         }
@@ -486,6 +494,7 @@ public class GridStartFactory {
      * @param submitDir  the submit directory where the submit file for the job
      *                   has to be generated.
      * @param path       the path to the postscript on the submit host.
+     * @param globalLog  path to global postscript log file
      * @param className  the name of the class that implements the mode. It is the
      *                   name of the class, not the complete name with package. That
      *                   is added by itself.
@@ -500,6 +509,7 @@ public class GridStartFactory {
     private POSTScript loadPOSTScript( PegasusProperties properties,
                                        String submitDir,
                                        String path,
+                                       String globalLog,
                                        String className )
                                    throws GridStartFactoryException {
 
@@ -516,7 +526,7 @@ public class GridStartFactory {
         try{
             DynamicLoader dl = new DynamicLoader( className);
             ps = ( POSTScript ) dl.instantiate( new Object[0] );
-            ps.initialize( properties, path, submitDir );
+            ps.initialize( properties, path, submitDir, globalLog );
         }
         catch (Exception e) {
             throw new GridStartFactoryException("Instantiating GridStart ",

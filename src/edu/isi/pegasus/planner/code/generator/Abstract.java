@@ -52,6 +52,11 @@ import java.util.Map;
 public abstract class Abstract implements CodeGenerator{
 
     /**
+     * Suffix for the global log file to which exitcode should log to.
+     */
+    public static final String POSTSCRIPT_LOG_SUFFIX = ".exitcode.log";
+
+    /**
      * The bag of initialization objects.
      */
     protected PegasusBag mBag;

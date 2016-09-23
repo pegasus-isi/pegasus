@@ -74,10 +74,12 @@ public class NoPOSTScript implements POSTScript {
      * @param path       the path to the POSTScript on the submit host.
      * @param submitDir  the submit directory where the submit file for the job
      *                   has to be generated.
+     * @param globalLog  a global log file to use for logging
      */
     public void initialize( PegasusProperties properties,
                             String path,
-                            String submitDir ){
+                            String submitDir , 
+                            String globalLog ){
         mProps     = properties;
         mLogger    = LogManagerFactory.loadSingletonInstance( properties );
     }
