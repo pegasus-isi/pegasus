@@ -11,13 +11,9 @@ from optparse import OptionParser
 
 from Pegasus.cluster import RecordParser
 
-# temporary log files
-tmp_log_name = '_exit-code-' + ''.join(random.choice(string.ascii_lowercase) for i in range(30))
-std_out = open(tmp_log_name + '.out', 'w')
-std_err = open(tmp_log_name + '.err', 'w')
-log = OrderedDict([('name', None), ('timestamp', None), ('exitcode', None), ('app_exitcode', None), ('retry', None),
-                   ('std_out', None), ('std_err', None)])
-
+# logging
+log = OrderedDict([('name', None), ('timestamp', None), ('exitcode', None), ('app_exitcode', None), ('retry', None)])
+tmp_log_files = []
 
 class JobFailed(Exception): pass
 
@@ -283,32 +279,43 @@ def exitcode(outfile, status=None, rename=True,
             check_kickstart_records(stdout)
 
 
-def _log_error(err_msg):
-    std_err.write(err_msg + '\n')
-
-
 def _log_info(info_msg):
-    std_out.write(info_msg + '\n')
+    if len(tmp_log_files) > 0:
+        tmp_log_files[0].write(info_msg + '\n')
+    else:
+        print(info_msg)
 
 
-def _write_logs():
-    # reading std_out and std_err files
-    std_out.close()
-    std_err.close()
+def _log_error(err_msg):
+    if len(tmp_log_files) > 0:
+        tmp_log_files[1].write(err_msg + '\n')
+    else:
+        print(err_msg)
 
-    with open(std_out.name, 'r') as sout:
-        log['std_out'] = sout.read()
-    with open(std_err.name, 'r') as serr:
-        log['std_err'] = serr.read()
 
-    # writing to log file (concurrency safe)
-    with io.open('pegasus-exitcode.log', 'a', encoding='utf8') as outfile:
-        res = json.dumps(log, ensure_ascii=False)
-        outfile.write(unicode(res + '\n'))
+def _write_logs(log_filename):
+    if log_filename:
+        # reading std_out and std_err files
+        std_out = tmp_log_files[0]
+        std_err = tmp_log_files[1]
+        std_out.close()
+        std_err.close()
 
-    # cleaning temporary files
-    os.remove(std_out.name)
-    os.remove(std_err.name)
+        with open(std_out.name, 'r') as sout:
+            log['std_out'] = sout.read()
+        with open(std_err.name, 'r') as serr:
+            log['std_err'] = serr.read()
+
+        # writing to log file (concurrency safe)
+        with io.open(log_filename, 'a', encoding='utf8') as outfile:
+            res = json.dumps(log, ensure_ascii=False)
+            outfile.write(unicode(res + '\n'))
+
+        # cleaning temporary files
+        os.remove(std_out.name)
+        os.remove(std_err.name)
+    else:
+        print(json.dumps(log))
 
 
 def main(args):
@@ -339,6 +346,10 @@ def main(args):
                            "other output exists. If multiple success messages are "
                            "provided, then they must all exist in the output or "
                            "the job is considered a failure.")
+    parser.add_option("-l", "--log", action="store", type="string",
+                      dest="log_filename",
+                      help="Name of the common log file in which stdout/stderr will"
+                           "be redirected.")
 
     (options, args) = parser.parse_args(args)
 
@@ -347,6 +358,12 @@ def main(args):
 
     outfile = args[0]
 
+    if options.log_filename:
+        # temporary log files
+        tmp_log_name = '_exit-code-' + ''.join(random.choice(string.ascii_lowercase) for i in range(30))
+        tmp_log_files.append(open(tmp_log_name + '.out', 'w'))
+        tmp_log_files.append(open(tmp_log_name + '.err', 'w'))
+
     try:
         log['name'] = outfile
         log['timestamp'] = datetime.datetime.now().isoformat()
@@ -354,11 +371,10 @@ def main(args):
                  failure_messages=options.failure_messages,
                  success_messages=options.success_messages)
         log['exitcode'] = 0
-        _write_logs()
+        _write_logs(options.log_filename)
         sys.exit(0)
     except JobFailed, jf:
         _log_error(str(jf))
         log['exitcode'] = 1
-        print jf
-        _write_logs()
+        _write_logs(options.log_filename)
         sys.exit(1)
