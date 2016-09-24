@@ -1081,8 +1081,8 @@ def analyze_db(config_properties):
     success = total_success_failed.succeeded
     failed = total_success_failed.failed
 
-    held = workflow_stats.get_total_held_jobs()
-
+    held_jobs = workflow_stats.get_total_held_jobs()
+    held = len(held_jobs)
 
     # PM-1039
     if success is None:
@@ -1105,6 +1105,22 @@ def analyze_db(config_properties):
              sys.exit(2)
          # Workflow has no failures, exit with exitcode 0  
          sys.exit(0)
+
+    # PM-1126 print information about held jobs
+    if held > 0:
+        # Print header
+        print_console("Held jobs' details".center(80, '*'))
+        print_console()
+
+        for held_job in held_jobs:
+            #each tuple is max_ji_id, jobid, jobname, reason
+            #first two are database id's for debugging
+            print_console( held_job.jobname.center(80, '=') )
+            print_console()
+            print_console( "submit file            : %s" % (held_job.jobname + ".sub" or '-') )
+            print_console( "last_job_instance_id   : %s" % (held_job[0] or '-') )
+            print_console( "reason                 : %s" % (held_job.reason or '-') )
+            print_console()
 
     # Now, print information about jobs that failed...
     if failed > 0:

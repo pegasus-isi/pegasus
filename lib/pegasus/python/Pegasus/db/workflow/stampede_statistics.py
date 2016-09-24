@@ -425,7 +425,7 @@ class StampedeStatistics(object):
                                 WHERE j.state = 'JOB_HELD';
         """
 
-        sq_1 = self.session.query(func.max(JobInstance.job_instance_id).label('max_ji_id'), JobInstance.job_id.label('jobid'))
+        sq_1 = self.session.query(func.max(JobInstance.job_instance_id).label('max_ji_id'), JobInstance.job_id.label('jobid'), Job.exec_job_id.label('jobname'))
 
         if self._expand and self._is_root_wf:
             sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
@@ -438,11 +438,12 @@ class StampedeStatistics(object):
         sq_1 = sq_1.filter(Job.job_id == JobInstance.job_id)
         sq_1 = sq_1.group_by(JobInstance.job_id).subquery()
 
-        q = self.session.query(distinct(Jobstate.job_instance_id.label('last_job_instance')))
+        q = self.session.query(distinct(Jobstate.job_instance_id.label('last_job_instance')), sq_1.c.jobid, sq_1.c.jobname, Jobstate.reason)
 
         q = q.filter( Jobstate.state == 'JOB_HELD')
         q = q.join( sq_1, Jobstate.job_instance_id == sq_1.c.max_ji_id)
-        return q.count()
+
+        return q.all()
 
     def get_total_succeeded_jobs_status(self):
         """
