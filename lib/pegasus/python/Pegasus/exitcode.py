@@ -1,11 +1,11 @@
+import atexit
 import datetime
 import io
 import json
-import sys
-import random
 import re
+import sys
 import os
-import string
+import uuid
 from collections import OrderedDict
 from optparse import OptionParser
 
@@ -14,6 +14,7 @@ from Pegasus.cluster import RecordParser
 # logging
 log = OrderedDict([('name', None), ('timestamp', None), ('exitcode', None), ('app_exitcode', None), ('retry', None)])
 tmp_log_files = []
+
 
 class JobFailed(Exception): pass
 
@@ -311,9 +312,6 @@ def _write_logs(log_filename):
             res = json.dumps(log, ensure_ascii=False)
             outfile.write(unicode(res + '\n'))
 
-        # cleaning temporary files
-        os.remove(std_out.name)
-        os.remove(std_err.name)
     else:
         print(json.dumps(log))
 
@@ -360,7 +358,7 @@ def main(args):
 
     if options.log_filename:
         # temporary log files
-        tmp_log_name = '_exit-code-' + ''.join(random.choice(string.ascii_lowercase) for i in range(30))
+        tmp_log_name = '_exit-code-' + str(uuid.uuid4())
         tmp_log_files.append(open(tmp_log_name + '.out', 'w'))
         tmp_log_files.append(open(tmp_log_name + '.err', 'w'))
 
@@ -378,3 +376,10 @@ def main(args):
         log['exitcode'] = 1
         _write_logs(options.log_filename)
         sys.exit(1)
+
+
+@atexit.register
+def remove_temporary_files():
+    # cleaning temporary files
+    for tmp_file in tmp_log_files:
+        os.remove(tmp_file.name)
