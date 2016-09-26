@@ -912,7 +912,7 @@ def print_top_summary():
     print_console( " Total jobs         : % 6d (%3.2f%%)" % (total, 100 * (1.0 * total/(total or 1))) )
     print_console( " # jobs succeeded   : % 6d (%3.2f%%)" % (success, 100 * (1.0 * success/(total or 1))) )
     print_console( " # jobs failed      : % 6d (%3.2f%%)" % (failed, 100 * (1.0 * failed/(total or 1))) )
-    print_console( " # jobs held        : % 6d (%3.2f%%)" % (held, 100 * (1.0 * unsubmitted/(total or 1))) )
+    print_console( " # jobs held        : % 6d (%3.2f%%)" % (held, 100 * (1.0 * held/(total or 1))) )
     print_console( " # jobs unsubmitted : % 6d (%3.2f%%)" % (unsubmitted, 100 * (1.0 * unsubmitted/(total or 1))) )
     if unknown > 0:
         print_console( " # jobs unknown     : % 6d (%3.2f%%)" % (unknown, 100 * (1.0 * unknown/(total or 1)))  )
