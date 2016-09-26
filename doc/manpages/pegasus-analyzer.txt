@@ -198,6 +198,7 @@ section of the output:
  Total jobs         :     75 (100.00%)
  # jobs succeeded   :     41 (54.67%)
  # jobs failed      :      0 (0.00%)
+ # jobs held        :      1 (1.33%)
  # jobs unsubmitted :     33 (44.00%)
  # jobs unknown     :      1 (1.33%)
 ----------------
@@ -205,11 +206,37 @@ section of the output:
 'jobs_succeeded' are jobs that have completed successfully. 'jobs_failed'
 are jobs that have finished, but that did not complete successfully.
 'jobs_unsubmitted' are jobs that are listed in the 'dag_file', but no 
-information about them was found in the 'jobstate.log' file. Finally,
+information about them was found in the 'jobstate.log'
+file. 'jobs_held' are jobs that were in HTCondor HELD state on the
+last retry of the job. With default, pegasus added periodic_remove
+expression with the jobs, a held job can eventually fail. In that
+case, held job appears as a failed job also. Finally,
 'jobs_unknown' are jobs that have started, but have not reached completion.
 
 After the summary section, *pegasus-analyzer* will display information about 
 each job in the 'job_failed' and 'job_unknown' categories.
+
+----------------
+*******************************Held jobs' details*******************************
+	
+================================sleep_ID0000001=================================
+	
+	submit file            : sleep_ID0000001.sub
+	last_job_instance_id   : 7
+	reason                 :  Error from slot1@corbusier.isi.edu:
+	                          STARTER at 128.9.64.188 failed to
+				  send file(s) to 
+			          <128.9.64.188:62639>: error reading from
+				  /opt/condor/8.4.8/local.corbusier/execute/dir_76205/f.out:
+				  (errno 2) No such file or directory;
+				 SHADOW failed to receive file(s) from <128.9.64.188:62653> 
+
+----------------
+In the above example, pegasus-analyzer is reporting that a job was
+held, and the reason why it was held, as determined from the
+dagman.out file for the workflow. The last_job_instance_id is the
+database id for the job in the job instance table of the monitoring
+database.
 
 ----------------
 ******************Failed jobs' details**********************
