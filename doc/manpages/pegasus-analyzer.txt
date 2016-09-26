@@ -219,9 +219,9 @@ each job in the 'job_failed' and 'job_unknown' categories.
 ----------------
 *******************************Held jobs' details*******************************
 	
-================================sleep_ID0000001=================================
+====================================sleep_j2====================================
 	
-	submit file            : sleep_ID0000001.sub
+	submit file            : sleep_j2.sub
 	last_job_instance_id   : 7
 	reason                 :  Error from slot1@corbusier.isi.edu:
 	                          STARTER at 128.9.64.188 failed to
@@ -232,8 +232,8 @@ each job in the 'job_failed' and 'job_unknown' categories.
 				 SHADOW failed to receive file(s) from <128.9.64.188:62653> 
 
 ----------------
-In the above example, pegasus-analyzer is reporting that a job was
-held, and the reason why it was held, as determined from the
+In the above example, the 'sleep_j2' job was held, and the analyzer
+displays the reason why it was held, as determined from the
 dagman.out file for the workflow. The last_job_instance_id is the
 database id for the job in the job instance table of the monitoring
 database.
