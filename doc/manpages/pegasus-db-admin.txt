@@ -124,7 +124,7 @@ $ pegasus-db-admin update -s /path/to/submitdir -t JDBCRC
 
 Authors
 -------
-Rafael Ferreira da Silva <rafsilva@isi.edu>
+Rafael Ferreira da Silva `<rafsilva@isi.edu>`
 
 Pegasus Team <http://pegasus.isi.edu>
 
