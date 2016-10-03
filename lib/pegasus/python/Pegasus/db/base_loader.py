@@ -2,6 +2,7 @@ import time
 import logging
 
 from Pegasus.db import connection
+from sqlalchemy import exc
 
 class BaseLoader(object):
     "Base loader class. Has a database session and a log handle."
