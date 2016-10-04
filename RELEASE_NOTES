@@ -1,6 +1,164 @@
 ===============================
+Release Notes for Pegasus 4.7.0
+===============================
+We are happy to announce the release of Pegasus 4.7.0.  Pegasus 4.7.0
+is a major release of Pegasus and includes all the bug fixes and
+improvements in the 4.6.2 release 
+
+New features and Improvements in 4.7.0 are
+
+    - automatic submit directory organization
+    - improved directory management on staging site in nonsharedfs mode
+    - R DAX API
+    - pegasus-analyzer reports information about held jobs
+    - check for cyclic dependencies in DAG
+
+New Features
+--------------
+1) [PM-833] – Pegasus should organize submit files of workflows in
+   hierarchal data structure 
+
+   Pegasus now automatically distributes the files in HTCondor submit
+   directory for all workflows in 2 level directory structure. This is
+   done to prevent having too many workflow and condor submit files in
+   one directory for a large workflow.  The behavior of submit
+   directory organization can be controlled by the following
+   properties 
+
+   pegasus.dir.submit.mapper.hashed.levels         the number of
+   directory levels used to accomodate the files. Defaults to 2. 
+   pegasus.dir.submit.mapper.hashed.multiplier      the number of
+   files associated with a job in the submit directory. defaults to    5. 
+
+   Note that this is enabled by default.  If you want to have pre
+   4.7.0 behavior you can 
+   	 pegasus.dir.submit.mapper Flat
+   
+   Submit mapper properties are documented in the user guide here
+   https://pegasus.isi.edu/docs/4.7.0/properties.php#site_dir_props 
+
+2) [PM-833] – Pegasus should manage directory structure on the staging
+site
+
+    For non sharedfs mode, Pegasus will now automatically manage the
+    directory structure on the staging site in a hierarchal directory
+    structure via use of staging mappers. The staging mappers
+    determine what sub directory on the staging site a job will be
+    associated with. Before, the introduction of staging mappers, all
+    files associated with the jobs scheduled for a particular site
+    landed in the same directory on the staging site. As a result, for
+    large workflows this could degrade filesystem performance on the
+    staging servers. More information can be found in the
+    documentation at
+    https://pegasus.isi.edu/docs/4.7.0/ref_staging_mapper.php 
+
+3) [PM-1036] – R DAX API
+
+   Related JIRA item: [PM-1074] – Add R example to pegasus-init
+
+4) [PM-1126] – pegasus-analyzer should report information about held jobs
+
+   Pegasus monitoring daemon now populates the reason for held jobs in
+   it’s database. Both pegasus-analyzer and dashboard were updated to
+   show this information. 
+   Related JIRA items:
+   	   [PM-1121] – Store reasons for workflow failure in stampede database
+	   [PM-1122] – update dashboard to display reasons for workflow state and jobstate
+	   [PM-1058] – Create homebrew tap for pegasus
+
+5) Pegasus is now also available via home-brew on MACOSX via a tap
+ repository
+   github.com/pegasus-isi/homebrew-tools
+
+   It contains formulas for pegasus and htcondor.Users can do:$ brew
+   tap pegasus-isi/tools 
+
+$ brew install pegasus htcondor
+$ brew tap homebrew/services
+$ brew services start htcondor
+
+6) [PM-928] – pegasus-exitcode should write its output to a log file
+
+   pegasus-exticode is now set to write to a workflow global log file
+   ending in exitcode.log that captures pegasus-exitcode stdout and
+   stderr as json messages.  This allows users to check
+   pegasus-exitcode messages, which otherwise would have been set to
+   /dev/null by condor dagman. 
+
+7) [PM-1115] – Pegasus to check for cyclic dependencies in the DAG
+   Pegasus now explicitly checks for cyclic dependencies and reports
+   one of the edges making up the cycle. 
+
+8) [PM-1054] – Add option to ignore files in libinterpose
+
+   kickstart now has support for environment variables
+   KICKSTART_TRACE_MATCH and KICKSTART_TRACE_IGNORE that determine
+   what file accesses are captured via lib interpose. The MATCH
+   version only traces files that match the patterns, and the IGNORE
+   version does NOT trace files that match the patterns. Only one of
+   the two can be specified. 
+
+9) [PM-915] – modify kickstart to collect and aggregate runtime
+metadata
+
+10) [PM-1004] – update metrics server ui to display extra planner configuration metrics
+
+11) [PM-1111] – pegasus planner and api’s should have support for
+ppc64 as architecture type
+
+12) [PM-1117] – Support for tutorial via pegasus-init on bluewaters
+
+Improvement
+--------------
+
+1) [PM-1125] – Disable builds for older platforms
+
+2) [PM-1116] – pass task resource requirements as environment
+variables for job wrappers to pick up 
+
+3) [PM-1112] – enable variable expansion for regex based replica
+catalog
+
+4) [PM-1105] – Mirror job priorities to DAGMan node priorities
+
+   HTCondor ticket 5749 . We can assign DAG priorities only if
+   detected condor version is greater than 8.5. 
+
+5) [PM-1094] – pegasus-dashboard file browser should load on demand
+
+6) [PM-1079] – pegasus-statistics should be able to skip over failures
+when generating particular type of stats 
+
+7) [PM-1073] – condor_q changes in 8.5.x will affect pegasus-status
+
+8) [PM-1023] – KIckstart stdout/stderr as CDATA
+
+9) [PM-749] – Store job held reasons in stampede database
+
+10) [PM-1088] – Move to relative paths in dagman and condor submit
+files
+
+11) [PM-900] – site catalog for XSEDE
+
+12) [PM-901] – site for OSG
+
+Bugs Fixed
+--------------
+1) [PM-1061] – pegasus-analyzer should detect and report on failed job
+submissions
+
+2) [PM-1118] – database changes to jobstate and workflow state tables
+
+3) [PM-1124] – Hashed Output Mappers throw unable to instantiate error
+
+4) [PM-1127] – Wf adds worker package staging even though it has already placed a worker package in place
+ 
+
+===============================
 Release Notes for Pegasus 4.6.2
 ===============================
+
+
 We are happy to announce the release of Pegasus 4.6.2.  Pegasus 4.6.2
 is a minor release of Pegasus and includes improvements and bug fixes
 to the 4.6.1 release. 
