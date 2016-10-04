@@ -54,6 +54,16 @@ site
 
 3) [PM-1036] – R DAX API
 
+   Pegasus now includes an R API for generating DAXes of complex and 
+   large workflows in R environments. The API follows the Google' R 
+   style guide, and all objects and methods are defined using the S3 
+   OOP system. The source package can be obtained by running 
+   *pegasus-config --r* or from the Pegasus' downloads page. A tutorial
+   workflow can be generated using *pegasus-init*, and an example
+   workflow is provided in the examples folder. More information can
+   be found in the documentation at
+   https://pegasus.isi.edu/docs/4.7.0/dax_generator_api.php#api-r
+
    Related JIRA item: [PM-1074] – Add R example to pegasus-init
 
 4) [PM-1126] – pegasus-analyzer should report information about held jobs
