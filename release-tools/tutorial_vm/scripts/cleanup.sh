@@ -1,14 +1,23 @@
 #!/bin/bash
 
-set -e
-
 package-cleanup --assumeyes --oldkernels --count=1
 
-yum -y remove gcc kernel-devel `package-cleanup --leaves | grep -v 'Loaded plugins' | xargs`
+yum -y remove gcc kernel-devel
+
+while true; do
+    LEAVES=`package-cleanup --leaves --quiet`
+
+    if [ "${LEAVES}" == '' ]; then
+        break
+    fi
+
+    yum -y remove ${LEAVES}
+done
 
 yum clean all
 
+rm --recursive --force /root/* /var/lib/dhclient/* /tmp/*
 
-find /var/log -type f -exec truncate --size 0 '{}' \;
+truncate --size 0 `find /var/log -type f | xargs`
 
-rm --recursive --force /root/anaconda-ks.cfg /tmp/*
+truncate --size 0 ~/.bash_history ; history -c
