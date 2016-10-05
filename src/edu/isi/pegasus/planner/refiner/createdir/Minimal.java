@@ -179,7 +179,14 @@ public class Minimal extends AbstractStrategy {
             
             Object value = siteToBitIndexMap.get( site );
             if( value == null){
+                StringBuffer parents = new StringBuffer();
+                parents.append( "{");
+                for(GraphNode parent : node.getParents()){
+                    parents.append( parent.getID() ).append(",");
+                }
+                parents.append( "}");
                 throw new RuntimeException( "Create dir site " + site + " for job " + job.getID() + 
+                                            " with parents " + parents + 
                                             " is not present in staging sites for workflow " +  createDirMap.keySet() );
             }
             int index = (Integer)value; 
