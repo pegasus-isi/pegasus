@@ -1,0 +1,52 @@
+#!/usr/bin/env python
+
+##
+#  Copyright 2016 University Of Southern California
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+##
+
+import glob
+import json
+import logging
+
+# logging
+logger = logging.getLogger("my_logger")
+console = logging.StreamHandler()
+logger.setLevel(logging.INFO)
+console.setLevel(logging.INFO)
+formatter = logging.Formatter("%(asctime)s %(levelname)7s:  ExitCode Log Parser: %(message)s")
+console.setFormatter(formatter)
+logger.addHandler(console)
+
+files_list = glob.glob('*.exitcode.log')
+
+if len(files_list) < 1:
+    logger.warn('Unable to find exitcode log file.')
+    exit(0)
+
+exitcode_file = files_list[0]
+
+parse_error = False
+
+for line in open(exitcode_file):
+    try:
+        d = json.loads(line.strip())
+    except Exception, e:
+        logger.error(e)
+        parse_error = True
+
+if parse_error:
+    exit(1)
+
+logger.info('%s successfully parsed.' % exitcode_file)

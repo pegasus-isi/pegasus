@@ -138,6 +138,10 @@ if [ $METRICS_TOTAL_JOBS -ne $NUM_SUBMIT_FILES ]; then
     STATUS=$(($STATUS + 1))
 fi
 
+#Check exitcode log file
+$TOP_DIR/test/scripts/parse-exitcode-json
+STATUS=$(($STATUS + $?))
+
 
 if [ $STATUS -ne 0 ]; then
     echo "Test failed, creating tarball..."
