@@ -28,7 +28,9 @@ import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.refiner.DeployWorkerPackage;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -149,13 +151,31 @@ public class Minimal extends AbstractStrategy {
             //check if for stage out jobs there are any parents specified 
             //or not.
             if( job instanceof TransferJob && job.getJobType() == Job.STAGE_OUT_JOB ){
-                if( node.getParents().isEmpty() ){
+                Collection<GraphNode> parents = node.getParents();
+                boolean skip = false;
+                if( parents.isEmpty() ){
                     //means we have a stage out job only. probably the workflow
                     //was fully reduced in data reuse
-                    mLogger.log( "Not considering job for create dir edges " + job.getID() , LogManager.DEBUG_MESSAGE_LEVEL );
+                    skip = true;
+                }
+                if( parents.size() == 1 ){
+                    for(GraphNode parent : parents ){
+                        if( parent.getID().startsWith( DeployWorkerPackage.DEPLOY_WORKER_PREFIX)){
+                            //PM-1128 we only have a single parent to a stage out job that is a
+                            //stage worker job. the stage out job is deleting outputs of jobs
+                            //deleted in data reuse
+                            skip = true;
+                        }
+                    }
+                }
+                if( skip ){
+                    //means we have a stage out job only. probably the workflow
+                    //was fully reduced in data reuse
+                    mLogger.log( "Not considering job for create dir edges - " + job.getID() , LogManager.DEBUG_MESSAGE_LEVEL );
                     nodeBitMap.put(node, set);
                     continue;
                 }
+                
             }
             
             //the set is a union of all the parents set

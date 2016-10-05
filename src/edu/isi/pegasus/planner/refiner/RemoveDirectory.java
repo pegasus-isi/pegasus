@@ -37,6 +37,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -244,10 +245,27 @@ public class RemoveDirectory extends Engine {
             //check if for stage out jobs there are any parents specified 
             //or not.
             if( job instanceof TransferJob && job.getJobType() == Job.STAGE_OUT_JOB ){
-                if( node.getParents().isEmpty() ){
+                Collection<GraphNode> parents = node.getParents();
+                boolean skip = false;
+                if( parents.isEmpty() ){
                     //means we have a stage out job only. probably the workflow
                     //was fully reduced in data reuse
-                    mLogger.log( "Not considering job for remove dir edges " + job.getID() , LogManager.DEBUG_MESSAGE_LEVEL );
+                    skip = true;
+                }
+                if( parents.size() == 1 ){
+                    for(GraphNode parent : parents ){
+                        if( parent.getID().startsWith( DeployWorkerPackage.DEPLOY_WORKER_PREFIX)){
+                            //PM-1128 we only have a single parent to a stage out job that is a
+                            //stage worker job. the stage out job is deleting outputs of jobs
+                            //deleted in data reuse
+                            skip = true;
+                        }
+                    }
+                }
+                if( skip ){
+                    //means we have a stage out job only. probably the workflow
+                    //was fully reduced in data reuse
+                    mLogger.log( "Not considering job for remove dir edges - " + job.getID() , LogManager.DEBUG_MESSAGE_LEVEL );
                     nodeBitMap.put(node, set);
                     continue;
                 }
