@@ -4,33 +4,34 @@
 <chapter id="useful_tips" lang="">
   <title>Useful Tips</title>
 
-    <section id="migrating_from_leq45">
-      <title>Migrating From Pegasus &lt;4.6 to Pegasus &gt;=4.6</title>
+    <section id="migrating_from_lt47">
+      <title>Migrating From Pegasus 4.5.X to Pegasus current version</title>
 
       <para>Since Pegasus 4.5 all databases are managed by a single tool: <emphasis
       role="bold">pegasus-db-admin</emphasis>. Databases will be automatically
       updated when <emphasis role="bold">pegasus-plan</emphasis> is invoked, but
-      WORKFLOW databases from past runs may not be updated accordingly. In Pegasus
-      4.6, the <emphasis role="bold">pegasus-db-admin</emphasis> tool provides an
+      WORKFLOW databases from past runs may not be updated accordingly. Since Pegasus
+      4.6.0, the <emphasis role="bold">pegasus-db-admin</emphasis> tool provides an
       option to automatically update all databases from completed workflows in the
       MASTER database. To enable this option, run the following command:</para>
 
       <programlisting>
 $ pegasus-db-admin update -a
 Your database has been updated.
-Your database is compatible with Pegasus version: 4.6.0
+Your database is compatible with Pegasus version: 4.7.0
 
 Verifying and updating workflow databases:
-20/20
+21/21
 
 Summary:
-  Verified/Updated: 20/20
-  Failed: 0/20
-  Unable to connect: 0/20
+Verified/Updated: 21/21
+Failed: 0/21
+Unable to connect: 0/21
+Unable to update (active workflows): 0/21
 
 Log files:
-  20160114T204631-dbadmin.out (Succeeded operations)
-  20160114T204631-dbadmin.err (Failed operations)
+20161006T134415-dbadmin.out (Succeeded operations)
+20161006T134415-dbadmin.err (Failed operations)
       </programlisting>
 
       <para>This option generates a log file for succeeded operations, and a log
@@ -47,7 +48,7 @@ Log files:
     </section>
 
     <section id="migrating_from_leq44">
-    <title>Migrating From Pegasus &lt;4.5 to Pegasus &gt;=4.5</title>
+    <title>Migrating From Pegasus &lt;4.5 to Pegasus 4.5.X</title>
 
     <para>Since Pegasus 4.5 all databases are managed by a single tool: <emphasis
     role="bold">pegasus-db-admin</emphasis>. Databases will be automatically
