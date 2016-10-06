@@ -4,16 +4,26 @@
 <chapter id="useful_tips" lang="">
   <title>Useful Tips</title>
 
-    <section id="migrating_from_lt47">
-      <title>Migrating From Pegasus 4.5.X to Pegasus current version</title>
+  <section id="migrating_from_lt47">
+    <title>Migrating From Pegasus 4.5.X to Pegasus current version</title>
 
-      <para>Since Pegasus 4.5 all databases are managed by a single tool: <emphasis
-      role="bold">pegasus-db-admin</emphasis>. Databases will be automatically
-      updated when <emphasis role="bold">pegasus-plan</emphasis> is invoked, but
-      WORKFLOW databases from past runs may not be updated accordingly. Since Pegasus
-      4.6.0, the <emphasis role="bold">pegasus-db-admin</emphasis> tool provides an
-      option to automatically update all databases from completed workflows in the
-      MASTER database. To enable this option, run the following command:</para>
+    <para>Most of the migrations from one version to another are related to
+    database upgrades, that is addressed by running the tool <emphasis
+    role="bold">pegasus-db-admin</emphasis>. </para>
+
+    <section>
+      <title>Database Upgrades From Pegasus 4.5.X to Pegasus current
+      version</title>
+
+      <para>Since Pegasus 4.5 all databases are managed by a single tool:
+      <emphasis role="bold">pegasus-db-admin</emphasis>. Databases will be
+      automatically updated when <emphasis role="bold">pegasus-plan</emphasis>
+      is invoked, but WORKFLOW databases from past runs may not be updated
+      accordingly. Since Pegasus 4.6.0, the <emphasis
+      role="bold">pegasus-db-admin</emphasis> tool provides an option to
+      automatically update all databases from completed workflows in the
+      MASTER database. To enable this option, run the following
+      command:</para>
 
       <programlisting>
 $ pegasus-db-admin update -a
@@ -34,39 +44,53 @@ Log files:
 20161006T134415-dbadmin.err (Failed operations)
       </programlisting>
 
-      <para>This option generates a log file for succeeded operations, and a log
-      file for failed operations. Each file contains the list of URLs of the
-      succeeded/failed databases.</para>
+      <para>This option generates a log file for succeeded operations, and a
+      log file for failed operations. Each file contains the list of URLs of
+      the succeeded/failed databases.</para>
 
-      <para>Note that, if no URL is provided, the tool will create/use a SQLite
-      database in the user's home directory:
+      <para>Note that, if no URL is provided, the tool will create/use a
+      SQLite database in the user's home directory:
       <emphasis>${HOME}/.pegasus/workflow.db</emphasis>.</para>
 
       <para>For complete description of pegasus-db-admin, see the <link
       linkend="cli-pegasus-db-admin">man page</link>.</para>
-
     </section>
 
-    <section id="migrating_from_leq44">
+    <section>
+      <title>Migration from Pegasus 4.6 to 4.7</title>
+
+      <para>In addition to the database changes, in Pegasus 4.7 the default
+      submit directory layout was changed from a flat structure where all
+      submit files independent of the number of jobs in the workflow appeared
+      in a single directory. For 4.7, the default is a hierarchal directory
+      structure two levels deep. To use the earlier layout, set the following
+      property </para>
+
+      <programlisting>pegasus.dir.submit.mapper     Flat</programlisting>
+    </section>
+  </section>
+
+  <section id="migrating_from_leq44">
     <title>Migrating From Pegasus &lt;4.5 to Pegasus 4.5.X</title>
 
-    <para>Since Pegasus 4.5 all databases are managed by a single tool: <emphasis
-    role="bold">pegasus-db-admin</emphasis>. Databases will be automatically
-    updated when <emphasis role="bold">pegasus-plan</emphasis> is invoked, but
-    it may require manually invocation of the <emphasis role="bold">
-    pegasus-db-admin</emphasis> for other Pegasus tools.</para>
+    <para>Since Pegasus 4.5 all databases are managed by a single tool:
+    <emphasis role="bold">pegasus-db-admin</emphasis>. Databases will be
+    automatically updated when <emphasis role="bold">pegasus-plan</emphasis>
+    is invoked, but it may require manually invocation of the <emphasis
+    role="bold"> pegasus-db-admin</emphasis> for other Pegasus tools.</para>
 
     <para>The <emphasis role="bold">check</emphasis> command verifies if the
-    database is compatible with the Pegasus' latest version. If the database is
-    not compatible, it will print the following message:</para>
+    database is compatible with the Pegasus' latest version. If the database
+    is not compatible, it will print the following message:</para>
 
     <programlisting>
 $ pegasus-db-admin check
 Your database is NOT compatible with version 4.5.0
     </programlisting>
 
-    <para>If you are running the <emphasis role="bold">check</emphasis> command
-    for the first time, the tool will prompt the following message:</para>
+    <para>If you are running the <emphasis role="bold">check</emphasis>
+    command for the first time, the tool will prompt the following
+    message:</para>
 
     <programlisting>
 Missing database tables or tables are not updated:
@@ -82,18 +106,21 @@ Your database has been updated.
 Your database is compatible with Pegasus version: 4.5.0
     </programlisting>
 
-    <para>The <emphasis role="bold">pegasus-db-admin</emphasis> tool can operate
-    directly over a database URL, or can read configuration parameters from the
-    properties file or a submit directory. In the later case, a database type
-    should be provided to indicate which properties should be used to connect to
-    the database. For example, the tool will seek for <emphasis>pegasus.catalog.replica.db.*</emphasis>
-    properties to connect to the JDBCRC database; or seek for <emphasis>pegasus.catalog.master.url</emphasis>
-    (or <emphasis>pegasus.dashboard.output</emphasis>, which is deprecated) property
-    to connect to the MASTER database; or seek for the <emphasis>pegasus.catalog.workflow.url</emphasis>
-    (or <emphasis>pegasus.monitord.output</emphasis>, which is deprecated) property
-    to connect to the WORKFLOW database. If none of these properties are found, the
-    tool will connect to the default database in the user's home directory
-    (sqlite:///${HOME}/.pegasus/workflow.db).</para>
+    <para>The <emphasis role="bold">pegasus-db-admin</emphasis> tool can
+    operate directly over a database URL, or can read configuration parameters
+    from the properties file or a submit directory. In the later case, a
+    database type should be provided to indicate which properties should be
+    used to connect to the database. For example, the tool will seek for
+    <emphasis>pegasus.catalog.replica.db.*</emphasis> properties to connect to
+    the JDBCRC database; or seek for
+    <emphasis>pegasus.catalog.master.url</emphasis> (or
+    <emphasis>pegasus.dashboard.output</emphasis>, which is deprecated)
+    property to connect to the MASTER database; or seek for the
+    <emphasis>pegasus.catalog.workflow.url</emphasis> (or
+    <emphasis>pegasus.monitord.output</emphasis>, which is deprecated)
+    property to connect to the WORKFLOW database. If none of these properties
+    are found, the tool will connect to the default database in the user's
+    home directory (sqlite:///${HOME}/.pegasus/workflow.db).</para>
 
     <para>Example: connection by providing the URL to the database:</para>
 
@@ -129,7 +156,6 @@ $ pegasus-db-admin update -s /path/to/submitdir -t JDBCRC
 
     <para>For complete description of pegasus-db-admin, see the <link
     linkend="cli-pegasus-db-admin">man page</link>.</para>
-
   </section>
 
   <section id="migrating_from_3x">
@@ -321,7 +347,6 @@ E.g.<emphasis role="bold">
       linkend="data_staging_configuration">chapter</link> and also look in the
       examples directory ( share/pegasus/examples).</para>
     </section>
-
   </section>
 
   <section id="migrating_from_2x">
@@ -358,9 +383,8 @@ E.g.<emphasis role="bold">
 
         <para>Pegasus 3.0 by default now parses DAX documents conforming to
         the DAX Schema 3.2 available <ulink role=""
-        url="schemas/dax-3.2/dax-3.2.xsd"
-        userlevel="">here</ulink> and is explained in detail in the chapter on
-        API references.</para>
+        url="schemas/dax-3.2/dax-3.2.xsd" userlevel="">here</ulink> and is
+        explained in detail in the chapter on API references.</para>
 
         <para>Starting Pegasus 3.0 , DAX generation API's are provided in
         Java/Python and Perl for users to use in their DAX Generators. The use
@@ -379,9 +403,8 @@ E.g.<emphasis role="bold">
 
         <para>Pegasus 3.0 by default now parses Site Catalog format conforming
         to the SC schema 3.0 ( XML3 ) available <ulink role=""
-        url="schemas/dax-3.2/dax-3.2.xsd"
-        userlevel="">here</ulink> and is explained in detail in the chapter on
-        Catalogs.</para>
+        url="schemas/dax-3.2/dax-3.2.xsd" userlevel="">here</ulink> and is
+        explained in detail in the chapter on Catalogs.</para>
 
         <para>Pegasus 3.0 comes with a pegasus-sc-converter that will convert
         users old site catalog ( XML ) to the XML3 format. Sample usage is
@@ -1068,30 +1091,30 @@ $ echo $?
   <section id="cpu_affinity_condor">
     <title>Slot Partitioning and CPU Affinity in Condor</title>
 
-    <para>By default, Condor will evenly divide the resources in a machine (such as
-        RAM, swap space and disk space) among all the CPUs, and advertise each CPU
-        as its own slot with an even share of the system resources. If you want to
-        have your custom configuration, you can use the following setting to define
-        the maximum number of different slot types:</para>
+    <para>By default, Condor will evenly divide the resources in a machine
+    (such as RAM, swap space and disk space) among all the CPUs, and advertise
+    each CPU as its own slot with an even share of the system resources. If
+    you want to have your custom configuration, you can use the following
+    setting to define the maximum number of different slot types:</para>
 
     <programlisting>
 MAX_SLOT_TYPES = 2
     </programlisting>
 
-    <para>For each slot type, you can divide system resources unevenly among your
-        CPUs. The <emphasis role="bold">N</emphasis> in the name of the macro listed
-        below must be an integer from 1 to <emphasis role="bold">MAX_SLOT_TYPES</emphasis>
-        (defined above).</para>
+    <para>For each slot type, you can divide system resources unevenly among
+    your CPUs. The <emphasis role="bold">N</emphasis> in the name of the macro
+    listed below must be an integer from 1 to <emphasis
+    role="bold">MAX_SLOT_TYPES</emphasis> (defined above).</para>
 
     <programlisting>
 SLOT_TYPE_1 = cpus=2, ram=50%, swap=1/4, disk=1/4
 SLOT_TYPE_N = cpus=1, ram=20%, swap=1/4, disk=1/8
     </programlisting>
 
-
-    <para>Slots can also be partitioned to accommodate actual needs by accepted jobs.
-        A partitionable slot is always unclaimed and dynamically splitted when jobs
-        are started. Slot partitioning can be enable as follows:</para>
+    <para>Slots can also be partitioned to accommodate actual needs by
+    accepted jobs. A partitionable slot is always unclaimed and dynamically
+    splitted when jobs are started. Slot partitioning can be enable as
+    follows:</para>
 
     <programlisting>
 SLOT_TYPE_1_PARTITIONABLE = True
@@ -1106,19 +1129,20 @@ SLOT1_CPU_AFFINITY=0,2
 SLOT2_CPU_AFFINITY=1,3
     </programlisting>
 
-    <para>Note that CPU numbers may vary from machines. Thus you need to verify what is
-        the association for your machine. One way to accomplish this is by using the
-        <emphasis role="bold">lscpu</emphasis> command line tool. For instance, the
-        output provided from this tool may look like:</para>
+    <para>Note that CPU numbers may vary from machines. Thus you need to
+    verify what is the association for your machine. One way to accomplish
+    this is by using the <emphasis role="bold">lscpu</emphasis> command line
+    tool. For instance, the output provided from this tool may look
+    like:</para>
 
     <programlisting>
 NUMA node0 CPU(s):     0,2,4,6,8,10
 NUMA node1 CPU(s):     1,3,5,7,9,11
     </programlisting>
 
-    <para>The following example assumes a machine with 2 sockets and 6 cores per
-        socket, where even cores belong to socket 1 and odd cores to socket
-        2:</para>
+    <para>The following example assumes a machine with 2 sockets and 6 cores
+    per socket, where even cores belong to socket 1 and odd cores to socket
+    2:</para>
 
     <programlisting>
 NUM_SLOTS_TYPE_1 = 1
@@ -1135,7 +1159,7 @@ SLOT1_CPU_AFFINITY=0,2,4,6,8,10
 SLOT2_CPU_AFFINITY=1,3,5,7,9,11
     </programlisting>
 
-    <para>Please read the section on "Configuring The Startd for SMP Machines" in
-        the Condor Administrator's Manual for full details.</para>
+    <para>Please read the section on "Configuring The Startd for SMP Machines"
+    in the Condor Administrator's Manual for full details.</para>
   </section>
 </chapter>
