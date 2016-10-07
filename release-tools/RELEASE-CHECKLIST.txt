@@ -43,13 +43,14 @@ NOTE: Do not copy and paste the commands below without double checking.
 9.  Built Yum repo. Similar to Apt repo, but the step has to be
     done on a RHEL machine. Do this on workflow.
 
-10. Create and deploy the tutorial VMs.
+10. Update Homebrew formula in repo https://github.com/pegasus-isi/homebrew-tools.git. 
 
-11. Change the symbolic link for the latest documentation to point 
+11. Create and deploy the tutorial VMs.
+
+12. Change the symbolic link for the latest documentation to point 
     to latest stable release
     https://pegasus.isi.edu/wms/docs/latest/
 
-12. Send annouce email to pegasus-announce@mailman.isi.edu
+13. Send annouce email to pegasus-announce@mailman.isi.edu
     (Karan has to do this step)
-
 
