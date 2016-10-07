@@ -1924,8 +1924,8 @@ Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.6
 <emphasis role="bold">Type        : </emphasis>Long</literallayout></entry>
 
-                  <entry>Indicates the maximum memory a job requires in MB
-                  diskspace.</entry>
+                  <entry>Indicates the maximum memory a job requires in
+                  MB.</entry>
                 </row>
 
                 <row>
@@ -1937,7 +1937,8 @@ Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.6
 <emphasis role="bold">Type        : </emphasis>Long</literallayout></entry>
 
-                  <entry>Indicates diskspace a job requires in MB.</entry>
+                  <entry>Indicates the maximum diskspace a job requires in
+                  MB.</entry>
                 </row>
               </tbody>
             </tgroup>
@@ -2372,7 +2373,7 @@ Scope       :</emphasis> Properties
                     <term>Flat</term>
 
                     <listitem>
-                      This mapper results in Pegasus placing all the job submit files in the submit directory as determined from the planner options. This can result in too many files in one directory for large workflows, and was the only option before Pegasus 4.7.0 release. 
+                       This mapper results in Pegasus placing all the job submit files in the submit directory as determined from the planner options. This can result in too many files in one directory for large workflows, and was the only option before Pegasus 4.7.0 release. 
                     </listitem>
                   </varlistentry>
 
@@ -2380,7 +2381,7 @@ Scope       :</emphasis> Properties
                     <term>Hashed</term>
 
                     <listitem>
-                      This mapper results in the creation of a deep directory structure rooted at the submit directory. The base directory is the submit directory as determined from the planner options. By default, the directory structure created is two levels deep. To control behavior of this mapper, users can specify the following properties 
+                       This mapper results in the creation of a deep directory structure rooted at the submit directory. The base directory is the submit directory as determined from the planner options. By default, the directory structure created is two levels deep. To control behavior of this mapper, users can specify the following properties 
 
                       <screen>
 pegasus.dir.submit.mapper.hashed.levels     the number of directory levels used 
@@ -2414,7 +2415,7 @@ Scope       :</emphasis> Properties
                     <term>Flat</term>
 
                     <listitem>
-                      This mapper results in Pegasus placing all the job submit files in the staging site directory as determined from the Site Catalog and planner options. This can result in too many files in one directory for large workflows, and was the only option before Pegasus 4.7.0 release. 
+                       This mapper results in Pegasus placing all the job submit files in the staging site directory as determined from the Site Catalog and planner options. This can result in too many files in one directory for large workflows, and was the only option before Pegasus 4.7.0 release. 
                     </listitem>
                   </varlistentry>
 
@@ -2422,7 +2423,7 @@ Scope       :</emphasis> Properties
                     <term>Hashed</term>
 
                     <listitem>
-                      This mapper results in the creation of a deep directory structure rooted at the staging site directory created by the create dir jobs. The binning is at the job level, and not at the file level i.e each job will push out it's outputs to the same directory on the staging site, independent of the number of output files. To control behavior of this mapper, users can specify the following properties 
+                       This mapper results in the creation of a deep directory structure rooted at the staging site directory created by the create dir jobs. The binning is at the job level, and not at the file level i.e each job will push out it's outputs to the same directory on the staging site, independent of the number of output files. To control behavior of this mapper, users can specify the following properties 
 
                       <screen>
 pegasus.dir.staging.mapper.hashed.levels     the number of directory levels used 
