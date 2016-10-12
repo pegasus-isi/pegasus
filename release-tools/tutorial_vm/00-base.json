@@ -22,7 +22,7 @@
       "ssh_username": "root",
       "ssh_password": "pegasus",
       "ssh_port": 22,
-      "ssh_wait_timeout": "45m",
+      "ssh_wait_timeout": "1h",
       "shutdown_command": "/sbin/halt -h --poweroff",
       "guest_additions_mode": "disable",
       "headless": true,
