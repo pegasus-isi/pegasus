@@ -26,6 +26,10 @@ which is deprecated) property to connect to the WORKFLOW database. If none of
 these properties are found, the tool will connect to the default database
 in the user' home directory (sqlite:///${HOME}/.pegasus/workflow.db).
 
+The *pegasus-db-admin* tool should always be followed by a *COMMAND* listed
+below. To see the available options for each command, please use the *-h* option
+after the command. For example: *pegasus-db-admin update -h*
+
 Commands
 --------
 *create*::
