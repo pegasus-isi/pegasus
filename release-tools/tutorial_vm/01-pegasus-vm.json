@@ -74,7 +74,8 @@
       "type": "shell",
       "scripts": [
         "scripts/aws/cloud-init.sh",
-        "scripts/secure-root.sh"
+        "scripts/secure-root.sh",
+        "scripts/aws/cleanup.sh"
       ],
       "only": [
         "aws"
