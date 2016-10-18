@@ -252,6 +252,20 @@ class Remove(TransferBase):
         return self._target_url.path
 
 
+    def __cmp__(self, other):
+        """
+        compares first on protos, then on hosts, then on paths - useful
+        for grouping similar types of transfers
+        """
+        if cmp(self._target_url.proto, other._target_url.proto) != 0:
+            return cmp(self._target_url.proto, other._target_url.proto)
+        if cmp(self._target_url.host, other._target_url.host) != 0:
+            return cmp(self._target_url.host, other._target_url.host)
+        if cmp(self._target_url.path, other._target_url.path) != 0:
+            return cmp(self._target_url.path, other._target_url.path)
+        return 0
+
+
 class Transfer(TransferBase):
     """
     Represents a single transfer request.
