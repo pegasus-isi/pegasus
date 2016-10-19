@@ -94,7 +94,16 @@ public class Flat extends Abstract {
         try{
             //the factory will give us the relative
             //add on part
-            addOn = mFactory.createFile( lfn ).getParentFile();
+            //PM-1131 figure out the last addon directory taking into
+            //account deep lfns
+            //addOn = mFactory.createFile( lfn ).getParentFile();
+            File relative = mFactory.createFile( lfn );
+            File deepLFN = new File(lfn);
+            addOn = relative;
+            while( deepLFN != null ){
+                deepLFN = deepLFN.getParentFile();
+                addOn   = addOn.getParentFile();
+            }
         }
         catch( IOException e ){
             throw new MapperException( "IOException " , e );
