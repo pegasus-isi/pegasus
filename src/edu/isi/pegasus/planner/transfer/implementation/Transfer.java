@@ -427,6 +427,7 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             	urlPair.append(" ,\n");
             }
             urlPair.append(" { \"type\": \"transfer\",\n");
+            urlPair.append("   \"lfn\": ").append("\"").append(ft.getLFN()).append("\"").append(",\n");
             urlPair.append("   \"id\": ").append(num).append(",\n");
             urlPair.append("   \"src_urls\": [");
             boolean notFirst = false;

@@ -151,7 +151,16 @@ public class Hashed extends Abstract{
             //we create a new add on as a new job encountered
             this.mLastSeenJobID = job.getID();
             try {
-                this.mLastAddon = this.mFactory.createRelativeFile(lfn).getParentFile();
+                //PM-1131 figure out the last addon directory taking into
+                //account deep lfns
+                //this.mLastAddon = this.mFactory.createRelativeFile(lfn).getParentFile();
+                File relative = this.mFactory.createRelativeFile(lfn);
+                File deepLFN = new File(lfn);
+                mLastAddon = relative;
+                while( deepLFN != null ){
+                    deepLFN    = deepLFN.getParentFile();
+                    mLastAddon = mLastAddon.getParentFile();
+                }
             } catch (IOException ex) {
                 throw new MapperException( "Unable to determine relative shared scratch directory for LFN " + lfn +
                                            " on site " + site,
