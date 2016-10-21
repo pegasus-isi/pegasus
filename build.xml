@@ -365,6 +365,11 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       </fileset>
     </chmod>
 
+    <!-- lib -->
+    <copy preservelastmodified="true" todir="${dist.lib}/pegasus/externals/python">
+      <fileset dir="lib/pegasus/externals/python" includes="**/*"/>
+    </copy>
+
     <copy preservelastmodified="true" todir="${dist.dir}" file="LICENSE"/>
 
     <package-binary name="pegasus-worker-${pegasus.version}-${dist.arch}"/>
