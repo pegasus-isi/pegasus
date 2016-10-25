@@ -18,7 +18,7 @@
   <property name="dist.data" location="${dist.dir}/share"/>
   <property name="dist.share" location="${dist.data}/pegasus"/>
   <property name="dist.jars" location="${dist.share}/java"/>
-  <property name="dist.schema" location="${dist.share}/schema"/> 
+  <property name="dist.schema" location="${dist.share}/schema"/>
   <property name="dist.doc" location="${dist.dir}/share/doc/pegasus"/>
   <property name="dist.man" location="${dist.data}/man"/>
 
@@ -518,7 +518,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <fileset dir="lib/pegasus/python/Pegasus" includes="**/*.pyc"/>
     </delete>
   </target>
-  
+
   <target name="dist-source" description="Build source tarball">
     <exec executable="release-tools/create-source-tar" failonerror="true">
       <arg line="${pegasus.version}"/>
@@ -553,7 +553,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
   <target name="test-java" depends="dist-common,jar,compile-externals" description="Run java unit tests">
     <mkdir dir="${junitreport.dir}"/>
-    <junit printsummary="yes" haltonfailure="yes">
+    <junit printsummary="yes" haltonfailure="yes" fork="true" forkmode="once">
       <sysproperty key="externals.python.path" value="${dist.lib}/pegasus/externals/python"/>
       <sysproperty key="pegasus.home.schemadir" value="${dist.schema}"/>
       <sysproperty key="pegasus.home.bindir"   value="${dist.bin}"/>
@@ -564,7 +564,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
         <path location="${dist.jars}/pegasus-test.jar"/>
         <path location="${dist.jars}/vdl.jar"/>
       </classpath>
-      
+
       <formatter type="xml" usefile="yes"/>
       <formatter type="brief" usefile="no"/>
       <test name="edu.isi.pegasus.planner.test.AllTests" todir="${junitreport.dir}"/>
@@ -591,6 +591,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
   </target>
 
   <target name="test" depends="test-python,test-java,test-kickstart,test-pmc" description="Run all unit tests"/>
-  
+
 </project>
 
