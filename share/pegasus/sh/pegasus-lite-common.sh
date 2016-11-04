@@ -118,7 +118,18 @@ function pegasus_lite_internal_wp_download()
         # not sure what system we are on - try the default package
         system="x86_64_rhel_6"
     fi
+
+    # Before we download from the Pegasus server, see if we can find a version
+    # deployed on the infrastructure, for example on CVMFS on OSG
+    cvmfs_base="/cvmfs/oasis.opensciencegrid.org/osg/projects/pegasus/worker/${pegasus_lite_version_major}.${pegasus_lite_version_minor}.${pegasus_lite_version_patch}/$system"
+    if [ -f "$cvmfs_base/bin/pegasus-config" ]; then
+        pegasus_lite_log "Using ${cvmfs_base} as worker package"
+        unset PEGASUS_HOME
+        export PATH="${cvmfs_base}/bin:$PATH"
+        return 0
+    fi
     
+    # Nevermind, download directly from Pegasus server
     url="http://download.pegasus.isi.edu/pegasus/${pegasus_lite_version_major}"
     url="${url}.${pegasus_lite_version_minor}.${pegasus_lite_version_patch}"
     url="${url}/pegasus-worker"
@@ -229,6 +240,24 @@ function pegasus_lite_init()
     # can tell the job was a PegasusLite job
     pegasus_lite_log "PegasusLite: version ${pegasus_lite_full_version}" 1>&2
 
+    # PM-1134 - provide some details on where we are running
+    out="Executing on"
+    if [ "x$HOSTNAME" != "x" ]; then
+        out="$out host $HOSTNAME"
+    elif hostname -f >/dev/null 2>&1; then
+        out="$out host "`hostname -f`
+    fi
+    if [ "x$OSG_SITE_NAME" != "x" ]; then
+        out="$out OSG_SITE_NAME=${OSG_SITE_NAME}"
+    fi
+    if [ "x$GLIDEIN_Site" != "x" ]; then
+        out="$out GLIDEIN_Site=${GLIDEIN_Site}"
+    fi
+    if [ "x$GLIDEIN_ResourceName" != "x" ]; then
+        out="$out GLIDEIN_Site=${GLIDEIN_ResourceName}"
+    fi
+    pegasus_lite_log "$out"
+
     # for staged credentials, expand the paths and set strict permissions
     for base in X509_USER_PROXY S3CFG BOTO_CONFIG SSH_PRIVATE_KEY irodsEnvFile GOOGLE_PKCS12 ; do
         for key in `(env | grep -i ^$base | sed 's/=.*//') 2>/dev/null`; do
@@ -252,6 +281,7 @@ function pegasus_lite_signal_int()
     caught_signal_name="INT"
     caught_signal_num=2
 }
+
 
 function pegasus_lite_signal_term()
 {
