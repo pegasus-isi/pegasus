@@ -915,6 +915,11 @@ public class PegasusLite implements GridStart {
             if( job.userExecutablesStagedForJob() ){
                 appendStderrFragment( sb, "setting the xbit for executables staged" );
                 sb.append( "# set the xbit for any executables staged" ).append( '\n' );
+                if ( mUseSymLinks ){
+                    //PM-1135 if the user does not own the target of the
+                    //symlink then the chmod could fail, so allow this.
+                    sb.append("set +e" ).append( '\n' );
+                }
                 sb.append( getPathToChmodExecutable( job.getSiteHandle() ) );
                 sb.append( " +x " );
 
@@ -926,6 +931,9 @@ public class PegasusLite implements GridStart {
 
                 }
                 sb.append( '\n' );
+                if ( mUseSymLinks ){
+                    sb.append("set -e" ).append( '\n' );
+                }
                 sb.append( '\n' );
             }
            
