@@ -292,6 +292,12 @@ public class PegasusLite implements GridStart {
      */
     protected boolean mEnforceStrictChecksOnWPVersion;
     
+    /**
+     * This member variable if set causes the destination URL for the symlink jobs
+     * to have symlink:// url if the pool attributed associated with the pfn
+     * is same as a particular jobs execution pool. 
+     */
+    protected boolean mUseSymLinks;
     
     /**
      * Whether PegasusLite should download from the worker package from website
@@ -322,6 +328,7 @@ public class PegasusLite implements GridStart {
                 mWorkerPackageMap = new HashMap<String,String>();
         }
         mEnforceStrictChecksOnWPVersion = mProps.enforceStrictChecksForWorkerPackage();
+        mUseSymLinks                    = mProps.getUseOfSymbolicLinks();
         mAllowWPDownloadFromWebsite     = mProps.allowDownloadOfWorkerPackageFromPegasusWebsite();
         
         /* PM-810    
@@ -883,6 +890,10 @@ public class PegasusLite implements GridStart {
                     appendStderrFragment( sb, "staging in input data and executables" );
                     sb.append( "# stage in data and executables" ).append( '\n' );
                     sb.append(  sls.invocationString( job, null ) );
+                    if ( mUseSymLinks ){
+                        //PM-1135 allow the transfer executable to symlink input file urls
+                        sb.append( " --symlink " );
+                    }
                     sb.append( " 1>&2" ).append( " << 'EOF'" ).append( '\n' );
                     sb.append( convertToTransferInputFormat( inputFiles ) );
                     sb.append( "EOF" ).append( '\n' );
@@ -904,6 +915,11 @@ public class PegasusLite implements GridStart {
             if( job.userExecutablesStagedForJob() ){
                 appendStderrFragment( sb, "setting the xbit for executables staged" );
                 sb.append( "# set the xbit for any executables staged" ).append( '\n' );
+                if ( mUseSymLinks ){
+                    //PM-1135 if the user does not own the target of the
+                    //symlink then the chmod could fail, so allow this.
+                    sb.append("set +e" ).append( '\n' );
+                }
                 sb.append( getPathToChmodExecutable( job.getSiteHandle() ) );
                 sb.append( " +x " );
 
@@ -915,6 +931,9 @@ public class PegasusLite implements GridStart {
 
                 }
                 sb.append( '\n' );
+                if ( mUseSymLinks ){
+                    sb.append("set -e" ).append( '\n' );
+                }
                 sb.append( '\n' );
             }
            
