@@ -786,8 +786,12 @@ class FileHandler(TransferHandlerBase):
                     self._post_transfer_attempt(t, True, t_start)
                     continue
 
-            cmd = "/bin/cp -f -R -L '%s' '%s'" \
-                % (t.get_src_path(), t.get_dst_path())
+            if symlink_file_transfer:
+                cmd = "ln -f -s '%s' '%s'" \
+                    % (t.get_src_path(), t.get_dst_path())
+            else:
+                cmd = "/bin/cp -f -R -L '%s' '%s'" \
+                    % (t.get_src_path(), t.get_dst_path())
             try:
                 tc = TimedCommand(cmd)
                 tc.run()
@@ -3245,6 +3249,9 @@ logger = logging.getLogger("my_logger")
 # threads we have currently running
 threads = []
 
+# should file transfers symlink rather than copy
+symlink_file_transfer = False
+
 # track remote directories created so that don't have to
 # try to create them over and over again
 remote_dirs_created = {}
@@ -3600,6 +3607,7 @@ def main():
     global threads
     global stats_start
     global stats_end
+    global symlink_file_transfer
     
     # dup stderr onto stdout
     sys.stderr = sys.stdout
@@ -3622,6 +3630,12 @@ def main():
                              " via the PEGASUS_TRANSFER_THREADS environment" +
                              " variable. The command line option takes" +
                              " precedence over the environment variable.")
+    parser.add_option("-s", "--symlink", action = "store_true", dest = "symlink",
+                      help = "Allow symlinking of file URLs." +
+                             " If the source and destination URLs chosen" +
+                             " are both file URLs with the same site_label" +
+                             " then the source file will be symlinked" +
+                             " to the destination rather than being copied.")
     parser.add_option("-d", "--debug", action = "store_true", dest = "debug",
                       help = "Enables debugging ouput.")
     
@@ -3658,6 +3672,9 @@ def main():
     except Exception, err:
         logger.critical('Error reading transfer list: %s' % (err))
         myexit(1)
+
+    # store symlink option in global variable
+    symlink_file_transfer = options.symlink
     
     # queues to track the work
     inputs_l = []
