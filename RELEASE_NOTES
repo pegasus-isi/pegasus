@@ -1,4 +1,22 @@
 ===============================
+Release Notes for Pegasus 4.7.1
+===============================
+
+We are happy to announce the release of Pegasus 4.7.1. Pegasus 4.7.1
+is a minor release of Pegasus and includes improvements and bug fixes
+to the 4.7.0 release.
+
+Improvements in 4.7.1 are
+
+- Fix for stage in jobs with repeated portion of LFN [PM-1131]
+- Fix for pegasus.transfer.bypass.input.staging breaks symlinking on
+  the local site [PM-1135]
+- Capture the execution site information in pegasus lite [PM-1134]
+]
+- Added ability to check CVMFS for worker package
+
+
+===============================
 Release Notes for Pegasus 4.7.0
 ===============================
 We are happy to announce the release of Pegasus 4.7.0.  Pegasus 4.7.0
