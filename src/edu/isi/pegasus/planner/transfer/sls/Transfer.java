@@ -724,7 +724,6 @@ public class Transfer   implements SLS {
      * <pre>
      * PEGASUS_HOME
      * GLOBUS_LOCATION
-     * LD_LIBRARY_PATH
      * </pre>
      *
      *
@@ -743,24 +742,7 @@ public class Transfer   implements SLS {
 
         String globus = mSiteStore.getEnvironmentVariable( site, "GLOBUS_LOCATION" );
         if( globus != null ){
-            //check for LD_LIBRARY_PATH
-            String ldpath = mSiteStore.getEnvironmentVariable( site, "LD_LIBRARY_PATH" );
-            if ( ldpath == null ){
-                //construct a default LD_LIBRARY_PATH
-                ldpath = globus;
-                //remove trailing / if specified
-                ldpath = ( ldpath.charAt( ldpath.length() - 1 ) == File.separatorChar )?
-                                ldpath.substring( 0, ldpath.length() - 1 ):
-                                ldpath;
-
-                ldpath = ldpath + File.separator + "lib";
-                mLogger.log( "Constructed default LD_LIBRARY_PATH " + ldpath,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-            }
-
-            //we have both the environment variables
             result.add( new Profile( Profile.ENV, "GLOBUS_LOCATION", globus) );
-            result.add( new Profile( Profile.ENV, "LD_LIBRARY_PATH", ldpath) );
         }
 
         return result;
