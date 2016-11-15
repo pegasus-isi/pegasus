@@ -788,7 +788,7 @@ class FileHandler(TransferHandlerBase):
 
             if symlink_file_transfer:
                 # first check that the src file exists
-                if os.path.exists(t.get_src_path()) is False:
+                if (os.path.exists(t.get_src_path()) and os.access(t.get_src_path(), os.R_OK)) is False:
                     logger.error("ln: src (%s) does not exist" % t.get_src_path())
                     failed_l.append(t)
                     self._post_transfer_attempt(t, False, t_start)
