@@ -740,7 +740,24 @@ class TransferHandlerBase(object):
             prev = transfer
             
         return out_lists
-                
+
+
+    def _verify_read_access(self, path):
+        """
+        Sometimes we need to verify that a local file exists, and that we have
+        read acess. Note that because of access mechanisms on some of the file
+        systems we have to deal with, such as CVMFS, checking POSIX permissions
+        is not enough. Here we try to open() the file to make sure it works.
+        """
+        if not os.path.exists(path):
+            return False
+        try:
+            f = open(path, "r")
+            f.close()
+        except:
+            return False
+        return True
+
 
 class FileHandler(TransferHandlerBase):
     """
@@ -787,9 +804,10 @@ class FileHandler(TransferHandlerBase):
                     continue
 
             if symlink_file_transfer:
-                # first check that the src file exists
-                if os.path.exists(t.get_src_path()) is False:
-                    logger.error("ln: src (%s) does not exist" % t.get_src_path())
+                # first check that the src file exists, and that it can be opened
+                if not self._verify_read_access(t.get_src_path()):
+                    logger.error("ln: src (%s) does not exist, or we do not have permission to read it" \
+                                 % t.get_src_path())
                     failed_l.append(t)
                     self._post_transfer_attempt(t, False, t_start)
                     continue
