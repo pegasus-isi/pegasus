@@ -494,6 +494,7 @@ public class Condor extends Namespace{
      * internals
      *
      * <pre>
+     * accounting_group - OK
      * arguments	- not supported, got from the arguments tag in DAX
      * batch_queue      - the batch queue to be used
      * copy_to_spool    - supported, limited to LCG sites at present where one needs
@@ -567,7 +568,10 @@ public class Condor extends Namespace{
 
         switch (key.charAt(0)) {
             case 'a':
-                if (key.compareTo("arguments") == 0) {
+                if (key.compareTo("accounting_group") == 0) {
+                    res = VALID_KEY;
+                }
+                else if (key.compareTo("arguments") == 0) {
                     res = NOT_PERMITTED_KEY;
                 }
                 else {

@@ -1738,13 +1738,8 @@ $adag-&gt;toXML( \*STDOUT, '', $xmlns );</programlisting>
       style guide</ulink>, and all objects and methods are defined using the 
       <emphasis>S3</emphasis> OOP system.</para>
       
-      <para>The API can be installed in the following ways:</para>
+      <para>The API can be installed as follows:</para>
       <orderedlist>
-          <listitem>
-              <para>Command line using <code>R CMD</code> and 
-              <code>pegasus-config</code> (R version &gt;= 3.2):</para>
-              <programlisting>R CMD install `pegasus-config --r`</programlisting>
-          </listitem>
           <listitem>
               <para>Installing from source package (.tar.gz) in an R 
                environment:</para>
