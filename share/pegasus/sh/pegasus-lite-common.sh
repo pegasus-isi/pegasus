@@ -241,10 +241,9 @@ function pegasus_lite_init()
     pegasus_lite_log "PegasusLite: version ${pegasus_lite_full_version}" 1>&2
 
     # PM-1134 - provide some details on where we are running
+    # PM-1144 - do not use HOSTNAME from env, as it might have come form getenv=true
     out="Executing on"
-    if [ "x$HOSTNAME" != "x" ]; then
-        out="$out host $HOSTNAME"
-    elif hostname -f >/dev/null 2>&1; then
+    if hostname -f >/dev/null 2>&1; then
         out="$out host "`hostname -f`
     fi
     if [ "x$OSG_SITE_NAME" != "x" ]; then
