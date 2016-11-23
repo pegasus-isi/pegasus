@@ -1,4 +1,22 @@
 ===============================
+Release Notes for Pegasus 4.7.2
+===============================
+
+We are happy to announce the release of Pegasus 4.7.2. Pegasus 4.7.2
+is a minor release of Pegasus and includes improvements and bug fixes
+to the 4.7.1 release.
+
+Improvements in 4.7.2 are
+
+ - [PM-1141] - The commit to allow symlinks in pegasus-transfer broke
+               PFN fall through
+ - [PM-1142] - Do not set LD_LIBRARY_PATH in job env
+ - [PM-1143] - R DAX API
+ - [PM-1144] - pegasus lite prints the wrong hostname for non-glidein
+               jobs
+
+
+===============================
 Release Notes for Pegasus 4.7.1
 ===============================
 
