@@ -267,7 +267,9 @@ function pegasus_lite_init()
                 eval val="\$$key"
                 pegasus_lite_log "Expanded \$$key to $val"
             fi
-            chmod 0600 $val
+            if [ -e "$val" ]; then
+                chmod 0600 "$val"
+            fi
         done
     done
 
