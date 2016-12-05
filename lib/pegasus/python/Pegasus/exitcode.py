@@ -6,13 +6,12 @@ import re
 import sys
 import os
 import uuid
-from collections import OrderedDict
 from optparse import OptionParser
 
 from Pegasus.cluster import RecordParser
 
 # logging
-log = OrderedDict([('name', None), ('timestamp', None), ('exitcode', None), ('app_exitcode', None), ('retry', None)])
+log = {'name': None, 'timestamp': None, 'exitcode': None, 'app_exitcode': None, 'retry': None}
 tmp_log_files = []
 
 
