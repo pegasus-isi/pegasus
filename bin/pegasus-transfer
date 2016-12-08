@@ -2789,10 +2789,11 @@ class StashHandler(TransferHandlerBase):
         for t in transfers_l:
             t_start = time.time()
 
-            # stashcp wants just the path with no leading slash
+            # stashcp wants just the path with a single leading slash
             src_path = t.src_url()
             src_path = re.sub('^stash:', '', src_path)
             src_path = re.sub('^/+', '', src_path)
+            src_path = '/' + src_path
     
             local_dir = os.path.dirname(t.get_dst_path())
             prepare_local_dir(local_dir)
