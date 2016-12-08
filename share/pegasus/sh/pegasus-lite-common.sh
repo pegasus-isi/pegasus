@@ -253,7 +253,7 @@ function pegasus_lite_init()
         out="$out GLIDEIN_Site=${GLIDEIN_Site}"
     fi
     if [ "x$GLIDEIN_ResourceName" != "x" ]; then
-        out="$out GLIDEIN_Site=${GLIDEIN_ResourceName}"
+        out="$out GLIDEIN_ResourceName=${GLIDEIN_ResourceName}"
     fi
     pegasus_lite_log "$out"
 
