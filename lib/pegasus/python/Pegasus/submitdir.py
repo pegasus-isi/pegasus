@@ -1,10 +1,9 @@
 import os
+from os.path import expanduser
+
 import glob
 import tarfile
 import shutil
-import logging
-from optparse import OptionParser
-
 
 from Pegasus.db import connection
 from Pegasus.tools import utils
@@ -19,19 +18,28 @@ class MasterDatabase:
     def __init__(self, session):
         self.session = session
 
-    def get_master_workflow(self, wf_uuid):
+    def get_master_workflow(self, wf_uuid, submit_dir=None):
         q = self.session.query(DashboardWorkflow)
         q = q.filter(DashboardWorkflow.wf_uuid == wf_uuid)
+
+        if submit_dir:
+            q = q.filter(DashboardWorkflow.submit_dir == submit_dir)
+
         wf = q.first()
         return wf
+
+    def get_master_workflow_for_submitdir(self, submitdir):
+        q = self.session.query(DashboardWorkflow)
+        q = q.filter(DashboardWorkflow.submit_dir == submitdir)
+        return q.all()
 
     def get_ensemble_workflow(self, wf_uuid):
         q = self.session.query(EnsembleWorkflow)
         q = q.filter(EnsembleWorkflow.wf_uuid == wf_uuid)
         return q.first()
 
-    def delete_master_workflow(self, wf_uuid):
-        w = self.get_master_workflow(wf_uuid)
+    def delete_master_workflow(self, wf_uuid, submit_dir=None):
+        w = self.get_master_workflow(wf_uuid, submit_dir=submit_dir)
         if w is None:
             return
 
@@ -81,10 +89,17 @@ class WorkflowDatabase(object):
             log.info("New submit dir: %s" % wf.submit_dir)
 
 class SubmitDir(object):
-    def __init__(self, submitdir):
-        if not os.path.isdir(submitdir):
-            raise SubmitDirException("Invalid submit dir: %s" % submitdir)
+    def __init__(self, submitdir, raise_err=True):
         self.submitdir = os.path.abspath(submitdir)
+        self.submitdir_exists = True
+
+        if not os.path.isdir(submitdir):
+            self.submitdir_exists = False
+
+            if raise_err is False:
+                return
+
+            raise SubmitDirException("Invalid submit dir: %s" % submitdir)
 
         # Locate braindump file
         self.braindump_file = os.path.join(self.submitdir, "braindump.txt")
@@ -430,28 +445,59 @@ class SubmitDir(object):
         mdbsession.commit()
         mdbsession.close()
 
-    def detach(self):
+    def detach(self, wf_uuid=None):
         "Remove any master db entries for the given root workflow"
+        if self.submitdir_exists:
+            # Verify that we aren't trying to detach a subworkflow
+            if self.is_subworkflow():
+                raise SubmitDirException("Subworkflows cannot be detached independent of the root workflow")
 
-        # Verify that we aren't trying to detach a subworkflow
-        if self.is_subworkflow():
-            raise SubmitDirException("Subworkflows cannot be detached independent of the root workflow")
+            # Connect to master database
+            mdbsession = connection.connect_by_submitdir(self.submitdir, connection.DBType.MASTER)
+            mdb = MasterDatabase(mdbsession)
 
-        # Connect to master database
-        mdbsession = connection.connect_by_submitdir(self.submitdir, connection.DBType.MASTER)
-        mdb = MasterDatabase(mdbsession)
+            # Check to see if it even exists
+            wf = mdb.get_master_workflow(self.wf_uuid)
+            if wf is None:
+                print "Workflow is not in master DB"
+            else:
+                # Delete the workflow (this will delete the master_workflowstate entries as well)
+                mdb.delete_master_workflow(self.wf_uuid)
 
-        # Check to see if it even exists
-        wf = mdb.get_master_workflow(self.wf_uuid)
-        if wf is None:
-            print "Workflow is not in master DB"
+            # Update the master db
+            mdbsession.commit()
+            mdbsession.close()
+
         else:
-            # Delete the workflow (this will delete the master_workflowstate entries as well)
-            mdb.delete_master_workflow(self.wf_uuid)
+            # Connect to master database
+            home = expanduser('~')
+            mdbsession = connection.connect('sqlite:///%s/.pegasus/workflow.db' % home,
+                                            db_type=connection.DBType.MASTER)
+            mdb = MasterDatabase(mdbsession)
 
-        # Update the master db
-        mdbsession.commit()
-        mdbsession.close()
+            try:
+                if wf_uuid is None:
+                    wfs = mdb.get_master_workflow_for_submitdir(self.submitdir)
+                    if wfs:
+                        msg = "Invalid submit dir: %s, Specify --wf-uuid <WF_UUID> to detach\n" % self.submitdir
+                        msg += "\tWorkflow UUID, DAX Label, Submit Hostname, Submit Dir.\n"
+                        for wf in wfs:
+                            msg += '\t%s, %s, %s, %s\n' % (wf.wf_uuid, wf.dax_label, wf.submit_hostname, wf.submit_dir)
+                        raise SubmitDirException(msg)
+
+                    else:
+                        raise SubmitDirException("Invalid submit dir: %s" % self.submitdir)
+
+                else:
+                    # Delete
+                    mdb.delete_master_workflow(wf_uuid, submit_dir=self.submitdir)
+
+                    # Update the master db
+                    mdbsession.commit()
+
+            finally:
+                mdbsession.close()
+
 
 class ExtractCommand(LoggingCommand):
     description = "Extract (uncompress) submit directory"
@@ -507,11 +553,17 @@ class DetachCommand(LoggingCommand):
     description = "Detach a submit dir from the master db (dashboard)"
     usage = "Usage: %prog detach SUBMITDIR"
 
+    def __init__(self):
+        LoggingCommand.__init__(self)
+        self.parser.add_option("-i", "--wf-uuid", dest="wf_uuid",
+                               help="Specify wf_uuid of the workflow to be detached.")
+
     def run(self):
         if len(self.args) != 1:
             self.parser.error("Specify SUBMITDIR")
 
-        SubmitDir(self.args[0]).detach()
+        wf_uuid = self.options.wf_uuid
+        SubmitDir(self.args[0], raise_err=False).detach(wf_uuid=wf_uuid)
 
 class SubmitDirCommand(CompoundCommand):
     description = "Manages submit directories"
