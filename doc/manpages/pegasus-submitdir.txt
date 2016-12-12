@@ -72,7 +72,7 @@ Commands
     master_workflow and master_workflowstate entries in the master db for the
     root workflow in SUBMITDIR.
 
-*detach* SUBMITDIR::
+*detach* [--wf-uuid <WF_UUID>] SUBMITDIR::
     Remove entries for the workflow in SUBMITDIR from the user's master db.
     This command will delete any entries in the master_workflow and
     master_workflowstate tables.
