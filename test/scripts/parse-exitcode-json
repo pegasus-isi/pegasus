@@ -22,7 +22,7 @@ import logging
 
 # logging
 logger = logging.getLogger("my_logger")
-console = logging.StreamHandler()
+console = logging.StreamHandler(stream=sys.stdout)
 logger.setLevel(logging.INFO)
 console.setLevel(logging.INFO)
 formatter = logging.Formatter("%(asctime)s %(levelname)7s:  ExitCode Log Parser: %(message)s")
