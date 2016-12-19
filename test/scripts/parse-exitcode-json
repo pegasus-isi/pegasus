@@ -16,6 +16,7 @@
 #  limitations under the License.
 ##
 
+import sys
 import glob
 import json
 import logging
