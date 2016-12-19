@@ -487,7 +487,7 @@ public class PegasusConfiguration {
             StringBuffer sb = new StringBuffer();
             sb.append( "Property Key " ).append( key ).append( " already set to " ).
                append( propValue ).append( ". Will not be set to - ").append( value );
-            mLogger.log( sb.toString(), LogManager.WARNING_MESSAGE_LEVEL );
+            mLogger.log( sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
         }
     }
 
