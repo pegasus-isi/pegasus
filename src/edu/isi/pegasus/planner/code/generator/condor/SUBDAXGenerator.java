@@ -702,6 +702,9 @@ public class SUBDAXGenerator{
         preScriptJob.setStagingSiteHandle( mPegasusConfiguration.determineStagingSite(preScriptJob, mBag.getPlannerOptions()) );
         
         GridStart pegasusLiteWrapper = mGridStartFactory.loadGridStart( preScriptJob, null );
+        
+        //we want full path to pegasus-kickstart
+        pegasusLiteWrapper.useFullPathToGridStarts( true );
         if (!pegasusLiteWrapper.enable( preScriptJob, false )){
             throw new RuntimeException( "Unable to wrap job " + dagJob.getID() + " with PegasusLite ");
         }
