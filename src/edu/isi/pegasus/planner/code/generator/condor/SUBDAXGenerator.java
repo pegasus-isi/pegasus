@@ -675,6 +675,12 @@ public class SUBDAXGenerator{
         //to ensure pegasus lite script is _pre.sh
         preScriptJob.setName( dagJob.getName() + "_pre" );
         
+        //need to set transformation and derivation to make sure
+        //kickstart does not trip up in it's arguments over missing -N argument
+        preScriptJob.setLogicalID( dagJob.getLogicalID() );
+        preScriptJob.setTXName( "pegasus-plan" );
+        preScriptJob.setDVName( "pegasus-plan" );
+        
         preScriptJob.setSiteHandle( dagJob.getSiteHandle() );
         
         preScriptJob.setJobType( Job.COMPUTE_JOB );
