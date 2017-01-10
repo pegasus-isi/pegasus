@@ -700,6 +700,9 @@ public class SUBDAXGenerator{
             throw new RuntimeException( "Unable to wrap job " + dagJob.getID() + " with PegasusLite ");
         }
         
+        //set the xbit on the shell script
+        //for 3.2, we will have 1.6 as the minimum jdk requirement
+        wrapper.setExecutable( true, false );
         
         return wrapper;
     
