@@ -51,6 +51,7 @@ import edu.isi.pegasus.planner.code.GridStartFactory;
 import static edu.isi.pegasus.planner.code.generator.Abstract.POSTSCRIPT_LOG_SUFFIX;
 import edu.isi.pegasus.planner.code.generator.DAXReplicaStore;
 import edu.isi.pegasus.planner.code.generator.Metrics;
+import edu.isi.pegasus.planner.code.gridstart.PegasusLite;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.ENV;
@@ -60,6 +61,8 @@ import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -67,6 +70,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
@@ -78,6 +83,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  * The class that takes in a dax job specified in the DAX and renders it into
  * a SUBDAG with pegasus-plan as the appropriate prescript.
@@ -233,9 +241,9 @@ public class SUBDAXGenerator{
     private PegasusConfiguration mPegasusConfiguration;
     
     /**
-     * The PegasusLite launcher for launching the planner prescripts.
+     * The path to pegasus-lite-common.sh
      */
-    //private GridStart mPegasusLiteLauncher;
+    private File mPegasusLiteCommon;
     
     /**
      * The default constructor.
@@ -290,7 +298,11 @@ public class SUBDAXGenerator{
                               dag,
                               POSTSCRIPT_LOG_SUFFIX );//last parameter can be null
         mPegasusConfiguration = new PegasusConfiguration( bag.getLogger() );
-       
+        
+        File baseShare = mProps.getSharedDir();
+        File shellShare = new File( baseShare, "sh");
+        mPegasusLiteCommon = new File( shellShare, PegasusLite.PEGASUS_LITE_COMMON_FILE_BASENAME );
+        
         
         mMetricsReporter.initialize(bag);
       
@@ -712,6 +724,28 @@ public class SUBDAXGenerator{
         //set the xbit on the shell script
         //for 3.2, we will have 1.6 as the minimum jdk requirement
         wrapper.setExecutable( true, false );
+        
+        //for pegasus lite wrapper to work, we need to copy
+        //pegasus-lite-common.sh to the directory where the dag file
+        //resides for the sub workflow i.e the base submit directory for
+        //the workflow containing the sub workflow
+        File dest = new File( mPegasusPlanOptions.getSubmitDirectory(), PegasusLite.PEGASUS_LITE_COMMON_FILE_BASENAME );
+        if( !dest.exists() ){
+            OutputStream out = null;
+            try {
+                //we copy only once
+                out = new FileOutputStream( dest );
+                Files.copy( Paths.get( mPegasusLiteCommon.getPath()),  out );
+            } catch( Exception ex) {
+                if( out != null ){
+                    try {
+                        out.close();
+                    } catch (IOException ex1) {
+                    }
+                }
+                throw new RuntimeException( "Unable to copy file " + mPegasusLiteCommon + " to directory " + dest, ex);
+            }
+        }
         
         return wrapper;
     
