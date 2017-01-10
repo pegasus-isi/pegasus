@@ -46,9 +46,12 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 
 import edu.isi.pegasus.planner.classes.DAXJob;
+import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.code.GridStartFactory;
+import static edu.isi.pegasus.planner.code.generator.Abstract.POSTSCRIPT_LOG_SUFFIX;
 import edu.isi.pegasus.planner.code.generator.DAXReplicaStore;
 import edu.isi.pegasus.planner.code.generator.Metrics;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -83,7 +86,7 @@ import java.util.Set;
  * @version $Revision$
  */
 public class SUBDAXGenerator{
-
+    
     /**
      * The default category for the sub dax jobs.
      */
@@ -219,6 +222,22 @@ public class SUBDAXGenerator{
     private Metrics mMetricsReporter;
     
     /**
+     * The handle to the GridStart Factory.
+     */
+    private GridStartFactory mGridStartFactory;
+    
+    
+    /**
+     * handle to PegasusConfiguration
+     */
+    private PegasusConfiguration mPegasusConfiguration;
+    
+    /**
+     * The PegasusLite launcher for launching the planner prescripts.
+     */
+    //private GridStart mPegasusLiteLauncher;
+    
+    /**
      * The default constructor.
      */
     public SUBDAXGenerator() {
@@ -265,6 +284,14 @@ public class SUBDAXGenerator{
             mLogger.log( "Condor Version detected is " + mCondorVersion , LogManager.DEBUG_MESSAGE_LEVEL );
         }
 
+        //PM-1132 initialize the PegasusLite Wrapper
+        mGridStartFactory = new GridStartFactory();
+        mGridStartFactory.initialize( mBag, 
+                              dag,
+                              POSTSCRIPT_LOG_SUFFIX );//last parameter can be null
+        mPegasusConfiguration = new PegasusConfiguration( bag.getLogger() );
+       
+        
         mMetricsReporter.initialize(bag);
       
     }
@@ -606,7 +633,79 @@ public class SUBDAXGenerator{
 
     }
     
-     
+    /**
+     * Invokes pegasus-plan via PegasusLite to ensure that prescript works even 
+     * when the DAX'es are created by parent jobs in a Hashed directory structure
+     * on the staging site.
+     * 
+     * @param dagJob      the DAG job corresponding to which the prescript is associated.
+     * @param directory   the directory where the submit file for dagman job has
+     *                    to be written out to.
+     * @param executable    the path to the planner that needs to be called in the prescript
+     * @param arguments     the arguments with which the planner is called.
+     * 
+     * @return the wrapper script that gets called in the prescript for the dag job 
+     */
+    protected File constructPlannerPrescriptWrapper( Job dagJob, 
+                                                     File directory,
+                                                     String executable,
+                                                     String arguments ){
+        
+        //create a shallow clone job for the prescript to be generated.
+        //we need to do this as the dagJob refers to condor dagman instance
+        //not the prescript
+        Job preScriptJob = new Job();
+        
+        //make sure the relative submit dir is same as dag job
+        preScriptJob.setRelativeSubmitDirectory( dagJob.getRelativeSubmitDirectory());
+        
+        //set the executable to the pegasus-plan path
+        preScriptJob.setRemoteExecutable( executable );
+        
+        //make sure inputs and output files are set same as dag job
+        //that is what we want PegasusLite to handle for PM-1132
+        preScriptJob.setInputFiles( dagJob.getInputFiles() );
+        preScriptJob.setOutputFiles( dagJob.getOutputFiles() );
+        
+        //arguments are just $@ since the prescript in the invocation contains
+        //the arguments
+        preScriptJob.setArguments( "$@" );
+        
+        //set the name of the job to add the _pre suffix
+        //to ensure pegasus lite script is _pre.sh
+        preScriptJob.setName( dagJob.getName() + "_pre" );
+        
+        preScriptJob.setSiteHandle( dagJob.getSiteHandle() );
+        
+        preScriptJob.setJobType( Job.COMPUTE_JOB );
+        
+        //determine the basename for the wrapper
+        String basename = this.getBasename( preScriptJob.getName(), ".sh" );
+        
+        //prescript job refers to the pegasus-plan wrapper
+        preScriptJob.setTXName( basename );
+        
+        File wrapper = new File( directory, basename );
+        
+        //to ensure pegasuslite invocation set mode to nonsharedfs
+        //and we dont want any kickstart involved
+        preScriptJob.vdsNS.construct( Pegasus.DATA_CONFIGURATION_KEY, PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE);
+        //preScriptJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None");
+        
+        //set the staging site to be same as dag job??
+        preScriptJob.setStagingSiteHandle( mPegasusConfiguration.determineStagingSite(preScriptJob, mBag.getPlannerOptions()) );
+        
+        GridStart pegasusLiteWrapper = mGridStartFactory.loadGridStart( preScriptJob, null );
+        if (!pegasusLiteWrapper.enable( preScriptJob, false )){
+            throw new RuntimeException( "Unable to wrap job " + dagJob.getID() + " with PegasusLite ");
+        }
+        
+        
+        return wrapper;
+    
+    }
+    
+    
     /**
      * Construct a pegasus plan wrapper script that changes the directory in which
      * pegasus-plan is launched. 
@@ -619,7 +718,7 @@ public class SUBDAXGenerator{
      * 
      * @return the wrapper script that gets called in the prescript for the dag job 
      */
-    protected File constructPlannerPrescriptWrapper( Job dagJob, 
+    protected File constructPlannerPrescriptWrapperOld( Job dagJob, 
                                                      File directory,
                                                      String executable,
                                                      String arguments ){
