@@ -869,6 +869,11 @@ public class SUBDAXGenerator{
 
         //construct the name of the DAG job as same as subdax job
         job.setName( subdaxJob.getName() );
+        
+        //make sure inputs and output files are set same as the subdaxJob job
+        //that is what we want PegasusLite wrapper to handle for PM-1132
+        job.setInputFiles( subdaxJob.getInputFiles() );
+        job.setOutputFiles( subdaxJob.getOutputFiles() );
 
         List entries;
         TransformationCatalogEntry entry = null;
