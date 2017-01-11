@@ -679,6 +679,9 @@ public class SUBDAXGenerator{
         preScriptJob.setInputFiles( dagJob.getInputFiles() );
         preScriptJob.setOutputFiles( dagJob.getOutputFiles() );
         
+        System.out.println( " ** DEBUG ** prescript input files are " + preScriptJob.getInputFiles() );
+        System.out.println( " ** DEBUG ** prescript input files are " + preScriptJob.getOutputFiles() );
+        
         //arguments are just $@ since the prescript in the invocation contains
         //the arguments
         preScriptJob.setArguments( "$@" );
