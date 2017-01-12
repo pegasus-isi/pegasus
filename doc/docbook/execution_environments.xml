@@ -19,8 +19,8 @@
     notifications).</para>
 
     <para>Running on a local HTCondor pool is achieved by executing the
-    workflow on site local ( <emphasis role="bold">--sites
-    local</emphasis>option to pegasus-plan ). The site "local" is a reserved
+    workflow on site local (<emphasis role="bold">--sites
+    local</emphasis> option to pegasus-plan). The site "local" is a reserved
     site in Pegasus and results in the jobs to run on the submit host in
     HTCondor universe local. The site catalog can be left very simple in this
     case:</para>

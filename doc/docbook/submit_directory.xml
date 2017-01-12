@@ -557,7 +557,7 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
     </orderedlist>
 
     <table>
-      <title>Table 1: The job lifecycle when executed as part of the
+      <title>The job lifecycle when executed as part of the
       workflow</title>
 
       <tgroup cols="2">
@@ -665,7 +665,7 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
     contains metadata about the workflow.</para>
 
     <table>
-      <title>Table 2: Information Captured in Braindump File</title>
+      <title>Information Captured in Braindump File</title>
 
       <tgroup cols="2">
         <tbody>

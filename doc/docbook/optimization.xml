@@ -633,7 +633,7 @@ siteX    pegasus::seqexec     /usr/pegasus/bin/pegasus-cluster INSTALLED       I
             following pegasus profiles with the jobs in the DAX</para>
 
             <table>
-              <title>Table : Pegasus Profiles that can be associated with jobs
+              <title>Pegasus Profiles that can be associated with jobs
               in the DAX for PMC</title>
 
               <tgroup cols="2">
