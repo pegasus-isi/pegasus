@@ -103,7 +103,7 @@
       <section>
         <title>Regex</title>
 
-        <para>This replica selector allows the user allows the user to
+        <para>This replica selector allows the user to
         specific regular expressions that can be used to rank various PFN's
         returned from the Replica Catalog for a particular LFN. This replica
         selector orders the replicas based on the rank. Lower the rank higher
@@ -201,7 +201,7 @@ pegasus.replica.uwm.prefer.stagein.sites                   isi,cit
         mechanism.</para>
 
         <para>To use this replica selector set the following
-        property<programlisting>pegasus.selector.replica                  Default</programlisting></para>
+        property<programlisting>pegasus.selector.replica                  Local</programlisting></para>
       </section>
     </section>
   </section>

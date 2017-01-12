@@ -164,7 +164,7 @@ public class PegasusConfiguration {
     public String determineStagingSite( Job job, PlannerOptions options ){
         //check to see if job has data.configuration set
         if( !job.vdsNS.containsKey( Pegasus.DATA_CONFIGURATION_KEY ) ){
-            throw new RuntimeException( "Internal Planner Error: Data Configuration shoudl have been set for job " + job.getID() );
+            throw new RuntimeException( "Internal Planner Error: Data Configuration should have been set for job " + job.getID() );
         }
         
         String conf = job.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY );

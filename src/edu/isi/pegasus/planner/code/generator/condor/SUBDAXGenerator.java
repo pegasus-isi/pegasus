@@ -46,9 +46,13 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 
 import edu.isi.pegasus.planner.classes.DAXJob;
+import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.code.GridStartFactory;
+import static edu.isi.pegasus.planner.code.generator.Abstract.POSTSCRIPT_LOG_SUFFIX;
 import edu.isi.pegasus.planner.code.generator.DAXReplicaStore;
 import edu.isi.pegasus.planner.code.generator.Metrics;
+import edu.isi.pegasus.planner.code.gridstart.PegasusLite;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -57,6 +61,8 @@ import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -64,6 +70,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
@@ -75,6 +83,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  * The class that takes in a dax job specified in the DAX and renders it into
  * a SUBDAG with pegasus-plan as the appropriate prescript.
@@ -83,7 +94,7 @@ import java.util.Set;
  * @version $Revision$
  */
 public class SUBDAXGenerator{
-
+    
     /**
      * The default category for the sub dax jobs.
      */
@@ -219,6 +230,22 @@ public class SUBDAXGenerator{
     private Metrics mMetricsReporter;
     
     /**
+     * The handle to the GridStart Factory.
+     */
+    private GridStartFactory mGridStartFactory;
+    
+    
+    /**
+     * handle to PegasusConfiguration
+     */
+    private PegasusConfiguration mPegasusConfiguration;
+    
+    /**
+     * The path to pegasus-lite-common.sh
+     */
+    private File mPegasusLiteCommon;
+    
+    /**
      * The default constructor.
      */
     public SUBDAXGenerator() {
@@ -265,6 +292,18 @@ public class SUBDAXGenerator{
             mLogger.log( "Condor Version detected is " + mCondorVersion , LogManager.DEBUG_MESSAGE_LEVEL );
         }
 
+        //PM-1132 initialize the PegasusLite Wrapper
+        mGridStartFactory = new GridStartFactory();
+        mGridStartFactory.initialize( mBag, 
+                              dag,
+                              POSTSCRIPT_LOG_SUFFIX );//last parameter can be null
+        mPegasusConfiguration = new PegasusConfiguration( bag.getLogger() );
+        
+        File baseShare = mProps.getSharedDir();
+        File shellShare = new File( baseShare, "sh");
+        mPegasusLiteCommon = new File( shellShare, PegasusLite.PEGASUS_LITE_COMMON_FILE_BASENAME );
+        
+        
         mMetricsReporter.initialize(bag);
       
     }
@@ -606,7 +645,116 @@ public class SUBDAXGenerator{
 
     }
     
-     
+    /**
+     * Invokes pegasus-plan via PegasusLite to ensure that prescript works even 
+     * when the DAX'es are created by parent jobs in a Hashed directory structure
+     * on the staging site.
+     * 
+     * @param dagJob      the DAG job corresponding to which the prescript is associated.
+     * @param directory   the directory where the submit file for dagman job has
+     *                    to be written out to.
+     * @param executable    the path to the planner that needs to be called in the prescript
+     * @param arguments     the arguments with which the planner is called.
+     * 
+     * @return the wrapper script that gets called in the prescript for the dag job 
+     */
+    protected File constructPlannerPrescriptWrapper( Job dagJob, 
+                                                     File directory,
+                                                     String executable,
+                                                     String arguments ){
+        
+        //create a shallow clone job for the prescript to be generated.
+        //we need to do this as the dagJob refers to condor dagman instance
+        //not the prescript
+        Job preScriptJob = new Job();
+        
+        //make sure the relative submit dir is same as dag job
+        preScriptJob.setRelativeSubmitDirectory( dagJob.getRelativeSubmitDirectory());
+        
+        //set the executable to the pegasus-plan path
+        preScriptJob.setRemoteExecutable( executable );
+        
+        //make sure inputs and output files are set same as dag job
+        //that is what we want PegasusLite to handle for PM-1132
+        preScriptJob.setInputFiles( dagJob.getInputFiles() );
+        preScriptJob.setOutputFiles( dagJob.getOutputFiles() );
+        
+        System.out.println( " ** DEBUG ** prescript input files are " + preScriptJob.getInputFiles() );
+        System.out.println( " ** DEBUG ** prescript input files are " + preScriptJob.getOutputFiles() );
+        
+        //arguments are just $@ since the prescript in the invocation contains
+        //the arguments
+        preScriptJob.setArguments( "$@" );
+        
+        //set the name of the job to add the _pre suffix
+        //to ensure pegasus lite script is _pre.sh
+        preScriptJob.setName( dagJob.getName() + "_pre" );
+        
+        //need to set transformation and derivation to make sure
+        //kickstart does not trip up in it's arguments over missing -N argument
+        preScriptJob.setLogicalID( dagJob.getLogicalID() );
+        preScriptJob.setTXName( "pegasus-plan" );
+        preScriptJob.setDVName( "pegasus-plan" );
+        
+        preScriptJob.setSiteHandle( dagJob.getSiteHandle() );
+        
+        preScriptJob.setJobType( Job.COMPUTE_JOB );
+        
+        //determine the basename for the wrapper
+        String basename = this.getBasename( preScriptJob.getName(), ".sh" );
+        
+        //prescript job refers to the pegasus-plan wrapper
+        preScriptJob.setTXName( basename );
+        
+        File wrapper = new File( directory, basename );
+        
+        //to ensure pegasuslite invocation set mode to nonsharedfs
+        //and we dont want any kickstart involved
+        preScriptJob.vdsNS.construct( Pegasus.DATA_CONFIGURATION_KEY, PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE);
+        //preScriptJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None");
+        
+        //set the staging site to be same as dag job??
+        preScriptJob.setStagingSiteHandle( mPegasusConfiguration.determineStagingSite(preScriptJob, mBag.getPlannerOptions()) );
+        
+        GridStart pegasusLiteWrapper = mGridStartFactory.loadGridStart( preScriptJob, null );
+        
+        //we want full path to pegasus-kickstart
+        pegasusLiteWrapper.useFullPathToGridStarts( true );
+        if (!pegasusLiteWrapper.enable( preScriptJob, false )){
+            throw new RuntimeException( "Unable to wrap job " + dagJob.getID() + " with PegasusLite ");
+        }
+        
+        //set the xbit on the shell script
+        //for 3.2, we will have 1.6 as the minimum jdk requirement
+        wrapper.setExecutable( true, false );
+        
+        //for pegasus lite wrapper to work, we need to copy
+        //pegasus-lite-common.sh to the directory where the dag file
+        //resides for the sub workflow i.e the base submit directory for
+        //the workflow containing the sub workflow
+        File dest = new File( mPegasusPlanOptions.getSubmitDirectory(), PegasusLite.PEGASUS_LITE_COMMON_FILE_BASENAME );
+        if( !dest.exists() ){
+            OutputStream out = null;
+            try {
+                //we copy only once
+                out = new FileOutputStream( dest );
+                Files.copy( Paths.get( mPegasusLiteCommon.getPath()),  out );
+            } catch( Exception ex) {
+                if( out != null ){
+                    try {
+                        out.close();
+                    } catch (IOException ex1) {
+                    }
+                }
+                throw new RuntimeException( "Unable to copy file " + mPegasusLiteCommon + " to directory " + dest, ex);
+            }
+        }
+        
+        return wrapper;
+    
+    }
+    
+    
     /**
      * Construct a pegasus plan wrapper script that changes the directory in which
      * pegasus-plan is launched. 
@@ -619,7 +767,7 @@ public class SUBDAXGenerator{
      * 
      * @return the wrapper script that gets called in the prescript for the dag job 
      */
-    protected File constructPlannerPrescriptWrapper( Job dagJob, 
+    protected File constructPlannerPrescriptWrapperOld( Job dagJob, 
                                                      File directory,
                                                      String executable,
                                                      String arguments ){
@@ -724,6 +872,11 @@ public class SUBDAXGenerator{
 
         //construct the name of the DAG job as same as subdax job
         job.setName( subdaxJob.getName() );
+        
+        //make sure inputs and output files are set same as the subdaxJob job
+        //that is what we want PegasusLite wrapper to handle for PM-1132
+        job.setInputFiles( subdaxJob.getInputFiles() );
+        job.setOutputFiles( subdaxJob.getOutputFiles() );
 
         List entries;
         TransformationCatalogEntry entry = null;

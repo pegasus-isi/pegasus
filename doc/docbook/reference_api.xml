@@ -139,6 +139,7 @@
         <emphasis>adag</emphasis>.</para>
 
         <table>
+          <title>Root element attributes</title>
           <tgroup cols="4">
             <thead>
               <row>
@@ -468,6 +469,7 @@
           transformation catalog.</para>
 
           <table>
+            <title>executable element attributes</title>
             <tgroup cols="4">
               <thead>
                 <row>
@@ -798,6 +800,7 @@
           the following value set:</para>
 
           <table>
+            <title>invoke element attributes</title>
             <tgroup cols="3">
               <thead>
                 <row>
@@ -876,6 +879,7 @@
           variables:</para>
 
           <table>
+            <title>invoke/executable environment variables</title>
             <tgroup cols="3">
               <thead>
                 <row>
@@ -3867,6 +3871,7 @@ Where QUERY can be( r.wf_id &gt;= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.w
         <title>Resource - Query Prefix</title>
 
         <para><table frame="box" rules="all">
+            <title>Query Prefix</title>
             <caption/>
 
             <thead>

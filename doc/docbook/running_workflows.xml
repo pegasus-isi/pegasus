@@ -319,7 +319,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
               NonJavaCallout.</para>
 
               <table>
-                <title>Table 1: Key Value Pairs that are currently generated
+                <title>Key Value Pairs that are currently generated
                 for the site selector temporary file that is generated in the
                 NonJavaCallout.</title>
 
@@ -1188,7 +1188,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         below:</para>
 
         <table>
-          <title>Table2: Basic Properties that need to be set</title>
+          <title>Basic Properties that need to be set</title>
 
           <tgroup cols="1">
             <tbody>

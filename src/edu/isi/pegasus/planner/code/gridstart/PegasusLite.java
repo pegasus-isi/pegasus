@@ -1315,7 +1315,7 @@ public class PegasusLite implements GridStart {
     }
 
     public void useFullPathToGridStarts(boolean fullPath) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        mKickstartGridStartImpl.useFullPathToGridStarts(fullPath);
     }
 
     /**

@@ -12,7 +12,7 @@ a = File("f.a")
 a.addPFN(PFN("file://" + os.getcwd() + "/f.a", "local"))
 dax.addFile(a)
 	
-# Add executables to the DAX-level replica catalog
+# Add executables to the DAX-level transformation catalog
 e_hello = Executable(namespace="hello_world", name="hello", version="1.0", \
                      os="linux", arch="x86_64", installed=False)
 e_hello.addPFN(PFN("file://" + os.getcwd() + "/hello.sh", "local"))
