@@ -1100,7 +1100,7 @@ class GridFtpHandler(TransferHandlerBase):
                     local_ok = False
         if not local_ok:
             for t in transfers:
-                self._post_transfer_attempt(t, transfer_success, t_start)
+                self._post_transfer_attempt(t, False, time.time())
             return False
     
         # create tmp file with transfer src/dst pairs
@@ -2423,10 +2423,15 @@ class ScpHandler(TransferHandlerBase):
                 else:
                     # file -> scp
                     
-                    # src has to exist and be readable
-                    if not verify_local_file(t.get_src_path()):
-                        failed_l.append(t)
-                        self._post_transfer_attempt(t, False, t_start)
+                    local_ok = True
+                    for t in t_group:
+                        # src has to exist and be readable
+                        if not verify_local_file(t.get_src_path()):
+                            local_ok = False
+                    if not local_ok:
+                        for t in t_group:
+                            failed_l.append(t)
+                            self._post_transfer_attempt(t, False, time.time())
                         continue
                     
                     key = "SSH_PRIVATE_KEY_" + t_base.get_dst_site_label()
