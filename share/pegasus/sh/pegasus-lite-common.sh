@@ -26,7 +26,7 @@
 
 function pegasus_lite_setup_log()
 {
-    # PM-1132 set up the log explicitly to a file or stderr
+    # PM-1132 set up the log explicitly to a file 
     
     if [ "X${pegasus_lite_log_file}" != "X" ]; then
 	# Close STDOUT file descriptor
@@ -37,15 +37,16 @@ function pegasus_lite_setup_log()
 
         # Open STDERR to file for writes
 	exec 2>$pegasus_lite_log_file
+
+	exec 1>&2
     fi
 
-    exec 1>&2
 }
 
 function pegasus_lite_log()
 {
     TS=`/bin/date +'%F %H:%M:%S'`
-    echo "$TS: $1" 
+    echo "$TS: $1"  1>&2
 }
 
 
