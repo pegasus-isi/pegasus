@@ -790,6 +790,13 @@ class FileHandler(TransferHandlerBase):
         for t in transfers:
             t_start = time.time()
             prepare_local_dir(os.path.dirname(t.get_dst_path()))
+            
+            # src has to exist and be readable
+            if not verify_local_file(t.get_src_path()):
+                failed_l.append(t)
+                self._post_transfer_attempt(t, False, t_start)
+                continue
+            
             if os.path.exists(t.get_src_path()) \
                and os.path.exists(t.get_dst_path()):
                 # make sure src and target are not the same file - have to
@@ -1083,6 +1090,18 @@ class GridFtpHandler(TransferHandlerBase):
         """
         global gsiftp_failures
         env = {}
+    
+        # if srcs are local, verify them first
+        local_ok = True
+        for t in transfers:
+            if t.get_src_proto() == "file":
+                # src has to exist and be readable
+                if not verify_local_file(t.get_src_path()):
+                    local_ok = False
+        if not local_ok:
+            for t in transfers:
+                self._post_transfer_attempt(t, False, time.time())
+            return False
     
         # create tmp file with transfer src/dst pairs
         num_pairs = 0
@@ -1448,6 +1467,11 @@ class IRodsHandler(TransferHandlerBase):
                 cmd += " '" + t.get_dst_path() + "'"
             else:
                 # file->irods
+                # src has to exist and be readable
+                if not verify_local_file(t.get_src_path()):
+                    failed_l.append(t)
+                    self._post_transfer_attempt(t, False, t_start)
+                    continue
                 cmd = "imkdir -p '" + os.path.dirname(t.get_dst_path()) + "'"
                 try:
                     tc = TimedCommand(cmd, env_overrides = env, timeout_secs = 10*60)
@@ -1678,6 +1702,12 @@ class S3Handler(TransferHandlerBase):
                 cmd = tools.full_path("pegasus-s3") + " get '%s' '%s'" % (t.src_url(), t.get_dst_path())
             else:
                 # this is a 'put'
+                if t.get_src_proto() == "file":
+                    # src has to exist and be readable
+                    if not verify_local_file(t.get_src_path()):
+                        failed_l.append(t)
+                        self._post_transfer_attempt(t, False, t_start)
+                        continue
                 env = self._s3_cred_env(t.get_dst_site_label())
                 cmd = tools.full_path("pegasus-s3") + " put -f -b '%s' '%s'" % (t.get_src_path(), t.dst_url())
 
@@ -2058,6 +2088,11 @@ class GSHandler(TransferHandlerBase):
                 cmd = "gsutil -q cp '%s' '%s'" % (t.src_url(), t.get_dst_path())
             else:
                 # this is a 'put'
+                # src has to exist and be readable
+                if not verify_local_file(t.get_src_path()):
+                    failed_l.append(t)
+                    self._post_transfer_attempt(t, False, t_start)
+                    continue
                 cmd = "gsutil -q cp '%s' '%s'" % (t.get_src_path(), t.dst_url())            
 
             try:
@@ -2218,7 +2253,14 @@ class GFALHandler(TransferHandlerBase):
             t_start = time.time()
         
             if t.get_dst_proto() == "file":
-                prepare_local_dir(os.path.dirname(t.get_dst_path()))        
+                prepare_local_dir(os.path.dirname(t.get_dst_path()))
+                
+            if t.get_src_proto() == "file":
+                # src has to exist and be readable
+                if not verify_local_file(t.get_src_path()):
+                    failed_l.append(t)
+                    self._post_transfer_attempt(t, False, t_start)
+                    continue        
     
             cmd = "gfal-copy -f"
             if logger.isEnabledFor(logging.DEBUG):
@@ -2380,6 +2422,18 @@ class ScpHandler(TransferHandlerBase):
                         cmd += " '" + t_base.get_dst_path() + "'"
                 else:
                     # file -> scp
+                    
+                    local_ok = True
+                    for t in t_group:
+                        # src has to exist and be readable
+                        if not verify_local_file(t.get_src_path()):
+                            local_ok = False
+                    if not local_ok:
+                        for t in t_group:
+                            failed_l.append(t)
+                            self._post_transfer_attempt(t, False, time.time())
+                        continue
+                    
                     key = "SSH_PRIVATE_KEY_" + t_base.get_dst_site_label()
                     if key in os.environ:
                         check_cred_fs_permissions(os.environ[key])
@@ -2611,6 +2665,13 @@ class GSIScpHandler(TransferHandlerBase):
                         cmd += " '" + t_base.get_dst_path() + "'"
                 else:
                     # file -> scp
+                    
+                    # src has to exist and be readable
+                    if not verify_local_file(t.get_src_path()):
+                        failed_l.append(t)
+                        self._post_transfer_attempt(t, False, t_start)
+                        continue
+                    
                     mkdir_key = "scp://" + self._extract_hostname(t_base.get_dst_host()) + ":" \
                               + os.path.dirname(t_base.get_dst_path())
                     if not mkdir_key in remote_dirs_created:
@@ -3352,7 +3413,7 @@ def backticks(cmd_line):
 def max_cmd_length():
     """
     os.sysconf('SC_ARG_MAX') does not always work, so use brute force
-    to determine the maximum command line lenght the system can handle
+    to determine the maximum command line length the system can handle
     """
 
     for n in range(10, 20):
@@ -3412,7 +3473,7 @@ def env_setup():
     logger.info("LD_LIBRARY_PATH=" + os.environ['LD_LIBRARY_PATH'])
 
     max_cmd_len = max_cmd_length()
-    logger.debug("Maximum command line argument lenght to be used: %d" %(max_cmd_len))
+    logger.debug("Maximum command line argument length to be used: %d" %(max_cmd_len))
 
 
 def check_cred_fs_permissions(path):
@@ -3427,6 +3488,26 @@ def check_cred_fs_permissions(path):
         logger.warning("%s found to have weak permissions. chmod to 0600."
                        %(path))
         os.chmod(path, 0600)
+
+
+
+def verify_local_file(path):
+    """
+    makes sure a local file exists and is readable
+    """
+    if not(os.path.exists(path)):
+        logger.error("Expected local file does not exist: " + path)
+        return False
+
+    # check readability
+    try:
+        f = open(path, "r")
+        f.close()
+    except:
+        logger.error("File is not readable: " + path)
+        return False
+    
+    return True
 
 
 def prepare_local_dir(path):

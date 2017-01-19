@@ -477,7 +477,7 @@ E.g.<emphasis role="bold">
       names.</para>
 
       <table>
-        <title>Table 1: Property Keys removed and their Profile based
+        <title>Property Keys removed and their Profile based
         replacement</title>
 
         <tgroup cols="2">
@@ -614,7 +614,7 @@ E.g.<emphasis role="bold">
         the new names for the profile keys.</para>
 
         <table>
-          <title>Table 2: Old and New Names For Job Clustering Profile
+          <title>Old and New Names For Job Clustering Profile
           Keys</title>
 
           <tgroup cols="2">
@@ -664,7 +664,7 @@ E.g.<emphasis role="bold">
       details in the Profiles Chapter.</para>
 
       <table>
-        <title>Table 3: Old and New Names For Transfer Bundling Profile
+        <title>Old and New Names For Transfer Bundling Profile
         Keys</title>
 
         <tgroup cols="2">
@@ -714,7 +714,7 @@ E.g.<emphasis role="bold">
       new names for the clients that replaced them</para>
 
       <table>
-        <title>Table 1: Old Client Names and their New Names</title>
+        <title>Old Client Names and their New Names</title>
 
         <tgroup cols="2">
           <tbody>

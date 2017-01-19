@@ -508,7 +508,7 @@ Scope       :</emphasis> TC, SC, DAX, Properties
       around the instruction, the out pair of parentheses is not necessary in
       globus profile specifications</para>
 
-      <para>Table 2 shows some commonly used RSL instructions. For an
+      <para>The table below shows some commonly used RSL instructions. For an
       authoritative list of all possible RSL instructions refer to the Globus
       RSL specification.</para>
 
@@ -926,11 +926,11 @@ Scope       :</emphasis> TC, SC, DAX, Properties
 
       <para>Pegasus prevents the user from specifying certain Condor commands
       in condor profiles, because they are automatically generated or can be
-      overridden through some different means. Table 5 shows prohibited Condor
+      overridden through some different means. The table below shows prohibited Condor
       commands.</para>
 
       <table>
-        <title>Table 5: Condor commands prohibited in condor profiles</title>
+        <title>Condor commands prohibited in condor profiles</title>
 
         <tgroup cols="2">
           <tbody>
@@ -992,7 +992,7 @@ Scope       :</emphasis> TC, SC, DAX, Properties
       remote job's stdout, usually the output from kickstart, as sole argument
       to the post-script.</para>
 
-      <para>Table 6 shows the keys in the dagman profile domain that are
+      <para>The table below shows the keys in the dagman profile domain that are
       understood by Pegasus and can be associated at a per job basis.</para>
 
       <para><table>
@@ -1189,7 +1189,7 @@ Profile  Key: </emphasis></emphasis>ABORT-DAG-ON
 
       <para/>
 
-      <para>Table 7 shows the keys in the dagman profile domain that are
+      <para>The table below shows the keys in the dagman profile domain that are
       understood by Pegasus and can be used to apply to the whole workflow.
       These are used to control DAGMan's behavior at the workflow level, and
       are recommended to be specified in the properties file.</para>
@@ -1325,7 +1325,7 @@ Scope       :</emphasis> Properties
       sub-set of <emphasis>pegasus</emphasis> profiles for their
       decision-making.</para>
 
-      <para>Table 8 shows some of the useful configuration option Pegasus
+      <para>The table below shows some of the useful configuration option Pegasus
       understands.</para>
 
       <table>
