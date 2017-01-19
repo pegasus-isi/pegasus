@@ -1,0 +1,25 @@
+2013.06.13 11:35:09.422 PDT:   Submitting job(s). 
+2013.06.13 11:35:09.428 PDT:   1 job(s) submitted to cluster 2232. 
+2013.06.13 11:35:09.434 PDT:    
+2013.06.13 11:35:09.440 PDT:   ----------------------------------------------------------------------- 
+2013.06.13 11:35:09.446 PDT:   File for submitting this DAG to Condor           : local-hierarchy-0.dag.condor.sub 
+2013.06.13 11:35:09.451 PDT:   Log of DAGMan debugging messages                 : local-hierarchy-0.dag.dagman.out 
+2013.06.13 11:35:09.457 PDT:   Log of Condor library output                     : local-hierarchy-0.dag.lib.out 
+2013.06.13 11:35:09.463 PDT:   Log of Condor library error messages             : local-hierarchy-0.dag.lib.err 
+2013.06.13 11:35:09.468 PDT:   Log of the life of condor_dagman itself          : local-hierarchy-0.dag.dagman.log 
+2013.06.13 11:35:09.474 PDT:    
+2013.06.13 11:35:09.480 PDT:   ----------------------------------------------------------------------- 
+2013.06.13 11:35:09.486 PDT:    
+2013.06.13 11:35:09.491 PDT:   Your workflow has been started and is running in the base directory: 
+2013.06.13 11:35:09.497 PDT:    
+2013.06.13 11:35:09.503 PDT:     /lfs1/devel/Pegasus/git/pegasus/test/core/028-dynamic-hierarchy/work/vahi/pegasus/local-hierarchy/run0001 
+2013.06.13 11:35:09.509 PDT:    
+2013.06.13 11:35:09.515 PDT:   *** To monitor the workflow you can run *** 
+2013.06.13 11:35:09.520 PDT:    
+2013.06.13 11:35:09.526 PDT:     pegasus-status -l /lfs1/devel/Pegasus/git/pegasus/test/core/028-dynamic-hierarchy/work/vahi/pegasus/local-hierarchy/run0001 
+2013.06.13 11:35:09.532 PDT:    
+2013.06.13 11:35:09.538 PDT:   *** To remove your workflow run *** 
+2013.06.13 11:35:09.543 PDT:    
+2013.06.13 11:35:09.549 PDT:     pegasus-remove /lfs1/devel/Pegasus/git/pegasus/test/core/028-dynamic-hierarchy/work/vahi/pegasus/local-hierarchy/run0001 
+2013.06.13 11:35:09.554 PDT:    
+2013.06.13 11:35:09.701 PDT:   Time taken to execute is 1.877 seconds 
