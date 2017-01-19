@@ -24,10 +24,28 @@
 #
 
 
+function pegasus_lite_setup_log()
+{
+    # PM-1132 set up the log explicitly to a file or stderr
+    
+    if [ "X${pegasus_lite_log_file}" != "X" ]; then
+	# Close STDOUT file descriptor
+	exec 1>&-
+
+        # Close STDERR FD
+        exec 2>&-
+
+        # Open STDERR to file for writes
+	exec 2>$pegasus_lite_log_file
+    fi
+
+    exec 1>&2
+}
+
 function pegasus_lite_log()
 {
     TS=`/bin/date +'%F %H:%M:%S'`
-    echo "$TS: $1" 1>&2
+    echo "$TS: $1" 
 }
 
 
@@ -235,6 +253,9 @@ function pegasus_lite_setup_work_dir()
 function pegasus_lite_init()
 {
     pegasus_lite_full_version=${pegasus_lite_version_major}.${pegasus_lite_version_minor}.${pegasus_lite_version_patch}
+
+    # setup pegasus lite log
+    pegasus_lite_setup_log
 
     # announce version - we do this so pegasus-exitcode and other tools
     # can tell the job was a PegasusLite job
