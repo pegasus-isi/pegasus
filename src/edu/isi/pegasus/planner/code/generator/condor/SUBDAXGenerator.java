@@ -680,7 +680,7 @@ public class SUBDAXGenerator{
         preScriptJob.setOutputFiles( dagJob.getOutputFiles() );
         
         System.out.println( " ** DEBUG ** prescript input files are " + preScriptJob.getInputFiles() );
-        System.out.println( " ** DEBUG ** prescript input files are " + preScriptJob.getOutputFiles() );
+        System.out.println( " ** DEBUG ** prescript output files are " + preScriptJob.getOutputFiles() );
         
         //arguments are just $@ since the prescript in the invocation contains
         //the arguments
@@ -711,7 +711,12 @@ public class SUBDAXGenerator{
         //to ensure pegasuslite invocation set mode to nonsharedfs
         //and we dont want any kickstart involved
         preScriptJob.vdsNS.construct( Pegasus.DATA_CONFIGURATION_KEY, PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE);
-        //preScriptJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None");
+        
+        //ensure that the pegasuslite log gets directed to a err file , as
+        //HTCondor DAGMan eats up prescript outputs by default
+        //planner output still goes explicitly to a .prel.log file
+        preScriptJob.envVariables.construct( PegasusLite.PEGASUS_LITE_LOG_ENV_KEY, 
+                                             preScriptJob.getName()+ ".err" );
         
         //set the staging site to be same as dag job??
         preScriptJob.setStagingSiteHandle( mPegasusConfiguration.determineStagingSite(preScriptJob, mBag.getPlannerOptions()) );

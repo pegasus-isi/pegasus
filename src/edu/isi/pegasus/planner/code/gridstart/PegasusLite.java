@@ -170,6 +170,12 @@ public class PegasusLite implements GridStart {
     public static final String WORKER_NODE_DIRECTORY_KEY = "PEGASUS_WN_TMP";
     
     /**
+     * The environment/shell variable that if set points to the file where
+     * PegasusLite log goes.
+     */
+    public static final String PEGASUS_LITE_LOG_ENV_KEY = "pegasus_lite_log_file";
+    
+    /**
      * Stores the major version of the planner.
      */
     private String mMajorVersionLevel;
@@ -799,8 +805,15 @@ public class PegasusLite implements GridStart {
             sb.append( "pegasus_lite_version_patch=\"" ).append( this.mPatchVersionLevel ).append( "\"").append( '\n' );
             sb.append( "pegasus_lite_enforce_strict_wp_check=\"" ).append( this.mEnforceStrictChecksOnWPVersion ).append( "\"").append( '\n' );
             sb.append( "pegasus_lite_version_allow_wp_auto_download=\"" ).append( this.mAllowWPDownloadFromWebsite ).append( "\"").append( '\n' );
-            sb.append( '\n' );
+            
+            //PM-1132 set the variable to point to a log file for pegasus lite output
+            if( job.envVariables.containsKey( PegasusLite.PEGASUS_LITE_LOG_ENV_KEY) ){
+                sb.append( PegasusLite.PEGASUS_LITE_LOG_ENV_KEY).append( "=\"" ).
+                  append( job.envVariables.get(PegasusLite.PEGASUS_LITE_LOG_ENV_KEY) ).append( "\"").append( '\n' );
+            }
 
+            sb.append( '\n' );
+            
             sb.append( ". " ).append( PegasusLite.PEGASUS_LITE_COMMON_FILE_BASENAME ).append( '\n' );
             sb.append( '\n' );
 
