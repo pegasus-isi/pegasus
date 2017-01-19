@@ -26,9 +26,20 @@
 
 function pegasus_lite_setup_log()
 {
-    # PM-1132 set up the log explicitly to a file 
-    
+    # PM-1132 set up the log explicitly to a file     
     if [ "X${pegasus_lite_log_file}" != "X" ]; then
+
+	# rename the log file with approprite suffix
+	# to ensure they are not ovewritten
+	count="000"
+	for count in `seq -f "%03g" 0 999`;
+        do
+            if [ ! -e ${pegasus_lite_log_file}.${count} ] ; then
+		break
+	    fi
+        done    
+	pegasus_lite_log_file=${pegasus_lite_log_file}.${count}
+
 	# Close STDOUT file descriptor
 	exec 1>&-
 
