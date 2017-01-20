@@ -1827,7 +1827,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []        
         
-        r = re.search("(\w+)@([\w#]+)", mkdir_l[0].get_host())
+        r = re.search("([\w-]+)@([\w#-]+)", mkdir_l[0].get_host())
         if not r:
             raise RuntimeError("Unable to determine username from URL")
 
@@ -1876,7 +1876,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
         failed_l = []        
         
         # src
-        r = re.search("(\w+)@([\w#]+)", transfers_l[0].get_src_host())
+        r = re.search("([\w-]+)@([\w#-]+)", transfers_l[0].get_src_host())
         if not r:
             raise RuntimeError("Unable to determine username from URL")
         globus_username = r.group(1)
@@ -1939,7 +1939,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []        
         
-        r = re.search("(\w+)@([\w#]+)", removes_l[0].get_host())
+        r = re.search("([\w-]+)@([\w#-]+)", removes_l[0].get_host())
         if not r:
             raise RuntimeError("Unable to determine username from URL")
 
