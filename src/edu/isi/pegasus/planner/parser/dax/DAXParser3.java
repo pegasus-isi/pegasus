@@ -1326,17 +1326,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
          * @param rl  the ReplicaLocation object
          */
         public void addArgument(ReplicaLocation rl) {
-            mBuffer.append( " " ).append( rl.getLFN() ).append( " ");
-        }
-
-
-        /**
-         * Adds a file name to the argument string
-         *
-         * @param file  the file object.
-         */
-        private void addArgument( edu.isi.pegasus.planner.dax.File file ){
-            mBuffer.append(  " " ).append( file.getName() ).append( " " );
+            mBuffer.append( rl.getLFN() );
         }
 
 
