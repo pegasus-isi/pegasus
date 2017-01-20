@@ -41,7 +41,8 @@ import org.junit.runners.Suite.SuiteClasses;
     edu.isi.pegasus.planner.refiner.DataReuseEngineTest.class,
     edu.isi.pegasus.common.util.GLiteEscapeTest.class,
     edu.isi.pegasus.common.util.VariableExpanderTest.class,
-    edu.isi.pegasus.planner.partitioner.graph.CycleCheckerTest.class
+    edu.isi.pegasus.planner.partitioner.graph.CycleCheckerTest.class,
+    edu.isi.pegasus.planner.parser.dax.DAXParser3Test.class 
 })
 public class AllTests {
 }
