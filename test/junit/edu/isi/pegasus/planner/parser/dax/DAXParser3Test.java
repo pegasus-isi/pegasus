@@ -113,7 +113,7 @@ public class DAXParser3Test {
         Job j        =  (Job)n.getContent();
         String args = j.getArguments();
         //System.out.println( "@" + args + "@" + args.length() + args.charAt( 0 ));
-        assertEquals( "  ", args);
+        assertEquals( "", args);
         mLogger.logEventCompletion();
     }
 
@@ -130,7 +130,7 @@ public class DAXParser3Test {
         Job j        =  (Job)n.getContent();
         String args = j.getArguments();
         System.out.println( "@" + args + "@" + args.length()  );
-        assertEquals( " -a findrange -T 60 -i f.b2 -o f.c2", args);
+        assertEquals( "-a findrange -T 60 -i f.b2 -o f.c2", args);
         mLogger.logEventCompletion();
     }
 
@@ -147,7 +147,7 @@ public class DAXParser3Test {
         Job j        =  (Job)n.getContent();
         String args = j.getArguments();
         System.out.println( "@" + args + "@" + args.length()  );
-        assertEquals( " -a analyze -T 60 -if.c1,f.c2 -of.d", args);
+        assertEquals( "-a analyze -T 60 -if.c1,f.c2 -of.d", args);
         mLogger.logEventCompletion();
     }
 
@@ -164,7 +164,7 @@ public class DAXParser3Test {
         Job j        =  (Job)n.getContent();
         String args = j.getArguments();
         System.out.println( "@" + args + "@" + args.length()  );
-        assertEquals( " --frame-files --V1:V-HrecV2-967640000-10000.gwf --L1:L-L1_LDAS_C02_L2-967648128-128.gwf --L1:L-L1_LDAS_C02_L2-967648256-128.gwf --output V1H1L1-INSPIRAL_FULL_DATA_JOB0-967648572-1105.xml.gz --bank-file H1L1V1-PREGEN_TMPLTBANK_SPLITTABLE_BANK0-967593543-86400.xml.gz --user-tag FULL_DATA",
+        assertEquals( "--frame-files --V1:V-HrecV2-967640000-10000.gwf --L1:L-L1_LDAS_C02_L2-967648128-128.gwf --L1:L-L1_LDAS_C02_L2-967648256-128.gwf --output V1H1L1-INSPIRAL_FULL_DATA_JOB0-967648572-1105.xml.gz --bank-file H1L1V1-PREGEN_TMPLTBANK_SPLITTABLE_BANK0-967593543-86400.xml.gz --user-tag FULL_DATA",
                       args);
         mLogger.logEventCompletion();
     }

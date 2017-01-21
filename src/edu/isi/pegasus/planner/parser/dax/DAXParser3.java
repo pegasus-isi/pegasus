@@ -291,6 +291,10 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                     return m;
                 }//end of element adag
                 else if( element.equals( "argument" ) ){
+                    //arguments are constructed from character data
+                    //since we don't trim it by default, reset text content
+                    //buffer explicitly at start of arguments tag
+                    mTextContent.setLength(0);
                     return new Arguments();
                 }
                 return null;
