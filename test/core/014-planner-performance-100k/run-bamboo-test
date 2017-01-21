@@ -5,7 +5,7 @@
 
 # Max number of seconds allowed for the planner to plan the
 # dax - if these limit is exeeded, the test fails
-MAX_SECONDS=1450
+MAX_SECONDS=1900
 
 # Min number of seconds allowed for the planner to plan the
 # dax - if these limit is exeeded, the test fails. This is used
