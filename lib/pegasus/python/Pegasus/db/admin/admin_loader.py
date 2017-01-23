@@ -41,8 +41,10 @@ class DBAdminError(Exception):
         :param db: DB session object
         :param dburi: DB URI
         :param db_version: Current DB version (integer)
-        :param compatible_version: Current DB version (pegasus version)
+        :param db_compatible_version: Current DB version (pegasus version)
         :param given_version: Provided pegasus version
+        :param pegasus_version: Pegasus DB version (integer)
+        :param pegasus_compatible_version: Pegasus DB version (integer)
         """
         super(DBAdminError, self).__init__(message)
 
@@ -58,6 +60,13 @@ class DBAdminError(Exception):
                 except NoResultFound:
                     pass
             self.db_compatible_version = get_compatible_version(self.db_version)
+
+            if given_version:
+                self.pegasus_version = COMPATIBILITY[given_version]
+                self.pegasus_compatible_version = given_version
+            else:
+                self.pegasus_version = CURRENT_DB_VERSION
+                self.pegasus_compatible_version = get_compatible_version(CURRENT_DB_VERSION)
 
 
 def get_compatible_version(version):
