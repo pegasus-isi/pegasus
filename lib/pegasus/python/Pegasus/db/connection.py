@@ -48,7 +48,8 @@ class ConnectionError(Exception):
         :param given_version: Provided pegasus version
         :param db_type: Database type (JDBCRC, MASTER, WORKFLOW)
         """
-        self.args = (message,)
+        super(ConnectionError, self).__init__(message)
+
         self.given_version = given_version
         self.db_type = db_type
 
@@ -111,8 +112,12 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
             raise ConnectionError("%s (%s)" % (e.message, dburi), given_version=pegasus_version, db_type=db_type)
 
     if schema_check:
-        from Pegasus.db.admin.admin_loader import db_verify
-        db_verify(db, pegasus_version=pegasus_version, force=force)
+        try:
+            from Pegasus.db.admin.admin_loader import DBAdminError, db_verify
+            db_verify(db, pegasus_version=pegasus_version, force=force)
+        except DBAdminError as e:
+            e.db_type = db_type
+            raise(e)
 
     return db
 
