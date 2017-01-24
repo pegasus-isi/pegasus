@@ -42,8 +42,16 @@ CONNECTION_PROPERTIES = [
 #-------------------------------------------------------------------
 
 class ConnectionError(Exception):
-    pass
+    def __init__(self, message, given_version=None, db_type=None):
+        """
+        :param message: Exception message
+        :param given_version: Provided pegasus version
+        :param db_type: Database type (JDBCRC, MASTER, WORKFLOW)
+        """
+        super(ConnectionError, self).__init__(message)
 
+        self.given_version = given_version
+        self.db_type = db_type
 
 class DBType:
     JDBCRC = "JDBCRC"
@@ -59,16 +67,16 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
             db_type=None, connect_args=None, verbose=True):
     """
     Connect to the provided URL database.
-    :param dburi:
+    :param dburi: DB URI
     :param echo:
-    :param schema_check:
-    :param create:
-    :param pegasus_version:
+    :param schema_check: Whether the schema should be checked
+    :param create: Whether to create/update the database
+    :param pegasus_version: Pegasus given version to create/check the database
     :param force:
     :param props:
-    :param db_type:
+    :param db_type: DB type (JDBCRC, MASTER, or WORKFLOW)
     :param connect_args:
-    :param verbose:
+    :param verbose: Whether information log should be printed
     :return:
     """
     dburi = _parse_jdbc_uri(dburi)
@@ -84,10 +92,11 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
 
     except exc.OperationalError, e:
         if "mysql" in dburi and "unknown database" in str(e).lower():
-            raise ConnectionError("MySQL database should be previously created: %s (%s)" % (e.message, dburi))
-        raise ConnectionError("%s (%s)" % (e.message, dburi))
+            raise ConnectionError("MySQL database should be previously created: %s (%s)" % (e.message, dburi),
+                                  given_version=pegasus_version, db_type=db_type)
+        raise ConnectionError("%s (%s)" % (e.message, dburi), given_version=pegasus_version, db_type=db_type)
     except Exception, e:
-        raise ConnectionError("%s (%s)" % (e.message, dburi))
+        raise ConnectionError("%s (%s)" % (e.message, dburi), given_version=pegasus_version, db_type=db_type)
 
     Session = orm.sessionmaker(bind=engine, autoflush=False, autocommit=False,
                                expire_on_commit=False)
@@ -100,11 +109,15 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
             db_create(dburi, engine, db, pegasus_version=pegasus_version, force=force, verbose=verbose)
 
         except exc.OperationalError, e:
-            raise ConnectionError("%s (%s)" % (e.message, dburi))
+            raise ConnectionError("%s (%s)" % (e.message, dburi), given_version=pegasus_version, db_type=db_type)
 
     if schema_check:
-        from Pegasus.db.admin.admin_loader import db_verify
-        db_verify(db, pegasus_version=pegasus_version, force=force)
+        try:
+            from Pegasus.db.admin.admin_loader import DBAdminError, db_verify
+            db_verify(db, pegasus_version=pegasus_version, force=force)
+        except DBAdminError as e:
+            e.db_type = db_type
+            raise(e)
 
     return db
 
@@ -131,9 +144,9 @@ def connect_by_properties(config_properties, db_type, cl_properties=None, echo=F
 def url_by_submitdir(submit_dir, db_type, config_properties=None, top_dir=None, cl_properties=None):
     """ Get URL from the submit directory """
     if not submit_dir:
-        raise ConnectionError("A submit directory should be provided with the type parameter.")
+        raise ConnectionError("A submit directory should be provided with the type parameter.", db_type=db_type)
     if not db_type:
-        raise ConnectionError("A type should be provided with the property file.")
+        raise ConnectionError("A type should be provided with the property file.", db_type=db_type)
 
     # From the submit dir, we need the wf_uuid
     # Getting values from the submit_dir braindump file
@@ -158,7 +171,7 @@ def url_by_properties(config_properties, db_type, submit_dir=None, top_dir=None,
     """ Get URL from the property file """
     # Validate parameters
     if not db_type:
-        raise ConnectionError("A type should be provided with the property file.")
+        raise ConnectionError("A type should be provided with the property file.", db_type=db_type)
 
     # Parse, and process properties
     if not props:
@@ -173,13 +186,13 @@ def url_by_properties(config_properties, db_type, submit_dir=None, top_dir=None,
     elif db_type.upper() == DBType.WORKFLOW:
         dburi = _get_workflow_uri(props, submit_dir, top_dir)
     else:
-        raise ConnectionError("Invalid database type '%s'." % db_type)
+        raise ConnectionError("Invalid database type '%s'." % db_type, db_type=db_type)
 
     if dburi:
         log.debug("Using database: %s" % dburi)
         return dburi
 
-    raise ConnectionError("Unable to find a database URI to connect.")
+    raise ConnectionError("Unable to find a database URI to connect.", db_type=db_type)
 
 
 def get_wf_uuid(submit_dir):
@@ -408,7 +421,8 @@ def _parse_props(dburi, props, db_type=None, connect_args=None):
                     connect_args[DBKey.TIMEOUT] = timeout
 
             except ValueError, e:
-                raise ConnectionError("Timeout properties should be set in seconds: %s (%s)" % (e.message, dburi))
+                raise ConnectionError("Timeout properties should be set in seconds: %s (%s)" % (e.message, dburi),
+                                      db_type=db_type)
 
     return connect_args
 
