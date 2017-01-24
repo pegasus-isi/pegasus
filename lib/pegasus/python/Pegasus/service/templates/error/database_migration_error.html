@@ -9,17 +9,21 @@
         <hr>
         <ul>
             <li>
-                Master Database is not compatible with the current version of Pegasus.
+                Master Database (v{{ e.db_compatible_version }}) is not compatible with the current version of Pegasus (v{{ e.pegasus_compatible_version }}).
             </li>
             <li>
-                STAMPEDE Database is not compatible with the current version of Pegasus.
+                STAMPEDE Database (v{{ e.db_compatible_version }}) is not compatible with the current version of Pegasus (v{{ e.pegasus_compatible_version }}).
             </li>
         </ul>
-        <h3>Possible Alternatives</h3>
+        <h3>Solution(s)</h3>
         <hr>
         <ul>
+            {% if e.db_version < e.pegasus_version %}
             <li>Please execute pegasus-db-admin update on the database you are trying to access.</li>
-            <li>Ensure that pegasus-dashboard process has write access on the database you are trying to access.</li>
+            {% endif %}
+            {% if e.db_version > e.pegasus_version %}
+            <li>The database was created using a newer version of pegasus. Restart Pegasus dashboard from the new Pegasus version</li>
+            {% endif %}
         </ul>
     </div>
 </section>
