@@ -496,11 +496,31 @@ class StampedeStatistics(object):
 
         return q
 
+    def get_total_running_jobs_status(self):
+        JobInstanceSub = orm.aliased(JobInstance, name='JobInstanceSub')
+        sq_1 = self.session.query(func.max(JobInstanceSub.job_submit_seq).label('jss'), JobInstanceSub.job_id.label('jobid'))
+        if self._expand and self._is_root_wf:
+            sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
+        elif self._expand and not self._is_root_wf:
+            sq_1 = sq_1.filter(Workflow.wf_id.in_ (self._wfs))
+        else:
+            sq_1 = sq_1.filter(Workflow.wf_id == self._wfs[0])
+        sq_1 = sq_1.filter(Workflow.wf_id == Job.wf_id)
+        sq_1 = sq_1.filter(Job.job_id == JobInstanceSub.job_id)
+        if self._get_job_filter() is not None:
+            sq_1 = sq_1.filter(self._get_job_filter())
+        sq_1 = sq_1.group_by(JobInstanceSub.job_id).subquery()
+
+        q = self.session.query(JobInstance.job_instance_id.label('last_job_instance'))
+        q = q.filter(JobInstance.job_id == sq_1.c.jobid)
+        q = q.filter(JobInstance.job_submit_seq == sq_1.c.jss)
+        q = q.filter(JobInstance.exitcode == None)
+        return q.count()
+
     def get_total_failed_jobs_status(self):
 
         q = self._get_total_failed_jobs_status()
         return q.count()
-
 
     def _query_jobstate_for_instance(self, states):
         """

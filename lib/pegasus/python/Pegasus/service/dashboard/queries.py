@@ -20,6 +20,7 @@ from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.db.schema import *
 from Pegasus.db.errors import StampedeDBNotFoundError
 from sqlalchemy.orm.exc import *
+from sqlalchemy.util._collections import KeyedTuple
 
 log = logging.getLogger(__name__)
 
@@ -273,22 +274,44 @@ class WorkflowInfo(object):
         qmax = self.__get_maxjss_subquery()
 
         q = self.session.query(func.count(Job.wf_id).label('total'))
+        q = q.add_column(func.sum(case([(Job.type_desc == 'dag', 1), (Job.type_desc == 'dax', 1)], else_=0)).label('total_workflow'))
+        q = q.filter(Job.wf_id == self._wf_id)
+
+        totals = q.one()
+
+        q = self.session.query(func.count(Job.wf_id).label('total'))
         q = q.add_column(func.sum(case([(JobInstance.exitcode == 0, 1)], else_=0)).label('success'))
         q = q.add_column(func.sum(case([(JobInstance.exitcode == 0, case([(Job.type_desc == 'dag', 1),(Job.type_desc == 'dax', 1)], else_=0))], else_=0)).label('success_workflow'))
-
 
         q = q.add_column(func.sum(case([(JobInstance.exitcode != 0, 1)], else_=0)).label('fail'))
         q = q.add_column(func.sum(case([(JobInstance.exitcode != 0, case([(Job.type_desc == 'dag', 1),(Job.type_desc == 'dax', 1)], else_=0))], else_=0)).label('fail_workflow'))
 
-        q = q.add_column(func.sum(case([(JobInstance.exitcode == None, 1)], else_=0)).label('others'))
-        q = q.add_column(func.sum(case([(JobInstance.exitcode == None, case([(Job.type_desc == 'dag', 1),(Job.type_desc == 'dax', 1)], else_=0))], else_=0)).label('others_workflow'))
+        q = q.add_column(func.sum(case([(JobInstance.exitcode == None, 1)], else_=0)).label('running'))
+        q = q.add_column(func.sum(case([(JobInstance.exitcode == None, case([(Job.type_desc == 'dag', 1),(Job.type_desc == 'dax', 1)], else_=0))], else_=0)).label('running_workflow'))
 
         q = q.filter(Job.wf_id == self._wf_id)
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(Job.job_id == qmax.c.job_id)
         q = q.filter(JobInstance.job_submit_seq == qmax.c.max_jss)
 
-        return q.one()
+        counts = q.one()
+
+        out = KeyedTuple([
+            totals.total, totals.total_workflow,
+            totals.total - (counts.success + counts.fail + counts.running),
+            totals.total_workflow - (counts.success_workflow + counts.fail_workflow + counts.running_workflow),
+            counts.success, counts.success_workflow,
+            counts.fail, counts.fail_workflow,
+            counts.running, counts.running_workflow
+        ], labels=[
+            "total", "total_workflow",
+            "others", "others_workflow",
+            "success", "success_workflow",
+            "fail", "fail_workflow",
+            "running", "running_workflow"
+        ])
+
+        return out
 
     def get_job_information(self, job_id, job_instance_id):
 
