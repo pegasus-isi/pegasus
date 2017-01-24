@@ -226,6 +226,10 @@ public class Cleanup implements CleanupImplementation{
             writer.write("[\n");
             
             int fileNum = 1;
+            //track if cleanup job runs on staging site
+            boolean runCleanupJobRemotely = false;
+            
+            //iterate first to check where the cleanup job should run
             for( Iterator it = files.iterator(); it.hasNext(); fileNum++ ){
                 PegasusFile file = (PegasusFile)it.next();
                 String pfn = mPlannerCache.lookup(file.getLFN(), stagingSiteHandle, OPERATION.put );
@@ -243,6 +247,34 @@ public class Cleanup implements CleanupImplementation{
                     mLogger.log("Cleanup Job " + id + " instead of running on local site , will run on site " + stagingSiteHandle,
                                  LogManager.DEBUG_MESSAGE_LEVEL );
                     eSite = stagingSiteHandle;
+                    runCleanupJobRemotely = true;
+                    break;
+                }
+            }
+            
+            for( Iterator it = files.iterator(); it.hasNext(); fileNum++ ){
+                PegasusFile file = (PegasusFile)it.next();
+                String pfn = mPlannerCache.lookup(file.getLFN(), stagingSiteHandle, OPERATION.put );
+
+                if( pfn == null ){
+                    throw new RuntimeException( "Unable to determine cleanup url for lfn " + file.getLFN() + " at site " + stagingSiteHandle );
+                }
+
+                if( runCleanupJobRemotely &&
+                    // attempt a substitute only if a URL is not file or symlink already
+                    // Fix me: Too loose a match
+                    //!( pfn.startsWith( PegasusURL.FILE_URL_SCHEME ) || pfn.startsWith( PegasusURL.SYMLINK_URL_SCHEME)) ){
+                     
+                    //be conservation and only attempt replace gsiftp PM-1155
+                    ( pfn.startsWith( PegasusURL.GSIFTP_URL_SCHEME )) ){
+                    
+                    StringBuilder newPFN = new StringBuilder();
+                    newPFN.append( PegasusURL.FILE_URL_SCHEME ).append( "//" );
+                    //we want to skip out the hostname        
+                    newPFN.append( new PegasusURL( pfn ).getPath()  );
+                    mLogger.log( " Replaced PFN " + pfn + " on staging site with file url " + newPFN + " for cleanup job " + id,
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                    pfn = newPFN.toString();
                 }
 
                 //associate a credential if required
