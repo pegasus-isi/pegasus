@@ -225,12 +225,11 @@ public class Cleanup implements CleanupImplementation{
             
             writer.write("[\n");
             
-            int fileNum = 1;
             //track if cleanup job runs on staging site
             boolean runCleanupJobRemotely = false;
             
             //iterate first to check where the cleanup job should run
-            for( Iterator it = files.iterator(); it.hasNext(); fileNum++ ){
+            for( Iterator it = files.iterator(); it.hasNext();  ){
                 PegasusFile file = (PegasusFile)it.next();
                 String pfn = mPlannerCache.lookup(file.getLFN(), stagingSiteHandle, OPERATION.put );
 
@@ -252,6 +251,7 @@ public class Cleanup implements CleanupImplementation{
                 }
             }
             
+            int fileNum = 1;
             for( Iterator it = files.iterator(); it.hasNext(); fileNum++ ){
                 PegasusFile file = (PegasusFile)it.next();
                 String pfn = mPlannerCache.lookup(file.getLFN(), stagingSiteHandle, OPERATION.put );
