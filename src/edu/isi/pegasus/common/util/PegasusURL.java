@@ -32,6 +32,12 @@ public class PegasusURL {
      * The scheme name for file url.
      */
     public static final String SYMLINK_URL_SCHEME = "symlink:";
+    
+    
+    /**
+     * The scheme name for gsift url.
+     */
+    public static final String GSIFTP_URL_SCHEME = "gsiftp:";
 
 
     /**
