@@ -568,7 +568,7 @@ def stampede_database_missing(error):
 @dashboard_routes.errorhandler(DBAdminError)
 def database_migration_error(error):
     log.exception(error)
-    return render_template('error/database_migration_error.html')
+    return render_template('error/database_migration_error.html', e=error)
 
 
 @dashboard_routes.errorhandler(ServiceError)
