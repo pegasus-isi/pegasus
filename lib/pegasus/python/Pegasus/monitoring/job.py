@@ -368,8 +368,6 @@ class Job:
 
             #PM-641 optimization Modified string concatenation to a list join 
             if "stdout" in my_record:
-                print " *** DEBUG Length of STDOUT is %s %s %s" %(MAX_OUTPUT_LENGTH, stdout_size, len(my_record["stdout"]))
-
                 # PM-1152 we always attempt to store upto MAX_OUTPUT_LENGTH
                 stdout = self.get_snippet_to_populate(my_record["stdout"], my_task_number, stdout_size, "stdout")
                 if stdout is not None:
