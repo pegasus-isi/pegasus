@@ -314,7 +314,7 @@ class Job:
         return dagman_out
 
 
-    def extract_job_info(self, run_dir, kickstart_output):
+    def extract_job_info(self, kickstart_output):
         """
         This function reads the output from the kickstart parser and
         extracts the job information for the Stampede schema. It first
@@ -331,6 +331,9 @@ class Job:
 
         # Kickstart was parsed
         self._kickstart_parsed = True
+
+        # PM-1157 we construct run dir from job submit dir
+        run_dir = self._job_submit_dir
 
         # Let's try to find an invocation record...
         my_invocation_found = False
@@ -419,7 +422,9 @@ class Job:
             logger.debug("cannot find cluster record in output")
 
         # Finally, read error file only 
-        my_err_file = os.path.join(run_dir, self._error_file)
+        #my_err_file = os.path.join(run_dir, self._error_file)
+        basename = self._exec_job_id + ".err"
+        my_err_file = os.path.join(run_dir, basename)
 
         if my_invocation_found:
             # in my job output there were some invocation records
@@ -463,17 +468,26 @@ class Job:
 
         return basename
 
-    def read_stdout_stderr_files(self, run_dir):
+    def read_stdout_stderr_files(self, run_dir=None):
         """
         This function reads both stdout and stderr files and populates
         these fields in the Job class.
         """
         my_max_encoded_length = MAX_OUTPUT_LENGTH - 2000
+
+        if run_dir is None:
+            # PM-1157 pick from the job submit directory associated with the job
+            run_dir = self._job_submit_dir
+
         if self._output_file is None:
             # This is the case for SUBDAG jobs
             self._stdout_text = None
         else:
-            basename = self._output_file
+            # PM-1157 output file has absolute path from submit file
+            # interferes with replay mode on another directory
+            # basename = self._output_file
+
+            basename = self._exec_job_id + ".out"
             if self._has_rotated_stdout_err_files:
                 basename += ".%03d" % ( self._job_output_counter)
 
@@ -496,7 +510,8 @@ class Job:
             # This is the case for SUBDAG jobs
             self._stderr_text = None
         else:
-            basename = self._error_file
+            #basename = self._error_file
+            basename = self._exec_job_id + ".err"
             if self._has_rotated_stdout_err_files:
                 basename += ".%03d" % ( self._job_output_counter)
 
