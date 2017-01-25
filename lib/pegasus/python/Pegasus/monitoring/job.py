@@ -369,38 +369,27 @@ class Job:
             #PM-641 optimization Modified string concatenation to a list join 
             if "stdout" in my_record:
                 print " *** DEBUG Length of STDOUT is %s %s %s" %(MAX_OUTPUT_LENGTH, stdout_size, len(my_record["stdout"]))
-                # PM-1152 we always attempt to store upto MAX_OUTPUT_LENGTH
-                remaining = MAX_OUTPUT_LENGTH - stdout_size - 20
-                current   = len(my_record["stdout"])
-                stdout = None
-                if current <= remaining:
-                    # we can store the whole stdout
-                    stdout = my_record["stdout"]
-                else:
-                    logger.debug( "Only grabbing %s of stdout for task %s from file %s " %(remaining, my_task_number, self.get_rotated_out_filename()) )
-                    if remaining > 0:
-                        # we store only the first remaining chars
-                        stdout =  my_record["stdout"][:-(current - remaining)]
 
-                #if len(my_record["stdout"])<= MAX_OUTPUT_LENGTH - stdout_size:
+                # PM-1152 we always attempt to store upto MAX_OUTPUT_LENGTH
+                stdout = self.get_snippet_to_populate(my_record["stdout"], my_task_number, stdout_size, "stdout")
                 if stdout is not None:
                     try:
                         stdout_text_list.append(utils.quote("#@ %d stdout\n" % (my_task_number)))
-                        #stdout_text_list.append(utils.quote(my_record["stdout"]))
                         stdout_text_list.append(utils.quote(stdout))
                         stdout_text_list.append(utils.quote("\n"))
-                        #stdout_size+=len(my_record["stdout"])+20
-                        stdout_size+=len(stdout)+20
+                        stdout_size += len(stdout) + 20
                     except KeyError:
                         logger.exception( "Unable to parse stdout section from kickstart record for task %s from file %s " %(my_task_number, self.get_rotated_out_filename() ))
 
             if "stderr" in my_record:
-                if len(my_record["stderr"]) <= MAX_OUTPUT_LENGTH - stdout_size :
+                # Note: we are populating task stderr from kickstart record to job stdout only
+                stderr = self.get_snippet_to_populate(my_record["stderr"], my_task_number, stdout_size, "stderr")
+                if stderr is not None:
                     try:
                         stdout_text_list.append(utils.quote("#@ %d stderr\n" % (my_task_number)))
-                        stdout_text_list.append(utils.quote(my_record["stderr"]))
+                        stdout_text_list.append(utils.quote(stderr))
                         stdout_text_list.append(utils.quote("\n"))
-                        stdout_size+=len(my_record["stderr"])+20
+                        stdout_size += len( stderr ) + 20
                     except KeyError:
                         logger.exception( "Unable to parse stderr section from kickstart record for task %s from file %s " %(my_task_number, self.get_rotated_out_filename() ))
 
@@ -558,3 +547,27 @@ class Job:
 
         return False
 
+    def get_snippet_to_populate(self, task_output, task_number, current_buffer_size, type):
+        """
+
+        :param task_output:
+        :param task number:          the task number
+        :param current_buffer_size:  the current size of the buffer that is storing job stdout for all tasks
+        :param type:                 whether stdout or stderr for logging
+        :return:
+        """
+        # PM-1152 we always attempt to store upto MAX_OUTPUT_LENGTH
+        # 20 is the rough estimate of number of extra characters added by URL encoding
+        remaining = MAX_OUTPUT_LENGTH - current_buffer_size - 20
+        task_output_size   = len(task_output)
+        stdout = None
+        if task_output_size <= remaining:
+            # we can store the whole stdout
+            stdout = task_output
+        else:
+            logger.debug( "Only grabbing %s of %s for task %s from file %s " %(remaining, type, task_number, self.get_rotated_out_filename()) )
+            if remaining > 0:
+                # we store only the first remaining chars
+                stdout =  task_output[:-(task_output_size - remaining)]
+
+        return stdout
