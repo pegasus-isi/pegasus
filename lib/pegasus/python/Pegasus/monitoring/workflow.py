@@ -1808,7 +1808,7 @@ class Workflow:
 
             # Add job information to the Job class.
             logger.debug("Starting extraction of job_info from job output file %s " % my_job_output_fn)
-            my_invocation_found = my_job.extract_job_info(self._run_dir, my_output)
+            my_invocation_found = my_job.extract_job_info( my_output)
             logger.debug("Completed extraction of job_info from job output file %s " % my_job_output_fn)
 
             if my_invocation_found:
@@ -1899,7 +1899,7 @@ class Workflow:
 
             # Read stdout/stderr files, if not disabled by user
             if self._store_stdout_stderr:
-                my_job.read_stdout_stderr_files(self._run_dir)
+                my_job.read_stdout_stderr_files()
 
             # parse_kickstart will be False for subdag jobs
             if my_job._exec_job_id.startswith("subdax_") or not parse_kickstart:
