@@ -269,6 +269,14 @@ class Parser:
                 for my_element in self._ks_elements[name]:
                     if my_element in attrs:
                         self._keys[my_element] = attrs[my_element]
+        elif name == "signalled":
+            # PM-1109 grab the attributes we are interested in
+            self._keys[ name ] = {} #a dictionary indexed by attributes
+            self._parsing_signalled = True
+            self._keys[ name ]["action"] = "" #grabbed later in char data
+            for attr in attrs:
+                if attr in self._ks_elements[name]:
+                    self._keys[name][attr] = attrs[attr]
         elif name == "statcall":
             if "id" in attrs:
                 if attrs["id"] == "stdout" and "stdout" in self._ks_elements:
@@ -325,6 +333,8 @@ class Parser:
             self._parsing_main_job = False
         elif name == "machine":
             self._parsing_machine = False
+        elif name == "signalled":
+            self._parsing_signalled = False
         elif name == "statcall":
             if self._parsing_stdout == True:
                 self._parsing_stdout = False
@@ -346,14 +356,17 @@ class Parser:
         if self._parsing_cwd == True:
             self._cwd += data
 
-        if self._parsing_arguments == True:
+        elif self._parsing_arguments == True:
             self._arguments.append(data.strip())
 
-        if self._parsing_stdout == True and self._parsing_data == True:
+        elif self._parsing_stdout == True and self._parsing_data == True:
             self._stdout += data
 
-        if self._parsing_stderr == True and self._parsing_data == True:
+        elif self._parsing_stderr == True and self._parsing_data == True:
             self._stderr += data
+
+        elif self._parsing_signalled == True:
+            self._keys["signalled"]["action"] += data 
 
     def parse_invocation_record(self, buffer=''):
         """
@@ -367,6 +380,7 @@ class Parser:
         self._parsing_stderr = False
         self._parsing_data = False
         self._parsing_cwd = False
+        self._parsing_signalled = False
         self._arguments = []
         self._stdout = ""
         self._stderr = ""
@@ -531,6 +545,7 @@ class Parser:
                              "uname": ["system", "release", "machine"],
                              "file": ["name"],
                              "status": ["raw"],
+                             "signalled": ["signal", "corefile", "action"], #action is the char data in signalled element
                              "regular": ["exitcode"],
                              "argument-vector": [],
                              "cwd": [],
