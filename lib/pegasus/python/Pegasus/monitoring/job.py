@@ -366,6 +366,17 @@ class Job:
                 # We are done with this part
                 my_invocation_found = True
 
+            # PM-1109 encode signal information if it exists
+            signal_message = " "
+            if "signalled" in my_record:
+                # construct our own error message
+                attrs = my_record["signalled"]
+                signal_message = "Job was "
+                if "action" in attrs:
+                    signal_message += attrs["action"]
+                if "signal" in attrs:
+                    signal_message += " with signal " + attrs["signal"]
+
             #PM-641 optimization Modified string concatenation to a list join 
             if "stdout" in my_record:
                 # PM-1152 we always attempt to store upto MAX_OUTPUT_LENGTH
@@ -381,7 +392,7 @@ class Job:
 
             if "stderr" in my_record:
                 # Note: we are populating task stderr from kickstart record to job stdout only
-                stderr = self.get_snippet_to_populate(my_record["stderr"], my_task_number, stdout_size, "stderr")
+                stderr = self.get_snippet_to_populate( signal_message + my_record["stderr"], my_task_number, stdout_size, "stderr")
                 if stderr is not None:
                     try:
                         stdout_text_list.append(utils.quote("#@ %d stderr\n" % (my_task_number)))
