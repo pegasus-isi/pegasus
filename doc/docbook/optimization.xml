@@ -633,8 +633,8 @@ siteX    pegasus::seqexec     /usr/pegasus/bin/pegasus-cluster INSTALLED       I
             following pegasus profiles with the jobs in the DAX</para>
 
             <table>
-              <title>Pegasus Profiles that can be associated with jobs
-              in the DAX for PMC</title>
+              <title>Pegasus Profiles that can be associated with jobs in the
+              DAX for PMC</title>
 
               <tgroup cols="2">
                 <tbody>
@@ -971,7 +971,7 @@ tr B {
           </tgroup>
         </table>
 
-        <para>It is highly recommended that users <emphasis role="bold">dont
+        <para>It is highly recommended that users <emphasis role="bold">don't
         specify</emphasis> directory related options in the arguments section
         for the DAX Jobs. Pegasus assigns values to these options for the sub
         workflows automatically.</para>
@@ -1038,9 +1038,9 @@ tr B {
         </orderedlist>
 
         <tip>
-          <para>It is recommended that user dagman.maxpre in their properties
-          file to control the maximum number of pegasus plan instances
-          launched by each running dagman instance.</para>
+          <para>It is recommended that users specify dagman.maxpre in their
+          properties file to control the maximum number of pegasus plan
+          instances launched by each running dagman instance.</para>
         </tip>
       </section>
     </section>

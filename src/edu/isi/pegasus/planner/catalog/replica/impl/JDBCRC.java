@@ -342,7 +342,7 @@ public class JDBCRC implements ReplicaCatalog
 
         try {
             if (driver != null) {
-                //only support mysql and postgres for time being
+                //only support mysql, sqlite and postgres for time being
                 if( driver.equalsIgnoreCase( "MySQL") ){
                     driver = "com.mysql.jdbc.Driver";
                 }
