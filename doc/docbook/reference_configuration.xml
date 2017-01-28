@@ -926,8 +926,8 @@ Scope       :</emphasis> TC, SC, DAX, Properties
 
       <para>Pegasus prevents the user from specifying certain Condor commands
       in condor profiles, because they are automatically generated or can be
-      overridden through some different means. The table below shows prohibited Condor
-      commands.</para>
+      overridden through some different means. The table below shows
+      prohibited Condor commands.</para>
 
       <table>
         <title>Condor commands prohibited in condor profiles</title>
@@ -992,8 +992,9 @@ Scope       :</emphasis> TC, SC, DAX, Properties
       remote job's stdout, usually the output from kickstart, as sole argument
       to the post-script.</para>
 
-      <para>The table below shows the keys in the dagman profile domain that are
-      understood by Pegasus and can be associated at a per job basis.</para>
+      <para>The table below shows the keys in the dagman profile domain that
+      are understood by Pegasus and can be associated at a per job
+      basis.</para>
 
       <para><table>
           <title>Useful dagman Commands that can be associated at a per job
@@ -1189,10 +1190,11 @@ Profile  Key: </emphasis></emphasis>ABORT-DAG-ON
 
       <para/>
 
-      <para>The table below shows the keys in the dagman profile domain that are
-      understood by Pegasus and can be used to apply to the whole workflow.
-      These are used to control DAGMan's behavior at the workflow level, and
-      are recommended to be specified in the properties file.</para>
+      <para>The table below shows the keys in the dagman profile domain that
+      are understood by Pegasus and can be used to apply to the whole
+      workflow. These are used to control DAGMan's behavior at the workflow
+      level, and are recommended to be specified in the properties
+      file.</para>
 
       <table id="dagman_throttling_profiles">
         <title>Useful dagman Commands that can be specified in the properties
@@ -1325,8 +1327,8 @@ Scope       :</emphasis> Properties
       sub-set of <emphasis>pegasus</emphasis> profiles for their
       decision-making.</para>
 
-      <para>The table below shows some of the useful configuration option Pegasus
-      understands.</para>
+      <para>The table below shows some of the useful configuration option
+      Pegasus understands.</para>
 
       <table>
         <title>Useful pegasus Profiles.</title>
@@ -2885,15 +2887,16 @@ Scope       :</emphasis> Properties
                     <term>JDBCRC</term>
 
                     <listitem>
-                       In this mode, Pegasus queries a SQL based replica catalog that is accessed via JDBC. The sql schema's for this catalog can be found at $PEGASUS_HOME/sql directory. To use JDBCRC, the user additionally needs to set the following properties 
+                       In this mode, Pegasus queries a SQL based replica catalog that is accessed via JDBC. To use JDBCRC, the user additionally needs to set the following properties 
 
                       <orderedlist>
-                        <listitem>pegasus.catalog.replica.db.driver =
-                        mysql</listitem>
+                        <listitem>pegasus.catalog.replica.db.driver = mysql |
+                        postgres |sqlite </listitem>
 
-                        <listitem>pegasus.catalog.replica.db.url = jdbc url to
-                        database e.g
-                        jdbc:mysql://database-host.isi.edu/database-name</listitem>
+                        <listitem>pegasus.catalog.replica.db.url = &lt;jdbc
+                        url to the database&gt; e.g
+                        jdbc:mysql://database-host.isi.edu/database-name |
+                        jdbc:sqlite:/shared/jdbcrc.db </listitem>
 
                         <listitem>pegasus.catalog.replica.db.user =
                         database-user</listitem>

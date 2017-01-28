@@ -9,9 +9,8 @@
 
     <para>The DAX is a description of an abstract workflow in XML format that
     is used as the primary input into Pegasus. The DAX schema is described in
-    <ulink
-    url="schemas/dax-3.4/dax-3.4.xsd">dax-3.4.xsd</ulink>
-    The documentation of the schema and its elements can be found in <ulink
+    <ulink url="schemas/dax-3.4/dax-3.4.xsd">dax-3.4.xsd</ulink> The
+    documentation of the schema and its elements can be found in <ulink
     url="schemas/dax-3.4/dax-3.4.html">dax-3.4.html</ulink>.</para>
 
     <para>A DAX can be created by all users with the DAX generating API in
@@ -461,7 +460,7 @@ D1/f.3 file://$input/D1/f.3 site="local"</programlisting>
 
         <listitem>
           <para><emphasis role="bold">pegasus.catalog.replica.db.driver mysql
-          | sqlite </emphasis></para>
+          | postgres |sqlite </emphasis></para>
         </listitem>
 
         <listitem>
@@ -489,7 +488,7 @@ D1/f.3 file://$input/D1/f.3 site="local"</programlisting>
       <emphasis>pegasus-rc-client</emphasis> to interface to query, insert and
       remove entries from the JDBCRC backend. Starting 4.5 release, there is
       also support for sqlite databases. Specify the jdbc url to refer to a
-      sqlite database .</para>
+      sqlite database.</para>
     </section>
 
     <section id="rc-MRC">
@@ -988,10 +987,9 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
 
       <para>Pegasus 4.2 by default now parses Site Catalog format conforming
       to the SC schema 4.0 (XML4) available <ulink role=""
-      url="schemas/sc-4.0/sc-4.0.xsd"
-      userlevel="">here</ulink> and is explained in detail in the Catalog
-      Properties section of <link linkend="running_workflows">Running
-      Workflows</link>.</para>
+      url="schemas/sc-4.0/sc-4.0.xsd" userlevel="">here</ulink> and is
+      explained in detail in the Catalog Properties section of <link
+      linkend="running_workflows">Running Workflows</link>.</para>
 
       <para>Pegasus 4.2 comes with a pegasus-sc-converter that will convert
       users old site catalog (XML3) to the XML4 format. Sample usage is given
@@ -1323,7 +1321,7 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6 ENV::PATH=
       <title>TC Client pegasus-tc-client</title>
 
       <para>We need to map our declared transformations (preprocess,
-      findranage, and analyze) from the example DAX above to a simple "mock
+      findrange, and analyze) from the example DAX above to a simple "mock
       application" name "keg" ("canonical example for the grid") which reads
       input files designated by arguments, writes them back onto output files,
       and produces on STDOUT a summary of where and when it was run. Keg ships
