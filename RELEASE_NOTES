@@ -1,4 +1,86 @@
 ===============================
+Release Notes for Pegasus 4.7.3
+===============================
+
+We are happy to announce the release of Pegasus 4.7.3. Pegasus 4.7.3
+is a minor release of Pegasus and includes improvements and bug fixes
+to the 4.7.2 release. It has a bug fix without which monitoring will
+break for users running with HTCondor 8.5.8 or higher. 
+
+Improvements
+--------------
+1) [PM-1109] – dashboard to display errors if a job is killed instead
+   of exiting with non zero exitcode 
+   
+   pegasus-monitord did not pass signal information from the kickstart
+   records to the monitoring database. If a job fails and because of a
+   signal, it will now create an error message indicating the signal
+   information, and populate it. 
+
+2) [PM-1129] – dashboard should display database and pegasus version 
+
+3) [PM-1138] – Pegasus dashboard pie charts should distinguish between
+   running and unsubmitted 
+
+4) [PM-1155] – remote cleanup jobs should have file url’s if possible 
+
+Bugs Fixed
+--------------
+
+1) [PM-1132] – Hashed staging mapper doen’t work correctly with sub
+   dax generation jobs 
+
+   For large workflows with dax generation jobs, the planning broke
+   for sub workflows if the dax was generated in a hashed directory
+   structure. It is now fixed. 
+
+   Note: As a result of this fix, pegasus-plan prescripts for sub
+   workflows in all cases, are now invoked by pegasus-lite 
+
+2) [PM-1135] – pegasus.transfer.bypass.input.staging breaks symlinking
+   on the local site 
+
+3) [PM-1136] – With bypass input staging some URLs are ending up in
+   the wrong site 
+
+4) [PM-1147] – pegasus-transfer should check that files exist before
+   trying to transfer them 
+
+   In case where the source file url’s don’t exist, pegasus-transfer
+   used to still attempt multiple retries resulting in hard to read
+   error messages. This was fixed, whereby pegasus-transfer does not
+   attempt retries on a source if a source file does not exist. 
+
+5) [PM-1151] – pegasus-monitord fails to populate stampede DB
+   correctly when workflow is run on HTCondor 8.5.8 
+
+6) [PM-1152] – pegasus-analyzer not showing stdout and stderr of
+   failed transfer jobs 
+
+   In case of larger stdout+stderr outputted by an application, we
+   store only first 64K in the monitoring database combined for a
+   single or clustered job. There was a bug whereby if a single task
+   outputted more than 64K nothing was populated. This is fixed 
+
+7) [PM-1153] – Pegasus creates extraneous spaces when replacing <file
+   name=”something” /> 
+
+   DAX parser was updated to not add extraneous spaces when
+   constructing the argument string for jobs 
+
+8) [PM-1154] – regex too narrow for GO names with dashes
+
+9) [PM-1157] – monitord replay should work on submit directories that
+   are moved
+
+   pegasus generated submit files have absolute paths. However, for
+   debugging purposes where a submit directory might be moved to a
+   different host, where the paths don’t exist. monitord now searches
+   for files based on relative paths from the top level submit
+   directory. This enables users to repopulate their workflow
+   databases easily. 
+
+===============================
 Release Notes for Pegasus 4.7.2
 ===============================
 
