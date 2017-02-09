@@ -50,24 +50,19 @@ public class Docker implements ContainerShellWrapper {
      */
     public String wrap( Job job ){
         StringBuilder sb = new StringBuilder();
-        /**
-         * docker run -e USER=$USER  -e USERID=$UID -v $PWD:/scratch -w=/scratch -t centos-pegasus-root bash -c "usertouse=vahi; set -e ; echo $GROUPS; groupadd --gid $GROUP\                          
-S gridstaff && echo $UID; useradd --uid $UID --gid $GROUPS \$usertouse; su \$usertouse -c \"env PATH=\$PATH /usr/bin/pegasus-kickstart  -n pegasus::preprocess:4.0 -N j1 -R local  -s f.b2=f\
-.b2 -s f.b1=f.b1 -L blackdiamond -T 2017-02-01T13:22:04-08:00 /usr/bin/pegasus-keg  -a preprocess -T 60 -i  f.a  -o  f.b1  f.b2\""
-         */
         
-        //figure out the user as which job is launched
-        sb.append( "cont_userid=`id -u`" ).append( "\n" );
-        sb.append( "cont_user=`whoami`" ).append( "\n" );
-        sb.append( "cont_groupid=`id -g`" ).append( "\n" );
-        sb.append( "cont_group=`id -g -n $cont_user` ").append( "\n" );
+        //sets up the variables used for docker run command
+        sb.append( "docker_init").append( "\n" );
+        
         
         //assume docker is available in path
         sb.append( "docker run ");
         //directory where job is run is mounted as scratch
         sb.append( "-v $PWD:/scratch -w=/scratch ");     
         //hardcoded image for time being
-        sb.append( "-t centos-pegasus-root ");
+        sb.append( "-t ");
+        sb.append( "--name $cont_name ");
+        sb.append( " centos-pegasus-root ");
         
         //invoke the command to run as user who launched the job
         sb.append( "bash -c ").
@@ -85,7 +80,10 @@ S gridstaff && echo $UID; useradd --uid $UID --gid $GROUPS \$usertouse; su \$use
                 sb.append( "\\\"");
                 
           sb.append( "\"");      
-                
+        
+        sb.append( "\n" );
+        //remove the docker container
+        sb.append( "docker rm $cont_name " ).append( " 1>&2" );
         
         return sb.toString();
     }

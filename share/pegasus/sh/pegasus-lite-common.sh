@@ -265,6 +265,22 @@ function pegasus_lite_setup_work_dir()
     return 1
 }
 
+function container_init()
+{
+    # setup common variables
+    set -e
+    cont_userid=`id -u`
+    cont_user=`whoami`
+    cont_groupid=`id -g`
+    cont_group=`id -g -n $cont_user` 
+    cont_name=${PEGASUS_DAG_JOB_ID}-`date -u +%s`
+    set +e
+}
+
+function docker_init()
+{
+    container_init
+}
 
 function pegasus_lite_init()
 {
