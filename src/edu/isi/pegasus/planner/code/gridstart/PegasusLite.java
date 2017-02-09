@@ -47,6 +47,9 @@ import edu.isi.pegasus.planner.classes.TransferJob;
 
 import edu.isi.pegasus.planner.code.GridStart;
 
+import edu.isi.pegasus.planner.code.gridstart.container.ContainerShellWrapper;
+import edu.isi.pegasus.planner.code.gridstart.container.impl.Docker;
+
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
@@ -334,6 +337,11 @@ public class PegasusLite implements GridStart {
      * Whether to do integrity checking or not.
      */
     protected boolean mDoIntegrityChecking ;
+
+    /** The shell wrapper to use to wrap job in container
+     */
+    protected ContainerShellWrapper mContainerWrapper;
+
     
     /**
      * Initializes the GridStart implementation.
@@ -392,7 +400,7 @@ public class PegasusLite implements GridStart {
 
         
         mLocalPathToPegasusLiteCommon = getSubmitHostPathToPegasusLiteCommon( );
-
+        mContainerWrapper = new Docker();
 
     }
     
@@ -1004,8 +1012,10 @@ public class PegasusLite implements GridStart {
             }
             else{
                 this.mKickstartGridStartImpl.enable( job, isGlobusJob );
-                sb.append( job.getRemoteExecutable() ).append( job.getArguments() ).append( '\n' );
+                //sb.append( job.getRemoteExecutable() ).append( job.getArguments() ).append( '\n' );
+                sb.append( mContainerWrapper.wrap(job));
             }
+            sb.append( "\n" );
             
             //PM-701 enable back fail on error
             sb.append( "job_ec=$?" ).append( "\n" );
