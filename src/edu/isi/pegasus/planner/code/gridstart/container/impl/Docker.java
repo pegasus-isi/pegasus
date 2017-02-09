@@ -56,6 +56,12 @@ S gridstaff && echo $UID; useradd --uid $UID --gid $GROUPS \$usertouse; su \$use
 .b2 -s f.b1=f.b1 -L blackdiamond -T 2017-02-01T13:22:04-08:00 /usr/bin/pegasus-keg  -a preprocess -T 60 -i  f.a  -o  f.b1  f.b2\""
          */
         
+        //figure out the user as which job is launched
+        sb.append( "cont_userid=`id -u`" ).append( "\n" );
+        sb.append( "cont_user=`whoami`" ).append( "\n" );
+        sb.append( "cont_groupid=`id -g`" ).append( "\n" );
+        sb.append( "cont_group=`id -g -n $cont_user` ").append( "\n" );
+        
         //assume docker is available in path
         sb.append( "docker run ");
         //directory where job is run is mounted as scratch
@@ -67,11 +73,10 @@ S gridstaff && echo $UID; useradd --uid $UID --gid $GROUPS \$usertouse; su \$use
         sb.append( "bash -c ").
            append( "\"").
             
-            append( "usertouse=$USER ; ").
             append( "set -e ;" ).
-            append( "groupadd --gid $GROUPS ;").
-            append( "useradd --uid $UID --gid $GROUPS \\$usertouse;").
-            append( "su \\$usertouse -c ");
+            append( "groupadd --gid $cont_groupid $cont_group ;").
+            append( "useradd --uid $cont_userid --gid $cont_groupid $cont_user;").
+            append( "su $cont_user -c ");
                 sb.append( "\\\"");
                 
                 sb.append( job.getRemoteExecutable()).append( " " ).
