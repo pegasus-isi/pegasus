@@ -472,10 +472,11 @@ def _backup_db(db):
         if url.password:
             command += " --password=%s" % url.password
         command += " %s > %s" % (url.database, dest_file)
-        try:
-            subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError, e:
-            raise DBAdminError(e.output, db=db)
+        out, err = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).communicate()
+        if err:
+            if 'Error 2013' in err:
+                err += '\nPlease, refer to the pegasus-db-admin troubleshooting for possible ways to fix this error.'
+            raise DBAdminError(err, db=db)
         log.debug("Created backup database file at: %s" % dest_file)
 
 

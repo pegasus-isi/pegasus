@@ -183,6 +183,25 @@ $ pegasus-db-admin update -s /path/to/submitdir -t JDBCRC
 
 ----------------
 
+Troubleshooting
+---------------
+*Error 2013: Lost connection to MySQL server during query when dumping table*
+
+When updating MySQL databases, pegasus-db-admin uses '*mysqldump*' to create a
+backup .sql file for the current database. For very large databases, the dump
+may fail due to timeout limits of the MySQL database (which are set to 30 seconds
+for read, and 60 seconds for write). You can change these limits in the '*my.cnf*'
+config file by setting the following configuration parameters (the values below
+are only an example, you should adjust them as you may like):
+
+----------------
+net_read_timeout = 120
+net_write_timeout = 900
+
+----------------
+
+After making these changes to my.cnf you must restart MySQL.
+
 
 Authors
 -------
