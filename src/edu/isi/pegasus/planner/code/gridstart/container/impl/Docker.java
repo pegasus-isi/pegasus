@@ -52,6 +52,7 @@ public class Docker implements ContainerShellWrapper {
         StringBuilder sb = new StringBuilder();
         
         //sets up the variables used for docker run command
+        //FIXME docker_init has to be passed the name of the tar file?
         sb.append( "docker_init").append( "\n" );
         
         
@@ -62,7 +63,7 @@ public class Docker implements ContainerShellWrapper {
         //hardcoded image for time being
         sb.append( "-t ");
         sb.append( "--name $cont_name ");
-        sb.append( " centos-pegasus-root ");
+        sb.append( " $cont_image ");
         
         //invoke the command to run as user who launched the job
         sb.append( "bash -c ").

@@ -268,18 +268,38 @@ function pegasus_lite_setup_work_dir()
 function container_init()
 {
     # setup common variables
-    set -e
     cont_userid=`id -u`
     cont_user=`whoami`
     cont_groupid=`id -g`
     cont_group=`id -g -n $cont_user` 
     cont_name=${PEGASUS_DAG_JOB_ID}-`date -u +%s`
-    set +e
+
 }
 
 function docker_init()
 {
+    set -e
+
     container_init
+    # check if an image file was passed
+    image_file=$1
+    cont_image="unknown"
+    if [ X${image_file} != "X" ] ; then
+	pegasus_lite_log "container file is ${image_file}"
+	
+	if [ -e ${image_file} ] ; then
+	    # try and load the image
+	    cont_image=`docker load -i centos-pegasus-root.tar | sed -E "s/Loaded image://"` || cont_image="unknown"
+	fi
+    fi
+    
+    if [${cont_image} = "unknown" ]; then
+	pegasus_lite_log "Unable to load image from file $image_file"
+    else
+	pegasus_lite_log "Loaded docker image $cont_image"
+    fi
+
+    set +e
 }
 
 function pegasus_lite_init()
