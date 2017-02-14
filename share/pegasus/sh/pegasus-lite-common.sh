@@ -284,18 +284,19 @@ function docker_init()
     
     if [ $# -ne 1 ]; then 
 	pegasus_lite_log "docker_init should be passed a docker url or a file"
+	return 1
     fi
 
     # check if an image file was passed
     image_file=$1
-    cont_image="unknown"
+    cont_image=""
 
     if [ X${image_file} != "X" ] ; then
 		
 	if [ -e ${image_file} ] ; then
 	    pegasus_lite_log "container file is ${image_file}"
 	    # try and load the image
-	    cont_image=`docker load -i centos-pegasus-root.tar | sed -E "s/Loaded image://"` || cont_image="unknown"
+	    cont_image=`docker load -i ${image_file} | sed -E "s/Loaded image://"` || cont_image="unknown"
 	else
 	    # try and load from docker hub
 	    docker load ..
@@ -303,8 +304,9 @@ function docker_init()
 	
     fi
     
-    if [${cont_image} = "unknown" ]; then
+    if [ X${cont_image} = "X" ]; then
 	pegasus_lite_log "Unable to load image from $image_file"
+	return 1
     else
 	pegasus_lite_log "Loaded docker image $cont_image"
     fi
