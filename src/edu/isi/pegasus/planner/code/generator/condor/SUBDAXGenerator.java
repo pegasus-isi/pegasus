@@ -683,9 +683,9 @@ public class SUBDAXGenerator{
         //the arguments
         preScriptJob.setArguments( "$@" );
         
-        //set the name of the job to add the _pre suffix
-        //to ensure pegasus lite script is _pre.sh
-        preScriptJob.setName( dagJob.getName() + "_pre" );
+        //set the name of the job to add the .pre suffix
+        //to ensure pegasus lite script is .pre.sh
+        preScriptJob.setName( dagJob.getName() + ".pre" );
         
         //need to set transformation and derivation to make sure
         //kickstart does not trip up in it's arguments over missing -N argument
