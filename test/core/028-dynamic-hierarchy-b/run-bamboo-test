@@ -74,12 +74,10 @@ tr level1::sleep {
 }
 
 tr level2::sleep {   
-  site local {
+  site CCG {
     pfn "/bin/sleep"
     os "linux"
     arch "x86_64"
-    osrelease "deb"
-    osversion "8"
     type "INSTALLED"
   }
 }
