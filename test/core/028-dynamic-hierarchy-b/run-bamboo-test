@@ -171,7 +171,6 @@ cat >sites.xml <<EOF
             <file-server operation="all" url="gsiftp://obelix.isi.edu/nfs/ccg4/scratch-purge-no-backups/CCG/outputs"/>
         </directory>
 
-        <profile namespace="env" key="PEGASUS_HOME">$CONDOR_POOL_PEGASUS_HOME</profile>
     </site>
 
 </sitecatalog>
