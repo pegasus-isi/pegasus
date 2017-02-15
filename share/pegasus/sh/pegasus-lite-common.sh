@@ -92,7 +92,6 @@ function pegasus_lite_internal_wp_shipped()
         fi
 
         tar xzf $pegasus_lite_start_dir/pegasus-worker-*.tar.gz
-        rm -f $pegasus_lite_start_dir/pegasus-worker-*.tar.gz
         unset PEGASUS_HOME
         export PATH=${pegasus_lite_work_dir}/pegasus-${pegasus_lite_full_version}/bin:$PATH
         return 0
