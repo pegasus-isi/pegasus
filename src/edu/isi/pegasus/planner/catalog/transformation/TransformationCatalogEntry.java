@@ -316,9 +316,9 @@ public class TransformationCatalogEntry
 
     /**
      * Set the logical transformation by providing the mNamespace, mName and mVersion as seperate strings.
-     * @param mNamespace String
-     * @param mName String
-     * @param mVersion String
+     * @param namespace
+     * @param name
+     * @param version
      */
     public void setLogicalTransformation( String namespace, String name,
         String version ) {
@@ -329,7 +329,7 @@ public class TransformationCatalogEntry
 
     /**
      * Set the logical mNamespace of the transformation.
-     * @param mNamespace String
+     * @param namespace String
      */
     public void setLogicalNamespace( String namespace ) {
         this.mNamespace = namespace;
@@ -337,7 +337,7 @@ public class TransformationCatalogEntry
 
     /**
      * Set the logical mName of the transformation.
-     * @param mName String
+     * @param name String
      */
     public void setLogicalName( String name ) {
         this.mName = name;
@@ -345,7 +345,7 @@ public class TransformationCatalogEntry
 
     /**
      * Set the logical mVersion of the transformation.
-     * @param mVersion String
+     * @param version String
      */
     public void setLogicalVersion( String version ) {
         this.mVersion = version;
@@ -353,7 +353,7 @@ public class TransformationCatalogEntry
 
     /**
      *  Set the mResourceID where the transformation is available.
-     * @param mResourceID String
+     * @param resourceID String
      */
     public void setResourceId( String resourceid ) {
         this.mResourceID = resourceid;
@@ -369,10 +369,10 @@ public class TransformationCatalogEntry
 
     /**
      * Set the physical location of the transformation.
-     * @param mPFN String
+     * @param pfn String
      */
-    public void setPhysicalTransformation( String physicalname ) {
-        this.mPFN = physicalname;
+    public void setPhysicalTransformation( String pfn ) {
+        this.mPFN = pfn;
     }
 
     /**
@@ -437,7 +437,7 @@ public class TransformationCatalogEntry
 
     /**
      * Allows you to add one profile at a time to the transformation.
-     * @param profile Profile  A single profile consisting of mNamespace, key and value
+     * @param profiles profiles to be added.
      */
     public void addProfiles( Profiles profiles ) {
     	if(profiles != null) {
@@ -578,7 +578,7 @@ public class TransformationCatalogEntry
 
     /**
      * Returns the profiles for a particular Namespace.
-     * @param mNamespace String The mNamespace of the profile
+     * @param namespace String The mNamespace of the profile
      * @return List   List of Profile objects. returns null if none are found.
      */
     public List getProfiles( String namespace ) {
