@@ -31,6 +31,7 @@ import edu.isi.pegasus.common.util.ProfileParser;
 import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.Notifications;
 import java.io.IOException;
 import edu.isi.pegasus.planner.classes.Profile;
@@ -99,6 +100,11 @@ public class TransformationCatalogEntry
      * All the notifications associated with the job
      */
     private Notifications mNotifications;
+    
+    /**
+     * A reference to the container to use to launch the transformation
+     */
+    private Container mContainer;
 
     /**
      * The basic constructor
@@ -113,6 +119,7 @@ public class TransformationCatalogEntry
 //        sysinfo = null;
         mSysInfo = null;
         mNotifications = new Notifications();
+        mContainer = null;
     }
 
     /**
@@ -180,6 +187,7 @@ public class TransformationCatalogEntry
      * @param sysinfo     the SystemInformation
      */
     private TransformationCatalogEntry( String namespace, String name, String version, String resourceID, String physicalname, TCType type, Profiles profiles, SysInfo sysinfo) {
+        this();
         this.mNamespace = namespace;
         this.mVersion = version;
         this.mName = name;
@@ -208,6 +216,7 @@ public class TransformationCatalogEntry
             mResourceID, mPFN,
             type, mProfiles, this.getSysInfo() );
         entry.addNotifications( this.getNotifications() );
+        entry.setContainer( this.mContainer == null ? null : (Container)mContainer.clone() );
         return entry;
     }
 
@@ -235,6 +244,7 @@ public class TransformationCatalogEntry
         }
 
         sb.append( "\n Notifications: " ).append( this.mNotifications );
+        sb.append( "\n Container    : " ).append( this.mContainer );
 
         return sb.toString();
 
@@ -283,6 +293,15 @@ public class TransformationCatalogEntry
         return xml;
     }
 
+    /**
+     * Set the container to use.
+     * 
+     * @param container 
+     */
+    public void setContainer(Container container ){
+        this.mContainer = container;
+    }
+    
     /**
      * Set the logical transformation with a fully qualified tranformation String of the format NS::NAME:Ver
      * @param logicaltransformation String
@@ -462,6 +481,15 @@ public class TransformationCatalogEntry
         }
     }
 
+    /**
+     * Return the container to be used to launch the executable
+     * 
+     * @return 
+     */
+    private Container getContainer(){
+        return mContainer;
+    }
+    
     /**
      * Gets the Fully Qualified Transformation mName in the format NS::Name:Ver.
      * @return String
