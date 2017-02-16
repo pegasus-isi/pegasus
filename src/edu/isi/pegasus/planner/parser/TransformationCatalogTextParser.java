@@ -210,6 +210,11 @@ public class TransformationCatalogTextParser {
                                       LogManager.DEBUG_MESSAGE_LEVEL);
                         }
                     }
+                    else{
+                        throw new ScannerException( mScanner.getLineNumber(),
+                                          "expecting reserved word \"tr\" or \"cont\" . Instead got \"" +
+                                                  ( (TransformationCatalogReservedWord) mLookAhead ) + "\"");
+                    }
 
                     mLookAhead = mScanner.nextToken();
 
