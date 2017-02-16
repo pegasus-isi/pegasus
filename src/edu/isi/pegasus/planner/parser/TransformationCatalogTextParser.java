@@ -547,7 +547,8 @@ public class TransformationCatalogTextParser {
             }
         }
 
-        System.out.println("Object passed is " + container);
+        mLogger.log( "Container Entry parsed is - " + container,
+                                      LogManager.DEBUG_MESSAGE_LEVEL);
 
         if (! (mLookAhead instanceof CloseBrace)) {
                         throw new ScannerException(mScanner.getLineNumber(),

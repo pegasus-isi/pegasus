@@ -79,6 +79,15 @@ public class Container implements Cloneable {
     }
     
     /**
+     * Overloaded constructor
+     * @param name
+     */
+    public Container(String name){
+        this();
+        mName = name;
+    }
+    
+    /**
      * Set the name/identifier for the container
      * 
      * @param name 
@@ -264,4 +273,27 @@ public class Container implements Cloneable {
         return obj;
     }
     
+    /**
+     * Returns textual description of object
+     * 
+     * @return 
+     */
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+        sb.append( "cont ").append( this.getName() ).append( "{").append("\n");
+        sb.append( "\t" ).append( "type     " ).append( "\t" ).append( this.getType() ).append( "\n");
+        if( this.getImageURL() != null ){
+            sb.append( "\t" ).append( "image    " ).append( "\t" ).append( this.getImageURL().getURL() ).append( "\n");
+        }
+        sb.append( "\t" ).append( "image_site " ).append( "\t" ).append( this.getImageSite() ).append( "\n");
+        if( this.getImageDefinitionURL() != null ){
+            sb.append( "\t" ).append( "dockerfile " ).append( "\t" ).append( this.getImageDefinitionURL().getURL() ).append( "\n");
+        }
+        for( Profile p: this.getProfiles()){
+             sb.append( "\t" ).append( "profile   " ).append("\t").append( p.getProfileNamespace() ).append( "\t" ).
+                               append( p.getProfileKey()).append( " " ).append( p.getProfileValue()).append( "\n");
+        }
+        sb.append( "}").append("\n");
+        return sb.toString();
+    }
 }
