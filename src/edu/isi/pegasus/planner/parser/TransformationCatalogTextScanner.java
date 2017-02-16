@@ -127,14 +127,18 @@ public class TransformationCatalogTextScanner {
 
         //for identifier after tr we allow for . - : and / \
         boolean previousTokenIsTR = false;
-        boolean previousTokenIsSite = false;
+        boolean previousTokenIsSiteOrCont = false;
         if( ( mPreviousToken instanceof TransformationCatalogReservedWord &&
                                 ((TransformationCatalogReservedWord)mPreviousToken).getValue() == TransformationCatalogReservedWord.TRANSFORMATION ) ){
             previousTokenIsTR = true;
         }
-        else if( ( mPreviousToken instanceof TransformationCatalogReservedWord &&
-                                ((TransformationCatalogReservedWord)mPreviousToken).getValue() == TransformationCatalogReservedWord.SITE ) ){
-            previousTokenIsSite = true;
+        else if(  mPreviousToken instanceof TransformationCatalogReservedWord && 
+                                (
+                                        ((TransformationCatalogReservedWord)mPreviousToken).getValue() == TransformationCatalogReservedWord.SITE  ||
+                                        ((TransformationCatalogReservedWord)mPreviousToken).getValue() == TransformationCatalogReservedWord.CONT 
+                                )
+                ){
+            previousTokenIsSiteOrCont = true;
         }
 
         // are we parsing a reserved word or identifier
@@ -152,8 +156,8 @@ public class TransformationCatalogTextScanner {
                     mLookAhead = mInputReader.read();
                 }
             }
-            else if( previousTokenIsSite ){
-                //allow - . @ in site names
+            else if( previousTokenIsSiteOrCont ){
+                //allow - . @ in site names or container name
                 while ( mLookAhead != -1 &&
                         ( Character.isJavaIdentifierPart((char) mLookAhead) || mLookAhead == '-' || mLookAhead == '.' || mLookAhead == '@'  ) ){
                     identifier.append( (char) mLookAhead );
