@@ -35,6 +35,11 @@ public class Container implements Cloneable {
     public static enum TYPE{ docker, singularity };
 
     /**
+     * the container name assigned by user
+     */
+    protected String mName;
+    
+    /**
      * Type of container to use
      */
     protected TYPE mType;
@@ -66,10 +71,29 @@ public class Container implements Cloneable {
      */
     public Container(){
         mType = TYPE.docker;
+        mName     = null;
         mImageURL = null;
         mDefinitionFileURL = null;
         mImageSite = null;
         mProfiles = new Profiles();
+    }
+    
+    /**
+     * Set the name/identifier for the container
+     * 
+     * @param name 
+     */
+    public void setName( String name ){
+        mName = name;
+    }
+    
+    /**
+     * The name of the project
+     * 
+     * @return 
+     */
+    public String getName(){
+        return mName;
     }
     
     /**
