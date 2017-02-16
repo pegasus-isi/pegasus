@@ -262,6 +262,7 @@ public class TransformationCatalogTextParser {
             }
 
             int word = ( (TransformationCatalogReservedWord) mLookAhead).getValue();
+            String attribute = ((TransformationCatalogReservedWord)mLookAhead).toString();
             mLookAhead = mScanner.nextToken();
             
             String value ;
@@ -307,7 +308,7 @@ public class TransformationCatalogTextParser {
 
                 default:
                     throw new ScannerException(mScanner.getLineNumber(),
-                        "invalid reserved word used to configure a transformation catalog entry");
+                        "invalid reserved word " + attribute + " used to configure a transformation catalog entry");
 
             }
         }
