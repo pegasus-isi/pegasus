@@ -202,13 +202,13 @@ public class TransformationCatalogTextParser {
                     
                         //get the  transformation/id, that is parsed differently
                         String name = getEntryIdentifier( TransformationCatalogReservedWord.symbolTable().get("cont") );
-                        while( !( mLookAhead instanceof CloseBrace ) ){
-                            Container entry = getContainerEntry( name, modifyFileURL);
-                            //store.addEntry( container );
-                            //we have information about one transformation catalog container
-                            mLogger.log( "Container Entry parsed is - " + entry,
-                                      LogManager.DEBUG_MESSAGE_LEVEL);
-                        }
+                        
+                        Container entry = getContainerEntry( name, modifyFileURL);
+                        //store.addEntry( container );
+                        //we have information about one transformation catalog container
+                        mLogger.log( "Container Entry parsed is - " + entry,
+                                  LogManager.DEBUG_MESSAGE_LEVEL);
+
                     }
                     else{
                         throw new ScannerException( mScanner.getLineNumber(),
