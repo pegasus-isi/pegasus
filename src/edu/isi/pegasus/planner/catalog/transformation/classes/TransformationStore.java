@@ -163,7 +163,7 @@ public class TransformationStore {
                 entry.setContainer(cont);
             }
             else{
-                throw new RuntimeException( "Transformation Catalog Entry " + entry + " refers to non existent container" + name);
+                throw new RuntimeException( "Transformation Catalog Entry " + entry + " refers to non existent container " + name);
             }
         }
     }

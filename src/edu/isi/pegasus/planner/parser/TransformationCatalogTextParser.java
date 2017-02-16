@@ -208,6 +208,7 @@ public class TransformationCatalogTextParser {
                         //we have information about one transformation catalog container
                         mLogger.log( "Container Entry parsed is - " + entry,
                                   LogManager.DEBUG_MESSAGE_LEVEL);
+                        store.addContainer(entry);
 
                     }
                     else{
@@ -235,6 +236,9 @@ public class TransformationCatalogTextParser {
             throw new ScannerException( mScanner.getLineNumber(), e );
         }
 
+        //PM-1165 resolve container references
+        store.resolveContainerReferences();
+        
         return store;
     }
 
@@ -566,8 +570,6 @@ public class TransformationCatalogTextParser {
             }
         }
 
-        mLogger.log( "Container Entry parsed is - " + container,
-                                      LogManager.DEBUG_MESSAGE_LEVEL);
 
         if (! (mLookAhead instanceof CloseBrace)) {
                         throw new ScannerException(mScanner.getLineNumber(),
