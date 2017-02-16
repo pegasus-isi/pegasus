@@ -25,12 +25,12 @@ import edu.isi.pegasus.planner.parser.tokens.Identifier;
 import edu.isi.pegasus.planner.parser.tokens.CloseBrace;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.common.util.VariableExpander;
 
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
@@ -44,7 +44,6 @@ import java.io.Reader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import edu.isi.pegasus.planner.classes.Profile;
-import edu.isi.pegasus.planner.namespace.Metadata;
 
 
 /**
@@ -54,38 +53,38 @@ import edu.isi.pegasus.planner.namespace.Metadata;
  * following format
  * 
  * <pre>
- * tr example::keg:1.0 {
- * 
- *  #specify profiles that apply for all the sites for the transformation
- *  #in each site entry the profile can be overriden
- *  profile env "APP_HOME" "/tmp/karan"
- *  profile env "JAVA_HOME" "/bin/java.1.5"
- * 
- *  site isi {
- *   profile env "me" "with"
- *   profile condor "more" "test"
- *   profile env "JAVA_HOME" "/bin/java.1.6"
- *   pfn "/path/to/keg"
- *   arch  "x86"
- *   os    "linux"
- *   osrelease "fc"
- *   osversion "4"
- *   type "installed"            
- *  }
- * 
- *  site wind {
- *   profile env "me" "with"
- *   profile condor "more" "test"
- *   pfn "/path/to/keg"
- *   arch  "x86"
- *   os    "linux"
- *   osrelease "fc"
- *   osversion "4"
- *   type "STAGEABLE"
- *  }
- * }
+ tr example::keg:1.0 {
+ 
+  #specify profiles that apply for all the sites for the transformation
+  #in each name container the profile can be overriden
+  profile env "APP_HOME" "/tmp/karan"
+  profile env "JAVA_HOME" "/bin/java.1.5"
+ 
+  name isi {
+   profile env "me" "with"
+   profile condor "more" "test"
+   profile env "JAVA_HOME" "/bin/java.1.6"
+   pfn "/path/to/keg"
+   arch  "x86"
+   os    "linux"
+   osrelease "fc"
+   osversion "4"
+   type "installed"            
+  }
+ 
+  name wind {
+   profile env "me" "with"
+   profile condor "more" "test"
+   pfn "/path/to/keg"
+   arch  "x86"
+   os    "linux"
+   osrelease "fc"
+   osversion "4"
+   type "STAGEABLE"
+  }
+ }
 
- * </pre>
+ </pre>
  *
  * @author Karan Vahi
  * @author Jens Vöckler
@@ -148,33 +147,55 @@ public class TransformationCatalogTextParser {
             String transformation   = null;
             do {
                 if ( mLookAhead != null ) {
-                    //get the  transformation/id, that is parsed differently
-                    //compared to the rest of the attributes of the site.
-                    transformation = getTransformation();
-
-                
-                    //check for any profiles that maybe specified and need to
-                    //applied for all entries related to the transformation
-                    Profiles profiles = getProfilesForTransformation();
-
-                    while( !( mLookAhead instanceof CloseBrace ) ){
-                        TransformationCatalogEntry entry = getTransformationCatalogEntry( transformation, profiles , modifyFileURL);
-                        store.addEntry( entry );
-                        //we have information about one transformation catalog entry
-                        mLogger.log( "Transformation Catalog Entry parsed is - " + entry,
-                                  LogManager.DEBUG_MESSAGE_LEVEL);
-                    }
-
-                    //again check for any profiles that may be associated
-                    //makes profiles overloading slightly more complicated
-                    //no need to do it
-                    //profiles.addAll( getProfilesForTransformation() );
-
-                    if (! (mLookAhead instanceof CloseBrace)) {
+                    
+                    if (! ( mLookAhead instanceof TransformationCatalogReservedWord ) ){ 
                         throw new ScannerException( mScanner.getLineNumber(),
-                                                   "expecting a closing brace");
+                                          "expecting reserved word \"tr\" or \"cont\" . Instead got \"" +
+                                                  (  mLookAhead ) + "\"");
                     }
+                    else if(  ( (TransformationCatalogReservedWord) mLookAhead ).getValue() ==
+                                TransformationCatalogReservedWord.TRANSFORMATION ) {
+                    
+                        //get the  transformation/id, that is parsed differently
+                        //compared to the rest of the attributes of the name.
+                        transformation = getTransformation();
 
+
+                        //check for any profiles that maybe specified and need to
+                        //applied for all entries related to the transformation
+                        Profiles profiles = getProfilesForTransformation();
+
+                        while( !( mLookAhead instanceof CloseBrace ) ){
+                            TransformationCatalogEntry entry = getTransformationCatalogEntry( transformation, profiles , modifyFileURL);
+                            store.addEntry( entry );
+                            //we have information about one transformation catalog container
+                            mLogger.log( "Transformation Catalog Entry parsed is - " + entry,
+                                      LogManager.DEBUG_MESSAGE_LEVEL);
+                        }
+
+                        //again check for any profiles that may be associated
+                        //makes profiles overloading slightly more complicated
+                        //no need to do it
+                        //profiles.addAll( getProfilesForTransformation() );
+
+                        if (! (mLookAhead instanceof CloseBrace)) {
+                            throw new ScannerException( mScanner.getLineNumber(),
+                                                       "expecting a closing brace");
+                        }
+                    }
+                    else if(  ( (TransformationCatalogReservedWord) mLookAhead ).getValue() ==
+                                TransformationCatalogReservedWord.CONT ) {
+                    
+                        //get the  transformation/id, that is parsed differently
+                        String name = getEntryIdentifier( TransformationCatalogReservedWord.symbolTable().get("cont") );
+                        while( !( mLookAhead instanceof CloseBrace ) ){
+                            Container entry = getContainerEntry( name, modifyFileURL);
+                            //store.addEntry( container );
+                            //we have information about one transformation catalog container
+                            mLogger.log( "Container Entry parsed is - " + entry,
+                                      LogManager.DEBUG_MESSAGE_LEVEL);
+                        }
+                    }
 
                     mLookAhead = mScanner.nextToken();
 
@@ -227,12 +248,12 @@ public class TransformationCatalogTextParser {
     }
 
     /**
-     * Constructs a single transformation catalog entry and returns it.
+     * Constructs a single transformation catalog container and returns it.
      *
      * @param entry the <code>TransformationCatalogEntry<code> object that is to be populated.
      * @param profiles  the profiles that apply to all the entries
      * @param modifyFileURL Boolean indicating whether to modify the file URL or not
-     * @return  the transformation catalog entry object.
+     * @return  the transformation catalog container object.
      *
      * @throws even more mystery
      */
@@ -241,7 +262,7 @@ public class TransformationCatalogTextParser {
 
 
         TransformationCatalogEntry entry = new TransformationCatalogEntry();
-        String site = getSite();
+        String site = getEntryIdentifier( TransformationCatalogReservedWord.symbolTable().get("site") );
         entry.setLogicalTransformation( transformation );
         entry.setResourceId( site );
 
@@ -265,7 +286,7 @@ public class TransformationCatalogTextParser {
             String attribute = ((TransformationCatalogReservedWord)mLookAhead).toString();
             mLookAhead = mScanner.nextToken();
             
-            String value ;
+            String value = null;
             switch ( word ) {
 
                 case TransformationCatalogReservedWord.ARCH:
@@ -305,7 +326,12 @@ public class TransformationCatalogTextParser {
                     value = getQuotedValue( "type" );
                     entry.setType( TCType.valueOf(value.toUpperCase()) );
                     break;
-
+                   
+                case TransformationCatalogReservedWord.CONTAINER:
+                    value = getQuotedValue( "container" );
+                    entry.setContainer( new Container( value ));
+                    break;
+                    
                 default:
                     throw new ScannerException(mScanner.getLineNumber(),
                         "invalid reserved word " + attribute + " used to configure a transformation catalog entry");
@@ -316,7 +342,7 @@ public class TransformationCatalogTextParser {
         //System.out.println( "*** Profiles are " + p );
 
         entry.setSysInfo( sysinfo );
-        //add all the profiles for the entry only if they are empty
+        //add all the profiles for the container only if they are empty
         if( !p.isEmpty() ){
            entry.addProfiles( p );
         }
@@ -328,7 +354,7 @@ public class TransformationCatalogTextParser {
 
         mLookAhead = mScanner.nextToken();
         
-        //modify the entry to handle for file URL's
+        //modify the container to handle for file URL's
         //specified for the PFN's
         if(modifyFileURL){
         	return Abstract.modifyForFileURLS( entry );
@@ -348,12 +374,15 @@ public class TransformationCatalogTextParser {
     private String getTransformation() throws IOException,
         ScannerException {
         String transformation = null;
+        /*
         if (! ( mLookAhead instanceof TransformationCatalogReservedWord ) ||
             ( (TransformationCatalogReservedWord) mLookAhead ).getValue() !=
             TransformationCatalogReservedWord.TRANSFORMATION ) {
             throw new ScannerException( mScanner.getLineNumber(),
-                                          "expecting reserved word \"tr\"");
+                                          "expecting reserved word \"tr\" . Instead got \"" +
+                                                  ( (TransformationCatalogReservedWord) mLookAhead ) + "\"");
         }
+        */
         mLookAhead = mScanner.nextToken();
 
         // proceed with next token
@@ -375,31 +404,32 @@ public class TransformationCatalogTextParser {
     }
 
     /**
-     * Returns the site transformation for a site, and moves the scanner to hold the next
-     * <code>TransformationCatalogReservedWord</code>.
-     *
+     * Returns the name of an entry identifier where entry is demarcated by 
+     * curly braces
+     * 
+     * 
      * @return  the transformation name
      *
      * @throws plenty
      */
-    private String getSite() throws IOException,
+    private String getEntryIdentifier (TransformationCatalogReservedWord reservedWord ) throws IOException,
         ScannerException {
-        String site = null;
+        String identifier = null;
         if (! ( mLookAhead instanceof TransformationCatalogReservedWord ) ||
-            ( (TransformationCatalogReservedWord) mLookAhead ).getValue() !=
-            TransformationCatalogReservedWord.SITE  ) {
+            ( (TransformationCatalogReservedWord) mLookAhead ).getValue() != reservedWord.getValue()
+                ) {
             throw new ScannerException( mScanner.getLineNumber(),
-                                          "expecting reserved word \"site\" or closing brace instead of " + mLookAhead );
+                                          "expecting reserved word \"" + reservedWord +"\" or closing brace instead of " + mLookAhead );
         }
         mLookAhead = mScanner.nextToken();
 
         // proceed with next token
         if (! (mLookAhead instanceof Identifier)) {
             throw new ScannerException(mScanner.getLineNumber(),
-                "expecting the site identifier");
+                "expecting the reserved word \"" + reservedWord +"\" identifier");
         }
 
-        site = ( (Identifier) mLookAhead).getValue();
+        identifier = ( (Identifier) mLookAhead).getValue();
         mLookAhead = mScanner.nextToken();
 
         // proceed with next token
@@ -408,9 +438,11 @@ public class TransformationCatalogTextParser {
                                           "expecting an opening brace");
         }
         mLookAhead = mScanner.nextToken();
-        return site;
+        return identifier;
     }
 
+
+    
     /**
      * Returns a list of profiles that have to be applied to the entries for
      * all the sites corresponding to a transformation.
@@ -449,6 +481,83 @@ public class TransformationCatalogTextParser {
         return profiles;
     }
 
+    
+    /**
+     * Constructs a single container object and returns it.
+     *
+     * @param name identifier for the container.
+     * @param modifyFileURL Boolean indicating whether to modify the file URL or not
+     * @return  Container container object.
+     *
+     * @throws even more mystery
+     */
+    private Container getContainerEntry( String name, boolean modifyFileURL ) throws IOException,
+        ScannerException {
+
+
+        Container container = new Container();
+        container.setName(name);
+        
+
+        while ( mLookAhead != null && ! (mLookAhead instanceof CloseBrace) ) {
+           
+            //populate all the rest of the attributes
+            //associated with the transformation
+            if (! (mLookAhead instanceof TransformationCatalogReservedWord)) {
+                throw new ScannerException(mScanner.getLineNumber(),
+                    "expecting a reserved word describing a transformation attribute instead of "+
+                    (TransformationCatalogReservedWord)mLookAhead);
+            }
+
+            int word = ( (TransformationCatalogReservedWord) mLookAhead).getValue();
+            String attribute = ((TransformationCatalogReservedWord)mLookAhead).toString();
+            mLookAhead = mScanner.nextToken();
+            
+            String value = null;
+            switch ( word ) {
+
+                case TransformationCatalogReservedWord.TYPE:
+                    value = getQuotedValue( "type" );
+                    container.setType( Container.TYPE.valueOf( value ));
+                break;
+                    
+                case TransformationCatalogReservedWord.IMAGE:
+                    value = getQuotedValue( "image" );
+                    container.setImageURL(value);
+                break;
+
+                case TransformationCatalogReservedWord.IMAGE_SITE:
+                    value = getQuotedValue( "image_site" );
+                    container.setImageSite( value );
+                break;
+                
+                case TransformationCatalogReservedWord.DOCKERFILE:
+                    value = getQuotedValue( "dockerfile" );
+                    container.setImageDefinitionURL(value);
+                break;
+                
+                case TransformationCatalogReservedWord.PROFILE:
+                    container.addProfile(this.getProfile() );
+                    break;
+                    
+                default:
+                    throw new ScannerException(mScanner.getLineNumber(),
+                        "invalid reserved word " + attribute + " used to configure a container entry");
+
+            }
+        }
+
+        System.out.println("Object passed is " + container);
+
+        if (! (mLookAhead instanceof CloseBrace)) {
+                        throw new ScannerException(mScanner.getLineNumber(),
+                                                      "expecting a closing brace");
+        }
+
+        mLookAhead = mScanner.nextToken();
+        
+        return container;
+    }
     
     /**
      * Parses a single line and returns a profile.
