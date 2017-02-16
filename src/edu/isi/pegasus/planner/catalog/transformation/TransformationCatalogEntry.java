@@ -486,7 +486,7 @@ public class TransformationCatalogEntry
      * 
      * @return 
      */
-    private Container getContainer(){
+    public Container getContainer(){
         return mContainer;
     }
     
