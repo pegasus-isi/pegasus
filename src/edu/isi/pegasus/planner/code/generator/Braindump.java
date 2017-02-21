@@ -458,7 +458,7 @@ public class Braindump {
     protected String getSubmitHostname( ) throws CodeGeneratorException{
         try {
             InetAddress localMachine = java.net.InetAddress.getLocalHost();
-            return localMachine.getHostName();
+            return localMachine.getCanonicalHostName();
         } catch ( UnknownHostException ex) {
         	// With all the different type of VMs floating around today, it is
         	// not uncommon that the hostname is undefined. Make sure we do not
