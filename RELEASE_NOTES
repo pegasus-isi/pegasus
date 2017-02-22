@@ -1,4 +1,24 @@
 ===============================
+Release Notes for Pegasus 4.7.4
+===============================
+
+We are pleased to announce Pegasus 4.7.4. Pegasus 4.7.4 is a minor
+release of Pegasus and includes improvements and bug fixes to the
+4.7.4 release. 
+
+Bugs Fixed
+--------------
+1) [PM-1148] - kickstart should print a more helpful error message if
+the executable is missing 
+
+2) [PM-1160] - Dashboard is not recording the hostname correctly
+
+3) [PM-1163] - Confusing error message in pegasus-kickstart
+
+4) [PM-1164] - worker package in submit directory gets deleted during
+workflow run  
+
+===============================
 Release Notes for Pegasus 4.7.3
 ===============================
 
