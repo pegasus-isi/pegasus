@@ -1659,6 +1659,8 @@ class S3Handler(TransferHandlerBase):
             else:
                 raise RuntimeError("Unable to parse bucket: %s" % (bucket))
 
+            env = self._s3_cred_env(t.get_site_label())
+
             cmd = tools.full_path("pegasus-s3") + " mkdir"
             if logger.isEnabledFor(logging.DEBUG):
                 cmd += " -v"
