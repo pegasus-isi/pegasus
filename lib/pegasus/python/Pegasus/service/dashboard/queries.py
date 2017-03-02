@@ -71,11 +71,16 @@ class MasterDatabase(object):
         """
         Given a work-flow UUID, query the master database to get the connection URL for the work-flow's STAMPEDE database.
         """
+        q = self.session.query(DashboardWorkflow)
 
-        w = orm.aliased(DashboardWorkflow, name='w')
+        if root_wf_id is None:
+            raise ValueError('root_wf_id cannot be None')
 
-        q = self.session.query(w.wf_id, w.wf_uuid, w.db_url)
-        q = q.filter(w.wf_id == root_wf_id)
+        m_wf_id = str(root_wf_id)
+        if m_wf_id.isdigit():
+            q = q.filter(DashboardWorkflow.wf_id == root_wf_id)
+        else:
+            q = q.filter(DashboardWorkflow.wf_uuid == root_wf_id)
 
         q = q.one()
 
@@ -768,4 +773,3 @@ class WorkflowInfo(object):
     def close(self):
         log.debug('close')
         self.session.close()
-
