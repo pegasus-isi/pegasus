@@ -751,11 +751,25 @@ class TransferHandlerBase(object):
         """
         if not os.path.exists(path):
             return False
+        
+        # for non-zero sized files, try to read a little bit at the beginning
+        check_bytes = 0
+        try:
+            s = os.stat(path)
+            check_bytes = min(s[stat.ST_SIZE], 1024)
+        except:
+            return False
+
         try:
             f = open(path, "r")
+            if check_bytes > 0:
+                logger.debug("Reading %d bytes from %s to make sure the file is accessible" \
+                             %(check_bytes, path))
+                f.read(check_bytes)
             f.close()
         except:
             return False
+
         return True
 
 
@@ -810,14 +824,16 @@ class FileHandler(TransferHandlerBase):
                     self._post_transfer_attempt(t, True, t_start)
                     continue
 
+            # first check that the src file exists, and that it can be opened
+            if not self._verify_read_access(t.get_src_path()):
+                logger.error("ln: src (%s) does not exist, or we do not have permission to read it" \
+                             % t.get_src_path())
+                failed_l.append(t)
+                self._post_transfer_attempt(t, False, t_start)
+                continue
+
+            # some of the time, PegasusLite can tell us to take shortcut and symlink the files
             if symlink_file_transfer:
-                # first check that the src file exists, and that it can be opened
-                if not self._verify_read_access(t.get_src_path()):
-                    logger.error("ln: src (%s) does not exist, or we do not have permission to read it" \
-                                 % t.get_src_path())
-                    failed_l.append(t)
-                    self._post_transfer_attempt(t, False, t_start)
-                    continue
                 cmd = "ln -f -s '%s' '%s'" \
                     % (t.get_src_path(), t.get_dst_path())
             else:
