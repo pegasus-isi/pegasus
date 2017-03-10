@@ -900,8 +900,8 @@ class GridFtpHandler(TransferHandlerBase):
         if mkdirs_l[0].get_proto() == "gsiftp":
                 
             tools = Tools()
-            if tools.find("pegasus-gridftp", path_prepend=[prog_dir]) == None:
-                logger.error("Unable to do gsiftp mkdir because pegasus-gridftp could not be found")
+            if tools.find("globus-url-copy") == None:
+                logger.error("Unable to do gsiftp mkdir because globus-url-copy could not be found")
                 return [[], mkdirs_l]
             
             for target in mkdirs_l:
@@ -917,37 +917,16 @@ class GridFtpHandler(TransferHandlerBase):
                
                 success = False
            
-                # build command line for pegasus-gridftp
-                cmd = tools.full_path('pegasus-gridftp')
-                cmd += " mkdir"
-            
-                # make output match our current log level
-                if logger.isEnabledFor(logging.DEBUG):
-                    cmd += " -v"
-            
-                cmd += " -f"
-                cmd += " -p"
-                cmd += " " + target.get_url()     
-
+                cmd = tools.full_path("globus-url-copy")
+                cmd += " -create-dest"
+                cmd += " file:///dev/null"
+                cmd += " " + target.get_url() + "/.create-dir"
                 try:
                     tc = TimedCommand(cmd, env_overrides=env)
                     tc.run()
                     success = True
                 except RuntimeError, err:
                     logger.error(err)
-                    
-                if not success and tools.find("globus-url-copy"):
-                    # pegasus-gridftp has a new stricter hostcert check - if it fails, try globus-url-copy
-                    cmd = tools.full_path("globus-url-copy")
-                    cmd += " -create-dest"
-                    cmd += " file:///dev/null"
-                    cmd += " " + target.get_url() + "/.create-dir"
-                    try:
-                        tc = TimedCommand(cmd, env_overrides=env)
-                        tc.run()
-                        success = True
-                    except RuntimeError, err:
-                        logger.error(err)
 
             if success:
                 successful_l.append(target)
@@ -1044,60 +1023,32 @@ class GridFtpHandler(TransferHandlerBase):
     
     
     def do_removes(self, removes_l):
+        """
+        implemented as copy of /dev/null over the file we want to delete
+        """
+
         successful_l = []
         failed_l = []
-        env = {}
         
-        # differnent tools based on protocol
-        if removes_l[0].get_proto() == "gsiftp":
-            
-            tools = Tools()
-            if tools.find("pegasus-gridftp", path_prepend=[prog_dir]) == None:
-                logger.error("Unable to do gsiftp rm because pegasus-gridftp could not be found")
-                return [[], removes_l]
-            
-            try:
-                tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".lst")
-                tmp_file = os.fdopen(tmp_fd, "w+b")
-            except:
-                raise RuntimeError("Unable to create tmp file for pegasus-gridftp cleanup")
-            for target in removes_l:
-                tmp_file.write("%s\n" %(target.get_url()))
-            tmp_file.close()
-            
-            key = "X509_USER_PROXY_" + target.get_site_label()
-            if key in os.environ:
-                env["X509_USER_PROXY"] = os.environ[key]
-           
-            # build command line for pegasus-gridftp
-            cmd = tools.full_path('pegasus-gridftp')
-            cmd += " rm"
-        
-            # make output match our current log level
-            if logger.isEnabledFor(logging.DEBUG):
-                cmd += " -v"
-        
-            cmd += " -f"
-            if target.get_recursive():
-                cmd += " -r"
-            cmd += " -i " + tmp_name
-            
-            try:
-                tc = TimedCommand(cmd, env_overrides=env)
-                tc.run()
-                for t in removes_l:
-                    successful_l.append(t)
-            except RuntimeError, err:
-                logger.error(err)
-                for t in removes_l:
-                    failed_l.append(t)
-            os.unlink(tmp_name)
-        else:
-            # sshftp rm - same as scp!
-            handler = ScpHandler()
-            [successful_l, failed_l]  = handler.do_removes(removes_l)
+        if len(removes_l) == 0:
+            return
 
-        return [successful_l, failed_l]
+        # ignore recursive deletes
+        if removes_l[0].get_recursive():
+            return [removes_l, []]
+
+        # convert the rm to transfer of /dev/null
+        transfer_l = []
+        for r in removes_l:
+            t = Transfer()
+            t.add_src("local", "file:///dev/null")
+            t.add_dst(r.get_site_label(), r.get_url())
+            transfer_l.append(t)
+
+        [s, f] = self.do_transfers(transfer_l)
+        if len(f) > 0:
+            return [[], removes_l]
+        return [removes_l, []]
     
     
     def _exec_transfers(self, transfers, attempt, create_dest, third_party):
@@ -1294,8 +1245,8 @@ class GridFtpHandler(TransferHandlerBase):
                      + " -no-data-channel-authentication"
     
         return options
-    
-    
+
+   
     def _check_similar(self, a, b):
         """
         compares two url_pairs, and determins if they are similar enough to be
@@ -1311,7 +1262,7 @@ class GridFtpHandler(TransferHandlerBase):
             return False
         return True
 
-
+    
     def _split_similar(self, full_list):
         """
         splits up a long list of similar transfers into smaller
