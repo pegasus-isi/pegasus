@@ -1298,6 +1298,9 @@ public class JDBCRC implements ReplicaCatalog
                     return result;
                 }
                 count = rs.getInt("c");
+                if (count == 0) {
+                    return result;
+                }    
             }
             query = new StringBuilder("SELECT `key`, value FROM rc_meta "
                     + "WHERE lfn_id=").append(id);
@@ -1317,12 +1320,12 @@ public class JDBCRC implements ReplicaCatalog
             st.close();
             rs.close();
             query = new StringBuilder(256);
-            if (count == 0) {
-                query.append("DELETE FROM rc_lfn WHERE lfn_id=").append(id);
-            } else {
+            if (count > 1) {
                 query.append("DELETE FROM rc_pfn WHERE lfn_id=").append(id)
                         .append(" AND site='")
                         .append(quote(tuple.getResourceHandle())).append("'");
+            } else {
+                query.append("DELETE FROM rc_lfn WHERE lfn_id=").append(id);
             }
             st = mConnection.createStatement();
             result = st.executeUpdate(query.toString());
