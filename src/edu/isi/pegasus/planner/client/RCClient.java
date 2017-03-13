@@ -557,7 +557,7 @@ public class RCClient extends Toolkit {
 		result = m_rc.insert(entries);
 		m_log.info("inserted " + result + " entries");
 	    } else {
-		result = m_rc.delete(entries, false);
+		result = m_rc.delete(entries, true);
 		m_log.info("deleted " + result + " entries");
 	    }
 

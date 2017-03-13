@@ -1197,7 +1197,7 @@ public class JDBCRC implements ReplicaCatalog
           Map.Entry entry = (Map.Entry)it.next();
           String lfn = (String)entry.getKey();
           Collection c   = (Collection)entry.getValue();
-
+          
           //iterate through all RCE's for this lfn and delete
           for(Iterator rceIt = c.iterator();rceIt.hasNext();){
               ReplicaCatalogEntry rce = (ReplicaCatalogEntry)rceIt.next();
@@ -1278,28 +1278,40 @@ public class JDBCRC implements ReplicaCatalog
     if ( mConnection == null ) throw new RuntimeException( c_error );
 
     try {
-        query = new StringBuilder("SELECT lfn_id FROM rc_lfn WHERE lfn='").append(lfn).append("'");
+        query = new StringBuilder("SELECT lfn_id FROM rc_lfn WHERE lfn='")
+                .append(lfn).append("'");
         Statement st = mConnection.createStatement();
         ResultSet rs = st.executeQuery(query.toString());
         if (rs.next()) {
             int id = rs.getInt("lfn_id");
             st.close();
             rs.close();
+            int count = 0;
             if (tuple.getResourceHandle() != null) {
-                query = new StringBuilder("SELECT lfn_id FROM rc_pfn WHERE lfn_id=").append(id).append(" AND site='").append(quote(tuple.getResourceHandle())).append("'");
+                query = new StringBuilder("SELECT COUNT(lfn_id) AS c "
+                        + "FROM rc_pfn WHERE lfn_id=")
+                        .append(id).append(" AND site='")
+                        .append(quote(tuple.getResourceHandle())).append("'");
                 st = mConnection.createStatement();
                 rs = st.executeQuery(query.toString());
                 if (!rs.next()) {
                     return result;
                 }
+                count = rs.getInt("c");
+                if (count == 0) {
+                    return result;
+                }    
             }
-            query = new StringBuilder("SELECT `key`, value FROM rc_meta WHERE lfn_id=").append(id);
+            query = new StringBuilder("SELECT `key`, value FROM rc_meta "
+                    + "WHERE lfn_id=").append(id);
             st = mConnection.createStatement();
             rs = st.executeQuery(query.toString());
             while (rs.next()) {
                 String key = rs.getString("key");
                 String value = rs.getString("value");
-                if (key != null && (!tuple.hasAttribute(key) || (value != null && !tuple.getAttribute(key).equals(value)))) {
+                if (key != null && (!tuple.hasAttribute(key) 
+                        || (value != null 
+                        && !tuple.getAttribute(key).equals(value)))) {
                     st.close();
                     rs.close();
                     return result;
@@ -1308,7 +1320,13 @@ public class JDBCRC implements ReplicaCatalog
             st.close();
             rs.close();
             query = new StringBuilder(256);
-            query.append("DELETE FROM rc_lfn WHERE lfn_id=").append(id);
+            if (count > 1) {
+                query.append("DELETE FROM rc_pfn WHERE lfn_id=").append(id)
+                        .append(" AND site='")
+                        .append(quote(tuple.getResourceHandle())).append("'");
+            } else {
+                query.append("DELETE FROM rc_lfn WHERE lfn_id=").append(id);
+            }
             st = mConnection.createStatement();
             result = st.executeUpdate(query.toString());
             st.close();
