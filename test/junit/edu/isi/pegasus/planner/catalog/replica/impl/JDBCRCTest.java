@@ -53,9 +53,9 @@ public class JDBCRCTest {
     public void setUp() throws IOException {
 
         String basename = "pegasus-db-admin";
-        File pegasusDBAdmin = FindExecutable.findExec( basename );
-        if( pegasusDBAdmin == null ){
-            throw new RuntimeException( "Unable to find path to " + basename );
+        File pegasusDBAdmin = FindExecutable.findExec(basename);
+        if (pegasusDBAdmin == null) {
+            throw new RuntimeException("Unable to find path to " + basename);
         }
         String command = pegasusDBAdmin.getAbsolutePath() + " create jdbc:sqlite:jdbcrc_test.db";
 
@@ -71,10 +71,10 @@ public class JDBCRCTest {
             //spawn off the gobblers with the already initialized default callback
             StreamGobbler ips
                     = new StreamGobbler(p.getInputStream(), new DefaultStreamGobblerCallback(
-                                    LogManager.CONSOLE_MESSAGE_LEVEL));
+                            LogManager.CONSOLE_MESSAGE_LEVEL));
             StreamGobbler eps
                     = new StreamGobbler(p.getErrorStream(), new DefaultStreamGobblerCallback(
-                                    LogManager.ERROR_MESSAGE_LEVEL));
+                            LogManager.ERROR_MESSAGE_LEVEL));
 
             ips.start();
             eps.start();
@@ -148,21 +148,47 @@ public class JDBCRCTest {
 
     @Test
     public void deleteSpecificMapping() {
-        HashMap attr = new HashMap();
-        attr.put(ReplicaCatalogEntry.RESOURCE_HANDLE, "x");
-        attr.put("name", "value");
-        jdbcrc.insert("a", new ReplicaCatalogEntry("b", attr));
+        HashMap attr = new HashMap() {
+            {
+                put(ReplicaCatalogEntry.RESOURCE_HANDLE, "x");
+                put("name", "value");
+            }
+        };
+        HashMap attr2 = new HashMap() {
+            {
+                put(ReplicaCatalogEntry.RESOURCE_HANDLE, "y");
+                put("name", "value");
+            }
+        };
 
-        HashMap attr2 = new HashMap();
-        attr2.put(ReplicaCatalogEntry.RESOURCE_HANDLE, "x");
-        jdbcrc.delete("a", new ReplicaCatalogEntry("b", attr2));
+        jdbcrc.insert("a", new ReplicaCatalogEntry("b", attr));
+        jdbcrc.insert("a", new ReplicaCatalogEntry("b", new HashMap() {
+            {
+                put(ReplicaCatalogEntry.RESOURCE_HANDLE, "y");
+            }
+        }));
+        jdbcrc.delete("a", new ReplicaCatalogEntry("b", new HashMap() {
+            {
+                put(ReplicaCatalogEntry.RESOURCE_HANDLE, "x");
+            }
+        }));
 
         Collection<ReplicaCatalogEntry> c = jdbcrc.lookup("a");
         assertTrue(c.contains(new ReplicaCatalogEntry("b", attr)));
+        assertTrue(c.contains(new ReplicaCatalogEntry("b", attr2)));
 
         jdbcrc.delete("a", new ReplicaCatalogEntry("b", attr));
         c = jdbcrc.lookup("a");
         assertFalse(c.contains(new ReplicaCatalogEntry("b", attr)));
+        assertFalse(c.contains(new ReplicaCatalogEntry("b", new HashMap() {
+            {
+                put(ReplicaCatalogEntry.RESOURCE_HANDLE, "x");
+            }
+        })));
+        assertTrue(c.contains(new ReplicaCatalogEntry("b", attr2)));
+
+        jdbcrc.delete("a", new ReplicaCatalogEntry("b", attr2));
+        c = jdbcrc.lookup("a");
         assertFalse(c.contains(new ReplicaCatalogEntry("b", attr2)));
     }
 
@@ -187,9 +213,12 @@ public class JDBCRCTest {
     public void updateToAttributesMap() {
         jdbcrc.insert("a", new ReplicaCatalogEntry("b", "z"));
 
-        HashMap attr = new HashMap();
-        attr.put(ReplicaCatalogEntry.RESOURCE_HANDLE, "z");
-        attr.put("key", "value");
+        HashMap attr = new HashMap() {
+            {
+                put(ReplicaCatalogEntry.RESOURCE_HANDLE, "z");
+                put("key", "value");
+            }
+        };
 
         Collection<ReplicaCatalogEntry> c = jdbcrc.lookup("a");
         assertFalse(c.contains(new ReplicaCatalogEntry("b", attr)));
