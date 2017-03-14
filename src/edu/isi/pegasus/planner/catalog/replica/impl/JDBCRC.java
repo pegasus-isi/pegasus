@@ -1282,61 +1282,61 @@ public class JDBCRC implements ReplicaCatalog
                 .append(lfn).append("'");
         Statement st = mConnection.createStatement();
         ResultSet rs = st.executeQuery(query.toString());
-        if (rs.next()) {
-            int id = rs.getInt("lfn_id");
-            st.close();
-            rs.close();
-            int count = 0;
-            if (tuple.getResourceHandle() != null) {
-                query = new StringBuilder("SELECT COUNT(lfn_id) AS c "
-                        + "FROM rc_pfn WHERE lfn_id=")
-                        .append(id).append(" AND site='")
-                        .append(quote(tuple.getResourceHandle())).append("'");
-                st = mConnection.createStatement();
-                rs = st.executeQuery(query.toString());
-                if (!rs.next()) {
-                    return result;
-                }
-                count = rs.getInt("c");
-                if (count == 0) {
-                    return result;
-                }    
-            }
-            query = new StringBuilder("SELECT `key`, value FROM rc_meta "
-                    + "WHERE lfn_id=").append(id);
-            st = mConnection.createStatement();
-            rs = st.executeQuery(query.toString());
-            while (rs.next()) {
-                String key = rs.getString("key");
-                String value = rs.getString("value");
-                if (key != null && (!tuple.hasAttribute(key) 
-                        || (value != null 
-                        && !tuple.getAttribute(key).equals(value)))) {
-                    st.close();
-                    rs.close();
-                    return result;
-                }
-            }
-            st.close();
-            rs.close();
-            query = new StringBuilder(256);
-            if (count > 1) {
-                query.append("DELETE FROM rc_pfn WHERE lfn_id=").append(id)
-                        .append(" AND site='")
-                        .append(quote(tuple.getResourceHandle())).append("'");
-            } else {
-                query.append("DELETE FROM rc_lfn WHERE lfn_id=").append(id);
-            }
-            st = mConnection.createStatement();
-            result = st.executeUpdate(query.toString());
-            st.close();
-            rs.close();
+        if (!rs.next()) {
+            return result;
         }
+        int id = rs.getInt("lfn_id");
+        st.close();
+        rs.close();
+        
+        query = new StringBuilder("SELECT `key`, value FROM rc_meta "
+                + "WHERE lfn_id=").append(id);
+        st = mConnection.createStatement();
+        rs = st.executeQuery(query.toString());
+        while (rs.next()) {
+            String key = rs.getString("key");
+            String value = rs.getString("value");
+            if (key != null && (!tuple.hasAttribute(key) 
+                    || (value != null 
+                    && !tuple.getAttribute(key).equals(value)))) {
+                st.close();
+                rs.close();
+                return result;
+            }
+        }
+        st.close();
+        rs.close();
+        
+        query = new StringBuilder("SELECT COUNT(lfn_id) AS c "
+                + "FROM rc_pfn WHERE lfn_id=").append(id);
+        st = mConnection.createStatement();
+        rs = st.executeQuery(query.toString());
+        if (!rs.next()) {
+            return result;
+        }
+        int count = rs.getInt("c");
+                
+        query = new StringBuilder(256);
+        if (count > 1) {
+            query.append("DELETE FROM rc_pfn WHERE lfn_id=").append(id)
+                    .append(" AND pfn='").append(tuple.getPFN()).append("'");
+            
+            if (tuple.getResourceHandle() != null) {
+                query.append(" AND site='")
+                    .append(quote(tuple.getResourceHandle())).append("'");
+            }
+        } else {
+            query.append("DELETE FROM rc_lfn WHERE lfn_id=").append(id);
+        }
+        st = mConnection.createStatement();
+        result = st.executeUpdate(query.toString());
+        st.close();
+        rs.close();
         return result;
 
-    } catch ( SQLException e ) {
-        throw new RuntimeException( "Unable to tell database " +
-				  query + ": " + e.getMessage() );
+    } catch (SQLException e) {
+          throw new RuntimeException("Unable to tell database "
+                  + query + ": " + e.getMessage());
     }
   }
 
