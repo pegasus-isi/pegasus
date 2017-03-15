@@ -165,7 +165,7 @@ def format_seconds(duration, max_comp = 2):
    	# years
 	if comp < max_comp and (years >= 1 or comp > 0):
 		comp += 1
-		if days == 1:
+		if years == 1:
 			formatted_duration += str(years) + ' year, '
 		else:
 			formatted_duration += str(years) + ' years, '
