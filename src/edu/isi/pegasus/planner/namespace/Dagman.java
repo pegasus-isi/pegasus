@@ -187,6 +187,13 @@ public class Dagman extends Namespace {
     public static final String ABORT_DAG_ON_KEY = "ABORT-DAG-ON";
 
     /**
+     * To associate any variables that you want to reference in the job
+     * submit file
+     */
+    public static final String VARS_KEY = "VARS";
+    
+    
+    /**
      * Determines whether a key is category related or not.
      * 
      * @param key  the key in question
@@ -478,6 +485,15 @@ public class Dagman extends Namespace {
                 }
                 break;
 
+             case 'V':
+                if (key.compareTo(Dagman.VARS_KEY) == 0) {
+                    res = VALID_KEY;
+                }
+                else {
+                    res = NOT_PERMITTED_KEY;
+                }
+                break;
+                 
             default:
                 res = NOT_PERMITTED_KEY;
         }
@@ -644,6 +660,9 @@ public class Dagman extends Namespace {
         if( this.containsKey( Dagman.CATEGORY_KEY ) ){
             append( sb, replacementKey( Dagman.CATEGORY_KEY  ), name, replacementValue( Dagman.CATEGORY_KEY  ) );
         }
+        
+        //PM-1049 always add VARS dagnode retry
+        append( sb, Dagman.VARS_KEY, name, "+DAGNodeRetry=\"$(RETRY)\"" );
 
         return sb.toString();
     }
