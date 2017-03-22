@@ -57,6 +57,7 @@ BEGIN {
     current_job = ""
     current_wn = ""
     current_js = ""
+    exitcode = 0
 }
 
 /SystemJID: / {
