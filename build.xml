@@ -237,6 +237,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
              Version="true"
              Private="true"
              Windowtitle="PEGASUS"
+	     Encoding="UTF-8"
              classpathref="build.classpath">
       <packageset dir="src">
         <include name="edu/isi/pegasus/planner/dax/**"/>
