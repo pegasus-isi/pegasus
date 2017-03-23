@@ -147,13 +147,13 @@
                 </td>
             </tr>
             <tr>
-                <th class="job_table_width">Stdout Preview</th>
+                <th class="job_table_width">Application Stdour/Stderr</th>
                 <td>
                     <a target="_blank" href="{{ url_for ('.stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Preview</a>
                 </td>
             </tr>
             <tr>
-                <th class="job_table_width">Stdout File</th>
+                <th class="job_table_width">Kickstart Output</th>
                 <td class="text-nowrap">
                     <span class="pe-7s-link"> </span>
                     <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ job.stdout_file }}"
@@ -163,13 +163,7 @@
                 </td>
             </tr>
             <tr>
-                <th class="job_table_width">Stderr Preview</th>
-                <td>
-                    <a target="_blank" href="{{ url_for ('.stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Preview</a>
-                </td>
-            </tr>
-            <tr>
-                <th class="job_table_width">Stderr File</th>
+                <th class="job_table_width">Condor Stderr/Pegasus Lite Log</th>
                 <td class="text-nowrap">
                     <span class="pe-7s-link"> </span>
                     <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ job.stderr_file }}"
