@@ -1758,9 +1758,13 @@ class Workflow:
         """
         This function tries to parse the kickstart output file of a
         given job and collect information for the stampede schema.
+        
+        Return an the application exitcode from the kickstart file only if there is exactly
+        one kickstart record, else None
         """
         my_output = []
         parse_kickstart = True
+        app_exitcode = None
 
         #a boolean to track if the job has rotated stdout/stderr files
         #used to track the case where we have rotated files for non kickstart jobs
@@ -1827,10 +1831,8 @@ class Workflow:
                             # PM-1176 for clustered records we send INVOCATION notifications because that is how
                             # the planner generated it. Send job notification only for a non clustered job
                             # we have now real app exitcode
-                            app_exitcode = None
                             if "exitcode" in record :
                                 app_exitcode = record["exitcode"]
-                            self._notifications_manager.process_job_notifications(self, job_state, my_job, app_exitcode )
 
                     # Send task information to the database
                     self.db_send_task_start(my_job, "MAIN_JOB", my_task_id, record)
@@ -1926,6 +1928,7 @@ class Workflow:
 
         # register any files associated with the job
         self.register_files( my_job )
+        return app_exitcode
 
 
 
@@ -2167,6 +2170,9 @@ class Workflow:
         # OR we are in the PMC only mode where there are no postscripts associated
         parse_job_output_on_job_success_failure = not self.job_has_postscript(jobid) or self._is_pmc_dag
 
+        # PM-1176 track kickstart app exitcode only for non clustered jobs
+        real_app_exitcode = None
+
         # Parse the kickstart output file, also send mainjob tasks, if needed
         if job_state == "JOB_SUCCESS" or job_state == "JOB_FAILURE":
             # Main job has ended
@@ -2174,7 +2180,7 @@ class Workflow:
                 # PM-793 only parse job output here if a postscript is NOT associated with
                 # the job in the .dag file
                 # OR we are in the PMC only mode where there are no postscripts associated
-                self.parse_job_output(my_job, job_state)
+                real_app_exitcode = self.parse_job_output(my_job, job_state)
 
 
         if self._sink is None:
@@ -2191,15 +2197,13 @@ class Workflow:
             # the database entry for this job
             self.db_send_job_brief(my_job, "submit.start")
 
-        postscript_state = False # PM-1176 avoid duplicate job notifications
-        
+
         # Check if we need to send any tasks to the database
         if job_state == "PRE_SCRIPT_SUCCESS" or job_state == "PRE_SCRIPT_FAILURE":
             # PRE script finished
             self.db_send_task_start(my_job, "PRE_SCRIPT")
             self.db_send_task_end(my_job, "PRE_SCRIPT")
         elif job_state == "POST_SCRIPT_SUCCESS" or job_state == "POST_SCRIPT_FAILURE":
-            postscript_state = True
             if my_job._main_job_exitcode is None:
                 #PM-1070 set the main exitcode to the postscript exitcode
                 #No JOB_TERMINATED OR JOB_SUCCESS OR JOB_FAILURE for this job instance
@@ -2207,7 +2211,7 @@ class Workflow:
                 logger.warning( "Set main job exitcode for %s to post script failure code %s" %(my_job._exec_job_id, my_job._post_script_exitcode))
 
             #PM-793 we parse the job.out and .err files when postscript finishes
-            self.parse_job_output(my_job, job_state)
+            real_app_exitcode = self.parse_job_output(my_job, job_state)
 
             # check to see if there is a deferred job_inst.main.end event that
             # has to be sent to the database
@@ -2221,9 +2225,9 @@ class Workflow:
         # PM-1176 only send any notifications after we have parsed .out file if required
         # Take care of job-level notifications
         if self.check_notifications() == True and self._notifications_manager is not None :
-            if not postscript_state:
-                # notification would have been sent
-                self._notifications_manager.process_job_notifications(self, job_state, my_job, status)
+            if real_app_exitcode is not None:
+                status = real_app_exitcode
+            self._notifications_manager.process_job_notifications(self, job_state, my_job, status)
 
         # Now, figure out what state event we need to send to the database
         if job_state == "PRE_SCRIPT_STARTED":
