@@ -1812,6 +1812,7 @@ class Workflow:
             logger.debug("Completed extraction of job_info from job output file %s " % my_job_output_fn)
 
             if my_invocation_found:
+                num_records = len(my_output)
                 # Loop through all records
                 for record in my_output:
                     # Skip non-invocation records
@@ -1821,6 +1822,15 @@ class Workflow:
                     # Take care of invocation-level notifications
                     if self.check_notifications() == True and self._notifications_manager is not None:
                         self._notifications_manager.process_invocation_notifications(self, my_job, my_task_id, record)
+
+                        if num_records == 1:
+                            # PM-1176 for clustered records we send INVOCATION notifications because that is how
+                            # the planner generated it. Send job notification only for a non clustered job
+                            # we have now real app exitcode
+                            app_exitcode = None
+                            if "exitcode" in record :
+                                app_exitcode = record["exitcode"]
+                            self._notifications_manager.process_job_notifications(self, job_state, my_job, app_exitcode )
 
                     # Send task information to the database
                     self.db_send_task_start(my_job, "MAIN_JOB", my_task_id, record)
@@ -2166,9 +2176,6 @@ class Workflow:
                 # OR we are in the PMC only mode where there are no postscripts associated
                 self.parse_job_output(my_job, job_state)
 
-        # Take care of job-level notifications
-        if self.check_notifications() == True and self._notifications_manager is not None:
-            self._notifications_manager.process_job_notifications(self, job_state, my_job, status)
 
         if self._sink is None:
             # Not generating events, nothing else to do except clean
@@ -2184,13 +2191,15 @@ class Workflow:
             # the database entry for this job
             self.db_send_job_brief(my_job, "submit.start")
 
+        postscript_state = False # PM-1176 avoid duplicate job notifications
+        
         # Check if we need to send any tasks to the database
         if job_state == "PRE_SCRIPT_SUCCESS" or job_state == "PRE_SCRIPT_FAILURE":
             # PRE script finished
             self.db_send_task_start(my_job, "PRE_SCRIPT")
             self.db_send_task_end(my_job, "PRE_SCRIPT")
         elif job_state == "POST_SCRIPT_SUCCESS" or job_state == "POST_SCRIPT_FAILURE":
-
+            postscript_state = True
             if my_job._main_job_exitcode is None:
                 #PM-1070 set the main exitcode to the postscript exitcode
                 #No JOB_TERMINATED OR JOB_SUCCESS OR JOB_FAILURE for this job instance
@@ -2208,6 +2217,13 @@ class Workflow:
             # POST script finished
             self.db_send_task_start(my_job, "POST_SCRIPT")
             self.db_send_task_end(my_job, "POST_SCRIPT")
+
+        # PM-1176 only send any notifications after we have parsed .out file if required
+        # Take care of job-level notifications
+        if self.check_notifications() == True and self._notifications_manager is not None :
+            if not postscript_state:
+                # notification would have been sent
+                self._notifications_manager.process_job_notifications(self, job_state, my_job, status)
 
         # Now, figure out what state event we need to send to the database
         if job_state == "PRE_SCRIPT_STARTED":
