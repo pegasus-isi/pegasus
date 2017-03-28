@@ -29,27 +29,27 @@ function pegasus_lite_setup_log()
     # PM-1132 set up the log explicitly to a file     
     if [ "X${pegasus_lite_log_file}" != "X" ]; then
 
-	# rename the log file with approprite suffix
-	# to ensure they are not ovewritten
-	count="000"
-	for count in `seq -f "%03g" 0 999`;
+        # rename the log file with approprite suffix
+        # to ensure they are not ovewritten
+        count="000"
+        for count in `seq -f "%03g" 0 999`;
         do
             if [ ! -e ${pegasus_lite_log_file}.${count} ] ; then
-		break
-	    fi
+                break
+            fi
         done    
-	pegasus_lite_log_file=${pegasus_lite_log_file}.${count}
+        pegasus_lite_log_file=${pegasus_lite_log_file}.${count}
 
-	# Close STDOUT file descriptor
-	exec 1>&-
+        # Close STDOUT file descriptor
+        exec 1>&-
 
         # Close STDERR FD
         exec 2>&-
 
         # Open STDERR to file for writes
-	exec 2>$pegasus_lite_log_file
+        exec 2>$pegasus_lite_log_file
 
-	exec 1>&2
+        exec 1>&2
     fi
 
 }
@@ -189,20 +189,20 @@ function pegasus_lite_setup_work_dir()
     set +e
     ls $pegasus_lite_start_dir/*lof > /dev/null 2>&1
     if [ "$?" = "0" ]; then
-	found_lof="true"
+        found_lof="true"
     fi
     set -e
 
     if [ "x$pegasus_lite_work_dir" != "x" ]; then
         pegasus_lite_log "Not creating a new work directory as it is already set to $pegasus_lite_work_dir"
-	
-	if [ "x$found_lof" != "x" ]; then 
-	    if [ ! $pegasus_lite_start_dir -ef $pegasus_lite_work_dir ]; then
- 	        #PM-1021 copy all lof files from Condor scratch dir to directory where pegasus lite runs the job
-		pegasus_lite_log "Copying lof files from $pegasus_lite_start_dir to $pegasus_lite_work_dir"
-		cp $pegasus_lite_start_dir/*lof $pegasus_lite_work_dir
-	    fi
-	fi
+        
+        if [ "x$found_lof" != "x" ]; then 
+            if [ ! $pegasus_lite_start_dir -ef $pegasus_lite_work_dir ]; then
+                 #PM-1021 copy all lof files from Condor scratch dir to directory where pegasus lite runs the job
+                pegasus_lite_log "Copying lof files from $pegasus_lite_start_dir to $pegasus_lite_work_dir"
+                cp $pegasus_lite_start_dir/*lof $pegasus_lite_work_dir
+            fi
+        fi
 
         return
     fi
@@ -227,6 +227,7 @@ function pegasus_lite_setup_work_dir()
         # make sure there is enough available diskspace
         cd $d
         free=`df -kP . | awk '{if (NR==2) print $4}'`
+        free_human=`df --si . | awk '{if (NR==2) print $4}'`
         if [ "x$free" == "x" -o $free -lt $PEGASUS_WN_TMP_MIN_SPACE ]; then
             pegasus_lite_log "  Workdir: not enough disk space available in $d"
             continue
@@ -234,23 +235,24 @@ function pegasus_lite_setup_work_dir()
 
         if touch $d/.dirtest.$$ >/dev/null 2>&1; then
             rm -f $d/.dirtest.$$ >/dev/null 2>&1
-            d=`mktemp -d $d/pegasus.XXXXXX`
+            d=`mktemp -d $d/pegasus.XXXXXXXXX`
             export pegasus_lite_work_dir=$d
             export pegasus_lite_work_dir_created=1
-            pegasus_lite_log "  Work dir is $d - $free kB available"
+            pegasus_lite_log "  Workdir is $d - $free_human available"
 
             # PM-968 if provided, copy lof files from the HTCondor iwd to the PegasusLite work dir
             find $pegasus_lite_start_dir -name \*.lof -exec cp {} $pegasus_lite_work_dir/ \; >/dev/null 2>&1
 
+            pegasus_lite_log "Changing cwd to $pegasus_lite_work_dir"
             cd $pegasus_lite_work_dir
-	   
-	    if [ "x$found_lof" != "x" ]; then
-		#PM-1021 make sure pegasus_lite_work_dir and start dir are not same
-		if [ ! $pegasus_lite_start_dir -ef $pegasus_lite_work_dir ]; then
+           
+            if [ "x$found_lof" != "x" ]; then
+                #PM-1021 make sure pegasus_lite_work_dir and start dir are not same
+                if [ ! $pegasus_lite_start_dir -ef $pegasus_lite_work_dir ]; then
                     # copy all lof files from Condor scratch dir to directory where pegasus lite runs the job
-		    pegasus_lite_log "Copying lof files from $pegasus_lite_start_dir to $pegasus_lite_work_dir"
-		    cp $pegasus_lite_start_dir/*lof $pegasus_lite_work_dir
-		fi
+                    pegasus_lite_log "Copying lof files from $pegasus_lite_start_dir to $pegasus_lite_work_dir"
+                    cp $pegasus_lite_start_dir/*lof $pegasus_lite_work_dir
+                fi
             fi
 
             return 0
