@@ -27,6 +27,7 @@
 
 #include "statinfo.h"
 #include "utils.h"
+#include "checksum.h"
 #include "error.h"
 
 size_t data_section_size = 262144ul;
@@ -468,6 +469,21 @@ size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
         }
 
         fprintf(out, "/>\n");
+    }
+
+    /* checksum the files if the checksum tools are available
+     * and it is a "final" entry
+     */
+    if (id != NULL && info->error == 0 && strcmp(id, "final") == 0) {
+        char chksum[65];
+        real = realpath(info->file.name, NULL);
+        if (sha256(real, chksum)) {
+            fprintf(out, "%*s<checksum type=\"sha256\" value=\"%s\"/>\n",
+                    indent+2, "",  chksum);
+        }
+        if (real) {
+            free((void*) real);
+        }
     }
 
     /* if truncation is allowed, then the maximum amount of
