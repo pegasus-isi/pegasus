@@ -248,6 +248,12 @@ class Parser:
         elif name == "cwd" and name in self._ks_elements:
             # Start parsing cwd
             self._parsing_cwd = True
+        elif name == "checksum" and name in self._ks_elements:
+            # PM-1180 <checksum type="sha256" value="f2307670158c64c4407971f8fad67772724b0bad92bfb48f386b0814ba24e3af"/>
+            self._keys[name] = {}
+            for attr_name in self._ks_elements[name]:
+                if attr_name in attrs:
+                    self._keys[ name ] [attr_name] = attrs[attr_name]
         elif name == "data":
             # Start parsing data for stdout and stderr output
             self._parsing_data = True
@@ -342,6 +348,15 @@ class Parser:
                 self._parsing_stderr = False
             if self._parsing_final_statcall == True:
                 self._parsing_final_statcall = False
+            if "outputs" in self._keys:
+                if self._lfn in self._keys["outputs"]:
+                    # PM-1180 get the statinfo and update with checksum
+                    statinfo = self._keys["outputs"][self._lfn]
+                    if "checksum" in self._keys:
+                        for key in self._keys["checksum"]:
+                            statinfo[ "checksum." + key] = self._keys["checksum"][key]
+                        self._keys[ "checksum" ] = {}
+        
         elif name == "data":
             self._parsing_data = False
         # Now, see if we left one of the job elements
@@ -551,7 +566,9 @@ class Parser:
                              "cwd": [],
                              "stdout": [],
                              "stderr": [],
-                             "statinfo": ["lfn", "size", "ctime", "user" ]}
+                             "statinfo": ["lfn", "size", "ctime", "user" ],
+                             "checksum": ["type", "value"],
+                             "type": ["type", "value"]}
 
         return self.parse(stampede_elements, tasks=True, clustered=True)
 
