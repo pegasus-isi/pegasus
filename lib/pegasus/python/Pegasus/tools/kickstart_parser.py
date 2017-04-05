@@ -26,6 +26,7 @@ Pegasus utility functions for pasing a kickstart output file and return wanted i
 # Import Python modules
 
 from xml.parsers import expat
+from Pegasus.monitoring.metadata import FileMetadata
 import re
 import sys
 import logging
@@ -170,7 +171,7 @@ class Parser:
             end = buffer.find("]")
 
             if end >= 0:
-                end = end + len("]")                
+                end = end + len("]")
                 return buffer[:end]
 
             # task record should be in a single line!
@@ -294,13 +295,14 @@ class Parser:
                     self._lfn = attrs["lfn"]
         elif name == "statinfo":
             if self._parsing_final_statcall is True:
-                statinfo = {}
+                statinfo = FileMetadata()
                 for my_element in self._ks_elements[name]:
                     if my_element in attrs:
-                        statinfo[my_element] = attrs[my_element]
+                        statinfo.add_attribute( my_element, attrs[my_element])
                 if not self._keys.has_key( "outputs"):
                     self._keys[ "outputs" ] = {} #a dictionary indexed by lfn
                 lfn = self._lfn
+                statinfo.set_id( lfn )
                 if lfn is None or not statinfo:
                     logger.warning( "Malformed/Empty stat record for output lfn %s %s"  %(lfn, statinfo))
                 self._keys["outputs"][lfn] = statinfo
@@ -354,9 +356,9 @@ class Parser:
                     statinfo = self._keys["outputs"][self._lfn]
                     if "checksum" in self._keys:
                         for key in self._keys["checksum"]:
-                            statinfo[ "checksum." + key] = self._keys["checksum"][key]
+                            statinfo.add_attribute( "checksum." + key, self._keys["checksum"][key])
                         self._keys[ "checksum" ] = {}
-        
+
         elif name == "data":
             self._parsing_data = False
         # Now, see if we left one of the job elements
@@ -381,7 +383,7 @@ class Parser:
             self._stderr += data
 
         elif self._parsing_signalled == True:
-            self._keys["signalled"]["action"] += data 
+            self._keys["signalled"]["action"] += data
 
     def parse_invocation_record(self, buffer=''):
         """

@@ -1746,10 +1746,10 @@ class Workflow:
             # Make sure we include the wf_uuid ,
             kwargs["xwf__id"] = my_job._wf_uuid
             kwargs["lfn__id"] = lfn
-            for key in metadata.keys():
+            for key in metadata.get_attribute_keys():
                 #send an event per metadata key value pair
                 kwargs[ "key" ] = key
-                kwargs[ "value" ] = metadata[key]
+                kwargs[ "value" ] = metadata.get_attribute_value(key)
                 self.output_to_db( "rc.meta", kwargs)
 
 
