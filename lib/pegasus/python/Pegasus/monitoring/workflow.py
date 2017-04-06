@@ -31,6 +31,7 @@ import traceback
 from Pegasus.tools import utils
 from Pegasus.monitoring.job import Job
 from Pegasus.tools import kickstart_parser
+from Pegasus.monitoring.metadata import Metadata
 
 logger = logging.getLogger(__name__)
 
@@ -1841,7 +1842,16 @@ class Workflow:
                     # PM-992
                     # for outputs in xml record send information as file metadata
                     if "outputs" in record:
+                        # Start empty
+                        files = []
+                        for lfn in record["outputs"].keys():
+                            files.append( record["outputs"][lfn] )
+                            
                         self.db_send_files_metadata( my_job, my_task_id, record["outputs"] )
+                        # write out the .meta file for the job
+                        meta_file =  my_job._exec_job_id + ".meta"
+                        Metadata.write_to_jsonfile( files, my_job._job_submit_dir, meta_file)
+
 
                     # Increment task id counter
                     my_task_id = my_task_id + 1

@@ -19,17 +19,15 @@ This file implements the metadata related classes for pegasus-monitord.
 ##
 
 # Import Python modules
-import os
-import re
-import sys
-import time
-import socket
-import logging
-import traceback
 import json
+import logging
 import tempfile
 
+import os
+
 __author__ = "Karan Vahi <vahi@isi.edu>"
+
+logger = logging.getLogger(__name__)
 
 
 class Metadata( object ):
@@ -64,12 +62,20 @@ class Metadata( object ):
         return self._attributes.keys()
 
     @staticmethod
-    def write_to_jsonfile( metadata_list, directory , name):
-        temp_file = tempfile.NamedTemporaryFile( dir=directory, prefix="pegasus-monitord-", suffix=".meta", delete=False)
-        jsonify(  metadata_list, temp_file )
-        print "Written out to %s", temp_file.name
-        # rename the file to the name to assure atomicity
-        os.rename( temp_file.name, os.path.join(directory,name))
+    def write_to_jsonfile( metadata_list, directory  , name, prefix="pegasus-monitord"):
+        try:
+            temp_file = tempfile.NamedTemporaryFile( dir=directory, prefix=prefix , suffix=".meta", delete=False)
+            jsonify(  metadata_list, temp_file )
+            logger.debug( "Written out metadata to %s", temp_file.name )
+            # rename the file to the name to assure atomicity
+            os.rename( temp_file.name, os.path.join(directory,name))
+        except Exception, e:
+            # Error sending this event... disable the sink from now on...
+            logger.warning(" unable to write out  metadata to directory %s with name %s ", directory, name)
+            logger.exception(e)
+            return False
+
+        return True
 
 
 class FileMetadata( Metadata ):
