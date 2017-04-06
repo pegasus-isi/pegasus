@@ -254,9 +254,7 @@ public class Condor extends Namespace{
      */
     public static String CONCURRENCY_LIMITS_KEY  = "concurrency_limits";
 
-
-
-
+    public String USE_USER_X509_USER_PROXY = "use_x509userproxy";
 
 
     /**
@@ -598,6 +596,9 @@ public class Condor extends Namespace{
                 else if (key.compareTo( "cream_attributes" ) == 0) {
                     res = VALID_KEY;
                 }
+                else if ( key.compareTo( COLLECTOR_KEY) == 0 ) {
+                    res = VALID_KEY;
+                }
                 else {
                     res = UNKNOWN_KEY;
                 }
@@ -710,6 +711,9 @@ public class Condor extends Namespace{
                           key.compareTo( Condor.REQUEST_DISK_KEY) == 0 ){
                     res = VALID_KEY;
                 }
+                else if ( key.compareTo( Condor.REMOTE_UNIVERSE_KEY) == 0 ){
+                    res = VALID_KEY;
+                }
                 else {
                     res = UNKNOWN_KEY;
                 }
@@ -747,6 +751,9 @@ public class Condor extends Namespace{
 
             case 'u':
                 if (key.compareTo(UNIVERSE_KEY) == 0 ){
+                    res = VALID_KEY;
+                }
+                else if ( key.compareTo( USE_USER_X509_USER_PROXY ) == 0 ){
                     res = VALID_KEY;
                 }
                 else {
