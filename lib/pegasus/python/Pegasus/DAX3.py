@@ -104,45 +104,8 @@ f.close()
 """
 
 __author__ = "Gideon Juve <gideon@isi.edu>"
+
 __version__ = "3.6"
-
-__all__ = [
-    "DAX3Error",
-    "DuplicateError",
-    "NotFoundError",
-    "FormatError",
-    "ParseError",
-    "Element",
-    "Namespace",
-    "Arch",
-    "Link",
-    "Transfer",
-    "OS",
-    "When",
-    "Invoke",
-    "InvokeMixin",
-    "ProfileMixin",
-    "MetadataMixin",
-    "PFNMixin",
-    "CatalogType",
-    "File",
-    "Executable",
-    "Metadata",
-    "PFN",
-    "Profile",
-    "Use",
-    "UseMixin",
-    "Transformation",
-    "AbstractJob",
-    "Job",
-    "DAX",
-    "DAG",
-    "Dependency",
-    "ADAG",
-    "parseString",
-    "parse"
-]
-
 
 __all__ = [
     "DAX3Error",
@@ -610,7 +573,7 @@ class Executable(CatalogType, InvokeMixin):
         grep = Executable(namespace="os",name="grep",version="2.3",arch=Arch.X86)
         grep = Executable(namespace="os",name="grep",version="2.3",arch=Arch.X86,os=OS.LINUX)
     """
-    def __init__(self, name, namespace=None, version=None, arch=None, os=None, 
+    def __init__(self, name, namespace=None, version=None, arch=None, os=None,
                  osrelease=None, osversion=None, glibc=None, installed=None):
         """
         Arguments:
@@ -857,7 +820,7 @@ class Use(MetadataMixin):
     value for executable is 'true'.
     """
 
-    def __init__(self, name, link=None, register=None, transfer=None, 
+    def __init__(self, name, link=None, register=None, transfer=None,
                 optional=None, namespace=None, version=None, executable=None,
                 size=None):
         if not name:
@@ -943,7 +906,7 @@ class UseMixin:
         """Remove all uses from this object"""
         self.used.clear()
 
-    def uses(self, arg, link=None, register=None, transfer=None, 
+    def uses(self, arg, link=None, register=None, transfer=None,
              optional=None, namespace=None, version=None, executable=None,
              size=None):
 
@@ -1489,7 +1452,7 @@ class ADAG(InvokeMixin,MetadataMixin):
         dax.writeXML(f)
         f.close()
     """
-    def __init__(self, name, count=None, index=None):
+    def __init__(self, name, count=None, index=None, auto=False):
         """
         Arguments:
             name: The name of the workflow
@@ -1503,6 +1466,7 @@ class ADAG(InvokeMixin,MetadataMixin):
         if index: index = int(index)
         self.count = count
         self.index = index
+        self._auto = auto if auto is True else False
 
         # This is used to generate unique ID numbers
         self.sequence = 1
@@ -1701,8 +1665,67 @@ class ADAG(InvokeMixin,MetadataMixin):
         self.writeXML(file)
         file.close()
 
+    def _autoDependencies(self):
+        """Automatically compute job dependencies based on input/output files used by a job"""
+        if self._auto is False:
+            return
+
+        mapping = {}
+
+        def addOutput(job, file_obj):
+            if file_obj:
+                file_obj = file_obj.name
+
+                if file_obj not in mapping:
+                    mapping[file_obj] = (set(), set())
+
+                mapping[file_obj][1].add(job)
+
+        # Automatically determine dependencies
+
+        # Traverse each job
+        for job_id, job in self.jobs.iteritems():
+            file_used = job.used
+
+            # If job produces to stdout, identify it as an output file
+            addOutput(job, job.stdout)
+            # If job produces to stderr, identify it as an output file
+            addOutput(job, job.stderr)
+
+            # If job consumes from stdin, identify it as an input file
+            if job.stdin:
+                if job.stdin.name not in mapping:
+                    mapping[job.stdin.name] = (set(), set())
+
+                mapping[job.stdin.name][0].add(job)
+
+            for f in file_used:
+                if f.name not in mapping:
+                    mapping[f.name] = (set(), set())
+
+                if f.link == Link.INPUT:
+                    mapping[f.name][0].add(job)
+                else:
+                    mapping[f.name][1].add(job)
+
+        for file_name, io in mapping.iteritems():
+            # Go through the mapping and for each file add dependencies between the
+            # job producing a file and the jobs consuming the file
+            inputs = io[0]
+
+            if len(io[1]) > 0:
+                output = io[1].pop()
+
+                for _input in inputs:
+                    try:
+                        self.depends(parent=output, child=_input)
+                    except DuplicateError:
+                        pass
+
     def writeXML(self, out):
         """Write the ADAG as XML to a stream"""
+        self._autoDependencies()
+
         # Preamble
         out.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 
@@ -1714,7 +1737,7 @@ class ADAG(InvokeMixin,MetadataMixin):
             username = os.getenv("USERNAME", "N/A")
         else:
             username = "N/A"
-        out.write('<!-- generated by: %s -->\n' % username) 
+        out.write('<!-- generated by: %s -->\n' % username)
         out.write('<!-- generator: python -->\n')
 
         # Open tag
@@ -1886,7 +1909,7 @@ def parse(infile):
                 namespace=e.get("namespace", None),
                 version=e.get("version", None),
                 arch=e.get("arch", None),
-                os=e.get("os", None), 
+                os=e.get("os", None),
                 osrelease=e.get("osrelease", None),
                 osversion=e.get("osversion", None),
                 glibc=e.get("glibc", None),
@@ -1985,7 +2008,7 @@ def parse(infile):
         try:
             j = Job(
                 name=e.attrib["name"],
-                id=e.attrib["id"], 
+                id=e.attrib["id"],
                 namespace=e.get("namespace", None),
                 version=e.get("version", None),
                 node_label=e.get("node-label", None)
