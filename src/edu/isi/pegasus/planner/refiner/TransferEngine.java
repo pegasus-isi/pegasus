@@ -1041,7 +1041,9 @@ public class TransferEngine extends Engine {
                                             //construct for third party transfer
                                             thirdPartyDestPutURL :
                                             //construct for normal transfer
-                                            "file://" + mSiteStore.getInternalWorkDirectory( destSiteHandle, destRemoteDir ) + File.separator + addOn;
+                                            "file://" + mSiteStore.getInternalWorkDirectory( destSiteHandle, destRemoteDir ) + 
+                                                    File.separator + addOn +
+                                                    File.separator + lfn;
 
                    
                     String sourceURL     = null;
