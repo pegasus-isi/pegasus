@@ -141,7 +141,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <javac destdir="${build.src}" srcdir="src"
            encoding="UTF-8" deprecation="true" debug="true"
            target="${build.target}" source="${build.source}"
-           includes="edu/isi/pegasus/common/**/*.java,edu/isi/pegasus/gridftp/**/*.java"
+           includes="edu/isi/pegasus/common/**/*.java"
            excludes="edu/isi/pegasus/common/**/*Test.java,edu/isi/pegasus/planner/**/*.java"
            classpathref="build.classpath"
            includeantruntime="false">
