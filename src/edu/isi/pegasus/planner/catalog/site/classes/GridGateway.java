@@ -47,7 +47,7 @@ public class GridGateway extends AbstractSiteData{
     /**
      * An enumeration of valid schedulers on the grid gateway.
      */
-    public static enum SCHEDULER_TYPE{ Fork, LSF, PBS, Condor, SGE, Slurm, Moab, Unknown };
+    public static enum SCHEDULER_TYPE{ fork, lsf, pbs, condor, sge, slurm, moab, unknown };
     
     
     /**
@@ -109,7 +109,7 @@ public class GridGateway extends AbstractSiteData{
      * The default constructor.
      */
     public GridGateway( ){
-        this( TYPE.gt2, "localhost/jobmanager-fork", SCHEDULER_TYPE.Fork );
+        this( TYPE.gt2, "localhost/jobmanager-fork", SCHEDULER_TYPE.fork );
     }
     
     /**
@@ -264,11 +264,11 @@ public class GridGateway extends AbstractSiteData{
      */
     public void setScheduler(String value) {
         try{
-           mScheduler = GridGateway.SCHEDULER_TYPE.valueOf( value );
+           mScheduler = GridGateway.SCHEDULER_TYPE.valueOf( value.toLowerCase() );
         }
         catch( IllegalArgumentException iae ){
             //set the scheduler to unknown
-            mScheduler = GridGateway.SCHEDULER_TYPE.Unknown;
+            mScheduler = GridGateway.SCHEDULER_TYPE.unknown;
         }
     }
 
