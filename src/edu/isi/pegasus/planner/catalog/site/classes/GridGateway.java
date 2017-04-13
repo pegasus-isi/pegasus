@@ -33,10 +33,6 @@ import java.io.IOException;
  */
 public class GridGateway extends AbstractSiteData{
 
-   
-
-
-
     /**
      * An enumeration of valid types of grid gateway.
      */
@@ -51,7 +47,7 @@ public class GridGateway extends AbstractSiteData{
     /**
      * An enumeration of valid schedulers on the grid gateway.
      */
-    public static enum SCHEDULER_TYPE{ Fork, LSF, PBS, Condor, SGE, Unknown };
+    public static enum SCHEDULER_TYPE{ Fork, LSF, PBS, Condor, SGE, Slurm, Unknown };
     
     
     /**
