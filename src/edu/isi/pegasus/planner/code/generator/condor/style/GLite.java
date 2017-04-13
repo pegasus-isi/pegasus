@@ -231,11 +231,17 @@ public class GLite extends Abstract {
         if( gridResource == null  ){
             throw new CondorStyleException( missingKeyError( job, Condor.GRID_RESOURCE_KEY ) );
         }
+        //PM-1087 make it lower case first
+        gridResource = gridResource.toLowerCase();
+        
+        //Sample grid resource constructed for bosco/ssh
+        //batch slurm user@bridges.psc.edu 
         String batchSystem = gridResource.replace("batch ", "");
+        batchSystem = batchSystem.split( " " )[0];
         
         if( ! supportedBatchSystem( batchSystem ) ){
             //if it is not one of the support types, log a warning but use PBS.
-            mLogger.log( "Glite mode supports only pbs, sge , slurm or cobalt submission. Will use PBS style attributes for job " + 
+            mLogger.log( "Glite mode supports only pbs, sge , slurm, moab or cobalt submission. Will use PBS style attributes for job " + 
                          job.getID() + " with grid resource " + gridResource,
                          LogManager.WARNING_MESSAGE_LEVEL );
             batchSystem = "pbs";
