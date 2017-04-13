@@ -28,10 +28,10 @@
 	    <xs:enumeration value="condor"/>
             <xs:enumeration value="SGE"/>
 	    <xs:enumeration value="sge"/>
-	    <xs:enumeration value="Slurm"/>
+	    <!-- newer ones are only lowercase -->
 	    <xs:enumeration value="slurm"/>
-	    <xs:enumeration value="Moab"/>
 	    <xs:enumeration value="moab"/>
+	    <xs:enumeration value="cobalt"/>
             <xs:enumeration value="unknown"/>
         </xs:restriction>
     </xs:simpleType>
