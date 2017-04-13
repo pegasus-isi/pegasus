@@ -227,8 +227,8 @@ public class XMLTest {
                         FileServerType.OPERATION.put,
                         "gsiftp://skynet-data.isi.edu/scratch01");
         
-        testGridGateway( entry, GridGateway.JOB_TYPE.compute, GridGateway.SCHEDULER_TYPE.PBS, "smarty.isi.edu/jobmanager-pbs" );
-        testGridGateway( entry, GridGateway.JOB_TYPE.auxillary, GridGateway.SCHEDULER_TYPE.PBS, "smarty.isi.edu/jobmanager-fork" );
+        testGridGateway( entry, GridGateway.JOB_TYPE.compute, GridGateway.SCHEDULER_TYPE.pbs, "smarty.isi.edu/jobmanager-pbs" );
+        testGridGateway( entry, GridGateway.JOB_TYPE.auxillary, GridGateway.SCHEDULER_TYPE.pbs, "smarty.isi.edu/jobmanager-fork" );
         
         mLogger.logEventCompletion();
     }
