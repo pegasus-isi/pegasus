@@ -239,11 +239,17 @@ def get_errfile(outfile):
 
 def exitcode(outfile, status=None, rename=True,
              failure_messages=[], success_messages=[],
-             meta_file=None):
+             generate_meta=True):
     if not os.path.isfile(outfile):
         raise JobFailed("%s does not exist" % outfile)
 
     errfile = get_errfile(outfile)
+
+    # outfile Must end in .out
+    if not outfile.endswith(".out"):
+        raise JobFailed("%s does not look like a kickstart .out file" % outfile)
+
+    meta_file=outfile[:-3] + "meta"
 
     # If we are renaming, then rename
     if rename:
@@ -283,7 +289,8 @@ def exitcode(outfile, status=None, rename=True,
             check_kickstart_records(stdout)
 
     # Next check if metadata file needs to be generated
-    if meta_file is not None:
+    if generate_meta:
+
         generate_meta_file(outfile, meta_file)
 
 
@@ -358,8 +365,9 @@ def main(args):
                       dest="rename", default=True,
                       help="Don't rename kickstart.out and .err to .out.XXX and .err.XXX. "
                            "Useful for testing.")
-    parser.add_option("-m", "--metadata", action="store", type="string",
-                       dest="meta_file", help="the metadata file to generate after parsing kickstart records")
+    parser.add_option("-N", "--no-metadata", action="store_false",
+                      dest="generate_meta", default=True,
+                      help="disable generation of metadata file after parsing of kickstart records")
     parser.add_option("-f", "--failure-message", action="append",
                       dest="failure_messages", default=[],
                       help="Failure message to find in job stdout/stderr. If this "
@@ -400,7 +408,7 @@ def main(args):
         exitcode(outfile, status=options.status, rename=options.rename,
                  failure_messages=options.failure_messages,
                  success_messages=options.success_messages,
-                 meta_file=options.meta_file)
+                 generate_meta=options.generate_meta)
         log['exitcode'] = 0
         _write_logs(options.log_filename)
         sys.exit(0)
