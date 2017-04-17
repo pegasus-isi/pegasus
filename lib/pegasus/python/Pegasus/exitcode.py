@@ -9,6 +9,9 @@ import uuid
 from optparse import OptionParser
 
 from Pegasus.cluster import RecordParser
+from Pegasus.tools import kickstart_parser
+from Pegasus.monitoring.metadata import Metadata
+
 
 # logging
 log = {'name': None, 'timestamp': None, 'exitcode': None, 'app_exitcode': None, 'retry': None}
@@ -235,7 +238,8 @@ def get_errfile(outfile):
 
 
 def exitcode(outfile, status=None, rename=True,
-             failure_messages=[], success_messages=[]):
+             failure_messages=[], success_messages=[],
+             meta_file=None):
     if not os.path.isfile(outfile):
         raise JobFailed("%s does not exist" % outfile)
 
@@ -277,6 +281,33 @@ def exitcode(outfile, status=None, rename=True,
         # PM-927 Only check kickstart records if -r is not supplied
         if status is None:
             check_kickstart_records(stdout)
+
+    # Next check if metadata file needs to be generated
+    if meta_file is not None:
+        generate_meta_file(outfile, meta_file)
+
+
+def generate_meta_file( outfile, meta_file):
+    # First assume we will find rotated file
+    parser = kickstart_parser.Parser(outfile)
+    kickstart_output = parser.parse_stampede()
+
+    # Start empty
+    files = []
+    for record in kickstart_output:
+        if "invocation" in record:
+            # Ok, we have an invocation record, extract the metadata information
+            if "outputs" in record:
+                for lfn in record["outputs"].keys():
+                    files.append( record["outputs"][lfn] )
+
+    # if we enable by default, then only generate meta file if
+    # there is a need for it.
+    if len(files) > 0:
+        directory = os.path.dirname(meta_file)
+        basename  = os.path.basename(meta_file)
+        Metadata.write_to_jsonfile(files, directory,basename, prefix="pegasus-exitcode")
+
 
 
 def _log_info(info_msg):
@@ -327,6 +358,8 @@ def main(args):
                       dest="rename", default=True,
                       help="Don't rename kickstart.out and .err to .out.XXX and .err.XXX. "
                            "Useful for testing.")
+    parser.add_option("-m", "--metadata", action="store", type="string",
+                       dest="meta_file", help="the metadata file to generate after parsing kickstart records")
     parser.add_option("-f", "--failure-message", action="append",
                       dest="failure_messages", default=[],
                       help="Failure message to find in job stdout/stderr. If this "
@@ -366,7 +399,8 @@ def main(args):
         log['timestamp'] = datetime.datetime.now().isoformat()
         exitcode(outfile, status=options.status, rename=options.rename,
                  failure_messages=options.failure_messages,
-                 success_messages=options.success_messages)
+                 success_messages=options.success_messages,
+                 meta_file=options.meta_file)
         log['exitcode'] = 0
         _write_logs(options.log_filename)
         sys.exit(0)
