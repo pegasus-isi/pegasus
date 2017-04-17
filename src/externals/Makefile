@@ -76,14 +76,7 @@ $(LIBDIR)/requests: requests-2.8.0.tar.gz
 $(LIBDIR)/itsdangerous.py: itsdangerous-0.21.tar.gz
 $(LIBDIR)/boto: boto-2.38.0.tar.gz
 $(LIBDIR)/pam.py: pam-0.1.4.tar.gz
-ifeq ($(OSID),rhel5)
-    # 0.13 does not work on rhel5
-    $(LIBDIR)/OpenSSL: pyOpenSSL-0.12.tar.gz
-else
-    # 0.12 does not work on deb7 because of missing SSLv2_method
-    # 0.13 has been patched to work with newer versions of openssl (see patch file)
-    $(LIBDIR)/OpenSSL: pyOpenSSL-0.13-patched.tar.gz
-endif
+$(LIBDIR)/OpenSSL: pyOpenSSL-16.2.0.tar.gz
 $(LIBDIR)/plex: plex-2.0.0dev.tar.gz
 $(LIBDIR)/MySQLdb: MySQL-python-1.2.5.tar.gz
 $(LIBDIR)/psycopg2: psycopg2-2.5.5.tar.gz
