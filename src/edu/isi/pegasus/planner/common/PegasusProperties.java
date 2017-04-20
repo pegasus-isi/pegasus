@@ -57,6 +57,8 @@ public class PegasusProperties implements Cloneable {
      * the name of the property to disable invoke functionality
      */
     public static final String DISABLE_INVOKE_PROPERTY = "pegasus.gridstart.invoke.disable";
+    
+    public static final String PEGASUS_KICKSTART_STAT_PROPERTY = "pegasus.gridstart.kickstart.stat";
 
     public static final String PEGASUS_WORKER_NODE_EXECUTION_PROPERTY = "pegasus.execute.*.filesystem.local";
 
@@ -1669,7 +1671,7 @@ public class PegasusProperties implements Cloneable {
      *         else null.
      */
     public String doStatWithKickstart(){
-        return   mProps.getProperty( "pegasus.gridstart.kickstart.stat") ;
+        return   mProps.getProperty( PEGASUS_KICKSTART_STAT_PROPERTY ) ;
     }
 
     /**
