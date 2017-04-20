@@ -118,6 +118,7 @@ public class GraphNode extends Data {
         this();
         mLogicalID = id;
         mContent = content;
+        mContent.setGraphNodeReference(this);
     }
 
     /**
