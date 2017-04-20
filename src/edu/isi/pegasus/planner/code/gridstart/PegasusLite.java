@@ -47,6 +47,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.refiner.DeployWorkerPackage;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
 import edu.isi.pegasus.planner.transfer.SLS;
@@ -1487,7 +1488,28 @@ public class PegasusLite implements GridStart {
         }
     }
 
+    /**
+     * Updates the job tracking of the meta files of the parents
+     * 
+     * @param job
+     * 
+     * @return 
+     */
     protected boolean modifyJobForIntegrityChecks(Job job) {
-       return true;
+        //try and get hold of the parents
+        GraphNode node = job.getGraphNodeReference();
+        for( GraphNode parentNode : node.getParents() ){
+            Job parent = (Job)parentNode.getContent();
+            if( parent.getJobType() == Job.COMPUTE_JOB ){
+                //we need meta files for only compute jobs that are parents
+                StringBuilder metaFile = new StringBuilder();
+                metaFile.append( parent.getRelativeSubmitDirectory() ).append( File.separator ).
+                         append( parent.getID() ).append( ".meta" );
+                job.condorVariables.addIPFileForTransfer( metaFile.toString() );
+            }
+            
+        }
+        
+        return true;
     }
 }
