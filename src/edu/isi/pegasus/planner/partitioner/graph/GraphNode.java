@@ -153,6 +153,7 @@ public class GraphNode extends Data {
      */
     public void setContent( GraphNodeContent content ) {
         mContent = content;
+        mContent.setGraphNodeReference( this );
     }
 
 

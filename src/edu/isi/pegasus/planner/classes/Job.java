@@ -43,6 +43,7 @@ import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.namespace.Metadata;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
@@ -54,7 +55,6 @@ import java.io.Writer;
 import java.io.StringWriter;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -82,7 +82,7 @@ public class Job extends Data implements GraphNodeContent{
     public static final int COMPUTE_JOB     = 1;
 
     /**
-     * Denotea a job that is used to stage in the input files for a compute job.
+     * Denotes a job that is used to stage in the input files for a compute job.
      */
     public static final int STAGE_IN_JOB    = 2;
 
@@ -441,6 +441,11 @@ public class Job extends Data implements GraphNodeContent{
      */
     private String mNodeLabel;
     private String mSubmitDir;
+    
+    /**
+     * The node containing the job.
+     */
+    private GraphNode mGraphNode;
 
     /**
      * Intialises the member variables.
@@ -482,7 +487,7 @@ public class Job extends Data implements GraphNodeContent{
         mCredentialsType = new HashMap<String, Set<CredentialHandler.TYPE> >();
         mSubmissionCredential = null;
         mNodeLabel       = null;
-//        submitDirectory  = null;
+        mGraphNode       = null;
     }
 
     /**
@@ -527,7 +532,7 @@ public class Job extends Data implements GraphNodeContent{
         mSubmissionCredential = job.mSubmissionCredential;
         mCredentialsType = new HashMap<String, Set<CredentialHandler.TYPE>>();
         mNodeLabel       = null;
-//        submitDirectory  = job.submitDirectory;
+        mGraphNode       = job.getGraphNodeReference();
     }
 
     /**
@@ -595,6 +600,10 @@ public class Job extends Data implements GraphNodeContent{
         }
 
         newSub.mNodeLabel = this.mNodeLabel;
+        
+        //explicitly unset the reference to containing graph node
+        newSub.setGraphNodeReference( null );
+        
         return newSub;
     }
     
@@ -2279,5 +2288,22 @@ public class Job extends Data implements GraphNodeContent{
         return sb.toString();
     }
 
+    /**
+     * Set the containing GraphNode object
+     * 
+     * @param node 
+     */
+    public void setGraphNodeReference(GraphNode node) {
+        this.mGraphNode = node;
+    }
+    
+    /**
+     * Returns the containing GraphNode object
+     * 
+     * @return node 
+     */
+    public GraphNode getGraphNodeReference() {
+        return this.mGraphNode;
+    }
 
 }

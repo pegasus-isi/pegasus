@@ -26,4 +26,10 @@ package edu.isi.pegasus.planner.partitioner.graph;
 
 public interface GraphNodeContent {
     //an empty interface for grouping purposes
+    
+    /**
+     * Set a reference back to containing GraphNode
+     */
+    public void setGraphNodeReference( GraphNode node );
+    
 }
