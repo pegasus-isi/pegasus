@@ -88,7 +88,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
      * The "not-so-official" location URL of the Site Catalog Schema.
      */
     public static final String SCHEMA_LOCATION =
-                                        "http://pegasus.isi.edu/schema/sc-4.1.xsd";
+                                        "http://pegasus.isi.edu/schema/sc-4.2.xsd";
 
     /**
      * uri namespace
