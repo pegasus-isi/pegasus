@@ -176,6 +176,11 @@ public class PegasusLite implements GridStart {
     public static final String PEGASUS_LITE_LOG_ENV_KEY = "pegasus_lite_log_file";
     
     /**
+     * Basename for our pegasus integrity check tool in the worker pacakge.
+     */
+    public static final String PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME = "pegasus-integrity-check";
+    
+    /**
      * Stores the major version of the planner.
      */
     private String mMajorVersionLevel;
@@ -312,6 +317,11 @@ public class PegasusLite implements GridStart {
     protected boolean mAllowWPDownloadFromWebsite;
     
     /**
+     * Whether to do integrity checking or not.
+     */
+    protected boolean mDoIntegrityChecking ;
+    
+    /**
      * Initializes the GridStart implementation.
      *
      *  @param bag   the bag of objects that is used for initialization.
@@ -336,19 +346,8 @@ public class PegasusLite implements GridStart {
         mEnforceStrictChecksOnWPVersion = mProps.enforceStrictChecksForWorkerPackage();
         mUseSymLinks                    = mProps.getUseOfSymbolicLinks();
         mAllowWPDownloadFromWebsite     = mProps.allowDownloadOfWorkerPackageFromPegasusWebsite();
+        mDoIntegrityChecking            = mProps.doIntegrityChecking();
         
-        /* PM-810    
-        if( mTransferWorkerPackage ){
-            mWorkerPackageMap = bag.getWorkerPackageMap();
-            if( mWorkerPackageMap == null ){
-                mWorkerPackageMap = new HashMap<String,String>();
-            }
-        }
-        else{
-            mWorkerPackageMap = new HashMap<String,String>();
-        }
-        */
-
         mChmodOnExecutionSiteMap = new HashMap<String,String>();
 
         Version version = Version.instance();
@@ -950,6 +949,17 @@ public class PegasusLite implements GridStart {
                 sb.append( '\n' );
             }
            
+            //PM-1190 we do integrity checks only for compute jobs
+            if( mDoIntegrityChecking && isCompute){
+                appendStderrFragment( sb, "checking file integrity for input files" );
+                sb.append( "# do file integrity checks" ).append( '\n' );
+                addIntegrityCheckInvocation( sb, job.getInputFiles() );
+                //modify job for transferring the .meta files
+                if( !modifyJobForIntegrityChecks( job )) {
+                    throw new RuntimeException( "Unable to modify job for integrity checks" );
+                }
+            }
+            
             appendStderrFragment( sb, "executing the user tasks" );
             sb.append( "# execute the tasks" ).append( '\n' ).
                append( "set +e" ).append( '\n' );//PM-701
@@ -1461,5 +1471,23 @@ public class PegasusLite implements GridStart {
         
         return;
         
+    }
+
+    /**
+     * Adds the integrity check invocations for jobs input files
+     * @param sb 
+     * @param files 
+     */
+    protected void addIntegrityCheckInvocation(StringBuffer sb,  Collection<PegasusFile> files ) {
+        for( PegasusFile file: files ){
+            if( !file.isCheckpointFile() ){
+                sb.append( PegasusLite.PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME ).append( " --lfn " ).
+                   append( file.getLFN() ).append( "\n" );
+            }
+        }
+    }
+
+    protected boolean modifyJobForIntegrityChecks(Job job) {
+       return true;
     }
 }

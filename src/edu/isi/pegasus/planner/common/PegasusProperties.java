@@ -2398,6 +2398,18 @@ public class PegasusProperties implements Cloneable {
                               true );
     }
 
+    /**
+     * Returns a boolean indicating whether to enable integrity checking or not.
+     *
+     * Referred to by the "pegasus.integrity.checking" property.
+     *
+     * @return the value specified in the properties file, else false
+     *
+     */
+    public boolean doIntegrityChecking() {
+        return Boolean.parse( mProps.getProperty( "pegasus.integrity.checking" ),
+                              false );
+    }
 
 
     //DEFERRED PLANNING PROPERTIES
