@@ -1088,6 +1088,15 @@ public class ADag extends Data implements Graph{
     public NameValue getCyclicEdge(){
         return this.mGraphImplementor.getCyclicEdge();
     }
+
+    
+    /**
+     * 
+     * @param node 
+     */
+    public void setGraphNodeReference(GraphNode node) {
+        throw new UnsupportedOperationException( "GraphNode reference not set for ADag"); 
+    }
     
 
     
