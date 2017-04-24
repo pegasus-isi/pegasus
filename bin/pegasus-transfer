@@ -900,6 +900,13 @@ class GridFtpHandler(TransferHandlerBase):
         if mkdirs_l[0].get_proto() == "gsiftp":
                 
             tools = Tools()
+
+            # if prefer gfal if installed
+            if tools.find("gfal-mkdir", "--version", "\(gfal2 ([\.0-9]+)\)") is not None:
+                handler = GFALHandler()
+                [successful_l, failed_l]  = handler.do_mkdirs(mkdirs_l)
+                return [successful_l, failed_l]
+
             if tools.find("globus-url-copy") == None:
                 logger.error("Unable to do gsiftp mkdir because globus-url-copy could not be found")
                 return [[], mkdirs_l]
@@ -941,7 +948,7 @@ class GridFtpHandler(TransferHandlerBase):
     
     def do_transfers(self, transfers_l):
         """
-        gsiftp - globus-url-copy for now, maybe uberftp in the future
+        gsiftp - gdal or globus-url-copy
         """
         successful_l = []
         failed_l = []
@@ -950,6 +957,13 @@ class GridFtpHandler(TransferHandlerBase):
             return
         
         tools = Tools()
+        
+        # if prefer gfal if installed
+        if tools.find("gfal-copy", "--version", "\(gfal2 ([\.0-9]+)\)") is not None:
+            handler = GFALHandler()
+            [successful_l, failed_l] = handler.do_transfers(transfers_l)
+            return [successful_l, failed_l]
+        
         if tools.find("globus-url-copy", "-version", "([0-9]+\.[0-9]+)") is None:
             logger.error("Unable to do gsiftp transfers because globus-url-copy could not be found")
             return [[], transfers_l]
@@ -1024,6 +1038,7 @@ class GridFtpHandler(TransferHandlerBase):
     
     def do_removes(self, removes_l):
         """
+        use gfal is available, otherwise use guc which is 
         implemented as copy of /dev/null over the file we want to delete
         """
 
@@ -1032,6 +1047,12 @@ class GridFtpHandler(TransferHandlerBase):
         
         if len(removes_l) == 0:
             return
+        
+        # prefer gfal if available
+        if tools.find("gfal-rm", "--version", "\(gfal2 ([\.0-9]+)\)") is not None:
+            handler = GFALHandler()
+            [successful_l, failed_l] = handler.do_removes(removes_l)
+            return [successful_l, failed_l]
 
         # ignore recursive deletes
         if removes_l[0].get_recursive():
@@ -2186,7 +2207,7 @@ class GFALHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
         for t in mkdir_list:
-            
+
             cmd = "gfal-mkdir -p"
             if logger.isEnabledFor(logging.DEBUG):
                 cmd = cmd + " -v"
@@ -2197,11 +2218,9 @@ class GFALHandler(TransferHandlerBase):
                 tc.run()
             except Exception, err:
                 logger.error(err)
-                self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
                 continue
 
-            self._post_transfer_attempt(t, True, t_start)
             successful_l.append(t)
          
         return [successful_l, failed_l]
@@ -2231,7 +2250,7 @@ class GFALHandler(TransferHandlerBase):
                     self._post_transfer_attempt(t, False, t_start)
                     continue        
     
-            cmd = "gfal-copy -f"
+            cmd = "gfal-copy -f -p"
             if logger.isEnabledFor(logging.DEBUG):
                 cmd = cmd + " -v"
             cmd = cmd + " '%s' '%s'" % (t.src_url(), t.dst_url())
@@ -2277,7 +2296,6 @@ class GFALHandler(TransferHandlerBase):
                 failed_l.append(t)
                 continue
 
-            self._post_transfer_attempt(t, True, t_start)
             successful_l.append(t)
          
         return [successful_l, failed_l]
