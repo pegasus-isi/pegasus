@@ -450,6 +450,10 @@ public class MapGraph implements Graph{
         return mStore.get(key);
     }
 
+    public void setGraphNodeReference(GraphNode node) {
+        //noop
+    }
+
     /**
      * An inner iterator class that traverses through the Graph.
      * The traversal of the graph is a modified BFS. A node is added to

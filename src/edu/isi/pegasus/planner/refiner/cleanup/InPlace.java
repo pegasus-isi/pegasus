@@ -691,4 +691,8 @@ class CleanupJobContent implements GraphNodeContent {
     public GraphNode getNode() {
         return this.mNode;
     }
+
+    public void setGraphNodeReference(GraphNode node) {
+        //noop
+    }
 }
