@@ -21,6 +21,7 @@ import java.util.BitSet;
 
 import edu.isi.pegasus.planner.dax.File;
 import edu.isi.pegasus.planner.namespace.Metadata;
+import java.util.Iterator;
 
 /**
  * The logical file object that contains the logical filename which is got from
@@ -37,6 +38,7 @@ import edu.isi.pegasus.planner.namespace.Metadata;
  */
 public class PegasusFile extends Data {
 
+    
     /**
      * Enumeration for denoting type of linkage
      */
@@ -581,6 +583,20 @@ public class PegasusFile extends Data {
         return mFlags;
     }
     
+    /**
+     * Add all the metadata to the file
+     * 
+     * @param m 
+     */
+    public void addMetadata(Metadata m) {
+        if( !m.isEmpty() ){
+            for( Iterator<String> mit = m.getProfileKeyIterator(); mit.hasNext(); ){
+                String key = mit.next();
+                this.addMetadata( key, (String)m.get(key));
+            }
+        }
+    }
+
     /**
      * Add metadata to the object.
      * 

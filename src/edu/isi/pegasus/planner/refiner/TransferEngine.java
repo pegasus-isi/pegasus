@@ -69,6 +69,7 @@ import edu.isi.pegasus.planner.mapper.OutputMapperFactory;
 import edu.isi.pegasus.planner.mapper.StagingMapper;
 import edu.isi.pegasus.planner.mapper.StagingMapperFactory;
 import edu.isi.pegasus.planner.mapper.output.Hashed;
+import edu.isi.pegasus.planner.namespace.Metadata;
 
 
 import java.io.File;
@@ -1416,6 +1417,10 @@ public class TransferEngine extends Engine {
                 rces.add(  new ReplicaCatalogEntry( nv.getValue(), nv.getKey() ));
                 rl  = new ReplicaLocation( lfn, rces );
             }
+            
+            //PM-1190 add any retrieved metadata from the replica catalog
+            //to the associated PegasusFile that is associated with the compute jobs
+            pf.addMetadata( rl.getAllMetadata() );
             
             //select from the various replicas
             candidateLocations =  mReplicaSelector.selectAndOrderReplicas( rl, 
