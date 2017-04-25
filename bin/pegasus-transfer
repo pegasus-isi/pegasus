@@ -901,8 +901,9 @@ class GridFtpHandler(TransferHandlerBase):
                 
             tools = Tools()
 
-            # if prefer gfal if installed
-            if tools.find("gfal-mkdir", "--version", "\(gfal2 ([\.0-9]+)\)") is not None:
+            # prefer gfal if installed
+            if "PEGASUS_FORCE_GUC" not in os.environ \
+               and tools.find("gfal-mkdir", "--version", "\(gfal2 ([\.0-9]+)\)") is not None:
                 handler = GFALHandler()
                 [successful_l, failed_l]  = handler.do_mkdirs(mkdirs_l)
                 return [successful_l, failed_l]
@@ -958,8 +959,11 @@ class GridFtpHandler(TransferHandlerBase):
         
         tools = Tools()
         
-        # if prefer gfal if installed
-        if tools.find("gfal-copy", "--version", "\(gfal2 ([\.0-9]+)\)") is not None:
+        # prefer gfal if installed
+        if "PEGASUS_FORCE_GUC" not in os.environ \
+           and transfers_l[0].get_src_proto() != "sshftp" \
+           and transfers_l[0].get_dst_proto() != "sshftp" \
+           and tools.find("gfal-copy", "--version", "\(gfal2 ([\.0-9]+)\)") is not None:
             handler = GFALHandler()
             [successful_l, failed_l] = handler.do_transfers(transfers_l)
             return [successful_l, failed_l]
@@ -1049,7 +1053,9 @@ class GridFtpHandler(TransferHandlerBase):
             return
         
         # prefer gfal if available
-        if tools.find("gfal-rm", "--version", "\(gfal2 ([\.0-9]+)\)") is not None:
+        if "PEGASUS_FORCE_GUC" not in os.environ \
+           and removes_l[0].get_proto() != "sshftp" \
+           and tools.find("gfal-rm", "--version", "\(gfal2 ([\.0-9]+)\)") is not None:
             handler = GFALHandler()
             [successful_l, failed_l] = handler.do_removes(removes_l)
             return [successful_l, failed_l]
