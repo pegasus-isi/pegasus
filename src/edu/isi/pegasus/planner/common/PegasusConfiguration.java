@@ -109,7 +109,7 @@ public class PegasusConfiguration {
         //PM-1190 if integrity checking is turned on, turn on the stat of
         //files also
         if( properties.doIntegrityChecking() ){
-            this.checkAndSetProperty(properties, PegasusProperties.PEGASUS_KICKSTART_STAT_PROPERTY, "true" );
+            //this.checkAndSetProperty(properties, PegasusProperties.PEGASUS_KICKSTART_STAT_PROPERTY, "true" );
         }
     }
 
