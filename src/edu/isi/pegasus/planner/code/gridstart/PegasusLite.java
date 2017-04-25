@@ -975,7 +975,7 @@ public class PegasusLite implements GridStart {
                                                               job.getInputFiles() );
                 
                 //modify job for transferring the .meta files
-                if( !modifyJobForIntegrityChecks( job )) {
+                if( !modifyJobForIntegrityChecks( job , metaFile )) {
                     throw new RuntimeException( "Unable to modify job for integrity checks" );
                 }
             }
@@ -1511,10 +1511,21 @@ public class PegasusLite implements GridStart {
      * Updates the job tracking of the meta files of the parents
      * 
      * @param job
+     * @param file metadata file that may need to be associated
      * 
      * @return 
      */
-    protected boolean modifyJobForIntegrityChecks(Job job) {
+    protected boolean modifyJobForIntegrityChecks(Job job, File file) {
+        
+        if( file != null ){
+            //associate the file.
+            //we need relative path only not absolute
+            StringBuilder metaFile = new StringBuilder();
+                metaFile.append( job.getRelativeSubmitDirectory() ).append( File.separator ).
+                         append( file.getName() );
+                job.condorVariables.addIPFileForTransfer( metaFile.toString() );
+        }
+        
         //try and get hold of the parents
         GraphNode node = job.getGraphNodeReference();
         for( GraphNode parentNode : node.getParents() ){
