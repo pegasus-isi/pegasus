@@ -975,7 +975,7 @@ public class PegasusLite implements GridStart {
                                                               job.getInputFiles() );
                 
                 //modify job for transferring the .meta files
-                if( !modifyJobForIntegrityChecks( job , metaFile )) {
+                if( !modifyJobForIntegrityChecks( job , metaFile, this.mSubmitDir )) {
                     throw new RuntimeException( "Unable to modify job for integrity checks" );
                 }
             }
@@ -1512,18 +1512,15 @@ public class PegasusLite implements GridStart {
      * 
      * @param job
      * @param file metadata file that may need to be associated
+     * @param baseSubmitDir
      * 
      * @return 
      */
-    protected boolean modifyJobForIntegrityChecks(Job job, File file) {
+    protected boolean modifyJobForIntegrityChecks(Job job, File file, String baseSubmitDir) {
         
         if( file != null ){
             //associate the file.
-            //we need relative path only not absolute
-            StringBuilder metaFile = new StringBuilder();
-                metaFile.append( job.getRelativeSubmitDirectory() ).append( File.separator ).
-                         append( file.getName() );
-                job.condorVariables.addIPFileForTransfer( metaFile.toString() );
+            job.condorVariables.addIPFileForTransfer( file.getAbsolutePath() );
         }
         
         //try and get hold of the parents
@@ -1533,7 +1530,8 @@ public class PegasusLite implements GridStart {
             if( parent.getJobType() == Job.COMPUTE_JOB ){
                 //we need meta files for only compute jobs that are parents
                 StringBuilder metaFile = new StringBuilder();
-                metaFile.append( parent.getRelativeSubmitDirectory() ).append( File.separator ).
+                metaFile.append( baseSubmitDir ).append( File.separator ).
+                         append( parent.getRelativeSubmitDirectory() ).append( File.separator ).
                          append( parent.getID() ).append( ".meta" );
                 job.condorVariables.addIPFileForTransfer( metaFile.toString() );
             }
