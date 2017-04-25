@@ -17,10 +17,12 @@
 package edu.isi.pegasus.planner.code.gridstart;
 
 import edu.isi.pegasus.common.logging.LogManager;
+
 import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
 import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.StreamGobblerCallback;
 import edu.isi.pegasus.common.util.Version;
+
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
@@ -32,6 +34,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.FileTransfer;
@@ -41,20 +44,30 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.TransferJob;
+
 import edu.isi.pegasus.planner.code.GridStart;
+
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import edu.isi.pegasus.planner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import edu.isi.pegasus.planner.refiner.DeployWorkerPackage;
+
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
+
 import edu.isi.pegasus.planner.transfer.SLS;
 import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -955,6 +968,12 @@ public class PegasusLite implements GridStart {
                 appendStderrFragment( sb, "checking file integrity for input files" );
                 sb.append( "# do file integrity checks" ).append( '\n' );
                 addIntegrityCheckInvocation( sb, job.getInputFiles() );
+                
+                //check if planner knows of any checksums from the replica catalog
+                //and generate an input meta file!
+                File metaFile = generateChecksumMetadataFile( job.getFileFullPath( mSubmitDir,  ".in.meta"),
+                                                              job.getInputFiles() );
+                
                 //modify job for transferring the .meta files
                 if( !modifyJobForIntegrityChecks( job )) {
                     throw new RuntimeException( "Unable to modify job for integrity checks" );
@@ -1511,5 +1530,74 @@ public class PegasusLite implements GridStart {
         }
         
         return true;
+    }
+
+    /**
+     * Generate a metadata file containing the metadata for input files if it
+     * exists
+     * 
+     * @param name
+     * @param files
+     * 
+     * @return A metafile with the suffix, else null
+     */
+    protected File generateChecksumMetadataFile( String name, Collection<PegasusFile> files) {
+        
+        
+        //subset files that have any metadata associated with them
+        List<PegasusFile> metaFiles = new LinkedList();
+        for( PegasusFile file: files ){
+            if( !file.isCheckpointFile() ){
+                Metadata m = file.getAllMetadata();
+                if( !m.isEmpty() ){
+                    metaFiles.add( file );
+                }
+            }
+        }
+        if( metaFiles.isEmpty() ){
+            //nothing to write
+            return null;
+        }
+           
+        File metaFile = null;
+        PrintWriter pw = null;
+        try {
+            metaFile = new File( name); 
+            pw = new PrintWriter( metaFile );
+            pw.println( "[" );
+            StringBuilder sb = new StringBuilder();
+            for( PegasusFile pf : metaFiles ){
+                sb.append( "\n" ).append( "\t{" );
+                sb.append( "\n" ).append( "\t\t").append( "\"_type\": \"file\"").append( ","); 
+                sb.append( "\n" ).append( "\t\t").append( "\"_id\": \"").append( pf.getLFN()).append( "\"").append( ","); 
+                
+                sb.append( "\n" ).append( "\t\t").append( "\"_attributes\": {");
+                Metadata m = pf.getAllMetadata();
+                for( Iterator<String> it = m.getProfileKeyIterator(); it.hasNext(); ){
+                    String key = it.next();
+                    sb.append( "\n" ).append( "\t\t\t");
+                    sb.append( "\"").append( key ).append( "\"" ).append( "=" ).append( "\"" ).append( m.get(key)).append( "\"").
+                       append(",");
+                }
+                //remove trailing ,
+                sb = sb.deleteCharAt( sb.length() - 1 );
+                sb.append( "\n" ).append( "\t\t").append( "}"); //end of attributes
+                
+                //end of pegasus file
+                sb.append( "\n" ).append( "\t").append( "}").append( ",");
+            }
+            //remove trailing ,
+            sb = sb.deleteCharAt( sb.length() - 1 );
+            pw.print( sb );
+            pw.println( "\n]" );
+        } catch (FileNotFoundException ex) {
+            throw new RuntimeException( "Unable to generate input metadata file  " + name, ex );
+        }
+        finally{
+            if ( pw != null ){
+                pw.close();
+            }
+        }
+        return metaFile;
     }
 }
