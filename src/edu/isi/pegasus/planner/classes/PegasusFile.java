@@ -674,14 +674,25 @@ public class PegasusFile extends Data {
 
 
     /**
-      * Returns a boolean indicating if a file that is being staged is an
-      * executable or not (i.e is a data file).
+      * Returns a boolean indicating if a file that is being staged is a 
+      * checkpoint file or not.
       *
       * @return boolean indicating whether a file is a checkpoint file or not.
       */
      public boolean isCheckpointFile(){
         return (this.mType == PegasusFile.CHECKPOINT_FILE);
      }
+     
+     /**
+      * Returns a boolean indicating if a file that is being staged is an
+      * is a data file
+      *
+      * @return boolean indicating whether a file is a data file or not.
+      */
+     public boolean isDataFile(){
+        return (this.mType == PegasusFile.DATA_FILE);
+     }
+
 
     /**
      * Returns a copy of the existing data object.

@@ -1500,7 +1500,7 @@ public class PegasusLite implements GridStart {
      */
     protected void addIntegrityCheckInvocation(StringBuffer sb,  Collection<PegasusFile> files ) {
         for( PegasusFile file: files ){
-            if( !file.isCheckpointFile() ){
+            if( file.isDataFile() ){
                 sb.append( PegasusLite.PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME ).append( " --lfn " ).
                    append( file.getLFN() ).append( "\n" );
             }
@@ -1556,7 +1556,7 @@ public class PegasusLite implements GridStart {
         //subset files that have any metadata associated with them
         List<PegasusFile> metaFiles = new LinkedList();
         for( PegasusFile file: files ){
-            if( !file.isCheckpointFile() ){
+            if( file.isDataFile() ){
                 Metadata m = file.getAllMetadata();
                 if( !m.isEmpty() ){
                     metaFiles.add( file );
