@@ -960,8 +960,8 @@ class GridFtpHandler(TransferHandlerBase):
         
         # if prefer gfal if installed
         if tools.find("gfal-copy", "--version", "\(gfal2 ([\.0-9]+)\)") is not None \
-           and transfer_l[0].get_src_proto() != "sshftp" \
-           and transfer_l[0].get_dst_proto() != "sshftp":
+           and transfers_l[0].get_src_proto() != "sshftp" \
+           and transfers_l[0].get_dst_proto() != "sshftp":
             handler = GFALHandler()
             [successful_l, failed_l] = handler.do_transfers(transfers_l)
             return [successful_l, failed_l]
