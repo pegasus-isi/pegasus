@@ -12,6 +12,13 @@ BIN_DIR=`pegasus-config --bin`
 PEGASUS_LOCAL_BIN_DIR=$BIN_DIR
 export PEGASUS_LOCAL_BIN_DIR
 
+# determine TEST_NAME to setup site catalog
+TESTDIR=$(cd $testdir && pwd)
+TEST_NAME=`basename $TESTDIR`
+export TEST_NAME
+
+
+
 # generate the input file
 echo "This is sample input to KEG" >f.a
 shacmd=`sha256sum f.a`
@@ -31,6 +38,7 @@ export PYTHONPATH=`pegasus-config --python`
 pegasus-plan \
     --conf ./pegasusrc \
     --sites condorpool \
+    --staging-site cartman-data \
     --output-site local \
     --dir dags \
     --dax blackdiamond.dax \
