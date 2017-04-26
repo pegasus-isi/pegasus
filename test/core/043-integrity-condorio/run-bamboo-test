@@ -16,7 +16,7 @@ export PEGASUS_LOCAL_BIN_DIR
 echo "This is sample input to KEG" >f.a
 shacmd=`sha256sum f.a`
 
-sha=`echo $shacmd | sed -E 's/([a-z]*)[ \t].*/\1/'`
+sha=`echo $shacmd | sed -E 's/([a-z0-9]*).*/\1/'`
 cat >./conf/rc.data<<EOF
 f.a file://$TOPDIR/f.a site="condorpool" checksum.type="sha256" checksum.value="$sha"
 
