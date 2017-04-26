@@ -978,6 +978,7 @@ public class PegasusLite implements GridStart {
                 if( !modifyJobForIntegrityChecks( job , metaFile, this.mSubmitDir )) {
                     throw new RuntimeException( "Unable to modify job for integrity checks" );
                 }
+                sb.append( "\n" );
             }
             
             appendStderrFragment( sb, "executing the user tasks" );
@@ -1502,7 +1503,7 @@ public class PegasusLite implements GridStart {
         for( PegasusFile file: files ){
             if( file.isDataFile() ){
                 sb.append( PegasusLite.PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME ).append( " --lfn " ).
-                   append( file.getLFN() ).append( "\n" );
+                   append( file.getLFN() ).append( " 1>&2" ).append( "\n" );
             }
         }
     }
