@@ -1585,7 +1585,7 @@ public class PegasusLite implements GridStart {
                 for( Iterator<String> it = m.getProfileKeyIterator(); it.hasNext(); ){
                     String key = it.next();
                     sb.append( "\n" ).append( "\t\t\t");
-                    sb.append( "\"").append( key ).append( "\"" ).append( "=" ).append( "\"" ).append( m.get(key)).append( "\"").
+                    sb.append( "\"").append( key ).append( "\"" ).append( ":" ).append( "\"" ).append( m.get(key)).append( "\"").
                        append(",");
                 }
                 //remove trailing ,
