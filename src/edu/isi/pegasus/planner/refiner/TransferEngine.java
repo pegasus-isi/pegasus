@@ -1408,6 +1408,9 @@ public class TransferEngine extends Engine {
             //the transfer mode for the file needs to be
             //propogated for optional transfers.
             ft.setTransferFlag(pf.getTransferFlag());
+            
+            //PM-1190 associate metadata with the FileTransfer
+            ft.setMetadata( pf.getAllMetadata());
 
             ReplicaLocation candidateLocations = null;
             if( nv != null ){

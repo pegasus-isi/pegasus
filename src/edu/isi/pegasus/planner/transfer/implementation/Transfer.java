@@ -49,6 +49,7 @@ import java.util.ArrayList;
 import java.io.File;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
 
 /**
@@ -411,6 +412,23 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             urlPair.append(" { \"type\": \"transfer\",\n");
             urlPair.append("   \"lfn\": ").append("\"").append(ft.getLFN()).append("\"").append(",\n");
             urlPair.append("   \"id\": ").append(num).append(",\n");
+            
+            //PM-1190 dump any metadata that planner knows of about the file
+            Metadata m = ft.getAllMetadata();
+            if( !m.isEmpty() ){
+                urlPair.append( "   ").append( "\"attributes\": {");
+                for( Iterator<String> mit = m.getProfileKeyIterator(); mit.hasNext(); ){
+                    String key = mit.next();
+                    urlPair.append( "\n" ).append( "     ");
+                    urlPair.append( "\"").append( key ).append( "\"" ).append( ":" ).append( "\"" ).append( m.get(key)).append( "\"").
+                       append(",");
+                }
+                //remove trailing ,
+                urlPair = urlPair.deleteCharAt( urlPair.length() - 1 );
+                urlPair.append( "\n" ).append( "   ").append( "}").append( "\n" );
+            }
+            
+            
             urlPair.append("   \"src_urls\": [");
             boolean notFirst = false;
             for( String sourceSite: sourceSites ){

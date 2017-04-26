@@ -19,6 +19,7 @@ package edu.isi.pegasus.planner.classes;
 
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.common.PegRandom;
+import edu.isi.pegasus.planner.namespace.Metadata;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -500,6 +501,7 @@ public class FileTransfer extends PegasusFile {
         ft.mJob         = new String(this.mJob);
         ft.mPriority    = this.mPriority;
         ft.mURLForRegistrationOnDestination = this.mURLForRegistrationOnDestination;
+        ft.mMetadata    = (Metadata) this.mMetadata.clone();
 
         //the maps are not cloned underneath
 
