@@ -1220,7 +1220,7 @@ public class Kickstart implements GridStart {
         //PM-992 we stat outputs either if stat property is set
         //or registration is enabled. inputs are only stated if
         //stat property is turned on.
-        if ( stat || registerOutputs ){
+        if ( stat || registerOutputs || integrityChecksOn){
             //add the stat options to kickstart only for certain jobs for time being
              //and if the input variable is true
             if (job.getJobType() == Job.COMPUTE_JOB ||
