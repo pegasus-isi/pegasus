@@ -1212,7 +1212,8 @@ public class Kickstart implements GridStart {
     protected String generateStatArgumentOptions(Job job, boolean stat, boolean registerOutputs, boolean addPostScript, boolean integrityChecksOn ) {
         
         //sanity check
-        if ( !( stat || registerOutputs ) || this.mDisableKickstartStatCompletely){
+        if ( !( stat || registerOutputs || integrityChecksOn) || 
+                this.mDisableKickstartStatCompletely){
             return "";
         }
         
