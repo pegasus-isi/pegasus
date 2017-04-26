@@ -425,7 +425,7 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
                 }
                 //remove trailing ,
                 urlPair = urlPair.deleteCharAt( urlPair.length() - 1 );
-                urlPair.append( "\n" ).append( "   ").append( "}").append( "\n" );
+                urlPair.append( "\n" ).append( "   ").append( "}").append( "," ).append( "\n" );
             }
             
             
