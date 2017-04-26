@@ -678,7 +678,30 @@ class TransferHandlerBase(object):
         transfer.attempts += 1
         
         stats.add_stats(transfer, was_successful, t_start, t_end)
-        
+
+        # Introduce errors! The PEGASUS_TRANSFER_ERROR_RATE env variable can
+        # be used to introduce transfer error at some rate (valid values in
+        # precent: 0-100). This is useful for testing the data integrity
+        # detection and failover components of Pegasus. This only works
+        # for transfer with a file:// destination.
+        if "PEGASUS_TRANSFER_ERROR_RATE" in os.environ and \
+           transfer.get_dst_proto() == "file":
+            rate = int(os.environ["PEGASUS_TRANSFER_ERROR_RATE"])
+            if not (rate >=0 and rate <= 100):
+                logger.error("Invalid value for PEGASUS_TRANSFER_ERROR_RATE: %s" \
+                             %(os.environ["PEGASUS_TRANSFER_ERROR_RATE"]))
+                rate = 0
+            random.seed()
+            if random.randint(1, 100) <= rate:
+                # modify the file by adding a few bytes to it
+                logger.info("Introducing an error into %s" %(transfer.get_dst_path()))
+                try:
+                    f = open(transfer.get_dst_path(), "a")
+                    f.write("Here be dragons! Eh, I mean pegai!")
+                    f.close()
+                except Exception, e:
+                    logger.error(e)
+   
     
     def _check_similar(self, a, b):
         """

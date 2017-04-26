@@ -191,7 +191,7 @@ def setup_logger(debug_flag):
         console.setLevel(logging.DEBUG)
 
     # formatter
-    formatter = logging.Formatter("%(levelname)7s:  %(message)s")
+    formatter = logging.Formatter("Integrity check: %(message)s")
     console.setFormatter(formatter)
     logger.addHandler(console)
     logger.debug("Logger has been configured")
@@ -284,10 +284,12 @@ def check_integrity(fname, meta_data):
     
     # now compare them
     if current_sha256 != expected_sha256:
-        logger.error("%s: Expected checksum (%s) does not match the calculated checksum(%s)" \
+        logger.error("%s: Expected checksum (%s) does not match the calculated checksum (%s)" \
                      %(fname, expected_sha256, current_sha256))
         return False
     
+    logger.info("%s: Checksum verified" %(fname))
+
     return True
 
 
