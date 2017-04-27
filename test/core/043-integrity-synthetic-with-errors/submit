@@ -1,0 +1,50 @@
+#!/bin/bash
+
+set -e
+
+export TOP_DIR=`pwd`
+
+# generate the dax
+export PYTHONPATH=`pegasus-config --python`
+./dax-gen.py
+
+# site catalog
+cat >sites.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
+    <site handle="local">
+        <directory  path="${TOPDIR}/LOCAL/shared-scratch" type="shared-scratch">
+            <file-server  operation="all" url="file:///${TOPDIR}/LOCAL/shared-scratch" />
+        </directory>
+        <directory  path="${TOPDIR}/LOCAL/shared-storage" type="shared-storage">
+            <file-server  operation="all" url="file:///${TOPDIR}/LOCAL/shared-storage" />
+        </directory>
+    </site>
+
+    <site  handle="condor_pool">
+        <profile namespace="pegasus" key="style" >condor</profile>
+        <profile namespace="condor" key="universe" >vanilla</profile>
+        <profile namespace="env" key="PEGASUS_TRANSFER_ERROR_RATE" >10</profile>
+    </site>
+
+    <site  handle="staging_site">
+        <directory type="shared-scratch" path="${TOPDIR}/staging-site/scratch/043-integrity-synthetic-with-errors">
+            <file-server operation="all" url="gsiftp://colo-vm63.isi.edu${TOPDIR}/staging-site/scratch/043-integrity-synthetic-with-errors"/>
+        </directory>
+    </site>
+</sitecatalog>
+EOF
+
+echo
+echo
+echo "Planning and submitting the workflow..."
+pegasus-plan \
+    --conf pegasus.conf \
+    --dir workflow \
+    --dax dax.xml \
+    --sites condor_pool \
+    --staging-site staging_site \
+    --output-site local \
+    --submit
+
+

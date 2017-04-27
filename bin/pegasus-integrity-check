@@ -330,8 +330,8 @@ def main():
         
     # now check the file
     results = check_integrity(options.file, meta_data)
-    
-    # for now, always exit successfully
+    if not results:
+        myexit(1)
         
     myexit(0)
 
