@@ -1270,7 +1270,8 @@ public class Kickstart implements GridStart {
                     //for files that need to be registered
                     if( job.getJobType() == Job.COMPUTE_JOB ){
                         for( PegasusFile file : job.getOutputFiles() ){
-                            if( file.getRegisterFlag() ){
+                            //going forward we should remove this check completely.
+                            if( file.getRegisterFlag() || integrityChecksOn){
                                 args.append( " -s " ).append( file.getLFN() ).
                                      append( "=" ).append( file.getLFN() );
                             }
