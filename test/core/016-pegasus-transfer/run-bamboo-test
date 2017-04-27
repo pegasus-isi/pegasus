@@ -111,9 +111,9 @@ timed_transfer 0 20 "pegasus-transfer -f 3rdparty-step2.in"
 
 timed_transfer 0 10  "pegasus-transfer -f 3rdparty-cleanup.in"
 
-timed_transfer 0 40 "pegasus-transfer -f many-small-files-3rdparty.in"
+timed_transfer 0 40 "pegasus-transfer -n 32 -f many-small-files-3rdparty.in"
 
-timed_transfer 0 10 "pegasus-transfer -f medium-files-push-3rdparty.in"
+timed_transfer 0 10 "pegasus-transfer -n 16 -f medium-files-push-3rdparty.in"
 
 
 echo
@@ -130,9 +130,9 @@ export GLOBUS_TCP_PORT_RANGE=5000,6000
 
 timed_transfer 0 20 "pegasus-transfer -f nat.in"
 
-timed_transfer 0 30 "pegasus-transfer -f medium-files-pull.in"
+timed_transfer 0 30 "pegasus-transfer -n 16 -f medium-files-pull.in"
 
-timed_transfer 0 30 "pegasus-transfer -f medium-files-push.in"
+timed_transfer 0 30 "pegasus-transfer -n 16 -f medium-files-push.in"
 
 
 echo
