@@ -39,7 +39,7 @@ echo
 echo
 echo "Planning and submitting the workflow..."
 pegasus-plan \
-    --conf pegasus.conf \
+    --conf pegasusrc \
     --dir workflow \
     --dax dax.xml \
     --sites condor_pool \
