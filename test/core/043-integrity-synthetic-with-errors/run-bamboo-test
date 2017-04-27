@@ -2,7 +2,7 @@
 
 set -e
 
-export TOP_DIR=`pwd`
+export TOPDIR=`pwd`
 
 # generate the dax
 export PYTHONPATH=`pegasus-config --python`
