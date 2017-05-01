@@ -3,6 +3,7 @@ __author__ = "Rafael Ferreira da Silva"
 import logging
 import datetime
 import glob
+import os
 import shutil
 import subprocess
 import time
@@ -69,6 +70,20 @@ class DBAdminError(Exception):
 
 
 def get_compatible_version(version):
+    """
+    Get a compatible Pegasus version for the database version.
+    :param version: version of the database
+    :return: the equivalent Pegasus version
+    """
+    if version == CURRENT_DB_VERSION:
+        out, err = subprocess.Popen('%s/pegasus-version' % os.path.dirname(sys.argv[0]),
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True,
+                                    cwd=os.getcwd()).communicate()
+        if err:
+            raise DBAdminError(err)
+
+        return out.decode('utf8').strip()
+
     print_version = None
     previous_version = None
 
@@ -104,7 +119,6 @@ def db_create(dburi, engine, db, pegasus_version=None, force=False, verbose=True
     :param pegasus_version: version of the Pegasus software (e.g., 4.6.0)
     :param force: whether operations should be performed despite conflicts
     :param verbose: whether messages should be printed in the prompt
-    :return:
     """
     table_names = engine.table_names(connection=db)
     db_version.create(engine, checkfirst=True)
