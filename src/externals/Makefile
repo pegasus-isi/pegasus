@@ -30,6 +30,7 @@ PACKAGES+=boto
 PACKAGES+=pam.py
 PACKAGES+=OpenSSL
 PACKAGES+=plex
+PACKAGES+=future
 ifeq ($(shell which pg_config),)
     $(warning WARNING: pg_config not found: skipping python postgresql library)
 else
@@ -81,6 +82,7 @@ $(LIBDIR)/plex: plex-2.0.0dev.tar.gz
 $(LIBDIR)/MySQLdb: MySQL-python-1.2.5.tar.gz
 $(LIBDIR)/psycopg2: psycopg2-2.5.5.tar.gz
 $(LIBDIR)/ordereddict.py: ordereddict-1.1.tar.gz
+$(LIBDIR)/future: future-0.16.0.tar.gz
 
 clean:
 	rm -rf $(EXTDIR)
