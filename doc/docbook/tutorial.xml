@@ -1345,7 +1345,7 @@ tr wc {
       </note>
 
       <para>The <filename>tc.txt</filename> file contains information about
-      two transformations: wc, and split. These three transformations are
+      two transformations: wc, and split. These two transformations are
       referenced in the split DAX. The transformation catalog indicates that
       both transformations are installed on the condorpool site, and are
       compiled for x86_64 Linux.</para>

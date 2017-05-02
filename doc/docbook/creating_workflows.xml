@@ -1105,7 +1105,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
 
           <listitem>
             <para><emphasis role="bold">type</emphasis> - The type of
-            transformation. Whether it is Iinstalled ("INSTALLED") on the
+            transformation. Whether it is installed ("INSTALLED") on the
             remote site or is availabe to stage ("STAGEABLE").</para>
           </listitem>
 
