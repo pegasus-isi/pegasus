@@ -3,6 +3,25 @@ import os
 import pwd
 from jinja2 import Environment, FileSystemLoader
 
+
+class TutorialEnv:
+    LOCAL_MACHINE = ("Local Machine", "submit-host")
+    USC_HPCC_CLUSTER = ("USC HPCC Cluster", "usc-hpcc")
+    OSG_FROM_ISI = ("OSG from ISI submit node", "osg")
+    XSEDE_BOSCO = ("XSEDE, with Bosco", "xsede-bosco")
+    BLUEWATERS_GLITE = ("Bluewaters, with Glite", "bw-glite")
+
+
+class TutorialExample:
+    PROCESS = ("Process", "process")
+    PIPELINE = ("Pipeline", "pipeline")
+    SPLIT = ("Split", "split")
+    MERGE = ("Merge", "merge")
+    EPA = ("EPA (requires R)", "r-epa")
+    DIAMOND = ("Diamond", "diamond")
+    MPI = ("MPI Hello World", "mpi-hw")
+
+
 def choice(question, options, default):
     "Ask the user to choose from a short list of named options"
     while True:
@@ -13,6 +32,7 @@ def choice(question, options, default):
         for opt in options:
             if answer == opt:
                 return answer
+
 
 def yesno(question, default="y"):
     "Ask the user a yes/no question"
@@ -25,6 +45,7 @@ def yesno(question, default="y"):
             return True
         elif answer == 'n':
             return False
+
 
 def query(question, default=None):
     "Ask the user a question and return the response"
@@ -40,21 +61,23 @@ def query(question, default=None):
         else:
             return answer
 
+
 def optionlist(question, options, default=0):
     "Ask the user to choose from a list of options"
     for i, option in enumerate(options):
-        print "%d: %s" % (i+1, option[0])
+        print("%d: %s" % (i + 1, option[0]))
     while True:
-        sys.stdout.write("%s (1-%d) [%d]: " % (question, len(options), default+1))
+        sys.stdout.write("%s (1-%d) [%d]: " % (question, len(options), default + 1))
         answer = sys.stdin.readline().strip()
         if len(answer) == 0:
             return options[default][1]
         try:
             optno = int(answer)
             if optno > 0 and optno <= len(options):
-                return options[optno-1][1]
+                return options[optno - 1][1]
         except:
             pass
+
 
 class Workflow(object):
     def __init__(self, workflowdir, sharedir):
@@ -66,7 +89,7 @@ class Workflow(object):
         self.home = os.environ["HOME"]
         self.user = pwd.getpwuid(os.getuid())[0]
         self.generate_tutorial = False
-        self.tutorial_setup  = None
+        self.tutorial_setup = None
         self.compute_queue = "default"
         sysname, _, _, _, machine = os.uname()
         if sysname == 'Darwin':
@@ -76,7 +99,7 @@ class Workflow(object):
             self.os = sysname.upper()
         self.arch = machine
 
-    def copy_template(self, template, dest, mode=0644):
+    def copy_template(self, template, dest, mode=0o644):
         "Copy template to dest in workflowdir with mode"
         path = os.path.join(self.workflowdir, dest)
         t = self.jinja.get_template(template)
@@ -98,26 +121,26 @@ class Workflow(object):
 
             # determine the environment to setup tutorial for
             self.tutorial_setup = optionlist("What environment is tutorial to be setup for?", [
-                ("Local Machine", "submit-host"),
-                ("USC HPCC Cluster", "usc-hpcc"),
-                ("OSG from ISI submit node", "osg"),
-                ("XSEDE, with Bosco", "xsede-bosco"),
-                ("Bluewaters, with Glite", "bw-glite")
+                TutorialEnv.LOCAL_MACHINE,
+                TutorialEnv.USC_HPCC_CLUSTER,
+                TutorialEnv.OSG_FROM_ISI,
+                TutorialEnv.XSEDE_BOSCO,
+                TutorialEnv.BLUEWATERS_GLITE
             ])
 
             # figure out what example options to provide
             examples = [
-                ("Process", "process"),
-                ("Pipeline", "pipeline"),
-                ("Split", "split"),
-                ("Merge", "merge"),
-                ("EPA (requires R)", "r-epa")
+                TutorialExample.PROCESS,
+                TutorialExample.PIPELINE,
+                TutorialExample.SPLIT,
+                TutorialExample.MERGE,
+                TutorialExample.EPA
             ]
             if self.tutorial_setup != "osg":
-                examples.append( ("Diamond", "diamond"))
+                examples.append(TutorialExample.DIAMOND)
 
             if self.tutorial_setup == "bw-glite":
-                examples.append( ("MPI Hello World", "mpi-hw" ))
+                examples.append(TutorialExample.MPI)
 
             self.tutorial = optionlist("What tutorial workflow do you want?", examples)
 
@@ -125,7 +148,7 @@ class Workflow(object):
             return
 
         # Determine which DAX generator API to use
-        self.daxgen = choice("What DAX generator API do you want to use?", ["python","perl","java","r"], "python")
+        self.daxgen = choice("What DAX generator API do you want to use?", ["python", "perl", "java", "r"], "python")
 
         # Determine what kind of site catalog we need to generate
         self.config = optionlist("What does your computing infrastructure look like?", [
@@ -153,10 +176,10 @@ class Workflow(object):
             self.sitename = "condorpool"
         elif self.tutorial_setup == "usc-hpcc":
             self.sitename = "usc-hpcc"
-            self.config   = "glite"
+            self.config = "glite"
             self.compute_queue = "default"
             # for running the whole workflow as mpi job
-            self.properties["pegasus.job.aggregator"]="mpiexec"
+            self.properties["pegasus.job.aggregator"] = "mpiexec"
         elif self.tutorial_setup == "osg":
             self.sitename = "osg"
             self.os = "linux"
@@ -166,11 +189,9 @@ class Workflow(object):
             self.sitename = "condorpool"
         elif self.tutorial_setup == "bw-glite":
             self.sitename = "bluewaters"
-            self.config   = "glite"
+            self.config = "glite"
             self.compute_queue = "normal"
         return
-
-
 
     def generate(self):
         os.makedirs(self.workflowdir)
@@ -188,31 +209,32 @@ class Workflow(object):
 
                 # Executables used by the diamond workflow
                 self.mkdir("bin")
-                self.copy_template("diamond/transformation.py", "bin/preprocess", mode=0755)
-                self.copy_template("diamond/transformation.py", "bin/findrange", mode=0755)
-                self.copy_template("diamond/transformation.py", "bin/analyze", mode=0755)
+                self.copy_template("diamond/transformation.py", "bin/preprocess", mode=0o755)
+                self.copy_template("diamond/transformation.py", "bin/findrange", mode=0o755)
+                self.copy_template("diamond/transformation.py", "bin/analyze", mode=0o755)
 
                 # Diamond input file
                 self.copy_template("diamond/f.a", "input/f.a")
             elif self.tutorial == "split":
                 # Split workflow input file
                 self.copy_template("split/pegasus.html", "input/pegasus.html")
-                self.copy_template("plan_cluster_dax.sh", "plan_cluster_dax.sh", mode=0755)
+                self.copy_template("plan_cluster_dax.sh", "plan_cluster_dax.sh", mode=0o755)
             elif self.tutorial == "r-epa":
                 # Executables used by the R-EPA workflow
                 self.mkdir("bin")
-                self.copy_template("r-epa/epa-wrapper.sh", "bin/epa-wrapper.sh", mode=0755)
-                self.copy_template("r-epa/setupvar.R", "bin/setupvar.R", mode=0755)
-                self.copy_template("r-epa/weighted.average.R", "bin/weighted.average.R", mode=0755)
-                self.copy_template("r-epa/cumulative.percentiles.R", "bin/cumulative.percentiles.R", mode=0755)
+                self.copy_template("r-epa/epa-wrapper.sh", "bin/epa-wrapper.sh", mode=0o755)
+                self.copy_template("r-epa/setupvar.R", "bin/setupvar.R", mode=0o755)
+                self.copy_template("r-epa/weighted.average.R", "bin/weighted.average.R", mode=0o755)
+                self.copy_template("r-epa/cumulative.percentiles.R", "bin/cumulative.percentiles.R", mode=0o755)
             elif self.tutorial == "mpi-hw":
                 # copy the mpi wrapper, c code and mpi example
                 # Executables used by the mpi-hw workflow
                 self.mkdir("bin")
-                self.copy_template( "%s/pegasus-mpi-hw.c" % self.tutorial , "pegasus-mpi-hw.c")
-                self.copy_template( "%s/Makefile" % self.tutorial, "Makefile")
-                self.copy_template( "%s/mpi-hello-world-wrapper" % self.tutorial, "bin/mpi-hello-world-wrapper", mode=0755)
-                self.copy_template( "split/pegasus.html", "input/f.in")
+                self.copy_template("%s/pegasus-mpi-hw.c" % self.tutorial, "pegasus-mpi-hw.c")
+                self.copy_template("%s/Makefile" % self.tutorial, "Makefile")
+                self.copy_template("%s/mpi-hello-world-wrapper" % self.tutorial, "bin/mpi-hello-world-wrapper",
+                                   mode=0o755)
+                self.copy_template("split/pegasus.html", "input/f.in")
         else:
             self.copy_template("tc.txt", "tc.txt")
             if self.daxgen == "python":
@@ -227,8 +249,8 @@ class Workflow(object):
                 assert False
 
         self.copy_template("sites.xml", "sites.xml")
-        self.copy_template("plan_dax.sh", "plan_dax.sh", mode=0755)
-        self.copy_template("generate_dax.sh", "generate_dax.sh", mode=0755)
+        self.copy_template("plan_dax.sh", "plan_dax.sh", mode=0o755)
+        self.copy_template("generate_dax.sh", "generate_dax.sh", mode=0o755)
         self.copy_template("README.md", "README.md")
         self.copy_template("rc.txt", "rc.txt")
         self.copy_template("pegasus.properties", "pegasus.properties")
@@ -237,8 +259,10 @@ class Workflow(object):
             sys.stdout.write("Pegasus Tutorial setup for example workflow - %s for execution on %s in directory %s\n"
                              % (self.tutorial, self.tutorial_setup, self.workflowdir))
 
+
 def usage():
-    print "Usage: %s WORKFLOW_DIR" % sys.argv[0]
+    print("Usage: %s WORKFLOW_DIR" % sys.argv[0])
+
 
 def main(pegasus_share_dir):
     if len(sys.argv) != 2:
@@ -251,7 +275,7 @@ def main(pegasus_share_dir):
 
     workflowdir = sys.argv[1]
     if os.path.exists(workflowdir):
-        print "ERROR: WORKFLOW_DIR '%s' already exists" % workflowdir
+        print("ERROR: WORKFLOW_DIR '%s' already exists" % workflowdir)
         exit(1)
 
     workflowdir = os.path.abspath(workflowdir)
@@ -259,4 +283,3 @@ def main(pegasus_share_dir):
     w = Workflow(workflowdir, sharedir)
     w.configure()
     w.generate()
-

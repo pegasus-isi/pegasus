@@ -19,7 +19,8 @@ install_requires = [
     "boto==2.5.2",
     "pam==0.1.4",
     "pyOpenSSL==0.13",
-    'plex==2.0.0dev'
+    "plex==2.0.0dev",
+    "future==0.16.0"
 ]
 
 excludes = ['Pegasus.test*']
