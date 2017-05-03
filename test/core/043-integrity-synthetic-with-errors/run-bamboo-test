@@ -24,7 +24,7 @@ cat >sites.xml <<EOF
     <site  handle="condor_pool">
         <profile namespace="pegasus" key="style" >condor</profile>
         <profile namespace="condor" key="universe" >vanilla</profile>
-        <profile namespace="env" key="PEGASUS_TRANSFER_ERROR_RATE" >10</profile>
+        <profile namespace="env" key="PEGASUS_TRANSFER_ERROR_RATE" >5</profile>
     </site>
 
     <site  handle="staging_site">
