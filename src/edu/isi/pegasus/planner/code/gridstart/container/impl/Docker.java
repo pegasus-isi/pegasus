@@ -64,6 +64,11 @@ public class Docker implements ContainerShellWrapper {
         //deploy pegasus worker package in the container
         sb.append( getContainerWorkerPackageSnippet() );
         
+        sb.append( "chmod +x " ).append( Docker.WORKER_PACKAGE_SETUP_SCRIPT_NAME).append( "\n" );
+
+        //copy pegasus lite common from the directory where condor transferred it via it's file transfer.
+        sb.append( "cp $pegasus_lite_start_dir/pegasus-lite-common.sh . ").append( "\n" );
+ 
         //sets up the variables used for docker run command
         //FIXME docker_init has to be passed the name of the tar file?
         sb.append( "docker_init").append( "\n" );
@@ -97,7 +102,7 @@ public class Docker implements ContainerShellWrapper {
         
         sb.append( "\n" );
         //remove the docker container
-        sb.append( "docker rm $cont_name " ).append( " 1>&2" );
+        sb.append( "docker rm $cont_name " ).append( " 1>&2" ).append( "\n" );;
         
         return sb.toString();
     }
