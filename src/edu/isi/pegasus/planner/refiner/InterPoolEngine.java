@@ -23,6 +23,7 @@ import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.ADag;
@@ -504,9 +505,17 @@ public class InterPoolEngine extends Engine implements Refiner {
         //handle dependant executables
         handleFileTransfersForDependantExecutables( job );
         
+        //PM-1195 check if any container transfers need to be done
+        FileTransfer cTx = handleFileTransfersForAssociatedContainer( job, entry  );
+        
         if( fTx != null ){
             //add the main executable back as input
             job.addInputFile( fTx);
+        }
+        if( cTx != null ){
+            mLogger.log( "Container Executable " + cTx.getLFN() + " for job " + job.getID() + " being staged from " +
+                          cTx.getSourceURL(), LogManager.DEBUG_MESSAGE_LEVEL );
+            job.addInputFile( cTx );
         }
     }
     
@@ -557,6 +566,36 @@ public class InterPoolEngine extends Engine implements Refiner {
             //entry
             job.executable = entry.getPhysicalTransformation();
         }
+        
+        return fTx;
+    }
+    
+    /**
+     * Updates job and associates any container related file transfer
+     * 
+     * @param job 
+     */
+    private FileTransfer handleFileTransfersForAssociatedContainer(Job job, TransformationCatalogEntry entry) {
+        Container c = entry.getContainer();
+        if( c== null ){
+            //nothing to do
+            return null;
+        }
+        
+        
+        FileTransfer fTx = new FileTransfer( c.getName(),
+                                                 job.jobName);
+        fTx.setType(FileTransfer.EXECUTABLE_FILE);
+
+        String site = c.getImageSite();
+        if( site == null ){
+            site = "CONTAINER_SITE";
+        }
+        //construct logical name of the container with the suffix if 
+        //it exists in the URL?
+        
+        fTx.addSource( site,
+                       c.getImageURL().getURL() );
         
         return fTx;
     }
@@ -827,4 +866,5 @@ public class InterPoolEngine extends Engine implements Refiner {
         mLogger.logEventCompletion();
 
     }
+
 }
