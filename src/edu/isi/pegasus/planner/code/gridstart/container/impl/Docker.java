@@ -59,6 +59,8 @@ public class Docker implements ContainerShellWrapper {
     public String wrap( Job job ){
         StringBuilder sb = new StringBuilder();
         
+        sb.append( "set -e" ).append( "\n" );
+        
         //within the pegasus lite script create a wrapper
         //to launch job in the container. wrapper is required to
         //deploy pegasus worker package in the container
@@ -69,10 +71,13 @@ public class Docker implements ContainerShellWrapper {
         //copy pegasus lite common from the directory where condor transferred it via it's file transfer.
         sb.append( "cp $pegasus_lite_start_dir/pegasus-lite-common.sh . ").append( "\n" );
  
+        sb.append( "set +e" ).append( "\n" );
+        
         //sets up the variables used for docker run command
         //FIXME docker_init has to be passed the name of the tar file?
         sb.append( "docker_init").append( "\n" );
         
+        sb.append( "job_ec=$(($job_ec + $?))" ).append( "\n" ).append( "\n" );;
         
         //assume docker is available in path
         sb.append( "docker run ");
@@ -82,6 +87,8 @@ public class Docker implements ContainerShellWrapper {
         sb.append( "-t ");
         sb.append( "--name $cont_name ");
         sb.append( " $cont_image ");
+        
+        //track 
         
         //invoke the command to run as user who launched the job
         sb.append( "bash -c ").
@@ -101,8 +108,12 @@ public class Docker implements ContainerShellWrapper {
           sb.append( "\"");      
         
         sb.append( "\n" );
+        
+        sb.append( "job_ec=$(($job_ec + $?))" ).append( "\n" ).append( "\n" );;
+        
         //remove the docker container
         sb.append( "docker rm $cont_name " ).append( " 1>&2" ).append( "\n" );;
+        sb.append( "job_ec=$(($job_ec + $?))" ).append( "\n" ).append( "\n" );;
         
         return sb.toString();
     }
@@ -174,7 +185,7 @@ public class Docker implements ContainerShellWrapper {
         
         sb.append( "echo -e \"\\n############################# launching job in the container #############################\"  1>&2" ).append( "\n" );
         sb.append( "pegasus-kickstart \"\\${original_args[@]}\" ").append( "\n" );
-        sb.append( "EOF").append( "\n" );
+        sb.append( "EOF").append( "\n" ).append( "\n" );;
         return sb.toString();
         
     }

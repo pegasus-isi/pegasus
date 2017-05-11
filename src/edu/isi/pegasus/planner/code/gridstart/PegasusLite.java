@@ -990,7 +990,8 @@ public class PegasusLite implements GridStart {
             writer.flush();
             
             sb = new StringBuffer();
-
+            
+            sb.append( "job_ec=0" ).append( "\n" );
             //enable the job via kickstart
             //separate calls for aggregated and normal jobs
             if( job instanceof AggregatedJob ){
@@ -1018,7 +1019,9 @@ public class PegasusLite implements GridStart {
             sb.append( "\n" );
             
             //PM-701 enable back fail on error
-            sb.append( "job_ec=$?" ).append( "\n" );
+            //Fixme: has to go in no container wrapper implementation
+            //sb.append( "job_ec=$?" ).append( "\n" );
+           
             sb.append( "set -e").append( "\n" );
             sb.append( '\n' );
             
