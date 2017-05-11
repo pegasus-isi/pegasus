@@ -161,6 +161,8 @@ public class Docker implements ContainerShellWrapper {
      */
     protected static String constructContainerWorkerPackageSnippet() {
         StringBuffer sb = new StringBuffer();
+        sb.append( "\n" );
+        sb.append( "############################# Writing out script to launch job in docker container (START) #############################" ).append( "\n" );
         sb.append( "cat <<EOF > " ).append( Docker.WORKER_PACKAGE_SETUP_SCRIPT_NAME).append( "\n" );
         sb.append( "set -e" ).append( "\n" );
         sb.append( "pegasus_lite_version_major=$pegasus_lite_version_major" ).append( "\n" );
@@ -190,7 +192,9 @@ public class Docker implements ContainerShellWrapper {
         sb.append( "\n" );
         sb.append( "echo -e \"\\n############################# launching job in the container #############################\"  1>&2" ).append( "\n" );
         sb.append( "\\$kickstart \"\\${original_args[@]}\" ").append( "\n" );
-        sb.append( "EOF").append( "\n" ).append( "\n" );;
+        sb.append( "EOF").append( "\n" );
+        sb.append( "############################# Writing out script to launch job in docker container (END) #############################" ).append( "\n" );
+        sb.append( "\n" );
         return sb.toString();
         
     }
