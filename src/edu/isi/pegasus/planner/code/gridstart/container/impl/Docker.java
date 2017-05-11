@@ -171,11 +171,13 @@ public class Docker implements ContainerShellWrapper {
         sb.append( "pegasus_lite_work_dir=/scratch" ).append( "\n" );
         sb.append( "echo \\$PWD" ).append( "\n" );
         sb.append( "echo \"Arguments passed \\$@\"" ).append( "\n" );
-        sb.append( "original_args=(\"\\$@\")" ).append( "\n" );
+        sb.append( "original_args=(\"\\$@\")" ).append( "\n" ).append( "\n" );
 
         sb.append( ". pegasus-lite-common.sh" ).append( "\n" );
-        sb.append( "pegasus_lite_init" ).append( "\n" );
+        sb.append( "pegasus_lite_init" ).append( "\n" ).append( "\n" );
 
+        
+        sb.append( "\n" );
         sb.append( "echo -e \"\\n###################### figuring out the worker package to use in the container ######################\"  1>&2" ).append( "\n" );
         sb.append( "# figure out the worker package to use" ).append( "\n" );
 
@@ -183,6 +185,7 @@ public class Docker implements ContainerShellWrapper {
 
         sb.append( "echo \"PATH in container is set to is set to \\$PATH\" ").append( "\n" ); 
         
+        sb.append( "\n" );
         sb.append( "echo -e \"\\n############################# launching job in the container #############################\"  1>&2" ).append( "\n" );
         sb.append( "pegasus-kickstart \"\\${original_args[@]}\" ").append( "\n" );
         sb.append( "EOF").append( "\n" ).append( "\n" );;
