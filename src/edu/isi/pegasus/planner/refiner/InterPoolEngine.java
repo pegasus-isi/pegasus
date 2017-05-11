@@ -20,7 +20,6 @@ package edu.isi.pegasus.planner.refiner;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.common.util.Separator;
-import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
@@ -31,7 +30,6 @@ import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
-import edu.isi.pegasus.planner.code.CodeGenerator;
 import edu.isi.pegasus.planner.code.CodeGeneratorFactory;
 import edu.isi.pegasus.planner.code.generator.Stampede;
 import edu.isi.pegasus.planner.common.PegRandom;
@@ -56,7 +54,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
 /**
@@ -545,30 +542,6 @@ public class InterPoolEngine extends Engine implements Refiner {
             fTx.addSource(entry.getResourceId(),
                            entry.getPhysicalTransformation());
 
-/* PM-833 handle staging site paths only in TransferEngine
-            StringBuffer externalStagedPath = new StringBuffer();
-
-
-            //PM-590 Stricter checks
-            FileServer headNodeScratchServer = site.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
-
-            if( headNodeScratchServer == null ){
-                this.complainForHeadNodeURLPrefix( REFINER_NAME,  site.getSiteHandle() , FileServer.OPERATION.put, job );
-            }
-            externalStagedPath.append( headNodeScratchServer.getURLPrefix() ).
-                       append( mSiteStore.getExternalWorkDirectory(headNodeScratchServer, site.getSiteHandle() )).
-                       append( File.separator ).append(  job.getStagedExecutableBaseName());
-
-            fTx.addDestination( stagingSiteHandle,
-                                externalStagedPath.toString() );
-
-
-            //the internal path needs to be set for the executable
-            String internalStagedPath =  mSiteStore.getInternalWorkDirectory( job, true )
-                                + File.separator + job.getStagedExecutableBaseName();
-
-            job.setRemoteExecutable(  internalStagedPath );
-*/
             //PM-833 for executable staging set the executable only to basename only
             //should work in all data configurations
             job.setRemoteExecutable(  "." + File.separator + job.getStagedExecutableBaseName() );
@@ -655,29 +628,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                         fTx.addSource(tcEntry.getResourceId(),
                                       tcEntry.getPhysicalTransformation());
                         
-/* PM-833 handle staging site paths only in TransferEngine
-                        //the destination url is the working directory for
-                        //pool where it needs to be staged to
-                        //always creating a third party transfer URL
-                        //for the destination.                        
-                        String stagedPath = mSiteStore.getInternalWorkDirectory( job, true )
-                            + File.separator + basename;
 
-                        //PM-590 Stricter checks
-                        //PM-686 construct the URL using the externally accessible path for work directory
-                        StringBuffer externalStagedPath = new StringBuffer();
-                        FileServer headNodeScratchServer = site.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
-
-                        if( headNodeScratchServer == null ){
-                            this.complainForHeadNodeURLPrefix( REFINER_NAME,  site.getSiteHandle() , FileServer.OPERATION.put, job );
-                        }
-                        externalStagedPath.append( headNodeScratchServer.getURLPrefix() ).
-                                           append( mSiteStore.getExternalWorkDirectory(headNodeScratchServer, site.getSiteHandle() )).
-                                           append( File.separator ).append(  basename );
-
-                        fTx.addDestination( stagingSiteHandle,
-                                            externalStagedPath.toString() );
-*/
                         dependantExecutables.add( fTx );
 
                         //the jobs executable is the path to where
@@ -774,21 +725,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                 }
                 break;
 
-            // the hint Hints.JOBMANAGER_UNIVERSE_KEY is handled in
-            // Job class getGridGatewayJobType
-            /*
-            case 'j':
-                if (key.equals( Hints.JOBMANAGER_UNIVERSE_KEY  )) {
-                 job.condorUniverse = job.hints.containsKey( Hints.JOBMANAGER_UNIVERSE_KEY  ) ?
-                     (String) job.hints.removeKey( Hints.JOBMANAGER_UNIVERSE_KEY  ) :
-                     job.condorUniverse;
-
-                 return true;
-
-             }
-             break;
-             */
-
+            
             default:
                 break;
 
