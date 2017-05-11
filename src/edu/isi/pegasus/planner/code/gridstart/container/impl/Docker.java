@@ -99,7 +99,7 @@ public class Docker implements ContainerShellWrapper {
             append( "useradd --uid $cont_userid --gid $cont_groupid $cont_user;").
             append( "su $cont_user -c ");
                 sb.append( "\\\"");
-                
+                sb.append( Docker.WORKER_PACKAGE_SETUP_SCRIPT_NAME ).append( " " );
                 sb.append( job.getRemoteExecutable()).append( " " ).
                    append( job.getArguments() );
                 
@@ -171,6 +171,8 @@ public class Docker implements ContainerShellWrapper {
         sb.append( "pegasus_lite_work_dir=/scratch" ).append( "\n" );
         sb.append( "echo \\$PWD" ).append( "\n" );
         sb.append( "echo \"Arguments passed \\$@\"" ).append( "\n" );
+        sb.append( "kickstart=\"\\$1\" ").append( "\n" );
+        sb.append( "shift" ).append( "\n" );
         sb.append( "original_args=(\"\\$@\")" ).append( "\n" ).append( "\n" );
 
         sb.append( ". pegasus-lite-common.sh" ).append( "\n" );
@@ -187,7 +189,7 @@ public class Docker implements ContainerShellWrapper {
         
         sb.append( "\n" );
         sb.append( "echo -e \"\\n############################# launching job in the container #############################\"  1>&2" ).append( "\n" );
-        sb.append( "pegasus-kickstart \"\\${original_args[@]}\" ").append( "\n" );
+        sb.append( "\\$kickstart \"\\${original_args[@]}\" ").append( "\n" );
         sb.append( "EOF").append( "\n" ).append( "\n" );;
         return sb.toString();
         
