@@ -48,6 +48,7 @@ import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.code.GridStart;
 
 import edu.isi.pegasus.planner.code.gridstart.container.ContainerShellWrapper;
+import edu.isi.pegasus.planner.code.gridstart.container.ContainerShellWrapperFactory;
 import edu.isi.pegasus.planner.code.gridstart.container.impl.Docker;
 
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
@@ -333,14 +334,21 @@ public class PegasusLite implements GridStart {
      */
     protected boolean mAllowWPDownloadFromWebsite;
     
+    
     /**
      * Whether to do integrity checking or not.
      */
     protected boolean mDoIntegrityChecking ;
 
-    /** The shell wrapper to use to wrap job in container
+    /**
+     * The shell wrapper to use to wrap job in container
      */
     protected ContainerShellWrapper mContainerWrapper;
+
+    /*
+     * Factory for Container Shell Wrapper
+     */
+    protected ContainerShellWrapperFactory mContainerWrapperFactory;
 
     
     /**
@@ -400,8 +408,8 @@ public class PegasusLite implements GridStart {
 
         
         mLocalPathToPegasusLiteCommon = getSubmitHostPathToPegasusLiteCommon( );
-        mContainerWrapper = new Docker();
-
+        mContainerWrapperFactory = new ContainerShellWrapperFactory();
+        mContainerWrapperFactory.initialize(bag);
     }
     
     /**
@@ -1014,7 +1022,8 @@ public class PegasusLite implements GridStart {
             else{
                 this.mKickstartGridStartImpl.enable( job, isGlobusJob );
                 //sb.append( job.getRemoteExecutable() ).append( job.getArguments() ).append( '\n' );
-                sb.append( mContainerWrapper.wrap(job));
+                ContainerShellWrapper containerWrapper = this.mContainerWrapperFactory.loadInstance(job);
+                sb.append( containerWrapper.wrap(job));
             }
             sb.append( "\n" );
             
