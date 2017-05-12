@@ -17,12 +17,10 @@
 package edu.isi.pegasus.planner.code.gridstart.container;
 
 
-import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.planner.code.gridstart.container.ContainerShellWrapper;
 
-import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.Job;
@@ -139,7 +137,13 @@ public class ContainerShellWrapperFactory {
             shortName = ContainerShellWrapperFactory.NO_SHELL_WRAPPER_CLASS;
         }
         else{
-            shortName = c.getType().toString();
+            Container.TYPE type = c.getType();
+            if( c.getType().equals( Container.TYPE.docker) ){
+                shortName = ContainerShellWrapperFactory.DOCKER_SHELL_WRAPPER_CLASS;
+            }
+            else{
+                throw new ContainerShellWrapperFactoryException( "Unsupported Container Shell Wrapper of type" + type );
+            }
         }
         
         return loadInstance( mBag, shortName );
@@ -197,4 +201,7 @@ public class ContainerShellWrapperFactory {
     private void registerContainerShellWrapper( String name, ContainerShellWrapper implementation){
         mContainerWrapperImplementationTable.put( name.toLowerCase(), implementation );
     }
+    
+    
+    
 }
