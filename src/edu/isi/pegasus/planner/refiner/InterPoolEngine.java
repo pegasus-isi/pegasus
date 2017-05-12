@@ -582,7 +582,9 @@ public class InterPoolEngine extends Engine implements Refiner {
             return null;
         }
         
-        
+        //associate container with the job
+        job.setContainer(c);
+       
         FileTransfer fTx = new FileTransfer( c.getName(),
                                                  job.jobName);
         fTx.setType(FileTransfer.EXECUTABLE_FILE);

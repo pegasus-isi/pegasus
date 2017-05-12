@@ -41,6 +41,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
@@ -447,6 +448,12 @@ public class Job extends Data implements GraphNodeContent{
      */
     private GraphNode mGraphNode;
 
+    /** 
+     * A reference to the container to use to launch the transformation
+     */
+    private Container mContainer;
+
+    
     /**
      * Intialises the member variables.
      */
@@ -488,6 +495,7 @@ public class Job extends Data implements GraphNodeContent{
         mSubmissionCredential = null;
         mNodeLabel       = null;
         mGraphNode       = null;
+        mContainer = null;
     }
 
     /**
@@ -533,6 +541,7 @@ public class Job extends Data implements GraphNodeContent{
         mCredentialsType = new HashMap<String, Set<CredentialHandler.TYPE>>();
         mNodeLabel       = null;
         mGraphNode       = job.getGraphNodeReference();
+        mContainer = null;
     }
 
     /**
@@ -598,7 +607,8 @@ public class Job extends Data implements GraphNodeContent{
                 newSub.addCredentialType( site, cred );
             }
         }
-
+        
+        newSub.setContainer( this.mContainer == null ? null : (Container)mContainer.clone() );
         newSub.mNodeLabel = this.mNodeLabel;
         
         //explicitly unset the reference to containing graph node
@@ -1598,6 +1608,25 @@ public class Job extends Data implements GraphNodeContent{
     public void setArguments(String arguments){
         this.strargs = arguments;
     }
+    
+    /**
+     * Return the container to be used to launch the executable
+     * 
+     * @return 
+     */
+    public Container getContainer(){
+        return mContainer;
+    }
+    
+    /**
+     * Set the container to use.
+     * 
+     * @param container 
+     */
+    public void setContainer(Container container ){
+        this.mContainer = container;
+    }
+    
 
 
     /**
@@ -1987,6 +2016,7 @@ public class Job extends Data implements GraphNodeContent{
         append( sb, "Job Type Description", getJobTypeDescription(this.jobClass) , newline );
         append( sb, "Job Id" , this.jobID , newline );
         append( sb, "Runtime", this.mRuntime, newline  );
+        append( sb, "Container", this.mContainer, newline  );
         append( sb, "Executable" , this.executable , newline );
         append( sb, "Directory", this.mDirectory, newline );
         append( sb, "Condor Universe" , this.condorUniverse , newline );
