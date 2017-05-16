@@ -41,6 +41,10 @@ int sha256(const char *fname, char *chksum) {
     if (fgets(buf, sizeof(buf), p) != NULL) {
         /* make sure we got a full checksum */
         if (strlen(buf) > 64) {
+            if(buf[strlen(buf) - 1] == '\n')
+            {
+                buf[strlen(buf) - 1] = '\0';
+            }
             char *p = strstr(buf, "= ");
             p = p + 2;
             strcpy(chksum, p);
