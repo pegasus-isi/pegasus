@@ -267,8 +267,9 @@ def check_integrity(fname, meta_data):
     """
     
     # generate the current checksum
-    current_sha256 = backticks("sha256sum " + fname)
-    current_sha256 = current_sha256[0:64]
+    current_sha256 = backticks("openssl sha256 " + fname)
+    current_sha256 = current_sha256.strip()
+    current_sha256 = current_sha256[-64:]
     if len(current_sha256) != 64:
         logger.warn("Unable to determine sha256sum of " + fname)
         return False
