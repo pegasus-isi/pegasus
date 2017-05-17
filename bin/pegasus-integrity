@@ -38,6 +38,7 @@ import subprocess
 import sys
 import time
 import traceback
+import threading
 
 
 __author__ = "Mats Rynge <rynge@isi.edu>"
@@ -102,7 +103,7 @@ class Tools(object):
                 full_path = None
             
             if full_path == None:
-                logger.info("Command '%s' not found in the current environment"
+                logger.debug("Command '%s' not found in the current environment"
                             %(executable))
                 self._info[executable] = None
                 return self._info[executable]
@@ -129,12 +130,12 @@ class Tools(object):
                 self._info[executable]['version_patch'] = result.group(4)
             if self._info[executable]['version_patch'] is None or \
                self._info[executable]['version_patch'] == "":
-                self._info[executable]['version_patch'] = None
+                self._info[executable]['version_patch'] = 0
             else:
                 self._info[executable]['version_patch'] = \
                     int(self._info[executable]['version_patch'])
         
-            logger.info("Tool found: %s   Version: %s   Path: %s" 
+            logger.debug("Tool found: %s   Version: %s   Path: %s" 
                         % (executable, version, full_path))
             return self._info[executable]['full_path']
         finally:
@@ -151,7 +152,7 @@ class Tools(object):
         finally:
             self.lock.release()
 
-
+    
     def major_version(self, executable):
         """ Returns the detected major version given executable """
         self.lock.acquire()
@@ -162,6 +163,18 @@ class Tools(object):
         finally:
             self.lock.release()
                 
+    
+    def version_comparable(self, executable):
+        """ Returns the detected comparable version given executable """
+        self.lock.acquire()
+        try:
+            if executable in self._info and self._info[executable] is not None:
+                return "%03d%03d%03d" %(int(self._info[executable]['version_major']), \
+                                        int(self._info[executable]['version_minor']), \
+                                        int(self._info[executable]['version_patch']))
+            return None
+        finally:
+            self.lock.release()
 
 
     
@@ -261,18 +274,41 @@ def myexit(rc):
         sys.exit(rc)
 
 
+def generate_sha256(fname):
+    """
+    Generates a sha256 hash for the given file
+    """
+
+    tools = Tools()
+    tools.find("openssl", "version", "([0-9]+\.[0-9]+\.[0-9]+)")
+   
+    if not tools.full_path("openssl"):
+        logger.error("openssl not found!")
+        return None
+
+    cmd = tools.full_path("openssl")
+    if tools.version_comparable("openssl") < "001001000":
+        cmd += " sha -sha256"
+    else:
+        cmd += " sha256"
+    cmd += " " + fname
+
+    # generate the checksum
+    sha256 = backticks(cmd)
+    sha256 = sha256.strip()
+    sha256 = sha256[-64:]
+    if len(sha256) != 64:
+        logger.warn("Unable to determine sha256 of " + fname)
+  
+    return sha256
+
+
 def check_integrity(fname, meta_data):
     """
     Checks the integrity of a file given a set of metadata
     """
-    
-    # generate the current checksum
-    current_sha256 = backticks("openssl sha256 " + fname)
-    current_sha256 = current_sha256.strip()
-    current_sha256 = current_sha256[-64:]
-    if len(current_sha256) != 64:
-        logger.warn("Unable to determine sha256sum of " + fname)
-        return False
+
+    current_sha256 = generate_sha256(fname)
     
     # find the expected checksum in the metadata
     expected_sha256 = None
@@ -309,30 +345,46 @@ def main():
     prog_usage = "usage: %s [options]" % (prog_base)
     parser = optparse.OptionParser(usage=prog_usage)
     
-    parser.add_option("-f", "--lfn", action = "store", dest = "file",
-                      help = "The logical file name to check.")
-    parser.add_option("-d", "--debug", action = "store_true", dest = "debug",
+    parser.add_option("", "--generate-sha256", action = "store", dest = "generate_file",
+                      help = "Generate a SHA256 hash for the given file.")
+    parser.add_option("", "--verify", action = "store", dest = "verify_file",
+                      help = "Verify the hash for the given file.")
+    parser.add_option("", "--debug", action = "store_true", dest = "debug",
                       help = "Enables debugging output.")
     
     # Parse command line options
     (options, args) = parser.parse_args()
     setup_logger(options.debug)
 
-    # read all the .meta files in the current working dir
-    meta_data = []
-    for meta_file in glob.glob("*.meta"):
-        logger.debug("Loading metadata from %s" % (meta_file))
-        all_md = read_meta_data(meta_file)
-        for entry in all_md:
-            meta_data.append(entry)
+    # sanity checks
+    if (options.generate_file is None and options.verify_file is None) or \
+       (options.generate_file is not None and options.verify_file is not None):
+        logger.error("One, and only one, of --generate and --verify needs to be specified")
+        parser.print_help()
+        sys.exit(1)
     
-    if options.debug: 
-        pprint.PrettyPrinter(indent=4).pprint(meta_data)
-        
-    # now check the file
-    results = check_integrity(options.file, meta_data)
-    if not results:
-        myexit(1)
+    if options.generate_file:
+        results = generate_sha256(options.generate_file)
+        if not results:
+            myexit(1)
+        print results
+
+    if options.verify_file:
+        # read all the .meta files in the current working dir
+        meta_data = []
+        for meta_file in glob.glob("*.meta"):
+            logger.debug("Loading metadata from %s" % (meta_file))
+            all_md = read_meta_data(meta_file)
+            for entry in all_md:
+                meta_data.append(entry)
+    
+        if options.debug: 
+            pprint.PrettyPrinter(indent=4).pprint(meta_data)
+    
+        # now check the file
+        results = check_integrity(options.verify_file, meta_data)
+        if not results:
+            myexit(1)
         
     myexit(0)
 
