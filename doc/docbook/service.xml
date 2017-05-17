@@ -64,7 +64,7 @@
 
                 <entry>SSL key file used to encrypt connections. If no
                 certificate, key files are provided the service will generate
-                and use self-signed certificates. </entry>
+                and use self-signed certificates.</entry>
               </row>
 
               <row>
@@ -75,8 +75,8 @@
                 <entry>By default the service uses PAM authentication i.e.
                 When prompted for a username and password users can use the
                 credentials that they use to login to the machine. Users can
-                specify NoAuthentication to disable username/password prompt.
-                </entry>
+                specify NoAuthentication to disable username/password
+                prompt.</entry>
               </row>
 
               <row>
@@ -106,7 +106,7 @@
                 UID to the UID of the user whose information is being
                 requested. pegasus-service must be started as root for
                 PROCESS_SWITCHING to work. PROCESS_SWITCHING can be set to
-                False. </entry>
+                False.</entry>
               </row>
 
               <row>
@@ -147,7 +147,7 @@
       the host and port in the configuration file OR pass it as a command line
       switch to pegasus-service as follows.</para>
 
-      <programlisting>$ pegasus-service --hostname &lt;SERVER_HOSTNAME&gt; --port &lt;SERVER_PORT&gt;</programlisting>
+      <programlisting>$ pegasus-service --host &lt;SERVER_HOSTNAME&gt; --port &lt;SERVER_PORT&gt;</programlisting>
     </section>
   </section>
 
@@ -155,14 +155,14 @@
     <title>Dashboard</title>
 
     <para>The dashboard is automatically started when pegasus-service command
-    is executed. </para>
+    is executed.</para>
   </section>
 
   <section id="service_apache">
     <title>Running Pegasus Service under Apache HTTPD</title>
 
     <para><emphasis role="bold">Prerequisites</emphasis> Apache HTTPD,
-    mod_ssl, and mod_wsgi to be installed. </para>
+    mod_ssl, and mod_wsgi to be installed.</para>
 
     <para>To run pegasus-service under Apache HTTPD</para>
 
@@ -214,7 +214,7 @@
 
           <listitem>
             <para>Replace PATH_TO_SSL_CERT with absolute location of your SSL
-            certificate file </para>
+            certificate file</para>
           </listitem>
 
           <listitem>

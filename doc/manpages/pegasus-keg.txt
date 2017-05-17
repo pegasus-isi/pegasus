@@ -129,14 +129,14 @@ string.
 
 *-t interval*::
 The interval is an amount of sleep time that the *pegasus-keg*
-executable is to sleep. This can be used to emulate light work without
+executable is to sleep in seconds. This can be used to emulate light work without
 straining the pool resources. If used together with the *-T* spin
 option, the sleep interval comes before the spin interval. The default
 is no sleep time.
 
 *-T interval*::
 The interval is an amount of busy spin time that the *pegasus-keg*
-executable is to simulate intense computation. The simulation is done
+executable is to simulate intense computation in seconds. The simulation is done
 by random julia set calculations. This option can be used to emulate an
 intense work to strain pool resources. If used together with the *-t*
 sleep option, the sleep interval comes before the spin interval. The
