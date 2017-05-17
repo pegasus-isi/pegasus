@@ -357,7 +357,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <fileset dir="bin">
           <include name="pegasus-s3"/>
           <include name="pegasus-transfer"/>
-          <include name="pegasus-integrity-check"/>
+          <include name="pegasus-integrity"/>
           <!-- add script files to copy as necessary -->
       </fileset>
     </copy>
