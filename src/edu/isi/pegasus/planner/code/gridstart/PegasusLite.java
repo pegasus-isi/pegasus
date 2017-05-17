@@ -192,7 +192,7 @@ public class PegasusLite implements GridStart {
     /**
      * Basename for our pegasus integrity check tool in the worker pacakge.
      */
-    public static final String PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME = "pegasus-integrity-check";
+    public static final String PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME = "pegasus-integrity";
     
     /**
      * Stores the major version of the planner.
@@ -1495,7 +1495,7 @@ public class PegasusLite implements GridStart {
     protected void addIntegrityCheckInvocation(StringBuffer sb,  Collection<PegasusFile> files ) {
         for( PegasusFile file: files ){
             if( file.isDataFile() ){
-                sb.append( PegasusLite.PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME ).append( " --lfn " ).
+                sb.append( PegasusLite.PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME ).append( " --verify=" ).
                    append( file.getLFN() ).append( " 1>&2" ).append( "\n" );
             }
         }

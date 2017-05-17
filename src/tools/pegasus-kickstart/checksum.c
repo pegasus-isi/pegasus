@@ -25,13 +25,13 @@ int sha256(const char *fname, char *chksum) {
      *                  checksum
      * returns: 1 on success
      */
-    char buf[65];
+    char buf[1024];
     char cmd[2048];
     int rc = 0;
 
-    strcpy(cmd, "sha256sum ");
+    strcpy(cmd, "pegasus-integrity --generate-sha256=");
     strcat(cmd, fname);
-    strcat(cmd, " 2>/dev/null");
+    //strcat(cmd, " 2>/dev/null");
 
     FILE *p = popen(cmd, "r");
     if (p == NULL) {
@@ -39,8 +39,15 @@ int sha256(const char *fname, char *chksum) {
     }
     /* a sha256 checksum is 64 characters */
     if (fgets(buf, sizeof(buf), p) != NULL) {
-        strcpy(chksum, buf);
-        rc = 1;
+        /* make sure we got a full checksum */
+        if (strlen(buf) >= 64) {
+            if(buf[strlen(buf) - 1] == '\n')
+            {
+                buf[strlen(buf) - 1] = '\0';
+            }
+            strcpy(chksum, buf);
+            rc = 1;
+        }
     }
     pclose(p);
 
