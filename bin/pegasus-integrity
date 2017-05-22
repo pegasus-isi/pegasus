@@ -371,17 +371,21 @@ def generate_sha256(fname):
 
     tools = Tools()
     tools.find("openssl", "version", "([0-9]+\.[0-9]+\.[0-9]+)")
-   
-    if not tools.full_path("openssl"):
-        logger.error("openssl not found!")
-        return None
-
-    cmd = tools.full_path("openssl")
-    if tools.version_comparable("openssl") < "001001000":
-        cmd += " sha -sha256"
+    tools.find("sha256sum", "--version", "([0-9]+\.[0-9]+)")
+  
+    if tools.full_path("openssl"):
+        cmd = tools.full_path("openssl")
+        if tools.version_comparable("openssl") < "001001000":
+            cmd += " sha -sha256"
+        else:
+            cmd += " sha256"
+        cmd += " " + fname
+    elif tools.full_path("sha256sum"):
+        cmd = tools.full_path("sha256sum")
+        cmd += " " + fname + " | sed 's/ .*//'"
     else:
-        cmd += " sha256"
-    cmd += " " + fname
+        logger.error("openssl or sha256sum not found!")
+        return None
 
     # generate the checksum
     tc = TimedCommand(cmd, log_cmd=False, log_outerr=False)
