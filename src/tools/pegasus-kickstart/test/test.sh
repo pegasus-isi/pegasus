@@ -476,6 +476,11 @@ function test_metadata {
     return 0;
 }
 
+function test_integrity {
+    ./testintegrity.sh
+    return $?
+}
+
 # RUN THE TESTS
 run_test lotsofprocs
 run_test lotsofprocs_buffer
@@ -514,4 +519,6 @@ run_test test_missing_executable
 run_test test_not_executable
 run_test test_wrapper
 run_test test_metadata
+run_test test_integrity
+
 
