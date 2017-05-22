@@ -136,7 +136,7 @@ Complete!</programlisting>
 
     <para>Create repository file, update and install Pegasus (currently available releases are precise and trusty):</para>
 
-    <programlisting># echo 'deb deb http://download.pegasus.isi.edu/wms/download/ubuntu trusty main' &gt;/etc/apt/sources.list.d/pegasus.list
+    <programlisting># echo 'deb http://download.pegasus.isi.edu/pegasus/ubuntu trusty main' &gt;/etc/apt/sources.list.d/pegasus.list
 # apt-get update
 # apt-get install pegasus
 </programlisting>
@@ -154,7 +154,7 @@ Complete!</programlisting>
 
     <para>Create repository file, update and install Pegasus (currently available releases are wheezy and jessie):</para>
 
-    <programlisting># echo 'deb deb http://download.pegasus.isi.edu/wms/download/debian jessie main' &gt;/etc/apt/sources.list.d/pegasus.list
+    <programlisting># echo 'deb http://download.pegasus.isi.edu/pegasus/debian jessie main' &gt;/etc/apt/sources.list.d/pegasus.list
 # apt-get update
 # apt-get install pegasus
 </programlisting>
