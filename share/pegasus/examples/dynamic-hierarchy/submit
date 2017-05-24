@@ -148,6 +148,9 @@ cat >sites.xml <<EOF
             <file-server operation="all" url="file://$TOPDIR/outputs/condorpool"/>
         </directory>
         <profile namespace="pegasus" key="style" >condor</profile>
+        <!-- assumption is that the examples directory is mounted on
+              the condor pool -->
+         <profile namespace="pegasus" key="auxillary.local">true</profile>
         <profile namespace="condor" key="universe" >vanilla</profile>
         <profile namespace="env" key="PEGASUS_HOME">$CONDOR_POOL_PEGASUS_HOME</profile>
     </site>

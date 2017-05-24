@@ -17,5 +17,8 @@ The outer level dax ( outer.dax ) has two dax jobs.
 
 The DAX generation job is setup to run on a site called condorpool, that is a
 local condor pool. The DAX job itself runs locally as it translates to
-a condor dagman instance on the submit host.
+a condor dagman instance on the submit host. 
+
+Note: For the example to run correctly the directory from where you run the 
+example should be visible to the nodes making up your condor pool.
 
