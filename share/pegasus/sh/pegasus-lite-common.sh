@@ -291,7 +291,7 @@ function docker_init()
     image_file=$1
     cont_image=""
 
-    if [ X${image_file} != "X" ] ; then
+    if [ "X${image_file}" != "X" ] ; then
 		
 	if [ -e ${image_file} ] ; then
 	    pegasus_lite_log "container file is ${image_file}"
@@ -304,7 +304,7 @@ function docker_init()
 	
     fi
     
-    if [ X${cont_image} = "X" ]; then
+    if [ "X${cont_image}" = "X" ]; then
 	pegasus_lite_log "Unable to load image from $image_file"
 	return 1
     else
