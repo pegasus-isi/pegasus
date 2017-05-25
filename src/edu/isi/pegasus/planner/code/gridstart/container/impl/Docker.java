@@ -16,6 +16,7 @@
 
 package edu.isi.pegasus.planner.code.gridstart.container.impl;
 
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -75,7 +76,8 @@ public class Docker implements ContainerShellWrapper {
         
         //sets up the variables used for docker run command
         //FIXME docker_init has to be passed the name of the tar file?
-        sb.append( "docker_init").append( "\n" );
+        Container c = job.getContainer();
+        sb.append( "docker_init").append( " " ).append( c.getName() ).append( "\n" );
         
         sb.append( "job_ec=$(($job_ec + $?))" ).append( "\n" ).append( "\n" );;
         
