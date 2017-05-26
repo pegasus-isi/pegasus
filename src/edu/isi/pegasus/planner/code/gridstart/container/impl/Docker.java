@@ -137,7 +137,7 @@ public class Docker implements ContainerShellWrapper {
      * @return 
      */
     public String describe(){
-        return "No container wrapping";
+        return "Docker";
     }
 
   

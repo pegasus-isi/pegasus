@@ -1023,6 +1023,8 @@ public class PegasusLite implements GridStart {
                 this.mKickstartGridStartImpl.enable( job, isGlobusJob );
                 //sb.append( job.getRemoteExecutable() ).append( job.getArguments() ).append( '\n' );
                 ContainerShellWrapper containerWrapper = this.mContainerWrapperFactory.loadInstance(job);
+                mLogger.log( "Setting job " + job.getID() + 
+                             " to run via " + containerWrapper.describe() , LogManager.DEBUG_MESSAGE_LEVEL );
                 sb.append( containerWrapper.wrap(job));
             }
             sb.append( "\n" );
