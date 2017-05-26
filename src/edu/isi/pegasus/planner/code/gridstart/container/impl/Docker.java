@@ -172,8 +172,8 @@ public class Docker implements ContainerShellWrapper {
         sb.append( "pegasus_lite_enforce_strict_wp_check=$pegasus_lite_enforce_strict_wp_check" ).append( "\n" );
         sb.append( "pegasus_lite_version_allow_wp_auto_download=$pegasus_lite_version_allow_wp_auto_download" ).append( "\n" );
         sb.append( "pegasus_lite_work_dir=/scratch" ).append( "\n" );
-        sb.append( "echo \\$PWD" ).append( "\n" );
-        sb.append( "echo \"Arguments passed \\$@\"" ).append( "\n" );
+        sb.append( "echo \\$PWD" ).append( "  1>&2" ).append( "\n" );
+        sb.append( "echo \"Arguments passed \\$@\"" ).append( "  1>&2" ).append( "\n" );
         sb.append( "kickstart=\"\\$1\" ").append( "\n" );
         sb.append( "shift" ).append( "\n" );
         sb.append( "original_args=(\"\\$@\")" ).append( "\n" ).append( "\n" );
@@ -188,7 +188,7 @@ public class Docker implements ContainerShellWrapper {
 
         sb.append( "pegasus_lite_worker_package" ).append( "\n" );
 
-        sb.append( "echo \"PATH in container is set to is set to \\$PATH\" ").append( "\n" ); 
+        sb.append( "echo \"PATH in container is set to is set to \\$PATH\"").append( "  1>&2" ).append( "\n" ); 
         
         sb.append( "\n" );
         sb.append( "echo -e \"\\n############################# launching job in the container #############################\"  1>&2" ).append( "\n" );
