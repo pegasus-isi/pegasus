@@ -85,8 +85,7 @@ public class Docker implements ContainerShellWrapper {
         sb.append( "docker run ");
         //directory where job is run is mounted as scratch
         sb.append( "-v $PWD:/scratch -w=/scratch ");     
-        //hardcoded image for time being
-        sb.append( "-t ");
+        
         sb.append( "--name $cont_name ");
         sb.append( " $cont_image ");
         
