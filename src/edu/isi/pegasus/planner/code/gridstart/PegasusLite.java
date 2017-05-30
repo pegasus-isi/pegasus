@@ -49,7 +49,6 @@ import edu.isi.pegasus.planner.code.GridStart;
 
 import edu.isi.pegasus.planner.code.gridstart.container.ContainerShellWrapper;
 import edu.isi.pegasus.planner.code.gridstart.container.ContainerShellWrapperFactory;
-import edu.isi.pegasus.planner.code.gridstart.container.impl.Docker;
 
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -68,12 +67,10 @@ import edu.isi.pegasus.planner.selector.ReplicaSelector;
 import edu.isi.pegasus.planner.transfer.SLS;
 import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -1002,29 +999,17 @@ public class PegasusLite implements GridStart {
             sb.append( "job_ec=0" ).append( "\n" );
             //enable the job via kickstart
             //separate calls for aggregated and normal jobs
+            ContainerShellWrapper containerWrapper = this.mContainerWrapperFactory.loadInstance(job);
+            mLogger.log( "Setting job " + job.getID() + 
+                         " to run via " + containerWrapper.describe() , LogManager.DEBUG_MESSAGE_LEVEL );
             if( job instanceof AggregatedJob ){
                 this.mKickstartGridStartImpl.enable( (AggregatedJob)job, isGlobusJob );
-                //for clustered jobs we embed the contents of the input
-                //file in the shell wrapper itself
-                sb.append( job.getRemoteExecutable() ).append( " " ).append( job.getArguments() );
-                sb.append( " << EOF" ).append( '\n' );
-                
-                //PM-833 figure out the job submit directory
-                String jobSubmitDirectory = new File( job.getFileFullPath( mSubmitDir, ".in" )).getParent();
-                
-                sb.append( slurpInFile( jobSubmitDirectory, job.getStdIn() ) );
-                sb.append( "EOF" ).append( '\n' );
-
-                //rest the jobs stdin
-                job.setStdIn( "" );
-                job.condorVariables.removeKey( "input" );
+                sb.append( containerWrapper.wrap( (AggregatedJob)job));
             }
             else{
                 this.mKickstartGridStartImpl.enable( job, isGlobusJob );
                 //sb.append( job.getRemoteExecutable() ).append( job.getArguments() ).append( '\n' );
-                ContainerShellWrapper containerWrapper = this.mContainerWrapperFactory.loadInstance(job);
-                mLogger.log( "Setting job " + job.getID() + 
-                             " to run via " + containerWrapper.describe() , LogManager.DEBUG_MESSAGE_LEVEL );
+                
                 sb.append( containerWrapper.wrap(job));
             }
             sb.append( "\n" );
@@ -1206,36 +1191,6 @@ public class PegasusLite implements GridStart {
         sb.append("]\n");
 
         return sb;
-    }
-
-    /**
-     * Convenience method to slurp in contents of a file into memory.
-     *
-     * @param directory  the directory where the file resides
-     * @param file    the file to be slurped in.
-     * 
-     * @return StringBuffer containing the contents
-     */
-    protected StringBuffer slurpInFile( String directory, String file ) throws  IOException{
-        StringBuffer result = new StringBuffer();
-        //sanity check
-        if( file == null ){
-            return result;
-        }
-
-        BufferedReader in = new BufferedReader( new FileReader( new File(  directory, file )) );
-
-        String line = null;
-
-        while(( line = in.readLine() ) != null ){
-            //System.out.println( line );
-            result.append( line ).append( '\n' );
-        }
-
-        in.close();
-
-
-        return result;
     }
 
     /**
