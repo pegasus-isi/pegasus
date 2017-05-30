@@ -65,7 +65,7 @@ public class Docker implements ContainerShellWrapper {
         //within the pegasus lite script create a wrapper
         //to launch job in the container. wrapper is required to
         //deploy pegasus worker package in the container
-        sb.append( getContainerWorkerPackageSnippet() );
+        sb.append( constructJobLaunchScriptInContainer( job ) );
         
         sb.append( "chmod +x " ).append( Docker.WORKER_PACKAGE_SETUP_SCRIPT_NAME).append( "\n" );
 
@@ -142,29 +142,45 @@ public class Docker implements ContainerShellWrapper {
 
   
     /**
-     * Return the container package snippet.
+     * Return the container package snippet. Construct the snippet that generates the 
+     * shell script responsible for setting up the worker package in the container
+     * and launch the job in the container.
      * 
+     * @param job  the job
      * @return 
      */
-    protected String getContainerWorkerPackageSnippet() {
+    protected String constructJobLaunchScriptInContainer( Job job ) {
         if( WORKER_PACKAGE_SETUP_SNIPPET == null ){
-            WORKER_PACKAGE_SETUP_SNIPPET = Docker.constructContainerWorkerPackageSnippet();
+            WORKER_PACKAGE_SETUP_SNIPPET = Docker.constructContainerWorkerPackagePreamble();
         }
-        return WORKER_PACKAGE_SETUP_SNIPPET;
+        StringBuffer sb = new StringBuffer();
+        sb.append( "\n" );
+        sb.append( "############################# Writing out script to launch job in docker container (START) #############################" ).append( "\n" );
+        sb.append( "cat <<EOF > " ).append( Docker.WORKER_PACKAGE_SETUP_SCRIPT_NAME).append( "\n" );
+        
+        if( WORKER_PACKAGE_SETUP_SNIPPET == null ){
+            WORKER_PACKAGE_SETUP_SNIPPET = Docker.constructContainerWorkerPackagePreamble();
+        }
+        sb.append( WORKER_PACKAGE_SETUP_SNIPPET );
+        
+        sb.append( "echo -e \"\\n############################# launching job in the container #############################\"  1>&2" ).append( "\n" );
+        sb.append( "\\$kickstart \"\\${original_args[@]}\" ").append( "\n" );
+        sb.append( "EOF").append( "\n" );
+        sb.append( "############################# Writing out script to launch job in docker container (END) #############################" ).append( "\n" );
+        sb.append( "\n" );
+        
+        return sb.toString();
     }
     
       
     /**
      * Construct the snippet that generates the shell script responsible for
-     * setting up the worker package in the container
+     * setting up the worker package in the container.
      * 
      * @return 
      */
-    protected static String constructContainerWorkerPackageSnippet() {
+    protected static String constructContainerWorkerPackagePreamble() {
         StringBuffer sb = new StringBuffer();
-        sb.append( "\n" );
-        sb.append( "############################# Writing out script to launch job in docker container (START) #############################" ).append( "\n" );
-        sb.append( "cat <<EOF > " ).append( Docker.WORKER_PACKAGE_SETUP_SCRIPT_NAME).append( "\n" );
         sb.append( "set -e" ).append( "\n" );
         sb.append( "pegasus_lite_version_major=$pegasus_lite_version_major" ).append( "\n" );
         sb.append( "pegasus_lite_version_minor=$pegasus_lite_version_minor" ).append( "\n" );
@@ -189,13 +205,8 @@ public class Docker implements ContainerShellWrapper {
         sb.append( "pegasus_lite_worker_package" ).append( "\n" );
 
         sb.append( "echo \"PATH in container is set to is set to \\$PATH\"").append( "  1>&2" ).append( "\n" ); 
+        sb.append( "\n" );
         
-        sb.append( "\n" );
-        sb.append( "echo -e \"\\n############################# launching job in the container #############################\"  1>&2" ).append( "\n" );
-        sb.append( "\\$kickstart \"\\${original_args[@]}\" ").append( "\n" );
-        sb.append( "EOF").append( "\n" );
-        sb.append( "############################# Writing out script to launch job in docker container (END) #############################" ).append( "\n" );
-        sb.append( "\n" );
         return sb.toString();
         
     }
