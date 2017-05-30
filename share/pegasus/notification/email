@@ -98,7 +98,7 @@ parser.add_option("-t", "--to", action = "append", dest = "to_address",
 parser.add_option("-f", "--from", action = "store", dest = "from_address",
                   help = "The From: email address. Defaults to the required To: address.")
 parser.add_option("-r", "--report", action = "store", dest = "report",
-                  help = "Include workflow report. Valid values are: none pegasus-analyzer pegasus-status (default)")
+                  help = "Include workflow report. Valid values are: none pegasus-statistics pegasus-analyzer pegasus-status (default)")
 
 
 # Parse command line options
@@ -154,6 +154,19 @@ if report == "pegasus-status":
         body = body + out
     except Exception, err:
         print >> sys.stderr, "Error running pegasus-status: " + err
+
+# pegasus-statistics report
+if report == "pegasus-statistics":
+    try:
+        out = "\r\n\r\npegasus-statistics:\r\n\r\n" + \
+              backticks("touch " + os.environ['PEGASUS_SUBMIT_DIR'] + "/monitord.done" + \
+                        " && " + \
+                        os.environ['PEGASUS_BIN_DIR'] + "/pegasus-statistics" + \
+                        " --ignore-db-inconsistency " + \
+                        os.environ['PEGASUS_SUBMIT_DIR'] + " 2>&1" )
+        body = body + out
+    except Exception, err:
+        print >> sys.stderr, "Error running pegasus-analyzer: " + err 
 
 # pegasus-analyzer report             
 if report == "pegasus-analyzer":
