@@ -278,13 +278,6 @@ public abstract class Abstract implements JobAggregator {
         mLogger.log("Constructing Abstract clustered job " + mergedJobName,
                     LogManager.DEBUG_MESSAGE_LEVEL);
 
-
-        //enable the jobs that need to be merged
-        //before writing out the stdin file
-//        String gridStartPath = site.getKickstartPath();
-//        GridStart gridStart = mGridStartFactory.loadGridStart( firstJob,  gridStartPath );
-//        mergedJob = gridStart.enable( mergedJob, jobs );
-
         //inconsistency between job name and logical name for now
         mergedJob.setName( mergedJobName );
 
@@ -360,20 +353,8 @@ public abstract class Abstract implements JobAggregator {
         //input files. So doing the set thing is redundant.
         //Hashset not used correctly
 
-  
-//        mergedJob = enable( mergedJob, jobs  );
-
-
-
         File stdIn = writeOutInputFileForJobAggregator( job );
         
-        
-/*      JIRA PM-277
-        job.setUniverse( firstJob.getUniverse() );
-        job.setJobManager( firstJob.getJobManager() );
-*/
-        
-
         //the executable that fat job refers to is collapser
         TransformationCatalogEntry entry = this.getTCEntry( job );
 
@@ -392,20 +373,6 @@ public abstract class Abstract implements JobAggregator {
         
         //get hold of one of the jobs and suck init's globus namespace
         //info into the the map.
-
-        /* Not needed, as the clone method would have taken care of it.
-           Karan Sept 09, 2004
-        entry = getTCEntry(job);
-        mergedJob.globusRSL.checkKeyInNS(entry.getProfiles(Profile.GLOBUS));
-        */
-
-        //also put in jobType as mpi
-        //mergedJob.globusRSL.checkKeyinNS("jobtype","mpi");
-
-        //the profile information from the pool catalog does not need to be
-        //assimilated into the job. As the collapsed job is run on the
-        //same pool as the job is run
-        // mergedJob.updateProfiles(mPoolHandle.getPoolProfile(mergedJob.executionPool));
 
         //add any notifications specified in the transformation
         //catalog for the job. JIRA PM-391
