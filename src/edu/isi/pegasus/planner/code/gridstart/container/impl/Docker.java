@@ -21,7 +21,8 @@ import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
-import edu.isi.pegasus.planner.code.gridstart.container.ContainerShellWrapper;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * An interface to determine how a job gets wrapped to be launched on various 
@@ -29,7 +30,7 @@ import edu.isi.pegasus.planner.code.gridstart.container.ContainerShellWrapper;
  *
  * @author vahi
  */
-public class Docker implements ContainerShellWrapper {
+public class Docker extends Abstract{
 
     /**
      * The suffix for the shell script created on the remote worker node, that
@@ -45,7 +46,7 @@ public class Docker implements ContainerShellWrapper {
      * @param bag 
      */
     public void initialize( PegasusBag bag ){
-        
+        super.initialize(bag);
     }
     
     /**
@@ -125,9 +126,13 @@ public class Docker implements ContainerShellWrapper {
      * @return 
      */
     public String wrap( AggregatedJob job ){
-    
-        throw new UnsupportedOperationException("Method not implemented");
-
+        String snippet = this.wrap( (Job)job );
+        
+        //rest the jobs stdin
+        job.setStdIn( "" );
+        job.condorVariables.removeKey( "input" );
+       
+        return snippet;
     }
     
     /**
@@ -164,8 +169,28 @@ public class Docker implements ContainerShellWrapper {
         
         sb.append( "echo -e \"\\n############################# launching job in the container #############################\"  1>&2" ).append( "\n" );
         //sb.append( "\\$kickstart \"\\${original_args[@]}\" ").append( "\n" );
-        sb.append( job.getRemoteExecutable()).append( " " ).
+        
+        if( job instanceof AggregatedJob ){
+            try{
+                //for clustered jobs we embed the contents of the input
+                //file in the shell wrapper itself
+                sb.append( job.getRemoteExecutable() ).append( " " ).append( job.getArguments() );
+                sb.append( " << CLUSTER" ).append( '\n' );
+
+                //PM-833 figure out the job submit directory
+                String jobSubmitDirectory = new File( job.getFileFullPath( mSubmitDir, ".in" )).getParent();
+
+                sb.append( slurpInFile( jobSubmitDirectory, job.getStdIn() ) );
+                sb.append( "CLUSTER" ).append( '\n' );
+            }
+            catch( IOException ioe ){
+                throw new RuntimeException( "[Pegasus-Lite] Error while Docker wrapping job " + job.getID(), ioe );
+            }
+        }
+        else{
+                sb.append( job.getRemoteExecutable()).append( " " ).
                    append( job.getArguments() ).append( "\n" );
+        }
         sb.append( "EOF").append( "\n" );
         sb.append( "############################# Writing out script to launch job in docker container (END) #############################" ).append( "\n" );
         sb.append( "\n" );
