@@ -32,10 +32,10 @@ import edu.isi.pegasus.planner.code.gridstart.container.ContainerShellWrapper;
 public class Docker implements ContainerShellWrapper {
 
     /**
-     * The basename of the worker package setup shell script created on the
-     * remote worker node and that launches the job.
+     * The suffix for the shell script created on the remote worker node, that
+     * actually launches the job in the container.
      */
-    public static final String WORKER_PACKAGE_SETUP_SCRIPT_NAME = "pegasus-container-setup-launch.sh";
+    public static final String CONTAINER_JOB_LAUNCH_SCRIPT_SUFFIX = "-cont.sh";
     
     private static String WORKER_PACKAGE_SETUP_SNIPPET = null; 
      
@@ -64,10 +64,11 @@ public class Docker implements ContainerShellWrapper {
         
         //within the pegasus lite script create a wrapper
         //to launch job in the container. wrapper is required to
-        //deploy pegasus worker package in the container
-        sb.append( constructJobLaunchScriptInContainer( job ) );
+        //deploy pegasus worker package in the container and launch the user job
+        String scriptName = job.getID() + Docker.CONTAINER_JOB_LAUNCH_SCRIPT_SUFFIX;
+        sb.append( constructJobLaunchScriptInContainer( job, scriptName ) );
         
-        sb.append( "chmod +x " ).append( Docker.WORKER_PACKAGE_SETUP_SCRIPT_NAME).append( "\n" );
+        sb.append( "chmod +x " ).append( scriptName ).append( "\n" );
 
         //copy pegasus lite common from the directory where condor transferred it via it's file transfer.
         sb.append( "cp $pegasus_lite_start_dir/pegasus-lite-common.sh . ").append( "\n" );
@@ -100,18 +101,18 @@ public class Docker implements ContainerShellWrapper {
             append( "useradd --uid $cont_userid --gid $cont_groupid $cont_user;").
             append( "su $cont_user -c ");
                 sb.append( "\\\"");
-                sb.append( "./" ).append( Docker.WORKER_PACKAGE_SETUP_SCRIPT_NAME ).append( " " );
+                sb.append( "./" ).append(Docker.CONTAINER_JOB_LAUNCH_SCRIPT_SUFFIX ).append( " " );
                 sb.append( "\\\"");
                 
           sb.append( "\"");      
         
         sb.append( "\n" );
         
-        sb.append( "job_ec=$(($job_ec + $?))" ).append( "\n" ).append( "\n" );;
+        sb.append( "job_ec=$(($job_ec + $?))" ).append( "\n" ).append( "\n" );
         
         //remove the docker container
-        sb.append( "docker rm $cont_name " ).append( " 1>&2" ).append( "\n" );;
-        sb.append( "job_ec=$(($job_ec + $?))" ).append( "\n" ).append( "\n" );;
+        sb.append( "docker rm $cont_name " ).append( " 1>&2" ).append( "\n" );
+        sb.append( "job_ec=$(($job_ec + $?))" ).append( "\n" ).append( "\n" );
         
         return sb.toString();
     }
@@ -144,16 +145,17 @@ public class Docker implements ContainerShellWrapper {
      * and launch the job in the container.
      * 
      * @param job  the job
+     * @param scriptName basename of the script
      * @return 
      */
-    protected String constructJobLaunchScriptInContainer( Job job ) {
+    protected String constructJobLaunchScriptInContainer( Job job, String scriptName ) {
         if( WORKER_PACKAGE_SETUP_SNIPPET == null ){
             WORKER_PACKAGE_SETUP_SNIPPET = Docker.constructContainerWorkerPackagePreamble();
         }
         StringBuffer sb = new StringBuffer();
         sb.append( "\n" );
         sb.append( "############################# Writing out script to launch job in docker container (START) #############################" ).append( "\n" );
-        sb.append( "cat <<EOF > " ).append( Docker.WORKER_PACKAGE_SETUP_SCRIPT_NAME).append( "\n" );
+        sb.append( "cat <<EOF > " ).append( scriptName ).append( "\n" );
         
         if( WORKER_PACKAGE_SETUP_SNIPPET == null ){
             WORKER_PACKAGE_SETUP_SNIPPET = Docker.constructContainerWorkerPackagePreamble();
