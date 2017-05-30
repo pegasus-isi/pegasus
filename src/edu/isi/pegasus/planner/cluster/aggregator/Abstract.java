@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Iterator;
 import edu.isi.pegasus.common.util.Separator;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -291,6 +292,7 @@ public abstract class Abstract implements JobAggregator {
         Set ipFiles = new HashSet();
         Set opFiles = new HashSet();
         boolean userExecutablesStaged = false;
+        Container c = firstJob.getContainer();
         for( Iterator it = jobs.iterator(); it.hasNext(); ) {
                 job = (Job) it.next();
                 ipFiles.addAll( job.getInputFiles() );
@@ -306,8 +308,19 @@ public abstract class Abstract implements JobAggregator {
                 //merge profiles for all jobs
                 mergedJob.mergeProfiles( job );
 
+                //PM-1194 we want to merge only those jobs whose containers match
+                if( job.getContainer() != c ){
+                    StringBuilder error = new StringBuilder();
+                    error.append( "Cannot cluster jobs with different types of containers associated." ).
+                          append( "Container for job " ).append( job.getID() ).append( "-" ).append( job.getContainer()).
+                          append( "does not match with job ").append( firstJob.getID() ).append( "-" ).append( firstJob.getContainer());
+                    throw new RuntimeException( error.toString() );
+                }
         }
 
+        //PM-1194 set the container for clustered job
+        mergedJob.setContainer( c );
+        
         mergedJob.setExecutableStagingForJob(userExecutablesStaged);
         
         //overriding the input files, output files, id
