@@ -101,9 +101,6 @@ public class Docker implements ContainerShellWrapper {
             append( "su $cont_user -c ");
                 sb.append( "\\\"");
                 sb.append( "./" ).append( Docker.WORKER_PACKAGE_SETUP_SCRIPT_NAME ).append( " " );
-                sb.append( job.getRemoteExecutable()).append( " " ).
-                   append( job.getArguments() );
-                
                 sb.append( "\\\"");
                 
           sb.append( "\"");      
@@ -164,7 +161,9 @@ public class Docker implements ContainerShellWrapper {
         sb.append( WORKER_PACKAGE_SETUP_SNIPPET );
         
         sb.append( "echo -e \"\\n############################# launching job in the container #############################\"  1>&2" ).append( "\n" );
-        sb.append( "\\$kickstart \"\\${original_args[@]}\" ").append( "\n" );
+        //sb.append( "\\$kickstart \"\\${original_args[@]}\" ").append( "\n" );
+        sb.append( job.getRemoteExecutable()).append( " " ).
+                   append( job.getArguments() ).append( "\n" );
         sb.append( "EOF").append( "\n" );
         sb.append( "############################# Writing out script to launch job in docker container (END) #############################" ).append( "\n" );
         sb.append( "\n" );
@@ -189,11 +188,12 @@ public class Docker implements ContainerShellWrapper {
         sb.append( "pegasus_lite_version_allow_wp_auto_download=$pegasus_lite_version_allow_wp_auto_download" ).append( "\n" );
         sb.append( "pegasus_lite_work_dir=/scratch" ).append( "\n" );
         sb.append( "echo \\$PWD" ).append( "  1>&2" ).append( "\n" );
+        /*
         sb.append( "echo \"Arguments passed \\$@\"" ).append( "  1>&2" ).append( "\n" );
         sb.append( "kickstart=\"\\$1\" ").append( "\n" );
         sb.append( "shift" ).append( "\n" );
         sb.append( "original_args=(\"\\$@\")" ).append( "\n" ).append( "\n" );
-
+        */
         sb.append( ". pegasus-lite-common.sh" ).append( "\n" );
         sb.append( "pegasus_lite_init" ).append( "\n" ).append( "\n" );
 
