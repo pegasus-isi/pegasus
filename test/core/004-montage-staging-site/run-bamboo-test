@@ -2,6 +2,8 @@
 
 set -e
 
+TOP_DIR=`pwd`
+
 export PATH=/ccg/software/montage/current/bin:$PATH
 
 rm -rf montage-workflow-v2

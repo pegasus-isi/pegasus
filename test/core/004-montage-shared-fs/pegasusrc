@@ -1,12 +1,8 @@
 
-pegasus.catalog.replica=SimpleFile
-pegasus.catalog.replica.file=rc
-
-
 pegasus.catalog.site.file=sites.xml
 
-pegasus.catalog.transformation=Text
-pegasus.catalog.transformation.file=tc
+pegasus.catalog.replica      = File
+pegasus.catalog.replica.file = data/rc.txt
 
 pegasus.dir.useTimestamp=true
 
@@ -14,3 +10,4 @@ pegasus.condor.logs.symlink = false
 
 # PM-1022 for sharedfs in vanilla universe, transfer_input_files does not work
 #pegasus.gridstart.kickstart.stat true
+
