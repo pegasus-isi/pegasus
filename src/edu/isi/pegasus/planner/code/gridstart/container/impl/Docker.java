@@ -101,7 +101,7 @@ public class Docker implements ContainerShellWrapper {
             append( "useradd --uid $cont_userid --gid $cont_groupid $cont_user;").
             append( "su $cont_user -c ");
                 sb.append( "\\\"");
-                sb.append( "./" ).append(Docker.CONTAINER_JOB_LAUNCH_SCRIPT_SUFFIX ).append( " " );
+                sb.append( "./" ).append( scriptName ).append( " " );
                 sb.append( "\\\"");
                 
           sb.append( "\"");      
