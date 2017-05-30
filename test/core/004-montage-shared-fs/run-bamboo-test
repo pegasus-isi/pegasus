@@ -52,14 +52,14 @@ cat >sites.xml <<EOF
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://obelix.isi.edu" mount-point="/nfs/ccg4/scratch-purge-no-backups/ptesting/work"/>
-                    <internal-mount-point mount-point="/nfs/ccg4/scratch-purge-no-backups/ptesting/work"/>
+                    <file-server protocol="gsiftp" url="gsiftp://colo-vm63.isi.edu" mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/work"/>
+                    <internal-mount-point mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/work"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://obelix.isi.edu" mount-point="/nfs/ccg4/scratch-purge-no-backups/ptesting/outputs"/>
-                    <internal-mount-point mount-point="/nfs/ccg4/scratch-purge-no-backups/ptesting/outputs"/>
+                    <file-server protocol="gsiftp" url="gsiftp://colo-vm63.isi.edu" mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/outputs"/>
+                    <internal-mount-point mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/outputs"/>
                 </shared>
             </storage>
         </head-fs>
