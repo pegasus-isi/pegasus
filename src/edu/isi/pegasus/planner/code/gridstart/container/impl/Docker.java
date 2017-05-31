@@ -23,6 +23,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 
 /**
  * An interface to determine how a job gets wrapped to be launched on various 
@@ -85,6 +86,15 @@ public class Docker extends Abstract{
         
         //assume docker is available in path
         sb.append( "docker run ");
+        
+        //environment variables are set in the job as -e
+        for( Iterator it = job.envVariables.getProfileKeyIterator(); it.hasNext(); ){
+            String key = (String)it.next();
+            String value = (String) job.envVariables.get( key );
+            sb.append( "-e ").append( key ).append( "=" ).
+               append( "\"" ).append( value ).append( "\"" ).append( " " );
+        }
+        
         //directory where job is run is mounted as scratch
         sb.append( "-v $PWD:/scratch -w=/scratch ");     
         
