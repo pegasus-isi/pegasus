@@ -541,7 +541,7 @@ public class Job extends Data implements GraphNodeContent{
         mCredentialsType = new HashMap<String, Set<CredentialHandler.TYPE>>();
         mNodeLabel       = null;
         mGraphNode       = job.getGraphNodeReference();
-        mContainer = null;
+        mContainer       = job.getContainer();
     }
 
     /**
