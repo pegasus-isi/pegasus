@@ -207,6 +207,7 @@ public class Docker extends Abstract{
      */
     protected static String constructContainerWorkerPackagePreamble() {
         StringBuffer sb = new StringBuffer();
+        sb.append( "#!/bin/bash" ).append( "\n" );
         sb.append( "set -e" ).append( "\n" );
         sb.append( "pegasus_lite_version_major=$pegasus_lite_version_major" ).append( "\n" );
         sb.append( "pegasus_lite_version_minor=$pegasus_lite_version_minor" ).append( "\n" );
