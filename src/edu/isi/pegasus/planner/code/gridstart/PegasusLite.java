@@ -987,9 +987,9 @@ public class PegasusLite implements GridStart {
                 sb.append( "\n" );
             }
             
-            appendStderrFragment( sb, "executing the user tasks" );
-            sb.append( "# execute the tasks" ).append( '\n' ).
-               append( "set +e" ).append( '\n' );//PM-701
+            
+            //sb.append( "# execute the tasks" ).append( '\n' ).
+            sb.append( "set +e" ).append( '\n' );//PM-701
 
             writer.print( sb.toString() );
             writer.flush();

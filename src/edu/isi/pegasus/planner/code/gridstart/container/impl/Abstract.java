@@ -31,6 +31,10 @@ import java.io.IOException;
  */
 public abstract class Abstract implements ContainerShellWrapper{
     
+    public static final String SEPARATOR = "########################";
+    public static final char SEPARATOR_CHAR = '#';
+    public static final int  MESSAGE_STRING_LENGTH = 80;
+    
     /**
      * The LogManager object which is used to log all the messages.
      */
@@ -97,4 +101,32 @@ public abstract class Abstract implements ContainerShellWrapper{
 
         return result;
     }
+    
+    /**
+     * Appends a fragment to the pegasus lite script that logs a message to
+     * stderr
+     * 
+     * @param sb       string buffer
+     * @param message  the message  
+     */
+    protected void appendStderrFragment(StringBuilder sb, String message ) {
+        if( message.length() > Abstract.MESSAGE_STRING_LENGTH ){
+            throw new RuntimeException( "Message string for ContainerShellWrapper exceeds " + Abstract.MESSAGE_STRING_LENGTH + " characters");
+        }
+        
+        int pad = ( Abstract.MESSAGE_STRING_LENGTH - message.length() )/2;
+        sb.append( "echo -e \"\\n" );
+        for( int i = 0; i <= pad ; i ++ ){
+            sb.append( Abstract.SEPARATOR_CHAR );
+        }
+        sb.append( " " ).append( message ).append( " " );
+        for( int i = 0; i <= pad ; i ++ ){
+            sb.append( Abstract.SEPARATOR_CHAR );
+        }
+        sb.append( "\"  1>&2").append( "\n" );
+        
+        return;
+        
+    }
+
 }

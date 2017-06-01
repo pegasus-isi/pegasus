@@ -171,9 +171,10 @@ public class Docker extends Abstract{
         if( WORKER_PACKAGE_SETUP_SNIPPET == null ){
             WORKER_PACKAGE_SETUP_SNIPPET = Docker.constructContainerWorkerPackagePreamble();
         }
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append( "\n" );
-        sb.append( "############################# Writing out script to launch job in docker container (START) #############################" ).append( "\n" );
+        appendStderrFragment( sb, "Writing out script to launch job in docker container (START)" );
+        sb.append( "\n" );
         sb.append( "cat <<EOF > " ).append( scriptName ).append( "\n" );
         
         if( WORKER_PACKAGE_SETUP_SNIPPET == null ){
@@ -181,7 +182,8 @@ public class Docker extends Abstract{
         }
         sb.append( WORKER_PACKAGE_SETUP_SNIPPET );
         
-        sb.append( "echo -e \"\\n############################# launching job in the container #############################\"  1>&2" ).append( "\n" );
+        appendStderrFragment( sb, "launching job in the container");
+        sb.append( "\n" );
         //sb.append( "\\$kickstart \"\\${original_args[@]}\" ").append( "\n" );
         
         if( job instanceof AggregatedJob ){
@@ -206,7 +208,8 @@ public class Docker extends Abstract{
                    append( job.getArguments() ).append( "\n" );
         }
         sb.append( "EOF").append( "\n" );
-        sb.append( "############################# Writing out script to launch job in docker container (END) #############################" ).append( "\n" );
+        appendStderrFragment( sb, "Writing out script to launch job in docker container (END)" );
+        sb.append( "\n" );
         sb.append( "\n" );
         
         return sb.toString();
