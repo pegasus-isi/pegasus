@@ -108,8 +108,12 @@ public class Docker extends Abstract{
            append( "\"").
             
             append( "set -e ;" ).
+            append( "if ! grep -q -E  \"^$cont_group:\" /etc/group ; then ").
             append( "groupadd --gid $cont_groupid $cont_group ;").
-            append( "useradd --uid $cont_userid --gid $cont_groupid $cont_user;").
+            append( "fi; ").
+            append( "if ! id $cont_user 2>/dev/null >/dev/null; then ").
+            append( "useradd --uid $cont_userid --gid $cont_groupid $cont_user; ").
+            append( "fi; ").
             append( "su $cont_user -c ");
                 sb.append( "\\\"");
                 sb.append( "./" ).append( scriptName ).append( " " );
