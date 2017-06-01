@@ -297,9 +297,6 @@ function docker_init()
 	    pegasus_lite_log "container file is ${image_file}"
 	    # try and load the image
 	    cont_image=`docker load -i ${image_file} | sed -E "s/Loaded image://"` || cont_image="unknown"
-	else
-	    # try and load from docker hub
-	    docker load ..
 	fi
 	
     fi
