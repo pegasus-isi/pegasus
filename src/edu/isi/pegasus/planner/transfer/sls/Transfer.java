@@ -35,6 +35,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
@@ -361,6 +362,17 @@ public class Transfer   implements SLS {
         Collection<FileTransfer> result = new LinkedList();
         String destDir = workerNodeDirectory;
         
+        //PM-1197 check to see if a job is to be launched in a container
+        Container c = job.getContainer();
+        String containerLFN = null;
+        if( c != null ){
+            containerLFN = c.getName();
+            if( this.mUseSymLinks ){
+                mLogger.log( "Symlink of data files will be disabled because job " + job.getID() + " is launched in a container " + containerLFN,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            }
+        }
+        
         //To do. distinguish the sls file from the other input files
         for( Iterator it = files.iterator(); it.hasNext(); ){
             PegasusFile pf = ( PegasusFile ) it.next();
@@ -440,6 +452,18 @@ public class Transfer   implements SLS {
                                 !pf.isExecutable() && //can only do symlinks for data files . not executables
                                 ft.getSourceURL().getKey().equals( job.getSiteHandle()) && //source URL logically on the same site where job is to be run
                                 url.toString().startsWith( PegasusURL.FILE_URL_SCHEME ) ); //source URL is a file URL
+                }
+            }
+            
+            if( symlink && containerLFN != null ){
+                //PM-1197 special handling for the case where job is to be
+                //launched in a container
+                
+                if( !pf.getLFN().equals( containerLFN ) ){
+                    //we can only symlink the container image.
+                    //data files can't be symlinked , as source directories are
+                    //not mounted in the container
+                    symlink = false;
                 }
             }
             
