@@ -1279,26 +1279,6 @@ public class TransferEngine extends Engine {
         //sDirURL would be the url to the source directory.
         //dDirPutURL would be the url to the destination directoy
         //and is always a networked url.
-/* for PM-833
-        String dDirPutURL = this.getURLOnSharedScratch( stagingSite, job, OPERATION.put, null );
-        String dDirGetURL = this.getURLOnSharedScratch( stagingSite, job, OPERATION.get, null );
-        String sDirURL = null;
-        String sAbsPath = null;
-        String dAbsPath = mSiteStore.getInternalWorkDirectory( stagingSiteHandle, eRemoteDir );
-        
-        
-        //file dest dir is destination dir accessed as a file URL
-        String fileDestDir = scheme + "://" + dAbsPath;
-                
-        //check if the execution pool is third party or not
-        boolean runTransferOnLocalSite = runTransferOnLocalSite( stagingSite, dDirPutURL, Job.STAGE_IN_JOB);
-        String destDir = ( runTransferOnLocalSite ) ?
-            //use the full networked url to the directory
-            dDirPutURL
-            :
-            //use the default pull mode
-            fileDestDir;
-*/
 
         for( Iterator it = searchFiles.iterator(); it.hasNext(); ){
             String sourceURL = null,destPutURL = null, destGetURL =null;
@@ -1347,16 +1327,6 @@ public class TransferEngine extends Engine {
                     job.setRemoteExecutable(  dAbsPath + File.separator + lfn );
                 }
                 
-/* PM-833
-                if( destNV == null ){
-                    //the source URL was specified in the DAX
-                    //no transfer of executables case
-                    throw new RuntimeException( "Unreachable code . Signifies error in internal logic " );
-                }
-                else{
-*/
-                    //staging of executables case
-//PM-833                    destPutURL = destNV.getValue();
                     destPutURL = (runTransferOnLocalSite( stagingSite, destPutURL, Job.STAGE_IN_JOB))?
                                //the destination URL is already third party
                                //enabled. use as it is
@@ -1366,7 +1336,6 @@ public class TransferEngine extends Engine {
                                
                     //for time being for this case the get url is same as put url
                     destGetURL = destPutURL;
-//PM-833                }
             }
             else{
                 //query the replica services and get hold of pfn
@@ -1478,25 +1447,7 @@ public class TransferEngine extends Engine {
 
                 if( destPutURL == null || 
                         symLinkSelectedLocation){ //PM-1082 if a destination has to be symlinked always recompute
-                    //no staging of executables case. 
-                    //we construct destination URL to file.
-                    /* PM-833
-                    StringBuffer destPFN = new StringBuffer();
-                    if( symLinkSelectedLocation ){
-                        //we use the file URL location to dest dir
-                        //in case we are symlinking
-                        //destPFN.append( fileDestDir );
-                        destPFN.append( this.replaceProtocolFromURL( destDir ) );
-                    }
-                    else{
-                        //we use whatever destDir was set to earlier
-                        destPFN.append( destDir );
-                    }
-                    destPFN.append( File.separator).append( lfn );
-                    destPutURL = destPFN.toString();
-                    preferredDestPutURL = destPutURL;
-                    destGetURL = dDirGetURL + File.separator + lfn;
-                    */
+                    
                     if( symLinkSelectedLocation ){
                         //we use the file URL location to dest dir
                         //in case we are symlinking
