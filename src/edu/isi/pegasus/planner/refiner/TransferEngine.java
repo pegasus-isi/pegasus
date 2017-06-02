@@ -54,6 +54,7 @@ import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.PlannerCache;
@@ -1272,6 +1273,10 @@ public class TransferEngine extends Engine {
         SiteCatalogEntry stagingSite        = mSiteStore.lookup( stagingSiteHandle );
         //we are using the pull mode for data transfer
         String scheme  = "file";
+        String containerLFN = null;
+        if( job.getContainer() != null ){
+            containerLFN = job.getContainer().getName();
+        }
 
         //sAbsPath would be just the source directory absolute path
         //dAbsPath would be just the destination directory absolute path
@@ -1431,6 +1436,14 @@ public class TransferEngine extends Engine {
                     selLoc = replaceSourceProtocolFromURL( selLoc );
                 }
             
+                
+                if ( symLinkSelectedLocation ){
+                    //PM-1197 we can symlink only if no container is associated with the job
+                    //or the file in question is the container file itself.
+                    if( !(containerLFN == null || containerLFN.equals( lfn )) ){
+                        symLinkSelectedLocation = false;
+                    }
+                }
                                         
                 //get the file to the job's execution pool
                 //this is assuming that there are no directory paths
