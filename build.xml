@@ -254,6 +254,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <delete dir="${dist.doc}/wordpress/python"/>
     <mkdir dir="${dist.doc}/wordpress/python"/>
     <exec executable="./doc/python-docs" dir="" failonerror="true">
+      <env key="PYTHONPATH" value="${basedir}/lib/pegasus/externals/python"/>
       <arg line="${basedir}/lib/pegasus/python/Pegasus ${dist.doc}/wordpress/python"/>
     </exec>
   </target>
