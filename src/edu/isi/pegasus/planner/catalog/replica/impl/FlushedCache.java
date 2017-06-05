@@ -450,4 +450,15 @@ public class FlushedCache implements ReplicaCatalog {
         throw new java.lang.UnsupportedOperationException(
                 "Method not implemented");
     }
+    
+    /**
+     * Set the catalog to read-only mode.
+     * 
+     * @param readonly whether the catalog is read-only
+     */
+    @Override
+    public void setReadOnly(boolean readonly) {
+        throw new java.lang.UnsupportedOperationException(
+                "Method not implemented");
+    }
 }

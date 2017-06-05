@@ -1570,5 +1570,16 @@ public class JDBCRC implements ReplicaCatalog
     public java.io.File getFileSource(){
         return null;
     }
+    
+    /**
+     * Set the catalog to read-only mode.
+     * 
+     * @param readonly whether the catalog is read-only
+     */
+    @Override
+    public void setReadOnly(boolean readonly) {
+        throw new java.lang.UnsupportedOperationException(
+                "Method not implemented");
+    }
 }
 
