@@ -803,7 +803,6 @@ public class MRC
      */
     @Override
     public void setReadOnly(boolean readonly) {
-        throw new java.lang.UnsupportedOperationException(
-                "Method not implemented");
+        // do nothing
     }
 }
