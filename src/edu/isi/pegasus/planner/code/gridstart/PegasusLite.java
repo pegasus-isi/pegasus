@@ -929,8 +929,10 @@ public class PegasusLite implements GridStart {
                     appendStderrFragment( sb, "staging in input data and executables" );
                     sb.append( "# stage in data and executables" ).append( '\n' );
                     sb.append(  sls.invocationString( job, null ) );
-                    if ( mUseSymLinks ){
+                    if ( mUseSymLinks && job.getContainer() == null ){
                         //PM-1135 allow the transfer executable to symlink input file urls
+                        //PM-1197 we have to disable symlink if a job is set to 
+                        //be launched via a container
                         sb.append( " --symlink " );
                     }
                     sb.append( " 1>&2" ).append( " << 'EOF'" ).append( '\n' );
