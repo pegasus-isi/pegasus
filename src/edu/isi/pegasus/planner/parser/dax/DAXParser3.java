@@ -42,6 +42,8 @@ import edu.isi.pegasus.planner.catalog.transformation.impl.Abstract;
 import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
+import edu.isi.pegasus.planner.classes.DataFlowJob;
+import edu.isi.pegasus.planner.classes.DataFlowJob.Edge;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PCRelation;
@@ -326,9 +328,9 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 return null;
 
 
-            //d dag dax
+            //d dag dax job decaf
             case 'd':
-                if( element.equals( "dag" ) || element.equals( "dax" ) ){
+                if( element.equals( "dag" ) || element.equals( "dax" ) || element.equals( "dflow")  ){
                     Job j = new Job( );
                     //all jobs in the DAX are of type compute
                     j.setUniverse( GridGateway.JOB_TYPE.compute.toString() );
@@ -362,98 +364,129 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         }
                     }
 
+                    if( element.equals( "dag") || element.equals( "dax") ){
+                        if( file == null ){
+                            this.complain( element, "file", file );
+                            return null;
+                        }
+                        PegasusFile pf = new PegasusFile( file );
+                        pf.setLinkage( LINKAGE.INPUT );
 
-                    if( file == null ){
-                        this.complain( element, "file", file );
-                        return null;
-                    }
-                    PegasusFile pf = new PegasusFile( file );
-                    pf.setLinkage( LINKAGE.INPUT );
-                    
-                    if( element.equals( "dag" ) ){
-                        DAGJob dagJob = new DAGJob( j );
+                        if( element.equals( "dag" ) ){
+                            DAGJob dagJob = new DAGJob( j );
 
-                        //we dont want notifications to be inherited
-                        dagJob.resetNotifications();
+                            //we dont want notifications to be inherited
+                            dagJob.resetNotifications();
 
-                        dagJob.setDAGLFN( file );
-                        dagJob.addInputFile( pf );
-                        
-                        //the job should always execute on local site
-                        //for time being
-                        dagJob.hints.construct(Hints.EXECUTION_SITE_KEY, "local");
+                            dagJob.setDAGLFN( file );
+                            dagJob.addInputFile( pf );
 
-                        //also set the executable to be used
-                        dagJob.hints.construct(Hints.PFN_HINT_KEY, "/opt/condor/bin/condor-dagman");
+                            //the job should always execute on local site
+                            //for time being
+                            dagJob.hints.construct(Hints.EXECUTION_SITE_KEY, "local");
 
-
-
-                        //add default name and namespace information
-                        dagJob.setTransformation("condor",
-                                "dagman",
-                                null);
+                            //also set the executable to be used
+                            dagJob.hints.construct(Hints.PFN_HINT_KEY, "/opt/condor/bin/condor-dagman");
 
 
-                        dagJob.setDerivation("condor",
-                                "dagman",
-                                null);
 
-                        dagJob.level = -1;
-
-                        //dagman jobs are always launched without a gridstart
-                        dagJob.vdsNS.construct(Pegasus.GRIDSTART_KEY,
-                                GridStartFactory.GRIDSTART_SHORT_NAMES[GridStartFactory.NO_GRIDSTART_INDEX]);
+                            //add default name and namespace information
+                            dagJob.setTransformation("condor",
+                                    "dagman",
+                                    null);
 
 
-                        //set the internal primary id for job
-                        //dagJob.setName( constructJobID( dagJob ) );
-                        dagJob.setName( dagJob.generateName( this.mJobPrefix) );
-                        return dagJob;
-                    }
-                    else if (element.equals( "dax" ) ){
-                        DAXJob daxJob = new DAXJob( j );
+                            dagJob.setDerivation("condor",
+                                    "dagman",
+                                    null);
 
-                        //we dont want notifications to be inherited
-                        daxJob.resetNotifications();
+                            dagJob.level = -1;
+
+                            //dagman jobs are always launched without a gridstart
+                            dagJob.vdsNS.construct(Pegasus.GRIDSTART_KEY,
+                                    GridStartFactory.GRIDSTART_SHORT_NAMES[GridStartFactory.NO_GRIDSTART_INDEX]);
 
 
-                        //the job should be tagged type pegasus
-                        daxJob.setTypeRecursive();
+                            //set the internal primary id for job
+                            //dagJob.setName( constructJobID( dagJob ) );
+                            dagJob.setName( dagJob.generateName( this.mJobPrefix) );
+                            return dagJob;
+                        }
+                        else if (element.equals( "dax" ) ){
+                            DAXJob daxJob = new DAXJob( j );
 
-                        //the job should always execute on local site
-                        //for time being
-                        daxJob.hints.construct(Hints.EXECUTION_SITE_KEY, "local" );
+                            //we dont want notifications to be inherited
+                            daxJob.resetNotifications();
 
-                        //also set a fake executable to be used
-                        daxJob.hints.construct( Hints.PFN_HINT_KEY, "/tmp/pegasus-plan" );
 
-                        //retrieve the extra attribute about the DAX
-                        daxJob.setDAXLFN( file );
-                        daxJob.addInputFile( pf );
+                            //the job should be tagged type pegasus
+                            daxJob.setTypeRecursive();
 
-                        //add default name and namespace information
-                        daxJob.setTransformation( "pegasus",
+                            //the job should always execute on local site
+                            //for time being
+                            daxJob.hints.construct(Hints.EXECUTION_SITE_KEY, "local" );
+
+                            //also set a fake executable to be used
+                            daxJob.hints.construct( Hints.PFN_HINT_KEY, "/tmp/pegasus-plan" );
+
+                            //retrieve the extra attribute about the DAX
+                            daxJob.setDAXLFN( file );
+                            daxJob.addInputFile( pf );
+
+                            //add default name and namespace information
+                            daxJob.setTransformation( "pegasus",
+                                                      "pegasus-plan",
+                                                      Version.instance().toString() );
+
+
+                            daxJob.setDerivation( "pegasus",
                                                   "pegasus-plan",
-                                                  Version.instance().toString() );
+                                                   Version.instance().toString() );
 
+                            daxJob.level       = -1;
 
-                        daxJob.setDerivation( "pegasus",
-                                              "pegasus-plan",
-                                               Version.instance().toString() );
-
-                        daxJob.level       = -1;
-
-                        //set the internal primary id for job
-                        //daxJob.setName( constructJobID( daxJob ) );
-                        daxJob.setName( daxJob.generateName( this.mJobPrefix) );
-                        return daxJob;
+                            //set the internal primary id for job
+                            //daxJob.setName( constructJobID( daxJob ) );
+                            daxJob.setName( daxJob.generateName( this.mJobPrefix) );
+                            return daxJob;
+                        }
+                    }
+                    else  if( element.equals( "dflow" ) ){
+                        DataFlowJob dflowJob = new DataFlowJob( j );
+                        //add default name and namespace information
+                        dflowJob.setTransformation( null,
+                                                  "dataflow",
+                                                  null );
+                        return dflowJob;
                     }
 
-                }//end of element job
-                return null;//end of j
+                }//end of element  dag, dax, job
+                else if ( element.equals( "decaf") ){
+                    Profile p = new Profile(); 
+                    //retroffited decaf element into unused selector profile space
+                    p.setProfileNamespace(  "selector" );
+                    for ( int i=0; i < names.size(); ++i ) {
+                        String name = (String) names.get( i );
+                        String value = (String) values.get( i );
+                        if ( name.equals( "namespace" ) ) {
+                            p.setProfileNamespace( value );
+                            this.log( element, name, value );
+                        }
+                        else if ( name.equals( "key" ) ) {
+                            p.setProfileKey( value );
+                 	    this.log( element, name, value );
+                        }
+                        else {
+                	    this.complain( element, name, value );
+                        }
+                    }
+                    return p;
+
+                }//end of element decaf
+                return null;//end of d
 
                 
-            //e executable
+            //e executable edge
             case 'e':
                 if( element.equals( "executable" ) ){
                     String namespace = null;
@@ -506,6 +539,24 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                     executable.setInstalled(os_installed);
                     return executable;
                 }//end of element executable
+                else if ( element.equals( "edge") ){
+                   
+                   String parent = null, child = null;
+                   for ( int i=0; i < names.size(); ++i ) {
+                        String name = (String) names.get( i );
+                        String value = (String) values.get( i );
+
+                        if ( name.equals( "parent" ) ) {
+                            parent = value;
+                        }
+                        else if( name.equals( "child" ) ){
+                            child = value;
+                        }
+                   }
+                   Edge edge = new Edge( parent, child );
+                   
+                   return edge;
+                }
 
                 return null; //end of e
 
@@ -915,7 +966,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }
                 return false;
 
-            //d dax dag
+            //d dax dag job decaf
             case 'd':
                 if( parent instanceof Map ){
 
@@ -938,10 +989,45 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         this.mCallback.cbJob( daxJob );
                         return true;
                     }
+                    else if( child instanceof DataFlowJob ){
+                        //dflow appears in adag element
+                        DataFlowJob dflowJob = ( DataFlowJob )child;
+
+                        
+                        //call the callback function
+                        this.mCallback.cbJob( dflowJob );
+                        return true;
+                    }
+                }
+                else if ( parent instanceof DataFlowJob ){
+                    DataFlowJob dflow = (DataFlowJob) parent;
+                    if( child instanceof Profile ){//decaf appears as selector profile
+                        Profile decaf = ( Profile )child;
+                        decaf.setProfileValue( mTextContent.toString().trim() );
+                        dflow.addProfile(decaf);
+                        return true;
+                    }
+                }
+                else if ( parent instanceof Job ){
+                    Job job = (Job) parent;
+                    if( child instanceof Profile ){//decaf appears as selector profile
+                        Profile decaf = ( Profile )child;
+                        decaf.setProfileValue( mTextContent.toString().trim() );
+                        job.addProfile(decaf);
+                        return true;
+                    }
+                }
+                else if ( parent instanceof Edge ){
+                    Edge edge = (Edge) parent;
+                    if( child instanceof Profile ){//decaf appears as selector profile
+                        Profile decaf = ( Profile )child;
+                        decaf.setProfileValue( mTextContent.toString().trim() );
+                        edge.addProfile(decaf);
+                        return true;
+                    }
                 }
                 return false;
-
-
+                
             //f file
             case 'f':
                 if( child instanceof ReplicaLocation ){
@@ -962,7 +1048,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }
                 return false;
 
-            //e executable
+            //e executable edge
             case 'e':
                 if( child instanceof Executable ){
                     if( parent instanceof Map ){
@@ -976,6 +1062,14 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         //each new pfn is a new transformation
                         //catalog entry
                         //this.mCallback.cbExecutable( tce );
+                        return true;
+                    }
+                }
+                else if( child instanceof Edge ){
+                    //edge appears in job
+                    if( parent instanceof DataFlowJob ){
+                        DataFlowJob dflow = ( DataFlowJob )parent;
+                        dflow.addEdge( (Edge) child);
                         return true;
                     }
                 }
@@ -1021,10 +1115,18 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
             //j job
             case 'j':
-                if( child instanceof Job  && parent instanceof Map ){
-                    //callback for Job
-                    this.mCallback.cbJob( (Job)child );
-                    return true;
+                if( child instanceof Job ){ 
+                    if ( parent instanceof Map ){
+                        //callback for Job
+                        this.mCallback.cbJob( (Job)child );
+                        return true;
+                    }
+                    else if( parent instanceof DataFlowJob ){
+                        DataFlowJob dflow = (DataFlowJob) parent;
+                        dflow.add( (Job)child );
+                        return true;
+                    }
+                    return false;
                 }
                 return false;
 
