@@ -457,6 +457,9 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         dflowJob.setTransformation( "dataflow",
                                                   "decaf",
                                                   null );
+                        
+                        //set the internal primary id for job
+                        dflowJob.setName( constructJobID( dflowJob ) );
                         return dflowJob;
                     }
 
