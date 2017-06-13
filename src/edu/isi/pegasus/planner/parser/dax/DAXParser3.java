@@ -43,7 +43,7 @@ import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.DataFlowJob;
-import edu.isi.pegasus.planner.classes.DataFlowJob.Edge;
+import edu.isi.pegasus.planner.classes.DataFlowJob.Link;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PCRelation;
@@ -539,6 +539,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                     executable.setInstalled(os_installed);
                     return executable;
                 }//end of element executable
+                /* disabled for decaf v4 dax
                 else if ( element.equals( "edge") ){
                    
                    String parent = null, child = null;
@@ -553,10 +554,11 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                             child = value;
                         }
                    }
-                   Edge edge = new Edge( parent, child );
+                   Link edge = new Link( parent, child );
                    
                    return edge;
                 }
+                */
 
                 return null; //end of e
 
@@ -622,6 +624,43 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }//end of element invoke
                 return null;
 
+            //l link job for a dataflow
+            case 'l':
+                if ( element.equals( "link") ){
+                   
+                   Link l = new Link( );
+                    //all jobs in the DAX are of type compute
+                    l.setUniverse( GridGateway.JOB_TYPE.compute.toString() ); 
+                    l.setJobType( Job.COMPUTE_JOB );
+                    
+                    for ( int i=0; i < names.size(); ++i ) {
+                        String name = (String) names.get( i );
+                        String value = (String) values.get( i );
+
+                        if ( name.equals( "namespace" ) ) {
+                            l.setTXNamespace( value );
+                        }
+                        else if( name.equals( "name" ) ){
+                            l.setTXName( value );
+                        }
+                        else if( name.equals( "version" ) ){
+                            l.setTXVersion( value );
+                        }
+                        else if( name.equals( "id"  ) ){
+                            l.setLogicalID( value );
+                        }
+                        else if( name.equals( "node-label"  ) ){
+                            l.setNodeLabel( value );
+                        }
+                        else {
+                	    this.complain( element, name, value );
+                        }
+                    }
+                   
+                   return l;
+                }
+                return null;
+                
             //j job
             case 'j':
                 if( element.equals( "job" ) ){
@@ -660,6 +699,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }//end of element job
                 return null;//end of j
 
+                
             //m metadata
             case 'm':
                 if( element.equals( "metadata" ) ){
@@ -955,14 +995,20 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
             //c child 
             case 'c':
-                if( parent instanceof Map ){
-                    if( child instanceof PCRelation ){
-                        PCRelation pc = (PCRelation)child;
+                if( child instanceof PCRelation ){
+                    PCRelation pc = (PCRelation)child;
+                    if( parent instanceof Map ){
                         //call the callback
                         this.mCallback.cbParents( pc.getChild(), mParents);
                         return true;
                     }
-                    
+                    else if ( parent instanceof Link ){
+                        Link link = (Link)parent;
+                        //not clear so far if decaf allows multiple parents 
+                        //or just a single edge.
+                        PCRelation parentJob = mParents.get(0);
+                        link.setLink( parentJob.getParent(), parentJob.getChild());
+                    }
                 }
                 return false;
 
@@ -1017,8 +1063,9 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         return true;
                     }
                 }
-                else if ( parent instanceof Edge ){
-                    Edge edge = (Edge) parent;
+                /* disabled for decaf v4 dax
+                else if ( parent instanceof Link ){
+                    Link edge = (Link) parent;
                     if( child instanceof Profile ){//decaf appears as selector profile
                         Profile decaf = ( Profile )child;
                         decaf.setProfileValue( mTextContent.toString().trim() );
@@ -1026,6 +1073,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         return true;
                     }
                 }
+                */
                 return false;
                 
             //f file
@@ -1065,11 +1113,11 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         return true;
                     }
                 }
-                else if( child instanceof Edge ){
+                else if( child instanceof Link ){
                     //edge appears in job
                     if( parent instanceof DataFlowJob ){
                         DataFlowJob dflow = ( DataFlowJob )parent;
-                        dflow.addEdge( (Edge) child);
+                        dflow.addEdge((Link) child);
                         return true;
                     }
                 }
@@ -1130,6 +1178,17 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }
                 return false;
 
+            //l link job
+            case 'l':
+                if( child instanceof Link ){
+                    if( parent instanceof DataFlowJob ){
+                        DataFlowJob dflow = (DataFlowJob) parent;
+                        dflow.add( (Job)child );
+                        return true;
+                    }
+                }
+                return false;
+             
             //m metadata
             case 'm':
                 if ( child instanceof Profile ) {

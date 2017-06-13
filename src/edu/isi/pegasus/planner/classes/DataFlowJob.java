@@ -19,7 +19,7 @@ import java.util.List;
  */
 public class DataFlowJob extends AggregatedJob{
     
-    private List<Edge> mEdges;
+    private List<Link> mEdges;
     
     /**
      * The default constructor.
@@ -50,30 +50,32 @@ public class DataFlowJob extends AggregatedJob{
     }
     
     /**
-     * Add Edge
+     * Add Link
      * 
      * @param e 
      */
-    public void addEdge( Edge e ){
+    public void addEdge( Link e ){
         mEdges.add( e );
     }
 
-    public static class Edge  extends Data{
+    /**
+     * A link job to indicate a job in the data flow that does data transformation
+     * between two jobs
+     */
+    public static class Link  extends Job{
 
         private GraphNode mParentJob;
         private GraphNode mChildJob;
-        private Namespace mDecafProfiles;
+        
 
-        public Edge( String parent, String child ){
+        public Link(){
+            super();
+        }
+        
+        public void setLink( String parent, String child ){
             mParentJob = new GraphNode( parent );
             mChildJob  = new GraphNode( child );
-            mDecafProfiles = new Selector();
         }
-
-        public void addProfile( Profile p ){
-            mDecafProfiles.construct( p.getProfileKey(), p.getProfileValue());
-        }
-
 
         @Override
         public String toString() {
