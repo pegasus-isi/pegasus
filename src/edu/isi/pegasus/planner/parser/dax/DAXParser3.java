@@ -454,8 +454,8 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                     else  if( element.equals( "dflow" ) ){
                         DataFlowJob dflowJob = new DataFlowJob( j );
                         //add default name and namespace information
-                        dflowJob.setTransformation( null,
-                                                  "dataflow",
+                        dflowJob.setTransformation( "dataflow",
+                                                  "decaf",
                                                   null );
                         return dflowJob;
                     }
@@ -1008,6 +1008,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         //or just a single edge.
                         PCRelation parentJob = mParents.get(0);
                         link.setLink( parentJob.getParent(), parentJob.getChild());
+                        return true;
                     }
                 }
                 return false;
