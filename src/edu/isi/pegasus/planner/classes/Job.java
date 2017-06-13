@@ -44,6 +44,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.namespace.Metadata;
+import edu.isi.pegasus.planner.namespace.Selector;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.io.File;
 import java.util.Iterator;
@@ -387,6 +388,11 @@ public class Job extends Data implements GraphNodeContent{
      */
     @Expose @SerializedName( "metadata" )
     private Metadata mMetadataAttributes;
+    
+    /**
+     * the selector namespace
+     */
+    private Selector mSelectorProfiles;
 
     /**
      * Identifies the level of the job in the dax. The level is bottom up
@@ -484,6 +490,7 @@ public class Job extends Data implements GraphNodeContent{
         hints            = new Hints();
         vdsNS            = new Pegasus();
         mMetadataAttributes       = new Metadata();
+        mSelectorProfiles = new Selector();
         jobClass         = UNASSIGNED_JOB;
         level            = -1;
         mRuntime = -1;
@@ -530,6 +537,7 @@ public class Job extends Data implements GraphNodeContent{
         hints            = job.hints;
         vdsNS            = job.vdsNS;
         mMetadataAttributes       = job.mMetadataAttributes;
+        mSelectorProfiles = job.mSelectorProfiles;
         jobClass         = job.getJobType();
         level            = job.level;
         mRuntime = job.mRuntime;
@@ -579,7 +587,7 @@ public class Job extends Data implements GraphNodeContent{
                                                         (Dagman)this.dagmanVariables.clone();
         newSub.vdsNS          = this.vdsNS == null ? null :(Pegasus)this.vdsNS.clone();
         newSub.mMetadataAttributes     = this.mMetadataAttributes == null ? null :(Metadata)this.mMetadataAttributes.clone();
-
+        newSub.mSelectorProfiles = this.mSelectorProfiles == null ? null: (Selector)this.mSelectorProfiles.clone();
         newSub.hints          = (Hints)this.hints.clone();
         newSub.jobID          = this.jobID;
         newSub.jobClass       = this.jobClass;
@@ -1760,6 +1768,7 @@ public class Job extends Data implements GraphNodeContent{
         vdsNS.checkKeyInNS(entry);
         hints.checkKeyInNS(entry);
         mMetadataAttributes.checkKeyInNS(entry);
+        mSelectorProfiles.checkKeyInNS( entry );
     }
 
     /**
@@ -1781,6 +1790,7 @@ public class Job extends Data implements GraphNodeContent{
         vdsNS.checkKeyInNS(properties,executionPool);
         hints.checkKeyInNS(properties, executionPool );
         mMetadataAttributes.checkKeyInNS(properties, executionPool );
+        mSelectorProfiles.checkKeyInNS( properties, executionPool );
     }
     
     /**
@@ -1845,6 +1855,12 @@ public class Job extends Data implements GraphNodeContent{
             this.mMetadataAttributes.checkKeyInNS( key, (String)n.get( key ) );
         }
         
+        n = profiles.get( NAMESPACES.selector );
+        for( Iterator it = n.getProfileKeyIterator(); it.hasNext(); ){
+            key = (String)it.next();
+            this.mSelectorProfiles.checkKeyInNS( key, (String)n.get( key ) );
+        }
+        
     }
 
 
@@ -1891,6 +1907,9 @@ public class Job extends Data implements GraphNodeContent{
             else if(profile.getProfileNamespace().equals(Profile.METADATA)){
                 this.mMetadataAttributes.checkKeyInNS(profile);
             }
+            else if(profile.getProfileNamespace().equals(Profile.SELECTOR)){
+                this.mSelectorProfiles.checkKeyInNS(profile);
+            }
             else{
                 //unknown profile.
                 mLogger.log("Unknown Profile: " + profile + " for job" +
@@ -1918,6 +1937,7 @@ public class Job extends Data implements GraphNodeContent{
         this.vdsNS.merge( job.vdsNS );
         this.hints.merge( job.hints );
         this.mMetadataAttributes.merge( job.mMetadataAttributes );
+        this.mSelectorProfiles.merge( job.mSelectorProfiles );
     }
 
     /**
@@ -1991,6 +2011,7 @@ public class Job extends Data implements GraphNodeContent{
         hints            = new Hints();
         vdsNS            = new Pegasus();
         mMetadataAttributes = new Metadata();
+        mSelectorProfiles= new Selector();
     }
 
     /**
@@ -2220,6 +2241,10 @@ public class Job extends Data implements GraphNodeContent{
                     this.mMetadataAttributes.checkKeyInNS( key, value );
                     break;
 
+                case 's'://selector for decaf elements
+                    this.mSelectorProfiles.checkKeyInNS( p.getProfileKey(), p.getProfileValue() );
+                    break;
+                    
                 default:
                     //ignore should not come here ever.
                     mLogger.log("Namespace not supported. ignoring "+ namespace,
