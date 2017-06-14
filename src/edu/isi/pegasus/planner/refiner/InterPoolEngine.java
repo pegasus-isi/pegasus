@@ -27,6 +27,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.DataFlowJob;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -269,44 +270,7 @@ public class InterPoolEngine extends Engine implements Refiner {
             GraphNode node = it.next();
             Job job = ( Job )node.getContent();
            
-            //check if the user has specified any hints in the dax
-            incorporateHint(job, Hints.EXECUTION_SITE_KEY );
-            
-            String site  = job.getSiteHandle();
-            mLogger.log( "Setting up site mapping for job "  + job.getName(), 
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-            
-            if ( site == null ) {
-                error = new StringBuffer();
-                error.append( "Site Selector could not map the job " ).
-                        append( job.getCompleteTCName() ).append( " with id ").append( job.getID() ).append( " to any of the execution sites " ).
-                        append( sites ).append( " using the Transformation Mapper (" ).append( this.mTCMapper.getMode() ).
-                        append( ")" ).
-                        append( "\n" ).
-                        append( "\nThis error is most likely due to an error in the transformation catalog." ).
-                        append( "\nMake sure that the ").append( job.getCompleteTCName() ).append(" transformation" ).
-                        append("\nexists with matching system information  for sites ").append(sites).append(" you are trying to plan for " ).
-                        append(mSiteStore.getSysInfos( sites )).
-                      append( "\n" );
-                mLogger.log( error.toString(),
-                            LogManager.ERROR_MESSAGE_LEVEL );
-                throw new RuntimeException( error.toString() );
-            }
- 
-            
-            if ( site.length() == 0 ||
-                 site.equalsIgnoreCase( SiteSelector.SITE_NOT_FOUND ) ) {
-                error = new StringBuffer();
-                error.append( "Site Selector (" ).append( mSiteSelector.description() ).
-                      append( ") could not map job " ).append( job.getCompleteTCName() ).
-                      append( " with id ").append( job.getID() ).
-                      append( " to any site" );
-                mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL );
-                throw new RuntimeException( error.toString() );
-            }
-
-            mLogger.log("Job was mapped to " + job.jobName + " to site " + site,
-                        LogManager.DEBUG_MESSAGE_LEVEL);
+            incorporateSiteMapping( job , sites );
             
             //incorporate the profiles and
             //do transformation selection
@@ -349,6 +313,56 @@ public class InterPoolEngine extends Engine implements Refiner {
         }
 
     }
+    
+    /**
+     * Incorporates hints and checks to ensure a job has been mapped correctly.
+     * 
+     * @param job
+     * @param sites 
+     */
+    protected void incorporateSiteMapping(Job job,  List<String> sites) {
+        StringBuilder error = null;
+        //check if the user has specified any hints in the dax
+            incorporateHint(job, Hints.EXECUTION_SITE_KEY );
+            
+            String site  = job.getSiteHandle();
+            mLogger.log( "Setting up site mapping for job "  + job.getName(), 
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            
+            if ( site == null ) {
+                error = new StringBuilder();
+                error.append( "Site Selector could not map the job " ).
+                        append( job.getCompleteTCName() ).append( " with id ").append( job.getID() ).append( " to any of the execution sites " ).
+                        append( sites ).append( " using the Transformation Mapper (" ).append( this.mTCMapper.getMode() ).
+                        append( ")" ).
+                        append( "\n" ).
+                        append( "\nThis error is most likely due to an error in the transformation catalog." ).
+                        append( "\nMake sure that the ").append( job.getCompleteTCName() ).append(" transformation" ).
+                        append("\nexists with matching system information  for sites ").append(sites).append(" you are trying to plan for " ).
+                        append(mSiteStore.getSysInfos( sites )).
+                      append( "\n" );
+                mLogger.log( error.toString(),
+                            LogManager.ERROR_MESSAGE_LEVEL );
+                throw new RuntimeException( error.toString() );
+            }
+ 
+            
+            if ( site.length() == 0 ||
+                 site.equalsIgnoreCase( SiteSelector.SITE_NOT_FOUND ) ) {
+                error = new StringBuilder();
+                error.append( "Site Selector (" ).append( mSiteSelector.description() ).
+                      append( ") could not map job " ).append( job.getCompleteTCName() ).
+                      append( " with id ").append( job.getID() ).
+                      append( " to any site" );
+                mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL );
+                throw new RuntimeException( error.toString() );
+            }
+
+            mLogger.log("Job was mapped to " + job.jobName + " to site " + site,
+                        LogManager.DEBUG_MESSAGE_LEVEL);
+            
+    }
+
 
     /**
      * Returns the staging site to be used for a job. The determination is made
@@ -870,4 +884,5 @@ public class InterPoolEngine extends Engine implements Refiner {
 
     }
 
+    
 }
