@@ -270,7 +270,18 @@ public class InterPoolEngine extends Engine implements Refiner {
             GraphNode node = it.next();
             Job job = ( Job )node.getContent();
            
-            incorporateSiteMapping( job , sites );
+            if( job instanceof DataFlowJob ){
+                    //PM-1205 datalfows are clustered jobs
+                    //we map the constitutent jobs not the datalfow job itself.
+                    for( Iterator consIT = ((DataFlowJob)job).nodeIterator(); consIT.hasNext(); ){
+                        GraphNode n = (GraphNode) consIT.next();
+                        Job j = (Job) n.getContent();
+                        incorporateSiteMapping( j , sites );
+                    }
+            }
+            else{
+                incorporateSiteMapping( job , sites );
+            }
             
             //incorporate the profiles and
             //do transformation selection
