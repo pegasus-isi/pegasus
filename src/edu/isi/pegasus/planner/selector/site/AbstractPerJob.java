@@ -62,7 +62,7 @@ public abstract class AbstractPerJob extends Abstract {
                     //we map the constitutent jobs not the datalfow job itself.
                     for( Iterator consIT = ((DataFlowJob)job).nodeIterator(); consIT.hasNext(); ){
                         GraphNode n = (GraphNode) consIT.next();
-                        Job j = (Job) node.getContent();
+                        Job j = (Job) n.getContent();
                         mapJob( j, sites );
                     }
                 }
