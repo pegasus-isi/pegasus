@@ -626,43 +626,6 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
                 }//end of element invoke
                 return null;
-
-            //l link job for a dataflow
-            case 'l':
-                if ( element.equals( "link") ){
-                   
-                   Link l = new Link( );
-                    //all jobs in the DAX are of type compute
-                    l.setUniverse( GridGateway.JOB_TYPE.compute.toString() ); 
-                    l.setJobType( Job.COMPUTE_JOB );
-                    
-                    for ( int i=0; i < names.size(); ++i ) {
-                        String name = (String) names.get( i );
-                        String value = (String) values.get( i );
-
-                        if ( name.equals( "namespace" ) ) {
-                            l.setTXNamespace( value );
-                        }
-                        else if( name.equals( "name" ) ){
-                            l.setTXName( value );
-                        }
-                        else if( name.equals( "version" ) ){
-                            l.setTXVersion( value );
-                        }
-                        else if( name.equals( "id"  ) ){
-                            l.setLogicalID( value );
-                        }
-                        else if( name.equals( "node-label"  ) ){
-                            l.setNodeLabel( value );
-                        }
-                        else {
-                	    this.complain( element, name, value );
-                        }
-                    }
-                   
-                   return l;
-                }
-                return null;
                 
             //j job
             case 'j':
@@ -702,6 +665,43 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }//end of element job
                 return null;//end of j
 
+            //l link job for a dataflow
+            case 'l':
+                if ( element.equals( "link") ){
+                   
+                   Link l = new Link( );
+                    //all jobs in the DAX are of type compute
+                    l.setUniverse( GridGateway.JOB_TYPE.compute.toString() ); 
+                    l.setJobType( Job.COMPUTE_JOB );
+                    
+                    for ( int i=0; i < names.size(); ++i ) {
+                        String name = (String) names.get( i );
+                        String value = (String) values.get( i );
+
+                        if ( name.equals( "namespace" ) ) {
+                            l.setTXNamespace( value );
+                        }
+                        else if( name.equals( "name" ) ){
+                            l.setTXName( value );
+                        }
+                        else if( name.equals( "version" ) ){
+                            l.setTXVersion( value );
+                        }
+                        else if( name.equals( "id"  ) ){
+                            l.setLogicalID( value );
+                        }
+                        else if( name.equals( "node-label"  ) ){
+                            l.setNodeLabel( value );
+                        }
+                        else {
+                	    this.complain( element, name, value );
+                        }
+                    }
+                   //set the internal primary id for job
+                   l.setName( constructJobID( l ) );
+                   return l;
+                }
+                return null;
                 
             //m metadata
             case 'm':
