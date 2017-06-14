@@ -32,6 +32,8 @@ import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.cluster.JobAggregator;
+import edu.isi.pegasus.planner.cluster.aggregator.Decaf;
 import edu.isi.pegasus.planner.code.CodeGeneratorFactory;
 import edu.isi.pegasus.planner.code.generator.Stampede;
 import edu.isi.pegasus.planner.common.PegRandom;
@@ -271,13 +273,20 @@ public class InterPoolEngine extends Engine implements Refiner {
             Job job = ( Job )node.getContent();
            
             if( job instanceof DataFlowJob ){
-                    //PM-1205 datalfows are clustered jobs
-                    //we map the constitutent jobs not the datalfow job itself.
-                    for( Iterator consIT = ((DataFlowJob)job).nodeIterator(); consIT.hasNext(); ){
-                        GraphNode n = (GraphNode) consIT.next();
-                        Job j = (Job) n.getContent();
-                        incorporateSiteMapping( j , sites );
-                    }
+                //associate the job with decaf job aggregator
+                //hardcoded for time being
+                DataFlowJob dflow = (DataFlowJob)job;
+                JobAggregator decaf = new Decaf();
+                decaf.initialize(dag, mBag);
+                dflow.setJobAggregator( decaf );
+                
+                //PM-1205 datalfows are clustered jobs
+                //we map the constitutent jobs not the datalfow job itself.
+                for( Iterator consIT = dflow.nodeIterator(); consIT.hasNext(); ){
+                    GraphNode n = (GraphNode) consIT.next();
+                    Job j = (Job) n.getContent();
+                    incorporateSiteMapping( j , sites );
+                }
             }
             
             incorporateSiteMapping( job , sites );
