@@ -279,9 +279,9 @@ public class InterPoolEngine extends Engine implements Refiner {
                         incorporateSiteMapping( j , sites );
                     }
             }
-            else{
-                incorporateSiteMapping( job , sites );
-            }
+            
+            incorporateSiteMapping( job , sites );
+            
             
             //incorporate the profiles and
             //do transformation selection

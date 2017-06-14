@@ -66,9 +66,9 @@ public abstract class AbstractPerJob extends Abstract {
                         mapJob( j, sites );
                     }
                 }
-                else{
-                    mapJob( job, sites);
-                }
+                
+                mapJob( job, sites);
+                
             }
         }
 
