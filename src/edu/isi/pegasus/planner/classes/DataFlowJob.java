@@ -6,6 +6,7 @@
 package edu.isi.pegasus.planner.classes;
 
 import edu.isi.pegasus.planner.namespace.Namespace;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.namespace.Selector;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.partitioner.graph.MapGraph;
@@ -27,6 +28,8 @@ public class DataFlowJob extends AggregatedJob{
     public DataFlowJob() {
         super();
         mEdges = new LinkedList();
+        //data flow job cannot be executed via kickstart
+        this.vdsNS.construct( Pegasus.GRIDSTART_KEY, "none" );
     }
 
     /**
@@ -47,6 +50,8 @@ public class DataFlowJob extends AggregatedJob{
     public DataFlowJob(Job job,int num) {
         super(job, num );
         mEdges = new LinkedList();
+        //data flow job cannot be executed via kickstart
+        this.vdsNS.construct( Pegasus.GRIDSTART_KEY, "none" );
     }
     
     /**
