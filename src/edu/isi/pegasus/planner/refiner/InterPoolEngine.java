@@ -291,25 +291,6 @@ public class InterPoolEngine extends Engine implements Refiner {
             
             incorporateSiteMapping( job , sites );
             
-            
-            //incorporate the profiles and
-            //do transformation selection
-            //set the staging site for the job
-            TransformationCatalogEntry entry = lookupTC(job);
-            incorporateProfiles(job, entry );
-            
-            //PM-810 assign data configuration for the job if
-            //not already incorporated from profiles and properites
-            if( !job.vdsNS.containsKey( Pegasus.DATA_CONFIGURATION_KEY) ){
-                job.vdsNS.construct( Pegasus.DATA_CONFIGURATION_KEY, PegasusConfiguration.DEFAULT_DATA_CONFIGURATION_VALUE );
-            }
-            job.setStagingSiteHandle( determineStagingSite( job ) );
-            handleExecutableFileTransfers(job, entry);
-            
-            //PM-882 incorporate estimates on runtimes of the jobs
-            //after the site selection has been done
-            incorporateEstimates( job );
-            
             //log actions as XML fragment
             try{
                 logRefinerAction(job);
@@ -318,6 +299,7 @@ public class InterPoolEngine extends Engine implements Refiner {
             catch( Exception e ){
                 throw new RuntimeException( "PASOA Exception", e );
             }
+            
 
         }//end of mapping all jobs
 
@@ -380,6 +362,24 @@ public class InterPoolEngine extends Engine implements Refiner {
 
             mLogger.log("Job was mapped to " + job.jobName + " to site " + site,
                         LogManager.DEBUG_MESSAGE_LEVEL);
+            
+            //incorporate the profiles and
+            //do transformation selection
+            //set the staging site for the job
+            TransformationCatalogEntry entry = lookupTC(job);
+            incorporateProfiles(job, entry );
+            
+            //PM-810 assign data configuration for the job if
+            //not already incorporated from profiles and properites
+            if( !job.vdsNS.containsKey( Pegasus.DATA_CONFIGURATION_KEY) ){
+                job.vdsNS.construct( Pegasus.DATA_CONFIGURATION_KEY, PegasusConfiguration.DEFAULT_DATA_CONFIGURATION_VALUE );
+            }
+            job.setStagingSiteHandle( determineStagingSite( job ) );
+            handleExecutableFileTransfers(job, entry);
+            
+            //PM-882 incorporate estimates on runtimes of the jobs
+            //after the site selection has been done
+            incorporateEstimates( job );
             
     }
 
