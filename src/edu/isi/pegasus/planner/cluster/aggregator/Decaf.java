@@ -281,7 +281,7 @@ public class Decaf implements JobAggregator{
         }
         generator.writeEnd();// for nodes
         
-        generator.writeStartArray( "links" );
+        generator.writeStartArray( "edges" );
         for (DataFlowJob.Link j : links) {
             //decaf attributes are stored as selector profiles
             Namespace decafAttrs =j.getSelectorProfiles();
