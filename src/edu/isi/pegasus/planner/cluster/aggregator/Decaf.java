@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.classes.DataFlowJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.cluster.JobAggregator;
+import edu.isi.pegasus.planner.code.generator.condor.style.Condor;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -30,6 +31,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -103,16 +105,22 @@ public class Decaf implements JobAggregator{
         //PM-833 the .in file should be in the same directory where all job submit files go
         File directory = new File( this.mWFSubmitDirectory, job.getRelativeSubmitDirectory() );
         File jsonFile = new File( directory, name );
-        Writer writer;
-        try {
-            writer = new BufferedWriter(new FileWriter( jsonFile ) );
-        } catch (IOException ex) {
-            throw new RuntimeException( "Unable to open file " + jsonFile + " for writing ", ex );
-        }
+        File launchFile = new File( directory, job.getID() + ".sh" );
+        Writer jsonWriter = getWriter( jsonFile );
+        Writer launchWriter = getWriter( launchFile );
+        
 
         //generate the json file for the data flow job
-        writeOutDECAFJsonWorkflow( (DataFlowJob) job, writer );
+        writeOutDECAFJsonWorkflow((DataFlowJob) job, jsonWriter );
+        //generate the shell script that sets up the MPMD invocation
+        writeOutLaunchScript((DataFlowJob) job, launchWriter );
         
+        //set the xbit to true for the file
+        launchFile.setExecutable( true );
+        //the launch file is the main executable for the data flow
+        job.setRemoteExecutable( launchFile.toString() );
+        //rely on condor to transfer the script to the remote cluster
+        job.condorVariables.construct( Condor.TRANSFER_EXECUTABLE_KEY, "true" );
         
     }
    
@@ -336,6 +344,50 @@ public class Decaf implements JobAggregator{
         generator.writeEnd();//for document
         
         generator.close();
+    }
+
+    /**
+     * Writer to write out the launch script for the data flow job.
+     * 
+     * @param job 
+     * @param writer 
+     */
+    private void writeOutLaunchScript(DataFlowJob job, Writer writer) {
+        PrintWriter pw = new PrintWriter( writer );
+        pw.println( "#!/bin/bash" );
+        
+        //mpirun  -np 4 ./linear_2nodes : -np 2 ./linear_2nodes : -np 2 ./linear_2nodes
+        StringBuilder sb = new StringBuilder();
+        sb.append( "mpirun" ).append( " " );
+        //traverse through the nodes making up the Data flow job
+        //and update resource requirements
+        boolean first = true;
+        for( Iterator it = job.nodeIterator(); it.hasNext(); ){
+            GraphNode n = (GraphNode) it.next();
+            Job j       = (Job) n.getContent();
+            int cores  = j.vdsNS.getIntValue( Pegasus.CORES_KEY, -1 );
+            
+            if( !first ){
+                sb.append( ":" ).append( " " );
+            }
+            
+            sb.append( "-np" ).append( " " ).append( cores ).append( " " ).
+               append( j.getRemoteExecutable() );
+            first = false;
+            
+         }
+         pw.println( sb );
+         pw.close();
+    }
+    
+    private Writer getWriter(File jsonFile) {
+        Writer writer = null;
+        try {
+            writer = new BufferedWriter(new FileWriter( jsonFile ) );
+        } catch (IOException ex) {
+            throw new RuntimeException( "Unable to open file " + jsonFile + " for writing ", ex );
+        }
+        return writer;
     }
 
 }
