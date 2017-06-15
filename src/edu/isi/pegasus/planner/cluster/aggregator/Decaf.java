@@ -230,31 +230,23 @@ public class Decaf implements JobAggregator{
         JsonGeneratorFactory factory = Json.createGeneratorFactory( properties );
         JsonGenerator generator = factory.createGenerator( writer );
        
-        /*
-        generator
-     .writeStartObject()
-         .write("firstName", "John")
-         .write("lastName", "Smith")
-         .write("age", 25)
-         .writeStartObject("address")
-             .write("streetAddress", "21 2nd Street")
-             .write("city", "New York")
-             .write("state", "NY")
-             .write("postalCode", "10021")
-         .writeEnd()
-        */
-        
         //separate out the nodes and the link jobs from the collection.
+        //linked list is important as order determine the source and target
+        //in links
         LinkedList<Job> nodes = new LinkedList();
-        LinkedList<Job> links = new LinkedList();
+        LinkedList<DataFlowJob.Link> links = new LinkedList();
+        //maps tasks logical id to index in the nodes array of json
+        Map<String,Integer> logicalIDToIndex = new HashMap();
+        int index = 0;
         for( Iterator it = job.nodeIterator(); it.hasNext(); ){
             GraphNode n = (GraphNode) it.next();
             Job j = (Job) n.getContent();
             if( j instanceof DataFlowJob.Link ){
-                links.add(j);
+                links.add((DataFlowJob.Link) j);
             }
             else{
-                nodes.add(j);
+                logicalIDToIndex.put( j.getLogicalID(), index++ );
+                nodes.add( j );
             }
         }
         
@@ -278,11 +270,16 @@ public class Decaf implements JobAggregator{
         generator.writeEnd();// for nodes
         
         generator.writeStartArray( "links" );
-        for( Iterator<Job> it = links.iterator(); it.hasNext(); ){
-            Job j = it.next();
+        for( Iterator<DataFlowJob.Link> it = links.iterator(); it.hasNext(); ){
+            DataFlowJob.Link j = it.next();
             //decaf attributes are stored as selector profiles
             Namespace decafAttrs =j.getSelectorProfiles();
             generator.writeStartObject();
+            
+            //write out source and target
+            generator.write( "source", logicalIDToIndex.get( j.getParentID() ) );
+            generator.write( "target", logicalIDToIndex.get( j.getChildID() ) );
+            
             for( Iterator profileIt = decafAttrs.getProfileKeyIterator(); profileIt.hasNext(); ){
                 String key = (String)profileIt.next();
                 String value = (String)decafAttrs.get( key );

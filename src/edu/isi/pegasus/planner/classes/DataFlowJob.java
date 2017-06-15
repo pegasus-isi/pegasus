@@ -76,6 +76,15 @@ public class DataFlowJob extends AggregatedJob{
             mParentJob = new GraphNode( parent );
             mChildJob  = new GraphNode( child );
         }
+        
+        public String getParentID(){
+           return mParentJob.getID();
+        }
+        
+        
+        public String getChildID(){
+           return mChildJob.getID();
+        }
 
         @Override
         public String toString() {
