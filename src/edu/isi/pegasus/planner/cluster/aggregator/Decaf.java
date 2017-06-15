@@ -255,23 +255,34 @@ public class Decaf implements JobAggregator{
         generator.writeStartObject( "workflow" ).
                     write( "filter_level", "NONE" );
         generator.writeStartArray( "nodes" );
-        for( Iterator<Job> it = nodes.iterator(); it.hasNext(); ){
-            Job j = it.next();
+        for (Job j : nodes) {
             //decaf attributes are stored as selector profiles
             Namespace decafAttrs =j.getSelectorProfiles();
             generator.writeStartObject();
             for( Iterator profileIt = decafAttrs.getProfileKeyIterator(); profileIt.hasNext(); ){
                 String key = (String)profileIt.next();
                 String value = (String)decafAttrs.get( key );
-                generator.write( key, value );
+                //check for int values
+                Integer v = -1;
+                try{
+                    v = Integer.parseInt( value );
+                }
+                catch( Exception e ){}
+                
+                if( v == -1 ){
+                    generator.write( key, value );
+
+                }
+                else{   
+                    generator.write( key, v );
+                }
             }
             generator.writeEnd();
         }
         generator.writeEnd();// for nodes
         
         generator.writeStartArray( "links" );
-        for( Iterator<DataFlowJob.Link> it = links.iterator(); it.hasNext(); ){
-            DataFlowJob.Link j = it.next();
+        for (DataFlowJob.Link j : links) {
             //decaf attributes are stored as selector profiles
             Namespace decafAttrs =j.getSelectorProfiles();
             generator.writeStartObject();
@@ -283,7 +294,21 @@ public class Decaf implements JobAggregator{
             for( Iterator profileIt = decafAttrs.getProfileKeyIterator(); profileIt.hasNext(); ){
                 String key = (String)profileIt.next();
                 String value = (String)decafAttrs.get( key );
-                generator.write( key, value );
+                
+                //check for int values
+                Integer v = -1;
+                try{
+                    v = Integer.parseInt( value );
+                }
+                catch( Exception e ){}
+                
+                if( v == -1 ){
+                    generator.write( key, value );
+
+                }
+                else{   
+                    generator.write( key, v );
+                }
             }
             generator.writeEnd();
         }
