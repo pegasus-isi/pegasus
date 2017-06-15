@@ -15,11 +15,31 @@
  */
 package edu.isi.pegasus.planner.cluster.aggregator;
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
+import edu.isi.pegasus.planner.classes.DataFlowJob;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.cluster.JobAggregator;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.namespace.Namespace;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.json.Json;
+import javax.json.stream.JsonGenerator;
+
+import javax.json.stream.JsonGeneratorFactory;
 
 /**
  * Decaf data flows are represented as clustered job. DECAF implementation to
@@ -28,9 +48,27 @@ import java.util.List;
  * @author Karan Vahi
  */
 public class Decaf implements JobAggregator{
+    
+    /**
+     * The base submit directory for the workflow.
+     */
+    protected String mWFSubmitDirectory;
+
+    /**
+     * The object holding all the properties pertaining to Pegasus.
+     */
+    protected PegasusProperties mProps;
+
+    /**
+     * The handle to the LogManager that logs all the messages.
+     */
+    protected LogManager mLogger;
 
     public void initialize(ADag dag, PegasusBag bag) {
         
+        mLogger = bag.getLogger();
+        mProps  = bag.getPegasusProperties();
+        mWFSubmitDirectory = bag.getPlannerOptions().getSubmitDirectory() ;
     }
 
    
@@ -41,7 +79,24 @@ public class Decaf implements JobAggregator{
      * @param job          the abstract clustered job
      */
     public void makeAbstractAggregatedJobConcrete( AggregatedJob job ){
-        throw new UnsupportedOperationException("Not supported yet.");  
+        
+        //figure out name and directoryu
+        String name = job.getID() + ".json";
+            
+        //PM-833 the .in file should be in the same directory where all job submit files go
+        File directory = new File( this.mWFSubmitDirectory, job.getRelativeSubmitDirectory() );
+        File jsonFile = new File( directory, name );
+        Writer writer;
+        try {
+            writer = new BufferedWriter(new FileWriter( jsonFile ) );
+        } catch (IOException ex) {
+            throw new RuntimeException( "Unable to open file " + jsonFile + " for writing ", ex );
+        }
+
+        //generate the json file for the data flow job
+        writeOutDECAFJsonWorkflow( (DataFlowJob) job, writer );
+        
+        
     }
    
     
@@ -128,6 +183,87 @@ public class Decaf implements JobAggregator{
      */
     public String getClusterExecutableBasename(){
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    /**
+     * Writes out the data flow as decaf workflow represented as JSON. Sample
+     * DECAF 2 node workflow represented here.
+     * <pre>
+            {
+           "workflow": {
+               "filter_level": "NONE", 
+               "nodes": [
+                   {
+                       "nprocs": 4, 
+                       "start_proc": 0, 
+                       "func": "prod"
+                   }, 
+                   {
+                       "nprocs": 2, 
+                       "start_proc": 6, 
+                       "func": "con"
+                   }
+               ], 
+               "edges": [
+                   {
+                       "nprocs": 2, 
+                       "start_proc": 4, 
+                       "source": 0, 
+                       "func": "dflow", 
+                       "prod_dflow_redist": "count", 
+                       "path": "/data/scratch/vahi/software/install/decaf/default/examples/direct/mod_linear_2nodes.so", 
+                       "dflow_con_redist": "count", 
+                       "target": 1
+                   }
+               ]
+           }
+       }
+     * </pre>
+     * 
+     * @param dataFlowJob
+     * @param writer 
+     */
+    private void writeOutDECAFJsonWorkflow(DataFlowJob job, Writer writer ) {
+        Map<String, Object> properties = new HashMap<String, Object>(1);
+        properties.put(JsonGenerator.PRETTY_PRINTING, true);
+        JsonGeneratorFactory factory = Json.createGeneratorFactory( properties );
+        JsonGenerator generator = factory.createGenerator( writer );
+       
+        /*
+        generator
+     .writeStartObject()
+         .write("firstName", "John")
+         .write("lastName", "Smith")
+         .write("age", 25)
+         .writeStartObject("address")
+             .write("streetAddress", "21 2nd Street")
+             .write("city", "New York")
+             .write("state", "NY")
+             .write("postalCode", "10021")
+         .writeEnd()
+        */
+        generator.writeStartObject();
+        generator.writeStartObject( "workflow" ).
+                    write( "filter_level", "NONE" );
+        generator.writeStartArray( "nodes" );
+        for( Iterator it = job.nodeIterator(); it.hasNext(); ){
+            GraphNode n = (GraphNode) it.next();
+            Job j = (Job) n.getContent();
+            //decaf attributes are stored as selector profiles
+            Namespace decafAttrs =j.getSelectorProfiles();
+            generator.writeStartObject();
+            for( Iterator profileIt = decafAttrs.getProfileKeyIterator(); profileIt.hasNext(); ){
+                String key = (String)profileIt.next();
+                String value = (String)decafAttrs.get( key );
+                generator.write( key, value );
+            }
+            generator.writeEnd();
+        }
+        generator.writeEnd();// for nodes
+        generator.writeEnd();//for workflow
+        generator.writeEnd();//for document
+        
+        generator.close();
     }
 
 }

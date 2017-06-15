@@ -1715,6 +1715,15 @@ public class Job extends Data implements GraphNodeContent{
         Object obj = dagmanVariables.get( Dagman.PRE_SCRIPT_ARGUMENTS_KEY );
         return (obj == null)? null: (String)obj;
     }
+    
+    /**
+     * Returns the data flow attributes associated with the job
+     * 
+     * @return 
+     */
+    public Namespace getSelectorProfiles(){
+        return this.mSelectorProfiles;
+    }
 
     /**
      * Returns whether the job is recursive or not.
