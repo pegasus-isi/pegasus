@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -242,13 +243,28 @@ public class Decaf implements JobAggregator{
              .write("postalCode", "10021")
          .writeEnd()
         */
+        
+        //separate out the nodes and the link jobs from the collection.
+        LinkedList<Job> nodes = new LinkedList();
+        LinkedList<Job> links = new LinkedList();
+        for( Iterator it = job.nodeIterator(); it.hasNext(); ){
+            GraphNode n = (GraphNode) it.next();
+            Job j = (Job) n.getContent();
+            if( j instanceof DataFlowJob.Link ){
+                links.add(j);
+            }
+            else{
+                nodes.add(j);
+            }
+        }
+        
+        
         generator.writeStartObject();
         generator.writeStartObject( "workflow" ).
                     write( "filter_level", "NONE" );
         generator.writeStartArray( "nodes" );
-        for( Iterator it = job.nodeIterator(); it.hasNext(); ){
-            GraphNode n = (GraphNode) it.next();
-            Job j = (Job) n.getContent();
+        for( Iterator<Job> it = nodes.iterator(); it.hasNext(); ){
+            Job j = it.next();
             //decaf attributes are stored as selector profiles
             Namespace decafAttrs =j.getSelectorProfiles();
             generator.writeStartObject();
@@ -260,6 +276,24 @@ public class Decaf implements JobAggregator{
             generator.writeEnd();
         }
         generator.writeEnd();// for nodes
+        
+        generator.writeStartArray( "links" );
+        for( Iterator<Job> it = links.iterator(); it.hasNext(); ){
+            Job j = it.next();
+            //decaf attributes are stored as selector profiles
+            Namespace decafAttrs =j.getSelectorProfiles();
+            generator.writeStartObject();
+            for( Iterator profileIt = decafAttrs.getProfileKeyIterator(); profileIt.hasNext(); ){
+                String key = (String)profileIt.next();
+                String value = (String)decafAttrs.get( key );
+                generator.write( key, value );
+            }
+            generator.writeEnd();
+        }
+        generator.writeEnd();// for nodes
+        
+        
+        
         generator.writeEnd();//for workflow
         generator.writeEnd();//for document
         
