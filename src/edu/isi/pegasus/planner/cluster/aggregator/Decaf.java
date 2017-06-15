@@ -24,6 +24,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.cluster.JobAggregator;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Namespace;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -35,8 +36,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.stream.JsonGenerator;
 
@@ -49,6 +48,12 @@ import javax.json.stream.JsonGeneratorFactory;
  * @author Karan Vahi
  */
 public class Decaf implements JobAggregator{
+    
+    
+    /**
+     * The key indicating the number of processors to run the job on.
+     */
+    private static final String NPROCS_KEY ="nprocs";
     
     /**
      * The base submit directory for the workflow.
@@ -83,6 +88,17 @@ public class Decaf implements JobAggregator{
         
         //figure out name and directoryu
         String name = job.getID() + ".json";
+        
+        //traverse through the nodes making up the Data flow job
+        //and update resource requirements
+         for( Iterator it = job.nodeIterator(); it.hasNext(); ){
+            GraphNode n = (GraphNode) it.next();
+            Job j = (Job) n.getContent();
+            Namespace decafProfiles = j.getSelectorProfiles();
+            if( decafProfiles.containsKey( Decaf.NPROCS_KEY)  ){
+                j.vdsNS.construct(Pegasus.CORES_KEY, (String) decafProfiles.get( Decaf.NPROCS_KEY ));
+            }
+         }
             
         //PM-833 the .in file should be in the same directory where all job submit files go
         File directory = new File( this.mWFSubmitDirectory, job.getRelativeSubmitDirectory() );
