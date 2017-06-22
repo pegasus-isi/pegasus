@@ -368,7 +368,7 @@ public class Decaf implements JobAggregator{
             int cores  = j.vdsNS.getIntValue( Pegasus.CORES_KEY, -1 );
             
             if( !first ){
-                sb.append( ":" ).append( " " );
+                sb.append( " " ).append( ":" ).append( " " );
             }
             
             sb.append( "-np" ).append( " " ).append( cores ).append( " " ).
