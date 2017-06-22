@@ -88,8 +88,17 @@ public class Decaf implements JobAggregator{
      */
     public void makeAbstractAggregatedJobConcrete( AggregatedJob job ){
         
-        //figure out name and directoryu
-        String name = job.getID() + ".json";
+        //figure out name and directory
+        //String name = job.getID() + ".json";
+        
+        //we cannot give any name because of hardcoded nature
+        //in decaf. instead pick up the name as defined in the 
+        //transformation catalog for dataflow::decaf
+        String dataFlowExecutable = job.getRemoteExecutable();
+        String name = new File( dataFlowExecutable ).getName();
+        if( !name.endsWith( ".json") ){
+            throw new RuntimeException( "Data flow job with id " + job.getID() + " should be mapped to a json file in TC. Is mapped to " + name );
+        }
         
         //traverse through the nodes making up the Data flow job
         //and update resource requirements
