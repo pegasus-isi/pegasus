@@ -279,7 +279,8 @@ public class Condor extends Abstract {
                         job.condorVariables.construct("initialdir", workdir);
                     }
                 }
-                wrapJobWithLocalPegasusLite( job );
+                //looks like condor file transfer works for local universe jobs now
+                //wrapJobWithLocalPegasusLite( job );
                 applyCredentialsForLocalExec(job);
         }
         else{
