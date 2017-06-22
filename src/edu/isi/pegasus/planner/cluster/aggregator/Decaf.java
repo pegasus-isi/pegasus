@@ -121,6 +121,8 @@ public class Decaf implements JobAggregator{
 
         //generate the json file for the data flow job
         writeOutDECAFJsonWorkflow((DataFlowJob) job, jsonWriter );
+        job.condorVariables.addIPFileForTransfer( jsonFile.getAbsolutePath() );
+        
         //generate the shell script that sets up the MPMD invocation
         writeOutLaunchScript((DataFlowJob) job, launchWriter );
         
