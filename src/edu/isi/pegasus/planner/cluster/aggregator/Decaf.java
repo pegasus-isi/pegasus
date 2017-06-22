@@ -102,14 +102,21 @@ public class Decaf implements JobAggregator{
         
         //traverse through the nodes making up the Data flow job
         //and update resource requirements
-         for( Iterator it = job.nodeIterator(); it.hasNext(); ){
+        int cores = 0;
+        for( Iterator it = job.nodeIterator(); it.hasNext(); ){
             GraphNode n = (GraphNode) it.next();
             Job j = (Job) n.getContent();
             Namespace decafProfiles = j.getSelectorProfiles();
             if( decafProfiles.containsKey( Decaf.NPROCS_KEY)  ){
                 j.vdsNS.construct(Pegasus.CORES_KEY, (String) decafProfiles.get( Decaf.NPROCS_KEY ));
             }
-         }
+            int c  = j.vdsNS.getIntValue( Pegasus.CORES_KEY, -1 );
+            if( c == -1 ){
+                throw new RuntimeException( "Invalid number of cores or decaf key " + Decaf.NPROCS_KEY + " specified for job " + j.getID() );
+            }
+            cores += c;
+        }
+        job.vdsNS.construct( Pegasus.CORES_KEY, Integer.toString(cores) );
             
         //PM-833 the .in file should be in the same directory where all job submit files go
         File directory = new File( this.mWFSubmitDirectory, job.getRelativeSubmitDirectory() );
