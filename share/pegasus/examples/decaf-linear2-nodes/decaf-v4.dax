@@ -18,8 +18,10 @@
 	  <!-- to indicate the input and output file that a decaf
 	       dataflow requires -->
 	  <uses name="f.b1" link="input"/>
-	  <uses name="f.c1" link="output" register="true" transfer="true"/>
 
+	  <!-- this example does not generate any output file
+	  <uses name="f.out" link="output" register="true" transfer="true"/>
+	  -->
 	  <job id="ID0000003" name="linear_2nodes_producer">
 	    <decaf key="start_proc">0</decaf>
 	    <decaf key="nprocs">4</decaf>
