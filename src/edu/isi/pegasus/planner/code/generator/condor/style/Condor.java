@@ -31,6 +31,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactoryException
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -281,6 +282,16 @@ public class Condor extends Abstract {
                 }
                 wrapJobWithLocalPegasusLite( job );
                 applyCredentialsForLocalExec(job);
+                
+                //remove request_ keys as they are not handled in local universe
+                for( Iterator it = job.condorVariables.getProfileKeyIterator(); it.hasNext();){
+                    String key = (String)it.next();
+                    if( key.startsWith( "request_") ){
+                        mLogger.log( "Removing unsupported key " + key + " in local universe for job " + job.getID(),
+                                     LogManager.WARNING_MESSAGE_LEVEL );
+                        it.remove();
+                    }
+                }
         }
         else{
             //Is invalid state
