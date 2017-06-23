@@ -374,6 +374,8 @@ public class Decaf implements JobAggregator{
         PrintWriter pw = new PrintWriter( writer );
         pw.println( "#!/bin/bash" );
         
+        pw.println( "echo \" Launched from directory `pwd` \" ");
+        
         //mpirun  -np 4 ./linear_2nodes : -np 2 ./linear_2nodes : -np 2 ./linear_2nodes
         StringBuilder sb = new StringBuilder();
         sb.append( "mpirun" ).append( " " );
