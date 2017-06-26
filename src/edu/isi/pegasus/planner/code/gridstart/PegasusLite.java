@@ -849,7 +849,7 @@ public class PegasusLite implements GridStart {
             sb.append( "# cleanup in case of failures" ).append( '\n' );
             sb.append( "trap pegasus_lite_signal_int INT" ).append( '\n' );
             sb.append( "trap pegasus_lite_signal_term TERM" ).append( '\n' );
-            sb.append( "trap pegasus_lite_exit EXIT" ).append( '\n' );
+            sb.append( "trap pegasus_lite_unexpected_exit EXIT" ).append( '\n' );
             sb.append( '\n' );
 
             appendStderrFragment( sb, "Setting up workdir" );
@@ -1087,6 +1087,10 @@ public class PegasusLite implements GridStart {
                 associateCredentials( job, files );
             }
             
+            sb.append( "\n" );
+            sb.append( "# clear the trap, and exit cleanly" );
+            sb.append( "trap - EXIT" ).append( '\n' );
+            sb.append( "pegasus_lite_final_exit" ).append( '\n' );
            
             writer.print( sb.toString() );
             writer.flush();

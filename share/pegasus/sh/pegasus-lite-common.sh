@@ -379,8 +379,13 @@ function pegasus_lite_signal_term()
 }
 
 
-function pegasus_lite_exit()
+function pegasus_lite_unexpected_exit()
 {
+    # note that there are two exit() functions, one for final
+    # exit and one for unexepected. The final one is only called
+    # at the last step of the lite script. The unexpected one
+    # can be called anytime if the script exists as a result 
+    # of for example signals
     rc=$?
     if [ "x$caught_signal_name" != "x" ]; then
         # if we got a signal, always fail the job
@@ -392,14 +397,45 @@ function pegasus_lite_exit()
         rc=1
     elif [ $rc -gt 0 ]; then
         pegasus_lite_log "Last command exited with $rc"
+    fi
+
+    # never allow the script to exit with 0 in case of 
+    # unexpected termination
+    if [ "x$rc" = "x0" ]; then
+        pegasus_lite_log "Unable to determine why the script was forced to exit!"
+        rc=1
+    fi
+
+    if [ "x$pegasus_lite_work_dir_created" = "x1" ]; then
+        cd /
+        rm -rf $pegasus_lite_work_dir
+        pegasus_lite_log "$pegasus_lite_work_dir cleaned up"
+    fi
+
+    echo "PegasusLite: exitcode $rc" 1>&2
+
+    exit $rc
+}
+
+
+function pegasus_lite_final_exit()
+{
+    # note that there are two exit() functions, one for final
+    # exit and one for unexepected. The final one is only called
+    # at the last step of the lite script. The unexpected one
+    # can be called anytime if the script exists as a result 
+    # of for example signals
+    rc=1
+    
+    # the exit code of the lite script should reflect the exit code
+    # from the user task    
+    if [ "x$job_ec" = "x" ];then
+        pegasus_lite_log "job_ec is missing - did the user task fail?"
     else
-        # normal exit
-        if [ "x$job_ec" != "x" ];then
-            if [ $job_ec != 0 ];then
-                pegasus_lite_log "Job failed with exitcode $job_ec"
-                rc=$job_ec
-            fi
+        if [ $job_ec != 0 ];then
+            pegasus_lite_log "User task failed with exitcode $job_ec"
         fi
+        rc=$job_ec
     fi
 
     if [ "x$pegasus_lite_work_dir_created" = "x1" ]; then
