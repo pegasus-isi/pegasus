@@ -11,20 +11,26 @@ if [ ! -e build.xml ]; then
     exit 1
 fi
 
+TOP_DIR=$PWD
+
+rm -f lib/pegasus/python/dist/pegasus*.tar.gz
 mkdir -p dist
 
 # create the dist package
 ( cd lib/pegasus/python && /usr/bin/env python setup.py sdist)
 
-# move and rename the created package to the root dist dir
-mv lib/pegasus/python/dist/pegasus-wms-${VERSION}.tar.gz dist/pegasus-python-source-${VERSION}.tar.gz
+# python is now normalizing the version (see PEP 440)
+cd lib/pegasus/python/dist/
+ls -l
+NORM_VERSION=`ls *.tar.gz | sed 's/pegasus-wms-//' | sed 's/\.tar\.gz//'`
+echo "Normalized verison is $NORM_VERSION"
 
-# untar the package and write the version in setup.py
-cd dist
-tar zxf pegasus-python-source-${VERSION}.tar.gz
-sed -i.bak -e s/version=read_version\(\)/version=\"${VERSION}\"/g pegasus-wms-${VERSION}/setup.py
-rm pegasus-wms-${VERSION}/setup.py.bak
+tar xzf pegasus-wms-$NORM_VERSION.tar.gz
+sed -i.bak -e s/version=read_version\(\)/version=\"${VERSION}\"/g pegasus-wms-${NORM_VERSION}/setup.py
+rm pegasus-wms-${NORM_VERSION}/setup.py.bak
 
-tar czf pegasus-python-source-${VERSION}.tar.gz pegasus-wms-${VERSION}
-rm -rf pegasus-wms-${VERSION}
+# create the final tarball
+tar czf $TOP_DIR/dist/pegasus-python-source-${VERSION}.tar.gz pegasus-wms-${NORM_VERSION}
+rm -rf pegasus-wms-${NORM_VERSION}*
+
 
