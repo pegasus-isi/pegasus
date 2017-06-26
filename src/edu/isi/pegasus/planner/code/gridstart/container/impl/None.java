@@ -53,6 +53,8 @@ public class None extends Abstract {
         StringBuilder sb = new StringBuilder();
         appendStderrFragment( sb, "executing the user task" );
         sb.append( job.getRemoteExecutable() ).append( job.getArguments() ).append( '\n' );
+        //capture exitcode of the job
+        sb.append( "job_ec=$?" ).append( "\n" );
         return sb.toString();
     }
     
@@ -79,6 +81,10 @@ public class None extends Abstract {
             sb.append( slurpInFile( jobSubmitDirectory, job.getStdIn() ) );
             sb.append( "EOF" ).append( '\n' );
 
+            //capture exitcode of the job
+            sb.append( "job_ec=$?" ).append( "\n" );
+        
+            
             //rest the jobs stdin
             job.setStdIn( "" );
             job.condorVariables.removeKey( "input" );
