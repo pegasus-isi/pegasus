@@ -250,7 +250,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </javadoc>
   </target>
 
-  <target name="doc-python" depends="setup,doc-user-guide" description="Generate python documentation">
+  <target name="doc-python" depends="setup,doc-user-guide,compile-externals" description="Generate python documentation">
     <delete dir="${dist.doc}/wordpress/python"/>
     <mkdir dir="${dist.doc}/wordpress/python"/>
     <exec executable="./doc/python-docs" dir="" failonerror="true">
