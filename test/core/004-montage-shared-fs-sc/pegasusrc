@@ -1,6 +1,6 @@
 
 pegasus.catalog.replica=SimpleFile
-pegasus.catalog.replica.file=rc
+pegasus.catalog.replica.file=data/rc.txt
 
 
 pegasus.catalog.site.file=sites.xml
@@ -15,4 +15,4 @@ pegasus.condor.logs.symlink = false
 # PM-1022 for sharedfs in vanilla universe, transfer_input_files does not work
 #pegasus.gridstart.kickstart.stat true
 
-pegasus.file.cleanup.constraint.maxspace=2684354560
+pegasus.file.cleanup.constraint.maxspace=5242880000
