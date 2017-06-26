@@ -840,12 +840,12 @@ public class PegasusProperties implements Cloneable {
     /**
      * Returns the maximum available space per site.
      * 
-     * Referred to by the "pegasus.file.cleanup.constraint.*.maxspace" property
+     * Referred to by the "pegasus.file.cleanup.constraint.maxspace" property
      * 
      * @return the value in the property file , else null
      */
     public String getCleanupConstraintMaxSpace() {
-        return mProps.getProperty( "pegasus.file.cleanup.constraint.*.maxspace" );
+        return mProps.getProperty( "pegasus.file.cleanup.constraint.maxspace" );
     }
     
     
