@@ -1088,9 +1088,10 @@ public class PegasusLite implements GridStart {
             }
             
             sb.append( "\n" );
-            sb.append( "# clear the trap, and exit cleanly" );
+            sb.append( "# clear the trap, and exit cleanly" ).append( '\n' );
             sb.append( "trap - EXIT" ).append( '\n' );
             sb.append( "pegasus_lite_final_exit" ).append( '\n' );
+            sb.append( "\n" );
            
             writer.print( sb.toString() );
             writer.flush();
