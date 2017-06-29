@@ -113,13 +113,24 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
             db_create(dburi, engine, db, pegasus_version=pegasus_version, force=force, verbose=verbose)
 
         except exc.OperationalError, e:
-            if "database is locked" in str(e).lower():
+            if 'database is locked' in str(e).lower():
+                # database is locked, getting PIDs and commands
                 p = urlparse(dburi)
-                out, err = subprocess.Popen("fuser -u %s" % p.path,
+                out, err = subprocess.Popen('fuser -u %s' % p.path,
                                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True,
                                             cwd=os.getcwd()).communicate()
 
-                raise ConnectionError("Database is locked (%s). PIDs: %s" % (dburi, out.decode('utf8').strip()),
+                pids = out.decode('utf8').strip().replace(' ', ',')
+                out, err = subprocess.Popen('ps -o "pid user command" -p %s' % pids,
+                                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True,
+                                            cwd=os.getcwd()).communicate()
+                if err:
+                    raise ConnectionError('Database is locked (%s): Unable to run ps command: %s' % (dburi, err),
+                                          given_version=pegasus_version, db_type=db_type)
+
+                output = out.decode('utf8').strip()
+                output = output[output.find('\n') + 1:]
+                raise ConnectionError('Database is locked (%s):\n%s' % (dburi, output),
                                       given_version=pegasus_version, db_type=db_type)
             else:
                 raise ConnectionError("%s (%s)" % (e.message, dburi), given_version=pegasus_version, db_type=db_type)
