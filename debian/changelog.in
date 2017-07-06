@@ -4,3 +4,14 @@ pegasus (@PEGASUS_VERSION@-1+@OSID@) unstable; urgency=low
 
  -- Pegasus Development Team <pegasus-support@isi.edu>  @DATE@
 
+pegasus (4.7.4-1+deb9) stretch; urgency=low
+
+  * Pegasus 4.7.4 build for Stretch
+  * Added build-deps:
+    Python setuptools, Python.h, OpenSSL, R, pdflatex, TeX fonts,
+    MySQL client, PQ, libz
+  * JAVA_HOME includes java-8
+  * Build tag must be +deb9 (!?)
+
+ -- Steffen Grunewald <steffen.grunewald@ligo.org>  Mon, 03 Jul 2017 16:10:00 +0200
+
