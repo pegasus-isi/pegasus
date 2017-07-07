@@ -3,12 +3,11 @@ Section: science
 Priority: extra
 Maintainer: Pegasus Development Team <pegasus-support@isi.edu>
 Build-Depends: debhelper (>= 9), ant, openjdk-8-jdk | openjdk-7-jdk | openjdk-6-jdk, perl, python, asciidoc, xsltproc, fop,
-       dh-python,
        python-dev,
        python-setuptools,
        libmysqlclient-dev | default-libmysqlclient-dev, libpq-dev,
        zlib1g-dev,
-       libssl1.0-dev,
+       libssl1.0-dev | libssl-dev,
        r-base-dev,
        texlive-latex-base, texlive-fonts-recommended
 Standards-Version: 3.9.4
