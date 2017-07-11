@@ -6,12 +6,17 @@ import time
 import threading
 import datetime
 from sqlalchemy.orm.exc import NoResultFound
+import json
+import subprocess
+
 
 from Pegasus import user
 from Pegasus.db import connection
 from Pegasus.service import app
 from Pegasus.db.ensembles import Ensembles, EnsembleStates, EnsembleWorkflowStates, EMError
 from Pegasus.db.schema import DashboardWorkflow, DashboardWorkflowstate
+from datetime import datetime
+
 
 log = logging.getLogger(__name__)
 
@@ -158,6 +163,7 @@ class WorkflowProcessor:
                 os.remove(f)
 
         script = "(%s) 2>&1 | tee -a %s | grep pegasus-run >%s ; /bin/echo $? >%s" % (plan_command, logfile, runfile, resultfile)
+        print "The script is ",script
         forkscript(script, cwd=basedir, pidfile=pidfile, env=get_script_env())
 
     def planning(self):
@@ -337,6 +343,7 @@ class EnsembleProcessor:
         self.max_planning = ensemble.max_planning
         self.running = 0
         self.planning = 0
+        self.observer = None
 
         # We are only interested in workflows that are in one
         # of the following states. The EM doesn't handle other
@@ -382,6 +389,7 @@ class EnsembleProcessor:
         except Exception, e:
             log.error("Planning failed for workflow %s" % workflow.name)
             log.exception(e)
+            print "PLAN FAILED BECAUE OF %s" %workflow.name
             workflow.set_state(EnsembleWorkflowStates.PLAN_FAILED)
             workflow.set_updated()
 
@@ -411,6 +419,9 @@ class EnsembleProcessor:
             self.dao.session.commit()
             return
 
+        workflow_timestamp = subprocess.Popen("date",stdout=subprocess.PIPE).communicate()[0].strip("\n")
+        workflow.set_event_timestamp(str(workflow_timestamp))
+
         log.info("Queueing workflow %s" % workflow.name)
 
         # Planning succeeded, get uuid and queue workflow
@@ -426,7 +437,191 @@ class EnsembleProcessor:
     def can_run(self):
         return self.active and self.running < self.max_running
 
+    def has_events_file(self,workflow):
+
+
+        eventconfig = workflow.get_eventconfig()
+        #print eventconfig
+        #print os.path.exists(eventconfig)
+        if not eventconfig is None:
+            if not os.path.exists(eventconfig):
+                print "Path specified for the event config does not point to any file"
+                return False
+            with open(eventconfig) as data_file:    
+                data = json.load(data_file)
+            if not "event-type" in data.keys():
+                print "Specify event-type: file | hdfs | file-dir | hdfs-dir"
+                return False
+
+            if not "event-cycle" in data.keys():
+                print "event-cycle is necessary in event-config file"
+                return False
+
+            if  data["event-type"]=="file":
+                if not "event-file" in data.keys(): 
+                    print "event-type is file but event-file is not specified"
+                    return False
+                if not os.path.exists(data["event-file"]):
+                    return False
+                if not "event-content" in data.keys():
+                    return True
+
+                data["event-cycle"] = map(int,data["event-cycle"])
+                greater_than_cycle = [i for i in data["event-cycle"] if i>=workflow.get_event_cycle()]
+                idx_of_event_content = data["event-cycle"].index(greater_than_cycle[0])
+                workflow.set_event_maxcycle(greater_than_cycle[len(greater_than_cycle)-1])
+                #self.maxcycle = greater_than_cycle[len(greater_than_cycle)-1]
+                #print "index",idx_of_event_content
+                for content in data["event-content"][idx_of_event_content]:
+                    print "content",content
+                    if not content in open(data["event-file"]).read():
+                        return False
+
+            if  data["event-type"]=="file-dir":
+                if not "event-dir" in data.keys(): 
+                    print "event-type is file-dir but event-dir is not specified"
+                    return False
+                if not os.path.exists(data["event-dir"]):
+                    return False
+                if not "event-size" in data.keys():
+                    print "event-size is necessary"
+                    return False
+                if not "event-content" in data.keys():
+                    return True
+
+                if data["event-content"]=="*":
+
+                    data["event-cycle"] = map(int,data["event-cycle"])
+                    greater_than_cycle = [i for i in data["event-cycle"] if i>=workflow.get_event_cycle()]
+                    workflow.set_event_maxcycle(greater_than_cycle[len(greater_than_cycle)-1])
+
+                    #os.system("date +%x_%H:%M:%S:%N")
+                    workflow_timestamp = workflow.get_event_timestamp()
+                    print "Workflow timestamp",workflow_timestamp
+                    if workflow_timestamp == None:
+                        print "Workflow timestamp not set yet"
+                        return False
+                        #workflow_timestamp = os.system("echo date")
+                        
+                        print "Afterwards",workflow_timestamp,workflow.get_event_timestamp()
+                    #num_files = os.system("find '"+data["event-dir"]+"' -size +"+str(data["event-size"])+"c -newermt '"+str(workflow_timestamp)+"' -exec /bin/echo {} \; | wc -l")
+                    files = subprocess.check_output(["find", data["event-dir"], "-size", "+"+str(data["event-size"])+"c", "-newermt", str(workflow_timestamp)])
+                    num_files = files.count("\n")-1
+                    print num_files, data["event-dir"],data["event-size"],workflow_timestamp,data["event-numfiles"]
+                    if (num_files) < data["event-numfiles"]:
+                        return False
+
+
+                else:
+                    data["event-cycle"] = map(int,data["event-cycle"])
+                    greater_than_cycle = [i for i in data["event-cycle"] if i>=workflow.get_event_cycle()]
+                    idx_of_event_content = data["event-cycle"].index(greater_than_cycle[0])
+                    workflow.set_event_maxcycle(greater_than_cycle[len(greater_than_cycle)-1])
+                    #self.maxcycle = greater_than_cycle[len(greater_than_cycle)-1]
+                    print "index",idx_of_event_content
+                    it = 0
+                    idx = workflow.get_event_cycle()
+                    for content in data["event-content"][idx_of_event_content]:
+                        print "content",content, it, idx, int(data["event-size"][idx-1][it])
+                        if not os.path.exists(data["event-dir"]+"/"+content):
+                            return False
+
+                        statinfo = os.stat(data["event-dir"]+"/"+content)
+                        filesize = int(statinfo.st_size)
+                        if filesize < int(data["event-size"][idx-1][it]):
+                            return False
+
+                        it+=1
+
+
+
+            if  data["event-type"]=="hdfs-dir":
+                if not "event-dir" in data.keys(): 
+                    print "event-type is hdfs-dir but event-dir is not specified"
+                    return False
+                try:
+                    subprocess.check_output(["hdfs","dfs","-test","-e",data["event-dir"]])
+                except:
+                    print "Check if HDFS is running or if the hdfs-dir exists in HDFS"
+                    return False
+
+                if not "event-size" in data.keys():
+                    print "event-size is necessary"
+                    return False
+                if not "event-content" in data.keys():
+                    return True
+
+                if data["event-content"]=="*":
+
+                    data["event-cycle"] = map(int,data["event-cycle"])
+                    greater_than_cycle = [i for i in data["event-cycle"] if i>=workflow.get_event_cycle()]
+                    workflow.set_event_maxcycle(greater_than_cycle[len(greater_than_cycle)-1])
+
+                    #os.system("date +%x_%H:%M:%S:%N")
+                    workflow_timestamp = workflow.get_event_timestamp()
+                    print "Workflow timestamp",workflow_timestamp
+                    if workflow_timestamp == None:
+                        print "Workflow timestamp not set yet"
+                        return False
+                        #workflow_timestamp = os.system("echo date")
+                        
+                        print "Afterwards",workflow_timestamp,workflow.get_event_timestamp()
+                    #num_files = os.system("find '"+data["event-dir"]+"' -size +"+str(data["event-size"])+"c -newermt '"+str(workflow_timestamp)+"' -exec /bin/echo {} \; | wc -l")
+                    ps = subprocess.Popen(["hdfs", "dfs", "-ls", data["event-dir"]], stdout=subprocess.PIPE)
+                    dates = subprocess.check_output(["awk","{print $6}"],stdin=ps.stdout)
+                    ps = subprocess.Popen(["hdfs", "dfs", "-ls", data["event-dir"]], stdout=subprocess.PIPE)
+                    times = subprocess.check_output(["awk","{print $7}"],stdin=ps.stdout)
+                    ps = subprocess.Popen(["hdfs", "dfs", "-ls", data["event-dir"]], stdout=subprocess.PIPE)
+                    sizes = subprocess.check_output(["awk","{print $5}"],stdin=ps.stdout)
+
+                    dates = dates.split("\n")
+                    times = times.split("\n")
+                    sizes = sizes.split("\n")
+                    dates = dates[1:len(dates)-1]
+                    times = times[1:len(dates)-1]
+                    sizes = sizes[1:len(dates)-1]
+                    workflow_time = datetime.strptime(workflow_timestamp,"%a %b %d %H:%M:%S %Z %Y")
+                    print dates,times,sizes,workflow_time
+                    num_files = 0
+                    for i in xrange(len(times)):
+                        t1 = datetime.strptime(dates[i]+" "+times[i],"%Y-%m-%d %H:%M")
+                        if t1>=workflow_time and float(sizes[i])>float(data["event-size"]):
+                            num_files += 1
+
+
+                    #num_files = files.count("\n")-1
+                    print dates,times,sizes
+                    print num_files, data["event-dir"],data["event-size"],workflow_timestamp,data["event-numfiles"],workflow_time
+                    if (num_files) < data["event-numfiles"]:
+                        return False
+
+
+                else:
+                    data["event-cycle"] = map(int,data["event-cycle"])
+                    greater_than_cycle = [i for i in data["event-cycle"] if i>=workflow.get_event_cycle()]
+                    idx_of_event_content = data["event-cycle"].index(greater_than_cycle[0])
+                    workflow.set_event_maxcycle(greater_than_cycle[len(greater_than_cycle)-1])
+                    #self.maxcycle = greater_than_cycle[len(greater_than_cycle)-1]
+                    print "index",idx_of_event_content
+                    it = 0
+                    idx = workflow.get_event_cycle()
+                    for content in data["event-content"][idx_of_event_content]:
+                        print "content",content, it, idx, int(data["event-size"][idx-1][it])
+                        if not os.path.exists(data["event-dir"]+"/"+content):
+                            return False
+
+                        statinfo = os.stat(data["event-dir"]+"/"+content)
+                        filesize = int(statinfo.st_size)
+                        if filesize < int(data["event-size"][idx-1][it]):
+                            return False
+
+                        it+=1
+
+
+        return True
+
     def run_workflow(self, workflow):
+
         log.info("Running workflow %s" % workflow.name)
 
         self.running += 1
@@ -447,7 +642,8 @@ class EnsembleProcessor:
 
     def handle_queued(self, workflow):
         if self.can_run():
-            self.run_workflow(workflow)
+            if self.has_events_file(workflow):
+                self.run_workflow(workflow)
         else:
             log.debug("Delaying run of workflow %s due to policy" % workflow.name)
 
@@ -466,8 +662,10 @@ class EnsembleProcessor:
         self.running -= 1
 
         if p.running_successful():
+            
             log.info("Workflow %s was successful" % workflow.name)
-            workflow.set_state(EnsembleWorkflowStates.SUCCESSFUL)
+            #workflow.set_state(EnsembleWorkflowStates.SUCCESSFUL)
+            self.handle_successful(workflow)
         else:
             log.info("Workflow %s failed" % workflow.name)
             workflow.set_state(EnsembleWorkflowStates.FAILED)
@@ -475,6 +673,14 @@ class EnsembleProcessor:
         workflow.set_updated()
 
         self.dao.session.commit()
+
+    def handle_successful(self,workflow):
+        if workflow.get_event_cycle()<workflow.get_event_maxcycle():
+            workflow.set_event_cycle(workflow.get_event_cycle()+1)
+            workflow.set_event_timestamp(os.system("date"))
+            workflow.set_state(EnsembleWorkflowStates.READY)
+        else:
+            workflow.set_state(EnsembleWorkflowStates.SUCCESSFUL)
 
     def handle_workflow(self, w):
         if w.state == EnsembleWorkflowStates.READY:

@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 # -------------------------------------------------------------------
 # DB Admin configuration
 # -------------------------------------------------------------------
-CURRENT_DB_VERSION = 8
+CURRENT_DB_VERSION = 9
 DB_MIN_VERSION = 4
 
 COMPATIBILITY = {
@@ -29,7 +29,7 @@ COMPATIBILITY = {
     '4.5.0': 4, '4.5.1': 4, '4.5.2': 4, '4.5.3': 4, '4.5.4': 5,
     '4.6.0': 6, '4.6.1': 6, '4.6.2': 6,
     '4.7.0': 8, '4.7.3': 8,
-    '4.8.0': 8
+    '4.8.0': 9
 }
 
 
@@ -255,6 +255,7 @@ def parse_pegasus_version(pegasus_version=None):
     :param pegasus_version: version of the Pegasus software (e.g., 4.6.0)
     :return: database version
     """
+    
     version = None
     if pegasus_version == 0 or pegasus_version:
         for key in COMPATIBILITY:
@@ -524,8 +525,13 @@ def _version_sanity_check(db, version):
     :param db: db connection
     :param version: version to be verified
     """
-    if float(version) > CURRENT_DB_VERSION:
-        raise DBAdminError("You database was created with a newer Pegasus version. "
+    #print float(version)
+    #print CURRENT_DB_VERSION
+    if float(version) > float(CURRENT_DB_VERSION):
+        #print "Below"
+        #print float(version)
+        print CURRENT_DB_VERSION
+        raise DBAdminError("You database was created with a newer Pegasus version. :"
                            "It will not work properly with the current version."
                            "\nPlease, run 'pegasus-db-admin downgrade' with the latest Pegasus to downgrade your "
                            "database.", db=db, db_version=version)

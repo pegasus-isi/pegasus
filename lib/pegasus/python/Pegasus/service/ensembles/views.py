@@ -104,6 +104,7 @@ def route_create_ensemble_workflow(ensemble):
         raise EMError("Specify ensemble workflow 'name'")
 
     priority = request.form.get("priority", 0)
+    eventconfig = request.form.get("eventconfig",None)
 
     basedir = request.form.get("basedir")
     if basedir is None:
@@ -113,11 +114,26 @@ def route_create_ensemble_workflow(ensemble):
     if plan_command is None:
         raise EMError("Specify 'plan_command' that should be executed to plan workflow")
 
-    dao.create_ensemble_workflow(e.id, name, basedir, priority, plan_command)
+    dao.create_ensemble_workflow_with_event(e.id, name, basedir, priority, plan_command, eventconfig)
 
     g.session.commit()
 
     return api.json_created(url_for("route_get_ensemble_workflow", ensemble=ensemble, workflow=name))
+
+##########################################################################################################Added by Suraj Pandey##################################
+# @emapp.route("/ensembles/<string:ensemble>/events", methods=["POST"])
+# def route_create_ensemble_events(ensemble):
+#     dao = Ensembles(g.session)
+#     e = dao.get_ensemble(g.user.username, ensemble)
+
+#     #TODO: Receive the events sent and use them here
+#     e.set_ensemble_workflow_events()
+
+#     g.session.commit()
+
+#     return api.json_created(url_for("route_get_ensemble_workflow", ensemble=ensemble, workflow=name))
+###########################################################################################################End Added By Suraj Pandey#############################
+
 
 @emapp.route("/ensembles/<string:ensemble>/workflows/<string:workflow>", methods=["GET"])
 def route_get_ensemble_workflow(ensemble, workflow):

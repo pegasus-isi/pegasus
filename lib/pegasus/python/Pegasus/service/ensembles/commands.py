@@ -163,6 +163,46 @@ def pathfind(command):
 
     return None
 
+#########################################################Added by Suraj Pandey##########################################
+# class EventCommand(EnsembleClientCommand):
+#     description = "Specify Events"
+#     usage = "Usage: %prog events ENSEMBLE 1-filename [,2-filename ...]"
+#     def __init__(self):
+#         EnsembleClientCommand.__init__(self)
+#         self.parser.add_option("-ev", "--events", action="store", dest="events",
+#             default=None, help="Workflow Trigger Events")
+
+#     def run(self):
+#         o = self.options
+#         p = self.parser
+
+#         if len(self.args) < 2:
+#             p.error("Specify ENSEMBLE and trigger events")
+
+#         en = self.args[0]
+#         evs = self.args[1]
+
+#         ensemble, workflow = self.splitew(ew)
+
+#         exe = pathfind(command)
+#         if exe is None:
+#             p.error("invalid planning command: %s" % command)
+
+#         args.insert(0, exe)
+
+#         command = '"%s"' % '" "'.join(args)
+
+#         #TODO: Parse events and pass them through this data structure
+#         data = {
+#             "name": workflow,
+#             "priority": o.priority,
+#             "basedir": os.getcwd(),
+#             "plan_command": command
+#         }
+
+#         response = self.post("/ensembles/%s/events" % en, data=data)
+########################################################End Added By Suraj Pandey#########################################
+
 
 class SubmitCommand(EnsembleClientCommand):
     description = "Submit workflow"
@@ -173,6 +213,8 @@ class SubmitCommand(EnsembleClientCommand):
         self.parser.disable_interspersed_args()
         self.parser.add_option("-p", "--priority", action="store", dest="priority",
             default=0, help="Workflow priority", metavar="NUMBER")
+        self.parser.add_option("-v", "--event", action="store", dest="eventconfig",
+            default=None, help="trigger events")
 
     def run(self):
         o = self.options
@@ -199,7 +241,8 @@ class SubmitCommand(EnsembleClientCommand):
             "name": workflow,
             "priority": o.priority,
             "basedir": os.getcwd(),
-            "plan_command": command
+            "plan_command": command,
+            "eventconfig": o.eventconfig
         }
 
         response = self.post("/ensembles/%s/workflows" % ensemble, data=data)
@@ -438,4 +481,3 @@ class EnsembleCommand(CompoundCommand):
 def main():
     "The entry point for pegasus-em"
     EnsembleCommand().main()
-

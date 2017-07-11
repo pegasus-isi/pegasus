@@ -111,6 +111,11 @@ class EnsembleWorkflow(EnsembleBase):
         self.set_created()
         self.set_updated()
         self.state = EnsembleWorkflowStates.READY
+        self.event = None
+        self.eventconfig = None
+        self.event_cycle = 1
+        self.event_maxcycle = 1
+        self.event_timestamp = None
         self.set_priority(0)
         self.set_plan_command(plan_command)
         self.set_wf_uuid(None)
@@ -146,6 +151,18 @@ class EnsembleWorkflow(EnsembleBase):
     def set_priority(self, priority):
         self.priority = validate_priority(priority)
 
+    def set_eventconfig(self, eventconfig):
+        self.eventconfig = eventconfig
+
+    def set_event_cycle(self,event_cycle):
+        self.event_cycle = event_cycle
+
+    def set_event_maxcycle(self,event_maxcycle):
+        self.event_maxcycle = event_maxcycle
+
+    def set_event_timestamp(self,event_timestamp):
+        self.event_timestamp = event_timestamp
+
     def set_wf_uuid(self, wf_uuid):
         if wf_uuid is not None and len(wf_uuid) != 36:
             raise EMError("Invalid wf_uuid")
@@ -159,6 +176,18 @@ class EnsembleWorkflow(EnsembleBase):
 
     def set_plan_command(self, plan_command):
         self.plan_command = plan_command
+
+    def get_eventconfig(self):
+        return self.eventconfig
+
+    def get_event_cycle(self):
+        return self.event_cycle
+
+    def get_event_maxcycle(self):
+        return self.event_maxcycle
+
+    def get_event_timestamp(self):
+        return self.event_timestamp
 
     def _get_file(self, suffix):
         edir = self.ensemble.get_localdir()
@@ -183,6 +212,9 @@ class EnsembleWorkflow(EnsembleBase):
 
     def get_plan_command(self):
         return self.plan_command
+
+    def get_created_time(self):
+        return self.created
 
     def get_object(self):
         return {
@@ -268,6 +300,24 @@ class Ensembles:
         # Create database record
         w = EnsembleWorkflow(ensemble_id, name, basedir, plan_command)
         w.set_priority(priority)
+        self.session.add(w)
+        self.session.flush()
+
+        return w
+
+    def create_ensemble_workflow_with_event(self, ensemble_id, name, basedir, priority, plan_command, eventconfig):
+
+        # Verify that the workflow doesn't already exist
+        q = self.session.query(EnsembleWorkflow)
+        q = q.filter(EnsembleWorkflow.ensemble_id==ensemble_id,
+                     EnsembleWorkflow.name==name)
+        if q.count() > 0:
+            raise EMError("Ensemble workflow %s already exists" % name, 400)
+
+        # Create database record
+        w = EnsembleWorkflow(ensemble_id, name, basedir, plan_command)
+        w.set_priority(priority)
+        w.set_eventconfig(eventconfig)
         self.session.add(w)
         self.session.flush()
 
