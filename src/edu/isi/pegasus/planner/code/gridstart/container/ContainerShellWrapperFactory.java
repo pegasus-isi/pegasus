@@ -19,7 +19,6 @@ package edu.isi.pegasus.planner.code.gridstart.container;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
-import edu.isi.pegasus.planner.code.gridstart.container.ContainerShellWrapper;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
@@ -46,10 +45,16 @@ public class ContainerShellWrapperFactory {
                                           "edu.isi.pegasus.planner.code.gridstart.container.impl";
 
     /**
-     * The name of the class implementing the condor code generator.
+     * The name of the class implementing the Docker shell wrapper
      */
     public static final String DOCKER_SHELL_WRAPPER_CLASS =
                     "Docker";
+    
+    /**
+     * The name of the class implementing the Singularity shell wrapper
+     */
+    public static final String SINGULARITY_SHELL_WRAPPER_CLASS =
+                    "Singularity";
 
     /**
      * The name of the class implementing the Stampede Event Generator
@@ -62,14 +67,16 @@ public class ContainerShellWrapperFactory {
      */
     public static String[] CONTAINER_SHORT_NAMES = {
                                            "docker",
+                                           "singularity",
                                            "none"
                                           };
     /**
      * The known container implementations.
      */
     public static String[] CONTAINER_IMPLEMENTING_CLASSES = {
-                                                     "Docker",
-                                                     "None"
+                                                     DOCKER_SHELL_WRAPPER_CLASS,
+                                                     SINGULARITY_SHELL_WRAPPER_CLASS,
+                                                     NO_SHELL_WRAPPER_CLASS
                                                     };
     /**
      * A table that maps short names of <code>ContainerShellWrapper</code> implementations
@@ -141,8 +148,11 @@ public class ContainerShellWrapperFactory {
             if( c.getType().equals( Container.TYPE.docker) ){
                 shortName = ContainerShellWrapperFactory.DOCKER_SHELL_WRAPPER_CLASS;
             }
+            else if( c.getType().equals( Container.TYPE.singularity) ){
+                shortName = ContainerShellWrapperFactory.SINGULARITY_SHELL_WRAPPER_CLASS;
+            }
             else{
-                throw new ContainerShellWrapperFactoryException( "Unsupported Container Shell Wrapper of type" + type );
+                throw new ContainerShellWrapperFactoryException( "Unsupported Container Shell Wrapper of type " + type );
             }
         }
         
