@@ -160,7 +160,7 @@ public class Singularity extends Abstract{
         sb.append( WORKER_PACKAGE_SETUP_SNIPPET );
         
         //set the job environment variables explicitly in the -cont.sh file
-        appendStderrFragment( sb, "setting environment variables for job");
+        sb.append("# setting environment variables for job").append( '\n' );
         for( Iterator it = job.envVariables.getProfileKeyIterator(); it.hasNext(); ){
             String key = (String)it.next();
             String value = (String) job.envVariables.get( key );
