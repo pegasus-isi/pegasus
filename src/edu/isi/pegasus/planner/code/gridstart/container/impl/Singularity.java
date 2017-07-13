@@ -142,7 +142,7 @@ public class Singularity extends Abstract{
      * @return 
      */
     public String describe(){
-        return "Docker";
+        return "Singularity";
     }
 
   
