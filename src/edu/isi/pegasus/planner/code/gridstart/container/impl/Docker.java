@@ -39,6 +39,11 @@ public class Docker extends Abstract{
      */
     public static final String CONTAINER_JOB_LAUNCH_SCRIPT_SUFFIX = "-cont.sh";
     
+    /**
+     * The directory in the container to be used as working directory 
+     */
+    public static final String CONTAINER_WORKING_DIRECTORY = "/scratch";
+    
     private static String WORKER_PACKAGE_SETUP_SNIPPET = null; 
      
     
@@ -96,7 +101,8 @@ public class Docker extends Abstract{
         }
         
         //directory where job is run is mounted as scratch
-        sb.append( "-v $PWD:/scratch -w=/scratch ");     
+        sb.append( "-v $PWD:").append( CONTAINER_WORKING_DIRECTORY ).append( " ");
+        sb.append( "-w=").append( CONTAINER_WORKING_DIRECTORY ).append( " ");     
         
         sb.append( "--name $cont_name ");
         sb.append( " $cont_image ");
@@ -231,7 +237,7 @@ public class Docker extends Abstract{
         sb.append( "pegasus_lite_version_patch=$pegasus_lite_version_patch" ).append( "\n" );
         sb.append( "pegasus_lite_enforce_strict_wp_check=$pegasus_lite_enforce_strict_wp_check" ).append( "\n" );
         sb.append( "pegasus_lite_version_allow_wp_auto_download=$pegasus_lite_version_allow_wp_auto_download" ).append( "\n" );
-        sb.append( "pegasus_lite_work_dir=/scratch" ).append( "\n" );
+        sb.append( "pegasus_lite_work_dir=" ).append( Singularity.CONTAINER_WORKING_DIRECTORY ).append( "\n" );
         sb.append( "echo \\$PWD" ).append( "  1>&2" ).append( "\n" );
         /*
         sb.append( "echo \"Arguments passed \\$@\"" ).append( "  1>&2" ).append( "\n" );
