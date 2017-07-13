@@ -97,9 +97,10 @@ public class Singularity extends Abstract{
         }
         
         //exec --pwd /srv --scratch /var/tmp --scratch /tmp --home $PWD:/srv
-        sb.append( "--pwd /srv --scratch /var/tmp --scratch /tmp --home $PWD:/srv ");     
+        sb.append( "--pwd /srv --scratch /var/tmp --scratch /tmp --home $PWD:/srv ");  
+        
         //we are running directly against image file. no loading
-        sb.append( c.getName() ); 
+        sb.append( c.getName() ).append( " " );; 
         
         //the script that sets up pegasus worker package and execute
         //user application
