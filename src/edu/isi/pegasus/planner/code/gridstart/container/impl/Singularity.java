@@ -39,8 +39,13 @@ public class Singularity extends Abstract{
      */
     public static final String CONTAINER_JOB_LAUNCH_SCRIPT_SUFFIX = "-cont.sh";
     
+    /**
+     * The directory in the container to be used as working directory 
+     */
+    public static final String CONTAINER_WORKING_DIRECTORY = "/srv";
+    
     private static String WORKER_PACKAGE_SETUP_SNIPPET = null; 
-     
+    
     
     /**
      * Initiailizes the Container  shell wrapper
@@ -97,10 +102,11 @@ public class Singularity extends Abstract{
         }
         
         //exec --pwd /srv --scratch /var/tmp --scratch /tmp --home $PWD:/srv
-        sb.append( "--pwd /srv --scratch /var/tmp --scratch /tmp --home $PWD:/srv ");  
+        sb.append( "--pwd ").append( CONTAINER_WORKING_DIRECTORY ).append( " --scratch /var/tmp --scratch /tmp ");
+        sb.append( "--home $PWD:" ).append( CONTAINER_WORKING_DIRECTORY ).append( " " );
         
         //we are running directly against image file. no loading
-        sb.append( c.getName() ).append( " " );; 
+        sb.append( c.getName() ).append( " " );
         
         //the script that sets up pegasus worker package and execute
         //user application
@@ -213,7 +219,7 @@ public class Singularity extends Abstract{
         sb.append( "pegasus_lite_version_patch=$pegasus_lite_version_patch" ).append( "\n" );
         sb.append( "pegasus_lite_enforce_strict_wp_check=$pegasus_lite_enforce_strict_wp_check" ).append( "\n" );
         sb.append( "pegasus_lite_version_allow_wp_auto_download=$pegasus_lite_version_allow_wp_auto_download" ).append( "\n" );
-        sb.append( "pegasus_lite_work_dir=/scratch" ).append( "\n" );
+        sb.append( "pegasus_lite_work_dir=" ).append( Singularity.CONTAINER_WORKING_DIRECTORY ).append( "\n" );
         sb.append( "echo \\$PWD" ).append( "  1>&2" ).append( "\n" );
         /*
         sb.append( "echo \"Arguments passed \\$@\"" ).append( "  1>&2" ).append( "\n" );
