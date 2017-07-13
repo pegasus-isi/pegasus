@@ -77,57 +77,37 @@ public class Singularity extends Abstract{
  
         sb.append( "set +e" ).append( "\n" );
         
-        //sets up the variables used for docker run command
-        //FIXME docker_init has to be passed the name of the tar file?
         Container c = job.getContainer();
-        sb.append( "docker_init").append( " " ).append( c.getName() ).append( "\n" );
+        sb.append( "singularity_init").append( " " ).append( c.getName() ).append( "\n" );
         
         sb.append( "job_ec=$(($job_ec + $?))" ).append( "\n" ).append( "\n" );;
         
-        //assume docker is available in path
-        sb.append( "docker run ");
+        //assume singularity is available in path
+        sb.append( "singularity exec ");
         
         //environment variables are set in the job as -e
+        //not clear as to what to do with environment
+        //FIXME
         for( Iterator it = job.envVariables.getProfileKeyIterator(); it.hasNext(); ){
             String key = (String)it.next();
             String value = (String) job.envVariables.get( key );
-            sb.append( "-e ").append( key ).append( "=" ).
+            /*sb.append( "-e ").append( key ).append( "=" ).
                append( "\"" ).append( value ).append( "\"" ).append( " " );
+            */
         }
         
-        //directory where job is run is mounted as scratch
-        sb.append( "-v $PWD:/scratch -w=/scratch ");     
-        
-        sb.append( "--name $cont_name ");
+        //exec --pwd /srv --scratch /var/tmp --scratch /tmp --home $PWD:/srv
+        sb.append( "--pwd /srv --scratch /var/tmp --scratch /tmp --home $PWD:/srv ");       
         sb.append( " $cont_image ");
         
-        //track 
-        
-        //invoke the command to run as user who launched the job
-        sb.append( "bash -c ").
-           append( "\"").
-            
-            append( "set -e ;" ).
-            append( "if ! grep -q -E  \"^$cont_group:\" /etc/group ; then ").
-            append( "groupadd --gid $cont_groupid $cont_group ;").
-            append( "fi; ").
-            append( "if ! id $cont_user 2>/dev/null >/dev/null; then ").
-            append( "useradd --uid $cont_userid --gid $cont_groupid $cont_user; ").
-            append( "fi; ").
-            append( "su $cont_user -c ");
-                sb.append( "\\\"");
-                sb.append( "./" ).append( scriptName ).append( " " );
-                sb.append( "\\\"");
-                
-          sb.append( "\"");      
+        //the script that sets up pegasus worker package and execute
+        //user application
+        sb.append( "./" ).append( scriptName ).append( " " );
         
         sb.append( "\n" );
         
         sb.append( "job_ec=$(($job_ec + $?))" ).append( "\n" ).append( "\n" );
         
-        //remove the docker container
-        sb.append( "docker rm $cont_name " ).append( " 1>&2" ).append( "\n" );
-        sb.append( "job_ec=$(($job_ec + $?))" ).append( "\n" ).append( "\n" );
         
         return sb.toString();
     }

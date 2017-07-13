@@ -316,6 +316,22 @@ function docker_init()
     set +e
 }
 
+function singularity_init()
+{
+    set -e
+
+    # set the common variables used in the pegasus lite job.sh files
+    container_init
+    
+    if [ $# -ne 1 ]; then 
+	pegasus_lite_log "singularity_init should be passed a docker url or a file"
+	return 1
+    fi
+
+    # for singularity we don't need to load anything like in docker.
+    
+}
+
 function pegasus_lite_init()
 {
     pegasus_lite_full_version=${pegasus_lite_version_major}.${pegasus_lite_version_minor}.${pegasus_lite_version_patch}
