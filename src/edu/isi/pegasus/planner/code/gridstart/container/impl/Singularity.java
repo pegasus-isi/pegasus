@@ -97,8 +97,9 @@ public class Singularity extends Abstract{
         }
         
         //exec --pwd /srv --scratch /var/tmp --scratch /tmp --home $PWD:/srv
-        sb.append( "--pwd /srv --scratch /var/tmp --scratch /tmp --home $PWD:/srv ");       
-        sb.append( " $cont_image ");
+        sb.append( "--pwd /srv --scratch /var/tmp --scratch /tmp --home $PWD:/srv ");     
+        //we are running directly against image file. no loading
+        sb.append( c.getName() ); 
         
         //the script that sets up pegasus worker package and execute
         //user application
@@ -153,7 +154,7 @@ public class Singularity extends Abstract{
         }
         StringBuilder sb = new StringBuilder();
         sb.append( "\n" );
-        appendStderrFragment( sb, "Writing out script to launch job in docker container (START)" );
+        appendStderrFragment( sb, "Writing out script to launch job in singularity container (START)" );
         sb.append( "\n" );
         sb.append( "cat <<EOF > " ).append( scriptName ).append( "\n" );
         
@@ -188,7 +189,7 @@ public class Singularity extends Abstract{
                    append( job.getArguments() ).append( "\n" );
         }
         sb.append( "EOF").append( "\n" );
-        appendStderrFragment( sb, "Writing out script to launch job in docker container (END)" );
+        appendStderrFragment( sb, "Writing out script to launch job in singularity container (END)" );
         sb.append( "\n" );
         sb.append( "\n" );
         
