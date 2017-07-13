@@ -90,17 +90,6 @@ public class Singularity extends Abstract{
         //assume singularity is available in path
         sb.append( "singularity exec ");
         
-        //environment variables are set in the job as -e
-        //not clear as to what to do with environment
-        //FIXME
-        for( Iterator it = job.envVariables.getProfileKeyIterator(); it.hasNext(); ){
-            String key = (String)it.next();
-            String value = (String) job.envVariables.get( key );
-            /*sb.append( "-e ").append( key ).append( "=" ).
-               append( "\"" ).append( value ).append( "\"" ).append( " " );
-            */
-        }
-        
         //exec --pwd /srv --scratch /var/tmp --scratch /tmp --home $PWD:/srv
         sb.append( "--pwd ").append( CONTAINER_WORKING_DIRECTORY ).append( " --scratch /var/tmp --scratch /tmp ");
         sb.append( "--home $PWD:" ).append( CONTAINER_WORKING_DIRECTORY ).append( " " );
@@ -169,6 +158,13 @@ public class Singularity extends Abstract{
             WORKER_PACKAGE_SETUP_SNIPPET = Docker.constructContainerWorkerPackagePreamble();
         }
         sb.append( WORKER_PACKAGE_SETUP_SNIPPET );
+        
+        //set the job environment variables explicitly in the -cont.sh file
+        for( Iterator it = job.envVariables.getProfileKeyIterator(); it.hasNext(); ){
+            String key = (String)it.next();
+            String value = (String) job.envVariables.get( key );
+            sb.append( "export key=").append( "\"").append( value ).append( "\"").append( '\n' );
+        }
         
         appendStderrFragment( sb, "launching job in the container");
         sb.append( "\n" );
