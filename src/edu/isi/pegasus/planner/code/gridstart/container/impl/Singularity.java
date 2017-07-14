@@ -31,7 +31,7 @@ import java.util.Iterator;
  *
  * @author vahi
  */
-public class Docker extends Abstract{
+public class Singularity extends Abstract{
 
     /**
      * The suffix for the shell script created on the remote worker node, that
@@ -42,10 +42,10 @@ public class Docker extends Abstract{
     /**
      * The directory in the container to be used as working directory 
      */
-    public static final String CONTAINER_WORKING_DIRECTORY = "/scratch";
+    public static final String CONTAINER_WORKING_DIRECTORY = "/srv";
     
     private static String WORKER_PACKAGE_SETUP_SNIPPET = null; 
-     
+    
     
     /**
      * Initiailizes the Container  shell wrapper
@@ -82,58 +82,29 @@ public class Docker extends Abstract{
  
         sb.append( "set +e" ).append( "\n" );
         
-        //sets up the variables used for docker run command
-        //FIXME docker_init has to be passed the name of the tar file?
         Container c = job.getContainer();
-        sb.append( "docker_init").append( " " ).append( c.getName() ).append( "\n" );
+        sb.append( "singularity_init").append( " " ).append( c.getName() ).append( "\n" );
         
         sb.append( "job_ec=$(($job_ec + $?))" ).append( "\n" ).append( "\n" );;
         
-        //assume docker is available in path
-        sb.append( "docker run ");
+        //assume singularity is available in path
+        sb.append( "singularity exec ");
         
-        //environment variables are set in the job as -e
-        for( Iterator it = job.envVariables.getProfileKeyIterator(); it.hasNext(); ){
-            String key = (String)it.next();
-            String value = (String) job.envVariables.get( key );
-            sb.append( "-e ").append( key ).append( "=" ).
-               append( "\"" ).append( value ).append( "\"" ).append( " " );
-        }
+        //exec --pwd /srv --scratch /var/tmp --scratch /tmp --home $PWD:/srv
+        sb.append( "--pwd ").append( CONTAINER_WORKING_DIRECTORY ).append( " --scratch /var/tmp --scratch /tmp ");
+        sb.append( "--home $PWD:" ).append( CONTAINER_WORKING_DIRECTORY ).append( " " );
         
-        //directory where job is run is mounted as scratch
-        sb.append( "-v $PWD:").append( CONTAINER_WORKING_DIRECTORY ).append( " ");
-        sb.append( "-w=").append( CONTAINER_WORKING_DIRECTORY ).append( " ");     
+        //we are running directly against image file. no loading
+        sb.append( c.getName() ).append( " " );
         
-        sb.append( "--name $cont_name ");
-        sb.append( " $cont_image ");
-        
-        //track 
-        
-        //invoke the command to run as user who launched the job
-        sb.append( "bash -c ").
-           append( "\"").
-            
-            append( "set -e ;" ).
-            append( "if ! grep -q -E  \"^$cont_group:\" /etc/group ; then ").
-            append( "groupadd --gid $cont_groupid $cont_group ;").
-            append( "fi; ").
-            append( "if ! id $cont_user 2>/dev/null >/dev/null; then ").
-            append( "useradd --uid $cont_userid --gid $cont_groupid $cont_user; ").
-            append( "fi; ").
-            append( "su $cont_user -c ");
-                sb.append( "\\\"");
-                sb.append( "./" ).append( scriptName ).append( " " );
-                sb.append( "\\\"");
-                
-          sb.append( "\"");      
+        //the script that sets up pegasus worker package and execute
+        //user application
+        sb.append( "./" ).append( scriptName ).append( " " );
         
         sb.append( "\n" );
         
         sb.append( "job_ec=$(($job_ec + $?))" ).append( "\n" ).append( "\n" );
         
-        //remove the docker container
-        sb.append( "docker rm $cont_name " ).append( " 1>&2" ).append( "\n" );
-        sb.append( "job_ec=$(($job_ec + $?))" ).append( "\n" ).append( "\n" );
         
         return sb.toString();
     }
@@ -160,7 +131,7 @@ public class Docker extends Abstract{
      * @return 
      */
     public String describe(){
-        return "Docker";
+        return "Singularity";
     }
 
   
@@ -179,7 +150,7 @@ public class Docker extends Abstract{
         }
         StringBuilder sb = new StringBuilder();
         sb.append( "\n" );
-        appendStderrFragment( sb, "Writing out script to launch job in docker container (START)" );
+        appendStderrFragment( sb, "Writing out script to launch job in singularity container (START)" );
         sb.append( "\n" );
         sb.append( "cat <<EOF > " ).append( scriptName ).append( "\n" );
         
@@ -187,6 +158,14 @@ public class Docker extends Abstract{
             WORKER_PACKAGE_SETUP_SNIPPET = Docker.constructContainerWorkerPackagePreamble();
         }
         sb.append( WORKER_PACKAGE_SETUP_SNIPPET );
+        
+        //set the job environment variables explicitly in the -cont.sh file
+        sb.append("# setting environment variables for job").append( '\n' );
+        for( Iterator it = job.envVariables.getProfileKeyIterator(); it.hasNext(); ){
+            String key = (String)it.next();
+            String value = (String) job.envVariables.get( key );
+            sb.append( "export ").append( key ).append( "=").append( "\"").append( value ).append( "\"").append( '\n' );
+        }
         
         appendStderrFragment( sb, "launching job in the container");
         sb.append( "\n" );
@@ -214,7 +193,7 @@ public class Docker extends Abstract{
                    append( job.getArguments() ).append( "\n" );
         }
         sb.append( "EOF").append( "\n" );
-        appendStderrFragment( sb, "Writing out script to launch job in docker container (END)" );
+        appendStderrFragment( sb, "Writing out script to launch job in singularity container (END)" );
         sb.append( "\n" );
         sb.append( "\n" );
         
