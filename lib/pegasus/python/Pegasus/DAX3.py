@@ -373,7 +373,7 @@ class InvokeMixin:
     def addInvoke(self, invoke):
         """Add invoke to this object"""
         if self.hasInvoke(invoke):
-            raise DuplicateError("Duplicate Invoke", invoke)
+            raise DuplicateError("Duplicate Invoke %s" %invoke )
         self.invocations.add(invoke)
 
     def hasInvoke(self, invoke):
@@ -417,7 +417,7 @@ class ProfileMixin:
     def addProfile(self, profile):
         """Add a profile to this object"""
         if self.hasProfile(profile):
-            raise DuplicateError("Duplicate profile", profile)
+            raise DuplicateError("Duplicate profile %s" %profile )
         self.profiles.add(profile)
 
     def hasProfile(self, profile):
@@ -443,7 +443,7 @@ class MetadataMixin:
     def addMetadata(self, metadata):
         """Add metadata to this object"""
         if self.hasMetadata(metadata):
-            raise DuplicateError("Duplicate Metadata", metadata)
+            raise DuplicateError("Duplicate Metadata %s" %metadata )
         self._metadata.add(metadata)
 
     def removeMetadata(self, metadata):
@@ -469,7 +469,7 @@ class PFNMixin:
     def addPFN(self, pfn):
         """Add a PFN to this object"""
         if self.hasPFN(pfn):
-            raise DuplicateError("Duplicate PFN", pfn)
+            raise DuplicateError("Duplicate PFN %s" %pfn)
         self.pfns.add(pfn)
 
     def removePFN(self, pfn):
@@ -925,7 +925,7 @@ class UseMixin:
     def addUse(self, use):
         """Add Use to this object"""
         if self.hasUse(use):
-            raise DuplicateError("Duplicate Use", use)
+            raise DuplicateError("Duplicate Use %s" %use )
         self.used.add(use)
 
     def removeUse(self, use):
@@ -1554,7 +1554,7 @@ class ADAG(InvokeMixin, MetadataMixin):
         if job.id is None:
             job.id = self.nextJobID()
         if self.hasJob(job):
-            raise DuplicateError("Duplicate job", job)
+            raise DuplicateError("Duplicate job %s" %job )
         self.jobs[job.id] = job
 
     def hasJob(self, job):
@@ -1596,7 +1596,7 @@ class ADAG(InvokeMixin, MetadataMixin):
         if not isinstance(file, File):
             raise FormatError("Invalid File", file)
         if self.hasFile(file):
-            raise DuplicateError("Duplicate file", file)
+            raise DuplicateError("Duplicate file %s" %file)
         self.files.add(file)
 
     def hasFile(self, file):
@@ -1616,7 +1616,7 @@ class ADAG(InvokeMixin, MetadataMixin):
     def addExecutable(self, executable):
         """Add an executable to this ADAG"""
         if self.hasExecutable(executable):
-            raise DuplicateError("Duplicate executable", executable)
+            raise DuplicateError("Duplicate executable %s" %executable)
         self.executables.add(executable)
 
     def hasExecutable(self, executable):
@@ -1626,7 +1626,7 @@ class ADAG(InvokeMixin, MetadataMixin):
     def removeExecutable(self, executable):
         """Remove executable from this ADAG"""
         if not self.hasExecutable(executable):
-            raise NotFoundError("Executable not found", executable)
+            raise NotFoundError("Executable not found %s" %executable)
         self.executables.remove(executable)
 
     def clearExecutables(self):
@@ -1636,7 +1636,7 @@ class ADAG(InvokeMixin, MetadataMixin):
     def addTransformation(self, transformation):
         """Add a transformation to this ADAG"""
         if self.hasTransformation(transformation):
-            raise DuplicateError("Duplicate tranformation", transformation)
+            raise DuplicateError("Duplicate tranformation %s" %transformation)
         self.transformations.add(transformation)
 
     def hasTransformation(self, transformation):
@@ -1646,7 +1646,7 @@ class ADAG(InvokeMixin, MetadataMixin):
     def removeTransformation(self, transformation):
         """Remove transformation from this ADAG"""
         if not self.hasTransformation(transformation):
-            raise NotFoundError("Transformation not found", transformation)
+            raise NotFoundError("Transformation not found %s" %transformation)
         self.transformations.remove(transformation)
 
     def clearTransformations(self):
@@ -1675,7 +1675,7 @@ class ADAG(InvokeMixin, MetadataMixin):
 
         """
         if self.hasDependency(dep):
-            raise DuplicateError("Duplicate dependency", dep)
+            raise DuplicateError("Duplicate dependency %s" %dep)
         # Check the jobs
         if dep.parent not in self.jobs:
             raise NotFoundError("Parent not found", dep.parent)
@@ -2169,6 +2169,9 @@ def main():
     diamond.metadata("name", "diamond")
     diamond.metadata("createdby", "Gideon Juve")
 
+    # add some invoke condition
+    diamond.invoke('on_error','/usr/bin/update_db -failure')
+
     # Add input file to the DAX-level replica catalog
     a = File("f.a")
     a.addPFN(PFN("gsiftp://site.com/inputs/f.a", "site"))
@@ -2186,7 +2189,8 @@ def main():
     diamond.addExecutable(e_findrange)
 
     e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64")
-    e_analyze.addPFN(PFN("gsiftp://site.com/bin/analyze", "site"))
+    e_analyze.addPFN(PFN("gsiftp://site.com/bin/analyze","site"))
+    e_analyze.addProfile( Profile(namespace="env",  key="APP_HOME", value="/app"))
     diamond.addExecutable(e_analyze)
 
     # Add a preprocess job
