@@ -25,6 +25,7 @@ Usage: pegasus-transfer [options]
 import cmd
 import ConfigParser
 import errno
+import hashlib
 import json
 import logging
 import math
@@ -513,6 +514,16 @@ class Tools(object):
         try:
             if executable in self._info and self._info[executable] is not None:
                 return self._info[executable]['version_major']
+            return None
+        finally:
+            self.lock.release()
+    
+    def minor_version(self, executable):
+        """ Returns the detected minor version given executable """
+        self.lock.acquire()
+        try:
+            if executable in self._info and self._info[executable] is not None:
+                return self._info[executable]['version_minor']
             return None
         finally:
             self.lock.release()
@@ -3007,6 +3018,56 @@ class DockerHandler(TransferHandlerBase):
         return [successful_l, failed_l]  
 
 
+class SingularityHubHandler(TransferHandlerBase):
+    """
+    Use "singularity pull" to import images from Singularity Hub
+    """
+    
+    _name = "SingularityHubHandler"
+    _protocol_map = ["shub->file"]
+
+    def do_transfers(self, transfers_l):
+        
+        tools = Tools()
+        if tools.find("singularity", "--version", "^([0-9]+\.[0-9]+)") is None:
+            logger.error("Unable to do pull Singularity images as singularity command could not be found")
+            return [[], transfers_l]
+
+        # the "pull" command was introduced in 2.3
+        if tools.major_version("singularity") < 2 or \
+           (tools.major_version("singularity") == 2 and tools.minor_version("singularity") < 3):
+            logger.error("Singularity 2.3 or above is required for pulling images from the hub")
+            return [[], transfers_l]
+
+        successful_l = []
+        failed_l = []
+        for t in transfers_l:
+            t_start = time.time()
+
+            # singularity pull --name only accepts a filename, not a full path, so
+            # download and then move to the correct location
+
+            target_name = hashlib.sha224(t.get_dst_path()).hexdigest()
+
+            prepare_local_dir(os.path.dirname(t.get_dst_path()))
+            cmd = "%s pull --name '%s' '%s' && mv '%s.img' '%s'" \
+                % (tools.full_path("singularity"), target_name, t.src_url(), \
+                   target_name, t.get_dst_path())
+            try:
+                tc = TimedCommand(cmd)
+                tc.run()
+            except RuntimeError, err:
+                logger.error(err)
+                self._post_transfer_attempt(t, False, t_start)
+                failed_l.append(t)
+                continue
+
+            self._post_transfer_attempt(t, True, t_start)
+            successful_l.append(t)
+        
+        return [successful_l, failed_l]  
+
+
 class Stats:
     """
     Keeps global stats for transfers
@@ -3178,6 +3239,7 @@ class SimilarWorkSet:
         self._available_handlers.append( StashHandler() )
         self._available_handlers.append( SymlinkHandler() )
         self._available_handlers.append( DockerHandler() )
+        self._available_handlers.append( SingularityHubHandler() )
 
         # mkdirs and removes
         if isinstance(transfers_l[0], Mkdir) or isinstance(transfers_l[0], Remove):
