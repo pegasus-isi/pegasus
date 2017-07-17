@@ -105,11 +105,11 @@ $ <emphasis role="bold">export CLASSPATH=`pegasus-config --classpath`</emphasis>
     <filename>/etc/yum.repos.d/</filename></emphasis>. For RHEL 7 based
     systemes:</para>
 
-    <programlisting># <emphasis role="bold">wget -O /etc/yum.repos.d/pegasus.repo http://download.pegasus.isi.edu/wms/download/rhel/7/pegasus.repo</emphasis></programlisting>
+    <programlisting># <emphasis role="bold">wget -O /etc/yum.repos.d/pegasus.repo http://download.pegasus.isi.edu/pegasus/rhel/7/pegasus.repo</emphasis></programlisting>
 
     <para>For RHEL 6 based systems:</para>
 
-    <para><programlisting># <emphasis role="bold">wget -O /etc/yum.repos.d/pegasus.repo http://download.pegasus.isi.edu/wms/download/rhel/6/pegasus.repo</emphasis></programlisting></para>
+    <para><programlisting># <emphasis role="bold">wget -O /etc/yum.repos.d/pegasus.repo http://download.pegasus.isi.edu/pegasus/rhel/6/pegasus.repo</emphasis></programlisting></para>
 
     <para>Search for, and install Pegasus:</para>
 
