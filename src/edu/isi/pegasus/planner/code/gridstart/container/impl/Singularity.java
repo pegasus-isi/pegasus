@@ -164,7 +164,21 @@ public class Singularity extends Abstract{
         for( Iterator it = job.envVariables.getProfileKeyIterator(); it.hasNext(); ){
             String key = (String)it.next();
             String value = (String) job.envVariables.get( key );
-            sb.append( "export ").append( key ).append( "=").append( "\"").append( value ).append( "\"").append( '\n' );
+            sb.append( "export").append( " " ).append( key ).append( "=" );
+            
+            //check for env variables that are constructed based on condor job classds 
+            //such asCONDOR_JOBID=$(cluster).$(process). these are set by condor
+            //and can only picked up from the shell when a job runs on a node
+            //so we only set the key
+            boolean fromShell = value.contains( "$(" );
+            if( fromShell ){
+                //append the $variable
+                sb.append( "=" ).append( "$" ).append( key );
+            }
+            else{
+                sb.append( "\"").append( value ).append( "\"").append( '\n' );
+            }
+            sb.append( " " );
         }
         
         appendStderrFragment( sb, "launching job in the container");
