@@ -96,8 +96,19 @@ public class Docker extends Abstract{
         for( Iterator it = job.envVariables.getProfileKeyIterator(); it.hasNext(); ){
             String key = (String)it.next();
             String value = (String) job.envVariables.get( key );
-            sb.append( "-e ").append( key ).append( "=" ).
-               append( "\"" ).append( value ).append( "\"" ).append( " " );
+            
+            //check for env variables that are constructed based on condor job classds 
+            //such asCONDOR_JOBID=$(cluster).$(process). these are set by condor
+            //and can only picked up from the shell when a job runs on a node
+            //so we only set the key
+            boolean fromShell = value.contains( "$(" );
+            sb.append( "-e ").append( key );
+            if( !fromShell ){
+                //append the value
+                sb.append( "=" ).
+                append( "\"" ).append( value ).append( "\"" );
+            }
+            sb.append( " " );
         }
         
         //directory where job is run is mounted as scratch
