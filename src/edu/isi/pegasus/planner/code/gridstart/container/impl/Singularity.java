@@ -176,9 +176,9 @@ public class Singularity extends Abstract{
                 sb.append( "=" ).append( "$" ).append( key );
             }
             else{
-                sb.append( "\"").append( value ).append( "\"").append( '\n' );
+                sb.append( "\"").append( value ).append( "\"");
             }
-            sb.append( " " );
+            sb.append( '\n' );
         }
         
         appendStderrFragment( sb, "launching job in the container");
