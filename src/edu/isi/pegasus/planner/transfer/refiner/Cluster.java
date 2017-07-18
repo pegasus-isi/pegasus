@@ -27,19 +27,12 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
-import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-
-
-
 import java.util.Collection;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
-
 
 import java.util.Map;
 import java.util.HashMap;
@@ -637,42 +630,6 @@ public class Cluster extends Bundle {
     public  String getDescription(){
         return Cluster.DESCRIPTION;
     }
-
-
-    /**
-     * Determines the bundle factor for a particular site on the basis of the
-     * stage in bundle value associcated with the underlying transfer
-     * transformation in the transformation catalog. If the key is not found,
-     * then the default value is returned. In case of the default value being
-     * null the global default is returned.
-     *
-     * @param site    the site at which the value is desired.
-     * @param deflt   the default value.
-     *
-     * @return the bundle factor.
-     *
-     * @see #DEFAULT_LOCAL_STAGE_IN_CLUSTER_FACTOR
-     */
-    protected int getSISiteBundleValue(String site,  String deflt){
-        //this should be parameterised Karan Dec 20,2005
-        TransformationCatalogEntry entry  =
-            mTXStageInImplementation.getTransformationCatalogEntry(site, Job.STAGE_IN_JOB );
-        Job sub = new Job();
-        String value = (deflt == null)?
-                        this.DEFAULT_LOCAL_STAGE_IN_CLUSTER_FACTOR:
-                        deflt;
-
-        if(entry != null){
-            sub.updateProfiles(entry);
-            value = (sub.vdsNS.containsKey( Pegasus.CLUSTER_STAGE_IN_KEY ))?
-                     sub.vdsNS.getStringValue( Pegasus.CLUSTER_STAGE_IN_KEY ):
-                     value;
-        }
-
-        return Integer.parseInt(value);
-    }
-
-
 
     /**
      * Returns the name of the job that acts as a synchronization node in
