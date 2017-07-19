@@ -39,6 +39,7 @@ import java.util.HashMap;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.transfer.Implementation;
 
 
@@ -99,6 +100,11 @@ public class Cluster extends Bundle {
      * the workflow.
      */
     public static final String DEFAULT_REMOTE_STAGE_OUT_CLUSTER_FACTOR = "2";
+    
+    /**
+     * number of compute jobs to be associated with a single job
+     */
+    public static final float NUM_COMPUTE_JOBS_PER_TRANSFER_JOB = 10;
 
     /**
      * A map indexed by site name, that contains the pointer to the stage in
@@ -123,6 +129,11 @@ public class Cluster extends Bundle {
      */
     private Map< String, Job > mSyncJobMap;
     
+    /**
+     * Tracks number of jobs at each level of the workflow. 
+     */
+    private Map<Integer,Integer> mTXJobsPerLevelMap;
+    
      /**
      * The overloaded constructor.
      *
@@ -141,6 +152,10 @@ public class Cluster extends Bundle {
      * the bundle values.
      */
     protected  void initializeBundleValues() {
+        
+        //PM-1212 we want to get an idea 
+        mTXJobsPerLevelMap = buildDefaultTXJobsPerLevelMap( 10 );
+                
         mStageinLocalBundleValue = new BundleValue();
         mStageinLocalBundleValue.initialize( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
                                              Pegasus.CLUSTER_STAGE_IN_KEY,
@@ -308,7 +323,7 @@ public class Cluster extends Bundle {
         
         int level   = job.getLevel();
         String site = job.getStagingSiteHandle();
-        int clusterValue = cValue.determine( implementation, job );
+        int clusterValue = cValue.determine( implementation, job , mTXJobsPerLevelMap.get( job.getLevel() ) );
         /*
         int clusterValue = getSISiteBundleValue( site,
                                                 job.vdsNS.getStringValue( Pegasus.CLUSTER_STAGE_IN_KEY ) );
@@ -722,6 +737,39 @@ public class Cluster extends Bundle {
      */
     public Job getSyncJob( String site ){
         return (Job)mSyncJobMap.get( site );
+    }
+
+    /**
+     * Builds a map that maps for each level the number of default transfer jobs to be created
+     * 
+     * @param divisor
+     * @return 
+     */
+    private Map<Integer, Integer> buildDefaultTXJobsPerLevelMap( float divisor ) {
+        //PM-1212
+        Map<Integer,Integer> m = new HashMap();
+        int count = 0;
+        int previous = -1;
+        int cluster = -1;
+        int level = 0;
+        for( Iterator it = this.mDAG.iterator(); it.hasNext(); ){
+            GraphNode node = ( GraphNode )it.next();
+            level = node.getDepth();
+            if( level != previous ){
+                cluster = (int)Math.ceil( count/divisor);
+                mLogger.log( "Number of transfer jobs for " + previous + " are " + cluster, LogManager.DEBUG_MESSAGE_LEVEL );
+                m.put( previous,  cluster);
+                count = 0;
+            }
+            count++;
+            previous = level;
+        }
+        
+        cluster  = (int)Math.ceil( count/divisor);
+        m.put( level,  cluster);
+        mLogger.log( "Number of transfer jobs for " + level + " are " + cluster, LogManager.DEBUG_MESSAGE_LEVEL );
+        
+        return m;
     }
     
 }
