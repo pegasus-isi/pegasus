@@ -2,13 +2,13 @@ project:
   key: DSL
   name: DSL
   plans:
-    - key: BNT47
-      name: Build & Test (4.7)
+    - key: BNT48
+      name: Build & Test (4.8)
       scm:
         - !git
           name: Pegasus
           url: https://github.com/pegasus-isi/pegasus.git
-          branch: 4.7
+          branch: master
       stages:
         - name: Source Checkout
           jobs:
@@ -1023,14 +1023,14 @@ project:
         - key: TAG_UBUNTU_16
           value: xenial
 
-    - key: TVM47
-      name: Tutorial VM (4.7)
-      description: Tutorial VM (4.7)
+    - key: TVM48
+      name: Tutorial VM (4.8)
+      description: Tutorial VM (4.8)
       scm:
         - !git
           name: Pegasus
           url: https://github.com/pegasus-isi/pegasus.git
-          branch: 4.7
+          branch: master
       stages:
         - name: Build Tutorial VM
           description: Build Tutorial VM
@@ -1114,14 +1114,14 @@ project:
 #          address: pegasus-svn@isi.edu
 #          event: !event FAILED_BUILDS_AND_FIRST_SUCCESSFUL
 
-    - key: WT47
-      name: Workflow Tests (4.7)
-      description: Workflow Tests (4.7)
+    - key: WT48
+      name: Workflow Tests (4.8)
+      description: Workflow Tests (4.8)
       scm:
         - !git
           name: Pegasus
           url: https://github.com/pegasus-isi/pegasus.git
-          branch: 4.7
+          branch: master
       stages:
         - name: Setup
           description: Setup
