@@ -1,6 +1,6 @@
 project:
-  key: DSL
-  name: DSL
+  key: PEGASUS
+  name: Pegasus
   plans:
     - key: BNT48
       name: Build & Test (4.8)
