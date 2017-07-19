@@ -1025,7 +1025,6 @@ project:
 
     - key: TVM47
       name: Tutorial VM (4.7)
-      description: Tutorial VM (4.7)
       scm:
         - !git
           name: Pegasus
@@ -1116,7 +1115,6 @@ project:
 
     - key: WT47
       name: Workflow Tests (4.7)
-      description: Workflow Tests (4.7)
       scm:
         - !git
           name: Pegasus
