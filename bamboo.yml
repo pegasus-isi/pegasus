@@ -1025,7 +1025,6 @@ project:
 
     - key: TVM48
       name: Tutorial VM (master)
-      description: Tutorial VM (master)
       scm:
         - !git
           name: Pegasus
@@ -1116,7 +1115,6 @@ project:
 
     - key: WT48
       name: Workflow Tests (master)
-      description: Workflow Tests (master)
       scm:
         - !git
           name: Pegasus
