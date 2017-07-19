@@ -3,7 +3,7 @@ project:
   name: Pegasus
   plans:
     - key: BNT48
-      name: Build & Test (4.8)
+      name: Build & Test (master)
       scm:
         - !git
           name: Pegasus
@@ -1024,8 +1024,8 @@ project:
           value: xenial
 
     - key: TVM48
-      name: Tutorial VM (4.8)
-      description: Tutorial VM (4.8)
+      name: Tutorial VM (master)
+      description: Tutorial VM (master)
       scm:
         - !git
           name: Pegasus
@@ -1115,8 +1115,8 @@ project:
 #          event: !event FAILED_BUILDS_AND_FIRST_SUCCESSFUL
 
     - key: WT48
-      name: Workflow Tests (4.8)
-      description: Workflow Tests (4.8)
+      name: Workflow Tests (master)
+      description: Workflow Tests (master)
       scm:
         - !git
           name: Pegasus
