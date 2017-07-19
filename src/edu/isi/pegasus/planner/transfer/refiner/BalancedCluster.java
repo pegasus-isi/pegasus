@@ -1274,9 +1274,7 @@ public class BalancedCluster extends Basic {
 
     }
     
-   
-    
-    protected  class BundleValue {
+   protected  class BundleValue {
         
        
         /**
@@ -1287,7 +1285,7 @@ public class BalancedCluster extends Basic {
         /**
          * The default bundle value to use.
          */
-        private String mDefaultBundleValue;
+        private int mDefaultBundleValue;
 
 
         /**
@@ -1314,7 +1312,7 @@ public class BalancedCluster extends Basic {
         public void initialize( String key, String defaultKey, String defaultValue ){
             mProfileKey         = key;
             mDefaultProfileKey  = defaultKey;
-            mDefaultBundleValue = defaultValue;
+            mDefaultBundleValue = Integer.parseInt( defaultValue );
         }
         
       
@@ -1339,6 +1337,28 @@ public class BalancedCluster extends Basic {
         * @return the bundle factor.
         */
         public int determine(  Implementation implementation, Job job  ){
+           return this.determine( implementation, job, mDefaultBundleValue );
+
+        }
+        
+       /**
+        * Determines the bundle factor for a particular site on the basis of the
+        * stage in bundle value associcated with the underlying transfer
+        * transformation in the transformation catalog. If the key is not found,
+        * then the default value is returned. In case of the default value being
+        * null the global default is returned.
+        * 
+        * The value is stored internally to ensure that a subsequent
+        * call to get(String site) returns the value determined.
+        * 
+        * @param implementation  the transfer implementation being used
+        * @param job   the compute job for which the bundle factor needs to 
+        *              be determined.
+        * @param defaultValue  the default value to use
+        * 
+        * @return the bundle factor.
+        */
+        public int determine(  Implementation implementation, Job job , int defaultValue ){
            String site = job.getStagingSiteHandle();
 
             //look up the value in SiteCatalogEntry for the store
@@ -1346,7 +1366,7 @@ public class BalancedCluster extends Basic {
 
            //sanity check
            if( entry == null ){
-               return Integer.parseInt( mDefaultBundleValue );
+               return defaultValue;
            }
 
            //check for Pegasus Profile mProfileKey in the site entry
@@ -1358,18 +1378,15 @@ public class BalancedCluster extends Basic {
            }
 
            //if value is still null , rely of the default bundle value
-           value = ( value == null )?
-                   this.mDefaultBundleValue:
-                   value;
+           return ( value == null )?
+                   defaultValue:
+                   Integer.parseInt(value);
 
-           return Integer.parseInt(value);
 
         }
        
        
     
     }
-    
-    
-
+   
 }
