@@ -963,7 +963,7 @@ project:
                 - name: pegasus-binary-x86_64_rhel_7
                 - name: pegasus-binary-x86_64_ubuntu_14
                 - name: pegasus-binary-x86_64_ubuntu_16
-                - name: pegasus-binary-x86_rhel_6
+                #- name: pegasus-binary-x86_rhel_6
                 - name: pegasus-deb-x86_64_deb_7
                 - name: pegasus-deb-x86_64_deb_8
                 - name: pegasus-deb-x86_64_deb_9
@@ -975,7 +975,7 @@ project:
                 - name: pegasus-r-dax3
                 - name: pegasus-rpm-x86_64_rhel_6
                 - name: pegasus-rpm-x86_64_rhel_7
-                - name: pegasus-rpm-x86_rhel_6
+                #- name: pegasus-rpm-x86_rhel_6
                 - name: pegasus-source
                 - name: pegasus-source-versioned
                 - name: pegasus-srcrpm
@@ -987,7 +987,7 @@ project:
                 - name: pegasus-worker-x86_64_rhel_7
                 - name: pegasus-worker-x86_64_ubuntu_14
                 - name: pegasus-worker-x86_64_ubuntu_16
-                - name: pegasus-worker-x86_rhel_6
+                #- name: pegasus-worker-x86_rhel_6
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
 #      permissions:
