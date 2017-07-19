@@ -121,24 +121,24 @@ public class BalancedCluster extends Basic {
 
     
     /**
-     * The BundleValue that evaluates for local stage in jobs.
+     * The ClusterValue that evaluates for local stage in jobs.
      */
-    protected BundleValue mStageinLocalBundleValue;
+    protected ClusterValue mStageinLocalBundleValue;
 
     /**
-     * The BundleValue that evaluates for remote stage-in jobs.
+     * The ClusterValue that evaluates for remote stage-in jobs.
      */
-    protected BundleValue mStageInRemoteBundleValue;
+    protected ClusterValue mStageInRemoteBundleValue;
 
     /**
-     * The BundleValue that evaluates for local stage out jobs.
+     * The ClusterValue that evaluates for local stage out jobs.
      */
-    protected BundleValue mStageOutLocalBundleValue;
+    protected ClusterValue mStageOutLocalBundleValue;
 
     /**
-     * The BundleValue that evaluates for remote stage out jobs.
+     * The ClusterValue that evaluates for remote stage out jobs.
      */
-    protected BundleValue mStageOutRemoteBundleValue;
+    protected ClusterValue mStageOutRemoteBundleValue;
 
     
     /**
@@ -241,14 +241,14 @@ public class BalancedCluster extends Basic {
      * the bundle values.
      */
     protected  void initializeClusterValues() {
-        mStageinLocalBundleValue = new BundleValue();
+        mStageinLocalBundleValue = new ClusterValue();
         mStageinLocalBundleValue.initialize( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
                                              Pegasus.CLUSTER_STAGE_IN_KEY,
                                              getDefaultClusterValueFromProperties( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
                                                                     Pegasus.CLUSTER_STAGE_IN_KEY,
                                                                     BalancedCluster.DEFAULT_LOCAL_STAGE_IN_CLUSTER_FACTOR ) );
         
-        mStageInRemoteBundleValue = new BundleValue();
+        mStageInRemoteBundleValue = new ClusterValue();
         mStageInRemoteBundleValue.initialize( Pegasus.CLUSTER_REMOTE_STAGE_IN_KEY,
                                               Pegasus.CLUSTER_STAGE_IN_KEY,
                                               getDefaultClusterValueFromProperties( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
@@ -256,14 +256,14 @@ public class BalancedCluster extends Basic {
                                                                      BalancedCluster.DEFAULT_REMOTE_STAGE_IN_CLUSTER_FACTOR ) );
 
 
-        mStageOutLocalBundleValue = new BundleValue();
+        mStageOutLocalBundleValue = new ClusterValue();
         mStageOutLocalBundleValue.initialize( Pegasus.CLUSTER_LOCAL_STAGE_OUT_KEY,
                                               Pegasus.CLUSTER_STAGE_OUT_KEY,
                                               getDefaultClusterValueFromProperties( Pegasus.CLUSTER_LOCAL_STAGE_OUT_KEY,
                                                                      Pegasus.CLUSTER_STAGE_OUT_KEY,
                                                                      BalancedCluster.DEFAULT_LOCAL_STAGE_OUT_CLUSTER_FACTOR ));
 
-        mStageOutRemoteBundleValue = new BundleValue();
+        mStageOutRemoteBundleValue = new ClusterValue();
         mStageOutRemoteBundleValue.initialize( Pegasus.CLUSTER_REMOTE_STAGE_OUT_KEY,
                                                Pegasus.CLUSTER_STAGE_OUT_KEY,
                                                getDefaultClusterValueFromProperties( Pegasus.CLUSTER_REMOTE_STAGE_OUT_KEY,
@@ -364,7 +364,7 @@ public class BalancedCluster extends Basic {
                                       Collection files, 
                                       int type,
                                       Map<String,PoolTransfer> stageInMap,
-                                      BundleValue bundleValue,
+                                      ClusterValue bundleValue,
                                       Implementation implementation ){
 
         String jobName    = job.getName();
@@ -561,7 +561,7 @@ public class BalancedCluster extends Basic {
         }
 
         String jobName = job.getName();
-        BundleValue bundleValue = (localTransfer) ? this.mStageOutLocalBundleValue :
+        ClusterValue bundleValue = (localTransfer) ? this.mStageOutLocalBundleValue :
                                            this.mStageOutRemoteBundleValue;
 
         mLogMsg = "Adding stageout nodes for job " + jobName;
@@ -1274,7 +1274,7 @@ public class BalancedCluster extends Basic {
 
     }
     
-   protected  class BundleValue {
+   protected  class ClusterValue {
         
        
         /**
@@ -1298,7 +1298,7 @@ public class BalancedCluster extends Basic {
         /**
          * The default constructor.
          */
-        public BundleValue(){
+        public ClusterValue(){
 
         }
         
