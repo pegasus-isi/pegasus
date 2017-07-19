@@ -582,7 +582,7 @@ public class Bundle extends Basic {
 //        String site = job.getSiteHandle();
         String site = job.getStagingSiteHandle();
 
-        int bundle = bundleValue.determine( this.mTXStageOutImplementation, job );
+        int bundle = getStageOutBundleValue( bundleValue, job ); 
 
         if ( level != mCurrentSOLevel ){
             mCurrentSOLevel = level;
@@ -862,6 +862,17 @@ public class Bundle extends Basic {
         map = new HashMap();
         
         return map;
+    }
+
+    /**
+     * Returns the bundling value to be used for creating stageout jobs for a job
+     * 
+     * @param bundleValue
+     * @param job
+     * @return 
+     */
+    protected int getStageOutBundleValue(BundleValue bundleValue, Job job) {
+        return bundleValue.determine( this.mTXStageOutImplementation, job );
     }
 
     

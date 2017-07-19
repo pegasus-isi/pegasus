@@ -738,6 +738,17 @@ public class Cluster extends Bundle {
     public Job getSyncJob( String site ){
         return (Job)mSyncJobMap.get( site );
     }
+    
+    /**
+     * Returns the bundling value to be used for creating stageout jobs for a job
+     * 
+     * @param bundleValue
+     * @param job
+     * @return 
+     */
+    protected int getStageOutBundleValue(BundleValue bundleValue, Job job) {
+        return bundleValue.determine( this.mTXStageOutImplementation, job, mTXJobsPerLevelMap.get( job.getLevel() )  );
+    }
 
     /**
      * Builds a map that maps for each level the number of default transfer jobs to be created
