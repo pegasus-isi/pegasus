@@ -154,7 +154,7 @@ public class Cluster extends Bundle {
     protected  void initializeBundleValues() {
         
         //PM-1212 we want to get an idea 
-        mTXJobsPerLevelMap = buildDefaultTXJobsPerLevelMap( 10 );
+        mTXJobsPerLevelMap = buildDefaultTXJobsPerLevelMap( NUM_COMPUTE_JOBS_PER_TRANSFER_JOB );
                 
         mStageinLocalBundleValue = new BundleValue();
         mStageinLocalBundleValue.initialize( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
