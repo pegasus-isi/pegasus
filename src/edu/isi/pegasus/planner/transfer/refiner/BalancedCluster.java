@@ -44,6 +44,7 @@ import java.util.HashSet;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 import edu.isi.pegasus.planner.transfer.Implementation;
 import java.util.LinkedList;
@@ -97,6 +98,11 @@ public class BalancedCluster extends Basic {
      * the workflow.
      */
     public static final String DEFAULT_REMOTE_STAGE_OUT_CLUSTER_FACTOR = "2";
+    
+    /**
+     * number of compute jobs to be associated with a single job
+     */
+    public static final float NUM_COMPUTE_JOBS_PER_TRANSFER_JOB = 10;
 
 
     /**
@@ -205,6 +211,11 @@ public class BalancedCluster extends Basic {
      * handle to PegasusConfiguration
      */
     protected PegasusConfiguration mPegasusConfiguration;
+    
+    /**
+     * Tracks number of jobs at each level of the workflow. 
+     */
+    private Map<Integer,Integer> mTXJobsPerLevelMap;
 
     /**
      * The overloaded constructor.
@@ -241,6 +252,9 @@ public class BalancedCluster extends Basic {
      * the bundle values.
      */
     protected  void initializeClusterValues() {
+        //PM-1212 we want to get an idea 
+        mTXJobsPerLevelMap = buildDefaultTXJobsPerLevelMap( 10 );
+        
         mStageinLocalBundleValue = new ClusterValue();
         mStageinLocalBundleValue.initialize( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
                                              Pegasus.CLUSTER_STAGE_IN_KEY,
@@ -434,7 +448,7 @@ public class BalancedCluster extends Basic {
                 boolean contains = stageInMap.containsKey(siteHandle);
                 //following pieces need rearragnement!
                 if(!contains){
-                    bundle = bundleValue.determine( implementation, job );
+                    bundle = bundleValue.determine( implementation, job ,  mTXJobsPerLevelMap.get( job.getLevel() ) );
                 }
                 PoolTransfer pt = (contains)?
                                   (PoolTransfer)stageInMap.get(siteHandle):
@@ -571,8 +585,8 @@ public class BalancedCluster extends Basic {
         int level   = job.getLevel();
         String site = job.getStagingSiteHandle();
 
-        int bundle = bundleValue.determine( this.mTXStageOutImplementation, job );
-
+        int bundle = bundleValue.determine( this.mTXStageOutImplementation, job ,  mTXJobsPerLevelMap.get( job.getLevel() ) );
+        
         if ( level != mCurrentSOLevel ){
             mCurrentSOLevel = level;
             //we are starting on a new level of the workflow.
@@ -880,7 +894,38 @@ public class BalancedCluster extends Basic {
     }
 
     
-
+    /**
+     * Builds a map that maps for each level the number of default transfer jobs to be created
+     * 
+     * @param divisor
+     * @return 
+     */
+    private Map<Integer, Integer> buildDefaultTXJobsPerLevelMap( float divisor ) {
+        //PM-1212
+        Map<Integer,Integer> m = new HashMap();
+        int count = 0;
+        int previous = -1;
+        int cluster = -1;
+        int level = 0;
+        for( Iterator it = this.mDAG.iterator(); it.hasNext(); ){
+            GraphNode node = ( GraphNode )it.next();
+            level = node.getDepth();
+            if( level != previous ){
+                cluster = (int)Math.ceil( count/divisor);
+                mLogger.log( "Number of transfer jobs for " + previous + " are " + cluster, LogManager.DEBUG_MESSAGE_LEVEL );
+                m.put( previous,  cluster);
+                count = 0;
+            }
+            count++;
+            previous = level;
+        }
+        
+        cluster  = (int)Math.ceil( count/divisor);
+        m.put( level,  cluster);
+        mLogger.log( "Number of transfer jobs for " + level + " are " + cluster, LogManager.DEBUG_MESSAGE_LEVEL );
+        
+        return m;
+    }
     
     /**
      * A container class for storing the name of the transfer job, the list of
