@@ -999,7 +999,7 @@ project:
       triggers:
         - !scheduled
           description: Nightly Build
-          cronExpression: '0 19 * * *'
+          cronExpression: "0 0 19 * * ?" 
 #      notifications:
 #        - !email
 #          address: pegasus-svn@isi.edu
@@ -1108,7 +1108,7 @@ project:
       triggers:
         - !scheduled
           description: Nightly Build
-          cronExpression: '0 2 * * *'
+          cronExpression: "0 0 2 * * ?" 
 #      notifications:
 #        - !email
 #          address: pegasus-svn@isi.edu
@@ -3457,7 +3457,7 @@ project:
       triggers:
         - !scheduled
           description: Nightly Build
-          cronExpression: '0 2 * * *'
+          cronExpression: "0 0 2 * * ?"
 #      notifications:
 #        - !email
 #          address: pegasus-svn@isi.edu
