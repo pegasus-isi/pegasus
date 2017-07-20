@@ -78,8 +78,11 @@ public class Singularity extends Abstract{
         sb.append( "chmod +x " ).append( scriptName ).append( "\n" );
 
         //copy pegasus lite common from the directory where condor transferred it via it's file transfer.
-        sb.append( "cp $pegasus_lite_start_dir/pegasus-lite-common.sh . ").append( "\n" );
- 
+        sb.append( "if ! [ $pegasus_lite_start_dir -ef . ]; then").append( "\n" );
+        sb.append( "\tcp $pegasus_lite_start_dir/pegasus-lite-common.sh . ").append( "\n" );
+        sb.append( "fi" ).append( "\n" );
+        sb.append( "\n" );
+        
         sb.append( "set +e" ).append( "\n" );
         
         Container c = job.getContainer();
