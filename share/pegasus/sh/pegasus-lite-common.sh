@@ -24,6 +24,10 @@
 #
 
 
+# a default used if no other worker packages can be found
+pegasus_lite_default_system="x86_64_rhel_7"
+
+
 function pegasus_lite_setup_log()
 {
     # PM-1132 set up the log explicitly to a file     
@@ -170,7 +174,20 @@ function pegasus_lite_internal_wp_download()
         pegasus_lite_log "ERROR: Unable to download a worker package for this platform ($system)."
         pegasus_lite_log "If you want to use the same package as on the submit host, try the following setting in your properties file:"
         pegasus_lite_log "   pegasus.transfer.worker.package.strict = false"
-        return 1
+
+        # try the default worker package
+        pegasus_lite_log "Will try the default worker package ($pegasus_lite_default_system)"
+        url="http://download.pegasus.isi.edu/pegasus/${pegasus_lite_version_major}"
+        url="${url}.${pegasus_lite_version_minor}.${pegasus_lite_version_patch}"
+        url="${url}/pegasus-worker"
+        url="${url}-${pegasus_lite_version_major}.${pegasus_lite_version_minor}.${pegasus_lite_version_patch}"
+        url="${url}-${pegasus_lite_default_system}.tar.gz"
+        pegasus_lite_log "Downloading Pegasus worker package from $url"
+        curl -s -S --insecure -o pegasus-worker.tar.gz "$url" || wget -q -O pegasus-worker.tar.gz "$url"
+        if ! tar xzf pegasus-worker.tar.gz; then
+            pegasus_lite_log "ERROR: Unable to download the default worker package."
+            return 1
+        fi
     fi
 
     rm -f pegasus-worker.tar.gz
@@ -496,9 +513,9 @@ function pegasus_lite_get_system()
         elif [ -e /etc/debian_version ]; then
             osname="deb"
             osversion=`cat /etc/debian_version`
-        elif [ "X$osname" = "Xfedora" ]; then
-            osname="fc"
-            osversion=`cat /etc/issue | head -n1 | awk '{print $3;}'`
+        elif [ -e /etc/fedora-release ]; then
+            osname="fedora"
+            osversion=`cat /etc/fedora-release | grep -o -E '[0-9]+'`
         elif [ -e /etc/redhat-release ]; then
             osname="rhel"
             osversion=`cat /etc/redhat-release | grep -o -E ' [0-9]+.[0-9]+'`
