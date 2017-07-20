@@ -576,8 +576,6 @@ public class TransformationCatalogTextParser {
                                                       "expecting a closing brace");
         }
 
-        mLookAhead = mScanner.nextToken();
-        
         return container;
     }
     
