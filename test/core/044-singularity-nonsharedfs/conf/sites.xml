@@ -28,6 +28,8 @@
        <profile namespace="pegasus" key="style">condor</profile>
        <profile namespace="pegasus" key="clusters.num">1</profile>
        <profile namespace="condor" key="universe">vanilla</profile>
+       <!-- special path until singularity rpm goes to 2.3 -->
+       <profile namespace="env" key="PATH" >/ccg/software/singularity/default/bin:/usr/bin:/bin</profile>
        
    </site>
 

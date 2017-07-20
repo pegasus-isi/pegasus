@@ -1,3 +1,5 @@
+pegasus.catalog.transformation      = Text
+pegasus.catalog.transformation.file = data/tc.txt
 
 pegasus.catalog.replica      = File
 pegasus.catalog.replica.file = data/rc.txt
