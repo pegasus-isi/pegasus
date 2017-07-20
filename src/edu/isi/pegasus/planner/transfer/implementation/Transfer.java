@@ -51,6 +51,8 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The implementation that creates transfer jobs referring to the python based
@@ -142,15 +144,15 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
         switch (type){
 
             case STAGE_IN_JOB:
-                category = "stage-in";
+                category = "stagein";
                 break;
 
             case STAGE_OUT_JOB:
-                category = "stage-out";
+                category = "stageout";
                 break;
 
             case INTER_POOL_JOB:
-                category = "stage-inter";
+                category = "stageinter";
                 break;
             default:
                 category = "transfer";
@@ -159,6 +161,23 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
         return category;
                 
     }
+    
+    /**
+     * Returns a Map that maps deprecated name to the new category name
+     * 
+     * @return 
+     */
+    public static Map<String,String> deprecatedDAGManCategoryNames(  ) {
+        Map<String,String> m = new HashMap();
+
+        m.put( "stage-in", "stagein" );
+        m.put( "stage-out", "stageout" );
+        m.put( "stage-inter", "stageinter" );
+        
+        return m;
+                
+    }
+
 
 
     /**
