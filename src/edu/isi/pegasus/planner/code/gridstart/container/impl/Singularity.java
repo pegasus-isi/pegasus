@@ -239,12 +239,7 @@ public class Singularity extends Abstract{
         sb.append( "pegasus_lite_version_allow_wp_auto_download=$pegasus_lite_version_allow_wp_auto_download" ).append( "\n" );
         sb.append( "pegasus_lite_work_dir=" ).append( Singularity.CONTAINER_WORKING_DIRECTORY ).append( "\n" );
         sb.append( "echo \\$PWD" ).append( "  1>&2" ).append( "\n" );
-        /*
-        sb.append( "echo \"Arguments passed \\$@\"" ).append( "  1>&2" ).append( "\n" );
-        sb.append( "kickstart=\"\\$1\" ").append( "\n" );
-        sb.append( "shift" ).append( "\n" );
-        sb.append( "original_args=(\"\\$@\")" ).append( "\n" ).append( "\n" );
-        */
+        
         sb.append( ". pegasus-lite-common.sh" ).append( "\n" );
         sb.append( "pegasus_lite_init" ).append( "\n" ).append( "\n" );
 
