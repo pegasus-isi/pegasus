@@ -66,6 +66,8 @@ import com.google.gson.stream.JsonWriter;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.namespace.Metadata;
+import edu.isi.pegasus.planner.refiner.cleanup.Cleanup;
+import edu.isi.pegasus.planner.transfer.implementation.Transfer;
 
 
 import java.io.BufferedWriter;
@@ -197,6 +199,12 @@ public class CondorGenerator extends Abstract {
     private static  Map<Integer,String> mJobTypeToCondorConcurrencyLimits = null;
     
     /**
+     * Maps default maxjobs keys for various Pegasus defined categories to
+     * their default values
+     */
+    private static  Map<String, String> mDefaultMaxJobsCategoryValues = null;
+    
+    /**
      * Map that maps job type to corresponding condor concurrency limits
      */
     private static Map<Integer, String> jobTypeToCondorConcurrencyLimits(){
@@ -219,6 +227,23 @@ public class CondorGenerator extends Abstract {
             mJobTypeToCondorConcurrencyLimits.put( Job.DAG_JOB,                     "pegasus_dag");
         }
         return mJobTypeToCondorConcurrencyLimits;
+    }
+    
+    
+    /**
+     * Map that maps job type to corresponding condor concurrency limits
+     */
+    private static Map<String, String> defaultMaxJobsCategoryValues(){
+        if( mDefaultMaxJobsCategoryValues == null ){
+            //PM-1212
+            mDefaultMaxJobsCategoryValues = new HashMap();
+            //pegasus_transfer is our Condor Concurrency Group for all transfer jobs
+            mDefaultMaxJobsCategoryValues.put( Transfer.getDAGManCategory( Job.STAGE_IN_JOB ) + ".maxjobs",  "10");
+            mDefaultMaxJobsCategoryValues.put( Transfer.getDAGManCategory( Job.STAGE_OUT_JOB ) + ".maxjobs",  "10");
+            mDefaultMaxJobsCategoryValues.put( Cleanup.DEFAULT_CLEANUP_CATEGORY_KEY + ".maxjobs",  "4");
+            
+        }
+        return mDefaultMaxJobsCategoryValues;
     }
     
     /**
@@ -1143,30 +1168,38 @@ public class CondorGenerator extends Abstract {
 
         //get all dagman properties
         Properties dagman = properties.matchingSubset( DAGMAN_PROPERTIES_PREFIX, false );
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         String newLine = System.getProperty( "line.separator", "\r\n" );
 
+        //PM-1212 add default values for transfer and cleanup categories
+        //if user has not specified before
+        Map<String, String> m = defaultMaxJobsCategoryValues();
+        for( String key : m.keySet() ){
+            if( !dagman.containsKey( key ) ){
+                //add the key and default value
+                dagman.setProperty( key, m.get(key) );
+            }
+        }
+        
         //iterate through all the properties
         for( Iterator it = dagman.keySet().iterator(); it.hasNext(); ){
             String name = ( String ) it.next();//like bigjob.maxjobs
-            //System.out.println( name );
 
             //figure out whether it is a category property or not
             //really a short cut way of doing it
-            //if( (dotIndex = name.indexOf( "." )) != -1 && dotIndex != name.length() - 1 ){
             if( Dagman.categoryRelatedKey( name.toUpperCase() ) ){
                 //we have a category and a key
                 int dotIndex = name.indexOf( "." );
                 String category = name.substring( 0, dotIndex   );//like bigjob
                 String knob     = name.substring( dotIndex + 1 );//like maxjobs
                 String value    = dagman.getProperty( name );//the value of the property in the properties
-
-                //System.out.println( category + " " + knob + " " + value);
+               
                 result.append( knob.toUpperCase( ) ).append( " " ).append( category ).
                        append( " " ).append( value ).append( newLine );
             }
         }
-
+        
+        
         return result.toString();
     }
 
