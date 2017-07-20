@@ -15,9 +15,14 @@
 #  limitations under the License.
 #
 from __future__ import print_function
-from future import standard_library
 
-standard_library.install_aliases()
+import sys
+
+if sys.version_info >= (3, 0):
+    # compatibility with Python 3
+    from future import standard_library
+
+    standard_library.install_aliases()
 
 __author__ = 'Rafael Ferreira da Silva'
 
@@ -28,9 +33,9 @@ import time
 from datetime import datetime
 from Pegasus.DAX3 import *
 from Pegasus.init import *
-from Pegasus.jupyter.sites_catalog import *
-from Pegasus.jupyter.replica_catalog import *
-from Pegasus.jupyter.transformation_catalog import *
+from Pegasus.catalogs.sites_catalog import *
+from Pegasus.catalogs.replica_catalog import *
+from Pegasus.catalogs.transformation_catalog import *
 
 
 class Cleanup:
