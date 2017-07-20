@@ -70,40 +70,14 @@ public class BalancedCluster extends Basic {
 
 
     /**
-     * The default bundling factor that identifies the number of transfer jobs
-     * that are being created per execution pool for stageing in data for
-     * the workflow.
-     */
-    public static final String DEFAULT_LOCAL_STAGE_IN_CLUSTER_FACTOR = "2";
-
-    
-    /**
-     * The default bundling factor that identifies the number of transfer jobs
-     * that are being created per execution pool for stageing in data for
-     * the workflow.
-     */
-    public static final String DEFAULT_REMOTE_STAGE_IN_CLUSTER_FACTOR = "2";
-
-    /**
-     * The default bundling factor that identifies the number of transfer jobs
-     * that are being created per execution pool for stageing out data for
-     * the workflow.
-     */
-    public static final String DEFAULT_LOCAL_STAGE_OUT_CLUSTER_FACTOR = "2";
-
-
-    /**
-     * The default bundling factor that identifies the number of transfer jobs
-     * that are being created per execution pool for stageing out data for
-     * the workflow.
-     */
-    public static final String DEFAULT_REMOTE_STAGE_OUT_CLUSTER_FACTOR = "2";
-    
-    /**
      * number of compute jobs to be associated with a single job
      */
     public static final float NUM_COMPUTE_JOBS_PER_TRANSFER_JOB = 10;
 
+    /**
+     * If no transfer profile is specified the value, for the parameters
+     */
+    private static final int NO_PROFILE_VALUE = -1;
 
     /**
      * The map containing the list of stage in transfer jobs that are being
@@ -260,14 +234,14 @@ public class BalancedCluster extends Basic {
                                              Pegasus.CLUSTER_STAGE_IN_KEY,
                                              getDefaultClusterValueFromProperties( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
                                                                     Pegasus.CLUSTER_STAGE_IN_KEY,
-                                                                    BalancedCluster.DEFAULT_LOCAL_STAGE_IN_CLUSTER_FACTOR ) );
+                                                                    BalancedCluster.NO_PROFILE_VALUE ) );
         
         mStageInRemoteBundleValue = new ClusterValue();
         mStageInRemoteBundleValue.initialize( Pegasus.CLUSTER_REMOTE_STAGE_IN_KEY,
                                               Pegasus.CLUSTER_STAGE_IN_KEY,
                                               getDefaultClusterValueFromProperties( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
                                                                      Pegasus.CLUSTER_STAGE_IN_KEY,
-                                                                     BalancedCluster.DEFAULT_REMOTE_STAGE_IN_CLUSTER_FACTOR ) );
+                                                                     BalancedCluster.NO_PROFILE_VALUE ) );
 
 
         mStageOutLocalBundleValue = new ClusterValue();
@@ -275,14 +249,14 @@ public class BalancedCluster extends Basic {
                                               Pegasus.CLUSTER_STAGE_OUT_KEY,
                                               getDefaultClusterValueFromProperties( Pegasus.CLUSTER_LOCAL_STAGE_OUT_KEY,
                                                                      Pegasus.CLUSTER_STAGE_OUT_KEY,
-                                                                     BalancedCluster.DEFAULT_LOCAL_STAGE_OUT_CLUSTER_FACTOR ));
+                                                                     BalancedCluster.NO_PROFILE_VALUE ));
 
         mStageOutRemoteBundleValue = new ClusterValue();
         mStageOutRemoteBundleValue.initialize( Pegasus.CLUSTER_REMOTE_STAGE_OUT_KEY,
                                                Pegasus.CLUSTER_STAGE_OUT_KEY,
                                                getDefaultClusterValueFromProperties( Pegasus.CLUSTER_REMOTE_STAGE_OUT_KEY,
                                                                       Pegasus.CLUSTER_STAGE_OUT_KEY,
-                                                                      BalancedCluster.DEFAULT_REMOTE_STAGE_OUT_CLUSTER_FACTOR ));
+                                                                      BalancedCluster.NO_PROFILE_VALUE ));
 
     }
 
@@ -301,9 +275,9 @@ public class BalancedCluster extends Basic {
      * @param defaultKey     the default pegasus profile key
      * @param defaultValue   the default value.
      *
-     * @return the value as string.
+     * @return the value 
      */
-    protected String getDefaultClusterValueFromProperties( String key, String defaultKey, String defaultValue ){
+    protected int getDefaultClusterValueFromProperties( String key, String defaultKey, int defaultValue ){
 
         String result = mPegasusProfilesInProperties.getStringValue( key );
 
@@ -314,11 +288,11 @@ public class BalancedCluster extends Basic {
             if( result == null ){
                 //none of the keys are mentioned in properties
                 //use the default value
-                result = defaultValue;
+                return  defaultValue;
             }
         }
 
-        return result;
+        return Integer.parseInt( result );
 
     }
     
@@ -1354,13 +1328,12 @@ public class BalancedCluster extends Basic {
          * @param defaultKey the default Profile Key to be used if key is not found.
          * @param defaultValue the default value to be associated if no key is found.
          */
-        public void initialize( String key, String defaultKey, String defaultValue ){
+        public void initialize( String key, String defaultKey, int defaultValue ){
             mProfileKey         = key;
             mDefaultProfileKey  = defaultKey;
-            mDefaultBundleValue = Integer.parseInt( defaultValue );
+            mDefaultBundleValue =  defaultValue ;
         }
         
-      
        
        
         
@@ -1409,23 +1382,23 @@ public class BalancedCluster extends Basic {
             //look up the value in SiteCatalogEntry for the store
            SiteCatalogEntry entry = BalancedCluster.this.mSiteStore.lookup( site );
 
-           //sanity check
-           if( entry == null ){
-               return defaultValue;
+           //check if a profile are set in site catalog entry
+           String profileValue = null;
+           if( entry != null ){
+                //check for Pegasus Profile mProfileKey in the site entry
+                Pegasus profiles = (Pegasus) entry.getProfiles().get( NAMESPACES.pegasus );
+                profileValue = profiles.getStringValue( mProfileKey );
+                if( profileValue == null ){
+                    //try to look up value of default key
+                    profileValue = profiles.getStringValue( mDefaultProfileKey );
+                }
            }
-
-           //check for Pegasus Profile mProfileKey in the site entry
-           Pegasus profiles = (Pegasus) entry.getProfiles().get( NAMESPACES.pegasus );
-           String value = profiles.getStringValue( mProfileKey );
-           if( value == null ){
-               //try to look up value of default key
-               value = profiles.getStringValue( mDefaultProfileKey );
-           }
-
-           //if value is still null , rely of the default bundle value
-           return ( value == null )?
-                   defaultValue:
-                   Integer.parseInt(value);
+           
+           //if value is still null, grab the default value
+           //when initialized from properties
+           return ( profileValue == null && mDefaultBundleValue != BalancedCluster.NO_PROFILE_VALUE )?
+                   mDefaultBundleValue://the value used in the properties file
+                   defaultValue;
 
 
         }
