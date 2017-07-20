@@ -149,7 +149,9 @@ import codecs
 import shlex
 import codecs
 
-from past.builtins import basestring
+if sys.version_info >= (3, 0):
+    # compatibility with Python 3
+    from past.builtins import basestring
 
 try:
     from StringIO import StringIO
