@@ -1,7 +1,9 @@
 
+pegasus.catalog.transformation      = Text
+pegasus.catalog.transformation.file = data/tc.txt
+
 pegasus.catalog.replica=SimpleFile
 pegasus.catalog.replica.file=data/rc.txt
-
 
 pegasus.catalog.site.file=sites.xml
 

@@ -3289,6 +3289,35 @@ project:
                 - name: tests
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
+            - key: T044E
+              name: 044-singularity-nonsharedfs-hub
+              description: Singularity test case, using shub images
+              tasks:
+                - !script
+                  description: Cleanup
+                  enabled: false
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "rm -rf pegasus/ test/"
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xf tests.tar"
+                - !script
+                  description: Run Test
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+                      test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+              requirements:
+                - capabilityKey: condor
+                  matchType: !exists exists
+              artifactDependencies:
+                - name: tests
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
             - key: T1D
               name: blackdiamond - pl-condorio
               description: TODO
