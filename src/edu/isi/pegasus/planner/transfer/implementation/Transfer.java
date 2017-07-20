@@ -128,6 +128,37 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
      * The executable basename for the transfer executable.
      */
     public static final String EXECUTABLE_BASENAME = "pegasus-transfer";
+    
+    /**
+     * Returns the dagman category for transfer job 
+     * 
+     * @param type job type
+     * 
+     * @return 
+     */
+    public static String getDAGManCategory( int type ) {
+        String category = null;
+
+        switch (type){
+
+            case STAGE_IN_JOB:
+                category = "stage-in";
+                break;
+
+            case STAGE_OUT_JOB:
+                category = "stage-out";
+                break;
+
+            case INTER_POOL_JOB:
+                category = "stage-inter";
+                break;
+            default:
+                category = "transfer";
+                
+        }
+        return category;
+                
+    }
 
 
     /**
@@ -482,34 +513,5 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
                                   Transfer.TRANSFORMATION_VERSION);
     }
 
-    /**
-     * Returns the dagman category for transfer job 
-     * 
-     * @param type job type
-     * 
-     * @return 
-     */
-    protected String getDAGManCategory( int type ) {
-        String category = null;
-
-        switch (type){
-
-            case STAGE_IN_JOB:
-                category = "stage-in";
-                break;
-
-            case STAGE_OUT_JOB:
-                category = "stage-out";
-                break;
-
-            case INTER_POOL_JOB:
-                category = "stage-inter";
-                break;
-            default:
-                category = "transfer";
-                
-        }
-        return category;
-                
-    }
+    
 }
