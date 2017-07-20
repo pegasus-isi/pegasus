@@ -73,33 +73,7 @@ public class Cluster extends Bundle {
                       "Cluster Transfers: Stagein and Stageout TX jobs are clustered per level";
 
 
-    /**
-     * The default clustering factor that identifies the number of transfer jobs
-     * that are being created per execution pool for stageing in data for
-     * the workflow.
-     */
-    public static final String DEFAULT_LOCAL_STAGE_IN_CLUSTER_FACTOR = "2";
-
-    /**
-     * The default clustering factor that identifies the number of transfer jobs
-     * that are being created per execution pool for stageing in data for
-     * the workflow.
-     */
-    public static final String DEFAULT_REMOTE_STAGE_IN_CLUSTER_FACTOR = "2";
-
-    /**
-     * The default bundling factor that identifies the number of transfer jobs
-     * that are being created per execution pool for stageing out data for
-     * the workflow.
-     */
-    public static final String DEFAULT_LOCAL_STAGE_OUT_CLUSTER_FACTOR = "2";
-
-    /**
-     * The default bundling factor that identifies the number of transfer jobs
-     * that are being created per execution pool for stageing out data for
-     * the workflow.
-     */
-    public static final String DEFAULT_REMOTE_STAGE_OUT_CLUSTER_FACTOR = "2";
+    
     
     /**
      * number of compute jobs to be associated with a single job
@@ -161,14 +135,14 @@ public class Cluster extends Bundle {
                                              Pegasus.CLUSTER_STAGE_IN_KEY,
                                              getDefaultBundleValueFromProperties( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
                                                                                   Pegasus.CLUSTER_STAGE_IN_KEY,
-                                                                                  Cluster.DEFAULT_LOCAL_STAGE_IN_CLUSTER_FACTOR ));
+                                                                                  Cluster.NO_PROFILE_VALUE));
         
         mStageInRemoteBundleValue = new BundleValue();
         mStageInRemoteBundleValue.initialize( Pegasus.CLUSTER_REMOTE_STAGE_IN_KEY,
                                               Pegasus.CLUSTER_STAGE_IN_KEY,
                                               getDefaultBundleValueFromProperties( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
                                                                                    Pegasus.CLUSTER_STAGE_IN_KEY, 
-                                                                                   Cluster.DEFAULT_REMOTE_STAGE_IN_CLUSTER_FACTOR ));
+                                                                                   Cluster.NO_PROFILE_VALUE ));
 
 
         mStageOutLocalBundleValue = new BundleValue();
@@ -176,14 +150,14 @@ public class Cluster extends Bundle {
                                               Pegasus.CLUSTER_STAGE_OUT_KEY,
                                               getDefaultBundleValueFromProperties( Pegasus.CLUSTER_LOCAL_STAGE_OUT_KEY,
                                                                                    Pegasus.CLUSTER_STAGE_OUT_KEY,
-                                                                                   Cluster.DEFAULT_LOCAL_STAGE_OUT_CLUSTER_FACTOR ));
+                                                                                   Cluster.NO_PROFILE_VALUE ));
 
         mStageOutRemoteBundleValue = new BundleValue();
         mStageOutRemoteBundleValue.initialize( Pegasus.BUNDLE_REMOTE_STAGE_OUT_KEY,
                                                Pegasus.BUNDLE_STAGE_OUT_KEY,
                                                getDefaultBundleValueFromProperties( Pegasus.BUNDLE_REMOTE_STAGE_OUT_KEY,
                                                                                     Pegasus.BUNDLE_STAGE_OUT_KEY,
-                                                                                    Cluster.DEFAULT_REMOTE_STAGE_OUT_CLUSTER_FACTOR ));
+                                                                                    Cluster.NO_PROFILE_VALUE ));
     }
 
     
