@@ -659,44 +659,6 @@ public class CondorGenerator extends Abstract {
             mInitializeGridStart = false;
         }
 
-        //for recursive dax's trigger partition and plan and exit.
-        //Commented out to be replaced with SUBDAG rendering.
-        //Karan September 10th 2009
-        /*
-        if ( job.typeRecursive() ){
-            String args = job.getArguments();
-            PartitionAndPlan pap = new PartitionAndPlan();
-            pap.initialize( mBag );
-            Collection<File> files = pap.doPartitionAndPlan( args );
-            File dagFile = null;
-            for( Iterator it = files.iterator(); it.hasNext(); ){
-                File f = (File) it.next();
-                if ( f.getName().endsWith( ".dag" ) ){
-                    dagFile = f;
-                    break;
-                }
-            }
-
-            mLogger.log( "The DAG for the recursive job created is " + dagFile,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-
-            //translate the current job into DAGMan submit file
-            Job dagCondorJob = this.constructDAGJob( job.getName(),
-                                                         dagFile.getParent(),
-                                                         dagFile.getName() );
-
-            //write out the dagCondorJob for it
-            mLogger.log( "Generating submit file for DAG " , LogManager.DEBUG_MESSAGE_LEVEL );
-            this.generateCode( dag, dagCondorJob );
-            
-            //setting the dagman variables of dagCondorJob to original job
-            //so that the right information is printed in the .dag file
-            job.dagmanVariables = dagCondorJob.dagmanVariables;
-            return;
-        }
-        */
-        
-
         // intialize the print stream to the file
         PrintWriter writer = null;
         try{
@@ -764,12 +726,7 @@ public class CondorGenerator extends Abstract {
         fragment.append("# END OF SUBMIT FILE").append( "\n" );
         fragment.append(CondorGenerator.mSeparator);
         writer.println( fragment );
-/*
-        writer.println("queue");
-        writer.println(this.mSeparator);
-        writer.println("# END OF SUBMIT FILE");
-        writer.println(this.mSeparator);
-*/
+
         // close the print stream to the file (flush)
         writer.close();
         return;
@@ -964,21 +921,6 @@ public class CondorGenerator extends Abstract {
        job.condorVariables.construct("getenv","TRUE");
 
        job.condorVariables.construct("remove_kill_sig","SIGUSR1");
-
-
-       //the log file for condor dagman for the dagman also needs to be created
-       //it is different from the log file that is shared by jobs of
-       //the partition. That is referred to by Condorlog
-
-//       keep the log file common for all jobs and dagman albeit without
-//       dag.dagman.log suffix
-//       job.condorVariables.construct("log", getAbsolutePath( partition, dir,".dag.dagman.log"));
-
-//       String dagName = mMegaDAG.dagInfo.nameOfADag;
-//       String dagIndex= mMegaDAG.dagInfo.index;
-//       job.condorVariables.construct("log", dir + mSeparator +
-//                                     dagName + "_" + dagIndex + ".log");
-
 
        //the job needs to be explicitly launched in 
        //scheduler universe instead of local universe
@@ -1739,71 +1681,6 @@ public class CondorGenerator extends Abstract {
         return result;
     }
 
-    /**
-     * It changes the paths to the executable depending on whether we want to
-     * transfer the executable or not. If the transfer_executable is set to true,
-     * then the executable needs to be shipped from the submit host meaning the
-     * local pool. This function changes the path of the executable to the one on
-     * the local pool, so that it can be shipped.
-     *
-     * @param job the <code>Job</code> containing the job description.
-     *
-     * @throws CodeGeneratorException
-     */
-/*
-    protected void handleTransferOfExecutable(Job sinfo) throws CodeGeneratorException{
-        Condor cvar = sinfo.condorVariables;
-
-        if (!cvar.getBooleanValue("transfer_executable")) {
-            //the executable paths are correct and
-            //point to the executable on the remote pool
-            return;
-        }
-
-        SiteCatalogEntry site = mSiteStore.lookup( sinfo.getSiteHandle() );
-        String gridStartPath = site.getKickstartPath();
-
-        if (gridStartPath == null) {
-            //not using grid start
-            //we need to stage in the executable from
-            //the local pool. Not yet implemented
-            mLogger.log("At present only the transfer of gridstart is supported",
-                        LogManager.ERROR_MESSAGE_LEVEL);
-            return;
-        } else {
-            site =  mSiteStore.lookup( "local" );
-            gridStartPath = site.getKickstartPath();
-            if (gridStartPath == null) {
-                mLogger.log(
-                    "Gridstart needs to be shipped from the submit host to pool" +
-                    sinfo.executionPool + ".\nNo entry for it in pool local",
-                    LogManager.ERROR_MESSAGE_LEVEL);
-                throw new CodeGeneratorException( "GridStart needs to be shipped from submit host to site " +
-                                                  sinfo.getSiteHandle() );
-
-            } else {
-                //the jobs path to executable is updated
-                //by the path on the submit host
-                cvar.construct("executable", gridStartPath);
-
-                //the arguments to gridstart need to be
-                //appended with the true remote directory
-                String args = (String) cvar.removeKey("arguments");
-                args = " -w " +
-                    mSiteStore.getInternalWorkDirectory( sinfo ) +
-                    " " + args;
-                cvar.construct("arguments", args);
-
-                //we have to remove the remote_initial dir for it.
-                //as this is required for the LCG sites
-                //Actually this should be done thru a LCG flag
-                cvar.removeKey("remote_initialdir");
-
-            }
-
-        }
-    }
- */
 
     /**
      * Applies a submit file style to the job, according to the fact whether
@@ -1991,16 +1868,9 @@ public class CondorGenerator extends Abstract {
         //pool, querying with entry for vanilla universe.
         //In the new format the gridstart is associated with the
         //pool not pool, condor universe
-//        SiteInfo site = mPoolHandle.getPoolEntry(job.executionPool,
-//                                                 Condor.VANILLA_UNIVERSE);
         
         SiteCatalogEntry site = mSiteStore.lookup( job.getSiteHandle() );
-
-        //JIRA PM-491 . Path to kickstart should not be passed
-        //to the factory.
-//        String gridStartPath = site.getKickstartPath();
-
-        
+       
         StringBuffer rslString = new StringBuffer();
         String jobName = job.jobName;
         String script = null;
@@ -2009,19 +1879,7 @@ public class CondorGenerator extends Abstract {
         job.dagmanVariables.checkKeyInNS(Dagman.JOB_KEY,
                                          job.getFileRelativePath(SUBMIT_FILE_SUFFIX));
         
-        
-        //remove the prescript arguments key
-        //should be already be set to the prescript key
-//        //NO NEED TO REMOVE AS WE ARE HANDLING CORRECTLY IN DAGMAN NAMESPACE
-//        //NOW. THERE THE ARGUMENTS AND KEY ARE COMBINED. Karan May 11,2006
-//        //job.dagmanVariables.removeKey(Dagman.PRE_SCRIPT_ARGUMENTS_KEY);
-
-//        script = (String)job.dagmanVariables.removeKey(Dagman.PRE_SCRIPT_KEY);
-//        if(script != null){
-//            //put in the new key with the prescript
-//            job.dagmanVariables.checkKeyInNS(PRE_SCRIPT_KEY,script);
-//        }
-
+     
 
         //condor streaming is now for both grid and non grid universe jobs
         // we always put in the streaming keys. they default to false
