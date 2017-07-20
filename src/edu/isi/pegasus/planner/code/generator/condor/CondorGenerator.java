@@ -1132,7 +1132,7 @@ public class CondorGenerator extends Abstract {
                     String newCategory = deprecatedCategoryToNew.get( category );
                     String newKey = newCategory + "." + knob;
                     it.remove();
-                    logDeprecatedPropertyWarning("Deprecated dagman category profile detected in propertie" , key, newKey );
+                    logDeprecatedPropertyWarning("Deprecated dagman category profile detected in properties" , key, newKey );
                     
                     toAdd.setProperty( newKey, value );
                 }
