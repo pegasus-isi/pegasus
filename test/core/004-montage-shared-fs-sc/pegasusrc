@@ -7,9 +7,6 @@ pegasus.catalog.replica.file=data/rc.txt
 
 pegasus.catalog.site.file=sites.xml
 
-pegasus.catalog.transformation=Text
-pegasus.catalog.transformation.file=tc
-
 pegasus.dir.useTimestamp=true
 
 pegasus.condor.logs.symlink = false
