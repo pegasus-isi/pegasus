@@ -60,6 +60,7 @@ class Ensemble(EnsembleBase):
         self.state = EnsembleStates.ACTIVE
         self.set_max_running(1)
         self.set_max_planning(1)
+        self.eventconfig = None
 
     def set_state(self, state):
         state = state.upper()
@@ -84,6 +85,15 @@ class Ensemble(EnsembleBase):
             self.max_planning = max_planning
         except ValueError:
             raise EMError("Invalid value for max_planning: %s" % max_planning)
+
+    def set_eventconfig(self, eventconfig):
+        self.eventconfig = eventconfig
+
+    def get_eventconfig(self):
+        return self.eventconfig
+
+    def get_eventconfig(self):
+        return self.eventconfig
 
     def get_localdir(self):
         u = user.get_user_by_username(self.username)
@@ -269,6 +279,19 @@ class Ensembles:
         ensemble = Ensemble(username, name)
         ensemble.set_max_running(max_running)
         ensemble.set_max_planning(max_planning)
+        self.session.add(ensemble)
+        self.session.flush()
+        return ensemble
+
+    def create_ensemble_with_event(self, username, name, max_running, max_planning, eventconfig):
+        if self.session.query(Ensemble).filter(Ensemble.username==username, Ensemble.name==name).count() > 0:
+            raise EMError("Ensemble %s already exists" % name, 400)
+
+        ensemble = Ensemble(username, name)
+        ensemble.set_max_running(max_running)
+        ensemble.set_max_planning(max_planning)
+        ensemble.set_eventconfig(eventconfig)
+
         self.session.add(ensemble)
         self.session.flush()
         return ensemble

@@ -584,6 +584,7 @@ pg_ensemble = Table('ensemble', metadata,
     Column('max_running', Integer, nullable=False),
     Column('max_planning', Integer, nullable=False),
     Column('username', String(100), nullable=False),
+    Column('eventconfig', String(100)),
     **table_keywords
 )
 

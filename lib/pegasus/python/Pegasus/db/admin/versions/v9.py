@@ -22,20 +22,23 @@ class Version(BaseVersion):
         """
         log.info("Updating to version %s" % DB_VERSION)
         try:
-            log.info("Updating ensemble_workflow...")
-            self.db.execute("ALTER TABLE ensemble_workflow ADD eventconfig String(512)")
+            #log.info("Updating ensemble_workflow...")
+            #self.db.execute("ALTER TABLE ensemble_workflow ADD eventconfig String(512)")
             #log.info("Updating ensemble_workflow...")
             #self.db.execute("ALTER TABLE ensemble_workflow ADD eventfile String(512)")
             #log.info("Updating ensemble_workflow...")
             #self.db.execute("ALTER TABLE ensemble_workflow ADD eventdir String(512)")
             #log.info("Updating ensemble_workflow...")
             #self.db.execute("ALTER TABLE ensemble_workflow ADD eventcontent String(512)")
-            log.info("Updating ensemble_workflow...")
-            self.db.execute("ALTER TABLE ensemble_workflow ADD event_cycle INT NOT NULL DEFAULT 1")
-            log.info("Updating ensemble_workflow...")
-            self.db.execute("ALTER TABLE ensemble_workflow ADD event_maxcycle INT NOT NULL DEFAULT 1")
-            log.info("Updating ensemble_workflow...")
-            self.db.execute("ALTER TABLE ensemble_workflow ADD event_timestamp String(512)")
+            #log.info("Updating ensemble_workflow...")
+            #self.db.execute("ALTER TABLE ensemble_workflow ADD event_cycle INT NOT NULL DEFAULT 1")
+            #log.info("Updating ensemble_workflow...")
+            #self.db.execute("ALTER TABLE ensemble_workflow ADD event_maxcycle INT NOT NULL DEFAULT 1")
+            #log.info("Updating ensemble_workflow...")
+            #self.db.execute("ALTER TABLE ensemble_workflow ADD event_timestamp String(512)")
+
+            log.info("Updating ensemble...")
+            self.db.execute("ALTER TABLE ensemble ADD eventconfig String(512)")
         except (OperationalError, ProgrammingError):
             pass
         except Exception, e:

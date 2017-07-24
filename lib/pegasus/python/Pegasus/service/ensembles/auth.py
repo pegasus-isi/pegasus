@@ -23,13 +23,13 @@ def basic_auth_response():
 def authorize_request():
     cred = request.authorization
 
-    if not cred:
-        log.error("Auth required")
-        return basic_auth_response()
+   # if not cred:
+   #     log.error("Auth required")
+   #     return basic_auth_response()
 
-    if not authenticate(cred.username, cred.password):
-        log.error("Invalid login: %s", cred.username)
-        return basic_auth_response()
+   # if not authenticate(cred.username, cred.password):
+   #     log.error("Invalid login: %s", cred.username)
+   #     return basic_auth_response()
 
     try:
         g.user = user.get_user_by_username(cred.username)

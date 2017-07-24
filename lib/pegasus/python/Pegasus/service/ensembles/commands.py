@@ -8,7 +8,7 @@ import zipfile
 from optparse import OptionParser
 
 from Pegasus.command import Command, CompoundCommand, LoggingCommand
-from Pegasus.service.ensembles import emapp, manager
+from Pegasus.service.ensembles import emapp, manager, eventmanager
 from Pegasus.db.ensembles import EnsembleStates, EnsembleWorkflowStates
 
 log = logging.getLogger(__name__)
@@ -94,6 +94,9 @@ class ServerCommand(LoggingCommand):
                 mgr = manager.EnsembleManager()
                 mgr.start()
 
+                evmgr = eventmanager.EnsembleEventManager()
+                evmgr.start()
+
         if os.getuid() == 0:
             log.fatal("The ensemble manager should not be run as root")
             exit(1)
@@ -129,6 +132,8 @@ class CreateCommand(EnsembleClientCommand):
             default=1, type="int", help="Maximum number of workflows being planned at once")
         self.parser.add_option("-R", "--max-running", action="store", dest="max_running",
             default=1, type="int", help="Maximum number of workflows running at once")
+        self.parser.add_option("-v", "--event", action="store", dest="eventconfig",
+            default=None, help="trigger events")
 
     def run(self):
         if len(self.args) != 1:
@@ -136,10 +141,13 @@ class CreateCommand(EnsembleClientCommand):
 
         name = self.args[0]
 
+        print "Eventconfig",self.options.eventconfig
+
         request = {
             "name": name,
             "max_planning": self.options.max_planning,
-            "max_running": self.options.max_running
+            "max_running": self.options.max_running,
+            "eventconfig": self.options.eventconfig
         }
 
         response = self.post("/ensembles", data=request)
@@ -213,8 +221,8 @@ class SubmitCommand(EnsembleClientCommand):
         self.parser.disable_interspersed_args()
         self.parser.add_option("-p", "--priority", action="store", dest="priority",
             default=0, help="Workflow priority", metavar="NUMBER")
-        self.parser.add_option("-v", "--event", action="store", dest="eventconfig",
-            default=None, help="trigger events")
+        # self.parser.add_option("-v", "--event", action="store", dest="eventconfig",
+            # default=None, help="trigger events")
 
     def run(self):
         o = self.options
@@ -241,8 +249,8 @@ class SubmitCommand(EnsembleClientCommand):
             "name": workflow,
             "priority": o.priority,
             "basedir": os.getcwd(),
-            "plan_command": command,
-            "eventconfig": o.eventconfig
+            "plan_command": command
+            # "eventconfig": o.eventconfig
         }
 
         response = self.post("/ensembles/%s/workflows" % ensemble, data=data)

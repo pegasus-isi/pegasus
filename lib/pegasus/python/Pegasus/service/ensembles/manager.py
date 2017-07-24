@@ -15,7 +15,6 @@ from Pegasus.db import connection
 from Pegasus.service import app
 from Pegasus.db.ensembles import Ensembles, EnsembleStates, EnsembleWorkflowStates, EMError
 from Pegasus.db.schema import DashboardWorkflow, DashboardWorkflowstate
-from datetime import datetime
 
 
 log = logging.getLogger(__name__)
@@ -580,11 +579,11 @@ class EnsembleProcessor:
                     dates = dates[1:len(dates)-1]
                     times = times[1:len(dates)-1]
                     sizes = sizes[1:len(dates)-1]
-                    workflow_time = datetime.strptime(workflow_timestamp,"%a %b %d %H:%M:%S %Z %Y")
+                    workflow_time = datetime.datetime.strptime(workflow_timestamp,"%a %b %d %H:%M:%S %Z %Y")
                     print dates,times,sizes,workflow_time
                     num_files = 0
                     for i in xrange(len(times)):
-                        t1 = datetime.strptime(dates[i]+" "+times[i],"%Y-%m-%d %H:%M")
+                        t1 = datetime.datetime.strptime(dates[i]+" "+times[i],"%Y-%m-%d %H:%M")
                         if t1>=workflow_time and float(sizes[i])>float(data["event-size"]):
                             num_files += 1
 
@@ -642,8 +641,8 @@ class EnsembleProcessor:
 
     def handle_queued(self, workflow):
         if self.can_run():
-            if self.has_events_file(workflow):
-                self.run_workflow(workflow)
+            # if self.has_events_file(workflow):
+            self.run_workflow(workflow)
         else:
             log.debug("Delaying run of workflow %s due to policy" % workflow.name)
 
