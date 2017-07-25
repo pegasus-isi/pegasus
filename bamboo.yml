@@ -65,6 +65,10 @@ project:
                 - name: pegasus-source
                   copyPattern: 'pegasus-source.tar.gz'
                   isShared: true
+              requirements:
+                - capabilityKey: docbuild
+                  matchType: !equals
+                  matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
 
@@ -988,6 +992,10 @@ project:
                 - name: pegasus-worker-x86_64_ubuntu_14
                 - name: pegasus-worker-x86_64_ubuntu_16
                 #- name: pegasus-worker-x86_rhel_6
+              requirements:
+                - capabilityKey: hostname
+                  matchType: !equals
+                    matchValue: colo-vm63.isi.edu
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
 #      permissions:
