@@ -72,7 +72,7 @@ public class Singularity extends Abstract{
         //within the pegasus lite script create a wrapper
         //to launch job in the container. wrapper is required to
         //deploy pegasus worker package in the container and launch the user job
-        String scriptName = job.getID() + Docker.CONTAINER_JOB_LAUNCH_SCRIPT_SUFFIX;
+        String scriptName = job.getID() + Singularity.CONTAINER_JOB_LAUNCH_SCRIPT_SUFFIX;
         sb.append( constructJobLaunchScriptInContainer( job, scriptName ) );
         
         sb.append( "chmod +x " ).append( scriptName ).append( "\n" );
@@ -149,7 +149,7 @@ public class Singularity extends Abstract{
      */
     protected String constructJobLaunchScriptInContainer( Job job, String scriptName ) {
         if( WORKER_PACKAGE_SETUP_SNIPPET == null ){
-            WORKER_PACKAGE_SETUP_SNIPPET = Docker.constructContainerWorkerPackagePreamble();
+            WORKER_PACKAGE_SETUP_SNIPPET = Singularity.constructContainerWorkerPackagePreamble();
         }
         StringBuilder sb = new StringBuilder();
         sb.append( "\n" );
@@ -158,7 +158,7 @@ public class Singularity extends Abstract{
         sb.append( "cat <<EOF > " ).append( scriptName ).append( "\n" );
         
         if( WORKER_PACKAGE_SETUP_SNIPPET == null ){
-            WORKER_PACKAGE_SETUP_SNIPPET = Docker.constructContainerWorkerPackagePreamble();
+            WORKER_PACKAGE_SETUP_SNIPPET = Singularity.constructContainerWorkerPackagePreamble();
         }
         sb.append( WORKER_PACKAGE_SETUP_SNIPPET );
         
@@ -202,7 +202,7 @@ public class Singularity extends Abstract{
                 sb.append( "CLUSTER" ).append( '\n' );
             }
             catch( IOException ioe ){
-                throw new RuntimeException( "[Pegasus-Lite] Error while Docker wrapping job " + job.getID(), ioe );
+                throw new RuntimeException( "[Pegasus-Lite] Error while Singularity wrapping job " + job.getID(), ioe );
             }
         }
         else{
