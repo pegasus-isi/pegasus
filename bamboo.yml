@@ -68,7 +68,7 @@ project:
               requirements:
                 - capabilityKey: docbuild
                   matchType: !equals
-                  matchValue: true
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
 
