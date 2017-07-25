@@ -1335,8 +1335,8 @@ public class TransferEngine extends Engine {
             if( pf instanceof FileTransfer ){
                 //that means we should be having the source url already.
                 //nv contains both the source pool and the url.
-                //This happens in case of AI Planner or transfer of executables
-                nv = ((FileTransfer)pf).getSourceURL();
+                //PM-1213 remote the source URL. will be added later back
+                nv = ((FileTransfer)pf).removeSourceURL();
                 
                 NameValue destNV = ((FileTransfer)pf).removeDestURL();
                 
