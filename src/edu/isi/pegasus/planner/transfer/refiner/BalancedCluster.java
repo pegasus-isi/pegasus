@@ -46,6 +46,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
+import edu.isi.pegasus.planner.refiner.TransferEngine;
 import edu.isi.pegasus.planner.transfer.Implementation;
 import java.util.LinkedList;
 
@@ -74,6 +75,11 @@ public class BalancedCluster extends Basic {
      */
     public static final float NUM_COMPUTE_JOBS_PER_TRANSFER_JOB = 10;
 
+    /**
+     * Default value for deleted jobs level
+     */
+    public static final int DEFAULT_TX_JOBS_FOR_DELETED_JOBS = 10;
+    
     /**
      * If no transfer profile is specified the value, for the parameters
      */
@@ -897,6 +903,9 @@ public class BalancedCluster extends Basic {
         cluster  = (int)Math.ceil( count/divisor);
         m.put( level,  cluster);
         mLogger.log( "Number of transfer jobs for " + level + " are " + cluster, LogManager.DEBUG_MESSAGE_LEVEL );
+        
+        //add a value for the level associated with deleted jobs
+        m.put( TransferEngine.DELETED_JOBS_LEVEL, BalancedCluster.DEFAULT_TX_JOBS_FOR_DELETED_JOBS );
         
         return m;
     }

@@ -40,6 +40,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.refiner.TransferEngine;
 import edu.isi.pegasus.planner.transfer.Implementation;
 
 
@@ -79,6 +80,11 @@ public class Cluster extends Bundle {
      * number of compute jobs to be associated with a single job
      */
     public static final float NUM_COMPUTE_JOBS_PER_TRANSFER_JOB = 10;
+    
+    /**
+     * Default value for deleted jobs level
+     */
+    public static final int DEFAULT_TX_JOBS_FOR_DELETED_JOBS = 10;
 
     /**
      * A map indexed by site name, that contains the pointer to the stage in
@@ -753,6 +759,9 @@ public class Cluster extends Bundle {
         cluster  = (int)Math.ceil( count/divisor);
         m.put( level,  cluster);
         mLogger.log( "Number of transfer jobs for " + level + " are " + cluster, LogManager.DEBUG_MESSAGE_LEVEL );
+        
+        //add a value for the level associated with deleted jobs
+        m.put( TransferEngine.DELETED_JOBS_LEVEL, BalancedCluster.DEFAULT_TX_JOBS_FOR_DELETED_JOBS );
         
         return m;
     }
