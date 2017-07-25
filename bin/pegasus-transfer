@@ -3001,8 +3001,9 @@ class DockerHandler(TransferHandlerBase):
             src_path = re.sub('^docker:/+', '', src_path)
     
             prepare_local_dir(os.path.dirname(t.get_dst_path()))
-            cmd = "%s save -o '%s' '%s'" \
-                % (tools.full_path("docker"), t.get_dst_path(), src_path)
+            cmd = "%s pull '%s' && %s save -o '%s' '%s'" \
+                % (tools.full_path("docker"), src_path, \
+                   tools.full_path("docker"), t.get_dst_path(), src_path)
             try:
                 tc = TimedCommand(cmd)
                 tc.run()
