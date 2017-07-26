@@ -1001,9 +1001,11 @@ project:
       permissions:
         user:
           mayani: !permission ADMIN
-        other: !userType
-          ANONYMOUS_USERS: !permission VIEW
-          LOGGED_IN_USERS: !permission VIEW
+        other:
+          !userType ANONYMOUS_USERS:
+            -  !permission VIEW
+          !userType LOGGED_IN_USERS:
+            -  !permission VIEW
       triggers:
         - !scheduled
           description: Nightly Build
