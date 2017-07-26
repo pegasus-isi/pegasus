@@ -998,23 +998,23 @@ project:
                     matchValue: colo-vm63.isi.edu
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
-#      permissions:
-#        user:
-#          mayani: !permission ADMIN
-#        other: !userType
-#          ANONYMOUS_USERS: !permission VIEW
-#          LOGGED_IN_USERS: !permission VIEW
+      permissions:
+        user:
+          mayani: !permission ADMIN
+        other: !userType
+          ANONYMOUS_USERS: !permission VIEW
+          LOGGED_IN_USERS: !permission VIEW
       triggers:
         - !scheduled
           description: Nightly Build
           cronExpression: "0 0 19 * * ?"
-#      notifications:
-#        - !email
-#          address: pegasus-svn@isi.edu
-#          event: !event JOB_HUNG
-#        - !email
-#          address: pegasus-svn@isi.edu
-#          event: !event FAILED_BUILDS_AND_FIRST_SUCCESSFUL
+      notifications:
+        - !email
+          address: pegasus-svn@isi.edu
+          event: !event JOB_HUNG
+        - !email
+          address: pegasus-svn@isi.edu
+          event: !event FAILED_BUILDS_AND_FIRST_SUCCESSFUL
       variables:
         - key: TAG_CENTOS_6
           value: centos6
