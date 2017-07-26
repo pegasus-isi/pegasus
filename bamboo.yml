@@ -1000,7 +1000,12 @@ project:
                 cleanWorkingDirectoryAfterEachBuild: true
       permissions:
         user:
-          mayani: !permission ADMIN
+          mayani:
+            -  !permission ADMIN
+        group:
+          ccg-users:
+            -  !permission VIEW
+            -  !permission BUILD
         other:
           !userType ANONYMOUS_USERS:
             -  !permission VIEW
@@ -1107,13 +1112,19 @@ project:
                     matchValue: 'true'
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
-#      permissions:
-#        user:
-#          mayani: !permission ADMIN
-#        other: !userType
-#          ANONYMOUS_USERS: !permission VIEW
-#          LOGGED_IN_USERS: !permission VIEW
-
+      permissions:
+        user:
+          mayani:
+            -  !permission ADMIN
+        group:
+          ccg-users:
+            -  !permission VIEW
+            -  !permission BUILD
+        other:
+          !userType ANONYMOUS_USERS:
+            -  !permission VIEW
+          !userType LOGGED_IN_USERS:
+            -  !permission VIEW
       triggers:
         - !scheduled
           description: Nightly Build
@@ -1121,10 +1132,13 @@ project:
           onlyRunIfOtherPlansArePassing:
             planKeys:
               - PEGASUS-BNT47
-#      notifications:
-#        - !email
-#          address: pegasus-svn@isi.edu
-#          event: !event FAILED_BUILDS_AND_FIRST_SUCCESSFUL
+      notifications:
+        - !email
+          address: pegasus-svn@isi.edu
+          event: !event JOB_HUNG
+        - !email
+          address: pegasus-svn@isi.edu
+          event: !event FAILED_BUILDS_AND_FIRST_SUCCESSFUL
 
     - key: WT47
       name: Workflow Tests (4.7)
@@ -3459,12 +3473,19 @@ project:
                 - name: tests
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: false
-#      permissions:
-#        user:
-#          mayani: !permission ADMIN
-#        other: !userType
-#          ANONYMOUS_USERS: !permission VIEW
-#          LOGGED_IN_USERS: !permission VIEW
+      permissions:
+        user:
+          mayani:
+            -  !permission ADMIN
+        group:
+          ccg-users:
+            -  !permission VIEW
+            -  !permission BUILD
+        other:
+          !userType ANONYMOUS_USERS:
+            -  !permission VIEW
+          !userType LOGGED_IN_USERS:
+            -  !permission VIEW
       triggers:
         - !scheduled
           description: Nightly Build
@@ -3472,10 +3493,10 @@ project:
           onlyRunIfOtherPlansArePassing:
             planKeys:
               - PEGASUS-BNT47
-#      notifications:
-#        - !email
-#          address: pegasus-svn@isi.edu
-#          event: !event JOB_HUNG
-#        - !email
-#          address: pegasus-svn@isi.edu
-#          event: !event FAILED_BUILDS_AND_FIRST_SUCCESSFUL
+      notifications:
+        - !email
+          address: pegasus-svn@isi.edu
+          event: !event JOB_HUNG
+        - !email
+          address: pegasus-svn@isi.edu
+          event: !event FAILED_BUILDS_AND_FIRST_SUCCESSFUL
