@@ -284,12 +284,12 @@ public class InterPoolEngine extends Engine implements Refiner {
                         append( job.getCompleteTCName() ).append( " with id ").append( job.getID() ).append( " to any of the execution sites " ).
                         append( sites ).append( " using the Transformation Mapper (" ).append( this.mTCMapper.getMode() ).
                         append( ")" ).
-                        append( "\n" ).
-                        append( "\nThis error is most likely due to an error in the transformation catalog." ).
-                        append( "\nMake sure that the ").append( job.getCompleteTCName() ).append(" transformation" ).
-                        append("\nexists with matching system information  for sites ").append(sites).append(" you are trying to plan for " ).
+                        append( "\n\n" ).
+                        append( "This error is most likely due to an error in the transformation catalog." ).
+                        append( " Please verify that the '").append( job.getCompleteTCName() ).append(" transformation" ).
+                        append("' exists with matching system information for the sites ").append(sites).append(" you are planning against: " ).
                         append(mSiteStore.getSysInfos( sites )).
-                      append( "\n" );
+                      append( "\n\n" );
                 mLogger.log( error.toString(),
                             LogManager.ERROR_MESSAGE_LEVEL );
                 throw new RuntimeException( error.toString() );
