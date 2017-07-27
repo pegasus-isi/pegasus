@@ -2468,7 +2468,7 @@ project:
             - key: PEG030
               name: 030-pegasuslite-irods
               description: TODO
-              enabled: true
+              enabled: false
               tasks:
                 - !script
                   description: Cleanup
