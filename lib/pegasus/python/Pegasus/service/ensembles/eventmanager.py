@@ -71,14 +71,14 @@ class EnsembleEventManager(threading.Thread):
             if self.has_events(e):
                 try:
                     print "Executing script to generate new dax"
-                    subprocess.call([self.script[e.name],"workflow_dax"+str(self.cycle[e.name])+".dax"])
+                    subprocess.call([self.script[e.name],"workflow_dax"+str(self.cycle[e.name])+".dax",str(self.cycle[e.name]),e.get_eventconfig()])
                     os.chdir(str(self.daxdir[e.name]))
                     os.system("pegasus-em submit "+str(e.name)+"."+str(self.cycle[e.name])+" "+str(self.pegasus_args[e.name])+" "+str(self.daxdir[e.name])+"/"+"workflow_dax"+str(self.cycle[e.name])+".dax")
                     self.cycle[e.name]+=1
                     self.timestamp[e.name] = subprocess.check_output(["date"])
                     self.timestamp[e.name] = self.timestamp[e.name].strip("\n")
-                except Exception as e:
-                    print e
+                except Exception as excp:
+                    print excp
             # eventconfig = e.get_eventconfig()
 
 
@@ -215,8 +215,11 @@ class EnsembleEventManager(threading.Thread):
 
                         # print "Afterwards",workflow_timestamp,workflow.get_event_timestamp()
                     #num_files = os.system("find '"+data["event-dir"]+"' -size +"+str(data["event-size"])+"c -newermt '"+str(workflow_timestamp)+"' -exec /bin/echo {} \; | wc -l")
-                    files = subprocess.check_output(["find", data["event-dir"], "-size", str(data["event-size"])+"c", "-newermt", str(event_timestamp)])
-                    num_files = files.count("\n")-1
+                    #files = subprocess.check_output(["find", data["event-dir"], "-size", str(data["event-size"])+"c", "-newermt", str(event_timestamp)])
+		    files = subprocess.Popen(["find", data["event-dir"], "-size",str(data["event-size"])+"c", "-newermt",str(event_timestamp)],stdout=subprocess.PIPE)
+                    #num_files = files.count("\n")-1
+		    num_files = subprocess.check_output(["wc","-l"],stdin=files.stdout)
+		    num_files = int(num_files.strip("\n"))
                     print num_files, data["event-dir"],data["event-size"],event_timestamp,data["event-numfiles"]
                     if (num_files) < data["event-numfiles"]:
                         return False

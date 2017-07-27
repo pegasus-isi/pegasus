@@ -47,6 +47,9 @@ PASSWORD = ""
 # Workflow processing interval in seconds
 EM_INTERVAL = 60
 
+# Event checking interval in seconds
+EV_INTERVAL = 1
+
 # Directory to store data
 STORAGE_DIRECTORY = "/var/pegasus"
 
