@@ -1881,7 +1881,7 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: false
+                cleanWorkingDirectoryAfterEachBuild: true
             - key: PEGASUSGRIDFTP
               name: 017-pegasus-gridftp
               description: TODO
