@@ -20,7 +20,9 @@ import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A container data class to use in the Transformation Catalog
@@ -33,11 +35,17 @@ public class Container implements Cloneable {
      * The types of container supported.
      */
     public static enum TYPE{ docker, singularity };
+    
 
     /**
-     * the container name assigned by user
+     * the container name assigned by user in the TC
      */
     protected String mName;
+    
+    /**
+     * the LFN used internally for determining destination basenames for staging.
+     */
+    protected String mLFN;
     
     /**
      * Type of container to use
@@ -72,6 +80,7 @@ public class Container implements Cloneable {
     public Container(){
         mType = TYPE.docker;
         mName     = null;
+        mLFN      = null;
         mImageURL = null;
         mDefinitionFileURL = null;
         mImageSite = null;
@@ -85,6 +94,7 @@ public class Container implements Cloneable {
     public Container(String name){
         this();
         mName = name;
+        setLFN( name );
     }
     
     /**
@@ -94,6 +104,25 @@ public class Container implements Cloneable {
      */
     public void setName( String name ){
         mName = name;
+        setLFN( name );
+    }
+    
+    /**
+     * The name of the container transformation.
+     * 
+     * @return 
+     */
+    public String getName(){
+        return mName;
+    }
+    
+    /**
+     * Set the LFN  for the container
+     * 
+     * @param name 
+     */
+    protected void setLFN( String name ){
+       mLFN = name;
     }
     
     /**
@@ -101,8 +130,8 @@ public class Container implements Cloneable {
      * 
      * @return 
      */
-    public String getName(){
-        return mName;
+    public String getLFN(){
+        return mLFN;
     }
     
     /**
@@ -280,7 +309,7 @@ public class Container implements Cloneable {
      */
     public String toString(){
         StringBuilder sb = new StringBuilder();
-        sb.append( "cont ").append( this.getName() ).append( "{").append("\n");
+        sb.append( "cont ").append(this.getLFN() ).append( "{").append("\n");
         sb.append( "\t" ).append( "type     " ).append( "\t" ).append( this.getType() ).append( "\n");
         if( this.getImageURL() != null ){
             sb.append( "\t" ).append( "image    " ).append( "\t" ).append( this.getImageURL().getURL() ).append( "\n");

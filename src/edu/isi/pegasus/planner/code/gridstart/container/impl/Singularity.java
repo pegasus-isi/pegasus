@@ -86,7 +86,7 @@ public class Singularity extends Abstract{
         sb.append( "set +e" ).append( "\n" );
         
         Container c = job.getContainer();
-        sb.append( "singularity_init").append( " " ).append( c.getName() ).append( "\n" );
+        sb.append( "singularity_init").append( " " ).append( c.getLFN() ).append( "\n" );
         
         sb.append( "job_ec=$(($job_ec + $?))" ).append( "\n" ).append( "\n" );;
         
@@ -98,7 +98,7 @@ public class Singularity extends Abstract{
         sb.append( "--home $PWD:" ).append( CONTAINER_WORKING_DIRECTORY ).append( " " );
         
         //we are running directly against image file. no loading
-        sb.append( c.getName() ).append( " " );
+        sb.append( c.getLFN() ).append( " " );
         
         //the script that sets up pegasus worker package and execute
         //user application

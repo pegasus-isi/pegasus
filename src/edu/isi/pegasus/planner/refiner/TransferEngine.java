@@ -1275,7 +1275,7 @@ public class TransferEngine extends Engine {
         String scheme  = "file";
         String containerLFN = null;
         if( job.getContainer() != null ){
-            containerLFN = job.getContainer().getName();
+            containerLFN = job.getContainer().getLFN();
         }
 
         //sAbsPath would be just the source directory absolute path

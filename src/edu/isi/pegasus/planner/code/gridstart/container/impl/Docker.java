@@ -93,7 +93,7 @@ public class Docker extends Abstract{
         //sets up the variables used for docker run command
         //FIXME docker_init has to be passed the name of the tar file?
         Container c = job.getContainer();
-        sb.append( "docker_init").append( " " ).append( c.getName() ).append( "\n" );
+        sb.append( "docker_init").append( " " ).append( c.getLFN() ).append( "\n" );
         
         sb.append( "job_ec=$(($job_ec + $?))" ).append( "\n" ).append( "\n" );
         

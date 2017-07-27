@@ -135,7 +135,7 @@ public class TransformationStore {
      * @param container add a container
      */
     public void addContainer( Container container ){
-        String name = container == null ? null : container.getName();
+        String name = container == null ? null : container.getLFN();
         if( name == null || name.isEmpty() ) {
             throw new RuntimeException( "Invalid container passed " + container);
         }
@@ -157,7 +157,7 @@ public class TransformationStore {
             if( c == null ){
                 continue;
             }
-            String name = c.getName();
+            String name = c.getLFN();
             if( containsContainer(name) ){
                 Container cont = this.getContainer(name);
                 entry.setContainer(cont);
