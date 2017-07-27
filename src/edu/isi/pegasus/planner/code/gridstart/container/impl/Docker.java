@@ -45,6 +45,11 @@ public class Docker extends Abstract{
     public static final String CONTAINER_WORKING_DIRECTORY = "/scratch";
     
     private static String WORKER_PACKAGE_SETUP_SNIPPET = null; 
+    
+    /**
+     * time in seconds that we wait for before launching docker run command.
+     */
+    private static final String SLEEP_TIME_FOR_DOCKER_BOOTUP = "5";
      
     
     /**
@@ -90,7 +95,10 @@ public class Docker extends Abstract{
         Container c = job.getContainer();
         sb.append( "docker_init").append( " " ).append( c.getName() ).append( "\n" );
         
-        sb.append( "job_ec=$(($job_ec + $?))" ).append( "\n" ).append( "\n" );;
+        sb.append( "job_ec=$(($job_ec + $?))" ).append( "\n" ).append( "\n" );
+        
+        //we want to sleep for few seconds to allow the container to boot up fully
+        sb.append( "sleep" ).append( " " ).append( Docker.SLEEP_TIME_FOR_DOCKER_BOOTUP ).append( "\n" );
         
         //assume docker is available in path
         sb.append( "docker run ");
