@@ -313,7 +313,7 @@ function docker_init()
 	if [ -e ${image_file} ] ; then
 	    pegasus_lite_log "container file is ${image_file}"
 	    # try and load the image
-	    images=`docker load -i centos-base | sed -E "s/^Loaded image:(.*)$/\1/"`
+	    images=`docker load -i ${image_file} | sed -E "s/^Loaded image:(.*)$/\1/"`
 
 	    #docker load can list multiple images, which might be aliases for same image
 	    for image in $images ; do
