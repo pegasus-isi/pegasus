@@ -36,6 +36,24 @@ public class Container implements Cloneable {
      */
     public static enum TYPE{ docker, singularity };
     
+    /**
+     * Singularity is picky about extensions as it uses that for loading the container image
+     */
+    protected static  Set<String> mSupportedSingularityExtensions = null;
+    
+    protected static Set<String> getsupportedSingularityExtensions(){
+        if( mSupportedSingularityExtensions == null ){
+            //from http://singularity.lbl.gov/user-guide#other-container-formats-supported 
+            mSupportedSingularityExtensions = new HashSet<String>();
+            mSupportedSingularityExtensions.add( ".img" );
+            mSupportedSingularityExtensions.add( ".tar" );
+            mSupportedSingularityExtensions.add( ".tar.gz" );
+            mSupportedSingularityExtensions.add( ".tar.bz2" );
+            mSupportedSingularityExtensions.add( ".cpio" );
+            mSupportedSingularityExtensions.add( ".cpio.gz" );
+        }
+        return mSupportedSingularityExtensions;
+    }
 
     /**
      * the container name assigned by user in the TC
@@ -121,7 +139,7 @@ public class Container implements Cloneable {
      * 
      * @param name 
      */
-    protected void setLFN( String name ){
+    protected final void setLFN( String name ){
        mLFN = name;
     }
     
@@ -135,12 +153,49 @@ public class Container implements Cloneable {
     }
     
     /**
+     * Compute LFN to be used based on the image URL for the container
+     * 
+     * @param url
+     * 
+     * @return LFN 
+     */
+    public String computeLFN( PegasusURL url ){
+        String lfn = this.getName();
+        String protocol = url.getProtocol();
+        String path = url.getPath();
+        if( this.mType.equals( Container.TYPE.singularity) ){
+            
+            String suffix = null;
+            if( protocol.startsWith( PegasusURL.SINGULARITY_PROTOCOL_SCHEME ) ){
+                //default suffix while pulling from singularity hub is .img
+                suffix = ".img";
+            }
+            else{ 
+                //determine the suffix in the URL
+                int dotIndex = path.indexOf( '.' );
+                if( dotIndex != -1  ){
+                    suffix = path.substring(dotIndex);
+                    if( !Container.getsupportedSingularityExtensions().contains( suffix ) ){
+                        throw new RuntimeException( "Invalid suffix " + suffix + " determined singularity image url " + url );
+                    }
+                }
+                else{
+                    throw new RuntimeException( "Unable to compute singularity extension from url " + url );
+                }
+            }
+            lfn = lfn + suffix;
+        }
+        return lfn;
+    }
+    
+    /**
      * Set the image URL
      * 
      * @param url 
      */
     public void setImageURL( String url ){
         mImageURL = new PegasusURL( url );
+        setLFN( computeLFN( mImageURL ) );
     }
     
     /**
