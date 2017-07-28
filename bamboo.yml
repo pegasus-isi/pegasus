@@ -1881,7 +1881,7 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: false
+                cleanWorkingDirectoryAfterEachBuild: true
             - key: PEGASUSGRIDFTP
               name: 017-pegasus-gridftp
               description: TODO
@@ -3196,7 +3196,7 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: false
+                cleanWorkingDirectoryAfterEachBuild: true
             - key: T044A
               name: 044-docker-nonsharedfs
               description: nonsharedfs test with docker containers and executable staging
