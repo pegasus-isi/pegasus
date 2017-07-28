@@ -16,6 +16,7 @@
 
 package edu.isi.pegasus.planner.code.gridstart.container.impl;
 
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
@@ -152,6 +153,7 @@ public class Singularity extends Abstract{
             WORKER_PACKAGE_SETUP_SNIPPET = Singularity.constructContainerWorkerPackagePreamble();
         }
         StringBuilder sb = new StringBuilder();
+        Container c = job.getContainer();
         sb.append( "\n" );
         appendStderrFragment( sb, "Writing out script to launch job in singularity container (START)" );
         sb.append( "\n" );
@@ -164,7 +166,7 @@ public class Singularity extends Abstract{
         
         //set the job environment variables explicitly in the -cont.sh file
         sb.append("# setting environment variables for job").append( '\n' );
-        for( Iterator it = job.envVariables.getProfileKeyIterator(); it.hasNext(); ){
+        for( Iterator it = c.getProfilesObject().getProfileKeyIterator(Profiles.NAMESPACES.env); it.hasNext(); ){
             String key = (String)it.next();
             String value = (String) job.envVariables.get( key );
             sb.append( "export").append( " " ).append( key ).append( "=" );
