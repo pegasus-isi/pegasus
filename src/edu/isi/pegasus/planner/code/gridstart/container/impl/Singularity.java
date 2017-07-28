@@ -22,6 +22,8 @@ import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
+import edu.isi.pegasus.planner.namespace.ENV;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
@@ -163,9 +165,10 @@ public class Singularity extends Abstract{
         
         //set the job environment variables explicitly in the -cont.sh file
         sb.append("# setting environment variables for job").append( '\n' );
-        for( Iterator it = c.getProfilesObject().getProfileKeyIterator(Profiles.NAMESPACES.env); it.hasNext(); ){
+        ENV containerENVProfiles = (ENV) c.getProfilesObject().get(Profiles.NAMESPACES.env);
+        for( Iterator it = containerENVProfiles.getProfileKeyIterator(); it.hasNext(); ){
             String key = (String)it.next();
-            String value = (String) job.envVariables.get( key );
+            String value = (String) containerENVProfiles.get( key );
             sb.append( "export").append( " " ).append( key ).append( "=" );
             
             //check for env variables that are constructed based on condor job classds 
