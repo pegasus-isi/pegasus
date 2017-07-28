@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
+import edu.isi.pegasus.planner.namespace.ENV;
 
 import java.io.File;
 import java.io.IOException;
@@ -106,9 +107,10 @@ public class Docker extends Abstract{
         sb.append( "docker run ");
         
         //environment variables are set in the job as -e
-        for( Iterator it = c.getProfilesObject().getProfileKeyIterator(Profiles.NAMESPACES.env); it.hasNext(); ){
+        ENV containerENVProfiles = (ENV) c.getProfilesObject().get(Profiles.NAMESPACES.env);
+        for( Iterator it = containerENVProfiles.getProfileKeyIterator(); it.hasNext(); ){
             String key = (String)it.next();
-            String value = (String) job.envVariables.get( key );
+            String value = (String) containerENVProfiles.get( key );
             
             //check for env variables that are constructed based on condor job classds 
             //such asCONDOR_JOBID=$(cluster).$(process). these are set by condor
