@@ -159,7 +159,9 @@ public class TransformationStore {
             }
             String name = c.getLFN();
             if( containsContainer(name) ){
-                Container cont = this.getContainer(name);
+                //clone before associating as multiple transformations 
+                //can be associated with one container entry
+                Container cont = (Container) this.getContainer(name).clone();
                 entry.setContainer(cont);
                 //PM-1214 special handling of merging container ENV profiles with TC
                 entry.incorporateContainerProfiles( cont );
