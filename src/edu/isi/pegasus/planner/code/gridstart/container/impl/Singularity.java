@@ -16,6 +16,7 @@
 
 package edu.isi.pegasus.planner.code.gridstart.container.impl;
 
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
@@ -152,19 +153,17 @@ public class Singularity extends Abstract{
             WORKER_PACKAGE_SETUP_SNIPPET = Singularity.constructContainerWorkerPackagePreamble();
         }
         StringBuilder sb = new StringBuilder();
+        Container c = job.getContainer();
         sb.append( "\n" );
         appendStderrFragment( sb, "Writing out script to launch job in singularity container (START)" );
         sb.append( "\n" );
         sb.append( "cat <<EOF > " ).append( scriptName ).append( "\n" );
-        
-        if( WORKER_PACKAGE_SETUP_SNIPPET == null ){
-            WORKER_PACKAGE_SETUP_SNIPPET = Singularity.constructContainerWorkerPackagePreamble();
-        }
-        sb.append( WORKER_PACKAGE_SETUP_SNIPPET );
+        sb.append( "#!/bin/bash" ).append( "\n" );
+        sb.append( "set -e" ).append( "\n" );
         
         //set the job environment variables explicitly in the -cont.sh file
         sb.append("# setting environment variables for job").append( '\n' );
-        for( Iterator it = job.envVariables.getProfileKeyIterator(); it.hasNext(); ){
+        for( Iterator it = c.getProfilesObject().getProfileKeyIterator(Profiles.NAMESPACES.env); it.hasNext(); ){
             String key = (String)it.next();
             String value = (String) job.envVariables.get( key );
             sb.append( "export").append( " " ).append( key ).append( "=" );
@@ -183,6 +182,13 @@ public class Singularity extends Abstract{
             }
             sb.append( '\n' );
         }
+        
+        //PM-1214 worker package setup in container should happen after
+        //the environment variables have been set.
+        if( WORKER_PACKAGE_SETUP_SNIPPET == null ){
+            WORKER_PACKAGE_SETUP_SNIPPET = Singularity.constructContainerWorkerPackagePreamble();
+        }
+        sb.append( WORKER_PACKAGE_SETUP_SNIPPET );
         
         appendStderrFragment( sb, "launching job in the container");
         sb.append( "\n" );
@@ -225,9 +231,8 @@ public class Singularity extends Abstract{
      * @return 
      */
     protected static String constructContainerWorkerPackagePreamble() {
-        StringBuffer sb = new StringBuffer();
-        sb.append( "#!/bin/bash" ).append( "\n" );
-        sb.append( "set -e" ).append( "\n" );
+        StringBuilder sb = new StringBuilder();
+        
         sb.append( "pegasus_lite_version_major=$pegasus_lite_version_major" ).append( "\n" );
         sb.append( "pegasus_lite_version_minor=$pegasus_lite_version_minor" ).append( "\n" );
         sb.append( "pegasus_lite_version_patch=$pegasus_lite_version_patch" ).append( "\n" );

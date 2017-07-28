@@ -16,10 +16,12 @@
 
 package edu.isi.pegasus.planner.code.gridstart.container.impl;
 
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.Profile;
 
 import java.io.File;
 import java.io.IOException;
@@ -104,7 +106,7 @@ public class Docker extends Abstract{
         sb.append( "docker run ");
         
         //environment variables are set in the job as -e
-        for( Iterator it = job.envVariables.getProfileKeyIterator(); it.hasNext(); ){
+        for( Iterator it = c.getProfilesObject().getProfileKeyIterator(Profiles.NAMESPACES.env); it.hasNext(); ){
             String key = (String)it.next();
             String value = (String) job.envVariables.get( key );
             
