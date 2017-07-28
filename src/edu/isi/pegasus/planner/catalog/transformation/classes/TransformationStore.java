@@ -45,7 +45,7 @@ public class TransformationStore {
     private Map<String, Map<String,List<TransformationCatalogEntry>>> mTCStore;
 
     /**
-     * Containers indexed by their name
+     * Containers indexed by their LFN
      */
     private Map<String, Container> mContainers; 
             
@@ -135,7 +135,7 @@ public class TransformationStore {
      * @param container add a container
      */
     public void addContainer( Container container ){
-        String name = container == null ? null : container.getLFN();
+        String name = container == null ? null : container.getName();
         if( name == null || name.isEmpty() ) {
             throw new RuntimeException( "Invalid container passed " + container);
         }
