@@ -336,6 +336,8 @@ public class Container implements Cloneable {
             obj = ( Container ) super.clone();
             obj.setType( mType );
             obj.setImageSite(mImageSite);
+            obj.setLFN( this.mLFN );
+            obj.setName( this.mName);
             
             PegasusURL url = this.getImageDefinitionURL();
             if( url != null ){
