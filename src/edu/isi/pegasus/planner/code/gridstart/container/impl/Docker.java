@@ -52,7 +52,7 @@ public class Docker extends Abstract{
     /**
      * time in seconds that we wait for before launching docker run command.
      */
-    private static final String SLEEP_TIME_FOR_DOCKER_BOOTUP = "5";
+    private static final String SLEEP_TIME_FOR_DOCKER_BOOTUP = "30";
      
     
     /**
