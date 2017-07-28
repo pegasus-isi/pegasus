@@ -346,13 +346,14 @@ public class Container implements Cloneable {
             
             PegasusURL url = this.getImageDefinitionURL();
             if( url != null ){
-                obj.setImageDefinitionURL( url.toString() );
+                obj.setImageDefinitionURL( url.getURL()  );
             }
             url = this.getImageURL();
             if( url != null ){
-                obj.setImageURL( url.toString() );
+                obj.setImageURL( url.getURL()  );
             }
             //FIX me check for profiles clone
+            obj.mProfiles = new Profiles();
             obj.addProfiles( this.mProfiles );
             
         }
