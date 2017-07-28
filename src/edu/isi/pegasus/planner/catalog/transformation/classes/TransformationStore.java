@@ -161,6 +161,8 @@ public class TransformationStore {
             if( containsContainer(name) ){
                 Container cont = this.getContainer(name);
                 entry.setContainer(cont);
+                //PM-1214 special handling of merging container ENV profiles with TC
+                entry.incorporateContainerProfiles( cont );
             }
             else{
                 throw new RuntimeException( "Transformation Catalog Entry " + entry + " refers to non existent container " + name);

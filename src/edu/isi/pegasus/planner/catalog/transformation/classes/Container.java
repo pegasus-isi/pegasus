@@ -292,6 +292,11 @@ public class Container implements Cloneable {
         return ( this.mProfiles == null ) ? null : mProfiles.getProfiles(namespace);
     }
     
+    
+    public Profiles getProfilesObject(){
+        return this.mProfiles;
+    }
+    
     /**
      * Allows you to add multiple profiles to the transformation.
      * @param profiles List of Profile objects containing the profile information.

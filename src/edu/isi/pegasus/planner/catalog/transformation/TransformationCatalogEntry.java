@@ -37,6 +37,7 @@ import java.io.IOException;
 import edu.isi.pegasus.planner.classes.Profile;
 
 import edu.isi.pegasus.planner.dax.Invoke;
+import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.util.Collection;
 import java.util.List;
@@ -302,6 +303,26 @@ public class TransformationCatalogEntry
         this.mContainer = container;
     }
     
+    /**
+     * Merge the container and TC profiles.
+     * 
+     * @param cont 
+     */
+    public void incorporateContainerProfiles(Container cont) {
+        //PM-1214 all  ENV profiles have to be merged 
+        //with the tranformation profile overriding the container
+        //but carried forward with the container object.
+        ENV containerENVProfiles = (ENV) cont.getProfilesObject().get(Profiles.NAMESPACES.env);
+        ENV txENVProfiles = (ENV)this.mProfiles.get(Profiles.NAMESPACES.env);
+        containerENVProfiles.merge( txENVProfiles );
+        
+        //container object has all the env profiles
+        //reset from the Transformation Catalog Entry object
+        txENVProfiles.reset();
+        
+        
+    }
+
     /**
      * Set the logical transformation with a fully qualified tranformation String of the format NS::NAME:Ver
      * @param logicaltransformation String
