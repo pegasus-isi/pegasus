@@ -45,7 +45,7 @@ public class TransformationStore {
     private Map<String, Map<String,List<TransformationCatalogEntry>>> mTCStore;
 
     /**
-     * Containers indexed by their name
+     * Containers indexed by their LFN
      */
     private Map<String, Container> mContainers; 
             
@@ -157,10 +157,14 @@ public class TransformationStore {
             if( c == null ){
                 continue;
             }
-            String name = c.getName();
+            String name = c.getLFN();
             if( containsContainer(name) ){
-                Container cont = this.getContainer(name);
+                //clone before associating as multiple transformations 
+                //can be associated with one container entry
+                Container cont = (Container) this.getContainer(name).clone();
                 entry.setContainer(cont);
+                //PM-1214 special handling of merging container ENV profiles with TC
+                entry.incorporateContainerProfiles( cont );
             }
             else{
                 throw new RuntimeException( "Transformation Catalog Entry " + entry + " refers to non existent container " + name);

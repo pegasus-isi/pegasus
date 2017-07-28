@@ -584,9 +584,9 @@ public class InterPoolEngine extends Engine implements Refiner {
         
         //associate container with the job
         job.setContainer(c);
-        mLogger.log( "Job " + job.getID() + " associated with container " + c.getName(), LogManager.DEBUG_MESSAGE_LEVEL );
+        mLogger.log( "Job " + job.getID() + " associated with container " + c.getLFN(), LogManager.DEBUG_MESSAGE_LEVEL );
        
-        FileTransfer fTx = new FileTransfer( c.getName(),
+        FileTransfer fTx = new FileTransfer( c.getLFN(),
                                                  job.jobName);
         fTx.setType(FileTransfer.DATA_FILE);
 

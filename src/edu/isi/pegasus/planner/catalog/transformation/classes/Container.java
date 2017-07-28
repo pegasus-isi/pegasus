@@ -20,7 +20,9 @@ import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A container data class to use in the Transformation Catalog
@@ -33,11 +35,35 @@ public class Container implements Cloneable {
      * The types of container supported.
      */
     public static enum TYPE{ docker, singularity };
+    
+    /**
+     * Singularity is picky about extensions as it uses that for loading the container image
+     */
+    protected static  Set<String> mSupportedSingularityExtensions = null;
+    
+    protected static Set<String> getsupportedSingularityExtensions(){
+        if( mSupportedSingularityExtensions == null ){
+            //from http://singularity.lbl.gov/user-guide#other-container-formats-supported 
+            mSupportedSingularityExtensions = new HashSet<String>();
+            mSupportedSingularityExtensions.add( ".img" );
+            mSupportedSingularityExtensions.add( ".tar" );
+            mSupportedSingularityExtensions.add( ".tar.gz" );
+            mSupportedSingularityExtensions.add( ".tar.bz2" );
+            mSupportedSingularityExtensions.add( ".cpio" );
+            mSupportedSingularityExtensions.add( ".cpio.gz" );
+        }
+        return mSupportedSingularityExtensions;
+    }
 
     /**
-     * the container name assigned by user
+     * the container name assigned by user in the TC
      */
     protected String mName;
+    
+    /**
+     * the LFN used internally for determining destination basenames for staging.
+     */
+    protected String mLFN;
     
     /**
      * Type of container to use
@@ -72,6 +98,7 @@ public class Container implements Cloneable {
     public Container(){
         mType = TYPE.docker;
         mName     = null;
+        mLFN      = null;
         mImageURL = null;
         mDefinitionFileURL = null;
         mImageSite = null;
@@ -85,6 +112,7 @@ public class Container implements Cloneable {
     public Container(String name){
         this();
         mName = name;
+        setLFN( name );
     }
     
     /**
@@ -94,6 +122,25 @@ public class Container implements Cloneable {
      */
     public void setName( String name ){
         mName = name;
+        setLFN( name );
+    }
+    
+    /**
+     * The name of the container transformation.
+     * 
+     * @return 
+     */
+    public String getName(){
+        return mName;
+    }
+    
+    /**
+     * Set the LFN  for the container
+     * 
+     * @param name 
+     */
+    protected final void setLFN( String name ){
+       mLFN = name;
     }
     
     /**
@@ -101,8 +148,44 @@ public class Container implements Cloneable {
      * 
      * @return 
      */
-    public String getName(){
-        return mName;
+    public String getLFN(){
+        return mLFN;
+    }
+    
+    /**
+     * Compute LFN to be used based on the image URL for the container
+     * 
+     * @param url
+     * 
+     * @return LFN 
+     */
+    public String computeLFN( PegasusURL url ){
+        String lfn = this.getName();
+        String protocol = url.getProtocol();
+        String path = url.getPath();
+        if( this.mType.equals( Container.TYPE.singularity) ){
+            
+            String suffix = null;
+            if( protocol.startsWith( PegasusURL.SINGULARITY_PROTOCOL_SCHEME ) ){
+                //default suffix while pulling from singularity hub is .img
+                suffix = ".img";
+            }
+            else{ 
+                //determine the suffix in the URL
+                int dotIndex = path.indexOf( '.' );
+                if( dotIndex != -1  ){
+                    suffix = path.substring(dotIndex);
+                    if( !Container.getsupportedSingularityExtensions().contains( suffix ) ){
+                        throw new RuntimeException( "Invalid suffix " + suffix + " determined singularity image url " + url );
+                    }
+                }
+                else{
+                    throw new RuntimeException( "Unable to compute singularity extension from url " + url );
+                }
+            }
+            lfn = lfn + suffix;
+        }
+        return lfn;
     }
     
     /**
@@ -112,6 +195,7 @@ public class Container implements Cloneable {
      */
     public void setImageURL( String url ){
         mImageURL = new PegasusURL( url );
+        setLFN( computeLFN( mImageURL ) );
     }
     
     /**
@@ -208,6 +292,11 @@ public class Container implements Cloneable {
         return ( this.mProfiles == null ) ? null : mProfiles.getProfiles(namespace);
     }
     
+    
+    public Profiles getProfilesObject(){
+        return this.mProfiles;
+    }
+    
     /**
      * Allows you to add multiple profiles to the transformation.
      * @param profiles List of Profile objects containing the profile information.
@@ -252,16 +341,19 @@ public class Container implements Cloneable {
             obj = ( Container ) super.clone();
             obj.setType( mType );
             obj.setImageSite(mImageSite);
+            obj.setLFN( this.mLFN );
+            obj.setName( this.mName);
             
             PegasusURL url = this.getImageDefinitionURL();
             if( url != null ){
-                obj.setImageDefinitionURL( url.toString() );
+                obj.setImageDefinitionURL( url.getURL()  );
             }
             url = this.getImageURL();
             if( url != null ){
-                obj.setImageURL( url.toString() );
+                obj.setImageURL( url.getURL()  );
             }
             //FIX me check for profiles clone
+            obj.mProfiles = new Profiles();
             obj.addProfiles( this.mProfiles );
             
         }
@@ -280,7 +372,7 @@ public class Container implements Cloneable {
      */
     public String toString(){
         StringBuilder sb = new StringBuilder();
-        sb.append( "cont ").append( this.getName() ).append( "{").append("\n");
+        sb.append( "cont ").append(this.getLFN() ).append( "{").append("\n");
         sb.append( "\t" ).append( "type     " ).append( "\t" ).append( this.getType() ).append( "\n");
         if( this.getImageURL() != null ){
             sb.append( "\t" ).append( "image    " ).append( "\t" ).append( this.getImageURL().getURL() ).append( "\n");

@@ -366,7 +366,7 @@ public class Transfer   implements SLS {
         Container c = job.getContainer();
         String containerLFN = null;
         if( c != null ){
-            containerLFN = c.getName();
+            containerLFN = c.getLFN();
             if( this.mUseSymLinks ){
                 mLogger.log( "Symlink of data files will be disabled because job " + job.getID() + " is launched in a container " + containerLFN,
                          LogManager.DEBUG_MESSAGE_LEVEL );
