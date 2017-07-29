@@ -21,7 +21,7 @@ cd montage-workflow-v2
     #shub://pegasus-isi/montage-workflow-v2 \
 singularity exec \
     --bind $PWD:/srv --workdir /srv \
-    /tmp/5b2887177e39a804904a186eb4b0a278.img \
+    shub://pegasus-isi/montage-workflow-v2 \
     /srv/montage-workflow.py --tc-target container \
                              --center "275.196290 -16.171530" \
                              --degrees 0.5 \
