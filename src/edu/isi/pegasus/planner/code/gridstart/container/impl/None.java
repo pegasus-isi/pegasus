@@ -51,7 +51,7 @@ public class None extends Abstract {
      */
     public String wrap( Job job ){
         StringBuilder sb = new StringBuilder();
-        appendStderrFragment( sb, "executing the user task" );
+        appendStderrFragment( sb, Abstract.PEGASUS_LITE_MESSAGE_PREFIX, "Executing the user task" );
         sb.append( job.getRemoteExecutable() ).append( job.getArguments() ).append( '\n' );
         //capture exitcode of the job
         sb.append( "job_ec=$?" ).append( "\n" );
@@ -69,7 +69,7 @@ public class None extends Abstract {
         StringBuilder sb = new StringBuilder();
         
         try{
-            appendStderrFragment( sb, "executing the user's clustered task" );
+            appendStderrFragment( sb, Abstract.PEGASUS_LITE_MESSAGE_PREFIX, "Executing the user's clustered task" );
             //for clustered jobs we embed the contents of the input
             //file in the shell wrapper itself
             sb.append( job.getRemoteExecutable() ).append( " " ).append( job.getArguments() );
