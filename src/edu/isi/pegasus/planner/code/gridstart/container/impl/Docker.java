@@ -205,7 +205,7 @@ public class Docker extends Abstract{
         }
         StringBuilder sb = new StringBuilder();
         sb.append( "\n" );
-        appendStderrFragment( sb, "Writing out script to launch job in docker container (START)" );
+        appendStderrFragment( sb, Abstract.PEGASUS_LITE_MESSAGE_PREFIX, "Writing out script to launch user task in container" );
         sb.append( "\n" );
         sb.append( "cat <<EOF > " ).append( scriptName ).append( "\n" );
         
@@ -214,7 +214,7 @@ public class Docker extends Abstract{
         }
         sb.append( WORKER_PACKAGE_SETUP_SNIPPET );
         
-        appendStderrFragment( sb, "launching job in the container");
+        appendStderrFragment( sb, Abstract.CONTAINER_MESSAGE_PREFIX, "Launching user task");
         sb.append( "\n" );
         //sb.append( "\\$kickstart \"\\${original_args[@]}\" ").append( "\n" );
         
@@ -240,7 +240,7 @@ public class Docker extends Abstract{
                    append( job.getArguments() ).append( "\n" );
         }
         sb.append( "EOF").append( "\n" );
-        appendStderrFragment( sb, "Writing out script to launch job in docker container (END)" );
+        //appendStderrFragment( sb, "Writing out script to launch user TASK in docker container (END)" );
         sb.append( "\n" );
         sb.append( "\n" );
         
@@ -255,7 +255,7 @@ public class Docker extends Abstract{
      * @return 
      */
     protected static String constructContainerWorkerPackagePreamble() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append( "#!/bin/bash" ).append( "\n" );
         sb.append( "set -e" ).append( "\n" );
         sb.append( "pegasus_lite_version_major=$pegasus_lite_version_major" ).append( "\n" );
@@ -276,7 +276,8 @@ public class Docker extends Abstract{
 
         
         sb.append( "\n" );
-        sb.append( "echo -e \"\\n###################### figuring out the worker package to use in the container ######################\"  1>&2" ).append( "\n" );
+        appendStderrFragment(sb, Abstract.CONTAINER_MESSAGE_PREFIX, "Figuring out Pegasus worker package to use" );
+        
         sb.append( "# figure out the worker package to use" ).append( "\n" );
 
         sb.append( "pegasus_lite_worker_package" ).append( "\n" );

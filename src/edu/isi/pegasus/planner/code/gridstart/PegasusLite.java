@@ -121,6 +121,7 @@ public class PegasusLite implements GridStart {
 
     public static final String SEPARATOR = "########################";
     public static final char SEPARATOR_CHAR = '#';
+    public static final String  MESSAGE_PREFIX = "[Pegasus Lite]";
     public static final int  MESSAGE_STRING_LENGTH = 80;
     
     /**
@@ -897,7 +898,7 @@ public class PegasusLite implements GridStart {
             sb.append( "pegasus_lite_setup_work_dir" ).append( '\n' );
             sb.append( '\n' );
 
-            appendStderrFragment( sb, "figuring out the worker package to use" );
+            appendStderrFragment( sb, "Figuring out the worker package to use" );
             sb.append( "# figure out the worker package to use" ).append( '\n' );
             sb.append( "pegasus_lite_worker_package" ).append( '\n' );
             sb.append( '\n' );
@@ -926,7 +927,7 @@ public class PegasusLite implements GridStart {
                 
                 //stage the input files first
                 if( !inputFiles.isEmpty() ){
-                    appendStderrFragment( sb, "staging in input data and executables" );
+                    appendStderrFragment( sb, "Staging in input data and executables" );
                     sb.append( "# stage in data and executables" ).append( '\n' );
                     sb.append(  sls.invocationString( job, null ) );
                     if ( mUseSymLinks && job.getContainer() == null ){
@@ -944,7 +945,7 @@ public class PegasusLite implements GridStart {
                 //PM-779 checkpoint files need to be setup to never fail
                 String checkPointFragment = checkpointFilesToPegasusLite( job, sls, chkpointFiles);
                 if( !checkPointFragment.isEmpty() ){
-                    appendStderrFragment( sb, "staging in checkpoint files" );
+                    appendStderrFragment( sb, "Staging in checkpoint files" );
                     sb.append( "# stage in checkpoint files " ).append( '\n' );
                     sb.append( checkPointFragment );
                 }
@@ -954,7 +955,7 @@ public class PegasusLite implements GridStart {
             }
 
             if( job.userExecutablesStagedForJob() ){
-                appendStderrFragment( sb, "setting the xbit for executables staged" );
+                appendStderrFragment( sb, "Setting the xbit for executables staged" );
                 sb.append( "# set the xbit for any executables staged" ).append( '\n' );
                 for( Iterator it = job.getInputFiles().iterator(); it.hasNext(); ){
                     PegasusFile pf = ( PegasusFile )it.next();
@@ -973,7 +974,7 @@ public class PegasusLite implements GridStart {
            
             //PM-1190 we do integrity checks only for compute jobs
             if( mDoIntegrityChecking && isCompute){
-                appendStderrFragment( sb, "checking file integrity for input files" );
+                appendStderrFragment( sb, "Checking file integrity for input files" );
                 sb.append( "# do file integrity checks" ).append( '\n' );
                 addIntegrityCheckInvocation( sb, job.getInputFiles() );
                 
@@ -1065,7 +1066,7 @@ public class PegasusLite implements GridStart {
                 //PM-779 checkpoint files need to be setup to never fail
                 String checkPointFragment = checkpointFilesToPegasusLite( job, sls, chkpointFiles);
                 if( !checkPointFragment.isEmpty() ){
-                    appendStderrFragment( sb, "staging out checkpoint files" );
+                    appendStderrFragment( sb, "Staging out checkpoint files" );
                     sb.append( "# stage out checkpoint files " ).append( '\n' );
                     sb.append( checkPointFragment );
                 }
@@ -1073,7 +1074,7 @@ public class PegasusLite implements GridStart {
                 if( !outputFiles.isEmpty() ){
                     //generate the stage out fragment for staging out outputs
                     String postJob = sls.invocationString( job, null );
-                    appendStderrFragment( sb, "staging out output files" );
+                    appendStderrFragment( sb, "Staging out output files" );
                     sb.append( "# stage out" ).append( '\n' );
                     sb.append( postJob );
 
@@ -1449,16 +1450,18 @@ public class PegasusLite implements GridStart {
      * @param message  the message  
      */
     private void appendStderrFragment(StringBuffer sb, String message ) {
-        if( message.length() > PegasusLite.MESSAGE_STRING_LENGTH ){
+        //prefix + 1 + message
+        int len = PegasusLite.MESSAGE_PREFIX.length() + 1 + message.length();
+        if( len > PegasusLite.MESSAGE_STRING_LENGTH ){
             throw new RuntimeException( "Message string for PegasusLite exceeds " + PegasusLite.MESSAGE_STRING_LENGTH + " characters");
         }
         
-        int pad = ( PegasusLite.MESSAGE_STRING_LENGTH - message.length() )/2;
+        int pad = ( PegasusLite.MESSAGE_STRING_LENGTH - len )/2;
         sb.append( "echo -e \"\\n" );
         for( int i = 0; i <= pad ; i ++ ){
             sb.append( PegasusLite.SEPARATOR_CHAR );
         }
-        sb.append( " " ).append( message ).append( " " );
+        sb.append( PegasusLite.MESSAGE_PREFIX ).append( " " ).append( message ).append( " " );
         for( int i = 0; i <= pad ; i ++ ){
             sb.append( PegasusLite.SEPARATOR_CHAR );
         }
