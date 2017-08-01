@@ -313,12 +313,16 @@ public class TransformationCatalogEntry
         //with the tranformation profile overriding the container
         //but carried forward with the container object.
         ENV containerENVProfiles = (ENV) cont.getProfilesObject().get(Profiles.NAMESPACES.env);
-        ENV txENVProfiles = (ENV)this.mProfiles.get(Profiles.NAMESPACES.env);
-        containerENVProfiles.merge( txENVProfiles );
         
-        //container object has all the env profiles
-        //reset from the Transformation Catalog Entry object
-        txENVProfiles.reset();
+        //merge only if there any profiles associated with the entry
+        if( this.mProfiles != null ){
+            ENV txENVProfiles = (ENV)this.mProfiles.get(Profiles.NAMESPACES.env);
+            containerENVProfiles.merge( txENVProfiles );
+            //container object has all the env profiles
+            //reset from the Transformation Catalog Entry object
+            txENVProfiles.reset();
+        }
+        
         
         
     }
