@@ -585,7 +585,9 @@ public abstract class Namespace /*extends Data*/{
     * Resets the namespace, removing all profiles associated
     */
    public void reset(){
-       this.mProfileMap.clear();
+       if( this.mProfileMap != null ){
+           this.mProfileMap.clear();
+        }
    }
    
    /**
