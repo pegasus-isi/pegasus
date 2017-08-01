@@ -101,7 +101,7 @@ public class Docker extends Abstract{
         sb.append( "job_ec=$(($job_ec + $?))" ).append( "\n" ).append( "\n" );
         
         //we want to sleep for few seconds to allow the container to boot up fully
-        sb.append( "sleep" ).append( " " ).append( Docker.SLEEP_TIME_FOR_DOCKER_BOOTUP ).append( "\n" );
+        //sb.append( "sleep" ).append( " " ).append( Docker.SLEEP_TIME_FOR_DOCKER_BOOTUP ).append( "\n" );
         
         //assume docker is available in path
         sb.append( "docker run ");
