@@ -170,7 +170,7 @@ function pegasus_lite_internal_wp_download()
     url="${url}-${system}.tar.gz"
     pegasus_lite_log "Downloading Pegasus worker package from $url"
     curl -s -S --insecure -o pegasus-worker.tar.gz "$url" || wget -q -O pegasus-worker.tar.gz "$url"
-    if ! tar xzf pegasus-worker.tar.gz; then
+    if ! (test -e pegasus-worker.tar.gz && tar xzf pegasus-worker.tar.gz); then
         pegasus_lite_log "ERROR: Unable to download a worker package for this platform ($system)."
         pegasus_lite_log "If you want to use the same package as on the submit host, try the following setting in your properties file:"
         pegasus_lite_log "   pegasus.transfer.worker.package.strict = false"
@@ -184,7 +184,7 @@ function pegasus_lite_internal_wp_download()
         url="${url}-${pegasus_lite_default_system}.tar.gz"
         pegasus_lite_log "Downloading Pegasus worker package from $url"
         curl -s -S --insecure -o pegasus-worker.tar.gz "$url" || wget -q -O pegasus-worker.tar.gz "$url"
-        if ! tar xzf pegasus-worker.tar.gz; then
+        if ! (test -e pegasus-worker.tar.gz && tar xzf pegasus-worker.tar.gz); then
             pegasus_lite_log "ERROR: Unable to download the default worker package."
             return 1
         fi
