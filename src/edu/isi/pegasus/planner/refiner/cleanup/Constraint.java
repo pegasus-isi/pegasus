@@ -130,7 +130,7 @@ public class Constraint extends AbstractCleanupStrategy {
         availableSpacePerSite = new HashMap<String, Long>();
         maxAvailableSpacePerSite = new HashMap<String, Long>();
         deferStageins = (mProps.getProperty("pegasus.file.cleanup.constraint.deferstageins") != null);
-        
+
         // read file sizes from a CSV file
         String CSVName = System.getProperty("pegasus.file.cleanup.constraint.csv");
         if (CSVName != null) {
@@ -651,10 +651,12 @@ public class Constraint extends AbstractCleanupStrategy {
         //Phase II:Examine candidate heads and add if necessary
         for (GraphNode candidateHead : candidateHeads) {
             boolean unsatisfiedDependency = false;
-            for (GraphNode dependency : dependencies.get(candidateHead)) {
-                if (!executed.contains(dependency) && currentSiteJobs.contains(dependency)) {
-                    unsatisfiedDependency = true;
-                    break;
+            if (dependencies.containsKey(candidateHead)) {
+                for (GraphNode dependency : dependencies.get(candidateHead)) {
+                    if (!executed.contains(dependency) && currentSiteJobs.contains(dependency)) {
+                        unsatisfiedDependency = true;
+                        break;
+                    }
                 }
             }
             if (!unsatisfiedDependency && currentSiteJobs.contains(candidateHead)) {
