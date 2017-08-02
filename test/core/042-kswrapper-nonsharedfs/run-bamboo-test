@@ -53,7 +53,7 @@ WORK_DIR=`cat plan.out | grep pegasus-run | sed -E 's/.*pegasus-run[ ]+//'`
 #check if planner did the right things
 for SUB in `find ${WORK_DIR} -name "*sub" -exec grep -l -P "pegasus_site\s*=\s*\"condorpool\"" {} \;` ; do
     PEGASUS_LITE_SH=`echo $SUB | sed -e s/\.sub/\.sh/`
-    if grep -A 2 -E '# executing the user task'  $PEGASUS_LITE_SH | grep $KS_WRAPPER 1> /dev/null 2>&1 ; then
+    if grep -A 2 -E '#[Pegasus Lite] Executing the user task'  $PEGASUS_LITE_SH | grep $KS_WRAPPER 1> /dev/null 2>&1 ; then
 	:
     else
 	echo "Job $SUB $PEGASUS_LITE_SH not launched by kickstart-wrapper"
