@@ -592,24 +592,29 @@ public class Constraint extends AbstractCleanupStrategy {
         String id = CLEANUP_JOB_PREFIX + new Random().nextInt(Integer.MAX_VALUE);
         if (!parents.isEmpty()) {
             GraphNode node = new GraphNode(id, mImpl.createCleanupJob(id, listOfFiles, (Job) parents.iterator().next().getContent()));
-            node.setParents(new ArrayList<GraphNode>(parents));
             for (GraphNode parent : parents) {
                 boolean hasStageOut = false;
                 for (GraphNode child : parent.getChildren()) {
                     Job currentJob = (Job) child.getContent();
                     if (currentJob.getJobType() == Job.STAGE_OUT_JOB) {
+                        for (GraphNode gc : child.getChildren()) {
+                            node.addChild(gc);
+                            gc.addParent(node);
+                        }
                         child.addChild(node);
+                        node.addParent(child);
                         hasStageOut = true;
                     }
                 }
                 if (!hasStageOut) {
                     parent.addChild(node);
+                    node.addParent(parent);
                 }
             }
-            node.setChildren(new ArrayList<GraphNode>(heads));
-            for (GraphNode child : heads) {
-                child.addParent(node);
-            }
+            // prevent loops
+            node.removeChild(node);
+            node.removeParent(node);
+
             mLogger.log(Utilities.cleanUpJobToString(parents, heads, listOfFiles), LogManager.DEBUG_MESSAGE_LEVEL);
             workflow.addNode(node);
         }
