@@ -106,7 +106,7 @@ public class All
             throw new RuntimeException(
                 "There are no entries for the transformation \"" +
                 lfn +
-                "\"in the TC" );
+                "\" in the TC" );
         }
         if ( sysinfomap != null ) {
             for ( Iterator i = siteids.iterator(); i.hasNext(); ) {
