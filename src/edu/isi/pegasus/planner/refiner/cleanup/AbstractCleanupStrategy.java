@@ -56,7 +56,13 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
      * The default value for the number of clustered cleanup jobs created per
      * level.
      */
-    public static final int DEFAULT_CLUSTERED_CLEANUP_JOBS_PER_LEVEL = 2;
+    //public static final int DEFAULT_CLUSTERED_CLEANUP_JOBS_PER_LEVEL = 2;
+    
+    /**
+     * If user has not specified any value themselves
+     */
+    protected static final int NO_PROFILE_VALUE = -1;
+    
 
     /**
      * The mapping to siteHandle to all the jobs that are mapped to it mapping
@@ -180,11 +186,12 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
                 mLogger.log("Cluster Size of cleanup jobs  " + mCleanupJobsSize,
                         LogManager.CONFIG_MESSAGE_LEVEL);
             } else {
-                //we rely on a default value for the clustered cleanup jobs
-                mCleanupJobsPerLevel = DEFAULT_CLUSTERED_CLEANUP_JOBS_PER_LEVEL;
+                //PM-1212 no hardcoded default value for number of clustered cleanup jobs
+                //instead we compute based on levels 
+                mCleanupJobsPerLevel = NO_PROFILE_VALUE;
             }
         }
-        if (!mUseSizeFactor) {
+        if (!mUseSizeFactor && mCleanupJobsPerLevel != NO_PROFILE_VALUE) {
             //log a config message for the number of cleanup jobs
             mLogger.log("Maximum number of cleanup jobs to be created per level " + mCleanupJobsPerLevel,
                     LogManager.CONFIG_MESSAGE_LEVEL);

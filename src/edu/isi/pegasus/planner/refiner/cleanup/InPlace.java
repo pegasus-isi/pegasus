@@ -43,6 +43,16 @@ import java.util.Set;
  * @version $Revision$
  */
 public class InPlace extends AbstractCleanupStrategy {
+    
+    /**
+     * Number of jobs on a level of the workflow per cleanup job
+     */
+    public static final float NUM_JOBS_PER_LEVEL_PER_CLEANUP_JOB = 4;
+    
+    /**
+     * Tracks number of jobs at each level of the workflow. 
+     */
+    protected Map<Integer,Integer> mCleanupJobsPerLevelMap;
 
     /**
      * Adds cleanup jobs to the workflow.
@@ -53,6 +63,7 @@ public class InPlace extends AbstractCleanupStrategy {
      */
     @Override
     public Graph addCleanupJobs(Graph workflow) {
+        mCleanupJobsPerLevelMap = this.buildDefaultCleanupJobsPerLevelMap(workflow, NUM_JOBS_PER_LEVEL_PER_CLEANUP_JOB);
         // invoke addCleanupJobs from super class.
         workflow = super.addCleanupJobs(workflow);
 
@@ -473,7 +484,14 @@ public class InPlace extends AbstractCleanupStrategy {
         }
 
         //cluster size is how many nodes are clustered into one cleanup cleanupNode
-        int clusterSize = getClusterSize(size);
+        int divisor = this.mCleanupJobsPerLevel;
+        if( mCleanupJobsPerLevel == NO_PROFILE_VALUE ){
+            //PM-1212 if a user has not specified anything in properties
+            //we determine based on number of jobs on a level
+            //divisor = this.mCleanupJobsPerLevelMap.get( level );
+            divisor = (int) InPlace.NUM_JOBS_PER_LEVEL_PER_CLEANUP_JOB;
+        }
+        int clusterSize = getClusterSize(size, divisor);
 
         StringBuilder sb = new StringBuilder();
         sb.append("Clustering ").append(size).append(" cleanup nodes at level ").append(level).
@@ -618,15 +636,53 @@ public class InPlace extends AbstractCleanupStrategy {
     }
 
     /**
+     * Builds a map that maps for each level the number of default cleanup jobs to be created
+     * 
+     * @param divisor
+     * @return 
+     */
+    private Map<Integer, Integer> buildDefaultCleanupJobsPerLevelMap( Graph workflow, float divisor ) {
+        //PM-1212
+        Map<Integer,Integer> m = new HashMap();
+        int count = 0;
+        int previous = -1;
+        int cluster = -1;
+        //inplace cleanup computation relies on levels starting from 1
+        int level = 1;
+        for( Iterator it = workflow.iterator(); it.hasNext(); ){
+            GraphNode node = ( GraphNode )it.next();
+            //inplace cleanup computation relies on levels starting from 1
+            //while iterator depth starts from 0
+            level = node.getDepth() + 1;
+            if( level != previous ){
+                cluster = (int)Math.ceil( count/divisor);
+                mLogger.log( "Number of cleanup jobs for " + previous + " are " + cluster, LogManager.DEBUG_MESSAGE_LEVEL );
+                m.put( previous,  cluster);
+                count = 0;
+            }
+            count++;
+            previous = level;
+        }
+        
+        cluster  = (int)Math.ceil( count/divisor);
+        m.put( level,  cluster);
+        mLogger.log( "Number of cleanup jobs for " + level + " are " + cluster, LogManager.DEBUG_MESSAGE_LEVEL );
+        
+        
+        return m;
+    }
+    
+    /**
      * Returns the number of cleanup jobs clustered into one job per level.
      *
      *
      * @param size the number of cleanup jobs created by the algorithm before
      * clustering for the level.
+     * @param divisor number of cleanup jobs to be used for level
      *
      * @return the number of clustered cleanup jobs to be created for the level
      */
-    private int getClusterSize(int size) {
+    private int getClusterSize(int size , int divisor ) {
 
         int result;
 
@@ -636,7 +692,8 @@ public class InPlace extends AbstractCleanupStrategy {
         } else {
             //it is the ceiling ( x + y -1 )/y
             //we use the fixed number of cleanup jobs per level
-            result = (size + mCleanupJobsPerLevel - 1) / mCleanupJobsPerLevel;
+            //result = (size + mCleanupJobsPerLevel - 1) / mCleanupJobsPerLevel;
+            result = (size + divisor - 1) / divisor;
         }
 
         return result;
