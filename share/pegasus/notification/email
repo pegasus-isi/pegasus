@@ -123,6 +123,18 @@ except RuntimeError, err:
     print >> sys.stderr, err
     usage(parser)
 
+# read the braindump file
+braindump = {}
+try:
+    f = open("braindump.txt", "r")
+    for line in f:
+        if " " in line:
+            (key, val) = line.split(" ", 1)
+            val = val.strip()
+            braindump[key] = val
+    f.close()
+except Exception, err:
+    print >> sys.stderr, err
 
 # Create a text/plain message
 msg = email.mime.Multipart.MIMEMultipart()
@@ -153,7 +165,7 @@ if report == "pegasus-status":
                         " " + os.environ['PEGASUS_SUBMIT_DIR'] + " 2>&1") 
         body = body + out
     except Exception, err:
-        print >> sys.stderr, "Error running pegasus-status: " + err
+        print >> sys.stderr, "Error running pegasus-status: " + str(err)
 
 # pegasus-statistics report
 if report == "pegasus-statistics":
@@ -166,7 +178,7 @@ if report == "pegasus-statistics":
                         os.environ['PEGASUS_SUBMIT_DIR'] + " 2>&1" )
         body = body + out
     except Exception, err:
-        print >> sys.stderr, "Error running pegasus-analyzer: " + err 
+        print >> sys.stderr, "Error running pegasus-analyzer: " + str(err)
 
 # pegasus-analyzer report             
 if report == "pegasus-analyzer":
@@ -176,21 +188,21 @@ if report == "pegasus-analyzer":
                         os.environ['PEGASUS_SUBMIT_DIR'] + " 2>&1" )
         body = body + out
     except Exception, err:
-        print >> sys.stderr, "Error running pegasus-analyzer: " + err 
+        print >> sys.stderr, "Error running pegasus-analyzer: " + str(err)
 
 msg.attach(email.mime.Text.MIMEText(body))
 
 # for start events, check if we can generate dax/dag images automatically
 if os.environ['PEGASUS_EVENT'] == "start":
     try:
-        dax_fname = glob.glob("*.dax")[0]
-        dag_fname = glob.glob("*-0.dag")[0]
+        dax_fname = braindump["dax"]
+        dag_fname = braindump["dag"]
         # only generate the images if the workflow is small enough
         if os.path.getsize(dag_fname) < 1000000:
 
             # first the dot files - this should always work
             backticks(os.environ['PEGASUS_BIN_DIR'] + "/pegasus-graphviz " + \
-                      "-o dax.dot " + dax_fname + " >/dev/null 2>&1")
+                      "--nosimplify -o dax.dot " + dax_fname + " >/dev/null 2>&1")
             backticks(os.environ['PEGASUS_BIN_DIR'] + "/pegasus-graphviz " + \
                       "-o dag.dot " + dag_fname + " >/dev/null 2>&1")
 
@@ -212,7 +224,7 @@ if os.environ['PEGASUS_EVENT'] == "start":
             msg.attach(att)
 
     except Exception, err:
-        print >> sys.stderr, "Unable to generate workflow images: " + err 
+        print >> sys.stderr, "Unable to generate workflow images: " + str(err)
 
 # try to send using smtp first, and if that does not work, sendmail
 try:
