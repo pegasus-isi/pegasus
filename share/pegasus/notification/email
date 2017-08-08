@@ -198,7 +198,7 @@ if os.environ['PEGASUS_EVENT'] == "start":
         dax_fname = braindump["dax"]
         dag_fname = braindump["dag"]
         # only generate the images if the workflow is small enough
-        if os.path.getsize(dag_fname) < 1000000:
+        if os.path.getsize(dag_fname) < 100000000:
 
             # first the dot files - this should always work
             backticks(os.environ['PEGASUS_BIN_DIR'] + "/pegasus-graphviz " + \
