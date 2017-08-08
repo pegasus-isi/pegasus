@@ -61,7 +61,8 @@ pegasus-plan \
 
 
 WORK_DIR=`cat plan.out | grep pegasus-remove | sed -E 's/.*pegasus-remove[ ]+//'`
-cd $WORK_DIR
+# account for deep submit directory structure
+cd $WORK_DIR/00/00
 
 BREAK=0
 COUNTER=0
