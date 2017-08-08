@@ -53,12 +53,6 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
     public static final String DEFAULT_MAX_JOBS_FOR_CLEANUP_CATEGORY = "4";
 
     /**
-     * The default value for the number of clustered cleanup jobs created per
-     * level.
-     */
-    //public static final int DEFAULT_CLUSTERED_CLEANUP_JOBS_PER_LEVEL = 2;
-    
-    /**
      * If user has not specified any value themselves
      */
     protected static final int NO_PROFILE_VALUE = -1;
