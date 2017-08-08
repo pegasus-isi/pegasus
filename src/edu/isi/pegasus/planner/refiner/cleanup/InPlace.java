@@ -47,7 +47,7 @@ public class InPlace extends AbstractCleanupStrategy {
     /**
      * Number of jobs on a level of the workflow per cleanup job
      */
-    public static final float NUM_JOBS_PER_LEVEL_PER_CLEANUP_JOB = 4;
+    public static final float NUM_JOBS_PER_LEVEL_PER_CLEANUP_JOB = 10;
    
     /**
      * Adds cleanup jobs to the workflow.
