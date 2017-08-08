@@ -478,18 +478,18 @@ public class InPlace extends AbstractCleanupStrategy {
         }
 
         //cluster size is how many nodes are clustered into one cleanup cleanupNode
-        int divisor = this.mCleanupJobsPerLevel;
+        int numCleanup = this.mCleanupJobsPerLevel;
         if( mCleanupJobsPerLevel == NO_PROFILE_VALUE ){
             //PM-1212 if a user has not specified anything in properties
             //we determine based on number of jobs on a level
             //divisor = this.mCleanupJobsPerLevelMap.get( level );
-            divisor = (int) InPlace.NUM_JOBS_PER_LEVEL_PER_CLEANUP_JOB;
+            numCleanup = (int)Math.ceil( size /InPlace.NUM_JOBS_PER_LEVEL_PER_CLEANUP_JOB );
         }
-        int clusterSize = getClusterSize(size, divisor);
+        int clusterSize = getClusterSize(size, numCleanup);
 
         StringBuilder sb = new StringBuilder();
         sb.append("Clustering ").append(size).append(" cleanup nodes at level ").append(level).
-                append(" with cluster size ").append(clusterSize);
+                append(" with cluster size ").append(clusterSize).append( " into total of " ).append( numCleanup );
         mLogger.log(sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL);
 
         //for the time being lets assume one to one mapping
@@ -635,11 +635,11 @@ public class InPlace extends AbstractCleanupStrategy {
      *
      * @param size the number of cleanup jobs created by the algorithm before
      * clustering for the level.
-     * @param divisor number of cleanup jobs to be used for level
+     * @param num number of cleanup jobs to be created for level
      *
-     * @return the number of clustered cleanup jobs to be created for the level
+     * @return the number of cleanup jobs clustered into a bigger cleanup job
      */
-    private int getClusterSize(int size , int divisor ) {
+    private int getClusterSize(int size , int num ) {
 
         int result;
 
@@ -650,7 +650,7 @@ public class InPlace extends AbstractCleanupStrategy {
             //it is the ceiling ( x + y -1 )/y
             //we use the fixed number of cleanup jobs per level
             //result = (size + mCleanupJobsPerLevel - 1) / mCleanupJobsPerLevel;
-            result = (size + divisor - 1) / divisor;
+            result = (size + num - 1) / num;
         }
 
         return result;
