@@ -1206,12 +1206,12 @@ cont centos-pegasus{
 }</programlisting>
 
         <para>The container itself is defined using the cont entry. Multiple
-        transformations can refer to the same container. </para>
+        transformations can refer to the same container.</para>
 
         <orderedlist>
           <listitem>
             <para><emphasis role="bold">cont</emphasis> cont - A container
-            identifier. </para>
+            identifier.</para>
           </listitem>
 
           <listitem>
@@ -1301,7 +1301,10 @@ Output Filename: /dev/fd/1</computeroutput></screen>
 clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
                 STAGEABLE    INTEL32::LINUX</computeroutput></screen>
 
-      <para/>
+      <note>
+        <para>pegasus-tc-client is no longer actively developed and is
+        deprecated.</para>
+      </note>
     </section>
 
     <section>
