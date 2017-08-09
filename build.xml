@@ -492,8 +492,26 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <package-binary name="pegasus-nodocs-${pegasus.version}-${dist.arch}"/>
   </target>
 
+  <!-- This target should clean everything _except_ things we want in the
+       source tarball, such as documentation. -->
   <target name="dist-clean">
-    <delete dir="${dist.dir}"/>
+    <delete dir="dist"/>
+    <delete dir="build"/>
+    <exec executable="${make}" dir="src/tools" failonerror="true">
+      <arg line="distclean"/>
+    </exec>
+    <exec executable="${make}" dir="src/tools/pegasus-mpi-cluster" failonerror="true">
+      <arg line="distclean"/>
+    </exec>
+    <exec executable="${make}" dir="src/externals" failonerror="true">
+      <arg line="clean"/>
+    </exec>
+    <exec executable="${dist.python}" dir="lib/pegasus/python" failonerror="true">
+      <arg line="setup.py clean --all"/>
+    </exec>
+    <delete>
+      <fileset dir="lib/pegasus/python/Pegasus" includes="**/*.pyc"/>
+    </delete>
   </target>
 
   <target name="clean" description="Delete all build artifacts">
