@@ -28,11 +28,11 @@ PACKAGES+=requests
 PACKAGES+=itsdangerous.py
 PACKAGES+=boto
 PACKAGES+=pam.py
-PACKAGES+=OpenSSL
-PACKAGES+=six
-PACKAGES+=enum34
-PACKAGES+=cffi
-PACKAGES+=cryptography
+#PACKAGES+=OpenSSL
+#PACKAGES+=six
+#PACKAGES+=enum34
+#PACKAGES+=cffi
+#PACKAGES+=cryptography
 PACKAGES+=plex
 PACKAGES+=future
 ifeq ($(shell which pg_config),)
