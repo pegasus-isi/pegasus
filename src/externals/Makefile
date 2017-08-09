@@ -31,11 +31,7 @@ PACKAGES+=pam.py
 PACKAGES+=OpenSSL
 PACKAGES+=six
 PACKAGES+=enum34
-PACKAGES+=asn1crypto
 PACKAGES+=cffi
-PACKAGES+=idna
-PACKAGES+=ipaddress
-PACKAGES+=pycparser
 PACKAGES+=cryptography
 PACKAGES+=plex
 PACKAGES+=future
@@ -89,11 +85,7 @@ $(LIBDIR)/pam.py: pam-0.1.4.tar.gz
 $(LIBDIR)/OpenSSL: pyOpenSSL-16.2.0.tar.gz
 $(LIBDIR)/six: six-1.10.0.tar.gz
 $(LIBDIR)/enum34: enum34-1.1.6.tar.gz
-$(LIBDIR)/asn1crypto: asn1crypto-0.22.0.tar.gz
 $(LIBDIR)/cffi: cffi-1.10.0.tar.gz
-$(LIBDIR)/idna: idna-2.6.tar.gz
-$(LIBDIR)/ipaddress: ipaddress-1.0.18.tar.gz
-$(LIBDIR)/pycparser: pycparser-2.18.tar.gz
 $(LIBDIR)/cryptography: cryptography-2.0.3.tar.gz
 $(LIBDIR)/plex: plex-2.0.0dev.tar.gz
 $(LIBDIR)/MySQLdb: MySQL-python-1.2.5.tar.gz
