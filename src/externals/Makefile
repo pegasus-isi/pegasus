@@ -29,6 +29,8 @@ PACKAGES+=itsdangerous.py
 PACKAGES+=boto
 PACKAGES+=pam.py
 PACKAGES+=OpenSSL
+PACKAGES+=six
+PACKAGES+=cryptography
 PACKAGES+=plex
 PACKAGES+=future
 ifeq ($(shell which pg_config),)
@@ -58,7 +60,8 @@ $(LIBDIR)/%:
 	mkdir -p $(LIBDIR) &&\
 	tar xzf $< &&\
 	pushd $(TARNAME) > /dev/null &&\
-	if [ -d "OpenSSL" ]; then $(PYTHON) setup.py build_ext $(PYOPENSSL_ARGS) > /dev/null; fi &&\
+	if [ -d "src/OpenSSL" ]; then $(PYTHON) setup.py build_ext $(PYOPENSSL_ARGS) > /dev/null; fi &&\
+	if [ -d "src/cryptography" ]; then $(PYTHON) setup.py build_ext $(PYOPENSSL_ARGS) > /dev/null; fi &&\
 	$(PYTHON) setup.py install_lib -d $(LIBDIR) > /dev/null &&\
 	popd > /dev/null &&\
 	rm -rf $(TARNAME) &&\
@@ -78,6 +81,8 @@ $(LIBDIR)/itsdangerous.py: itsdangerous-0.21.tar.gz
 $(LIBDIR)/boto: boto-2.38.0.tar.gz
 $(LIBDIR)/pam.py: pam-0.1.4.tar.gz
 $(LIBDIR)/OpenSSL: pyOpenSSL-16.2.0.tar.gz
+$(LIBDIR)/six: six-1.10.0.tar.gz
+$(LIBDIR)/cryptography: cryptography-2.0.3.tar.gz
 $(LIBDIR)/plex: plex-2.0.0dev.tar.gz
 $(LIBDIR)/MySQLdb: MySQL-python-1.2.5.tar.gz
 $(LIBDIR)/psycopg2: psycopg2-2.5.5.tar.gz
