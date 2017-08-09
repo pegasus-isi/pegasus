@@ -493,7 +493,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
   <!-- This target should clean everything _except_ things we want in the
        source tarball, such as documentation. -->
   <target name="dist-clean">
-    <delete dir="dist"/>
+    <delete dir="${dist.dir}"/>
     <delete dir="build"/>
     <exec executable="${make}" dir="src/tools" failonerror="true">
       <arg line="distclean"/>
