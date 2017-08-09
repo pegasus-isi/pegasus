@@ -1031,7 +1031,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
 
     <orderedlist>
       <listitem>
-        <para><emphasis role="bold">Text: </emphasis>A multiline text based
+        <para><emphasis role="bold">Text: </emphasis>A multi line text based
         Transformation Catalog (DEFAULT)</para>
       </listitem>
     </orderedlist>
@@ -1080,7 +1080,8 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
     osversion "4"
     type "STAGEABLE"
   }
-}</programlisting></para>
+}
+</programlisting></para>
 
       <para>The entries in this catalog have the following meaning</para>
 
@@ -1145,6 +1146,100 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
             file&gt;</replaceable></emphasis></para>
           </listitem>
         </orderedlist></para>
+
+      <section id="tc-container">
+        <title>Containerized Applications</title>
+
+        <para>Starting Pegasus release 4.8.0, there is support for application
+        containers. Users can specify what container they want to use for
+        running their application in the Transformation Catalog using the
+        multi line text based format described in this section. Users can
+        specify an optional attribute named container that refers to the
+        container to be used for the application.</para>
+
+        <programlisting>tr example::keg:1.0 { 
+
+  #specify profiles that apply for all the sites for the transformation 
+  #in each site entry the profile can be overriden 
+
+  profile env "APP_HOME" "/tmp/myscratch"
+  profile env "JAVA_HOME" "/opt/java/1.6"
+
+  site isi {
+    # environment to be set when the job is run in the container
+    # overrides env profiles specified in the container
+    profile env "HELLo" "WORLD"
+    profile env "JAVA_HOME" "/bin/java.1.6"
+    
+    profile condor "FOO" "bar"
+    
+    pfn "/path/to/keg
+    arch "x86"
+    os "linux"
+    osrelease "fc"
+    osversion "4"
+      
+    # INSTALLED means pfn refers to path in the container.
+    # STAGEABLE means the executable can be staged into the container
+    type "INSTALLED" 
+
+    #optional attribute to specify the container to use
+    container "centos-pegasus"
+  }
+}
+
+cont centos-pegasus{
+     # can be either docker or singularity
+     type "docker"
+
+     # URL to image in a docker|singularity hub OR
+     # URL to an existing docker image exported as a tar file or singularity image
+     image "docker:///rynge/montage:latest" 
+
+     # optional site attribute to tell pegasus which site tar file
+     # exists. useful for handling file URL's correctly
+     image_site "optional site"
+  
+     # environment to be set when the job is run in the container
+     # only env profiles are supported
+     profile env "JAVA_HOME" "/opt/java/1.6"	    
+}</programlisting>
+
+        <para>The container itself is defined using the cont entry. Multiple
+        transformations can refer to the same container. </para>
+
+        <orderedlist>
+          <listitem>
+            <para><emphasis role="bold">cont</emphasis> cont - A container
+            identifier. </para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">image</emphasis> - URL to image in a
+            docker|singularity hub or URL to an existing docker image exported
+            as a tar file or singularity image. Example of a docker hub URL is
+            docker:///rynge/montage:latest, while for singularity
+            shub://pegasus-isi/fedora-montage</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">image_site</emphasis> - The site
+            identifier for the site where the container is available</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Profiles</emphasis> - One or many
+            profiles can be attached to a transformation for all sites or to a
+            transformation on a particular site. For containers, only env
+            profiles are supported.</para>
+          </listitem>
+        </orderedlist>
+
+        <note>
+          <para>Containerized Applications can only be specified in the
+          transformation catalog, not via the DAX API.</para>
+        </note>
+      </section>
     </section>
 
     <section id="pegasus-tc-client">
@@ -1212,7 +1307,7 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
     <section>
       <title>TC Converter Client pegasus-tc-converter</title>
 
-      <para>Pegasus 3.0 by default now parses a file based multiline textual
+      <para>Pegasus 3.0 by default now parses a file based multi line textual
       format of a Transformation Catalog. The new Text format is explained in
       detail in the chapter on Catalogs.</para>
 
