@@ -1148,14 +1148,14 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
         </orderedlist></para>
 
       <section id="tc-container">
-        <title>Containerized Applications</title>
+        <title>Containerized Applications in the Transformation
+        Catalog</title>
 
-        <para>Starting Pegasus release 4.8.0, there is support for application
-        containers. Users can specify what container they want to use for
-        running their application in the Transformation Catalog using the
-        multi line text based format described in this section. Users can
-        specify an optional attribute named container that refers to the
-        container to be used for the application.</para>
+        <para>Users can specify what container they want to use for running
+        their application in the Transformation Catalog using the multi line
+        text based format described in this section. Users can specify an
+        optional attribute named container that refers to the container to be
+        used for the application.</para>
 
         <programlisting>tr example::keg:1.0 { 
 
@@ -1206,12 +1206,12 @@ cont centos-pegasus{
 }</programlisting>
 
         <para>The container itself is defined using the cont entry. Multiple
-        transformations can refer to the same container. </para>
+        transformations can refer to the same container.</para>
 
         <orderedlist>
           <listitem>
             <para><emphasis role="bold">cont</emphasis> cont - A container
-            identifier. </para>
+            identifier.</para>
           </listitem>
 
           <listitem>
