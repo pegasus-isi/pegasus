@@ -489,7 +489,7 @@ public class InPlace extends AbstractCleanupStrategy {
 
         StringBuilder sb = new StringBuilder();
         sb.append("Clustering ").append(size).append(" cleanup nodes at level ").append(level).
-                append(" with cluster size ").append(clusterSize).append( " into total of " ).append( numCleanup );
+                append(" with cluster size ").append(clusterSize).append( " into MAX total of " ).append( numCleanup );
         mLogger.log(sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL);
 
         //for the time being lets assume one to one mapping
@@ -619,7 +619,7 @@ public class InPlace extends AbstractCleanupStrategy {
         if (allFilesToDelete.isEmpty()) {
             //the clustered cleanup job we are trying to create has
             //no files to delete
-            mLogger.log("\t\tClustered cleanup node is empty " + clusteredCleanupNode.getID(),
+            mLogger.log("\t\tClustered cleanup node is empty as files to be deleted are already deleted by other cleanup nodes " + clusteredCleanupNode.getID(),
                     LogManager.DEBUG_MESSAGE_LEVEL);
             return null;
         }
