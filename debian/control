@@ -5,6 +5,7 @@ Maintainer: Pegasus Development Team <pegasus-support@isi.edu>
 Build-Depends: debhelper (>= 9), ant, openjdk-8-jdk | openjdk-7-jdk | openjdk-6-jdk, perl, python, asciidoc, xsltproc, fop,
        python-dev,
        python-setuptools,
+       python-openssl,
        libmysqlclient-dev | default-libmysqlclient-dev, libpq-dev,
        zlib1g-dev,
        libssl1.0-dev | libssl-dev,
@@ -17,7 +18,7 @@ Homepage: http://pegasus.isi.edu
 Package: pegasus
 Architecture: any
 Depends: openjdk-8-jre | openjdk-8-jre-headless | openjdk-7-jre | openjdk-7-jre-headless | openjdk-6-jre | openjdk-6-jre-headless,
-  perl, python, ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
+  perl, python, python-openssl, ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
 Recommends: condor, globus
 Description: Workflow management system for HTCondor, Grid, and Clouds
  The Pegasus project encompasses a set of technologies the help
