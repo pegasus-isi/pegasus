@@ -3581,7 +3581,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: false
             - key: T014100K
-              name: 014-planner-performance-100K
+              name: 014-planner-performance-100k
               description: Planner performance 100K
               tasks:
                 - !script
