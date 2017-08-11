@@ -13,8 +13,7 @@
     configurations using PegasusLite. Users can specify with their
     transformations in the Transformation Catalog the container in which the
     the transformation should be executed. Pegasus has support for the
-    following container technologies Docker and Singularity containers.
-    </para>
+    following container technologies Docker and Singularity containers.</para>
 
     <orderedlist>
       <listitem>
@@ -57,12 +56,12 @@
       <title>Container Execution Model</title>
 
       <para>User's containerized applications are launched as part of
-      PegasusLite jobs. PegasusLite job when starting on a remote worker node.
-      </para>
+      PegasusLite jobs. PegasusLite job when starting on a remote worker
+      node.</para>
 
       <orderedlist>
         <listitem>
-          <para> Sets up a directory to run a user job in. </para>
+          <para>Sets up a directory to run a user job in.</para>
         </listitem>
 
         <listitem>
@@ -105,18 +104,18 @@
 
       <para>The above model, allows for all credential handling required for
       data transfers to be handled outside the container within the
-      PegasusLite job. </para>
+      PegasusLite job.</para>
     </section>
 
     <section id="container-transfers">
-      <title>Container Transfers</title>
+      <title>Staging of Application Containers</title>
 
       <para>Pegasus treats containers as other files in terms of data
       management. Container to be used for a job is tracked as an input
       dependency that needs to be staged if it is not already there. Similar
       to executables, you specify the location for your container image in the
       Transformation Catalog. You can specify the source URL's for containers
-      as the following. </para>
+      as the following.</para>
 
       <orderedlist>
         <listitem>
@@ -158,7 +157,7 @@
                 </listitem>
 
                 <listitem>
-                  <para>.tar.bz2 </para>
+                  <para>.tar.bz2</para>
                 </listitem>
 
                 <listitem>
@@ -182,7 +181,7 @@
       staging site used for the workflow, as part of the data stage-in nodes,
       using pegasus-transfer. When pulling in an image from a container hub
       repository, pegasus-transfer will export the container as a tar file in
-      case of Docker, and as .img file in case of Singularity </para>
+      case of Docker, and as .img file in case of Singularity</para>
 
       <section id="container-symlinking">
         <title>Symlinking</title>
@@ -195,7 +194,7 @@
         will automatically disable symlinking for jobs that use containers.
         The only exception being the application container itself. If you
         specify a URL for the container image, the image will be symlinked if
-        Pegasus determines that it can be. </para>
+        Pegasus determines that it can be.</para>
 
         <para>Enabling symlinking of containers is useful, when running large
         workflows on a single cluster. Pegasus can pull the image from the

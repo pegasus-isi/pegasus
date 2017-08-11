@@ -1337,6 +1337,10 @@ site corbusier {
       </section>
     </section>
 
+    <xi:include href="containers.xml" xpointer="container-transfers"
+                xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+
     <section id="staging_job_checkpoint_files">
       <title>Staging of Job Checkpoint Files</title>
 
