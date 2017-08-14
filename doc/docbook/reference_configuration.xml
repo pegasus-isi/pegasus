@@ -1396,8 +1396,8 @@ Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
               <entry>Determines the executable for launching a job. This
-              covers both tasks ( jobs specifed by the user in the DAX) and
-              additional jobs added by Pegasus during the planning opertation.
+              covers both tasks ( jobs specified by the user in the DAX) and
+              additional jobs added by Pegasus during the planning operation.
               Possible values are <emphasis role="bold"><emphasis>Kickstart |
               NoGridStart</emphasis></emphasis> | PegasusLite | Distribute at
               the moment. <note>
@@ -1482,9 +1482,11 @@ Scope       :</emphasis> TC, SC, DAX, Properties
               <entry>This key determines the maximum number of
               <emphasis>stage-in</emphasis> jobs that are can executed locally
               or remotely per compute site per workflow. This is used to
-              configure the <emphasis>Bundle</emphasis> Transfer Refiner,
-              which is the Default Refiner used in Pegasus. This profile is
-              best set in the Site Catalog or in the Properties file</entry>
+              configure the <emphasis><link
+              linkend="transfer-refiner-balanced-cluster">BalancedCluster</link></emphasis>
+              Transfer Refiner, which is the Default Refiner used in Pegasus.
+              This profile is best set in the Site Catalog or in the
+              Properties file</entry>
             </row>
 
             <row>
@@ -1533,8 +1535,10 @@ Scope       :</emphasis> TC, SC, DAX, Properties
               <entry>This key determines the maximum number of
               <emphasis>stage-out</emphasis> jobs that are can executed
               locally or remotely per compute site per workflow. This is used
-              to configure the <emphasis>Bundle</emphasis> Transfer Refiner, ,
-              which is the Default Refiner used in Pegasus.</entry>
+              to configure the <emphasis><link
+              linkend="transfer-refiner-balanced-cluster">BalancedCluster</link></emphasis>
+              Transfer Refiner, , which is the Default Refiner used in
+              Pegasus.</entry>
             </row>
 
             <row>
@@ -2891,12 +2895,12 @@ Scope       :</emphasis> Properties
 
                       <orderedlist>
                         <listitem>pegasus.catalog.replica.db.driver = mysql |
-                        postgres |sqlite </listitem>
+                        postgres |sqlite</listitem>
 
                         <listitem>pegasus.catalog.replica.db.url = &lt;jdbc
                         url to the database&gt; e.g
                         jdbc:mysql://database-host.isi.edu/database-name |
-                        jdbc:sqlite:/shared/jdbcrc.db </listitem>
+                        jdbc:sqlite:/shared/jdbcrc.db</listitem>
 
                         <listitem>pegasus.catalog.replica.db.user =
                         database-user</listitem>
@@ -5133,7 +5137,7 @@ Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
 Scope       :</emphasis> Properties
 <emphasis role="bold">Since       :</emphasis> 4.2.0
 <emphasis role="bold">Type        : </emphasis>Integer
-<emphasis role="bold">Default     :</emphasis> 2</literallayout></entry>
+</literallayout></entry>
 
               <entry>In case of the InPlace strategy for adding the cleanup
               nodes to the workflow, this property specifies the maximum

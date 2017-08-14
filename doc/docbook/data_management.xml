@@ -950,7 +950,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
         pegasus.transfer.refiner</para>
       </tip>
 
-      <section>
+      <section id="transfer-refiner-balanced-cluster">
         <title>BalancedCluster</title>
 
         <para>This is a new transfer refiner that was introduced in Pegasus
@@ -1950,8 +1950,10 @@ pegasus.dir.staging.mapper.hashed.multiplier the number of files associated with
         nodes per level of the workflow in addition to leaf cleanup nodes. The
         nodes remove files no longer required during execution. For example,
         an added cleanup node will remove input files for a particular compute
-        job after the job has finished successfully. This is the default
-        value.</para>
+        job after the job has finished successfully. Starting 4.8.0 release,
+        the number of cleanup nodes created by this algorithm on a particular
+        level, is dictated by the number of nodes it encounters on a level of
+        the workflow.</para>
       </listitem>
 
       <listitem>
