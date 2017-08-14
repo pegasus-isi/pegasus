@@ -835,11 +835,11 @@ tr B {
     files.</para>
 
     <para><emphasis>Solution:</emphasis> The most common solution to these
-    problems is to use <link linkend="hierarchial_workflows">hierarchial
+    problems is to use <link linkend="hierarchial_workflows">hierarchical
     workflows</link>, which works really well if your workflow can be
-    logically partitioned into smaller workflows. A hierarchial workflow still
-    runs like a single workflow, with the difference being that some jobs in
-    the workflow are actally sub-workflows.</para>
+    logically partitioned into smaller workflows. A hierarchical workflow
+    still runs like a single workflow, with the difference being that some
+    jobs in the workflow are actually sub-workflows.</para>
 
     <para>For workflows with a large number of files, you can control the
     number of files in a single directory by reorganizing the files into a
@@ -1194,10 +1194,13 @@ tr B {
     to be as quick as possibly, but we also do not want our transfers to
     overwhelm data services and systems.</para>
 
-    <para><emphasis>Solution:</emphasis> The default configuration consists of
-    a combination of the maximum number of transfer jobs per level in the
-    workflow, and how many threads such a pegasus-transfer job can
-    spawn.</para>
+    <para><emphasis>Solution:</emphasis> Starting 4.8.0 release, the default
+    configuration of Pegasus now adds transfer jobs and cleanup jobs based on
+    the number of jobs at a particular level of the workflow. For example, for
+    every 10 compute jobs on a level of a workflow, one data transfer job(
+    stage-in and stage-out) is created. The default configuration also sets
+    how many threads such a pegasus-transfer job can spawn. Cleanup jobs are
+    similarly constructed with an internal ratio of 5.</para>
 
     <para>Information on how to control the number of stagein and stageout
     jobs can be found in the <link linkend="data_movement_nodes">Data Movement

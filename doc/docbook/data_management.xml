@@ -103,11 +103,11 @@
       <section>
         <title>Regex</title>
 
-        <para>This replica selector allows the user to
-        specific regular expressions that can be used to rank various PFN's
-        returned from the Replica Catalog for a particular LFN. This replica
-        selector orders the replicas based on the rank. Lower the rank higher
-        the preference.</para>
+        <para>This replica selector allows the user to specific regular
+        expressions that can be used to rank various PFN's returned from the
+        Replica Catalog for a particular LFN. This replica selector orders the
+        replicas based on the rank. Lower the rank higher the
+        preference.</para>
 
         <para>The regular expressions are assigned different rank, that
         determine the order in which the expressions are employed. The rank
@@ -854,9 +854,16 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
       <para>Pegasus supports three different transfer refiners that dictate
       how the stagein and stageout jobs are added for the workflow.The default
-      Transfer Refiner used in Pegasus is the BalancedCluster Refiner that
-      allows the user to specify how many local|remote stagein|stageout jobs
-      are created per execution site.</para>
+      Transfer Refiner used in Pegasus is the BalancedCluster Refiner.
+      Starting 4.8.0 release, the default configuration of Pegasus now adds
+      transfer jobs and cleanup jobs based on the number of jobs at a
+      particular level of the workflow. For example, for every 10 compute jobs
+      on a level of a workflow, one data transfer job( stage-in and stage-out)
+      is created. </para>
+
+      <para>The transfer refiners also allow the user to specify how many
+      local|remote stagein|stageout jobs are created per execution
+      site.</para>
 
       <para>The behavior of the refiners (BalancedCluster and Cluster) are
       controlled by specifying certain pegasus profiles</para>
@@ -1340,7 +1347,6 @@ site corbusier {
     <xi:include href="containers.xml" xpointer="container-transfers"
                 xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
-
     <section id="staging_job_checkpoint_files">
       <title>Staging of Job Checkpoint Files</title>
 
@@ -1772,7 +1778,7 @@ irodsPassword 'somesecretpassword'</programlisting>
     will be associated with. Before, the introduction of staging mappers, all
     files associated with the jobs scheduled for a particular site landed in
     the same directory on the staging site. As a result, for large workflows
-    this could degrade filesystem performance on the staging servers. </para>
+    this could degrade filesystem performance on the staging servers.</para>
 
     <para>To configure the staging mapper, you need to specify the following
     property</para>
@@ -1788,7 +1794,7 @@ irodsPassword 'somesecretpassword'</programlisting>
         Pegasus placing all the job submit files in the staging site directory
         as determined from the Site Catalog and planner options. This can
         result in too many files in one directory for large workflows, and was
-        the only option before Pegasus 4.7.0 release. </para>
+        the only option before Pegasus 4.7.0 release.</para>
       </listitem>
 
       <listitem>
@@ -1798,7 +1804,7 @@ irodsPassword 'somesecretpassword'</programlisting>
         level, and not at the file level i.e each job will push out it's
         outputs to the same directory on the staging site, independent of the
         number of output files. To control behavior of this mapper, users can
-        specify the following properties </para>
+        specify the following properties</para>
 
         <screen>pegasus.dir.staging.mapper.hashed.levels     the number of directory levels used to accomodate the files. Defaults to 2.
 pegasus.dir.staging.mapper.hashed.multiplier the number of files associated with a job in the submit directory. defaults to 5.
