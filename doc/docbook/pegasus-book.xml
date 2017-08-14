@@ -17,6 +17,7 @@
   <xi:include href="service.xml"/>
   <xi:include href="reference_configuration.xml"/>
   <xi:include href="submit_directory.xml"/>
+  <xi:include href="jupyter.xml"/>
   <xi:include href="reference_api.xml"/>
   <xi:include href="reference_command_lines.xml"/>
   <xi:include href="useful_tips.xml"/>
