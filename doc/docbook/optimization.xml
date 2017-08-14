@@ -1246,7 +1246,7 @@ tr B {
     <table>
       <title>Default Category names associated by Pegasus</title>
 
-      <tgroup cols="2">
+      <tgroup cols="3">
         <tbody>
           <row>
             <entry><emphasis role="bold">DAGMan Category
@@ -1254,36 +1254,49 @@ tr B {
 
             <entry><emphasis role="bold">Auxillary Job applied
             to.</emphasis></entry>
+
+            <entry><emphasis role="bold">Default Value Assigned in generated
+            DAG file</emphasis></entry>
           </row>
 
           <row>
             <entry><literallayout>stage-in </literallayout></entry>
 
             <entry>data stage-in jobs</entry>
+
+            <entry>10</entry>
           </row>
 
           <row>
             <entry><literallayout>stage-out</literallayout></entry>
 
             <entry>data stage-out jobs</entry>
+
+            <entry>10</entry>
           </row>
 
           <row>
             <entry><literallayout>stage-inter</literallayout></entry>
 
             <entry>inter site data transfer jobs</entry>
+
+            <entry>-</entry>
           </row>
 
           <row>
             <entry><literallayout>cleanup</literallayout></entry>
 
             <entry>data cleanup jobs</entry>
+
+            <entry>4</entry>
           </row>
 
           <row>
             <entry><literallayout>registration </literallayout></entry>
 
             <entry>registration jobs</entry>
+
+            <entry>1 (for file based RC)</entry>
           </row>
         </tbody>
       </tgroup>
