@@ -995,7 +995,7 @@ project:
               requirements:
                 - capabilityKey: hostname
                   matchType: !equals
-                    matchValue: colo-vm63.isi.edu
+                    matchValue: build-1.pegasus.isi.edu
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
       permissions:
