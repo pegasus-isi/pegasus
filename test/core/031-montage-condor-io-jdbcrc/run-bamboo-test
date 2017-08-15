@@ -37,7 +37,7 @@ for BINARY in `(cd /ccg/software/montage/Montage_v3.3_mats/bin/ && ls)`; do
 tr $BINARY:3.3 {
     site CCG {
         pfn "/ccg/software/montage/Montage_v3.3_mats/bin/$BINARY"
-        arch "x86"
+        arch "x86_64"
         os "linux"
         type "INSTALLED"
         profile pegasus "clusters.size" "20"
@@ -73,7 +73,7 @@ cat >sites.xml <<EOF
         <profile namespace="env" key="GLOBUS_TCP_PORT_RANGE" >40000,50000</profile>
         <profile namespace="env" key="http_proxy" >http://workflow.isi.edu:3128</profile>
     </site>
-    <site handle="CCG" arch="x86" os="LINUX">
+    <site handle="CCG" arch="x86_64" os="LINUX">
         <head-fs>
             <scratch />
             <storage />
