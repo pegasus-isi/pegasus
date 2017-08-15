@@ -915,7 +915,6 @@ class Workflow:
 
         if not self._replay_mode:
             # Recover state from a previous run
-            self.read_workflow_state()
             self.read_workflow_progress()
             if self._previous_processed_line != 0:
                 # Recovery mode detected, reset last_processed_line so
@@ -923,6 +922,9 @@ class Workflow:
                 # file...
                 logger.info( "Setting last processed line to 0 in recovery mode to ensure population starts afresh")
                 self._last_processed_line = 0
+            else:
+                # PM-1209 we only read workflow state when we know it is not the monitord recovery mode
+                self.read_workflow_state()
 
         # Determine location of jobstate.log file
         my_jsd = (jsd or utils.jobbase)
