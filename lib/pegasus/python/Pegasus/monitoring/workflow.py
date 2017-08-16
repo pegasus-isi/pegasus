@@ -670,6 +670,8 @@ class Workflow:
                 self._dagman_exit_code = UNKNOWN_FAILURE_CODE
                 self._JSDB.write("%d INTERNAL *** DAGMAN_FINISHED %s ***\n" % (prev_wf_end_timestamp, self._dagman_exit_code))
                 self.db_send_wf_state(  "end", prev_wf_end_timestamp )
+                # PM-1217 reset exitcode to None as we don't want monitord to stop monitoring this workflow
+                self._dagman_exit_code = None
 
 
         if state == "start":
