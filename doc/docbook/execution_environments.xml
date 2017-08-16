@@ -19,11 +19,10 @@
     notifications).</para>
 
     <para>Running on a local HTCondor pool is achieved by executing the
-    workflow on site local (<emphasis role="bold">--sites
-    local</emphasis> option to pegasus-plan). The site "local" is a reserved
-    site in Pegasus and results in the jobs to run on the submit host in
-    HTCondor universe local. The site catalog can be left very simple in this
-    case:</para>
+    workflow on site local (<emphasis role="bold">--sites local</emphasis>
+    option to pegasus-plan). The site "local" is a reserved site in Pegasus
+    and results in the jobs to run on the submit host in HTCondor universe
+    local. The site catalog can be left very simple in this case:</para>
 
     <programlisting>
 &lt;?xml version="1.0" encoding="UTF-8"?&gt;
@@ -654,7 +653,7 @@ pegasus.data.configuration    condorio</programlisting>
     local HTCondor can be used to submit jobs via glite (with some
     modifications described below). If you need to SSH to a different cluster
     head node in order to submit jobs to the PBS system, then you need to use
-    Bosco, which is <link linkend="bosco"> documented in another
+    BOSCO, which is <link linkend="bosco"> documented in another
     section</link>.</para>
 
     <tip>
@@ -992,14 +991,14 @@ pegasus.data.configuration    condorio</programlisting>
   </section>
 
   <section id="bosco_sdsc">
-    <title>SDSC Comet with Bosco glideins</title>
+    <title>SDSC Comet with BOSCO glideins</title>
 
-    <para>Bosco documentation: <ulink
+    <para>BOSCO documentation: <ulink
     url="https://twiki.opensciencegrid.org/bin/view/CampusGrids/BoSCO">https://twiki.opensciencegrid.org/bin/view/CampusGrids/BoSCO</ulink></para>
 
-    <para>Bosco is part of the HTCondor system which allows you to set up a
+    <para>BOSCO is part of the HTCondor system which allows you to set up a
     personal pool of resources brought in from a remote cluster. In this
-    section, we describe how to use Bosco to run glideins (pilot jobs)
+    section, we describe how to use BOSCO to run glideins (pilot jobs)
     dynamically on the SDSC Comet cluster. The glideins are submitted based on
     the demand of the user jobs in the pool.</para>
 
@@ -1037,13 +1036,13 @@ $ condor_q
 $ condor_status
     </programlisting>
 
-    <para>Let's tell Bosco about our SDSC Comet account:</para>
+    <para>Let's tell BOSCO about our SDSC Comet account:</para>
 
     <programlisting>
 $ bosco_cluster -a YOUR_SDSC_USERNAME@comet-ln2.sdsc.edu pbs
     </programlisting>
 
-    <para>Bosco needs a little bit more information to be able to submit the
+    <para>BOSCO needs a little bit more information to be able to submit the
     glideins to Comet. Log in to your Comet account via ssh (important - this
     step has to take place on Comet) and create the
     <emphasis>~/bosco/glite/bin/pbs_local_submit_attributes.sh</emphasis> file
@@ -1064,7 +1063,7 @@ echo "#PBS -A [YOUR_COMET_ALLOCATION]"
 $ chmod 755 ~/bosco/glite/bin/pbs_local_submit_attributes.sh
     </programlisting>
 
-    <para>Log out of Comet, and get back into the host and user Bosco was
+    <para>Log out of Comet, and get back into the host and user BOSCO was
     installed into. We also need to edit a few files on that host.
     <emphasis>~/bosco/libexec/campus_factory/share/glidein_jobs/glidein_wrapper.sh</emphasis>
     has a bug in some versions of HTCondor. Open up the file and make sure the
@@ -1104,28 +1103,29 @@ NUM_SLOTS_TYPE_1 = 1
          _condor_NUM_CPUS=1; \
     </programlisting>
 
-    <para>You should now have a functioning Bosco setup. Submit a Pegasus
+    <para>You should now have a functioning BOSCO setup. Submit a Pegasus
     workflow.</para>
   </section>
 
   <section id="bosco">
-    <title>Remote PBS Cluster using Bosco and SSH</title>
+    <title>Remote PBS Cluster using BOSCO and SSH</title>
 
-    <para><ulink url="http://bosco.opensciencegrid.org/about/">Bosco</ulink>
+    <para><ulink url="http://bosco.opensciencegrid.org/about/">BOSCO</ulink>
     enables HTCondor to submit jobs to remote PBS clusters using SSH. This
     section describes how to specify a site catalog entry for a site that has
-    been configured for Bosco job submissions.</para>
+    been configured for BOSCO job submissions.</para>
 
-    <para>First, the site needs to be setup for Bosco according to the <ulink
-    url="https://twiki.opensciencegrid.org/bin/view/CampusGrids/BoSCO"> Bosco
-    documentation</ulink>. Bosco uses glite to submit jobs to the PBS
+    <para>First, the site needs to be setup for BOSCO according to the <ulink
+    url="https://twiki.opensciencegrid.org/bin/view/CampusGrids/BoSCO"> BOSCO
+    documentation</ulink>. BOSCO uses glite to submit jobs to the PBS
     scheduler on the remote cluster. You will also need to configure the glite
-    installed for Bosco on the remote system according to the documentation in
+    installed for BOSCO on the remote system according to the documentation in
     the <link linkend="glite">glite section</link> in order for the mapping of
     Pegasus profiles to PBS job requirements to work. In particular, you will
     need to install the <literal>pbs_local_submit_attributes.sh</literal> and
     <literal>sge_local_submit_attributes.sh</literal> scripts in the correct
-    place in the glite <literal>bin</literal> directory.</para>
+    place in the glite <literal>bin</literal> directory on the remote cluster,
+    usually in the directory <emphasis>~/bosco/glite/bin/</emphasis> . </para>
 
     <para>Second, to tag a site for SSH submission, the following profiles
     need to be specified for the site in the site catalog:</para>
@@ -1139,11 +1139,11 @@ NUM_SLOTS_TYPE_1 = 1
 
       <listitem>
         <para>Specify the service information as grid gateways. This should
-        match what Bosco provided when the cluster was set up.</para>
+        match what BOSCO provided when the cluster was set up.</para>
       </listitem>
     </orderedlist>
 
-    <para>An example site catalog entry for a Bosco site looks like
+    <para>An example site catalog entry for a BOSCO site looks like
     this:</para>
 
     <programlisting>
@@ -1154,24 +1154,30 @@ NUM_SLOTS_TYPE_1 = 1
 
     &lt;site  handle="USC_HPCC_Bosco" arch="x86_64" os="LINUX"&gt;
 
-        &lt;!-- Specify the service information as grid gateways. This should match what Bosco provided when the cluster
+        &lt;!-- Specify the service information. This should match what Bosco provided when the cluster
              was set up. --&gt;
-        &lt;grid type="batch" contact="username@hpc-login2.usc.edu" scheduler="PBS" jobtype="compute"/&gt;
-        &lt;grid type="batch" contact="username@hpc-login2.usc.edu" scheduler="PBS" jobtype="auxillary"/&gt;
+        &lt;grid type="batch" contact="vahi@hpc-pegasus.usc.edu" scheduler="PBS" jobtype="compute"/&gt;
+        &lt;grid type="batch" contact="vahi@hpc-pegasus.usc.edu" scheduler="PBS" jobtype="auxillary"/&gt;
 
         &lt;!-- Scratch directory on the cluster --&gt;
-        &lt;directory type="shared-scratch" path="/home/rcf-40/tmp"&gt;
-            &lt;file-server operation="all" url="scp://username@hpc-login2.usc.edu/home/rcf-40/tmp"/&gt;
+        &lt;directory type="shared-scratch" path="/home/rcf-40/vahi/tmp"&gt;
+            &lt;file-server operation="all" url="scp://vahi@hpc-pegasus.usc.edu/home/rcf-40/vahi/tmp"/&gt;
         &lt;/directory&gt;
 
-        &lt;!-- SSH is the style to use for SSH submits --&gt;
+        &lt;!-- SSH is the style to use for Bosco SSH submits --&gt;
         &lt;profile namespace="pegasus" key="style"&gt;ssh&lt;/profile&gt;
 
-        &lt;!-- This mode uses the same profiles used for glite to control the jobs --&gt;
-        &lt;profile namespace="condor" key="batch_queue"&gt;default&lt;/profile&gt;
+        &lt;!--  works around bug in the HTCondor GAHP, that does not
+              set the remote directory --&gt;
+        &lt;profile namespace="pegasus" key="change.dir"&gt;true&lt;/profile&gt;
+
+        &lt;!-- Bosco is using the grid universe, which means the globus
+             namespace can be used to control the jobs --&gt;
+        &lt;profile namespace="pegasus" key="queue"&gt;default&lt;/profile&gt;
         &lt;profile namespace="pegasus" key="runtime"&gt;30&lt;/profile&gt;
 
     &lt;/site&gt;
+
 
 &lt;/sitecatalog&gt;
 
@@ -1179,14 +1185,14 @@ NUM_SLOTS_TYPE_1 = 1
 
     <note>
       <para>It is recommended to have a submit node configured either as a
-      Bosco submit node or a vanilla HTCondor node. You cannot have HTCondor
-      configured both as a Bosco install and a traditional HTCondor submit
-      node at the same time as Bosco will override the traditional HTCondor
+      BOSCO submit node or a vanilla HTCondor node. You cannot have HTCondor
+      configured both as a BOSCO install and a traditional HTCondor submit
+      node at the same time as BOSCO will override the traditional HTCondor
       pool in the user environment.</para>
     </note>
 
-    <para>Starting 4.3 there is a bosco-shared-fs example in the examples
-    directory of the distribution.</para>
+    <para>There is a bosco-shared-fs example in the examples directory of the
+    distribution.</para>
   </section>
 
   <section id="campus_cluster">
@@ -1310,6 +1316,7 @@ pegasus.transfer.worker.package = true
 </chapter>
 <?xxe-serial-numbers iq2ifwj5 vahi
 iq2nanhq vahi
+j6fj4v2e vahi
 (1z141z5 (1z141z6) (1z141z7) (1z141z8 (1z141z9) (1z141za (1z141zb))
 (1z141zc (1z141zd)) (1z141ze) (1z141zf (1z141zg) (1z141zh))) (1z141zi
 (1z141zj) (1z141zk) (1z141zl (1z141zm) (1z141zn (1z141zo (1z141zp))))
@@ -1358,10 +1365,11 @@ iq2nanhq vahi
 (1z1427m) (1z1427n) (1z1427o (1z1427p)) (1z1427q) (1z1427r (1z1427s))
 (1z1427t) (1z1427u (1z1427v)) (1z1427w) (1z1427x)) (1z1427y (1z1427z)
 (1z14280 (1z14281)) (1z14282 (1z14283) (1z14284) (1z14285) (1z14286)
-(1z14287)) (1z14288) (1z14289 (1z1428a (1z1428b (1z1428c) (1z1428d)
-(1z1428e))) (1z1428f (1z1428g))) (1z1428h) (1z1428i) (1z1428j (1z1428k))
-(1z1428l)) (1z1428m (1z1428n) (1z1428o) (1z1428p (1z1428q (1z1428r))
-(1z1428s (1z1428t)) (1z1428u (1z1428v))) (1z1428w (1z1428x))) (1z1428y
-(1z1428z) (1z14290 (1z14291)) (1z14292 (1z14293) (1z14294) (1z14295)
-(1z14296)) (1z14297) (1z14298) (1z14299) (1z1429a (1z1429b)) (1z1429c
-(1z1429d))) (1z1429e (1z1429f) (1z1429g (1z1429h (1z1429i) (1z1429j)))))?>
+(1z14287) (5x3c5xd)) (1z14288) (1z14289 (1z1428a (1z1428b (1z1428c)
+(1z1428d) (1z1428e))) (1z1428f (1z1428g))) (1z1428h) (1z1428i) (1z1428j
+(1z1428k)) (1z1428l)) (1z1428m (1z1428n) (1z1428o) (1z1428p (1z1428q
+(1z1428r)) (1z1428s (1z1428t)) (1z1428u (1z1428v))) (1z1428w (1z1428x)))
+(1z1428y (1z1428z) (1z14290 (1z14291)) (1z14292 (1z14293) (1z14294)
+(1z14295) (1z14296)) (1z14297) (1z14298) (1z14299) (1z1429a (1z1429b))
+(1z1429c (1z1429d))) (1z1429e (1z1429f) (1z1429g (1z1429h (1z1429i)
+(1z1429j)))))?>

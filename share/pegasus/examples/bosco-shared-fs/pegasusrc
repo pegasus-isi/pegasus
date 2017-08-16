@@ -1,7 +1,7 @@
 pegasus.catalog.site = XML
 pegasus.catalog.site.file = sites.xml
 
-pegasus.dir.useTimestamp = true
+
 pegasus.condor.logs.symlink = false
 
 pegasus.data.configuration = sharedfs
@@ -11,7 +11,5 @@ pegasus.transfer.worker.package = true
 # works around bug in the HTCondor GAHP
 pegasus.condor.arguments.quote = false
 
-# works around bug in the HTCondor GAHP
-pegasus.change.dir = true
 
 
