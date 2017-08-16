@@ -4,39 +4,42 @@
     <site  handle="local" arch="x86_64" os="LINUX">
 
         <!-- local work directory -->
-        <directory type="shared-scratch" path="/local-scratch/rynge/bosco-shared-fs/work">
-            <file-server operation="all" url="file:///local-scratch/rynge/bosco-shared-fs/work"/>
+        <directory type="shared-scratch" path="${TOPDIR}/LOCAL/work">
+            <file-server operation="all" url="file:///${TOPDIR}/LOCAL/work"/>
         </directory>
 
 	<!-- outputs directory -->
-        <directory type="local-storage" path="/local-scratch/rynge/bosco-shared-fs/outputs">
-            <file-server operation="all" url="file:///local-scratch/rynge/bosco-shared-fs/outputs"/>
+        <directory type="local-storage" path="${TOPDIR}/LOCAL/outputs">
+            <file-server operation="all" url="file:///${TOPDIR}/LOCAL/outputs"/>
         </directory>
 
-	<!-- Provide a ssh key without a passphrase for ssh staging -->
-    <profile namespace="env" key="SSH_PRIVATE_KEY">/path/to/.ssh/workflow_rsa</profile>
-
+	<!-- Provide a ssh key without a passphrase for ssh staging	-->
+        <profile namespace="env" key="SSH_PRIVATE_KEY">/path/to/.ssh/workflow_rsa</profile>
     </site>
 
     <site  handle="USC_HPCC_Bosco" arch="x86_64" os="LINUX">
 
         <!-- Specify the service information. This should match what Bosco provided when the cluster
 	     was set up. -->
-        <grid type="batch" contact="rynge@hpc-login2.usc.edu" scheduler="PBS" jobtype="compute"/>
-        <grid type="batch" contact="rynge@hpc-login2.usc.edu" scheduler="PBS" jobtype="auxillary"/>
+        <grid type="batch" contact="vahi@hpc-pegasus.usc.edu" scheduler="PBS" jobtype="compute"/>
+        <grid type="batch" contact="vahi@hpc-pegasus.usc.edu" scheduler="PBS" jobtype="auxillary"/>
 
 	<!-- Scratch directory on the cluster -->
-        <directory type="shared-scratch" path="/home/rcf-40/rynge/tmp">
-            <file-server operation="all" url="scp://rynge@hpc-login2.usc.edu/home/rcf-40/rynge/tmp"/>
+        <directory type="shared-scratch" path="/home/rcf-40/vahi/tmp">
+            <file-server operation="all" url="scp://vahi@hpc-pegasus.usc.edu/home/rcf-40/vahi/tmp"/>
         </directory>
 
 	<!-- SSH is the style to use for Bosco SSH submits -->
         <profile namespace="pegasus" key="style">ssh</profile>
 
+	<!--  works around bug in the HTCondor GAHP, that does not
+	      set the remote directory -->
+	<profile namespace="pegasus" key="change.dir">true</profile>
+
 	<!-- Bosco is using the grid universe, which means the globus
 	     namespace can be used to control the jobs -->
-        <profile namespace="globus" key="queue">default</profile>
-	<profile namespace="globus" key="maxwalltime">30</profile>
+        <profile namespace="pegasus" key="queue">default</profile>
+	<profile namespace="pegasus" key="runtime">30</profile>
 
     </site>
 
