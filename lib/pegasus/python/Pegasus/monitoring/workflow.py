@@ -165,6 +165,7 @@ class Workflow:
         except:
             logger.warning("unable to read %s!" % (dag_file))
         else:
+            logger.info( "Parsing DAG file %s" %dag_file)
             for dag_line in DAG:
                 lc_dag_line = dag_line.lower().lstrip();
                 if lc_dag_line.startswith("job"):
@@ -946,7 +947,7 @@ class Workflow:
                 # Append to current one if not in replay mode and not
                 # in recovering from previous errors
                 # this is for rescue dags and when a workflow is run for the first time
-                logger.info( "Appending to exisitng jobstate.log replay_mode %s previous_processed_line %s" %(self._replay_mode, self._previous_processed_line))
+                logger.info( "Appending to existing jobstate.log replay_mode %s previous_processed_line %s" %(self._replay_mode, self._previous_processed_line))
                 self._JSDB = open(self._jsd_file, 'a', 0)
             else:
                 # Rotate jobstate.log file, if any in case of replay
