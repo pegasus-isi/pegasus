@@ -102,6 +102,8 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
     except Exception, e:
         raise ConnectionError("%s (%s)" % (e.message, dburi), given_version=pegasus_version, db_type=db_type)
 
+    _check_db_permissions(dburi, db_type)
+
     Session = orm.sessionmaker(bind=engine, autoflush=False, autocommit=False,
                                expire_on_commit=False)
     db = orm.scoped_session(Session)
@@ -422,6 +424,16 @@ def _validate(dburi):
 
     except ImportError, e:
         raise ConnectionError("Missing Python module: %s (%s)" % (e.message, dburi))
+
+
+def _check_db_permissions(dburi, db_type):
+    if urlparse(dburi).scheme == 'sqlite':
+        path = urlparse(dburi).path[1:]
+        if db_type:
+            if db_type == DBType.MASTER:
+                os.chmod(path, 0o744)
+        elif path == os.path.expanduser('~') + '/.pegasus/workflow.db':
+            os.chmod(path, 0o744)
 
 
 def _parse_props(dburi, props, db_type=None, connect_args=None):
