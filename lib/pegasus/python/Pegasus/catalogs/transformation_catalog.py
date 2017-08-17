@@ -46,7 +46,7 @@ class TransformationCatalog:
 
         self._executables.append(executable)
 
-    def addContainer(self, container):
+    def add_container(self, container):
         """
         Add a container to the transformation catalog.
         :param container: A DAX3 Container object

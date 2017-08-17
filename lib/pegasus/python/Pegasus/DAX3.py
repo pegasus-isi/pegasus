@@ -150,6 +150,7 @@ import datetime, os, sys
 import codecs
 import shlex
 import codecs
+import warnings
 
 if sys.version_info >= (3, 0):
     # compatibility with Python 3
@@ -691,6 +692,9 @@ class Executable(CatalogType, InvokeMixin):
             # containers are not support by the DAX3 schema
         ])
         self.innerXML(e)
+
+        if self.container:
+            warnings.warn('The DAX API extensions do not support references for containers.')
 
         # Invocations
         for inv in self.invocations:
