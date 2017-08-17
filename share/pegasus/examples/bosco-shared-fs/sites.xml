@@ -36,8 +36,7 @@
 	      set the remote directory -->
 	<profile namespace="pegasus" key="change.dir">true</profile>
 
-	<!-- Bosco is using the grid universe, which means the globus
-	     namespace can be used to control the jobs -->
+	<!-- Job requirements should be specified using Pegasus profiles -->
         <profile namespace="pegasus" key="queue">default</profile>
 	<profile namespace="pegasus" key="runtime">30</profile>
 
