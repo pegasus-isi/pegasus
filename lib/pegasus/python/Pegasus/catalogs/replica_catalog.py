@@ -36,7 +36,7 @@ class ReplicaCatalog:
         :param name: Replica file name
         :param path: Replica file path
         :param site: Site name where replica is available
-        :param metadata: Additional metadata provided as a dictionary (optional)
+        :param metadata: Additional metadata provided as a set (optional)
         """
         if not name or not path:
             raise Exception('A replica name and path should be provided.')
@@ -45,11 +45,19 @@ class ReplicaCatalog:
             self._replicas[name] = {path: []}
 
         if site:
+            for m in self._replicas[name][path]:
+                if m[0] == 'site':
+                    self._replicas[name][path].remove(m)
+                    break
             self._replicas[name][path].append(('site', site))
 
         if metadata:
-            for m in metadata:
-                self._replicas[name][path].append((m, metadata[m]))
+            for md in metadata:
+                for m in self._replicas[name][path]:
+                    if m[0] == md.key:
+                        self._replicas[name][path].remove(m)
+                        break
+                self._replicas[name][path].append((md.key, md.value))
 
     def write(self, force=False):
         """

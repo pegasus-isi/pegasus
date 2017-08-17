@@ -112,7 +112,7 @@ class SitesCatalog:
         profile = {'namespace': namespace, 'key': key, 'value': value}
         self._sites[handle]['profiles'].append(profile)
 
-    def add_job_manager(self, handle, type, contact, scheduler, jobtype):
+    def add_job_manager(self, handle, type, contact, scheduler, jobtype=None):
         """
         Add a job manager to a specific site.
         :param handle: Site name
@@ -127,7 +127,11 @@ class SitesCatalog:
         if handle not in self._sites:
             raise ('There are no entries for site "%s".' % handle)
 
-        grid = {'type': type, 'contact': contact, 'scheduler': scheduler, 'jobtype': jobtype}
+        grid = {'type': type, 'contact': contact, 'scheduler': scheduler}
+
+        if jobtype:
+            grid['jobtype'] = jobtype
+
         self._sites[handle]['grids'].append(grid)
 
     def write(self, force=False):
@@ -159,8 +163,12 @@ class SitesCatalog:
 
                     # grids
                     for grid in self._sites[handle]['grids']:
-                        ppf.write('\t\t<grid type="%s" contact="%s" scheduler="%s" jobtype="%s"/>\n' % (
-                            grid['type'], grid['contact'], grid['scheduler'], grid['jobtype']))
+                        ppf.write('\t\t<grid type="%s" contact="%s" scheduler="%s" ' % (
+                            grid['type'], grid['contact'], grid['scheduler']))
+
+                        if 'jobtype' in grid:
+                            ppf.write('jobtype="%s" ' % grid['jobtype'])
+                        ppf.write('/>\n')
 
                     # site profiles
                     for p in self._sites[handle]['profiles']:
@@ -176,7 +184,7 @@ class SitesCatalog:
 
     def _create_local_site(self):
         """
-        Create a local site for the workflow 
+        Create a local site for the workflow
         """
         os = platform.system()
         if os.lower() == 'linux':

@@ -44,7 +44,8 @@ class TransformationCatalog:
         if not executable:
             raise Exception('An executable should be provided.')
 
-        self._executables.append(executable)
+        if executable not in self._executables:
+            self._executables.append(executable)
 
     def add_container(self, container):
         """
@@ -54,7 +55,8 @@ class TransformationCatalog:
         if not container:
             raise Exception('A container should be provided.')
 
-        self._containers.append(container)
+        if container not in self._containers:
+            self._containers.append(container)
 
     def write(self, force=False):
         """
