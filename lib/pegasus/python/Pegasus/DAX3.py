@@ -115,6 +115,7 @@ __all__ = [
     "ParseError",
     "Element",
     "Namespace",
+    "ContainerType",
     "Arch",
     "Link",
     "Transfer",
@@ -128,6 +129,7 @@ __all__ = [
     "CatalogType",
     "File",
     "Executable",
+    "Container",
     "Metadata",
     "PFN",
     "Profile",
@@ -341,6 +343,14 @@ class When:
     ALL = 'all'
 
 
+class ContainerType:
+    """
+    Container types. See Container.
+    """
+    DOCKER = 'docker'
+    SINGULARITY = 'singularity'
+
+
 class Invoke:
     def __init__(self, when, what):
         if not when:
@@ -375,7 +385,7 @@ class InvokeMixin:
     def addInvoke(self, invoke):
         """Add invoke to this object"""
         if self.hasInvoke(invoke):
-            raise DuplicateError("Duplicate Invoke %s" %invoke )
+            raise DuplicateError("Duplicate Invoke %s" % invoke)
         self.invocations.add(invoke)
 
     def hasInvoke(self, invoke):
@@ -419,7 +429,7 @@ class ProfileMixin:
     def addProfile(self, profile):
         """Add a profile to this object"""
         if self.hasProfile(profile):
-            raise DuplicateError("Duplicate profile %s" %profile )
+            raise DuplicateError("Duplicate profile %s" % profile)
         self.profiles.add(profile)
 
     def hasProfile(self, profile):
@@ -445,7 +455,7 @@ class MetadataMixin:
     def addMetadata(self, metadata):
         """Add metadata to this object"""
         if self.hasMetadata(metadata):
-            raise DuplicateError("Duplicate Metadata %s" %metadata )
+            raise DuplicateError("Duplicate Metadata %s" % metadata)
         self._metadata.add(metadata)
 
     def removeMetadata(self, metadata):
@@ -471,7 +481,7 @@ class PFNMixin:
     def addPFN(self, pfn):
         """Add a PFN to this object"""
         if self.hasPFN(pfn):
-            raise DuplicateError("Duplicate PFN %s" %pfn)
+            raise DuplicateError("Duplicate PFN %s" % pfn)
         self.pfns.add(pfn)
 
     def removePFN(self, pfn):
@@ -597,7 +607,7 @@ class File(CatalogType):
 class Executable(CatalogType, InvokeMixin):
     """Executable(name[,namespace][,version][,arch][,os][,osrelease][,osversion][,glibc][,installed])
 
-    An entry for an executable in the DAX-level replica catalog.
+    An entry for an executable in the DAX-level transformation catalog.
 
     Examples:
         grep = Executable("grep")
@@ -607,7 +617,8 @@ class Executable(CatalogType, InvokeMixin):
     """
 
     def __init__(self, name, namespace=None, version=None, arch=None, os=None,
-                 osrelease=None, osversion=None, glibc=None, installed=None):
+                 osrelease=None, osversion=None, glibc=None, installed=None,
+                 container=None):
         """
         Arguments:
             name: Logical name of executable
@@ -619,6 +630,7 @@ class Executable(CatalogType, InvokeMixin):
             osversion: Version of os that this exe was compiled for
             glibc: Version of glibc this exe was compiled against
             installed: Is the executable installed (true), or stageable (false)
+            container: Optional attribute to specify the container to use
         """
         CatalogType.__init__(self, name)
         self.namespace = namespace
@@ -629,6 +641,7 @@ class Executable(CatalogType, InvokeMixin):
         self.osversion = osversion
         self.glibc = glibc
         self.installed = installed
+        self.container = container
         self.invocations = set()
 
     def __unicode__(self):
@@ -646,7 +659,8 @@ class Executable(CatalogType, InvokeMixin):
                      self.osrelease,
                      self.osversion,
                      self.glibc,
-                     self.installed))
+                     self.installed,
+                     self.container))
 
     def __eq__(self, other):
         if isinstance(other, Executable):
@@ -658,7 +672,8 @@ class Executable(CatalogType, InvokeMixin):
                    self.osrelease == other.osrelease and \
                    self.osversion == other.osversion and \
                    self.glibc == other.glibc and \
-                   self.installed == other.installed
+                   self.installed == other.installed and \
+                   self.container == other.container
         return False
 
     def toXML(self):
@@ -673,6 +688,7 @@ class Executable(CatalogType, InvokeMixin):
             ('osversion', self.osversion),
             ('glibc', self.glibc),
             ('installed', self.installed)
+            # containers are not support by the DAX3 schema
         ])
         self.innerXML(e)
 
@@ -681,6 +697,56 @@ class Executable(CatalogType, InvokeMixin):
             e.element(inv.toXML())
 
         return e
+
+
+class Container(ProfileMixin):
+    """Container(name,type,image[,image_site])
+
+    An entry for a container in the DAX-level transformation catalog.
+
+    Examples:
+        mycontainer = Container("myapp", type="docker", image="docker:///rynge/montage:latest")
+    """
+
+    def __init__(self, name, type, image, imagesite=None):
+        """
+        Arguments:
+            name: Container name
+            type: Container type (see ContainerType)
+            image: URL to image in a container hub OR URL to an existing container image
+            imagesite: optional site attribute to tell pegasus which site tar file exist
+        """
+        if not name:
+            raise FormatError("Invalid name", name)
+        if not type:
+            raise FormatError("Invalid container type", type)
+        if not image:
+            raise FormatError("Invalid image", image)
+        self.name = name
+        self.type = type
+        self.image = image
+        self.imagesite = imagesite
+        self.profiles = set()
+
+    def __unicode__(self):
+        return u"<Container %s:%s>" % (self.name, self.type)
+
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __hash__(self):
+        return hash((self.name,
+                     self.type,
+                     self.image,
+                     self.imagesite))
+
+    def __eq__(self, other):
+        if isinstance(other, Container):
+            return self.name == other.name and \
+                   self.type == other.type and \
+                   self.image == other.image and \
+                   self.imagesite == other.imagesite
+        return False
 
 
 class Metadata:
@@ -927,7 +993,7 @@ class UseMixin:
     def addUse(self, use):
         """Add Use to this object"""
         if self.hasUse(use):
-            raise DuplicateError("Duplicate Use %s" %use )
+            raise DuplicateError("Duplicate Use %s" % use)
         self.used.add(use)
 
     def removeUse(self, use):
@@ -1556,7 +1622,7 @@ class ADAG(InvokeMixin, MetadataMixin):
         if job.id is None:
             job.id = self.nextJobID()
         if self.hasJob(job):
-            raise DuplicateError("Duplicate job %s" %job )
+            raise DuplicateError("Duplicate job %s" % job)
         self.jobs[job.id] = job
 
     def hasJob(self, job):
@@ -1598,7 +1664,7 @@ class ADAG(InvokeMixin, MetadataMixin):
         if not isinstance(file, File):
             raise FormatError("Invalid File", file)
         if self.hasFile(file):
-            raise DuplicateError("Duplicate file %s" %file)
+            raise DuplicateError("Duplicate file %s" % file)
         self.files.add(file)
 
     def hasFile(self, file):
@@ -1618,7 +1684,7 @@ class ADAG(InvokeMixin, MetadataMixin):
     def addExecutable(self, executable):
         """Add an executable to this ADAG"""
         if self.hasExecutable(executable):
-            raise DuplicateError("Duplicate executable %s" %executable)
+            raise DuplicateError("Duplicate executable %s" % executable)
         self.executables.add(executable)
 
     def hasExecutable(self, executable):
@@ -1628,7 +1694,7 @@ class ADAG(InvokeMixin, MetadataMixin):
     def removeExecutable(self, executable):
         """Remove executable from this ADAG"""
         if not self.hasExecutable(executable):
-            raise NotFoundError("Executable not found %s" %executable)
+            raise NotFoundError("Executable not found %s" % executable)
         self.executables.remove(executable)
 
     def clearExecutables(self):
@@ -1638,7 +1704,7 @@ class ADAG(InvokeMixin, MetadataMixin):
     def addTransformation(self, transformation):
         """Add a transformation to this ADAG"""
         if self.hasTransformation(transformation):
-            raise DuplicateError("Duplicate tranformation %s" %transformation)
+            raise DuplicateError("Duplicate tranformation %s" % transformation)
         self.transformations.add(transformation)
 
     def hasTransformation(self, transformation):
@@ -1648,7 +1714,7 @@ class ADAG(InvokeMixin, MetadataMixin):
     def removeTransformation(self, transformation):
         """Remove transformation from this ADAG"""
         if not self.hasTransformation(transformation):
-            raise NotFoundError("Transformation not found %s" %transformation)
+            raise NotFoundError("Transformation not found %s" % transformation)
         self.transformations.remove(transformation)
 
     def clearTransformations(self):
@@ -1677,7 +1743,7 @@ class ADAG(InvokeMixin, MetadataMixin):
 
         """
         if self.hasDependency(dep):
-            raise DuplicateError("Duplicate dependency %s" %dep)
+            raise DuplicateError("Duplicate dependency %s" % dep)
         # Check the jobs
         if dep.parent not in self.jobs:
             raise NotFoundError("Parent not found", dep.parent)
@@ -2172,7 +2238,7 @@ def main():
     diamond.metadata("createdby", "Gideon Juve")
 
     # add some invoke condition
-    diamond.invoke('on_error','/usr/bin/update_db -failure')
+    diamond.invoke('on_error', '/usr/bin/update_db -failure')
 
     # Add input file to the DAX-level replica catalog
     a = File("f.a")
@@ -2191,8 +2257,8 @@ def main():
     diamond.addExecutable(e_findrange)
 
     e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64")
-    e_analyze.addPFN(PFN("gsiftp://site.com/bin/analyze","site"))
-    e_analyze.addProfile( Profile(namespace="env",  key="APP_HOME", value="/app"))
+    e_analyze.addPFN(PFN("gsiftp://site.com/bin/analyze", "site"))
+    e_analyze.addProfile(Profile(namespace="env", key="APP_HOME", value="/app"))
     diamond.addExecutable(e_analyze)
 
     # Add a preprocess job

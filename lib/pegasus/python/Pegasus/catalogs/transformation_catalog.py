@@ -34,6 +34,7 @@ class TransformationCatalog:
         self.workflow_dir = workflow_dir
         self.filename = filename
         self._executables = []
+        self._containers = []
 
     def add(self, executable):
         """
@@ -45,6 +46,16 @@ class TransformationCatalog:
 
         self._executables.append(executable)
 
+    def addContainer(self, container):
+        """
+        Add a container to the transformation catalog.
+        :param container: A DAX3 Container object
+        """
+        if not container:
+            raise Exception('A container should be provided.')
+
+        self._containers.append(container)
+
     def write(self, force=False):
         """
         Write the catalog to a file.
@@ -54,6 +65,7 @@ class TransformationCatalog:
 
         if not os.path.isfile(catalog_file) or force:
             with open(catalog_file, 'w') as ppf:
+                # executables
                 for e in self._executables:
                     # executable name
                     name = e.name
@@ -88,9 +100,30 @@ class TransformationCatalog:
                         if e.osversion:
                             ppf.write('\t\tosversion "%s"\n' % e.osversion)
                         ppf.write('\t\ttype "%s"\n' % installed)
+
+                        # reference to container
+                        if e.container:
+                            ppf.write('\t\tcontainer "%s"\n' % e.container)
+
                         ppf.write('\t}\n')
 
-                    ppf.write('}\n')
+                    ppf.write('}\n\n')
+
+                # containers
+                for c in self._containers:
+                    ppf.write('cont %s {\n' % c.name)
+                    ppf.write('\ttype "%s"\n' % c.type)
+                    ppf.write('\timage "%s"\n' % c.image)
+
+                    if c.imagesite:
+                        ppf.write('\timage_site "%s"\n' % c.imagesite)
+
+                    # profiles
+                    for p in c.profiles:
+                        ppf.write('\tprofile %s "%s" "%s"\n' % (p.namespace, p.key, p.value))
+
+                    ppf.write('}\n\n')
+
 
         else:
             print('\x1b[0;35mWARNING: Transformation Catalog (%s) already exists. Use "force=True" '

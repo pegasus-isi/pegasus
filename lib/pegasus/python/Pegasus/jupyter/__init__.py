@@ -1,1 +1,1 @@
-__all__ = ['instance', 'sites_catalog', 'replica_catalog', 'transformation_catalog']
+__all__ = ['instance']
