@@ -264,7 +264,7 @@ def _get_connection(dburi=None, cl_properties=None, config_properties=None, subm
     elif config_properties or _has_connection_properties(cl_properties):
         return connection.connect_by_properties(config_properties, db_type, cl_properties=cl_properties,
                                                 pegasus_version=pegasus_version, schema_check=schema_check,
-                                                create=create, force=force, db_type=db_type)
+                                                create=create, force=force)
 
     if not db_type:
         dburi = connection._get_master_uri()
