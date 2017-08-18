@@ -1,17 +1,35 @@
+#!/usr/bin/env python
+#
+#  Copyright 2017 University Of Southern California
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+__author__ = 'Rafael Ferreira da Silva'
+
 import imp
 import logging
 import getpass
 import os
 import subprocess
 
+from Pegasus import user as users
 from Pegasus.tools import properties
 from Pegasus.tools import utils
 from sqlalchemy import create_engine, orm, event, exc
 from sqlalchemy.engine import Engine
 from sqlite3 import Connection as SQLite3Connection
+from stat import *
 from urlparse import urlparse
-
-from Pegasus import user as users
 
 __all__ = ['connect']
 
@@ -68,7 +86,7 @@ class DBKey:
 
 
 def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=None, force=False, props=None,
-            db_type=None, connect_args=None, verbose=True):
+            db_type=None, backup=False, connect_args=None, verbose=True):
     """
     Connect to the provided URL database.
     :param dburi: DB URI
@@ -79,12 +97,18 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
     :param force:
     :param props:
     :param db_type: DB type (JDBCRC, MASTER, or WORKFLOW)
+    :param backup: Whether to backup the database
     :param connect_args:
     :param verbose: Whether information log should be printed
     :return:
     """
     dburi = _parse_jdbc_uri(dburi)
     _validate(dburi)
+
+    mask = None
+    if backup:
+        mask = _backup_db(dburi)
+    init = _db_is_file(dburi)
 
     try:
         log.debug("Connecting to: %s" % dburi)
@@ -93,6 +117,8 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
 
         engine = create_engine(dburi, echo=echo, pool_recycle=True, connect_args=connect_args)
         engine.connect()
+        if backup or not init:
+            _check_db_permissions(dburi, db_type, mask)
 
     except exc.OperationalError, e:
         if "mysql" in dburi and "unknown database" in str(e).lower():
@@ -101,8 +127,6 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
         raise ConnectionError("%s (%s)" % (e.message, dburi), given_version=pegasus_version, db_type=db_type)
     except Exception, e:
         raise ConnectionError("%s (%s)" % (e.message, dburi), given_version=pegasus_version, db_type=db_type)
-
-    _check_db_permissions(dburi, db_type)
 
     Session = orm.sessionmaker(bind=engine, autoflush=False, autocommit=False,
                                expire_on_commit=False)
@@ -341,7 +365,7 @@ def _get_master_uri(props=None):
     # check for writability and create directory if required
     if not os.path.isdir(dir):
         try:
-            os.mkdir(dir)
+            os.mkdir(dir, 0755)
         except OSError:
             raise ConnectionError("Unable to create directory: %s" % dir)
     elif not os.access(dir, os.W_OK):
@@ -426,14 +450,17 @@ def _validate(dburi):
         raise ConnectionError("Missing Python module: %s (%s)" % (e.message, dburi))
 
 
-def _check_db_permissions(dburi, db_type):
+def _check_db_permissions(dburi, db_type, mask=None):
     if urlparse(dburi).scheme == 'sqlite':
         path = urlparse(dburi).path[1:]
         if db_type:
-            if db_type == DBType.MASTER:
+            if db_type == DBType.MASTER or db_type == DBType.WORKFLOW:
                 os.chmod(path, 0o744)
         elif path == os.path.expanduser('~') + '/.pegasus/workflow.db':
             os.chmod(path, 0o744)
+
+        if mask:
+            os.chmod(path, mask)
 
 
 def _parse_props(dburi, props, db_type=None, connect_args=None):
@@ -496,7 +523,6 @@ def _parse_top_level_wf_params(submit_dir, top_dir):
     :param top_dir: path to the workflow top directory
     :return: top level workflow parameters
     """
-    top_level_wf_params = None
     dir = submit_dir
     if top_dir:
         dir = top_dir
@@ -524,3 +550,26 @@ def _parse_top_level_wf_params(submit_dir, top_dir):
         raise ConnectionError("Unable to find file 'braindump.txt' in parent folders.")
 
     return top_level_wf_params
+
+
+def _backup_db(dburi):
+    """
+    Create a copy of the database (SQLite).
+    :param dburi: DB URI
+    """
+    mask = None
+    if urlparse(dburi).scheme == 'sqlite':
+        db_path = urlparse(dburi).path[1:]
+        if os.path.isfile(db_path):
+            log.info('Rotating sqlite db file %s' % db_path)
+            mask = os.stat(db_path)[ST_MODE]
+            utils.rotate_log_file(db_path)
+
+    return mask
+
+
+def _db_is_file(dburi):
+    if urlparse(dburi).scheme == 'sqlite':
+        db_path = urlparse(dburi).path[1:]
+        return os.path.isfile(db_path)
+    return True

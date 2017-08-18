@@ -20,13 +20,14 @@ class DashboardLoader(BaseLoader):
         expects the database to exist (ie: will not issue CREATE DB)
         but will populate an empty DB with tables/indexes/etc.
     """
-    def __init__(self, connString, perf=False, batch=False, props=None, db_type=None):
+    def __init__(self, connString, perf=False, batch=False, props=None, db_type=None, backup=False):
         """Init object
 
         @type   connString: string
         @param  connString: SQLAlchemy connection string - REQUIRED
         """
-        super(DashboardLoader, self).__init__(connString, batch=batch, props=props, db_type=db_type, flush_every=1)
+        super(DashboardLoader, self).__init__(connString, batch=batch, props=props, db_type=db_type, backup=backup,
+                                              flush_every=1)
 
         # "Case" dict to map events to handler methods
         self.eventMap = {

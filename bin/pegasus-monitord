@@ -948,21 +948,17 @@ else:
     #PM-652 if there is sqlite db then just take a backup
     #by rotating the db file. possible as we have only one root workflow per sqlitedb
     #PM-689 rotation happens both in replay and monitord recovery mode ( where recover file exists)
+    backup = False
     if restart_logging and event_dest.startswith( "sqlite:" ):
         try:
-            start = event_dest.index( "sqlite:///" )
+            event_dest.index( "sqlite:///" )
         except ValueError:
             logger.error( 'Invalid sqlite connection string passed %s ' %event_dest )
-
-        db_path = event_dest[start + 10:]
-
-        if os.path.isfile(db_path):
-            logger.info( 'Rotating sqlite db file %s' %db_path)
-            utils.rotate_log_file( db_path )
+        backup = True
 
     try:
         wf_event_sink = eo.create_wf_event_sink(event_dest, db_stats=db_stats, restart=restart_logging, enc=encoding,
-                                                props=props, db_type=connection.DBType.WORKFLOW)
+                                                props=props, db_type=connection.DBType.WORKFLOW, backup = backup)
         atexit.register(finish_stampede_loader)
     except:
         logger.error(traceback.format_exc())
