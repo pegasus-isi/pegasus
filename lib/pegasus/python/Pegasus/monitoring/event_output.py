@@ -147,13 +147,13 @@ class DBEventSink(EventSink):
     """
     Write wflow event logs to database via loader
     """
-    def __init__(self, dest, db_stats=False, namespace=STAMPEDE_NS, props=None, db_type=None, **kw):
+    def __init__(self, dest, db_stats=False, namespace=STAMPEDE_NS, props=None, db_type=None, backup=False, **kw):
         self._namespace=namespace
         #pick the right database loader based on prefix
         if namespace == STAMPEDE_NS:
-            self._db = WorkflowLoader(dest, perf=db_stats, batch=True, props=props, db_type=db_type)
+            self._db = WorkflowLoader(dest, perf=db_stats, batch=True, props=props, db_type=db_type, backup=backup)
         elif namespace == DASHBOARD_NS:
-            self._db = DashboardLoader(dest, perf=db_stats, batch=True, props=props, db_type=db_type)
+            self._db = DashboardLoader(dest, perf=db_stats, batch=True, props=props, db_type=db_type, backup=backup)
         else:
             raise ValueError("Unknown namespace specified '%s'" % (namespace))
 
