@@ -57,6 +57,9 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
      */
     protected static final int NO_PROFILE_VALUE = -1;
     
+    public static final String SCALING_MESSAGE = "Pegasus now has a strategy for scaling cleanup jobs based on size of workflow. " +
+                                                 "Consider removing the property pegasus.file.cleanup.clusters.num";
+    
 
     /**
      * The mapping to siteHandle to all the jobs that are mapped to it mapping
@@ -152,7 +155,7 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
             mProps.setProperty(key, DEFAULT_MAX_JOBS_FOR_CLEANUP_CATEGORY);
         }
 
-        mCleanupJobsPerLevel = -1;
+        mCleanupJobsPerLevel = NO_PROFILE_VALUE;
         String propValue = mProps.getMaximumCleanupJobsPerLevel();
         int value = -1;
         try {
@@ -189,6 +192,8 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
             //log a config message for the number of cleanup jobs
             mLogger.log("Maximum number of cleanup jobs to be created per level " + mCleanupJobsPerLevel,
                     LogManager.CONFIG_MESSAGE_LEVEL);
+            //PM-1212 log a message telling users to consider disabling the knob
+            mLogger.log( SCALING_MESSAGE, LogManager.INFO_MESSAGE_LEVEL );
         }
     }
 

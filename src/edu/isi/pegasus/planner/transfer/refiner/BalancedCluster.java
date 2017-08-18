@@ -48,6 +48,7 @@ import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 import edu.isi.pegasus.planner.refiner.TransferEngine;
 import edu.isi.pegasus.planner.transfer.Implementation;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
 /**
@@ -69,7 +70,12 @@ public class BalancedCluster extends Basic {
     public static final String DESCRIPTION =
                       "Balanced Cluster Transfer Refiner( round robin distribution at file level)";
 
-
+    public static final String SCALING_MESSAGE_PREFIX = "Pegasus now has a strategy for scaling transfer jobs based on size of workflow.";
+    
+    public static final String SCALING_MESSAGE_PROPERTY_PREFIX = "Consider removing the property";
+    
+    public static final String SCALING_MESSAGE_PROFILE_PREFIX = "Consider removing the pegasus profile";
+    
     /**
      * number of compute jobs to be associated with a single job
      */
@@ -196,6 +202,11 @@ public class BalancedCluster extends Basic {
      * Tracks number of jobs at each level of the workflow. 
      */
     private Map<Integer,Integer> mTXJobsPerLevelMap;
+    
+    /**
+     * List of scaling messages to log
+     */
+    private Set<String> mScalingMessages;
 
     /**
      * The overloaded constructor.
@@ -223,6 +234,7 @@ public class BalancedCluster extends Basic {
         mJobPrefix    = mPOptions.getJobnamePrefix();
 
         mSiteStore    = bag.getHandleToSiteStore();
+        mScalingMessages = new LinkedHashSet();
         mPegasusProfilesInProperties = (Pegasus) mProps.getProfiles( NAMESPACES.pegasus );
         initializeClusterValues();
     }
@@ -296,6 +308,13 @@ public class BalancedCluster extends Basic {
                 //use the default value
                 return  defaultValue;
             }
+            else{
+                logDefferedScalingPropertyMessage( defaultKey );
+            }
+        }
+        else{
+            //PM-1212 log about our scaling thing
+            logDefferedScalingPropertyMessage( key );
         }
 
         return Integer.parseInt( result );
@@ -669,9 +688,13 @@ public class BalancedCluster extends Basic {
         //reset the stageout map too
         this.resetStageOutMaps();
         
-        
         //PM-747 add the edges in the very end
         super.done();
+        
+        //PM-1212 log any scaling informational messages 
+        for( String message: this.mScalingMessages ){
+            mLogger.log( message, LogManager.INFO_MESSAGE_LEVEL );
+        }
     }
     
     /**
@@ -908,6 +931,34 @@ public class BalancedCluster extends Basic {
         m.put( TransferEngine.DELETED_JOBS_LEVEL, BalancedCluster.DEFAULT_TX_JOBS_FOR_DELETED_JOBS );
         
         return m;
+    }
+
+    /**
+     * Builds up a message for logging a scaling message indicating user
+     * to remove a property
+     * 
+     * @param key 
+     */
+    protected void logDefferedScalingPropertyMessage(String key ) {
+        StringBuilder message = new StringBuilder();
+        message.append( SCALING_MESSAGE_PREFIX ).append( " " ).append( SCALING_MESSAGE_PROPERTY_PREFIX )
+               .append( " " ).append( "pegasus." ).append( key ).
+               append( " " ).append( " from properties file"); 
+        this.mScalingMessages.add( message.toString() );
+    }
+    
+    /**
+     * Builds up a message for logging a scaling message indicating user
+     * to remove a profile
+     * 
+     * @param key 
+     */
+    protected void logDefferedScalingProfileMessage(String key, String site ) {
+        StringBuilder message = new StringBuilder();
+        message.append( SCALING_MESSAGE_PREFIX ).append( " " ).append( SCALING_MESSAGE_PROFILE_PREFIX )
+               .append( " " ).append( key ).append( " " ).append( "from site" ).append( " " )
+               .append( site ).append( " " ).append( "in site catalog");
+        this.mScalingMessages.add( message.toString() );
     }
     
     /**
@@ -1400,6 +1451,12 @@ public class BalancedCluster extends Basic {
                 if( profileValue == null ){
                     //try to look up value of default key
                     profileValue = profiles.getStringValue( mDefaultProfileKey );
+                    if( profileValue == null ){
+                        BalancedCluster.this.logDefferedScalingProfileMessage( mDefaultProfileKey, site);
+                    }
+                }
+                else{
+                    BalancedCluster.this.logDefferedScalingProfileMessage( mProfileKey, site);
                 }
            }
            
