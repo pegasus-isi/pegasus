@@ -932,7 +932,7 @@ def print_individual_wf_job_stats(workflow_stats, workflow_id, dax_label, output
         if output_format == "text":
             max_length[0] = max(max_length[0], len(job_stats.name))
             max_length[1] = max(max_length[1], len(str(job_stats.retry_count)))
-            max_length[2] = max(max_length[2], len(job_stats.site))
+            max_length[2] = max(max_length[2], len(job_stats.site or " "))
             max_length[3] = max(max_length[3], len(str(job_stats.kickstart)))
             max_length[4] = max(max_length[4], len(str(job_stats.multiplier_factor)))
             max_length[5] = max(max_length[5], len(str(job_stats.kickstart_mult)))
