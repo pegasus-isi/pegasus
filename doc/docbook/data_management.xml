@@ -859,7 +859,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       transfer jobs and cleanup jobs based on the number of jobs at a
       particular level of the workflow. For example, for every 10 compute jobs
       on a level of a workflow, one data transfer job( stage-in and stage-out)
-      is created. </para>
+      is created.</para>
 
       <para>The transfer refiners also allow the user to specify how many
       local|remote stagein|stageout jobs are created per execution
@@ -1018,7 +1018,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     </section>
 
     <section id="transfer_client">
-      <title>Executable Used for Transfer Jobs</title>
+      <title>Executable Used for Transfer and Cleanup Jobs</title>
 
       <para>Pegasus refers to a python script called <emphasis role="bold">
       pegasus-transfer</emphasis> as the executable in the transfer jobs to
@@ -1044,9 +1044,16 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
           <tbody>
             <row>
+              <entry>gfal-copy</entry>
+
+              <entry>staging file to and from GridFTP servers</entry>
+            </row>
+
+            <row>
               <entry>globus-url-copy</entry>
 
-              <entry>staging files to and from GridFTP servers</entry>
+              <entry>staging files to and from GridFTP servers, only if gfal
+              is not detected in the path.</entry>
             </row>
 
             <row>
@@ -1113,6 +1120,20 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       client , users can add an entry into the transformation catalog with
       fully qualified logical name as <emphasis
       role="bold">pegasus::pegasus-transfer</emphasis></para>
+
+      <section>
+        <title>Preference of GFAL over GUC</title>
+
+        <para>JGlobus is no longer actively supported and is not in compliance
+        with <ulink
+        url="https://docs.globus.org/security-bulletins/2015-12-strict-mode">RFC
+        2818</ulink> . As a result cleanup jobs using pegasus-gridftp client
+        would fail against the servers supporting the strict mode. We have
+        removed the pegasus-gridftp client and now use gfal clients as
+        globus-url-copy does not support removes. If gfal is not available,
+        globus-url-copy is used for cleanup by writing out zero bytes files
+        instead of removing them</para>
+      </section>
     </section>
 
     <section>
