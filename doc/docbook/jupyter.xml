@@ -89,7 +89,9 @@
       Catalog</link></emphasis> (RC) tells Pegasus where to find each of the
       input files for the workflow. We provide a Python API for creating the
       RC programmatically. For detailed information on how the RC works and
-      its semantics can be found <link linkend="replica">here</link>.</para>
+      its semantics can be found <link linkend="replica">here</link>, and the
+      auto-generated python documentation for this API can be found <ulink
+      url="python/replica_catalog.html">here</ulink>.</para>
 
       <programlisting>rc = ReplicaCatalog(workflow_dir)
 rc.add('pegasus.html', 'file:///home/pegasus/pegasus.html', site='local')
@@ -99,8 +101,9 @@ rc.add('pegasus.html', 'file:///home/pegasus/pegasus.html', site='local')
       Catalog </link></emphasis> (TC) describes all of the executables (called
       "transformations") used by the workflow. The Python Jupyter API also
       provides methods to manage this catalog. A detailed description of the
-      TC properties can be found <link
-      linkend="transformation">here</link>.</para>
+      TC properties can be found <link linkend="transformation">here</link>,
+      and the auto-generated python documentation for this API can be found
+      <ulink url="python/transformation_catalog.html">here</ulink>.</para>
 
       <programlisting>e_split = Executable('split', arch=Arch.X86_64, os=OSType.LINUX, installed=True)
 e_split.addPFN(PFN('file:///usr/bin/split', 'condorpool'))
@@ -116,7 +119,9 @@ tc.add(e_wc)
       <para>The <emphasis><link linkend="site">Site Catalog</link></emphasis>
       (SC) describes the sites where the workflow jobs are to be executed. A
       detailed description of the SC properties and handlers can be found
-      <link linkend="transformation">here</link>.</para>
+      <link linkend="transformation">here</link>, and the auto-generated
+      python documentation for this API can be found <ulink
+      url="python/sites_catalog.html">here</ulink>.</para>
 
       <programlisting>sc = SitesCatalog(workflow_dir)
 sc.add_site('condorpool', arch=Arch.X86_64, os=OSType.LINUX)
@@ -171,5 +176,15 @@ sc.add_site_profile('condorpool', namespace=Namespace.CONDOR, key='universe', va
     the strict requirement of Python 3 for running the multi-user hub, our API
     requires the Python <ulink url="https://pypi.python.org/pypi/future">
     future</ulink> package in order to be compatible with Python 3.</para>
+  </section>
+
+  <section id="jupyter-api-reference">
+    <title>API Reference</title>
+
+    <para>Refer to the auto-generated python documentation explaining the
+    <ulink url="python/instance.html">Jupyter API (instance)</ulink>, and for
+    the catalogs (<ulink url="python/sites_catalog.html">sites</ulink>, <ulink
+    url="python/replica_catalog.html">replica</ulink>, and <ulink
+    url="python/transformation_catalog.html">transformation</ulink>).</para>
   </section>
 </chapter>

@@ -103,7 +103,7 @@ diamond.writeXML(f)
 f.close()
 """
 
-__author__ = "Gideon Juve <gideon@isi.edu>"
+__author__ = "Gideon Juve <gideon@isi.edu>, Rafael Ferreira da Silva <rafsilva@isi.edu>"
 
 __version__ = "3.6"
 
