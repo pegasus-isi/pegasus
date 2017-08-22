@@ -1250,6 +1250,12 @@ class Workflow:
             # For pre-script SUCCESS/FAILED, we send the exitcode
             kwargs["exitcode"] = str(my_job._pre_script_exitcode)
 
+        if event == "submit.start":
+            if my_job._site_name is not None:
+                # PM-1196 put in the site information that we have from
+                # parsing the job submit file
+                kwargs["site"] = my_job._site_name
+
         # Send job state event to database
         self.output_to_db("job_inst." + event, kwargs)
 
@@ -1279,6 +1285,7 @@ class Workflow:
             kwargs["stderr.file"] = my_job._error_file
         if my_job._sched_id is not None:
             kwargs["sched__id"] = my_job._sched_id
+
 
         # Send job state event to database
         self.output_to_db("job_inst.main.start", kwargs)
