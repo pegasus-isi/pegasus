@@ -1,4 +1,81 @@
 ===============================
+Release Notes for Pegasus 4.7.5
+===============================
+We are happy to announce the release of Pegasus 4.7.5 . Pegasus 4.7.5
+is a minor release, which contains minor enhancements and fixes
+bugs. This will most likely be the last release in the 4.7 series, and
+unless you have specific reasons to stay with the 4.7.x series, we
+recommend to upgrade to 4.8.0. 
+
+Improvements
+--------------
+
+1) [PM-1191] - If available, use GFAL over globus url copy 
+
+   JGlobus is no longer actively supported and is not in compliance
+   with RFC 2818
+   (https://docs.globus.org/security-bulletins/2015-12-strict-mode). As 
+   a result cleanup jobs using pegasus-gridftp client would fail
+   against the servers supporting the strict mode. We have removed the
+   pegasus-gridftp client and now use gfal clients as globus-url-copy
+   does not support removes. If gfal is not available, globus-url-copy
+   is used for cleanup by writing out zero bytes files instead of
+   removing them. 
+
+2) [PM-1146] - There doesn't seem to be a way to get a persistent URL
+   for a workflow in dashboard 
+
+3) [PM-1186] - pegasus-db-admin should list compatibility with latest
+   pegasus version if no changes to schema
+
+4) [PM-1187] - make scheduler type case insensitive for grid gateway
+   in site catalog 
+
+
+Bugs Fixed
+--------------
+
+1) [PM-1032] - Handle proper error message for non-standard python
+   usage
+
+2) [PM-1171] - Monitord regularly produces empty stderr and stdout
+   files
+
+3) [PM-1172] - pegasus-rc-client deletes all entries for a lfn
+
+4) [PM-1173] - cleanup jobs failing against Titan gridftp server due
+   to RFC 2818 compliance 
+
+5) [PM-1176] - the job notifications on failure and success should
+   have exitcode from kickstart file
+
+6) [PM-1181] - monitord fails to exit if database is locked
+
+7) [PM-1185] - destination in remote file transfers for inter site
+   jobs point's to directory 
+
+8) [PM-1193] - "pegasus-rc-client list" modifies rc.txt
+
+9) [PM-1196] - pegasus-statistics is not generating jobs.txt for some
+   large workflows 
+
+10) [PM-1207] - Investigate error message: Normalizing '4.8.0dev' to
+    '4.8.0.dev0' 
+
+11) [PM-1208] - Improve database is locked error message 
+
+12) [PM-1209] - Analyzer gets confused about retry number in
+    hierarchical workflows 
+
+13) [PM-1211] - DAX API should tell which lfn was a dup
+
+14) [PM-1213] - pegasus creates duplicate source URL's for staged
+    executables 
+
+15) [PM-1217] - monitord exits prematurely, when in dagman recovery mode
+
+
+===============================
 Release Notes for Pegasus 4.7.4
 ===============================
 
