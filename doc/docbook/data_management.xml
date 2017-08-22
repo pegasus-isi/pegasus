@@ -1132,7 +1132,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
         removed the pegasus-gridftp client and now use gfal clients as
         globus-url-copy does not support removes. If gfal is not available,
         globus-url-copy is used for cleanup by writing out zero bytes files
-        instead of removing them</para>
+        instead of removing them.</para>
       </section>
     </section>
 
