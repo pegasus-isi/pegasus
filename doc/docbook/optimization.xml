@@ -1202,9 +1202,17 @@ tr B {
     how many threads such a pegasus-transfer job can spawn. Cleanup jobs are
     similarly constructed with an internal ratio of 5.</para>
 
-    <para>Information on how to control the number of stagein and stageout
-    jobs can be found in the <link linkend="data_movement_nodes">Data Movement
-    Nodes</link> section.</para>
+    <para>Additionally, Pegasus makes use of DAGMan categories and associates
+    the following default values with the transfer and cleanup
+    jobs.
+    <xi:include xpointer="table-default-job-categories"
+    xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    </para>
+    
+
+    <para>Information on how to control manully the maxinum number of stagein
+    and stageout jobs can be found in the <link
+    linkend="data_movement_nodes">Data Movement Nodes</link> section.</para>
 
     <para>How to control the number of threads pegasus-transfer can use
     depends on if you want to control standard transfer jobs, or PegasusLite.
@@ -1243,7 +1251,7 @@ tr B {
     <para>By default, pegasus associates default category names to following
     types of auxillary jobs</para>
 
-    <table>
+    <table id="table-default-job-categories">
       <title>Default Category names associated by Pegasus</title>
 
       <tgroup cols="3">
