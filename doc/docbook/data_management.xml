@@ -1138,6 +1138,15 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
         globus-url-copy does not support removes. If gfal is not available,
         globus-url-copy is used for cleanup by writing out zero bytes files
         instead of removing them.</para>
+
+        <para>If you want to force globus-url-copy to be preferred over GFAL,
+        set the <emphasis role="bold">PEGASUS_FORCE_GUC=1</emphasis>
+        environment variable in the site catalog for the sites you want the
+        preference to be enforced. Please note that we expect globus-url-copy
+        support to be completely removed in future releases of Pegasus due to
+        the end of life of Globus Toolkit (see
+        <ulink url="https://www.globus.org/blog/support-open-source-globus-toolkit-ends-january-2018">announcement</ulink>).
+        </para>
       </section>
     </section>
 
