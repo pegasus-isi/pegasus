@@ -26,11 +26,6 @@ if sys.version_info >= (3, 0):
 
 __author__ = 'Rafael Ferreira da Silva'
 
-__all__ = [
-    "Cleanup",
-    "Instance"
-]
-
 import os
 import subprocess
 import time

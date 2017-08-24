@@ -2,7 +2,7 @@
 
 package-cleanup --assumeyes --oldkernels --count=1
 
-yum -y remove gcc kernel-devel
+yum -y remove gcc kernel-devel python-pip python-devel gcc
 
 while true; do
     LEAVES=`package-cleanup --leaves --quiet`
