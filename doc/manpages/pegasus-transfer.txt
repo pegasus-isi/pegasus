@@ -97,6 +97,23 @@ Threading
 In order to speed up data transfers, pegasus-transfer will start a set
 of transfers in parallel using threads.
 
+Preference of GFAL over GUC
+---------------------------
+
+JGlobus is no longer actively supported and is not in compliance RFC 2818.
+As a result cleanup jobs using pegasus-gridftp client would fail
+against the servers supporting the strict mode. We have removed the
+pegasus-gridftp client and now use gfal clients as globus-url-copy
+does not support removes. If gfal is not available, globus-url-copy is
+used for cleanup by writing out zero bytes files instead of removing
+them.
+
+If you want to force globus-url-copy to be preferred over GFAL, set the
+PEGASUS_FORCE_GUC=1 environment variable in the site catalog for the
+sites you want the preference to be enforced. Please note that we expect
+globus-url-copy support to be completely removed in future releases of
+Pegasus due to the end of life of Globus Toolkit in 2018.
+
 Author
 ------
 Pegasus Team <http://pegasus.isi.edu>
