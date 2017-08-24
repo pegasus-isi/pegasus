@@ -187,4 +187,19 @@ sc.add_site_profile('condorpool', namespace=Namespace.CONDOR, key='universe', va
     url="python/replica_catalog.html">replica</ulink>, and <ulink
     url="python/transformation_catalog.html">transformation</ulink>).</para>
   </section>
+
+  <section id="jupyter-example">
+    <title>Tutorial Example Notebook</title>
+
+    <para>The Pegasus <link linkend="tutorial_vm">Tutorial VM</link> is
+    configured with Jupyter and the example Pegasus Tutorial Jupyter Notebook.
+    To start Jupyter, use the following command in the VM terminal:</para>
+
+    <programlisting>$ jupyter-notebook --browser=firefox</programlisting>
+
+    <para>This command will open the browser with a tab to the Jupyter
+    dashboard, which will show your $HOME directory list of files. The Pegasus
+    Tutorial Notebook can be found into the <emphasis
+    role="bold">'jupyter'</emphasis> folder.</para>
+  </section>
 </chapter>
