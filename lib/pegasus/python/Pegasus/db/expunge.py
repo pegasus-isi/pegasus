@@ -53,7 +53,7 @@ def delete_workflow(dburi, wf_uuid):
             for desc_wf in desc_wfs:
                 # delete the files from the rc_lfn explicitly as they are
                 # not associated with workflow table
-                delete_workflow_files( session, desc_wf.wf_uuid, desc_wf.wf_id )
+                __delete_workflow_files__( session, desc_wf.wf_uuid, desc_wf.wf_id )
         except orm.exc.NoResultFound, e:
             log.warn('No workflow found with root wf_id %s - aborting expunge', wf.wf_id)
             return
@@ -68,22 +68,19 @@ def delete_workflow(dburi, wf_uuid):
     finally:
         session.close()
 
-def delete_workflow_files(session, wf_uuid, wf_id):
+def __delete_workflow_files__(session, wf_uuid, wf_id):
     # Expunge all files associated with the workflow from the rc tables
     log.info('Expunging rc files for workflow %s with database id %s from workflow database' %(wf_uuid,wf_id))
 
-    try:
-        query = session.query(RCLFN).filter( RCLFN.lfn_id.in_( session.query(WorkflowFiles.lfn_id).filter(WorkflowFiles.wf_id==wf_id)))
-        count = query.delete(synchronize_session=False)
-        log.info('Flushing deletes of rc_lfn from workflow: %s', wf_uuid)
-        i = time.time()
-        session.flush()
-        session.commit()
-        log.info('Flush took: %f seconds', time.time() - i)
-        log.info( "Deleted  %s files from rc_file table for workflow %s " %(count,wf_uuid))
-    finally:
-        # do some cleanup
-        log.info( "do some cleanup")
+    query = session.query(RCLFN).filter( RCLFN.lfn_id.in_( session.query(WorkflowFiles.lfn_id).filter(WorkflowFiles.wf_id==wf_id)))
+    count = query.delete(synchronize_session=False)
+    log.info('Flushing deletes of rc_lfn from workflow: %s', wf_uuid)
+    i = time.time()
+    session.flush()
+    session.commit()
+    log.info('Flush took: %f seconds', time.time() - i)
+    log.info( "Deleted  %s files from rc_file table for workflow %s " %(count,wf_uuid))
+
 
 def delete_dashboard_workflow(dburi, wf_uuid):
     "Expunge workflow from dashboard database"
