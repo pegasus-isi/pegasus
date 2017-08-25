@@ -245,20 +245,14 @@ public class PlannerMetrics extends Data{
     /**
      * Sets the app metrics that need to be forwarded.
      * 
-     * @param metrics the application metrics
-     * @param dax     the dax
+     * @param metrics       the application metrics
+     * @param defaultName   the default name to use for the app if users have not specified it
      */
-    public void setApplicationMetrics( PegasusProperties properties, String dax ){
+    public void setApplicationMetrics( PegasusProperties properties, String defaultName ){
         //figure out the application name if set
         String name = properties.getProperty( PegasusProperties.PEGASUS_APP_METRICS_PREFIX );
         if( name == null ){
-            //PM-1220 compute from the dax name
-            name = new File(dax).getName();
-            //try and strip out extension if exists
-            int index = name.indexOf( '.' );
-            if( index != -1 ){
-                name = name.substring( 0, index );
-            }
+            name = defaultName;
         }
         
         if( name != null ){
