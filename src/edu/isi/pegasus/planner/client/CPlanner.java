@@ -481,7 +481,7 @@ public class CPlanner extends Executable{
                                 dataConfiguration;
         mPMetrics.setDataConfiguration( dataConfiguration );
         mPMetrics.setPlannerOptions( mPOptions.getOriginalArgString() );
-        mPMetrics.setApplicationMetrics( mProps );
+        mPMetrics.setApplicationMetrics( mProps, dax );
         
 
         //try to get hold of the vds properties
