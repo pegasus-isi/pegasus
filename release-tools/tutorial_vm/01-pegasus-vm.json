@@ -85,6 +85,7 @@
       "type": "shell",
       "scripts": [
         "scripts/pegasus-service.sh",
+        "scripts/jupyter.sh",
         "scripts/cleanup.sh",
         "scripts/zero.sh"
       ]

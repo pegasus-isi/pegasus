@@ -481,9 +481,7 @@ public class CPlanner extends Executable{
                                 dataConfiguration;
         mPMetrics.setDataConfiguration( dataConfiguration );
         mPMetrics.setPlannerOptions( mPOptions.getOriginalArgString() );
-        mPMetrics.setApplicationMetrics( mProps );
         
-
         //try to get hold of the vds properties
         //set in the jvm that user specifed at command line
         mPOptions.setVDSProperties(mProps.getMatchingProperties("pegasus.",false));
@@ -515,6 +513,7 @@ public class CPlanner extends Executable{
                                                                this.mProps ) );
 
         //set some initial workflow metrics
+        mPMetrics.setApplicationMetrics( mProps, orgDag.getLabel() );
         mPMetrics.setRootWorkflowUUID( orgDag.getRootWorkflowUUID() );
         mPMetrics.setWorkflowUUID( orgDag.getWorkflowUUID() );
         mPMetrics.setWorkflowMetrics( orgDag.getWorkflowMetrics() );
