@@ -1278,47 +1278,77 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     </section>
 
     <section id="transfer_worker_package_staging">
-      <title>Staging of Pegasus Worker Package</title>
+      <title>Staging of Worker Package</title>
+      
+      <para>The worker package contains runtime tools such as
+      <emphasis>pegasus-kickstart</emphasis> and <emphasis>pegasus-transfer</emphasis>,
+      and is required to be available for most jobs.</para>
+      
+      <para>How the package is made available to the jobs depends on multiple factors.
+      For example, a pre-installed Pegasus can be used if the location is set using the 
+      environment profile PEGASUS_HOME for the site in the Site Catalog.</para>
 
-      <para>Pegasus can optionally stage the pegasus worker package as part of
-      the executable workflow to remote workflow specific execution directory.
-      The pegasus worker package contains the pegasus auxillary executables
-      that are required on the remote site. If the worker package is not
-      staged as part of the executable workflow, then Pegasus relies on the
-      installed version of the worker package on the remote site. To determine
-      the location of the installed version of the worker package on a remote
-      site, Pegasus looks for an environment profile PEGASUS_HOME for the site
-      in the Site Catalog.</para>
-
-      <para>Users can set the following property to true to turn on worker
-      package staging</para>
+      <para>If Pegasus is not already available on the execution site, the worker
+      package can be staged by setting the following property:</para>
 
       <programlisting><emphasis role="bold">pegasus.transfer.worker.package          true</emphasis> </programlisting>
-
-      <para>Starting 4.6.0 release, the worker package used for a remote site
-      ( if required ) is determined in the following order</para>
+       
+      <para> 
+      Note that how the package is transferred and accessed differs based on
+      the configured data management mode:
+      </para>
+      
+      <itemizedlist>
+        <listitem>
+          <para><emphasis>sharedfs</emphasis> mode: the package is staged in to 
+          the shared filesystem once, and reused for all the jobs 
+          </para>
+        </listitem>
+        <listitem>
+          <para><emphasis>nonsharedfs</emphasis> or <emphasis>condorio</emphasis> mode:
+          each job carries a worker package. This is obviously less efficient, but 
+          the size of the worker package is kept small to minimize the impact of these
+          extra transfers.
+          </para>
+        </listitem>
+      </itemizedlist>  
+      
+      <para>Which worker package is used is determined in the following order:</para>
 
       <itemizedlist>
         <listitem>
-          <para>there is an entry for pegasus::worker executable in the
+          <para>There is an entry for pegasus::worker executable in the
           transformation catalog. Information on how to construct that entry
           is provided below.</para>
         </listitem>
 
         <listitem>
-          <para>the planner at runtime creates a worker package out of the
-          binary installation on the pegasus website, and puts it in the
-          submit directory. It uses this worker package if the OS and
+          <para>The planner at runtime creates a worker package out of the
+          binary installation, and puts it in the
+          submit directory. This worker package is used if the OS and
           architecture of the created worker package match with remote site,
-          or there is an exact match with ( osrelease and osversion) if
+          or there is an exact match with (osrelease and osversion) if
           specified by the user in the site catalog for the remote
           site.</para>
         </listitem>
 
         <listitem>
-          <para>the worker package compatible with the remote site is used
-          from the Pegasus website.</para>
+          <para>The worker package compatible with the remote site is available
+          as a binary from the Pegasus download site.</para>
         </listitem>
+        
+        <listitem>
+          <para>At runtime under, in the <emphasis>nonsharedfs</emphasis> or <emphasis>condorio</emphasis> modes,
+          extra checks are made to make sure the worker package matches the Pegasus version and the OS and
+          architecture. The reason is that these workflows might be running in an heterogeneous environment,
+          and thus there is no way to know before the job starts what worker package is required. If
+          the runtime check fails, a worker package matching the Pegasus wersion, OS and architecture
+          will be downloaded from the Pegasus download site. This behavior can be controlled with the
+          <link linkend="pegasus.transfer.worker.package.autodownload">pegasus.transfer.worker.package.autodownload</link> and 
+          <link linkend="pegasus.transfer.worker.package.strict">pegasus.transfer.worker.package.strict</link> properties. 
+          </para>
+        </listitem>
+        
       </itemizedlist>
 
       <para>For users to specify a particular worker package to use, they can
@@ -1352,31 +1382,8 @@ site corbusier {
     type "INSTALLED"
   }
 }
-
 </programlisting>
 
-      <section>
-        <title>Worker Package Staging in Non Shared Filesystem setup</title>
-
-        <para>Worker package staging is automatically set to true , when
-        workflows are setup to run in a non shared filesystem setup i.e.
-        <emphasis role="bold">pegasus.data.configuration</emphasis> is set to
-        <emphasis role="bold">nonsharedfs</emphasis> or <emphasis
-        role="bold">condorio</emphasis> . In these configurations, a
-        stage_worker job is created that brings in the worker package to the
-        submit directory of the workflow. For each job, the worker package is
-        then transferred with the job using Condor File Transfers ( <emphasis
-        role="bold">transfer_input_files</emphasis> ) . This transfer always
-        happens unless, PEGASUS_HOME is specified in the site catalog for the
-        site on which the job is scheduled to run.</para>
-
-        <para>Users can explicitly set the following property to false, to
-        turn off worker package staging by the Planner. This is applicable ,
-        when running in the cloud and virtual machines / worker nodes already
-        have the pegasus worker tools installed.</para>
-
-        <programlisting><emphasis role="bold">pegasus.transfer.worker.package          false</emphasis> </programlisting>
-      </section>
     </section>
 
     <xi:include href="containers.xml" xpointer="container-transfers"

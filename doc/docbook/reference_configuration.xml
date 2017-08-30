@@ -8,7 +8,7 @@
 
   <orderedlist>
     <listitem>
-      <para>the behaviour of an individual job via <emphasis
+      <para>the behavior of an individual job via <emphasis
       role="bold">profiles</emphasis></para>
     </listitem>
 
@@ -4209,8 +4209,8 @@ See Also    :</emphasis> pegasus.data.configuration</literallayout></entry>
               </row>
 
               <row>
-                <entry><literallayout><emphasis role="bold"><emphasis
-                        role="bold">Property Key: </emphasis></emphasis>pegasus.transfer.worker.package.autodownload<emphasis
+                <entry><literallayout><anchor id="pegasus.transfer.worker.package.autodownload"/>
+                      <emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.transfer.worker.package.autodownload<emphasis
                       role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
 Scope       :</emphasis> Properties
@@ -4228,7 +4228,7 @@ See Also    :</emphasis> pegasus.transfer.worker.package</literallayout></entry>
               </row>
 
               <row>
-                <entry><literallayout><emphasis role="bold"><emphasis
+                <entry><literallayout><anchor id="pegasus.transfer.worker.package.strict"/><emphasis role="bold"><emphasis
                         role="bold">Property Key: </emphasis></emphasis>pegasus.transfer.worker.package.strict<emphasis
                       role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
