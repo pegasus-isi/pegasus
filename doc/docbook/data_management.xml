@@ -1338,11 +1338,11 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
         </listitem>
         
         <listitem>
-          <para>At runtime under, in the <emphasis>nonsharedfs</emphasis> or <emphasis>condorio</emphasis> modes,
+          <para>At runtime, in the <emphasis>nonsharedfs</emphasis> or <emphasis>condorio</emphasis> modes,
           extra checks are made to make sure the worker package matches the Pegasus version and the OS and
           architecture. The reason is that these workflows might be running in an heterogeneous environment,
           and thus there is no way to know before the job starts what worker package is required. If
-          the runtime check fails, a worker package matching the Pegasus wersion, OS and architecture
+          the runtime check fails, a worker package matching the Pegasus version, OS and architecture
           will be downloaded from the Pegasus download site. This behavior can be controlled with the
           <link linkend="pegasus.transfer.worker.package.autodownload">pegasus.transfer.worker.package.autodownload</link> and 
           <link linkend="pegasus.transfer.worker.package.strict">pegasus.transfer.worker.package.strict</link> properties. 
@@ -1351,10 +1351,10 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
         
       </itemizedlist>
 
-      <para>For users to specify a particular worker package to use, they can
+      <para>If you want to specify a particular worker package to use, you can
       specify the transformation <emphasis
       role="bold">pegasus::worker</emphasis> in the transformation catalog
-      with</para>
+      with:</para>
 
       <itemizedlist>
         <listitem>
@@ -1376,7 +1376,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       <programlisting># example of specifying a worker package in the transformation catalog
 tr pegasus::worker {
 site corbusier {
-    pfn "http://pegasus.isi.edu/pegasus/download?filename=4.5.2/pegasus-binary-4.5.2-x86_64_macos_10.tar.gz"
+    pfn "https://download.pegasus.isi.edu/pegasus/4.8.0dev/pegasus-worker-4.8.0dev-x86_64_macos_10.tar.gz"
     arch "x86_64"
     os "MACOSX"
     type "INSTALLED"
