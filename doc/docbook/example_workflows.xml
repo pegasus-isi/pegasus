@@ -180,6 +180,10 @@ share/pegasus/examples/grid-blackdiamond-python/</programlisting>
 
   <section id="container_examples">
     <title>Container Examples</title>
+    
+    <section id="example_containers_montage" xreflabel="Montage Using Containers">
+    
+    <title>Montage Using Containers</title>
 
     <para>This section contains an example of a real workflow running inside
     Singularity containers. The application is
@@ -270,7 +274,7 @@ pegasus-plan \
         --output-site local \
         --cluster horizontal 
     </programlisting>
-
+    </section>
   </section>
 
   <section id="local_shell_examples">

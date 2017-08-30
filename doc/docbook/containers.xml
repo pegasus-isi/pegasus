@@ -206,8 +206,9 @@
   </section> 
 
   <section id="container-example">
+    <title>Container Example - Montage Workflow</title>
 
-    <xi:include href="example_workflows.xml" xpointer="container_examples"
+    <xi:include href="example_workflows.xml" xpointer="example_containers_montage"
                 xmlns:xi="http://www.w3.org/2001/XInclude"/>
     
   </section>
