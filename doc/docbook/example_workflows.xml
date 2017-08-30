@@ -178,6 +178,101 @@ share/pegasus/examples/grid-blackdiamond-python/</programlisting>
     </section>
   </section>
 
+  <section id="container_examples">
+    <title>Container Examples</title>
+
+    <para>This section contains an example of a real workflow running inside
+    Singularity containers. The application is
+    <ulink url="http://montage.ipac.caltech.edu/">Montage</ulink>
+    using the
+    <ulink url="https://github.com/pegasus-isi/montage-workflow-v2">montage-v2 workflow</ulink>.
+    Be aware that this workflow can be fairly data intensive, and when running with
+    containers in <emphasis>condorio</emphasis> or <emphasis>nonsharedfs</emphasis>
+    data management modes, the data staging of the application data and the container
+    image to each job can result in a non-trivial amount of network traffic. 
+    </para>
+    
+    <para>
+    The software dependencies consists of the <emphasis>Montage</emphasis>
+    software stack, and <emphasis>AstroPy</emphasis>. These are installed into the
+    image (see the <emphasis>Singularity</emphasis> file in the GitHub repository).
+    The image has been made available in
+    <ulink url="https://singularity-hub.org/">Singularity Hub</ulink>.
+    </para>
+    
+    <para>Now that we have an image, the next step is to check out the
+    workflow from GitHub, and use it to create an abstract workflow description,
+    a transformation catalog and a replica catalog. The 
+    <emphasis>montage-workflow.py</emphasis> command create all this for us, but
+    the command itself requires Montage to look up input data for the specified
+    location in the sky. The provide the environment, run this command inside the
+    same Singularity image. For example:
+    </para>
+    
+    <programlisting>
+singularity exec \
+            --bind $PWD:/srv --workdir /srv \
+            shub://pegasus-isi/montage-workflow-v2 \
+            /srv/montage-workflow.py \
+                --tc-target container \
+                --center "56.7 24.00" \
+                --degrees 2.0 \
+                --band dss:DSS2B:blue \
+                --band dss:DSS2R:green \
+                --band dss:DSS2IR:red
+    </programlisting>
+    
+    <para>The command executes a data find for the 3 specified bands, 2.0 degrees around
+    the location 56.7 24.00, and generates a workflow to combine the images into a single
+    image. One extra flag is provided to let the command know we want to execute the workflow
+    inside containers: <emphasis>--tc-target container</emphasis>. The result is a 
+    transformation catalog in <emphasis>data/tc.txt</emphasis></para>, with starts with:
+    
+    <programlisting>
+cont montage {
+   type "singularity"
+   image "shub://pegasus-isi/montage-workflow-v2"
+   profile env "MONTAGE_HOME" "/opt/Montage"
+}
+
+tr mDiffFit {
+  site condor_pool {
+    type "INSTALLED"
+    container "montage"
+    pfn "file:///opt/Montage/bin/mDiffFit"
+    profile pegasus "clusters.size" "5"
+  }
+}
+... 
+    </programlisting>
+    
+    <para>The first entry describes the container, where the image can be found
+    (Singularity Hub in this example), and
+    a special environment variable we want to be set for the jobs.</para>
+    
+    <para>The second entry, of which there are many more similar ones in the file,
+    describes the application. Note how it refers back to the
+    <emphasis>"montage"</emphasis> container, specifying that we want the job
+    to be wrapped in the container.</para>
+    
+    <para>In the <emphasis>data/</emphasis> directory. we can also find the
+    abstract workflow (<emphasis>montage.dax</emphasis>), and replica catalog
+    (<emphasis>rc.dax</emphasis>). Note that this are the same as if the
+    workflow was running in a non-container environment. To plan the workflow:
+    </para>
+
+    <programlisting>
+pegasus-plan \
+        --dir work \
+        --relative-dir `date +'%s'` \
+        --dax data/montage.dax \
+        --sites condor_pool \
+        --output-site local \
+        --cluster horizontal 
+    </programlisting>
+
+  </section>
+
   <section id="local_shell_examples">
     <title>Local Shell Examples</title>
 
