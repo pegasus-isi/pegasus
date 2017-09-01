@@ -426,6 +426,213 @@ pegasus.data.configuration    condorio</programlisting>
 </programlisting>
     </section>
   </section>
+  
+  <section id="pyglidein">
+    <title>Remote Cluster using PyGlidein</title>
+    
+    <para>
+      Glideins (HTCondor pilot jobs) provide an efficient solution for high-throughput workflows.
+      The glideins are submitted to the remote cluster scheduler, and once started up, makes it appear
+      like your HTCondor pool extends into the remote cluster. HTCondor can then
+      schedule the jobs to the remote compute node in the same way it would schedule jobs
+      to local compute nodes.
+    </para>
+    
+    <para>
+      Some infrastructures, such as <link linkend="open_science_grid">Open Science Grid</link>,
+      provide infrastructure level glidein solutions,
+      such as GlideinWMS. Another solution is <link linkend="bosco">BOSCO</link>. For some more
+      custom setups, 
+      <ulink url="https://github.com/WIPACrepo/pyglidein">pyglidein</ulink> from the
+      <ulink url="http://icecube.wisc.edu/">IceCube</ulink> project provides a nice framework.
+      The architecture consists on a server on the submit host, which job it is to determining the demand.
+      On the remote resource, the client can be invoked for example via cron, and submits directly
+      to HTCondor, SLURM and PBS schedulers. This makes pyglidein very flexible and works well for
+      example if the resource requires two-factor authentication. 
+    </para>
+    
+        <para><figure id="fig-pyglidein">
+        <title>pyglidein overview</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata align="center" contentdepth="100%"
+                       fileref="images/pyglidein.png" scalefit="1"
+                       valign="middle" width="100%"/>
+          </imageobject>
+        </mediaobject>
+      </figure></para>
+    
+    <para>
+      To get started with pyglidein, check out a copy of the Git repository on both your submit
+      host as well as the cluster you want to glidein to. Starting with the submit host, first
+      make sure you have HTCondor configured for
+      <ulink url="http://research.cs.wisc.edu/htcondor/manual/current/3_8Security.html#SECTION00483400000000000000">PASSWORD</ulink>
+      authentication. Make a copy of the HTCondor pool password file. You will need it on the
+      cluster, and it is a binary file, so make sure you cp instead of a copy-and-paste of the 
+      file contents. To get the server started:
+    </para>
+    
+    <programlisting>
+./server.py --port 11001  
+    </programlisting>
+    
+    <para>
+      By default, the pyglidein server will use all jobs in the system to determine if glideins
+      are needed. If you want user jobs to explicitly let us know they want glideins, you can pass
+      a constraint for the server to use. For example, jobs could have the 
+      <emphasis>+WantsStampede2 = True</emphasis> attribute, and then we could start the
+      server with:
+    </para>
+    
+    <programlisting>
+./server.py --port 11001 --constraint "'WantStampede2 == True'"  
+    </programlisting>
+    
+    <para>
+      One the server is running, you can check status by pointing a web browser to it.
+    </para>
+    
+    <para>
+      Next step is to create a <emphasis>glidein.tar.gz</emphasis> file containing
+      the HTCondor binaries, our pool password file, and a modified job wrapper script.
+      This can be accomplished by building HTCondor with the
+      <emphasis>create_glidein_tarball.py</emphasis> script, but first we need to modify
+      <emphasis>glidein_template/</emphasis>. Start by copying your pool password file
+      over the existing <emphasis>passwdfile</emphasis> file.
+    </para>
+    
+    <para>
+      Edit <emphasis>user_job_wrapper.sh</emphasis>. We don't need most of it, so
+      edit it to read:
+    </para>
+    
+    <programlisting>
+#!/bin/bash
+
+# This script is started just before the user job
+# It is referenced by the USER_JOB_WRAPPER
+
+export HOME=$PWD
+
+# fix PATH and LD_LIBRARY_PATH
+export PATH=$PATH:/usr/bin:/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib:/usr/lib/x86_64-linux-gnu:/lib64:/lib:/lib/x86_64-linux-gnu
+
+GLIDEIN_DIR=$GLIDEIN_LOCAL_TMP_DIR
+if [ ! -d $GLIDEIN_DIR ]; then
+    GLIDEIN_DIR=$PWD
+fi
+JOB_WRAPPER="${GLIDEIN_DIR}/job_wrapper.sh"
+
+# fall through to next/default job wrapper
+if [ ! -e $JOB_WRAPPER ]; then
+    exec "$@"
+else
+    exec ${JOB_WRAPPER} "$@"
+fi   
+    </programlisting>
+    
+    <para>
+      Create the glidein.tar.gz by running:
+    </para>  
+    
+    <programlisting>
+python create_glidein_tarball.py
+    </programlisting>
+    
+    <para>
+      Once you have the glidein.tar.gz file, copy it to the Git checkout you have on 
+      the remote cluster. Then move over there for the remaining steps. Create a 
+      configuration file for your glidein under <emphasis>configs/</emphasis>. Here
+      is an example for TACC Stampede2:
+    </para>
+    
+    <programlisting>
+[Mode]
+debug = True
+
+[Glidein]
+address = http://workflow.isi.edu:11001/jsonrpc
+site = TACC-Stampede2
+tarball = /home1/00384/rynge/git/pyglidein/glidein.tar.gz
+
+[Cluster]
+user = rynge
+os = RHEL7
+scheduler = slurm
+submit_command = sbatch
+walltime_hrs = 1
+max_idle_jobs = 1
+limit_per_submit = 1
+
+gpu_only = False
+whole_node = True
+whole_node_cpus = 1
+whole_node_memory = 96000
+whole_node_disk = 30000
+whole_node_gpus = 0
+group_jobs = False
+partition = normal
+running_cmd = squeue -u $USER -t RUNNING -p normal -h | wc -l
+idle_cmd = squeue -u $USER -t PENDING -p normal -h | wc -l
+
+[SubmitFile]
+filename = submit.slurm
+local_dir = /tmp/$SLURM_JOB_ID
+custom_header = #SBATCH -A TG-ABC00001
+cvmfs_job_wrapper = False
+
+[CustomEnv]
+CLUSTER = workflow.isi.edu
+    </programlisting>
+    
+    <para>
+      This configuration will obviously look different for different clusters.
+      <emphasis>configs/</emphasis> has a bunch of example configs, but a few things to 
+      note: 
+    </para>
+    
+    <itemizedlist>
+      <listitem>
+        <para><emphasis role="bold">address</emphasis> is the location of the server
+        we started earlier</para>
+      </listitem>
+      <listitem>
+        <para><emphasis role="bold">tarball</emphasis> is the full path to our custom
+        glidein.tar.gz file we created above.</para>
+      </listitem>    
+      <listitem>
+        <para><emphasis role="bold">CLUSTER</emphasis> is the location of your
+        HTCondor central manager. In many cases this is the same host you started
+        the server on. Please note that if you do not set this variable, the
+        glideins will try to register into the IceCube infrastructure.</para>
+      </listitem>   
+    </itemizedlist>
+    
+    <para>
+      At this point we can try our first glidein:
+    </para>
+    
+    <programlisting>
+./client.py --config=$HOME/git/pyglidein/configs/stampede2.config
+    </programlisting>
+    
+    <para>
+      Once we have a seen a successful glidein, we can add the client to the crontab:
+    </para>
+    
+    <programlisting>
+# m  h  dom mon dow   command
+*/10 *   *   *   *    (cd ~/git/pyglidein/ &amp;&amp; ./client.py --config=$HOME/git/pyglidein/configs/stampede2.config) &gt;~/cron-pyglidein.log 2&gt;&amp;1
+    </programlisting>
+    
+    <para>
+      With this setup, glideins will now appear automatically based on the demand in the local
+      HTCondor queue.
+    </para>
+    
+  </section>
 
   <section id="globus_gram">
     <title>Remote Cluster using Globus GRAM</title>
