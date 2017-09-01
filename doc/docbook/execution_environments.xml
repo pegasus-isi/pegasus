@@ -562,7 +562,8 @@ user = rynge
 os = RHEL7
 scheduler = slurm
 submit_command = sbatch
-walltime_hrs = 1
+walltime_hrs = 48
+max_total_jobs = 10
 max_idle_jobs = 1
 limit_per_submit = 1
 
