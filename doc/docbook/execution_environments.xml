@@ -481,7 +481,7 @@ pegasus.data.configuration    condorio</programlisting>
       By default, the pyglidein server will use all jobs in the system to determine if glideins
       are needed. If you want user jobs to explicitly let us know they want glideins, you can pass
       a constraint for the server to use. For example, jobs could have the 
-      <emphasis>+WantsStampede2 = True</emphasis> attribute, and then we could start the
+      <emphasis>+WantStampede2 = True</emphasis> attribute, and then we could start the
       server with:
     </para>
     
