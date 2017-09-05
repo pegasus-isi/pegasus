@@ -107,7 +107,11 @@ New Features and Improvements
 27) [PM-1178] – kickstart to checksum output files
 
 28) [PM-1220] – default app name for metrics server based on dax label
- 
+
+29) The documentation also lists on how to setup pyglidein ( a resouce
+    provisioner framwork) from the IceCube to provision resources for your
+    workflow. More details can be found at
+    https://pegasus.isi.edu/docs/4.8.0/pyglidein.php  
 
 Bugs Fixed
 --------------
