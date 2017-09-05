@@ -2,7 +2,7 @@ project:
   key: PEGASUS
   name: Pegasus
   plans:
-    - key: BNT48
+    - key: BNT49
       name: Build & Test (master)
       scm:
         - !git
@@ -1038,7 +1038,7 @@ project:
         - key: TAG_UBUNTU_16
           value: xenial
 
-    - key: TVM48
+    - key: TVM49
       name: Tutorial VM (master)
       scm:
         - !git
@@ -1131,7 +1131,7 @@ project:
           cronExpression: "0 0 2 * * ?"
           onlyRunIfOtherPlansArePassing:
             planKeys:
-              - PEGASUS-BNT48
+              - PEGASUS-BNT49
       notifications:
         - !email
           address: pegasus-svn@isi.edu
@@ -1140,7 +1140,7 @@ project:
           address: pegasus-svn@isi.edu
           event: !event FAILED_BUILDS_AND_FIRST_SUCCESSFUL
 
-    - key: WT48
+    - key: WT49
       name: Workflow Tests (master)
       scm:
         - !git
@@ -3723,7 +3723,7 @@ project:
           cronExpression: "0 0 2 * * ?"
           onlyRunIfOtherPlansArePassing:
             planKeys:
-              - PEGASUS-BNT48
+              - PEGASUS-BNT49
       notifications:
         - !email
           address: pegasus-svn@isi.edu
