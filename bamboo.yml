@@ -3,12 +3,12 @@ project:
   name: Pegasus
   plans:
     - key: BNT48
-      name: Build & Test (master)
+      name: Build & Test (4.8)
       scm:
         - !git
           name: Pegasus
           url: https://github.com/pegasus-isi/pegasus.git
-          branch: master
+          branch: 4.8
       stages:
         - name: Source Checkout
           jobs:
@@ -1039,12 +1039,12 @@ project:
           value: xenial
 
     - key: TVM48
-      name: Tutorial VM (master)
+      name: Tutorial VM (4.8)
       scm:
         - !git
           name: Pegasus
           url: https://github.com/pegasus-isi/pegasus.git
-          branch: master
+          branch: 4.8
       stages:
         - name: Build Tutorial VM
           description: Build Tutorial VM
@@ -1141,12 +1141,12 @@ project:
           event: !event FAILED_BUILDS_AND_FIRST_SUCCESSFUL
 
     - key: WT48
-      name: Workflow Tests (master)
+      name: Workflow Tests (4.8)
       scm:
         - !git
           name: Pegasus
           url: https://github.com/pegasus-isi/pegasus.git
-          branch: master
+          branch: 4.8
       stages:
         - name: Setup
           description: Setup
