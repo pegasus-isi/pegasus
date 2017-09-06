@@ -948,6 +948,29 @@ project:
                       mv *.dmg $DOWNLOADS/
                       mv pegasus-r-dax3*.tar.gz $DOWNLOADS/
 
+                      # debian
+                      mkdir -p $DOWNLOADS/debian/dists/wheezy/main/binary-amd64
+                      cp $DOWNLOADS/pegasus_*deb7_amd64.deb $DOWNLOADS/debian/dists/wheezy/main/binary-amd64/
+                      mkdir -p $DOWNLOADS/debian/dists/jessie/main/binary-amd64
+                      cp $DOWNLOADS/pegasus_*deb8_amd64.deb $DOWNLOADS/debian/dists/jessie/main/binary-amd64/
+                      mkdir -p $DOWNLOADS/debian/dists/stretch/main/binary-amd64
+                      cp $DOWNLOADS/pegasus_*deb9_amd64.deb $DOWNLOADS/debian/dists/stretch/main/binary-amd64/
+
+                      # ubuntu
+                      mkdir -p $DOWNLOADS/ubuntu/dists/trusty/main/binary-amd64
+                      cp $DOWNLOADS/pegasus_*ubuntu14_amd64.deb $DOWNLOADS/ubuntu/dists/trusty/main/binary-amd64/
+                      mkdir -p $DOWNLOADS/ubuntu/dists/xenial/main/binary-amd64
+                      cp $DOWNLOADS/pegasus_*ubuntu16_amd64.deb $DOWNLOADS/ubuntu/dists/xenial/main/binary-amd64/
+
+                      # rheh
+                      mkdir -p $DOWNLOADS/rhel/src
+                      cp $DOWNLOADS/pegasus-*.src.rpm $DOWNLOADS/rhel/src/
+                      mkdir -p $DOWNLOADS/rhel/6/x86_64
+                      cp $DOWNLOADS/pegasus-*el6.x86_64.rpm $DOWNLOADS/rhel/6/x86_64/
+                      mkdir -p $DOWNLOADS/rhel/7/x86_64
+                      cp $DOWNLOADS/pegasus-*el7.x86_64.rpm $DOWNLOADS/rhel/7/x86_64/
+
+                      # no files should be left behind
                       ls -l
 
                       scp -r $DOWNLOADS download.pegasus.isi.edu:/srv/download.pegasus.isi.edu/public_html/pegasus/
