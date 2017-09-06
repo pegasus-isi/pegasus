@@ -57,7 +57,7 @@ project:
                   copyPattern: 'pegasus-python-source-*.tar.gz'
                   isShared: true
                 - name: pegasus-source-versioned
-                  copyPattern: 'pegasus-source-*.tar.gz'
+                  copyPattern: 'pegasus-?.*.tar.gz'
                   isShared: true
                 - name: pegasus-source
                   copyPattern: 'pegasus-source.tar.gz'

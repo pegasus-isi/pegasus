@@ -2,15 +2,26 @@ Source: pegasus
 Section: science
 Priority: extra
 Maintainer: Pegasus Development Team <pegasus-support@isi.edu>
-Build-Depends: debhelper (>= 9), ant, openjdk-8-jdk | openjdk-7-jdk | openjdk-6-jdk, perl, python, asciidoc, xsltproc, fop,
-       python-dev,
-       python-setuptools,
-       python-openssl,
+Build-Depends: debhelper (>= 9),
+       ant,
+       asciidoc,
+       docbook-dsssl,
+       docbook-utils,
+       docbook-xml,
+       docbook-xsl,
+       fop,
        libmysqlclient-dev | default-libmysqlclient-dev, libpq-dev,
-       zlib1g-dev,
        libssl1.0-dev | libssl-dev,
+       openjdk-8-jdk | openjdk-7-jdk | openjdk-6-jdk,
+       perl,
+       python,
+       python-dev,
+       python-openssl,
+       python-setuptools,
        r-base-dev,
-       texlive-latex-base, texlive-fonts-recommended
+       texlive-latex-base, texlive-fonts-recommended,
+       xsltproc,
+       zlib1g-dev
 Standards-Version: 3.9.4
 X-Python-Version: >= 2.7
 Homepage: http://pegasus.isi.edu

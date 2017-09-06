@@ -14,7 +14,7 @@ fi
 
 mkdir -p build/rpm/BUILD build/rpm/RPMS build/rpm/SOURCES build/rpm/SPECS build/rpm/SRPMS
 
-cp dist/pegasus-source-$VERSION.tar.gz build/rpm/SOURCES/
+cp dist/pegasus-$VERSION.tar.gz build/rpm/SOURCES/
 
 # special sauce for el7
 DIST=`./release-tools/getosid | perl -pe 's/rhel/.el/'`
