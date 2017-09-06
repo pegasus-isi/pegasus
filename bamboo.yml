@@ -40,13 +40,10 @@ project:
 
                       # We need a versioned copy to put on the website that
                       # excludes git files
-                      cp -a pegasus-source pegasus-source-$VERSION
-                      #tar -czf pegasus-source-$VERSION.tar.gz --exclude=.git --exclude=.gitignore pegasus-source-$VERSION
-                      tar -czf pegasus-source-$VERSION.tar.gz pegasus-source-$VERSION
+                      (cd pegasus-source && ./release-tools/create-source-tar && mv dist/pegasus-source-$VERSION.tar.gz ..)
 
                       # Create the source tarball for python source files using setup.py
                       (cd pegasus-source && ant dist-python-source && mv dist/pegasus-python-source-$VERSION.tar.gz ..)
-
 
                       # Create a source tarball with documentation and
                       # setup files to be used as the input to later
