@@ -8,7 +8,7 @@ project:
         - !git
           name: Pegasus
           url: https://github.com/pegasus-isi/pegasus.git
-          branch: 4.8
+          branch: master
       stages:
         - name: Source Checkout
           jobs:
@@ -1041,7 +1041,7 @@ project:
         - !git
           name: Pegasus
           url: https://github.com/pegasus-isi/pegasus.git
-          branch: 4.8
+          branch: master
       stages:
         - name: Build Tutorial VM
           description: Build Tutorial VM
@@ -1143,7 +1143,7 @@ project:
         - !git
           name: Pegasus
           url: https://github.com/pegasus-isi/pegasus.git
-          branch: 4.8
+          branch: master
       stages:
         - name: Setup
           description: Setup
