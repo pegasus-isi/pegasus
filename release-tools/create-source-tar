@@ -5,6 +5,11 @@ set -v
 
 VERSION=$1
 
+if [ "x$VERSION" = "x" ]; then
+    echo "Please specify a version for the source tarball"
+    exit 1
+fi
+
 # make sure we are in a source dir
 if [ ! -e build.xml ]; then
     echo "This does not look a like a source directory. Exiting..."
@@ -41,4 +46,7 @@ printf "pegasus.build.git.hash = $HASH\n" > dist/pegasus-$VERSION/build.git.prop
 cd dist/
 tar czf pegasus-$VERSION.tar.gz pegasus-$VERSION
 rm -rf pegasus-$VERSION
+
+echo "The generated source tarball is ready at dist/pegasus-$VERSION.tar.gz"
+
 
