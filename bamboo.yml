@@ -1871,36 +1871,6 @@ project:
                 - name: tests
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
-            - key: PEGASUSGRIDFTP
-              name: 017-pegasus-gridftp
-              description: TODO
-              enabled: true
-              tasks:
-                - !script
-                  description: Cleanup
-                  enabled: true
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "rm -rf pegasus/ test/"
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xf tests.tar"
-                - !script
-                  description: Run Test
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
-                      test/scripts/launch-bamboo-test-no-jobs ${bamboo_shortJobName}
-              requirements:
-                - capabilityKey: condor
-                  matchType: !exists exists
-              artifactDependencies:
-                - name: tests
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: false
             - key: T18A
               name: 018-black-condorc-condor-io
               description: TODO
