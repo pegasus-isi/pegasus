@@ -104,15 +104,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       </filterset>
     </copy>
 
-    <!-- Debian changelog file with updated version number -->
-    <copy preservelastmodified="true" overwrite="false" file="debian/changelog.in" tofile="debian/changelog">
-      <filterset>
-        <filter token="PEGASUS_VERSION" value="${pegasus.version}"/>
-        <filter token="OSID" value="${dist.osid}"/>
-        <filter token="DATE" value="${ISODATE.deb}"/>
-      </filterset>
-    </copy>
-
     <!-- Create pegasus-config -->
     <mkdir dir="${dist.bin}"/>
     <copy preservelastmodified="true" todir="${dist.bin}">
@@ -559,6 +550,16 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
   </target>
 
   <target name="dist-deb" depends="setup" description="Build Debian package">
+      
+    <!-- Debian changelog file with updated version number -->
+    <copy preservelastmodified="true" overwrite="true" file="debian/changelog.in" tofile="debian/changelog">
+      <filterset>
+        <filter token="PEGASUS_VERSION" value="${pegasus.version}"/>
+        <filter token="OSID" value="${dist.osid}"/>
+        <filter token="DATE" value="${ISODATE.deb}"/>
+      </filterset>
+    </copy>
+
     <exec executable="dpkg-buildpackage" failonerror="true">
       <arg line="-b -uc"/>
     </exec>
