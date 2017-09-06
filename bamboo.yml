@@ -40,7 +40,7 @@ project:
 
                       # We need a versioned copy to put on the website that
                       # excludes git files
-                      (cd pegasus-source && ./release-tools/create-source-tar && mv dist/pegasus-source-$VERSION.tar.gz ..)
+                      (cd pegasus-source && ./release-tools/create-source-tar && mv dist/pegasus-$VERSION.tar.gz ..)
 
                       # Create the source tarball for python source files using setup.py
                       (cd pegasus-source && ant dist-python-source && mv dist/pegasus-python-source-$VERSION.tar.gz ..)
@@ -938,7 +938,7 @@ project:
 
                       DOWNLOADS=pegasus/$VERSION
                       mkdir -p $DOWNLOADS
-                      mv pegasus-source-*.tar.gz $DOWNLOADS/
+                      mv pegasus-4*.tar.gz $DOWNLOADS/
                       mv pegasus-python-source-*.tar.gz $DOWNLOADS/
                       mv pegasus-binary-*.tar.gz $DOWNLOADS/
                       mv pegasus-worker-*.tar.gz $DOWNLOADS/
