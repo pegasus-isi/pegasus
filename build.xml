@@ -105,7 +105,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </copy>
 
     <!-- Debian changelog file with updated version number -->
-    <copy preservelastmodified="true" overwrite="true" file="debian/changelog.in" tofile="debian/changelog">
+    <copy preservelastmodified="true" overwrite="false" file="debian/changelog.in" tofile="debian/changelog">
       <filterset>
         <filter token="PEGASUS_VERSION" value="${pegasus.version}"/>
         <filter token="OSID" value="${dist.osid}"/>
