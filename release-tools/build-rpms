@@ -1,10 +1,10 @@
 #!/bin/bash
 
 set -e
-set -v
 
 VERSION=$1
-BASEDIR=`pwd`
+
+TOP_DIR=`pwd`
 
 # make sure we are in a source dir
 if [ ! -e build.xml ]; then
@@ -16,15 +16,31 @@ mkdir -p build/rpm/BUILD build/rpm/RPMS build/rpm/SOURCES build/rpm/SPECS build/
 
 cp dist/pegasus-$VERSION.tar.gz build/rpm/SOURCES/
 
+# create a new spec file with the custom version
+RELEASE_VERSION=1
+BASEVER=`echo "$VERSION" | perl -p -e 's/([0-9]+\.[0-9]+\.[0-9]+).*/\1/'`
+EXTRAVER=`echo "$VERSION" | perl -p -e 's/[0-9]+\.[0-9]+\.[0-9]+//'`
+if [ "x$EXTRAVER" != "x" ]; then
+    # add timestamp - the goal is a version number like:
+    # 4.8.1dev-0.1.201709070934
+    RELEASE_VERSION="0.1."`date +'%Y%m%d%H%M'`"%{?dist}"
+fi
+
+cp pegasus.spec.in pegasus.spec
+DATE_RPM=`date +'%a %b %d %Y'`
+perl -p -i -e "s/\\@PEGASUS_VERSION\\@/$VERSION/g" pegasus.spec
+perl -p -i -e "s/\\@DATE\\@/$DATE_RPM/g" pegasus.spec
+perl -p -i -e "s/^Release:.*/Release:        $RELEASE_VERSION/g" pegasus.spec
+
 # special sauce for el7
 DIST=`./release-tools/getosid | perl -pe 's/rhel/.el/'`
 if (rpmbuild --showrc | grep ": dist" | grep "el7") >/dev/null 2>&1; then
-    perl -pi -e 's@BuildRequires: .*@BuildRequires:  python-setuptools, openssl-devel, ant, pyOpenSSL, ant-apache-regexp, java-1.8.0-openjdk-devel, gcc, groff, python-devel, gcc-c++, make, asciidoc, libxslt, fop, R-devel@' pegasus.spec
+    perl -p -i -e 's@BuildRequires: .*@BuildRequires:  python-setuptools, openssl-devel, ant, pyOpenSSL, ant-apache-regexp, java-1.8.0-openjdk-devel, gcc, groff, python-devel, gcc-c++, make, asciidoc, libxslt, fop, R-devel@' pegasus.spec
 fi
 
 cp pegasus.spec build/rpm/SPECS/
 
-rpmbuild -ba --define "_topdir $BASEDIR/build/rpm" --define "dist $DIST" pegasus.spec
+rpmbuild -ba --define "_topdir $TOP_DIR/build/rpm" --define "dist $DIST" pegasus.spec
 
 find build/rpm -name \*.rpm -exec cp {} dist/ \;
 rm -f dist/*debug*

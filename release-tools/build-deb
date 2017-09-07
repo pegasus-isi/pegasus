@@ -1,0 +1,57 @@
+#!/bin/bash
+
+set -e
+
+VERSION=$1
+OSID=$2
+
+if [ "x$VERSION" = "x" ]; then
+    echo "Please specify a version for the source tarball"
+    exit 1
+fi
+
+TOP_DIR=`pwd`
+
+# make sure we are in a source dir
+if [ ! -e build.xml ]; then
+    echo "This does not look a like a source directory. Exiting..."
+    exit 1
+fi
+
+# we assume the source tarball has already been built
+cd dist
+rm -rf pegasus-$VERSION
+tar xzf pegasus-$VERSION.tar.gz
+cd pegasus-$VERSION
+
+# Massage the Pegasus version to something which works well
+# in Debian. For dev/rc/... packages, use the ~ trick
+PACKAGE_VERSION=$VERSION
+BASEVER=`echo "$VERSION" | perl -p -e 's/([0-9]+\.[0-9]+\.[0-9]+).*/\1/'`
+EXTRAVER=`echo "$VERSION" | perl -p -e 's/[0-9]+\.[0-9]+\.[0-9]+//'`
+if [ "x$EXTRAVER" != "x" ]; then
+    # add timestamp - the goal is a version number like:
+    # 4.8.1~dev201709070934
+    EXTRAVER="$EXTRAVER"`date +'%Y%m%d%H%M'`
+    PACKAGE_VERSION="$BASEVER~$EXTRAVER"
+fi
+
+# create a debian/changelog - this is important to LIGO and other projects
+# picking up our source tarball and building Debian packages
+cd debian
+cp changelog.in changelog
+DATE_DEB=`date -R`
+perl -p -i -e "s/\\@PEGASUS_VERSION\\@/$PACKAGE_VERSION/g" changelog
+perl -p -i -e "s/\\@DATE\\@/$DATE_DEB/g" changelog
+if [ "x$OSID" = "x" ]; then
+    perl -p -i -e "s/\\+\\@OSID\\@//g" changelog
+else
+    perl -p -i -e "s/\\@OSID\\@/$OSID/g" changelog
+fi
+cd ..
+
+dpkg-buildpackage -b -uc
+
+(cd .. && lintian pegasus_${PACKAGE_VERSION}*.changes) || true
+
+

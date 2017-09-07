@@ -549,28 +549,10 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </exec>
   </target>
 
-  <target name="dist-deb" depends="setup" description="Build Debian package">
-      
-    <!-- Debian changelog file with updated version number -->
-    <copy preservelastmodified="true" overwrite="true" file="debian/changelog.in" tofile="debian/changelog">
-      <filterset>
-        <filter token="PEGASUS_VERSION" value="${pegasus.version}"/>
-        <filter token="OSID" value="${dist.osid}"/>
-        <filter token="DATE" value="${ISODATE.deb}"/>
-      </filterset>
-    </copy>
-
-    <exec executable="dpkg-buildpackage" failonerror="true">
-      <arg line="-b -uc"/>
+  <target name="dist-deb" depends="dist-source,setup" description="Build Debian package">
+    <exec executable="release-tools/build-deb" failonerror="true">
+      <arg line="${pegasus.version} ${dist.osid}"/>
     </exec>
-    <apply executable="lintian" dir=".." failonerror="false">
-      <fileset dir=".." includes="pegasus_${pegasus.version}*.changes"/>
-    </apply>
-    <apply executable="mv" failonerror="true">
-      <srcfile/>
-      <arg value="dist/"/>
-      <fileset dir=".." includes="pegasus_${pegasus.version}*.deb"/>
-    </apply>
   </target>
 
   <target name="test-java" depends="dist-common,jar,compile-externals" description="Run java unit tests">
