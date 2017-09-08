@@ -970,6 +970,16 @@ project:
                       mkdir -p $DOWNLOADS/rhel/7/x86_64
                       cp $DOWNLOADS/pegasus-*el7.x86_64.rpm $DOWNLOADS/rhel/7/x86_64/
 
+                      # standard filenames for RPMs - used by tutorial VM
+                      cd pegasus/$VERSION
+                      if [ ! -e pegasus-$VERSION.el6.x86_64.rpm ]; then
+                          cp pegasus-*el6.x86_64.rpm pegasus-$VERSION.el6.x86_64.rpm
+                      fi
+                      if [ ! -e pegasus-$VERSION.el7.x86_64.rpm ]; then
+                          cp pegasus-*el7.x86_64.rpm pegasus-$VERSION.el7.x86_64.rpm
+                      fi
+                      cd ..
+
                       # no files should be left behind
                       ls -l
 
