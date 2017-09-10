@@ -978,7 +978,7 @@ project:
                       if [ ! -e pegasus-$VERSION.el7.x86_64.rpm ]; then
                           cp pegasus-*el7.x86_64.rpm pegasus-$VERSION.el7.x86_64.rpm
                       fi
-                      cd ..
+                      cd ../..
 
                       # no files should be left behind
                       ls -l
