@@ -77,7 +77,7 @@ do
 
 	if [ -e "diamond-a_ID0000001/diamond-a-0.cache" ]; then
 		set +e
-		grep -v -P "diamond-.*-4\.0" diamond-a_ID0000001/diamond-a-0.cache | grep -v "http://"
+		grep -v -P "diamond-.*-4_0" diamond-a_ID0000001/diamond-a-0.cache | grep -v "http://"
 		EC=$?
 		set -e
 
