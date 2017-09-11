@@ -1567,6 +1567,10 @@ public class Job extends Data implements GraphNodeContent{
      * @return the staged executable basename
      */
     public static String getStagedExecutableBaseName( String txNamespace, String txName, String txVersion ){
+        //PM-1222
+        if( txVersion != null && txVersion.indexOf( ".") != -1 ){
+            txVersion = txVersion.replaceAll( "\\.", "_" );
+        }
         return combine( txNamespace, txName, txVersion);
     }
 
