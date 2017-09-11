@@ -30,7 +30,7 @@ Package: pegasus
 Architecture: any
 Depends: openjdk-8-jre | openjdk-8-jre-headless | openjdk-7-jre | openjdk-7-jre-headless | openjdk-6-jre | openjdk-6-jre-headless,
   perl, python, python-openssl, ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
-Recommends: condor, globus
+Recommends: condor
 Description: Workflow management system for HTCondor, Grid, and Clouds
  The Pegasus project encompasses a set of technologies the help
  workflow-based applications execute in a number of different
