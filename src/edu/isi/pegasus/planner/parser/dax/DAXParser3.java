@@ -1252,9 +1252,15 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
         if (mJobPrefix != null) {
             name.append(mJobPrefix);
         }
-
+        
+        //PM-1222 strip out any . from transformation name
+        String txName = j.getTXName();
+        if( txName != null && txName.indexOf( ".") != -1 ){
+            txName = txName.replaceAll( "\\.", "_" );
+        }
+        
         //append the name and id recevied from dax
-        name.append(j.getTXName());
+        name.append( txName );
         name.append("_");
         name.append(j.getLogicalID());
         return name.toString();
