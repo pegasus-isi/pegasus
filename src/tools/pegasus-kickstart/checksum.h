@@ -15,6 +15,6 @@
 #ifndef _CHECKSUM_H
 #define _CHECKSUM_H
 
-extern int sha256(const char *fname, char *chksum);
+extern int pegasus_integrity_xml(const char *fname, char *xml);
 
 #endif /* _CHECKSUM_H */
