@@ -164,14 +164,20 @@ public class Condor extends Namespace{
     public static final String PRIORITY_KEY = "priority";
     
     /**
-     * The name of the key that specifies the peridic release
+     * The name of the key that specifies the periodic release
      */
     public static final String  PERIODIC_RELEASE_KEY = "periodic_release";
 
     /**
-     * The name of the key that specifies the peridic remove
+     * The name of the key that specifies the periodic remove
      */
     public static final String  PERIODIC_REMOVE_KEY = "periodic_remove";
+    
+     /**
+     * The name of the key that specifies the periodic remove
+     */
+    public static final String  PERIODIC_HOLD = "periodic_hold";
+
 
     /**
      * The condor key for designation the grid_resource.
@@ -516,6 +522,7 @@ public class Condor extends Namespace{
      * noop_job_exit_code - OK
      * periodic_release - OK
      * periodic_remove  - OK
+     * periodic_hold  - OK
      * priority         - OK
      * queue		- required thing. always added
      * remote_initialdir- not allowed, the working directory is picked up from
@@ -675,9 +682,11 @@ public class Condor extends Namespace{
                 break;
 
             case 'p':
-                if (key.compareTo( Condor.PERIODIC_RELEASE_KEY ) == 0 ||
+                if (
+                    key.compareTo( Condor.PRIORITY_KEY ) == 0 ||
+                    key.compareTo( Condor.PERIODIC_RELEASE_KEY ) == 0 ||
                     key.compareTo( Condor.PERIODIC_REMOVE_KEY ) == 0 ||
-                    key.compareTo( Condor.PRIORITY_KEY ) == 0) {
+                    key.compareTo( Condor.PERIODIC_HOLD ) == 0 ){
                     res = VALID_KEY;
                 }
                 else {
