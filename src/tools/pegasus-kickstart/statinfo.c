@@ -475,11 +475,10 @@ size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
      * and it is a "final" entry
      */
     if (id != NULL && info->error == 0 && strcmp(id, "final") == 0) {
-        char chksum[65];
+        char chksum_xml[2048];
         real = realpath(info->file.name, NULL);
-        if (sha256(real, chksum)) {
-            fprintf(out, "%*s<checksum type=\"sha256\" value=\"%s\"/>\n",
-                    indent+2, "",  chksum);
+        if (pegasus_integrity_xml(real, chksum_xml)) {
+            fprintf(out, "%*s%s\n", indent+2, "",  chksum_xml);
         }
         if (real) {
             free((void*) real);

@@ -18,18 +18,17 @@
 
 #include "checksum.h"
 
-int sha256(const char *fname, char *chksum) {
-    /* purpose: calculate the sha256 checksum of a file
+int pegasus_integrity_xml(const char *fname, char *xml) {
+    /* purpose: calculate the checksum of a file
      * paramtr: fname: name of the file
-     *          chksum: the buffer for the calculated
-     *                  checksum
+     *          xml: the buffer for the calculated checksum
      * returns: 1 on success
      */
-    char buf[1024];
+    char buf[2048];
     char cmd[2048];
     int rc = 0;
 
-    strcpy(cmd, "pegasus-integrity --generate-sha256=");
+    strcpy(cmd, "pegasus-integrity --generate-xml=");
     strcat(cmd, fname);
     //strcat(cmd, " 2>/dev/null");
 
@@ -37,15 +36,14 @@ int sha256(const char *fname, char *chksum) {
     if (p == NULL) {
         return rc;
     }
-    /* a sha256 checksum is 64 characters */
     if (fgets(buf, sizeof(buf), p) != NULL) {
         /* make sure we got a full checksum */
-        if (strlen(buf) >= 64) {
+        if (strlen(buf) > 0) {
             if(buf[strlen(buf) - 1] == '\n')
             {
                 buf[strlen(buf) - 1] = '\0';
             }
-            strcpy(chksum, buf);
+            strcpy(xml, buf);
             rc = 1;
         }
     }

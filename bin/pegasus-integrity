@@ -403,11 +403,25 @@ def generate_sha256(fname):
     return sha256
 
 
+def generate_xml(fname):
+    """
+    Generates kickstart xml for the given file
+    """
+    
+    ts_start = time.time()
+    sha256 = generate_sha256(fname)
+    if sha256 == None:
+        return None
+    ts_end = time.time()
+    return "<checksum type=\"sha256\" value=\"%s\" timing=\"%.3f\"/>" %(sha256, ts_end - ts_start)
+
+
 def check_integrity(fname, meta_data):
     """
     Checks the integrity of a file given a set of metadata
     """
 
+    ts_start = time.time()
     current_sha256 = generate_sha256(fname)
     
     # find the expected checksum in the metadata
@@ -419,13 +433,15 @@ def check_integrity(fname, meta_data):
         logger.error("No checksum in the meta data for " + fname)
         return False
     
+    ts_end = time.time()
+    
     # now compare them
     if current_sha256 != expected_sha256:
-        logger.error("%s: Expected checksum (%s) does not match the calculated checksum (%s)" \
-                     %(fname, expected_sha256, current_sha256))
+        logger.error("%s: Expected checksum (%s) does not match the calculated checksum (%s) (timing: %.3f)" \
+                     %(fname, expected_sha256, current_sha256, ts_end - ts_start))
         return False
     
-    logger.info("%s: Checksum verified" %(fname))
+    logger.info("%s: Checksum verified (timing: %.3f)" %(fname, ts_end - ts_start))
 
     return True
 
@@ -447,6 +463,8 @@ def main():
     
     parser.add_option("", "--generate-sha256", action = "store", dest = "generate_file",
                       help = "Generate a SHA256 hash for the given file.")
+    parser.add_option("", "--generate-xml", action = "store", dest = "generate_xml",
+                      help = "Generate hashes for the given file, output to kickstart xml.")
     parser.add_option("", "--verify", action = "store", dest = "verify_file",
                       help = "Verify the hash for the given file.")
     parser.add_option("", "--debug", action = "store_true", dest = "debug",
@@ -457,14 +475,19 @@ def main():
     setup_logger(options.debug)
 
     # sanity checks
-    if (options.generate_file is None and options.verify_file is None) or \
-       (options.generate_file is not None and options.verify_file is not None):
-        logger.error("One, and only one, of --generate and --verify needs to be specified")
+    if sum([options.generate_file != None, options.generate_xml != None, options.verify_file != None]) != 1:
+        logger.error("One, and only one, of --generate-* and --verify needs to be specified")
         parser.print_help()
         sys.exit(1)
     
     if options.generate_file:
         results = generate_sha256(options.generate_file)
+        if not results:
+            myexit(1)
+        print results
+    
+    if options.generate_xml:
+        results = generate_xml(options.generate_xml)
         if not results:
             myexit(1)
         print results
