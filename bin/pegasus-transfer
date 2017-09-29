@@ -3572,6 +3572,13 @@ def env_setup():
     # fink on macos x
     if os.path.exists("/sw/bin") and not("/sw/bin" in path_entries):
         path_entries.append("/sw/bin")
+
+    # PYTHONHOME can cause problems when we call out to other tools
+    if "PYTHONHOME" in os.environ:
+        logger.warning("PYTHONHOME was found in the environment." + \
+                       " Unsetting to make sure callouts to transfer tools" + \
+                       " will work.")
+        del os.environ["PYTHONHOME"]
     
     # need LD_LIBRARY_PATH for Globus tools
     ld_library_path = ""
