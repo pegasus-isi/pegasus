@@ -46,6 +46,7 @@ public class Container implements Cloneable {
             //from http://singularity.lbl.gov/user-guide#other-container-formats-supported 
             mSupportedSingularityExtensions = new HashSet<String>();
             mSupportedSingularityExtensions.add( ".img" );
+            mSupportedSingularityExtensions.add( ".simg" );
             mSupportedSingularityExtensions.add( ".tar" );
             mSupportedSingularityExtensions.add( ".tar.gz" );
             mSupportedSingularityExtensions.add( ".tar.bz2" );
@@ -167,8 +168,8 @@ public class Container implements Cloneable {
             
             String suffix = null;
             if( protocol.startsWith( PegasusURL.SINGULARITY_PROTOCOL_SCHEME ) ){
-                //default suffix while pulling from singularity hub is .img
-                suffix = ".img";
+                //default suffix while pulling from singularity hub is .simg
+                suffix = ".simg";
             }
             else{ 
                 //determine the suffix in the URL
