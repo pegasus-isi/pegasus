@@ -19,7 +19,7 @@ cd montage-workflow-v2
 # The actual workflow execution is using an image without
 # Pegasus to trigger the automatic worker package deployment.
 singularity exec \
-    --bind $PWD:/srv --workdir /srv \
+    --bind $PWD:/srv --pwd /srv \
     shub://pegasus-isi/montage-workflow-v2 \
     /srv/montage-workflow.py --tc-target container \
                              --center "56.7 24.00" \

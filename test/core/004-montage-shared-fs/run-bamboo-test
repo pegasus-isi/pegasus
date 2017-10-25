@@ -13,11 +13,11 @@ echo
 echo
 
 cd montage-workflow-v2
-./montage-workflow.py --center "56.7 24.00" \
-                      --degrees 2.0 \
-                      --band dss:DSS2B:blue \
-                      --band dss:DSS2R:green \
-                      --band dss:DSS2IR:red
+./montage-workflow.py --center "275.196290 -16.171530" \
+                      --degrees 0.5 \
+                      --band 2mass:j:green \
+                      --band 2mass:h:blue \
+                      --band 2mass:k:red
 
 export PEGASUS_VERSION=`pegasus-version`
 
