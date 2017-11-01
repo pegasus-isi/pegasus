@@ -18,6 +18,7 @@ package edu.isi.pegasus.planner.code.generator.condor;
 
 
 
+import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.common.util.CondorVersion;
@@ -724,6 +725,17 @@ public class SUBDAXGenerator{
         pegasusLiteWrapper.useFullPathToGridStarts( true );
         if (!pegasusLiteWrapper.enable( preScriptJob, false )){
             throw new RuntimeException( "Unable to wrap job " + dagJob.getID() + " with PegasusLite ");
+        }
+        
+        //PM-1224 ensure any credentials set in prescript job are associated
+        //with the main dagman job for the sub workflow
+        for( Map.Entry<String,Set<CredentialHandler.TYPE>> entry : preScriptJob.getCredentialTypes().entrySet()  ){
+            String site = entry.getKey();
+            for( CredentialHandler.TYPE credType: entry.getValue()){
+                mLogger.log( "Associating credential for site " + site + " of type " + credType + " with job " + dagJob.getID(),
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+                dagJob.addCredentialType(site, credType);
+            }
         }
         
         //set the xbit on the shell script
