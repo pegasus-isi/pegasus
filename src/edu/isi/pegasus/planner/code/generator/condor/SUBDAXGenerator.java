@@ -667,7 +667,7 @@ public class SUBDAXGenerator{
         //create a shallow clone job for the prescript to be generated.
         //we need to do this as the dagJob refers to condor dagman instance
         //not the prescript
-        Job preScriptJob = new Job();
+        Job preScriptJob = new DAXJob();
         
         //make sure the relative submit dir is same as dag job
         preScriptJob.setRelativeSubmitDirectory( dagJob.getRelativeSubmitDirectory());
