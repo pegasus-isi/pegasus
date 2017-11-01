@@ -37,6 +37,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
+import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.NameValue;
@@ -532,45 +533,48 @@ public class PegasusLite implements GridStart {
             //from the submit host
             job.condorVariables.addIPFileForTransfer( this.mLocalPathToPegasusLiteCommon );
 
-            //figure out transfer of worker package
-            if( mTransferWorkerPackage ){
-                //sanity check to see if PEGASUS_HOME is defined
-                if( mSiteStore.getEnvironmentVariable( job.getSiteHandle(), "PEGASUS_HOME" ) == null ){
-                    //yes we need to add from the location in the worker package map
-                    String location = this.mWorkerPackageMap.get( job.getSiteHandle() );
+            //PM-1225 worker package transfer is only triggered for non sub dax jobs
+            if ( !(job instanceof DAXJob) ){
+                //figure out transfer of worker package for compute jobs
+                if( mTransferWorkerPackage ){
+                    //sanity check to see if PEGASUS_HOME is defined
+                    if( mSiteStore.getEnvironmentVariable( job.getSiteHandle(), "PEGASUS_HOME" ) == null ){
+                        //yes we need to add from the location in the worker package map
+                        String location = this.mWorkerPackageMap.get( job.getSiteHandle() );
 
-                    if( location == null ){
-                        throw new RuntimeException( "Unable to figure out worker package location for job " + job.getID() );
+                        if( location == null ){
+                            throw new RuntimeException( "Unable to figure out worker package location for job " + job.getID() );
+                        }
+                        job.condorVariables.addIPFileForTransfer(location);
                     }
-                    job.condorVariables.addIPFileForTransfer(location);
-                }
-                else{
-                    mLogger.log( "No worker package staging for job " + job.getID() +
-                                 " PEGASUS_HOME specified in the site catalog for site " + job.getSiteHandle(),
-                                 LogManager.DEBUG_MESSAGE_LEVEL );
-                }
-            }
-            else{
-                //we don't want pegasus to add a stage worker job.
-                //but transfer directly if required.
-                if( mSiteStore.getEnvironmentVariable( job.getSiteHandle(), "PEGASUS_HOME" ) == null ){
-                    //yes we need to add from the location in the worker package map
-                    String location = this.mWorkerPackageMap.get( job.getSiteHandle() );
-
-                    if( !mWorkerPackageMap.containsKey( job.getSiteHandle()) ){
-                        location = retrieveLocationForWorkerPackageFromTC( job.getSiteHandle() );
-                        //null can be populated as value
-                        this.mWorkerPackageMap.put( job.getSiteHandle(), location );
-                    }
-                    //add only if location is not null
-                    if( location != null ){
-                        job.condorVariables.addIPFileForTransfer( location );
+                    else{
+                        mLogger.log( "No worker package staging for job " + job.getID() +
+                                     " PEGASUS_HOME specified in the site catalog for site " + job.getSiteHandle(),
+                                     LogManager.DEBUG_MESSAGE_LEVEL );
                     }
                 }
                 else{
-                    mLogger.log( "No worker package staging for job " + job.getID()  +
-                                 " PEGASUS_HOME specified in the site catalog for site " + job.getSiteHandle(),
-                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                    //we don't want pegasus to add a stage worker job.
+                    //but transfer directly if required.
+                    if( mSiteStore.getEnvironmentVariable( job.getSiteHandle(), "PEGASUS_HOME" ) == null ){
+                        //yes we need to add from the location in the worker package map
+                        String location = this.mWorkerPackageMap.get( job.getSiteHandle() );
+
+                        if( !mWorkerPackageMap.containsKey( job.getSiteHandle()) ){
+                            location = retrieveLocationForWorkerPackageFromTC( job.getSiteHandle() );
+                            //null can be populated as value
+                            this.mWorkerPackageMap.put( job.getSiteHandle(), location );
+                        }
+                        //add only if location is not null
+                        if( location != null ){
+                            job.condorVariables.addIPFileForTransfer( location );
+                        }
+                    }
+                    else{
+                        mLogger.log( "No worker package staging for job " + job.getID()  +
+                                     " PEGASUS_HOME specified in the site catalog for site " + job.getSiteHandle(),
+                                     LogManager.DEBUG_MESSAGE_LEVEL );
+                    }
                 }
             }
 
