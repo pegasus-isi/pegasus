@@ -244,10 +244,20 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
      */
     public TransformationCatalogEntry getTransformationCatalogEntry(String siteHandle, int jobClass ){
 
-        if(  jobClass == Job.STAGE_IN_WORKER_PACKAGE_JOB && !siteHandle.equalsIgnoreCase( "local") ){
-            //PM-538
+        if(  jobClass == Job.STAGE_IN_WORKER_PACKAGE_JOB
+                // && !siteHandle.equalsIgnoreCase( "local") 
+                ){
+            //Case 1 PM-538 : job to be created for remote site. In this case, the stage worker job
+            //          has to rely on pegasus-transfer on the submit host, that is 
+            //         transferred using condor transfer_executable. Set in postProcess() method
+            
+            //Case 2 PM-1226: The stage worker job is for site local, and all the jobs in the workflow
+            //                are also running on site local. So in this case we need to ensure that
+            //                stage_worker job does not have a chicken and egg problem, and refer
+            //                to the pegasus-transfer path in it's executable to the location where it 
+            //                is staging to on the local site 
+            
             //construct an entry for the local site and transfer it.
-
             return this.defaultTCEntry( Transfer.TRANSFORMATION_NAMESPACE,
                                       Transfer.TRANSFORMATION_NAME,
                                       Transfer.TRANSFORMATION_VERSION,
