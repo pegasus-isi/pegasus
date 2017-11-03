@@ -12,17 +12,18 @@ PYTHONPATH=`pegasus-config --python`
 export PYTHONPATH=".:$PYTHONPATH"
 
 
-# generate the dax
-./local_hierarchy.py $CONDOR_POOL_PEGASUS_HOME  > outer.dax
-
+# generate the DAXes
 mkdir -p input
+./local_hierarchy.py $CONDOR_POOL_PEGASUS_HOME  > outer.dax
+./blackdiamond.py $BIN_DIR/..  $TOP_DIR/input/blackdiamond.dax
+cp sleep.dax $TOP_DIR/input/
+
 
 # create the replica catalog for outer level workflow
 echo "blackdiamond.dax  $TOP_DIR/input/blackdiamond.dax site=local" > rc.data
+echo "sleep.dax  $TOP_DIR/input/sleep.dax site=local" >> rc.data
 echo "f.a $TOP_DIR/input/f.a site="local"" >> rc.data
 
-#generate the DAX
-./blackdiamond.py $BIN_DIR/..  $TOP_DIR/input/blackdiamond.dax
 
 #create the replica catalog for the inner dax
 cat > input/f.a <<EOF
@@ -63,6 +64,29 @@ tr diamond::findrange:4.0{
     type "STAGEABLE"
    }
 }
+
+tr level1::sleep { 
+  site CCG {
+    pfn "/bin/sleep"
+    os "linux"
+    arch "x86_64"
+    osrelease "rhel"
+    osversion "7"
+    type "INSTALLED"
+  }
+}
+
+tr level2::sleep {   
+  site CCG {
+    pfn "/bin/sleep"
+    os "linux"
+    arch "x86_64"
+    osrelease "rhel"
+    osversion "7"
+    type "INSTALLED"
+  }
+}
+
 EOF
 
 # create the site catalog for both outer level and inner level workflow

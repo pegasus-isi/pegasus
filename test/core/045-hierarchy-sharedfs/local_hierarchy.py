@@ -33,7 +33,7 @@ adag.addJob(dax1)
 
 # this dax job uses a pre-existing dax file
 # that has to be present in the replica catalog
-daxfile2 = File('blackdiamond.dax')
+daxfile2 = File('sleep.dax')
 dax2 = DAX (daxfile2)
 dax2.addArguments('--output-site local')
 dax2.addArguments( '-vvv')
