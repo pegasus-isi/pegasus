@@ -365,7 +365,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTCUT
-              name: Ubuntu Trusty C Unit Tests
+              name: Ubuntu Zesty C Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -394,7 +394,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTJUT
-              name: Ubuntu Trusty Java Unit Tests
+              name: Ubuntu Zesty Java Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -424,7 +424,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTPUT
-              name: Ubuntu Trusty Python Unit Tests
+              name: Ubuntu Zesty Python Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -820,49 +820,6 @@ project:
                     regex: 10.*
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
-            - key: BXUT
-              name: Build x86_64 Ubuntu Trusty
-              tasks:
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xzf pegasus-source.tar.gz"
-                - !script
-                  description: Binary Packages
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_17}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      --entrypoint ant \
-                      pegasus/pegasus:${TAG} \
-                      clean dist-deb dist-worker dist-release
-              artifactDefinitions:
-                - name: pegasus-binary-x86_64_ubuntu_14
-                  copyPattern: 'pegasus-binary-*-x86_64_ubuntu_14.tar.gz'
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-deb-x86_64_ubuntu_14
-                  copyPattern: '*.deb'
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-worker-x86_64_ubuntu_14
-                  copyPattern: 'pegasus-worker-*-x86_64_ubuntu_14.tar.gz'
-                  location: pegasus-source/dist
-                  isShared: true
-              artifactDependencies:
-                - name: pegasus-source
-              requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
             - key: BXUX
               name: Build x86_64 Ubuntu Xenial
               tasks:
@@ -897,6 +854,49 @@ project:
                   isShared: true
                 - name: pegasus-worker-x86_64_ubuntu_16
                   copyPattern: 'pegasus-worker-*-x86_64_ubuntu_16.tar.gz'
+                  location: pegasus-source/dist
+                  isShared: true
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: BXUZ
+              name: Build x86_64 Ubuntu Zesty
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Binary Packages
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      TAG=${bamboo_TAG_UBUNTU_17}
+
+                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+
+                      /opt/docker/docker-bamboo-wrapper run \
+                      --rm \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
+                      --entrypoint ant \
+                      pegasus/pegasus:${TAG} \
+                      clean dist-deb dist-worker dist-release
+              artifactDefinitions:
+                - name: pegasus-binary-x86_64_ubuntu_17
+                  copyPattern: 'pegasus-binary-*-x86_64_ubuntu_17.tar.gz'
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-deb-x86_64_ubuntu_17
+                  copyPattern: '*.deb'
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-worker-x86_64_ubuntu_17
+                  copyPattern: 'pegasus-worker-*-x86_64_ubuntu_17.tar.gz'
                   location: pegasus-source/dist
                   isShared: true
               artifactDependencies:
@@ -957,10 +957,10 @@ project:
                       cp $DOWNLOADS/pegasus_*deb9_amd64.deb $DOWNLOADS/debian/dists/stretch/main/binary-amd64/
 
                       # ubuntu
-                      mkdir -p $DOWNLOADS/ubuntu/dists/zesty/main/binary-amd64
-                      cp $DOWNLOADS/pegasus_*ubuntu14_amd64.deb $DOWNLOADS/ubuntu/dists/zesty/main/binary-amd64/
                       mkdir -p $DOWNLOADS/ubuntu/dists/xenial/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*ubuntu16_amd64.deb $DOWNLOADS/ubuntu/dists/xenial/main/binary-amd64/
+                      mkdir -p $DOWNLOADS/ubuntu/dists/zesty/main/binary-amd64
+                      cp $DOWNLOADS/pegasus_*ubuntu17_amd64.deb $DOWNLOADS/ubuntu/dists/zesty/main/binary-amd64/
 
                       # rheh
                       mkdir -p $DOWNLOADS/rhel/src
@@ -995,14 +995,14 @@ project:
                 - name: pegasus-binary-x86_64_macos
                 - name: pegasus-binary-x86_64_rhel_6
                 - name: pegasus-binary-x86_64_rhel_7
-                - name: pegasus-binary-x86_64_ubuntu_14
                 - name: pegasus-binary-x86_64_ubuntu_16
+                - name: pegasus-binary-x86_64_ubuntu_17
                 #- name: pegasus-binary-x86_rhel_6
                 - name: pegasus-deb-x86_64_deb_7
                 - name: pegasus-deb-x86_64_deb_8
                 - name: pegasus-deb-x86_64_deb_9
-                - name: pegasus-deb-x86_64_ubuntu_14
                 - name: pegasus-deb-x86_64_ubuntu_16
+                - name: pegasus-deb-x86_64_ubuntu_17
                 - name: pegasus-dmg-x86_64_macos
                 - name: pegasus-doc
                 - name: pegasus-python-source-versioned
@@ -1019,8 +1019,8 @@ project:
                 - name: pegasus-worker-x86_64_macos
                 - name: pegasus-worker-x86_64_rhel_6
                 - name: pegasus-worker-x86_64_rhel_7
-                - name: pegasus-worker-x86_64_ubuntu_14
                 - name: pegasus-worker-x86_64_ubuntu_16
+                - name: pegasus-worker-x86_64_ubuntu_17
                 #- name: pegasus-worker-x86_rhel_6
               requirements:
                 - capabilityKey: hostname
@@ -1063,8 +1063,6 @@ project:
           value: jessie
         - key: TAG_DEBIAN_9
           value: stretch
-        - key: TAG_UBUNTU_14
-          value: trusty
         - key: TAG_UBUNTU_16
           value: xenial
         - key: TAG_UBUNTU_17
