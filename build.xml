@@ -18,9 +18,7 @@
   <property name="dist.data" location="${dist.dir}/share"/>
   <property name="dist.share" location="${dist.data}/pegasus"/>
   <property name="dist.jars" location="${dist.share}/java"/>
-  <!--
-  <property name="dist.aws.jars" location="${dist.share}/java/aws">
-  -->
+  <property name="dist.aws.jars" location="${dist.share}/java/aws"/>
   <property name="dist.schema" location="${dist.share}/schema"/>
   <property name="dist.doc" location="${dist.dir}/share/doc/pegasus"/>
   <property name="dist.man" location="${dist.data}/man"/>
@@ -396,7 +394,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <package-binary name="pegasus-worker-${pegasus.version}-${dist.arch}"/>
   </target>
 
-  <target name="dist-common" depends="dist-clean,setup,jar-planner,jar-vdl,compile-ctools,compile-python,compile-externals,compile-r,dist-worker">
+  <target name="dist-common" depends="dist-clean,setup,jar-planner,jar-aws-batch,jar-vdl,compile-ctools,compile-python,compile-externals,compile-r,dist-worker">
     <!-- bin -->
     <copy preservelastmodified="true" todir="${dist.bin}">
       <fileset dir="bin">
@@ -465,6 +463,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </chmod>
     <chmod perm="0644" type="file">
       <fileset dir="${dist.jars}" includes="*.jar"/>
+      <fileset dir="${dist.aws.jars}" includes="*.jar"/>
     </chmod>
     <!-- include a copy of the worker package - this is so that the planner can include it
          quickly in workflows running on the same system as the planner -->
