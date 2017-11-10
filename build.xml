@@ -3,8 +3,8 @@
   <property environment="env"/>
   <property file="build.properties"/>
   <property file="build.git.properties"/>
-  <property name="build.source" value="1.6"/>
-  <property name="build.target" value="1.6"/>
+  <property name="build.source" value="1.8"/>
+  <property name="build.target" value="1.8"/>
   <property name="make" value="make"/>
   <property name="bash" value="bash"/>
   <property name="compile.lint" value="-Xlint:none"/>
@@ -18,12 +18,19 @@
   <property name="dist.data" location="${dist.dir}/share"/>
   <property name="dist.share" location="${dist.data}/pegasus"/>
   <property name="dist.jars" location="${dist.share}/java"/>
+  <!--
+  <property name="dist.aws.jars" location="${dist.share}/java/aws">
+  -->
   <property name="dist.schema" location="${dist.share}/schema"/>
   <property name="dist.doc" location="${dist.dir}/share/doc/pegasus"/>
   <property name="dist.man" location="${dist.data}/man"/>
 
   <path id="build.classpath">
     <fileset dir="share/pegasus/java" includes="*.jar"/>
+  </path>
+  
+  <path id="build.aws.classpath">
+    <fileset dir="share/pegasus/java/aws" includes="*.jar"/>
   </path>
 
   <echo>Pegasus Version: ${pegasus.version}</echo>
@@ -163,6 +170,18 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <compilerarg value="${compile.lint}"/>
     </javac>
   </target>
+  
+  <target name="compile-aws-batch" depends="compile-planner" description="Compile Pegasus AWS Batch Code">
+    <javac destdir="${build.src}" srcdir="src"
+           target="${build.target}" source="${build.source}"
+           encoding="UTF-8" debug="true"
+           includes="edu/isi/pegasus/aws/**/*.java"
+           excludes="edu/isi/pegasus/aws/**/*Test.java,org/griphyn/**/*.java"
+           classpathref="build.aws.classpath"
+           includeantruntime="false">
+      <compilerarg value="${compile.lint}"/>
+    </javac>
+  </target>
 
   <target name="compile-junit" depends="setup,compile-common,compile-planner" description="Compile java unit tests">
     <javac destdir="${test.src}" srcdir="test/junit"
@@ -188,8 +207,16 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <mkdir dir="${dist.jars}"/>
     <jar destfile="${dist.jars}/pegasus.jar" basedir="${build.src}"
          includes="*.properties,edu/isi/pegasus/**/*.class,edu/isi/ikcap/**/*.class"
-         excludes="*.class,edu/isi/pegasus/planner/test/**/*.class,edu/isi/pegasus/**/*Test.class,org/griphyn/**/*Test.class,org/griphyn/**/*.class"/>
+         excludes="*.class,edu/isi/pegasus/aws/**/*.class,edu/isi/pegasus/planner/test/**/*.class,edu/isi/pegasus/**/*Test.class,org/griphyn/**/*Test.class,org/griphyn/**/*.class"/>
     <chmod perm="0644" file="${dist.jars}/pegasus.jar"/>
+  </target>
+
+  <target name="jar-aws-batch" depends="compile-aws-batch" description="Generate jar for Pegauss AWS Batch Code">
+    <mkdir dir="${dist.jars}"/>
+    <jar destfile="${dist.jars}/pegasus-aws-batch.jar" basedir="${build.src}"
+         includes="*.properties,edu/isi/pegasus/aws/**/*.class"
+         excludes="*.class,edu/isi/pegasus/aws/**/*Test.class"/>
+    <chmod perm="0644" file="${dist.jars}/pegasus-aws-batch.jar"/>
   </target>
 
   <target name="jar-junit" depends="compile-junit" description="Generate unit test jar">
