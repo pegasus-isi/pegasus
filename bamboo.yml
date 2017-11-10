@@ -647,49 +647,6 @@ project:
                   matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
-            - key: BXDW
-              name: Build x86_64 Debian 7
-              tasks:
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xzf pegasus-source.tar.gz"
-                - !script
-                  description: Binary Packages
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      TAG=${bamboo_TAG_DEBIAN_7}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      --entrypoint ant \
-                      pegasus/pegasus:${TAG} \
-                      clean dist-deb dist-worker dist-release
-              artifactDefinitions:
-                - name: pegasus-binary-x86_64_deb_7
-                  copyPattern: 'pegasus-binary-*-x86_64_deb_7.tar.gz'
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-deb-x86_64_deb_7
-                  copyPattern: '*.deb'
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-worker-x86_64_deb_7
-                  copyPattern: 'pegasus-worker-*-x86_64_deb_7.tar.gz'
-                  location: pegasus-source/dist
-                  isShared: true
-              artifactDependencies:
-                - name: pegasus-source
-              requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
             - key: BXDJ
               name: Build x86_64 Debian 8
               tasks:
@@ -989,7 +946,6 @@ project:
                       ssh pegasus.isi.edu "mkdir -p /srv/pegasus.isi.edu/public_html/docs/$VERSION"
                       scp -r docs/pegasus-*/share/doc/pegasus/wordpress/* pegasus.isi.edu:/srv/pegasus.isi.edu/public_html/docs/$VERSION/
               artifactDependencies:
-                - name: pegasus-binary-x86_64_deb_7
                 - name: pegasus-binary-x86_64_deb_8
                 - name: pegasus-binary-x86_64_deb_9
                 - name: pegasus-binary-x86_64_macos
@@ -998,7 +954,6 @@ project:
                 - name: pegasus-binary-x86_64_ubuntu_16
                 - name: pegasus-binary-x86_64_ubuntu_17
                 #- name: pegasus-binary-x86_rhel_6
-                - name: pegasus-deb-x86_64_deb_7
                 - name: pegasus-deb-x86_64_deb_8
                 - name: pegasus-deb-x86_64_deb_9
                 - name: pegasus-deb-x86_64_ubuntu_16
@@ -1013,7 +968,6 @@ project:
                 - name: pegasus-source
                 - name: pegasus-source-versioned
                 - name: pegasus-srcrpm
-                - name: pegasus-worker-x86_64_deb_7
                 - name: pegasus-worker-x86_64_deb_8
                 - name: pegasus-worker-x86_64_deb_9
                 - name: pegasus-worker-x86_64_macos
@@ -1057,8 +1011,6 @@ project:
           value: centos6
         - key: TAG_CENTOS_7
           value: centos7
-        - key: TAG_DEBIAN_7
-          value: wheezy
         - key: TAG_DEBIAN_8
           value: jessie
         - key: TAG_DEBIAN_9
