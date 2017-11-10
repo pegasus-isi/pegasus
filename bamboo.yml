@@ -377,7 +377,7 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_14}
+                      TAG=${bamboo_TAG_UBUNTU_17}
 
                       /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
 
@@ -406,7 +406,7 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_14}
+                      TAG=${bamboo_TAG_UBUNTU_17}
 
                       /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
 
@@ -436,7 +436,7 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_14}
+                      TAG=${bamboo_TAG_UBUNTU_17}
 
                       /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
 
@@ -833,7 +833,7 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_14}
+                      TAG=${bamboo_TAG_UBUNTU_17}
 
                       /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
 
@@ -957,8 +957,8 @@ project:
                       cp $DOWNLOADS/pegasus_*deb9_amd64.deb $DOWNLOADS/debian/dists/stretch/main/binary-amd64/
 
                       # ubuntu
-                      mkdir -p $DOWNLOADS/ubuntu/dists/trusty/main/binary-amd64
-                      cp $DOWNLOADS/pegasus_*ubuntu14_amd64.deb $DOWNLOADS/ubuntu/dists/trusty/main/binary-amd64/
+                      mkdir -p $DOWNLOADS/ubuntu/dists/zesty/main/binary-amd64
+                      cp $DOWNLOADS/pegasus_*ubuntu14_amd64.deb $DOWNLOADS/ubuntu/dists/zesty/main/binary-amd64/
                       mkdir -p $DOWNLOADS/ubuntu/dists/xenial/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*ubuntu16_amd64.deb $DOWNLOADS/ubuntu/dists/xenial/main/binary-amd64/
 
@@ -1067,6 +1067,8 @@ project:
           value: trusty
         - key: TAG_UBUNTU_16
           value: xenial
+        - key: TAG_UBUNTU_17
+          value: zesty
 
     - key: TVM49
       name: Tutorial VM (master)
