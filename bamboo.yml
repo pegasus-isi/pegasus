@@ -91,7 +91,7 @@ project:
 
                       /opt/docker/docker-bamboo-wrapper run \
                       --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/scitech/home/bamboo/pegasus-source \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       --entrypoint ant \
                       pegasus/pegasus:${TAG} test-kickstart test-pmc
               artifactDependencies:
@@ -122,7 +122,7 @@ project:
                       --rm \
                       --entrypoint ant \
                       --env "USER=bamboo" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/scitech/home/bamboo/pegasus-source \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-java
               artifactDependencies:
                 - name: pegasus-source
@@ -152,7 +152,7 @@ project:
                       --rm \
                       --entrypoint ant \
                       --env "USER=bamboo" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/scitech/home/bamboo/pegasus-source \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-python
               artifactDependencies:
                 - name: pegasus-source
@@ -205,7 +205,7 @@ project:
 
                       /opt/docker/docker-bamboo-wrapper run \
                       --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/scitech/home/bamboo/pegasus-source \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       --entrypoint ant \
                       pegasus/pegasus:${TAG} test-kickstart test-pmc
               artifactDependencies:
@@ -236,7 +236,7 @@ project:
                       --rm \
                       --entrypoint ant \
                       --env "USER=bamboo" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/scitech/home/bamboo/pegasus-source \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-java
               artifactDependencies:
                 - name: pegasus-source
@@ -266,7 +266,7 @@ project:
                       --rm \
                       --entrypoint ant \
                       --env "USER=bamboo" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/scitech/home/bamboo/pegasus-source \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-python
               artifactDependencies:
                 - name: pegasus-source
@@ -294,7 +294,7 @@ project:
 
                       /opt/docker/docker-bamboo-wrapper run \
                       --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/scitech/home/bamboo/pegasus-source \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       --entrypoint ant \
                       pegasus/pegasus:${TAG} test-kickstart test-pmc
               artifactDependencies:
@@ -325,7 +325,7 @@ project:
                       --rm \
                       --entrypoint ant \
                       --env "USER=bamboo" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/scitech/home/bamboo/pegasus-source \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-java
               artifactDependencies:
                 - name: pegasus-source
@@ -355,7 +355,7 @@ project:
                       --rm \
                       --entrypoint ant \
                       --env "USER=bamboo" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/scitech/home/bamboo/pegasus-source \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-python
               artifactDependencies:
                 - name: pegasus-source
@@ -383,7 +383,7 @@ project:
 
                       /opt/docker/docker-bamboo-wrapper run \
                       --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/scitech/home/bamboo/pegasus-source \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       --entrypoint ant \
                       pegasus/pegasus:${TAG} test-kickstart test-pmc
               artifactDependencies:
@@ -414,7 +414,7 @@ project:
                       --rm \
                       --entrypoint ant \
                       --env "USER=bamboo" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/scitech/home/bamboo/pegasus-source \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-java
               artifactDependencies:
                 - name: pegasus-source
@@ -444,7 +444,7 @@ project:
                       --rm \
                       --entrypoint ant \
                       --env "USER=bamboo" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/scitech/home/bamboo/pegasus-source \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-python
               artifactDependencies:
                 - name: pegasus-source
@@ -576,7 +576,7 @@ project:
 
                       /opt/docker/docker-bamboo-wrapper run \
                       --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/scitech/home/bamboo/pegasus-source \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       --entrypoint ant \
                       pegasus/pegasus:${TAG} \
                       dist-rpm dist-worker dist-release
@@ -623,7 +623,7 @@ project:
 
                       /opt/docker/docker-bamboo-wrapper run \
                       --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/scitech/home/bamboo/pegasus-source \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       --entrypoint ant \
                       pegasus/pegasus:${TAG} \
                       dist-rpm dist-worker dist-release
@@ -666,7 +666,7 @@ project:
 
                       /opt/docker/docker-bamboo-wrapper run \
                       --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/scitech/home/bamboo/pegasus-source \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       --entrypoint ant \
                       pegasus/pegasus:${TAG} \
                       clean dist-deb dist-worker dist-release
@@ -709,7 +709,7 @@ project:
 
                       /opt/docker/docker-bamboo-wrapper run \
                       --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/scitech/home/bamboo/pegasus-source \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       --entrypoint ant \
                       pegasus/pegasus:${TAG} \
                       clean dist-deb dist-worker dist-release
@@ -752,7 +752,7 @@ project:
 
                       /opt/docker/docker-bamboo-wrapper run \
                       --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/scitech/home/bamboo/pegasus-source \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       --entrypoint ant \
                       pegasus/pegasus:${TAG} \
                       clean dist-deb dist-worker dist-release
@@ -839,7 +839,7 @@ project:
 
                       /opt/docker/docker-bamboo-wrapper run \
                       --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/scitech/home/bamboo/pegasus-source \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       --entrypoint ant \
                       pegasus/pegasus:${TAG} \
                       clean dist-deb dist-worker dist-release
@@ -882,7 +882,7 @@ project:
 
                       /opt/docker/docker-bamboo-wrapper run \
                       --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/scitech/home/bamboo/pegasus-source \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       --entrypoint ant \
                       pegasus/pegasus:${TAG} \
                       clean dist-deb dist-worker dist-release
