@@ -364,7 +364,7 @@ project:
                   matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
-            - key: UTCUT
+            - key: UTCUZ
               name: Ubuntu Zesty C Unit Tests
               tasks:
                 - !script
@@ -393,7 +393,7 @@ project:
                   matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
-            - key: UTJUT
+            - key: UTJUZ
               name: Ubuntu Zesty Java Unit Tests
               tasks:
                 - !script
@@ -423,7 +423,7 @@ project:
                   matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
-            - key: UTPUT
+            - key: UTPUZ
               name: Ubuntu Zesty Python Unit Tests
               tasks:
                 - !script
