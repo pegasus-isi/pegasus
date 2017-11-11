@@ -906,8 +906,6 @@ project:
                       mv pegasus-r-dax3*.tar.gz $DOWNLOADS/
 
                       # debian
-                      mkdir -p $DOWNLOADS/debian/dists/wheezy/main/binary-amd64
-                      cp $DOWNLOADS/pegasus_*deb7_amd64.deb $DOWNLOADS/debian/dists/wheezy/main/binary-amd64/
                       mkdir -p $DOWNLOADS/debian/dists/jessie/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*deb8_amd64.deb $DOWNLOADS/debian/dists/jessie/main/binary-amd64/
                       mkdir -p $DOWNLOADS/debian/dists/stretch/main/binary-amd64
