@@ -557,7 +557,7 @@ public class RCClient extends Toolkit {
 		result = m_rc.insert(entries);
 		m_log.info("inserted " + result + " entries");
 	    } else {
-		result = m_rc.delete(entries, false);
+		result = m_rc.delete(entries, true);
 		m_log.info("deleted " + result + " entries");
 	    }
 
@@ -613,7 +613,7 @@ public class RCClient extends Toolkit {
 
 	// sanity check
 	if (words == null || words.size() == 0)
-	    return result;
+            return result;
 
 	// separate command from arguments
 	String cmd = ((String) words.remove(0)).toLowerCase();
@@ -621,6 +621,7 @@ public class RCClient extends Toolkit {
 	if (cmd.equals("help")) {
 	    showHelp();
 	} else if (cmd.equals("lookup")) {
+            m_rc.setReadOnly(true);
 	    for (Iterator i = words.iterator(); i.hasNext();) {
 		String lfn = (String) i.next();
 		Collection c = m_rc.lookup(lfn);
@@ -632,6 +633,7 @@ public class RCClient extends Toolkit {
 		}
 	    }
 	} else if (cmd.equals("list")) {
+            m_rc.setReadOnly(true);
 	    Map m = new HashMap();
 	    for (Iterator i = words.iterator(); i.hasNext();) {
 		String key = ((String) i.next()).toLowerCase();
@@ -1038,7 +1040,7 @@ public class RCClient extends Toolkit {
 
 	    // Set verbosity level
 	    me.setLevel(level);
-	    // now work with me
+            // now work with me
 	    me.connect(me.m_pegasus_props, me.m_conf_property_file );
 	    RCClient.log(Level.DEBUG, "connected to backend");
 	    // are there any remaining CLI arguments?

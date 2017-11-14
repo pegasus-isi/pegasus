@@ -11,58 +11,46 @@ NOTE: Do not copy and paste the commands below without double checking.
        cd pegasus
        git checkout N.M
 
-2.  Generate man pages documentation PDFs. This step has a set of 
-    dependencies the normal build does not. To mention a few: fop,
-    asciidoc, xsltproc, docbook. 
-
-       ant doc
-
-3.  Check in the geneated man pages:
-
-       git commit -a -m "Updated man pages"
-
-4.  Set the version number in build.properties and commit:
+2.  Set the version number in build.properties and commit:
 
        vim build.properties
        git commit -a -m "Setting version for tag"
 
-5.  Tag. Example:
+3.  Tag. Example:
 
         git tag -a -m "Created tag for N.M.O" N.M.O
 
-6.  Open branch for new checkins with new version:
+4.  Open branch for new checkins with new version:
 
        vim build.properties
        git commit -a -m "Branch reopen for checkins"
 
-7.  Bring the branch back to master, but ignore the commits.
+5.  Bring the branch back to master, but ignore the commits.
 
        git checkout master
        git merge --no-commit N.M
     (edit build.properties)
        git commit -a -m "Merged N.M"
 
-8.  git push --tags
+6.  git push --tags
 
-9.  Build with Bamboo
+7.  Build with Bamboo
 
-10. Build APT repo. First copy the debs into their final place in 
-    the apt tree. Then run update-pegasus-apt-repo on a Debian
-    machine. Note that Mats' Debian key is used to sign the
-    repository, so currently he has to do this step.
+8.  Build APT repo. First copy the debs into their final place in 
+    the apt trees (Debian and Ubuntu). Then run
+    update-pegasus-apt-repo on a Debian machine. Do this on obelix.
 
-11. Built Yum repo. Similar to Apt repo, but the step has to be
-    done on a RHEL machine.
+9.  Built Yum repo. Similar to Apt repo, but the step has to be
+    done on a RHEL machine. Do this on workflow.
 
-12. Create and deploy the tutorial VMs.
+10. Update Homebrew formula in repo https://github.com/pegasus-isi/homebrew-tools.git. 
 
-13. Update download page (and test the links!)
+11. Create and deploy the tutorial VMs.
 
-14. Change the symbolic link for the latest documentation to point 
+12. Change the symbolic link for the latest documentation to point 
     to latest stable release
     https://pegasus.isi.edu/wms/docs/latest/
 
-15. Send annouce email to pegasus-announce@mailman.isi.edu
+13. Send annouce email to pegasus-announce@mailman.isi.edu
     (Karan has to do this step)
-
 

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
+    <site handle="local" arch="x86_64" os="LINUX" osrelease="deb" osversion="8">
+        <directory type="shared-scratch" path="${PWD}/work/scratch">
+            <file-server operation="all" url="file://${PWD}/work/scratch"/>
+        </directory>
+        <directory type="local-storage" path="${PWD}/work/outputs">
+            <file-server operation="all" url="file://${PWD}/work/outputs"/>
+        </directory>
+        <profile namespace="env" key="http_proxy" >workflow.isi.edu:3128</profile>
+        <!-- special path until singularity rpm goes to 2.3 -->
+        <profile namespace="env" key="PATH" >/ccg/software/singularity/default/bin:/usr/bin:/bin</profile>
+    </site>
+    <site  handle="condor_pool" arch="x86_64" os="LINUX">
+        <profile namespace="pegasus" key="style" >condor</profile>
+        <profile namespace="env" key="http_proxy" >workflow.isi.edu:3128</profile>
+        <!-- special path until singularity rpm goes to 2.3 -->
+        <profile namespace="env" key="PATH" >/ccg/software/singularity/default/bin:/usr/bin:/bin</profile>
+    </site>
+    <site  handle="staging" arch="x86_64" os="LINUX">
+        <directory type="shared-scratch" path="/nfs/ccg4/scratch-purge-no-backups/044-singularity-nonsharedfs-hub">
+            <file-server operation="all" url="gsiftp://colo-vm63.isi.edu/nfs/ccg4/scratch-purge-no-backups/044-singularity-nonsharedfs-hub"/>
+        </directory>
+    </site>
+</sitecatalog>
+

@@ -1,0 +1,53 @@
+#!/bin/bash
+
+set -e
+
+TOP_DIR=`pwd`
+
+export PATH=/ccg/software/singularity/default/bin:$PATH
+
+rm -rf montage-workflow-v2
+git clone https://github.com/pegasus-isi/montage-workflow-v2.git
+
+echo
+echo
+
+cd montage-workflow-v2
+
+# Create the workflow inside a Singularity container, but note
+# that this image has Pegasus installed as we need the DAX API.
+# The actual workflow execution is using an image without
+# Pegasus to trigger the automatic worker package deployment.
+singularity exec \
+    --bind $PWD:/srv --pwd /srv \
+    shub://pegasus-isi/montage-workflow-v2 \
+    /srv/montage-workflow.py --tc-target container \
+                             --center "56.7 24.00" \
+                             --degrees 1.0 \
+                             --band dss:DSS2B:blue \
+                             --band dss:DSS2R:red
+
+# rc needs to have paths "outside" the image
+perl -p -i -e "s;/srv/data;$PWD/data;g" data/rc.txt
+
+# update the tc with an image which does not have Pegasus
+# already installed
+perl -p -i -e 's/montage-workflow-v2/fedora-montage/' data/tc.txt
+
+# custom site catalog
+cp ../sites.xml sites.xml
+
+# run in nonsharedfs mode
+perl -p -i -e 's/condorio/nonsharedfs/' pegasus.properties
+
+pegasus-plan \
+        --dir work \
+        --relative-dir `date +'%s'` \
+        --dax data/montage.dax \
+        --sites condor_pool \
+        --staging-site staging \
+        --output-site local \
+        --submit \
+        | tee $TOP_DIR/plan.out
+
+

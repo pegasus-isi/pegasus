@@ -116,10 +116,15 @@ no matter what other output exists. If multiple success messages are
 provided, then they must all exist in the output or the job is considered
 a failure.
 
+*-l* 'filename'::
+*--log* 'filename'::
+Name of the common log file in which stdout/stderr will be redirected.
+
 
 Authors
 -------
 Gideon Juve `<juve@usc.edu>`
+Rafael Ferreira da Silva `<rafsilva@isi.edu>`
 
 Pegasus Team <http://pegasus.isi.edu>
 

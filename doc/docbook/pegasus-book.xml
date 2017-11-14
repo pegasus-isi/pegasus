@@ -10,12 +10,14 @@
   <xi:include href="running_workflows.xml"/>
   <xi:include href="monitoring_debugging_stats.xml"/>
   <xi:include href="execution_environments.xml"/>
+  <xi:include href="containers.xml"/>
   <xi:include href="example_workflows.xml"/>
   <xi:include href="data_management.xml"/>
   <xi:include href="optimization.xml"/>
   <xi:include href="service.xml"/>
   <xi:include href="reference_configuration.xml"/>
   <xi:include href="submit_directory.xml"/>
+  <xi:include href="jupyter.xml"/>
   <xi:include href="reference_api.xml"/>
   <xi:include href="reference_command_lines.xml"/>
   <xi:include href="useful_tips.xml"/>

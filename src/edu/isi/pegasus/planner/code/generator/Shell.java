@@ -230,7 +230,9 @@ public class Shell extends Abstract {
 	
         //initialize GridStart if required.
         if ( mInitializeGridStart ){
-            mGridStartFactory.initialize( mBag, dag );
+            mGridStartFactory.initialize( mBag, 
+                                          dag,
+                                          this.getDAGFilename(dag, POSTSCRIPT_LOG_SUFFIX ) );
             mInitializeGridStart = false;
         }
 

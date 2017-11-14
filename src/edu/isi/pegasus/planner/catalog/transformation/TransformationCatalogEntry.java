@@ -31,11 +31,13 @@ import edu.isi.pegasus.common.util.ProfileParser;
 import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.Notifications;
 import java.io.IOException;
 import edu.isi.pegasus.planner.classes.Profile;
 
 import edu.isi.pegasus.planner.dax.Invoke;
+import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.util.Collection;
 import java.util.List;
@@ -99,6 +101,11 @@ public class TransformationCatalogEntry
      * All the notifications associated with the job
      */
     private Notifications mNotifications;
+    
+    /**
+     * A reference to the container to use to launch the transformation
+     */
+    private Container mContainer;
 
     /**
      * The basic constructor
@@ -113,6 +120,7 @@ public class TransformationCatalogEntry
 //        sysinfo = null;
         mSysInfo = null;
         mNotifications = new Notifications();
+        mContainer = null;
     }
 
     /**
@@ -180,6 +188,7 @@ public class TransformationCatalogEntry
      * @param sysinfo     the SystemInformation
      */
     private TransformationCatalogEntry( String namespace, String name, String version, String resourceID, String physicalname, TCType type, Profiles profiles, SysInfo sysinfo) {
+        this();
         this.mNamespace = namespace;
         this.mVersion = version;
         this.mName = name;
@@ -208,6 +217,7 @@ public class TransformationCatalogEntry
             mResourceID, mPFN,
             type, mProfiles, this.getSysInfo() );
         entry.addNotifications( this.getNotifications() );
+        entry.setContainer( this.mContainer == null ? null : (Container)mContainer.clone() );
         return entry;
     }
 
@@ -235,6 +245,7 @@ public class TransformationCatalogEntry
         }
 
         sb.append( "\n Notifications: " ).append( this.mNotifications );
+        sb.append( "\n Container    : " ).append( this.mContainer );
 
         return sb.toString();
 
@@ -284,6 +295,39 @@ public class TransformationCatalogEntry
     }
 
     /**
+     * Set the container to use.
+     * 
+     * @param container 
+     */
+    public void setContainer(Container container ){
+        this.mContainer = container;
+    }
+    
+    /**
+     * Merge the container and TC profiles.
+     * 
+     * @param cont 
+     */
+    public void incorporateContainerProfiles(Container cont) {
+        //PM-1214 all  ENV profiles have to be merged 
+        //with the tranformation profile overriding the container
+        //but carried forward with the container object.
+        ENV containerENVProfiles = (ENV) cont.getProfilesObject().get(Profiles.NAMESPACES.env);
+        
+        //merge only if there any profiles associated with the entry
+        if( this.mProfiles != null ){
+            ENV txENVProfiles = (ENV)this.mProfiles.get(Profiles.NAMESPACES.env);
+            containerENVProfiles.merge( txENVProfiles );
+            //container object has all the env profiles
+            //reset from the Transformation Catalog Entry object
+            txENVProfiles.reset();
+        }
+        
+        
+        
+    }
+
+    /**
      * Set the logical transformation with a fully qualified tranformation String of the format NS::NAME:Ver
      * @param logicaltransformation String
      */
@@ -297,9 +341,9 @@ public class TransformationCatalogEntry
 
     /**
      * Set the logical transformation by providing the mNamespace, mName and mVersion as seperate strings.
-     * @param mNamespace String
-     * @param mName String
-     * @param mVersion String
+     * @param namespace
+     * @param name
+     * @param version
      */
     public void setLogicalTransformation( String namespace, String name,
         String version ) {
@@ -310,7 +354,7 @@ public class TransformationCatalogEntry
 
     /**
      * Set the logical mNamespace of the transformation.
-     * @param mNamespace String
+     * @param namespace String
      */
     public void setLogicalNamespace( String namespace ) {
         this.mNamespace = namespace;
@@ -318,7 +362,7 @@ public class TransformationCatalogEntry
 
     /**
      * Set the logical mName of the transformation.
-     * @param mName String
+     * @param name String
      */
     public void setLogicalName( String name ) {
         this.mName = name;
@@ -326,7 +370,7 @@ public class TransformationCatalogEntry
 
     /**
      * Set the logical mVersion of the transformation.
-     * @param mVersion String
+     * @param version String
      */
     public void setLogicalVersion( String version ) {
         this.mVersion = version;
@@ -334,7 +378,7 @@ public class TransformationCatalogEntry
 
     /**
      *  Set the mResourceID where the transformation is available.
-     * @param mResourceID String
+     * @param resourceID String
      */
     public void setResourceId( String resourceid ) {
         this.mResourceID = resourceid;
@@ -350,10 +394,10 @@ public class TransformationCatalogEntry
 
     /**
      * Set the physical location of the transformation.
-     * @param mPFN String
+     * @param pfn String
      */
-    public void setPhysicalTransformation( String physicalname ) {
-        this.mPFN = physicalname;
+    public void setPhysicalTransformation( String pfn ) {
+        this.mPFN = pfn;
     }
 
     /**
@@ -418,7 +462,7 @@ public class TransformationCatalogEntry
 
     /**
      * Allows you to add one profile at a time to the transformation.
-     * @param profile Profile  A single profile consisting of mNamespace, key and value
+     * @param profiles profiles to be added.
      */
     public void addProfiles( Profiles profiles ) {
     	if(profiles != null) {
@@ -462,6 +506,15 @@ public class TransformationCatalogEntry
         }
     }
 
+    /**
+     * Return the container to be used to launch the executable
+     * 
+     * @return 
+     */
+    public Container getContainer(){
+        return mContainer;
+    }
+    
     /**
      * Gets the Fully Qualified Transformation mName in the format NS::Name:Ver.
      * @return String
@@ -550,7 +603,7 @@ public class TransformationCatalogEntry
 
     /**
      * Returns the profiles for a particular Namespace.
-     * @param mNamespace String The mNamespace of the profile
+     * @param namespace String The mNamespace of the profile
      * @return List   List of Profile objects. returns null if none are found.
      */
     public List getProfiles( String namespace ) {

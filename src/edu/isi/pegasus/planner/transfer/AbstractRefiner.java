@@ -130,7 +130,7 @@ public abstract class AbstractRefiner implements Refiner{
         mTPT.buildState();
         mRemoteTransfers = new RemoteTransfer( mProps );
         mRemoteTransfers.buildState();
-        mSubmitDirFactory = bag.getSubmitDirFileFactory();
+        mSubmitDirFactory = bag.getSubmitMapper();
         mXMLStore        = XMLProducerFactory.loadXMLProducer( mProps );
     }
 

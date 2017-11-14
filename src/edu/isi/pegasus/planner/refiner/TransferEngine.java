@@ -54,6 +54,7 @@ import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.PlannerCache;
@@ -66,7 +67,10 @@ import edu.isi.pegasus.planner.mapper.SubmitMapperFactory;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.mapper.OutputMapper;
 import edu.isi.pegasus.planner.mapper.OutputMapperFactory;
+import edu.isi.pegasus.planner.mapper.StagingMapper;
+import edu.isi.pegasus.planner.mapper.StagingMapperFactory;
 import edu.isi.pegasus.planner.mapper.output.Hashed;
+import edu.isi.pegasus.planner.namespace.Metadata;
 
 
 import java.io.File;
@@ -186,9 +190,16 @@ public class TransferEngine extends Engine {
     private ReplicaCatalog mWorkflowCache;
 
     /**
-     * Handle to an OutputMapper that tells what
+     * Handle to an OutputMapper that tells where to place the files on the
+     * output site.
      */
     private OutputMapper mOutputMapper;
+    
+    /**
+     * Handle to an Staging Mapper that tells where to place the files on the
+     * shared scratch space on the staging site.
+     */
+    private StagingMapper mStagingMapper;
     
     /**
      * The working directory relative to the mount point of the execution pool.
@@ -242,7 +253,10 @@ public class TransferEngine extends Engine {
         super( bag );
 
         mSubmitDirMapper =  SubmitMapperFactory.loadInstance( bag,  new File(mPOptions.getSubmitDirectory()));
-        bag.add(PegasusBag.PEGASUS_SUBMIT_DIR_FACTORY, mSubmitDirMapper );
+        bag.add(PegasusBag.PEGASUS_SUBMIT_MAPPER, mSubmitDirMapper );
+        
+        mStagingMapper = StagingMapperFactory.loadInstance(bag);
+        bag.add(PegasusBag.PEGASUS_STAGING_MAPPER, mStagingMapper );
         
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mSRMServiceURLToMountPointMap = constructSiteToSRMServerMap( mProps );
@@ -264,8 +278,8 @@ public class TransferEngine extends Engine {
             throw new FactoryException("Transfer Engine ", e);
         }
 
-        mOutputSite   =  mPOptions.getOutputSite(); 
-        mOutputMapper = OutputMapperFactory.loadInstance( reducedDag, bag);
+        mOutputSite    = mPOptions.getOutputSite(); 
+        mOutputMapper  = OutputMapperFactory.loadInstance( reducedDag, bag);
 
         mWorkflowCache = this.initializeWorkflowCacheFile( reducedDag );
 
@@ -273,13 +287,15 @@ public class TransferEngine extends Engine {
                 
                 
         //log some configuration messages
-        mLogger.log("Transfer Refiner loaded is [" + mTXRefiner.getDescription() +
+        mLogger.log("Transfer Refiner loaded is           [" + mTXRefiner.getDescription() +
                             "]",LogManager.CONFIG_MESSAGE_LEVEL);
-        mLogger.log("ReplicaSelector loaded is  [" + mReplicaSelector.description() +
+        mLogger.log("ReplicaSelector loaded is            [" + mReplicaSelector.description() +
                     "]",LogManager.CONFIG_MESSAGE_LEVEL);
         mLogger.log("Submit Directory Mapper loaded is    [" + mSubmitDirMapper.description() +
                     "]",LogManager.CONFIG_MESSAGE_LEVEL);
-        mLogger.log("Output Mapper loaded is    [" + mOutputMapper.description() +
+        mLogger.log("Staging Mapper loaded is             [" + mStagingMapper.description() +
+                    "]",LogManager.CONFIG_MESSAGE_LEVEL);
+        mLogger.log("Output Mapper loaded is              [" + mOutputMapper.description() +
                     "]",LogManager.CONFIG_MESSAGE_LEVEL);
     }
     
@@ -788,9 +804,12 @@ public class TransferEngine extends Engine {
             throw new RuntimeException( mLogMsg );
         }
 
+        //PM-833 figure out the addOn component just once per lfn
+        File addOn = mStagingMapper.mapToRelativeDirectory(job, stagingSite, lfn);
+            
         //the get
-        String sharedScratchGetURL = this.getURLOnSharedScratch( stagingSite, job, OPERATION.get, lfn );
-        String sharedScratchPutURL = this.getURLOnSharedScratch( stagingSite, job, OPERATION.put, lfn );
+        String sharedScratchGetURL = this.getURLOnSharedScratch( stagingSite, job, OPERATION.get, addOn, lfn );
+        String sharedScratchPutURL = this.getURLOnSharedScratch( stagingSite, job, OPERATION.put, addOn, lfn );
 
         //in the planner cache we track the output files put url on staging site
         trackInPlannerCache( lfn, sharedScratchPutURL, stagingSiteHandle );
@@ -991,6 +1010,7 @@ public class TransferEngine extends Engine {
             String sourceURI = null;
             
             //PM-590 Stricter checks
+            /* PM-833
             String thirdPartyDestPutURI = this.getURLOnSharedScratch( destSite, job, OPERATION.put, null );
 
 
@@ -1002,17 +1022,37 @@ public class TransferEngine extends Engine {
                 thirdPartyDestPutURI :
                 //construct for normal transfer
                 "file://" + mSiteStore.getInternalWorkDirectory( destSiteHandle, destRemoteDir );
-
+            */
 
             for (Iterator fileIt = pJob.getOutputFiles().iterator(); fileIt.hasNext(); ){
                 PegasusFile pf = (PegasusFile) fileIt.next();
                 String outFile = pf.getLFN();
 
                if( job.getInputFiles().contains( pf ) ){
+
+                   //PM-833 figure out the addOn component just once per lfn
+                   String lfn = pf.getLFN();
+                   File addOn = mStagingMapper.mapToRelativeDirectory(job, destSite, lfn);
+                   String thirdPartyDestPutURL = this.getURLOnSharedScratch(destSite, job, OPERATION.put, addOn, lfn);
+
+
+                   //definite inconsitency as url prefix and mount point
+                   //are not picked up from the same server
+                   boolean localTransfer = runTransferOnLocalSite( destSite, thirdPartyDestPutURL, Job.INTER_POOL_JOB );
+                   String destURL = localTransfer ?
+                                            //construct for third party transfer
+                                            thirdPartyDestPutURL :
+                                            //construct for normal transfer
+                                            "file://" + mSiteStore.getInternalWorkDirectory( destSiteHandle, destRemoteDir ) + 
+                                                    File.separator + addOn +
+                                                    File.separator + lfn;
+
+                   
                     String sourceURL     = null;
-                    String destURL       = destURI + File.separator + outFile;
+                    /* PM-833 String destURL       = destURI + File.separator + outFile;
                     String thirdPartyDestURL = thirdPartyDestPutURI + File.separator +
                                            outFile;
+                    */
                     FileTransfer ft      = new FileTransfer(outFile,pJob.jobName);
                     ft.setSize( pf.getSize() );
                     ft.addDestination(destSiteHandle,destURL);
@@ -1021,10 +1061,10 @@ public class TransferEngine extends Engine {
                     //for the cleanup algorithm
                     //only the destination is tracked as source will have been
                     //tracked for the parent jobs
-                    trackInPlannerCache( outFile, thirdPartyDestURL, destSiteHandle );
+                    trackInPlannerCache( outFile, thirdPartyDestPutURL, destSiteHandle );
 
                     //in the workflow cache we track the get URL for the outfile
-                    String thirdPartyDestGetURL = this.getURLOnSharedScratch( destSite, job, OPERATION.get, outFile );
+                    String thirdPartyDestGetURL = this.getURLOnSharedScratch( destSite, job, OPERATION.get, addOn, outFile );
                     trackInWorkflowCache( outFile, thirdPartyDestGetURL, destSiteHandle );
 
                     //add all the possible source urls iterating through
@@ -1049,7 +1089,7 @@ public class TransferEngine extends Engine {
                         
                             sourceURL = sourceURI + File.separator + outFile;
 
-                            if(!(sourceURL.equalsIgnoreCase(thirdPartyDestURL))){
+                            if(!(sourceURL.equalsIgnoreCase(thirdPartyDestPutURL))){
                                 //add the source url only if it does not match to
                                 //the third party destination url
                                 ft.addSource(pJob.getStagingSiteHandle(), sourceURL);
@@ -1233,6 +1273,10 @@ public class TransferEngine extends Engine {
         SiteCatalogEntry stagingSite        = mSiteStore.lookup( stagingSiteHandle );
         //we are using the pull mode for data transfer
         String scheme  = "file";
+        String containerLFN = null;
+        if( job.getContainer() != null ){
+            containerLFN = job.getContainer().getLFN();
+        }
 
         //sAbsPath would be just the source directory absolute path
         //dAbsPath would be just the destination directory absolute path
@@ -1240,25 +1284,6 @@ public class TransferEngine extends Engine {
         //sDirURL would be the url to the source directory.
         //dDirPutURL would be the url to the destination directoy
         //and is always a networked url.
-        String dDirPutURL = this.getURLOnSharedScratch( stagingSite, job, OPERATION.put, null );
-        String dDirGetURL = this.getURLOnSharedScratch( stagingSite, job, OPERATION.get, null );
-        String sDirURL = null;
-        String sAbsPath = null;
-        String dAbsPath = mSiteStore.getInternalWorkDirectory( stagingSiteHandle, eRemoteDir );
-        
-        
-        //file dest dir is destination dir accessed as a file URL
-        String fileDestDir = scheme + "://" + dAbsPath;
-                
-        //check if the execution pool is third party or not
-        boolean runTransferOnLocalSite = runTransferOnLocalSite( stagingSite, dDirPutURL, Job.STAGE_IN_JOB);
-        String destDir = ( runTransferOnLocalSite ) ?
-            //use the full networked url to the directory
-            dDirPutURL
-            :
-            //use the default pull mode
-            fileDestDir;
-
 
         for( Iterator it = searchFiles.iterator(); it.hasNext(); ){
             String sourceURL = null,destPutURL = null, destGetURL =null;
@@ -1268,23 +1293,45 @@ public class TransferEngine extends Engine {
 
             String lfn     = pf.getLFN();
             NameValue nv   = null;
+            
+            //PM-833 figure out the addOn component just once per lfn
+            File addOn = mStagingMapper.mapToRelativeDirectory(job, stagingSite, lfn);
+            
+            destPutURL = this.getURLOnSharedScratch( stagingSite, job, OPERATION.put, addOn, lfn );
+            destGetURL = this.getURLOnSharedScratch( stagingSite, job, OPERATION.get, addOn, lfn );
+            String sDirURL = null;
+            String sAbsPath = null;
+            String dAbsPath = mSiteStore.getInternalWorkDirectory( stagingSiteHandle, eRemoteDir ) + File.separator + addOn;
+        
+        
+            //file dest dir is destination dir accessed as a file URL
+            String fileDestDir = scheme + "://" + dAbsPath;
+                
+            //check if the execution pool is third party or not
+            boolean runTransferOnLocalSite = runTransferOnLocalSite( stagingSite, destPutURL, Job.STAGE_IN_JOB);
+            String destDir = ( runTransferOnLocalSite ) ?
+                //use the full networked url to the directory
+                destPutURL
+                :
+                //use the default pull mode
+                fileDestDir;
+            
 
             //see if the pf is infact an instance of FileTransfer
             if( pf instanceof FileTransfer ){
                 //that means we should be having the source url already.
                 //nv contains both the source pool and the url.
-                //This happens in case of AI Planner or transfer of executables
-                nv = ((FileTransfer)pf).getSourceURL();
+                //PM-1213 remote the source URL. will be added later back
+                nv = ((FileTransfer)pf).removeSourceURL();
                 
                 NameValue destNV = ((FileTransfer)pf).removeDestURL();
-                if( destNV == null ){
-                    //the source URL was specified in the DAX
-                    //no transfer of executables case
-                    throw new RuntimeException( "Unreachable code . Signifies error in internal logic " );
+                
+                //PM-833 we have to explicity set the remote executable
+                //especially for the staging of executables in sharedfs
+                if( lfn.equalsIgnoreCase( job.getStagedExecutableBaseName() )){
+                    job.setRemoteExecutable(  dAbsPath + File.separator + lfn );
                 }
-                else{
-                    //staging of executables case
-                    destPutURL = destNV.getValue();
+                
                     destPutURL = (runTransferOnLocalSite( stagingSite, destPutURL, Job.STAGE_IN_JOB))?
                                //the destination URL is already third party
                                //enabled. use as it is
@@ -1294,7 +1341,6 @@ public class TransferEngine extends Engine {
                                
                     //for time being for this case the get url is same as put url
                     destGetURL = destPutURL;
-                }
             }
             else{
                 //query the replica services and get hold of pfn
@@ -1336,6 +1382,9 @@ public class TransferEngine extends Engine {
             //the transfer mode for the file needs to be
             //propogated for optional transfers.
             ft.setTransferFlag(pf.getTransferFlag());
+            
+            //PM-1190 associate metadata with the FileTransfer
+            ft.setMetadata( pf.getAllMetadata());
 
             ReplicaLocation candidateLocations = null;
             if( nv != null ){
@@ -1345,6 +1394,10 @@ public class TransferEngine extends Engine {
                 rces.add(  new ReplicaCatalogEntry( nv.getValue(), nv.getKey() ));
                 rl  = new ReplicaLocation( lfn, rces );
             }
+            
+            //PM-1190 add any retrieved metadata from the replica catalog
+            //to the associated PegasusFile that is associated with the compute jobs
+            pf.addMetadata( rl.getAllMetadata() );
             
             //select from the various replicas
             candidateLocations =  mReplicaSelector.selectAndOrderReplicas( rl, 
@@ -1383,6 +1436,14 @@ public class TransferEngine extends Engine {
                     selLoc = replaceSourceProtocolFromURL( selLoc );
                 }
             
+                
+                if ( symLinkSelectedLocation ){
+                    //PM-1197 we can symlink only if no container is associated with the job
+                    //or the file in question is the container file itself.
+                    if( !(containerLFN == null || containerLFN.equals( lfn )) ){
+                        symLinkSelectedLocation = false;
+                    }
+                }
                                         
                 //get the file to the job's execution pool
                 //this is assuming that there are no directory paths
@@ -1399,23 +1460,15 @@ public class TransferEngine extends Engine {
 
                 if( destPutURL == null || 
                         symLinkSelectedLocation){ //PM-1082 if a destination has to be symlinked always recompute
-                    //no staging of executables case. 
-                    //we construct destination URL to file.
-                    StringBuffer destPFN = new StringBuffer();
+                    
                     if( symLinkSelectedLocation ){
                         //we use the file URL location to dest dir
                         //in case we are symlinking
                         //destPFN.append( fileDestDir );
-                        destPFN.append( this.replaceProtocolFromURL( destDir ) );
+                        destPutURL =  this.replaceProtocolFromURL( destPutURL );
                     }
-                    else{
-                        //we use whatever destDir was set to earlier
-                        destPFN.append( destDir );
-                    }
-                    destPFN.append( File.separator).append( lfn );
-                    destPutURL = destPFN.toString();
+                    //ensures symlinked location gets picked up
                     preferredDestPutURL = destPutURL;
-                    destGetURL = dDirGetURL + File.separator + lfn;
                 }
             
 
@@ -1428,7 +1481,8 @@ public class TransferEngine extends Engine {
                 //match the directory url knowing that lfn and
                 //(source and dest pool) are same
                 try{
-                    if(sourceURL.equalsIgnoreCase(dDirPutURL + File.separator + lfn)||
+                    //PM-833if(sourceURL.equalsIgnoreCase(dDirPutURL + File.separator + lfn)||
+                    if(sourceURL.equalsIgnoreCase( destPutURL )||
                          ( selLoc.getResourceHandle().equalsIgnoreCase( stagingSiteHandle ) &&
                            lfn.equals( sourceURL.substring(sourceURL.lastIndexOf(File.separator) + 1)) &&
                            //sAbsPath.equals( dAbsPath )
@@ -1748,12 +1802,15 @@ public class TransferEngine extends Engine {
         for( Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ){
             PegasusFile pf = (PegasusFile) it.next();
             String lfn = pf.getLFN();
+            
+            //PM-833 figure out the addOn component just once per lfn
+            File addOn = mStagingMapper.mapToRelativeDirectory(job, stagingSiteEntry, lfn);
 
             //construct the URL to track in planner cache
-            String stagingSitePutURL = this.getURLOnSharedScratch( stagingSiteEntry, job, OPERATION.put, lfn);
+            String stagingSitePutURL = this.getURLOnSharedScratch( stagingSiteEntry, job, OPERATION.put, addOn, lfn);
             trackInPlannerCache( lfn, stagingSitePutURL, stagingSiteEntry.getSiteHandle() );
 
-            String stagingSiteGetURL = this.getURLOnSharedScratch( stagingSiteEntry, job, OPERATION.get, lfn);
+            String stagingSiteGetURL = this.getURLOnSharedScratch( stagingSiteEntry, job, OPERATION.get, addOn, lfn);
             trackInWorkflowCache( lfn, stagingSiteGetURL, stagingSiteEntry.getSiteHandle() );
 
         }
@@ -1837,6 +1894,24 @@ public class TransferEngine extends Engine {
      * @return  the URL
      */
     private String getURLOnSharedScratch( SiteCatalogEntry entry ,
+                                          Job job,
+                                          FileServer.OPERATION operation ,
+                                          File addOn,
+                                          String lfn ){
+        return mStagingMapper.map(job, addOn, entry,  operation, lfn );
+        
+    }
+    /**
+     * Returns a URL on the shared scratch of the staging site
+     *
+     * @param entry         the SiteCatalogEntry for the associated stagingsite
+     * @param job           the job
+     * @param operation     the FileServer operation for which we need the URL
+     * @param lfn           the LFN can be null to get the path to the directory
+     *
+     * @return  the URL
+     */
+    private String getURLOnSharedScratchOriginal( SiteCatalogEntry entry ,
                                           Job job,
                                           FileServer.OPERATION operation ,
                                           String lfn ){

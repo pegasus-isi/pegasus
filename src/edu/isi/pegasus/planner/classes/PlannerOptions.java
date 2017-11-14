@@ -1128,17 +1128,12 @@ public class PlannerOptions extends Data implements Cloneable{
      */
     public void setSubmitDirectory( String base, String relative ){
         base = sanitizePath( base );
-        /*
-        mSubmitFileDir = ( relative == null )?
-                         new File( base ).getAbsolutePath():
-                         new File( base, relative ).getAbsolutePath();
-         */
-
-//not clear what it should be .
-//        mRelativeDir = relative;
-        mRelativeSubmitDir = relative;
-
         mBaseDir  = base;
+        //PM-1113 do the null check to ensure order of arguments 
+        //--dir and --relative-submit-dir is not important
+        if( relative != null ){
+            mRelativeSubmitDir = relative;
+        }
     }
 
 

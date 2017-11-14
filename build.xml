@@ -3,8 +3,8 @@
   <property environment="env"/>
   <property file="build.properties"/>
   <property file="build.git.properties"/>
-  <property name="build.source" value="1.6"/>
-  <property name="build.target" value="1.6"/>
+  <property name="build.source" value="1.8"/>
+  <property name="build.target" value="1.8"/>
   <property name="make" value="make"/>
   <property name="bash" value="bash"/>
   <property name="compile.lint" value="-Xlint:none"/>
@@ -18,12 +18,17 @@
   <property name="dist.data" location="${dist.dir}/share"/>
   <property name="dist.share" location="${dist.data}/pegasus"/>
   <property name="dist.jars" location="${dist.share}/java"/>
-  <property name="dist.schema" location="${dist.share}/schema"/> 
+  <property name="dist.aws.jars" location="${dist.share}/java/aws"/>
+  <property name="dist.schema" location="${dist.share}/schema"/>
   <property name="dist.doc" location="${dist.dir}/share/doc/pegasus"/>
   <property name="dist.man" location="${dist.data}/man"/>
 
   <path id="build.classpath">
     <fileset dir="share/pegasus/java" includes="*.jar"/>
+  </path>
+  
+  <path id="build.aws.classpath">
+    <fileset dir="share/pegasus/java/aws" includes="*.jar"/>
   </path>
 
   <echo>Pegasus Version: ${pegasus.version}</echo>
@@ -104,15 +109,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       </filterset>
     </copy>
 
-    <!-- Debian changelog file with updated version number -->
-    <copy preservelastmodified="true" overwrite="true" file="debian/changelog.in" tofile="debian/changelog">
-      <filterset>
-        <filter token="PEGASUS_VERSION" value="${pegasus.version}"/>
-        <filter token="OSID" value="${dist.osid}"/>
-        <filter token="DATE" value="${ISODATE.deb}"/>
-      </filterset>
-    </copy>
-
     <!-- Create pegasus-config -->
     <mkdir dir="${dist.bin}"/>
     <copy preservelastmodified="true" todir="${dist.bin}">
@@ -141,7 +137,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <javac destdir="${build.src}" srcdir="src"
            encoding="UTF-8" deprecation="true" debug="true"
            target="${build.target}" source="${build.source}"
-           includes="edu/isi/pegasus/common/**/*.java,edu/isi/pegasus/gridftp/**/*.java"
+           includes="edu/isi/pegasus/common/**/*.java"
            excludes="edu/isi/pegasus/common/**/*Test.java,edu/isi/pegasus/planner/**/*.java"
            classpathref="build.classpath"
            includeantruntime="false">
@@ -172,6 +168,18 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <compilerarg value="${compile.lint}"/>
     </javac>
   </target>
+  
+  <target name="compile-aws-batch" depends="compile-planner" description="Compile Pegasus AWS Batch Code">
+    <javac destdir="${build.src}" srcdir="src"
+           target="${build.target}" source="${build.source}"
+           encoding="UTF-8" debug="true"
+           includes="edu/isi/pegasus/aws/**/*.java"
+           excludes="edu/isi/pegasus/aws/**/*Test.java,org/griphyn/**/*.java"
+           classpathref="build.aws.classpath"
+           includeantruntime="false">
+      <compilerarg value="${compile.lint}"/>
+    </javac>
+  </target>
 
   <target name="compile-junit" depends="setup,compile-common,compile-planner" description="Compile java unit tests">
     <javac destdir="${test.src}" srcdir="test/junit"
@@ -197,8 +205,16 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <mkdir dir="${dist.jars}"/>
     <jar destfile="${dist.jars}/pegasus.jar" basedir="${build.src}"
          includes="*.properties,edu/isi/pegasus/**/*.class,edu/isi/ikcap/**/*.class"
-         excludes="*.class,edu/isi/pegasus/planner/test/**/*.class,edu/isi/pegasus/**/*Test.class,org/griphyn/**/*Test.class,org/griphyn/**/*.class"/>
+         excludes="*.class,edu/isi/pegasus/aws/**/*.class,edu/isi/pegasus/planner/test/**/*.class,edu/isi/pegasus/**/*Test.class,org/griphyn/**/*Test.class,org/griphyn/**/*.class"/>
     <chmod perm="0644" file="${dist.jars}/pegasus.jar"/>
+  </target>
+
+  <target name="jar-aws-batch" depends="compile-aws-batch" description="Generate jar for Pegauss AWS Batch Code">
+    <mkdir dir="${dist.jars}"/>
+    <jar destfile="${dist.jars}/pegasus-aws-batch.jar" basedir="${build.src}"
+         includes="*.properties,edu/isi/pegasus/aws/**/*.class"
+         excludes="*.class,edu/isi/pegasus/aws/**/*Test.class"/>
+    <chmod perm="0644" file="${dist.jars}/pegasus-aws-batch.jar"/>
   </target>
 
   <target name="jar-junit" depends="compile-junit" description="Generate unit test jar">
@@ -237,6 +253,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
              Version="true"
              Private="true"
              Windowtitle="PEGASUS"
+	     Encoding="UTF-8"
              classpathref="build.classpath">
       <packageset dir="src">
         <include name="edu/isi/pegasus/planner/dax/**"/>
@@ -249,11 +266,12 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </javadoc>
   </target>
 
-  <target name="doc-python" depends="setup,doc-user-guide" description="Generate python documentation">
+  <target name="doc-python" depends="setup,doc-user-guide,compile-externals" description="Generate python documentation">
     <delete dir="${dist.doc}/wordpress/python"/>
     <mkdir dir="${dist.doc}/wordpress/python"/>
     <exec executable="./doc/python-docs" dir="" failonerror="true">
-      <arg line="${basedir}/lib/pegasus/python/Pegasus ${dist.doc}/wordpress/python"/>
+      <env key="PYTHONPATH" value="${basedir}/lib/pegasus/externals/python"/>
+      <arg line="${basedir}/lib/pegasus/python ${dist.doc}/wordpress/python"/>
     </exec>
   </target>
 
@@ -356,6 +374,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <fileset dir="bin">
           <include name="pegasus-s3"/>
           <include name="pegasus-transfer"/>
+          <include name="pegasus-integrity"/>
           <!-- add script files to copy as necessary -->
       </fileset>
     </copy>
@@ -365,12 +384,17 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       </fileset>
     </chmod>
 
+    <!-- lib -->
+    <copy preservelastmodified="true" todir="${dist.lib}/pegasus/externals/python">
+      <fileset dir="lib/pegasus/externals/python" includes="**/*"/>
+    </copy>
+
     <copy preservelastmodified="true" todir="${dist.dir}" file="LICENSE"/>
 
     <package-binary name="pegasus-worker-${pegasus.version}-${dist.arch}"/>
   </target>
 
-  <target name="dist-common" depends="dist-clean,setup,jar-planner,jar-vdl,compile-ctools,compile-python,compile-externals,compile-r,dist-worker">
+  <target name="dist-common" depends="dist-clean,setup,jar-planner,jar-aws-batch,jar-vdl,compile-ctools,compile-python,compile-externals,compile-r,dist-worker">
     <!-- bin -->
     <copy preservelastmodified="true" todir="${dist.bin}">
       <fileset dir="bin">
@@ -439,6 +463,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </chmod>
     <chmod perm="0644" type="file">
       <fileset dir="${dist.jars}" includes="*.jar"/>
+      <fileset dir="${dist.aws.jars}" includes="*.jar"/>
     </chmod>
     <!-- include a copy of the worker package - this is so that the planner can include it
          quickly in workflows running on the same system as the planner -->
@@ -484,8 +509,26 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <package-binary name="pegasus-nodocs-${pegasus.version}-${dist.arch}"/>
   </target>
 
+  <!-- This target should clean everything _except_ things we want in the
+       source tarball, such as documentation. -->
   <target name="dist-clean">
     <delete dir="${dist.dir}"/>
+    <delete dir="build"/>
+    <exec executable="${make}" dir="src/tools" failonerror="true">
+      <arg line="distclean"/>
+    </exec>
+    <exec executable="${make}" dir="src/tools/pegasus-mpi-cluster" failonerror="true">
+      <arg line="distclean"/>
+    </exec>
+    <exec executable="${make}" dir="src/externals" failonerror="true">
+      <arg line="clean"/>
+    </exec>
+    <exec executable="${dist.python}" dir="lib/pegasus/python" failonerror="true">
+      <arg line="setup.py clean --all"/>
+    </exec>
+    <delete>
+      <fileset dir="lib/pegasus/python/Pegasus" includes="**/*.pyc"/>
+    </delete>
   </target>
 
   <target name="clean" description="Delete all build artifacts">
@@ -513,7 +556,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <fileset dir="lib/pegasus/python/Pegasus" includes="**/*.pyc"/>
     </delete>
   </target>
-  
+
   <target name="dist-source" description="Build source tarball">
     <exec executable="release-tools/create-source-tar" failonerror="true">
       <arg line="${pegasus.version}"/>
@@ -532,23 +575,15 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </exec>
   </target>
 
-  <target name="dist-deb" depends="setup" description="Build Debian package">
-    <exec executable="dpkg-buildpackage" failonerror="true">
-      <arg line="-b -uc"/>
+  <target name="dist-deb" depends="dist-source,setup" description="Build Debian package">
+    <exec executable="release-tools/build-deb" failonerror="true">
+      <arg line="${pegasus.version} ${dist.osid}"/>
     </exec>
-    <apply executable="lintian" dir=".." failonerror="false">
-      <fileset dir=".." includes="pegasus_${pegasus.version}*.changes"/>
-    </apply>
-    <apply executable="mv" failonerror="true">
-      <srcfile/>
-      <arg value="dist/"/>
-      <fileset dir=".." includes="pegasus_${pegasus.version}*.deb"/>
-    </apply>
   </target>
 
   <target name="test-java" depends="dist-common,jar,compile-externals" description="Run java unit tests">
     <mkdir dir="${junitreport.dir}"/>
-    <junit printsummary="yes" haltonfailure="yes">
+    <junit printsummary="yes" haltonfailure="yes" fork="true" forkmode="once">
       <sysproperty key="externals.python.path" value="${dist.lib}/pegasus/externals/python"/>
       <sysproperty key="pegasus.home.schemadir" value="${dist.schema}"/>
       <sysproperty key="pegasus.home.bindir"   value="${dist.bin}"/>
@@ -559,7 +594,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
         <path location="${dist.jars}/pegasus-test.jar"/>
         <path location="${dist.jars}/vdl.jar"/>
       </classpath>
-      
+
       <formatter type="xml" usefile="yes"/>
       <formatter type="brief" usefile="no"/>
       <test name="edu.isi.pegasus.planner.test.AllTests" todir="${junitreport.dir}"/>
@@ -586,6 +621,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
   </target>
 
   <target name="test" depends="test-python,test-java,test-kickstart,test-pmc" description="Run all unit tests"/>
-  
+
 </project>
 

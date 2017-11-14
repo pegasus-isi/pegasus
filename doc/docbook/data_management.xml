@@ -7,14 +7,14 @@
   <section id="replica_selection">
     <title>Replica Selection</title>
 
-    <para>Each job in the DAX maybe associated with input LFN&amp;rsquor;s
-    denoting the files that are required for the job to run. To determine the
-    physical replica (PFN) for a LFN, Pegasus queries the Replica catalog to
-    get all the PFN&amp;rsquor;s (replicas) associated with a LFN. The Replica
-    Catalog may return multiple PFN's for each of the LFN's queried. Hence,
-    Pegasus needs to select a single PFN amongst the various PFN's returned
-    for each LFN. This process is known as replica selection in Pegasus. Users
-    can specify the replica selector to use in the properties file.</para>
+    <para>Each job in the DAX maybe associated with input LFN's denoting the
+    files that are required for the job to run. To determine the physical
+    replica (PFN) for a LFN, Pegasus queries the Replica catalog to get all
+    the PFN's (replicas) associated with a LFN. The Replica Catalog may return
+    multiple PFN's for each of the LFN's queried. Hence, Pegasus needs to
+    select a single PFN amongst the various PFN's returned for each LFN. This
+    process is known as replica selection in Pegasus. Users can specify the
+    replica selector to use in the properties file.</para>
 
     <para>This document describes the various Replica Selection Strategies in
     Pegasus.</para>
@@ -103,11 +103,11 @@
       <section>
         <title>Regex</title>
 
-        <para>This replica selector allows the user allows the user to
-        specific regular expressions that can be used to rank various PFN's
-        returned from the Replica Catalog for a particular LFN. This replica
-        selector orders the replicas based on the rank. Lower the rank higher
-        the preference.</para>
+        <para>This replica selector allows the user to specific regular
+        expressions that can be used to rank various PFN's returned from the
+        Replica Catalog for a particular LFN. This replica selector orders the
+        replicas based on the rank. Lower the rank higher the
+        preference.</para>
 
         <para>The regular expressions are assigned different rank, that
         determine the order in which the expressions are employed. The rank
@@ -153,10 +153,10 @@ pegasus.selector.replica.regex.rank.2                       gsiftp://example\.is
         having a particular replica, then a random site is selected amongst
         these preferred sites.</para>
 
-        <para>A bad site for a compute site X, is a site from which
-        replica&amp;rsquor;s should not be staged. The reason of not accessing
-        replica from a bad site can vary from the link being down, to the user
-        not having permissions on that site&amp;rsquor;s data.</para>
+        <para>A bad site for a compute site X, is a site from which replicas
+        should not be staged. The reason of not accessing replica from a bad
+        site can vary from the link being down, to the user not having
+        permissions on that site's data.</para>
 
         <para>The good | bad sites are specified by the following
         properties</para>
@@ -201,7 +201,7 @@ pegasus.replica.uwm.prefer.stagein.sites                   isi,cit
         mechanism.</para>
 
         <para>To use this replica selector set the following
-        property<programlisting>pegasus.selector.replica                  Default</programlisting></para>
+        property<programlisting>pegasus.selector.replica                  Local</programlisting></para>
       </section>
     </section>
   </section>
@@ -763,10 +763,15 @@ pegasus.replica.uwm.prefer.stagein.sites                   isi,cit
       configuration which is trying to strike a balance between performance
       and aggressiveness. We obviously want data transfers to be as quick as
       possibly, but we also do not want our transfers to overwhelm data
-      services and systems. The default configuration consists of a
-      combination of the maximum number of transfer jobs per level in the
-      workflow, and how many threads such a pegasus-transfer job can
-      spawn.</para>
+      services and systems. </para>
+
+      <para>Starting 4.8.0 release, the default configuration of Pegasus now
+      adds transfer jobs and cleanup jobs based on the number of jobs at a
+      particular level of the workflow. For example, for every 10 compute jobs
+      on a level of a workflow, one data transfer job( stage-in and stage-out)
+      is created. The default configuration also sets how many threads such a
+      pegasus-transfer job can spawn. Cleanup jobs are similarly constructed
+      with an internal ratio of 5.</para>
 
       <para>Information on how to control the number of stagein and stageout
       jobs can be found in the <link linkend="data_movement_nodes"> Data
@@ -854,9 +859,16 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
       <para>Pegasus supports three different transfer refiners that dictate
       how the stagein and stageout jobs are added for the workflow.The default
-      Transfer Refiner used in Pegasus is the BalancedCluster Refiner that
-      allows the user to specify how many local|remote stagein|stageout jobs
-      are created per execution site.</para>
+      Transfer Refiner used in Pegasus is the BalancedCluster Refiner.
+      Starting 4.8.0 release, the default configuration of Pegasus now adds
+      transfer jobs and cleanup jobs based on the number of jobs at a
+      particular level of the workflow. For example, for every 10 compute jobs
+      on a level of a workflow, one data transfer job( stage-in and stage-out)
+      is created.</para>
+
+      <para>The transfer refiners also allow the user to specify how many
+      local|remote stagein|stageout jobs are created per execution
+      site.</para>
 
       <para>The behavior of the refiners (BalancedCluster and Cluster) are
       controlled by specifying certain pegasus profiles</para>
@@ -943,7 +955,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
         pegasus.transfer.refiner</para>
       </tip>
 
-      <section>
+      <section id="transfer-refiner-balanced-cluster">
         <title>BalancedCluster</title>
 
         <para>This is a new transfer refiner that was introduced in Pegasus
@@ -1011,7 +1023,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     </section>
 
     <section id="transfer_client">
-      <title>Executable Used for Transfer Jobs</title>
+      <title>Executable Used for Transfer and Cleanup Jobs</title>
 
       <para>Pegasus refers to a python script called <emphasis role="bold">
       pegasus-transfer</emphasis> as the executable in the transfer jobs to
@@ -1037,9 +1049,16 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
           <tbody>
             <row>
+              <entry>gfal-copy</entry>
+
+              <entry>staging file to and from GridFTP servers</entry>
+            </row>
+
+            <row>
               <entry>globus-url-copy</entry>
 
-              <entry>staging files to and from GridFTP servers</entry>
+              <entry>staging files to and from GridFTP servers, only if gfal
+              is not detected in the path.</entry>
             </row>
 
             <row>
@@ -1086,6 +1105,12 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
             </row>
 
             <row>
+              <entry>gsiscp</entry>
+
+              <entry>staging files using gsiscp and X509</entry>
+            </row>
+
+            <row>
               <entry>iget</entry>
 
               <entry>staging files to and from iRODS servers</entry>
@@ -1100,6 +1125,29 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       client , users can add an entry into the transformation catalog with
       fully qualified logical name as <emphasis
       role="bold">pegasus::pegasus-transfer</emphasis></para>
+
+      <section>
+        <title>Preference of GFAL over GUC</title>
+
+        <para>JGlobus is no longer actively supported and is not in compliance
+        with <ulink
+        url="https://docs.globus.org/security-bulletins/2015-12-strict-mode">RFC
+        2818</ulink> . As a result cleanup jobs using pegasus-gridftp client
+        would fail against the servers supporting the strict mode. We have
+        removed the pegasus-gridftp client and now use gfal clients as
+        globus-url-copy does not support removes. If gfal is not available,
+        globus-url-copy is used for cleanup by writing out zero bytes files
+        instead of removing them.</para>
+
+        <para>If you want to force globus-url-copy to be preferred over GFAL,
+        set the <emphasis role="bold">PEGASUS_FORCE_GUC=1</emphasis>
+        environment variable in the site catalog for the sites you want the
+        preference to be enforced. Please note that we expect globus-url-copy
+        support to be completely removed in future releases of Pegasus due to
+        the end of life of Globus Toolkit (see
+        <ulink url="https://www.globus.org/blog/support-open-source-globus-toolkit-ends-january-2018">announcement</ulink>).
+        </para>
+      </section>
     </section>
 
     <section>
@@ -1230,53 +1278,83 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     </section>
 
     <section id="transfer_worker_package_staging">
-      <title>Staging of Pegasus Worker Package</title>
+      <title>Staging of Worker Package</title>
+      
+      <para>The worker package contains runtime tools such as
+      <emphasis>pegasus-kickstart</emphasis> and <emphasis>pegasus-transfer</emphasis>,
+      and is required to be available for most jobs.</para>
+      
+      <para>How the package is made available to the jobs depends on multiple factors.
+      For example, a pre-installed Pegasus can be used if the location is set using the 
+      environment profile PEGASUS_HOME for the site in the Site Catalog.</para>
 
-      <para>Pegasus can optionally stage the pegasus worker package as part of
-      the executable workflow to remote workflow specific execution directory.
-      The pegasus worker package contains the pegasus auxillary executables
-      that are required on the remote site. If the worker package is not
-      staged as part of the executable workflow, then Pegasus relies on the
-      installed version of the worker package on the remote site. To determine
-      the location of the installed version of the worker package on a remote
-      site, Pegasus looks for an environment profile PEGASUS_HOME for the site
-      in the Site Catalog.</para>
-
-      <para>Users can set the following property to true to turn on worker
-      package staging</para>
+      <para>If Pegasus is not already available on the execution site, the worker
+      package can be staged by setting the following property:</para>
 
       <programlisting><emphasis role="bold">pegasus.transfer.worker.package          true</emphasis> </programlisting>
-
-      <para>Starting 4.6.0 release, the worker package used for a remote site
-      ( if required ) is determined in the following order</para>
+       
+      <para> 
+      Note that how the package is transferred and accessed differs based on
+      the configured data management mode:
+      </para>
+      
+      <itemizedlist>
+        <listitem>
+          <para><emphasis>sharedfs</emphasis> mode: the package is staged in to 
+          the shared filesystem once, and reused for all the jobs 
+          </para>
+        </listitem>
+        <listitem>
+          <para><emphasis>nonsharedfs</emphasis> or <emphasis>condorio</emphasis> mode:
+          each job carries a worker package. This is obviously less efficient, but 
+          the size of the worker package is kept small to minimize the impact of these
+          extra transfers.
+          </para>
+        </listitem>
+      </itemizedlist>  
+      
+      <para>Which worker package is used is determined in the following order:</para>
 
       <itemizedlist>
         <listitem>
-          <para>there is an entry for pegasus::worker executable in the
+          <para>There is an entry for pegasus::worker executable in the
           transformation catalog. Information on how to construct that entry
           is provided below.</para>
         </listitem>
 
         <listitem>
-          <para>the planner at runtime creates a worker package out of the
-          binary installation on the pegasus website, and puts it in the
-          submit directory. It uses this worker package if the OS and
+          <para>The planner at runtime creates a worker package out of the
+          binary installation, and puts it in the
+          submit directory. This worker package is used if the OS and
           architecture of the created worker package match with remote site,
-          or there is an exact match with ( osrelease and osversion) if
+          or there is an exact match with (osrelease and osversion) if
           specified by the user in the site catalog for the remote
           site.</para>
         </listitem>
 
         <listitem>
-          <para>the worker package compatible with the remote site is used
-          from the Pegasus website.</para>
+          <para>The worker package compatible with the remote site is available
+          as a binary from the Pegasus download site.</para>
         </listitem>
+        
+        <listitem>
+          <para>At runtime, in the <emphasis>nonsharedfs</emphasis> or <emphasis>condorio</emphasis> modes,
+          extra checks are made to make sure the worker package matches the Pegasus version and the OS and
+          architecture. The reason is that these workflows might be running in an heterogeneous environment,
+          and thus there is no way to know before the job starts what worker package is required. If
+          the runtime check fails, a worker package matching the Pegasus version, OS and architecture
+          will be downloaded from the Pegasus download site. This behavior can be controlled with the
+          <link linkend="pegasus.transfer.worker.package.autodownload">pegasus.transfer.worker.package.autodownload</link> and 
+          <link linkend="pegasus.transfer.worker.package.strict">pegasus.transfer.worker.package.strict</link> properties. 
+          </para>
+        </listitem>
+        
       </itemizedlist>
 
-      <para>For users to specify a particular worker package to use, they can
+      <para>If you want to specify a particular worker package to use, you can
       specify the transformation <emphasis
       role="bold">pegasus::worker</emphasis> in the transformation catalog
-      with</para>
+      with:</para>
 
       <itemizedlist>
         <listitem>
@@ -1298,38 +1376,18 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       <programlisting># example of specifying a worker package in the transformation catalog
 tr pegasus::worker {
 site corbusier {
-    pfn "http://pegasus.isi.edu/pegasus/download?filename=4.5.2/pegasus-binary-4.5.2-x86_64_macos_10.tar.gz"
+    pfn "https://download.pegasus.isi.edu/pegasus/4.8.0dev/pegasus-worker-4.8.0dev-x86_64_macos_10.tar.gz"
     arch "x86_64"
     os "MACOSX"
     type "INSTALLED"
   }
 }
-
 </programlisting>
 
-      <section>
-        <title>Worker Package Staging in Non Shared Filesystem setup</title>
-
-        <para>Worker package staging is automatically set to true , when
-        workflows are setup to run in a non shared filesystem setup i.e.
-        <emphasis role="bold">pegasus.data.configuration</emphasis> is set to
-        <emphasis role="bold">nonsharedfs</emphasis> or <emphasis
-        role="bold">condorio</emphasis> . In these configurations, a
-        stage_worker job is created that brings in the worker package to the
-        submit directory of the workflow. For each job, the worker package is
-        then transferred with the job using Condor File Transfers ( <emphasis
-        role="bold">transfer_input_files</emphasis> ) . This transfer always
-        happens unless, PEGASUS_HOME is specified in the site catalog for the
-        site on which the job is scheduled to run.</para>
-
-        <para>Users can explicitly set the following property to false, to
-        turn off worker package staging by the Planner. This is applicable ,
-        when running in the cloud and virtual machines / worker nodes already
-        have the pegasus worker tools installed.</para>
-
-        <programlisting><emphasis role="bold">pegasus.transfer.worker.package          false</emphasis> </programlisting>
-      </section>
     </section>
+
+    <xi:include href="containers.xml" xpointer="container-transfers"
+                xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
     <section id="staging_job_checkpoint_files">
       <title>Staging of Job Checkpoint Files</title>
@@ -1521,58 +1579,52 @@ exec /usr/bin/ssh $extra_opts $port_str $remote_host $remote_program
       <emphasis>sshftp://username@host/foo/bar.txt</emphasis> in your
       workflows.</para>
     </section>
-    
+
     <section id="transfer_globus_online">
       <title>Globus Online</title>
 
-      <para><ulink url="http://globus.org">Globus Online</ulink> is a transfer service
-          with features such as policy based connection management and automatic
-          failure detection and recovery. Pegasus has limited the support for Globus
-          Online transfers.
-      </para>
+      <para><ulink url="http://globus.org">Globus Online</ulink> is a transfer
+      service with features such as policy based connection management and
+      automatic failure detection and recovery. Pegasus has limited the
+      support for Globus Online transfers.</para>
 
-      <para>If you want to use Globus Online in your workflow, all data has to be
-          accessible via a Globus Online endpoint. You can not mix Globus Online
-          endpoints with other protocols. For most users, this means they will 
-          have to create an endpoint for their submit host and probably modify
-          both the replica catalog and DAX generator so that all URLs in the
-          workflow are for Globus Online endpoints.
-      </para>
+      <para>If you want to use Globus Online in your workflow, all data has to
+      be accessible via a Globus Online endpoint. You can not mix Globus
+      Online endpoints with other protocols. For most users, this means they
+      will have to create an endpoint for their submit host and probably
+      modify both the replica catalog and DAX generator so that all URLs in
+      the workflow are for Globus Online endpoints.</para>
 
-      <para>There are two levels of credentials required. One is for the workflow
-          to use the Globus Online API, which is handled by a X.509 proxy. The
-          second level is for the endpoints, which the user will have have 
-          manage via the Globus Online web interface. The required steps are:
-      </para>
-          
+      <para>There are two levels of credentials required. One is for the
+      workflow to use the Globus Online API, which is handled by a X.509
+      proxy. The second level is for the endpoints, which the user will have
+      have manage via the Globus Online web interface. The required steps
+      are:</para>
+
       <orderedlist>
-          <listitem>
-              <para>Using the <ulink url="https://docs.globus.org/cli/">CLI interface</ulink>,
-                  update your user profile, and add your X.509 DN.
-              </para>
-          </listitem>
-          <listitem>
-              <para>In the Globus Online web interface, under Endpoints,
-                  find the endpoints you need for the
-                  workflow, and activate them. Note that you should
-                  activate them for the whole duration of the workflow
-                  or you will have to regularly log in and re-activate
-                  the endpoints during workflow execution.
-              </para>
-          </listitem>
+        <listitem>
+          <para>Using the <ulink url="https://docs.globus.org/cli/">CLI
+          interface</ulink>, update your user profile, and add your X.509
+          DN.</para>
+        </listitem>
+
+        <listitem>
+          <para>In the Globus Online web interface, under Endpoints, find the
+          endpoints you need for the workflow, and activate them. Note that
+          you should activate them for the whole duration of the workflow or
+          you will have to regularly log in and re-activate the endpoints
+          during workflow execution.</para>
+        </listitem>
       </orderedlist>
 
       <para>URLs for Globus Online endpoint data follows the following scheme:
-          <emphasis>go://[globus_username]@[endpoint]/[path]</emphasis>.
-          For example, for a user with the Globus Online username
-          <emphasis>bob</emphasis> and his private endpoint 
-          <emphasis>bob#researchdata</emphasis> and a file
-          <emphasis>/home/bsmith/experiment/1.dat</emphasis>, the URL would be:
-          <emphasis>go://bob@bob#researchdata/home/bsmith/experiment/1.dat</emphasis>
-      </para>
-
+      <emphasis>go://[globus_username]@[endpoint]/[path]</emphasis>. For
+      example, for a user with the Globus Online username
+      <emphasis>bob</emphasis> and his private endpoint
+      <emphasis>bob#researchdata</emphasis> and a file
+      <emphasis>/home/bsmith/experiment/1.dat</emphasis>, the URL would be:
+      <emphasis>go://bob@bob#researchdata/home/bsmith/experiment/1.dat</emphasis></para>
     </section>
-
   </section>
 
   <section id="cred_staging">
@@ -1759,6 +1811,55 @@ irodsPassword 'somesecretpassword'</programlisting>
     </section>
   </section>
 
+  <section id="ref_staging_mapper">
+    <title>Staging Mappers</title>
+
+    <para>Starting 4.7 release, Pegasus has support for staging mappers in the
+    <emphasis role="bold">nonsharedfs</emphasis> data configuration. The
+    staging mappers determine what sub directory on the staging site a job
+    will be associated with. Before, the introduction of staging mappers, all
+    files associated with the jobs scheduled for a particular site landed in
+    the same directory on the staging site. As a result, for large workflows
+    this could degrade filesystem performance on the staging servers.</para>
+
+    <para>To configure the staging mapper, you need to specify the following
+    property</para>
+
+    <programlisting>pegasus.dir.staging.mapper  &lt;name of the mapper to use&gt;</programlisting>
+
+    <para>The following mappers are supported currently, with Hashed being the
+    default .</para>
+
+    <orderedlist>
+      <listitem>
+        <para><emphasis role="bold">Flat</emphasis> : This mapper results in
+        Pegasus placing all the job submit files in the staging site directory
+        as determined from the Site Catalog and planner options. This can
+        result in too many files in one directory for large workflows, and was
+        the only option before Pegasus 4.7.0 release.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Hashed</emphasis> : This mapper results in
+        the creation of a deep directory structure rooted at the staging site
+        directory created by the create dir jobs. The binning is at the job
+        level, and not at the file level i.e each job will push out it's
+        outputs to the same directory on the staging site, independent of the
+        number of output files. To control behavior of this mapper, users can
+        specify the following properties</para>
+
+        <screen>pegasus.dir.staging.mapper.hashed.levels     the number of directory levels used to accomodate the files. Defaults to 2.
+pegasus.dir.staging.mapper.hashed.multiplier the number of files associated with a job in the submit directory. defaults to 5.
+</screen>
+      </listitem>
+    </orderedlist>
+
+    <note>
+      <para>The staging mappers are only triggered if
+      pegasus.data.configuration is set to nonsharedfs</para>
+    </note>
+  </section>
+
   <section id="ref_output_mapper">
     <title>Output Mappers</title>
 
@@ -1841,6 +1942,23 @@ irodsPassword 'somesecretpassword'</programlisting>
         is <link linkend="rc-regex">here</link>.</para>
       </listitem>
     </orderedlist>
+
+    <section>
+      <title>Effect of pegasus.dir.storage.deep</title>
+
+      <para>For Flat and Hashed output mappers, the base directory to which
+      the add on component is added is determined by the property
+      pegasus.dir.storage.deep . The output directory on the output site is
+      determined from the site catalog.</para>
+
+      <para>If pegasus.dir.storage.deep is set to true, then to this base
+      directory, a relative directory is appended i.e. $storage_base = $base +
+      $relative_directory. The relative directory is computed on the basis of
+      the --relative-dir option. If that is not set, then defaults to the
+      relative submit directory for the workflow ( usually
+      $user/$vogroup/$label/runxxxx ).This is the base directory that is
+      passed to the storage mappers.</para>
+    </section>
   </section>
 
   <section id="data_cleanup">
@@ -1874,8 +1992,10 @@ irodsPassword 'somesecretpassword'</programlisting>
         nodes per level of the workflow in addition to leaf cleanup nodes. The
         nodes remove files no longer required during execution. For example,
         an added cleanup node will remove input files for a particular compute
-        job after the job has finished successfully. This is the default
-        value.</para>
+        job after the job has finished successfully. Starting 4.8.0 release,
+        the number of cleanup nodes created by this algorithm on a particular
+        level, is dictated by the number of nodes it encounters on a level of
+        the workflow.</para>
       </listitem>
 
       <listitem>
@@ -1883,9 +2003,9 @@ irodsPassword 'somesecretpassword'</programlisting>
         cleanup nodes to constraint the amount of storage space used by a
         workflow, in addition to leaf cleanup nodes. The nodes remove files no
         longer required during execution. The added cleanup node guarantees
-        limits on disk usage. File sizes are read from the
-        <emphasis role="bold">size</emphasis> flag in the DAX, or from a 
-        CSV file (<link linkend="cleanup_props"><emphasis>
+        limits on disk usage. File sizes are read from the <emphasis
+        role="bold">size</emphasis> flag in the DAX, or from a CSV file (<link
+        linkend="cleanup_props"><emphasis>
         pegasus.file.cleanup.constraint.csv</emphasis></link>).</para>
       </listitem>
     </orderedlist>

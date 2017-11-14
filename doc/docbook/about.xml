@@ -77,7 +77,7 @@
         <para>By default, all jobs in Pegasus are launched via the <emphasis
         role="bold">kickstart</emphasis> process that captures runtime
         provenance of the job and helps in debugging. The provenance data is
-        collected in a database, and the data can be summaries with tools such
+        collected in a database, and the data can be summarised with tools such
         as <emphasis role="bold">pegasus-statistics</emphasis>, <emphasis
         role="bold">pegasus-plots</emphasis>, or directly with SQL
         queries.</para>

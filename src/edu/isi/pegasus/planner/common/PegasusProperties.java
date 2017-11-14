@@ -57,6 +57,8 @@ public class PegasusProperties implements Cloneable {
      * the name of the property to disable invoke functionality
      */
     public static final String DISABLE_INVOKE_PROPERTY = "pegasus.gridstart.invoke.disable";
+    
+    public static final String PEGASUS_KICKSTART_STAT_PROPERTY = "pegasus.gridstart.kickstart.stat";
 
     public static final String PEGASUS_WORKER_NODE_EXECUTION_PROPERTY = "pegasus.execute.*.filesystem.local";
 
@@ -838,12 +840,12 @@ public class PegasusProperties implements Cloneable {
     /**
      * Returns the maximum available space per site.
      * 
-     * Referred to by the "pegasus.file.cleanup.constraint.*.maxspace" property
+     * Referred to by the "pegasus.file.cleanup.constraint.maxspace" property
      * 
      * @return the value in the property file , else null
      */
     public String getCleanupConstraintMaxSpace() {
-        return mProps.getProperty( "pegasus.file.cleanup.constraint.*.maxspace" );
+        return mProps.getProperty( "pegasus.file.cleanup.constraint.maxspace" );
     }
     
     
@@ -1669,7 +1671,7 @@ public class PegasusProperties implements Cloneable {
      *         else null.
      */
     public String doStatWithKickstart(){
-        return   mProps.getProperty( "pegasus.gridstart.kickstart.stat") ;
+        return   mProps.getProperty( PEGASUS_KICKSTART_STAT_PROPERTY ) ;
     }
 
     /**
@@ -2398,6 +2400,18 @@ public class PegasusProperties implements Cloneable {
                               true );
     }
 
+    /**
+     * Returns a boolean indicating whether to enable integrity checking or not.
+     *
+     * Referred to by the "pegasus.integrity.checking" property.
+     *
+     * @return the value specified in the properties file, else false
+     *
+     */
+    public boolean doIntegrityChecking() {
+        return Boolean.parse( mProps.getProperty( "pegasus.integrity.checking" ),
+                              false );
+    }
 
 
     //DEFERRED PLANNING PROPERTIES

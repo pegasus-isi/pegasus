@@ -314,7 +314,7 @@ class Job:
         return dagman_out
 
 
-    def extract_job_info(self, run_dir, kickstart_output):
+    def extract_job_info(self, kickstart_output):
         """
         This function reads the output from the kickstart parser and
         extracts the job information for the Stampede schema. It first
@@ -331,6 +331,9 @@ class Job:
 
         # Kickstart was parsed
         self._kickstart_parsed = True
+
+        # PM-1157 we construct run dir from job submit dir
+        run_dir = self._job_submit_dir
 
         # Let's try to find an invocation record...
         my_invocation_found = False
@@ -363,24 +366,39 @@ class Job:
                 # We are done with this part
                 my_invocation_found = True
 
+            # PM-1109 encode signal information if it exists
+            signal_message = " "
+            if "signalled" in my_record:
+                # construct our own error message
+                attrs = my_record["signalled"]
+                signal_message = "Job was "
+                if "action" in attrs:
+                    signal_message += attrs["action"]
+                if "signal" in attrs:
+                    signal_message += " with signal " + attrs["signal"]
+
             #PM-641 optimization Modified string concatenation to a list join 
             if "stdout" in my_record:
-                if len(my_record["stdout"])<= MAX_OUTPUT_LENGTH - stdout_size:
+                # PM-1152 we always attempt to store upto MAX_OUTPUT_LENGTH
+                stdout = self.get_snippet_to_populate(my_record["stdout"], my_task_number, stdout_size, "stdout")
+                if stdout is not None:
                     try:
                         stdout_text_list.append(utils.quote("#@ %d stdout\n" % (my_task_number)))
-                        stdout_text_list.append(utils.quote(my_record["stdout"]))
+                        stdout_text_list.append(utils.quote(stdout))
                         stdout_text_list.append(utils.quote("\n"))
-                        stdout_size+=len(my_record["stdout"])+20
+                        stdout_size += len(stdout) + 20
                     except KeyError:
                         logger.exception( "Unable to parse stdout section from kickstart record for task %s from file %s " %(my_task_number, self.get_rotated_out_filename() ))
 
             if "stderr" in my_record:
-                if len(my_record["stderr"]) <= MAX_OUTPUT_LENGTH - stdout_size :
+                # Note: we are populating task stderr from kickstart record to job stdout only
+                stderr = self.get_snippet_to_populate( signal_message + my_record["stderr"], my_task_number, stdout_size, "stderr")
+                if stderr is not None:
                     try:
                         stdout_text_list.append(utils.quote("#@ %d stderr\n" % (my_task_number)))
-                        stdout_text_list.append(utils.quote(my_record["stderr"]))
+                        stdout_text_list.append(utils.quote(stderr))
                         stdout_text_list.append(utils.quote("\n"))
-                        stdout_size+=len(my_record["stderr"])+20
+                        stdout_size += len( stderr ) + 20
                     except KeyError:
                         logger.exception( "Unable to parse stderr section from kickstart record for task %s from file %s " %(my_task_number, self.get_rotated_out_filename() ))
 
@@ -419,7 +437,9 @@ class Job:
             logger.debug("cannot find cluster record in output")
 
         # Finally, read error file only 
-        my_err_file = os.path.join(run_dir, self._error_file)
+        #my_err_file = os.path.join(run_dir, self._error_file)
+        basename = self._exec_job_id + ".err"
+        my_err_file = os.path.join(run_dir, basename)
 
         if my_invocation_found:
             # in my job output there were some invocation records
@@ -463,17 +483,26 @@ class Job:
 
         return basename
 
-    def read_stdout_stderr_files(self, run_dir):
+    def read_stdout_stderr_files(self, run_dir=None):
         """
         This function reads both stdout and stderr files and populates
         these fields in the Job class.
         """
         my_max_encoded_length = MAX_OUTPUT_LENGTH - 2000
+
+        if run_dir is None:
+            # PM-1157 pick from the job submit directory associated with the job
+            run_dir = self._job_submit_dir
+
         if self._output_file is None:
             # This is the case for SUBDAG jobs
             self._stdout_text = None
         else:
-            basename = self._output_file
+            # PM-1157 output file has absolute path from submit file
+            # interferes with replay mode on another directory
+            # basename = self._output_file
+
+            basename = self._exec_job_id + ".out"
             if self._has_rotated_stdout_err_files:
                 basename += ".%03d" % ( self._job_output_counter)
 
@@ -496,7 +525,8 @@ class Job:
             # This is the case for SUBDAG jobs
             self._stderr_text = None
         else:
-            basename = self._error_file
+            #basename = self._error_file
+            basename = self._exec_job_id + ".err"
             if self._has_rotated_stdout_err_files:
                 basename += ".%03d" % ( self._job_output_counter)
 
@@ -525,3 +555,28 @@ class Job:
             return True
 
         return False
+
+    def get_snippet_to_populate(self, task_output, task_number, current_buffer_size, type):
+        """
+
+        :param task_output:
+        :param task number:          the task number
+        :param current_buffer_size:  the current size of the buffer that is storing job stdout for all tasks
+        :param type:                 whether stdout or stderr for logging
+        :return:
+        """
+        # PM-1152 we always attempt to store upto MAX_OUTPUT_LENGTH
+        # 20 is the rough estimate of number of extra characters added by URL encoding
+        remaining = MAX_OUTPUT_LENGTH - current_buffer_size - 20
+        task_output_size   = len(task_output)
+        stdout = None
+        if task_output_size <= remaining:
+            # we can store the whole stdout
+            stdout = task_output
+        else:
+            logger.debug( "Only grabbing %s of %s for task %s from file %s " %(remaining, type, task_number, self.get_rotated_out_filename()) )
+            if remaining > 0:
+                # we store only the first remaining chars
+                stdout =  task_output[:-(task_output_size - remaining)]
+
+        return stdout

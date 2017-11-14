@@ -50,6 +50,7 @@ import edu.isi.pegasus.planner.transfer.RemoteTransfer;
 import edu.isi.pegasus.planner.transfer.implementation.ImplementationFactory;
 import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -57,6 +58,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -274,13 +277,13 @@ public class DeployWorkerPackage
     private static Set<String> supportedOSReleaseAndVersions(){
         if( mSupportedOSReleaseVersions == null ){
             mSupportedOSReleaseVersions = new HashSet();
-            mSupportedOSReleaseVersions.add( "rhel_5" );
             mSupportedOSReleaseVersions.add( "rhel_6" );
-            mSupportedOSReleaseVersions.add( "deb_6" );
+            mSupportedOSReleaseVersions.add( "rhel_7" );
             mSupportedOSReleaseVersions.add( "deb_7" );
             mSupportedOSReleaseVersions.add( "deb_8" );
+            mSupportedOSReleaseVersions.add( "ubuntu_14" );
+            mSupportedOSReleaseVersions.add( "ubuntu_16" );
             mSupportedOSReleaseVersions.add( "macos_10" );
-            
         }
         return mSupportedOSReleaseVersions;
     }
@@ -968,8 +971,38 @@ public class DeployWorkerPackage
 
             FileTransfer ft = (FileTransfer)mFTMap.get( site );
             
+            //PM-1127 do an extra site if both source and destination
+            //site match and are set to local
+            NameValue source      = ft.getSourceURL();
+            NameValue destination = ft.getSourceURL();
+            if( source.getKey().equals( destination.getKey()) &&
+                source.getKey().equals( "local") ){
+                //make sure the full canonical urls are different
+                //only if source and destination urls both are file
+                String sourceURL = source.getValue();
+                String destURL   = destination.getValue();
+                if( sourceURL.startsWith( PegasusURL.FILE_URL_SCHEME ) && destURL.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
+                    try {
+                        //do the actual canonical check to make sure if the stage worker job
+                        //should not be added
+                        if( new File(sourceURL).getCanonicalPath().equals( new File(destURL).getCanonicalPath()) ){
+                            mLogger.log( "Skipping stage worker job for site " + site + " as worker package already in submit directory " + sourceURL,
+                                    LogManager.DEBUG_MESSAGE_LEVEL );
+                            continue;
+                        }
+                    } catch (IOException ex) {
+                        mLogger.log( "Error in Canonical compare for " + ft , ex, LogManager.ERROR_MESSAGE_LEVEL);
+                    }
+                }
+            }
+            //add the file transfer for stage worker job
             fts.add( ft );
-            
+        }//end of for loop
+        
+        if( fts.isEmpty() ){
+            //PM-1127 no file transfer to be done for stage worker job
+            //return the workflow unmodified
+            return workflow;
         }
 
         //hmm need to propogate site info with a dummy job on fly

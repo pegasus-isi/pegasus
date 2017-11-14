@@ -130,7 +130,7 @@ public class Constraint extends AbstractCleanupStrategy {
         availableSpacePerSite = new HashMap<String, Long>();
         maxAvailableSpacePerSite = new HashMap<String, Long>();
         deferStageins = (mProps.getProperty("pegasus.file.cleanup.constraint.deferstageins") != null);
-        
+
         // read file sizes from a CSV file
         String CSVName = System.getProperty("pegasus.file.cleanup.constraint.csv");
         if (CSVName != null) {
@@ -592,24 +592,29 @@ public class Constraint extends AbstractCleanupStrategy {
         String id = CLEANUP_JOB_PREFIX + new Random().nextInt(Integer.MAX_VALUE);
         if (!parents.isEmpty()) {
             GraphNode node = new GraphNode(id, mImpl.createCleanupJob(id, listOfFiles, (Job) parents.iterator().next().getContent()));
-            node.setParents(new ArrayList<GraphNode>(parents));
             for (GraphNode parent : parents) {
                 boolean hasStageOut = false;
                 for (GraphNode child : parent.getChildren()) {
                     Job currentJob = (Job) child.getContent();
                     if (currentJob.getJobType() == Job.STAGE_OUT_JOB) {
+                        for (GraphNode gc : child.getChildren()) {
+                            node.addChild(gc);
+                            gc.addParent(node);
+                        }
                         child.addChild(node);
+                        node.addParent(child);
                         hasStageOut = true;
                     }
                 }
                 if (!hasStageOut) {
                     parent.addChild(node);
+                    node.addParent(parent);
                 }
             }
-            node.setChildren(new ArrayList<GraphNode>(heads));
-            for (GraphNode child : heads) {
-                child.addParent(node);
-            }
+            // prevent loops
+            node.removeChild(node);
+            node.removeParent(node);
+
             mLogger.log(Utilities.cleanUpJobToString(parents, heads, listOfFiles), LogManager.DEBUG_MESSAGE_LEVEL);
             workflow.addNode(node);
         }
@@ -651,10 +656,12 @@ public class Constraint extends AbstractCleanupStrategy {
         //Phase II:Examine candidate heads and add if necessary
         for (GraphNode candidateHead : candidateHeads) {
             boolean unsatisfiedDependency = false;
-            for (GraphNode dependency : dependencies.get(candidateHead)) {
-                if (!executed.contains(dependency) && currentSiteJobs.contains(dependency)) {
-                    unsatisfiedDependency = true;
-                    break;
+            if (dependencies.containsKey(candidateHead)) {
+                for (GraphNode dependency : dependencies.get(candidateHead)) {
+                    if (!executed.contains(dependency) && currentSiteJobs.contains(dependency)) {
+                        unsatisfiedDependency = true;
+                        break;
+                    }
                 }
             }
             if (!unsatisfiedDependency && currentSiteJobs.contains(candidateHead)) {

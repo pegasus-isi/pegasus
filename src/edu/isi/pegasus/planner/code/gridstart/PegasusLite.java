@@ -17,10 +17,12 @@
 package edu.isi.pegasus.planner.code.gridstart;
 
 import edu.isi.pegasus.common.logging.LogManager;
+
 import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
 import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.StreamGobblerCallback;
 import edu.isi.pegasus.common.util.Version;
+
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
@@ -32,8 +34,10 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
+import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.NameValue;
@@ -41,21 +45,33 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.TransferJob;
+
 import edu.isi.pegasus.planner.code.GridStart;
+
+import edu.isi.pegasus.planner.code.gridstart.container.ContainerShellWrapper;
+import edu.isi.pegasus.planner.code.gridstart.container.ContainerShellWrapperFactory;
+
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import edu.isi.pegasus.planner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import edu.isi.pegasus.planner.refiner.DeployWorkerPackage;
+
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
+
 import edu.isi.pegasus.planner.transfer.SLS;
 import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
-import java.io.BufferedReader;
+
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -106,6 +122,7 @@ public class PegasusLite implements GridStart {
 
     public static final String SEPARATOR = "########################";
     public static final char SEPARATOR_CHAR = '#';
+    public static final String  MESSAGE_PREFIX = "[Pegasus Lite]";
     public static final int  MESSAGE_STRING_LENGTH = 80;
     
     /**
@@ -168,6 +185,17 @@ public class PegasusLite implements GridStart {
      * a particular directory on the worker node
      */
     public static final String WORKER_NODE_DIRECTORY_KEY = "PEGASUS_WN_TMP";
+    
+    /**
+     * The environment/shell variable that if set points to the file where
+     * PegasusLite log goes.
+     */
+    public static final String PEGASUS_LITE_LOG_ENV_KEY = "pegasus_lite_log_file";
+    
+    /**
+     * Basename for our pegasus integrity check tool in the worker pacakge.
+     */
+    public static final String PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME = "pegasus-integrity";
     
     /**
      * Stores the major version of the planner.
@@ -292,12 +320,35 @@ public class PegasusLite implements GridStart {
      */
     protected boolean mEnforceStrictChecksOnWPVersion;
     
+    /**
+     * This member variable if set causes the destination URL for the symlink jobs
+     * to have symlink:// url if the pool attributed associated with the pfn
+     * is same as a particular jobs execution pool. 
+     */
+    protected boolean mUseSymLinks;
     
     /**
      * Whether PegasusLite should download from the worker package from website
      * in any case or not
      */
     protected boolean mAllowWPDownloadFromWebsite;
+    
+    
+    /**
+     * Whether to do integrity checking or not.
+     */
+    protected boolean mDoIntegrityChecking ;
+
+    /**
+     * The shell wrapper to use to wrap job in container
+     */
+    protected ContainerShellWrapper mContainerWrapper;
+
+    /*
+     * Factory for Container Shell Wrapper
+     */
+    protected ContainerShellWrapperFactory mContainerWrapperFactory;
+
     
     /**
      * Initializes the GridStart implementation.
@@ -322,20 +373,10 @@ public class PegasusLite implements GridStart {
                 mWorkerPackageMap = new HashMap<String,String>();
         }
         mEnforceStrictChecksOnWPVersion = mProps.enforceStrictChecksForWorkerPackage();
+        mUseSymLinks                    = mProps.getUseOfSymbolicLinks();
         mAllowWPDownloadFromWebsite     = mProps.allowDownloadOfWorkerPackageFromPegasusWebsite();
+        mDoIntegrityChecking            = mProps.doIntegrityChecking();
         
-        /* PM-810    
-        if( mTransferWorkerPackage ){
-            mWorkerPackageMap = bag.getWorkerPackageMap();
-            if( mWorkerPackageMap == null ){
-                mWorkerPackageMap = new HashMap<String,String>();
-            }
-        }
-        else{
-            mWorkerPackageMap = new HashMap<String,String>();
-        }
-        */
-
         mChmodOnExecutionSiteMap = new HashMap<String,String>();
 
         Version version = Version.instance();
@@ -366,8 +407,8 @@ public class PegasusLite implements GridStart {
 
         
         mLocalPathToPegasusLiteCommon = getSubmitHostPathToPegasusLiteCommon( );
-
-
+        mContainerWrapperFactory = new ContainerShellWrapperFactory();
+        mContainerWrapperFactory.initialize(bag);
     }
     
     /**
@@ -492,45 +533,48 @@ public class PegasusLite implements GridStart {
             //from the submit host
             job.condorVariables.addIPFileForTransfer( this.mLocalPathToPegasusLiteCommon );
 
-            //figure out transfer of worker package
-            if( mTransferWorkerPackage ){
-                //sanity check to see if PEGASUS_HOME is defined
-                if( mSiteStore.getEnvironmentVariable( job.getSiteHandle(), "PEGASUS_HOME" ) == null ){
-                    //yes we need to add from the location in the worker package map
-                    String location = this.mWorkerPackageMap.get( job.getSiteHandle() );
+            //PM-1225 worker package transfer is only triggered for non sub dax jobs
+            if ( !(job instanceof DAXJob) ){
+                //figure out transfer of worker package for compute jobs
+                if( mTransferWorkerPackage ){
+                    //sanity check to see if PEGASUS_HOME is defined
+                    if( mSiteStore.getEnvironmentVariable( job.getSiteHandle(), "PEGASUS_HOME" ) == null ){
+                        //yes we need to add from the location in the worker package map
+                        String location = this.mWorkerPackageMap.get( job.getSiteHandle() );
 
-                    if( location == null ){
-                        throw new RuntimeException( "Unable to figure out worker package location for job " + job.getID() );
+                        if( location == null ){
+                            throw new RuntimeException( "Unable to figure out worker package location for job " + job.getID() );
+                        }
+                        job.condorVariables.addIPFileForTransfer(location);
                     }
-                    job.condorVariables.addIPFileForTransfer(location);
-                }
-                else{
-                    mLogger.log( "No worker package staging for job " + job.getID() +
-                                 " PEGASUS_HOME specified in the site catalog for site " + job.getSiteHandle(),
-                                 LogManager.DEBUG_MESSAGE_LEVEL );
-                }
-            }
-            else{
-                //we don't want pegasus to add a stage worker job.
-                //but transfer directly if required.
-                if( mSiteStore.getEnvironmentVariable( job.getSiteHandle(), "PEGASUS_HOME" ) == null ){
-                    //yes we need to add from the location in the worker package map
-                    String location = this.mWorkerPackageMap.get( job.getSiteHandle() );
-
-                    if( !mWorkerPackageMap.containsKey( job.getSiteHandle()) ){
-                        location = retrieveLocationForWorkerPackageFromTC( job.getSiteHandle() );
-                        //null can be populated as value
-                        this.mWorkerPackageMap.put( job.getSiteHandle(), location );
-                    }
-                    //add only if location is not null
-                    if( location != null ){
-                        job.condorVariables.addIPFileForTransfer( location );
+                    else{
+                        mLogger.log( "No worker package staging for job " + job.getID() +
+                                     " PEGASUS_HOME specified in the site catalog for site " + job.getSiteHandle(),
+                                     LogManager.DEBUG_MESSAGE_LEVEL );
                     }
                 }
                 else{
-                    mLogger.log( "No worker package staging for job " + job.getID()  +
-                                 " PEGASUS_HOME specified in the site catalog for site " + job.getSiteHandle(),
-                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                    //we don't want pegasus to add a stage worker job.
+                    //but transfer directly if required.
+                    if( mSiteStore.getEnvironmentVariable( job.getSiteHandle(), "PEGASUS_HOME" ) == null ){
+                        //yes we need to add from the location in the worker package map
+                        String location = this.mWorkerPackageMap.get( job.getSiteHandle() );
+
+                        if( !mWorkerPackageMap.containsKey( job.getSiteHandle()) ){
+                            location = retrieveLocationForWorkerPackageFromTC( job.getSiteHandle() );
+                            //null can be populated as value
+                            this.mWorkerPackageMap.put( job.getSiteHandle(), location );
+                        }
+                        //add only if location is not null
+                        if( location != null ){
+                            job.condorVariables.addIPFileForTransfer( location );
+                        }
+                    }
+                    else{
+                        mLogger.log( "No worker package staging for job " + job.getID()  +
+                                     " PEGASUS_HOME specified in the site catalog for site " + job.getSiteHandle(),
+                                     LogManager.DEBUG_MESSAGE_LEVEL );
+                    }
                 }
             }
 
@@ -792,8 +836,15 @@ public class PegasusLite implements GridStart {
             sb.append( "pegasus_lite_version_patch=\"" ).append( this.mPatchVersionLevel ).append( "\"").append( '\n' );
             sb.append( "pegasus_lite_enforce_strict_wp_check=\"" ).append( this.mEnforceStrictChecksOnWPVersion ).append( "\"").append( '\n' );
             sb.append( "pegasus_lite_version_allow_wp_auto_download=\"" ).append( this.mAllowWPDownloadFromWebsite ).append( "\"").append( '\n' );
-            sb.append( '\n' );
+            
+            //PM-1132 set the variable to point to a log file for pegasus lite output
+            if( job.envVariables.containsKey( PegasusLite.PEGASUS_LITE_LOG_ENV_KEY) ){
+                sb.append( PegasusLite.PEGASUS_LITE_LOG_ENV_KEY).append( "=\"" ).
+                  append( job.envVariables.get(PegasusLite.PEGASUS_LITE_LOG_ENV_KEY) ).append( "\"").append( '\n' );
+            }
 
+            sb.append( '\n' );
+            
             sb.append( ". " ).append( PegasusLite.PEGASUS_LITE_COMMON_FILE_BASENAME ).append( '\n' );
             sb.append( '\n' );
 
@@ -801,7 +852,9 @@ public class PegasusLite implements GridStart {
             sb.append( '\n' );
 
             sb.append( "# cleanup in case of failures" ).append( '\n' );
-            sb.append( "trap pegasus_lite_exit INT TERM EXIT" ).append( '\n' );
+            sb.append( "trap pegasus_lite_signal_int INT" ).append( '\n' );
+            sb.append( "trap pegasus_lite_signal_term TERM" ).append( '\n' );
+            sb.append( "trap pegasus_lite_unexpected_exit EXIT" ).append( '\n' );
             sb.append( '\n' );
 
             appendStderrFragment( sb, "Setting up workdir" );
@@ -849,7 +902,7 @@ public class PegasusLite implements GridStart {
             sb.append( "pegasus_lite_setup_work_dir" ).append( '\n' );
             sb.append( '\n' );
 
-            appendStderrFragment( sb, "figuring out the worker package to use" );
+            appendStderrFragment( sb, "Figuring out the worker package to use" );
             sb.append( "# figure out the worker package to use" ).append( '\n' );
             sb.append( "pegasus_lite_worker_package" ).append( '\n' );
             sb.append( '\n' );
@@ -878,9 +931,15 @@ public class PegasusLite implements GridStart {
                 
                 //stage the input files first
                 if( !inputFiles.isEmpty() ){
-                    appendStderrFragment( sb, "staging in input data and executables" );
+                    appendStderrFragment( sb, "Staging in input data and executables" );
                     sb.append( "# stage in data and executables" ).append( '\n' );
                     sb.append(  sls.invocationString( job, null ) );
+                    if ( mUseSymLinks && job.getContainer() == null ){
+                        //PM-1135 allow the transfer executable to symlink input file urls
+                        //PM-1197 we have to disable symlink if a job is set to 
+                        //be launched via a container
+                        sb.append( " --symlink " );
+                    }
                     sb.append( " 1>&2" ).append( " << 'EOF'" ).append( '\n' );
                     sb.append( convertToTransferInputFormat( inputFiles ) );
                     sb.append( "EOF" ).append( '\n' );
@@ -890,7 +949,7 @@ public class PegasusLite implements GridStart {
                 //PM-779 checkpoint files need to be setup to never fail
                 String checkPointFragment = checkpointFilesToPegasusLite( job, sls, chkpointFiles);
                 if( !checkPointFragment.isEmpty() ){
-                    appendStderrFragment( sb, "staging in checkpoint files" );
+                    appendStderrFragment( sb, "Staging in checkpoint files" );
                     sb.append( "# stage in checkpoint files " ).append( '\n' );
                     sb.append( checkPointFragment );
                 }
@@ -900,57 +959,72 @@ public class PegasusLite implements GridStart {
             }
 
             if( job.userExecutablesStagedForJob() ){
-                appendStderrFragment( sb, "setting the xbit for executables staged" );
+                appendStderrFragment( sb, "Setting the xbit for executables staged" );
                 sb.append( "# set the xbit for any executables staged" ).append( '\n' );
-                sb.append( getPathToChmodExecutable( job.getSiteHandle() ) );
-                sb.append( " +x " );
-
                 for( Iterator it = job.getInputFiles().iterator(); it.hasNext(); ){
                     PegasusFile pf = ( PegasusFile )it.next();
                     if( pf.getType() == PegasusFile.EXECUTABLE_FILE ){
-                        sb.append( pf.getLFN() ).append( " " );
+                        sb.append( "if [ ! -x " + pf.getLFN() + " ]; then\n" );
+                        sb.append( "    " );
+                        sb.append( getPathToChmodExecutable( job.getSiteHandle() ) );
+                        sb.append( " +x " );
+                        sb.append( pf.getLFN() ).append( "\n" );
+                        sb.append( "fi\n" );
                     }
 
                 }
                 sb.append( '\n' );
-                sb.append( '\n' );
             }
            
-            appendStderrFragment( sb, "executing the user tasks" );
-            sb.append( "# execute the tasks" ).append( '\n' ).
-               append( "set +e" ).append( '\n' );//PM-701
+            //PM-1190 we do integrity checks only for compute jobs
+            if( mDoIntegrityChecking && isCompute){
+                appendStderrFragment( sb, "Checking file integrity for input files" );
+                sb.append( "# do file integrity checks" ).append( '\n' );
+                addIntegrityCheckInvocation( sb, job.getInputFiles() );
+                
+                //check if planner knows of any checksums from the replica catalog
+                //and generate an input meta file!
+                File metaFile = generateChecksumMetadataFile( job.getFileFullPath( mSubmitDir,  ".in.meta"),
+                                                              job.getInputFiles() );
+                
+                //modify job for transferring the .meta files
+                if( !modifyJobForIntegrityChecks( job , metaFile, this.mSubmitDir )) {
+                    throw new RuntimeException( "Unable to modify job for integrity checks" );
+                }
+                sb.append( "\n" );
+            }
+            
+            
+            //sb.append( "# execute the tasks" ).append( '\n' ).
+            sb.append( "set +e" ).append( '\n' );//PM-701
 
             writer.print( sb.toString() );
             writer.flush();
             
             sb = new StringBuffer();
-
+            
+            sb.append( "job_ec=0" ).append( "\n" );
             //enable the job via kickstart
             //separate calls for aggregated and normal jobs
+            ContainerShellWrapper containerWrapper = this.mContainerWrapperFactory.loadInstance(job);
+            mLogger.log( "Setting job " + job.getID() + 
+                         " to run via " + containerWrapper.describe() , LogManager.DEBUG_MESSAGE_LEVEL );
             if( job instanceof AggregatedJob ){
                 this.mKickstartGridStartImpl.enable( (AggregatedJob)job, isGlobusJob );
-                //for clustered jobs we embed the contents of the input
-                //file in the shell wrapper itself
-                sb.append( job.getRemoteExecutable() ).append( " " ).append( job.getArguments() );
-                sb.append( " << EOF" ).append( '\n' );
-                
-                //PM-833 figure out the job submit directory
-                String jobSubmitDirectory = new File( job.getFileFullPath( mSubmitDir, ".in" )).getParent();
-                
-                sb.append( slurpInFile( jobSubmitDirectory, job.getStdIn() ) );
-                sb.append( "EOF" ).append( '\n' );
-
-                //rest the jobs stdin
-                job.setStdIn( "" );
-                job.condorVariables.removeKey( "input" );
+                sb.append( containerWrapper.wrap( (AggregatedJob)job));
             }
             else{
                 this.mKickstartGridStartImpl.enable( job, isGlobusJob );
-                sb.append( job.getRemoteExecutable() ).append( job.getArguments() ).append( '\n' );
+                //sb.append( job.getRemoteExecutable() ).append( job.getArguments() ).append( '\n' );
+                
+                sb.append( containerWrapper.wrap(job));
             }
+            sb.append( "\n" );
             
             //PM-701 enable back fail on error
-            sb.append( "job_ec=$?" ).append( "\n" );
+            //Fixme: has to go in no container wrapper implementation
+            //sb.append( "job_ec=$?" ).append( "\n" );
+           
             sb.append( "set -e").append( "\n" );
             sb.append( '\n' );
             
@@ -996,7 +1070,7 @@ public class PegasusLite implements GridStart {
                 //PM-779 checkpoint files need to be setup to never fail
                 String checkPointFragment = checkpointFilesToPegasusLite( job, sls, chkpointFiles);
                 if( !checkPointFragment.isEmpty() ){
-                    appendStderrFragment( sb, "staging out checkpoint files" );
+                    appendStderrFragment( sb, "Staging out checkpoint files" );
                     sb.append( "# stage out checkpoint files " ).append( '\n' );
                     sb.append( checkPointFragment );
                 }
@@ -1004,7 +1078,7 @@ public class PegasusLite implements GridStart {
                 if( !outputFiles.isEmpty() ){
                     //generate the stage out fragment for staging out outputs
                     String postJob = sls.invocationString( job, null );
-                    appendStderrFragment( sb, "staging out output files" );
+                    appendStderrFragment( sb, "Staging out output files" );
                     sb.append( "# stage out" ).append( '\n' );
                     sb.append( postJob );
 
@@ -1018,6 +1092,11 @@ public class PegasusLite implements GridStart {
                 associateCredentials( job, files );
             }
             
+            sb.append( "\n" );
+            sb.append( "# clear the trap, and exit cleanly" ).append( '\n' );
+            sb.append( "trap - EXIT" ).append( '\n' );
+            sb.append( "pegasus_lite_final_exit" ).append( '\n' );
+            sb.append( "\n" );
            
             writer.print( sb.toString() );
             writer.flush();
@@ -1124,36 +1203,6 @@ public class PegasusLite implements GridStart {
         sb.append("]\n");
 
         return sb;
-    }
-
-    /**
-     * Convenience method to slurp in contents of a file into memory.
-     *
-     * @param directory  the directory where the file resides
-     * @param file    the file to be slurped in.
-     * 
-     * @return StringBuffer containing the contents
-     */
-    protected StringBuffer slurpInFile( String directory, String file ) throws  IOException{
-        StringBuffer result = new StringBuffer();
-        //sanity check
-        if( file == null ){
-            return result;
-        }
-
-        BufferedReader in = new BufferedReader( new FileReader( new File(  directory, file )) );
-
-        String line = null;
-
-        while(( line = in.readLine() ) != null ){
-            //System.out.println( line );
-            result.append( line ).append( '\n' );
-        }
-
-        in.close();
-
-
-        return result;
     }
 
     /**
@@ -1294,7 +1343,7 @@ public class PegasusLite implements GridStart {
     }
 
     public void useFullPathToGridStarts(boolean fullPath) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        mKickstartGridStartImpl.useFullPathToGridStarts(fullPath);
     }
 
     /**
@@ -1410,16 +1459,18 @@ public class PegasusLite implements GridStart {
      * @param message  the message  
      */
     private void appendStderrFragment(StringBuffer sb, String message ) {
-        if( message.length() > PegasusLite.MESSAGE_STRING_LENGTH ){
+        //prefix + 1 + message
+        int len = PegasusLite.MESSAGE_PREFIX.length() + 1 + message.length();
+        if( len > PegasusLite.MESSAGE_STRING_LENGTH ){
             throw new RuntimeException( "Message string for PegasusLite exceeds " + PegasusLite.MESSAGE_STRING_LENGTH + " characters");
         }
         
-        int pad = ( PegasusLite.MESSAGE_STRING_LENGTH - message.length() )/2;
+        int pad = ( PegasusLite.MESSAGE_STRING_LENGTH - len )/2;
         sb.append( "echo -e \"\\n" );
         for( int i = 0; i <= pad ; i ++ ){
             sb.append( PegasusLite.SEPARATOR_CHAR );
         }
-        sb.append( " " ).append( message ).append( " " );
+        sb.append( PegasusLite.MESSAGE_PREFIX ).append( " " ).append( message ).append( " " );
         for( int i = 0; i <= pad ; i ++ ){
             sb.append( PegasusLite.SEPARATOR_CHAR );
         }
@@ -1427,5 +1478,122 @@ public class PegasusLite implements GridStart {
         
         return;
         
+    }
+
+    /**
+     * Adds the integrity check invocations for jobs input files
+     * @param sb 
+     * @param files 
+     */
+    protected void addIntegrityCheckInvocation(StringBuffer sb,  Collection<PegasusFile> files ) {
+        for( PegasusFile file: files ){
+            if( file.isDataFile() ){
+                sb.append( PegasusLite.PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME ).append( " --verify=" ).
+                   append( file.getLFN() ).append( " 1>&2" ).append( "\n" );
+            }
+        }
+    }
+
+    /**
+     * Updates the job tracking of the meta files of the parents
+     * 
+     * @param job
+     * @param file metadata file that may need to be associated
+     * @param baseSubmitDir
+     * 
+     * @return 
+     */
+    protected boolean modifyJobForIntegrityChecks(Job job, File file, String baseSubmitDir) {
+        
+        if( file != null ){
+            //associate the file.
+            job.condorVariables.addIPFileForTransfer( file.getAbsolutePath() );
+        }
+        
+        //try and get hold of the parents
+        GraphNode node = job.getGraphNodeReference();
+        for( GraphNode parentNode : node.getParents() ){
+            Job parent = (Job)parentNode.getContent();
+            if( parent.getJobType() == Job.COMPUTE_JOB ){
+                //we need meta files for only compute jobs that are parents
+                StringBuilder metaFile = new StringBuilder();
+                metaFile.append( baseSubmitDir ).append( File.separator ).
+                         append( parent.getRelativeSubmitDirectory() ).append( File.separator ).
+                         append( parent.getID() ).append( ".meta" );
+                job.condorVariables.addIPFileForTransfer( metaFile.toString() );
+            }
+            
+        }
+        
+        return true;
+    }
+
+    /**
+     * Generate a metadata file containing the metadata for input files if it
+     * exists
+     * 
+     * @param name
+     * @param files
+     * 
+     * @return A metafile with the suffix, else null
+     */
+    protected File generateChecksumMetadataFile( String name, Collection<PegasusFile> files) {
+        
+        
+        //subset files that have any metadata associated with them
+        List<PegasusFile> metaFiles = new LinkedList();
+        for( PegasusFile file: files ){
+            if( file.isDataFile() ){
+                Metadata m = file.getAllMetadata();
+                if( !m.isEmpty() ){
+                    metaFiles.add( file );
+                }
+            }
+        }
+        if( metaFiles.isEmpty() ){
+            //nothing to write
+            return null;
+        }
+           
+        File metaFile = null;
+        PrintWriter pw = null;
+        try {
+            metaFile = new File( name); 
+            pw = new PrintWriter( metaFile );
+            pw.println( "[" );
+            StringBuilder sb = new StringBuilder();
+            for( PegasusFile pf : metaFiles ){
+                sb.append( "\n" ).append( "\t{" );
+                sb.append( "\n" ).append( "\t\t").append( "\"_type\": \"file\"").append( ","); 
+                sb.append( "\n" ).append( "\t\t").append( "\"_id\": \"").append( pf.getLFN()).append( "\"").append( ","); 
+                
+                sb.append( "\n" ).append( "\t\t").append( "\"_attributes\": {");
+                Metadata m = pf.getAllMetadata();
+                for( Iterator<String> it = m.getProfileKeyIterator(); it.hasNext(); ){
+                    String key = it.next();
+                    sb.append( "\n" ).append( "\t\t\t");
+                    sb.append( "\"").append( key ).append( "\"" ).append( ":" ).append( "\"" ).append( m.get(key)).append( "\"").
+                       append(",");
+                }
+                //remove trailing ,
+                sb = sb.deleteCharAt( sb.length() - 1 );
+                sb.append( "\n" ).append( "\t\t").append( "}"); //end of attributes
+                
+                //end of pegasus file
+                sb.append( "\n" ).append( "\t").append( "}").append( ",");
+            }
+            //remove trailing ,
+            sb = sb.deleteCharAt( sb.length() - 1 );
+            pw.print( sb );
+            pw.println( "\n]" );
+        } catch (FileNotFoundException ex) {
+            throw new RuntimeException( "Unable to generate input metadata file  " + name, ex );
+        }
+        finally{
+            if ( pw != null ){
+                pw.close();
+            }
+        }
+        return metaFile;
     }
 }

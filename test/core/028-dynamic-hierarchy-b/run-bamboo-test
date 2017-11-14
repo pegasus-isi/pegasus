@@ -1,0 +1,192 @@
+#!/bin/bash
+
+set -e
+TOP_DIR=`pwd`
+
+# pegasus bin directory is needed to find keg
+BIN_DIR=`pegasus-config --bin`
+CONDOR_POOL_PEGASUS_HOME=/usr
+
+# build the dax generator
+PYTHONPATH=`pegasus-config --python`
+export PYTHONPATH=".:$PYTHONPATH"
+
+
+# generate the dax
+./local_hierarchy.py $CONDOR_POOL_PEGASUS_HOME  > outer.dax
+
+mkdir -p input
+
+INNER_DAX_PROPERTIES=${TOP_DIR}/input/inner.properties
+INNER_DAX_TC=${TOP_DIR}/input/inner.tc.text
+INNER_DAX_RC=${TOP_DIR}/input/inner.rc.data
+INNER_DAX_SC=${TOP_DIR}/input/inner.sites.xml
+
+# create the replica catalog for outer level workflow
+# specifying the locations of various configuration files
+# pegasus requires for the inner level workflow
+echo "dax1.properties  $INNER_DAX_PROPERTIES site=local" > rc.data
+echo "dax1.rc  $INNER_DAX_RC site=local" >> rc.data
+echo "dax1.tc.text $INNER_DAX_TC site=local" >> rc.data
+echo "dax1.sites.xml $INNER_DAX_SC site=local" >> rc.data
+echo "inner2.dax  $TOP_DIR/input/inner2.dax site=local" >> rc.data
+
+#copy the preexisting sample dax file
+cp sample_inner2.dax input/inner2.dax
+
+
+#create the replica catalog for the inner dax
+cat > f.a <<EOF
+Sample input file for the first inner dax job.
+
+EOF
+echo "f.a $TOP_DIR/f.a site="local"" > $INNER_DAX_RC
+
+#generate the properties file for the inner workflow
+cat > $INNER_DAX_PROPERTIES <<EOF
+pegasus.catalog.site.file=dax1.sites.xml
+
+pegasus.catalog.transformation=Text
+pegasus.catalog.transformation.file=dax1.tc.text
+
+pegasus.catalog.replica=File
+pegasus.catalog.replica.file=dax1.rc
+
+
+pegasus.dir.storage.deep=false
+
+pegasus.condor.logs.symlink = false
+
+EOF
+
+
+#create the transformation catalog for the outer level workflow
+cat >tc.text <<EOF
+tr level1::sleep { 
+  site local {
+    pfn "/bin/sleep"
+    os "linux"
+    arch "x86_64"
+    osrelease "rhel"
+    osversion "7"
+    type "INSTALLED"
+  }
+}
+
+tr level2::sleep {   
+  site CCG {
+    pfn "/bin/sleep"
+    os "linux"
+    arch "x86_64"
+    type "INSTALLED"
+  }
+}
+
+# assumption is that the submit directory is accessbile on the nodes
+# making up the condor pool. path can be updated to a local path
+# on the nodes
+tr blackdiamond::generate{
+   site local {
+    pfn "$TOP_DIR/blackdiamond.py"     
+    os "linux"
+    osrelease "rhel"
+    osversion "7"
+    arch "x86_64"
+    type "STAGEABLE"
+   }
+}
+EOF
+
+#create the transformation catalog for inner dax
+# In this case the binary is keg, which is shipped with Pegasus, so we use
+# Assumption is that pegasus-keg is installed at same place on the submit host
+# and the nodes in the CCG.
+cat > $INNER_DAX_TC <<EOF
+
+tr level2::sleep {   
+  site local {
+    pfn "/bin/sleep"
+    os "linux"
+    osrelease "rhel"
+    osversion "7"
+    type "INSTALLED"
+  }
+}
+
+tr diamond::preprocess:4.0{
+   site local {
+    pfn "$BIN_DIR/pegasus-keg"
+    os "linux"
+    osrelease "rhel"
+    osversion "7"
+    arch "x86_64"
+    type "STAGEABLE"
+   }
+}
+
+tr diamond::analyze:4.0{
+   site local {
+    pfn "$BIN_DIR/pegasus-keg"
+    os "linux"
+    osrelease "rhel"
+    osversion "7"
+    arch "x86_64"
+    type "STAGEABLE"
+   }
+}
+tr diamond::findrange:4.0{
+   site local {
+    pfn "$BIN_DIR/pegasus-keg"
+    os "linux"
+    osrelease "rhel"
+    osversion "7"
+    arch "x86_64"
+    type "STAGEABLE"
+   }
+}
+EOF
+
+# create the site catalog for both outer level and inner level workflow
+cat >sites.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
+
+    <site handle="local" arch="x86_64" os="LINUX" osrelease="rhel" osversion="7">
+        <directory type="shared-scratch" path="$TOP_DIR/work/local-site/scratch">
+            <file-server operation="all" url="file://$TOP_DIR/work/local-site/scratch"/>
+        </directory>
+        <directory type="local-storage" path="$TOP_DIR/outputs/local-site">
+            <file-server operation="all" url="file://$TOP_DIR/outputs/local-site"/>
+        </directory>
+    </site>
+
+    <site  handle="CCG" arch="x86_64" os="LINUX">
+        <grid  type="gt5" contact="obelix.isi.edu/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+        <grid  type="gt5" contact="obelix.isi.edu/jobmanager-condor" scheduler="Condor" jobtype="compute"/>
+
+        <directory type="shared-scratch" path="/nfs/ccg4/scratch-purge-no-backups/CCG/scratch">
+            <file-server operation="all" url="gsiftp://obelix.isi.edu/nfs/ccg4/scratch-purge-no-backups/CCG/scratch"/>
+        </directory>
+        <directory type="local-storage" path="/nfs/ccg4/scratch-purge-no-backups/CCG/outputs">
+            <file-server operation="all" url="gsiftp://obelix.isi.edu/nfs/ccg4/scratch-purge-no-backups/CCG/outputs"/>
+        </directory>
+
+    </site>
+
+</sitecatalog>
+EOF
+
+#use the same site catalog file for the inner level workflow
+cp sites.xml $INNER_DAX_SC
+
+
+# plan and submit the  workflow
+pegasus-plan \
+    --conf pegasusrc \
+    --sites local,CCG \
+    --dir work \
+    --output-site local \
+    --dax outer.dax \
+    --submit \
+    | tee $TOP_DIR/plan.out
+

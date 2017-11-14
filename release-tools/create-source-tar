@@ -1,9 +1,13 @@
 #!/bin/bash
 
 set -e
-set -v
 
 VERSION=$1
+
+if [ "x$VERSION" = "x" ]; then
+    echo "Please specify a version for the source tarball"
+    exit 1
+fi
 
 # make sure we are in a source dir
 if [ ! -e build.xml ]; then
@@ -11,22 +15,37 @@ if [ ! -e build.xml ]; then
     exit 1
 fi
 
-mkdir -p dist/pegasus-source-$VERSION
+TOP_DIR=`pwd`
+
+mkdir -p dist/pegasus-$VERSION
 
 for ITEM in `ls | grep -E -v '^(build|dist)$'`; do
-    cp -a $ITEM dist/pegasus-source-$VERSION/
+    cp -a $ITEM dist/pegasus-$VERSION/
 done
 
 # remove some stuff we don't want in the source tar
 for ITEM in .git .gitignore; do
-    find dist/pegasus-source-$VERSION/ -name $ITEM -exec rm -rf {} \;
+    find dist/pegasus-$VERSION/ -name $ITEM -exec rm -rf {} \;
 done
+
+# create a debian/changelog - this is important to LIGO and other projects
+# picking up our source tarball and building Debian packages
+cd dist/pegasus-$VERSION/debian
+cp changelog.in changelog
+DATE_DEB=`date -R`
+perl -p -i -e "s/\\@PEGASUS_VERSION\\@/$VERSION/g" changelog
+perl -p -i -e "s/\\@DATE\\@/$DATE_DEB/g" changelog
+perl -p -i -e "s/\\+\\@OSID\\@//g" changelog
+cd $TOP_DIR
 
 # Set the git hash in build.properties so that we have it saved
 HASH=$(git rev-parse HEAD)
-printf "pegasus.build.git.hash = $HASH\n" > dist/pegasus-source-$VERSION/build.git.properties
+printf "pegasus.build.git.hash = $HASH\n" > dist/pegasus-$VERSION/build.git.properties
 
 cd dist/
-tar czf pegasus-source-$VERSION.tar.gz pegasus-source-$VERSION
-rm -rf pegasus-source-$VERSION
+tar czf pegasus-$VERSION.tar.gz pegasus-$VERSION
+rm -rf pegasus-$VERSION
+
+echo "The generated source tarball is ready at dist/pegasus-$VERSION.tar.gz"
+
 

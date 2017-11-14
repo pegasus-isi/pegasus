@@ -26,6 +26,7 @@ Pegasus utility functions for pasing a kickstart output file and return wanted i
 # Import Python modules
 
 from xml.parsers import expat
+from Pegasus.monitoring.metadata import FileMetadata
 import re
 import sys
 import logging
@@ -170,7 +171,7 @@ class Parser:
             end = buffer.find("]")
 
             if end >= 0:
-                end = end + len("]")                
+                end = end + len("]")
                 return buffer[:end]
 
             # task record should be in a single line!
@@ -248,6 +249,12 @@ class Parser:
         elif name == "cwd" and name in self._ks_elements:
             # Start parsing cwd
             self._parsing_cwd = True
+        elif name == "checksum" and name in self._ks_elements:
+            # PM-1180 <checksum type="sha256" value="f2307670158c64c4407971f8fad67772724b0bad92bfb48f386b0814ba24e3af"/>
+            self._keys[name] = {}
+            for attr_name in self._ks_elements[name]:
+                if attr_name in attrs:
+                    self._keys[ name ] [attr_name] = attrs[attr_name]
         elif name == "data":
             # Start parsing data for stdout and stderr output
             self._parsing_data = True
@@ -269,6 +276,14 @@ class Parser:
                 for my_element in self._ks_elements[name]:
                     if my_element in attrs:
                         self._keys[my_element] = attrs[my_element]
+        elif name == "signalled":
+            # PM-1109 grab the attributes we are interested in
+            self._keys[ name ] = {} #a dictionary indexed by attributes
+            self._parsing_signalled = True
+            self._keys[ name ]["action"] = "" #grabbed later in char data
+            for attr in attrs:
+                if attr in self._ks_elements[name]:
+                    self._keys[name][attr] = attrs[attr]
         elif name == "statcall":
             if "id" in attrs:
                 if attrs["id"] == "stdout" and "stdout" in self._ks_elements:
@@ -280,13 +295,14 @@ class Parser:
                     self._lfn = attrs["lfn"]
         elif name == "statinfo":
             if self._parsing_final_statcall is True:
-                statinfo = {}
+                statinfo = FileMetadata()
                 for my_element in self._ks_elements[name]:
                     if my_element in attrs:
-                        statinfo[my_element] = attrs[my_element]
+                        statinfo.add_attribute( my_element, attrs[my_element])
                 if not self._keys.has_key( "outputs"):
                     self._keys[ "outputs" ] = {} #a dictionary indexed by lfn
                 lfn = self._lfn
+                statinfo.set_id( lfn )
                 if lfn is None or not statinfo:
                     logger.warning( "Malformed/Empty stat record for output lfn %s %s"  %(lfn, statinfo))
                 self._keys["outputs"][lfn] = statinfo
@@ -325,6 +341,8 @@ class Parser:
             self._parsing_main_job = False
         elif name == "machine":
             self._parsing_machine = False
+        elif name == "signalled":
+            self._parsing_signalled = False
         elif name == "statcall":
             if self._parsing_stdout == True:
                 self._parsing_stdout = False
@@ -332,6 +350,15 @@ class Parser:
                 self._parsing_stderr = False
             if self._parsing_final_statcall == True:
                 self._parsing_final_statcall = False
+            if "outputs" in self._keys:
+                if self._lfn in self._keys["outputs"]:
+                    # PM-1180 get the statinfo and update with checksum
+                    statinfo = self._keys["outputs"][self._lfn]
+                    if "checksum" in self._keys:
+                        for key in self._keys["checksum"]:
+                            statinfo.add_attribute( "checksum." + key, self._keys["checksum"][key])
+                        self._keys[ "checksum" ] = {}
+
         elif name == "data":
             self._parsing_data = False
         # Now, see if we left one of the job elements
@@ -346,14 +373,17 @@ class Parser:
         if self._parsing_cwd == True:
             self._cwd += data
 
-        if self._parsing_arguments == True:
+        elif self._parsing_arguments == True:
             self._arguments.append(data.strip())
 
-        if self._parsing_stdout == True and self._parsing_data == True:
+        elif self._parsing_stdout == True and self._parsing_data == True:
             self._stdout += data
 
-        if self._parsing_stderr == True and self._parsing_data == True:
+        elif self._parsing_stderr == True and self._parsing_data == True:
             self._stderr += data
+
+        elif self._parsing_signalled == True:
+            self._keys["signalled"]["action"] += data
 
     def parse_invocation_record(self, buffer=''):
         """
@@ -367,6 +397,7 @@ class Parser:
         self._parsing_stderr = False
         self._parsing_data = False
         self._parsing_cwd = False
+        self._parsing_signalled = False
         self._arguments = []
         self._stdout = ""
         self._stderr = ""
@@ -531,12 +562,15 @@ class Parser:
                              "uname": ["system", "release", "machine"],
                              "file": ["name"],
                              "status": ["raw"],
+                             "signalled": ["signal", "corefile", "action"], #action is the char data in signalled element
                              "regular": ["exitcode"],
                              "argument-vector": [],
                              "cwd": [],
                              "stdout": [],
                              "stderr": [],
-                             "statinfo": ["lfn", "size", "ctime", "user" ]}
+                             "statinfo": ["lfn", "size", "ctime", "user" ],
+                             "checksum": ["type", "value"],
+                             "type": ["type", "value"]}
 
         return self.parse(stampede_elements, tasks=True, clustered=True)
 

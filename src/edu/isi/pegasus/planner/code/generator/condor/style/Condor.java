@@ -64,9 +64,11 @@ public class Condor extends Abstract {
     public static final String PARALLEL_UNIVERSE =
                          edu.isi.pegasus.planner.namespace.Condor.PARALLEL_UNIVERSE;
 
-    
     public static final String TRANSFER_EXECUTABLE_KEY =
-                         edu.isi.pegasus.planner.namespace.Condor.TRANSFER_EXECUTABLE_KEY;
+                         edu.isi.pegasus.planner.namespace.Condor.TRANSFER_EXECUTABLE_KEY;   
+    
+    public static final String X509USERPROXY_KEY =
+                         edu.isi.pegasus.planner.namespace.Condor.X509USERPROXY_KEY;
 
     public static final String EMPTY_TRANSFER_OUTPUT_KEY = "+TransferOutput";
 

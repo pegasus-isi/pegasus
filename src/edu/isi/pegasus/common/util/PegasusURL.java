@@ -32,6 +32,12 @@ public class PegasusURL {
      * The scheme name for file url.
      */
     public static final String SYMLINK_URL_SCHEME = "symlink:";
+    
+    
+    /**
+     * The scheme name for gsift url.
+     */
+    public static final String GSIFTP_URL_SCHEME = "gsiftp:";
 
 
     /**
@@ -39,6 +45,16 @@ public class PegasusURL {
      */
     public static final String DEFAULT_PROTOCOL = "file";
 
+    /**
+     * singularity hub protocol scheme
+     */
+    public static String SINGULARITY_PROTOCOL_SCHEME = "shub";
+    
+    /**
+     * Docker hub protocol scheme
+     */
+    public static String DOCKER_PROTOCOL_SCHEME = "docker";
+    
     /**
      *
      * Stores the regular expressions necessary to parse a PegasusURL into 3 components

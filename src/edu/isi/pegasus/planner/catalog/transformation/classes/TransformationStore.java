@@ -44,7 +44,11 @@ public class TransformationStore {
      */
     private Map<String, Map<String,List<TransformationCatalogEntry>>> mTCStore;
 
-
+    /**
+     * Containers indexed by their LFN
+     */
+    private Map<String, Container> mContainers; 
+            
     /**
      * The default constructor.
      */
@@ -57,6 +61,7 @@ public class TransformationStore {
      */
     private void initialize(){
         mTCStore = new TreeMap<String, Map<String,List<TransformationCatalogEntry>>>();
+        mContainers = new TreeMap<String,Container>();
     }
 
     /**
@@ -122,6 +127,49 @@ public class TransformationStore {
             mTCStore.put(completeName, m );
         }
 
+    }
+    
+    /**
+     * Add container specified.
+     * 
+     * @param container add a container
+     */
+    public void addContainer( Container container ){
+        String name = container == null ? null : container.getName();
+        if( name == null || name.isEmpty() ) {
+            throw new RuntimeException( "Invalid container passed " + container);
+        }
+        
+        //check if we already have it
+        if( this.mContainers.containsKey(name) ){
+            throw new RuntimeException( "Container " + container + " already exists as " + container );
+        }
+        this.mContainers.put(name, container);
+    }
+    
+    /**
+     * Goes through all the transformation catalog entries and associates
+     * with them to real references of containers
+     */
+    public void resolveContainerReferences(){
+        for( TransformationCatalogEntry entry : this.getAllEntries() ){
+            Container c = entry.getContainer();
+            if( c == null ){
+                continue;
+            }
+            String name = c.getLFN();
+            if( containsContainer(name) ){
+                //clone before associating as multiple transformations 
+                //can be associated with one container entry
+                Container cont = (Container) this.getContainer(name).clone();
+                entry.setContainer(cont);
+                //PM-1214 special handling of merging container ENV profiles with TC
+                entry.incorporateContainerProfiles( cont );
+            }
+            else{
+                throw new RuntimeException( "Transformation Catalog Entry " + entry + " refers to non existent container " + name);
+            }
+        }
     }
 
     /**
@@ -311,6 +359,27 @@ public class TransformationStore {
      */
     public boolean containsTransformation( String completeName ){
         return this.mTCStore.containsKey( completeName );
+    }
+
+    /**
+     * Whether store contains a container or not. 
+     * 
+     * @param name
+     * 
+     * @return 
+     */
+    public boolean  containsContainer(String name) {
+        return this.mContainers.containsKey( name );
+    }
+
+    /**
+     * Return a container.
+     * 
+     * @param name
+     * @return 
+     */
+    public Container getContainer(String name) {
+        return this.mContainers.get( name );
     }
 
 

@@ -21,6 +21,7 @@ import java.util.BitSet;
 
 import edu.isi.pegasus.planner.dax.File;
 import edu.isi.pegasus.planner.namespace.Metadata;
+import java.util.Iterator;
 
 /**
  * The logical file object that contains the logical filename which is got from
@@ -37,6 +38,7 @@ import edu.isi.pegasus.planner.namespace.Metadata;
  */
 public class PegasusFile extends Data {
 
+    
     /**
      * Enumeration for denoting type of linkage
      */
@@ -582,6 +584,20 @@ public class PegasusFile extends Data {
     }
     
     /**
+     * Add all the metadata to the file
+     * 
+     * @param m 
+     */
+    public void addMetadata(Metadata m) {
+        if( !m.isEmpty() ){
+            for( Iterator<String> mit = m.getProfileKeyIterator(); mit.hasNext(); ){
+                String key = mit.next();
+                this.addMetadata( key, (String)m.get(key));
+            }
+        }
+    }
+
+    /**
      * Add metadata to the object.
      * 
      * @param key
@@ -658,14 +674,25 @@ public class PegasusFile extends Data {
 
 
     /**
-      * Returns a boolean indicating if a file that is being staged is an
-      * executable or not (i.e is a data file).
+      * Returns a boolean indicating if a file that is being staged is a 
+      * checkpoint file or not.
       *
       * @return boolean indicating whether a file is a checkpoint file or not.
       */
      public boolean isCheckpointFile(){
         return (this.mType == PegasusFile.CHECKPOINT_FILE);
      }
+     
+     /**
+      * Returns a boolean indicating if a file that is being staged is an
+      * is a data file
+      *
+      * @return boolean indicating whether a file is a data file or not.
+      */
+     public boolean isDataFile(){
+        return (this.mType == PegasusFile.DATA_FILE);
+     }
+
 
     /**
      * Returns a copy of the existing data object.

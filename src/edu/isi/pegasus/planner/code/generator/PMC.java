@@ -116,7 +116,9 @@ public class PMC extends Abstract {
         //PM-747 no need for conversion as ADag now implements Graph interface
         Graph workflow = dag;
 
-        mGridStartFactory.initialize(mBag, dag);
+        mGridStartFactory.initialize( mBag, 
+                                      dag,
+                                      this.getDAGFilename(dag, POSTSCRIPT_LOG_SUFFIX ) );
 
         Job prevJob = null;
         //traverse the workflow and enable the jobs with kickstart first

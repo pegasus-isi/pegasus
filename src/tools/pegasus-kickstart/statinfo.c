@@ -27,6 +27,7 @@
 
 #include "statinfo.h"
 #include "utils.h"
+#include "checksum.h"
 #include "error.h"
 
 size_t data_section_size = 262144ul;
@@ -468,6 +469,20 @@ size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
         }
 
         fprintf(out, "/>\n");
+    }
+
+    /* checksum the files if the checksum tools are available
+     * and it is a "final" entry
+     */
+    if (id != NULL && info->error == 0 && strcmp(id, "final") == 0) {
+        char chksum_xml[2048];
+        real = realpath(info->file.name, NULL);
+        if (pegasus_integrity_xml(real, chksum_xml)) {
+            fprintf(out, "%*s%s\n", indent+2, "",  chksum_xml);
+        }
+        if (real) {
+            free((void*) real);
+        }
     }
 
     /* if truncation is allowed, then the maximum amount of

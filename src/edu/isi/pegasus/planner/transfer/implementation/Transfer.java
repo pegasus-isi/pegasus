@@ -49,7 +49,10 @@ import java.util.ArrayList;
 import java.io.File;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The implementation that creates transfer jobs referring to the python based
@@ -127,6 +130,54 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
      * The executable basename for the transfer executable.
      */
     public static final String EXECUTABLE_BASENAME = "pegasus-transfer";
+    
+    /**
+     * Returns the dagman category for transfer job 
+     * 
+     * @param type job type
+     * 
+     * @return 
+     */
+    public static String getDAGManCategory( int type ) {
+        String category = null;
+
+        switch (type){
+
+            case STAGE_IN_JOB:
+                category = "stagein";
+                break;
+
+            case STAGE_OUT_JOB:
+                category = "stageout";
+                break;
+
+            case INTER_POOL_JOB:
+                category = "stageinter";
+                break;
+            default:
+                category = "transfer";
+                
+        }
+        return category;
+                
+    }
+    
+    /**
+     * Returns a Map that maps deprecated name to the new category name
+     * 
+     * @return 
+     */
+    public static Map<String,String> deprecatedDAGManCategoryNames(  ) {
+        Map<String,String> m = new HashMap();
+
+        m.put( "stage-in", "stagein" );
+        m.put( "stage-out", "stageout" );
+        m.put( "stage-inter", "stageinter" );
+        
+        return m;
+                
+    }
+
 
 
     /**
@@ -193,10 +244,20 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
      */
     public TransformationCatalogEntry getTransformationCatalogEntry(String siteHandle, int jobClass ){
 
-        if(  jobClass == Job.STAGE_IN_WORKER_PACKAGE_JOB && !siteHandle.equalsIgnoreCase( "local") ){
-            //PM-538
+        if(  jobClass == Job.STAGE_IN_WORKER_PACKAGE_JOB
+                // && !siteHandle.equalsIgnoreCase( "local") 
+                ){
+            //Case 1 PM-538 : job to be created for remote site. In this case, the stage worker job
+            //          has to rely on pegasus-transfer on the submit host, that is 
+            //         transferred using condor transfer_executable. Set in postProcess() method
+            
+            //Case 2 PM-1226: The stage worker job is for site local, and all the jobs in the workflow
+            //                are also running on site local. So in this case we need to ensure that
+            //                stage_worker job does not have a chicken and egg problem, and refer
+            //                to the pegasus-transfer path in it's executable to the location where it 
+            //                is staging to on the local site 
+            
             //construct an entry for the local site and transfer it.
-
             return this.defaultTCEntry( Transfer.TRANSFORMATION_NAMESPACE,
                                       Transfer.TRANSFORMATION_NAME,
                                       Transfer.TRANSFORMATION_VERSION,
@@ -278,7 +339,6 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
      * <pre>
      * PEGASUS_HOME
      * GLOBUS_LOCATION
-     * LD_LIBRARY_PATH
      * </pre>
      *
      *
@@ -297,24 +357,7 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
 
         String globus = mSiteStore.getEnvironmentVariable( site, "GLOBUS_LOCATION" );
         if( globus != null && globus.length() > 1 ){
-            //check for LD_LIBRARY_PATH
-            String ldpath = mSiteStore.getEnvironmentVariable( site, "LD_LIBRARY_PATH" );
-            if ( ldpath == null ){
-                //construct a default LD_LIBRARY_PATH
-                ldpath = globus;
-                //remove trailing / if specified
-                ldpath = ( ldpath.charAt( ldpath.length() - 1 ) == File.separatorChar )?
-                                ldpath.substring( 0, ldpath.length() - 1 ):
-                                ldpath;
-
-                ldpath = ldpath + File.separator + "lib";
-                mLogger.log( "Constructed default LD_LIBRARY_PATH " + ldpath,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-            }
-
-            //we have both the environment variables
             result.add( new Profile( Profile.ENV, "GLOBUS_LOCATION", globus) );
-            result.add( new Profile( Profile.ENV, "LD_LIBRARY_PATH", ldpath) );
         }
 
         return result;
@@ -427,7 +470,25 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             	urlPair.append(" ,\n");
             }
             urlPair.append(" { \"type\": \"transfer\",\n");
+            urlPair.append("   \"lfn\": ").append("\"").append(ft.getLFN()).append("\"").append(",\n");
             urlPair.append("   \"id\": ").append(num).append(",\n");
+            
+            //PM-1190 dump any metadata that planner knows of about the file
+            Metadata m = ft.getAllMetadata();
+            if( !m.isEmpty() ){
+                urlPair.append( "   ").append( "\"attributes\": {");
+                for( Iterator<String> mit = m.getProfileKeyIterator(); mit.hasNext(); ){
+                    String key = mit.next();
+                    urlPair.append( "\n" ).append( "     ");
+                    urlPair.append( "\"").append( key ).append( "\"" ).append( ":" ).append( "\"" ).append( m.get(key)).append( "\"").
+                       append(",");
+                }
+                //remove trailing ,
+                urlPair = urlPair.deleteCharAt( urlPair.length() - 1 );
+                urlPair.append( "\n" ).append( "   ").append( "}").append( "," ).append( "\n" );
+            }
+            
+            
             urlPair.append("   \"src_urls\": [");
             boolean notFirst = false;
             for( String sourceSite: sourceSites ){
@@ -481,34 +542,5 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
                                   Transfer.TRANSFORMATION_VERSION);
     }
 
-    /**
-     * Returns the dagman category for transfer job 
-     * 
-     * @param type job type
-     * 
-     * @return 
-     */
-    protected String getDAGManCategory( int type ) {
-        String category = null;
-
-        switch (type){
-
-            case STAGE_IN_JOB:
-                category = "stage-in";
-                break;
-
-            case STAGE_OUT_JOB:
-                category = "stage-out";
-                break;
-
-            case INTER_POOL_JOB:
-                category = "stage-inter";
-                break;
-            default:
-                category = "transfer";
-                
-        }
-        return category;
-                
-    }
+    
 }

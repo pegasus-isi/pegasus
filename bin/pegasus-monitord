@@ -90,7 +90,7 @@ re_parse_timestamp = re.compile(r"\s*(\d{1,2})\/(\d{1,2})(\/(\d{1,2}))?\s+(\d{1,
 re_parse_iso_stamp = re.compile(r"^\s*(\d{4}).?(\d{2}).?(\d{2}).(\d{2}).?(\d{2}).?(\d{2})([.,]\d+)?([Zz]|[-+](\d{2}).?(\d{2}))")
 re_parse_event = re.compile(r"Event:\s+ULOG_(\S+) for (?:HT|)Condor (?:Job|Node) (\S+)\s+\((-?[0-9]+\.[0-9]+)(\.[0-9]+)?\).*")
 re_parse_script_running = re.compile(r"\d{2}\sRunning (PRE|POST) script of (?:Job|Node) (.+)\.{3}")
-re_parse_script_done = re.compile(r"\d{2}\s(PRE|POST) Script of (?:Job|Node) (\S+)")
+re_parse_script_done = re.compile(r"\d{2}\s(PRE|POST) Script of (?:Job|[nN]ode) (\S+)")
 re_parse_script_successful = re.compile(r"completed successfully\.$")
 re_parse_script_failed = re.compile(r"failed with status\s+(-?\d+)\.?$")
 re_parse_job_submit = re.compile(r"Submitting (?:HT|)Condor Node (.+) job")
@@ -101,11 +101,12 @@ re_parse_retry = re.compile(r"Retrying node (\S+) \(retry \#(\d+) of (\d+)\)")
 re_parse_dagman_condor_id = re.compile(r"\*\* condor_scheduniv_exec\.([0-9\.]+) \(CONDOR_DAGMAN\) STARTING UP")
 re_parse_dagman_finished = re.compile(r"\(condor_DAGMAN\)[\w\s]+EXITING WITH STATUS (\d+)$")
 re_parse_dagman_pid = re.compile(r"\*\* PID = (\d+)$")
-re_parse_condor_version = re.compile(r"\*\* \$CondorVersion: ((\d+\.\d+)\.\d+)")
+re_parse_condor_version = re.compile(r"\*\* \$CondorVersion: ((\d+)\.(\d+)\.(\d+))")
 re_parse_condor_logfile = re.compile(r"Condor log will be written to ([^,]+)")
 re_parse_condor_logfile_insane = re.compile(r"\d{2}\s{3,}(\S+)")
 re_parse_multiline_files = re.compile(r"All DAG node user log files:")
 re_parse_dagman_aborted  = re.compile(r"Received SIGUSR1")
+re_parse_job_held        = re.compile(r"\s*Hold reason:(.*)")
 
 # Constants
 MONITORD_WF_RETRY_FILE = "monitord.subwf" # filename for writing persistent sub-workflow retry information
@@ -458,7 +459,7 @@ if jsd is not None:
 # --- functions ---------------------------------------------------------------------------
 #
 
-def add(wf, jobid, event, sched_id=None, status=None):
+def add(wf, jobid, event, sched_id=None, status=None, reason=None):
     """
     This function processes events related to jobs' state changes. It
     creates a new job, when needed, and by calling the workflow's
@@ -545,7 +546,7 @@ def add(wf, jobid, event, sched_id=None, status=None):
         return None
 
     # Make sure job has the updated state
-    wf.update_job_state(jobid, sched_id, my_job_submit_seq, event, status, my_time)
+    wf.update_job_state(jobid, sched_id, my_job_submit_seq, event, status, my_time, reason)
 
     return my_job_submit_seq
 
@@ -768,8 +769,12 @@ def process_dagman_out(wf, log_line):
             my_expr = re_parse_condor_version.search(log_line)
             # groups = condor version, condor major
             my_condor_version = my_expr.group(1)
-            my_condor_major = my_expr.group(2)
-            logger.info("Using DAGMan version %s" % (my_condor_version))
+            my_condor_major = int(my_expr.group(2))
+            my_condor_minor = int(my_expr.group(3))
+            my_condor_patch = int(my_expr.group(4))
+            wf.set_dagman_version( my_condor_major, my_condor_minor, my_condor_patch)
+            logger.info("Using DAGMan version %s %d" % (my_condor_version,
+                                                        wf.get_dagman_version() ))
         elif (re_parse_condor_logfile.search(log_line) is not None or
               wf._multiline_file_flag == True and re_parse_condor_logfile_insane.search(log_line) is not None):
             # Condor common log file location, DAGMan 6.6
@@ -813,10 +818,27 @@ def process_dagman_out(wf, log_line):
             wf._skipping_recovery_lines = True
             return
         elif re_parse_dagman_aborted.search(log_line) is not None:
-            #dagman was aborted. just log in monitord log
-            #eventually the dagman exit line will trigger failure in the DB
+            # PM-767 dagman was aborted. just log in monitord log
+            # eventually the dagman exit line will trigger failure in the DB
             logger.warning("DAGMan was aborted for workflow running in directory %s" %wf._run_dir )
+            wf._current_state_reason = "DAGMan aborted as it received SIGUSR1 signal."
             return
+        elif re_parse_job_held.search(log_line) is not None:
+            # PM-749  figure out reason for job held
+            my_expr = re_parse_job_held.search(log_line)
+            my_held_reason = my_expr.group(1)
+
+            # figure out which job  was held
+            # the log line has no info. so try to fallback on last job
+            last_job = wf._last_known_job
+            if( last_job is None or last_job._job_state != "JOB_HELD"):
+                logger.error( "Last known job %s is not held. Parsed  held job with reason %s " %( last_job,my_held_reason ))
+
+            # PM-749 insert a new JOB_HELD_REASON event that connects to held job
+            my_event = "JOB_HELD_REASON"
+            my_jobid = last_job._exec_job_id
+            my_sched_id = last_job._sched_id
+            my_job_submit_seq = add(wf, my_jobid, my_event, sched_id=my_sched_id, reason=my_held_reason)
     else:
         # Could not parse timestamp
         logger.info( "time stamp format not recognized" )
@@ -930,21 +952,17 @@ else:
     #PM-652 if there is sqlite db then just take a backup
     #by rotating the db file. possible as we have only one root workflow per sqlitedb
     #PM-689 rotation happens both in replay and monitord recovery mode ( where recover file exists)
+    backup = False
     if restart_logging and event_dest.startswith( "sqlite:" ):
         try:
-            start = event_dest.index( "sqlite:///" )
+            event_dest.index( "sqlite:///" )
         except ValueError:
             logger.error( 'Invalid sqlite connection string passed %s ' %event_dest )
-
-        db_path = event_dest[start + 10:]
-
-        if os.path.isfile(db_path):
-            logger.info( 'Rotating sqlite db file %s' %db_path)
-            utils.rotate_log_file( db_path )
+        backup = True
 
     try:
         wf_event_sink = eo.create_wf_event_sink(event_dest, db_stats=db_stats, restart=restart_logging, enc=encoding,
-                                                props=props, db_type=connection.DBType.WORKFLOW)
+                                                props=props, db_type=connection.DBType.WORKFLOW, backup = backup)
         atexit.register(finish_stampede_loader)
     except:
         logger.error(traceback.format_exc())

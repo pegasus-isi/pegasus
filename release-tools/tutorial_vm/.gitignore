@@ -1,3 +1,4 @@
-*.img
-*.vmdk
-pegasus-tutorial.cfg
+output/
+packer_cache/
+log-*.txt
+

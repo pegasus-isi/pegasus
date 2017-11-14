@@ -245,11 +245,16 @@ public class PlannerMetrics extends Data{
     /**
      * Sets the app metrics that need to be forwarded.
      * 
-     * @param metrics the application metrics
+     * @param metrics       the application metrics
+     * @param defaultName   the default name to use for the app if users have not specified it
      */
-    public void setApplicationMetrics( PegasusProperties properties ){
+    public void setApplicationMetrics( PegasusProperties properties, String defaultName ){
         //figure out the application name if set
         String name = properties.getProperty( PegasusProperties.PEGASUS_APP_METRICS_PREFIX );
+        if( name == null ){
+            name = defaultName;
+        }
+        
         if( name != null ){
             mApplicationMetrics = properties.matchingSubset( PegasusProperties.PEGASUS_APP_METRICS_PREFIX, false );
             //add the name

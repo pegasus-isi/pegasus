@@ -70,6 +70,11 @@ public class PegasusExitCode implements POSTScript  {
      * It is $PEGASUS_HOME/bin/pegasus-exitcode
      */
     protected String mExitParserPath;
+    
+    /**
+     * The path to the log file that exitcode should log to
+     */
+    protected String mExitCodeLogPath;
 
     /**
      * The properties that need to be passed to the postscript invocation
@@ -82,7 +87,7 @@ public class PegasusExitCode implements POSTScript  {
      * the workflow.
      */
     protected String mSubmitDir;
-
+    
     
     /**
      * The default constructor.
@@ -101,10 +106,12 @@ public class PegasusExitCode implements POSTScript  {
      * @param path       the path to the POSTScript on the submit host.
      * @param submitDir  the submit directory where the submit file for the job
      *                   has to be generated.
+     * @param globalLog  a global log file to use for logging
      */
     public void initialize( PegasusProperties properties,
                             String path,
-                            String submitDir ){
+                            String submitDir,
+                            String globalLog ){
         mProps     = properties;
         mSubmitDir = submitDir;
         mLogger    = LogManagerFactory.loadSingletonInstance( properties );
@@ -112,7 +119,7 @@ public class PegasusExitCode implements POSTScript  {
         //construct the exitcode paths and arguments
         mExitParserPath       = (path == null ) ? getDefaultExitCodePath() : path;
         mPostScriptProperties = getPostScriptProperties( properties );
-
+        mExitCodeLogPath      = globalLog;
     }
 
     /**
@@ -165,7 +172,9 @@ public class PegasusExitCode implements POSTScript  {
             }
         }
 
-
+        //PM-928 set it to write to global log file per workflow
+        defaultOptions.append( " -l " ).append( this.mExitCodeLogPath );
+        
         //put the extra options into the exitcode arguments
         //in the correct order.
         Object args = job.dagmanVariables.get( Dagman.POST_SCRIPT_ARGUMENTS_KEY );

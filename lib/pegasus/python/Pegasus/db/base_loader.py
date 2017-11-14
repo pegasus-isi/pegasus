@@ -2,17 +2,18 @@ import time
 import logging
 
 from Pegasus.db import connection
+from sqlalchemy import exc
 
 class BaseLoader(object):
     "Base loader class. Has a database session and a log handle."
 
-    def __init__(self, dburi, batch=True, props=None, db_type=None, flush_every=1000):
+    def __init__(self, dburi, batch=True, props=None, db_type=None, backup=False, flush_every=1000):
         """Will be overridden by subclasses to take
         parameters specific to their function.
         """
         self.log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
         self.dburi = dburi
-        self.session = connection.connect(dburi, create=True, props=props, db_type=db_type)
+        self.session = connection.connect(dburi, create=True, props=props, db_type=db_type, backup=backup)
 
         # flags and state for batching
         self._batch = batch

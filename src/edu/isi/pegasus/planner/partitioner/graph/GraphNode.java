@@ -118,6 +118,7 @@ public class GraphNode extends Data {
         this();
         mLogicalID = id;
         mContent = content;
+        mContent.setGraphNodeReference(this);
     }
 
     /**
@@ -153,6 +154,7 @@ public class GraphNode extends Data {
      */
     public void setContent( GraphNodeContent content ) {
         mContent = content;
+        mContent.setGraphNodeReference( this );
     }
 
 
@@ -304,6 +306,16 @@ public class GraphNode extends Data {
     public void setColor( int color ){
         mColor = color;
     }
+    
+    /**
+     * Gets the color of the node to the color specified
+     *
+     * @return
+     */
+    public int getColor( ){
+        return mColor;
+    }
+
 
 
     /**

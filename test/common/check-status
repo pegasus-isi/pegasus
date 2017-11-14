@@ -32,7 +32,7 @@ if [ ! -e braindump.txt ]; then
 fi
 
 # minutes
-TIMEOUT=120
+TIMEOUT=180
 
 START_TS=`date +'%s'`
 MAX_TS=`echo "$START_TS + $TIMEOUT * 60" | bc`

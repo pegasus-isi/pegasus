@@ -11,6 +11,10 @@ fi
 
 TOPDIR=`pwd`
 
+# unique part of shared directory paths to make sure we do not conflict with
+# other instances of similar tests
+UUID=`uuidgen`
+
 # output directory
 mkdir -p outputs
 
@@ -43,8 +47,8 @@ cat >sites.xml <<EOF
     </site>
 
      <site  handle="staging" arch="x86_64" os="LINUX">
-        <directory type="shared-scratch" path="/nfs/ccg4/scratch-purge-no-backups">
-            <file-server operation="all" url="gsiftp://cartman.isi.edu/nfs/ccg4/scratch-purge-no-backups"/>
+        <directory type="shared-scratch" path="/nfs/ccg4/scratch-purge-no-backups/bamboo/$UUID">
+            <file-server operation="all" url="gsiftp://colo-vm63.isi.edu/nfs/ccg4/scratch-purge-no-backups/bamboo/$UUID"/>
         </directory>
     </site>
 

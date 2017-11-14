@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import pwd
 import sys
 import time
 from Pegasus.DAX3 import *
@@ -11,11 +12,13 @@ if len(sys.argv) != 2:
         sys.exit(1)
 daxfile = sys.argv[1]
 
+USER = pwd.getpwuid(os.getuid())[0]
+
 # Create a abstract dag
 dax = ADAG("split")
 
 # Add some workflow-level metadata
-dax.metadata("creator", "%s@%s" % (os.getlogin(), os.uname()[1]))
+dax.metadata("creator", "%s@%s" % (USER, os.uname()[1]))
 dax.metadata("created", time.ctime())
 
 webpage = File("pegasus.html")
@@ -41,7 +44,7 @@ for c in "abcd":
     wc.addArguments("-l",part)
     wc.setStdout(count)
     wc.uses(part, link=Link.INPUT)
-    wc.uses(count, link=Link.OUTPUT, transfer=True, register=False)
+    wc.uses(count, link=Link.OUTPUT, transfer=True, register=True)
     dax.addJob(wc)
 
     #adding dependency

@@ -34,13 +34,15 @@ import org.junit.runners.Suite.SuiteClasses;
     edu.isi.pegasus.planner.code.generator.condor.style.GliteTest.class,
     edu.isi.pegasus.planner.code.generator.condor.style.CondorTest.class,
     edu.isi.pegasus.planner.code.generator.condor.style.CondorGTest.class,
-    edu.isi.pegasus.planner.transfer.mapper.FlatOutputMapperTest.class,
-    edu.isi.pegasus.planner.transfer.mapper.HashedOutputMapperTest.class,
-    edu.isi.pegasus.planner.transfer.mapper.ReplicaOutputMapperTest.class,
-    edu.isi.pegasus.planner.transfer.mapper.FixedOutputMapperTest.class,
+    edu.isi.pegasus.planner.mapper.output.FlatOutputMapperTest.class,
+    edu.isi.pegasus.planner.mapper.output.HashedOutputMapperTest.class,
+    edu.isi.pegasus.planner.mapper.output.ReplicaOutputMapperTest.class,
+    edu.isi.pegasus.planner.mapper.output.FixedOutputMapperTest.class,
     edu.isi.pegasus.planner.refiner.DataReuseEngineTest.class,
     edu.isi.pegasus.common.util.GLiteEscapeTest.class,
     edu.isi.pegasus.common.util.VariableExpanderTest.class,
+    edu.isi.pegasus.planner.partitioner.graph.CycleCheckerTest.class,
+    edu.isi.pegasus.planner.parser.dax.DAXParser3Test.class 
 })
 public class AllTests {
 }

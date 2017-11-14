@@ -1,9 +1,8 @@
 #!/usr/bin/env python
-import sys
 import os
+import pwd
+import sys
 import time
-
-# Import the Python DAX library
 from Pegasus.DAX3 import *
 
 # The name of the DAX file is the first argument
@@ -12,12 +11,14 @@ if len(sys.argv) != 2:
     sys.exit(1)
 daxfile = sys.argv[1]
 
+USER = pwd.getpwuid(os.getuid())[0]
+
 # Create a abstract dag
 print "Creating ADAG..."
 diamond = ADAG("diamond")
 
 # Add some workflow-level metadata
-diamond.metadata("creator", "%s@%s" % (os.getlogin(), os.uname()[1]))
+diamond.metadata("creator", "%s@%s" % (USER, os.uname()[1]))
 diamond.metadata("created", time.ctime())
 
 # Add a preprocess job

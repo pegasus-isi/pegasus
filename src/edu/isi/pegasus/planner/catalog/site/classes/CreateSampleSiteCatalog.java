@@ -59,13 +59,13 @@ public class CreateSampleSiteCatalog {
             //associate grid gateway for auxillary and compute jobs
             GridGateway gw = new GridGateway( GridGateway.TYPE.gt2,
                                               "cluster.isi.edu/jobmanager-fork",
-                                              GridGateway.SCHEDULER_TYPE.Fork );
+                                              GridGateway.SCHEDULER_TYPE.fork );
             gw.setJobType( GridGateway.JOB_TYPE.auxillary );
             entry.addGridGateway( gw );
             
             gw = new GridGateway( GridGateway.TYPE.gt2,
                                               "cluster.isi.edu/jobmanager-pbs",
-                                              GridGateway.SCHEDULER_TYPE.PBS );
+                                              GridGateway.SCHEDULER_TYPE.pbs );
             gw.setJobType( GridGateway.JOB_TYPE.compute );
             entry.addGridGateway( gw );
             

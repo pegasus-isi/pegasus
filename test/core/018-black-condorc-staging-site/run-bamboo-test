@@ -40,7 +40,7 @@ cat > sites.xml <<EOF
             </storage>
         </head-fs>
     </site>
-     <site handle="isi-condorc" arch="x86" os="LINUX" osrelease="rhel" osversion="5">
+     <site handle="isi-condorc" arch="x86_64" os="LINUX" osrelease="rhel" osversion="7">
          <grid type="condor" contact="ccg-testing1.isi.edu" scheduler="Condor" jobtype="compute" total-nodes="50"/>
          <grid type="condor" contact="ccg-testing1.isi.edu" scheduler="Condor" jobtype="auxillary" total-nodes="50"/>
 
@@ -61,7 +61,7 @@ cat > sites.xml <<EOF
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://cartman.isi.edu" mount-point="${TOPDIR}/staging-site/scratch"/>
+                    <file-server protocol="gsiftp" url="gsiftp://colo-vm63.isi.edu" mount-point="${TOPDIR}/staging-site/scratch"/>
                     <internal-mount-point mount-point="${TOPDIR}/staging-site/scratch"/>
                 </shared>
             </scratch>

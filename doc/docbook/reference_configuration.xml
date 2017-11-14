@@ -8,7 +8,7 @@
 
   <orderedlist>
     <listitem>
-      <para>the behaviour of an individual job via <emphasis
+      <para>the behavior of an individual job via <emphasis
       role="bold">profiles</emphasis></para>
     </listitem>
 
@@ -508,7 +508,7 @@ Scope       :</emphasis> TC, SC, DAX, Properties
       around the instruction, the out pair of parentheses is not necessary in
       globus profile specifications</para>
 
-      <para>Table 2 shows some commonly used RSL instructions. For an
+      <para>The table below shows some commonly used RSL instructions. For an
       authoritative list of all possible RSL instructions refer to the Globus
       RSL specification.</para>
 
@@ -926,11 +926,11 @@ Scope       :</emphasis> TC, SC, DAX, Properties
 
       <para>Pegasus prevents the user from specifying certain Condor commands
       in condor profiles, because they are automatically generated or can be
-      overridden through some different means. Table 5 shows prohibited Condor
-      commands.</para>
+      overridden through some different means. The table below shows
+      prohibited Condor commands.</para>
 
       <table>
-        <title>Table 5: Condor commands prohibited in condor profiles</title>
+        <title>Condor commands prohibited in condor profiles</title>
 
         <tgroup cols="2">
           <tbody>
@@ -992,8 +992,9 @@ Scope       :</emphasis> TC, SC, DAX, Properties
       remote job's stdout, usually the output from kickstart, as sole argument
       to the post-script.</para>
 
-      <para>Table 6 shows the keys in the dagman profile domain that are
-      understood by Pegasus and can be associated at a per job basis.</para>
+      <para>The table below shows the keys in the dagman profile domain that
+      are understood by Pegasus and can be associated at a per job
+      basis.</para>
 
       <para><table>
           <title>Useful dagman Commands that can be associated at a per job
@@ -1189,10 +1190,11 @@ Profile  Key: </emphasis></emphasis>ABORT-DAG-ON
 
       <para/>
 
-      <para>Table 7 shows the keys in the dagman profile domain that are
-      understood by Pegasus and can be used to apply to the whole workflow.
-      These are used to control DAGMan's behavior at the workflow level, and
-      are recommended to be specified in the properties file.</para>
+      <para>The table below shows the keys in the dagman profile domain that
+      are understood by Pegasus and can be used to apply to the whole
+      workflow. These are used to control DAGMan's behavior at the workflow
+      level, and are recommended to be specified in the properties
+      file.</para>
 
       <table id="dagman_throttling_profiles">
         <title>Useful dagman Commands that can be specified in the properties
@@ -1325,8 +1327,8 @@ Scope       :</emphasis> Properties
       sub-set of <emphasis>pegasus</emphasis> profiles for their
       decision-making.</para>
 
-      <para>Table 8 shows some of the useful configuration option Pegasus
-      understands.</para>
+      <para>The table below shows some of the useful configuration option
+      Pegasus understands.</para>
 
       <table>
         <title>Useful pegasus Profiles.</title>
@@ -1394,8 +1396,8 @@ Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
               <entry>Determines the executable for launching a job. This
-              covers both tasks ( jobs specifed by the user in the DAX) and
-              additional jobs added by Pegasus during the planning opertation.
+              covers both tasks ( jobs specified by the user in the DAX) and
+              additional jobs added by Pegasus during the planning operation.
               Possible values are <emphasis role="bold"><emphasis>Kickstart |
               NoGridStart</emphasis></emphasis> | PegasusLite | Distribute at
               the moment. <note>
@@ -1480,9 +1482,11 @@ Scope       :</emphasis> TC, SC, DAX, Properties
               <entry>This key determines the maximum number of
               <emphasis>stage-in</emphasis> jobs that are can executed locally
               or remotely per compute site per workflow. This is used to
-              configure the <emphasis>Bundle</emphasis> Transfer Refiner,
-              which is the Default Refiner used in Pegasus. This profile is
-              best set in the Site Catalog or in the Properties file</entry>
+              configure the <emphasis><link
+              linkend="transfer-refiner-balanced-cluster">BalancedCluster</link></emphasis>
+              Transfer Refiner, which is the Default Refiner used in Pegasus.
+              This profile is best set in the Site Catalog or in the
+              Properties file</entry>
             </row>
 
             <row>
@@ -1531,8 +1535,10 @@ Scope       :</emphasis> TC, SC, DAX, Properties
               <entry>This key determines the maximum number of
               <emphasis>stage-out</emphasis> jobs that are can executed
               locally or remotely per compute site per workflow. This is used
-              to configure the <emphasis>Bundle</emphasis> Transfer Refiner, ,
-              which is the Default Refiner used in Pegasus.</entry>
+              to configure the <emphasis><link
+              linkend="transfer-refiner-balanced-cluster">BalancedCluster</link></emphasis>
+              Transfer Refiner, , which is the Default Refiner used in
+              Pegasus.</entry>
             </row>
 
             <row>
@@ -1924,8 +1930,8 @@ Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.6
 <emphasis role="bold">Type        : </emphasis>Long</literallayout></entry>
 
-                  <entry>Indicates the maximum memory a job requires in MB
-                  diskspace.</entry>
+                  <entry>Indicates the maximum memory a job requires in
+                  MB.</entry>
                 </row>
 
                 <row>
@@ -1937,7 +1943,8 @@ Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.6
 <emphasis role="bold">Type        : </emphasis>Long</literallayout></entry>
 
-                  <entry>Indicates diskspace a job requires in MB.</entry>
+                  <entry>Indicates the maximum diskspace a job requires in
+                  MB.</entry>
                 </row>
               </tbody>
             </tgroup>
@@ -2372,7 +2379,7 @@ Scope       :</emphasis> Properties
                     <term>Flat</term>
 
                     <listitem>
-                       By default, Pegasus will place the output files in the storage directory specified in the site catalog for the output site. 
+                       This mapper results in Pegasus placing all the job submit files in the submit directory as determined from the planner options. This can result in too many files in one directory for large workflows, and was the only option before Pegasus 4.7.0 release. 
                     </listitem>
                   </varlistentry>
 
@@ -2380,7 +2387,7 @@ Scope       :</emphasis> Properties
                     <term>Hashed</term>
 
                     <listitem>
-                       This mapper results in the creation of a deep directory structure rooted at the submit directory. The base directory is the submit directory as determined from the planner options. By default, the directory structure created is two levels deep. To control behavior of this mapper, users can specify the following properties
+                       This mapper results in the creation of a deep directory structure rooted at the submit directory. The base directory is the submit directory as determined from the planner options. By default, the directory structure created is two levels deep. To control behavior of this mapper, users can specify the following properties 
 
                       <screen>
 pegasus.dir.submit.mapper.hashed.levels     the number of directory levels used 
@@ -2388,6 +2395,50 @@ pegasus.dir.submit.mapper.hashed.levels     the number of directory levels used
 pegasus.dir.submit.mapper.hashed.multiplier the number of files associated with a job
                                             in the submit directory. defaults to 5.
 </screen>
+
+                       
+                    </listitem>
+                  </varlistentry>
+                </variablelist></entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.dir.staging.mapper<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.7
+<emphasis role="bold">Type        : </emphasis>Enumeration
+<emphasis role="bold">Values      :</emphasis> Flat|Hashed
+<emphasis role="bold">Default     :</emphasis> Hashed</literallayout></entry>
+
+              <entry>This property modifies determines how the job input and
+              output files are mapped on the staging site. This only applies
+              when the pegasus data configuration is set to
+              nonsharedfs.<variablelist>
+                  <varlistentry>
+                    <term>Flat</term>
+
+                    <listitem>
+                       This mapper results in Pegasus placing all the job submit files in the staging site directory as determined from the Site Catalog and planner options. This can result in too many files in one directory for large workflows, and was the only option before Pegasus 4.7.0 release. 
+                    </listitem>
+                  </varlistentry>
+
+                  <varlistentry>
+                    <term>Hashed</term>
+
+                    <listitem>
+                       This mapper results in the creation of a deep directory structure rooted at the staging site directory created by the create dir jobs. The binning is at the job level, and not at the file level i.e each job will push out it's outputs to the same directory on the staging site, independent of the number of output files. To control behavior of this mapper, users can specify the following properties 
+
+                      <screen>
+pegasus.dir.staging.mapper.hashed.levels     the number of directory levels used 
+                                            to accomodate the files. Defaults to 2.
+pegasus.dir.staging.mapper.hashed.multiplier the number of files associated with a job
+                                            in the submit directory. defaults to 5.
+</screen>
+
+                       
                     </listitem>
                   </varlistentry>
                 </variablelist></entry>
@@ -2840,15 +2891,16 @@ Scope       :</emphasis> Properties
                     <term>JDBCRC</term>
 
                     <listitem>
-                       In this mode, Pegasus queries a SQL based replica catalog that is accessed via JDBC. The sql schema's for this catalog can be found at $PEGASUS_HOME/sql directory. To use JDBCRC, the user additionally needs to set the following properties 
+                       In this mode, Pegasus queries a SQL based replica catalog that is accessed via JDBC. To use JDBCRC, the user additionally needs to set the following properties 
 
                       <orderedlist>
-                        <listitem>pegasus.catalog.replica.db.driver =
-                        mysql</listitem>
+                        <listitem>pegasus.catalog.replica.db.driver = mysql |
+                        postgres |sqlite</listitem>
 
-                        <listitem>pegasus.catalog.replica.db.url = jdbc url to
-                        database e.g
-                        jdbc:mysql://database-host.isi.edu/database-name</listitem>
+                        <listitem>pegasus.catalog.replica.db.url = &lt;jdbc
+                        url to the database&gt; e.g
+                        jdbc:mysql://database-host.isi.edu/database-name |
+                        jdbc:sqlite:/shared/jdbcrc.db</listitem>
 
                         <listitem>pegasus.catalog.replica.db.user =
                         database-user</listitem>
@@ -4157,8 +4209,8 @@ See Also    :</emphasis> pegasus.data.configuration</literallayout></entry>
               </row>
 
               <row>
-                <entry><literallayout><emphasis role="bold"><emphasis
-                        role="bold">Property Key: </emphasis></emphasis>pegasus.transfer.worker.package.autodownload<emphasis
+                <entry><literallayout><anchor id="pegasus.transfer.worker.package.autodownload"/>
+                      <emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.transfer.worker.package.autodownload<emphasis
                       role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
 Scope       :</emphasis> Properties
@@ -4176,7 +4228,7 @@ See Also    :</emphasis> pegasus.transfer.worker.package</literallayout></entry>
               </row>
 
               <row>
-                <entry><literallayout><emphasis role="bold"><emphasis
+                <entry><literallayout><anchor id="pegasus.transfer.worker.package.strict"/><emphasis role="bold"><emphasis
                         role="bold">Property Key: </emphasis></emphasis>pegasus.transfer.worker.package.strict<emphasis
                       role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
@@ -5085,7 +5137,7 @@ Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
 Scope       :</emphasis> Properties
 <emphasis role="bold">Since       :</emphasis> 4.2.0
 <emphasis role="bold">Type        : </emphasis>Integer
-<emphasis role="bold">Default     :</emphasis> 2</literallayout></entry>
+</literallayout></entry>
 
               <entry>In case of the InPlace strategy for adding the cleanup
               nodes to the workflow, this property specifies the maximum
@@ -5184,14 +5236,12 @@ Scope       :</emphasis> Properties
 <emphasis role="bold">Default     : </emphasis>(no default)
                   </literallayout></entry>
 
-              <entry><para>This property is used to specify a CSV file with a 
-              list of LFNs and their respective sizes in Bytes. The CSV file 
+              <entry><para>This property is used to specify a CSV file with a
+              list of LFNs and their respective sizes in Bytes. The CSV file
               must be composed of two columns: <emphasis role="bold">filename
               </emphasis> and <emphasis role="bold">length</emphasis>.
-              </para>
-              </entry>
+              </para></entry>
             </row>
-
           </tbody>
         </tgroup>
       </table>

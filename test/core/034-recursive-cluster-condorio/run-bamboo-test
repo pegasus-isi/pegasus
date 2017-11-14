@@ -11,6 +11,10 @@ fi
 
 TOPDIR=`pwd`
 
+# unique part of shared directory paths to make sure we do not conflict with
+# other instances of similar tests
+UUID=`uuidgen`
+
 # generate the input file
 echo "This is sample input to KEG" >f.a
 
@@ -49,14 +53,14 @@ cat >sites.xml <<EOF
        <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://cartman.isi.edu" mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/scratch"/>
-                    <internal-mount-point mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/scratch"/>
+                    <file-server protocol="gsiftp" url="gsiftp://colo-vm63.isi.edu" mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/$UUID/scratch"/>
+                    <internal-mount-point mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/$UUID/scratch"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://cartman.isi.edu" mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/outputs"/>
-                    <internal-mount-point mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/outputs"/>
+                    <file-server protocol="gsiftp" url="gsiftp://colo-vm63.isi.edu" mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/$UUID/outputs"/>
+                    <internal-mount-point mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/$UUID/outputs"/>
                 </shared>
             </storage>
         </head-fs>

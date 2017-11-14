@@ -1589,11 +1589,6 @@ public class AbstractJob {
             writer.writeAttribute("node-label", mNodeLabel);
         } //add argument
         
-        //PM-902
-        for (MetaData md : mMetaDataAttributes) {
-            md.toXML(writer, indent + 1);
-        }
-        
         if (!mArguments.isEmpty()) {
             writer.startElement("argument", indent + 1);
             for (Object o : mArguments) {
@@ -1608,7 +1603,14 @@ public class AbstractJob {
                 }
             }
             writer.endElement();
-        } //add profiles
+        } 
+
+        //PM-902
+        for (MetaData md : mMetaDataAttributes) {
+            md.toXML(writer, indent + 1);
+        }
+        
+        //add profiles
         for (Profile p : mProfiles) {
             p.toXML(writer, indent + 1);
         } 

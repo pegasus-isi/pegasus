@@ -23,6 +23,9 @@ pegasus-plan --conf pegasus.properties \
     --cleanup leaf \
     --force \
 {% endif %}
+{% if staging_site is defined %}
+    --staging-site {{staging_site}} \
+{% endif %}
     --sites {{sitename}} \
     --submit
 

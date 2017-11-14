@@ -19,9 +19,7 @@ package edu.isi.pegasus.planner.catalog.transformation.impl;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.common.util.Boolean;
-import edu.isi.pegasus.common.util.FileUtils;
 import edu.isi.pegasus.common.util.Separator;
-import edu.isi.pegasus.common.util.VariableExpander;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
@@ -59,37 +57,50 @@ import java.util.Set;
  *
  *
  * <pre>
- * tr example::keg:1.0 {
- *
- *  #specify profiles that apply for all the sites for the transformation
- *  #in each site entry the profile can be overriden
- *  profile env "APP_HOME" "/tmp/karan"
- *  profile env "JAVA_HOME" "/bin/java.1.5"
- * 
- *  site isi {
- *   profile env "me" "with"
- *   profile condor "more" "test"
- *   profile env "JAVA_HOME" "/bin/java.1.6"
- *   pfn "/path/to/keg"
- *   arch  "x86"
- *   os    "linux"
- *   osrelease "fc"
- *   osversion "4"
- *   type "installed"
- *  }
- *
- *  site wind {
- *   profile env "me" "with"
- *   profile condor "more" "test"
- *   pfn "/path/to/keg"
- *   arch  "x86"
- *   os    "linux"
- *   osrelease "fc"
- *   osversion "4"
- *   type "STAGEABLE"
- *  }
- * }
- *
+   tr example::keg:1.0 { 
+
+    #specify profiles that apply for all the sites for the transformation 
+    #in each site entry the profile can be overriden 
+
+    profile env "APP_HOME" "/tmp/myscratch"
+    profile env "JAVA_HOME" "/opt/java/1.6"
+
+    site isi-cluster {
+      profile env "HELLo" "WORLD"
+      profile condor "FOO" "bar"
+      profile env "JAVA_HOME" "/bin/java.1.6"
+      pfn "/path/to/keg"
+      arch "x86"
+      os "linux"
+      osrelease "fc"
+      osversion "4"
+      
+      # installed means pfn refers to path in the container.
+      # stageable means the executable can be staged into the container
+      type "INSTALLED" 
+
+      # optional attribute to specify the container to use
+      container "centos-pegasus"
+    }
+  }
+
+  cont centos-pegasus{
+    type "docker"
+
+    # URL to image in a docker hub or a url to an existing docker
+    # file exported as a tar file
+     image "/URL/" 
+
+    # optional site attribute to tell pegasus which site tar file
+    # exists. useful for handling file URL's correctly
+     image_site "optional site"
+  
+    # a url to an existing docker file to build container image  from scratch
+     dockerfile "/URL"
+
+    # specify env profile via env option do docker run
+    profile env "JAVA_HOME" "/opt/java/1.6"        
+  }
  * </pre>
  *
  *

@@ -75,7 +75,35 @@ public class TransformationCatalogReservedWord
      */
     public static final int METADATA = 9;
 
-
+    /**
+     * token value for reserved word "container" as attribute for transformation
+     */
+    public static final int CONTAINER = 10;
+    
+    //container related keywords
+    
+    /**
+     * token value for reserved word "cont"
+     */
+    public static final int CONT = 11;
+    
+    
+    /**
+     * token value for reserved word "image"
+     */
+    public static final int IMAGE = 12;
+    
+    
+    /**
+     * token value for reserved word "image_site"
+     */
+    public static final int IMAGE_SITE = 13;
+    
+    
+    /**
+     * token value for reserved word "dockerfile"
+     */
+    public static final int DOCKERFILE = 14;
     
     /**
      * Singleton implementation of a symbol table for reserved words.
@@ -110,6 +138,16 @@ public class TransformationCatalogReservedWord
                     new TransformationCatalogReservedWord(TransformationCatalogReservedWord.OSVERSION ));
             mSymbolTable.put( "type",
                     new TransformationCatalogReservedWord(TransformationCatalogReservedWord.TYPE));
+            mSymbolTable.put( "container",
+                    new TransformationCatalogReservedWord(TransformationCatalogReservedWord.CONTAINER));
+            mSymbolTable.put( "cont",
+                    new TransformationCatalogReservedWord(TransformationCatalogReservedWord.CONT ));
+            mSymbolTable.put( "image",
+                    new TransformationCatalogReservedWord(TransformationCatalogReservedWord.IMAGE ));
+            mSymbolTable.put( "image_site",
+                    new TransformationCatalogReservedWord(TransformationCatalogReservedWord.IMAGE_SITE ));
+            mSymbolTable.put( "dockerfile",
+                    new TransformationCatalogReservedWord(TransformationCatalogReservedWord.DOCKERFILE ));
         }
 
         return mSymbolTable;
@@ -140,7 +178,7 @@ public class TransformationCatalogReservedWord
         //kludgy?
         String result = null;
         for( Map.Entry<String, TransformationCatalogReservedWord> entry : TransformationCatalogReservedWord.symbolTable().entrySet() ){
-            if( entry == this ){
+            if( entry.getValue() == this ){
                 result = entry.getKey();
                 break;
             }

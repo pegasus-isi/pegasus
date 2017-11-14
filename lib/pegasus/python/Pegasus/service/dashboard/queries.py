@@ -20,6 +20,7 @@ from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.db.schema import *
 from Pegasus.db.errors import StampedeDBNotFoundError
 from sqlalchemy.orm.exc import *
+from sqlalchemy.util._collections import KeyedTuple
 
 log = logging.getLogger(__name__)
 
@@ -70,11 +71,16 @@ class MasterDatabase(object):
         """
         Given a work-flow UUID, query the master database to get the connection URL for the work-flow's STAMPEDE database.
         """
+        q = self.session.query(DashboardWorkflow)
 
-        w = orm.aliased(DashboardWorkflow, name='w')
+        if root_wf_id is None:
+            raise ValueError('root_wf_id cannot be None')
 
-        q = self.session.query(w.wf_id, w.wf_uuid, w.db_url)
-        q = q.filter(w.wf_id == root_wf_id)
+        m_wf_id = str(root_wf_id)
+        if m_wf_id.isdigit():
+            q = q.filter(DashboardWorkflow.wf_id == root_wf_id)
+        else:
+            q = q.filter(DashboardWorkflow.wf_uuid == root_wf_id)
 
         q = q.one()
 
@@ -113,7 +119,7 @@ class MasterDatabase(object):
                                w.submit_dir, w.planner_arguments,
                                w.user, w.grid_dn, w.planner_version,
                                w.dax_label, w.dax_version, w.db_url, w.archived,
-                               state)
+                               ws.reason, ws.status, state)
 
         q = q.filter(w.wf_id == ws.wf_id)
         q = q.filter(ws.wf_id == qmax.c.wf_id)
@@ -260,7 +266,7 @@ class WorkflowInfo(object):
                                      (ws.status == 0, 'Successful'),
                                      (ws.status != 0, 'Failed')],
                                     else_='Undefined').label('state'),
-                               ws.timestamp)
+                               ws.reason, ws.timestamp)
 
         q = q.filter(w.wf_id == self._wf_id)
         q = q.filter(w.wf_id == ws.wf_id)
@@ -273,22 +279,44 @@ class WorkflowInfo(object):
         qmax = self.__get_maxjss_subquery()
 
         q = self.session.query(func.count(Job.wf_id).label('total'))
+        q = q.add_column(func.sum(case([(Job.type_desc == 'dag', 1), (Job.type_desc == 'dax', 1)], else_=0)).label('total_workflow'))
+        q = q.filter(Job.wf_id == self._wf_id)
+
+        totals = q.one()
+
+        q = self.session.query(func.count(Job.wf_id).label('total'))
         q = q.add_column(func.sum(case([(JobInstance.exitcode == 0, 1)], else_=0)).label('success'))
         q = q.add_column(func.sum(case([(JobInstance.exitcode == 0, case([(Job.type_desc == 'dag', 1),(Job.type_desc == 'dax', 1)], else_=0))], else_=0)).label('success_workflow'))
-
 
         q = q.add_column(func.sum(case([(JobInstance.exitcode != 0, 1)], else_=0)).label('fail'))
         q = q.add_column(func.sum(case([(JobInstance.exitcode != 0, case([(Job.type_desc == 'dag', 1),(Job.type_desc == 'dax', 1)], else_=0))], else_=0)).label('fail_workflow'))
 
-        q = q.add_column(func.sum(case([(JobInstance.exitcode == None, 1)], else_=0)).label('others'))
-        q = q.add_column(func.sum(case([(JobInstance.exitcode == None, case([(Job.type_desc == 'dag', 1),(Job.type_desc == 'dax', 1)], else_=0))], else_=0)).label('others_workflow'))
+        q = q.add_column(func.sum(case([(JobInstance.exitcode == None, 1)], else_=0)).label('running'))
+        q = q.add_column(func.sum(case([(JobInstance.exitcode == None, case([(Job.type_desc == 'dag', 1),(Job.type_desc == 'dax', 1)], else_=0))], else_=0)).label('running_workflow'))
 
         q = q.filter(Job.wf_id == self._wf_id)
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(Job.job_id == qmax.c.job_id)
         q = q.filter(JobInstance.job_submit_seq == qmax.c.max_jss)
 
-        return q.one()
+        counts = q.one()
+
+        out = KeyedTuple([
+            totals.total, totals.total_workflow,
+            totals.total - (counts.success + counts.fail + counts.running),
+            totals.total_workflow - (counts.success_workflow + counts.fail_workflow + counts.running_workflow),
+            counts.success, counts.success_workflow,
+            counts.fail, counts.fail_workflow,
+            counts.running, counts.running_workflow
+        ], labels=[
+            "total", "total_workflow",
+            "others", "others_workflow",
+            "success", "success_workflow",
+            "fail", "fail_workflow",
+            "running", "running_workflow"
+        ])
+
+        return out
 
     def get_job_information(self, job_id, job_instance_id):
 
@@ -331,7 +359,7 @@ class WorkflowInfo(object):
 
     def get_job_states(self, job_id, job_instance_id):
 
-        q = self.session.query(Jobstate.state, Jobstate.timestamp)
+        q = self.session.query(Jobstate.state, Jobstate.reason, Jobstate.timestamp)
         q = q.filter(Job.wf_id == self._wf_id)
         q = q.filter(Job.job_id == job_id)
         q = q.filter(JobInstance.job_instance_id == job_instance_id)
@@ -752,7 +780,8 @@ class WorkflowInfo(object):
 
         q = q.join(Job, Job.job_id == JobInstance.job_id)
         q = q.outerjoin(Task, Job.job_id == Task.job_id)
-        q = q.join(Invocation, JobInstance.job_instance_id == Invocation.job_instance_id)
+        q = q.join(Invocation, and_(JobInstance.job_instance_id == Invocation.job_instance_id, and_(
+            or_(Task.abs_task_id == None, and_(Task.abs_task_id != None, Task.abs_task_id == Invocation.abs_task_id)))))
 
         q = q.filter(Job.wf_id == self._wf_id)
         q = q.filter(Job.job_id == job_id)
@@ -781,4 +810,3 @@ class WorkflowInfo(object):
     def close(self):
         log.debug('close')
         self.session.close()
-

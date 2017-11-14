@@ -104,12 +104,15 @@ public class NetloggerPostScript implements POSTScript {
      * @param path       the path to the POSTScript on the submit host.
      * @param submitDir  the submit directory where the submit file for the job
      *                   has to be generated.
-     *
+     * @param globalLog  a global log file to use for logging
+     * 
      * @throws RuntimeException in case of path being null.
      */
     public void initialize( PegasusProperties properties,
                             String path,
-                            String submitDir ){
+                            String submitDir , 
+                            String globalLog ){
+
 
         mProps     = properties;
         mPOSTScriptPath = path == null ? this.getNetloggerExitCodePath() :path ;

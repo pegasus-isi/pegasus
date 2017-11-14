@@ -40,7 +40,7 @@ cat > sites.xml <<EOF
             </storage>
         </head-fs>
     </site>
-     <site handle="isi-condorc" arch="x86" os="LINUX" osrelease="rhel" osversion="5">
+     <site handle="isi-condorc" arch="x86_64" os="LINUX" osrelease="rhel" osversion="7">
          <grid type="condor" contact="ccg-testing1.isi.edu" scheduler="Condor" jobtype="compute" total-nodes="50"/>
          <grid type="condor" contact="ccg-testing1.isi.edu" scheduler="Condor" jobtype="auxillary" total-nodes="50"/>
 
@@ -55,7 +55,7 @@ cat > sites.xml <<EOF
         <profile namespace="pegasus" key="clusters.num">1</profile>
     </site>
 
-    <site  handle="condorpool" arch="x86" os="LINUX">
+    <site  handle="condorpool" arch="x86_64" os="LINUX">
         <head-fs>
             <scratch />
             <storage />

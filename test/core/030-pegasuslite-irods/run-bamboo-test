@@ -52,12 +52,12 @@ cat >sites.xml <<EOF
         <directory type="local-storage" path="$TOP_DIR/outputs">
             <file-server operation="all" url="file://$TOP_DIR/outputs"/>
         </directory>
-        <profile namespace="env" key="PATH">$PEGASUS_BIN_DIR:/ccg/software/irods/3.3/bin:/usr/bin:/bin</profile>
+        <profile namespace="env" key="PATH">$PEGASUS_BIN_DIR:/ccg/software/irods/4.1.4/bin:/usr/bin:/bin</profile>
     </site>
-    <site  handle="condor_pool" arch="x86" os="LINUX">
+    <site  handle="condor_pool" arch="x86_64" os="LINUX">
         <profile namespace="pegasus" key="style" >condor</profile>
         <profile namespace="condor" key="universe" >vanilla</profile>
-        <profile namespace="env" key="PATH">/ccg/software/irods/3.3/bin:/usr/bin:/bin</profile>
+        <profile namespace="env" key="PATH">/ccg/software/irods/4.1.4/bin:/usr/bin:/bin</profile>
     </site>
     <site  handle="staging_site" arch="x86" os="LINUX">
         <directory type="shared-scratch" path="/nara-renci-irods/home/rynge/workflows/scratch">

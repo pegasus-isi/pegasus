@@ -2,66 +2,42 @@
 
 set -e
 
-#######################################################################
-#
-#  Settings
-#
-
-DEGREES=0.5
-
-#######################################################################
-
 TOP_DIR=`pwd`
 
-export PATH=/ccg/software/montage/Montage_v3.3_mats/bin:$PATH
+export PATH=/ccg/software/montage/current/bin:$PATH
 
-# unique directory for this run
-RUN_ID=`/bin/date +'%F_%H%M%S'`
-RUN_DIR=`pwd`/work/$RUN_ID
+rm -rf montage-workflow-v2
+git clone https://github.com/pegasus-isi/montage-workflow-v2.git
 
-echo "Work directory: $RUN_DIR"
-
-mkdir -p $RUN_DIR/inputs
-
-cd $RUN_DIR
-cp $TOP_DIR/pegasusrc .
-
-# create the transformation catalogue (tc)
 echo
-echo "Creating the transformation catalog..."
-for BINARY in `(cd /ccg/software/montage/Montage_v3.3_mats/bin/ && ls)`; do
-    cat >>tc <<EOF
-tr $BINARY:3.3 {
-    site CCG {
-        pfn "/ccg/software/montage/Montage_v3.3_mats/bin/$BINARY"
-        arch "x86"
-        os "linux"
-        type "INSTALLED"
-        profile pegasus "clusters.size" "20"
-    }
-}
-EOF
-done
+echo
 
-# site catalog
+cd montage-workflow-v2
+./montage-workflow.py --center "275.196290 -16.171530" \
+                      --degrees 0.5 \
+                      --band 2mass:j:green \
+                      --band 2mass:h:blue \
+                      --band 2mass:k:red
+
+# custom site catalog
 echo
 echo "Creating the site catalog..."
 cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site handle="local" arch="x86_64" os="LINUX" osrelease="deb" osversion="8">
+    <site handle="local" arch="x86_64" os="LINUX">
         <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="$RUN_DIR/scratch"/>
-                    <internal-mount-point mount-point="$RUN_DIR/scratch"/>
+                    <file-server protocol="file" url="file://" mount-point="$PWD/scratch"/>
+                    <internal-mount-point mount-point="$PWD/scratch"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="$RUN_DIR/outputs"/>
-                    <internal-mount-point mount-point="$RUN_DIR/outputs"/>
+                    <file-server protocol="file" url="file://" mount-point="$PWD/outputs"/>
+                    <internal-mount-point mount-point="$PWD/outputs"/>
                 </shared>
             </storage>
         </head-fs>
@@ -70,7 +46,7 @@ cat >sites.xml <<EOF
         <profile namespace="env" key="GLOBUS_TCP_PORT_RANGE" >40000,50000</profile>
         <profile namespace="env" key="http_proxy" >http://workflow.isi.edu:3128</profile>
     </site>
-    <site handle="CCG" arch="x86" os="LINUX">
+    <site handle="CCG" arch="x86_64" os="LINUX">
         <grid  type="gt5" contact="obelix.isi.edu/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
         <grid  type="gt5" contact="obelix.isi.edu/jobmanager-condor" scheduler="Condor" jobtype="compute"/>
         <head-fs>
@@ -90,25 +66,15 @@ cat >sites.xml <<EOF
 </sitecatalog>
 EOF
 
-echo
-echo "Running mDAG (finding input images, generating DAX, ...)..."
-mDAG 2mass j M17 $DEGREES $DEGREES 0.0002777778 . "file://$RUN_DIR" "file://$RUN_DIR/inputs"
-
-echo
-echo "Adding input images to the replica catalog..."
-echo "  " `cat cache.list | wc -l` "images found"
-cat cache.list | grep -v ".fits " >rc
-perl -p -i -e 's/ipac_cluster/local/' rc
-cat url.list | sed 's/\.gz http/ http/' >>rc
-
 echo "Planning and submitting the workflow..."
 pegasus-plan \
-    --conf pegasusrc \
+    --conf ../pegasusrc \
     --sites CCG \
     --dir work \
     --output-site local \
-    --dax dag.xml \
+    --dax data/montage.dax \
     --cluster horizontal \
-    --submit | tee $TOP_DIR/plan.out
+    --submit \
+    | tee $TOP_DIR/plan.out
 
 

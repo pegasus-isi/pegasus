@@ -49,8 +49,12 @@ def index(username):
         args = __get_datatables_args()
         if request.is_xhr:
             count, filtered, workflows, totals = dashboard.get_root_workflow_list(**args)
+
             __update_label_link(workflows)
             __update_timestamp(workflows)
+
+            for workflow in workflows:
+                workflow.state = (workflow.state + ' (%s)' % workflow.reason) if workflow.status > 0 and workflow.reason else workflow.state
         else:
             totals = dashboard.get_root_workflow_list(counts_only=True, **args)
 
@@ -120,8 +124,8 @@ def failed_jobs(username, root_wf_id, wf_id):
 
     for job in failed_jobs_list:
         job.exec_job_id = '<a href="' + url_for('.job', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">' + job.exec_job_id + '</a>'
-        job.stdout = '<a target="_blank" href="' + url_for('.stdout', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">stdout</a>'
-        job.stderr = '<a target="_blank" href="' + url_for('.stderr', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">stderr</a>'
+        job.stdout = '<a target="_blank" href="' + url_for('.stdout', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">Application Stdout/Stderr</a>'
+        job.stderr = '<a target="_blank" href="' + url_for('.stderr', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">Condor Stderr/Pegasus Lite Log</a>'
 
     return render_template('workflow/jobs_failed.xhr.json', count=total_count, filtered=filtered_count, jobs=failed_jobs_list, table_args=args)
 
@@ -171,8 +175,8 @@ def failing_jobs(username, root_wf_id, wf_id):
 
     for job in failing_jobs_list:
         job.exec_job_id = '<a href="' + url_for('.job', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">' + job.exec_job_id + '</a>'
-        job.stdout = '<a target="_blank" href="' + url_for('.stdout', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">stdout</a>'
-        job.stderr = '<a target="_blank" href="' + url_for('.stderr', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">stderr</a>'
+        job.stdout = '<a target="_blank" href="' + url_for('.stdout', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">Application Stdout/Stderr</a>'
+        job.stderr = '<a target="_blank" href="' + url_for('.stderr', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">Condor Stderr/Pegasus Lite Log</a>'
 
     return render_template('workflow/jobs_failing.xhr.json', count=total_count, filtered=filtered_count, jobs=failing_jobs_list, table_args=args)
 
@@ -511,23 +515,30 @@ def file_browser(username, root_wf_id, wf_id):
     return 'Error', 500
 
 
-@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/files', methods=['GET'])
-def file_list(username, root_wf_id, wf_id):
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/files/', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/files/<path:path>', methods=['GET'])
+def file_list(username, root_wf_id, wf_id, path=''):
     try:
         dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id=wf_id)
         details = dashboard.get_workflow_details(wf_id)
         submit_dir = details.submit_dir
 
         if os.path.isdir(submit_dir):
-            folders = {}
+            dest = os.path.join(submit_dir, path)
 
-            for folder, sub_folders, files in os.walk(submit_dir):
-                folder = '/' + folder.replace(submit_dir, '', 1).lstrip('/')
-                folders[folder] = {'D': [], 'F': files}
+            if os.path.isfile(dest):
+                return '', 204
 
-                for sub_folder in sub_folders:
-                    full_sub_folder = os.path.normpath(os.path.join(folder, sub_folder))
-                    folders[folder]['D'].append(full_sub_folder)
+            folders = {
+                'dirs': [],
+                'files': []
+            }
+
+            for entry in os.listdir(dest):
+                if os.path.isdir(os.path.join(dest, entry)):
+                    folders['dirs'].append(os.path.normpath(os.path.join(path, entry)))
+                else:
+                    folders['files'].append(os.path.normpath(os.path.join(path, entry)))
 
             return json.dumps(folders), 200, {'Content-Type': 'application/json'}
 
@@ -669,7 +680,7 @@ def stampede_database_missing(error):
 @dashboard_routes.errorhandler(DBAdminError)
 def database_migration_error(error):
     log.exception(error)
-    return render_template('error/database_migration_error.html')
+    return render_template('error/database_migration_error.html', e=error)
 
 """
 @dashboard_routes.errorhandler(ServiceError)

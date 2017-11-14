@@ -44,8 +44,11 @@ import java.util.HashSet;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
+import edu.isi.pegasus.planner.refiner.TransferEngine;
 import edu.isi.pegasus.planner.transfer.Implementation;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
 /**
@@ -67,37 +70,26 @@ public class BalancedCluster extends Basic {
     public static final String DESCRIPTION =
                       "Balanced Cluster Transfer Refiner( round robin distribution at file level)";
 
-
-    /**
-     * The default bundling factor that identifies the number of transfer jobs
-     * that are being created per execution pool for stageing in data for
-     * the workflow.
-     */
-    public static final String DEFAULT_LOCAL_STAGE_IN_CLUSTER_FACTOR = "2";
-
+    public static final String SCALING_MESSAGE_PREFIX = "Pegasus now has a strategy for scaling transfer jobs based on size of workflow.";
+    
+    public static final String SCALING_MESSAGE_PROPERTY_PREFIX = "Consider removing the property";
+    
+    public static final String SCALING_MESSAGE_PROFILE_PREFIX = "Consider removing the pegasus profile";
     
     /**
-     * The default bundling factor that identifies the number of transfer jobs
-     * that are being created per execution pool for stageing in data for
-     * the workflow.
+     * number of compute jobs to be associated with a single job
      */
-    public static final String DEFAULT_REMOTE_STAGE_IN_CLUSTER_FACTOR = "2";
+    public static final float NUM_COMPUTE_JOBS_PER_TRANSFER_JOB = 10;
 
     /**
-     * The default bundling factor that identifies the number of transfer jobs
-     * that are being created per execution pool for stageing out data for
-     * the workflow.
+     * Default value for deleted jobs level
      */
-    public static final String DEFAULT_LOCAL_STAGE_OUT_CLUSTER_FACTOR = "2";
-
-
+    public static final int DEFAULT_TX_JOBS_FOR_DELETED_JOBS = 10;
+    
     /**
-     * The default bundling factor that identifies the number of transfer jobs
-     * that are being created per execution pool for stageing out data for
-     * the workflow.
+     * If no transfer profile is specified the value, for the parameters
      */
-    public static final String DEFAULT_REMOTE_STAGE_OUT_CLUSTER_FACTOR = "2";
-
+    private static final int NO_PROFILE_VALUE = -1;
 
     /**
      * The map containing the list of stage in transfer jobs that are being
@@ -121,24 +113,24 @@ public class BalancedCluster extends Basic {
 
     
     /**
-     * The BundleValue that evaluates for local stage in jobs.
+     * The ClusterValue that evaluates for local stage in jobs.
      */
-    protected BundleValue mStageinLocalBundleValue;
+    protected ClusterValue mStageinLocalBundleValue;
 
     /**
-     * The BundleValue that evaluates for remote stage-in jobs.
+     * The ClusterValue that evaluates for remote stage-in jobs.
      */
-    protected BundleValue mStageInRemoteBundleValue;
+    protected ClusterValue mStageInRemoteBundleValue;
 
     /**
-     * The BundleValue that evaluates for local stage out jobs.
+     * The ClusterValue that evaluates for local stage out jobs.
      */
-    protected BundleValue mStageOutLocalBundleValue;
+    protected ClusterValue mStageOutLocalBundleValue;
 
     /**
-     * The BundleValue that evaluates for remote stage out jobs.
+     * The ClusterValue that evaluates for remote stage out jobs.
      */
-    protected BundleValue mStageOutRemoteBundleValue;
+    protected ClusterValue mStageOutRemoteBundleValue;
 
     
     /**
@@ -205,6 +197,16 @@ public class BalancedCluster extends Basic {
      * handle to PegasusConfiguration
      */
     protected PegasusConfiguration mPegasusConfiguration;
+    
+    /**
+     * Tracks number of jobs at each level of the workflow. 
+     */
+    private Map<Integer,Integer> mTXJobsPerLevelMap;
+    
+    /**
+     * List of scaling messages to log
+     */
+    private Set<String> mScalingMessages;
 
     /**
      * The overloaded constructor.
@@ -232,6 +234,7 @@ public class BalancedCluster extends Basic {
         mJobPrefix    = mPOptions.getJobnamePrefix();
 
         mSiteStore    = bag.getHandleToSiteStore();
+        mScalingMessages = new LinkedHashSet();
         mPegasusProfilesInProperties = (Pegasus) mProps.getProfiles( NAMESPACES.pegasus );
         initializeClusterValues();
     }
@@ -241,34 +244,37 @@ public class BalancedCluster extends Basic {
      * the bundle values.
      */
     protected  void initializeClusterValues() {
-        mStageinLocalBundleValue = new BundleValue();
+        //PM-1212 we want to get an idea 
+        mTXJobsPerLevelMap = buildDefaultTXJobsPerLevelMap( BalancedCluster.NUM_COMPUTE_JOBS_PER_TRANSFER_JOB );
+        
+        mStageinLocalBundleValue = new ClusterValue();
         mStageinLocalBundleValue.initialize( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
                                              Pegasus.CLUSTER_STAGE_IN_KEY,
                                              getDefaultClusterValueFromProperties( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
                                                                     Pegasus.CLUSTER_STAGE_IN_KEY,
-                                                                    BalancedCluster.DEFAULT_LOCAL_STAGE_IN_CLUSTER_FACTOR ) );
+                                                                    BalancedCluster.NO_PROFILE_VALUE ) );
         
-        mStageInRemoteBundleValue = new BundleValue();
+        mStageInRemoteBundleValue = new ClusterValue();
         mStageInRemoteBundleValue.initialize( Pegasus.CLUSTER_REMOTE_STAGE_IN_KEY,
                                               Pegasus.CLUSTER_STAGE_IN_KEY,
                                               getDefaultClusterValueFromProperties( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
                                                                      Pegasus.CLUSTER_STAGE_IN_KEY,
-                                                                     BalancedCluster.DEFAULT_REMOTE_STAGE_IN_CLUSTER_FACTOR ) );
+                                                                     BalancedCluster.NO_PROFILE_VALUE ) );
 
 
-        mStageOutLocalBundleValue = new BundleValue();
+        mStageOutLocalBundleValue = new ClusterValue();
         mStageOutLocalBundleValue.initialize( Pegasus.CLUSTER_LOCAL_STAGE_OUT_KEY,
                                               Pegasus.CLUSTER_STAGE_OUT_KEY,
                                               getDefaultClusterValueFromProperties( Pegasus.CLUSTER_LOCAL_STAGE_OUT_KEY,
                                                                      Pegasus.CLUSTER_STAGE_OUT_KEY,
-                                                                     BalancedCluster.DEFAULT_LOCAL_STAGE_OUT_CLUSTER_FACTOR ));
+                                                                     BalancedCluster.NO_PROFILE_VALUE ));
 
-        mStageOutRemoteBundleValue = new BundleValue();
+        mStageOutRemoteBundleValue = new ClusterValue();
         mStageOutRemoteBundleValue.initialize( Pegasus.CLUSTER_REMOTE_STAGE_OUT_KEY,
                                                Pegasus.CLUSTER_STAGE_OUT_KEY,
                                                getDefaultClusterValueFromProperties( Pegasus.CLUSTER_REMOTE_STAGE_OUT_KEY,
                                                                       Pegasus.CLUSTER_STAGE_OUT_KEY,
-                                                                      BalancedCluster.DEFAULT_REMOTE_STAGE_OUT_CLUSTER_FACTOR ));
+                                                                      BalancedCluster.NO_PROFILE_VALUE ));
 
     }
 
@@ -287,9 +293,9 @@ public class BalancedCluster extends Basic {
      * @param defaultKey     the default pegasus profile key
      * @param defaultValue   the default value.
      *
-     * @return the value as string.
+     * @return the value 
      */
-    protected String getDefaultClusterValueFromProperties( String key, String defaultKey, String defaultValue ){
+    protected int getDefaultClusterValueFromProperties( String key, String defaultKey, int defaultValue ){
 
         String result = mPegasusProfilesInProperties.getStringValue( key );
 
@@ -300,11 +306,18 @@ public class BalancedCluster extends Basic {
             if( result == null ){
                 //none of the keys are mentioned in properties
                 //use the default value
-                result = defaultValue;
+                return  defaultValue;
+            }
+            else{
+                logDefferedScalingPropertyMessage( defaultKey );
             }
         }
+        else{
+            //PM-1212 log about our scaling thing
+            logDefferedScalingPropertyMessage( key );
+        }
 
-        return result;
+        return Integer.parseInt( result );
 
     }
     
@@ -364,7 +377,7 @@ public class BalancedCluster extends Basic {
                                       Collection files, 
                                       int type,
                                       Map<String,PoolTransfer> stageInMap,
-                                      BundleValue bundleValue,
+                                      ClusterValue bundleValue,
                                       Implementation implementation ){
 
         String jobName    = job.getName();
@@ -434,7 +447,7 @@ public class BalancedCluster extends Basic {
                 boolean contains = stageInMap.containsKey(siteHandle);
                 //following pieces need rearragnement!
                 if(!contains){
-                    bundle = bundleValue.determine( implementation, job );
+                    bundle = bundleValue.determine( implementation, job ,  mTXJobsPerLevelMap.get( job.getLevel() ) );
                 }
                 PoolTransfer pt = (contains)?
                                   (PoolTransfer)stageInMap.get(siteHandle):
@@ -561,7 +574,7 @@ public class BalancedCluster extends Basic {
         }
 
         String jobName = job.getName();
-        BundleValue bundleValue = (localTransfer) ? this.mStageOutLocalBundleValue :
+        ClusterValue bundleValue = (localTransfer) ? this.mStageOutLocalBundleValue :
                                            this.mStageOutRemoteBundleValue;
 
         mLogMsg = "Adding stageout nodes for job " + jobName;
@@ -571,8 +584,8 @@ public class BalancedCluster extends Basic {
         int level   = job.getLevel();
         String site = job.getStagingSiteHandle();
 
-        int bundle = bundleValue.determine( this.mTXStageOutImplementation, job );
-
+        int bundle = bundleValue.determine( this.mTXStageOutImplementation, job ,  mTXJobsPerLevelMap.get( job.getLevel() ) );
+        
         if ( level != mCurrentSOLevel ){
             mCurrentSOLevel = level;
             //we are starting on a new level of the workflow.
@@ -675,9 +688,13 @@ public class BalancedCluster extends Basic {
         //reset the stageout map too
         this.resetStageOutMaps();
         
-        
         //PM-747 add the edges in the very end
         super.done();
+        
+        //PM-1212 log any scaling informational messages 
+        for( String message: this.mScalingMessages ){
+            mLogger.log( message, LogManager.INFO_MESSAGE_LEVEL );
+        }
     }
     
     /**
@@ -880,7 +897,69 @@ public class BalancedCluster extends Basic {
     }
 
     
+    /**
+     * Builds a map that maps for each level the number of default transfer jobs to be created
+     * 
+     * @param divisor
+     * @return 
+     */
+    private Map<Integer, Integer> buildDefaultTXJobsPerLevelMap( float divisor ) {
+        //PM-1212
+        Map<Integer,Integer> m = new HashMap();
+        int count = 0;
+        int previous = -1;
+        int cluster = -1;
+        int level = 0;
+        for( Iterator it = this.mDAG.iterator(); it.hasNext(); ){
+            GraphNode node = ( GraphNode )it.next();
+            level = node.getDepth();
+            if( level != previous ){
+                cluster = (int)Math.ceil( count/divisor);
+                mLogger.log( "Number of transfer jobs for " + previous + " are " + cluster, LogManager.DEBUG_MESSAGE_LEVEL );
+                m.put( previous,  cluster);
+                count = 0;
+            }
+            count++;
+            previous = level;
+        }
+        
+        cluster  = (int)Math.ceil( count/divisor);
+        m.put( level,  cluster);
+        mLogger.log( "Number of transfer jobs for " + level + " are " + cluster, LogManager.DEBUG_MESSAGE_LEVEL );
+        
+        //add a value for the level associated with deleted jobs
+        m.put( TransferEngine.DELETED_JOBS_LEVEL, BalancedCluster.DEFAULT_TX_JOBS_FOR_DELETED_JOBS );
+        
+        return m;
+    }
 
+    /**
+     * Builds up a message for logging a scaling message indicating user
+     * to remove a property
+     * 
+     * @param key 
+     */
+    protected void logDefferedScalingPropertyMessage(String key ) {
+        StringBuilder message = new StringBuilder();
+        message.append( SCALING_MESSAGE_PREFIX ).append( " " ).append( SCALING_MESSAGE_PROPERTY_PREFIX )
+               .append( " " ).append( "pegasus." ).append( key ).
+               append( " " ).append( " from properties file"); 
+        this.mScalingMessages.add( message.toString() );
+    }
+    
+    /**
+     * Builds up a message for logging a scaling message indicating user
+     * to remove a profile
+     * 
+     * @param key 
+     */
+    protected void logDefferedScalingProfileMessage(String key, String site ) {
+        StringBuilder message = new StringBuilder();
+        message.append( SCALING_MESSAGE_PREFIX ).append( " " ).append( SCALING_MESSAGE_PROFILE_PREFIX )
+               .append( " " ).append( key ).append( " " ).append( "from site" ).append( " " )
+               .append( site ).append( " " ).append( "in site catalog");
+        this.mScalingMessages.add( message.toString() );
+    }
     
     /**
      * A container class for storing the name of the transfer job, the list of
@@ -1274,9 +1353,7 @@ public class BalancedCluster extends Basic {
 
     }
     
-   
-    
-    protected  class BundleValue {
+   protected  class ClusterValue {
         
        
         /**
@@ -1287,7 +1364,7 @@ public class BalancedCluster extends Basic {
         /**
          * The default bundle value to use.
          */
-        private String mDefaultBundleValue;
+        private int mDefaultBundleValue;
 
 
         /**
@@ -1300,7 +1377,7 @@ public class BalancedCluster extends Basic {
         /**
          * The default constructor.
          */
-        public BundleValue(){
+        public ClusterValue(){
 
         }
         
@@ -1311,13 +1388,12 @@ public class BalancedCluster extends Basic {
          * @param defaultKey the default Profile Key to be used if key is not found.
          * @param defaultValue the default value to be associated if no key is found.
          */
-        public void initialize( String key, String defaultKey, String defaultValue ){
+        public void initialize( String key, String defaultKey, int defaultValue ){
             mProfileKey         = key;
             mDefaultProfileKey  = defaultKey;
-            mDefaultBundleValue = defaultValue;
+            mDefaultBundleValue =  defaultValue ;
         }
         
-      
        
        
         
@@ -1339,37 +1415,62 @@ public class BalancedCluster extends Basic {
         * @return the bundle factor.
         */
         public int determine(  Implementation implementation, Job job  ){
+           return this.determine( implementation, job, mDefaultBundleValue );
+
+        }
+        
+       /**
+        * Determines the bundle factor for a particular site on the basis of the
+        * stage in bundle value associcated with the underlying transfer
+        * transformation in the transformation catalog. If the key is not found,
+        * then the default value is returned. In case of the default value being
+        * null the global default is returned.
+        * 
+        * The value is stored internally to ensure that a subsequent
+        * call to get(String site) returns the value determined.
+        * 
+        * @param implementation  the transfer implementation being used
+        * @param job   the compute job for which the bundle factor needs to 
+        *              be determined.
+        * @param defaultValue  the default value to use
+        * 
+        * @return the bundle factor.
+        */
+        public int determine(  Implementation implementation, Job job , int defaultValue ){
            String site = job.getStagingSiteHandle();
 
             //look up the value in SiteCatalogEntry for the store
            SiteCatalogEntry entry = BalancedCluster.this.mSiteStore.lookup( site );
 
-           //sanity check
-           if( entry == null ){
-               return Integer.parseInt( mDefaultBundleValue );
+           //check if a profile are set in site catalog entry
+           String profileValue = null;
+           if( entry != null ){
+                //check for Pegasus Profile mProfileKey in the site entry
+                Pegasus profiles = (Pegasus) entry.getProfiles().get( NAMESPACES.pegasus );
+                profileValue = profiles.getStringValue( mProfileKey );
+                if( profileValue == null ){
+                    //try to look up value of default key
+                    profileValue = profiles.getStringValue( mDefaultProfileKey );
+                    if( profileValue == null ){
+                        BalancedCluster.this.logDefferedScalingProfileMessage( mDefaultProfileKey, site);
+                    }
+                }
+                else{
+                    BalancedCluster.this.logDefferedScalingProfileMessage( mProfileKey, site);
+                }
            }
+           
+           //if value is still null, grab the default value
+           //when initialized from properties
+           return ( profileValue == null && mDefaultBundleValue != BalancedCluster.NO_PROFILE_VALUE )?
+                   mDefaultBundleValue://the value used in the properties file
+                   defaultValue;
 
-           //check for Pegasus Profile mProfileKey in the site entry
-           Pegasus profiles = (Pegasus) entry.getProfiles().get( NAMESPACES.pegasus );
-           String value = profiles.getStringValue( mProfileKey );
-           if( value == null ){
-               //try to look up value of default key
-               value = profiles.getStringValue( mDefaultProfileKey );
-           }
-
-           //if value is still null , rely of the default bundle value
-           value = ( value == null )?
-                   this.mDefaultBundleValue:
-                   value;
-
-           return Integer.parseInt(value);
 
         }
        
        
     
     }
-    
-    
-
+   
 }

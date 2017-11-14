@@ -139,6 +139,7 @@
         <emphasis>adag</emphasis>.</para>
 
         <table>
+          <title>Root element attributes</title>
           <tgroup cols="4">
             <thead>
               <row>
@@ -468,6 +469,7 @@
           transformation catalog.</para>
 
           <table>
+            <title>executable element attributes</title>
             <tgroup cols="4">
               <thead>
                 <row>
@@ -798,6 +800,7 @@
           the following value set:</para>
 
           <table>
+            <title>invoke element attributes</title>
             <tgroup cols="3">
               <thead>
                 <row>
@@ -876,6 +879,7 @@
           variables:</para>
 
           <table>
+            <title>invoke/executable environment variables</title>
             <tgroup cols="3">
               <thead>
                 <row>
@@ -1738,13 +1742,8 @@ $adag-&gt;toXML( \*STDOUT, '', $xmlns );</programlisting>
       style guide</ulink>, and all objects and methods are defined using the 
       <emphasis>S3</emphasis> OOP system.</para>
       
-      <para>The API can be installed in the following ways:</para>
+      <para>The API can be installed as follows:</para>
       <orderedlist>
-          <listitem>
-              <para>Command line using <code>R CMD</code> and 
-              <code>pegasus-config</code>:</para>
-              <programlisting>R CMD install `pegasus-config --r`</programlisting>
-          </listitem>
           <listitem>
               <para>Installing from source package (.tar.gz) in an R 
                environment:</para>
@@ -3872,6 +3871,7 @@ Where QUERY can be( r.wf_id &gt;= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.w
         <title>Resource - Query Prefix</title>
 
         <para><table frame="box" rules="all">
+            <title>Query Prefix</title>
             <caption/>
 
             <thead>

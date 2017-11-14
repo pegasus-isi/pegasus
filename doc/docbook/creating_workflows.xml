@@ -9,9 +9,8 @@
 
     <para>The DAX is a description of an abstract workflow in XML format that
     is used as the primary input into Pegasus. The DAX schema is described in
-    <ulink
-    url="schemas/dax-3.4/dax-3.4.xsd">dax-3.4.xsd</ulink>
-    The documentation of the schema and its elements can be found in <ulink
+    <ulink url="schemas/dax-3.4/dax-3.4.xsd">dax-3.4.xsd</ulink> The
+    documentation of the schema and its elements can be found in <ulink
     url="schemas/dax-3.4/dax-3.4.html">dax-3.4.html</ulink>.</para>
 
     <para>A DAX can be created by all users with the DAX generating API in
@@ -461,7 +460,7 @@ D1/f.3 file://$input/D1/f.3 site="local"</programlisting>
 
         <listitem>
           <para><emphasis role="bold">pegasus.catalog.replica.db.driver mysql
-          | sqlite </emphasis></para>
+          | postgres |sqlite </emphasis></para>
         </listitem>
 
         <listitem>
@@ -489,7 +488,7 @@ D1/f.3 file://$input/D1/f.3 site="local"</programlisting>
       <emphasis>pegasus-rc-client</emphasis> to interface to query, insert and
       remove entries from the JDBCRC backend. Starting 4.5 release, there is
       also support for sqlite databases. Specify the jdbc url to refer to a
-      sqlite database .</para>
+      sqlite database.</para>
     </section>
 
     <section id="rc-MRC">
@@ -988,10 +987,9 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
 
       <para>Pegasus 4.2 by default now parses Site Catalog format conforming
       to the SC schema 4.0 (XML4) available <ulink role=""
-      url="schemas/sc-4.0/sc-4.0.xsd"
-      userlevel="">here</ulink> and is explained in detail in the Catalog
-      Properties section of <link linkend="running_workflows">Running
-      Workflows</link>.</para>
+      url="schemas/sc-4.0/sc-4.0.xsd" userlevel="">here</ulink> and is
+      explained in detail in the Catalog Properties section of <link
+      linkend="running_workflows">Running Workflows</link>.</para>
 
       <para>Pegasus 4.2 comes with a pegasus-sc-converter that will convert
       users old site catalog (XML3) to the XML4 format. Sample usage is given
@@ -1028,23 +1026,13 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
     or environment variables need to be set when the transformation is invoked
     etc.</para>
 
-    <para>Pegasus currently supports two implementations of the Transformation
+    <para>Pegasus currently supports a Text formatted Transformation
     Catalog</para>
 
     <orderedlist>
       <listitem>
-        <para><emphasis role="bold">Text: </emphasis>A multiline text based
+        <para><emphasis role="bold">Text: </emphasis>A multi line text based
         Transformation Catalog (DEFAULT)</para>
-      </listitem>
-
-      <listitem>
-        <para><emphasis role="bold">File:</emphasis> A simple multi column
-        text based Transformation Catalog</para>
-      </listitem>
-
-      <listitem>
-        <para><emphasis role="bold">Database:</emphasis> A database backend
-        (MySQL or PostgreSQL) via JDB</para>
       </listitem>
     </orderedlist>
 
@@ -1092,7 +1080,8 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
     osversion "4"
     type "STAGEABLE"
   }
-}</programlisting></para>
+}
+</programlisting></para>
 
       <para>The entries in this catalog have the following meaning</para>
 
@@ -1117,7 +1106,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
 
           <listitem>
             <para><emphasis role="bold">type</emphasis> - The type of
-            transformation. Whether it is Iinstalled ("INSTALLED") on the
+            transformation. Whether it is installed ("INSTALLED") on the
             remote site or is availabe to stage ("STAGEABLE").</para>
           </listitem>
 
@@ -1157,173 +1146,107 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
             file&gt;</replaceable></emphasis></para>
           </listitem>
         </orderedlist></para>
-    </section>
 
-    <section id="tc-File">
-      <title>Singleline Text based TC (File)</title>
+      <section id="tc-container">
+        <title>Containerized Applications in the Transformation
+        Catalog</title>
 
-      <warning>
-        <para>This format is now deprecated in favor of the multiline TC. If
-        you are still using the single line TC you should convert it to
-        multiline using the tc-converter client.</para>
-      </warning>
+        <para>Users can specify what container they want to use for running
+        their application in the Transformation Catalog using the multi line
+        text based format described in this section. Users can specify an
+        optional attribute named container that refers to the container to be
+        used for the application.</para>
 
-      <para>The format of the this TC is as follows.</para>
+        <programlisting>tr example::keg:1.0 { 
 
-      <programlisting>#site  logicaltr   physicaltr   type  system  profiles(NS::KEY="VALUE")
+  #specify profiles that apply for all the sites for the transformation 
+  #in each site entry the profile can be overriden 
 
-site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6 ENV::PATH="/usr/bin";PEGASUS_HOME="/usr/local/pegasus"</programlisting>
+  profile env "APP_HOME" "/tmp/myscratch"
+  profile env "JAVA_HOME" "/opt/java/1.6"
 
-      <para>The system and profile entries are optional and will use default
-      values if not specified. The entries in the file format have the
-      following meaning:</para>
+  site isi {
+    # environment to be set when the job is run in the container
+    # overrides env profiles specified in the container
+    profile env "HELLo" "WORLD"
+    profile env "JAVA_HOME" "/bin/java.1.6"
+    
+    profile condor "FOO" "bar"
+    
+    pfn "/path/to/keg
+    arch "x86"
+    os "linux"
+    osrelease "fc"
+    osversion "4"
+      
+    # INSTALLED means pfn refers to path in the container.
+    # STAGEABLE means the executable can be staged into the container
+    type "INSTALLED" 
 
-      <orderedlist>
-        <listitem>
-          <para><emphasis role="bold">site</emphasis> - A site
-          identifier.</para>
-        </listitem>
+    #optional attribute to specify the container to use
+    container "centos-pegasus"
+  }
+}
 
-        <listitem>
-          <para><emphasis role="bold">logicaltr</emphasis> - The logical
-          transformation name. The format is NAMESPACE::NAME:VERSION where
-          NAMESPACE and NAME are optional.</para>
-        </listitem>
+cont centos-pegasus{
+     # can be either docker or singularity
+     type "docker"
 
-        <listitem>
-          <para><emphasis role="bold">physicaltr</emphasis> - The physical
-          transformation path or URL.</para>
+     # URL to image in a docker|singularity hub OR
+     # URL to an existing docker image exported as a tar file or singularity image
+     image "docker:///rynge/montage:latest" 
 
-          <para>If the transformation type is INSTALLED then it needs to be an
-          absolute path to the executable. If the type is STAGEABLE then the
-          path needs to be a HTTP, FTP or gsiftp URL</para>
-        </listitem>
+     # optional site attribute to tell pegasus which site tar file
+     # exists. useful for handling file URL's correctly
+     image_site "optional site"
+  
+     # environment to be set when the job is run in the container
+     # only env profiles are supported
+     profile env "JAVA_HOME" "/opt/java/1.6"	    
+}</programlisting>
 
-        <listitem>
-          <para><emphasis role="bold">type</emphasis> - The type of
-          transformation. Can have on of two values</para>
+        <para>The container itself is defined using the cont entry. Multiple
+        transformations can refer to the same container.</para>
 
-          <itemizedlist>
-            <listitem>
-              <para><emphasis role="bold">INSTALLED</emphasis>: This means
-              that the transformation is installed on the remote site</para>
-            </listitem>
-
-            <listitem>
-              <para><emphasis role="bold">STAGEABLE</emphasis>: This means
-              that the transformation is available as a static binary and can
-              be staged to a remote site.</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">system</emphasis> - The system for which
-          the transformation is compiled.</para>
-
-          <para>The formation of the sytem is ARCH::OS:OSVERSION:GLIBC where
-          the GLIBC and OS VERSION are optional. ARCH can have one of the
-          following values INTEL32, INTEL64, SPARCV7, SPARCV9, AIX, AMD64. OS
-          can have one of the following values LINUX,SUNOS. The default value
-          for system if none specified is INTEL32::LINUX</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Profiles</emphasis> - The profiles
-          associated with the transformation. For indepth information about
-          profiles and their priorities read the Profile Guide.</para>
-
-          <para>The format for profiles is NS::KEY="VALUE" where NS is the
-          namespace of the profile e.g. Pegasus,condor,DAGMan,env,globus. The
-          key and value can be any strings. Remember to quote the value with
-          double quotes. If you need to specify several profiles you can do it
-          in several ways</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>NS1::KEY1="VALUE1",KEY2="VALUE2";NS2::KEY3="VALUE3",KEY4="VALUE4"</para>
-
-              <para>This is the most optimized form. Multiple key values for
-              the same namespace are separated by a comma "," and different
-              namespaces are separated by a semicolon ";"</para>
-            </listitem>
-
-            <listitem>
-              <para>NS1::KEY1="VALUE1";NS1::KEY2="VALUE2";NS2::KEY3="VALUE3";NS2::KEY4="VALUE4"</para>
-
-              <para>You can also just repeat the triple of NS::KEY="VALUE"
-              separated by semicolons for a simple format;</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-      </orderedlist>
-
-      <para>To use this format of the Transformation Catalog you need to set
-      the following properties</para>
-
-      <para><orderedlist>
+        <orderedlist>
           <listitem>
-            <para><emphasis
-            role="bold">pegasus.catalog.transformation=File</emphasis></para>
+            <para><emphasis role="bold">cont</emphasis> cont - A container
+            identifier.</para>
           </listitem>
 
           <listitem>
-            <para><emphasis
-            role="bold">pegasus.catalog.transformation.file=<replaceable>&lt;path
-            to the transformation catalog
-            file&gt;</replaceable></emphasis></para>
-          </listitem>
-        </orderedlist></para>
-    </section>
-
-    <section id="tc-Database">
-      <title>Database TC (Database)</title>
-
-      <para>The database TC alows you to use a relational database. To use the
-      database TC you need to have installed a MySQL or PostgreSQL server. The
-      schema for the database is available in $PEGASUS_HOME/sql directory. You
-      will have to install the schema into either PostgreSQL or MySQL by
-      running the appropriate commands to load the two scheams <emphasis
-      role="bold">create-XX-init.sql</emphasis> and <emphasis
-      role="bold">create-XX-tc.sql</emphasis> where XX is either <emphasis
-      role="bold">my</emphasis> (for MySQL) or <emphasis
-      role="bold">pg</emphasis> (for PostgreSQL)</para>
-
-      <para>To use the Database TC you need to set the following
-      properties</para>
-
-      <para><orderedlist>
-          <listitem>
-            <para><emphasis
-            role="bold">pegasus.catalog.transformation.db.driver=MySQL |
-            Postgres</emphasis></para>
+            <para><emphasis role="bold">image</emphasis> - URL to image in a
+            docker|singularity hub or URL to an existing docker image exported
+            as a tar file or singularity image. Example of a docker hub URL is
+            docker:///rynge/montage:latest, while for singularity
+            shub://pegasus-isi/fedora-montage</para>
           </listitem>
 
           <listitem>
-            <para><emphasis
-            role="bold">pegasus.catalog.transformation.db.url=<replaceable>&lt;jdbc
-            url to the databse&gt;</replaceable></emphasis></para>
+            <para><emphasis role="bold">image_site</emphasis> - The site
+            identifier for the site where the container is available</para>
           </listitem>
 
           <listitem>
-            <para><emphasis
-            role="bold">pegasus.catalog.transformation.db.user=<replaceable>&lt;database
-            user&gt;</replaceable></emphasis></para>
+            <para><emphasis role="bold">Profiles</emphasis> - One or many
+            profiles can be attached to a transformation for all sites or to a
+            transformation on a particular site. For containers, only env
+            profiles are supported.</para>
           </listitem>
+        </orderedlist>
 
-          <listitem>
-            <para><emphasis
-            role="bold">pegasus.catalog.transformation.db.password=<replaceable>&lt;database
-            password&gt;</replaceable></emphasis></para>
-          </listitem>
-        </orderedlist></para>
+        <note>
+          <para>Containerized Applications can only be specified in the
+          transformation catalog, not via the DAX API.</para>
+        </note>
+      </section>
     </section>
 
     <section id="pegasus-tc-client">
       <title>TC Client pegasus-tc-client</title>
 
       <para>We need to map our declared transformations (preprocess,
-      findranage, and analyze) from the example DAX above to a simple "mock
+      findrange, and analyze) from the example DAX above to a simple "mock
       application" name "keg" ("canonical example for the grid") which reads
       input files designated by arguments, writes them back onto output files,
       and produces on STDOUT a summary of where and when it was run. Keg ships
@@ -1378,13 +1301,16 @@ Output Filename: /dev/fd/1</computeroutput></screen>
 clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
                 STAGEABLE    INTEL32::LINUX</computeroutput></screen>
 
-      <para/>
+      <note>
+        <para>pegasus-tc-client is no longer actively developed and is
+        deprecated.</para>
+      </note>
     </section>
 
     <section>
       <title>TC Converter Client pegasus-tc-converter</title>
 
-      <para>Pegasus 3.0 by default now parses a file based multiline textual
+      <para>Pegasus 3.0 by default now parses a file based multi line textual
       format of a Transformation Catalog. The new Text format is explained in
       detail in the chapter on Catalogs.</para>
 

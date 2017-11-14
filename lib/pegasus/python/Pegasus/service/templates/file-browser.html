@@ -80,13 +80,14 @@ $.fn.tooltip = bootstrapTooltip;
 {% block javascript_init %}
 <script>
 $(function () {
+    var folder_struct = {};
 
     function folderStructure(folders, path, collapse) {
         var urlPrefix = '{{ url_for('.file_view', root_wf_id=root_wf_id, wf_id=wf_id, path='') }}';
-        collapse = collapse == undefined ? false : collapse;
+        collapse = collapse === undefined ? false : collapse;
 
-        var directories = 'D' in folders[path] ? folders[path]['D'] : null;
-        var files       = 'F' in folders[path] ? folders[path]['F'] : null;
+        var directories = folders['dirs'];
+        var files = folders['files'];
 
         var ul = $('<ul></ul>');
 
@@ -94,18 +95,21 @@ $(function () {
             ul.hide();
         }
 
-        var trimThis = path.length > 1 ? path + '/' : path;
-
         for (var i = 0; directories && i < directories.length; ++i) {
-            var li = $('<li class="directory collapsed"></li>');
-            li.text(directories[i].replace(trimThis, ''));
-            var e = folderStructure(folders, directories[i], true);
-            li.append(e);
+            var li = $('<li class="directory collapsed" id="' + directories[i] + '"></li>');
+            directories[i] = directories[i].split('/');
+            directories[i] = directories[i][directories[i].length - 1];
+
+            li.text(directories[i]);
             ul.append(li);
         }
 
         for (var i = 0; files && i < files.length; ++i) {
             var li = $('<li class="text-nowrap"></li>');
+
+            files[i] = files[i].split('/');
+            files[i] = files[i][files[i].length - 1];
+
             var a = $('<a>' + files[i] + '</a>');
             var url = urlPrefix + path + '/' + files[i];
             url = url.replace(/\/{2,}/g, '/');
@@ -118,39 +122,61 @@ $(function () {
         return ul;
     }
 
-    function loadFileList() {
-        $.ajax({
-            url: '{{ url_for('.file_list', root_wf_id=root_wf_id, wf_id=wf_id) }}',
-            dataType: 'json',
-            success: function(folders) {
+    function loadFileList(path, async, collapsed) {
+        var url_template = '{{ url_for('.file_list', root_wf_id=root_wf_id, wf_id=wf_id, path=":::") }}';
+        async = async === undefined ? true : async;
+        collapsed = collapsed === undefined ? true : collapsed;
 
-                var e = folderStructure(folders, '/', false);
-                var ul = $('<ul class="directory">/</ul>');
-                ul.append(e);
-                $('.file-list').html(ul);
+        if (path in folder_struct) {
+            return;
+        }
+
+        $.ajax({
+            url: url_template.replace(/:::/g, path),
+            dataType: 'json',
+            async: async,
+
+            success: function (folders) {
+                var e = folderStructure(folders, path, collapsed);
+
+                if (path == '') {
+                    var ul = $('<ul class="directory">/</ul>');
+                    ul.append(e);
+                    $('.file-list').html(ul);
+                    folder_struct['/'] = true;
+                } else {
+                    var dir = '#' + path.replace(/\//g, '\\/');
+                    $(dir).append(e);
+                    $(dir).removeClass('collapsed');
+                    folder_struct[path] = true;
+                }
 
                 /*
                  * Event Handler Registration
                  */
-                $('.file-list .directory').click(function(event) {
+                $('.file-list li.directory').click(function (event) {
                     event.stopPropagation();
                     event.stopImmediatePropagation();
-                    $('ul', this).toggle();
-                    $('ul', this).parent().toggleClass('collapsed');
+                    var e = $(this);
+                    e.children('ul').toggle();
+                    e.toggleClass('collapsed');
+
+                    loadFileList(e.attr('id'), false, false);
+
                 });
 
-                $('.file-list li').click(function(event) {
+                $('.file-list li').click(function (event) {
                     event.stopPropagation();
                     event.preventDefault();
                 });
 
-                $('.file-list li a').click(function(event) {
+                $('.file-list li a').click(function (event) {
                     event.stopPropagation();
                     event.preventDefault();
                     onFileViewClick($(this).attr('href'));
                 });
             },
-            error: function(e){
+            error: function (e) {
                 var errorJSON = JSON.parse(e.responseText);
                 if (errorJSON.code) {
                     $('.file-list').text(errorJSON.code + ', Message: ' + errorJSON.message);
@@ -163,7 +189,7 @@ $(function () {
         $.ajax({
             url: url,
             dataType: 'text',
-            success: function(data) {
+            success: function (data) {
 
                 if (data.length === 0) {
                     data = 'Empty file';
@@ -171,17 +197,22 @@ $(function () {
 
                 $('#file-contents').text(data);
             },
-            error: function(){
+            error: function () {
                 $('#file-contents').text('Error occurred while loading file');
             }
         });
     }
 
     {% if init_file %}
+        loadFileList('', false, false);
+        {%  set splits = init_file.lstrip('/').split('/')[:-1] %}
+        {%  for i in range(splits|length) %}
+            loadFileList('{{ splits[:i + 1]|join('/') }}', false, false);
+        {% endfor %}
         onFileViewClick("{{ url_for ('.file_view', root_wf_id = root_wf_id, wf_id = wf_id, path = init_file.lstrip('/')) }}");
+    {%  else %}
+        loadFileList('', true, false);
     {% endif %}
-
-    loadFileList();
 });
 </script>
 {% endblock %}

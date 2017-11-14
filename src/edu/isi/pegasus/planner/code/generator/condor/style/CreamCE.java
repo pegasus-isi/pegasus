@@ -147,7 +147,7 @@ public class CreamCE extends Abstract{
         
         //the job should have the collector key associated
         GridGateway.SCHEDULER_TYPE scheduler = g.getScheduler();
-        if( scheduler.equals( GridGateway.SCHEDULER_TYPE.Fork ) || scheduler.equals( GridGateway.SCHEDULER_TYPE.Unknown) ){
+        if( scheduler.equals( GridGateway.SCHEDULER_TYPE.fork ) || scheduler.equals( GridGateway.SCHEDULER_TYPE.unknown) ){
             StringBuffer error = new StringBuffer();
             error.append( "Please specify a valid scheduler with the grid gateway for site " ).
                   append( job.getSiteHandle() ).append( " and job type " ).

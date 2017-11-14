@@ -27,25 +27,20 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
-import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-
-
-
 import java.util.Collection;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
-
 
 import java.util.Map;
 import java.util.HashMap;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.refiner.TransferEngine;
 import edu.isi.pegasus.planner.transfer.Implementation;
 
 
@@ -79,33 +74,17 @@ public class Cluster extends Bundle {
                       "Cluster Transfers: Stagein and Stageout TX jobs are clustered per level";
 
 
+    
+    
     /**
-     * The default clustering factor that identifies the number of transfer jobs
-     * that are being created per execution pool for stageing in data for
-     * the workflow.
+     * number of compute jobs to be associated with a single job
      */
-    public static final String DEFAULT_LOCAL_STAGE_IN_CLUSTER_FACTOR = "2";
-
+    public static final float NUM_COMPUTE_JOBS_PER_TRANSFER_JOB = 10;
+    
     /**
-     * The default clustering factor that identifies the number of transfer jobs
-     * that are being created per execution pool for stageing in data for
-     * the workflow.
+     * Default value for deleted jobs level
      */
-    public static final String DEFAULT_REMOTE_STAGE_IN_CLUSTER_FACTOR = "2";
-
-    /**
-     * The default bundling factor that identifies the number of transfer jobs
-     * that are being created per execution pool for stageing out data for
-     * the workflow.
-     */
-    public static final String DEFAULT_LOCAL_STAGE_OUT_CLUSTER_FACTOR = "2";
-
-    /**
-     * The default bundling factor that identifies the number of transfer jobs
-     * that are being created per execution pool for stageing out data for
-     * the workflow.
-     */
-    public static final String DEFAULT_REMOTE_STAGE_OUT_CLUSTER_FACTOR = "2";
+    public static final int DEFAULT_TX_JOBS_FOR_DELETED_JOBS = 10;
 
     /**
      * A map indexed by site name, that contains the pointer to the stage in
@@ -130,6 +109,11 @@ public class Cluster extends Bundle {
      */
     private Map< String, Job > mSyncJobMap;
     
+    /**
+     * Tracks number of jobs at each level of the workflow. 
+     */
+    private Map<Integer,Integer> mTXJobsPerLevelMap;
+    
      /**
      * The overloaded constructor.
      *
@@ -148,19 +132,23 @@ public class Cluster extends Bundle {
      * the bundle values.
      */
     protected  void initializeBundleValues() {
+        
+        //PM-1212 we want to get an idea 
+        mTXJobsPerLevelMap = buildDefaultTXJobsPerLevelMap( NUM_COMPUTE_JOBS_PER_TRANSFER_JOB );
+                
         mStageinLocalBundleValue = new BundleValue();
         mStageinLocalBundleValue.initialize( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
                                              Pegasus.CLUSTER_STAGE_IN_KEY,
                                              getDefaultBundleValueFromProperties( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
                                                                                   Pegasus.CLUSTER_STAGE_IN_KEY,
-                                                                                  Cluster.DEFAULT_LOCAL_STAGE_IN_CLUSTER_FACTOR ));
+                                                                                  Cluster.NO_PROFILE_VALUE));
         
         mStageInRemoteBundleValue = new BundleValue();
         mStageInRemoteBundleValue.initialize( Pegasus.CLUSTER_REMOTE_STAGE_IN_KEY,
                                               Pegasus.CLUSTER_STAGE_IN_KEY,
                                               getDefaultBundleValueFromProperties( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
                                                                                    Pegasus.CLUSTER_STAGE_IN_KEY, 
-                                                                                   Cluster.DEFAULT_REMOTE_STAGE_IN_CLUSTER_FACTOR ));
+                                                                                   Cluster.NO_PROFILE_VALUE ));
 
 
         mStageOutLocalBundleValue = new BundleValue();
@@ -168,14 +156,14 @@ public class Cluster extends Bundle {
                                               Pegasus.CLUSTER_STAGE_OUT_KEY,
                                               getDefaultBundleValueFromProperties( Pegasus.CLUSTER_LOCAL_STAGE_OUT_KEY,
                                                                                    Pegasus.CLUSTER_STAGE_OUT_KEY,
-                                                                                   Cluster.DEFAULT_LOCAL_STAGE_OUT_CLUSTER_FACTOR ));
+                                                                                   Cluster.NO_PROFILE_VALUE ));
 
         mStageOutRemoteBundleValue = new BundleValue();
         mStageOutRemoteBundleValue.initialize( Pegasus.BUNDLE_REMOTE_STAGE_OUT_KEY,
                                                Pegasus.BUNDLE_STAGE_OUT_KEY,
                                                getDefaultBundleValueFromProperties( Pegasus.BUNDLE_REMOTE_STAGE_OUT_KEY,
                                                                                     Pegasus.BUNDLE_STAGE_OUT_KEY,
-                                                                                    Cluster.DEFAULT_REMOTE_STAGE_OUT_CLUSTER_FACTOR ));
+                                                                                    Cluster.NO_PROFILE_VALUE ));
     }
 
     
@@ -315,7 +303,7 @@ public class Cluster extends Bundle {
         
         int level   = job.getLevel();
         String site = job.getStagingSiteHandle();
-        int clusterValue = cValue.determine( implementation, job );
+        int clusterValue = cValue.determine( implementation, job , mTXJobsPerLevelMap.get( job.getLevel() ) );
         /*
         int clusterValue = getSISiteBundleValue( site,
                                                 job.vdsNS.getStringValue( Pegasus.CLUSTER_STAGE_IN_KEY ) );
@@ -638,42 +626,6 @@ public class Cluster extends Bundle {
         return Cluster.DESCRIPTION;
     }
 
-
-    /**
-     * Determines the bundle factor for a particular site on the basis of the
-     * stage in bundle value associcated with the underlying transfer
-     * transformation in the transformation catalog. If the key is not found,
-     * then the default value is returned. In case of the default value being
-     * null the global default is returned.
-     *
-     * @param site    the site at which the value is desired.
-     * @param deflt   the default value.
-     *
-     * @return the bundle factor.
-     *
-     * @see #DEFAULT_LOCAL_STAGE_IN_CLUSTER_FACTOR
-     */
-    protected int getSISiteBundleValue(String site,  String deflt){
-        //this should be parameterised Karan Dec 20,2005
-        TransformationCatalogEntry entry  =
-            mTXStageInImplementation.getTransformationCatalogEntry(site, Job.STAGE_IN_JOB );
-        Job sub = new Job();
-        String value = (deflt == null)?
-                        this.DEFAULT_LOCAL_STAGE_IN_CLUSTER_FACTOR:
-                        deflt;
-
-        if(entry != null){
-            sub.updateProfiles(entry);
-            value = (sub.vdsNS.containsKey( Pegasus.CLUSTER_STAGE_IN_KEY ))?
-                     sub.vdsNS.getStringValue( Pegasus.CLUSTER_STAGE_IN_KEY ):
-                     value;
-        }
-
-        return Integer.parseInt(value);
-    }
-
-
-
     /**
      * Returns the name of the job that acts as a synchronization node in
      * between stage in jobs of different levels.
@@ -765,6 +717,53 @@ public class Cluster extends Bundle {
      */
     public Job getSyncJob( String site ){
         return (Job)mSyncJobMap.get( site );
+    }
+    
+    /**
+     * Returns the bundling value to be used for creating stageout jobs for a job
+     * 
+     * @param bundleValue
+     * @param job
+     * @return 
+     */
+    protected int getStageOutBundleValue(BundleValue bundleValue, Job job) {
+        return bundleValue.determine( this.mTXStageOutImplementation, job, mTXJobsPerLevelMap.get( job.getLevel() )  );
+    }
+
+    /**
+     * Builds a map that maps for each level the number of default transfer jobs to be created
+     * 
+     * @param divisor
+     * @return 
+     */
+    private Map<Integer, Integer> buildDefaultTXJobsPerLevelMap( float divisor ) {
+        //PM-1212
+        Map<Integer,Integer> m = new HashMap();
+        int count = 0;
+        int previous = -1;
+        int cluster = -1;
+        int level = 0;
+        for( Iterator it = this.mDAG.iterator(); it.hasNext(); ){
+            GraphNode node = ( GraphNode )it.next();
+            level = node.getDepth();
+            if( level != previous ){
+                cluster = (int)Math.ceil( count/divisor);
+                mLogger.log( "Number of transfer jobs for " + previous + " are " + cluster, LogManager.DEBUG_MESSAGE_LEVEL );
+                m.put( previous,  cluster);
+                count = 0;
+            }
+            count++;
+            previous = level;
+        }
+        
+        cluster  = (int)Math.ceil( count/divisor);
+        m.put( level,  cluster);
+        mLogger.log( "Number of transfer jobs for " + level + " are " + cluster, LogManager.DEBUG_MESSAGE_LEVEL );
+        
+        //add a value for the level associated with deleted jobs
+        m.put( TransferEngine.DELETED_JOBS_LEVEL, BalancedCluster.DEFAULT_TX_JOBS_FOR_DELETED_JOBS );
+        
+        return m;
     }
     
 }

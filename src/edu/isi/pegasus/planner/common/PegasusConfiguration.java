@@ -18,7 +18,6 @@
 package edu.isi.pegasus.planner.common;
 
 import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.DirectoryLayout;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
@@ -31,13 +30,10 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactory;
-import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
 import java.util.Iterator;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * A utility class that returns JAVA Properties that need to be set based on
@@ -110,44 +106,11 @@ public class PegasusConfiguration {
 
         this.loadConfigurationProperties( properties );
 
-        //sanitize on the planner options
-        //PM-810 no longer required
-        //checks done per job
-        /*
-        if( properties.executeOnWorkerNode() ){
-            String slsImplementor = properties.getSLSTransferImplementation();
-            if( slsImplementor == null ){
-                slsImplementor = SLSFactory.DEFAULT_SLS_IMPL_CLASS;
-            }
-            
-            //check for the sls implementation
-            if( slsImplementor.equalsIgnoreCase( DEPRECATED_CONDOR_CONFIGURATION_VALUE ) ){
-
-                for( String site : (Set<String>)options.getExecutionSites() ){
-                    //sanity check to make sure staging outputSite is set to local
-                    String stagingSite = options.getStagingSite( site );
-                    if( stagingSite == null ){
-                        stagingSite = "local";
-                        //set it to local outputSite
-                        mLogger.log( "Setting staging site for " + site + " to " + stagingSite ,
-                                      LogManager.CONFIG_MESSAGE_LEVEL );
-                        options.addToStagingSitesMappings( site , stagingSite );
-
-                    }
-                    else if (!( stagingSite.equalsIgnoreCase( "local" ) )){
-                        StringBuffer sb = new StringBuffer();
-
-                        sb.append( "Mismatch in the between execution site ").append( site ).
-                           append( " and staging site " ).append( stagingSite ).
-                           append( " . For Condor IO staging site should be set to local . " );
-
-                        throw new RuntimeException( sb.toString() );
-                    }
-                }
-
-            }
+        //PM-1190 if integrity checking is turned on, turn on the stat of
+        //files also
+        if( properties.doIntegrityChecking() ){
+            //this.checkAndSetProperty(properties, PegasusProperties.PEGASUS_KICKSTART_STAT_PROPERTY, "true" );
         }
-        */
     }
 
     /**
@@ -164,7 +127,7 @@ public class PegasusConfiguration {
     public String determineStagingSite( Job job, PlannerOptions options ){
         //check to see if job has data.configuration set
         if( !job.vdsNS.containsKey( Pegasus.DATA_CONFIGURATION_KEY ) ){
-            throw new RuntimeException( "Internal Planner Error: Data Configuration shoudl have been set for job " + job.getID() );
+            throw new RuntimeException( "Internal Planner Error: Data Configuration should have been set for job " + job.getID() );
         }
         
         String conf = job.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY );
@@ -415,6 +378,7 @@ public class PegasusConfiguration {
                                         " specified for property " + PegasusConfiguration.PEGASUS_CONFIGURATION_PROPERTY_KEY );
         }
         
+        
         return p;
     }
 
@@ -487,7 +451,7 @@ public class PegasusConfiguration {
             StringBuffer sb = new StringBuffer();
             sb.append( "Property Key " ).append( key ).append( " already set to " ).
                append( propValue ).append( ". Will not be set to - ").append( value );
-            mLogger.log( sb.toString(), LogManager.WARNING_MESSAGE_LEVEL );
+            mLogger.log( sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
         }
     }
 

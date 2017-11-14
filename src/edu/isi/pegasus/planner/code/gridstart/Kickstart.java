@@ -261,6 +261,11 @@ public class Kickstart implements GridStart {
     private boolean mDisableKickstartStatCompletely;
 
     /**
+     * whether integrity checking is turned on or not
+     */
+    private boolean mIntegrityCheckingOn ;
+    
+    /**
      * Initializes the GridStart implementation.
      *
      * @param bag   the bag of objects that is used for initialization.
@@ -279,6 +284,7 @@ public class Kickstart implements GridStart {
         mInvokeLength = mProps.getGridStartInvokeLength();
         
         mGenerateLOF  = mProps.generateLOFFiles();
+        mIntegrityCheckingOn = mProps.doIntegrityChecking();
         mConcDAG      = dag;
         mSiteStore    = bag.getHandleToSiteStore();
         mTCHandle     = bag.getHandleToTransformationCatalog();
@@ -638,7 +644,7 @@ public class Kickstart implements GridStart {
        }
 
         
-        String statArgs = generateStatArgumentOptions( job, stat, mRegisterOutputs, addPostScript );
+        String statArgs = generateStatArgumentOptions( job, stat, mRegisterOutputs, addPostScript, mIntegrityCheckingOn );
         if( !statArgs.isEmpty() ){
             gridStartArgs.append( statArgs );
         }
@@ -1196,24 +1202,28 @@ public class Kickstart implements GridStart {
     }
 
     /**
-     * Returns the stat argument options to be appended for kickstart invocation
+     * Returns the stat argument options to be appended for kick
      * 
      * @param job
      * @param stat
+     * @param registerOutputs
+     * @param addPostScript
+     * @param integrityChecksOn
      * @return 
      */
-    protected String generateStatArgumentOptions(Job job, boolean stat, boolean registerOutputs, boolean addPostScript ) {
+    protected String generateStatArgumentOptions(Job job, boolean stat, boolean registerOutputs, boolean addPostScript, boolean integrityChecksOn ) {
         
         //sanity check
-        if ( !( stat || registerOutputs ) || this.mDisableKickstartStatCompletely){
+        if ( !( stat || registerOutputs || integrityChecksOn) || 
+                this.mDisableKickstartStatCompletely){
             return "";
         }
         
-        StringBuffer args = new StringBuffer();
+        StringBuilder args = new StringBuilder();
         //PM-992 we stat outputs either if stat property is set
         //or registration is enabled. inputs are only stated if
         //stat property is turned on.
-        if ( stat || registerOutputs ){
+        if ( stat || registerOutputs || integrityChecksOn){
             //add the stat options to kickstart only for certain jobs for time being
              //and if the input variable is true
             if (job.getJobType() == Job.COMPUTE_JOB ||
@@ -1257,12 +1267,13 @@ public class Kickstart implements GridStart {
                         }
                     }
                 }
-                else if( registerOutputs ){
+                else if( registerOutputs || integrityChecksOn ){
                     //PM-992 we generate lfn=pfn -s options on command line
                     //for files that need to be registered
                     if( job.getJobType() == Job.COMPUTE_JOB ){
                         for( PegasusFile file : job.getOutputFiles() ){
-                            if( file.getRegisterFlag() ){
+                            //going forward we should remove this check completely.
+                            if( file.getRegisterFlag() || integrityChecksOn){
                                 args.append( " -s " ).append( file.getLFN() ).
                                      append( "=" ).append( file.getLFN() );
                             }

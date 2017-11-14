@@ -5,28 +5,44 @@ if [ $# -ne 2 ]; then
     exit 1
 fi
 
-SRC=$1
+PYTHON_PATH=$1
+SRC=$1/Pegasus
 DEST=$2
 
 export PYTHONDOCS="http://docs.python.org/library/"
+export PYTHONPATH=${PYTHON_PATH}
 
 cd $SRC
 
-# Generate the docs
-pydoc -w DAX3
+# Python files
+PYTHON_FILES=(DAX3 jupyter/instance catalogs/replica_catalog catalogs/sites_catalog catalogs/transformation_catalog)
 
-# remove local file paths and make them links relative
-perl -p -i -e 's:(file\:){0,1}[\w\.\-_/]+lib/pegasus/python/Pegasus/::g' DAX3.html
+for pyfile in ${PYTHON_FILES[@]}; do
+    # Generate the docs
+    pydoc -w ./$pyfile.py
 
-# change the file name from DAX3.html to index.html
-perl -p -i -e 's/DAX3\.html/index.html/g' DAX3.html
+    # getting the file name
+    htmlfile=$(echo $pyfile| cut -d'/' -f 2)
 
-# prepend core module links with http://docs.python.org/library/
-perl -p -i -e 's/"(codecs|os|sys|shlex|datetime|exceptions)\.html/"http:\/\/docs.python.org\/library\/\1.html/g' DAX3.html
+    # remove local file paths and make them links relative
+    perl -p -i -e 's:(file\:){0,1}[\w\.\-_/]+lib/pegasus/python/Pegasus/::g' $htmlfile.html
 
-# Install in the destination
-/bin/mv DAX3.html $DEST/index.html
+    if [ "$pyfile" == "DAX3" ]; then
+        # change the file name from DAX3.html to index.html
+        perl -p -i -e 's/DAX3\.html/index.html/g' DAX3.html
+    fi
 
-# the documentation also links to the source module, so we need a copy
-/bin/cp DAX3.py $DEST/DAX3.py
+    # prepend core module links with http://docs.python.org/library/
+    perl -p -i -e 's/"(codecs|os|sys|shlex|datetime|exceptions)\.html/"http:\/\/docs.python.org\/library\/\1.html/g' $htmlfile.html
+
+    # Install in the destination
+    if [ "$pyfile" == "DAX3" ]; then
+        /bin/mv $htmlfile.html $DEST/index.html
+    else
+        /bin/mv $htmlfile.html $DEST/$htmlfile.html
+    fi
+
+    # the documentation also links to the source module, so we need a copy
+    /bin/cp $pyfile.py $DEST/$htmlfile.py
+done
 

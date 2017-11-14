@@ -1,0 +1,20 @@
+pegasus.catalog.site=XML
+pegasus.catalog.site.file=sites.xml
+
+pegasus.catalog.transformation=Text
+pegasus.catalog.transformation.file=tc.text
+
+pegasus.catalog.replica=File
+pegasus.catalog.replica.file=rc.data
+
+
+pegasus.dir.storage.deep=false
+
+pegasus.condor.logs.symlink = false
+
+# PM-1132 ensure that dax generation job executes 
+# in a deep structure on staging site
+pegasus.data.configuration nonsharedfs
+pegasus.dir.staging.mapper Hashed
+pegasus.dir.submit.mapper  Hashed
+

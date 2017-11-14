@@ -369,7 +369,8 @@ class Dashboard(object):
 
         statistics['successful-jobs'] = workflow.get_total_succeeded_jobs_status()
         statistics['failed-jobs'] = workflow.get_total_failed_jobs_status()
-        statistics['unsubmitted-jobs'] = statistics['total-jobs'] -(statistics['successful-jobs'] + statistics['failed-jobs'])
+        statistics['running-jobs'] = workflow.get_total_running_jobs_status()
+        statistics['unsubmitted-jobs'] = statistics['total-jobs'] - (statistics['successful-jobs'] + statistics['failed-jobs'] + statistics['running-jobs'])
         statistics['job-retries'] = workflow.get_total_jobs_retries()
         statistics['job-instance-retries'] = statistics['successful-jobs'] + statistics['failed-jobs'] + statistics['job-retries']
 

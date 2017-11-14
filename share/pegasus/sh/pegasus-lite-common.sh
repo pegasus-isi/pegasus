@@ -24,10 +24,44 @@
 #
 
 
+# a default used if no other worker packages can be found
+pegasus_lite_default_system="x86_64_rhel_7"
+
+
+function pegasus_lite_setup_log()
+{
+    # PM-1132 set up the log explicitly to a file     
+    if [ "X${pegasus_lite_log_file}" != "X" ]; then
+
+        # rename the log file with approprite suffix
+        # to ensure they are not ovewritten
+        count="000"
+        for count in `seq -f "%03g" 0 999`;
+        do
+            if [ ! -e ${pegasus_lite_log_file}.${count} ] ; then
+                break
+            fi
+        done    
+        pegasus_lite_log_file=${pegasus_lite_log_file}.${count}
+
+        # Close STDOUT file descriptor
+        exec 1>&-
+
+        # Close STDERR FD
+        exec 2>&-
+
+        # Open STDERR to file for writes
+        exec 2>$pegasus_lite_log_file
+
+        exec 1>&2
+    fi
+
+}
+
 function pegasus_lite_log()
 {
     TS=`/bin/date +'%F %H:%M:%S'`
-    echo "$TS: $1" 1>&2
+    echo "$TS: $1"  1>&2
 }
 
 
@@ -62,7 +96,6 @@ function pegasus_lite_internal_wp_shipped()
         fi
 
         tar xzf $pegasus_lite_start_dir/pegasus-worker-*.tar.gz
-        rm -f $pegasus_lite_start_dir/pegasus-worker-*.tar.gz
         unset PEGASUS_HOME
         export PATH=${pegasus_lite_work_dir}/pegasus-${pegasus_lite_full_version}/bin:$PATH
         return 0
@@ -118,7 +151,18 @@ function pegasus_lite_internal_wp_download()
         # not sure what system we are on - try the default package
         system="x86_64_rhel_6"
     fi
+
+    # Before we download from the Pegasus server, see if we can find a version
+    # deployed on the infrastructure, for example on CVMFS on OSG
+    cvmfs_base="/cvmfs/oasis.opensciencegrid.org/osg/projects/pegasus/worker/${pegasus_lite_version_major}.${pegasus_lite_version_minor}.${pegasus_lite_version_patch}/$system"
+    if [ -f "$cvmfs_base/bin/pegasus-config" ]; then
+        pegasus_lite_log "Using ${cvmfs_base} as worker package"
+        unset PEGASUS_HOME
+        export PATH="${cvmfs_base}/bin:$PATH"
+        return 0
+    fi
     
+    # Nevermind, download directly from Pegasus server
     url="http://download.pegasus.isi.edu/pegasus/${pegasus_lite_version_major}"
     url="${url}.${pegasus_lite_version_minor}.${pegasus_lite_version_patch}"
     url="${url}/pegasus-worker"
@@ -126,7 +170,26 @@ function pegasus_lite_internal_wp_download()
     url="${url}-${system}.tar.gz"
     pegasus_lite_log "Downloading Pegasus worker package from $url"
     curl -s -S --insecure -o pegasus-worker.tar.gz "$url" || wget -q -O pegasus-worker.tar.gz "$url"
-    tar xzf pegasus-worker.tar.gz
+    if ! (test -e pegasus-worker.tar.gz && tar xzf pegasus-worker.tar.gz); then
+        pegasus_lite_log "ERROR: Unable to download a worker package for this platform ($system)."
+        pegasus_lite_log "If you want to use the same package as on the submit host, try the following setting in your properties file:"
+        pegasus_lite_log "   pegasus.transfer.worker.package.strict = false"
+
+        # try the default worker package
+        pegasus_lite_log "Will try the default worker package ($pegasus_lite_default_system)"
+        url="http://download.pegasus.isi.edu/pegasus/${pegasus_lite_version_major}"
+        url="${url}.${pegasus_lite_version_minor}.${pegasus_lite_version_patch}"
+        url="${url}/pegasus-worker"
+        url="${url}-${pegasus_lite_version_major}.${pegasus_lite_version_minor}.${pegasus_lite_version_patch}"
+        url="${url}-${pegasus_lite_default_system}.tar.gz"
+        pegasus_lite_log "Downloading Pegasus worker package from $url"
+        curl -s -S --insecure -o pegasus-worker.tar.gz "$url" || wget -q -O pegasus-worker.tar.gz "$url"
+        if ! (test -e pegasus-worker.tar.gz && tar xzf pegasus-worker.tar.gz); then
+            pegasus_lite_log "ERROR: Unable to download the default worker package."
+            return 1
+        fi
+    fi
+
     rm -f pegasus-worker.tar.gz
 
     unset PEGASUS_HOME
@@ -143,20 +206,20 @@ function pegasus_lite_setup_work_dir()
     set +e
     ls $pegasus_lite_start_dir/*lof > /dev/null 2>&1
     if [ "$?" = "0" ]; then
-	found_lof="true"
+        found_lof="true"
     fi
     set -e
 
     if [ "x$pegasus_lite_work_dir" != "x" ]; then
         pegasus_lite_log "Not creating a new work directory as it is already set to $pegasus_lite_work_dir"
-	
-	if [ "x$found_lof" != "x" ]; then 
-	    if [ ! $pegasus_lite_start_dir -ef $pegasus_lite_work_dir ]; then
- 	        #PM-1021 copy all lof files from Condor scratch dir to directory where pegasus lite runs the job
-		pegasus_lite_log "Copying lof files from $pegasus_lite_start_dir to $pegasus_lite_work_dir"
-		cp $pegasus_lite_start_dir/*lof $pegasus_lite_work_dir
-	    fi
-	fi
+        
+        if [ "x$found_lof" != "x" ]; then 
+            if [ ! $pegasus_lite_start_dir -ef $pegasus_lite_work_dir ]; then
+                 #PM-1021 copy all lof files from Condor scratch dir to directory where pegasus lite runs the job
+                pegasus_lite_log "Copying lof files from $pegasus_lite_start_dir to $pegasus_lite_work_dir"
+                cp $pegasus_lite_start_dir/*lof $pegasus_lite_work_dir
+            fi
+        fi
 
         return
     fi
@@ -181,6 +244,7 @@ function pegasus_lite_setup_work_dir()
         # make sure there is enough available diskspace
         cd $d
         free=`df -kP . | awk '{if (NR==2) print $4}'`
+        free_human=`df --si . | awk '{if (NR==2) print $4}'`
         if [ "x$free" == "x" -o $free -lt $PEGASUS_WN_TMP_MIN_SPACE ]; then
             pegasus_lite_log "  Workdir: not enough disk space available in $d"
             continue
@@ -188,23 +252,27 @@ function pegasus_lite_setup_work_dir()
 
         if touch $d/.dirtest.$$ >/dev/null 2>&1; then
             rm -f $d/.dirtest.$$ >/dev/null 2>&1
-            d=`mktemp -d $d/pegasus.XXXXXX`
+            d=`mktemp -d $d/pegasus.XXXXXXXXX`
             export pegasus_lite_work_dir=$d
             export pegasus_lite_work_dir_created=1
-            pegasus_lite_log "  Work dir is $d - $free kB available"
+            pegasus_lite_log "  Workdir is $d - $free_human available"
 
             # PM-968 if provided, copy lof files from the HTCondor iwd to the PegasusLite work dir
             find $pegasus_lite_start_dir -name \*.lof -exec cp {} $pegasus_lite_work_dir/ \; >/dev/null 2>&1
 
+	    # PM-1190 if provided, copy meta files from the HTCondor iwd to the PegasusLite work dir
+            find $pegasus_lite_start_dir -name \*.meta -exec cp {} $pegasus_lite_work_dir/ \; >/dev/null 2>&1
+
+            pegasus_lite_log "Changing cwd to $pegasus_lite_work_dir"
             cd $pegasus_lite_work_dir
-	   
-	    if [ "x$found_lof" != "x" ]; then
-		#PM-1021 make sure pegasus_lite_work_dir and start dir are not same
-		if [ ! $pegasus_lite_start_dir -ef $pegasus_lite_work_dir ]; then
+           
+            if [ "x$found_lof" != "x" ]; then
+                #PM-1021 make sure pegasus_lite_work_dir and start dir are not same
+                if [ ! $pegasus_lite_start_dir -ef $pegasus_lite_work_dir ]; then
                     # copy all lof files from Condor scratch dir to directory where pegasus lite runs the job
-		    pegasus_lite_log "Copying lof files from $pegasus_lite_start_dir to $pegasus_lite_work_dir"
-		    cp $pegasus_lite_start_dir/*lof $pegasus_lite_work_dir
-		fi
+                    pegasus_lite_log "Copying lof files from $pegasus_lite_start_dir to $pegasus_lite_work_dir"
+                    cp $pegasus_lite_start_dir/*lof $pegasus_lite_work_dir
+                fi
             fi
 
             return 0
@@ -214,14 +282,100 @@ function pegasus_lite_setup_work_dir()
     return 1
 }
 
+function container_init()
+{
+    # setup common variables
+    cont_userid=`id -u`
+    cont_user=`whoami`
+    cont_groupid=`id -g`
+    cont_group=`id -g -n $cont_user` 
+    cont_name=${PEGASUS_DAG_JOB_ID}-`date -u +%s`
+
+}
+
+function docker_init()
+{
+    set -e
+
+    container_init
+    
+    if [ $# -ne 1 ]; then 
+	pegasus_lite_log "docker_init should be passed a docker url or a file"
+	return 1
+    fi
+
+    # check if an image file was passed
+    image_file=$1
+    cont_image=""
+
+    if [ "X${image_file}" != "X" ] ; then
+		
+	if [ -e ${image_file} ] ; then
+	    pegasus_lite_log "container file is ${image_file}"
+	    # try and load the image
+	    images=`docker load -i ${image_file} | sed -E "s/^Loaded image:(.*)$/\1/"`
+
+	    #docker load can list multiple images, which might be aliases for same image
+	    for image in $images ; do
+		cont_image=$image
+	    done
+	fi
+	
+    fi
+    
+    if [ "X${cont_image}" = "X" ]; then
+	pegasus_lite_log "Unable to load image from $image_file"
+	return 1
+    else
+	pegasus_lite_log "Loaded docker image $cont_image"
+    fi
+
+    set +e
+}
+
+function singularity_init()
+{
+    set -e
+
+    # set the common variables used in the pegasus lite job.sh files
+    container_init
+    
+    if [ $# -ne 1 ]; then 
+	pegasus_lite_log "singularity_init should be passed a docker url or a file"
+	return 1
+    fi
+
+    # for singularity we don't need to load anything like in docker.
+    
+}
 
 function pegasus_lite_init()
 {
     pegasus_lite_full_version=${pegasus_lite_version_major}.${pegasus_lite_version_minor}.${pegasus_lite_version_patch}
 
+    # setup pegasus lite log
+    pegasus_lite_setup_log
+
     # announce version - we do this so pegasus-exitcode and other tools
     # can tell the job was a PegasusLite job
     pegasus_lite_log "PegasusLite: version ${pegasus_lite_full_version}" 1>&2
+
+    # PM-1134 - provide some details on where we are running
+    # PM-1144 - do not use HOSTNAME from env, as it might have come form getenv=true
+    out="Executing on"
+    if hostname -f >/dev/null 2>&1; then
+        out="$out host "`hostname -f`
+    fi
+    if [ "x$OSG_SITE_NAME" != "x" ]; then
+        out="$out OSG_SITE_NAME=${OSG_SITE_NAME}"
+    fi
+    if [ "x$GLIDEIN_Site" != "x" ]; then
+        out="$out GLIDEIN_Site=${GLIDEIN_Site}"
+    fi
+    if [ "x$GLIDEIN_ResourceName" != "x" ]; then
+        out="$out GLIDEIN_ResourceName=${GLIDEIN_ResourceName}"
+    fi
+    pegasus_lite_log "$out"
 
     # for staged credentials, expand the paths and set strict permissions
     for base in X509_USER_PROXY S3CFG BOTO_CONFIG SSH_PRIVATE_KEY irodsEnvFile GOOGLE_PKCS12 ; do
@@ -233,30 +387,88 @@ function pegasus_lite_init()
                 eval val="\$$key"
                 pegasus_lite_log "Expanded \$$key to $val"
             fi
-            chmod 0600 $val
+            if [ -e "$val" ]; then
+                chmod 0600 "$val"
+            fi
         done
     done
 
 }
 
 
-function pegasus_lite_exit()
+function pegasus_lite_signal_int()
 {
+    # remember the fact until we call the EXIT function
+    caught_signal_name="INT"
+    caught_signal_num=2
+}
+
+
+function pegasus_lite_signal_term()
+{
+    # remember the fact until we call the EXIT function
+    caught_signal_name="TERM"
+    caught_signal_num=15
+}
+
+
+function pegasus_lite_unexpected_exit()
+{
+    # note that there are two exit() functions, one for final
+    # exit and one for unexepected. The final one is only called
+    # at the last step of the lite script. The unexpected one
+    # can be called anytime if the script exists as a result 
+    # of for example signals
     rc=$?
-    if [ "x$rc" = "x" ]; then
-        rc=0
+    if [ "x$caught_signal_name" != "x" ]; then
+        # if we got a signal, always fail the job
+        pegasus_lite_log "Caught $caught_signal_name signal! Aborting..."
+        rc=$(($caught_signal_num + 128))
+    elif [ "x$rc" = "x" ]; then
+        # when would this actually happen?
+        pegasus_lite_log "Unable to determine real exit code!"
+        rc=1
+    elif [ $rc -gt 0 ]; then
+        pegasus_lite_log "Last command exited with $rc"
     fi
 
-    if [ "x$job_ec" != "x" ];then
-	if [ $job_ec != 0 ];then
-	    pegasus_lite_log "Job failed with exitcode $job_ec"
-	    rc=$job_ec
-	fi
+    # never allow the script to exit with 0 in case of 
+    # unexpected termination
+    if [ "x$rc" = "x0" ]; then
+        pegasus_lite_log "Unable to determine why the script was forced to exit!"
+        rc=1
     fi
-	
 
-    if [ $rc != 0 ]; then
-        pegasus_lite_log "FAILURE: Last command exited with $rc"
+    if [ "x$pegasus_lite_work_dir_created" = "x1" ]; then
+        cd /
+        rm -rf $pegasus_lite_work_dir
+        pegasus_lite_log "$pegasus_lite_work_dir cleaned up"
+    fi
+
+    echo "PegasusLite: exitcode $rc" 1>&2
+
+    exit $rc
+}
+
+
+function pegasus_lite_final_exit()
+{
+    # note that there are two exit() functions, one for final
+    # exit and one for unexepected. The final one is only called
+    # at the last step of the lite script. The unexpected one
+    # can be called anytime if the script exists as a result 
+    # of for example signals
+    rc=1
+    
+    # the exit code of the lite script should reflect the exit code
+    # from the user task    
+    if [ "x$job_ec" = "x" ];then
+        pegasus_lite_log "job_ec is missing - did the user task fail?"
+    else
+        if [ $job_ec != 0 ];then
+            pegasus_lite_log "User task failed with exitcode $job_ec"
+        fi
+        rc=$job_ec
     fi
 
     if [ "x$pegasus_lite_work_dir_created" = "x1" ]; then
@@ -301,9 +513,9 @@ function pegasus_lite_get_system()
         elif [ -e /etc/debian_version ]; then
             osname="deb"
             osversion=`cat /etc/debian_version`
-        elif [ "X$osname" = "Xfedora" ]; then
-            osname="fc"
-            osversion=`cat /etc/issue | head -n1 | awk '{print $3;}'`
+        elif [ -e /etc/fedora-release ]; then
+            osname="fedora"
+            osversion=`cat /etc/fedora-release | grep -o -E '[0-9]+'`
         elif [ -e /etc/redhat-release ]; then
             osname="rhel"
             osversion=`cat /etc/redhat-release | grep -o -E ' [0-9]+.[0-9]+'`

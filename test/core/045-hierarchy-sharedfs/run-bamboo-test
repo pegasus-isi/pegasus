@@ -1,0 +1,133 @@
+#!/bin/bash
+
+set -e
+TOP_DIR=`pwd`
+
+# pegasus bin directory is needed to find keg
+BIN_DIR=`pegasus-config --bin`
+CONDOR_POOL_PEGASUS_HOME=/usr
+
+# build the dax generator
+PYTHONPATH=`pegasus-config --python`
+export PYTHONPATH=".:$PYTHONPATH"
+
+
+# generate the DAXes
+mkdir -p input
+./local_hierarchy.py $CONDOR_POOL_PEGASUS_HOME  > outer.dax
+./blackdiamond.py $BIN_DIR/..  $TOP_DIR/input/blackdiamond.dax
+cp sleep.dax $TOP_DIR/input/
+
+
+# create the replica catalog for outer level workflow
+echo "blackdiamond.dax  $TOP_DIR/input/blackdiamond.dax site=local" > rc.data
+echo "sleep.dax  $TOP_DIR/input/sleep.dax site=local" >> rc.data
+echo "f.a $TOP_DIR/input/f.a site="local"" >> rc.data
+
+
+#create the replica catalog for the inner dax
+cat > input/f.a <<EOF
+Sample input file for the first inner dax job.
+EOF
+
+#create the transformation catalog for the outer level workflow
+cat >tc.text <<EOF
+
+tr diamond::preprocess:4.0{
+   site local {
+    pfn "$BIN_DIR/pegasus-keg"
+    os "linux"
+    osrelease "rhel"
+    osversion "7"
+    arch "x86_64"
+    type "STAGEABLE"
+   }
+}
+
+tr diamond::analyze:4.0{
+   site local {
+    pfn "$BIN_DIR/pegasus-keg"
+    os "linux"
+    osrelease "rhel"
+    osversion "7"
+    arch "x86_64"
+    type "STAGEABLE"
+   }
+}
+tr diamond::findrange:4.0{
+   site local {
+    pfn "$BIN_DIR/pegasus-keg"
+    os "linux"
+    osrelease "rhel"
+    osversion "7"
+    arch "x86_64"
+    type "STAGEABLE"
+   }
+}
+
+tr level1::sleep { 
+  site CCG {
+    pfn "/bin/sleep"
+    os "linux"
+    arch "x86_64"
+    osrelease "rhel"
+    osversion "7"
+    type "INSTALLED"
+  }
+}
+
+tr level2::sleep {   
+  site CCG {
+    pfn "/bin/sleep"
+    os "linux"
+    arch "x86_64"
+    osrelease "rhel"
+    osversion "7"
+    type "INSTALLED"
+  }
+}
+
+EOF
+
+# create the site catalog for both outer level and inner level workflow
+cat >sites.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
+
+    <site handle="local" arch="x86_64" os="LINUX" osrelease="rhel" osversion="7">
+        <directory type="shared-scratch" path="$TOP_DIR/work/local-site/scratch">
+            <file-server operation="all" url="file://$TOP_DIR/work/local-site/scratch"/>
+        </directory>
+        <directory type="local-storage" path="$TOP_DIR/outputs/local-site">
+            <file-server operation="all" url="file://$TOP_DIR/outputs/local-site"/>
+        </directory>
+    </site>
+
+    <site  handle="CCG" arch="x86_64" os="LINUX" osrelease="rhel" osversion="7">
+        <grid  type="gt5" contact="obelix.isi.edu/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+        <grid  type="gt5" contact="obelix.isi.edu/jobmanager-condor" scheduler="Condor" jobtype="compute"/>
+
+        <directory type="shared-scratch" path="/nfs/ccg4/scratch-purge-no-backups/CCG/scratch">
+            <file-server operation="all" url="gsiftp://obelix.isi.edu/nfs/ccg4/scratch-purge-no-backups/CCG/scratch"/>
+        </directory>
+        <directory type="local-storage" path="/nfs/ccg4/scratch-purge-no-backups/CCG/outputs">
+            <file-server operation="all" url="gsiftp://obelix.isi.edu/nfs/ccg4/scratch-purge-no-backups/CCG/outputs"/>
+        </directory>
+
+        <profile namespace="env" key="PEGASUS_HOME">$CONDOR_POOL_PEGASUS_HOME</profile>
+    </site>
+
+</sitecatalog>
+EOF
+
+
+# plan and submit the  workflow
+pegasus-plan \
+    --conf pegasusrc \
+    --sites CCG \
+    --dir work \
+    --output-site local \
+    --dax outer.dax \
+    --submit \
+    | tee $TOP_DIR/plan.out
+

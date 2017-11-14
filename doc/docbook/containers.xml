@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="containers">
+  <title>Containers</title>
+
+  <section id="container-overview">
+    <title>Overview</title>
+
+    <para>Application containers provides a solution to package software with
+    complex dependencies to be used during workflow execution. Starting with 
+    Pegasus 4.8.0, Pegasus has support
+    for application containers in the non-shared filesystem or condorio data
+    configurations using PegasusLite. Users can specify with their
+    transformations in the Transformation Catalog the container in which the
+    the transformation should be executed. Pegasus currently has support for the
+    following container technologies:</para>
+
+    <orderedlist>
+      <listitem>
+        <para>Docker</para>
+      </listitem>
+
+      <listitem>
+        <para>Singularity</para>
+      </listitem>
+    </orderedlist>
+
+    <para>The worker package is not required to be pre-installed in images. If
+    a matching worker package is not installed, Pegasus will try to determine
+    which package is required and download it.</para>
+  </section>
+
+  <section id="container-configuration">
+    <title>Configuring Workflows To Use Containers</title>
+
+    <para>Containers currently can only be specified in the Transformation
+    Catalog. Users have the option of either using a different container for
+    each executable or same container for all executables. In the case, where
+    you wants to use a container that does not have your executable
+    pre-installed, you can mark the executable as STAGEABLE and Pegasus will
+    stage the executable into the container, as part of executable
+    staging.</para>
+
+    <para>The DAX API extensions don't support references for
+    containers.</para>
+
+    <xi:include href="creating_workflows.xml" xpointer="tc-container"
+                xmlns:xi="http://www.w3.org/2001/XInclude"/>
+  </section>
+
+  <section id="container-exec-model">
+
+      <title>Container Execution Model</title>
+
+      <para>User's containerized applications are launched as part of
+      PegasusLite jobs. PegasusLite job when starting on a remote worker
+      node.</para>
+
+      <orderedlist>
+        <listitem>
+          <para>Sets up a directory to run a user job in.</para>
+        </listitem>
+
+        <listitem>
+          <para>Pulls in all the relevant input data, executables and the
+          container image to that directory</para>
+        </listitem>
+
+        <listitem>
+          <para>Optionally, loads the container from the container image file
+          and sets up the user to run as in the container (only applicable for
+          Docker containers)</para>
+        </listitem>
+
+        <listitem>
+          <para>Mounts the job directory into the container as /scratch for
+          Docker containers, while as /srv for Singularity containers.</para>
+        </listitem>
+
+        <listitem>
+          <para>Container will run a job specific script that figures out the
+          appropriate Pegasus worker to use in the container if not already
+          installed, and sets up the job environment to use it, before
+          launching the user application using
+          <emphasis>pegasus-kickstart.</emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para>Optionally, shuts down the container (only applicable for
+          Docker containers)</para>
+        </listitem>
+
+        <listitem>
+          <para>Ships out the output data to the staging site</para>
+        </listitem>
+
+        <listitem>
+          <para>Cleans up the directory on the worker node.</para>
+        </listitem>
+      </orderedlist>
+
+      <para>The above model, allows for all credential handling required for
+      data transfers to be handled outside the container within the
+      PegasusLite job.</para>
+    </section>
+
+    <section id="container-transfers">
+      <title>Staging of Application Containers</title>
+
+      <para>Pegasus treats containers as other files in terms of data
+      management. Container to be used for a job is tracked as an input
+      dependency that needs to be staged if it is not already there. Similar
+      to executables, you specify the location for your container image in the
+      Transformation Catalog. You can specify the source URL's for containers
+      as the following.</para>
+
+      <orderedlist>
+        <listitem>
+          <para>URL to a container hosted on a central hub repository</para>
+
+          <para>Example of a docker hub URL is docker:///rynge/montage:latest,
+          while for singularity shub://pegasus-isi/fedora-montage</para>
+        </listitem>
+
+        <listitem>
+          <para>URL to a container image file on a file server.</para>
+
+          <itemizedlist>
+            <listitem>
+              <para><emphasis role="bold">Docker - </emphasis>Docker supports
+              loading of containers from a tar file, Hence, containers images
+              can only be specified as tar files and the extension for the
+              filename is not important.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">Singularity -</emphasis> Singularity
+              supports container images in various forms and relies on the
+              extension in the filename to determine what format the file is
+              in. Pegasus supports the following extensions for singularity
+              container images</para>
+
+              <itemizedlist>
+                <listitem>
+                  <para>.img</para>
+                </listitem>
+
+                <listitem>
+                  <para>.tar</para>
+                </listitem>
+
+                <listitem>
+                  <para>.tar.gz</para>
+                </listitem>
+
+                <listitem>
+                  <para>.tar.bz2</para>
+                </listitem>
+
+                <listitem>
+                  <para>.cpio</para>
+                </listitem>
+
+                <listitem>
+                  <para>.cpio.gz</para>
+                </listitem>
+              </itemizedlist>
+
+              <para>Singularity will fail to run the container if you don't
+              specify the right extension , when specify the source URL for
+              the image.</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </orderedlist>
+
+      <para>In both the cases, Pegasus will place the container image on the
+      staging site used for the workflow, as part of the data stage-in nodes,
+      using pegasus-transfer. When pulling in an image from a container hub
+      repository, pegasus-transfer will export the container as a tar file in
+      case of Docker, and as .img file in case of Singularity</para>
+
+      <section id="container-symlinking">
+        <title>Symlinking</title>
+
+        <para>Since, Pegasus only mounts the job directory determined by
+        PegasusLite into the application container, symlinking of input data
+        sets does not work. This is because the symlink in PegasusLite
+        directory points to a source directory on the worker node, that is not
+        mounted in the container. Hence user's jobs would fail. Hence, Pegasus
+        will automatically disable symlinking for jobs that use containers.
+        The only exception being the application container itself. If you
+        specify a URL for the container image, the image will be symlinked if
+        Pegasus determines that it can be.</para>
+
+        <para>Enabling symlinking of containers is useful, when running large
+        workflows on a single cluster. Pegasus can pull the image from the
+        container repository once, and place it on the shared filesystem where
+        it can then be symlinked from, when the PegasusLite jobs start on the
+        worker nodes of that cluster. In order to do this, you need to be
+        running the nonsharedfs data configuration mode with the staging site
+        set to be the same as the compute site.</para>
+     
+    </section>
+  </section> 
+
+  <section id="container-example">
+    <title>Container Example - Montage Workflow</title>
+
+    <xi:include href="example_workflows.xml" xpointer="example_containers_montage"
+                xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    
+  </section>
+</chapter>

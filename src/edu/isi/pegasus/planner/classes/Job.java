@@ -41,8 +41,10 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.namespace.Metadata;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
@@ -54,7 +56,6 @@ import java.io.Writer;
 import java.io.StringWriter;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -82,7 +83,7 @@ public class Job extends Data implements GraphNodeContent{
     public static final int COMPUTE_JOB     = 1;
 
     /**
-     * Denotea a job that is used to stage in the input files for a compute job.
+     * Denotes a job that is used to stage in the input files for a compute job.
      */
     public static final int STAGE_IN_JOB    = 2;
 
@@ -441,7 +442,18 @@ public class Job extends Data implements GraphNodeContent{
      */
     private String mNodeLabel;
     private String mSubmitDir;
+    
+    /**
+     * The node containing the job.
+     */
+    private GraphNode mGraphNode;
 
+    /** 
+     * A reference to the container to use to launch the transformation
+     */
+    private Container mContainer;
+
+    
     /**
      * Intialises the member variables.
      */
@@ -482,7 +494,8 @@ public class Job extends Data implements GraphNodeContent{
         mCredentialsType = new HashMap<String, Set<CredentialHandler.TYPE> >();
         mSubmissionCredential = null;
         mNodeLabel       = null;
-//        submitDirectory  = null;
+        mGraphNode       = null;
+        mContainer = null;
     }
 
     /**
@@ -527,7 +540,8 @@ public class Job extends Data implements GraphNodeContent{
         mSubmissionCredential = job.mSubmissionCredential;
         mCredentialsType = new HashMap<String, Set<CredentialHandler.TYPE>>();
         mNodeLabel       = null;
-//        submitDirectory  = job.submitDirectory;
+        mGraphNode       = job.getGraphNodeReference();
+        mContainer       = job.getContainer();
     }
 
     /**
@@ -593,8 +607,13 @@ public class Job extends Data implements GraphNodeContent{
                 newSub.addCredentialType( site, cred );
             }
         }
-
+        
+        newSub.setContainer( this.mContainer == null ? null : (Container)mContainer.clone() );
         newSub.mNodeLabel = this.mNodeLabel;
+        
+        //explicitly unset the reference to containing graph node
+        newSub.setGraphNodeReference( null );
+        
         return newSub;
     }
     
@@ -807,6 +826,16 @@ public class Job extends Data implements GraphNodeContent{
                 url.startsWith( "root" ) || url.startsWith( "srm") ||
                 url.startsWith( "go" ) ){
             this.addCredentialType( site, CredentialHandler.TYPE.x509   );
+        }
+        else if( url.startsWith( "gsiscp" ) ){
+        	// is this the correct place to verify the URL?
+        	if (url.indexOf("@") == -1) {
+        		throw new RuntimeException("Detected a gsiscp transfer without" +
+        				" username. Please specify a username in the URL." +
+        				" For example:" +
+        				" gsiftp://username@somehost.org:22/path/file");
+        	}
+            this.addCredentialType( site, CredentialHandler.TYPE.x509 );
         }
         else if( url.startsWith( "sshftp" ) ){
         	// is this the correct place to verify the URL?
@@ -1538,6 +1567,10 @@ public class Job extends Data implements GraphNodeContent{
      * @return the staged executable basename
      */
     public static String getStagedExecutableBaseName( String txNamespace, String txName, String txVersion ){
+        //PM-1222
+        if( txVersion != null && txVersion.indexOf( ".") != -1 ){
+            txVersion = txVersion.replaceAll( "\\.", "_" );
+        }
         return combine( txNamespace, txName, txVersion);
     }
 
@@ -1579,6 +1612,25 @@ public class Job extends Data implements GraphNodeContent{
     public void setArguments(String arguments){
         this.strargs = arguments;
     }
+    
+    /**
+     * Return the container to be used to launch the executable
+     * 
+     * @return 
+     */
+    public Container getContainer(){
+        return mContainer;
+    }
+    
+    /**
+     * Set the container to use.
+     * 
+     * @param container 
+     */
+    public void setContainer(Container container ){
+        this.mContainer = container;
+    }
+    
 
 
     /**
@@ -1968,6 +2020,7 @@ public class Job extends Data implements GraphNodeContent{
         append( sb, "Job Type Description", getJobTypeDescription(this.jobClass) , newline );
         append( sb, "Job Id" , this.jobID , newline );
         append( sb, "Runtime", this.mRuntime, newline  );
+        append( sb, "Container", this.mContainer, newline  );
         append( sb, "Executable" , this.executable , newline );
         append( sb, "Directory", this.mDirectory, newline );
         append( sb, "Condor Universe" , this.condorUniverse , newline );
@@ -2269,5 +2322,22 @@ public class Job extends Data implements GraphNodeContent{
         return sb.toString();
     }
 
+    /**
+     * Set the containing GraphNode object
+     * 
+     * @param node 
+     */
+    public void setGraphNodeReference(GraphNode node) {
+        this.mGraphNode = node;
+    }
+    
+    /**
+     * Returns the containing GraphNode object
+     * 
+     * @return node 
+     */
+    public GraphNode getGraphNodeReference() {
+        return this.mGraphNode;
+    }
 
 }

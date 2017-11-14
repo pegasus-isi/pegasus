@@ -1,0 +1,51 @@
+#!/bin/bash
+
+set -e
+
+# this variable is expanded by the planner when
+# parsing in the sites.xml file in the conf directory
+TOPDIR=`pwd`
+export TOPDIR
+
+# pegasus bin directory is needed to find keg
+BIN_DIR=`pegasus-config --bin`
+PEGASUS_LOCAL_BIN_DIR=$BIN_DIR
+export PEGASUS_LOCAL_BIN_DIR
+
+# determine TEST_NAME to setup site catalog
+if [ X${testdir} = "X" ]; then
+    testdir=`dirname  $0`
+fi
+TESTDIR=$(cd $testdir && pwd)
+TEST_NAME=`basename $TESTDIR`
+export TEST_NAME
+
+
+
+# generate the input file
+echo "This is sample input to KEG" >f.a
+shacmd=`sha256sum f.a`
+
+sha=`echo $shacmd | sed -E 's/([a-z0-9]*).*/\1/'`
+cat >./conf/rc.data<<EOF
+f.a file://$TOPDIR/f.a site="condorpool" checksum.type="sha256" checksum.value="$sha"
+
+EOF
+
+
+# generate the dax
+export PYTHONPATH=`pegasus-config --python`
+./blackdiamond.py $BIN_DIR > blackdiamond.dax
+
+# plan and submit the  workflow
+pegasus-plan \
+    --conf ./pegasusrc \
+    --sites condorpool \
+    --staging-site cartman-data \
+    --output-site local \
+    --dir dags \
+    --dax blackdiamond.dax \
+    --cluster horizontal \
+    --force \
+    -v \
+    --submit

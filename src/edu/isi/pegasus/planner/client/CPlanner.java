@@ -481,9 +481,7 @@ public class CPlanner extends Executable{
                                 dataConfiguration;
         mPMetrics.setDataConfiguration( dataConfiguration );
         mPMetrics.setPlannerOptions( mPOptions.getOriginalArgString() );
-        mPMetrics.setApplicationMetrics( mProps );
         
-
         //try to get hold of the vds properties
         //set in the jvm that user specifed at command line
         mPOptions.setVDSProperties(mProps.getMatchingProperties("pegasus.",false));
@@ -515,24 +513,32 @@ public class CPlanner extends Executable{
                                                                this.mProps ) );
 
         //set some initial workflow metrics
+        mPMetrics.setApplicationMetrics( mProps, orgDag.getLabel() );
         mPMetrics.setRootWorkflowUUID( orgDag.getRootWorkflowUUID() );
         mPMetrics.setWorkflowUUID( orgDag.getWorkflowUUID() );
         mPMetrics.setWorkflowMetrics( orgDag.getWorkflowMetrics() );
        
         //write out a the relevant properties to submit directory
         int state = 0;
-        String relativeSubmitDir; //the submit directory relative to the base specified
+        //the submit directory relative to the base specified . etermine on basis of --relative-submit-dir and --relative-dir
+        String relativeSubmitDir  = mPOptions.getRelativeSubmitDirectory(); 
+        String relativeExecDir    = mPOptions.getRelativeDirectory();
+        String defaultRelativeDir = null;
         try{
-            //determine the relative submit directory
-            relativeSubmitDir = ( mPOptions.getRelativeSubmitDirectory() == null )?
-                                    //create our own relative dir
-                                    determineRelativeSubmitDirectory( orgDag,
+            //create our own relative dir
+            defaultRelativeDir = determineRelativeSubmitDirectory( orgDag,
                                                                        baseDir,
                                                                        mUser,
                                                                        mPOptions.getVOGroup(),
-                                                                       mProps.useTimestampForDirectoryStructure() ):
-                                    mPOptions.getRelativeSubmitDirectory();
-
+                                                                       mProps.useTimestampForDirectoryStructure());
+            if( relativeSubmitDir == null ){
+                //PM-1113 relative submit directory is the default relative dir
+                relativeSubmitDir = defaultRelativeDir;
+            }
+            if( relativeExecDir == null ){
+                //PM-1113 relative submit directory is the default relative dir
+                relativeExecDir = defaultRelativeDir;
+            }
 
             mPOptions.setSubmitDirectory( baseDir, relativeSubmitDir  );
            
@@ -542,11 +548,7 @@ public class CPlanner extends Executable{
                 String launchDir = System.getProperty("user.dir") ;
                 mLogger.log( "The directory in which the planner was launched " + launchDir,
                               LogManager.CONFIG_MESSAGE_LEVEL );
-                mLogger.log( "The base submit directory for the planner " + baseDir,
-                              LogManager.CONFIG_MESSAGE_LEVEL );
-                mLogger.log( "The relative submit directory for the planner " + relativeSubmitDir,
-                              LogManager.CONFIG_MESSAGE_LEVEL );
-
+                
                 if ( !mPOptions.getForceReplan() ) {
                     //if --force-replan is not set handle
                     //rescue dags
@@ -610,33 +612,25 @@ public class CPlanner extends Executable{
                      LogManager.CONFIG_MESSAGE_LEVEL );
 
 
-        //check if a random directory is specified by the user
+        //PM-1113 check if a relativeExec dir needs to be updated because of --random-dir option
         if ( mPOptions.generateRandomDirectory() && mPOptions.getRandomDir() == null ) {
             //user has specified the random dir name but wants
             //to go with default name which is the flow id
             //for the workflow unless a basename is specified.
-            mPOptions.setRandomDir(getRandomDirectory(orgDag));
+            relativeExecDir = getRandomDirectory(orgDag);
         } 
         else if ( mPOptions.getRandomDir() != null ) {
-        //keep the name that the user passed
-        } 
-        else if ( mPOptions.getRelativeDirectory() != null ) {
-            //the relative-dir option  is used to construct
-            //the remote directory name
-            mPOptions.setRandomDir( mPOptions.getRelativeDirectory() );
+            //keep the name that the user passed
+            relativeExecDir = mPOptions.getRandomDir();
         }
-        else if ( relativeSubmitDir != null ) {
-            //the relative directory constructed on the submit host
-            //is the one required for remote sites
-            mPOptions.setRandomDir( relativeSubmitDir );
-
-            //also for time being set the relative dir option to
-            //same as the relative submit directory.
-            //Eventually we should have getRelativeExecDir function also
-            //SLS interfaces use getRelativeDir for time being.
-            mPOptions.setRelativeDirectory( relativeSubmitDir );
-        }
-
+        mLogger.log( "The base submit directory for the workflow        " + baseDir,
+                              LogManager.CONFIG_MESSAGE_LEVEL );
+        mLogger.log( "The relative submit directory for the workflow    " + relativeSubmitDir,
+                              LogManager.CONFIG_MESSAGE_LEVEL );
+        mLogger.log( "The relative execution directory for the workflow " + relativeExecDir,
+                              LogManager.CONFIG_MESSAGE_LEVEL );
+        mPOptions.setRandomDir( relativeExecDir );
+        
         //before starting the refinement process load
         //the stampede event generator and generate events for the dax
         generateStampedeEventsForAbstractWorkflow( orgDag, mBag );

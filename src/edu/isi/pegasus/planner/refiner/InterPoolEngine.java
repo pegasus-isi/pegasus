@@ -20,10 +20,10 @@ package edu.isi.pegasus.planner.refiner;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.common.util.Separator;
-import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.ADag;
@@ -31,7 +31,6 @@ import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
-import edu.isi.pegasus.planner.code.CodeGenerator;
 import edu.isi.pegasus.planner.code.CodeGeneratorFactory;
 import edu.isi.pegasus.planner.code.generator.Stampede;
 import edu.isi.pegasus.planner.common.PegRandom;
@@ -56,7 +55,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
 /**
@@ -281,15 +279,15 @@ public class InterPoolEngine extends Engine implements Refiner {
             if ( site == null ) {
                 error = new StringBuffer();
                 error.append( "Site Selector could not map the job " ).
-                        append( job.getCompleteTCName() ).append( " to any of the execution sites " ).
+                        append( job.getCompleteTCName() ).append( " with id ").append( job.getID() ).append( " to any of the execution sites " ).
                         append( sites ).append( " using the Transformation Mapper (" ).append( this.mTCMapper.getMode() ).
                         append( ")" ).
-                        append( "\n" ).
-                        append( "\nThis error is most likely due to an error in the transformation catalog." ).
-                        append( "\nMake sure that the ").append( job.getCompleteTCName() ).append(" transformation" ).
-                        append("\nexists with matching system information  for sites ").append(sites).append(" you are trying to plan for " ).
+                        append( "\n\n" ).
+                        append( "This error is most likely due to an error in the transformation catalog." ).
+                        append( " Please verify that the '").append( job.getCompleteTCName() ).append(" transformation" ).
+                        append("' exists with matching system information for the sites ").append(sites).append(" you are planning against: " ).
                         append(mSiteStore.getSysInfos( sites )).
-                      append( "\n" );
+                      append( "\n\n" );
                 mLogger.log( error.toString(),
                             LogManager.ERROR_MESSAGE_LEVEL );
                 throw new RuntimeException( error.toString() );
@@ -301,6 +299,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                 error = new StringBuffer();
                 error.append( "Site Selector (" ).append( mSiteSelector.description() ).
                       append( ") could not map job " ).append( job.getCompleteTCName() ).
+                      append( " with id ").append( job.getID() ).
                       append( " to any site" );
                 mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL );
                 throw new RuntimeException( error.toString() );
@@ -506,9 +505,17 @@ public class InterPoolEngine extends Engine implements Refiner {
         //handle dependant executables
         handleFileTransfersForDependantExecutables( job );
         
+        //PM-1195 check if any container transfers need to be done
+        FileTransfer cTx = handleFileTransfersForAssociatedContainer( job, entry  );
+        
         if( fTx != null ){
             //add the main executable back as input
             job.addInputFile( fTx);
+        }
+        if( cTx != null ){
+            mLogger.log( "Container Executable " + cTx.getLFN() + " for job " + job.getID() + " being staged from " +
+                          cTx.getSourceURL(), LogManager.DEBUG_MESSAGE_LEVEL );
+            job.addInputFile( cTx );
         }
     }
     
@@ -543,28 +550,10 @@ public class InterPoolEngine extends Engine implements Refiner {
             //accessible url
             fTx.addSource(entry.getResourceId(),
                            entry.getPhysicalTransformation());
-            StringBuffer externalStagedPath = new StringBuffer();
 
-
-            //PM-590 Stricter checks
-            FileServer headNodeScratchServer = site.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
-
-            if( headNodeScratchServer == null ){
-                this.complainForHeadNodeURLPrefix( REFINER_NAME,  site.getSiteHandle() , FileServer.OPERATION.put, job );
-            }
-            externalStagedPath.append( headNodeScratchServer.getURLPrefix() ).
-                       append( mSiteStore.getExternalWorkDirectory(headNodeScratchServer, site.getSiteHandle() )).
-                       append( File.separator ).append(  job.getStagedExecutableBaseName());
-
-            fTx.addDestination( stagingSiteHandle,
-                                externalStagedPath.toString() );
-
-
-            //the internal path needs to be set for the executable
-            String internalStagedPath =  mSiteStore.getInternalWorkDirectory( job, true )
-                                + File.separator + job.getStagedExecutableBaseName();
-
-            job.setRemoteExecutable(  internalStagedPath );
+            //PM-833 for executable staging set the executable only to basename only
+            //should work in all data configurations
+            job.setRemoteExecutable(  "." + File.separator + job.getStagedExecutableBaseName() );
             
             //setting the job type of the job to
             //denote the executable is being staged
@@ -577,6 +566,39 @@ public class InterPoolEngine extends Engine implements Refiner {
             //entry
             job.executable = entry.getPhysicalTransformation();
         }
+        
+        return fTx;
+    }
+    
+    /**
+     * Updates job and associates any container related file transfer
+     * 
+     * @param job 
+     */
+    private FileTransfer handleFileTransfersForAssociatedContainer(Job job, TransformationCatalogEntry entry) {
+        Container c = entry.getContainer();
+        if( c== null ){
+            //nothing to do
+            return null;
+        }
+        
+        //associate container with the job
+        job.setContainer(c);
+        mLogger.log( "Job " + job.getID() + " associated with container " + c.getLFN(), LogManager.DEBUG_MESSAGE_LEVEL );
+       
+        FileTransfer fTx = new FileTransfer( c.getLFN(),
+                                                 job.jobName);
+        fTx.setType(FileTransfer.DATA_FILE);
+
+        String site = c.getImageSite();
+        if( site == null ){
+            site = "CONTAINER_SITE";
+        }
+        //construct logical name of the container with the suffix if 
+        //it exists in the URL?
+        
+        fTx.addSource( site,
+                       c.getImageURL().getURL() );
         
         return fTx;
     }
@@ -647,27 +669,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                         //accessible url
                         fTx.addSource(tcEntry.getResourceId(),
                                       tcEntry.getPhysicalTransformation());
-                        //the destination url is the working directory for
-                        //pool where it needs to be staged to
-                        //always creating a third party transfer URL
-                        //for the destination.                        
-                        String stagedPath = mSiteStore.getInternalWorkDirectory( job, true )
-                            + File.separator + basename;
-
-                        //PM-590 Stricter checks
-                        //PM-686 construct the URL using the externally accessible path for work directory
-                        StringBuffer externalStagedPath = new StringBuffer();
-                        FileServer headNodeScratchServer = site.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
-
-                        if( headNodeScratchServer == null ){
-                            this.complainForHeadNodeURLPrefix( REFINER_NAME,  site.getSiteHandle() , FileServer.OPERATION.put, job );
-                        }
-                        externalStagedPath.append( headNodeScratchServer.getURLPrefix() ).
-                                           append( mSiteStore.getExternalWorkDirectory(headNodeScratchServer, site.getSiteHandle() )).
-                                           append( File.separator ).append(  basename );
-
-                        fTx.addDestination( stagingSiteHandle,
-                                            externalStagedPath.toString() );
+                        
 
                         dependantExecutables.add( fTx );
 
@@ -765,21 +767,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                 }
                 break;
 
-            // the hint Hints.JOBMANAGER_UNIVERSE_KEY is handled in
-            // Job class getGridGatewayJobType
-            /*
-            case 'j':
-                if (key.equals( Hints.JOBMANAGER_UNIVERSE_KEY  )) {
-                 job.condorUniverse = job.hints.containsKey( Hints.JOBMANAGER_UNIVERSE_KEY  ) ?
-                     (String) job.hints.removeKey( Hints.JOBMANAGER_UNIVERSE_KEY  ) :
-                     job.condorUniverse;
-
-                 return true;
-
-             }
-             break;
-             */
-
+            
             default:
                 break;
 
@@ -881,4 +869,5 @@ public class InterPoolEngine extends Engine implements Refiner {
         mLogger.logEventCompletion();
 
     }
+
 }

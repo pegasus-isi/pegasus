@@ -12,11 +12,17 @@ var chart;
 var chartOptions;
 var chartData =
 {
-    Running:
+    Others:
     {
         jobs: {{ counts.others - counts.others_workflow }},
         workflow: {{ counts.others_workflow }},
         total: {{ counts.others }}
+    },
+    Running:
+    {
+        jobs: {{ counts.running - counts.running_workflow }},
+        workflow: {{ counts.running_workflow }},
+        total: {{ counts.running }}
     },
     Successful:
     {
@@ -282,7 +288,7 @@ $(document).ready(function () {
             data: [
                 {
                     name: 'Running',
-                    y: {{ counts.others }},
+                    y: {{ counts.running }},
                     sliced: true,
                     selected: true
                 },
@@ -293,11 +299,14 @@ $(document).ready(function () {
                 {
                     name: 'Successful',
                     y: {{ counts.success }}
+                },
+                {
+                    name: 'Others',
+                    y: {{ counts.others }}
                 }]
         }]
     };
 
-    var stat_chart;
     var statOptions;
 
     statOptions =
@@ -338,8 +347,8 @@ $(document).ready(function () {
             name: 'Job Status',
             data: [
                 {
-                    name: 'Unsubmitted',
-                    y: {{ statistics ['unsubmitted-jobs'] }},
+                    name: 'Running',
+                    y: {{ statistics ['running-jobs'] }},
                     sliced: true,
                     selected: true
                 },
@@ -350,6 +359,10 @@ $(document).ready(function () {
                 {
                     name: 'Successful',
                     y: {{ statistics ['successful-jobs'] }}
+                },
+                {
+                    name: 'Unsubmitted',
+                    y: {{ statistics ['unsubmitted-jobs'] }},
                 }]
         }]
     };
@@ -397,7 +410,7 @@ $(document).ready(function () {
                         </tr>
                         <tr>
                             <th>Progress</th>
-                            <td>{{ workflow.state }}</td>
+                            <td>{{ workflow.state }}{%  if workflow.reason %} '{{ workflow.reason }}'{% endif %}</td>
                         </tr>
                         <tr>
                             <th>Submit Host</th>
@@ -497,8 +510,8 @@ $(document).ready(function () {
                         <tr>
                             <th>Job Name</th>
                             <th>Exit Code</th>
-                            <th>Standard Out</th>
-                            <th>Standard Error</th>
+                            <th>Application Stdout/Stderr</th>
+                            <th>Condor Stderr/Pegasus Lite Log</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -534,8 +547,8 @@ $(document).ready(function () {
                         <tr>
                             <th>Job Name</th>
                             <th>Exit Code</th>
-                            <th>Standard Out</th>
-                            <th>Standard Error</th>
+                            <th>Application Stdout/Stderr</th>
+                            <th>Condor Stderr/Pegasus Lite Log</th>
                         </tr>
                         </thead>
                         <tbody>

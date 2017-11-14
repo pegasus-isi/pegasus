@@ -4,6 +4,10 @@ tr curl {
         arch "{{arch}}"
         os "{{os}}"
         type "INSTALLED"
+{% if tutorial_setup == "bw-glite" %}
+        profile pegasus "cores" "1"
+        profile pegasus "ppn" "1"
+{% endif %}
     }
 }
 
@@ -13,5 +17,9 @@ tr wc {
         arch "{{arch}}"
         os "{{os}}"
         type "INSTALLED"
+{% if tutorial_setup == "bw-glite" %}
+        profile pegasus "cores" "1"
+        profile pegasus "ppn" "1"
+{% endif %}
     }
 }

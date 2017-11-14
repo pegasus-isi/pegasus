@@ -1,0 +1,106 @@
+{
+  "variables": {
+    "base_ovf_path": "",
+    "vm_name": "PegasusTutorialVM",
+    "vm_version": ""
+  },
+  "builders": [
+    {
+      "name": "aws",
+      "type": "virtualbox-ovf",
+      "source_path": "{{ user `base_ovf_path` }}",
+      "ssh_username": "root",
+      "ssh_password": "pegasus",
+      "ssh_port": 22,
+      "http_directory": "http",
+      "shutdown_command": "/sbin/halt -h --poweroff",
+      "shutdown_timeout": "5m",
+      "guest_additions_mode": "disable",
+      "headless": true,
+      "format": "ova",
+      "output_directory": "output/{{ build_name }}",
+      "vm_name": "{{ user `vm_name` }}-{{ user `vm_version` }}",
+      "vboxmanage": [
+        [ "modifyvm", "{{ .Name }}", "--cpus", "1" ],
+        [ "modifyvm", "{{ .Name }}", "--memory", "1024" ]
+      ]
+    },
+    {
+      "name": "virtualbox",
+      "type": "virtualbox-ovf",
+      "source_path": "{{ user `base_ovf_path` }}",
+      "ssh_username": "root",
+      "ssh_password": "pegasus",
+      "ssh_port": 22,
+      "http_directory": "http",
+      "shutdown_command": "/sbin/halt -h --poweroff",
+      "shutdown_timeout": "5m",
+      "guest_additions_path": "VBoxGuestAdditions_{{ .Version }}.iso",
+      "virtualbox_version_file": ".vbox_version",
+      "headless": true,
+      "format": "ova",
+      "output_directory": "output/{{ build_name }}",
+      "vm_name": "{{ user `vm_name` }}-{{ user `vm_version` }}",
+      "vboxmanage": [
+        [ "modifyvm", "{{ .Name }}", "--cpus", "1" ],
+        [ "modifyvm", "{{ .Name }}", "--memory", "1024" ],
+        [ "modifyvm", "{{ .Name }}", "--clipboard", "bidirectional" ]
+      ]
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "start_retry_timeout": "5m",
+      "scripts": [
+        "scripts/update.sh"
+      ]
+    },
+    {
+      "type": "shell",
+      "pause_before": "1m",
+      "environment_vars": [
+        "USERNAME=tutorial"
+      ],
+      "scripts": [
+        "scripts/xfce.sh",
+        "scripts/virtualbox/guest-additions.sh"
+      ],
+      "only": [
+        "virtualbox"
+      ]
+    },
+    {
+      "type": "shell",
+      "scripts": [
+        "scripts/aws/cloud-init.sh",
+        "scripts/secure-root.sh",
+        "scripts/aws/cleanup.sh"
+      ],
+      "only": [
+        "aws"
+      ]
+    },
+    {
+      "type": "shell",
+      "scripts": [
+        "scripts/pegasus-service.sh",
+        "scripts/jupyter.sh",
+        "scripts/cleanup.sh",
+        "scripts/zero.sh"
+      ]
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "amazon-import",
+      "skip_clean": false,
+      "region": "us-west-2",
+      "s3_bucket_name": "pegasus-tutorial-vm-bucket",
+      "only": [
+        "aws"
+      ]
+    }
+  ]
+}
+

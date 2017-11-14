@@ -35,6 +35,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
@@ -44,6 +45,7 @@ import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.namespace.ENV;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.mapper.StagingMapper;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import java.io.File;
@@ -158,6 +160,11 @@ public class Transfer   implements SLS {
      */
     protected boolean mUseSymLinks;
     
+    /**
+     * Handle to the staging mapper to determine addon's for LFN's per site.
+     */
+    protected StagingMapper mStagingMapper;
+    
 
     /**
      * The default constructor.
@@ -176,6 +183,7 @@ public class Transfer   implements SLS {
         mLogger     = bag.getLogger();
         mSiteStore  = bag.getHandleToSiteStore();
         mTCHandle   = bag.getHandleToTransformationCatalog();
+        mStagingMapper = bag.getStagingMapper();
         mExtraArguments = mProps.getSLSTransferArguments();
         mStageSLSFile = mProps.stageSLSFilesViaFirstLevelStaging();
         mBypassStagingForInputs = mProps.bypassFirstLevelStagingForInputs();
@@ -354,6 +362,17 @@ public class Transfer   implements SLS {
         Collection<FileTransfer> result = new LinkedList();
         String destDir = workerNodeDirectory;
         
+        //PM-1197 check to see if a job is to be launched in a container
+        Container c = job.getContainer();
+        String containerLFN = null;
+        if( c != null ){
+            containerLFN = c.getLFN();
+            if( this.mUseSymLinks ){
+                mLogger.log( "Symlink of data files will be disabled because job " + job.getID() + " is launched in a container " + containerLFN,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            }
+        }
+        
         //To do. distinguish the sls file from the other input files
         for( Iterator it = files.iterator(); it.hasNext(); ){
             PegasusFile pf = ( PegasusFile ) it.next();
@@ -414,6 +433,9 @@ public class Transfer   implements SLS {
                 else{
                     url.append( mSiteStore.getExternalWorkDirectoryURL(stagingSiteServer, stagingSite ));
                 }
+                //PM-833 append the relative staging site add on directory
+                url.append( File.separator).append( mStagingMapper.getRelativeDirectory(stagingSite, lfn) );
+                
                 url.append( File.separator ).append( lfn );
                 ft.addSource( stagingSite, url.toString() );
             }
@@ -430,6 +452,18 @@ public class Transfer   implements SLS {
                                 !pf.isExecutable() && //can only do symlinks for data files . not executables
                                 ft.getSourceURL().getKey().equals( job.getSiteHandle()) && //source URL logically on the same site where job is to be run
                                 url.toString().startsWith( PegasusURL.FILE_URL_SCHEME ) ); //source URL is a file URL
+                }
+            }
+            
+            if( symlink && containerLFN != null ){
+                //PM-1197 special handling for the case where job is to be
+                //launched in a container
+                
+                if( !pf.getLFN().equals( containerLFN ) ){
+                    //we can only symlink the container image.
+                    //data files can't be symlinked , as source directories are
+                    //not mounted in the container
+                    symlink = false;
                 }
             }
             
@@ -488,10 +522,13 @@ public class Transfer   implements SLS {
         String sourceDir = workerNodeDirectory;
 
         PegasusFile pf;
+        String stagingSite = job.getStagingSiteHandle();
+        String computeSite = job.getSiteHandle();
 
         //To do. distinguish the sls file from the other input files
         for( Iterator it = files.iterator(); it.hasNext(); ){
             pf = ( PegasusFile ) it.next();
+            String lfn = pf.getLFN();
 
             FileTransfer ft = new FileTransfer();
             //ensure that right type gets associated, especially
@@ -501,20 +538,33 @@ public class Transfer   implements SLS {
             //source
             StringBuffer url = new StringBuffer();
             url.append( "file://" ).append( sourceDir ).append( File.separator ).
-                append( pf.getLFN() );
+                append( lfn );
             ft.addSource( job.getSiteHandle(), url.toString() );
 
             //destination
             url = new StringBuffer();
-/*
-            url.append( destURLPrefix ).append( File.separator );
-            url.append( destDir ).append( File.separator );
- */
-            //on the head node
-            url.append( mSiteStore.getExternalWorkDirectoryURL(stagingSiteServer, job.getStagingSiteHandle() ));
-            url.append( File.separator ).append( pf.getLFN() );
             
-            ft.addDestination( job.getStagingSiteHandle(), url.toString() );
+            if( mUseSymLinks && computeSite.equals( stagingSite) ){
+                //PM-1108 symlinking is turned on and the compute site for
+                //the job is the same the staging site. This means that
+                //the shared-scratch directory used on the staging site is locally
+                //accessible to the compute nodes. So we can go directly via the
+                //filesystem to copy the file
+                url.append( PegasusURL.FILE_URL_SCHEME ).append( "//" ).
+                    append( stagingSiteDirectory );
+            }
+            else{
+                //PM-1108 we go through the external file server interface, since
+                //staging site is remote to the compute site
+                //on the head node
+                url.append( mSiteStore.getExternalWorkDirectoryURL(stagingSiteServer, job.getStagingSiteHandle() ));
+            }
+
+            //PM-833 append the relative staging site add on directory
+            url.append( File.separator).append( mStagingMapper.getRelativeDirectory(stagingSite, lfn) );
+            url.append( File.separator ).append( lfn );
+            
+            ft.addDestination( stagingSite, url.toString() );
 
             result.add(ft);
 
@@ -698,7 +748,6 @@ public class Transfer   implements SLS {
      * <pre>
      * PEGASUS_HOME
      * GLOBUS_LOCATION
-     * LD_LIBRARY_PATH
      * </pre>
      *
      *
@@ -717,24 +766,7 @@ public class Transfer   implements SLS {
 
         String globus = mSiteStore.getEnvironmentVariable( site, "GLOBUS_LOCATION" );
         if( globus != null ){
-            //check for LD_LIBRARY_PATH
-            String ldpath = mSiteStore.getEnvironmentVariable( site, "LD_LIBRARY_PATH" );
-            if ( ldpath == null ){
-                //construct a default LD_LIBRARY_PATH
-                ldpath = globus;
-                //remove trailing / if specified
-                ldpath = ( ldpath.charAt( ldpath.length() - 1 ) == File.separatorChar )?
-                                ldpath.substring( 0, ldpath.length() - 1 ):
-                                ldpath;
-
-                ldpath = ldpath + File.separator + "lib";
-                mLogger.log( "Constructed default LD_LIBRARY_PATH " + ldpath,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-            }
-
-            //we have both the environment variables
             result.add( new Profile( Profile.ENV, "GLOBUS_LOCATION", globus) );
-            result.add( new Profile( Profile.ENV, "LD_LIBRARY_PATH", ldpath) );
         }
 
         return result;

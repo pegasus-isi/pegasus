@@ -45,7 +45,7 @@ Python 2.6.2</programlisting></para>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">HTCondor (formerly Condor) 8.0 or higher</emphasis>. See
+        <para><emphasis role="bold">HTCondor (formerly Condor) 8.4 or higher</emphasis>. See
         <ulink
         url="http://www.cs.wisc.edu/htcondor/">http://www.cs.wisc.edu/htcondor/</ulink>
         for more information. You should be able to run
@@ -80,7 +80,7 @@ Python 2.6.2</programlisting></para>
     <para>Example for bourne shells:</para>
 
     <programlisting> 
-    $ <emphasis role="bold">export PATH=/some/install/pegasus-4.6.0/bin:$PATH</emphasis></programlisting>
+    $ <emphasis role="bold">export PATH=/some/install/pegasus-4.8.0/bin:$PATH</emphasis></programlisting>
 
     <note>
       <para>Pegasus 4.x is different from previous versions of Pegasus in that
@@ -99,17 +99,19 @@ $ <emphasis role="bold">export CLASSPATH=`pegasus-config --classpath`</emphasis>
 
   <section id="rhel">
     <title>RHEL / CentOS / Scientific Linux</title>
+    
+    <para>Binary packages provided for: RHEL 6 x86_64, RHEL 7 x86_64 (and OSes derived from RHEL: CentOS, SL)</para>
 
     <para>Add the Pegasus repository to yum downloading the Pegasus repos
     file and adding it to<emphasis role="bold">
     <filename>/etc/yum.repos.d/</filename></emphasis>. For RHEL 7 based
     systemes:</para>
 
-    <programlisting># <emphasis role="bold">wget -O /etc/yum.repos.d/pegasus.repo http://download.pegasus.isi.edu/wms/download/rhel/7/pegasus.repo</emphasis></programlisting>
+    <programlisting># <emphasis role="bold">wget -O /etc/yum.repos.d/pegasus.repo http://download.pegasus.isi.edu/pegasus/rhel/7/pegasus.repo</emphasis></programlisting>
 
     <para>For RHEL 6 based systems:</para>
 
-    <para><programlisting># <emphasis role="bold">wget -O /etc/yum.repos.d/pegasus.repo http://download.pegasus.isi.edu/wms/download/rhel/6/pegasus.repo</emphasis></programlisting></para>
+    <para><programlisting># <emphasis role="bold">wget -O /etc/yum.repos.d/pegasus.repo http://download.pegasus.isi.edu/pegasus/rhel/6/pegasus.repo</emphasis></programlisting></para>
 
     <para>Search for, and install Pegasus:</para>
 
@@ -127,6 +129,8 @@ Complete!</programlisting>
   
   <section id="ubuntu">
     <title>Ubuntu</title>
+    
+    <para>Binary packages provided for: 14.04 LTS (Trusty Tahr) x86_64, 16.04 (Xenial Xerus) x86_64</para>
 
     <para>To be able to install and upgrade from the Pegasus apt repository,
     you will have to trust the repository key. You only need to add the
@@ -136,7 +140,7 @@ Complete!</programlisting>
 
     <para>Create repository file, update and install Pegasus (currently available releases are precise and trusty):</para>
 
-    <programlisting># echo 'deb deb http://download.pegasus.isi.edu/wms/download/ubuntu trusty main' &gt;/etc/apt/sources.list.d/pegasus.list
+    <programlisting># echo 'deb http://download.pegasus.isi.edu/pegasus/ubuntu trusty main' &gt;/etc/apt/sources.list.d/pegasus.list
 # apt-get update
 # apt-get install pegasus
 </programlisting>
@@ -145,6 +149,8 @@ Complete!</programlisting>
 
   <section id="debian">
     <title>Debian</title>
+    
+    <para>Binary packages provided for: 7 (Wheezy) x86_64, 8 (Jessie) x86_64, 9 (Stretch) x86_64</para>
 
     <para>To be able to install and upgrade from the Pegasus apt repository,
     you will have to trust the repository key. You only need to add the
@@ -152,9 +158,9 @@ Complete!</programlisting>
 
 <programlisting># <emphasis role="bold">wget -O - http://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -</emphasis></programlisting>
 
-    <para>Create repository file, update and install Pegasus (currently available releases are wheezy and jessie):</para>
+    <para>Create repository file, update and install Pegasus (currently available releases are jessie (8) and stretch (9)):</para>
 
-    <programlisting># echo 'deb deb http://download.pegasus.isi.edu/wms/download/debian jessie main' &gt;/etc/apt/sources.list.d/pegasus.list
+    <programlisting># echo 'deb http://download.pegasus.isi.edu/pegasus/debian stretch main' &gt;/etc/apt/sources.list.d/pegasus.list
 # apt-get update
 # apt-get install pegasus
 </programlisting>

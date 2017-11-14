@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
+    xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.1.xsd" version="4.1">
 
     <!-- The local site contains information about the submit host -->
-    <site handle="local">
+    <site handle="local" arch="{{arch}}" os="{{os}}">
 {% if generate_tutorial == true %}
         <!-- This is where intermediate data will be stored -->
         <directory type="shared-scratch" path="{{workflowdir}}/scratch">
@@ -13,6 +13,9 @@
         <directory type="shared-storage" path="{{workflowdir}}/output">
             <file-server operation="all" url="file://{{workflowdir}}/output"/>
         </directory>
+{% if generate_tutorial == true and tutorial_setup == "bw-glite" %}
+	<profile namespace="env" key="JAVA_HOME">${JAVA_HOME}</profile>
+{% endif %}
 {% endif %}
     </site>
 
@@ -28,10 +31,10 @@
 
 {% endif %}
 {% if config == "glite" or config == "bosco" %}
-{% if generate_tutorial == true and tutorial_setup == "usc-hpcc" %}
+{% if generate_tutorial == true and (tutorial_setup == "usc-hpcc" or tutorial_setup== "bw-glite") %}
          <!-- Scratch directory on the cluster -->
-        <directory type="shared-scratch" path="{{workflowdir}}/hpcc/scratch">
-            <file-server operation="all" url="file://{{workflowdir}}/hpcc/scratch"/>
+        <directory type="shared-scratch" path="{{workflowdir}}/{{sitename}}/scratch">
+            <file-server operation="all" url="file://{{workflowdir}}/{{sitename}}/scratch"/>
         </directory>
 
 {% else %}
@@ -52,7 +55,7 @@
         </directory>
 
 {% endif %}
-{% if config == "condorpool" or  tutorial_setup == "submit-host"  %}
+{% if config == "condorpool" or  tutorial_setup == "submit-host" or tutorial_setup == "xsede-bosco" %}
         <!-- These profiles tell Pegasus that the site is a plain Condor pool -->
         <profile namespace="pegasus" key="style">condor</profile>
         <profile namespace="condor" key="universe">vanilla</profile>
@@ -89,16 +92,22 @@
         <profile namespace="condor" key="grid_resource">pbs</profile>
 
         <!-- This tells glite what batch queue to submit jobs to -->
-        <profile namespace="pegasus" key="queue">default</profile>
+        <profile namespace="pegasus" key="queue">{{compute_queue}}</profile>
 	
-{% if generate_tutorial == true and tutorial_setup == "usc-hpcc" %}
+{% if generate_tutorial == true %}
 	<!--- This tells pegasus to have the auxillary jobs run on submit host 
 	      and not go through the local PBS queue -->
-	<profile namespace="pegasus"	key="auxillary.local">true</profile>
-               
+	<profile namespace="pegasus" key="auxillary.local">true</profile>
+{% endif %}
+
+{% if tutorial_setup == "usc-hpcc" %}
 	<!-- This profile tells Pegasus where the worker package is installed on the site -->
         <!-- Without this, Pegasus will automatically stage a worker package to the site -->
-        <profile namespace="env" key="PEGASUS_HOME">/home/rcf-proj/gmj/pegasus/SOFTWARE/pegasus/default</profile> 
+        <profile namespace="env"   key="PEGASUS_HOME">/home/rcf-proj/gmj/pegasus/SOFTWARE/pegasus/default</profile> 
+{% elif tutorial_setup == "bw-glite" %}
+	<!-- This profile tells Pegasus where the worker package is installed on the site -->
+        <!-- Without this, Pegasus will automatically stage a worker package to the site -->
+        <profile namespace="env"  key="PEGASUS_HOME">/mnt/a/u/training/instr006/SOFTWARE/install/pegasus/default</profile> 
 {% else %}
         <!-- This tells what account/project to use. It maps to the '-A' PBS argument. -->
         <profile namespace="pegasus" key="project">MYPROJ123</profile>
@@ -106,5 +115,30 @@
 
 {% endif %}
 
+{% if generate_tutorial == true and tutorial_setup == "osg" %}
+	<profile namespace="pegasus" key="style" >condor</profile>
+        <profile namespace="condor" key="universe" >vanilla</profile>
+        <profile namespace="condor" key="requirements">OSGVO_OS_STRING == "RHEL 6" &amp;&amp; Arch == "X86_64" &amp;&amp;  HAS_MODULES == True</profile>
+        <profile namespace="condor" key="+ProjectName">"PegasusTraining"</profile>
+
+{% endif %}
+       <!-- This profile tells Pegasus to create two clustered jobs
+            per level of the workflow, when horizontal clustering is
+            enabled -->
+	<profile namespace="pegasus" key="clusters.num" >2</profile>
+
     </site>
+
+{% if generate_tutorial == true and tutorial_setup == "osg" %}
+    <site  handle="isi_workflow" arch="x86_64" os="LINUX">
+        <!-- we are going to use workflow for jobs to stage in data
+	    from and stage data out, when it executes on OSG -->	     
+        <directory type="shared-scratch" path="/local-scratch/http/${USER}/staging">
+            <file-server operation="get"  url="http://workflow.isi.edu/scratch/${USER}/staging"/>
+            <file-server operation="put"   url="scp://${USER}@workflow.isi.edu/local-scratch/http/${USER}/staging"/>
+        </directory>
+        <profile namespace="pegasus"  key="SSH_PRIVATE_KEY">${HOME}/.ssh/workflow</profile>
+    </site>
+{% endif %}
+
 </sitecatalog>

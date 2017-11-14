@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Iterator;
 import edu.isi.pegasus.common.util.Separator;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -184,7 +185,7 @@ public abstract class Abstract implements JobAggregator {
         setDirectory( bag.getPlannerOptions().getSubmitDirectory() );
 
         mGridStartFactory = new GridStartFactory();
-        mGridStartFactory.initialize( mBag, dag );
+        mGridStartFactory.initialize( mBag, dag, null );
 
 
     }
@@ -278,13 +279,6 @@ public abstract class Abstract implements JobAggregator {
         mLogger.log("Constructing Abstract clustered job " + mergedJobName,
                     LogManager.DEBUG_MESSAGE_LEVEL);
 
-
-        //enable the jobs that need to be merged
-        //before writing out the stdin file
-//        String gridStartPath = site.getKickstartPath();
-//        GridStart gridStart = mGridStartFactory.loadGridStart( firstJob,  gridStartPath );
-//        mergedJob = gridStart.enable( mergedJob, jobs );
-
         //inconsistency between job name and logical name for now
         mergedJob.setName( mergedJobName );
 
@@ -298,6 +292,7 @@ public abstract class Abstract implements JobAggregator {
         Set ipFiles = new HashSet();
         Set opFiles = new HashSet();
         boolean userExecutablesStaged = false;
+        Container c = firstJob.getContainer();
         for( Iterator it = jobs.iterator(); it.hasNext(); ) {
                 job = (Job) it.next();
                 ipFiles.addAll( job.getInputFiles() );
@@ -313,8 +308,19 @@ public abstract class Abstract implements JobAggregator {
                 //merge profiles for all jobs
                 mergedJob.mergeProfiles( job );
 
+                //PM-1194 we want to merge only those jobs whose containers match
+                if( job.getContainer() != c ){
+                    StringBuilder error = new StringBuilder();
+                    error.append( "Cannot cluster jobs with different types of containers associated. " ).
+                          append( "Container for job " ).append( job.getID() ).append( " - " ).append( job.getContainer()).
+                          append( "does not match with job ").append( firstJob.getID() ).append( " - " ).append( firstJob.getContainer());
+                    throw new RuntimeException( error.toString() );
+                }
         }
 
+        //PM-1194 set the container for clustered job
+        mergedJob.setContainer( c );
+        
         mergedJob.setExecutableStagingForJob(userExecutablesStaged);
         
         //overriding the input files, output files, id
@@ -360,20 +366,8 @@ public abstract class Abstract implements JobAggregator {
         //input files. So doing the set thing is redundant.
         //Hashset not used correctly
 
-  
-//        mergedJob = enable( mergedJob, jobs  );
-
-
-
         File stdIn = writeOutInputFileForJobAggregator( job );
         
-        
-/*      JIRA PM-277
-        job.setUniverse( firstJob.getUniverse() );
-        job.setJobManager( firstJob.getJobManager() );
-*/
-        
-
         //the executable that fat job refers to is collapser
         TransformationCatalogEntry entry = this.getTCEntry( job );
 
@@ -392,20 +386,6 @@ public abstract class Abstract implements JobAggregator {
         
         //get hold of one of the jobs and suck init's globus namespace
         //info into the the map.
-
-        /* Not needed, as the clone method would have taken care of it.
-           Karan Sept 09, 2004
-        entry = getTCEntry(job);
-        mergedJob.globusRSL.checkKeyInNS(entry.getProfiles(Profile.GLOBUS));
-        */
-
-        //also put in jobType as mpi
-        //mergedJob.globusRSL.checkKeyinNS("jobtype","mpi");
-
-        //the profile information from the pool catalog does not need to be
-        //assimilated into the job. As the collapsed job is run on the
-        //same pool as the job is run
-        // mergedJob.updateProfiles(mPoolHandle.getPoolProfile(mergedJob.executionPool));
 
         //add any notifications specified in the transformation
         //catalog for the job. JIRA PM-391

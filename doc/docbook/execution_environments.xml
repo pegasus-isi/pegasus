@@ -19,11 +19,10 @@
     notifications).</para>
 
     <para>Running on a local HTCondor pool is achieved by executing the
-    workflow on site local ( <emphasis role="bold">--sites
-    local</emphasis>option to pegasus-plan ). The site "local" is a reserved
-    site in Pegasus and results in the jobs to run on the submit host in
-    HTCondor universe local. The site catalog can be left very simple in this
-    case:</para>
+    workflow on site local (<emphasis role="bold">--sites local</emphasis>
+    option to pegasus-plan). The site "local" is a reserved site in Pegasus
+    and results in the jobs to run on the submit host in HTCondor universe
+    local. The site catalog can be left very simple in this case:</para>
 
     <programlisting>
 &lt;?xml version="1.0" encoding="UTF-8"?&gt;
@@ -260,7 +259,7 @@
       following in their properties</para>
 
       <programlisting># pegasus properties
-pegasus.data.configuration    HTCondorio</programlisting>
+pegasus.data.configuration    condorio</programlisting>
     </section>
   </section>
 
@@ -310,9 +309,9 @@ pegasus.data.configuration    HTCondorio</programlisting>
     the object storage solution offered by the cloud providers</para>
 
     <para>Once resources begin appearing in the pool managed by the submit
-    machine&amp;rsquor;s HTCondor collector, the application workflow can be
-    submitted to HTCondor. A HTCondor DAGMan will manage the application
-    workflow execution. Pegasus run-time tools obtain timing-, performance and
+    machine's HTCondor collector, the application workflow can be submitted to
+    HTCondor. A HTCondor DAGMan will manage the application workflow
+    execution. Pegasus run-time tools obtain timing-, performance and
     provenance information as the application workflow is executed. At this
     point, it is the user's responsibility to de-provision the allocated
     resources.</para>
@@ -426,6 +425,214 @@ pegasus.data.configuration    HTCondorio</programlisting>
 &lt;/sitecatalog&gt;
 </programlisting>
     </section>
+  </section>
+  
+  <section id="pyglidein">
+    <title>Remote Cluster using PyGlidein</title>
+    
+    <para>
+      Glideins (HTCondor pilot jobs) provide an efficient solution for high-throughput workflows.
+      The glideins are submitted to the remote cluster scheduler, and once started up, makes it appear
+      like your HTCondor pool extends into the remote cluster. HTCondor can then
+      schedule the jobs to the remote compute node in the same way it would schedule jobs
+      to local compute nodes.
+    </para>
+    
+    <para>
+      Some infrastructures, such as <link linkend="open_science_grid">Open Science Grid</link>,
+      provide infrastructure level glidein solutions,
+      such as GlideinWMS. Another solution is <link linkend="bosco">BOSCO</link>. For some more
+      custom setups, 
+      <ulink url="https://github.com/WIPACrepo/pyglidein">pyglidein</ulink> from the
+      <ulink url="http://icecube.wisc.edu/">IceCube</ulink> project provides a nice framework.
+      The architecture consists on a server on the submit host, which job it is to determining the demand.
+      On the remote resource, the client can be invoked for example via cron, and submits directly
+      to HTCondor, SLURM and PBS schedulers. This makes pyglidein very flexible and works well for
+      example if the resource requires two-factor authentication. 
+    </para>
+    
+        <para><figure id="fig-pyglidein">
+        <title>pyglidein overview</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata align="center" contentdepth="100%"
+                       fileref="images/pyglidein.png" scalefit="1"
+                       valign="middle" width="100%"/>
+          </imageobject>
+        </mediaobject>
+      </figure></para>
+    
+    <para>
+      To get started with pyglidein, check out a copy of the Git repository on both your submit
+      host as well as the cluster you want to glidein to. Starting with the submit host, first
+      make sure you have HTCondor configured for
+      <ulink url="http://research.cs.wisc.edu/htcondor/manual/current/3_8Security.html#SECTION00483400000000000000">PASSWORD</ulink>
+      authentication. Make a copy of the HTCondor pool password file. You will need it on the
+      cluster, and it is a binary file, so make sure you cp instead of a copy-and-paste of the 
+      file contents. To get the server started:
+    </para>
+    
+    <programlisting>
+./server.py --port 11001  
+    </programlisting>
+    
+    <para>
+      By default, the pyglidein server will use all jobs in the system to determine if glideins
+      are needed. If you want user jobs to explicitly let us know they want glideins, you can pass
+      a constraint for the server to use. For example, jobs could have the 
+      <emphasis>+WantStampede2 = True</emphasis> attribute, and then we could start the
+      server with:
+    </para>
+    
+    <programlisting>
+./server.py --port 11001 --constraint "'WantStampede2 == True'"  
+    </programlisting>
+    
+    <para>
+      One the server is running, you can check status by pointing a web browser to it.
+    </para>
+    
+    <para>
+      Next step is to create a <emphasis>glidein.tar.gz</emphasis> file containing
+      the HTCondor binaries, our pool password file, and a modified job wrapper script.
+      This can be accomplished by building HTCondor with the
+      <emphasis>create_glidein_tarball.py</emphasis> script, but first we need to modify
+      <emphasis>glidein_template/</emphasis>. Start by copying your pool password file
+      over the existing <emphasis>passwdfile</emphasis> file.
+    </para>
+    
+    <para>
+      Edit <emphasis>user_job_wrapper.sh</emphasis>. We don't need most of it, so
+      edit it to read:
+    </para>
+    
+    <programlisting>
+#!/bin/bash
+
+# This script is started just before the user job
+# It is referenced by the USER_JOB_WRAPPER
+
+export HOME=$PWD
+
+# fix PATH and LD_LIBRARY_PATH
+export PATH=$PATH:/usr/bin:/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib:/usr/lib/x86_64-linux-gnu:/lib64:/lib:/lib/x86_64-linux-gnu
+
+GLIDEIN_DIR=$GLIDEIN_LOCAL_TMP_DIR
+if [ ! -d $GLIDEIN_DIR ]; then
+    GLIDEIN_DIR=$PWD
+fi
+JOB_WRAPPER="${GLIDEIN_DIR}/job_wrapper.sh"
+
+# fall through to next/default job wrapper
+if [ ! -e $JOB_WRAPPER ]; then
+    exec "$@"
+else
+    exec ${JOB_WRAPPER} "$@"
+fi   
+    </programlisting>
+    
+    <para>
+      Create the glidein.tar.gz by running:
+    </para>  
+    
+    <programlisting>
+python create_glidein_tarball.py
+    </programlisting>
+    
+    <para>
+      Once you have the glidein.tar.gz file, copy it to the Git checkout you have on 
+      the remote cluster. Then move over there for the remaining steps. Create a 
+      configuration file for your glidein under <emphasis>configs/</emphasis>. Here
+      is an example for TACC Stampede2:
+    </para>
+    
+    <programlisting>
+[Mode]
+debug = True
+
+[Glidein]
+address = http://workflow.isi.edu:11001/jsonrpc
+site = TACC-Stampede2
+tarball = /home1/00384/rynge/git/pyglidein/glidein.tar.gz
+
+[Cluster]
+user = rynge
+os = RHEL7
+scheduler = slurm
+submit_command = sbatch
+walltime_hrs = 48
+max_total_jobs = 10
+max_idle_jobs = 1
+limit_per_submit = 1
+
+gpu_only = False
+whole_node = True
+whole_node_cpus = 1
+whole_node_memory = 96000
+whole_node_disk = 30000
+whole_node_gpus = 0
+group_jobs = False
+partition = normal
+running_cmd = squeue -u $USER -t RUNNING -p normal -h | wc -l
+idle_cmd = squeue -u $USER -t PENDING -p normal -h | wc -l
+
+[SubmitFile]
+filename = submit.slurm
+local_dir = /tmp/$SLURM_JOB_ID
+custom_header = #SBATCH -A TG-ABC00001
+cvmfs_job_wrapper = False
+
+[CustomEnv]
+CLUSTER = workflow.isi.edu
+    </programlisting>
+    
+    <para>
+      This configuration will obviously look different for different clusters.
+      <emphasis>configs/</emphasis> has a bunch of example configs, but a few things to 
+      note: 
+    </para>
+    
+    <itemizedlist>
+      <listitem>
+        <para><emphasis role="bold">address</emphasis> is the location of the server
+        we started earlier</para>
+      </listitem>
+      <listitem>
+        <para><emphasis role="bold">tarball</emphasis> is the full path to our custom
+        glidein.tar.gz file we created above.</para>
+      </listitem>    
+      <listitem>
+        <para><emphasis role="bold">CLUSTER</emphasis> is the location of your
+        HTCondor central manager. In many cases this is the same host you started
+        the server on. Please note that if you do not set this variable, the
+        glideins will try to register into the IceCube infrastructure.</para>
+      </listitem>   
+    </itemizedlist>
+    
+    <para>
+      At this point we can try our first glidein:
+    </para>
+    
+    <programlisting>
+./client.py --config=$HOME/git/pyglidein/configs/stampede2.config
+    </programlisting>
+    
+    <para>
+      Once we have a seen a successful glidein, we can add the client to the crontab:
+    </para>
+    
+    <programlisting>
+# m  h  dom mon dow   command
+*/10 *   *   *   *    (cd ~/git/pyglidein/ &amp;&amp; ./client.py --config=$HOME/git/pyglidein/configs/stampede2.config) &gt;~/cron-pyglidein.log 2&gt;&amp;1
+    </programlisting>
+    
+    <para>
+      With this setup, glideins will now appear automatically based on the demand in the local
+      HTCondor queue.
+    </para>
+    
   </section>
 
   <section id="globus_gram">
@@ -639,12 +846,12 @@ pegasus.data.configuration    HTCondorio</programlisting>
     </note>
 
     <tip>
-      <para>This guide covers PBS, SGE and Moab, but glite also works with other
-      PBS-like batch systems, including LSF, SLURM, and others. If you need
-      help configuring Pegasus and HTCondor to work with one of these systems,
-      please contact pegasus-support@isi.edu. For the sake of brevity, the
-      text below will say "PBS", but you should read that as "PBS or PBS-like
-      system such as SGE, Moab, LSF, SLURM and others".</para>
+      <para>This guide covers PBS, SGE and Moab, but glite also works with
+      other PBS-like batch systems, including LSF, SLURM, Cobalt and others.
+      If you need help configuring Pegasus and HTCondor to work with one of
+      these systems, please contact pegasus-support@isi.edu. For the sake of
+      brevity, the text below will say "PBS", but you should read that as "PBS
+      or PBS-like system such as SGE, Moab, LSF, SLURM and others".</para>
     </tip>
 
     <para>Glite needs to be able to talk directly with the batch system
@@ -654,7 +861,7 @@ pegasus.data.configuration    HTCondorio</programlisting>
     local HTCondor can be used to submit jobs via glite (with some
     modifications described below). If you need to SSH to a different cluster
     head node in order to submit jobs to the PBS system, then you need to use
-    Bosco, which is <link linkend="bosco"> documented in another
+    BOSCO, which is <link linkend="bosco"> documented in another
     section</link>.</para>
 
     <tip>
@@ -669,8 +876,8 @@ pegasus.data.configuration    HTCondorio</programlisting>
     </tip>
 
     <para>In either case, you need to modifiy the HTCondor glite installation
-    that will be used to submit jobs to the PBS system. To do this, run
-    the <literal>pegasus-configure-glite</literal> command. This command will
+    that will be used to submit jobs to the PBS system. To do this, run the
+    <literal>pegasus-configure-glite</literal> command. This command will
     install all the required scripts to map Pegasus profiles to batch-system
     specific job attributes, and add support for Moab. You may need to run it
     as root depending on how you installed Condor.</para>
@@ -689,8 +896,8 @@ pegasus.data.configuration    HTCondorio</programlisting>
       <listitem>
         <para><emphasis role="bold">condor</emphasis> profile <emphasis
         role="bold">grid_resource</emphasis> with value set to <emphasis
-        role="bold">batch pbs</emphasis> or <emphasis role="bold">batch sge</emphasis>
-        or <emphasis role="bold">batch moab</emphasis>.</para>
+        role="bold">batch pbs</emphasis> or <emphasis role="bold">batch
+        sge</emphasis> or <emphasis role="bold">batch moab</emphasis>.</para>
       </listitem>
     </orderedlist>
 
@@ -742,10 +949,9 @@ pegasus.data.configuration    HTCondorio</programlisting>
     job based on the Pegasus profiles associated with the job. This expression
     is passed to glite and used by the
     <literal>*_local_submit_attributes.sh</literal> scripts installed by
-    <literal>pegasus-configure-glite</literal> to generate the
-    correct batch submit script. An example
-    <literal>+remote_cerequirements</literal> classad expression in the
-    HTCondor submit file looks like this:</para>
+    <literal>pegasus-configure-glite</literal> to generate the correct batch
+    submit script. An example <literal>+remote_cerequirements</literal>
+    classad expression in the HTCondor submit file looks like this:</para>
 
     <programlisting><emphasis role="bold">+remote_cerequirements = JOBNAME=="preprocessj1" &amp;&amp; PASSENV==1 &amp;&amp; WALLTIME=="01:00:00" &amp;&amp; \
  EXTRA_ARGUMENTS=="-N testjob -l walltime=01:23:45 -l nodes=2" &amp;&amp; \
@@ -767,14 +973,21 @@ pegasus.data.configuration    HTCondorio</programlisting>
       <table>
         <title>Mapping of Pegasus Profiles to Job Requirements</title>
 
-        <tgroup cols="6">
+        <tgroup cols="7">
           <thead>
             <row>
               <entry align="center">Profile Key</entry>
+
               <entry align="center">Key in +remote_cerequirements</entry>
+
               <entry>PBS Parameter</entry>
+
               <entry>SGE Parameter</entry>
+
               <entry>Moab Parameter</entry>
+
+              <entry>Cobalt Parameter</entry>
+
               <entry>Description</entry>
             </row>
           </thead>
@@ -782,10 +995,17 @@ pegasus.data.configuration    HTCondorio</programlisting>
           <tbody>
             <row>
               <entry>pegasus.cores</entry>
+
               <entry>CORES</entry>
+
               <entry>n/a</entry>
+
               <entry>-pe ompi</entry>
+
               <entry>n/a</entry>
+
+              <entry>--proccount cores</entry>
+
               <entry>Pegasus uses cores to calculate either nodes or ppn. If
               cores and ppn are specified, then nodes is computed. If cores
               and nodes is specified, then ppn is computed. If both nodes and
@@ -794,36 +1014,57 @@ pegasus.data.configuration    HTCondorio</programlisting>
               and Moab. If neither nodes nor ppn is specified, then no
               requirements are set in the PBS or Moab submit script. For SGE,
               how the processes are distributed over nodes depends on how the
-              parallel environment has been configured; it is set to 'ompi'
-              by default.</entry>
+              parallel environment has been configured; it is set to 'ompi' by
+              default.</entry>
             </row>
 
             <row>
               <entry>pegasus.nodes</entry>
+
               <entry>NODES</entry>
+
               <entry>-l nodes</entry>
+
               <entry>n/a</entry>
+
               <entry>-l nodes</entry>
+
+              <entry>-n nodes</entry>
+
               <entry>This specifies the number of nodes that the job should
               use. This is not used for SGE.</entry>
             </row>
 
             <row>
               <entry>pegasus.ppn</entry>
+
               <entry>PROCS</entry>
+
               <entry>-l ppn</entry>
+
               <entry>n/a</entry>
+
               <entry>-l ppn</entry>
+
+              <entry>--mode c[ppn]</entry>
+
               <entry>This specifies the number of processors per node that the
               job should use. This is not used for SGE.</entry>
             </row>
 
             <row>
               <entry>pegasus.runtime</entry>
+
               <entry>WALLTIME</entry>
+
               <entry>-l walltime</entry>
+
               <entry>-l h_rt</entry>
+
               <entry>-l walltime</entry>
+
+              <entry>-t walltime</entry>
+
               <entry>This specifies the maximum runtime for the job in
               seconds. It should be an integer value. Pegasus converts it to
               the "hh:mm:ss" format required by the batch system. The value is
@@ -832,34 +1073,55 @@ pegasus.data.configuration    HTCondorio</programlisting>
 
             <row>
               <entry>pegasus.memory</entry>
+
               <entry>PER_PROCESS_MEMORY</entry>
+
               <entry>-l pmem</entry>
+
               <entry>-l h_vmem</entry>
+
               <entry>-l pmem</entry>
+
+              <entry>n/a</entry>
+
               <entry>This specifies the maximum amount of physical memory used
               by any process in the job. For example, if the job runs four
               processes and each requires up to 2 GB (gigabytes) of memory,
-              then this value should be set to "2gb" for PBS and Moab, and "2G"
-              for SGE. The corresponding PBS directive would be
-              "#PBS -l pmem=2gb".</entry>
+              then this value should be set to "2gb" for PBS and Moab, and
+              "2G" for SGE. The corresponding PBS directive would be "#PBS -l
+              pmem=2gb".</entry>
             </row>
 
             <row>
               <entry>pegasus.project</entry>
+
               <entry>PROJECT</entry>
-              <entry>-A</entry>
+
+              <entry>-A project_name</entry>
+
               <entry>n/a</entry>
-              <entry>-A</entry>
+
+              <entry>-A project_name</entry>
+
+              <entry>-A project_name</entry>
+
               <entry>Causes the job time to be charged to or associated with a
               particular project/account. This is not used for SGE.</entry>
             </row>
 
             <row>
               <entry>pegasus.queue</entry>
+
               <entry>n/a</entry>
+
               <entry>-q</entry>
+
               <entry>-q</entry>
+
               <entry>-q</entry>
+
+              <entry/>
+
               <entry>This specifies the queue for the job. This profile does
               not have a corresponding value in
               <literal>+remote_cerequirements</literal>. Instead, Pegasus sets
@@ -870,10 +1132,17 @@ pegasus.data.configuration    HTCondorio</programlisting>
 
             <row>
               <entry>globus.totalmemory</entry>
+
               <entry>TOTAL_MEMORY</entry>
+
               <entry>-l mem</entry>
+
               <entry>n/a</entry>
+
               <entry>-l mem</entry>
+
+              <entry>n/a</entry>
+
               <entry>The total memory that your job requires. It is usually
               better to just specify the pegasus.memory profile. This is not
               mapped for SGE.</entry>
@@ -881,19 +1150,26 @@ pegasus.data.configuration    HTCondorio</programlisting>
 
             <row>
               <entry>pegasus.glite.arguments</entry>
+
               <entry>EXTRA_ARGUMENTS</entry>
+
               <entry>prefixed by "#PBS"</entry>
+
               <entry>prefixed by "#?"</entry>
+
               <entry>prefixed by "#MSUB"</entry>
+
+              <entry>n/a</entry>
+
               <entry>This specifies the extra arguments that must appear in
-              the generated submit script for a job. The value of this
-              profile is added to the submit script prefixed by the batch
-              system-specific value. These requirements
-              override any requirements specified using other profiles. This
-              is useful when you want to pass through special options to the
-              underlying batch system. For example, on the USC cluster we use
-              resource properties to specify the network type. If you want to
-              use the Myrinet network, you must specify something like "-l
+              the generated submit script for a job. The value of this profile
+              is added to the submit script prefixed by the batch
+              system-specific value. These requirements override any
+              requirements specified using other profiles. This is useful when
+              you want to pass through special options to the underlying batch
+              system. For example, on the USC cluster we use resource
+              properties to specify the network type. If you want to use the
+              Myrinet network, you must specify something like "-l
               nodes=8:ppn=2:myri". For infiniband, you would use something
               like "-l nodes=8:ppn=2:IB". In that case, both the nodes and ppn
               profiles would be effectively ignored.</entry>
@@ -923,24 +1199,23 @@ pegasus.data.configuration    HTCondorio</programlisting>
   </section>
 
   <section id="bosco_sdsc">
-    <title>SDSC Comet with Bosco glideins</title>
+    <title>SDSC Comet with BOSCO glideins</title>
 
-    <para>Bosco documentation: <ulink url="https://twiki.opensciencegrid.org/bin/view/CampusGrids/BoSCO">https://twiki.opensciencegrid.org/bin/view/CampusGrids/BoSCO</ulink></para>
+    <para>BOSCO documentation: <ulink
+    url="https://twiki.opensciencegrid.org/bin/view/CampusGrids/BoSCO">https://twiki.opensciencegrid.org/bin/view/CampusGrids/BoSCO</ulink></para>
 
-    <para>Bosco is part of the HTCondor system which allows you to set up
-        a personal pool of resources brought in from a remote cluster. In 
-        this section, we describe how to use Bosco to run glideins (pilot
-        jobs) dynamically on the SDSC Comet cluster. The glideins are 
-        submitted based on the demand of the user jobs in the pool.
-    </para>
+    <para>BOSCO is part of the HTCondor system which allows you to set up a
+    personal pool of resources brought in from a remote cluster. In this
+    section, we describe how to use BOSCO to run glideins (pilot jobs)
+    dynamically on the SDSC Comet cluster. The glideins are submitted based on
+    the demand of the user jobs in the pool.</para>
 
     <para>As your regular user, on the host you want to use as a workflow
-        submit host, download the latest version of HTCondor from the
-        <ulink url="https://research.cs.wisc.edu/htcondor/downloads/>">HTCondor Download page</ulink>.
-        At this point the latest version was 8.5.2 and we downloaded
-        condor-8.5.2-x86_64_RedHat6-stripped.tar.gz. Untar, and run the
-        installer:
-    </para>
+    submit host, download the latest version of HTCondor from the <ulink
+    url="https://research.cs.wisc.edu/htcondor/downloads/&gt;">HTCondor
+    Download page</ulink>. At this point the latest version was 8.5.2 and we
+    downloaded condor-8.5.2-x86_64_RedHat6-stripped.tar.gz. Untar, and run the
+    installer:</para>
 
     <programlisting>
 $ tar xzf condor-8.5.2-x86_64_RedHat6-stripped.tar.gz
@@ -953,13 +1228,11 @@ be placed in your login scripts:
    source /home/$USER/bosco/bosco_setenv
     </programlisting>
 
-    <para>
-        Source the setup file as instructed, run
-        <emphasis>bosco_start</emphasis>, and then test that 
-        <emphasis>condor_q</emphasis> and <emphasis>condor_status</emphasis>
-        works.
-    </para>
-    
+    <para>Source the setup file as instructed, run
+    <emphasis>bosco_start</emphasis>, and then test that
+    <emphasis>condor_q</emphasis> and <emphasis>condor_status</emphasis>
+    works.</para>
+
     <programlisting>
 $ source /home/$USER/bosco/bosco_setenv
 $ condor_q
@@ -971,23 +1244,19 @@ $ condor_q
 $ condor_status
     </programlisting>
 
-    <para>
-        Let's tell Bosco about our SDSC Comet account:
-    </para>
-    
+    <para>Let's tell BOSCO about our SDSC Comet account:</para>
+
     <programlisting>
 $ bosco_cluster -a YOUR_SDSC_USERNAME@comet-ln2.sdsc.edu pbs
     </programlisting>
 
-    <para>
-        Bosco needs a little bit more information to be able to submit 
-        the glideins to Comet. Log in to your Comet account via ssh
-        (important - this step has to take place on Comet) and create
-        the <emphasis>~/bosco/glite/bin/pbs_local_submit_attributes.sh</emphasis>
-        file with the following content. You can find your allocation by 
-        running <emphasis>show_accounts</emphasis> and looking at the project
-        column.
-    </para>
+    <para>BOSCO needs a little bit more information to be able to submit the
+    glideins to Comet. Log in to your Comet account via ssh (important - this
+    step has to take place on Comet) and create the
+    <emphasis>~/bosco/glite/bin/pbs_local_submit_attributes.sh</emphasis> file
+    with the following content. You can find your allocation by running
+    <emphasis>show_accounts</emphasis> and looking at the project
+    column.</para>
 
     <programlisting>
 echo "#PBS -q compute"
@@ -996,22 +1265,18 @@ echo "#PBS -l walltime=24:00:00"
 echo "#PBS -A [YOUR_COMET_ALLOCATION]"
     </programlisting>
 
-    <para>
-        Also chmod the file:
-    </para>
-    
+    <para>Also chmod the file:</para>
+
     <programlisting>
 $ chmod 755 ~/bosco/glite/bin/pbs_local_submit_attributes.sh
     </programlisting>
 
-    <para>
-        Log out of Comet, and get back into the host and user Bosco was installed
-        into. We also need to edit a few files on that host. 
-        <emphasis>~/bosco/libexec/campus_factory/share/glidein_jobs/glidein_wrapper.sh</emphasis>
-        has a bug in some versions of HTCondor. Open up the file and make sure the
-        eval line in the beginning is below the unset/export HOME section. If that
-        is not the case, edit the file to look like:
-    </para>
+    <para>Log out of Comet, and get back into the host and user BOSCO was
+    installed into. We also need to edit a few files on that host.
+    <emphasis>~/bosco/libexec/campus_factory/share/glidein_jobs/glidein_wrapper.sh</emphasis>
+    has a bug in some versions of HTCondor. Open up the file and make sure the
+    eval line in the beginning is below the unset/export HOME section. If that
+    is not the case, edit the file to look like:</para>
 
     <programlisting>
 #!/bin/sh 
@@ -1025,12 +1290,10 @@ export HOME
 eval campus_factory_dir=$_campusfactory_CAMPUSFACTORY_LOCATION
     </programlisting>
 
-    <para>
-        If the order of the HOME and eval statements are reversed in your file, change them
-        to look like the above. At the end of
-        <emphasis>~/bosco/libexec/campus_factory/share/glidein_jobs/glidein_condor_config</emphasis>
-        add:
-    </para>
+    <para>If the order of the HOME and eval statements are reversed in your
+    file, change them to look like the above. At the end of
+    <emphasis>~/bosco/libexec/campus_factory/share/glidein_jobs/glidein_condor_config</emphasis>
+    add:</para>
 
     <programlisting>
 # dynamic slots
@@ -1039,40 +1302,38 @@ SLOT_TYPE_1_PARTITIONABLE = TRUE
 NUM_SLOTS = 1
 NUM_SLOTS_TYPE_1 = 1
     </programlisting>
-    
-    <para>
-        In the file <emphasis>~/bosco/libexec/campus_factory/share/glidein_jobs/job.submit.template</emphasis>
-        find the line reading:
-    </para>
+
+    <para>In the file
+    <emphasis>~/bosco/libexec/campus_factory/share/glidein_jobs/job.submit.template</emphasis>
+    find the line reading:</para>
 
     <programlisting>
          _condor_NUM_CPUS=1; \
     </programlisting>
 
-    <para>
-        You should now have a functioning Bosco setup. Submit a Pegasus workflow.
-    </para>
-
+    <para>You should now have a functioning BOSCO setup. Submit a Pegasus
+    workflow.</para>
   </section>
 
   <section id="bosco">
-    <title>Remote PBS Cluster using Bosco and SSH</title>
+    <title>Remote PBS Cluster using BOSCO and SSH</title>
 
-    <para><ulink url="http://bosco.opensciencegrid.org/about/">Bosco</ulink>
+    <para><ulink url="http://bosco.opensciencegrid.org/about/">BOSCO</ulink>
     enables HTCondor to submit jobs to remote PBS clusters using SSH. This
     section describes how to specify a site catalog entry for a site that has
-    been configured for Bosco job submissions.</para>
+    been configured for BOSCO job submissions.</para>
 
-    <para>First, the site needs to be setup for Bosco according to the <ulink
-    url="https://twiki.opensciencegrid.org/bin/view/CampusGrids/BoSCO"> Bosco
-    documentation</ulink>. Bosco uses glite to submit jobs to the PBS
+    <para>First, the site needs to be setup for BOSCO according to the <ulink
+    url="https://twiki.opensciencegrid.org/bin/view/CampusGrids/BoSCO"> BOSCO
+    documentation</ulink>. BOSCO uses glite to submit jobs to the PBS
     scheduler on the remote cluster. You will also need to configure the glite
-    installed for Bosco on the remote system according to the documentation in
+    installed for BOSCO on the remote system according to the documentation in
     the <link linkend="glite">glite section</link> in order for the mapping of
     Pegasus profiles to PBS job requirements to work. In particular, you will
     need to install the <literal>pbs_local_submit_attributes.sh</literal> and
     <literal>sge_local_submit_attributes.sh</literal> scripts in the correct
-    place in the glite <literal>bin</literal> directory.</para>
+    place in the glite <literal>bin</literal> directory on the remote cluster,
+    usually in the directory <emphasis>~/bosco/glite/bin/</emphasis> .</para>
 
     <para>Second, to tag a site for SSH submission, the following profiles
     need to be specified for the site in the site catalog:</para>
@@ -1086,11 +1347,11 @@ NUM_SLOTS_TYPE_1 = 1
 
       <listitem>
         <para>Specify the service information as grid gateways. This should
-        match what Bosco provided when the cluster was set up.</para>
+        match what BOSCO provided when the cluster was set up.</para>
       </listitem>
     </orderedlist>
 
-    <para>An example site catalog entry for a Bosco site looks like
+    <para>An example site catalog entry for a BOSCO site looks like
     this:</para>
 
     <programlisting>
@@ -1101,24 +1362,29 @@ NUM_SLOTS_TYPE_1 = 1
 
     &lt;site  handle="USC_HPCC_Bosco" arch="x86_64" os="LINUX"&gt;
 
-        &lt;!-- Specify the service information as grid gateways. This should match what Bosco provided when the cluster
+        &lt;!-- Specify the service information. This should match what Bosco provided when the cluster
              was set up. --&gt;
-        &lt;grid type="batch" contact="username@hpc-login2.usc.edu" scheduler="PBS" jobtype="compute"/&gt;
-        &lt;grid type="batch" contact="username@hpc-login2.usc.edu" scheduler="PBS" jobtype="auxillary"/&gt;
+        &lt;grid type="batch" contact="vahi@hpc-pegasus.usc.edu" scheduler="PBS" jobtype="compute"/&gt;
+        &lt;grid type="batch" contact="vahi@hpc-pegasus.usc.edu" scheduler="PBS" jobtype="auxillary"/&gt;
 
         &lt;!-- Scratch directory on the cluster --&gt;
-        &lt;directory type="shared-scratch" path="/home/rcf-40/tmp"&gt;
-            &lt;file-server operation="all" url="scp://username@hpc-login2.usc.edu/home/rcf-40/tmp"/&gt;
+        &lt;directory type="shared-scratch" path="/home/rcf-40/vahi/tmp"&gt;
+            &lt;file-server operation="all" url="scp://vahi@hpc-pegasus.usc.edu/home/rcf-40/vahi/tmp"/&gt;
         &lt;/directory&gt;
 
-        &lt;!-- SSH is the style to use for SSH submits --&gt;
+        &lt;!-- SSH is the style to use for Bosco SSH submits --&gt;
         &lt;profile namespace="pegasus" key="style"&gt;ssh&lt;/profile&gt;
 
-        &lt;!-- This mode uses the same profiles used for glite to control the jobs --&gt;
-        &lt;profile namespace="condor" key="batch_queue"&gt;default&lt;/profile&gt;
+        &lt;!--  works around bug in the HTCondor GAHP, that does not
+              set the remote directory --&gt;
+        &lt;profile namespace="pegasus" key="change.dir"&gt;true&lt;/profile&gt;
+
+        &lt;!-- Job requirements should be specified using Pegasus profiles --&gt;
+        &lt;profile namespace="pegasus" key="queue"&gt;default&lt;/profile&gt;
         &lt;profile namespace="pegasus" key="runtime"&gt;30&lt;/profile&gt;
 
     &lt;/site&gt;
+
 
 &lt;/sitecatalog&gt;
 
@@ -1126,14 +1392,17 @@ NUM_SLOTS_TYPE_1 = 1
 
     <note>
       <para>It is recommended to have a submit node configured either as a
-      Bosco submit node or a vanilla HTCondor node. You cannot have HTCondor
-      configured both as a Bosco install and a traditional HTCondor submit
-      node at the same time as Bosco will override the traditional HTCondor
+      BOSCO submit node or a vanilla HTCondor node. You cannot have HTCondor
+      configured both as a BOSCO install and a traditional HTCondor submit
+      node at the same time as BOSCO will override the traditional HTCondor
       pool in the user environment.</para>
     </note>
 
-    <para>Starting 4.3 there is a bosco-shared-fs example in the examples
-    directory of the distribution.</para>
+    <para>There is a bosco-shared-fs example in the examples directory of the
+    distribution.</para>
+
+    <para>Job Requirements for the jobs can be set using the same profiles as
+    listed <link linkend="glite_mappings">here</link> .</para>
   </section>
 
   <section id="campus_cluster">
@@ -1255,8 +1524,10 @@ pegasus.transfer.worker.package = true
     </section>
   </section>
 </chapter>
-<?xxe-serial-numbers ijqai71n vahi
-ijw41a92 vahi
+<?xxe-serial-numbers iq2ifwj5 vahi
+iq2nanhq vahi
+j6fj4v2e vahi
+j6gzb3qj vahi
 (1z141z5 (1z141z6) (1z141z7) (1z141z8 (1z141z9) (1z141za (1z141zb))
 (1z141zc (1z141zd)) (1z141ze) (1z141zf (1z141zg) (1z141zh))) (1z141zi
 (1z141zj) (1z141zk) (1z141zl (1z141zm) (1z141zn (1z141zo (1z141zp))))
@@ -1281,33 +1552,35 @@ ijw41a92 vahi
 (1z14238) (1z14239)))) (1z1423a) (1z1423b) (1z1423c) (1z1423d (1z1423e
 (1z1423f)))) (1z1423g (1z1423h) (1z1423i) (1z1423j (1z1423k)) (1z1423l
 (1z1423m)) (1z1423n (1z1423o) (1z1423p) (1z1423q)) (1z1423r (1z1423s
-(1z1423t))) (1z1423u (1z1423v) (1z1423w) (1z1423x) (1z1423y)) (3y2848q)
-(1z14241 (1z14242 (1z14243 (1z14244) (1z14245) (1z14246))) (1z14247
-(1z14248 (1z14249) (1z1424a) (1z1424b) (1z1424c)))) (1z1424d) (1z1424e)
-(1z1424f (1z1424g)) (1z1424h (1z1424i) (1z1424j) (1z1424k) (1z1424l))
-(1z1424m (1z1424n)) (1z1424o) (1z1424p) (1z1424q (1z1424r) (1z1424s)
-(1z1424t (1z1424u) (1z1424v (1z1424w (1z1424x (1z1424y) (1z1424z (1z14250)
-(1z14251)) (1z14252 (1z14253 (1z14254))) (1z14255))) (1z14256 (1z14257
-(1z14258) (1z14259) (1z1425a) (1z1425b)) (1z1425c (1z1425d) (1z1425e)
-(1z1425f) (1z1425g)) (1z1425h (1z1425i) (1z1425j) (1z1425k) (1z1425l))
-(1z1425m (1z1425n) (1z1425o) (1z1425p) (1z1425q)) (1z1425r (1z1425s)
-(1z1425t) (1z1425u) (1z1425v)) (1z1429i (1z1429j) (1z1429k) (1z1429l)
-(1z1429m)) (1z1425w (1z1425x) (1z1425y) (1z1425z) (1z14260 (1z14261)
-(1z14262))) (1z14263 (1z14264) (1z14265) (1z14266) (1z14267)) (1z14268
-(1z14269) (1z1426a) (1z1426b) (1z1426c))))) (1z1426d (1z1426e))) (1z1426f
-(1z1426g) (1z1426h) (1z1426i (1z1426j) (1z1426k (1z1426l (1z1426m
-(1z1426n) (1z1426o (1z1426p) (1z1426q)) (1z1426r (1z1426s (1z1426t)))
-(1z1426u))) (1z1426v (1z1426w (1z1426x) (1z1426y) (1z1426z (1z14270))
-(1z14271)) (1z14272 (1z14273) (1z14274) (1z14275) (1z14276)) (1z14277
-(1z14278) (1z14279) (1z1427a) (1z1427b)) (1z1427c (1z1427d) (1z1427e)
-(1z1427f) (1z1427g (1z1427h) (1z1427i))) (1z1427j (1z1427k) (1z1427l)
-(1z1427m) (1z1427n))))) (1z1427o (1z1427p))) (1z1427q (1z1427r) (1z1427s
-(1z1427t) (1z1427u) (1z1427v)))) (1z1427w (1z1427x) (1z1427y (1z1427z))
-(1z14280 (1z14281) (1z14282) (1z14283) (1z14284) (1z14285)) (1z14286)
-(1z14287 (1z14288 (1z14289 (1z1428a) (1z1428b) (1z1428c))) (1z1428d
-(1z1428e))) (1z1428f) (1z1428g) (1z1428h (1z1428i)) (1z1428j)) (1z1428k
-(1z1428l) (1z1428m) (1z1428n (1z1428o (1z1428p)) (1z1428q (1z1428r))
-(1z1428s (1z1428t))) (1z1428u (1z1428v))) (1z1428w (1z1428x) (1z1428y
-(1z1428z)) (1z14290 (1z14291) (1z14292) (1z14293) (1z14294)) (1z14295)
-(1z14296) (1z14297) (1z14298 (1z14299)) (1z1429a (1z1429b))) (1z1429c
-(1z1429d) (1z1429e (1z1429f (1z1429g) (1z1429h)))))?>
+(1z1423t))) (1z1423u (1z1423v)) (1z1423w) (1z1423x (1z1423y (1z1423z
+(1z14240) (1z14241) (1z14242))) (1z14243 (1z14244 (1z14245) (1z14246)
+(1z14247) (1z14248) (1z14249)))) (1z1424a) (1z1424b) (1z1424c (1z1424d))
+(1z1424e (1z1424f) (1z1424g) (1z1424h) (1z1424i)) (1z1424j (1z1424k))
+(1z1424l) (1z1424m) (1z1424n (1z1424o) (1z1424p) (1z1424q (1z1424r)
+(1z1424s (1z1424t (1z1424u (1z1424v) (1z1424w) (1z1424x) (1z1424y)
+(1z1424z) (3y283y9) (1z14250))) (1z14251 (1z14252 (1z14253) (1z14254)
+(1z14255) (1z14256) (1z14257) (3y283ya) (1z14258)) (1z14259 (1z1425a)
+(1z1425b) (1z1425c) (1z1425d) (1z1425e) (3y283yb) (1z1425f)) (1z1425g
+(1z1425h) (1z1425i) (1z1425j) (1z1425k) (1z1425l) (3y283yc) (1z1425m))
+(1z1425n (1z1425o) (1z1425p) (1z1425q) (1z1425r) (1z1425s) (3y283yd)
+(1z1425t)) (1z1425u (1z1425v) (1z1425w) (1z1425x) (1z1425y) (1z1425z)
+(3y283ye) (1z14260)) (1z14261 (1z14262) (1z14263) (1z14264) (1z14265)
+(1z14266) (3y283yf) (1z14267)) (1z14268 (1z14269) (1z1426a) (1z1426b)
+(1z1426c) (1z1426d) (3y283yg) (1z1426e (1z1426f) (1z1426g))) (1z1426h
+(1z1426i) (1z1426j) (1z1426k) (1z1426l) (1z1426m) (3y283yh) (1z1426n))
+(1z1426o (1z1426p) (1z1426q) (1z1426r) (1z1426s) (1z1426t) (3y283yi)
+(1z1426u))))) (1z1426v (1z1426w))) (1z1426x (1z1426y) (1z1426z (1z14270)
+(1z14271) (1z14272)))) (1z14273 (1z14274) (1z14275 (1z14276)) (1z14277)
+(1z14278 (1z14279)) (1z1427a) (1z1427b (1z1427c) (1z1427d) (1z1427e))
+(1z1427f) (1z1427g) (1z1427h) (1z1427i (1z1427j) (1z1427k)) (1z1427l)
+(1z1427m) (1z1427n) (1z1427o (1z1427p)) (1z1427q) (1z1427r (1z1427s))
+(1z1427t) (1z1427u (1z1427v)) (1z1427w) (1z1427x)) (1z1427y (1z1427z)
+(1z14280 (1z14281)) (1z14282 (1z14283) (1z14284) (1z14285) (1z14286)
+(1z14287) (5x3c5xd)) (1z14288) (1z14289 (1z1428a (1z1428b (1z1428c)
+(1z1428d) (1z1428e))) (1z1428f (1z1428g))) (1z1428h) (1z1428i) (1z1428j
+(1z1428k)) (1z1428l) (7w4g7wh (7w4g7wi))) (1z1428m (1z1428n) (1z1428o)
+(1z1428p (1z1428q (1z1428r)) (1z1428s (1z1428t)) (1z1428u (1z1428v)))
+(1z1428w (1z1428x))) (1z1428y (1z1428z) (1z14290 (1z14291)) (1z14292
+(1z14293) (1z14294) (1z14295) (1z14296)) (1z14297) (1z14298) (1z14299)
+(1z1429a (1z1429b)) (1z1429c (1z1429d))) (1z1429e (1z1429f) (1z1429g
+(1z1429h (1z1429i) (1z1429j)))))?>

@@ -453,6 +453,12 @@ public class SiteStore extends AbstractSiteData{
                              this.mPlannerOptions.getRelativeDirectory():
                              //for a normal run add the relative submit directory
                              this.mPlannerOptions.getRelativeDirectory();
+            
+            //PM-1124 if leaf is null, means fall back to relative submit directory
+            if( leaf == null ){
+                leaf = this.mPlannerOptions.getRelativeSubmitDirectory();
+            }
+            
             File f = new File( mount_point, leaf );
             mount_point = f.getAbsolutePath();
         }

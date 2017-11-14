@@ -43,7 +43,12 @@ import java.util.Set;
  * @version $Revision$
  */
 public class InPlace extends AbstractCleanupStrategy {
-
+    
+    /**
+     * Number of jobs on a level of the workflow per cleanup job
+     */
+    public static final float NUM_JOBS_PER_LEVEL_PER_CLEANUP_JOB = 5;
+   
     /**
      * Adds cleanup jobs to the workflow.
      *
@@ -473,11 +478,18 @@ public class InPlace extends AbstractCleanupStrategy {
         }
 
         //cluster size is how many nodes are clustered into one cleanup cleanupNode
-        int clusterSize = getClusterSize(size);
+        int numCleanup = this.mCleanupJobsPerLevel;
+        if( mCleanupJobsPerLevel == NO_PROFILE_VALUE ){
+            //PM-1212 if a user has not specified anything in properties
+            //we determine based on number of jobs on a level
+            //divisor = this.mCleanupJobsPerLevelMap.get( level );
+            numCleanup = (int)Math.ceil( size /InPlace.NUM_JOBS_PER_LEVEL_PER_CLEANUP_JOB );
+        }
+        int clusterSize = getClusterSize(size, numCleanup);
 
         StringBuilder sb = new StringBuilder();
         sb.append("Clustering ").append(size).append(" cleanup nodes at level ").append(level).
-                append(" with cluster size ").append(clusterSize);
+                append(" with cluster size ").append(clusterSize).append( " into MAX total of " ).append( numCleanup );
         mLogger.log(sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL);
 
         //for the time being lets assume one to one mapping
@@ -607,7 +619,7 @@ public class InPlace extends AbstractCleanupStrategy {
         if (allFilesToDelete.isEmpty()) {
             //the clustered cleanup job we are trying to create has
             //no files to delete
-            mLogger.log("\t\tClustered cleanup node is empty " + clusteredCleanupNode.getID(),
+            mLogger.log("\t\tClustered cleanup node is empty as files to be deleted are already deleted by other cleanup nodes " + clusteredCleanupNode.getID(),
                     LogManager.DEBUG_MESSAGE_LEVEL);
             return null;
         }
@@ -623,10 +635,11 @@ public class InPlace extends AbstractCleanupStrategy {
      *
      * @param size the number of cleanup jobs created by the algorithm before
      * clustering for the level.
+     * @param num number of cleanup jobs to be created for level
      *
-     * @return the number of clustered cleanup jobs to be created for the level
+     * @return the number of cleanup jobs clustered into a bigger cleanup job
      */
-    private int getClusterSize(int size) {
+    private int getClusterSize(int size , int num ) {
 
         int result;
 
@@ -636,7 +649,8 @@ public class InPlace extends AbstractCleanupStrategy {
         } else {
             //it is the ceiling ( x + y -1 )/y
             //we use the fixed number of cleanup jobs per level
-            result = (size + mCleanupJobsPerLevel - 1) / mCleanupJobsPerLevel;
+            //result = (size + mCleanupJobsPerLevel - 1) / mCleanupJobsPerLevel;
+            result = (size + num - 1) / num;
         }
 
         return result;
@@ -690,5 +704,9 @@ class CleanupJobContent implements GraphNodeContent {
      */
     public GraphNode getNode() {
         return this.mNode;
+    }
+
+    public void setGraphNodeReference(GraphNode node) {
+        //noop
     }
 }

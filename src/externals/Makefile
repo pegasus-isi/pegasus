@@ -28,8 +28,13 @@ PACKAGES+=requests
 PACKAGES+=itsdangerous.py
 PACKAGES+=boto
 PACKAGES+=pam.py
-PACKAGES+=OpenSSL
+#PACKAGES+=OpenSSL
+#PACKAGES+=six
+#PACKAGES+=enum34
+#PACKAGES+=cffi
+#PACKAGES+=cryptography
 PACKAGES+=plex
+PACKAGES+=future
 ifeq ($(shell which pg_config),)
     $(warning WARNING: pg_config not found: skipping python postgresql library)
 else
@@ -61,7 +66,8 @@ $(LIBDIR)/%:
 	mkdir -p $(LIBDIR) &&\
 	tar xzf $< &&\
 	pushd $(TARNAME) > /dev/null &&\
-	if [ -d "OpenSSL" ]; then $(PYTHON) setup.py build_ext $(PYOPENSSL_ARGS) > /dev/null; fi &&\
+	if [ -d "src/OpenSSL" ]; then $(PYTHON) setup.py build_ext $(PYOPENSSL_ARGS) > /dev/null; fi &&\
+	if [ -d "src/cryptography" ]; then $(PYTHON) setup.py build_ext $(PYOPENSSL_ARGS) > /dev/null; fi &&\
 	$(PYTHON) setup.py install_lib -d $(LIBDIR) > /dev/null &&\
 	popd > /dev/null &&\
 	rm -rf $(TARNAME) &&\
@@ -80,18 +86,16 @@ $(LIBDIR)/requests: requests-2.8.0.tar.gz
 $(LIBDIR)/itsdangerous.py: itsdangerous-0.21.tar.gz
 $(LIBDIR)/boto: boto-2.38.0.tar.gz
 $(LIBDIR)/pam.py: pam-0.1.4.tar.gz
-ifeq ($(OSID),rhel5)
-    # 0.13 does not work on rhel5
-    $(LIBDIR)/OpenSSL: pyOpenSSL-0.12.tar.gz
-else
-    # 0.12 does not work on deb7 because of missing SSLv2_method
-    # 0.13 has been patched to work with newer versions of openssl (see patch file)
-    $(LIBDIR)/OpenSSL: pyOpenSSL-0.13-patched.tar.gz
-endif
+$(LIBDIR)/OpenSSL: pyOpenSSL-16.2.0.tar.gz
+$(LIBDIR)/six: six-1.10.0.tar.gz
+$(LIBDIR)/enum34: enum34-1.1.6.tar.gz
+$(LIBDIR)/cffi: cffi-1.10.0.tar.gz
+$(LIBDIR)/cryptography: cryptography-2.0.3.tar.gz
 $(LIBDIR)/plex: plex-2.0.0dev.tar.gz
 $(LIBDIR)/MySQLdb: MySQL-python-1.2.5.tar.gz
 $(LIBDIR)/psycopg2: psycopg2-2.5.5.tar.gz
 $(LIBDIR)/ordereddict.py: ordereddict-1.1.tar.gz
+$(LIBDIR)/future: future-0.16.0.tar.gz
 $(LIBDIR)/influxdb: influxdb-2.12.0.tar.gz
 $(LIBDIR)/pika: pika-0.10.0.tar.gz
 $(LIBDIR)/dateutil: python-dateutil-2.4.2.tar.gz

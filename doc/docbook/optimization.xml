@@ -139,9 +139,8 @@ Valid clustering techniques are horizontal and label.</programlisting></para>
 
                 <para>The clusters.size factor denotes how many jobs need to
                 be merged into a single clustered job. It is specified via the
-                use of a PEGASUS namespace profile key
-                &amp;ldquo;clusters.size&amp;rdquor;. for e.g. if at a
-                particular level, say 4 jobs referring to logical
+                use of a PEGASUS namespace profile key 'clusters.size'. for
+                e.g. if at a particular level, say 4 jobs referring to logical
                 transformation B have been scheduled to a siteX. The
                 clusters.size factor associated with job B for siteX is say 3.
                 This will result in 2 clustered jobs, one composed of 3 jobs
@@ -194,15 +193,14 @@ tr C {
 
                 <para>The clusters.num factor denotes how many clustered jobs
                 does the user want to see per level per site. It is specified
-                via the use of a PEGASUS namespace profile key
-                &amp;ldquo;clusters.num&amp;rdquor;. for e.g. if at a
-                particular level, say 4 jobs referring to logical
-                transformation B have been scheduled to a siteX. The
-                &amp;ldquo;clusters.num&amp;rdquor; factor associated with job
-                B for siteX is say 3. This will result in 3 clustered jobs,
-                one composed of 2 jobs and others of a single job each. The
-                clusters.num factor in the transformation catalog can be
-                specified as follows</para>
+                via the use of a PEGASUS namespace profile key 'clusters.num'.
+                for e.g. if at a particular level, say 4 jobs referring to
+                logical transformation B have been scheduled to a siteX. The
+                'clusters.num' factor associated with job B for siteX is say
+                3. This will result in 3 clustered jobs, one composed of 2
+                jobs and others of a single job each. The clusters.num factor
+                in the transformation catalog can be specified as
+                follows</para>
 
                 <programlisting># multiple line text-based transformation catalog: 2014-09-30T16:06:23.397-07:00
 tr B {
@@ -246,10 +244,9 @@ tr B {
 
                 <para>In the above case the jobs referring to logical
                 transformation B scheduled on siteX will be clustered on the
-                basis of &amp;ldquo;clusters.num&amp;rdquor; value. Hence, if
-                there are 4 jobs referring to logical transformation B
-                scheduled to siteX, then 3 clustered jobs will be
-                created.</para>
+                basis of 'clusters.num' value. Hence, if there are 4 jobs
+                referring to logical transformation B scheduled to siteX, then
+                3 clustered jobs will be created.</para>
 
                 <figure>
                   <title>Clustering by clusters.num</title>
@@ -636,8 +633,8 @@ siteX    pegasus::seqexec     /usr/pegasus/bin/pegasus-cluster INSTALLED       I
             following pegasus profiles with the jobs in the DAX</para>
 
             <table>
-              <title>Table : Pegasus Profiles that can be associated with jobs
-              in the DAX for PMC</title>
+              <title>Pegasus Profiles that can be associated with jobs in the
+              DAX for PMC</title>
 
               <tgroup cols="2">
                 <tbody>
@@ -690,8 +687,8 @@ siteX    pegasus::seqexec     /usr/pegasus/bin/pegasus-cluster INSTALLED       I
             </table>
 
             <para>Refer to the pegasus-mpi-cluster man page in the <link
-            linkend="cli">command line tools chapter</link> to
-            know more about PMC and how it schedules individual tasks.</para>
+            linkend="cli">command line tools chapter</link> to know more about
+            PMC and how it schedules individual tasks.</para>
 
             <para>It is recommended to have a pegasus::mpiexec entry in the
             transformation catalog to specify the path to PMC on the remote
@@ -838,11 +835,11 @@ tr B {
     files.</para>
 
     <para><emphasis>Solution:</emphasis> The most common solution to these
-    problems is to use <link linkend="hierarchial_workflows">hierarchial
+    problems is to use <link linkend="hierarchial_workflows">hierarchical
     workflows</link>, which works really well if your workflow can be
-    logically partitioned into smaller workflows. A hierarchial workflow still
-    runs like a single workflow, with the difference being that some jobs in
-    the workflow are actally sub-workflows.</para>
+    logically partitioned into smaller workflows. A hierarchical workflow
+    still runs like a single workflow, with the difference being that some
+    jobs in the workflow are actually sub-workflows.</para>
 
     <para>For workflows with a large number of files, you can control the
     number of files in a single directory by reorganizing the files into a
@@ -974,7 +971,7 @@ tr B {
           </tgroup>
         </table>
 
-        <para>It is highly recommended that users <emphasis role="bold">dont
+        <para>It is highly recommended that users <emphasis role="bold">don't
         specify</emphasis> directory related options in the arguments section
         for the DAX Jobs. Pegasus assigns values to these options for the sub
         workflows automatically.</para>
@@ -1041,9 +1038,9 @@ tr B {
         </orderedlist>
 
         <tip>
-          <para>It is recommended that user dagman.maxpre in their properties
-          file to control the maximum number of pegasus plan instances
-          launched by each running dagman instance.</para>
+          <para>It is recommended that users specify dagman.maxpre in their
+          properties file to control the maximum number of pegasus plan
+          instances launched by each running dagman instance.</para>
         </tip>
       </section>
     </section>
@@ -1197,14 +1194,25 @@ tr B {
     to be as quick as possibly, but we also do not want our transfers to
     overwhelm data services and systems.</para>
 
-    <para><emphasis>Solution:</emphasis> The default configuration consists of
-    a combination of the maximum number of transfer jobs per level in the
-    workflow, and how many threads such a pegasus-transfer job can
-    spawn.</para>
+    <para><emphasis>Solution:</emphasis> Starting 4.8.0 release, the default
+    configuration of Pegasus now adds transfer jobs and cleanup jobs based on
+    the number of jobs at a particular level of the workflow. For example, for
+    every 10 compute jobs on a level of a workflow, one data transfer job(
+    stage-in and stage-out) is created. The default configuration also sets
+    how many threads such a pegasus-transfer job can spawn. Cleanup jobs are
+    similarly constructed with an internal ratio of 5.</para>
 
-    <para>Information on how to control the number of stagein and stageout
-    jobs can be found in the <link linkend="data_movement_nodes">Data Movement
-    Nodes</link> section.</para>
+    <para>Additionally, Pegasus makes use of DAGMan categories and associates
+    the following default values with the transfer and cleanup
+    jobs.
+    <xi:include xpointer="table-default-job-categories"
+    xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    </para>
+    
+
+    <para>Information on how to control manully the maxinum number of stagein
+    and stageout jobs can be found in the <link
+    linkend="data_movement_nodes">Data Movement Nodes</link> section.</para>
 
     <para>How to control the number of threads pegasus-transfer can use
     depends on if you want to control standard transfer jobs, or PegasusLite.
@@ -1243,10 +1251,10 @@ tr B {
     <para>By default, pegasus associates default category names to following
     types of auxillary jobs</para>
 
-    <table>
+    <table id="table-default-job-categories">
       <title>Default Category names associated by Pegasus</title>
 
-      <tgroup cols="2">
+      <tgroup cols="3">
         <tbody>
           <row>
             <entry><emphasis role="bold">DAGMan Category
@@ -1254,36 +1262,49 @@ tr B {
 
             <entry><emphasis role="bold">Auxillary Job applied
             to.</emphasis></entry>
+
+            <entry><emphasis role="bold">Default Value Assigned in generated
+            DAG file</emphasis></entry>
           </row>
 
           <row>
             <entry><literallayout>stage-in </literallayout></entry>
 
-            <entry>data stage-in jobs </entry>
+            <entry>data stage-in jobs</entry>
+
+            <entry>10</entry>
           </row>
 
           <row>
             <entry><literallayout>stage-out</literallayout></entry>
 
-            <entry>data stage-out jobs </entry>
+            <entry>data stage-out jobs</entry>
+
+            <entry>10</entry>
           </row>
 
           <row>
             <entry><literallayout>stage-inter</literallayout></entry>
 
             <entry>inter site data transfer jobs</entry>
+
+            <entry>-</entry>
           </row>
 
           <row>
             <entry><literallayout>cleanup</literallayout></entry>
 
             <entry>data cleanup jobs</entry>
+
+            <entry>4</entry>
           </row>
 
           <row>
             <entry><literallayout>registration </literallayout></entry>
 
             <entry>registration jobs</entry>
+
+            <entry>1 (for file based RC)</entry>
           </row>
         </tbody>
       </tgroup>

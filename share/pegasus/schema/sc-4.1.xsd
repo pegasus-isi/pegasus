@@ -19,10 +19,19 @@
         </xs:annotation>
         <xs:restriction base="xs:NMTOKEN">
             <xs:enumeration value="Fork"/>
+	    <xs:enumeration value="fork"/>
             <xs:enumeration value="PBS"/>
+	    <xs:enumeration value="pbs"/>
             <xs:enumeration value="LSF"/>
+	    <xs:enumeration value="lsf"/>
             <xs:enumeration value="Condor"/>
+	    <xs:enumeration value="condor"/>
             <xs:enumeration value="SGE"/>
+	    <xs:enumeration value="sge"/>
+	    <!-- newer ones are only lowercase -->
+	    <xs:enumeration value="slurm"/>
+	    <xs:enumeration value="moab"/>
+	    <xs:enumeration value="cobalt"/>
             <xs:enumeration value="unknown"/>
         </xs:restriction>
     </xs:simpleType>

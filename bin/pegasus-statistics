@@ -285,6 +285,13 @@ def formatted_time_host_stats_legends_csv():
 #   the number of invocations, total runtime on each host sorted by FILTER
 """.replace("FILTER", str(time_filter))
 
+def remove_file(path):
+    try:
+        os.remove(path)
+    except OSError as e:
+        if e.errno != 2:
+            raise
+
 def write_to_file(file_path, mode, content):
     """
     Utility method for writing content to a given file
@@ -351,6 +358,7 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
     @param wf_uuid       : uuid of the top level workflow
     @param output_dir    : directory to write output files
     """
+    errors = 0
     try:
         if multiple_wf:
             expanded_workflow_stats = StampedeWorkflowStatistics(output_db_url)
@@ -378,6 +386,7 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
     for wf_det in desc_wf_uuid_list:
         wf_uuid_list.append(wf_det.wf_uuid)
 
+    global calc_wf_stats
     if calc_wf_stats:
         if file_type == FILE_TYPE_TXT:
             wf_stats_file_txt = os.path.join(output_dir, workflow_statistics_file_name + text_file_extension)
@@ -391,6 +400,7 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
             header = print_row(workflow_status_col_name_csv, workflow_status_col_size, "csv")
             write_to_file(wf_stats_file_csv, "a", header)
 
+    global calc_jb_stats
     if calc_jb_stats:
         jobs_stats_file_txt = os.path.join(output_dir, job_statistics_file_name + text_file_extension)
         if file_type == FILE_TYPE_TXT:
@@ -400,6 +410,7 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
         if file_type == FILE_TYPE_CSV:
             write_to_file(jobs_stats_file_csv, "w", formatted_job_stats_legends())
 
+    global calc_tf_stats
     if calc_tf_stats:
         if file_type == FILE_TYPE_TXT:
             transformation_stats_file_txt = os.path.join(output_dir, logical_transformation_statistics_file_name + text_file_extension)
@@ -409,23 +420,37 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
             transformation_stats_file_csv = os.path.join(output_dir, logical_transformation_statistics_file_name + csv_file_extension)
             write_to_file(transformation_stats_file_csv, "w", formatted_transformation_stats_legends())
 
+    global calc_ti_stats
     if calc_ti_stats:
-        time_stats_file_txt = os.path.join(output_dir, time_statistics_file_name + text_file_extension)
-        if file_type == FILE_TYPE_TXT:
-            write_to_file(time_stats_file_txt, "w", formatted_time_stats_legends_text())
-            content = print_statistics_by_time_and_host(expanded_workflow_stats, "text", combined=True, per_host=True)
-            write_to_file(time_stats_file_txt, "a", content)
+        try:
+            time_stats_file_txt = os.path.join(output_dir, time_statistics_file_name + text_file_extension)
+            if file_type == FILE_TYPE_TXT:
+                content = print_statistics_by_time_and_host(expanded_workflow_stats, "text", combined=True, per_host=True)
+                write_to_file(time_stats_file_txt, "w", formatted_time_stats_legends_text())
+                write_to_file(time_stats_file_txt, "a", content)
 
-        time_stats_file_csv = os.path.join(output_dir, time_statistics_file_name + csv_file_extension)
-        if file_type == FILE_TYPE_CSV:
-            write_to_file(time_stats_file_csv, "w", formatted_time_stats_legends_csv())
-            content = print_statistics_by_time_and_host(expanded_workflow_stats, "csv", combined=True, per_host=False)
-            write_to_file(time_stats_file_csv, "a", content)
+            time_stats_file_csv = os.path.join(output_dir, time_statistics_file_name + csv_file_extension)
+            if file_type == FILE_TYPE_CSV:
+                content = print_statistics_by_time_and_host(expanded_workflow_stats, "csv", combined=True, per_host=False)
+                write_to_file(time_stats_file_csv, "w", formatted_time_stats_legends_csv())
+                write_to_file(time_stats_file_csv, "a", content)
 
-            time_stats_file2_csv = os.path.join(output_dir, time_statistics_per_host_file_name + csv_file_extension)
-            write_to_file(time_stats_file2_csv, "w", formatted_time_host_stats_legends_csv())
-            content = print_statistics_by_time_and_host(expanded_workflow_stats, "csv", combined=False, per_host=True)
-            write_to_file(time_stats_file2_csv, "a", content)
+                time_stats_file2_csv = os.path.join(output_dir, time_statistics_per_host_file_name + csv_file_extension)
+                content = print_statistics_by_time_and_host(expanded_workflow_stats, "csv", combined=False, per_host=True)
+                write_to_file(time_stats_file2_csv, "w", formatted_time_host_stats_legends_csv())
+                write_to_file(time_stats_file2_csv, "a", content)
+        except Exception:
+            logger.warn('time statistics generation failed')
+            logger.debug('time statistics generation failed', exc_info=1)
+
+            calc_ti_stats = False
+            if file_type == FILE_TYPE_TXT:
+                remove_file(time_stats_file_txt)
+            if file_type == FILE_TYPE_CSV:
+                remove_file(time_stats_file_csv)
+                remove_file(time_stats_file2_csv)
+
+            errors += 1
 
     if calc_jb_stats or calc_tf_stats or calc_wf_stats:
         for sub_wf_uuid in wf_uuid_list:
@@ -448,124 +473,206 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
             logger.info("Generating statistics information about the workflow " + workflow_id + " ... ")
 
             if calc_jb_stats:
-                logger.debug("Generating job instance statistics information for workflow " + workflow_id + " ... ")
-                individual_workflow_stats.set_job_filter('all')
+                try:
+                    logger.debug("Generating job instance statistics information for workflow " + workflow_id + " ... ")
+                    individual_workflow_stats.set_job_filter('all')
 
-                if file_type == FILE_TYPE_TXT:
-                    content = print_individual_wf_job_stats(individual_workflow_stats, workflow_id, dax_label, "text")
-                    write_to_file(jobs_stats_file_txt, "a", content)
+                    if file_type == FILE_TYPE_TXT:
+                        content = print_individual_wf_job_stats(individual_workflow_stats, workflow_id, dax_label, "text")
+                        write_to_file(jobs_stats_file_txt, "a", content)
 
-                if file_type == FILE_TYPE_CSV:
-                    content = print_individual_wf_job_stats(individual_workflow_stats, workflow_id, dax_label, "csv")
-                    write_to_file(jobs_stats_file_csv, "a", content)
+                    if file_type == FILE_TYPE_CSV:
+                        content = print_individual_wf_job_stats(individual_workflow_stats, workflow_id, dax_label, "csv")
+                        write_to_file(jobs_stats_file_csv, "a", content)
+                except Exception:
+                    logger.warn('job instance statistics generation failed')
+                    logger.debug('job instance statistics generation failed', exc_info=1)
+
+                    calc_jb_stats = False
+                    if file_type == FILE_TYPE_TXT:
+                        remove_file(jobs_stats_file_txt)
+                    if file_type == FILE_TYPE_CSV:
+                        remove_file(jobs_stats_file_csv)
+
+                    errors += 1
 
             if calc_tf_stats:
-                logger.debug("Generating invocation statistics information for workflow " + workflow_id + " ... ")
-                individual_workflow_stats.set_job_filter('all')
-                if file_type == FILE_TYPE_TXT:
-                    content = print_wf_transformation_stats(individual_workflow_stats, workflow_id, dax_label, "text")
-                    write_to_file(transformation_stats_file_txt, "a", content)
+                try:
+                    logger.debug("Generating invocation statistics information for workflow " + workflow_id + " ... ")
+                    individual_workflow_stats.set_job_filter('all')
+                    if file_type == FILE_TYPE_TXT:
+                        content = print_wf_transformation_stats(individual_workflow_stats, workflow_id, dax_label, "text")
+                        write_to_file(transformation_stats_file_txt, "a", content)
 
-                if file_type == FILE_TYPE_CSV:
-                    content = print_wf_transformation_stats(individual_workflow_stats, workflow_id, dax_label, "csv")
-                    write_to_file(transformation_stats_file_csv, "a", content)
+                    if file_type == FILE_TYPE_CSV:
+                        content = print_wf_transformation_stats(individual_workflow_stats, workflow_id, dax_label, "csv")
+                        write_to_file(transformation_stats_file_csv, "a", content)
+                except Exception:
+                    logger.warn('transformation statistics generation failed')
+                    logger.debug('transformation statistics generation failed', exc_info=1)
+
+                    calc_tf_stats = False
+                    if file_type == FILE_TYPE_TXT:
+                        remove_file(transformation_stats_file_txt)
+                    if file_type == FILE_TYPE_CSV:
+                        remove_file(transformation_stats_file_csv)
+
+                    errors += 1
 
             if calc_wf_stats:
-                logger.debug("Generating workflow statistics information for workflow " +
-                             workflow_id  + " ... ")
-                individual_workflow_stats.set_job_filter('all')
-                # Write text file
-                if file_type == FILE_TYPE_TXT:
-                    content = print_individual_workflow_stats(individual_workflow_stats, workflow_id, dax_label, "text")
-                    write_to_file(wf_stats_file_txt, "a", content)
-                    # Write csv file
-                if file_type == FILE_TYPE_CSV:
-                    content = print_individual_workflow_stats(individual_workflow_stats, workflow_id, dax_label, "csv")
-                    write_to_file(wf_stats_file_csv, "a", content)
+                try:
+                    logger.debug("Generating workflow statistics information for workflow " + workflow_id + " ... ")
+                    individual_workflow_stats.set_job_filter('all')
+                    if file_type == FILE_TYPE_TXT:
+                        content = print_individual_workflow_stats(individual_workflow_stats, workflow_id, dax_label, "text")
+                        write_to_file(wf_stats_file_txt, "a", content)
+
+                    if file_type == FILE_TYPE_CSV:
+                        content = print_individual_workflow_stats(individual_workflow_stats, workflow_id, dax_label, "csv")
+                        write_to_file(wf_stats_file_csv, "a", content)
+                except Exception:
+                    logger.warn('workflow statistics generation failed')
+                    logger.debug('workflow statistics generation failed', exc_info=1)
+
+                    calc_wf_stats = False
+                    if file_type == FILE_TYPE_TXT:
+                        remove_file(wf_stats_file_txt)
+                    if file_type == FILE_TYPE_CSV:
+                        remove_file(wf_stats_file_csv)
+
+                    errors += 1
 
             individual_workflow_stats.close()
 
+    #
+    # Output printed to console
+    #
+
     stats_output = ""
 
+    global calc_wf_summary
     if calc_wf_summary:
         logger.info("Generating workflow summary ... ")
+        try:
+            if file_type == FILE_TYPE_TXT:
+                summary_output = formatted_wf_summary_legends_txt()
+                summary_output += NEW_LINE_STR
+                summary_output += print_workflow_summary(expanded_workflow_stats, "text", wf_summary=True, time_summary=True, multiple_wf=multiple_wf)
+                wf_summary_file_txt = os.path.join(output_dir, workflow_summary_file_name + text_file_extension)
+                write_to_file(wf_summary_file_txt, "w", summary_output)
 
-        if file_type == FILE_TYPE_TXT:
-            summary_output = formatted_wf_summary_legends_txt()
-            summary_output += NEW_LINE_STR
-            summary_output += print_workflow_summary(expanded_workflow_stats, "text", wf_summary=True, time_summary=True, multiple_wf=multiple_wf)
-            wf_summary_file_txt = os.path.join(output_dir, workflow_summary_file_name + text_file_extension)
-            write_to_file(wf_summary_file_txt, "w", summary_output)
+                stats_output += summary_output + "\n"
+                stats_output += "%-30s: %s\n" % ("Summary", wf_summary_file_txt)
 
-            stats_output += summary_output + "\n"
-            stats_output += "%-30s: %s\n" % ("Summary", wf_summary_file_txt)
+            if file_type == FILE_TYPE_CSV:
+                # Generate the first csv summary file
+                summary_output = formatted_wf_summary_legends_csv1()
+                summary_output += NEW_LINE_STR
+                summary_output += print_workflow_summary(expanded_workflow_stats, "csv", wf_summary=True, time_summary=False, multiple_wf=multiple_wf)
+                wf_summary_file_csv = os.path.join(output_dir, workflow_summary_file_name + csv_file_extension)
+                write_to_file(wf_summary_file_csv, "w", summary_output)
 
-        if file_type == FILE_TYPE_CSV:
-            # Generate the first csv summary file
-            summary_output = formatted_wf_summary_legends_csv1()
-            summary_output += NEW_LINE_STR
-            summary_output += print_workflow_summary(expanded_workflow_stats, "csv", wf_summary=True, time_summary=False, multiple_wf=multiple_wf)
-            wf_summary_file_csv = os.path.join(output_dir, workflow_summary_file_name + csv_file_extension)
-            write_to_file(wf_summary_file_csv, "w", summary_output)
+                stats_output += "%-30s: %s\n" % ("Summary:", wf_summary_file_csv)
 
-            stats_output += "%-30s: %s\n" % ("Summary:", wf_summary_file_csv)
+                # Generate the second csv summary file
+                summary_output = formatted_wf_summary_legends_csv2()
+                summary_output += NEW_LINE_STR
+                summary_output += print_workflow_summary(expanded_workflow_stats, "csv", wf_summary=False, time_summary=True, multiple_wf=multiple_wf)
+                wf_summary_file2_csv = os.path.join(output_dir, workflow_summary_time_file_name + csv_file_extension)
+                write_to_file(wf_summary_file2_csv, "w", summary_output)
 
-            # Generate the second csv summary file
-            summary_output = formatted_wf_summary_legends_csv2()
-            summary_output += NEW_LINE_STR
-            summary_output += print_workflow_summary(expanded_workflow_stats, "csv", wf_summary=False, time_summary=True, multiple_wf=multiple_wf)
-            wf_summary_file2_csv = os.path.join(output_dir, workflow_summary_time_file_name + csv_file_extension)
-            write_to_file(wf_summary_file2_csv, "w", summary_output)
+                stats_output += "%-30s: %s\n" % ("Summary Time:", wf_summary_file2_csv)
+        except Exception:
+            logger.warn('summary statistics generation failed')
+            logger.debug('summary statistics generation failed', exc_info=1)
+            stats_output = ""
 
-            stats_output += "%-30s: %s\n" % ("Summary Time:", wf_summary_file2_csv)
+            calc_wf_summary = False
+            if file_type == FILE_TYPE_TXT:
+                remove_file(wf_summary_file_txt)
+            if file_type == FILE_TYPE_CSV:
+                remove_file(workflow_summary_file_name)
+                remove_file(wf_summary_file2_csv)
+
+            errors += 1
 
     if calc_wf_stats:
-        stats_output += "%-30s: " % "Workflow execution statistics"
+        pre_stats_output = stats_output
+        try:
+            stats_output += "%-30s: " % "Workflow execution statistics"
 
-        if file_type == FILE_TYPE_TXT:
-            content = print_individual_workflow_stats(expanded_workflow_stats , "All Workflows", "", "text")
-            write_to_file(wf_stats_file_txt, "a" , content)
-            stats_output += wf_stats_file_txt +"\n"
+            if file_type == FILE_TYPE_TXT:
+                content = print_individual_workflow_stats(expanded_workflow_stats , "All Workflows", "", "text")
+                write_to_file(wf_stats_file_txt, "a" , content)
+                stats_output += wf_stats_file_txt +"\n"
 
-        if file_type == FILE_TYPE_CSV:
-            content = print_individual_workflow_stats(expanded_workflow_stats , "ALL", "", "csv")
-            write_to_file(wf_stats_file_csv, "a" , content)
-            stats_output += wf_stats_file_csv +"\n"
+            if file_type == FILE_TYPE_CSV:
+                content = print_individual_workflow_stats(expanded_workflow_stats, "ALL", "", "csv")
+                write_to_file(wf_stats_file_csv, "a", content)
+                stats_output += wf_stats_file_csv + "\n"
+        except Exception:
+            logger.warn('workflow statistics generation failed')
+            logger.debug('workflow statistics generation failed', exc_info=1)
+            stats_output = pre_stats_output
+
+            calc_wf_stats = False
+            if file_type == FILE_TYPE_TXT:
+                remove_file(wf_stats_file_txt)
+            if file_type == FILE_TYPE_CSV:
+                remove_file(wf_stats_file_csv)
+
+            errors += 1
 
     if calc_jb_stats:
         stats_output += "%-30s: " % "Job instance statistics"
         if file_type == FILE_TYPE_TXT:
-            stats_output += jobs_stats_file_txt +"\n"
+            stats_output += jobs_stats_file_txt + "\n"
 
         if file_type == FILE_TYPE_CSV:
-            stats_output += jobs_stats_file_csv +"\n"
+            stats_output += jobs_stats_file_csv + "\n"
 
     if calc_tf_stats:
         expanded_workflow_stats.set_job_filter('all')
-        stats_output += "%-30s: " % "Transformation statistics"
+        pre_stats_output = stats_output
 
-        if file_type == FILE_TYPE_TXT:
-            content = print_wf_transformation_stats(expanded_workflow_stats , "All", "", "text")
-            write_to_file(transformation_stats_file_txt, "a" , content)
-            stats_output += transformation_stats_file_txt +"\n"
+        try:
+            stats_output += "%-30s: " % "Transformation statistics"
 
-        if file_type == FILE_TYPE_CSV:
-            content = print_wf_transformation_stats(expanded_workflow_stats , "ALL", "", "csv")
-            write_to_file(transformation_stats_file_csv, "a" , content)
-            stats_output += transformation_stats_file_csv +"\n"
+            if file_type == FILE_TYPE_TXT:
+                content = print_wf_transformation_stats(expanded_workflow_stats , "All", "", "text")
+                write_to_file(transformation_stats_file_txt, "a", content)
+                stats_output += transformation_stats_file_txt + "\n"
+
+            if file_type == FILE_TYPE_CSV:
+                content = print_wf_transformation_stats(expanded_workflow_stats , "ALL", "", "csv")
+                write_to_file(transformation_stats_file_csv, "a", content)
+                stats_output += transformation_stats_file_csv + "\n"
+        except Exception:
+            logger.warn('transformation statistics generation failed')
+            logger.debug('transformation statistics generation failed', exc_info=1)
+            stats_output = pre_stats_output
+
+            calc_tf_stats = False
+            if file_type == FILE_TYPE_TXT:
+                remove_file(transformation_stats_file_txt)
+            if file_type == FILE_TYPE_CSV:
+                remove_file(transformation_stats_file_csv)
+
+            errors += 1
 
     if calc_ti_stats:
         stats_output += "%-30s: " % "Time statistics"
 
         if file_type == FILE_TYPE_TXT:
-            stats_output += time_stats_file_txt +"\n"
+            stats_output += time_stats_file_txt + "\n"
 
         if file_type == FILE_TYPE_CSV:
-            stats_output += time_stats_file_csv +"\n"
+            stats_output += time_stats_file_csv + "\n"
 
     expanded_workflow_stats.close()
 
     print stats_output
+    return errors
 
 def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_summary=True, multiple_wf=False):
     """
@@ -825,7 +932,7 @@ def print_individual_wf_job_stats(workflow_stats, workflow_id, dax_label, output
         if output_format == "text":
             max_length[0] = max(max_length[0], len(job_stats.name))
             max_length[1] = max(max_length[1], len(str(job_stats.retry_count)))
-            max_length[2] = max(max_length[2], len(job_stats.site))
+            max_length[2] = max(max_length[2], len(job_stats.site or " "))
             max_length[3] = max(max_length[3], len(str(job_stats.kickstart)))
             max_length[4] = max(max_length[4], len(str(job_stats.multiplier_factor)))
             max_length[5] = max(max_length[5], len(str(job_stats.kickstart_mult)))
@@ -923,6 +1030,7 @@ def print_wf_transformation_stats(stats, workflow_id, dax_label, fmt):
                 content[i] = content[i].ljust(max_length[i])
 
         if fmt == "csv":
+            columns = transformation_stats_col_name_csv
             content = [workflow_id, dax_label] + content
 
         if not header_printed:
@@ -1247,7 +1355,11 @@ def main():
     logger.info('workflow UUID is: %s' % wf_uuid)
 
     if output_db_url is not None:
-        print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=multiple_wf)
+        errors = print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=multiple_wf)
+
+        if errors:
+            logger.error('Failed to generate %d type(s) of statistics' % errors)
+            sys.exit(1)
 
 if __name__ == '__main__':
     main()

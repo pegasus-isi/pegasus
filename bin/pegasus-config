@@ -69,6 +69,11 @@ if ($ENV{"CLASSPATH"} ne "") {
     $classpath = $classpath . ":" . $ENV{"CLASSPATH"};
 }
 
+# construct aws batch related classpath
+my @aws_jars = sort(<$java_dir/aws/*.jar>);
+my $aws_classpath = join(":", @aws_jars);
+$classpath = $classpath . ":" . $aws_classpath;
+
 sub usage {
     my $app = basename($0); 
     print << "EOF";

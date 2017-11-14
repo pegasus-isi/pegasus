@@ -19,7 +19,7 @@ install_requires = [
     "boto==2.5.2",
     "pam==0.1.4",
     "pyOpenSSL==0.13",
-    'plex==2.0.0dev'
+    "plex==2.0.0dev"
 ]
 
 excludes = ['Pegasus.test*']
@@ -50,6 +50,9 @@ def create_manifest_file():
 #
 def setup_installer_dependencies():
     global install_requires
+
+    if sys.version_info >= (3, 0):
+        install_requires.append('future==0.16.0')
 
     if sys.version_info[1] < 7:
         install_requires.append('ordereddict==1.1')

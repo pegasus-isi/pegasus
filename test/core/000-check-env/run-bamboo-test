@@ -1,6 +1,15 @@
 #!/bin/bash
 
 echo
+echo
+echo
+echo "The current HTCondor version is:"
+echo
+
+condor_version
+
+echo
+echo 
 echo "The current test environment is:"
 echo
 

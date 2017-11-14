@@ -51,7 +51,7 @@ public class SysInfo implements Cloneable {
     /**
      * The default Architecture the entry is associated with if none is specified
      */
-    public static final Architecture DEFAULT_ARCHITECTURE = Architecture.x86;
+    public static final Architecture DEFAULT_ARCHITECTURE = Architecture.x86_64;
 
     /**
      * The architecture.

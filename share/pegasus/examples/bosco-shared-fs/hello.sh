@@ -1,7 +1,14 @@
 #!/bin/bash
+set -e
 
-# see what is in the f.a input file
-cat f.a
+input=f.a
+if [ ! -e $input ]; then
+    echo "ERROR: input file $input does not exist" 1>&2
+    exit 1
+fi
+
+# check that we got the input file                                                                                                                                                                                                                                       
+cat $input
 
 # output something on stdout
 echo "Hello!"

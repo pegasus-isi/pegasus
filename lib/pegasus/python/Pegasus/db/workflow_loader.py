@@ -27,13 +27,14 @@ class WorkflowLoader(BaseLoader):
 
     MAX_RETRIES = 10 # maximum number of retries in case of operational errors that arise because of database locked/connection dropped
 
-    def __init__(self, connString, perf=False, batch=False, props=None, db_type=None):
+    def __init__(self, connString, perf=False, batch=False, props=None, db_type=None, backup=False):
         """Init object
 
         @type   connString: string
         @param  connString: SQLAlchemy connection string - REQUIRED
         """
-        super(WorkflowLoader, self).__init__(connString, batch=batch, props=props, db_type=db_type, flush_every=1000)
+        super(WorkflowLoader, self).__init__(connString, batch=batch, props=props, db_type=db_type, backup=backup,
+                                             flush_every=1000)
 
         # "Case" dict to map events to handler methods
         self.eventMap = {

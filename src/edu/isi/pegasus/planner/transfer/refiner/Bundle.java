@@ -70,7 +70,7 @@ public class Bundle extends Basic {
      * that are being created per execution pool for stageing in data for
      * the workflow.
      */
-    public static final String DEFAULT_LOCAL_STAGE_IN_BUNDLE_FACTOR = "2";
+    public static final int DEFAULT_LOCAL_STAGE_IN_BUNDLE_FACTOR = 2;
 
     
     /**
@@ -78,14 +78,14 @@ public class Bundle extends Basic {
      * that are being created per execution pool for stageing in data for
      * the workflow.
      */
-    public static final String DEFAULT_REMOTE_STAGE_IN_BUNDLE_FACTOR = "2";
+    public static final int DEFAULT_REMOTE_STAGE_IN_BUNDLE_FACTOR = 2;
 
     /**
      * The default bundling factor that identifies the number of transfer jobs
      * that are being created per execution pool for stageing out data for
      * the workflow.
      */
-    public static final String DEFAULT_LOCAL_STAGE_OUT_BUNDLE_FACTOR = "2";
+    public static final int DEFAULT_LOCAL_STAGE_OUT_BUNDLE_FACTOR = 2;
 
 
     /**
@@ -93,8 +93,12 @@ public class Bundle extends Basic {
      * that are being created per execution pool for stageing out data for
      * the workflow.
      */
-    public static final String DEFAULT_REMOTE_STAGE_OUT_BUNDLE_FACTOR = "2";
+    public static final int DEFAULT_REMOTE_STAGE_OUT_BUNDLE_FACTOR = 2;
 
+    /**
+     * If no transfer profile is specified the value, for the parameters
+     */
+    public static final int NO_PROFILE_VALUE = -1;
 
     /**
      * The map containing the list of stage in transfer jobs that are being
@@ -277,9 +281,9 @@ public class Bundle extends Basic {
      * @param defaultKey     the default pegasus profile key
      * @param defaultValue   the default value.
      *
-     * @return the value as string.
+     * @return the value .
      */
-    protected String getDefaultBundleValueFromProperties( String key, String defaultKey, String defaultValue ){
+    protected int getDefaultBundleValueFromProperties( String key, String defaultKey, int defaultValue ){
 
         String result = mPegasusProfilesInProperties.getStringValue( key );
 
@@ -290,12 +294,11 @@ public class Bundle extends Basic {
             if( result == null ){
                 //none of the keys are mentioned in properties
                 //use the default value
-                result = defaultValue;
+                return  defaultValue;
             }
         }
 
-        return result;
-
+        return Integer.parseInt( result );
     }
     
     /**
@@ -582,7 +585,7 @@ public class Bundle extends Basic {
 //        String site = job.getSiteHandle();
         String site = job.getStagingSiteHandle();
 
-        int bundle = bundleValue.determine( this.mTXStageOutImplementation, job );
+        int bundle = getStageOutBundleValue( bundleValue, job ); 
 
         if ( level != mCurrentSOLevel ){
             mCurrentSOLevel = level;
@@ -862,6 +865,17 @@ public class Bundle extends Basic {
         map = new HashMap();
         
         return map;
+    }
+
+    /**
+     * Returns the bundling value to be used for creating stageout jobs for a job
+     * 
+     * @param bundleValue
+     * @param job
+     * @return 
+     */
+    protected int getStageOutBundleValue(BundleValue bundleValue, Job job) {
+        return bundleValue.determine( this.mTXStageOutImplementation, job );
     }
 
     
@@ -1299,7 +1313,7 @@ public class Bundle extends Basic {
         /**
          * The default bundle value to use.
          */
-        private String mDefaultBundleValue;
+        private int mDefaultBundleValue;
 
 
         /**
@@ -1323,7 +1337,7 @@ public class Bundle extends Basic {
          * @param defaultKey the default Profile Key to be used if key is not found.
          * @param defaultValue the default value to be associated if no key is found.
          */
-        public void initialize( String key, String defaultKey, String defaultValue ){
+        public void initialize( String key, String defaultKey, int defaultValue ){
             mProfileKey         = key;
             mDefaultProfileKey  = defaultKey;
             mDefaultBundleValue = defaultValue;
@@ -1351,31 +1365,52 @@ public class Bundle extends Basic {
         * @return the bundle factor.
         */
         public int determine(  Implementation implementation, Job job  ){
+           return this.determine( implementation, job, mDefaultBundleValue );
+
+        }
+        
+       /**
+        * Determines the bundle factor for a particular site on the basis of the
+        * stage in bundle value associcated with the underlying transfer
+        * transformation in the transformation catalog. If the key is not found,
+        * then the default value is returned. In case of the default value being
+        * null the global default is returned.
+        * 
+        * The value is stored internally to ensure that a subsequent
+        * call to get(String site) returns the value determined.
+        * 
+        * @param implementation  the transfer implementation being used
+        * @param job   the compute job for which the bundle factor needs to 
+        *              be determined.
+        * @param defaultValue  the default value to use
+        * 
+        * @return the bundle factor.
+        */
+        public int determine(  Implementation implementation, Job job , int defaultValue ){
            String site = job.getStagingSiteHandle();
 
             //look up the value in SiteCatalogEntry for the store
            SiteCatalogEntry entry = Bundle.this.mSiteStore.lookup( site );
 
-           //sanity check
-           if( entry == null ){
-               return Integer.parseInt( mDefaultBundleValue );
+           //check if a profile are set in site catalog entry
+           String profileValue = null;
+           if( entry != null ){
+                //check for Pegasus Profile mProfileKey in the site entry
+                Pegasus profiles = (Pegasus) entry.getProfiles().get( NAMESPACES.pegasus );
+                profileValue = profiles.getStringValue( mProfileKey );
+                if( profileValue == null ){
+                    //try to look up value of default key
+                    profileValue = profiles.getStringValue( mDefaultProfileKey );
+                }
            }
-
-           //check for Pegasus Profile mProfileKey in the site entry
-           Pegasus profiles = (Pegasus) entry.getProfiles().get( NAMESPACES.pegasus );
-           String value = profiles.getStringValue( mProfileKey );
-           if( value == null ){
-               //try to look up value of default key
-               value = profiles.getStringValue( mDefaultProfileKey );
-           }
-
-           //if value is still null , rely of the default bundle value
-           value = ( value == null )?
-                   this.mDefaultBundleValue:
-                   value;
-
-           return Integer.parseInt(value);
-
+           
+           //if value is still null, grab the default value
+           //when initialized from properties
+           return ( profileValue == null && mDefaultBundleValue != Bundle.NO_PROFILE_VALUE )?
+                   mDefaultBundleValue://the value used in the properties file
+                   defaultValue;
+           
+          
         }
        
        

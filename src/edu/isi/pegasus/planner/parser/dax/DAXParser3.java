@@ -291,6 +291,10 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                     return m;
                 }//end of element adag
                 else if( element.equals( "argument" ) ){
+                    //arguments are constructed from character data
+                    //since we don't trim it by default, reset text content
+                    //buffer explicitly at start of arguments tag
+                    mTextContent.setLength(0);
                     return new Arguments();
                 }
                 return null;
@@ -1248,9 +1252,15 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
         if (mJobPrefix != null) {
             name.append(mJobPrefix);
         }
-
+        
+        //PM-1222 strip out any . from transformation name
+        String txName = j.getTXName();
+        if( txName != null && txName.indexOf( ".") != -1 ){
+            txName = txName.replaceAll( "\\.", "_" );
+        }
+        
         //append the name and id recevied from dax
-        name.append(j.getTXName());
+        name.append( txName );
         name.append("_");
         name.append(j.getLogicalID());
         return name.toString();
@@ -1326,17 +1336,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
          * @param rl  the ReplicaLocation object
          */
         public void addArgument(ReplicaLocation rl) {
-            mBuffer.append( " " ).append( rl.getLFN() ).append( " ");
-        }
-
-
-        /**
-         * Adds a file name to the argument string
-         *
-         * @param file  the file object.
-         */
-        private void addArgument( edu.isi.pegasus.planner.dax.File file ){
-            mBuffer.append(  " " ).append( file.getName() ).append( " " );
+            mBuffer.append( rl.getLFN() );
         }
 
 

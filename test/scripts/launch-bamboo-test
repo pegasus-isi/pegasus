@@ -120,7 +120,7 @@ if cat monitord.log | grep -E '(ERR)|(CRITICAL)' >/dev/null 2>&1; then
     STATUS=$(($STATUS + 1))
 fi
 
-if cat monitord.log | grep WARN | grep -v -E '(read_stdout_stderr_files)|(unable to read error file)|(truncating std)' >/dev/null 2>&1; then
+if cat monitord.log | grep -v "DAGMan was aborted for workflow" | grep WARN | grep -v -E '(read_stdout_stderr_files)|(unable to read error file)|(truncating std)' >/dev/null 2>&1; then
     echo "monitord log contains warnings:"
     echo
     cat monitord.log
@@ -138,12 +138,17 @@ if [ $METRICS_TOTAL_JOBS -ne $NUM_SUBMIT_FILES ]; then
     STATUS=$(($STATUS + 1))
 fi
 
+#Check exitcode log file
+$TOP_DIR/test/scripts/parse-exitcode-json
+STATUS=$(($STATUS + $?))
+
 
 if [ $STATUS -ne 0 ]; then
     echo "Test failed, creating tarball..."
-    DIR="/nfs/ccg3/scratch/gideon/pegasus-failures"
+    DIR="/nfs/ccg3/scratch-purge-no-backups/pegasus-failures"
     if ! [ -d "$DIR" ]; then
-        DIR="/tmp"
+        mkdir -p "$DIR"
+        chmod 1777 "$DIR"
     fi
     TARFILE=$(mktemp $DIR/pegasus-failure-XXXXXX.tar.gz)
     tar czf $TARFILE $RUN_DIR 2>&1

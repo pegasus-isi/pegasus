@@ -439,7 +439,7 @@ public class ReplicaCatalogBridge
 
         
         //check in the main replica catalog
-        if ( this.mDAXReplicaStore.isEmpty() &&
+        if ( ( this.mDAXReplicaStore.isEmpty() && mDirectoryReplicaStore.isEmpty()) &&
                 ( mRCDown || mReplicaCatalog == null )) {
             mLogger.log("Replica Catalog is either down or connection to it was never opened ",
                         LogManager.WARNING_MESSAGE_LEVEL);
@@ -663,10 +663,6 @@ public class ReplicaCatalogBridge
        if( !newJob.dagmanVariables.containsKey( Dagman.CATEGORY_KEY ) ){
            newJob.dagmanVariables.construct( Dagman.CATEGORY_KEY, DEFAULT_REGISTRATION_CATEGORY_KEY );
        }
-
-        //in order to make sure that COG picks the default proxy
-        //correctly through condor
-        newJob.condorVariables.construct( "getenv", "true" );
 
         return newJob;
     }

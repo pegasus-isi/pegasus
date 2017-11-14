@@ -144,6 +144,7 @@ success = 0					# Number of successful jobs
 failed = 0					# Number of failed jobs
 unsubmitted = 0					# Number of unsubmitted jobs
 unknown = 0					# Number of jobs in an unknown state
+held    = 0                 # number of held jobs
 failed_jobs = []				# List of jobs that failed
 unknown_jobs = []				# List of jobs that neither succeeded nor failed
 
@@ -911,6 +912,7 @@ def print_top_summary():
     print_console( " Total jobs         : % 6d (%3.2f%%)" % (total, 100 * (1.0 * total/(total or 1))) )
     print_console( " # jobs succeeded   : % 6d (%3.2f%%)" % (success, 100 * (1.0 * success/(total or 1))) )
     print_console( " # jobs failed      : % 6d (%3.2f%%)" % (failed, 100 * (1.0 * failed/(total or 1))) )
+    print_console( " # jobs held        : % 6d (%3.2f%%)" % (held, 100 * (1.0 * held/(total or 1))) )
     print_console( " # jobs unsubmitted : % 6d (%3.2f%%)" % (unsubmitted, 100 * (1.0 * unsubmitted/(total or 1))) )
     if unknown > 0:
         print_console( " # jobs unknown     : % 6d (%3.2f%%)" % (unknown, 100 * (1.0 * unknown/(total or 1)))  )
@@ -1044,7 +1046,7 @@ def analyze_db(config_properties):
     """
     This function runs the analyzer using data from the database.
     """
-    global total, success, failed, unsubmitted, unknown
+    global total, success, failed, unsubmitted, unknown, held
 
     # Get the database URL
     try:
@@ -1079,6 +1081,9 @@ def analyze_db(config_properties):
     success = total_success_failed.succeeded
     failed = total_success_failed.failed
 
+    held_jobs = workflow_stats.get_total_held_jobs()
+    held = len(held_jobs)
+
     # PM-1039
     if success is None:
         success = 0
@@ -1100,6 +1105,22 @@ def analyze_db(config_properties):
              sys.exit(2)
          # Workflow has no failures, exit with exitcode 0  
          sys.exit(0)
+
+    # PM-1126 print information about held jobs
+    if held > 0:
+        # Print header
+        print_console("Held jobs' details".center(80, '*'))
+        print_console()
+
+        for held_job in held_jobs:
+            #each tuple is max_ji_id, jobid, jobname, reason
+            #first two are database id's for debugging
+            print_console( held_job.jobname.center(80, '=') )
+            print_console()
+            print_console( "submit file            : %s" % (held_job.jobname + ".sub" or '-') )
+            print_console( "last_job_instance_id   : %s" % (held_job[0] or '-') )
+            print_console( "reason                 : %s" % (held_job.reason or '-') )
+            print_console()
 
     # Now, print information about jobs that failed...
     if failed > 0:

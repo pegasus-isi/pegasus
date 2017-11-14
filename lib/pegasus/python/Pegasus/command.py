@@ -9,10 +9,11 @@ log = logging.getLogger(__name__)
 
 class Command(object):
     description = None
+    epilog = None
     usage = "Usage: %prog [options] [args]"
 
     def __init__(self):
-        self.parser = OptionParser(usage=self.usage, description=self.description)
+        self.parser = OptionParser(usage=self.usage, description=self.description, epilog=self.epilog)
 
     def parse(self, args):
         self.options, self.args = self.parser.parse_args(args)
@@ -56,7 +57,6 @@ class LoggingCommand(Command):
 
 class CompoundCommand(Command):
     "A Command with multiple sub-commands"
-    description = None
     usage = "%prog COMMAND [options] [args]"
     commands = []
     aliases = {}

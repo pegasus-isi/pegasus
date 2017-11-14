@@ -700,7 +700,9 @@ int main(int argc, char* argv[]) {
 
     /* is there really something to run? */
     if (appinfo.application.isValid != 1) {
-        printerr("FATAL: The main job specification is invalid or missing.\n");
+        printerr("FATAL: Unable to execute the specified binary. It might not exist,"
+                 " have the correct permissions, or be of the right type for the"
+                 " current system.\n");
         return 127;
     }
 

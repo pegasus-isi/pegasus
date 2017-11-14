@@ -53,10 +53,13 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
     public static final String DEFAULT_MAX_JOBS_FOR_CLEANUP_CATEGORY = "4";
 
     /**
-     * The default value for the number of clustered cleanup jobs created per
-     * level.
+     * If user has not specified any value themselves
      */
-    public static final int DEFAULT_CLUSTERED_CLEANUP_JOBS_PER_LEVEL = 2;
+    protected static final int NO_PROFILE_VALUE = -1;
+    
+    public static final String SCALING_MESSAGE = "Pegasus now has a strategy for scaling cleanup jobs based on size of workflow. " +
+                                                 "Consider removing the property pegasus.file.cleanup.clusters.num";
+    
 
     /**
      * The mapping to siteHandle to all the jobs that are mapped to it mapping
@@ -152,7 +155,7 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
             mProps.setProperty(key, DEFAULT_MAX_JOBS_FOR_CLEANUP_CATEGORY);
         }
 
-        mCleanupJobsPerLevel = -1;
+        mCleanupJobsPerLevel = NO_PROFILE_VALUE;
         String propValue = mProps.getMaximumCleanupJobsPerLevel();
         int value = -1;
         try {
@@ -180,14 +183,17 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
                 mLogger.log("Cluster Size of cleanup jobs  " + mCleanupJobsSize,
                         LogManager.CONFIG_MESSAGE_LEVEL);
             } else {
-                //we rely on a default value for the clustered cleanup jobs
-                mCleanupJobsPerLevel = DEFAULT_CLUSTERED_CLEANUP_JOBS_PER_LEVEL;
+                //PM-1212 no hardcoded default value for number of clustered cleanup jobs
+                //instead we compute based on levels 
+                mCleanupJobsPerLevel = NO_PROFILE_VALUE;
             }
         }
-        if (!mUseSizeFactor) {
+        if (!mUseSizeFactor && mCleanupJobsPerLevel != NO_PROFILE_VALUE) {
             //log a config message for the number of cleanup jobs
             mLogger.log("Maximum number of cleanup jobs to be created per level " + mCleanupJobsPerLevel,
                     LogManager.CONFIG_MESSAGE_LEVEL);
+            //PM-1212 log a message telling users to consider disabling the knob
+            mLogger.log( SCALING_MESSAGE, LogManager.INFO_MESSAGE_LEVEL );
         }
     }
 

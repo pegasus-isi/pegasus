@@ -31,11 +31,13 @@ import traceback
 from Pegasus.tools import utils
 from Pegasus.monitoring.job import Job
 from Pegasus.tools import kickstart_parser
+from Pegasus.monitoring.metadata import Metadata
 
 logger = logging.getLogger(__name__)
 
 # Optional imports, only generate 'warnings' if they fail
 NLSimpleParser = None
+
 
 try:
     from Pegasus.netlogger.parsers.base import NLSimpleParser
@@ -53,6 +55,7 @@ re_parse_planner_args = re.compile(r"\s*-Dpegasus.log.\*=(\S+)\s.*", re.IGNORECA
 # used while parsing the job .err file.
 re_parse_pegasuslite_ec = re.compile(r'^PegasusLite: exitcode (\d+)$', re.MULTILINE)
 #re_parse_register_input_files = re.compile(r'^([a-zA-z\.\d\\_-]+)\s+([\w]+://[\w\.\-:@]*/[\S ]*)\s+(\w=\".*\")*')
+
 
 # Constants
 MONITORD_START_FILE = "monitord.started"   # filename for writing when monitord starts
@@ -79,6 +82,23 @@ class Workflow:
     """
     # Class variables, used to send link parent jobs to sub workflows
     wf_list = {}
+
+    @staticmethod
+    def get_numeric_version( major, minor, patch):
+        """
+
+        :param major:
+        :param minor:
+        :param patch:
+        :return: int version
+        """
+
+        version = "%02d%02d%02d" %(major, minor, patch)
+        return int(version)
+
+    # class level variable constant
+    CONDOR_VERSION_8_3_3 = int("080303")
+    CONDOR_VERSION_8_2_8 = int("080208") # last stable release that did not report held job reasons
 
     def output_to_db(self, event, kwargs):
         """
@@ -146,6 +166,7 @@ class Workflow:
         except:
             logger.warning("unable to read %s!" % (dag_file))
         else:
+            logger.info( "Parsing DAG file %s" %dag_file)
             for dag_line in DAG:
                 lc_dag_line = dag_line.lower().lstrip();
                 if lc_dag_line.startswith("job"):
@@ -587,7 +608,7 @@ class Workflow:
         # Send sub-workflow event to database
         self.output_to_db("xwf.map.subwf_job", kwargs)
 
-    def db_send_wf_state(self, state, timestamp=None):
+    def db_send_wf_state(self, state, timestamp=None, reason=None):
         """
         This function sends to the DB information about the current
         workflow state to both the stampede database and dashboard database
@@ -607,6 +628,7 @@ class Workflow:
         # Make sure we include the wf_uuid
         kwargs["xwf__id"] = self._wf_uuid
         kwargs["ts"] = timestamp
+        kwargs["reason"] = reason
         # Always decrement the restart count by 1
         kwargs["restart_count"] = self._restart_count - 1
         if state == "end":
@@ -649,6 +671,8 @@ class Workflow:
                 self._dagman_exit_code = UNKNOWN_FAILURE_CODE
                 self._JSDB.write("%d INTERNAL *** DAGMAN_FINISHED %s ***\n" % (prev_wf_end_timestamp, self._dagman_exit_code))
                 self.db_send_wf_state(  "end", prev_wf_end_timestamp )
+                # PM-1217 reset exitcode to None as we don't want monitord to stop monitoring this workflow
+                self._dagman_exit_code = None
 
 
         if state == "start":
@@ -662,8 +686,9 @@ class Workflow:
         if self.check_notifications() == True and self._notifications_manager is not None:
             self._notifications_manager.process_workflow_notifications(self, state)
 
-        self.db_send_wf_state(state)
+        self.db_send_wf_state( state, reason=self._current_state_reason )
         self._last_known_state = state
+        self._current_state_reason = None # PM-1121 reset state reason after we have pushed to db
 
     def start_wf(self):
         """
@@ -778,6 +803,7 @@ class Workflow:
         self._user = None
         self._grid_dn = None
         self._planner_version = None
+        self._dagman_version  = None            # dagman version as integer
         self._last_submitted_job = None
         self._jobs_map = {}
         self._jobs = {}
@@ -806,6 +832,8 @@ class Workflow:
         self._walltime = {}                     # jid --> walltime
         self._job_site = {}                     # last site a job was planned for
         self._last_known_state = None           # last known state of the workflow. updated whenever change_wf_state is called
+        self._current_state_reason = None       # the reason if any for the current known state of the workflow
+        self._last_known_job = None             # last know job, used for tracking job held reason PM-749
         self._is_pmc_dag = False                # boolean to track whether monitord is parsing a PMC DAG i.e pmc-only mode of Pegasus
 
         self.init_clean()
@@ -891,7 +919,6 @@ class Workflow:
 
         if not self._replay_mode:
             # Recover state from a previous run
-            self.read_workflow_state()
             self.read_workflow_progress()
             if self._previous_processed_line != 0:
                 # Recovery mode detected, reset last_processed_line so
@@ -899,6 +926,9 @@ class Workflow:
                 # file...
                 logger.info( "Setting last processed line to 0 in recovery mode to ensure population starts afresh")
                 self._last_processed_line = 0
+            else:
+                # PM-1209 we only read workflow state when we know it is not the monitord recovery mode
+                self.read_workflow_state()
 
         # Determine location of jobstate.log file
         my_jsd = (jsd or utils.jobbase)
@@ -918,7 +948,7 @@ class Workflow:
                 # Append to current one if not in replay mode and not
                 # in recovering from previous errors
                 # this is for rescue dags and when a workflow is run for the first time
-                logger.info( "Appending to exisitng jobstate.log replay_mode %s previous_processed_line %s" %(self._replay_mode, self._previous_processed_line))
+                logger.info( "Appending to existing jobstate.log replay_mode %s previous_processed_line %s" %(self._replay_mode, self._previous_processed_line))
                 self._JSDB = open(self._jsd_file, 'a', 0)
             else:
                 # Rotate jobstate.log file, if any in case of replay
@@ -1180,10 +1210,16 @@ class Workflow:
         # jobid is in another state, return None
         return None
 
-    def db_send_job_brief(self, my_job, event, status=None):
+    def db_send_job_brief(self, my_job, event, status=None, reason=None):
         """
         This function sends to the DB basic state events for a
         particular job
+
+        :param my_job:
+        :param event:
+        :param status:
+        :param reason: reason for the job state event
+        :return:
         """
         # Check if database is configured
         if self._sink is None:
@@ -1198,6 +1234,7 @@ class Workflow:
         kwargs["job_inst__id"] = my_job._job_submit_seq
         kwargs["ts"] = my_job._job_state_timestamp
         kwargs["js__id"] = my_job._job_state_seq
+        kwargs["reason"] = reason
         if my_job._sched_id is not None:
             kwargs["sched__id"] = my_job._sched_id
         if status is not None:
@@ -1212,6 +1249,12 @@ class Workflow:
         if event == "pre.end":
             # For pre-script SUCCESS/FAILED, we send the exitcode
             kwargs["exitcode"] = str(my_job._pre_script_exitcode)
+
+        if event == "submit.start":
+            if my_job._site_name is not None:
+                # PM-1196 put in the site information that we have from
+                # parsing the job submit file
+                kwargs["site"] = my_job._site_name
 
         # Send job state event to database
         self.output_to_db("job_inst." + event, kwargs)
@@ -1242,6 +1285,7 @@ class Workflow:
             kwargs["stderr.file"] = my_job._error_file
         if my_job._sched_id is not None:
             kwargs["sched__id"] = my_job._sched_id
+
 
         # Send job state event to database
         self.output_to_db("job_inst.main.start", kwargs)
@@ -1715,10 +1759,10 @@ class Workflow:
             # Make sure we include the wf_uuid ,
             kwargs["xwf__id"] = my_job._wf_uuid
             kwargs["lfn__id"] = lfn
-            for key in metadata.keys():
+            for key in metadata.get_attribute_keys():
                 #send an event per metadata key value pair
                 kwargs[ "key" ] = key
-                kwargs[ "value" ] = metadata[key]
+                kwargs[ "value" ] = metadata.get_attribute_value(key)
                 self.output_to_db( "rc.meta", kwargs)
 
 
@@ -1727,9 +1771,13 @@ class Workflow:
         """
         This function tries to parse the kickstart output file of a
         given job and collect information for the stampede schema.
+        
+        Return an the application exitcode from the kickstart file only if there is exactly
+        one kickstart record, else None
         """
         my_output = []
         parse_kickstart = True
+        app_exitcode = None
 
         #a boolean to track if the job has rotated stdout/stderr files
         #used to track the case where we have rotated files for non kickstart jobs
@@ -1777,10 +1825,11 @@ class Workflow:
 
             # Add job information to the Job class.
             logger.debug("Starting extraction of job_info from job output file %s " % my_job_output_fn)
-            my_invocation_found = my_job.extract_job_info(self._run_dir, my_output)
+            my_invocation_found = my_job.extract_job_info( my_output)
             logger.debug("Completed extraction of job_info from job output file %s " % my_job_output_fn)
 
             if my_invocation_found:
+                num_records = len(my_output)
                 # Loop through all records
                 for record in my_output:
                     # Skip non-invocation records
@@ -1791,6 +1840,13 @@ class Workflow:
                     if self.check_notifications() == True and self._notifications_manager is not None:
                         self._notifications_manager.process_invocation_notifications(self, my_job, my_task_id, record)
 
+                        if num_records == 1:
+                            # PM-1176 for clustered records we send INVOCATION notifications because that is how
+                            # the planner generated it. Send job notification only for a non clustered job
+                            # we have now real app exitcode
+                            if "exitcode" in record :
+                                app_exitcode = record["exitcode"]
+
                     # Send task information to the database
                     self.db_send_task_start(my_job, "MAIN_JOB", my_task_id, record)
                     self.db_send_task_end(my_job, "MAIN_JOB", my_task_id, record)
@@ -1798,8 +1854,12 @@ class Workflow:
                     # PM-992
                     # for outputs in xml record send information as file metadata
                     if "outputs" in record:
+                        # Start empty
+                        files = []
+                        for lfn in record["outputs"].keys():
+                            files.append( record["outputs"][lfn] )
                         self.db_send_files_metadata( my_job, my_task_id, record["outputs"] )
-
+                        
                     # Increment task id counter
                     my_task_id = my_task_id + 1
 
@@ -1868,7 +1928,7 @@ class Workflow:
 
             # Read stdout/stderr files, if not disabled by user
             if self._store_stdout_stderr:
-                my_job.read_stdout_stderr_files(self._run_dir)
+                my_job.read_stdout_stderr_files()
 
             # parse_kickstart will be False for subdag jobs
             if my_job._exec_job_id.startswith("subdax_") or not parse_kickstart:
@@ -1885,6 +1945,7 @@ class Workflow:
 
         # register any files associated with the job
         self.register_files( my_job )
+        return app_exitcode
 
 
 
@@ -2067,7 +2128,7 @@ class Workflow:
         # Everything done
         return
 
-    def update_job_state(self, jobid, sched_id, job_submit_seq, job_state, status, walltime):
+    def update_job_state(self, jobid, sched_id, job_submit_seq, job_state, status, walltime, reason=None ):
         """
         This function updates a	job's state, and also writes
         a line in our jobstate.out file.
@@ -2082,6 +2143,11 @@ class Workflow:
             return
         # Got it
         my_job = self._jobs[jobid, job_submit_seq]
+
+        # PM-749 track last job
+        if job_state is not None:
+            self._last_known_job = my_job
+
 
         # Check for the out of order submit event case
         if my_job._sched_id is None and sched_id is not None:
@@ -2111,10 +2177,18 @@ class Workflow:
             # Not generating events and notifcations, nothing else to do
             return
 
+        # PM-749 only if condor version > 8.3.3 we look for JOB_HELD_REASON state
+        job_held_state = "JOB_HELD"
+        if self._dagman_version >= Workflow.CONDOR_VERSION_8_3_3:
+            job_held_state = "JOB_HELD_REASON"
+
         # PM-793 only parse job output here if a postscript is NOT associated with
         # the job in the .dag file
         # OR we are in the PMC only mode where there are no postscripts associated
         parse_job_output_on_job_success_failure = not self.job_has_postscript(jobid) or self._is_pmc_dag
+
+        # PM-1176 track kickstart app exitcode only for non clustered jobs
+        real_app_exitcode = None
 
         # Parse the kickstart output file, also send mainjob tasks, if needed
         if job_state == "JOB_SUCCESS" or job_state == "JOB_FAILURE":
@@ -2123,11 +2197,8 @@ class Workflow:
                 # PM-793 only parse job output here if a postscript is NOT associated with
                 # the job in the .dag file
                 # OR we are in the PMC only mode where there are no postscripts associated
-                self.parse_job_output(my_job, job_state)
+                real_app_exitcode = self.parse_job_output(my_job, job_state)
 
-        # Take care of job-level notifications
-        if self.check_notifications() == True and self._notifications_manager is not None:
-            self._notifications_manager.process_job_notifications(self, job_state, my_job, status)
 
         if self._sink is None:
             # Not generating events, nothing else to do except clean
@@ -2143,13 +2214,13 @@ class Workflow:
             # the database entry for this job
             self.db_send_job_brief(my_job, "submit.start")
 
+
         # Check if we need to send any tasks to the database
         if job_state == "PRE_SCRIPT_SUCCESS" or job_state == "PRE_SCRIPT_FAILURE":
             # PRE script finished
             self.db_send_task_start(my_job, "PRE_SCRIPT")
             self.db_send_task_end(my_job, "PRE_SCRIPT")
         elif job_state == "POST_SCRIPT_SUCCESS" or job_state == "POST_SCRIPT_FAILURE":
-
             if my_job._main_job_exitcode is None:
                 #PM-1070 set the main exitcode to the postscript exitcode
                 #No JOB_TERMINATED OR JOB_SUCCESS OR JOB_FAILURE for this job instance
@@ -2157,7 +2228,7 @@ class Workflow:
                 logger.warning( "Set main job exitcode for %s to post script failure code %s" %(my_job._exec_job_id, my_job._post_script_exitcode))
 
             #PM-793 we parse the job.out and .err files when postscript finishes
-            self.parse_job_output(my_job, job_state)
+            real_app_exitcode = self.parse_job_output(my_job, job_state)
 
             # check to see if there is a deferred job_inst.main.end event that
             # has to be sent to the database
@@ -2167,6 +2238,13 @@ class Workflow:
             # POST script finished
             self.db_send_task_start(my_job, "POST_SCRIPT")
             self.db_send_task_end(my_job, "POST_SCRIPT")
+
+        # PM-1176 only send any notifications after we have parsed .out file if required
+        # Take care of job-level notifications
+        if self.check_notifications() == True and self._notifications_manager is not None :
+            if real_app_exitcode is not None:
+                status = real_app_exitcode
+            self._notifications_manager.process_job_notifications(self, job_state, my_job, status)
 
         # Now, figure out what state event we need to send to the database
         if job_state == "PRE_SCRIPT_STARTED":
@@ -2237,8 +2315,9 @@ class Workflow:
             my_job._main_job_exitcode = 1
             self.db_send_job_brief( my_job, "abort.info")
             self.db_send_job_end(my_job, -1, True );
-        elif job_state == "JOB_HELD":
-            self.db_send_job_brief(my_job, "held.start")
+        elif job_state == job_held_state: # JOB_HELD_REASON or JOB_HELD states
+            # PM-749 we send the JOB_HELD event once we know the reason for it.
+            self.db_send_job_brief(my_job, "held.start", reason=reason)
         elif job_state == "JOB_EVICTED":
             self.db_send_job_brief(my_job, "main.term", -1)
         elif job_state == "JOB_RELEASED":
@@ -2447,3 +2526,33 @@ class Workflow:
         my_dagman_out = os.path.join(my_retry_dir, my_dagman_file)
 
         return my_dagman_out
+
+    def set_dagman_version( self, major, minor, patch):
+        """
+        Sets the dagman version
+
+        :param major:
+        :param minor:
+        :param patch:
+        :return:
+        """
+        try:
+            self._dagman_version = Workflow.get_numeric_version(major, minor, patch)
+        except:
+            # failsafe. default to 8.2.8 last stable release that did not report held job reasons
+            self._dagman_version = Workflow.CONDOR_VERSION_8_2_8
+
+    def get_dagman_version( self):
+        """
+        Return the dagman version as integer
+
+        :return:
+        """
+        return self._dagman_version
+
+
+
+
+
+# End of Workflow Class
+

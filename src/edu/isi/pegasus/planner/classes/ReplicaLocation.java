@@ -91,9 +91,9 @@ public class ReplicaLocation
      * @param pfns the list of <code>ReplicaCatalogEntry</code> objects.
      */
     public ReplicaLocation( String lfn , Collection<ReplicaCatalogEntry> pfns ){
-        mMetadata = new Metadata();
         mLFN      = lfn;
-
+        mMetadata = this.removeMetadata( pfns );
+        
         //PM-1001 always create a separate list only if required
         mPFNList = new ArrayList( pfns ) ;
 
@@ -344,6 +344,30 @@ public class ReplicaLocation
         return sb.toString();
     }
 
+    /**
+     * Helper method to retrofit RCE into the metadata object
+     * For replica catalog, metadata is per LFN
+     * 
+     * @param rces
+     * 
+     * @return Metadata object 
+     */
+    protected final Metadata removeMetadata( Collection<ReplicaCatalogEntry> rces ){
+        Metadata m = new Metadata();
+        for( ReplicaCatalogEntry rce: rces ){
+            for(Iterator<String> it = rce.getAttributeIterator(); it.hasNext(); ){
+                String attribute = it.next();
+                if( attribute.equals( ReplicaCatalogEntry.RESOURCE_HANDLE) || 
+                                     attribute.equals( ReplicaCatalogEntry.DEPRECATED_RESOURCE_HANDLE ) ){
+                    //skip
+                    continue;
+                }
+                m.construct(attribute, (String) rce.getAttribute( attribute));
+                it.remove();
+            }
+        }
+        return m;
+    }
 
     /**
      * Sanitizes a tuple list . Sets the resource handle to a default value if not
