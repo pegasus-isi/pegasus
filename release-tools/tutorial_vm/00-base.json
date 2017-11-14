@@ -40,6 +40,7 @@
     {
       "type": "shell",
       "start_retry_timeout": "5m",
+      "expect_disconnect": true,
       "environment_vars": [
         "USERNAME=tutorial",
         "PASSWD=pegasus",
