@@ -2410,7 +2410,7 @@ public class PegasusProperties implements Cloneable {
      */
     public boolean doIntegrityChecking() {
         return Boolean.parse( mProps.getProperty( "pegasus.integrity.checking" ),
-                              false );
+                              true );
     }
 
 
