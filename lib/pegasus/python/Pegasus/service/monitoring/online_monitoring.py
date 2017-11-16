@@ -1,5 +1,5 @@
-from influxdb.influxdb08 import InfluxDBClient
-from influxdb.influxdb08.client import InfluxDBClientError
+from influxdb import InfluxDBClient
+from influxdb.exceptions import InfluxDBClientError
 import urlparse
 import os
 import logging
@@ -187,9 +187,8 @@ class OnlineMonitord:
         try:
             point = [
                 {
-                    "name": trace_id,
-                    "columns": data.keys(),
-                    "points": [data.values()]
+                    "measurement": trace_id,
+                    "fields": data
                 }
             ]
             self.influx_client.write_points(point, time_precision="u")
