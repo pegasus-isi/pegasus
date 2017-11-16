@@ -300,6 +300,8 @@ def parse_dag(dag_file):
                 pass
             elif l.startswith("CATEGORY"):
                 pass
+            elif l.startswith("VARS"):
+                pass
             elif len(l) == 0 or l[0] == "#":
                 # Skip blank lines and comments
                 pass
