@@ -49,6 +49,10 @@ PACKAGES+=influxdb
 PACKAGES+=pika
 PACKAGES+=dateutil
 PACKAGES+=six
+PACKAGES+=chardet
+PACKAGES+=idna
+PACKAGES+=certifi
+PACKAGES+=urllib3
 
 PYOPENSSL_ARGS=
 ifeq ($(OSID),macos10)
@@ -82,12 +86,11 @@ $(LIBDIR)/jinja2: Jinja2-2.7.tar.gz
 $(LIBDIR)/markupsafe: MarkupSafe-0.18.tar.gz
 $(LIBDIR)/wtforms: WTForms-1.0.3.tar.gz
 $(LIBDIR)/werkzeug: Werkzeug-0.9.3.tar.gz
-$(LIBDIR)/requests: requests-2.8.0.tar.gz
+$(LIBDIR)/requests: requests-2.18.4.tar.gz
 $(LIBDIR)/itsdangerous.py: itsdangerous-0.21.tar.gz
 $(LIBDIR)/boto: boto-2.38.0.tar.gz
 $(LIBDIR)/pam.py: pam-0.1.4.tar.gz
 $(LIBDIR)/OpenSSL: pyOpenSSL-16.2.0.tar.gz
-$(LIBDIR)/six: six-1.10.0.tar.gz
 $(LIBDIR)/enum34: enum34-1.1.6.tar.gz
 $(LIBDIR)/cffi: cffi-1.10.0.tar.gz
 $(LIBDIR)/cryptography: cryptography-2.0.3.tar.gz
@@ -96,10 +99,15 @@ $(LIBDIR)/MySQLdb: MySQL-python-1.2.5.tar.gz
 $(LIBDIR)/psycopg2: psycopg2-2.5.5.tar.gz
 $(LIBDIR)/ordereddict.py: ordereddict-1.1.tar.gz
 $(LIBDIR)/future: future-0.16.0.tar.gz
-$(LIBDIR)/influxdb: influxdb-2.12.0.tar.gz
-$(LIBDIR)/pika: pika-0.10.0.tar.gz
-$(LIBDIR)/dateutil: python-dateutil-2.4.2.tar.gz
-$(LIBDIR)/six: six-1.10.0.tar.gz
+$(LIBDIR)/influxdb: influxdb-4.1.1.tar.gz
+$(LIBDIR)/pika: pika-0.11.0.tar.gz
+$(LIBDIR)/dateutil: python-dateutil-2.6.1.tar.gz
+$(LIBDIR)/six: six-1.11.0.tar.gz
+$(LIBDIR)/chardet: chardet-3.0.4.tar.gz
+$(LIBDIR)/idna: idna-2.6.tar.gz
+$(LIBDIR)/certifi: python-certifi-2017.11.05.tar.gz
+$(LIBDIR)/urllib3: urllib3-1.22.tar.gz
+
 
 clean:
 	rm -rf $(EXTDIR)

@@ -31,7 +31,7 @@ else
     packages+=("MarkupSafe-0.18")
     packages+=("WTForms-1.0.3")
     packages+=("Werkzeug-0.9.3")
-    packages+=("requests-2.8.0")
+    packages+=("requests-2.18.4")
     packages+=("itsdangerous-0.21")
     packages+=("boto-2.38.0")
     packages+=("SQLAlchemy-0.8.0")
