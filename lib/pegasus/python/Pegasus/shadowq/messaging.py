@@ -23,7 +23,7 @@ class ManifestListener(threading.Thread):
         self.channel = self.connection.channel()
 
         # Declare the exchange
-        self.channel.exchange_declare(exchange=self.manifest_exchange, type='topic')
+        self.channel.exchange_declare(exchange=self.manifest_exchange, exchange_type='topic')
 
         # Create an exclusive queue
         self.manifest_queue = self.channel.queue_declare(exclusive=True).method.queue
