@@ -41,17 +41,15 @@ project:
                       # We need a versioned copy to put on the website that
                       # excludes git files
                       (cd pegasus-source && ./release-tools/create-source-tar $VERSION && mv dist/pegasus-$VERSION.tar.gz ..)
+                      
+                      # pegasus-source.tar.gz is a tarball which is used to in subsequent buildsteps
+                      # make this a copy of the generated source tarball to keep everyhing
+                      # consistent
+                      (cd pegasus-source/dist && tar xzf ../../pegasus-$VERSION.tar.gz && mv pegasus-$VERSION pegasus-source && tar -czf ../../pegasus-source.tar.gz pegasus-source && rm -rf pegasus-source)
 
                       # Create the source tarball for python source files using setup.py
                       (cd pegasus-source && ant dist-python-source && mv dist/pegasus-python-source-$VERSION.tar.gz ..)
 
-                      # Create a source tarball with documentation and
-                      # setup files to be used as the input to later
-                      # build stages so we don't have to build the documentation
-                      # multiple times
-                      (cd pegasus-source && ant doc dist-clean)
-                      #tar -czf pegasus-source.tar.gz --exclude=.git --exclude=.gitignore pegasus-source
-                      tar -czf pegasus-source.tar.gz pegasus-source
               artifactDefinitions:
                 - name: pegasus-python-source-versioned
                   copyPattern: 'pegasus-python-source-*.tar.gz'
