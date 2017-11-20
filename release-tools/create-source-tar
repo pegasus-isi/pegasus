@@ -17,6 +17,10 @@ fi
 
 TOP_DIR=`pwd`
 
+# first build documentation - this is so that it does not have to be
+# rebuilt on platforms which do not have the full docbook toolchain
+ant doc dist-clean
+
 mkdir -p dist/pegasus-$VERSION
 
 for ITEM in `ls | grep -E -v '^(build|dist)$'`; do
