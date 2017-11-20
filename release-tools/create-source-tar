@@ -17,15 +17,23 @@ fi
 
 TOP_DIR=`pwd`
 
+# (this now takes place in build.xml)
 # first build documentation - this is so that it does not have to be
 # rebuilt on platforms which do not have the full docbook toolchain
-ant doc dist-clean
+#ant doc dist-clean
 
 mkdir -p dist/pegasus-$VERSION
 
 for ITEM in `ls | grep -E -v '^(build|dist)$'`; do
     cp -a $ITEM dist/pegasus-$VERSION/
 done
+
+# make sure the tar ball keeps working after the git repo as been removed
+if [ ! -e dist/pegasus-$VERSION/build.git.properties ]; then
+    # Set the git hash in build.properties so that we have it saved
+    HASH=$(git rev-parse HEAD)
+    printf "pegasus.build.git.hash = $HASH\n" > dist/pegasus-$VERSION/build.git.properties
+fi
 
 # remove some stuff we don't want in the source tar
 for ITEM in .git .gitignore; do
@@ -41,10 +49,6 @@ perl -p -i -e "s/\\@PEGASUS_VERSION\\@/$VERSION/g" changelog
 perl -p -i -e "s/\\@DATE\\@/$DATE_DEB/g" changelog
 perl -p -i -e "s/\\+\\@OSID\\@//g" changelog
 cd $TOP_DIR
-
-# Set the git hash in build.properties so that we have it saved
-HASH=$(git rev-parse HEAD)
-printf "pegasus.build.git.hash = $HASH\n" > dist/pegasus-$VERSION/build.git.properties
 
 cd dist/
 tar czf pegasus-$VERSION.tar.gz pegasus-$VERSION
