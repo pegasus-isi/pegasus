@@ -28,7 +28,7 @@ import org.apache.log4j.Logger;
 
 /**
  *
- * @author vahi
+ * @author Karan Vahi
  */
 public class PegasusAWSBatch {
 
@@ -115,6 +115,7 @@ public class PegasusAWSBatch {
         if( options.has( "help") ){
             try {
                 mOptionParser.printHelpOn( System.out );
+                System.exit(0);
             } catch (IOException ex) {
                 mLogger.error( ex);
             }
