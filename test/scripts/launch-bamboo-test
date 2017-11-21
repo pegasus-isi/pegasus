@@ -115,7 +115,7 @@ fi
 if cat monitord.log | grep -E '(ERR)|(CRITICAL)' >/dev/null 2>&1; then
     echo "monitord log contains errors:"
     echo
-    cat monitord.log
+    grep -E '(ERR)|(CRITICAL)' monitord.log
     echo
     STATUS=$(($STATUS + 1))
 fi
@@ -123,7 +123,7 @@ fi
 if cat monitord.log | grep -v "DAGMan was aborted for workflow" | grep WARN | grep -v -E '(read_stdout_stderr_files)|(unable to read error file)|(truncating std)' >/dev/null 2>&1; then
     echo "monitord log contains warnings:"
     echo
-    cat monitord.log
+    grep WARN monitord.log
     echo
     STATUS=$(($STATUS + 1))
 fi
