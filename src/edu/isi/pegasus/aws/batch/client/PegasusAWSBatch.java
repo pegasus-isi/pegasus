@@ -24,7 +24,11 @@ import java.util.Properties;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import joptsimple.ValueConverter;
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
 
 /**
  *
@@ -32,12 +36,26 @@ import org.apache.log4j.Logger;
  */
 public class PegasusAWSBatch {
 
-    private final Logger mLogger;
+    private static Logger mLogger;
     
     private final OptionParser mOptionParser;
     
+    /**
+     * Initializes the root logger when this class is loaded.
+     */
+    static {
+	if ((mLogger = Logger.getRootLogger()) != null) {
+	    mLogger.removeAllAppenders(); // clean house only once
+	    mLogger.addAppender(new ConsoleAppender(new PatternLayout(
+		    "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%c{1}] %m%n")));
+	    mLogger.setLevel(Level.INFO);
+            //reset logger to class specific
+            mLogger = Logger.getLogger( PegasusAWSBatch.class.getName() );
+	}
+    }
+    
     public PegasusAWSBatch(){
-        mLogger = org.apache.log4j.Logger.getLogger( PegasusAWSBatch.class.getName() );
+        //mLogger = org.apache.log4j.Logger.getLogger( PegasusAWSBatch.class.getName() );
         mOptionParser = new OptionParser();
     }
     
@@ -57,10 +75,28 @@ public class PegasusAWSBatch {
                 withRequiredArg().ofType( String.class );
         mOptionParser.acceptsAll(asList( "r", "region"), "the AWS region to run the jobs in ").
                 withRequiredArg().ofType( String.class );
+        mOptionParser.acceptsAll(asList( "l", "log-level"), "sets the logging level").
+                withRequiredArg().withValuesConvertedBy( new ValueConverter(){
+            @Override
+            public Object convert(String string) {
+                return Level.toLevel(string);
+            }
+
+            @Override
+            public Class valueType() {
+                return Level.class;
+                
+            }
+
+            @Override
+            public String valuePattern() {
+                return "error, warn, info, debug, trace";
+            }
+ } );
         mOptionParser.acceptsAll(asList( "h", "help"),   "generates help for the tool").forHelp();
         OptionSet options = null;
         try{
-            options = mOptionParser.parse(args);
+            options = mOptionParser.parse(args); 
         }
         catch( OptionException e){
             mLogger.error( e );
@@ -111,7 +147,17 @@ public class PegasusAWSBatch {
                
     }
 
+    /**
+     * Executes the client with the options passed on command line
+     * @param options 
+     */
     protected void executeCommand( OptionSet options ) {
+        
+        if( options.has( "log-level")){
+            mLogger.setLevel((Level) options.valueOf( "log-level"));
+        }
+        mLogger.debug( "Executing command");
+        
         if( options.has( "help") ){
             try {
                 mOptionParser.printHelpOn( System.out );
@@ -120,6 +166,7 @@ public class PegasusAWSBatch {
                 mLogger.error( ex);
             }
         }
+        
         
         Properties props = new Properties();
         if( options.has( "conf") ){
@@ -160,36 +207,6 @@ public class PegasusAWSBatch {
         catch( Exception e ){
             mLogger.debug( "Ignoring e as job queue can be created based on compute environemnt ", e);
         }
-        
-        /*
-        awsBatchPrefix  = (String) options.valueOf( "prefix" );
-        awsRegion       = (String) options.valueOf( "region" );
-        awsAccount      = (String) options.valueOf( "account" );
-        
-        String test = this.getAWSOptionValue(options, props, "test", "aws.test" );
-        
-        //prefer command line values over properties
-        String key = Synch.AWS_BATCH_PROPERTY_PREFIX + ".prefix";
-        awsBatchPrefix =  (awsBatchPrefix == null ) ? props.getProperty( key ) : awsBatchPrefix;
-        if( awsBatchPrefix == null ){
-            throw new RuntimeException( "Unable to determine AWS Batch prefix to use " );
-        }
-        props.setProperty( key , awsBatchPrefix);
-        
-        key = Synch.AWS_PROPERTY_PREFIX + ".region";
-        awsRegion =  (awsRegion == null ) ? props.getProperty( key ) : awsRegion;
-        if( awsRegion == null ){
-            throw new RuntimeException( "Unable to determine AWS region to use " );
-        }
-        props.setProperty( key , awsRegion);
-        
-        key = Synch.AWS_PROPERTY_PREFIX + ".account";
-        awsAccount =  (awsAccount == null ) ? props.getProperty( key ) : awsAccount;
-        if( awsAccount == null ){
-            throw new RuntimeException( "Unable to determine AWS account to use " );
-        }
-        props.setProperty( key , awsAccount);
-        */
         
         mLogger.info( "Going to connect with properties " + props + " and json map " + jsonMap );
         
