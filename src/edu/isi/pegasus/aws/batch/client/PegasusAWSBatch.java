@@ -31,10 +31,12 @@ import java.io.IOException;
 import static java.util.Arrays.asList;
 import java.util.Date;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Properties;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 import joptsimple.ValueConverter;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
@@ -179,6 +181,9 @@ public class PegasusAWSBatch {
             }
         }
         
+        //check for jobs to submit option
+        List<String> submitJobFiles = (List<String>) options.nonOptionArguments();
+        mLogger.info( "Job submit files are " + submitJobFiles );
         
         Properties props = new Properties();
         if( options.has( "conf") ){
@@ -230,8 +235,11 @@ public class PegasusAWSBatch {
         }
         sc.monitor();
         Job jobBuilder = new Job();
-        for( AWSJob j : jobBuilder.createJob( new File("sample-job-submit.json") )){
-            sc.submit(j);
+        for( String f : submitJobFiles ){
+            mLogger.info( "Submitting jobs from file " + f );
+            for( AWSJob j : jobBuilder.createJob( new File( f ) )){
+                sc.submit(j);
+            }
         }
         sc.signalToExitAfterJobsComplete();
         sc.awaitTermination();
