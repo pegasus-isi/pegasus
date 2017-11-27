@@ -178,6 +178,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
            classpathref="build.aws.classpath"
            includeantruntime="false">
       <compilerarg value="${compile.lint}"/>
+      <classpath refid="build.classpath" />
     </javac>
   </target>
 
