@@ -590,6 +590,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
       <classpath>
         <path refid="build.classpath"/>
+        <path refid="build.aws.classpath"/>
         <path location="${dist.jars}/pegasus.jar"/>
         <path location="${dist.jars}/pegasus-test.jar"/>
         <path location="${dist.jars}/vdl.jar"/>
