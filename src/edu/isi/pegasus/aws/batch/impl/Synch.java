@@ -23,14 +23,11 @@ import edu.isi.pegasus.aws.batch.builder.JobQueue;
 import edu.isi.pegasus.aws.batch.builder.JobDefinition;
 import edu.isi.pegasus.aws.batch.classes.AWSJob;
 import edu.isi.pegasus.aws.batch.classes.Tuple;
-import java.io.BufferedWriter;
+import edu.isi.pegasus.aws.batch.common.CloudWatchLog;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Collection;
-import java.util.Date;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -53,8 +50,6 @@ import software.amazon.awssdk.regions.Region;
 
 import software.amazon.awssdk.services.batch.*;
 import software.amazon.awssdk.services.batch.model.*;
-import software.amazon.awssdk.services.cloudwatchlogs.CloudWatchLogsClient;
-import software.amazon.awssdk.services.cloudwatchlogs.model.*;
 
 
 
@@ -80,6 +75,7 @@ public class Synch {
     
     public static final String COMPUTE_ENV_SUFFIX = "-compute-env";
     
+    public static final String CLOUD_WATCH_BATCH_LOG_GROUP =  "/aws/batch/job";
     /**
      * maximum sleep time in seconds
      */
@@ -298,7 +294,8 @@ public class Synch {
         int total = awsJobIDs.size();
         Set<String> doneJobs = new HashSet();
         BatchClient batchClient = BatchClient.builder().region( mAWSRegion ).build();
-        
+        CloudWatchLog cwl       = new CloudWatchLog();
+        cwl.initialze( mAWSRegion, mLogger.getLevel(), CLOUD_WATCH_BATCH_LOG_GROUP);
         while(true){
             //go through unprocessed jobs that have been submitted
             //in another thread
@@ -353,11 +350,10 @@ public class Synch {
                             mJobstateWriter.log(summary.jobName(), summary.jobId() , AWSJob.JOBSTATE.succeeded );
                             doneJobs.add( summary.jobId() );
                             numDone++;
-                            DescribeJobsRequest jobsRequest = DescribeJobsRequest.builder().
-                                                                jobs(succeededJobID).
-                                                             build();
+                            
                             mLogger.debug("Querying for succeeded job details "  + succeededJobID  );
-                            this.retrieveCloudWatchLog(batchClient, succeededJobID);
+                            File log = cwl.retrieve(succeededJobID);
+                            mLogger.debug("Log retreived for "  + succeededJobID + " to " + log  );
                         }
                     }
                 }
@@ -377,10 +373,12 @@ public class Synch {
                                 //remove the job so that we don't query for detail
                                 awsJobIDs.remove(failedJobID);
                                 numDone++;
+                                
+                                mLogger.debug("Querying for failed job details "  + failedJobID   );
+                                File log = cwl.retrieve(failedJobID);
+                                mLogger.debug("Log retreived for "  + failedJobID + " to " + log  );
                             }
                         }
-                        mLogger.debug("Querying for failed job details "  + failedJobID   );
-                        this.retrieveCloudWatchLog(batchClient, failedJobID);
                     }
                 }
                 
@@ -481,114 +479,7 @@ public class Synch {
         }
     }
     
-   /**
-    * Retrieves a cloud watch log for an AWS Job
-    * 
-    * @param batchClient the batch client
-    * @param awsJobID    the AWS job ID for the job
-    */
-   private void retrieveCloudWatchLog( BatchClient batchClient , String awsJobID ){
-       DescribeJobsRequest jobsRequest = DescribeJobsRequest.builder().
-               jobs(awsJobID).
-               build();
-       mLogger.debug("Querying for succeeded job details " + awsJobID + " " + new Date());
-       DescribeJobsResponse jobsResponse = batchClient.describeJobs(jobsRequest);
-       for (JobDetail jobDetail : jobsResponse.jobs()) {
-           try {
-               Tuple<String, String> log = determineCloudWatchLog(jobDetail);
-               this.retrieveCloudWatchLog(jobDetail.jobName(), log.getKey(), log.getValue());
-           } catch (Exception e) {
-               mLogger.error( "Error while retrieving cloud watch log for job " + awsJobID, e );
-           }
-       }
-       
-   }
    
-   /**
-    * Retrieves a cloud watch log for an AWS Job
-    * 
-    * @param jobName        the job name
-    * @param logGroup       the cloud watch log group
-    * @param streamName     the stream name
-    */
-   private void retrieveCloudWatchLog( String jobName, String logGroup, String streamName ){
-        mLogger.info( "Retrieving log for " + jobName + "for log group " + logGroup + " with stream name " + streamName );
-        CloudWatchLogsClient cwl = CloudWatchLogsClient.builder().region(mAWSRegion).build();
-        GetLogEventsRequest gle = GetLogEventsRequest.builder().
-                                                             logGroupName(logGroup).
-                                                             logStreamName( streamName ).
-                                                             startFromHead​( true ).
-                                                     build();
-        boolean done = false;
-        String previousToken = null;
-        PrintWriter pw = null;
-        try{
-            File f = new File( jobName + ".out" );
-            pw = new PrintWriter( new BufferedWriter( new FileWriter(f)));
-            mLogger.debug( "Will write out log to " + f.getAbsolutePath() );
-            while(!done) {
-                 GetLogEventsResponse response = cwl.getLogEvents(gle);
-                 for( OutputLogEvent event: response.events()){
-                     mLogger.debug(  "Retrieved event " +  event.message() );
-                     pw.println( event.message() );
-                 }
-                 String nextToken = response.nextForwardToken();
-
-                 if(  nextToken == null || nextToken.equals( previousToken) ) {
-                     //not clear if that is the right way to exit with token matching
-                     done = true;
-                 }
-                 else{
-                     gle = GetLogEventsRequest.builder().
-                                                     logGroupName( logGroup ).
-                                                     logStreamName( streamName ).
-                                                     startFromHead​( true ).
-                                                     nextToken( nextToken  ).
-                                             build();
-                 }
-                 previousToken = nextToken;
-            }
-            pw.flush();
-       }
-       catch(IOException ex){
-           mLogger.log(Priority.ERROR, ex);
-       }
-       finally{
-           if( pw != null ){
-               pw.close();
-           }
-       }
-                                                            
-    }
-   
-   private Tuple<String,String> determineCloudWatchLog(JobDetail jobDetail) {
-       //go through the attemps and get last attempt
-       AttemptDetail  detail = null;
-       String logGroup = "/aws/batch/job";
-       StringBuilder logStreamName = new StringBuilder();//karan-batch-synch-test-job-definition/default/e6b3eb37-46d3-4aa5-9208-e80eec481550
-       mLogger.debug( "determining cloud watch log ");
-       for( Iterator<AttemptDetail> it = jobDetail.attempts().iterator(); it.hasNext(); ){
-           detail = it.next();
-       }
-       if( detail != null ){
-           String taskARN = detail.container().taskArn();
-           String jobDefinition = jobDetail.jobDefinition();
-           
-           mLogger.debug( "log group: " + logGroup + " job defn: " + jobDefinition + " task arn: " + taskARN );
-           
-           String taskARNID = taskARN.substring( taskARN.lastIndexOf( "/" ) + 1 );
-           String jdBase = jobDefinition.substring(
-                                                    jobDefinition.indexOf( ":job-definition/" ) + ":job-definition/".length(),
-                                                    jobDefinition.lastIndexOf( ":"));
-           logStreamName.append( jdBase ).append( "/default/" ).append( taskARNID );
-       }
-       mLogger.info( "Log Stream name is " + logStreamName );
-       return new Tuple( logGroup, logStreamName.toString() );
-       
-    }
-    
-   
- 
     public boolean deleteJobDefinition( String arn ){
        
        
