@@ -54,12 +54,14 @@ public class CloudWatchLog {
     private CloudWatchLogsClient mCWL;
 
     private String mLogGroup;
+    
+    private final boolean mDeleteLogstreamAfterRetrieval;
 
     /**
      * The default constructor
      */
     public CloudWatchLog() {
-
+        mDeleteLogstreamAfterRetrieval = true;
     }
 
     /**
@@ -102,7 +104,7 @@ public class CloudWatchLog {
     }
 
     /**
-     * Retrieves a cloud watch log for an AWS Job
+     * Retrieves a cloud watch log for an AWS Job and then deletes the stream
      *
      * @param jobName the job name
      * @param logGroup the cloud watch log group
@@ -155,7 +157,37 @@ public class CloudWatchLog {
                 pw.close();
             }
         }
+        
+        if( mDeleteLogstreamAfterRetrieval ){
+            this.delete(logGroup, streamName);
+        }
+        
         return f;
+    }
+    
+    /**
+     * Deletes a log stream from CloudWatch
+     * 
+     * @param logGroup
+     * @param streamName
+     * 
+     * @return boolean 
+     */
+    public boolean delete( String logGroup, String streamName){
+        DeleteLogStreamRequest request = DeleteLogStreamRequest.builder().
+                logGroupName(logGroup).
+                logStreamName(streamName).
+                    build();
+        boolean deleted = true;
+        try{
+            DeleteLogStreamResponse response = mCWL.deleteLogStream(request);
+            mLogger.debug( "Stream deleted " + streamName + " " + response);
+        }
+        catch(Exception e){
+            mLogger.error( "Unable to delete stream " + streamName, e);
+            deleted = false;
+        }
+        return deleted;
     }
 
     /**
