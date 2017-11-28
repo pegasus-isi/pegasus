@@ -211,8 +211,13 @@ public class Synch {
         
         mLogger.debug( "Submitting job " + jobRequest );
         
-        Future<SubmitJobResponse> submitJobFuture = mExecutorService.submit( () -> mBatchClient.submitJob( jobRequest ) );
-        addSubmitJobResponse( submitJobFuture );
+        try{
+           Future<SubmitJobResponse> submitJobFuture = mExecutorService.submit( () -> mBatchClient.submitJob( jobRequest ) );
+           addSubmitJobResponse( submitJobFuture );
+        }
+        catch( Exception e ){
+            mLogger.error( "Unable to submit job " + job, e );
+        }
         addJob( job );
         
     }
@@ -229,7 +234,7 @@ public class Synch {
         }
     }
     
-    public void submit( Collection<AWSJob> jobs ){
+    private void submit( Collection<AWSJob> jobs ){
         //submit the jobs first before polling
         Collection<Future<SubmitJobResponse>> submitResponses = new LinkedList();
         for( AWSJob job: jobs ){
@@ -293,6 +298,7 @@ public class Synch {
         int total = awsJobIDs.size();
         Set<String> doneJobs = new HashSet();
         BatchClient batchClient = BatchClient.builder().region( mAWSRegion ).build();
+        
         while(true){
             //go through unprocessed jobs that have been submitted
             //in another thread
@@ -417,7 +423,10 @@ public class Synch {
                 }
        
             } catch (InterruptedException ex) {
-                 mLogger.log( Priority.ERROR, null, ex);
+                 mLogger.error( null, ex);
+            }
+            catch( Exception ex ){
+                mLogger.error( "Unknown exception while monitoring ", ex );
             }
         }
         
