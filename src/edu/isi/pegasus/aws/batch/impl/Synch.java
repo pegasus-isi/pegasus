@@ -45,6 +45,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.Priority;
+import software.amazon.awssdk.SdkBaseException;
         
 import software.amazon.awssdk.regions.Region;
 
@@ -364,12 +365,11 @@ public class Synch {
                             submittedJobs.add( new Tuple( response.jobName(), awsJobID ) );
                             total++;
                             it.remove();
-                        } catch (InterruptedException ex) {
-                            mLogger.log( Priority.ERROR, null, ex);
-                        } catch (ExecutionException ex) {
-                            mLogger.log( Priority.ERROR, null, ex);
                         }
-
+                        catch( Exception ex ){
+                            complainAndShutdown( ex );
+                            return;
+                        }
                     }
                 }
             }
@@ -463,22 +463,22 @@ public class Synch {
                     }
                 }
        
-            } catch (InterruptedException ex) {
-                 mLogger.error( null, ex);
             }
             catch( Exception ex ){
-                mLogger.error( "Unknown exception while monitoring ", ex );
+                complainAndShutdown( ex );
+                return;
             }
+            
         }
         
         
         mLogger.info( "Done monitoring" );
+        
         try {
             batchClient.close();
         } catch (Exception ex) {
-            mLogger.log( Priority.ERROR, null, ex);
+            mLogger.error( null, ex);
         }
-        this.deleteSetup();
         shutdown();
         mLogger.info( "Thread Executor Shutdown successfully " );
         
@@ -511,7 +511,36 @@ public class Synch {
        return mDoneWithJobSubmits;
     }
     
-    private void shutdown() {
+    /**
+     * Handles any exceptions thrown and exits
+     * 
+     * @param ex 
+     */
+    protected void complainAndShutdown(Exception ex) {
+        if( ex instanceof InterruptedException  ){
+             mLogger.error( "Monitoring Thread was interrupted", ex);
+        }
+        if( ex instanceof ExecutionException ){
+            mLogger.error("AWS Client Exception", ex);
+        }
+        else{
+            mLogger.error( "Unknown Exception ", ex );
+        }
+        this.shutdown();
+        return;
+    }
+
+    /**
+     * Shutdown the thread and exit
+     */
+    protected void shutdown() {
+        this.deleteSetup();
+        try {
+            mBatchClient.close();
+        } catch (Exception ex) {
+            mLogger.error( null, ex);
+        }
+         mLogger.error("Shutting down threads ...");
         if( this.mExecutorService != null ){
             mExecutorService.shutdown(); // Disable new tasks from being submitted
             try {
