@@ -39,8 +39,8 @@ project:
                       (cd pegasus-source && ant clean)
 
                       # We need a versioned copy to put on the website that
-                      # excludes git files
-                      (cd pegasus-source && ./release-tools/create-source-tar $VERSION && mv dist/pegasus-$VERSION.tar.gz ..)
+                      # excludes git files, but include the generated docs
+                      (cd pegasus-source && ant dist-source && mv dist/pegasus-$VERSION.tar.gz ..)
                       
                       # pegasus-source.tar.gz is a tarball which is used to in subsequent buildsteps
                       # make this a copy of the generated source tarball to keep everyhing
