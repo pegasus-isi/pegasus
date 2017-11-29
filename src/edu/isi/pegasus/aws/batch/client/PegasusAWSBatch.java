@@ -26,18 +26,21 @@ import edu.isi.pegasus.aws.batch.builder.Job;
 import edu.isi.pegasus.aws.batch.classes.AWSJob;
 import edu.isi.pegasus.aws.batch.impl.Synch;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.io.File;
 import java.io.IOException;
+
 import static java.util.Arrays.asList;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Properties;
+
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
 import joptsimple.ValueConverter;
+
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -88,6 +91,7 @@ public class PegasusAWSBatch {
                 withRequiredArg().ofType( String.class );
         mOptionParser.acceptsAll(asList( "r", "region"), "the AWS region to run the jobs in ").
                 withRequiredArg().ofType( String.class );
+        mOptionParser.acceptsAll(asList( "s", "setup"), "does not run any jobs. Only registers the job definition, compute environment and the job queue");
         mOptionParser.acceptsAll(asList( "l", "log-level"), "sets the logging level").
                 withRequiredArg().withValuesConvertedBy( new ValueConverter(){
             @Override
@@ -194,6 +198,16 @@ public class PegasusAWSBatch {
             System.out.println( "Properties with pegasus prefix remove " + props );
         }
         
+        //sanity checks
+        if( submitJobFiles.isEmpty() ){
+            if( !options.has( "setup" )  ){
+            throw new RuntimeException( "specify the job submit file");
+            }
+        }
+        else if( options.has( "setup" )  ){
+            throw new RuntimeException( "-s|--setup option cannot be specified along with jobs to run");
+        }
+        
         String key = Synch.AWS_BATCH_PROPERTY_PREFIX + ".prefix";
         String awsBatchPrefix = getAWSOptionValue(options, "prefix", props, key );
         props.setProperty( key , awsBatchPrefix);
@@ -230,6 +244,9 @@ public class PegasusAWSBatch {
         Synch sc = new Synch();
         try {
             sc.initialze( props, logLevel, jsonMap );
+            if( options.has( "setup" ) ) {
+                return;
+            }
         } catch (IOException ex) {
             mLogger.error(ex, ex);
         }
