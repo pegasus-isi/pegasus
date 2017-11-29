@@ -59,10 +59,12 @@ import software.amazon.awssdk.services.batch.model.*;
  */
 public class Synch {
 
-    
-    
-    
-    public enum JSON_FILE_TYPE{ compute_environment, job_defintion, job_queue};
+    /**
+     * The ARN prefix identifier
+     */
+    public static final String ARN_PREFIX = "arn:aws";
+
+    public enum BATCH_ENTITY_TYPE{ compute_environment, job_defintion, job_queue};
     
     public static final String AWS_PROPERTY_PREFIX = "aws";
     
@@ -135,7 +137,7 @@ public class Synch {
      * @param jsonFileMap
      * @throws IOException
      */
-    public void initialze( Properties properties, Level level, EnumMap<JSON_FILE_TYPE, File> jsonFileMap ) throws IOException{
+    public void initialze( Properties properties, Level level, EnumMap<BATCH_ENTITY_TYPE, String> jsonFileMap ) throws IOException{
         //"405596411149";
         mLogger = Logger.getLogger( Synch.class.getName() ); 
         mLogger.setLevel(level);
@@ -155,20 +157,40 @@ public class Synch {
         this.setup( jsonFileMap );
     }
     
-    private void setup( EnumMap<JSON_FILE_TYPE, File> jsonFileMap) {
-        
-        mJobDefinitionARN = createJobDefinition( jsonFileMap.get( JSON_FILE_TYPE.job_defintion ), 
+    private void setup( EnumMap<BATCH_ENTITY_TYPE, String> jsonFileMap) {
+        String value = jsonFileMap.get(BATCH_ENTITY_TYPE.job_defintion );
+        if( value.startsWith( ARN_PREFIX ) ){
+            mJobDefinitionARN = value;
+            mLogger.info("Using existing Job Definition " + mJobDefinitionARN );
+        }
+        else{
+            mJobDefinitionARN = createJobDefinition( new File(value), 
                                                            constructDefaultName( Synch.JOB_DEFINITION_SUFFIX));
-        mLogger.info("Created Job Definition " + mComputeEnvironmentARN );
+            mLogger.info("Created Job Definition " + mJobDefinitionARN );
+        }
         
-        mComputeEnvironmentARN = createComputeEnvironment( jsonFileMap.get( JSON_FILE_TYPE.compute_environment ), 
-                                                           constructDefaultName( Synch.COMPUTE_ENV_SUFFIX) );
-        mLogger.info( "Created Compute Environment " + mComputeEnvironmentARN );
+        value = jsonFileMap.get(BATCH_ENTITY_TYPE.compute_environment );
+        if( value.startsWith( ARN_PREFIX ) ){
+            mComputeEnvironmentARN = value;
+            mLogger.info("Using existing Compute Environment " + mComputeEnvironmentARN );
+        }
+        else{
+            mComputeEnvironmentARN = createComputeEnvironment( new File(value), 
+                                                               constructDefaultName( Synch.COMPUTE_ENV_SUFFIX) );
+            mLogger.info( "Created Compute Environment " + mComputeEnvironmentARN );
+        }
         
-        mJobQueueARN = this.createQueue( jsonFileMap.get( JSON_FILE_TYPE.job_queue ),
-                                         mComputeEnvironmentARN, 
-                                         constructDefaultName( Synch.JOB_QUEUE_SUFFIX ));
-        mLogger.info( "Created Job Queue " + mJobQueueARN );
+        value = jsonFileMap.get(BATCH_ENTITY_TYPE.job_queue );
+        if( value != null && value.startsWith( ARN_PREFIX ) ){
+            mJobQueueARN = value;
+            mLogger.info("Using existing Job Queue " + mJobQueueARN );
+        }
+        else{
+            mJobQueueARN = this.createQueue( new File(value),
+                                             mComputeEnvironmentARN, 
+                                             constructDefaultName( Synch.JOB_QUEUE_SUFFIX ));
+            mLogger.info( "Created Job Queue " + mJobQueueARN );
+        }
         
     }
 
@@ -793,7 +815,7 @@ public class Synch {
         props.setProperty( Synch.AWS_PROPERTY_PREFIX + ".region", "us-west-2" );
         props.setProperty( Synch.AWS_PROPERTY_PREFIX + ".account", "405596411149" );
         props.setProperty( Synch.AWS_BATCH_PROPERTY_PREFIX + ".prefix", "karan-batch-synch-test-1" );
-        EnumMap<Synch.JSON_FILE_TYPE,File> jsonMap = new EnumMap<Synch.JSON_FILE_TYPE,File>( Synch.JSON_FILE_TYPE.class);
+        EnumMap<Synch.BATCH_ENTITY_TYPE,String> jsonMap = new EnumMap<Synch.BATCH_ENTITY_TYPE,String>( Synch.BATCH_ENTITY_TYPE.class);
         sc.initialze( props, Level.DEBUG, jsonMap );
         
         

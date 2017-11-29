@@ -78,13 +78,13 @@ public class PegasusAWSBatch {
                 withRequiredArg().ofType( String.class );
         mOptionParser.acceptsAll(asList( "C", "conf"), "the properties file containing to use ").
                 withRequiredArg().ofType( String.class );
-        mOptionParser.acceptsAll(asList( "co", "compute-environment"), "the json file containing compute environment description to create ").
+        mOptionParser.acceptsAll(asList( "co", "compute-environment"), "the json file containing compute environment description to create or the ARN of existing compute environment").
                 withRequiredArg().ofType( String.class );
-        mOptionParser.acceptsAll(asList( "j", "job-definition"), "the json file containing job definition to register for executing jobs ").
+        mOptionParser.acceptsAll(asList( "j", "job-definition"), "the json file containing job definition to register for executing jobs or the ARN of existing job definition ").
                 withRequiredArg().ofType( String.class );
         mOptionParser.acceptsAll(asList( "p", "prefix"), "prefix to use for creating compute environment, job definition, job queue").
                withRequiredArg().ofType( String.class ).required();
-        mOptionParser.acceptsAll(asList( "q", "job-queue"), "the json file containing the job queue description to create ").
+        mOptionParser.acceptsAll(asList( "q", "job-queue"), "the json file containing the job queue description to create or the ARN of existing job queue").
                 withRequiredArg().ofType( String.class );
         mOptionParser.acceptsAll(asList( "r", "region"), "the AWS region to run the jobs in ").
                 withRequiredArg().ofType( String.class );
@@ -206,20 +206,20 @@ public class PegasusAWSBatch {
         String awsAccount      = getAWSOptionValue(options, "account", props, key );
         props.setProperty( key , awsAccount);   
         
-        EnumMap<Synch.JSON_FILE_TYPE,File> jsonMap = new EnumMap<>( Synch.JSON_FILE_TYPE.class);
+        EnumMap<Synch.BATCH_ENTITY_TYPE,String> jsonMap = new EnumMap<>( Synch.BATCH_ENTITY_TYPE.class);
         
         key = Synch.AWS_BATCH_PROPERTY_PREFIX + ".job_definition";
         String jobDefinition = getAWSOptionValue(options, "job-definition", props, key );
-        jsonMap.put(Synch.JSON_FILE_TYPE.job_defintion, new File(jobDefinition) );
+        jsonMap.put(Synch.BATCH_ENTITY_TYPE.job_defintion, jobDefinition );
         
         key = Synch.AWS_BATCH_PROPERTY_PREFIX + ".compute_environment";
         String computeEnvironment = getAWSOptionValue(options, "compute-environment", props, key );
-        jsonMap.put(Synch.JSON_FILE_TYPE.compute_environment, new File(computeEnvironment) );
+        jsonMap.put(Synch.BATCH_ENTITY_TYPE.compute_environment, computeEnvironment );
         
         key = Synch.AWS_BATCH_PROPERTY_PREFIX + ".job_queue";
         try{
             String jobQueue = getAWSOptionValue(options, "job-queue", props, key );
-            jsonMap.put(Synch.JSON_FILE_TYPE.job_queue, new File(jobQueue) );
+            jsonMap.put(Synch.BATCH_ENTITY_TYPE.job_queue, jobQueue );
         }
         catch( Exception e ){
             mLogger.debug( "Ignoring e as job queue can be created based on compute environemnt ", e);
