@@ -186,7 +186,7 @@ public class Synch {
             mLogger.info("Using existing Job Queue " + mJobQueueARN );
         }
         else{
-            mJobQueueARN = this.createQueue( new File(value),
+            mJobQueueARN = this.createQueue( (value == null) ? null : new File(value),
                                              mComputeEnvironmentARN, 
                                              constructDefaultName( Synch.JOB_QUEUE_SUFFIX ));
             mLogger.info( "Created Job Queue " + mJobQueueARN );
