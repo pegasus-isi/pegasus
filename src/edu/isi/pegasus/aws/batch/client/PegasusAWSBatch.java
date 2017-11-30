@@ -238,6 +238,8 @@ public class PegasusAWSBatch {
         key = Synch.AWS_BATCH_PROPERTY_PREFIX + ".job_queue";
         try{
             String jobQueue = getAWSOptionValue(options, "job-queue", props, key , false);
+            // when running jobs we need to create job queue even if they dont specify
+            jobQueue = (jobQueue == null && allEntitiesRequired) ? Synch.NULL_VALUE : jobQueue;
             jsonMap.put(Synch.BATCH_ENTITY_TYPE.job_queue, jobQueue );
         }
         catch( Exception e ){

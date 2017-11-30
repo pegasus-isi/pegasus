@@ -79,6 +79,13 @@ public class Synch {
     public static final String COMPUTE_ENV_SUFFIX = "-compute-env";
     
     public static final String CLOUD_WATCH_BATCH_LOG_GROUP =  "/aws/batch/job";
+    
+    /**
+     * A value to trigger creation of job queue even if user did not specify in 
+     * case of running jobs.
+     */
+    public static final String NULL_VALUE = "NULL";
+    
     /**
      * maximum sleep time in seconds
      */
@@ -206,13 +213,13 @@ public class Synch {
         value = getEntityValue(entities, BATCH_ENTITY_TYPE.job_queue, allRequired );
         delete = true;
         if( value != null ){
-            if( value != null && value.startsWith( ARN_PREFIX ) ){
+            if( value.startsWith( ARN_PREFIX ) ){
                 mJobQueueARN = value;
                 delete = false;
                 mLogger.info("Using existing Job Queue " + mJobQueueARN );
             }
             else{
-                mJobQueueARN = this.createQueue( (value == null) ? null : new File(value),
+                mJobQueueARN = this.createQueue( (value.equalsIgnoreCase( Synch.NULL_VALUE )) ? null : new File(value),
                                                  mComputeEnvironmentARN, 
                                                  constructDefaultName( Synch.JOB_QUEUE_SUFFIX ));
                 mLogger.info( "Created Job Queue " + mJobQueueARN );
