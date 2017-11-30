@@ -81,7 +81,7 @@ public class PegasusAWSBatch {
                 withRequiredArg().ofType( String.class );
         mOptionParser.acceptsAll(asList( "C", "conf"), "the properties file containing to use ").
                 withRequiredArg().ofType( String.class );
-        mOptionParser.acceptsAll(asList( "co", "compute-environment"), "the json file containing compute environment description to create or the ARN of existing compute environment").
+        mOptionParser.acceptsAll(asList( "ce", "compute-environment"), "the json file containing compute environment description to create or the ARN of existing compute environment").
                 withRequiredArg().ofType( String.class );
         mOptionParser.acceptsAll(asList( "j", "job-definition"), "the json file containing job definition to register for executing jobs or the ARN of existing job definition ").
                 withRequiredArg().ofType( String.class );
