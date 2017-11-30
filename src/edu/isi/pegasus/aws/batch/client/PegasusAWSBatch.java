@@ -83,6 +83,8 @@ public class PegasusAWSBatch {
                 withRequiredArg().ofType( String.class );
         mOptionParser.acceptsAll(asList( "ce", "compute-environment"), "the json file containing compute environment description to create or the ARN of existing compute environment").
                 withRequiredArg().ofType( String.class );
+        mOptionParser.acceptsAll(asList( "c", "create"), "does not run any jobs. Only creates the job definition, compute environment and the job queue");
+        mOptionParser.acceptsAll(asList( "d", "delete"), "does not run any jobs. Only deletes the job definition, compute environment and the job queue");
         mOptionParser.acceptsAll(asList( "j", "job-definition"), "the json file containing job definition to register for executing jobs or the ARN of existing job definition ").
                 withRequiredArg().ofType( String.class );
         mOptionParser.acceptsAll(asList( "p", "prefix"), "prefix to use for creating compute environment, job definition, job queue").
@@ -91,8 +93,6 @@ public class PegasusAWSBatch {
                 withRequiredArg().ofType( String.class );
         mOptionParser.acceptsAll(asList( "r", "region"), "the AWS region to run the jobs in ").
                 withRequiredArg().ofType( String.class );
-        mOptionParser.acceptsAll(asList( "s", "setup"), "does not run any jobs. Only registers the job definition, compute environment and the job queue");
-        mOptionParser.acceptsAll(asList( "d", "delete"), "does not run any jobs. Only deletes the job definition, compute environment and the job queue");
         mOptionParser.acceptsAll(asList( "l", "log-level"), "sets the logging level").
                 withRequiredArg().withValuesConvertedBy( new ValueConverter(){
             @Override
@@ -200,16 +200,16 @@ public class PegasusAWSBatch {
         
         //sanity checks
         boolean allEntitiesRequired = true;
-        if( options.has( "setup" ) || options.has( "delete") ){
+        if( options.has( "create" ) || options.has( "delete") ){
             allEntitiesRequired = false;
         }
         
         if( submitJobFiles.isEmpty() ){
-            if( !options.has( "setup" )  ){
+            if( !options.has( "create" )  ){
                 throw new RuntimeException( "specify the job submit file");
             }
         }
-        else if( options.has( "setup" )  ){
+        else if( options.has( "create" )  ){
             throw new RuntimeException( "-s|--setup option cannot be specified along with jobs to run");
         }
         
@@ -259,7 +259,7 @@ public class PegasusAWSBatch {
                 sc.setup(jsonMap, allEntitiesRequired);
             }
             
-            if( options.has( "setup" ) ) {
+            if( options.has( "create" ) ) {
                 return;
             }
         } catch (IOException ex) {
