@@ -169,7 +169,8 @@ public class Synch {
      * Does the setup of the various associated entitites for AWS Batch to
      * accept jobs.
      * 
-     * @param entities 
+     * @param entities      entitites to be setup
+     * @param allRequired   whehter all entities should be present
      */
     public void setup( EnumMap<BATCH_ENTITY_TYPE, String> entities, boolean allRequired) {
         boolean delete = true;
@@ -227,32 +228,49 @@ public class Synch {
     /**
      * Deletes the setup done for batch
      */
-    public boolean deleteSetup(){
-        return this.deleteSetup(mDeleteOnExit);
+    private boolean deleteSetup(){
+        EnumMap<BATCH_ENTITY_TYPE, String> entities = new EnumMap<>(BATCH_ENTITY_TYPE.class);
+        if( mDeleteOnExit.get(BATCH_ENTITY_TYPE.job_queue) ){
+            entities.put(BATCH_ENTITY_TYPE.job_queue, mJobQueueARN );
+        }
+        if( mDeleteOnExit.get(BATCH_ENTITY_TYPE.compute_environment) ){
+            entities.put(BATCH_ENTITY_TYPE.compute_environment, mComputeEnvironmentARN );
+        }
+        if( mDeleteOnExit.get(BATCH_ENTITY_TYPE.job_defintion) ){
+            entities.put(BATCH_ENTITY_TYPE.job_defintion, mJobDefinitionARN );
+        }
+        return this.deleteSetup(entities);
     }
-    
-    /**
-     * Deletes the setup
-     */
-    private boolean deleteSetup( EnumMap<BATCH_ENTITY_TYPE,Boolean> deleteOnExit){
-        boolean deleted = false;
-        if( deleteOnExit.get(BATCH_ENTITY_TYPE.job_queue) ){
-            mLogger.info( "Attempting to delete job queue " + mJobQueueARN );
-            deleted = deleteQueue( mJobQueueARN );
+     
+    /** 
+     * Does the setup of the various associated entitites for AWS Batch to
+     * accept jobs.
+     * 
+     * @param entities 
+     * @return 
+     */     
+    public boolean deleteSetup( EnumMap<BATCH_ENTITY_TYPE, String> entities) {
+        boolean deleted = true;
+        String value = this.getEntityValue(entities, BATCH_ENTITY_TYPE.job_queue, false);
+        if( value != null ){
+            mLogger.info( "Attempting to delete job queue " + value );
+            deleted = deleteQueue( value );
         }
-        if( deleted && deleteOnExit.get(BATCH_ENTITY_TYPE.compute_environment) ){
+        
+        value = this.getEntityValue(entities, BATCH_ENTITY_TYPE.compute_environment, false);
+        if( deleted && value != null ){
             //compute environment can only be deleted if job queue has been
-            mLogger.info( "Attempting to delete compute environment " + mComputeEnvironmentARN );
-            deleted = this.deleteComputeEnvironment( mComputeEnvironmentARN );
+            mLogger.info( "Attempting to delete compute environment " + value );
+            deleted = this.deleteComputeEnvironment( value );
         }
-        if( deleteOnExit.get(BATCH_ENTITY_TYPE.job_defintion) ){
-            mLogger.info( "Attempting to delete job definition " + mJobDefinitionARN );
-            deleted = this.deleteJobDefinition(mJobDefinitionARN );
+        value = this.getEntityValue(entities, BATCH_ENTITY_TYPE.job_defintion, false);
+        if( value != null ){
+            mLogger.info( "Attempting to delete job definition " + value );
+            deleted = this.deleteJobDefinition( value );
         }
         mLogger.info("Deleted Setup - " + deleted );
         return deleted;
     }
-     
     
     public AWSJob.JOBSTATE getJobState( String id ){
         return this.mJobMap.get(id).getJobState();

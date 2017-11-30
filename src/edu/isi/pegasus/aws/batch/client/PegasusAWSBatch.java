@@ -249,6 +249,12 @@ public class PegasusAWSBatch {
         Synch sc = new Synch();
         try {
             sc.initialze( props, logLevel, jsonMap );
+            
+            if( options.has( "delete" ) ){
+                sc.deleteSetup( jsonMap );
+                return;
+            }
+            
             if( options.has( "setup" ) ) {
                 return;
             }
