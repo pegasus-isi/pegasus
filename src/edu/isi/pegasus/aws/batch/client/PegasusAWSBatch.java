@@ -205,7 +205,7 @@ public class PegasusAWSBatch {
         }
         
         if( submitJobFiles.isEmpty() ){
-            if( !options.has( "create" )  ){
+            if( !(options.has( "create" ) || options.has( "delete"))  ){
                 throw new RuntimeException( "specify the job submit file");
             }
         }
