@@ -45,7 +45,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.Priority;
-import software.amazon.awssdk.SdkBaseException;
         
 import software.amazon.awssdk.regions.Region;
 
@@ -161,8 +160,6 @@ public class Synch {
         mExecutorService = Executors.newFixedThreadPool(2);
         mBatchClient = BatchClient.builder().region( mAWSRegion ).build();
         mDoneWithJobSubmits = false;
-        
-        this.setup( jsonFileMap , true);
     }
     
     /**

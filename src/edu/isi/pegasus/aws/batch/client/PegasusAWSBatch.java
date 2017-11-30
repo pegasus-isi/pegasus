@@ -254,6 +254,10 @@ public class PegasusAWSBatch {
                 sc.deleteSetup( jsonMap );
                 return;
             }
+            else{
+                //we do setup both in case of running jobs or just doing setup
+                sc.setup(jsonMap, allEntitiesRequired);
+            }
             
             if( options.has( "setup" ) ) {
                 return;
