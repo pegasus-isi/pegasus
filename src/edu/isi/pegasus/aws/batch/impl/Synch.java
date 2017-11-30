@@ -65,6 +65,7 @@ public class Synch {
      */
     public static final String ARN_PREFIX = "arn:aws";
 
+
     public enum BATCH_ENTITY_TYPE{ compute_environment, job_defintion, job_queue};
     
     public static final String AWS_PROPERTY_PREFIX = "aws";
@@ -161,80 +162,95 @@ public class Synch {
         mBatchClient = BatchClient.builder().region( mAWSRegion ).build();
         mDoneWithJobSubmits = false;
         
-        this.setup( jsonFileMap );
+        this.setup( jsonFileMap , true);
     }
     
     /**
      * Does the setup of the various associated entitites for AWS Batch to
      * accept jobs.
      * 
-     * @param jsonFileMap 
+     * @param entities 
      */
-    private void setup( EnumMap<BATCH_ENTITY_TYPE, String> jsonFileMap) {
-        String value = jsonFileMap.get(BATCH_ENTITY_TYPE.job_defintion );
+    public void setup( EnumMap<BATCH_ENTITY_TYPE, String> entities, boolean allRequired) {
         boolean delete = true;
-        if( value.startsWith( ARN_PREFIX ) ){
-            mJobDefinitionARN = value;
-            mLogger.info("Using existing Job Definition " + mJobDefinitionARN );
-            delete = false;
-        }
-        else{
-            mJobDefinitionARN = createJobDefinition( new File(value), 
-                                                           constructDefaultName( Synch.JOB_DEFINITION_SUFFIX));
-            mLogger.info("Created Job Definition " + mJobDefinitionARN );
-        }
-        mDeleteOnExit.put(BATCH_ENTITY_TYPE.job_defintion, delete );
         
-        value = jsonFileMap.get(BATCH_ENTITY_TYPE.compute_environment );
+        String value = getEntityValue(entities, BATCH_ENTITY_TYPE.job_defintion, allRequired );
+        if( value != null ){
+            if( value.startsWith( ARN_PREFIX ) ){
+                mJobDefinitionARN = value;
+                mLogger.info("Using existing Job Definition " + mJobDefinitionARN );
+                delete = false;
+            }
+            else{
+                mJobDefinitionARN = createJobDefinition( new File(value), 
+                                                               constructDefaultName( Synch.JOB_DEFINITION_SUFFIX));
+                mLogger.info("Created Job Definition " + mJobDefinitionARN );
+            }
+            mDeleteOnExit.put(BATCH_ENTITY_TYPE.job_defintion, delete );
+        }
+         
+        value = getEntityValue(entities, BATCH_ENTITY_TYPE.compute_environment, allRequired );
         delete = true;
-        if( value.startsWith( ARN_PREFIX ) ){
-            mComputeEnvironmentARN = value;
-            mLogger.info("Using existing Compute Environment " + mComputeEnvironmentARN );
-            delete = false;
+        if( value != null ){
+            if( value.startsWith( ARN_PREFIX ) ){
+                mComputeEnvironmentARN = value;
+                mLogger.info("Using existing Compute Environment " + mComputeEnvironmentARN );
+                delete = false;
+            }
+            else{
+                mComputeEnvironmentARN = createComputeEnvironment( new File(value), 
+                                                                   constructDefaultName( Synch.COMPUTE_ENV_SUFFIX) );
+                mLogger.info( "Created Compute Environment " + mComputeEnvironmentARN );
+            }
+            mDeleteOnExit.put(BATCH_ENTITY_TYPE.compute_environment, delete );
         }
-        else{
-            mComputeEnvironmentARN = createComputeEnvironment( new File(value), 
-                                                               constructDefaultName( Synch.COMPUTE_ENV_SUFFIX) );
-            mLogger.info( "Created Compute Environment " + mComputeEnvironmentARN );
-        }
-        
-        mDeleteOnExit.put(BATCH_ENTITY_TYPE.compute_environment, delete );
-        
-        value = jsonFileMap.get(BATCH_ENTITY_TYPE.job_queue );
+
+        value = getEntityValue(entities, BATCH_ENTITY_TYPE.job_queue, allRequired );
         delete = true;
-        if( value != null && value.startsWith( ARN_PREFIX ) ){
-            mJobQueueARN = value;
-            delete = false;
-            mLogger.info("Using existing Job Queue " + mJobQueueARN );
+        if( value != null ){
+            if( value != null && value.startsWith( ARN_PREFIX ) ){
+                mJobQueueARN = value;
+                delete = false;
+                mLogger.info("Using existing Job Queue " + mJobQueueARN );
+            }
+            else{
+                mJobQueueARN = this.createQueue( (value == null) ? null : new File(value),
+                                                 mComputeEnvironmentARN, 
+                                                 constructDefaultName( Synch.JOB_QUEUE_SUFFIX ));
+                mLogger.info( "Created Job Queue " + mJobQueueARN );
+            }
+            mDeleteOnExit.put(BATCH_ENTITY_TYPE.job_queue, delete );
         }
-        else{
-            mJobQueueARN = this.createQueue( (value == null) ? null : new File(value),
-                                             mComputeEnvironmentARN, 
-                                             constructDefaultName( Synch.JOB_QUEUE_SUFFIX ));
-            mLogger.info( "Created Job Queue " + mJobQueueARN );
-        }
-        mDeleteOnExit.put(BATCH_ENTITY_TYPE.job_queue, delete );
     }
 
+    
+    /**
+     * Deletes the setup done for batch
+     */
+    public boolean deleteSetup(){
+        return this.deleteSetup(mDeleteOnExit);
+    }
+    
     /**
      * Deletes the setup
      */
-    private void deleteSetup(){
+    private boolean deleteSetup( EnumMap<BATCH_ENTITY_TYPE,Boolean> deleteOnExit){
         boolean deleted = false;
-        if( this.mDeleteOnExit.get(BATCH_ENTITY_TYPE.job_queue) ){
+        if( deleteOnExit.get(BATCH_ENTITY_TYPE.job_queue) ){
             mLogger.info( "Attempting to delete job queue " + mJobQueueARN );
             deleted = deleteQueue( mJobQueueARN );
         }
-        if( deleted && this.mDeleteOnExit.get(BATCH_ENTITY_TYPE.compute_environment) ){
+        if( deleted && deleteOnExit.get(BATCH_ENTITY_TYPE.compute_environment) ){
             //compute environment can only be deleted if job queue has been
             mLogger.info( "Attempting to delete compute environment " + mComputeEnvironmentARN );
             deleted = this.deleteComputeEnvironment( mComputeEnvironmentARN );
         }
-        if( this.mDeleteOnExit.get(BATCH_ENTITY_TYPE.job_defintion) ){
+        if( deleteOnExit.get(BATCH_ENTITY_TYPE.job_defintion) ){
             mLogger.info( "Attempting to delete job definition " + mJobDefinitionARN );
             deleted = this.deleteJobDefinition(mJobDefinitionARN );
         }
         mLogger.info("Deleted Setup - " + deleted );
+        return deleted;
     }
      
     
@@ -540,7 +556,7 @@ public class Synch {
         } catch (Exception ex) {
             mLogger.error( null, ex);
         }
-         mLogger.error("Shutting down threads ...");
+        mLogger.error("Shutting down threads ...");
         if( this.mExecutorService != null ){
             mExecutorService.shutdown(); // Disable new tasks from being submitted
             try {
@@ -825,6 +841,27 @@ public class Synch {
         }
         return this.mPrefix + suffix;
     }
+    
+    /**
+     * Returns value and throws an exception if required
+     * 
+     * @param map
+     * @param type
+     * @param required
+     * 
+     * @return 
+     */
+    private String getEntityValue(EnumMap<BATCH_ENTITY_TYPE, String> map, BATCH_ENTITY_TYPE type, boolean required) {
+        String value = map.get( type );
+        
+        if( value == null && required ){
+            throw new RuntimeException( type + " needs to be specified ");
+        }
+        
+        return value;
+                
+    }
+    
     /**
      * Retrieves a property from the object. If not exists throws a runtime 
      * exception

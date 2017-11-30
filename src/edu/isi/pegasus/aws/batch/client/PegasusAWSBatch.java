@@ -92,6 +92,7 @@ public class PegasusAWSBatch {
         mOptionParser.acceptsAll(asList( "r", "region"), "the AWS region to run the jobs in ").
                 withRequiredArg().ofType( String.class );
         mOptionParser.acceptsAll(asList( "s", "setup"), "does not run any jobs. Only registers the job definition, compute environment and the job queue");
+        mOptionParser.acceptsAll(asList( "d", "delete"), "does not run any jobs. Only deletes the job definition, compute environment and the job queue");
         mOptionParser.acceptsAll(asList( "l", "log-level"), "sets the logging level").
                 withRequiredArg().withValuesConvertedBy( new ValueConverter(){
             @Override
@@ -195,13 +196,17 @@ public class PegasusAWSBatch {
             PegasusProperties p = PegasusProperties.getInstance(confFile);
             //strip out pegasus prefix in parsed properties file
             props = p.matchingSubset( "pegasus", false);
-            System.out.println( "Properties with pegasus prefix remove " + props );
         }
         
         //sanity checks
+        boolean allEntitiesRequired = true;
+        if( options.has( "setup" ) || options.has( "delete") ){
+            allEntitiesRequired = false;
+        }
+        
         if( submitJobFiles.isEmpty() ){
             if( !options.has( "setup" )  ){
-            throw new RuntimeException( "specify the job submit file");
+                throw new RuntimeException( "specify the job submit file");
             }
         }
         else if( options.has( "setup" )  ){
@@ -223,16 +228,16 @@ public class PegasusAWSBatch {
         EnumMap<Synch.BATCH_ENTITY_TYPE,String> jsonMap = new EnumMap<>( Synch.BATCH_ENTITY_TYPE.class);
         
         key = Synch.AWS_BATCH_PROPERTY_PREFIX + ".job_definition";
-        String jobDefinition = getAWSOptionValue(options, "job-definition", props, key );
+        String jobDefinition = getAWSOptionValue(options, "job-definition", props, key, allEntitiesRequired );
         jsonMap.put(Synch.BATCH_ENTITY_TYPE.job_defintion, jobDefinition );
         
         key = Synch.AWS_BATCH_PROPERTY_PREFIX + ".compute_environment";
-        String computeEnvironment = getAWSOptionValue(options, "compute-environment", props, key );
+        String computeEnvironment = getAWSOptionValue(options, "compute-environment", props, key , allEntitiesRequired);
         jsonMap.put(Synch.BATCH_ENTITY_TYPE.compute_environment, computeEnvironment );
         
         key = Synch.AWS_BATCH_PROPERTY_PREFIX + ".job_queue";
         try{
-            String jobQueue = getAWSOptionValue(options, "job-queue", props, key );
+            String jobQueue = getAWSOptionValue(options, "job-queue", props, key , false);
             jsonMap.put(Synch.BATCH_ENTITY_TYPE.job_queue, jobQueue );
         }
         catch( Exception e ){
@@ -263,11 +268,35 @@ public class PegasusAWSBatch {
 
     }
     
+    /**
+     * Returns the value of a particular option
+     * 
+     * @param options
+     * @param option
+     * @param props
+     * @param key
+     * @param required
+     * @return 
+     */
     private String getAWSOptionValue( OptionSet options, String option, Properties props, String key ){
+        return this.getAWSOptionValue(options, option, props, key, true);
+    }
+    
+    /**
+     * Returns the value of a particular option
+     * 
+     * @param options
+     * @param option
+     * @param props
+     * @param key
+     * @param required
+     * @return 
+     */
+    private String getAWSOptionValue( OptionSet options, String option, Properties props, String key, boolean required ){
         String value = (String) options.valueOf( option );
         
         value =  ( value == null ) ? props.getProperty( key ) : value;
-        if( value == null ){
+        if( value == null && required ){
             throw new RuntimeException( "Unable to determine value of pegasus." + key + 
                                         " Either specify in properties or set command line option " + option );
         }
