@@ -773,7 +773,8 @@ public class Synch {
                                                                         locationConstraint(mAWSRegion.value())
                                                                                                  .build()).
                                                                     build() );
-        return cbr.toString();
+        
+        return cbr.location();
     }
     
     /**
