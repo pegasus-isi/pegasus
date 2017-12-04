@@ -50,6 +50,15 @@ import software.amazon.awssdk.regions.Region;
 
 import software.amazon.awssdk.services.batch.*;
 import software.amazon.awssdk.services.batch.model.*;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.CreateBucketConfiguration;
+import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.CreateBucketResponse;
+import software.amazon.awssdk.services.s3.model.DeleteBucketRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.S3Object;
 
 
 
@@ -63,9 +72,13 @@ public class Synch {
      * The ARN prefix identifier
      */
     public static final String ARN_PREFIX = "arn:aws";
-
-
-    public enum BATCH_ENTITY_TYPE{ compute_environment, job_defintion, job_queue};
+    
+    /**
+     * The s3 prefix
+     */
+    public static final String S3_PREFIX ="s3://";
+    
+    public enum BATCH_ENTITY_TYPE{ compute_environment, job_defintion, job_queue, s3_bucket};
     
     public static final String AWS_PROPERTY_PREFIX = "aws";
     
@@ -77,6 +90,8 @@ public class Synch {
     public static final String JOB_QUEUE_SUFFIX = "-job-queue";
     
     public static final String COMPUTE_ENV_SUFFIX = "-compute-env";
+    
+    public static final String S3_BUCKET_SUFFIX = "-bucket";
     
     public static final String CLOUD_WATCH_BATCH_LOG_GROUP =  "/aws/batch/job";
     
@@ -108,13 +123,13 @@ public class Synch {
     
     private ExecutorService mExecutorService;
     
-    
-    
     private String mJobDefinitionARN;
     
     private String mComputeEnvironmentARN;
     
     private String mJobQueueARN;
+    
+    private String mS3Bucket;
     
     /**
      * A map to track what associated batch entities need to be 
@@ -226,6 +241,22 @@ public class Synch {
             }
             mDeleteOnExit.put(BATCH_ENTITY_TYPE.job_queue, delete );
         }
+        
+        value = getEntityValue(entities, BATCH_ENTITY_TYPE.s3_bucket, allRequired );
+        delete = true;
+        if( value != null ){
+            if( value.startsWith( S3_PREFIX ) ){
+                //strip out s3 prefix
+                mS3Bucket = value.substring( S3_PREFIX.length() );
+                delete = false;
+                mLogger.info("Using existing S3 Bucket " + mS3Bucket );
+            }
+            else{
+                mS3Bucket = this.createS3Bucket( constructDefaultName( Synch.S3_BUCKET_SUFFIX ));
+                mLogger.info( "Created S3 bucket " + mS3Bucket );
+            }
+            mDeleteOnExit.put(BATCH_ENTITY_TYPE.s3_bucket, delete );
+        }
     }
 
     
@@ -242,6 +273,9 @@ public class Synch {
         }
         if( mDeleteOnExit.get(BATCH_ENTITY_TYPE.job_defintion) ){
             entities.put(BATCH_ENTITY_TYPE.job_defintion, mJobDefinitionARN );
+        }
+        if( mDeleteOnExit.get(BATCH_ENTITY_TYPE.s3_bucket) ){
+            entities.put(BATCH_ENTITY_TYPE.s3_bucket, mS3Bucket );
         }
         return this.deleteSetup(entities);
     }
@@ -271,6 +305,14 @@ public class Synch {
         if( value != null ){
             mLogger.info( "Attempting to delete job definition " + value );
             deleted = this.deleteJobDefinition( value );
+        }
+        value = this.getEntityValue(entities, BATCH_ENTITY_TYPE.s3_bucket, false);
+        if( value != null ){
+            if( value.startsWith( S3_PREFIX ) ){
+                value = value.substring( S3_PREFIX.length() );
+            }
+            mLogger.info( "Attempting to delete S3 bucket " + value );
+            deleted = this.deleteS3Bucket( value );
         }
         mLogger.info("Deleted Setup - " + deleted );
         return deleted;
@@ -715,6 +757,57 @@ public class Synch {
         
         return arn;
     }
+    
+    /**
+     * Creates a S3 bucket with the given name
+     * 
+     * @param name
+     * 
+     * @return 
+     */
+    public String createS3Bucket(String name) {
+        S3Client s3Client = S3Client.builder().region(mAWSRegion).build();
+        CreateBucketResponse cbr = s3Client.createBucket( CreateBucketRequest.builder().
+                                                                    bucket(name).
+                                                                    createBucketConfiguration(CreateBucketConfiguration.builder().
+                                                                        locationConstraint(mAWSRegion.value())
+                                                                                                 .build()).
+                                                                    build() );
+        return cbr.toString();
+    }
+    
+    /**
+     * Delete a S3 bucket with the given name
+     * 
+     * @param name
+     * 
+     * @return 
+     */
+    public boolean deleteS3Bucket(String name) {
+        boolean deleted = true;
+        ListObjectsV2Request listObjectsV2Request = ListObjectsV2Request.builder().bucket(name).build();
+        ListObjectsV2Response listObjectsV2Response;
+        S3Client s3Client = S3Client.builder().region(mAWSRegion).build();
+        do {
+            listObjectsV2Response = s3Client.listObjectsV2(listObjectsV2Request);
+            for (S3Object s3Object : listObjectsV2Response.contents()) {
+                mLogger.debug( "Deleteing file " + s3Object.key() + " from bucket " + name);
+                s3Client.deleteObject(DeleteObjectRequest.builder().bucket( name ).key(s3Object.key()).build());
+            }
+
+            listObjectsV2Request = ListObjectsV2Request.builder().bucket( name )
+                                                       .continuationToken(listObjectsV2Response.nextContinuationToken())
+                                                       .build();
+
+        } while (listObjectsV2Response.isTruncated());
+        
+        // Delete empty bucket
+        DeleteBucketRequest deleteBucketRequest = DeleteBucketRequest.builder().bucket( name ).build();
+        s3Client.deleteBucket(deleteBucketRequest);
+        return deleted;
+    }
+    
+    
     
     public boolean deleteQueue( String arn ){
         //first we update queue to disable it

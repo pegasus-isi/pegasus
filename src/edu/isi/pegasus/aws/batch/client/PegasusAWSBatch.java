@@ -93,6 +93,8 @@ public class PegasusAWSBatch {
                 withRequiredArg().ofType( String.class );
         mOptionParser.acceptsAll(asList( "r", "region"), "the AWS region to run the jobs in ").
                 withRequiredArg().ofType( String.class );
+        mOptionParser.acceptsAll(asList( "s", "s3"), "the S3 bucket to use for lifecycle of the client. If not specifed then a bucket is created based on the prefix passed").
+                withRequiredArg().ofType( String.class );
         mOptionParser.acceptsAll(asList( "l", "log-level"), "sets the logging level").
                 withRequiredArg().withValuesConvertedBy( new ValueConverter(){
             @Override
@@ -245,6 +247,12 @@ public class PegasusAWSBatch {
         catch( Exception e ){
             mLogger.debug( "Ignoring e as job queue can be created based on compute environemnt ", e);
         }
+        
+        key = Synch.AWS_BATCH_PROPERTY_PREFIX + ".s3_bucket";
+        String s3Bucket = getAWSOptionValue(options, "s3", props, key , false);
+        // when running jobs we need to create S3 bucketeven if they dont specify
+        s3Bucket = (s3Bucket == null && allEntitiesRequired) ? Synch.NULL_VALUE : s3Bucket;
+        jsonMap.put(Synch.BATCH_ENTITY_TYPE.s3_bucket, s3Bucket );
         
         mLogger.info( "Going to connect with properties " + props + " and json map " + jsonMap );
         
