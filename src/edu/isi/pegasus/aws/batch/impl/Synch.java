@@ -27,6 +27,8 @@ import edu.isi.pegasus.aws.batch.common.CloudWatchLog;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -765,7 +767,7 @@ public class Synch {
      * 
      * @return 
      */
-    public String createS3Bucket(String name) {
+    public String createS3Bucket(String name)  {
         S3Client s3Client = S3Client.builder().region(mAWSRegion).build();
         CreateBucketResponse cbr = s3Client.createBucket( CreateBucketRequest.builder().
                                                                     bucket(name).
@@ -774,7 +776,19 @@ public class Synch {
                                                                                                  .build()).
                                                                     build() );
         
-        return cbr.location();
+        
+        URL url;
+        try {
+            url = new URL( cbr.location() );
+        } catch (MalformedURLException ex) {
+            throw new RuntimeException( "Invalid location returned for s3 bucket " + cbr.location(), ex );
+        }
+        String hostname = url.getHost();
+        //strip .s3.amazonaws.com suffix
+        
+        return hostname.endsWith(".s3.amazonaws.com" )?
+                    hostname.substring(0, hostname.length() - ".s3.amazonaws.com".length() ):
+                hostname;
     }
     
     /**
