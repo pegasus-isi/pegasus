@@ -53,6 +53,7 @@ PACKAGES+=chardet
 PACKAGES+=idna
 PACKAGES+=certifi
 PACKAGES+=urllib3
+PACKAGES+=pytz
 
 PYOPENSSL_ARGS=
 ifeq ($(OSID),macos10)
@@ -107,6 +108,7 @@ $(LIBDIR)/chardet: chardet-3.0.4.tar.gz
 $(LIBDIR)/idna: idna-2.6.tar.gz
 $(LIBDIR)/certifi: python-certifi-2017.11.05.tar.gz
 $(LIBDIR)/urllib3: urllib3-1.22.tar.gz
+$(LIBDIR)/pytz: pytz-2017.3.tar.gz
 
 
 clean:
