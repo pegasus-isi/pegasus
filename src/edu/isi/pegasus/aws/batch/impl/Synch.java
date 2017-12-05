@@ -805,9 +805,12 @@ public class Synch {
         S3Client s3Client = S3Client.builder().region(mAWSRegion).build();
         do {
             listObjectsV2Response = s3Client.listObjectsV2(listObjectsV2Request);
-            for (S3Object s3Object : listObjectsV2Response.contents()) {
-                mLogger.debug( "Deleteing file " + s3Object.key() + " from bucket " + name);
-                s3Client.deleteObject(DeleteObjectRequest.builder().bucket( name ).key(s3Object.key()).build());
+            if( listObjectsV2Response.contents() != null ){
+                //detelete the files in the bucket
+                for (S3Object s3Object : listObjectsV2Response.contents()) {
+                    mLogger.debug( "Deleteing file " + s3Object.key() + " from bucket " + name);
+                    s3Client.deleteObject(DeleteObjectRequest.builder().bucket( name ).key(s3Object.key()).build());
+                }
             }
 
             listObjectsV2Request = ListObjectsV2Request.builder().bucket( name )
