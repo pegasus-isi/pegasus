@@ -734,7 +734,7 @@ public class Synch {
         String arn  = jobQueueResponse.jobQueueArn();
         
         mLogger.info( "Created Job Queue " + arn );
-        mLogger.debug( "Created Compute Environment " + jobQueueResponse );
+        mLogger.debug( "Created Job Queue " + jobQueueResponse );
         
         boolean valid = false;
         int retry = 0;
