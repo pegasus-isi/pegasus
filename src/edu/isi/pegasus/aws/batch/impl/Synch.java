@@ -60,7 +60,9 @@ import software.amazon.awssdk.services.s3.model.DeleteBucketRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Object;
+import software.amazon.awssdk.sync.RequestBody;
 
 
 
@@ -79,6 +81,7 @@ public class Synch {
      * The s3 prefix
      */
     public static final String S3_PREFIX ="s3://";
+
     
     public enum BATCH_ENTITY_TYPE{ compute_environment, job_defintion, job_queue, s3_bucket};
     
@@ -96,6 +99,8 @@ public class Synch {
     public static final String S3_BUCKET_SUFFIX = "-bucket";
     
     public static final String CLOUD_WATCH_BATCH_LOG_GROUP =  "/aws/batch/job";
+    
+    public static final String TRANSFER_INPUT_FILES_KEY = "TRANSFER_INPUT_FILES";
     
     /**
      * A value to trigger creation of job queue even if user did not specify in 
@@ -339,6 +344,13 @@ public class Synch {
         job.setJobDefinitionARN( this.mJobDefinitionARN );
         job.setJobQueueARN(this.mJobQueueARN );
         SubmitJobRequest jobRequest = job.createAWSBatchSubmitRequest();
+        
+        //handle file transfers if any before submitting job
+        String files = job.getEnvironmentVariable( Synch.TRANSFER_INPUT_FILES_KEY );
+        if( files != null ){
+            transferInputFiles( this.mS3Bucket, files.split( ",") );
+            mLogger.info( "Uploaded files " + files + " for task " + job.getID() );
+        }
         
         mLogger.debug( "Submitting job " + jobRequest );
         
@@ -823,6 +835,34 @@ public class Synch {
         DeleteBucketRequest deleteBucketRequest = DeleteBucketRequest.builder().bucket( name ).build();
         s3Client.deleteBucket(deleteBucketRequest);
         return deleted;
+    }
+    
+    /**
+     * Transfers the input files to the specified bucket
+     * 
+     * @param bucket
+     * @param files 
+     */
+    public void transferInputFiles(String bucket, String[] files) {
+        S3Client s3Client = S3Client.builder().region(mAWSRegion).build();
+        for( String f: files){
+            File file = new File(f);
+            if( file.exists() ){
+                mLogger.debug( "Attempting to upload file " + file + " to bucket " + bucket);
+                s3Client.putObject(PutObjectRequest.builder().bucket(bucket).key( file.getName() )
+                                     .build(),RequestBody.of(file ));
+                mLogger.debug( "Uploaded file " + file + " to bucket " + bucket);
+            }
+            else{
+                throw new RuntimeException( "Unable file does not exist " + f );
+            }
+        }
+        try {
+            s3Client.close();
+        } catch (Exception ex) {
+           mLogger.error( "Unable to close the s3 client", ex);
+        }
+        
     }
     
     

@@ -101,6 +101,16 @@ public  class AWSJob {
     public Collection<Tuple<String,String>> getEnvironmentVariables(){
         return this.mEnvironmentVariables;
     }
+    
+    public String getEnvironmentVariable( String key ){
+        String value = null;
+        for( Tuple t: this.getEnvironmentVariables()){
+            if( t.getKey().equals( key ) ){
+                return (String)t.getValue();
+            }
+        }
+        return value;
+    }
 
     /**
      * Creates a submit job request for submission to AWS Batch
