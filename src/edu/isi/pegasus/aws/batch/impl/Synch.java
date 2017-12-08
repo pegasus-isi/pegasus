@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -348,7 +349,7 @@ public class Synch {
         //handle file transfers if any before submitting job
         String files = job.getEnvironmentVariable( Synch.TRANSFER_INPUT_FILES_KEY );
         if( files != null ){
-            transferInputFiles( this.mS3Bucket, files.split( ",") );
+            transferInputFiles( this.mS3Bucket, Arrays.asList( files.split( ",") ));
             mLogger.info( "Uploaded files " + files + " for task " + job.getID() );
         }
         
@@ -840,10 +841,18 @@ public class Synch {
     /**
      * Transfers the input files to the specified bucket
      * 
+     * @param files 
+     */
+    public void transferInputFiles( List<String> files) {
+        this.transferInputFiles( mS3Bucket, files);
+    }
+    /**
+     * Transfers the input files to the specified bucket
+     * 
      * @param bucket
      * @param files 
      */
-    public void transferInputFiles(String bucket, String[] files) {
+    public void transferInputFiles(String bucket, List<String> files) {
         S3Client s3Client = S3Client.builder().region(mAWSRegion).build();
         for( String f: files){
             File file = new File(f);

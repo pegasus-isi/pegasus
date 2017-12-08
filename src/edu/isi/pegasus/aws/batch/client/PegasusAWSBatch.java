@@ -29,10 +29,12 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 import static java.util.Arrays.asList;
 import java.util.Date;
 import java.util.EnumMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
@@ -85,6 +87,8 @@ public class PegasusAWSBatch {
                 withRequiredArg().ofType( String.class );
         mOptionParser.acceptsAll(asList( "c", "create"), "does not run any jobs. Only creates the job definition, compute environment and the job queue");
         mOptionParser.acceptsAll(asList( "d", "delete"), "does not run any jobs. Only deletes the job definition, compute environment and the job queue");
+        mOptionParser.acceptsAll(asList( "f", "files"), "comma separated list of files that need to be copied to the associated s3 bucket before any task starts").
+                withRequiredArg().ofType( String.class );
         mOptionParser.acceptsAll(asList( "j", "job-definition"), "the json file containing job definition to register for executing jobs or the ARN of existing job definition ").
                 withRequiredArg().ofType( String.class );
         mOptionParser.acceptsAll(asList( "p", "prefix"), "prefix to use for creating compute environment, job definition, job queue").
@@ -215,6 +219,10 @@ public class PegasusAWSBatch {
             throw new RuntimeException( "-s|--setup option cannot be specified along with jobs to run");
         }
         
+        List<String> files = options.has( "files" ) ?
+                Arrays.asList(  ((String) options.valueOf( "files" )).split(",") ):
+                new LinkedList();
+        
         String key = Synch.AWS_BATCH_PROPERTY_PREFIX + ".prefix";
         String awsBatchPrefix = getAWSOptionValue(options, "prefix", props, key );
         props.setProperty( key , awsBatchPrefix);
@@ -275,6 +283,10 @@ public class PegasusAWSBatch {
         } catch (IOException ex) {
             mLogger.error(ex, ex);
         }
+        
+        //transfer any common files required for all tasks
+        sc.transferInputFiles( files );
+        
         sc.monitor();
         Job jobBuilder = new Job();
         for( String f : submitJobFiles ){
