@@ -104,6 +104,11 @@ public class Synch {
     public static final String TRANSFER_INPUT_FILES_KEY = "TRANSFER_INPUT_FILES";
     
     /**
+     * The environment variable holding the name of the bucket to use for file transfers
+     */
+    public static final String PEGASUS_AWS_BATCH_ENV_KEY = "PEGASUS_AWS_BATCH_BUCKET";
+    
+    /**
      * A value to trigger creation of job queue even if user did not specify in 
      * case of running jobs.
      */
@@ -138,6 +143,11 @@ public class Synch {
     private String mJobQueueARN;
     
     private String mS3Bucket;
+    
+    /**
+     * List of common files transferred for all tasks
+     */
+    private List<String> mCommonFilesToS3;
     
     /**
      * A map to track what associated batch entities need to be 
@@ -182,6 +192,7 @@ public class Synch {
         mAWSRegion     = Region.of( getProperty( properties, Synch.AWS_PROPERTY_PREFIX, "region") );//"us-west-2" 
         mPrefix        = getProperty( properties, Synch.AWS_BATCH_PROPERTY_PREFIX,  "prefix" );
         mDeleteOnExit  = new EnumMap<>(BATCH_ENTITY_TYPE.class);
+        mCommonFilesToS3   = new LinkedList<String>();
         
         mJobstateWriter = new AWSJobstateWriter();
         mJobstateWriter.initialze( new File("."), mLogger);
@@ -344,15 +355,40 @@ public class Synch {
         //we need to set and override job queue ARN etc for time being
         job.setJobDefinitionARN( this.mJobDefinitionARN );
         job.setJobQueueARN(this.mJobQueueARN );
-        SubmitJobRequest jobRequest = job.createAWSBatchSubmitRequest();
         
         //handle file transfers if any before submitting job
         String files = job.getEnvironmentVariable( Synch.TRANSFER_INPUT_FILES_KEY );
+        List<String> allInputs = new LinkedList();
         if( files != null ){
-            transferInputFiles( this.mS3Bucket, Arrays.asList( files.split( ",") ));
+            List<String> inputs = Arrays.asList( files.split( ",") );
+            transferInputFiles( this.mS3Bucket, inputs);
             mLogger.info( "Uploaded files " + files + " for task " + job.getID() );
+            for(String f: inputs ){
+                //construct any file transfers that are required
+                //but only basenames
+                allInputs.add( new File(f).getName() );
+            }
+        }
+        //setup the environment for the task regarding S3 bucket to use etc
+        job.addEnvironmentVariable( Synch.PEGASUS_AWS_BATCH_ENV_KEY, this.mS3Bucket );
+        
+        //add any common input files 
+        for(String f: this.mCommonFilesToS3 ){
+                //construct any file transfers that are required
+                //but only basenames
+                allInputs.add( f );
+        }
+        if( !allInputs.isEmpty() ){
+           StringBuffer sb = new StringBuffer();
+           for( String f: allInputs ){
+               sb.append( f ).append( "," );
+           } 
+           //strip trailing ,
+           String envValue = sb.substring( 0, sb.lastIndexOf( "," ) );
+           job.addEnvironmentVariable( Synch.TRANSFER_INPUT_FILES_KEY, envValue );
         }
         
+        SubmitJobRequest jobRequest = job.createAWSBatchSubmitRequest();
         mLogger.debug( "Submitting job " + jobRequest );
         
         try{
@@ -843,8 +879,12 @@ public class Synch {
      * 
      * @param files 
      */
-    public void transferInputFiles( List<String> files) {
+    public void transferCommonInputFiles( List<String> files) {
         this.transferInputFiles( mS3Bucket, files);
+        //track the basenames of the files transferred to S3 bucket
+        for( String f: files ){
+            this.mCommonFilesToS3.add( new File(f).getName() );
+        }
     }
     /**
      * Transfers the input files to the specified bucket

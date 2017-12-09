@@ -285,7 +285,7 @@ public class PegasusAWSBatch {
         }
         
         //transfer any common files required for all tasks
-        sc.transferInputFiles( files );
+        sc.transferCommonInputFiles( files );
         
         sc.monitor();
         Job jobBuilder = new Job();
