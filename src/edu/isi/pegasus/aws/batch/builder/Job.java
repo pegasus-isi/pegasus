@@ -153,7 +153,7 @@ public class Job {
             }
         }
         /*
-        for ( Tuple t: j.getEnvironmentVariables()){
+        for ( Tuple t: j.getEnvironmentVariablesIterator()){
             System.out.println( t );
         }
         */
