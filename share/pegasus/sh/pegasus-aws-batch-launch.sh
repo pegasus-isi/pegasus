@@ -37,6 +37,28 @@ function error_exit () {
   exit 1
 }
 
+function usage () {
+  if [ "${#@}" -ne 0 ]; then
+    echo "* ${*}"
+    echo
+  fi
+  cat <<ENDUSAGE
+Usage:
+Launches a script or executable in the container.
+The script:executable is pulled down from a S3 bucket
+identified by the evn variable PEGASUS_AWS_BATCH_BUCKET
+
+Required environment varialbes to be set:
+export PEGASUS_AWS_BATCH_BUCKET=s3://my-bucket
+export PEGASUS_JOB_NAME="my-job"
+
+${BASENAME} exec-basename[ <script arguments> ]
+
+ENDUSAGE
+  exit 2
+
+}
+
 function pegasus_batch_log()
 {
     TS=`/bin/date +'%F %H:%M:%S'`
@@ -56,11 +78,10 @@ function setup_task_stderr()
     
 }
 # Check that necessary programs are available
-which aws >/dev/null 2>&1 || error_exit "Unable to find AWS CLI executable."
-which unzip >/dev/null 2>&1 || error_exit "Unable to find unzip executable."
+which aws >/dev/null 2>&1 || error_exit "Unable to find AWS CLI executable in the container."
+which unzip >/dev/null 2>&1 || error_exit "Unable to find unzip executable in the container."
 
 PEGASUS_LITE_COMMON_FILE=pegasus-lite-common.sh
-PEGASUS_LITE_JOB_SCRIPT_FILE=sample_pegasus_lite.sh
 
 if [ "X${task_stderr_file}" = "X" ]; then
     # compute from the job name
@@ -73,17 +94,33 @@ fi
 setup_task_stderr
 pegasus_batch_log "task stderr set to file $task_stderr_file"
 
+# sanity checks
 if [ "X${PEGASUS_AWS_BATCH_BUCKET}" = "X" ]; then
-    error_exit "The env variable PEGASUS_AWS_BATCH_BUCKET not specified"
+    usage "The env variable PEGASUS_AWS_BATCH_BUCKET not specified"
 fi
 
-aws s3 cp "${PEGASUS_AWS_BATCH_BUCKET}/${PEGASUS_LITE_COMMON_FILE}" - > "./${PEGASUS_LITE_COMMON_FILE}" || error_exit "Failed to download S3 file  ${PEGASUS_LITE_COMMON_FILE}"
-aws s3 cp "${PEGASUS_AWS_BATCH_BUCKET}/${PEGASUS_LITE_JOB_SCRIPT_FILE}" - > "./${PEGASUS_LITE_JOB_SCRIPT_FILE}" || error_exit "Failed to download S3 file ${PEGASUS_LITE_JOB_SCRIPT_FILE}"
-chmod +x ${PEGASUS_LITE_COMMON_FILE_FILE} ${PEGASUS_LITE_JOB_SCRIPT_FILE}
+scheme="$(echo "${PEGASUS_AWS_BATCH_BUCKET}" | cut -d: -f1)"
+if [ "${scheme}" != "s3" ]; then
+  usage "PEGASUS_AWS_BATCH_BUCKET environment variable value should start with s3://"
+fi
 
+if [ $# -eq 0 ]; then
+    usage "Need to pass the name of executable to run"
+fi
+
+# Use first argument as script name and pass the rest to the script
+pegasus_batch_log "Number of args passed to pegasus-aws-batch $# - $@"
+script="./${1}"; shift
+pegasus_batch_log "Launching ${script} with $# arguments $@"
+
+aws s3 cp "${PEGASUS_AWS_BATCH_BUCKET}/${PEGASUS_LITE_COMMON_FILE}" - > "./${PEGASUS_LITE_COMMON_FILE}" || error_exit "Failed to download S3 file  ${PEGASUS_LITE_COMMON_FILE} from bucket ${PEGASUS_AWS_BATCH_BUCKET}"
+aws s3 cp "${PEGASUS_AWS_BATCH_BUCKET}/${script}" - > "./${script}" || error_exit "Failed to download S3 file ${script} from bucket ${PEGASUS_AWS_BATCH_BUCKET}"
+chmod +x ${PEGASUS_LITE_COMMON_FILE_FILE} ${script}
+
+pegasus_batch_log "Launching ${script} with arguments $@"
 
 set +e
-./${PEGASUS_LITE_JOB_SCRIPT_FILE} "${@}" 
+./${script} "${@}" 
 task_ec=$?
 echo "PegasusAWSBatchLaunch: exitcode $task_ec" 1>&2
 
