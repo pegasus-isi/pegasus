@@ -101,12 +101,20 @@ public class Synch {
     
     public static final String CLOUD_WATCH_BATCH_LOG_GROUP =  "/aws/batch/job";
     
+    /**
+     * The environment variable to specify the input files to transfer to the S3 bucket
+     */
     public static final String TRANSFER_INPUT_FILES_KEY = "TRANSFER_INPUT_FILES";
     
     /**
      * The environment variable holding the name of the bucket to use for file transfers
      */
     public static final String PEGASUS_AWS_BATCH_ENV_KEY = "PEGASUS_AWS_BATCH_BUCKET";
+    
+    /**
+     * The environment variable holding the name of the job
+     */
+    public static final String PEGASUS_JOB_NAME_ENV_KEY = "PEGASUS_JOB_NAME";
     
     /**
      * A value to trigger creation of job queue even if user did not specify in 
@@ -370,7 +378,8 @@ public class Synch {
             }
         }
         //setup the environment for the task regarding S3 bucket to use etc
-        job.addEnvironmentVariable( Synch.PEGASUS_AWS_BATCH_ENV_KEY, this.mS3Bucket );
+        job.addEnvironmentVariable( Synch.PEGASUS_AWS_BATCH_ENV_KEY, S3_PREFIX + this.mS3Bucket );
+        job.addEnvironmentVariable( Synch.PEGASUS_JOB_NAME_ENV_KEY, job.getID() );
         
         //add any common input files 
         for(String f: this.mCommonFilesToS3 ){

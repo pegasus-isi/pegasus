@@ -17,15 +17,19 @@ package edu.isi.pegasus.aws.batch.common;
 
 import edu.isi.pegasus.aws.batch.classes.Tuple;
 import edu.isi.pegasus.aws.batch.impl.Synch;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+
 import java.util.Iterator;
+
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.Priority;
+
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.batch.BatchClient;
 import software.amazon.awssdk.services.batch.model.AttemptDetail;
@@ -46,6 +50,8 @@ import software.amazon.awssdk.services.cloudwatchlogs.model.DeleteLogStreamRespo
  * @author Karan Vahi
  */
 public class CloudWatchLog {
+    
+    public static final String TASK_STDERR_SEPARATOR="########################[AWS BATCH] TASK STDERR ########################";
 
     private Logger mLogger;
 
