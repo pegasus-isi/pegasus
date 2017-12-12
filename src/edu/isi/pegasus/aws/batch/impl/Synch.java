@@ -544,8 +544,8 @@ public class Synch {
                             numDone++;
                             
                             mLogger.debug("Querying for succeeded job details "  + succeededJobID  );
-                            File log = cwl.retrieve(succeededJobID);
-                            mLogger.debug("Log retreived for "  + succeededJobID + " to " + log  );
+                            Tuple<File,File> log = cwl.retrieve(succeededJobID);
+                            mLogger.debug("Logs retreived for "  + succeededJobID + " to " + log  );
                         }
                     }
                 }
@@ -567,8 +567,8 @@ public class Synch {
                                 numDone++;
                                 
                                 mLogger.debug("Querying for failed job details "  + failedJobID   );
-                                File log = cwl.retrieve(failedJobID);
-                                mLogger.debug("Log retreived for "  + failedJobID + " to " + log  );
+                                Tuple<File,File> log = cwl.retrieve(failedJobID);
+                                mLogger.debug("Logs retreived for "  + failedJobID + " to " + log  );
                             }
                         }
                     }

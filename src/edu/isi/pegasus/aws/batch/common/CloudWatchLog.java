@@ -91,9 +91,10 @@ public class CloudWatchLog {
      *
      * @param awsJobID the AWS job ID for the job
      *
-     * @return the file to which it is retrieved
+     * 
+     * @return a Tuple containing the stdout and stderr files to which it is retrieved
      */
-    public File retrieve(String awsJobID) {
+    public Tuple<File,File> retrieve(String awsJobID) {
         DescribeJobsRequest jobsRequest = DescribeJobsRequest.builder().
                 jobs(awsJobID).
                 build();
@@ -116,9 +117,9 @@ public class CloudWatchLog {
      * @param logGroup the cloud watch log group
      * @param streamName the stream name
      *
-     * @return the file to which it is retrieved
+     * @return a Tuple containing the stdout and stderr files to which it is retrieved
      */
-    public File retrieve(String jobName, String logGroup, String streamName) {
+    public Tuple<File,File> retrieve(String jobName, String logGroup, String streamName) {
         mLogger.info("Retrieving log for " + jobName + " for log group " + logGroup + " with stream name " + streamName);
 
         GetLogEventsRequest gle = GetLogEventsRequest.builder().
@@ -128,17 +129,36 @@ public class CloudWatchLog {
                 build();
         boolean done = false;
         String previousToken = null;
-        PrintWriter pw = null;
-        File f = null;
+        PrintWriter stdoutPW = null;
+        PrintWriter stderrPW = null;
+        File stdoutFile = null;
+        File stderrFile = null;
+        Tuple<File,File> result = null;
         try {
-            f = new File(jobName + ".out");
-            pw = new PrintWriter(new BufferedWriter(new FileWriter(f)));
-            mLogger.debug("Will write out log to " + f.getAbsolutePath());
+            //initally we flush to stdout file until switch over
+            boolean notSwitched = true;
+            stdoutFile = new File(jobName + ".out");
+            stderrFile = new File(jobName + ".err");
+            result     = new Tuple( stdoutFile, stderrFile );
+            stdoutPW   = new PrintWriter(new BufferedWriter(new FileWriter(stdoutFile)));
+            stderrPW   = new PrintWriter(new BufferedWriter(new FileWriter(stderrFile)));
+            PrintWriter pw = stdoutPW;
+            mLogger.debug("Will write out stdout log to " + stdoutFile.getAbsolutePath());
+            
             while (!done) {
                 GetLogEventsResponse response = mCWL.getLogEvents(gle);
                 for (OutputLogEvent event : response.events()) {
-                    mLogger.debug("Retrieved event " + event.message());
-                    pw.println(event.message());
+                    String message = event.message();
+                    mLogger.debug("Retrieved event " + message);
+                    if( notSwitched && message.startsWith( CloudWatchLog.TASK_STDERR_SEPARATOR) ){
+                        // we switch print writer to stderr
+                        notSwitched = false; 
+                        pw = stderrPW;
+                    }
+                    else{
+                        pw.println(event.message());
+                    }
+                    
                 }
                 String nextToken = response.nextForwardToken();
 
@@ -159,8 +179,11 @@ public class CloudWatchLog {
         } catch (IOException ex) {
             mLogger.log(Priority.ERROR, ex);
         } finally {
-            if (pw != null) {
-                pw.close();
+            if (stdoutPW != null) {
+                stdoutPW.close();
+            }
+            if (stderrPW != null) {
+                stderrPW.close();
             }
         }
         
@@ -168,7 +191,7 @@ public class CloudWatchLog {
             this.delete(logGroup, streamName);
         }
         
-        return f;
+        return result;
     }
     
     /**
