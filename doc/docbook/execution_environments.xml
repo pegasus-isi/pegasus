@@ -426,32 +426,31 @@ pegasus.data.configuration    condorio</programlisting>
 </programlisting>
     </section>
   </section>
-  
+
   <section id="pyglidein">
     <title>Remote Cluster using PyGlidein</title>
-    
-    <para>
-      Glideins (HTCondor pilot jobs) provide an efficient solution for high-throughput workflows.
-      The glideins are submitted to the remote cluster scheduler, and once started up, makes it appear
-      like your HTCondor pool extends into the remote cluster. HTCondor can then
-      schedule the jobs to the remote compute node in the same way it would schedule jobs
-      to local compute nodes.
-    </para>
-    
-    <para>
-      Some infrastructures, such as <link linkend="open_science_grid">Open Science Grid</link>,
-      provide infrastructure level glidein solutions,
-      such as GlideinWMS. Another solution is <link linkend="bosco">BOSCO</link>. For some more
-      custom setups, 
-      <ulink url="https://github.com/WIPACrepo/pyglidein">pyglidein</ulink> from the
-      <ulink url="http://icecube.wisc.edu/">IceCube</ulink> project provides a nice framework.
-      The architecture consists on a server on the submit host, which job it is to determining the demand.
-      On the remote resource, the client can be invoked for example via cron, and submits directly
-      to HTCondor, SLURM and PBS schedulers. This makes pyglidein very flexible and works well for
-      example if the resource requires two-factor authentication. 
-    </para>
-    
-        <para><figure id="fig-pyglidein">
+
+    <para>Glideins (HTCondor pilot jobs) provide an efficient solution for
+    high-throughput workflows. The glideins are submitted to the remote
+    cluster scheduler, and once started up, makes it appear like your HTCondor
+    pool extends into the remote cluster. HTCondor can then schedule the jobs
+    to the remote compute node in the same way it would schedule jobs to local
+    compute nodes.</para>
+
+    <para>Some infrastructures, such as <link linkend="open_science_grid">Open
+    Science Grid</link>, provide infrastructure level glidein solutions, such
+    as GlideinWMS. Another solution is <link linkend="bosco">BOSCO</link>. For
+    some more custom setups, <ulink
+    url="https://github.com/WIPACrepo/pyglidein">pyglidein</ulink> from the
+    <ulink url="http://icecube.wisc.edu/">IceCube</ulink> project provides a
+    nice framework. The architecture consists on a server on the submit host,
+    which job it is to determining the demand. On the remote resource, the
+    client can be invoked for example via cron, and submits directly to
+    HTCondor, SLURM and PBS schedulers. This makes pyglidein very flexible and
+    works well for example if the resource requires two-factor
+    authentication.</para>
+
+    <para><figure id="fig-pyglidein">
         <title>pyglidein overview</title>
 
         <mediaobject>
@@ -462,51 +461,45 @@ pegasus.data.configuration    condorio</programlisting>
           </imageobject>
         </mediaobject>
       </figure></para>
-    
-    <para>
-      To get started with pyglidein, check out a copy of the Git repository on both your submit
-      host as well as the cluster you want to glidein to. Starting with the submit host, first
-      make sure you have HTCondor configured for
-      <ulink url="http://research.cs.wisc.edu/htcondor/manual/current/3_8Security.html#SECTION00483400000000000000">PASSWORD</ulink>
-      authentication. Make a copy of the HTCondor pool password file. You will need it on the
-      cluster, and it is a binary file, so make sure you cp instead of a copy-and-paste of the 
-      file contents. To get the server started:
-    </para>
-    
+
+    <para>To get started with pyglidein, check out a copy of the Git
+    repository on both your submit host as well as the cluster you want to
+    glidein to. Starting with the submit host, first make sure you have
+    HTCondor configured for <ulink
+    url="http://research.cs.wisc.edu/htcondor/manual/current/3_8Security.html#SECTION00483400000000000000">PASSWORD</ulink>
+    authentication. Make a copy of the HTCondor pool password file. You will
+    need it on the cluster, and it is a binary file, so make sure you cp
+    instead of a copy-and-paste of the file contents. To get the server
+    started:</para>
+
     <programlisting>
 ./server.py --port 11001  
     </programlisting>
-    
-    <para>
-      By default, the pyglidein server will use all jobs in the system to determine if glideins
-      are needed. If you want user jobs to explicitly let us know they want glideins, you can pass
-      a constraint for the server to use. For example, jobs could have the 
-      <emphasis>+WantStampede2 = True</emphasis> attribute, and then we could start the
-      server with:
-    </para>
-    
+
+    <para>By default, the pyglidein server will use all jobs in the system to
+    determine if glideins are needed. If you want user jobs to explicitly let
+    us know they want glideins, you can pass a constraint for the server to
+    use. For example, jobs could have the <emphasis>+WantStampede2 =
+    True</emphasis> attribute, and then we could start the server with:</para>
+
     <programlisting>
 ./server.py --port 11001 --constraint "'WantStampede2 == True'"  
     </programlisting>
-    
-    <para>
-      One the server is running, you can check status by pointing a web browser to it.
-    </para>
-    
-    <para>
-      Next step is to create a <emphasis>glidein.tar.gz</emphasis> file containing
-      the HTCondor binaries, our pool password file, and a modified job wrapper script.
-      This can be accomplished by building HTCondor with the
-      <emphasis>create_glidein_tarball.py</emphasis> script, but first we need to modify
-      <emphasis>glidein_template/</emphasis>. Start by copying your pool password file
-      over the existing <emphasis>passwdfile</emphasis> file.
-    </para>
-    
-    <para>
-      Edit <emphasis>user_job_wrapper.sh</emphasis>. We don't need most of it, so
-      edit it to read:
-    </para>
-    
+
+    <para>One the server is running, you can check status by pointing a web
+    browser to it.</para>
+
+    <para>Next step is to create a <emphasis>glidein.tar.gz</emphasis> file
+    containing the HTCondor binaries, our pool password file, and a modified
+    job wrapper script. This can be accomplished by building HTCondor with the
+    <emphasis>create_glidein_tarball.py</emphasis> script, but first we need
+    to modify <emphasis>glidein_template/</emphasis>. Start by copying your
+    pool password file over the existing <emphasis>passwdfile</emphasis>
+    file.</para>
+
+    <para>Edit <emphasis>user_job_wrapper.sh</emphasis>. We don't need most of
+    it, so edit it to read:</para>
+
     <programlisting>
 #!/bin/bash
 
@@ -532,22 +525,19 @@ else
     exec ${JOB_WRAPPER} "$@"
 fi   
     </programlisting>
-    
-    <para>
-      Create the glidein.tar.gz by running:
-    </para>  
-    
+
+    <para>Create the glidein.tar.gz by running:</para>
+
     <programlisting>
 python create_glidein_tarball.py
     </programlisting>
-    
-    <para>
-      Once you have the glidein.tar.gz file, copy it to the Git checkout you have on 
-      the remote cluster. Then move over there for the remaining steps. Create a 
-      configuration file for your glidein under <emphasis>configs/</emphasis>. Here
-      is an example for TACC Stampede2:
-    </para>
-    
+
+    <para>Once you have the glidein.tar.gz file, copy it to the Git checkout
+    you have on the remote cluster. Then move over there for the remaining
+    steps. Create a configuration file for your glidein under
+    <emphasis>configs/</emphasis>. Here is an example for TACC
+    Stampede2:</para>
+
     <programlisting>
 [Mode]
 debug = True
@@ -587,52 +577,47 @@ cvmfs_job_wrapper = False
 [CustomEnv]
 CLUSTER = workflow.isi.edu
     </programlisting>
-    
-    <para>
-      This configuration will obviously look different for different clusters.
-      <emphasis>configs/</emphasis> has a bunch of example configs, but a few things to 
-      note: 
-    </para>
-    
+
+    <para>This configuration will obviously look different for different
+    clusters. <emphasis>configs/</emphasis> has a bunch of example configs,
+    but a few things to note:</para>
+
     <itemizedlist>
       <listitem>
-        <para><emphasis role="bold">address</emphasis> is the location of the server
-        we started earlier</para>
+        <para><emphasis role="bold">address</emphasis> is the location of the
+        server we started earlier</para>
       </listitem>
+
       <listitem>
-        <para><emphasis role="bold">tarball</emphasis> is the full path to our custom
-        glidein.tar.gz file we created above.</para>
-      </listitem>    
+        <para><emphasis role="bold">tarball</emphasis> is the full path to our
+        custom glidein.tar.gz file we created above.</para>
+      </listitem>
+
       <listitem>
         <para><emphasis role="bold">CLUSTER</emphasis> is the location of your
-        HTCondor central manager. In many cases this is the same host you started
-        the server on. Please note that if you do not set this variable, the
-        glideins will try to register into the IceCube infrastructure.</para>
-      </listitem>   
+        HTCondor central manager. In many cases this is the same host you
+        started the server on. Please note that if you do not set this
+        variable, the glideins will try to register into the IceCube
+        infrastructure.</para>
+      </listitem>
     </itemizedlist>
-    
-    <para>
-      At this point we can try our first glidein:
-    </para>
-    
+
+    <para>At this point we can try our first glidein:</para>
+
     <programlisting>
 ./client.py --config=$HOME/git/pyglidein/configs/stampede2.config
     </programlisting>
-    
-    <para>
-      Once we have a seen a successful glidein, we can add the client to the crontab:
-    </para>
-    
+
+    <para>Once we have a seen a successful glidein, we can add the client to
+    the crontab:</para>
+
     <programlisting>
 # m  h  dom mon dow   command
 */10 *   *   *   *    (cd ~/git/pyglidein/ &amp;&amp; ./client.py --config=$HOME/git/pyglidein/configs/stampede2.config) &gt;~/cron-pyglidein.log 2&gt;&amp;1
     </programlisting>
-    
-    <para>
-      With this setup, glideins will now appear automatically based on the demand in the local
-      HTCondor queue.
-    </para>
-    
+
+    <para>With this setup, glideins will now appear automatically based on the
+    demand in the local HTCondor queue.</para>
   </section>
 
   <section id="globus_gram">
@@ -831,11 +816,14 @@ CLUSTER = workflow.isi.edu
   </section>
 
   <section id="glite">
-    <title>Local PBS Cluster Using Glite</title>
+    <title>Local Campus Cluster Using Glite</title>
 
     <para>This section describes the configuration required for Pegasus to
     generate an executable workflow that uses glite to submit to a PBS or
-    PBS-like batch system on a local cluster.</para>
+    PBS-like batch system on a local cluster. This environment is referred to
+    as the local campus cluster, as the workflow submit node ( Pegasus
+    +HTCondor) need to be installed on a login node (or a node where the local
+    batch scheduler commands can be executed) of the cluster. </para>
 
     <note>
       <para>Glite is the old name for BLAH (or BLAHP). BLAH binaries are
@@ -854,7 +842,7 @@ CLUSTER = workflow.isi.edu
       or PBS-like system such as SGE, Moab, LSF, SLURM and others".</para>
     </tip>
 
-    <para>Glite needs to be able to talk directly with the batch system
+    <para>This is because the Glite layer communicates with the batch system
     running on the cluster using <literal>qsub</literal>,
     <literal>qstat</literal> or equivalent commands. If you can submit jobs to
     PBS from the workflow submit host running Pegasus and HTCondor, then the
@@ -973,7 +961,7 @@ CLUSTER = workflow.isi.edu
       <table>
         <title>Mapping of Pegasus Profiles to Job Requirements</title>
 
-        <tgroup cols="7">
+        <tgroup cols="8">
           <thead>
             <row>
               <entry align="center">Profile Key</entry>
@@ -983,6 +971,8 @@ CLUSTER = workflow.isi.edu
               <entry>PBS Parameter</entry>
 
               <entry>SGE Parameter</entry>
+
+              <entry>SLURM parameter</entry>
 
               <entry>Moab Parameter</entry>
 
@@ -1001,6 +991,8 @@ CLUSTER = workflow.isi.edu
               <entry>n/a</entry>
 
               <entry>-pe ompi</entry>
+
+              <entry>--ntasks cores</entry>
 
               <entry>n/a</entry>
 
@@ -1027,6 +1019,8 @@ CLUSTER = workflow.isi.edu
 
               <entry>n/a</entry>
 
+              <entry>--nodes nodes</entry>
+
               <entry>-l nodes</entry>
 
               <entry>-n nodes</entry>
@@ -1041,6 +1035,8 @@ CLUSTER = workflow.isi.edu
               <entry>PROCS</entry>
 
               <entry>-l ppn</entry>
+
+              <entry>n/a</entry>
 
               <entry>n/a</entry>
 
@@ -1061,6 +1057,8 @@ CLUSTER = workflow.isi.edu
 
               <entry>-l h_rt</entry>
 
+              <entry>--time walltime</entry>
+
               <entry>-l walltime</entry>
 
               <entry>-t walltime</entry>
@@ -1080,7 +1078,9 @@ CLUSTER = workflow.isi.edu
 
               <entry>-l h_vmem</entry>
 
-              <entry>-l pmem</entry>
+              <entry>--mem memory</entry>
+
+              <entry>--mem-per-cpu pmem</entry>
 
               <entry>n/a</entry>
 
@@ -1101,6 +1101,8 @@ CLUSTER = workflow.isi.edu
 
               <entry>n/a</entry>
 
+              <entry>n/a</entry>
+
               <entry>-A project_name</entry>
 
               <entry>-A project_name</entry>
@@ -1117,6 +1119,8 @@ CLUSTER = workflow.isi.edu
               <entry>-q</entry>
 
               <entry>-q</entry>
+
+              <entry>n/a</entry>
 
               <entry>-q</entry>
 
@@ -1139,6 +1143,8 @@ CLUSTER = workflow.isi.edu
 
               <entry>n/a</entry>
 
+              <entry>--mem memory</entry>
+
               <entry>-l mem</entry>
 
               <entry>n/a</entry>
@@ -1156,6 +1162,8 @@ CLUSTER = workflow.isi.edu
               <entry>prefixed by "#PBS"</entry>
 
               <entry>prefixed by "#?"</entry>
+
+              <entry>prefixed by "#SBATCH"</entry>
 
               <entry>prefixed by "#MSUB"</entry>
 
@@ -1524,10 +1532,7 @@ pegasus.transfer.worker.package = true
     </section>
   </section>
 </chapter>
-<?xxe-serial-numbers iq2ifwj5 vahi
-iq2nanhq vahi
-j6fj4v2e vahi
-j6gzb3qj vahi
+<?xxe-serial-numbers jb5ikm0k vahi
 (1z141z5 (1z141z6) (1z141z7) (1z141z8 (1z141z9) (1z141za (1z141zb))
 (1z141zc (1z141zd)) (1z141ze) (1z141zf (1z141zg) (1z141zh))) (1z141zi
 (1z141zj) (1z141zk) (1z141zl (1z141zm) (1z141zn (1z141zo (1z141zp))))
@@ -1542,45 +1547,54 @@ j6gzb3qj vahi
 (1z1421a (1z1421b)) (1z1421c) (1z1421d (1z1421e) (1z1421f) (1z1421g
 (1z1421h (1z1421i) (1z1421j (1z1421k (1z1421l))))) (1z1421m (1z1421n))
 (1z1421o (1z1421p))) (1z1421q (1z1421r) (1z1421s) (1z1421t) (1z1421u)
-(1z1421v) (1z1421w))) (1z1421x (1z1421y) (1z1421z (1z14220 (1z14221)
-(1z14222 (1z14223 (1z14224))))) (1z14225 (1z14226)) (1z14227 (1z14228))
-(1z14229 (1z1422a)) (1z1422b) (1z1422c (1z1422d) (1z1422e)) (1z1422f
-(1z1422g)) (1z1422h (1z1422i)) (1z1422j (1z1422k)) (1z1422l) (1z1422m)
-(1z1422n) (1z1422o)) (1z1422p (1z1422q) (1z1422r (1z1422s)) (1z1422t)
-(1z1422u (1z1422v (1z1422w (1z1422x) (1z1422y) (1z1422z))) (1z14230
-(1z14231 (1z14232) (1z14233) (1z14234))) (1z14235 (1z14236 (1z14237)
-(1z14238) (1z14239)))) (1z1423a) (1z1423b) (1z1423c) (1z1423d (1z1423e
-(1z1423f)))) (1z1423g (1z1423h) (1z1423i) (1z1423j (1z1423k)) (1z1423l
-(1z1423m)) (1z1423n (1z1423o) (1z1423p) (1z1423q)) (1z1423r (1z1423s
-(1z1423t))) (1z1423u (1z1423v)) (1z1423w) (1z1423x (1z1423y (1z1423z
-(1z14240) (1z14241) (1z14242))) (1z14243 (1z14244 (1z14245) (1z14246)
-(1z14247) (1z14248) (1z14249)))) (1z1424a) (1z1424b) (1z1424c (1z1424d))
-(1z1424e (1z1424f) (1z1424g) (1z1424h) (1z1424i)) (1z1424j (1z1424k))
-(1z1424l) (1z1424m) (1z1424n (1z1424o) (1z1424p) (1z1424q (1z1424r)
-(1z1424s (1z1424t (1z1424u (1z1424v) (1z1424w) (1z1424x) (1z1424y)
-(1z1424z) (3y283y9) (1z14250))) (1z14251 (1z14252 (1z14253) (1z14254)
-(1z14255) (1z14256) (1z14257) (3y283ya) (1z14258)) (1z14259 (1z1425a)
-(1z1425b) (1z1425c) (1z1425d) (1z1425e) (3y283yb) (1z1425f)) (1z1425g
-(1z1425h) (1z1425i) (1z1425j) (1z1425k) (1z1425l) (3y283yc) (1z1425m))
-(1z1425n (1z1425o) (1z1425p) (1z1425q) (1z1425r) (1z1425s) (3y283yd)
-(1z1425t)) (1z1425u (1z1425v) (1z1425w) (1z1425x) (1z1425y) (1z1425z)
-(3y283ye) (1z14260)) (1z14261 (1z14262) (1z14263) (1z14264) (1z14265)
-(1z14266) (3y283yf) (1z14267)) (1z14268 (1z14269) (1z1426a) (1z1426b)
-(1z1426c) (1z1426d) (3y283yg) (1z1426e (1z1426f) (1z1426g))) (1z1426h
-(1z1426i) (1z1426j) (1z1426k) (1z1426l) (1z1426m) (3y283yh) (1z1426n))
-(1z1426o (1z1426p) (1z1426q) (1z1426r) (1z1426s) (1z1426t) (3y283yi)
-(1z1426u))))) (1z1426v (1z1426w))) (1z1426x (1z1426y) (1z1426z (1z14270)
-(1z14271) (1z14272)))) (1z14273 (1z14274) (1z14275 (1z14276)) (1z14277)
-(1z14278 (1z14279)) (1z1427a) (1z1427b (1z1427c) (1z1427d) (1z1427e))
-(1z1427f) (1z1427g) (1z1427h) (1z1427i (1z1427j) (1z1427k)) (1z1427l)
-(1z1427m) (1z1427n) (1z1427o (1z1427p)) (1z1427q) (1z1427r (1z1427s))
-(1z1427t) (1z1427u (1z1427v)) (1z1427w) (1z1427x)) (1z1427y (1z1427z)
-(1z14280 (1z14281)) (1z14282 (1z14283) (1z14284) (1z14285) (1z14286)
-(1z14287) (5x3c5xd)) (1z14288) (1z14289 (1z1428a (1z1428b (1z1428c)
-(1z1428d) (1z1428e))) (1z1428f (1z1428g))) (1z1428h) (1z1428i) (1z1428j
-(1z1428k)) (1z1428l) (7w4g7wh (7w4g7wi))) (1z1428m (1z1428n) (1z1428o)
-(1z1428p (1z1428q (1z1428r)) (1z1428s (1z1428t)) (1z1428u (1z1428v)))
-(1z1428w (1z1428x))) (1z1428y (1z1428z) (1z14290 (1z14291)) (1z14292
-(1z14293) (1z14294) (1z14295) (1z14296)) (1z14297) (1z14298) (1z14299)
-(1z1429a (1z1429b)) (1z1429c (1z1429d))) (1z1429e (1z1429f) (1z1429g
-(1z1429h (1z1429i) (1z1429j)))))?>
+(1z1421v) (1z1421w))) (1z1421x (1z1421y) (1z1421z) (1z14220 (1z14221)
+(1z14222) (1z14223) (1z14224)) (1z14225 (1z14226 (1z14227) (1z14228
+(1z14229 (1z1422a))))) (1z1422b (1z1422c)) (1z1422d) (1z1422e (1z1422f))
+(1z1422g) (1z1422h) (1z1422i (1z1422j) (1z1422k) (1z1422l) (1z1422m))
+(1z1422n (1z1422o)) (1z1422p) (1z1422q) (1z1422r) (1z1422s (1z1422t))
+(1z1422u) (1z1422v (1z1422w)) (1z1422x (1z1422y (1z1422z (1z14230)))
+(1z14231 (1z14232 (1z14233))) (1z14234 (1z14235 (1z14236)))) (1z14237)
+(1z14238) (1z14239) (1z1423a) (1z1423b)) (1z1423c (1z1423d) (1z1423e
+(1z1423f (1z1423g) (1z1423h (1z1423i (1z1423j))))) (1z1423k (1z1423l))
+(1z1423m (1z1423n)) (1z1423o (1z1423p)) (1z1423q) (1z1423r (1z1423s)
+(1z1423t)) (1z1423u (1z1423v)) (1z1423w (1z1423x)) (1z1423y (1z1423z))
+(1z14240) (1z14241) (1z14242) (1z14243)) (1z14244 (1z14245) (1z14246
+(1z14247)) (1z14248) (1z14249 (1z1424a (1z1424b (1z1424c) (1z1424d)
+(1z1424e))) (1z1424f (1z1424g (1z1424h) (1z1424i) (1z1424j))) (1z1424k
+(1z1424l (1z1424m) (1z1424n) (1z1424o)))) (1z1424p) (1z1424q) (1z1424r)
+(1z1424s (1z1424t (1z1424u)))) (1z1424v (1z1424w) (1z1424x) (1z1424y
+(1z1424z)) (1z14250 (1z14251)) (1z14252 (1z14253) (1z14254) (1z14255))
+(1z14256 (1z14257 (1z14258))) (1z14259 (1z1425a)) (1z1425b) (1z1425c
+(1z1425d (1z1425e (1z1425f) (1z1425g) (1z1425h))) (1z1425i (1z1425j
+(1z1425k) (1z1425l) (1z1425m) (1z1425n) (1z1425o)))) (1z1425p) (1z1425q)
+(1z1425r (1z1425s)) (1z1425t (1z1425u) (1z1425v) (1z1425w) (1z1425x))
+(1z1425y (1z1425z)) (1z14260) (1z14261) (1z14262 (1z14263) (1z14264)
+(1z14265 (1z14266) (1z14267 (1z14268 (1z14269 (1z1426a) (1z1426b)
+(1z1426c) (1z1426d) (1z142bc) (1z1426e) (1z1426f) (1z1426g))) (1z1426h
+(1z1426i (1z1426j) (1z1426k) (1z1426l) (1z1426m) (1z142bd) (1z1426n)
+(1z1426o) (1z1426p)) (1z1426q (1z1426r) (1z1426s) (1z1426t) (1z1426u)
+(1z142be) (1z1426v) (1z1426w) (1z1426x)) (1z1426y (1z1426z) (1z14270)
+(1z14271) (1z14272) (1z142bf) (1z14273) (1z14274) (1z14275)) (1z14276
+(1z14277) (1z14278) (1z14279) (1z1427a) (1z142bg) (1z1427b) (1z1427c)
+(1z1427d)) (1z1427e (1z1427f) (1z1427g) (1z1427h) (1z1427i) (1z142bh)
+(1z1427j) (1z1427k) (1z1427l)) (1z1427m (1z1427n) (1z1427o) (1z1427p)
+(1z1427q) (1z142bi) (1z1427r) (1z1427s) (1z1427t)) (1z1427u (1z1427v)
+(1z1427w) (1z1427x) (1z1427y) (1z142bj) (1z1427z) (1z14280) (1z14281
+(1z14282) (1z14283))) (1z14284 (1z14285) (1z14286) (1z14287) (1z14288)
+(1z142bk) (1z14289) (1z1428a) (1z1428b)) (1z1428c (1z1428d) (1z1428e)
+(1z1428f) (1z1428g) (1z142bl) (1z1428h) (1z1428i) (1z1428j))))) (1z1428k
+(1z1428l))) (1z1428m (1z1428n) (1z1428o (1z1428p) (1z1428q) (1z1428r))))
+(1z1428s (1z1428t) (1z1428u (1z1428v)) (1z1428w) (1z1428x (1z1428y))
+(1z1428z) (1z14290 (1z14291) (1z14292) (1z14293)) (1z14294) (1z14295)
+(1z14296) (1z14297 (1z14298) (1z14299)) (1z1429a) (1z1429b) (1z1429c)
+(1z1429d (1z1429e)) (1z1429f) (1z1429g (1z1429h)) (1z1429i) (1z1429j
+(1z1429k)) (1z1429l) (1z1429m)) (1z1429n (1z1429o) (1z1429p (1z1429q))
+(1z1429r (1z1429s) (1z1429t) (1z1429u) (1z1429v) (1z1429w) (1z1429x))
+(1z1429y) (1z1429z (1z142a0 (1z142a1 (1z142a2) (1z142a3) (1z142a4)))
+(1z142a5 (1z142a6))) (1z142a7) (1z142a8) (1z142a9 (1z142aa)) (1z142ab)
+(1z142ac (1z142ad))) (1z142ae (1z142af) (1z142ag) (1z142ah (1z142ai
+(1z142aj)) (1z142ak (1z142al)) (1z142am (1z142an))) (1z142ao (1z142ap)))
+(1z142aq (1z142ar) (1z142as (1z142at)) (1z142au (1z142av) (1z142aw)
+(1z142ax) (1z142ay)) (1z142az) (1z142b0) (1z142b1) (1z142b2 (1z142b3))
+(1z142b4 (1z142b5))) (1z142b6 (1z142b7) (1z142b8 (1z142b9 (1z142ba)
+(1z142bb)))))?>
