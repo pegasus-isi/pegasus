@@ -79,6 +79,7 @@ function setup_task_stderr()
 }
 
 start_dir=`pwd`
+pegasus_batch_log "########################[Pegasus AWS Batch] Setting up workdir ########################"
 # Check that necessary programs are available
 which aws >/dev/null 2>&1 || error_exit "Unable to find AWS CLI executable in the container."
 which unzip >/dev/null 2>&1 || error_exit "Unable to find unzip executable in the container."
@@ -115,8 +116,8 @@ pegasus_batch_log "Number of args passed to pegasus-aws-batch - $# "
 script="${1}"; shift
 
 
-aws s3 cp "${PEGASUS_AWS_BATCH_BUCKET}/${PEGASUS_LITE_COMMON_FILE}"  "./${PEGASUS_LITE_COMMON_FILE}" || error_exit "Failed to download S3 file  ${PEGASUS_LITE_COMMON_FILE} from bucket ${PEGASUS_AWS_BATCH_BUCKET}"
-aws s3 cp "${PEGASUS_AWS_BATCH_BUCKET}/${script}"  "./${script}" || error_exit "Failed to download S3 file ${script} from bucket ${PEGASUS_AWS_BATCH_BUCKET}"
+aws s3 cp "${PEGASUS_AWS_BATCH_BUCKET}/${PEGASUS_LITE_COMMON_FILE}"  "./${PEGASUS_LITE_COMMON_FILE}" 1>&2 || error_exit "Failed to download S3 file  ${PEGASUS_LITE_COMMON_FILE} from bucket ${PEGASUS_AWS_BATCH_BUCKET}"
+aws s3 cp "${PEGASUS_AWS_BATCH_BUCKET}/${script}"  "./${script}" 1>&2 || error_exit "Failed to download S3 file ${script} from bucket ${PEGASUS_AWS_BATCH_BUCKET}"
 chmod +x ${PEGASUS_LITE_COMMON_FILE_FILE} ${script}
 
 pegasus_batch_log "Launching ${script} with $# arguments from directory ${start_dir}"
