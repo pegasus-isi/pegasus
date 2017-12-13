@@ -142,10 +142,9 @@ if ( defined $run ) {
     open( DID, "<$daglogfile" ) || 
 	die "Error: Cannot open file $daglogfile: $!\n";
     while (<DID>) {
-	if ( /\(CONDOR_DAGMAN\) STARTING UP/ ) {
-	    # this was written by a Python programmer: 
-	    $dagid = (split /\./, (split)[3], 2)[1];
-	}
+        if ( /\.([0-9\.]+) \(CONDOR_DAGMAN\) STARTING UP/ ) {
+            $dagid = $1;
+        }
     }
 
     # return to where we were
