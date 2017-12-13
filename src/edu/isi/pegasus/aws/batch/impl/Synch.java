@@ -62,6 +62,7 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.sync.RequestBody;
 
@@ -272,16 +273,21 @@ public class Synch {
         value = getEntityValue(entities, BATCH_ENTITY_TYPE.s3_bucket, allRequired );
         delete = true;
         if( value != null ){
-            if( value.startsWith( S3_PREFIX ) ){
+            String name = ( value.startsWith( S3_PREFIX ) )?
                 //strip out s3 prefix
-                mS3Bucket = value.substring( S3_PREFIX.length() );
-                delete = false;
-                mLogger.info("Using existing S3 Bucket " + mS3Bucket );
-            }
-            else{
-                mS3Bucket = this.createS3Bucket( constructDefaultName( Synch.S3_BUCKET_SUFFIX ));
+                value.substring( S3_PREFIX.length() ):
+                //construct a default name
+                constructDefaultName( Synch.S3_BUCKET_SUFFIX );
+            mS3Bucket = name;
+            if( this.createS3Bucket( name ) ){
                 mLogger.info( "Created S3 bucket " + mS3Bucket );
             }
+            else{
+                //bucket already exists. we wont delete it
+                mLogger.info( "Using existing S3 bucket that is already owned " + mS3Bucket );
+                delete = false;
+            } 
+            
             mDeleteOnExit.put(BATCH_ENTITY_TYPE.s3_bucket, delete );
         }
     }
@@ -823,30 +829,33 @@ public class Synch {
      * 
      * @param name
      * 
-     * @return 
+     * @return boolean true in case a bucket was created, 
+     *                 false if already exists,
+     * 
+     * @throws S3Exception in case unable to create bucket
      */
-    public String createS3Bucket(String name)  {
+    public boolean createS3Bucket(String name)  {
         S3Client s3Client = S3Client.builder().region(mAWSRegion).build();
-        CreateBucketResponse cbr = s3Client.createBucket( CreateBucketRequest.builder().
+        boolean created = true;
+        try{
+            CreateBucketResponse cbr = s3Client.createBucket( CreateBucketRequest.builder().
                                                                     bucket(name).
                                                                     createBucketConfiguration(CreateBucketConfiguration.builder().
                                                                         locationConstraint(mAWSRegion.value())
                                                                                                  .build()).
                                                                     build() );
-        
-        
-        URL url;
-        try {
-            url = new URL( cbr.location() );
-        } catch (MalformedURLException ex) {
-            throw new RuntimeException( "Invalid location returned for s3 bucket " + cbr.location(), ex );
         }
-        String hostname = url.getHost();
-        //strip .s3.amazonaws.com suffix
+        catch( S3Exception ex ){
+            if( ex.getErrorCode().equals( "BucketAlreadyOwnedByYou" ) ){
+                created = false;
+            }
+            else{
+                //rethrow the exception as is
+                throw ex;
+            }
+        }
         
-        return hostname.endsWith(".s3.amazonaws.com" )?
-                    hostname.substring(0, hostname.length() - ".s3.amazonaws.com".length() ):
-                hostname;
+        return created;
     }
     
     /**
