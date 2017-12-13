@@ -109,15 +109,15 @@ if [ $# -eq 0 ]; then
 fi
 
 # Use first argument as script name and pass the rest to the script
-pegasus_batch_log "Number of args passed to pegasus-aws-batch $# - $@"
+pegasus_batch_log "Number of args passed to pegasus-aws-batch - $# "
 script="./${1}"; shift
-pegasus_batch_log "Launching ${script} with $# arguments $@"
+pegasus_batch_log "Launching ${script} with $# arguments"
 
 aws s3 cp "${PEGASUS_AWS_BATCH_BUCKET}/${PEGASUS_LITE_COMMON_FILE}" - > "./${PEGASUS_LITE_COMMON_FILE}" || error_exit "Failed to download S3 file  ${PEGASUS_LITE_COMMON_FILE} from bucket ${PEGASUS_AWS_BATCH_BUCKET}"
 aws s3 cp "${PEGASUS_AWS_BATCH_BUCKET}/${script}" - > "./${script}" || error_exit "Failed to download S3 file ${script} from bucket ${PEGASUS_AWS_BATCH_BUCKET}"
 chmod +x ${PEGASUS_LITE_COMMON_FILE_FILE} ${script}
 
-pegasus_batch_log "Launching ${script} with arguments $@"
+pegasus_batch_log "Launching ${script} with $# arguments"
 
 set +e
 ./${script} "${@}" 
