@@ -819,9 +819,9 @@ CLUSTER = workflow.isi.edu
     <title>Local Campus Cluster Using Glite</title>
 
     <para>This section describes the configuration required for Pegasus to
-    generate an executable workflow that uses glite to submit to a PBS or
-    PBS-like batch system on a local cluster. This environment is referred to
-    as the local campus cluster, as the workflow submit node ( Pegasus
+    generate an executable workflow that uses glite to submit to a Slurm, PBS, or
+    SGE batch system on a local cluster. This environment is referred to
+    as the local campus cluster, as the workflow submit node (Pegasus
     +HTCondor) need to be installed on a login node (or a node where the local
     batch scheduler commands can be executed) of the cluster. </para>
 
@@ -834,27 +834,27 @@ CLUSTER = workflow.isi.edu
     </note>
 
     <tip>
-      <para>This guide covers PBS, SGE and Moab, but glite also works with
-      other PBS-like batch systems, including LSF, SLURM, Cobalt and others.
+      <para>This guide covers Slurm, PBS, Moab, and SGE, but glite also works with
+      other PBS-like batch systems, including LSF, Cobalt and others.
       If you need help configuring Pegasus and HTCondor to work with one of
       these systems, please contact pegasus-support@isi.edu. For the sake of
       brevity, the text below will say "PBS", but you should read that as "PBS
-      or PBS-like system such as SGE, Moab, LSF, SLURM and others".</para>
+      or PBS-like system such as SGE, Moab, LSF, and others".</para>
     </tip>
 
-    <para>This is because the Glite layer communicates with the batch system
-    running on the cluster using <literal>qsub</literal>,
-    <literal>qstat</literal> or equivalent commands. If you can submit jobs to
-    PBS from the workflow submit host running Pegasus and HTCondor, then the
+    <para>This is because the glite layer communicates with the batch system
+    running on the cluster using <literal>squeue</literal>/<literal>qsub</literal>/...
+    or equivalent commands. If you can submit jobs to the local scheduler from
+    the workflow submit host, then the
     local HTCondor can be used to submit jobs via glite (with some
     modifications described below). If you need to SSH to a different cluster
-    head node in order to submit jobs to the PBS system, then you need to use
+    head node in order to submit jobs to the scheduler, then you can use
     BOSCO, which is <link linkend="bosco"> documented in another
     section</link>.</para>
 
     <tip>
       <para>There is also a way to do remote job submission via glite even if
-      you cannot SSH to the PBS head node. This might be the case, for
+      you cannot SSH to the head node. This might be the case, for
       example, if the head node requires 2-factor authentication (e.g. RSA
       tokens). This approach is called the "Reverse GAHP" and you can find out
       more information on the <ulink
@@ -864,14 +864,14 @@ CLUSTER = workflow.isi.edu
     </tip>
 
     <para>In either case, you need to modifiy the HTCondor glite installation
-    that will be used to submit jobs to the PBS system. To do this, run the
+    that will be used to submit jobs to the local scheduler. To do this, run the
     <literal>pegasus-configure-glite</literal> command. This command will
     install all the required scripts to map Pegasus profiles to batch-system
     specific job attributes, and add support for Moab. You may need to run it
-    as root depending on how you installed Condor.</para>
+    as root depending on how you installed HTCondor.</para>
 
     <para>In order to configure a workflow to use glite you need to create an
-    entry in your site catalog for the PBS cluster and set the following
+    entry in your site catalog for the cluster and set the following
     profiles:</para>
 
     <orderedlist>
@@ -882,10 +882,12 @@ CLUSTER = workflow.isi.edu
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">condor</emphasis> profile <emphasis
-        role="bold">grid_resource</emphasis> with value set to <emphasis
-        role="bold">batch pbs</emphasis> or <emphasis role="bold">batch
-        sge</emphasis> or <emphasis role="bold">batch moab</emphasis>.</para>
+          <para><emphasis role="bold">condor</emphasis> profile
+              <emphasis role="bold">grid_resource</emphasis> with value set to
+              <emphasis role="bold">batch slurm</emphasis>,
+              <emphasis role="bold">batch pbs</emphasis>,
+              <emphasis role="bold">batch sge</emphasis> or
+              <emphasis role="bold">batch moab</emphasis>.</para>
       </listitem>
     </orderedlist>
 
@@ -907,18 +909,18 @@ CLUSTER = workflow.isi.edu
         &lt;/directory&gt;
     &lt;/site&gt;
 
-    &lt;site  handle="local-pbs" arch="x86" os="LINUX"&gt;
+    &lt;site  handle="local-slurm" arch="x86" os="LINUX"&gt;
 
         &lt;!-- the following is a shared directory shared amongst all the nodes in the cluster --&gt;
-        &lt;directory type="shared-scratch" path="/lfs/glite-sharedfs-example/local-pbs/shared-scratch"&gt;
-            &lt;file-server operation="all" url="file:///lfs/glite-sharedfs-example/local-pbs/shared-scratch"/&gt;
+        &lt;directory type="shared-scratch" path="/lfs/glite-sharedfs-example/local-slurm/shared-scratch"&gt;
+            &lt;file-server operation="all" url="file:///lfs/glite-sharedfs-example/local-slurm/shared-scratch"/&gt;
         &lt;/directory&gt;
 
-        &lt;profile namespace="env" key="PEGASUS_HOME"&gt;/lfs/software/pegasus/pegasus-4.2.0&lt;/profile&gt;
+        &lt;profile namespace="env" key="PEGASUS_HOME"&gt;/lfs/software/pegasus&lt;/profile&gt;
 
         &lt;profile namespace="pegasus" key="style" &gt;glite&lt;/profile&gt;
 
-        &lt;profile namespace="condor" key="grid_resource"&gt;batch pbs&lt;/profile&gt;
+        &lt;profile namespace="condor" key="grid_resource"&gt;batch slurm&lt;/profile&gt;
         &lt;profile namespace="pegasus" key="queue"&gt;batch&lt;/profile&gt;
         &lt;profile namespace="pegasus" key="runtime"&gt;30000&lt;/profile&gt;
     &lt;/site&gt;
@@ -1185,12 +1187,6 @@ CLUSTER = workflow.isi.edu
           </tbody>
         </tgroup>
       </table>
-
-      <tip>
-        <para>The above key mappings for PBS and SGE are supported in Pegasus
-        4.6.0 or later. The Moab mappings are supported in Pegasus 4.6.1 and
-        later.</para>
-      </tip>
     </section>
 
     <section>
