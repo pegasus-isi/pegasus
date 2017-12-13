@@ -120,7 +120,7 @@ chmod +x ${PEGASUS_LITE_COMMON_FILE_FILE} ${script}
 pegasus_batch_log "Launching ${script} with $# arguments"
 
 set +e
-./${script} "${@}" 
+./${script} ${@}
 task_ec=$?
 echo "PegasusAWSBatchLaunch: exitcode $task_ec" 1>&2
 
