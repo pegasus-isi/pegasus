@@ -65,6 +65,31 @@ function pegasus_batch_log()
     echo "$TS: $1"  1>&2
 }
 
+function pegasus_batch_final_exit()
+{
+    rc=1
+
+    # the exit code of the lite script should reflect the exit code 
+    if [ "x$task_ec" = "x" ];then
+        pegasus_batch_log "task_ec is missing - did the user task fail?"
+    else
+        if [ $task_ec != 0 ];then
+            pegasus_batch_log "User task failed with exitcode $task_ec"
+        fi
+        rc=$task_ec
+    fi
+
+    echo "PegasusAWSBatchLaunch: exitcode $rc" 1>&2
+
+    # cat the stderr back to stdout
+    echo $TASK_STDERR_SEPARATOR 
+    if (test -e  ${task_stderr_file}) ; then
+	cat ${task_stderr_file}
+    fi
+
+    exit $rc
+}
+
 
 # Sets up the task stderr to point to a file
 function setup_task_stderr()
@@ -79,7 +104,7 @@ function setup_task_stderr()
 }
 
 start_dir=`pwd`
-pegasus_batch_log "########################[Pegasus AWS Batch] Setting up workdir ########################"
+
 # Check that necessary programs are available
 which aws >/dev/null 2>&1 || error_exit "Unable to find AWS CLI executable in the container."
 which unzip >/dev/null 2>&1 || error_exit "Unable to find unzip executable in the container."
@@ -95,6 +120,7 @@ if [ "X${task_stderr_file}" = "X" ]; then
 fi
 
 setup_task_stderr
+echo "########################[Pegasus AWS Batch] Starting up ########################" 1>&2
 pegasus_batch_log "task stderr set to file $task_stderr_file"
 
 # sanity checks
@@ -111,6 +137,9 @@ if [ $# -eq 0 ]; then
     usage "Need to pass the name of executable to run"
 fi
 
+# single exit function for success and error
+trap 'pegasus_batch_final_exit' EXIT HUP INT QUIT TERM
+
 # Use first argument as script name and pass the rest to the script
 pegasus_batch_log "Number of args passed to pegasus-aws-batch - $# "
 script="${1}"; shift
@@ -125,13 +154,3 @@ pegasus_batch_log "Launching ${script} with $# arguments from directory ${start_
 set +e
 ./${script} "${@}"
 task_ec=$?
-echo "PegasusAWSBatchLaunch: exitcode $task_ec" 1>&2
-
-# push out the stderr back to the bucket
-# aws s3 cp "./${task_stderr_file}" "${PEGASUS_AWS_BATCH_BUCKET}/${task_stderr_file}" || echo "Unable to transfer stderr file ${task_stderr_file}"
-
-# cat the stderr back to stdout
-echo $TASK_STDERR_SEPARATOR 
-cat ${task_stderr_file}
-
-exit $task_ec
