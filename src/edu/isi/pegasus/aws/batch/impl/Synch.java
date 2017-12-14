@@ -26,9 +26,12 @@ import edu.isi.pegasus.aws.batch.classes.Tuple;
 import edu.isi.pegasus.aws.batch.common.CloudWatchLog;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -84,7 +87,6 @@ public class Synch {
      */
     public static final String S3_PREFIX ="s3://";
 
-    
     public enum BATCH_ENTITY_TYPE{ compute_environment, job_defintion, job_queue, s3_bucket};
     
     public static final String AWS_PROPERTY_PREFIX = "aws";
@@ -625,6 +627,7 @@ public class Synch {
         } catch (Exception ex) {
             mLogger.error( null, ex);
         }
+        
         shutdown();
         mLogger.info( "Thread Executor Shutdown successfully " );
         
@@ -686,7 +689,7 @@ public class Synch {
         } catch (Exception ex) {
             mLogger.error( null, ex);
         }
-        mLogger.error("Shutting down threads ...");
+        mLogger.info("Shutting down threads ...");
         if( this.mExecutorService != null ){
             mExecutorService.shutdown(); // Disable new tasks from being submitted
             try {
@@ -1125,7 +1128,78 @@ public class Synch {
         return value;
     }
     
+    /**
+     * Merges all the tasks stdout and setderr logs to the stdout and stderr file passed
+     * Results in a single stdout and stdderr file for all the tasks
+     * 
+     * @param stdout
+     * @param stderr 
+     */
+    public void mergeLogs(File stdout, File stderr) {
+        if( stdout == null ){
+            throw new RuntimeException( "Invalid stdout file specified" );
+        }
+        if( stderr == null ){
+            throw new RuntimeException( "Invalid stderr file specified" );
+        }
+        FileChannel stdoutDstChannel = null;
+        FileChannel stderrDstChannel = null;
+        try{ 
+            if( !stdout.exists() ) {
+                stdout.createNewFile();
+            }
+            if( !stderr.exists() ) {
+                stderr.createNewFile();
+            }
+            stdoutDstChannel = new FileOutputStream( stdout ).getChannel();
+            stderrDstChannel = new FileOutputStream( stderr ).getChannel();
+        
+            try{
+                //we are not relinqusing the lock
+                synchronized( this.mJobMap ){
+                    for(Map.Entry<String,AWSJob> entry: mJobMap.entrySet()){
+                        this.copyFileTo( new File( entry.getValue().getID() + ".out" ), stdoutDstChannel);
+                        this.copyFileTo( new File( entry.getValue().getID() + ".err" ), stderrDstChannel);
+                    }
+                }
+            }
+            finally{
+                if( stdoutDstChannel != null ){
+                    stdoutDstChannel.close();
+                }
+              }
+        }
+        catch( IOException ioe ){
+            mLogger.error( "Encountered exception while merging logs ", ioe );
+        }
+        
+    }
     
+    /**
+     * Copies source file to an existing open file channel
+     * @param src
+     * @param dstFileChannel 
+     */
+    private  void copyFileTo( File src, FileChannel dstFileChannel ){
+        if( !src.exists() ){
+            mLogger.error( "File does not exist. Ignoring for merge " + src);
+            return;
+        }
+        mLogger.debug( "Copying from " + src + " to " + dstFileChannel.toString() );
+        try {
+	    FileChannel srcFileChannel = null;
+	    try {
+	      srcFileChannel = new FileInputStream( src ).getChannel();
+              srcFileChannel.transferTo( 0 , srcFileChannel.size(), dstFileChannel);
+	    } finally {
+	      if ( srcFileChannel != null ) srcFileChannel.close();
+	    }
+	  } catch ( IOException ieo ) {
+	    // ignore -- copy is best effort for now
+	  } catch ( NullPointerException npe ) { 
+	    // also ignore
+	  }
+    }
     
 
     /**
@@ -1137,15 +1211,22 @@ public class Synch {
         //String taskARN = "arn:aws:ecs:us-west-2:405596411149:task/5f659be6-4ca5-4150-bc44-dacbcb63b696";
         //String jobDefinition = "arn:aws:batch:us-west-2:405596411149:job-definition/karan-batch-synch-test-job-definition:5";           
          
-        /*
+        
         Synch sc = new Synch();
         Properties props = new Properties() ;
-        props.setProperty( "prefix", "karan-batch-synch-test" );
-        sc.initialze( props );
-        sc.retrieveCloudWatchLog( "/aws/batch/job", "karan-batch-synch-test-job-definition/default/d9dcaa2c-2a7c-4e9d-8da4-74705e53a9e4" );        
+        props.setProperty( "aws.batch.prefix", "merge" );
+        props.setProperty( "aws.region", "region" );
+        props.setProperty( "aws.account", "merge" );
+        EnumMap<Synch.BATCH_ENTITY_TYPE,String> jsonMap = new EnumMap<Synch.BATCH_ENTITY_TYPE,String>( Synch.BATCH_ENTITY_TYPE.class);
+        sc.initialze( props, Level.DEBUG, jsonMap );
+        AWSJob j1 = new  AWSJob(); j1.setID( "pegasus-test-job-1");
+        AWSJob j2 = new  AWSJob(); j2.setID( "pegasus-test-job-2");
+        sc.mJobMap.put( "1", j1 );
+        sc.mJobMap.put( "2", j2);
+        sc.mergeLogs( new File("merge.out"),  new File("merge.err"));
         System.exit(1);
-        */
-      
+        
+        /*
         Synch sc = new Synch();
         Properties props = new Properties() ;
         props.setProperty( Synch.AWS_PROPERTY_PREFIX + ".region", "us-west-2" );

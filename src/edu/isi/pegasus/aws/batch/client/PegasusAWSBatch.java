@@ -91,7 +91,9 @@ public class PegasusAWSBatch {
                 withRequiredArg().ofType( String.class );
         mOptionParser.acceptsAll(asList( "j", "job-definition"), "the json file containing job definition to register for executing jobs or the ARN of existing job definition ").
                 withRequiredArg().ofType( String.class );
-        mOptionParser.acceptsAll(asList( "p", "prefix"), "prefix to use for creating compute environment, job definition, job queue").
+         mOptionParser.acceptsAll(asList( "m", "merge-logs"), "prefix to use for merging all the tasks' stdout to a single file.").
+                withRequiredArg().ofType( String.class );
+        mOptionParser.acceptsAll(asList( "p", "prefix"), "prefix to use for creating compute environment, job definition, job queue and s3 bucket").
                withRequiredArg().ofType( String.class ).required();
         mOptionParser.acceptsAll(asList( "q", "job-queue"), "the json file containing the job queue description to create or the ARN of existing job queue").
                 withRequiredArg().ofType( String.class );
@@ -297,6 +299,16 @@ public class PegasusAWSBatch {
         }
         sc.signalToExitAfterJobsComplete();
         sc.awaitTermination();
+        
+        //merge logs if required
+        if( options.has( "merge-log") ){
+            String prefix = (String) options.valueOf( "merge-log" );
+            File stdout =  new File( prefix + ".out") ;
+            File stderr =  new File( prefix + ".err" );
+            mLogger.info( "Merging Tasks stdout to  " + stdout  + " and stderr to " + stderr );
+            sc.mergeLogs( stdout, stderr );
+        }
+        
 
     }
     
