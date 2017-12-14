@@ -301,8 +301,8 @@ public class PegasusAWSBatch {
         sc.awaitTermination();
         
         //merge logs if required
-        if( options.has( "merge-log") ){
-            String prefix = (String) options.valueOf( "merge-log" );
+        if( options.has( "merge-logs") ){
+            String prefix = (String) options.valueOf( "merge-logs" );
             File stdout =  new File( prefix + ".out") ;
             File stderr =  new File( prefix + ".err" );
             mLogger.info( "Merging Tasks stdout to  " + stdout  + " and stderr to " + stderr );
