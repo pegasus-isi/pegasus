@@ -822,7 +822,7 @@ CLUSTER = workflow.isi.edu
     generate an executable workflow that uses glite to submit to a Slurm, PBS, or
     SGE batch system on a local cluster. This environment is referred to
     as the local campus cluster, as the workflow submit node (Pegasus
-    +HTCondor) need to be installed on a login node (or a node where the local
+    + HTCondor) need to be installed on a login node (or a node where the local
     batch scheduler commands can be executed) of the cluster. </para>
 
     <note>
@@ -833,14 +833,12 @@ CLUSTER = workflow.isi.edu
       has been renamed BLAH.</para>
     </note>
 
-    <tip>
-      <para>This guide covers Slurm, PBS, Moab, and SGE, but glite also works with
-      other PBS-like batch systems, including LSF, Cobalt and others.
-      If you need help configuring Pegasus and HTCondor to work with one of
-      these systems, please contact pegasus-support@isi.edu. For the sake of
-      brevity, the text below will say "PBS", but you should read that as "PBS
-      or PBS-like system such as SGE, Moab, LSF, and others".</para>
-    </tip>
+    <para>This guide covers Slurm, PBS, Moab, and SGE, but glite also works with
+    other PBS-like batch systems, including LSF, Cobalt and others.
+    If you need help configuring Pegasus and HTCondor to work with one of
+    these systems, please contact pegasus-support@isi.edu. For the sake of
+    brevity, the text below will say "PBS", but you should read that as "PBS
+    or PBS-like system such as SGE, Moab, LSF, and others".</para>
 
     <para>This is because the glite layer communicates with the batch system
     running on the cluster using <literal>squeue</literal>/<literal>qsub</literal>/...
@@ -921,7 +919,7 @@ CLUSTER = workflow.isi.edu
         &lt;profile namespace="pegasus" key="style" &gt;glite&lt;/profile&gt;
 
         &lt;profile namespace="condor" key="grid_resource"&gt;batch slurm&lt;/profile&gt;
-        &lt;profile namespace="pegasus" key="queue"&gt;batch&lt;/profile&gt;
+        &lt;profile namespace="pegasus" key="queue"&gt;normal&lt;/profile&gt;
         &lt;profile namespace="pegasus" key="runtime"&gt;30000&lt;/profile&gt;
     &lt;/site&gt;
 
