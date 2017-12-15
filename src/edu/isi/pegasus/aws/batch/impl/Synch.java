@@ -87,6 +87,7 @@ public class Synch {
      */
     public static final String S3_PREFIX ="s3://";
 
+    
     public enum BATCH_ENTITY_TYPE{ compute_environment, job_defintion, job_queue, s3_bucket};
     
     public static final String AWS_PROPERTY_PREFIX = "aws";
@@ -431,6 +432,14 @@ public class Synch {
         }
     }
     
+    private AWSJob getJob( String id ){
+        AWSJob j = null;
+        synchronized( this.mJobMap ){
+            j= mJobMap.get( id );
+        }
+        return j;
+    }
+    
     private void submit( Collection<AWSJob> jobs ){
         //submit the jobs first before polling
         Collection<Future<SubmitJobResponse>> submitResponses = new LinkedList();
@@ -547,6 +556,8 @@ public class Synch {
                     if ( awsJobIDs.contains( succeededJobID ) ){
                         if( !doneJobs.contains(succeededJobID) ){
                             mLogger.info( "Job Succeeded "  + succeededJobID  );
+                            AWSJob j = this.getJob( summary.jobName() );
+                            j.setState( AWSJob.JOBSTATE.succeeded );
                             mJobstateWriter.log(summary.jobName(), summary.jobId() , AWSJob.JOBSTATE.succeeded );
                             doneJobs.add( summary.jobId() );
                             numDone++;
@@ -568,6 +579,8 @@ public class Synch {
                         if ( awsJobIDs.contains(failedJobID) ){
                             if( !doneJobs.contains(failedJobID) ){
                                 mLogger.info("Job Failed "  + failedJobID   );
+                                AWSJob j = this.getJob( summary.jobName() );
+                                j.setState( AWSJob.JOBSTATE.failed );
                                 mJobstateWriter.log(summary.jobName(), summary.jobId() , AWSJob.JOBSTATE.failed );
                                 doneJobs.add( summary.jobId() );
                                 //remove the job so that we don't query for detail
@@ -1201,6 +1214,25 @@ public class Synch {
 	  }
     }
     
+    
+    /**
+     *  Updates the job with id name to state passed
+     * @param name
+     * @param state 
+     */
+    private void updateJobState(String name, AWSJob.JOBSTATE state) {
+        synchronized( this.mJobMap ){
+            if( mJobMap.containsKey( name )){
+                AWSJob j = mJobMap.get(name);
+                j.setState(state);
+            }
+            else{
+                mLogger.error( "Unable to find job " + name );
+            }
+        }
+    }
+
+
 
     /**
      * @param args the command line arguments
