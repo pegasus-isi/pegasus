@@ -15,6 +15,7 @@
  */
 package edu.isi.pegasus.aws.batch.common;
 
+import edu.isi.pegasus.aws.batch.classes.AWSJob;
 import edu.isi.pegasus.aws.batch.classes.Tuple;
 import edu.isi.pegasus.aws.batch.impl.Synch;
 
@@ -89,12 +90,22 @@ public class CloudWatchLog {
     /**
      * Retrieves a cloud watch log for an AWS Job
      *
-     * @param awsJobID the AWS job ID for the job
-     *
+     * @param job AWSJob
      * 
      * @return a Tuple containing the stdout and stderr files to which it is retrieved
      */
-    public Tuple<File,File> retrieve(String awsJobID) {
+    public Tuple<File,File> retrieve( AWSJob j ){
+        return this.retrieve( j.getAWSJobID(), j.getTaskSummary() );
+    }
+    /**
+     * Retrieves a cloud watch log for an AWS Job
+     *
+     * @param awsJobID the AWS job ID for the job
+     * @param summary  the task summary record
+     * 
+     * @return a Tuple containing the stdout and stderr files to which it is retrieved
+     */
+    public Tuple<File,File> retrieve(String awsJobID, String summary ) {
         DescribeJobsRequest jobsRequest = DescribeJobsRequest.builder().
                 jobs(awsJobID).
                 build();
@@ -102,7 +113,7 @@ public class CloudWatchLog {
         for (JobDetail jobDetail : jobsResponse.jobs()) {
             try {
                 Tuple<String, String> log = determineLog(jobDetail);
-                return this.retrieve(jobDetail.jobName(), log.getKey(), log.getValue());
+                return this.retrieve(jobDetail.jobName(), log.getKey(), log.getValue(), summary );
             } catch (Exception e) {
                 mLogger.error("Error while retrieving cloud watch log for job " + awsJobID, e);
             }
@@ -116,10 +127,11 @@ public class CloudWatchLog {
      * @param jobName the job name
      * @param logGroup the cloud watch log group
      * @param streamName the stream name
+     * @param summary  the task summary record
      *
      * @return a Tuple containing the stdout and stderr files to which it is retrieved
      */
-    public Tuple<File,File> retrieve(String jobName, String logGroup, String streamName) {
+    public Tuple<File,File> retrieve(String jobName, String logGroup, String streamName, String summary) {
         mLogger.info("Retrieving log for " + jobName + " for log group " + logGroup + " with stream name " + streamName);
 
         GetLogEventsRequest gle = GetLogEventsRequest.builder().
@@ -151,7 +163,8 @@ public class CloudWatchLog {
                     String message = event.message();
                     mLogger.debug("Retrieved event " + message);
                     if( notSwitched && message.startsWith( CloudWatchLog.TASK_STDERR_SEPARATOR) ){
-                        // we switch print writer to stderr
+                        // print summary to stdout and switch print writer to stderr
+                        pw.println( summary );
                         notSwitched = false; 
                         pw = stderrPW;
                     }

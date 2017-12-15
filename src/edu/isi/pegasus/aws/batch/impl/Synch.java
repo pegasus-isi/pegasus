@@ -563,7 +563,7 @@ public class Synch {
                             numDone++;
                             
                             mLogger.debug("Querying for succeeded job details "  + succeededJobID  );
-                            Tuple<File,File> log = cwl.retrieve(succeededJobID);
+                            Tuple<File,File> log = cwl.retrieve( j );
                             mLogger.debug("Logs retreived for "  + succeededJobID + " to " + log  );
                         }
                     }
@@ -588,7 +588,7 @@ public class Synch {
                                 numDone++;
                                 
                                 mLogger.debug("Querying for failed job details "  + failedJobID   );
-                                Tuple<File,File> log = cwl.retrieve(failedJobID);
+                                Tuple<File,File> log = cwl.retrieve( j );
                                 mLogger.debug("Logs retreived for "  + failedJobID + " to " + log  );
                             }
                         }
