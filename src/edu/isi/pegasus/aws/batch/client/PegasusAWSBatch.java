@@ -291,9 +291,11 @@ public class PegasusAWSBatch {
         
         sc.monitor();
         Job jobBuilder = new Job();
+        long sequenceID = 1;
         for( String f : submitJobFiles ){
             mLogger.info( "Submitting jobs from file " + f );
             for( AWSJob j : jobBuilder.createJob( new File( f ) )){
+                j.setSequenceID(sequenceID++);
                 sc.submit(j);
             }
         }
