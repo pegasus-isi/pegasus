@@ -359,7 +359,7 @@ public class Horizontal implements Clusterer,
             JobAggregator aggregator = mJobAggregatorFactory.loadInstance( (Job)l.get(0) );
             if(aggregator.entryNotInTC(key)){
                 //no need to cluster one job. go to the next iteration
-                mLogger.log("\t No clustering for jobs mapped to execution site "  + key + " as nojob aggregator entry  in tc ",
+                mLogger.log("\t No clustering for jobs mapped to execution site "  + key + " as no job aggregator entry  in tc ",
                             LogManager.WARNING_MESSAGE_LEVEL);
                 continue;
             }
