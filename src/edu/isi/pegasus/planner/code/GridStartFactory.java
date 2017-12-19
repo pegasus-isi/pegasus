@@ -32,6 +32,7 @@ import edu.isi.pegasus.common.util.DynamicLoader;
 import java.util.Map;
 import java.util.HashMap;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.cluster.aggregator.AWSBatch;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 
 /**
@@ -424,6 +425,11 @@ public class GridStartFactory {
             if( (conf.equalsIgnoreCase( PegasusConfiguration.CONDOR_CONFIGURATION_VALUE) ||
                 conf.equalsIgnoreCase( PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE ) ) &&
                         propValue == null ){
+                
+                if( job instanceof AggregatedJob && job.getTXName().equals( AWSBatch.COLLAPSE_LOGICAL_NAME) ){
+                    return PegasusAWSBatchGS.CLASSNAME;
+                }
+                
                 //PegasusLite for condorio and nonsharedfs mode
                 //as long as user did not specify explicilty in the properties file
                 return "PegasusLite";
