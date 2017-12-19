@@ -20,7 +20,7 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.cluster.JobAggregator;
 import edu.isi.pegasus.planner.cluster.aggregator.AWSBatch;
 import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
@@ -122,6 +122,16 @@ public class PegasusAWSBatchGS implements GridStart {
             
             enable = enable && this.enable(constitutentJob, isGlobusJob);
         }
+        
+        //we enable the clustered job ourselves
+        JobAggregator aggregator = job.getJobAggregator();
+        if( aggregator == null ){
+            throw new RuntimeException( "Clustered job not associated with a job aggregator " + job.getID() );
+        }
+        //all the constitutent jobs are enabled.
+        //get the job aggregator to render the job 
+        //to it's executable form
+        aggregator.makeAbstractAggregatedJobConcrete( job  );
         
         //set up stdout and stderr for the clustered job
         construct(job,"output", job.getFileFullPath( mSubmitDir, ".out") );
