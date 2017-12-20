@@ -17,7 +17,6 @@
 package edu.isi.pegasus.planner.cluster.aggregator;
 
 
-import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
@@ -27,13 +26,12 @@ import edu.isi.pegasus.planner.classes.AggregatedJob;
 
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.code.gridstart.PegasusLite;
 import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.JsonNode; 
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -63,6 +61,18 @@ public class AWSBatch extends Abstract {
      */
     public static String EXECUTABLE_BASENAME = "pegasus-aws-batch";
 
+    //the common files required for the pegasus-aws-batch
+    /**
+     * The basename of the script used to launch jobs in the AWS Batch via
+     * the fetch and run example
+     */
+    public static final String PEGASUS_AWS_BATCH_LAUNCH_BASENAME = "pegasus-aws-batch-launch.sh";
+    
+    /**
+     * The basename of the script used to launch jobs in the AWS Batch via
+     * the fetch and run example
+     */
+    public static final String PEGASUS_LITE_COMMON_FILE_BASENAME = PegasusLite.PEGASUS_LITE_COMMON_FILE_BASENAME;
 
     /**
      * The default constructor.
@@ -94,32 +104,10 @@ public class AWSBatch extends Abstract {
     public void makeAbstractAggregatedJobConcrete( AggregatedJob job ){
         //PM-962 for PMC aggregated values for runtime and memory don't get mapped
         //to the PMC job itself
-        String computedRuntime = (String)job.vdsNS.removeKey( Pegasus.RUNTIME_KEY );
-        if( computedRuntime == null ){
-            //remove the globus maxwalltime if set
-            computedRuntime = (String)job.globusRSL.removeKey( Globus.MAX_WALLTIME_KEY );
-        }
-        
-        String computedMemory  = (String)job.vdsNS.removeKey( Pegasus.MEMORY_KEY );
-        if( computedMemory == null ){
-            //remove the globus maxmemory if set
-            //memory for the PMC job should be set with pmc executable
-            computedMemory = (String)job.globusRSL.removeKey( Globus.MAX_MEMORY_KEY );
-        }
-        
+       
         super.makeAbstractAggregatedJobConcrete(job);
 
-        //only do something for the runtime if runtime is not 
-        //picked up from other profile sources for PMC jobs
-        if( computedRuntime != null &&
-                !( job.globusRSL.containsKey( Globus.MAX_WALLTIME_KEY ) ||
-                        ( job.vdsNS.containsKey( Pegasus.RUNTIME_KEY) ) )) {
-            
-            //do some estimation here for the runtime?
-            
-        }
-        
-
+       
         return;
     }
 
@@ -128,7 +116,7 @@ public class AWSBatch extends Abstract {
      *
      * @param job   the aggregated job
      *
-     * @return path to the input file
+     * @return shareSHDirectoryPath to the input file
      */
     protected File writeOutInputFileForJobAggregator(AggregatedJob job) {
         File dir = new File( this.mDirectory, job.getRelativeSubmitDirectory() );
@@ -144,7 +132,7 @@ public class AWSBatch extends Abstract {
      * @param isClustered  a boolean indicating whether the graph belongs to a
      *                     clustered job or not.
      *
-     * @return path to the input file
+     * @return shareSHDirectoryPath to the input file
      */
     public File generateAWSBatchInputFile(Graph job, File stdIn , boolean isClustered ) {
         try {
@@ -275,7 +263,7 @@ public class AWSBatch extends Abstract {
      */
     public String aggregatedJobArguments( AggregatedJob job ){
         //the stdin of the job actually needs to be passed as arguments
-        String stdin  = job.getStdIn();
+        String stdin  = job.getRelativeSubmitDirectory() + File.separator + job.getStdIn();
         StringBuffer args = new StringBuffer();
         
         //add --max-wall-time option PM-625
@@ -290,28 +278,19 @@ public class AWSBatch extends Abstract {
             }
         }
         
-        if( walltime != null ){
-            long value = -1;
-
-            try{
-                value = Long.parseLong(walltime );
-            }
-            catch( Exception e ){
-                //ignore
-            }
-
-            //walltime is specified in minutes
-            if( value > 1 ){
-                value = value / divisor;
-                if( value > 10 ){
-                    //subtract 5 minutes to give PMC a chance to return all stdouts
-                    //do this only if walltime is at least more than 10 minutes
-                    value = ( value - 5);
-                }
-                args.append( "--max-wall-time " ).append( value ).append(" ");
-            }
+        //add the --files option to transfer the common shell scripts required
+        StringBuilder shareSHDirectoryPath = new StringBuilder();
+        File share = mProps.getSharedDir();
+        if( share == null ){
+            throw new RuntimeException( "Property for Pegasus share directory is not set" );
         }
+        shareSHDirectoryPath.append( share.getAbsolutePath() ).append( File.separator ).
+             append( "sh" ).append( File.separator );
         
+        args.append( "--files" ).append( " " );
+        args.append( shareSHDirectoryPath ).append( AWSBatch.PEGASUS_LITE_COMMON_FILE_BASENAME ).append( "," ).
+             append( shareSHDirectoryPath ).append( AWSBatch.PEGASUS_AWS_BATCH_LAUNCH_BASENAME ).append( " " );
+
         // Construct any extra arguments specified in profiles or properties
         // This should go last, otherwise we can't override any automatically-
         // generated arguments

@@ -68,13 +68,6 @@ public class PegasusAWSBatchGS implements GridStart {
      */
     public static final String SHORT_NAME = "pegasus-aws-batch";
 
-
-    /**
-     * The basename of the script used to launch jobs in the AWS Batch via
-     * the fetch and run example
-     */
-    public static final String PEGASUS_AWS_BATCH_LAUNCH_BASENAME = "pegasus-aws-batch-launch.sh";
-
     public static final String SEPARATOR = "########################";
     public static final char SEPARATOR_CHAR = '#';
     public static final String  MESSAGE_PREFIX = "[Pegasus AWS Batch]";
@@ -133,7 +126,7 @@ public class PegasusAWSBatchGS implements GridStart {
 
             if( constitutentJob instanceof AggregatedJob ){
                 //slurp in contents of it's stdin
-                throw new RuntimeException( "Enabling of clustered jobs within a cluster not supported with " + PegasusAWSBatchGS.PEGASUS_AWS_BATCH_LAUNCH_BASENAME );
+                throw new RuntimeException( "Enabling of clustered jobs within a cluster not supported with " + AWSBatch.PEGASUS_AWS_BATCH_LAUNCH_BASENAME );
             }
             //we need to set the relative dir of constituent jobs to 
             //the clustered job itself
@@ -179,7 +172,7 @@ public class PegasusAWSBatchGS implements GridStart {
         //each constituent job pegasus lite script has to refer by basename only
         //and add the executable for transfer input file
         String executable = job.getRemoteExecutable();
-        job.setRemoteExecutable( PEGASUS_AWS_BATCH_LAUNCH_BASENAME );
+        job.setRemoteExecutable( AWSBatch.PEGASUS_AWS_BATCH_LAUNCH_BASENAME );
         job.condorVariables.addIPFileForTransfer( executable );
         job.setArguments( new File( executable ).getName() );
 
