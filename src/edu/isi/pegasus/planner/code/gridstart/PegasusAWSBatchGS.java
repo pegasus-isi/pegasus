@@ -179,7 +179,28 @@ public class PegasusAWSBatchGS implements GridStart {
         
         //add each file transfer via condor to pegasus-aws-batch 
         //mechanism
-        job.envVariables.construct( PegasusAWSBatchGS.TRANSFER_INPUT_FILES_KEY,  job.condorVariables.getIPFilesForTransfer() );
+        String csFiles = job.condorVariables.getIPFilesForTransfer();
+        if( csFiles != null ){
+            //we want all files other than pegasus-lite-common.sh
+            String[] files = csFiles.split( "," );
+            StringBuilder sb = new StringBuilder();
+            boolean match = true;
+            for( String file: files ){
+                if( match && file.equals( mPegasusLite.mLocalPathToPegasusLiteCommon) ){
+                    //no need to match further
+                    match = false;
+                    continue;
+                }
+                //add file
+                sb.append( file ).append( "," );
+            }
+            //remove trailing slash
+            int index = sb.lastIndexOf( "," );
+            String csv = ( index == - 1 )? sb.toString(): sb.substring( 0, index );
+            if( csv.length() > 0 ){
+                job.envVariables.construct( PegasusAWSBatchGS.TRANSFER_INPUT_FILES_KEY, csv );
+            }
+        }
         
         //add the environment variables required for fetch_and_run.sh script in
         //the container
