@@ -24,6 +24,7 @@ import edu.isi.pegasus.planner.cluster.JobAggregator;
 import edu.isi.pegasus.planner.cluster.aggregator.AWSBatch;
 import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import java.io.File;
 import java.util.Iterator;
 
 /**
@@ -37,10 +38,24 @@ import java.util.Iterator;
  * @author Karan Vahi
  */
 public class PegasusAWSBatchGS implements GridStart {
+
+    /**
+     * The environment variable that designates the key used by tool pegasus-aws-batch 
+     * for file transfers.
+     */
+    public static final String TRANSFER_INPUT_FILES_KEY = "TRANSFER_INPUT_FILES";
     
-    private PegasusBag mBag;
+    /**
+     * The environment variable that designates the key used by fetch_and_run.sh
+     * executable in batch containers 
+     */
+    public static final String BATCH_FILE_TYPE_KEY = "BATCH_FILE_TYPE";
     
-    private ADag mDAG;
+    /**
+     * The environment variable that designates the key used by fetch_and_run.sh
+     * executable for batch containers to pull the user script from s3
+     */
+    public static final String BATCH_FILE_S3_URL_KEY = "BATCH_FILE_S3_URL";
     
     /**
      * The basename of the class that is implmenting this. Could have
@@ -64,6 +79,10 @@ public class PegasusAWSBatchGS implements GridStart {
     public static final char SEPARATOR_CHAR = '#';
     public static final String  MESSAGE_PREFIX = "[Pegasus AWS Batch]";
     public static final int  MESSAGE_STRING_LENGTH = 80;
+    
+    private PegasusBag mBag;
+    
+    private ADag mDAG;
     
     /**
      * Instance to Pegasus Lite for wrapping jobs
@@ -121,6 +140,7 @@ public class PegasusAWSBatchGS implements GridStart {
             constitutentJob.setRelativeSubmitDirectory( relativeDir );
             
             enable = enable && this.enable(constitutentJob, isGlobusJob);
+            
         }
         
         //we enable the clustered job ourselves
@@ -155,7 +175,24 @@ public class PegasusAWSBatchGS implements GridStart {
      * @return 
      */
     public boolean enable(Job job, boolean isGlobusJob) {
-        return this.mPegasusLite.enable(job, isGlobusJob);
+        boolean result =  this.mPegasusLite.enable(job, isGlobusJob);
+        //each constituent job pegasus lite script has to refer by basename only
+        //and add the executable for transfer input file
+        String executable = job.getRemoteExecutable();
+        job.setRemoteExecutable( PEGASUS_AWS_BATCH_LAUNCH_BASENAME );
+        job.condorVariables.addIPFileForTransfer( executable );
+        job.setArguments( new File( executable ).getName() );
+
+        
+        //add each file transfer via condor to pegasus-aws-batch 
+        //mechanism
+        job.envVariables.construct( PegasusAWSBatchGS.TRANSFER_INPUT_FILES_KEY,  job.condorVariables.getIPFilesForTransfer() );
+        
+        //add the environment variables required for fetch_and_run.sh script in
+        //the container
+        job.envVariables.construct( PegasusAWSBatchGS.BATCH_FILE_TYPE_KEY,  "script" );
+        job.envVariables.construct( PegasusAWSBatchGS.BATCH_FILE_S3_URL_KEY,  "s3://pegasus-aws-batch" );
+        return result;
     }
 
     /**
