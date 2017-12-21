@@ -23,6 +23,9 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.cluster.JobAggregator;
 import edu.isi.pegasus.planner.cluster.aggregator.AWSBatch;
 import edu.isi.pegasus.planner.code.GridStart;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactory;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.io.File;
 import java.util.Iterator;
@@ -70,7 +73,7 @@ public class PegasusAWSBatchGS implements GridStart {
 
     public static final String SEPARATOR = "########################";
     public static final char SEPARATOR_CHAR = '#';
-    public static final String  MESSAGE_PREFIX = "[Pegasus AWS Batch]";
+    public static final String  MESSAGE_PREFIX = "[Pegasus AWS Batch Gridstart] ";
     public static final int  MESSAGE_STRING_LENGTH = 80;
     
     private PegasusBag mBag;
@@ -87,6 +90,7 @@ public class PegasusAWSBatchGS implements GridStart {
      */
     private LogManager mLogger;
     private String mSubmitDir;
+    private CondorStyleFactory mStyleFactory;
     
     public PegasusAWSBatchGS(){
         mPegasusLite = new PegasusLite();
@@ -104,6 +108,8 @@ public class PegasusAWSBatchGS implements GridStart {
         
         mSubmitDir = bag.getPlannerOptions().getSubmitDirectory();
         mPegasusLite.initialize(bag, dag);
+        mStyleFactory     = new CondorStyleFactory();
+        mStyleFactory.initialize(bag);
     }
 
     /**
@@ -169,6 +175,10 @@ public class PegasusAWSBatchGS implements GridStart {
      */
     public boolean enable(Job job, boolean isGlobusJob) {
         boolean result =  this.mPegasusLite.enable(job, isGlobusJob);
+        
+        mLogger.log( PegasusAWSBatchGS.MESSAGE_PREFIX + "Enabling task - " + job.getID() ,
+                      LogManager.DEBUG_MESSAGE_LEVEL );
+        
         //each constituent job pegasus lite script has to refer by basename only
         //and add the executable for transfer input file
         String executable = job.getRemoteExecutable();
@@ -176,6 +186,10 @@ public class PegasusAWSBatchGS implements GridStart {
         job.condorVariables.addIPFileForTransfer( executable );
         job.setArguments( new File( executable ).getName() );
 
+        //since in this we are running each task making up the clustered job via
+        //pegasus lite, the credentials have to be handled per task, not at the 
+        //clustered job level in the code generator
+        updateJobEnvForCredentials( job );
         
         //add each file transfer via condor to pegasus-aws-batch 
         //mechanism
@@ -206,6 +220,7 @@ public class PegasusAWSBatchGS implements GridStart {
         //the container
         job.envVariables.construct( PegasusAWSBatchGS.BATCH_FILE_TYPE_KEY,  "script" );
         job.envVariables.construct( PegasusAWSBatchGS.BATCH_FILE_S3_URL_KEY,  "s3://pegasus-aws-batch" );
+        
         return result;
     }
 
@@ -279,6 +294,24 @@ public class PegasusAWSBatchGS implements GridStart {
      */
     private void construct(Job job, String key, String value){
         job.condorVariables.construct(key,value);
+    }
+
+    /**
+     * Updates a job environment to hold any credential information required
+     * 
+     * @param job 
+     */
+    protected void updateJobEnvForCredentials(Job job) {
+        mLogger.log( PegasusAWSBatchGS.MESSAGE_PREFIX + "Credentials for task " + job.getID() + " - " + job.getCredentialTypes(),
+                      LogManager.DEBUG_MESSAGE_LEVEL );
+        
+        //we do it via style and avoid duplication of code
+        CondorStyle cs = mStyleFactory.loadInstance( job );
+        try {
+            cs.apply(job);
+        } catch (CondorStyleException ex) {
+           throw new RuntimeException( PegasusAWSBatchGS.MESSAGE_PREFIX + " Unable to associate credentials for task " + job.getID() ,ex );
+        }
     }
 
 }
