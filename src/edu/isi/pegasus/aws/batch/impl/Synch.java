@@ -29,8 +29,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.Collection;
@@ -157,6 +155,11 @@ public class Synch {
     private String mS3Bucket;
     
     /**
+     * The key prefix to use.
+     */
+    private String mS3BucketKeyPrefix;
+    
+    /**
      * List of common files transferred for all tasks
      */
     private List<String> mCommonFilesToS3;
@@ -205,6 +208,7 @@ public class Synch {
         mPrefix        = getProperty( properties, Synch.AWS_BATCH_PROPERTY_PREFIX,  "prefix" );
         mDeleteOnExit  = new EnumMap<>(BATCH_ENTITY_TYPE.class);
         mCommonFilesToS3   = new LinkedList<String>();
+        mS3BucketKeyPrefix = "";
         
         mJobstateWriter = new AWSJobstateWriter();
         mJobstateWriter.initialze( new File("."), mLogger);
@@ -281,8 +285,25 @@ public class Synch {
                 value.substring( S3_PREFIX.length() ):
                 //construct a default name
                 constructDefaultName( Synch.S3_BUCKET_SUFFIX );
-            mS3Bucket = name;
-            if( this.createS3Bucket( name ) ){
+           
+            //determine key addon
+            if( name.contains( File.separator) ){
+                int index = name.indexOf( File.separator );
+                mS3Bucket = name.substring( 0, index );
+                mS3BucketKeyPrefix = name.substring(index);
+                if( mS3BucketKeyPrefix.startsWith( File.separator) ){
+                    mS3BucketKeyPrefix = mS3BucketKeyPrefix.substring( 1 );
+                }
+                if( !mS3BucketKeyPrefix.endsWith( File.separator) ){
+                    mS3BucketKeyPrefix= mS3BucketKeyPrefix + File.separator;
+                }
+            }
+            else{
+                mS3BucketKeyPrefix = "";
+                mS3Bucket = name;
+            }
+            mLogger.info("S3 bucket name - " + mS3Bucket + " key add on - " + mS3BucketKeyPrefix );
+            if( this.createS3Bucket( mS3Bucket ) ){
                 mLogger.info( "Created S3 bucket " + mS3Bucket );
             }
             else{
@@ -378,7 +399,7 @@ public class Synch {
         List<String> allInputs = new LinkedList();
         if( files != null ){
             List<String> inputs = Arrays.asList( files.split( ",") );
-            transferInputFiles( this.mS3Bucket, inputs);
+            transferInputFiles(this.mS3Bucket, this.mS3BucketKeyPrefix, inputs);
             mLogger.info( "Uploaded files " + files + " for task " + job.getID() );
             for(String f: inputs ){
                 //construct any file transfers that are required
@@ -387,7 +408,7 @@ public class Synch {
             }
         }
         //setup the environment for the task regarding S3 bucket to use etc
-        job.addEnvironmentVariable( Synch.PEGASUS_AWS_BATCH_ENV_KEY, S3_PREFIX + this.mS3Bucket );
+        job.addEnvironmentVariable( Synch.PEGASUS_AWS_BATCH_ENV_KEY, S3_PREFIX + this.mS3Bucket + File.separator + this.mS3BucketKeyPrefix );
         job.addEnvironmentVariable( Synch.PEGASUS_JOB_NAME_ENV_KEY, job.getID() );
         
         //add any common input files 
@@ -914,7 +935,7 @@ public class Synch {
      * @param files 
      */
     public void transferCommonInputFiles( List<String> files) {
-        this.transferInputFiles( mS3Bucket, files);
+        this.transferInputFiles(mS3Bucket, this.mS3BucketKeyPrefix, files);
         //track the basenames of the files transferred to S3 bucket
         for( String f: files ){
             this.mCommonFilesToS3.add( new File(f).getName() );
@@ -924,17 +945,19 @@ public class Synch {
      * Transfers the input files to the specified bucket
      * 
      * @param bucket
+     * @param keyPrefix  the prefix mimicking deep LFN functionality
      * @param files 
      */
-    public void transferInputFiles(String bucket, List<String> files) {
+    public void transferInputFiles(String bucket, String keyPrefix, List<String> files) {
         S3Client s3Client = S3Client.builder().region(mAWSRegion).build();
         for( String f: files){
             File file = new File(f);
             if( file.exists() ){
-                mLogger.debug( "Attempting to upload file " + file + " to bucket " + bucket);
-                s3Client.putObject(PutObjectRequest.builder().bucket(bucket).key( file.getName() )
+                String key = keyPrefix + file.getName();
+                mLogger.debug( "Attempting to upload file " + file + " to bucket " + bucket + " with key " + key);
+                s3Client.putObject(PutObjectRequest.builder().bucket(bucket).key( key )
                                      .build(),RequestBody.of(file ));
-                mLogger.debug( "Uploaded file " + file + " to bucket " + bucket);
+                mLogger.debug( "Uploaded file " + file + " to bucket " + bucket + " with key " + key);
             }
             else{
                 throw new RuntimeException( "Unable file does not exist " + f );
