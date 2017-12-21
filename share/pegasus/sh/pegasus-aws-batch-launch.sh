@@ -127,6 +127,8 @@ pegasus_batch_log "task stderr set to file $task_stderr_file"
 if [ "X${PEGASUS_AWS_BATCH_BUCKET}" = "X" ]; then
     usage "The env variable PEGASUS_AWS_BATCH_BUCKET not specified"
 fi
+# strip out trailing / from bucket name if any
+PEGASUS_AWS_BATCH_BUCKET=`echo ${PEGASUS_AWS_BATCH_BUCKET} | sed -E "s/(.*)(\/)$/\1/"`
 
 scheme="$(echo "${PEGASUS_AWS_BATCH_BUCKET}" | cut -d: -f1)"
 if [ "${scheme}" != "s3" ]; then
