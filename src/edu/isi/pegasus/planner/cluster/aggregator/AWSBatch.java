@@ -278,6 +278,18 @@ public class AWSBatch extends Abstract {
             }
         }
         
+        //add any files to be transferred from submit host
+        args.append( "--files" ).append( " " );
+        
+        //check any credentials have to be transferred
+        String files = job.condorVariables.getIPFilesForTransfer();
+        job.condorVariables.removeIPFilesForTransfer();
+        if( files != null ){
+            args.append( files );
+            if( !files.endsWith( ",") ){
+                args.append( "," );
+            }
+        }
         //add the --files option to transfer the common shell scripts required
         StringBuilder shareSHDirectoryPath = new StringBuilder();
         File share = mProps.getSharedDir();
@@ -286,8 +298,6 @@ public class AWSBatch extends Abstract {
         }
         shareSHDirectoryPath.append( share.getAbsolutePath() ).append( File.separator ).
              append( "sh" ).append( File.separator );
-        
-        args.append( "--files" ).append( " " );
         args.append( shareSHDirectoryPath ).append( AWSBatch.PEGASUS_LITE_COMMON_FILE_BASENAME ).append( "," ).
              append( shareSHDirectoryPath ).append( AWSBatch.PEGASUS_AWS_BATCH_LAUNCH_BASENAME ).append( " " );
 

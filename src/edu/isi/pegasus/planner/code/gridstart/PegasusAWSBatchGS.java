@@ -28,7 +28,10 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactory;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.io.File;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 /**
  *
@@ -89,8 +92,18 @@ public class PegasusAWSBatchGS implements GridStart {
      * The logging instance
      */
     private LogManager mLogger;
+    
     private String mSubmitDir;
+    
+    /**
+     * The style factory to associate credentials
+     */
     private CondorStyleFactory mStyleFactory;
+    
+    /**
+     * Tracks credentials to be transferred for a clustered job
+     */
+    public Set<String> mCurrentClusteredJobCredentials;
     
     public PegasusAWSBatchGS(){
         mPegasusLite = new PegasusLite();
@@ -121,9 +134,9 @@ public class PegasusAWSBatchGS implements GridStart {
      */
     public boolean enable(AggregatedJob job, boolean isGlobusJob) {
         if( !job.getTXName().equals( AWSBatch.COLLAPSE_LOGICAL_NAME) ){
-            throw new RuntimeException( "Aggregated job not clusted using AWSBatch - " + job.getTXName() );
+            throw new RuntimeException( "Aggregated job not clustered using AWSBatch - " + job.getTXName() );
         }
-        
+        mCurrentClusteredJobCredentials = new HashSet();
         boolean enable = true;
         String relativeDir = job.getRelativeSubmitDirectory();
         for( Iterator<GraphNode> it = job.nodeIterator(); it.hasNext();  ) {
@@ -141,6 +154,11 @@ public class PegasusAWSBatchGS implements GridStart {
             enable = enable && this.enable(constitutentJob, isGlobusJob);
             
         }
+        
+        //set the credentials for clustered job
+        job.condorVariables.addIPFileForTransfer(mCurrentClusteredJobCredentials);
+        mLogger.log( PegasusAWSBatchGS.MESSAGE_PREFIX + "Credentials to be transferred for job  - " + job.getID() + " " + job.condorVariables.getIPFilesForTransfer(),
+                      LogManager.DEBUG_MESSAGE_LEVEL );
         
         //we enable the clustered job ourselves
         JobAggregator aggregator = job.getJobAggregator();
@@ -174,10 +192,10 @@ public class PegasusAWSBatchGS implements GridStart {
      * @return 
      */
     public boolean enable(Job job, boolean isGlobusJob) {
-        boolean result =  this.mPegasusLite.enable(job, isGlobusJob);
-        
         mLogger.log( PegasusAWSBatchGS.MESSAGE_PREFIX + "Enabling task - " + job.getID() ,
                       LogManager.DEBUG_MESSAGE_LEVEL );
+        
+        boolean result =  this.mPegasusLite.enable(job, isGlobusJob);
         
         //each constituent job pegasus lite script has to refer by basename only
         //and add the executable for transfer input file
@@ -189,7 +207,10 @@ public class PegasusAWSBatchGS implements GridStart {
         //since in this we are running each task making up the clustered job via
         //pegasus lite, the credentials have to be handled per task, not at the 
         //clustered job level in the code generator
-        updateJobEnvForCredentials( job );
+        String jobCredentials = updateJobEnvForCredentials( job );
+        for( String credential: jobCredentials.split(",")){
+            mCurrentClusteredJobCredentials.add( credential );
+        }
         
         //add each file transfer via condor to pegasus-aws-batch 
         //mechanism
@@ -300,18 +321,35 @@ public class PegasusAWSBatchGS implements GridStart {
      * Updates a job environment to hold any credential information required
      * 
      * @param job 
+     * 
+     * @retrun a comma separate list of paths to credentials to transfer
+     * 
      */
-    protected void updateJobEnvForCredentials(Job job) {
+    private String updateJobEnvForCredentials(Job job) {
         mLogger.log( PegasusAWSBatchGS.MESSAGE_PREFIX + "Credentials for task " + job.getID() + " - " + job.getCredentialTypes(),
                       LogManager.DEBUG_MESSAGE_LEVEL );
         
+        //we dont want credentials transferred per task making up the clustered job
+        String before = job.condorVariables.getIPFilesForTransfer();
+        job.condorVariables.removeIPFilesForTransfer();
+        
         //we do it via style and avoid duplication of code
         CondorStyle cs = mStyleFactory.loadInstance( job );
+        
         try {
             cs.apply(job);
         } catch (CondorStyleException ex) {
            throw new RuntimeException( PegasusAWSBatchGS.MESSAGE_PREFIX + " Unable to associate credentials for task " + job.getID() ,ex );
         }
+        
+        String credentials = job.condorVariables.getIPFilesForTransfer();
+        job.condorVariables.removeIPFilesForTransfer();
+        //preserver the original file transfer
+        if( before != null ){
+            job.condorVariables.addIPFileForTransfer( Arrays.asList( before.split( ",") ));
+        }
+        
+        return (credentials == null) ? "" : credentials;
     }
 
 }
