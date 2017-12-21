@@ -44,6 +44,7 @@ import joptsimple.OptionSet;
 import joptsimple.ValueConverter;
 
 import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
@@ -101,7 +102,9 @@ public class PegasusAWSBatch {
                 withRequiredArg().ofType( String.class );
         mOptionParser.acceptsAll(asList( "s", "s3"), "the S3 bucket to use for lifecycle of the client. If not specifed then a bucket is created based on the prefix passed").
                 withRequiredArg().ofType( String.class );
-        mOptionParser.acceptsAll(asList( "l", "log-level"), "sets the logging level").
+        mOptionParser.acceptsAll(asList( "l", "log-file"), "log to a file identified by the argument value").
+                withRequiredArg().ofType( String.class );
+        mOptionParser.acceptsAll(asList( "L", "log-level"), "sets the logging level").
                 withRequiredArg().withValuesConvertedBy( new ValueConverter(){
             @Override
             public Object convert(String string) {
@@ -179,6 +182,23 @@ public class PegasusAWSBatch {
      */
     protected void executeCommand( OptionSet options ) {
         Level logLevel = Level.INFO;
+        
+        if( options.has( "log-file") ){
+            File f = new File( (String)options.valueOf( "log-file") );
+            if ((mLogger = Logger.getRootLogger()) != null) {
+                mLogger.removeAllAppenders(); // clean house only once
+                try {
+                    mLogger.addAppender(new FileAppender(new PatternLayout(
+                            "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%c{1}] %m%n"), f.getAbsolutePath() ));
+                } catch (IOException ex) {
+                    System.err.println( "Unable to set logging to file " + f );
+                }
+                mLogger.setLevel(Level.INFO);
+                //reset logger to class specific
+                mLogger = Logger.getLogger( PegasusAWSBatch.class.getName() );
+            }
+        }
+        
         if( options.has( "log-level")){
             logLevel = (Level) options.valueOf( "log-level");
         }
