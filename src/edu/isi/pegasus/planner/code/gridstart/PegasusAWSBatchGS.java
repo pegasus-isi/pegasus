@@ -18,7 +18,6 @@ package edu.isi.pegasus.planner.code.gridstart;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
@@ -33,8 +32,10 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactory;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.io.File;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -61,6 +62,9 @@ public class PegasusAWSBatchGS implements GridStart {
      * been determined by reflection.
      */
     public static final String CLASSNAME = "PegasusAWSBatchGS";
+    
+    private static final String[] CREDENTIALS_ENV_VARIABLE_PREFIXES = 
+        { "BOTO_CONFIG", "GOOGLE_PKCS12", "irodsEnvFile", "S3CFG", "SSH_PRIVATE_KEY", "X509_USER_PROXY" };
 
     /**
      * The SHORTNAME for this implementation.
@@ -215,7 +219,7 @@ public class PegasusAWSBatchGS implements GridStart {
         //since in this we are running each task making up the clustered job via
         //pegasus lite, the credentials have to be handled per task, not at the 
         //clustered job level in the code generator
-        String jobCredentials = updateJobEnvForCredentials( job );
+        String jobCredentials = updateJobEnvForCredentials( job , mClusteredJobS3Bucket );
         for( String credential: jobCredentials.split(",")){
             mCurrentClusteredJobCredentials.add( credential );
         }
@@ -329,11 +333,13 @@ public class PegasusAWSBatchGS implements GridStart {
      * Updates a job environment to hold any credential information required
      * 
      * @param job 
+     * @param bucket the bucket to which credentials will be transferred by 
+     *               pegasus-aws-batch tool
      * 
-     * @retrun a comma separate list of paths to credentials to transfer
+     * @return a comma separate list of paths to credentials to transfer
      * 
      */
-    private String updateJobEnvForCredentials(Job job) {
+    private String updateJobEnvForCredentials(Job job, String bucket) {
         mLogger.log( PegasusAWSBatchGS.MESSAGE_PREFIX + "Credentials for task " + job.getID() + " - " + job.getCredentialTypes(),
                       LogManager.DEBUG_MESSAGE_LEVEL );
         
@@ -350,6 +356,51 @@ public class PegasusAWSBatchGS implements GridStart {
            throw new RuntimeException( PegasusAWSBatchGS.MESSAGE_PREFIX + " Unable to associate credentials for task " + job.getID() ,ex );
         }
         
+        //rewrite the credential related evnironment variables
+        Map<String,String> updatedCredentialEnvs = new HashMap();
+        for( Iterator it = job.envVariables.getProfileKeyIterator(); it.hasNext(); ){
+            String key   = (String)it.next();
+            String value = (String) job.envVariables.get( key );
+            int ch = key.charAt( 0 );
+            switch( ch ){
+                //"BOTO_CONFIG", "GOOGLE_PKCS12", "irodsEnvFile", "S3CFG", "SSH_PRIVATE_KEY", "X509_USER_PROXY" 
+                case 'B':
+                    if( key.startsWith( "BOTO_CONFIG") || key.startsWith( "BOTO_CONFIG_") ){
+                        updatedCredentialEnvs.put(key, rewriteValue(value, bucket ));
+                    }
+                    break;
+                    
+                case 'G':
+                    if( key.startsWith( "GOOGLE_PKCS12") || key.startsWith( "GOOGLE_PKCS12_") ){
+                        updatedCredentialEnvs.put(key, rewriteValue(value, bucket ));
+                    }
+                    break;
+                    
+                case 'i':
+                    if( key.startsWith( "irodsEnvFile") || key.startsWith( "irodsEnvFile_") ){
+                       updatedCredentialEnvs.put(key, rewriteValue(value, bucket )); 
+                    }
+                    break;    
+                    
+                case 'S':
+                    if( key.startsWith( "S3CFG") || key.startsWith( "S3CFG_") ||
+                             key.startsWith( "SSH_PRIVATE_KEY") || key.startsWith( "SSH_PRIVATE_KEY_") ){
+                           
+                        updatedCredentialEnvs.put(key, rewriteValue(value, bucket ));    
+                    }
+                    break;
+                case 'X':
+                    if( key.startsWith( "X509_USER_PROXY") || key.startsWith( "X509_USER_PROXY_") ){
+                        updatedCredentialEnvs.put(key, rewriteValue(value, bucket ));
+                    }
+                    break;
+            }
+        }
+        //update job to include update envs
+        for( Map.Entry<String,String> entry: updatedCredentialEnvs.entrySet() ){
+            job.envVariables.construct( entry.getKey(), entry.getValue() );
+        }
+        
         String credentials = job.condorVariables.getIPFilesForTransfer();
         job.condorVariables.removeIPFilesForTransfer();
         //preserver the original file transfer
@@ -358,6 +409,22 @@ public class PegasusAWSBatchGS implements GridStart {
         }
         
         return (credentials == null) ? "" : credentials;
+    }
+
+    /**
+     * Rewrites a credential value to include s3 bucket
+     * @param value
+     * @param bucket
+     * @return 
+     */
+    private String rewriteValue(String value, String bucket) {
+        //only rewrite values that start with .
+        if( value.startsWith( ".") ){
+            StringBuilder sb = new StringBuilder();
+            sb.append( bucket ).append( File.separator ).append( value );
+            return sb.toString();
+        }
+        return value;
     }
 
 }
