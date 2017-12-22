@@ -146,6 +146,27 @@ trap 'pegasus_batch_final_exit' EXIT HUP INT QUIT TERM
 pegasus_batch_log "Number of args passed to pegasus-aws-batch - $# "
 script="${1}"; shift
 
+# for staged credentials, download the credentials from s3 if specified, and set
+# the credential env variable to downloaded path 
+for base in X509_USER_PROXY S3CFG BOTO_CONFIG SSH_PRIVATE_KEY irodsEnvFile GOOGLE_PKCS12 ; do
+    for key in `(env | grep -i ^$base | sed 's/=.*//') 2>/dev/null`; do
+        eval val="\$$key"
+	scheme="$(echo "${val}" | cut -d: -f1)"
+	if [ "${scheme}" == "s3" ]; then
+	    # pull down the credential from S3
+	    cred=`echo ${val} | sed -E "s/s3:\/\/.*\/(.*)$/\1/"`
+	    aws s3 cp "${val}" "./${cred}" || error_exit "Failed to download credential ${val} to ${cred}"
+
+	    eval $key=`pwd`/"${cred}"
+            eval val="\$$key"
+            pegasus_batch_log "Expanded \$$key to $val"
+        fi
+        if [ -e "$val" ]; then
+            chmod 0600 "$val"
+        fi
+    done
+done
+
 
 aws s3 cp "${PEGASUS_AWS_BATCH_BUCKET}/${PEGASUS_LITE_COMMON_FILE}"  "./${PEGASUS_LITE_COMMON_FILE}" 1>&2 || error_exit "Failed to download S3 file  ${PEGASUS_LITE_COMMON_FILE} from bucket ${PEGASUS_AWS_BATCH_BUCKET}"
 aws s3 cp "${PEGASUS_AWS_BATCH_BUCKET}/${script}"  "./${script}" 1>&2 || error_exit "Failed to download S3 file ${script} from bucket ${PEGASUS_AWS_BATCH_BUCKET}"
