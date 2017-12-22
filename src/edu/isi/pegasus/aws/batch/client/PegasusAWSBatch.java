@@ -29,6 +29,8 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Arrays;
 
 import static java.util.Arrays.asList;
@@ -185,18 +187,7 @@ public class PegasusAWSBatch {
         
         if( options.has( "log-file") ){
             File f = new File( (String)options.valueOf( "log-file") );
-            if ((mLogger = Logger.getRootLogger()) != null) {
-                mLogger.removeAllAppenders(); // clean house only once
-                try {
-                    mLogger.addAppender(new FileAppender(new PatternLayout(
-                            "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%c{1}] %m%n"), f.getAbsolutePath() ));
-                } catch (IOException ex) {
-                    System.err.println( "Unable to set logging to file " + f );
-                }
-                mLogger.setLevel(Level.INFO);
-                //reset logger to class specific
-                mLogger = Logger.getLogger( PegasusAWSBatch.class.getName() );
-            }
+            setupFileLogging( f, true );
         }
         
         if( options.has( "log-level")){
@@ -367,6 +358,42 @@ public class PegasusAWSBatch {
                                         " Either specify in properties or set command line option " + option );
         }
         return value;
+    }
+
+    /**
+     * Sets up logging to a file instead of stdout and stderr
+     * 
+     * @param f 
+     * @param rotateLogs whether to rotate logs following a numbering scheme .00X
+     */
+    private void setupFileLogging( File f , boolean rotateLogs ) {
+        File log = f;
+        if( rotateLogs ){
+            //setup logging to 00X files
+            NumberFormat nf = new DecimalFormat( "000" );
+           
+            for( int i = 0; i < 1000; i++ ){
+                String name = f.getAbsolutePath() + "." +  nf.format( i );
+                log  = new File( name );
+                if( !log.exists() ){
+                    break;
+                }
+            }
+
+        }
+        
+        if ((mLogger = Logger.getRootLogger()) != null) {
+            mLogger.removeAllAppenders(); // clean house only once
+            try {
+                mLogger.addAppender(new FileAppender(new PatternLayout(
+                        "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%c{1}] %m%n"), log.getAbsolutePath() ));
+            } catch (IOException ex) {
+                System.err.println( "Unable to set logging to file " + log );
+            }
+            mLogger.setLevel(Level.INFO);
+            //reset logger to class specific
+            mLogger = Logger.getLogger( PegasusAWSBatch.class.getName() );
+        }
     }
     
 }
