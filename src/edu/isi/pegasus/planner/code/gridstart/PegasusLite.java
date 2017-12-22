@@ -1412,7 +1412,7 @@ public class PegasusLite implements GridStart {
      * @param jobname  the name of the job
      * @param site     the site 
      */
-    private void complainForHeadNodeFileServer(String jobname, String site) {
+     void complainForHeadNodeFileServer(String jobname, String site) {
         StringBuffer error = new StringBuffer();
         error.append( "[PegasusLite] " );
         if( jobname != null ){
