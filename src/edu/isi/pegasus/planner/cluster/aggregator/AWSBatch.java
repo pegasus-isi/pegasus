@@ -73,6 +73,24 @@ public class AWSBatch extends Abstract {
      * the fetch and run example
      */
     public static final String PEGASUS_LITE_COMMON_FILE_BASENAME = PegasusLite.PEGASUS_LITE_COMMON_FILE_BASENAME;
+    
+    /**
+     * The environment variable that designates the key used by fetch_and_run.sh
+     * executable in batch containers 
+     */
+    public static final String BATCH_FILE_TYPE_KEY = "BATCH_FILE_TYPE";
+    
+    /**
+     * The environment variable that designates the key used by fetch_and_run.sh
+     * executable for batch containers to pull the user script from s3
+     */
+    public static final String BATCH_FILE_S3_URL_KEY = "BATCH_FILE_S3_URL";
+    
+    /**
+     * The  environment variable that designates the key for AWS Batch s3 bucket
+     */
+    public static String PEGASUS_AWS_BATCH_BUCKET_KEY = "PEGASUS_AWS_BATCH_BUCKET";
+    
 
     /**
      * The default constructor.
@@ -277,6 +295,16 @@ public class AWSBatch extends Abstract {
                 divisor = 60;
             }
         }
+        
+        //we log to a file based on jobname
+        args.append( "--log-file" ).append( " " ).append( job.getID() + ".log" ).append( " " );
+        
+        //the S3 bucket to use is picked up from the environment
+        String bucket = (String) job.envVariables.get( AWSBatch.PEGASUS_AWS_BATCH_BUCKET_KEY );
+        if( bucket == null ){
+            throw new RuntimeException( "Clustered job not associated with S3 bucket for AWS Batch " + job.getID() );
+        }
+        args.append( "--s3" ).append( " " ).append( bucket ).append( " " );
         
         //add any files to be transferred from submit host
         args.append( "--files" ).append( " " );

@@ -16,6 +16,10 @@
 package edu.isi.pegasus.planner.code.gridstart;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.PegasusURL;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
@@ -51,17 +55,6 @@ public class PegasusAWSBatchGS implements GridStart {
      */
     public static final String TRANSFER_INPUT_FILES_KEY = "TRANSFER_INPUT_FILES";
     
-    /**
-     * The environment variable that designates the key used by fetch_and_run.sh
-     * executable in batch containers 
-     */
-    public static final String BATCH_FILE_TYPE_KEY = "BATCH_FILE_TYPE";
-    
-    /**
-     * The environment variable that designates the key used by fetch_and_run.sh
-     * executable for batch containers to pull the user script from s3
-     */
-    public static final String BATCH_FILE_S3_URL_KEY = "BATCH_FILE_S3_URL";
     
     /**
      * The basename of the class that is implmenting this. Could have
@@ -105,6 +98,13 @@ public class PegasusAWSBatchGS implements GridStart {
      */
     public Set<String> mCurrentClusteredJobCredentials;
     
+    /**
+     * Tracks the S3 bucket used for a clustered job
+     */
+    private String mClusteredJobS3Bucket;
+    
+    private SiteStore mSiteStore;
+    
     public PegasusAWSBatchGS(){
         mPegasusLite = new PegasusLite();
     }
@@ -118,7 +118,7 @@ public class PegasusAWSBatchGS implements GridStart {
         mBag       = bag;
         mDAG       = dag;
         mLogger    = bag.getLogger();
-        
+        mSiteStore = bag.getHandleToSiteStore();
         mSubmitDir = bag.getPlannerOptions().getSubmitDirectory();
         mPegasusLite.initialize(bag, dag);
         mStyleFactory     = new CondorStyleFactory();
@@ -137,6 +137,14 @@ public class PegasusAWSBatchGS implements GridStart {
             throw new RuntimeException( "Aggregated job not clustered using AWSBatch - " + job.getTXName() );
         }
         mCurrentClusteredJobCredentials = new HashSet();
+        
+        String bucket = mSiteStore.getExternalWorkDirectoryURL( job.getStagingSiteHandle() , FileServer.OPERATION.get );
+        if( bucket == null || !bucket.startsWith( PegasusURL.S3_URL_SCHEME) ){
+            throw new RuntimeException( PegasusAWSBatchGS.MESSAGE_PREFIX + " For job " + job.getID() + " bucket is not of type s3 " + bucket  );
+        }
+        mClusteredJobS3Bucket = bucket;
+        job.envVariables.construct(AWSBatch.PEGASUS_AWS_BATCH_BUCKET_KEY,  mClusteredJobS3Bucket );
+        
         boolean enable = true;
         String relativeDir = job.getRelativeSubmitDirectory();
         for( Iterator<GraphNode> it = job.nodeIterator(); it.hasNext();  ) {
@@ -236,11 +244,11 @@ public class PegasusAWSBatchGS implements GridStart {
                 job.envVariables.construct( PegasusAWSBatchGS.TRANSFER_INPUT_FILES_KEY, csv );
             }
         }
-        
+       
         //add the environment variables required for fetch_and_run.sh script in
         //the container
-        job.envVariables.construct( PegasusAWSBatchGS.BATCH_FILE_TYPE_KEY,  "script" );
-        job.envVariables.construct( PegasusAWSBatchGS.BATCH_FILE_S3_URL_KEY,  "s3://pegasus-aws-batch" );
+        job.envVariables.construct( AWSBatch.BATCH_FILE_TYPE_KEY,  "script" );
+        job.envVariables.construct(AWSBatch.BATCH_FILE_S3_URL_KEY,  mClusteredJobS3Bucket + File.separator + AWSBatch.PEGASUS_AWS_BATCH_LAUNCH_BASENAME );
         
         return result;
     }

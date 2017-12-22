@@ -38,6 +38,12 @@ public class PegasusURL {
      * The scheme name for gsift url.
      */
     public static final String GSIFTP_URL_SCHEME = "gsiftp:";
+    
+    
+    /**
+     * The scheme name for S3 url.
+     */
+    public static final String S3_URL_SCHEME = "s3:";
 
 
     /**
