@@ -1,7 +1,30 @@
 ===============================
+Release Notes for Pegasus 4.8.1
+===============================
+We are pleased to announce release of Pegasus 4.8.1
+
+Pegasus 4.8.1 is be a minor bug fix release 
+
+Bugs Fixed
+--------------
+
+1) [PM-1221] - source tar balls have .git files 
+
+2) [PM-1222] - condor dagman does not allow . in job names
+
+3) [PM-1224] - sub workflow planning pegasus lite prescript does not
+   	       associate credentials 
+
+4) [PM-1225] - hierarchal workflows planning in sharedfs fails with
+   	       worker package staging set 
+
+5) [PM-1226] - hierarchal workflow with worker package staging fails
+
+
+===============================
 Release Notes for Pegasus 4.8.0
 ===============================
-We are pleased to announce release of Pegasus 4.8.0 
+We are pleased to announce release of Pegasus 4.8.0
 
 Pegasus 4.8.0 is be a major release of Pegasus and includes
 improvements and bug fixes to the 4.7.4 release.
