@@ -177,6 +177,10 @@ public class PegasusAWSBatchGS implements GridStart {
         if( aggregator == null ){
             throw new RuntimeException( "Clustered job not associated with a job aggregator " + job.getID() );
         }
+        
+        //the aws batch job has to run at site local
+        job.setSiteHandle( "local" );
+        
         //all the constitutent jobs are enabled.
         //get the job aggregator to render the job 
         //to it's executable form
