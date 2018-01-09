@@ -296,6 +296,10 @@ public class AWSBatch extends Abstract {
             }
         }
         
+        args.append( "--conf" ).append( " " ).
+                  append(  mProps.getPropertiesInSubmitDirectory( )  ).
+                  append( " " );
+        
         //we log to a file based on jobname
         args.append( "--log-file" ).append( " " ).append( job.getID() + ".log" ).append( " " );
         
