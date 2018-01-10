@@ -303,6 +303,9 @@ public class AWSBatch extends Abstract {
         //we log to a file based on jobname
         args.append( "--log-file" ).append( " " ).append( job.getID() + ".log" ).append( " " );
         
+        //the job name is the prefix for the time being
+        args.append( "--prefix" ).append( " " ).append( job.getID() ).append( " " );
+        
         //the S3 bucket to use is picked up from the environment
         String bucket = (String) job.envVariables.get( AWSBatch.PEGASUS_AWS_BATCH_BUCKET_KEY );
         if( bucket == null ){
