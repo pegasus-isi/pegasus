@@ -18,7 +18,7 @@ install_requires = [
     "itsdangerous==0.21",
     "boto==2.5.2",
     "pam==0.1.4",
-    "pyOpenSSL==0.13",
+    "pyOpenSSL==16.2.0",
     "plex==2.0.0dev"
 ]
 
