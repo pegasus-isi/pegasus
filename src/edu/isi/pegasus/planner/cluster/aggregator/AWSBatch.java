@@ -281,7 +281,8 @@ public class AWSBatch extends Abstract {
      */
     public String aggregatedJobArguments( AggregatedJob job ){
         //the stdin of the job actually needs to be passed as arguments
-        String stdin  = job.getRelativeSubmitDirectory() + File.separator + job.getStdIn();
+        File jobSubmitDir = new File(this.mDirectory, job.getRelativeSubmitDirectory() );
+        String stdin  = jobSubmitDir + File.separator + job.getStdIn();
         StringBuffer args = new StringBuffer();
         
         //add --max-wall-time option PM-625
@@ -301,7 +302,7 @@ public class AWSBatch extends Abstract {
                   append( " " );
         
         //we log to a file based on jobname
-        args.append( "--log-file" ).append( " " ).append( job.getID() + ".log" ).append( " " );
+        args.append( "--log-file" ).append( " " ).append( jobSubmitDir).append( File.separator).append( job.getID() + ".log" ).append( " " );
         
         //the job name is the prefix for the time being
         args.append( "--prefix" ).append( " " ).append( job.getID() ).append( " " );
