@@ -146,7 +146,12 @@ public class PegasusAWSBatchGS implements GridStart {
         if( bucket == null || !bucket.startsWith( PegasusURL.S3_URL_SCHEME) ){
             throw new RuntimeException( PegasusAWSBatchGS.MESSAGE_PREFIX + " For job " + job.getID() + " bucket is not of type s3 " + bucket  );
         }
-        mClusteredJobS3Bucket = bucket;
+        //remove the username@amazon part, as that is specific to tool pegasus-s3
+        //but not used by pegasus-aws-batch
+        PegasusURL url = new PegasusURL( bucket );
+        //System.out.println( "Host " +  url.getHost() );
+        //System.out.println( "Path"  + url.getPath() );
+        mClusteredJobS3Bucket = PegasusURL.S3_URL_SCHEME + File.separator + url.getPath();
         job.envVariables.construct(AWSBatch.PEGASUS_AWS_BATCH_BUCKET_KEY,  mClusteredJobS3Bucket );
         
         boolean enable = true;
