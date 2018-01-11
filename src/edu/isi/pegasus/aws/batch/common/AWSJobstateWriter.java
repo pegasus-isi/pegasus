@@ -21,7 +21,7 @@ import org.apache.log4j.Logger;
  */
 public class AWSJobstateWriter {
     
-    public static final String JOBSTATE_LOG_FILENAME = "jobstate.log";
+    public static final String JOBSTATE_LOG_FILENAME = ".jobstate.log";
     
     private Logger mLogger;
     
@@ -34,11 +34,11 @@ public class AWSJobstateWriter {
         
     }
     
-    public void initialze( File directory, Logger logger ) {
+    public void initialze( File directory, String prefix,  Logger logger ) {
         //"405596411149";
         mLogger = Logger.getLogger( AWSJobstateWriter.class.getName() ); 
         try {
-            mJobstateWriter = new PrintWriter( new BufferedWriter( new FileWriter( new File( directory, JOBSTATE_LOG_FILENAME))));
+            mJobstateWriter = new PrintWriter( new BufferedWriter( new FileWriter( new File( directory, prefix + JOBSTATE_LOG_FILENAME))));
         } catch (IOException ex) {
             mLogger.error( "Unable to initalized jobstate writer to directory " + directory, ex );
             throw new RuntimeException( "Unable to initalized jobstate writer to directory " + directory, ex );

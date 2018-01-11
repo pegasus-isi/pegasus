@@ -211,7 +211,7 @@ public class Synch {
         mS3BucketKeyPrefix = "";
         
         mJobstateWriter = new AWSJobstateWriter();
-        mJobstateWriter.initialze( new File("."), mLogger);
+        mJobstateWriter.initialze( new File("."), mPrefix, mLogger);
         
         mJobMap = new HashMap();
         mExecutorService = Executors.newFixedThreadPool(2);
