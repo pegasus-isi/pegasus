@@ -565,11 +565,11 @@ public class Synch {
             //now query AWS Batch for the jobs
             try {
                 
-                ListJobsRequest listSucceededJobsRequest = createListJobRequest( basename, JOB_QUEUE_SUFFIX, JobStatus.SUCCEEDED );
-                ListJobsRequest listFailedJobsRequest    = createListJobRequest( basename, JOB_QUEUE_SUFFIX, JobStatus.FAILED );
+                ListJobsRequest listSucceededJobsRequest = createListJobRequest( this.mJobQueueARN, JobStatus.SUCCEEDED );
+                ListJobsRequest listFailedJobsRequest    = createListJobRequest( this.mJobQueueARN, JobStatus.FAILED );
                 
                 //first query for succeeded
-                mLogger.debug( "Querying for successful jobs ");
+                mLogger.debug( "Querying for successful jobs " + listSucceededJobsRequest );
                 ListJobsResponse listJobsResponse = batchClient.listJobs( listSucceededJobsRequest );
                 mLogger.debug( "Retrieved  " + listJobsResponse.jobSummaryList().size() + " responses ");
                 for( JobSummary summary: listJobsResponse.jobSummaryList() ){
@@ -594,7 +594,9 @@ public class Synch {
                 Thread.sleep( sleepTime );
                 if( numDone < total ){
                     // check for failed jobs
+                    mLogger.debug( "Querying for failed jobs " + listFailedJobsRequest );
                     listJobsResponse = batchClient.listJobs( listFailedJobsRequest );
+                    mLogger.debug( "Retrieved  " + listJobsResponse.jobSummaryList().size() + " responses ");
                     for( JobSummary summary: listJobsResponse.jobSummaryList() ){
                         String failedJobID = summary.jobId();
                         if ( awsJobIDs.contains(failedJobID) ){
@@ -1097,9 +1099,22 @@ public class Synch {
         return deleted;
     }
     
-    
-   
-    
+    /**
+     * Creates a list job request for a job queue
+     * 
+     * @param jobQueue the job queue name or arn
+     * @param status
+     * @return 
+     */
+    public ListJobsRequest createListJobRequest(String jobQueue,  JobStatus status) {
+       ListJobsRequest ljr = ListJobsRequest.builder().
+                                                    jobQueue( jobQueue ).
+                                                    jobStatus( status ).
+                                             build();
+       return ljr;
+        
+    }
+    /*
     public ListJobsRequest createListJobRequest(String basename, String jobQueueSuffix,  JobStatus status) {
        ListJobsRequest ljr = ListJobsRequest.builder().
                                                     jobQueue( basename + JOB_QUEUE_SUFFIX ).
@@ -1108,6 +1123,7 @@ public class Synch {
        return ljr;
         
     }
+    */
 
     /**
      * 
