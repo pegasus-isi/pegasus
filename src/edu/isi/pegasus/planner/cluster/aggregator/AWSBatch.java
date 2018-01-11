@@ -206,7 +206,8 @@ public class AWSBatch extends Abstract {
                     for( Iterator<String> envIT = constitutentJob.envVariables.getProfileKeyIterator(); envIT.hasNext();){
                         String key = envIT.next();
                         generator.writeStartObject();
-                        generator.writeStringField( key, (String)constitutentJob.envVariables.get(key) );
+                        generator.writeStringField( "name", key );
+                        generator.writeStringField( "value", (String)constitutentJob.envVariables.get(key) );
                         generator.writeEndObject();
                     }
                     generator.writeEndArray();
@@ -300,6 +301,10 @@ public class AWSBatch extends Abstract {
         args.append( "--conf" ).append( " " ).
                   append(  mProps.getPropertiesInSubmitDirectory( )  ).
                   append( " " );
+        
+        
+        //debug log level
+        args.append( "--log-level" ).append( " " ).append( "debug" ).append( " " );
         
         //we log to a file based on jobname
         args.append( "--log-file" ).append( " " ).append( jobSubmitDir).append( File.separator).append( job.getID() + ".log" ).append( " " );
