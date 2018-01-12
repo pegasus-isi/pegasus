@@ -1210,8 +1210,12 @@ public class Synch {
                 //we are not relinqusing the lock
                 synchronized( this.mJobMap ){
                     for(Map.Entry<String,AWSJob> entry: mJobMap.entrySet()){
-                        this.copyFileTo( new File( entry.getValue().getID() + ".out" ), stdoutDstChannel);
-                        this.copyFileTo( new File( entry.getValue().getID() + ".err" ), stderrDstChannel);
+                        File taskStdout = new File( entry.getValue().getID() + ".out" );
+                        File taskStderr = new File( entry.getValue().getID() + ".err" );
+                        this.copyFileTo( taskStdout , stdoutDstChannel);
+                        this.copyFileTo( taskStderr, stderrDstChannel);
+                        taskStdout.delete();
+                        taskStderr.delete();
                     }
                 }
             }
