@@ -311,7 +311,7 @@ public class AWSBatch extends Abstract {
         args.append( "--log-file" ).append( " " ).append( jobSubmitDir).append( File.separator).append( job.getID() + ".log" ).append( " " );
         
         //we wants the logs to be merged into a single file for pegasus monitoring
-        args.append( "--merge-logs" ).append( " " ).append( jobSubmitDir).append( File.separator).append( job.getID() ).append( " " );
+        args.append( "--merge-logs" ).append( " " ).append( jobSubmitDir).append( File.separator ).append( job.getID() ).append( " " );
         
         //the job name is the prefix for the time being
         args.append( "--prefix" ).append( " " ).append( job.getID() ).append( " " );
