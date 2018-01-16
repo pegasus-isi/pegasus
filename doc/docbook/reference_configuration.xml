@@ -4209,7 +4209,8 @@ See Also    :</emphasis> pegasus.data.configuration</literallayout></entry>
               </row>
 
               <row>
-                <entry><literallayout><anchor id="pegasus.transfer.worker.package.autodownload"/>
+                <entry><literallayout><anchor
+                      id="pegasus.transfer.worker.package.autodownload"/>
                       <emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.transfer.worker.package.autodownload<emphasis
                       role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
@@ -4228,8 +4229,9 @@ See Also    :</emphasis> pegasus.transfer.worker.package</literallayout></entry>
               </row>
 
               <row>
-                <entry><literallayout><anchor id="pegasus.transfer.worker.package.strict"/><emphasis role="bold"><emphasis
-                        role="bold">Property Key: </emphasis></emphasis>pegasus.transfer.worker.package.strict<emphasis
+                <entry><literallayout><anchor
+                      id="pegasus.transfer.worker.package.strict"/><emphasis
+                      role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.transfer.worker.package.strict<emphasis
                       role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
 Scope       :</emphasis> Properties
@@ -4824,6 +4826,31 @@ See Also    :</emphasis> pegasus.clusterer.job.aggregator</literallayout></entry
               work done as possible.</para><para>This property sets the
               Boolean flag, that indicates whether to make "pegasus-cluster"
               stop on the first job failure it detects.</para></entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.clusterer.allow.single<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.9
+<emphasis role="bold">Type  </emphasis>      : Boolean
+<emphasis role="bold">Default     :</emphasis> False
+</literallayout></entry>
+
+              <entrytbl cols="1">
+                <tbody>
+                  <row>
+                    <entry><para>By default, Pegasus does not launch clusters
+                    that contain a single job using the clustering/job
+                    aggregator executable. This property allows you to
+                    override this behaviour and have single job clusters to be
+                    created. Applies to both horizontal and label based
+                    clustering.</para></entry>
+                  </row>
+                </tbody>
+              </entrytbl>
             </row>
 
             <row>
