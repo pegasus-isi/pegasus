@@ -124,7 +124,7 @@ public class Horizontal implements Clusterer,
     private PPS mPPS;
 
     /**
-     * Allow clustering of single jobs.
+     * Boolean indicating whether to disallow clustering of single jobs.
      */
     private boolean mDisallowClusteringOfSingleJobs;
 
