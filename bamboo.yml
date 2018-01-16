@@ -925,10 +925,10 @@ project:
 
                       # standard filenames for RPMs - used by tutorial VM
                       cd pegasus/$VERSION
-                      if [ ! -e pegasus-$VERSION.el6.x86_64.rpm ]; then
+                      if [ ! -e pegasus-$VERSION-1.el6.x86_64.rpm ]; then
                           cp pegasus-*el6.x86_64.rpm pegasus-$VERSION-1.el6.x86_64.rpm
                       fi
-                      if [ ! -e pegasus-$VERSION.el7.x86_64.rpm ]; then
+                      if [ ! -e pegasus-$VERSION-1.el7.x86_64.rpm ]; then
                           cp pegasus-*el7.x86_64.rpm pegasus-$VERSION-1.el7.x86_64.rpm
                       fi
                       cd ../..
