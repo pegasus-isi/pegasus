@@ -233,8 +233,8 @@ def populate_job_instance_details(workflow_stats , workflow_info):
 	job_name_retry_count_dict ={}
 	wf_transformation_color_map ={}
 	global color_count
-	start_event = sys.maxint
-	end_event = -sys.maxint -1
+	start_event = sys.maxsize
+	end_event = -sys.maxsize -1
 	
 	worklow_states_list = workflow_stats.get_workflow_states()
 	if len(worklow_states_list) > 0:
@@ -284,7 +284,7 @@ def populate_job_instance_details(workflow_stats , workflow_info):
 		wf_transformation_color_map[job_stat.transformation] =global_transformtion_color_map[job_stat.transformation]
 	
 		
-	if (start_event != sys.maxint) and  (end_event != (-sys.maxint -1)):
+	if (start_event != sys.maxsize) and  (end_event != (-sys.maxsize -1)):
 		workflow_info.workflow_run_time = end_event - start_event
 	else:
 		logger.error("Unable to find the start and event event for the workflow  " + workflow_info.wf_uuid)
