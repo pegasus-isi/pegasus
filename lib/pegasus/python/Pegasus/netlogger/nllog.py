@@ -311,12 +311,12 @@ def profile(func):
         return func
     
     if func.__module__ == '__main__':
-        f = func.func_globals['__file__'] or 'unknown'
+        f = func.__globals__['__file__'] or 'unknown'
         event = '%s' %os.path.splitext(os.path.basename(f))[0]
         log = _logger('script')
         log.set_meta(file=f, pid=os.getpid(), ppid=os.getppid(), gpid=os.getgid())
     else:
-        event = '%s' %func.func_name
+        event = '%s' %func.__name__
         log = _logger('%s' %func.__module__)
         log.set_meta(pid=os.getpid(), ppid=os.getppid(), gpid=os.getgid())
 
@@ -343,12 +343,12 @@ def profile_result(func):
         return func
     
     if func.__module__ == '__main__':
-        f = func.func_globals['__file__'] or 'unknown'
+        f = func.__globals__['__file__'] or 'unknown'
         event = '%s' %os.path.splitext(os.path.basename(f))[0]
         log = _logger('script')
         log.set_meta(file=f, pid=os.getpid(), ppid=os.getppid(), gpid=os.getgid())
     else:
-        event = '%s' %func.func_name
+        event = '%s' %func.__name__
         log = _logger('%s' %func.__module__)
         log.set_meta(pid=os.getpid(), ppid=os.getppid(), gpid=os.getgid())
 
@@ -390,7 +390,7 @@ class Profiler(type):
         if type(func) is not types.FunctionType:
             return func
         
-        event = '%s' %func.func_name
+        event = '%s' %func.__name__
         def nl_profile_method(self, *args, **kw):
             self._log.debug("%s.start" %event)
             try:
