@@ -1,0 +1,24 @@
+pegasus.catalog.site.file=./conf/sites.xml
+
+pegasus.data.configuration = nonsharedfs
+
+pegasus.catalog.replica  File
+pegasus.catalog.replica.file ./conf/rc.data
+
+
+pegasus.clusterer.job.aggregator AWSBatch
+
+# Cluster even single jobs on a level
+pegasus.clusterer.allow.single True
+
+pegasus.integrity.checking = False
+
+# AWS Batch related properties
+pegasus.aws.region=us-west-2 
+pegasus.aws.account=405596411149
+pegasus.aws.batch.job_definition=arn:aws:batch:us-west-2:405596411149:job-definition/fetch_and_run
+pegasus.aws.batch.compute_environment=arn:aws:batch:us-west-2:405596411149:compute-environment/karan-cmd-test-compute-env
+pegasus.aws.batch.job_queue=arn:aws:batch:us-west-2:405596411149:job-queue/karan-cmd-test-job-queue
+
+
+

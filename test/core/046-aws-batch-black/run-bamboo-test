@@ -1,0 +1,40 @@
+#!/bin/bash
+
+set -e
+
+# this variable is expanded by the planner when
+# parsing in the sites.xml file in the conf directory
+TOPDIR=`pwd`
+export TOPDIR
+
+# pegasus bin directory is needed to find keg
+BIN_DIR=`pegasus-config --bin`
+PEGASUS_LOCAL_BIN_DIR=$BIN_DIR
+export PEGASUS_LOCAL_BIN_DIR
+
+TEST=046-aws-batch-black
+
+# strip out trailing / from TEST if any
+TEST=`echo ${TEST} | sed -E "s/(.*)(\/)$/\1/"`
+export TEST
+export S3_URL_PREFIX=s3://bamboo@amazon
+export S3_BUCKET=pegasus-batch-bamboo/${TEST}
+
+# generate the input file
+echo "This is sample input to KEG" >f.a
+
+# generate the dax
+export PYTHONPATH=`pegasus-config --python`
+./blackdiamond.py $BIN_DIR > blackdiamond.dax
+
+# plan and submit the  workflow
+pegasus-plan \
+    --conf ./conf/pegasusrc \
+    --sites aws-batch \
+    --cluster horizontal \
+    --output-site local \
+    --dir dags \
+    --dax blackdiamond.dax \
+    --force \
+    -v \
+#    --submit
