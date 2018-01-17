@@ -644,7 +644,7 @@ class OptionParser(optparse.OptionParser):
                         handler = _tfrh(logfile, when=tm_unit, interval=tm_interval)
                     else:
                         handler = logging.FileHandler(logfile)
-                except IOError,err:
+                except IOError as err:
                     self.error("Cannot open log file '%s': %s" % (logfile, err))
                 sys.stderr = handler.stream
                 handler.setFormatter(logging.Formatter("%(message)s"))
@@ -666,7 +666,7 @@ class OptionParser(optparse.OptionParser):
                         handler = _tfrh(logfile, when=tm_unit, interval=tm_interval)
                     else:
                         handler = logging.FileHandler(logfile)
-                except IOError,err:
+                except IOError as err:
                     self.error("Cannot open log file '%s': %s" % (logfile, err))
                 handler.setFormatter(logging.Formatter("%(message)s"))
         if handler:

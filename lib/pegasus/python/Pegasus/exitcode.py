@@ -412,7 +412,7 @@ def main(args):
         log['exitcode'] = 0
         _write_logs(options.log_filename)
         sys.exit(0)
-    except JobFailed, jf:
+    except JobFailed as jf:
         _log_error(str(jf))
         log['exitcode'] = 1
         _write_logs(options.log_filename)

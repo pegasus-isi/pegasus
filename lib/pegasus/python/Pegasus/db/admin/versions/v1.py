@@ -23,7 +23,7 @@ class Version(BaseVersion):
             return
         except (OperationalError, ProgrammingError):
             pass
-        except Exception, e:
+        except Exception as e:
             self.db.rollback()
             raise DBAdminError(e)
             
@@ -76,7 +76,7 @@ class Version(BaseVersion):
             
         except (OperationalError, ProgrammingError):
             pass
-        except Exception, e:
+        except Exception as e:
             self.db.rollback()
             raise DBAdminError(e)
 
@@ -110,6 +110,6 @@ class Version(BaseVersion):
             self.db.commit()
         except OperationalError:
             pass
-        except Exception, e:
+        except Exception as e:
             self.db.rollback()
             raise DBAdminError(e)

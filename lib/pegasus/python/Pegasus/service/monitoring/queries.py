@@ -374,7 +374,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
                 q = self._get_one(q, True, timeout=600)
                 wf_id = q.wf_id
 
-            except NoResultFound, e:
+            except NoResultFound as e:
                 raise e
 
         return wf_id
@@ -447,7 +447,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         try:
             return self._get_one(q, use_cache)
-        except NoResultFound, e:
+        except NoResultFound as e:
             raise e
 
     # Workflow Meta
@@ -747,7 +747,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         try:
             return self._get_one(q, use_cache, timeout=600)
-        except NoResultFound, e:
+        except NoResultFound as e:
             raise e
 
     # Host
@@ -822,7 +822,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         try:
             return self._get_one(q, use_cache)
-        except NoResultFound, e:
+        except NoResultFound as e:
             raise e
 
     # Job State
@@ -1030,7 +1030,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         try:
             return self._get_one(q, use_cache)
-        except NoResultFound, e:
+        except NoResultFound as e:
             raise e
 
     # Task Meta
@@ -1170,7 +1170,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         try:
             return self._get_one(q, use_cache, timeout=timeout_duration)
-        except NoResultFound, e:
+        except NoResultFound as e:
             raise e
 
     def _get_recent_job_instance(self, job_id=None, ji=JobInstance):
@@ -1313,7 +1313,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         try:
             return self._get_one(q, use_cache)
-        except NoResultFound, e:
+        except NoResultFound as e:
             raise e
 
     # Views

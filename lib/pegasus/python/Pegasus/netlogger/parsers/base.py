@@ -395,7 +395,7 @@ class BaseParser(ProcessInterface, DoesLogging):
             # main processing for the module
             try:
                 result = self.process(item)
-            except (ValueError, KeyError), E:
+            except (ValueError, KeyError) as E:
                 if self._ufile:
                     self._ufile.write(line)
                 else:
@@ -562,7 +562,7 @@ class NLBaseParser(BaseParser):
             try:
                 d = self.parseLine(line)
                 yield d
-            except ValueError,E:
+            except ValueError as E:
                 if self.err_cb is False:
                     pass
                 else:
@@ -591,7 +591,7 @@ class NLSimpleParser(DoesLogging):
         """
         try:
             fields = _bp_extract(line, validate=self.verify)
-        except BPError, err:
+        except BPError as err:
             raise BPParseError("BP parse error: " + str(err))
         # higher-level verification
         for key in TS_FIELD, EVENT_FIELD:
@@ -645,7 +645,7 @@ if HAVE_PYPARSING:
         def parseLine(self, line):
             try:
                 rlist = self.nvp.parseString(line).asList()
-            except ParseException, E:
+            except ParseException as E:
                 raise ValueError(E)
             result = {}
             for a in rlist:

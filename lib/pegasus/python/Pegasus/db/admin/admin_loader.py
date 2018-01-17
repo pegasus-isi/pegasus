@@ -151,7 +151,7 @@ def db_create(dburi, engine, db, pegasus_version=None, force=False, verbose=True
 
     try:
         metadata.create_all(engine)
-    except OperationalError, e:
+    except OperationalError as e:
         raise DBAdminError(e, db=db, given_version=pegasus_version)
     if verbose and v > 0:
         print "Your database has been updated."
@@ -340,7 +340,7 @@ def all_workflows_db(db, update=True, pegasus_version=None, schema_check=True, f
             con.close()
             f_out.write("[SUCCESS] %s\n" % dburi)
             counts['success'] += 1
-        except connection.ConnectionError, e:
+        except connection.ConnectionError as e:
             if "unable to open database file" in str(e):
                 f_err.write("[UNABLE TO CONNECT] %s\n" % dburi)
                 counts['unable_to_connect'] += 1
@@ -349,7 +349,7 @@ def all_workflows_db(db, update=True, pegasus_version=None, schema_check=True, f
                 f_err.write("[ERROR] %s\n" % dburi)
                 counts['failed'] += 1
                 log.debug(e)
-        except Exception, e:
+        except Exception as e:
             f_err.write("[ERROR] %s\n" % dburi)
             counts['failed'] += 1
             log.debug(e)
@@ -374,7 +374,7 @@ def _get_version(db):
     try:
         current_version = db.query(DBVersion.version).order_by(DBVersion.id.desc()).first()
 
-    except OperationalError, e:
+    except OperationalError as e:
         # update dbversion table
         # Temporary migration. Should be removed in future releases
         try:
@@ -391,9 +391,9 @@ def _get_version(db):
             db.commit()
             current_version = db.query(DBVersion.version).order_by(DBVersion.id.desc()).first()
 
-        except (OperationalError, ProgrammingError), e:
+        except (OperationalError, ProgrammingError) as e:
             pass
-        except Exception, e:
+        except Exception as e:
             db.rollback()
             raise DBAdminError(e, db=db)
 
@@ -518,7 +518,7 @@ def _verify_tables(db):
                 "Missing database tables or tables are not updated:\n    %s\n"
                 "Run 'pegasus-db-admin update %s' to create/update your database."
                 % (" \n    ".join(missing_tables), db.get_bind().url), db=db)
-    except Exception, e:
+    except Exception as e:
         raise DBAdminError(e, db=db)
 
 

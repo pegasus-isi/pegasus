@@ -26,7 +26,7 @@ class Version(BaseVersion):
             self.db.execute("ALTER TABLE master_workflowstate ADD reason TEXT NULL")
         except (OperationalError, ProgrammingError):
             pass
-        except Exception, e:
+        except Exception as e:
             self.db.rollback()
             log.exception(e)
             raise Exception(e)

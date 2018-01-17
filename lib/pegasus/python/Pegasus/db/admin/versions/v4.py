@@ -21,7 +21,7 @@ class Version(BaseVersion):
             self.db.execute("ALTER TABLE master_workflow ADD archived BOOLEAN NOT NULL default 0")
         except (OperationalError, ProgrammingError):
             pass
-        except Exception, e:
+        except Exception as e:
             log.error("Error adding archived field to master_workflow table")
             log.exception(e)
             raise RuntimeError(e)

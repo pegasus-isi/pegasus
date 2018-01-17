@@ -42,7 +42,7 @@ def delete_workflow(dburi, wf_uuid):
         query = session.query(Workflow).filter(Workflow.wf_uuid == wf_uuid)
         try:
             wf = query.one()
-        except orm.exc.NoResultFound, e:
+        except orm.exc.NoResultFound as e:
             log.warn('No workflow found with wf_uuid %s - aborting expunge', wf_uuid)
             return
 
@@ -54,7 +54,7 @@ def delete_workflow(dburi, wf_uuid):
                 # delete the files from the rc_lfn explicitly as they are
                 # not associated with workflow table
                 __delete_workflow_files__( session, desc_wf.wf_uuid, desc_wf.wf_id )
-        except orm.exc.NoResultFound, e:
+        except orm.exc.NoResultFound as e:
             log.warn('No workflow found with root wf_id %s - aborting expunge', wf.wf_id)
             return
         
@@ -92,7 +92,7 @@ def delete_dashboard_workflow(dburi, wf_uuid):
         query = session.query(DashboardWorkflow).filter(DashboardWorkflow.wf_uuid == wf_uuid)
         try:
             wf = query.one()
-        except orm.exc.NoResultFound, e:
+        except orm.exc.NoResultFound as e:
             log.warn('No workflow found with wf_uuid %s - aborting expunge', wf_uuid)
             return
 

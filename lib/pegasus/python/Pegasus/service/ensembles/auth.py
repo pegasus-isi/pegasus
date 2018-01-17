@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 def authenticate(username, password):
     try:
         return pam.authenticate(username, password)
-    except Exception, e:
+    except Exception as e:
         log.exception(e)
         return False
 
@@ -33,7 +33,7 @@ def authorize_request():
 
     try:
         g.user = user.get_user_by_username(cred.username)
-    except user.NoSuchUser, e:
+    except user.NoSuchUser as e:
         log.error("No such user: %s" % cred.username)
         return basic_auth_response()
 

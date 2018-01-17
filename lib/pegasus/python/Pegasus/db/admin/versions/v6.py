@@ -38,16 +38,16 @@ class Version(BaseVersion):
                 return
         except (OperationalError, ProgrammingError):
             pass
-        except Exception, e:
+        except Exception as e:
             raise DBAdminError(e)
 
         # check if previous table exists. If not, the migration should not continue (for new dbs)
         try:
             if not interrupted:
                 self.db.execute("SELECT site FROM rc_lfn LIMIT 0,1")
-        except (OperationalError, ProgrammingError), e:
+        except (OperationalError, ProgrammingError) as e:
             return
-        except Exception, e:
+        except Exception as e:
             raise DBAdminError(e)
 
         # Renaming rc_lfn.id to rc_lfn.lfn_id
@@ -82,7 +82,7 @@ class Version(BaseVersion):
             self.db.execute("INSERT INTO rc_meta(lfn_id, key, value) SELECT l.lfn_id, a.name, a.value FROM rc_lfn l LEFT JOIN rc_lfn_v4 b ON (l.lfn=b.lfn) INNER JOIN rc_attr a ON (a.id=b.id)")
             self.db.commit()
 
-        except Exception, e:
+        except Exception as e:
             log.info(e)
             self.db.rollback()
 
@@ -154,7 +154,7 @@ class Version(BaseVersion):
             self.db.execute("INSERT INTO rc_attr(id, name, value) SELECT l.id, a.key, a.value FROM rc_lfn l LEFT JOIN rc_lfn_v5 b ON (l.lfn=b.lfn) INNER JOIN rc_meta a ON (a.lfn_id=b.lfn_id)")
             self.db.commit()
 
-        except Exception, e:
+        except Exception as e:
             log.info(e)
             self.db.rollback()
 
@@ -174,9 +174,9 @@ class Version(BaseVersion):
         """
         try:
             table_obj.create(self.db.get_bind(), checkfirst=True)
-        except (OperationalError, ProgrammingError), e:
+        except (OperationalError, ProgrammingError) as e:
             pass
-        except Exception, e:
+        except Exception as e:
             self.db.rollback()
             raise DBAdminError(e)
 
@@ -188,7 +188,7 @@ class Version(BaseVersion):
         """
         try:
             self.db.execute("DROP TABLE %s" % table_name)
-        except Exception, e:
+        except Exception as e:
             pass
 
     def _drop_index(self, index_name):
@@ -199,5 +199,5 @@ class Version(BaseVersion):
         """
         try:
             self.db.execute("DROP INDEX %s" % index_name)
-        except Exception, e:
+        except Exception as e:
             pass

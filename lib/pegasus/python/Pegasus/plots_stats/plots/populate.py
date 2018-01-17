@@ -334,7 +334,7 @@ def get_wf_stats(wf_uuid,expand = False):
 	try:
 		workflow_stampede_stats = StampedeStatistics(global_db_url , expand)
 		workflow_stampede_stats.initialize(wf_uuid)
-        except (connection.ConnectionError, DBAdminError), e:
+        except (connection.ConnectionError, DBAdminError) as e:
                 logger.error("------------------------------------------------------")
                 logger.error(e)
                 sys.exit(1)

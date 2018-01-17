@@ -88,7 +88,7 @@ class ServerCommand(LoggingCommand):
             # Make sure the environment is OK for the ensemble manager
             try:
                 manager.check_environment()
-            except manager.EMError, e:
+            except manager.EMError as e:
                 log.warning("%s: Ensemble manager disabled" % e.message)
             else:
                 mgr = manager.EnsembleManager()

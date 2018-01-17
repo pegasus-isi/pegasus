@@ -43,7 +43,7 @@ class PAMAuthentication(BaseAuthentication):
     def authenticate(self):
         try:
             return pam.authenticate(self.username, self.password)
-        except Exception, e:
+        except Exception as e:
             log.exception(e)
             return False
 
@@ -138,7 +138,7 @@ def before():
 
     try:
         g.user = auth.get_user()
-    except user.NoSuchUser, e:
+    except user.NoSuchUser as e:
         log.error("No such user: %s" % username)
         return basic_auth_response()
 
@@ -173,7 +173,7 @@ def before():
         # Is user a valid system user?
         try:
             user_info = user.get_user_by_username(g.username)
-        except user.NoSuchUser, e:
+        except user.NoSuchUser as e:
             log.error('User %s is not a valid user' % g.username)
             abort(400)
 

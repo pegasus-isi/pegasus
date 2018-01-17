@@ -34,7 +34,7 @@ class Version(BaseVersion):
                     log.info("Updating foreign key constraint.")
                     try:
                         self.db.execute("DROP INDEX UNIQUE_MASTER_WORKFLOWSTATE")
-                    except Exception, e:
+                    except Exception as e:
                         pass
                     if self.db.get_bind().driver == "mysqldb":
                         self.db.execute("RENAME TABLE master_workflowstate TO master_workflowstate_v4")
@@ -61,5 +61,5 @@ class Version(BaseVersion):
         """
         try:
             self.db.execute("DROP TABLE %s" % table_name)
-        except Exception, e:
+        except Exception as e:
             pass

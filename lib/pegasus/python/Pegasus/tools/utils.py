@@ -523,7 +523,7 @@ def pid_running(filename):
                     # Now let's see if process still around...
                     try:
                         os.kill(my_pid, 0)
-                    except OSError, err:
+                    except OSError as err:
                         if err.errno == errno.ESRCH:
                             # pid is not found, monitoring cannot be running
                             logger.info("pid %d not running anymore..." % (my_pid))

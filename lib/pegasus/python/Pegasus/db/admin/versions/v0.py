@@ -57,6 +57,6 @@ class Version(BaseVersion):
             self.db.execute(query)
         except (OperationalError, ProgrammingError):
             pass
-        except Exception, e:
+        except Exception as e:
             self.db.rollback()
             raise DBAdminError(e)

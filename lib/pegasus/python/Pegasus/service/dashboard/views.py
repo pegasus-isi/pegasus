@@ -58,7 +58,7 @@ def index(username):
         else:
             totals = dashboard.get_root_workflow_list(counts_only=True, **args)
 
-    except NoWorkflowsFoundError, e:
+    except NoWorkflowsFoundError as e:
         if request.is_xhr:
             return render_template('workflow.xhr.json', count=e.count, filtered=e.filtered, workflows=[], table_args=args)
 

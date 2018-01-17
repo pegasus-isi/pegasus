@@ -23,7 +23,7 @@ try:
         import Pegasus.service
     else:
         import pysqlite2
-except ImportError, e:
+except ImportError as e:
     print e
     print "Unable to import Pegasus modules"
     print "Make sure dependencies are available"

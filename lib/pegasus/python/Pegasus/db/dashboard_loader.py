@@ -77,12 +77,12 @@ class DashboardLoader(BaseLoader):
                 self.eventMap[linedata['event']](linedata)
         except KeyError:
             self.log.error('no handler for event type "%s" defined', linedata['event'])
-        except exc.IntegrityError, e:
+        except exc.IntegrityError as e:
             # This is raised when an attempted insert violates the
             # schema (unique indexes, etc).
             self.log.error('Insert failed for event "%s" : %s', linedata['event'], e)
             self.session.rollback()
-        except exc.OperationalError, e:
+        except exc.OperationalError as e:
             self.log.error('Connection seemingly lost - attempting to refresh')
             self.session.rollback()
             self.check_connection()
@@ -181,11 +181,11 @@ class DashboardLoader(BaseLoader):
 
         try:
             self.session.commit()
-        except exc.IntegrityError, e:
+        except exc.IntegrityError as e:
             self.log.error('Integrity error on batch flush: %s - batch will need to be committed per-event which will take longer', e)
             self.session.rollback()
             self.hard_flush(batch_flush=False)
-        except exc.OperationalError, e:
+        except exc.OperationalError as e:
             self.log.error('Connection problem during commit: %s - reattempting batch', e)
             self.session.rollback()
             self.hard_flush()
@@ -284,10 +284,10 @@ class DashboardLoader(BaseLoader):
             query = self.session.query(DashboardWorkflow).filter(DashboardWorkflow.wf_uuid == wf_uuid)
             try:
                 self.wf_id_cache[wf_uuid] = query.one().wf_id
-            except orm.exc.MultipleResultsFound, e:
+            except orm.exc.MultipleResultsFound as e:
                 self.log.error('Multiple wf_id results for wf_uuid %s : %s', wf_uuid, e)
                 return None
-            except orm.exc.NoResultFound, e:
+            except orm.exc.NoResultFound as e:
                 self.log.error('No wf_id results for wf_uuid %s : %s', wf_uuid, e)
                 return None
 
@@ -306,10 +306,10 @@ class DashboardLoader(BaseLoader):
             query = self.session.query(Workflow).filter(DashboardWorkflow.wf_uuid == wf_uuid)
             try:
                 self.root_wf_id_cache[wf_uuid] = query.one().root_wf_id
-            except orm.exc.MultipleResultsFound, e:
+            except orm.exc.MultipleResultsFound as e:
                 self.log.error('Multiple wf_id results for wf_uuid %s : %s', wf_uuid, e)
                 return None
-            except orm.exc.NoResultFound, e:
+            except orm.exc.NoResultFound as e:
                 self.log.error('No wf_id results for wf_uuid %s : %s', wf_uuid, e)
                 return None
 

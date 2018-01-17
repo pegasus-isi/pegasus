@@ -76,14 +76,14 @@ class BaseLoader(object):
         self.log.trace('Checking connection')
         try:
             self.session.connection().closed
-        except exc.OperationalError, e:
+        except exc.OperationalError as e:
             try:
                 if not self.session.is_active:
                     self.session.rollback()
                 self.log.error('Lost connection - attempting reconnect')
                 time.sleep(5)
                 self.session.connection().connect()
-            except exc.OperationalError, e:
+            except exc.OperationalError as e:
                 self.check_connection(sub=True)
             if not sub:
                 self.log.warn('Connection re-established')
@@ -103,7 +103,7 @@ class BaseLoader(object):
             else:
                 event.commit_to_db(self.session)
             self.session.expunge(event)
-        except exc.IntegrityError, e:
+        except exc.IntegrityError as e:
             self.log.error('Insert failed for event %s : %s', event, e)
             self.session.rollback()
 

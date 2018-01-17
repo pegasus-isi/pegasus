@@ -33,7 +33,7 @@ try:
     import boto.s3.connection
     from boto.s3.bucket import Bucket
     from boto.s3.key import Key
-except ImportError, e:
+except ImportError as e:
     sys.stderr.write("ERROR: Unable to load boto library: %s\n" % e)
     exit(1)
 
@@ -114,7 +114,7 @@ class WorkThread(threading.Thread):
                 fn()
         except Queue.Empty:
             return
-        except Exception, e:
+        except Exception as e:
             traceback.print_exc()
             self.exception = e
 
@@ -895,14 +895,14 @@ def put(args):
 
                     info("Completing upload")
                     upload.complete_upload()
-                except Exception, e:
+                except Exception as e:
                     # If there is an error, then we need to try and abort
                     # the multipart upload so that it doesn't hang around
                     # forever on the server.
                     try:
                         info("Aborting multipart upload")
                         upload.cancel_upload()
-                    except Exception, f:
+                    except Exception as f:
                         sys.stderr.write("ERROR: Unable to abort multipart"
                             " upload (use lsup/rmup): %s\n" % f)
                     raise e
@@ -1223,7 +1223,7 @@ def main():
         fn = globals()[command]
         try:
             fn(args)
-        except Exception, e:
+        except Exception as e:
             # Just raise the exception if the user wants more info
             if VERBOSE or DEBUG: raise
 

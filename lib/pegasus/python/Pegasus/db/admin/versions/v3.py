@@ -25,7 +25,7 @@ class Version(BaseVersion):
             self.db.execute("ALTER TABLE ensemble_workflow ADD plan_command VARCHAR(1024) NOT NULL default './plan.sh'")
         except (OperationalError, ProgrammingError):
             pass
-        except Exception, e:
+        except Exception as e:
             self.db.rollback()
             log.exception(e)
             raise Exception(e)

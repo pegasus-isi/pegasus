@@ -47,7 +47,7 @@ class LoggingCommand(Command):
 
         try:
             self.run()
-        except Exception, e:
+        except Exception as e:
             # Only log stack grace if -v has been used
             if verbosity >= 1:
                 log.exception(e)

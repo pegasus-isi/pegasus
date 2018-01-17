@@ -23,18 +23,18 @@ class Version(BaseVersion):
             res = self.db.query(EnsembleWorkflow.id).limit(1).first()
             if not res:
                 self.db.execute("DROP TABLE ensemble_workflow")
-        except (OperationalError, ProgrammingError), e:
+        except (OperationalError, ProgrammingError) as e:
             pass
-        except Exception, e:
+        except Exception as e:
             self.db.rollback()
             raise DBAdminError(e)
         try:
             res = self.db.query(Ensemble.id).limit(1).first()
             if not res:
                 self.db.execute("DROP TABLE ensemble")
-        except (OperationalError, ProgrammingError), e:
+        except (OperationalError, ProgrammingError) as e:
             pass
-        except Exception, e:
+        except Exception as e:
             self.db.rollback()
             raise DBAdminError(e)
             
@@ -42,14 +42,14 @@ class Version(BaseVersion):
             pg_ensemble.create(self.db.get_bind(), checkfirst=True)
         except (OperationalError, ProgrammingError):
             pass
-        except Exception, e:
+        except Exception as e:
             self.db.rollback()
             raise DBAdminError(e)
         try:
             pg_ensemble_workflow.create(self.db.get_bind(), checkfirst=True)
         except (OperationalError, ProgrammingError):
             pass
-        except Exception, e:
+        except Exception as e:
             self.db.rollback()
             raise DBAdminError(e)
         
@@ -59,7 +59,7 @@ class Version(BaseVersion):
                 self.db.execute("ALTER TABLE workflow ADD COLUMN db_url TEXT")
             except (OperationalError, ProgrammingError):
                 pass
-            except Exception, e:
+            except Exception as e:
                 self.db.rollback()
                 raise DBAdminError(e)
             return
@@ -75,7 +75,7 @@ class Version(BaseVersion):
             data = self.db.execute("SELECT COUNT(wf_id) FROM master_workflow").first()
         except (OperationalError, ProgrammingError):
             pass
-        except Exception, e:
+        except Exception as e:
             self.db.rollback()
             raise DBAdminError(e)
             
@@ -83,7 +83,7 @@ class Version(BaseVersion):
             data2 = self.db.execute("SELECT COUNT(wf_id) FROM master_workflowstate").first()
         except (OperationalError, ProgrammingError):
             pass
-        except Exception, e:
+        except Exception as e:
             self.db.rollback()
             raise DBAdminError(e)
         
@@ -117,7 +117,7 @@ class Version(BaseVersion):
             self.db.execute(sql)
         except (OperationalError, ProgrammingError):
             pass
-        except Exception, e:
+        except Exception as e:
             self.db.rollback()
             raise DBAdminError(e)
         

@@ -404,7 +404,7 @@ class BaseOrderParser(object):
 
         try:
             self._parse_expression()
-        except UnrecognizedInput, e:
+        except UnrecognizedInput as e:
             raise InvalidOrderError(str(e))
 
     def _parse_expression(self):

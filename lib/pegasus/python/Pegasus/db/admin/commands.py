@@ -37,7 +37,7 @@ class CreateCommand(LoggingCommand):
             _print_version(version)
             db.close()
 
-        except (DBAdminError, connection.ConnectionError), e:
+        except (DBAdminError, connection.ConnectionError) as e:
             log.error(e)
             exit(1)
 
@@ -78,7 +78,7 @@ class UpdateCommand(LoggingCommand):
 
             db.close()
 
-        except (DBAdminError, connection.ConnectionError), e:
+        except (DBAdminError, connection.ConnectionError) as e:
             log.error(e)
             exit(1)
 
@@ -121,7 +121,7 @@ class DowngradeCommand(LoggingCommand):
 
             db.close()
 
-        except (DBAdminError, connection.ConnectionError), e:
+        except (DBAdminError, connection.ConnectionError) as e:
             log.error(e)
             exit(1)
 
@@ -161,7 +161,7 @@ class CheckCommand(LoggingCommand):
             _print_version(current_version)
             db.close()
 
-        except (DBAdminError, connection.ConnectionError), e:
+        except (DBAdminError, connection.ConnectionError) as e:
             log.error(e)
             exit(1)
 
@@ -195,7 +195,7 @@ class VersionCommand(LoggingCommand):
             _print_version(version)
             db.close()
 
-        except (DBAdminError, connection.ConnectionError), e:
+        except (DBAdminError, connection.ConnectionError) as e:
             log.error(e)
             exit(1)
 

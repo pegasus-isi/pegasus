@@ -69,7 +69,7 @@ class Metadata( object ):
             logger.debug( "Written out metadata to %s", temp_file.name )
             # rename the file to the name to assure atomicity
             os.rename( temp_file.name, os.path.join(directory,name))
-        except Exception, e:
+        except Exception as e:
             # Error sending this event... disable the sink from now on...
             logger.warning(" unable to write out  metadata to directory %s with name %s ", directory, name)
             logger.exception(e)

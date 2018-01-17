@@ -234,7 +234,7 @@ class Log:
         if isinstance(logfile,types.StringType):
             try:
                 self._logfile = urlfile(logfile)
-            except (socket.gaierror, socket.error, IOError), E:
+            except (socket.gaierror, socket.error, IOError) as E:
                 raise self.OpenError(E)
         else:
             self._logfile = logfile

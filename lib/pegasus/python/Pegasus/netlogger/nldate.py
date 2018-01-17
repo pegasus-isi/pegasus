@@ -174,7 +174,7 @@ def makeISO(value, is_gmt=False, set_gmt=False):
     else:
         try:
             d = magicdate.magicdate(value)
-        except Exception, E:
+        except Exception as E:
             raise ValueError("magicdate cannot parse '%s'" % value)
         partial_iso = d.isoformat()
         iso = completeISO(partial_iso, is_gmt=is_gmt, set_gmt=set_gmt)
@@ -224,7 +224,7 @@ def guess(s, parse=True, is_gmt=False, set_gmt=False,
     if try_en:
         try:
             d = magicdate.magicdate(s)
-        except Exception, E:
+        except Exception as E:
             d = None
         if d is not None:
             if parse:

@@ -166,7 +166,7 @@ class StampedeStatistics(object):
         self.log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
         try:
             self.session = connection.connect(connString)
-        except connection.ConnectionError, e:
+        except connection.ConnectionError as e:
             self.log.exception(e)
             raise StampedeDBNotFoundError
 
@@ -198,10 +198,10 @@ class StampedeStatistics(object):
             self._root_wf_id = result.wf_id
             self._root_wf_uuid = result.wf_uuid
             self._is_root_wf = result.root_wf_id == result.wf_id
-        except orm.exc.MultipleResultsFound, e:
+        except orm.exc.MultipleResultsFound as e:
             self.log.error('Multiple results found for wf_uuid: %s', root_wf_uuid)
             raise
-        except orm.exc.NoResultFound, e:
+        except orm.exc.NoResultFound as e:
             self.log.error('No results found for wf_uuid: %s', root_wf_uuid)
             raise
 

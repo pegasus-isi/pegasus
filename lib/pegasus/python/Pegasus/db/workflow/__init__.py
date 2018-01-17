@@ -41,7 +41,7 @@ class WorkflowBase(object):
                 continue
             try:
                 retval += '\n%s* %s : %s' % (spacer * self._indent, i, eval('self.%s' % i))
-            except NotImplementedError, e:
+            except NotImplementedError as e:
                 retval += '\n%s* %s : WARNING: %s' % (spacer * self._indent, i,e)
         return retval
 

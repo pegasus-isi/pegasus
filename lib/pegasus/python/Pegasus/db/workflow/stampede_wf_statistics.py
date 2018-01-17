@@ -13,7 +13,7 @@ class StampedeWorkflowStatistics(object):
         self.log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
         try:
             self.session = connection.connect(connString)
-        except (connection.ConnectionError, DBAdminError), e:
+        except (connection.ConnectionError, DBAdminError) as e:
             self.log.exception(e)
             raise StampedeDBNotFoundError
 

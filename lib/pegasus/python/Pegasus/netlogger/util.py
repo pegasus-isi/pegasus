@@ -286,7 +286,7 @@ def daemonize(log=None, root_log=None, close_fds=True):
         if pid > 0:
             # parent: exit
             sys.exit(0) 
-    except OSError, err: 
+    except OSError as err: 
         log.exc( "fork.1.failed", err)
         sys.exit(1)
     log.debug("daemonize.fork2")
@@ -296,7 +296,7 @@ def daemonize(log=None, root_log=None, close_fds=True):
         if pid > 0:
             # parent: exit
             sys.exit(0) 
-    except OSError, err: 
+    except OSError as err: 
         log.exc("daemonize.fork2.failed", err)
         sys.exit(1)
     # child: decouple from parent environment
@@ -542,7 +542,7 @@ class IncConfigObj(configobj.ConfigObj):
         # Call superclass with list of lines we built
         try:
             configobj.ConfigObj.__init__(self, lines, **kw)
-        except configobj.ParseError, E:
+        except configobj.ParseError as E:
             # Report correct file and line on parse error
             m = re.search('line "(\d+)"', str(E))
             if m is None:
