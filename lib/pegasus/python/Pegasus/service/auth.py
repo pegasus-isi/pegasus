@@ -193,7 +193,7 @@ def before():
     if not os.path.isdir(user_pegasus_dir):
         log.info("User's pegasus directory does not exist. Creating one...")
         try:
-            os.makedirs(user_pegasus_dir, mode=0744)
+            os.makedirs(user_pegasus_dir, mode=0o744)
         except OSError:
             log.info("Invalid Permissions: Could not create user's pegasus directory.")
             return make_response("Could not find user's Pegasus directory", 404)

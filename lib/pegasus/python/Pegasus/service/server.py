@@ -60,7 +60,7 @@ class ServerCommand(LoggingCommand):
 
         pegasusdir = os.path.expanduser("~/.pegasus")
         if not os.path.isdir(pegasusdir):
-            os.makedirs(pegasusdir, mode=0744)
+            os.makedirs(pegasusdir, mode=0o744)
 
         cert = app.config.get("CERTIFICATE", None)
         pkey = app.config.get("PRIVATE_KEY", None)

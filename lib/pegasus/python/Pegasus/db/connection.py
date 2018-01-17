@@ -365,7 +365,7 @@ def _get_master_uri(props=None):
     # check for writability and create directory if required
     if not os.path.isdir(dir):
         try:
-            os.mkdir(dir, 0755)
+            os.mkdir(dir, 0o755)
         except OSError:
             raise ConnectionError("Unable to create directory: %s" % dir)
     elif not os.access(dir, os.W_OK):
@@ -378,7 +378,7 @@ def _get_master_uri(props=None):
         try:
             # touch the file
             open(filename, 'w').close()
-            os.chmod(filename, 0600)
+            os.chmod(filename, 0o600)
         except Exception as e:
             log.warning("unable to initialize MASTER db %s." % filename)
             log.exception(e)

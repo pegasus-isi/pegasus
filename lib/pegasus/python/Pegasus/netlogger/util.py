@@ -704,12 +704,12 @@ except ImportError:
     import time, random, md5
     def uuid1():
       t = long( time.time() * 1000 )
-      r = long( random.random()*100000000000000000L )
+      r = long( random.random()*100000000000000000 )
       try:
         a = socket.gethostbyname( socket.gethostname() )
       except:
         # if we can't get a network address, just imagine one
-        a = random.random()*100000000000000000L
+        a = random.random()*100000000000000000
       data = str(t)+' '+str(r)+' '+str(a)
       data = md5.md5(data).hexdigest()
       return "%s-%s-%s-%s-%s" % (data[0:8], data[8:12], data[12:16],
