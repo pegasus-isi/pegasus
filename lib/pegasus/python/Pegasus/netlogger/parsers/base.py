@@ -558,7 +558,7 @@ class NLBaseParser(BaseParser):
            generator function, yielding the result of parseLine() for
            each line in the input stream
         """
-        for line_num, line in enumerate(self._infile.xreadlines()):
+        for line_num, line in enumerate(self._infile):
             try:
                 d = self.parseLine(line)
                 yield d
