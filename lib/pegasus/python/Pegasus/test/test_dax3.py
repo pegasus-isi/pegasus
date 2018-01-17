@@ -15,56 +15,56 @@ DAX3TEST_DAX = os.path.join(DIR, "dax3.xml")
 class TestElement(unittest.TestCase):
     def testSimple(self):
         x = Element("x")
-        self.assertEquals(str(x), '<x/>')
+        self.assertEqual(str(x), '<x/>')
 
     def testElement(self):
         x = Element("x")
         y = Element("y")
         x.element(y)
-        self.assertEquals(str(x), '<x>\n\t<y/>\n</x>')
+        self.assertEqual(str(x), '<x>\n\t<y/>\n</x>')
 
     def testText(self):
         x = Element("x")
         x.text("y")
-        self.assertEquals(str(x), '<x>\n\ty\n</x>')
+        self.assertEqual(str(x), '<x>\n\ty\n</x>')
 
     def testUnicode(self):
         x = Element("x")
         x.comment(u'\u03a3')
         x.flatten()
-        self.assertEquals(unicode(x), u'<x><!-- \u03a3 --></x>')
+        self.assertEqual(unicode(x), u'<x><!-- \u03a3 --></x>')
 
         x = Element(u'\u03a3')
-        self.assertEquals(unicode(x), u'<\u03a3/>')
+        self.assertEqual(unicode(x), u'<\u03a3/>')
 
         x = Element('x', [(u'\u03a3', 'foo')])
-        self.assertEquals(unicode(x), u'<x \u03a3="foo"/>')
+        self.assertEqual(unicode(x), u'<x \u03a3="foo"/>')
 
         x = Element('x', [('foo', u'\u03a3')])
-        self.assertEquals(unicode(x), u'<x foo="\u03a3"/>')
+        self.assertEqual(unicode(x), u'<x foo="\u03a3"/>')
 
         x = Element('x')
         x.text(u'\u03a3')
         x.flatten()
-        self.assertEquals(unicode(x), u'<x>\u03a3</x>')
+        self.assertEqual(unicode(x), u'<x>\u03a3</x>')
 
     def testFlatten(self):
         x = Element("x")
         x.text("y")
         x.flatten()
-        self.assertEquals(str(x), '<x>y</x>')
+        self.assertEqual(str(x), '<x>y</x>')
 
     def testComment(self):
         x = Element("x")
         x.comment("test")
-        self.assertEquals(str(x), '<x>\n\t<!-- test -->\n</x>')
+        self.assertEqual(str(x), '<x>\n\t<!-- test -->\n</x>')
 
 class TestMetadata(unittest.TestCase):
     def testConstructor(self):
         """Metadata constructor should only allow valid values"""
         m = Metadata("key","value")
-        self.assertEquals(m.key, "key")
-        self.assertEquals(m.value, "value")
+        self.assertEqual(m.key, "key")
+        self.assertEqual(m.value, "value")
         self.assertRaises(FormatError, Metadata, None, "value")
         self.assertRaises(FormatError, Metadata, "key", None)
 
@@ -80,14 +80,14 @@ class TestMetadata(unittest.TestCase):
     def testXML(self):
         """toXML should output properly formatted XML"""
         a = Metadata("key","value")
-        self.assertEquals(str(a.toXML()), '<metadata key="key">value</metadata>')
+        self.assertEqual(str(a.toXML()), '<metadata key="key">value</metadata>')
 
 class TestPFN(unittest.TestCase):
     def testConstructor(self):
         """PFN constructor should only allow valid values"""
         a = PFN("url","site")
-        self.assertEquals(a.url, "url")
-        self.assertEquals(a.site, "site")
+        self.assertEqual(a.url, "url")
+        self.assertEqual(a.site, "site")
         self.assertRaises(FormatError, PFN, None)
         self.assertRaises(FormatError, PFN, "url", None)
         self.assertRaises(FormatError, PFN, "")
@@ -121,17 +121,17 @@ class TestPFN(unittest.TestCase):
     def testXML(self):
         """toXML should output properly formatted XML"""
         a = PFN("http://abc", "a")
-        self.assertEquals(unicode(a.toXML()), '<pfn url="http://abc" site="a"/>')
+        self.assertEqual(unicode(a.toXML()), '<pfn url="http://abc" site="a"/>')
 
         a.addProfile(Profile("ns","name","value"))
-        self.assertEquals(str(a.toXML()), '<pfn url="http://abc" site="a">\n\t<profile namespace="ns" key="name">value</profile>\n</pfn>')
+        self.assertEqual(str(a.toXML()), '<pfn url="http://abc" site="a">\n\t<profile namespace="ns" key="name">value</profile>\n</pfn>')
 
 class TestProfile(unittest.TestCase):
     def testConstructor(self):
         a = Profile("ns","key","value")
-        self.assertEquals(a.namespace,"ns")
-        self.assertEquals(a.key,"key")
-        self.assertEquals(a.value,"value")
+        self.assertEqual(a.namespace,"ns")
+        self.assertEqual(a.key,"key")
+        self.assertEqual(a.value,"value")
 
     def testEqual(self):
         """Equal profiles should have the same (ns, key)"""
@@ -150,13 +150,13 @@ class TestProfile(unittest.TestCase):
     def testXML(self):
         """toXML should output properly formatted XML"""
         a = Profile("ns","key","value")
-        self.assertEquals(str(a.toXML()),'<profile namespace="ns" key="key">value</profile>')
+        self.assertEqual(str(a.toXML()),'<profile namespace="ns" key="key">value</profile>')
 
 class TestCatalogType(unittest.TestCase):
     def testConstructor(self):
         """Catalog types require a name"""
         t = CatalogType("name")
-        self.assertEquals(t.name, "name")
+        self.assertEqual(t.name, "name")
         self.assertRaises(FormatError, CatalogType, None)
         self.assertRaises(FormatError, CatalogType, "")
 
@@ -217,30 +217,30 @@ class TestFile(unittest.TestCase):
     def testXML(self):
         """toXML should output proper XML with nested elements"""
         c = File("name")
-        self.assertEquals(str(c.toXML()), '<file name="name"/>')
+        self.assertEqual(str(c.toXML()), '<file name="name"/>')
 
         # Profile
         c.addProfile(Profile("ns","key","value"))
-        self.assertEquals(str(c.toXML()), '<file name="name">\n\t<profile namespace="ns" key="key">value</profile>\n</file>')
+        self.assertEqual(str(c.toXML()), '<file name="name">\n\t<profile namespace="ns" key="key">value</profile>\n</file>')
         c.clearProfiles()
 
         # Metadata
         c.addMetadata(Metadata("key","value"))
-        self.assertEquals(str(c.toXML()), '<file name="name">\n\t<metadata key="key">value</metadata>\n</file>')
+        self.assertEqual(str(c.toXML()), '<file name="name">\n\t<metadata key="key">value</metadata>\n</file>')
         c.clearMetadata()
 
         # PFN
         c.addPFN(PFN("url","site"))
-        self.assertEquals(str(c.toXML()), '<file name="name">\n\t<pfn url="url" site="site"/>\n</file>')
+        self.assertEqual(str(c.toXML()), '<file name="name">\n\t<pfn url="url" site="site"/>\n</file>')
 
     def testArgumentXML(self):
         """toArgumentXML should never include inner elements"""
         c = File("name")
-        self.assertEquals(str(c.toArgumentXML()), '<file name="name"/>')
+        self.assertEqual(str(c.toArgumentXML()), '<file name="name"/>')
         c.addProfile(Profile("ns","key","value"))
         c.addMetadata(Metadata("key","value"))
         c.addPFN(PFN("url","site"))
-        self.assertEquals(str(c.toArgumentXML()), '<file name="name"/>')
+        self.assertEqual(str(c.toArgumentXML()), '<file name="name"/>')
 
     def testStdioXML(self):
         """toStdioXML should return proper xml for the supported stdio tags"""
@@ -248,9 +248,9 @@ class TestFile(unittest.TestCase):
         f.addProfile(Profile("ns","key","value"))
         f.addMetadata(Metadata("key","value"))
         f.addPFN(PFN("url","site"))
-        self.assertEquals(str(f.toStdioXML("stdin")), '<stdin name="name" link="input"/>')
-        self.assertEquals(str(f.toStdioXML("stdout")), '<stdout name="name" link="output"/>')
-        self.assertEquals(str(f.toStdioXML("stderr")), '<stderr name="name" link="output"/>')
+        self.assertEqual(str(f.toStdioXML("stdin")), '<stdin name="name" link="input"/>')
+        self.assertEqual(str(f.toStdioXML("stdout")), '<stdout name="name" link="output"/>')
+        self.assertEqual(str(f.toStdioXML("stderr")), '<stderr name="name" link="output"/>')
         self.assertRaises(FormatError, f.toStdioXML, "other")
 
 class TestExecutable(unittest.TestCase):
@@ -300,14 +300,14 @@ class TestExecutable(unittest.TestCase):
     def testXML(self):
         """toXML should output proper xml"""
         x = Executable(namespace="os",name="grep",version="2.3",arch=Arch.X86,os=OS.LINUX,osrelease="foo",osversion="bar",glibc="2.4",installed=True)
-        self.assertEquals(str(x.toXML()), '<executable name="grep" namespace="os" version="2.3" arch="x86" os="linux" osrelease="foo" osversion="bar" glibc="2.4" installed="true"/>')
+        self.assertEqual(str(x.toXML()), '<executable name="grep" namespace="os" version="2.3" arch="x86" os="linux" osrelease="foo" osversion="bar" glibc="2.4" installed="true"/>')
 
         x.metadata("key","value")
-        self.assertEquals(str(x.toXML()), '<executable name="grep" namespace="os" version="2.3" arch="x86" os="linux" osrelease="foo" osversion="bar" glibc="2.4" installed="true">\n\t<metadata key="key">value</metadata>\n</executable>')
+        self.assertEqual(str(x.toXML()), '<executable name="grep" namespace="os" version="2.3" arch="x86" os="linux" osrelease="foo" osversion="bar" glibc="2.4" installed="true">\n\t<metadata key="key">value</metadata>\n</executable>')
         x.clearMetadata()
 
         x.invoke("when","what")
-        self.assertEquals(str(x.toXML()), '<executable name="grep" namespace="os" version="2.3" arch="x86" os="linux" osrelease="foo" osversion="bar" glibc="2.4" installed="true">\n\t<invoke when="when">what</invoke>\n</executable>')
+        self.assertEqual(str(x.toXML()), '<executable name="grep" namespace="os" version="2.3" arch="x86" os="linux" osrelease="foo" osversion="bar" glibc="2.4" installed="true">\n\t<invoke when="when">what</invoke>\n</executable>')
         x.clearInvokes()
 
 
@@ -357,72 +357,72 @@ class TestUse(unittest.TestCase):
     def testJobXML(self):
         """Use.toXML should output properly formatted XML"""
         a = Use("name", namespace="ns", version="version")
-        self.assertEquals(str(a.toJobXML()), '<uses namespace="ns" name="name" version="version"/>')
+        self.assertEqual(str(a.toJobXML()), '<uses namespace="ns" name="name" version="version"/>')
 
         a = Use("name", version="version")
-        self.assertEquals(str(a.toJobXML()), '<uses name="name" version="version"/>')
+        self.assertEqual(str(a.toJobXML()), '<uses name="name" version="version"/>')
 
         a = Use("name")
-        self.assertEquals(str(a.toJobXML()), '<uses name="name"/>')
+        self.assertEqual(str(a.toJobXML()), '<uses name="name"/>')
 
         a = Use("name", version="version", transfer=True)
-        self.assertEquals(str(a.toJobXML()), '<uses name="name" version="version" transfer="true"/>')
+        self.assertEqual(str(a.toJobXML()), '<uses name="name" version="version" transfer="true"/>')
 
         a = Use("name", version="version", transfer=True, register=False)
-        self.assertEquals(str(a.toJobXML()), '<uses name="name" version="version" register="false" transfer="true"/>')
+        self.assertEqual(str(a.toJobXML()), '<uses name="name" version="version" register="false" transfer="true"/>')
 
         a = Use("name", link="link", register="true", transfer="true", 
                 optional=True, namespace="ns", version="10", executable=True)
-        self.assertEquals(str(a.toJobXML()), '<uses namespace="ns" name="name" version="10" link="link" register="true" transfer="true" optional="true" executable="true"/>')
+        self.assertEqual(str(a.toJobXML()), '<uses namespace="ns" name="name" version="10" link="link" register="true" transfer="true" optional="true" executable="true"/>')
 
         a = Use("name", link="link", register="true", transfer="true", 
                 optional=True, namespace="ns", version="10", executable=True,
                 size=1024)
-        self.assertEquals(str(a.toJobXML()), '<uses namespace="ns" name="name" version="10" link="link" register="true" transfer="true" optional="true" executable="true" size="1024"/>')
+        self.assertEqual(str(a.toJobXML()), '<uses namespace="ns" name="name" version="10" link="link" register="true" transfer="true" optional="true" executable="true" size="1024"/>')
 
         a = Use("name")
         a.metadata("key","value")
-        self.assertEquals(str(a.toJobXML()), '<uses name="name">\n\t<metadata key="key">value</metadata>\n</uses>')
+        self.assertEqual(str(a.toJobXML()), '<uses name="name">\n\t<metadata key="key">value</metadata>\n</uses>')
 
     def testTransformationXML(self):
         """Use.toXML should output properly formatted XML"""
         a = Use("name", namespace="ns", version="version")
-        self.assertEquals(str(a.toTransformationXML()), '<uses namespace="ns" name="name" version="version"/>')
+        self.assertEqual(str(a.toTransformationXML()), '<uses namespace="ns" name="name" version="version"/>')
 
         a = Use("name", version="version")
-        self.assertEquals(str(a.toTransformationXML()), '<uses name="name" version="version"/>')
+        self.assertEqual(str(a.toTransformationXML()), '<uses name="name" version="version"/>')
 
         a = Use("name")
-        self.assertEquals(str(a.toTransformationXML()), '<uses name="name"/>')
+        self.assertEqual(str(a.toTransformationXML()), '<uses name="name"/>')
 
         a = Use("name", version="version", transfer=True)
-        self.assertEquals(str(a.toTransformationXML()), '<uses name="name" version="version"/>')
+        self.assertEqual(str(a.toTransformationXML()), '<uses name="name" version="version"/>')
 
         a = Use("name", version="version", transfer=True, register=False)
-        self.assertEquals(str(a.toTransformationXML()), '<uses name="name" version="version"/>')
+        self.assertEqual(str(a.toTransformationXML()), '<uses name="name" version="version"/>')
 
         a = Use("name", link="link", register="true", transfer="true", 
                 optional=True, namespace="ns", version="10", executable=True, size=1024)
-        self.assertEquals(str(a.toTransformationXML()), '<uses namespace="ns" name="name" version="10" executable="true"/>')
+        self.assertEqual(str(a.toTransformationXML()), '<uses namespace="ns" name="name" version="10" executable="true"/>')
 
         a = Use("name")
         a.metadata("key","value")
-        self.assertEquals(str(a.toTransformationXML()), '<uses name="name">\n\t<metadata key="key">value</metadata>\n</uses>')
+        self.assertEqual(str(a.toTransformationXML()), '<uses name="name">\n\t<metadata key="key">value</metadata>\n</uses>')
 
 
 class TestTransformation(unittest.TestCase):
     def testConstructor(self):
         t = Transformation("name","namespace","version")
-        self.assertEquals(t.name, "name")
-        self.assertEquals(t.namespace, "namespace")
-        self.assertEquals(t.version, "version")
+        self.assertEqual(t.name, "name")
+        self.assertEqual(t.namespace, "namespace")
+        self.assertEqual(t.version, "version")
 
     def testExecutable(self):
         e = Executable("name",namespace="ns",version="version")
         t = Transformation(e)
-        self.assertEquals(t.name,e.name)
-        self.assertEquals(t.namespace,e.namespace)
-        self.assertEquals(t.version,e.version)
+        self.assertEqual(t.name,e.name)
+        self.assertEqual(t.namespace,e.namespace)
+        self.assertEqual(t.version,e.version)
 
     def testUse(self):
         """Transformations should allow Use objects"""
@@ -476,7 +476,7 @@ class TestTransformation(unittest.TestCase):
         """uses should accept File as an argument"""
         c = Transformation('myjob')
         c.uses(File("filename"))
-        self.assertEquals(str(c.toXML()), '<transformation name="myjob">\n\t<uses name="filename" executable="false"/>\n</transformation>')
+        self.assertEqual(str(c.toXML()), '<transformation name="myjob">\n\t<uses name="filename" executable="false"/>\n</transformation>')
 
     def testUsesExecutable(self):
         """Use should accept Executable as an argument"""
@@ -484,46 +484,46 @@ class TestTransformation(unittest.TestCase):
         e = Executable(name="exe", namespace="ns", version="1.0")
 
         c.uses(e)
-        self.assertEquals(str(c.toXML()), '<transformation name="myjob">\n\t<uses namespace="ns" name="exe" version="1.0"/>\n</transformation>')
+        self.assertEqual(str(c.toXML()), '<transformation name="myjob">\n\t<uses namespace="ns" name="exe" version="1.0"/>\n</transformation>')
         c.clearUses()
 
         c.uses(e, namespace="alt")
-        self.assertEquals(str(c.toXML()), '<transformation name="myjob">\n\t<uses namespace="alt" name="exe" version="1.0"/>\n</transformation>')
+        self.assertEqual(str(c.toXML()), '<transformation name="myjob">\n\t<uses namespace="alt" name="exe" version="1.0"/>\n</transformation>')
         c.clearUses()
 
         c.uses(e, version="alt")
-        self.assertEquals(str(c.toXML()), '<transformation name="myjob">\n\t<uses namespace="ns" name="exe" version="alt"/>\n</transformation>')
+        self.assertEqual(str(c.toXML()), '<transformation name="myjob">\n\t<uses namespace="ns" name="exe" version="alt"/>\n</transformation>')
         c.clearUses()
 
         c.uses(e, register=True)
-        self.assertEquals(str(c.toXML()), '<transformation name="myjob">\n\t<uses namespace="ns" name="exe" version="1.0"/>\n</transformation>')
+        self.assertEqual(str(c.toXML()), '<transformation name="myjob">\n\t<uses namespace="ns" name="exe" version="1.0"/>\n</transformation>')
         c.clearUses()
 
     def testXML(self):
         t = Transformation("name","namespace","version")
-        self.assertEquals(str(t.toXML()), '<transformation namespace="namespace" name="name" version="version"/>')
+        self.assertEqual(str(t.toXML()), '<transformation namespace="namespace" name="name" version="version"/>')
 
         t.uses("name",namespace="ns",version="ver",executable=True)
-        self.assertEquals(str(t.toXML()), '<transformation namespace="namespace" name="name" version="version">\n\t<uses namespace="ns" name="name" version="ver" executable="true"/>\n</transformation>')
+        self.assertEqual(str(t.toXML()), '<transformation namespace="namespace" name="name" version="version">\n\t<uses namespace="ns" name="name" version="ver" executable="true"/>\n</transformation>')
 
         t.clearUses()
 
         t.uses(Executable(name="name",namespace="ns",version="ver"))
-        self.assertEquals(str(t.toXML()), '<transformation namespace="namespace" name="name" version="version">\n\t<uses namespace="ns" name="name" version="ver"/>\n</transformation>')
+        self.assertEqual(str(t.toXML()), '<transformation namespace="namespace" name="name" version="version">\n\t<uses namespace="ns" name="name" version="ver"/>\n</transformation>')
 
         t.clearUses()
 
         t.uses(File(name="filename"),link="input", transfer=True, register=True)
-        self.assertEquals(str(t.toXML()), '<transformation namespace="namespace" name="name" version="version">\n\t<uses name="filename" executable="false"/>\n</transformation>')
+        self.assertEqual(str(t.toXML()), '<transformation namespace="namespace" name="name" version="version">\n\t<uses name="filename" executable="false"/>\n</transformation>')
 
         t.clearUses()
 
         t.metadata("key","value")
-        self.assertEquals(str(t.toXML()), '<transformation namespace="namespace" name="name" version="version">\n\t<metadata key="key">value</metadata>\n</transformation>')
+        self.assertEqual(str(t.toXML()), '<transformation namespace="namespace" name="name" version="version">\n\t<metadata key="key">value</metadata>\n</transformation>')
         t.clearMetadata()
 
         t.invoke("when","what")
-        self.assertEquals(str(t.toXML()), '<transformation namespace="namespace" name="name" version="version">\n\t<invoke when="when">what</invoke>\n</transformation>')
+        self.assertEqual(str(t.toXML()), '<transformation namespace="namespace" name="name" version="version">\n\t<invoke when="when">what</invoke>\n</transformation>')
 
 
 class TestInvoke(unittest.TestCase):
@@ -554,33 +554,33 @@ class TestJob(unittest.TestCase):
         self.assertRaises(FormatError, Job, None)
         self.assertRaises(FormatError, Job, "")
         j = Job('myjob',namespace="ns",version="2",node_label="label")
-        self.assertEquals(j.name,'myjob')
-        self.assertEquals(j.namespace,'ns')
-        self.assertEquals(j.version,'2')
-        self.assertEquals(j.node_label,'label')
+        self.assertEqual(j.name,'myjob')
+        self.assertEqual(j.namespace,'ns')
+        self.assertEqual(j.version,'2')
+        self.assertEqual(j.node_label,'label')
         j = Job(Transformation('myxform'))
-        self.assertEquals(j.name,'myxform')
+        self.assertEqual(j.name,'myxform')
         j = Job(Transformation('myxform',version="1"),version="2")
-        self.assertEquals(j.version,"2")
+        self.assertEqual(j.version,"2")
         j = Job(Transformation('myxform',namespace="ns1"),namespace="ns2")
-        self.assertEquals(j.namespace,"ns2")
+        self.assertEqual(j.namespace,"ns2")
 
     def testStd(self):
         """Should be able to set stdin/out/err using File or string"""
         j = Job('myjob')
         j.setStdout(File("stdout"))
-        self.assertEquals(j.stdout, File("stdout"))
+        self.assertEqual(j.stdout, File("stdout"))
         j.setStdin(File("stdin"))
-        self.assertEquals(j.stdin, File("stdin"))
+        self.assertEqual(j.stdin, File("stdin"))
         j.setStderr(File("stderr"))
-        self.assertEquals(j.stderr, File("stderr"))
+        self.assertEqual(j.stderr, File("stderr"))
 
         j.setStdout("stdout")
-        self.assertEquals(j.stdout, File("stdout"))
+        self.assertEqual(j.stdout, File("stdout"))
         j.setStdin("stdin")
-        self.assertEquals(j.stdin, File("stdin"))
+        self.assertEqual(j.stdin, File("stdin"))
         j.setStderr("stderr")
-        self.assertEquals(j.stderr, File("stderr"))
+        self.assertEqual(j.stderr, File("stderr"))
 
     def testMetadata(self):
         """Should be able to add/remove/has metadata"""
@@ -634,19 +634,19 @@ class TestJob(unittest.TestCase):
         # Regular arguments
         j.addArguments('a','b','c')
         j.addArguments('d',u'e')
-        self.assertEquals(j.getArguments(), 'a b c d e')
+        self.assertEqual(j.getArguments(), 'a b c d e')
         j.clearArguments()
 
         # File arguments
         f = File("name")
         g = File("name2")
         j.addArguments('a',f,'b',g)
-        self.assertEquals(j.getArguments(), 'a <file name="name"/> b <file name="name2"/>')
+        self.assertEqual(j.getArguments(), 'a <file name="name"/> b <file name="name2"/>')
         j.clearArguments()
 
         # Quoted strings
         j.addArguments('a','"gideon is cool"','b',"'apple bananna'")
-        self.assertEquals(j.getArguments(), 'a "gideon is cool" b \'apple bananna\'')
+        self.assertEqual(j.getArguments(), 'a "gideon is cool" b \'apple bananna\'')
         j.clearArguments()
 
         # Non-string arguments
@@ -676,7 +676,7 @@ class TestJob(unittest.TestCase):
         """uses should accept File as an argument"""
         c = Job('myjob')
         c.uses(File("filename"))
-        self.assertEquals(str(c.toXML()), '<job name="myjob">\n\t<uses name="filename"/>\n</job>')
+        self.assertEqual(str(c.toXML()), '<job name="myjob">\n\t<uses name="filename"/>\n</job>')
 
     def testUsesExecutable(self):
         """Use should accept Executable as an argument"""
@@ -684,74 +684,74 @@ class TestJob(unittest.TestCase):
         e = Executable(name="exe", namespace="ns", version="1.0")
 
         c.uses(e)
-        self.assertEquals(str(c.toXML()), '<job name="myjob">\n\t<uses namespace="ns" name="exe" version="1.0" executable="true"/>\n</job>')
+        self.assertEqual(str(c.toXML()), '<job name="myjob">\n\t<uses namespace="ns" name="exe" version="1.0" executable="true"/>\n</job>')
         c.clearUses()
 
         c.uses(e, namespace="alt")
-        self.assertEquals(str(c.toXML()), '<job name="myjob">\n\t<uses namespace="alt" name="exe" version="1.0" executable="true"/>\n</job>')
+        self.assertEqual(str(c.toXML()), '<job name="myjob">\n\t<uses namespace="alt" name="exe" version="1.0" executable="true"/>\n</job>')
         c.clearUses()
 
         c.uses(e, version="alt")
-        self.assertEquals(str(c.toXML()), '<job name="myjob">\n\t<uses namespace="ns" name="exe" version="alt" executable="true"/>\n</job>')
+        self.assertEqual(str(c.toXML()), '<job name="myjob">\n\t<uses namespace="ns" name="exe" version="alt" executable="true"/>\n</job>')
         c.clearUses()
 
         c.uses(e, register=True)
-        self.assertEquals(str(c.toXML()), '<job name="myjob">\n\t<uses namespace="ns" name="exe" version="1.0" register="true" executable="true"/>\n</job>')
+        self.assertEqual(str(c.toXML()), '<job name="myjob">\n\t<uses namespace="ns" name="exe" version="1.0" register="true" executable="true"/>\n</job>')
         c.clearUses()
 
     def testXML(self):
         # Job element
         j = Job(name="name")
-        self.assertEquals(str(j.toXML()), '<job name="name"/>')
+        self.assertEqual(str(j.toXML()), '<job name="name"/>')
         j = Job(name="name", id="id")
-        self.assertEquals(str(j.toXML()), '<job id="id" name="name"/>')
+        self.assertEqual(str(j.toXML()), '<job id="id" name="name"/>')
         j = Job(name="name", id="id", namespace="ns")
-        self.assertEquals(str(j.toXML()), '<job id="id" namespace="ns" name="name"/>')
+        self.assertEqual(str(j.toXML()), '<job id="id" namespace="ns" name="name"/>')
         j = Job(name="name", id="id", namespace="ns", version="version")
-        self.assertEquals(str(j.toXML()), '<job id="id" namespace="ns" name="name" version="version"/>')
+        self.assertEqual(str(j.toXML()), '<job id="id" namespace="ns" name="name" version="version"/>')
         j = Job(name="name", id="id", namespace="ns", version="version", node_label="label")
-        self.assertEquals(str(j.toXML()), '<job id="id" namespace="ns" name="name" version="version" node-label="label"/>')
+        self.assertEqual(str(j.toXML()), '<job id="id" namespace="ns" name="name" version="version" node-label="label"/>')
 
         # Arguments
         j = Job(name="name")
         j.addArguments('a')
-        self.assertEquals(str(j.toXML()), '<job name="name">\n\t<argument>a</argument>\n</job>')
+        self.assertEqual(str(j.toXML()), '<job name="name">\n\t<argument>a</argument>\n</job>')
         j.clearArguments()
 
         # File arguments
         j.addArguments(File("file"))
-        self.assertEquals(str(j.toXML()), '<job name="name">\n\t<argument><file name="file"/></argument>\n</job>')
+        self.assertEqual(str(j.toXML()), '<job name="name">\n\t<argument><file name="file"/></argument>\n</job>')
         j.clearArguments()
 
         # Profiles
         j.addProfile(Profile("namespace","key","value"))
-        self.assertEquals(str(j.toXML()), '<job name="name">\n\t<profile namespace="namespace" key="key">value</profile>\n</job>')
+        self.assertEqual(str(j.toXML()), '<job name="name">\n\t<profile namespace="namespace" key="key">value</profile>\n</job>')
         j.clearProfiles()
 
         # Metadata
         j.metadata("key","value")
-        self.assertEquals(str(j.toXML()), '<job name="name">\n\t<metadata key="key">value</metadata>\n</job>')
+        self.assertEqual(str(j.toXML()), '<job name="name">\n\t<metadata key="key">value</metadata>\n</job>')
         j.clearMetadata()
 
         # Stdin/out/err
         j.setStdin(File("stdin"))
-        self.assertEquals(str(j.toXML()), '<job name="name">\n\t<stdin name="stdin" link="input"/>\n</job>')
+        self.assertEqual(str(j.toXML()), '<job name="name">\n\t<stdin name="stdin" link="input"/>\n</job>')
         j.clearStdin()
         j.setStdout(File("stdout"))
-        self.assertEquals(str(j.toXML()), '<job name="name">\n\t<stdout name="stdout" link="output"/>\n</job>')
+        self.assertEqual(str(j.toXML()), '<job name="name">\n\t<stdout name="stdout" link="output"/>\n</job>')
         j.clearStdout()
         j.setStderr(File("stderr"))
-        self.assertEquals(str(j.toXML()), '<job name="name">\n\t<stderr name="stderr" link="output"/>\n</job>')
+        self.assertEqual(str(j.toXML()), '<job name="name">\n\t<stderr name="stderr" link="output"/>\n</job>')
         j.clearStderr()
 
         # Uses
         j.uses("name")
-        self.assertEquals(str(j.toXML()), '<job name="name">\n\t<uses name="name"/>\n</job>')
+        self.assertEqual(str(j.toXML()), '<job name="name">\n\t<uses name="name"/>\n</job>')
         j.clearUses()
 
         # Invocations
         j.invoke("when","what")
-        self.assertEquals(str(j.toXML()), '<job name="name">\n\t<invoke when="when">what</invoke>\n</job>')
+        self.assertEqual(str(j.toXML()), '<job name="name">\n\t<invoke when="when">what</invoke>\n</job>')
         j.clearInvokes()
 
         # Combined
@@ -763,7 +763,7 @@ class TestJob(unittest.TestCase):
         j.setStderr(File("stderr"))
         j.uses("name", link="input", transfer=True, register=True)
         j.invoke("when","what")
-        self.assertEquals(str(j.toXML()), '''<job id="id" namespace="ns" name="name" version="version" node-label="label">
+        self.assertEqual(str(j.toXML()), '''<job id="id" namespace="ns" name="name" version="version" node-label="label">
 \t<argument>-a <file name="file"/></argument>
 \t<profile namespace="namespace" key="key">value</profile>
 \t<stdin name="stdin" link="input"/>
@@ -784,13 +784,13 @@ class TestDAG(unittest.TestCase):
 
     def testXML(self):
         d = DAG("file")
-        self.assertEquals(str(d.toXML()), '<dag file="file"/>')
+        self.assertEqual(str(d.toXML()), '<dag file="file"/>')
         d = DAG(File("file"))
-        self.assertEquals(str(d.toXML()), '<dag file="file"/>')
+        self.assertEqual(str(d.toXML()), '<dag file="file"/>')
         d = DAG("file",id="10")
-        self.assertEquals(str(d.toXML()), '<dag id="10" file="file"/>')
+        self.assertEqual(str(d.toXML()), '<dag id="10" file="file"/>')
         d = DAG("file",node_label="label")
-        self.assertEquals(str(d.toXML()), '<dag file="file" node-label="label"/>')
+        self.assertEqual(str(d.toXML()), '<dag file="file" node-label="label"/>')
 
 class TestDAX(unittest.TestCase):
     def testConstructor(self):
@@ -803,13 +803,13 @@ class TestDAX(unittest.TestCase):
 
     def testXML(self):
         d = DAX("file")
-        self.assertEquals(str(d.toXML()), '<dax file="file"/>')
+        self.assertEqual(str(d.toXML()), '<dax file="file"/>')
         d = DAX(File("file"))
-        self.assertEquals(str(d.toXML()), '<dax file="file"/>')
+        self.assertEqual(str(d.toXML()), '<dax file="file"/>')
         d = DAX("file",id="10")
-        self.assertEquals(str(d.toXML()), '<dax id="10" file="file"/>')
+        self.assertEqual(str(d.toXML()), '<dax id="10" file="file"/>')
         d = DAX("file",node_label="label")
-        self.assertEquals(str(d.toXML()), '<dax file="file" node-label="label"/>')
+        self.assertEqual(str(d.toXML()), '<dax file="file" node-label="label"/>')
 
 class TestDependency(unittest.TestCase):
     def testConstructor(self):
@@ -861,22 +861,22 @@ class TestADAG(unittest.TestCase):
         self.assertRaises(FormatError, ADAG, None)
         self.assertRaises(FormatError, ADAG, "")
         a = ADAG("name",10,1)
-        self.assertEquals(a.name,"name")
-        self.assertEquals(a.index,1)
-        self.assertEquals(a.count,10)
+        self.assertEqual(a.name,"name")
+        self.assertEqual(a.index,1)
+        self.assertEqual(a.count,10)
 
     def testNextJobID(self):
         """nextJobID() should always return a valid job ID"""
         a = ADAG("foo")
-        self.assertEquals(a.nextJobID(),"ID0000001")
-        self.assertEquals(a.nextJobID(),"ID0000002")
-        self.assertEquals(a.nextJobID(),"ID0000003")
+        self.assertEqual(a.nextJobID(),"ID0000001")
+        self.assertEqual(a.nextJobID(),"ID0000002")
+        self.assertEqual(a.nextJobID(),"ID0000003")
         a.addJob(Job("a",id="ID0000004"))
-        self.assertEquals(a.nextJobID(),"ID0000005")
+        self.assertEqual(a.nextJobID(),"ID0000005")
         a.addJob(Job("a",id="ID0000006"))
         a.addJob(Job("a",id="ID0000007"))
         a.addJob(Job("a",id="ID0000008"))
-        self.assertEquals(a.nextJobID(),"ID0000009")
+        self.assertEqual(a.nextJobID(),"ID0000009")
 
     def testJobs(self):
         """Should be able to add/remove/test for jobs/dags/daxes"""
@@ -908,7 +908,7 @@ class TestADAG(unittest.TestCase):
         a.addDAG(dag)
         a.clearJobs()
         a.addJob(j)
-        self.assertEquals(a.getJob(j.id), j)
+        self.assertEqual(a.getJob(j.id), j)
         self.assertRaises(DuplicateError, a.addJob, j)
         a.clearJobs()
         self.assertRaises(NotFoundError, a.getJob, j)
@@ -1206,12 +1206,12 @@ class TestADAG(unittest.TestCase):
         """Assert that two xml documents are the same (more or less)"""
         left = self.simplifyXML(left)
         right = self.simplifyXML(right)
-        self.assertEquals(len(left),len(right),"XML document length differs")
+        self.assertEqual(len(left),len(right),"XML document length differs")
         if sort:
             left.sort()
             right.sort()
         for l,r in zip(left,right):
-            self.assertEquals(l,r,"XML differs:\n%s\n%s" % (l,r))
+            self.assertEqual(l,r,"XML differs:\n%s\n%s" % (l,r))
 
 
 class TestParse(unittest.TestCase):

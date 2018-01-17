@@ -25,36 +25,36 @@ from Pegasus.DAX3 import *
 class TestTransformationCatalog(unittest.TestCase):
     def test_tc(self):
         tc = TransformationCatalog('/home/test')
-        self.assertEquals('tc.txt', tc.filename)
+        self.assertEqual('tc.txt', tc.filename)
 
         tc = TransformationCatalog('/home/test', 'tc')
-        self.assertEquals('tc', tc.filename)
+        self.assertEqual('tc', tc.filename)
 
     def test_tc_add_executable(self):
         tc = TransformationCatalog('/home/test')
         self.assertRaises(Exception, tc.add)
-        self.assertEquals(len(tc._executables), 0)
+        self.assertEqual(len(tc._executables), 0)
 
         e = Executable('my-exec')
         tc.add(e)
-        self.assertEquals(len(tc._executables), 1)
-        self.assertEquals(tc._executables[0].name, e.name)
+        self.assertEqual(len(tc._executables), 1)
+        self.assertEqual(tc._executables[0].name, e.name)
 
         tc.add(e)
-        self.assertEquals(len(tc._executables), 1)
+        self.assertEqual(len(tc._executables), 1)
 
     def test_tc_add_container(self):
         tc = TransformationCatalog('/home/test')
         self.assertRaises(Exception, tc.add)
-        self.assertEquals(len(tc._containers), 0)
+        self.assertEqual(len(tc._containers), 0)
 
         c = Container('cont-pegasus', ContainerType.DOCKER, 'docker:///rynge/montage:latest')
         tc.add_container(c)
-        self.assertEquals(len(tc._containers), 1)
-        self.assertEquals(tc._containers[0].name, c.name)
+        self.assertEqual(len(tc._containers), 1)
+        self.assertEqual(tc._containers[0].name, c.name)
 
         tc.add_container(c)
-        self.assertEquals(len(tc._containers), 1)
+        self.assertEqual(len(tc._containers), 1)
 
 
 if __name__ == '__main__':

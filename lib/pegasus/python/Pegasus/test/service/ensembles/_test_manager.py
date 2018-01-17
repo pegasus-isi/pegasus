@@ -72,28 +72,28 @@ class EnsembleManagerTest(UserTestCase):
         db.session.flush()
 
         mgr.loop_once()
-        self.assertEquals(w.state, ensembles.EnsembleWorkflowStates.READY, "State should still be READY")
-        self.assertEquals(w2.state, ensembles.EnsembleWorkflowStates.READY, "State should still be READY")
+        self.assertEqual(w.state, ensembles.EnsembleWorkflowStates.READY, "State should still be READY")
+        self.assertEqual(w2.state, ensembles.EnsembleWorkflowStates.READY, "State should still be READY")
 
         e.set_state(ensembles.EnsembleStates.ACTIVE)
         db.session.flush()
 
         mgr.loop_once()
-        self.assertEquals(w.state, ensembles.EnsembleWorkflowStates.PLANNING, "State should be PLANNING")
-        self.assertEquals(w2.state, ensembles.EnsembleWorkflowStates.READY, "State should be READY")
+        self.assertEqual(w.state, ensembles.EnsembleWorkflowStates.PLANNING, "State should be PLANNING")
+        self.assertEqual(w2.state, ensembles.EnsembleWorkflowStates.READY, "State should be READY")
 
         mgr.loop_once()
-        self.assertEquals(w.state, ensembles.EnsembleWorkflowStates.RUNNING, "State should be RUNNING")
-        self.assertEquals(w.submitdir, "submitdir", "Submitdir should be set")
-        self.assertEquals(w.wf_uuid, "d8f8e15c-a55f-4ca0-8474-62bdb3310083", "UUID should be set")
-        self.assertEquals(w2.state, ensembles.EnsembleWorkflowStates.PLANNING, "State should be PLANNING")
+        self.assertEqual(w.state, ensembles.EnsembleWorkflowStates.RUNNING, "State should be RUNNING")
+        self.assertEqual(w.submitdir, "submitdir", "Submitdir should be set")
+        self.assertEqual(w.wf_uuid, "d8f8e15c-a55f-4ca0-8474-62bdb3310083", "UUID should be set")
+        self.assertEqual(w2.state, ensembles.EnsembleWorkflowStates.PLANNING, "State should be PLANNING")
 
         mgr.loop_once()
-        self.assertEquals(w.state, ensembles.EnsembleWorkflowStates.SUCCESSFUL, "State should be SUCCESSFUL")
-        self.assertEquals(w2.state, ensembles.EnsembleWorkflowStates.RUNNING, "State should be RUNNING")
+        self.assertEqual(w.state, ensembles.EnsembleWorkflowStates.SUCCESSFUL, "State should be SUCCESSFUL")
+        self.assertEqual(w2.state, ensembles.EnsembleWorkflowStates.RUNNING, "State should be RUNNING")
 
         mgr.loop_once()
-        self.assertEquals(w2.state, ensembles.EnsembleWorkflowStates.SUCCESSFUL, "State should be SUCCESSFUL")
+        self.assertEqual(w2.state, ensembles.EnsembleWorkflowStates.SUCCESSFUL, "State should be SUCCESSFUL")
 
 def RequiresPegasus(f):
     def wrapper(*args, **kwargs):
@@ -140,7 +140,7 @@ class ScriptTest(TestCase):
         em.forkscript("echo $PWD > %s" % cwdfile, cwd="/")
         time.sleep(1) # This just gives the script time to finish
         cwd = open(cwdfile, "r").read().strip()
-        self.assertEquals(cwd, "/")
+        self.assertEqual(cwd, "/")
         os.remove(cwdfile)
 
         pidfile = "/tmp/forkscript.pid"
@@ -163,7 +163,7 @@ class ScriptTest(TestCase):
             os.remove(cwdfile)
         em.runscript("echo $PWD > %s" % cwdfile, cwd="/")
         cwd = open(cwdfile, "r").read().strip()
-        self.assertEquals(cwd, "/")
+        self.assertEqual(cwd, "/")
         os.remove(cwdfile)
 
         self.assertRaises(em.EMException, em.runscript, "true", cwd="/some/path/not/existing")
@@ -419,7 +419,7 @@ class WorkflowTest(UserTestCase):
             mgr.loop_once()
             time.sleep(5)
 
-        self.assertEquals(ew.state, ensembles.EnsembleWorkflowStates.SUCCESSFUL)
+        self.assertEqual(ew.state, ensembles.EnsembleWorkflowStates.SUCCESSFUL)
 
     @IntegrationTest
     @RequiresPegasus
@@ -446,7 +446,7 @@ class WorkflowTest(UserTestCase):
             mgr.loop_once()
             time.sleep(5)
 
-        self.assertEquals(ew.state, ensembles.EnsembleWorkflowStates.FAILED)
+        self.assertEqual(ew.state, ensembles.EnsembleWorkflowStates.FAILED)
 
     @IntegrationTest
     @RequiresPegasus
@@ -489,5 +489,5 @@ class WorkflowTest(UserTestCase):
             mgr.loop_once()
             time.sleep(5)
 
-        self.assertEquals(ew.state, ensembles.EnsembleWorkflowStates.SUCCESSFUL)
+        self.assertEqual(ew.state, ensembles.EnsembleWorkflowStates.SUCCESSFUL)
 

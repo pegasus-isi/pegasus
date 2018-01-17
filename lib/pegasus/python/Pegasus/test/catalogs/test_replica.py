@@ -25,40 +25,40 @@ from Pegasus.DAX3 import *
 class TestReplicaCatalog(unittest.TestCase):
     def test_rc(self):
         rc = ReplicaCatalog('/home/test')
-        self.assertEquals('rc.txt', rc.filename)
+        self.assertEqual('rc.txt', rc.filename)
 
         rc = ReplicaCatalog('/home/test', 'rc')
-        self.assertEquals('rc', rc.filename)
+        self.assertEqual('rc', rc.filename)
 
     def test_rc_add(self):
         rc = ReplicaCatalog('/home/test')
         self.assertRaises(Exception, rc.add)
         self.assertRaises(Exception, rc.add, 'name')
 
-        self.assertEquals(len(rc._replicas), 0)
+        self.assertEqual(len(rc._replicas), 0)
 
         name = 'myfile'
         path = 'file://mypath'
         rc.add(name, path)
-        self.assertEquals(len(rc._replicas), 1)
-        self.assertEquals(len(rc._replicas[name][path]), 0)
+        self.assertEqual(len(rc._replicas), 1)
+        self.assertEqual(len(rc._replicas[name][path]), 0)
 
         rc.add(name, path, site='site-A')
-        self.assertEquals(len(rc._replicas), 1)
-        self.assertEquals(len(rc._replicas[name][path]), 1)
-        self.assertEquals(rc._replicas[name][path][0], ('site', 'site-A'))
+        self.assertEqual(len(rc._replicas), 1)
+        self.assertEqual(len(rc._replicas[name][path]), 1)
+        self.assertEqual(rc._replicas[name][path][0], ('site', 'site-A'))
 
         meta_set = set()
         meta_set.add(Metadata('meta-name', 'meta-content'))
 
         rc.add(name, path, site='site-A', metadata=meta_set)
-        self.assertEquals(len(rc._replicas), 1)
-        self.assertEquals(len(rc._replicas[name][path]), 2)
-        self.assertEquals(rc._replicas[name][path][0], ('site', 'site-A'))
-        self.assertEquals(rc._replicas[name][path][1], ('meta-name', 'meta-content'))
+        self.assertEqual(len(rc._replicas), 1)
+        self.assertEqual(len(rc._replicas[name][path]), 2)
+        self.assertEqual(rc._replicas[name][path][0], ('site', 'site-A'))
+        self.assertEqual(rc._replicas[name][path][1], ('meta-name', 'meta-content'))
 
         rc.add(name, path, site='site-A', metadata=meta_set)
-        self.assertEquals(len(rc._replicas[name][path]), 2)
+        self.assertEqual(len(rc._replicas[name][path]), 2)
 
 
 if __name__ == '__main__':

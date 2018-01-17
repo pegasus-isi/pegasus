@@ -17,24 +17,24 @@ class TestDBAdmin(unittest.TestCase):
         dburi = "sqlite:///%s" % filename
         
         db = connection.connect(dburi, create=True, verbose=False)
-        self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+        self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         
         db.execute("DROP TABLE dbversion")
         self.assertRaises(DBAdminError, db_verify, db)
         db.close()
         db = connection.connect(dburi, create=True, verbose=False)
-        self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+        self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         
         db.execute("DELETE FROM dbversion")
         db.close()
         db = connection.connect(dburi, create=True, verbose=False)
-        self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+        self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         
         db.execute("DROP TABLE rc_pfn")
         self.assertRaises(DBAdminError, db_verify, db)
         db.close()
         db = connection.connect(dburi, create=True, verbose=False)
-        self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+        self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         
         db.execute("DROP TABLE rc_pfn")
         db.execute("DROP TABLE workflow")
@@ -43,13 +43,13 @@ class TestDBAdmin(unittest.TestCase):
         self.assertRaises(DBAdminError, db_verify, db, "4.3.0")
         db.close()
         db = connection.connect(dburi, create=True, verbose=False)
-        self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+        self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         _remove(filename)
         
     def test_parse_pegasus_version(self):
-        self.assertEquals(parse_pegasus_version(), CURRENT_DB_VERSION)
-        self.assertEquals(parse_pegasus_version(""), CURRENT_DB_VERSION)
-        self.assertEquals(parse_pegasus_version("4.3.0"), 1)
+        self.assertEqual(parse_pegasus_version(), CURRENT_DB_VERSION)
+        self.assertEqual(parse_pegasus_version(""), CURRENT_DB_VERSION)
+        self.assertEqual(parse_pegasus_version("4.3.0"), 1)
         self.assertRaises(DBAdminError, parse_pegasus_version, 0)
         self.assertRaises(DBAdminError, parse_pegasus_version, 1)
         self.assertRaises(DBAdminError, parse_pegasus_version, 4.5)
@@ -66,13 +66,13 @@ class TestDBAdmin(unittest.TestCase):
         db = connection.connect(dburi, create=True, verbose=False)
 
         db_downgrade(db, pegasus_version="4.5.0", verbose=False)
-        self.assertEquals(db_current_version(db), 4)
+        self.assertEqual(db_current_version(db), 4)
         self.assertRaises(DBAdminError, db_verify, db)
         rc_lfn._set_parent(metadata)
         db.close()
 
         db = connection.connect(dburi, create=True, verbose=False)
-        self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+        self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
         _remove(filename)
 
@@ -127,7 +127,7 @@ class TestDBAdmin(unittest.TestCase):
         db.close()
         
         db = connection.connect(dburi, create=True, verbose=False)
-        self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+        self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         _remove(filename)
         
         db = connection.connect(dburi, schema_check=False, create=False, verbose=False)
@@ -139,7 +139,7 @@ class TestDBAdmin(unittest.TestCase):
         db.close()
         
         db = connection.connect(dburi, create=True, verbose=False)
-        self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+        self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         _remove(filename)
         
         db = connection.connect(dburi, schema_check=False, create=False, verbose=False)
@@ -157,7 +157,7 @@ class TestDBAdmin(unittest.TestCase):
         db.close()
         
         db = connection.connect(dburi, create=True, verbose=False)
-        self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+        self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         _remove(filename)
         
     def test_malformed_db(self):
@@ -165,13 +165,13 @@ class TestDBAdmin(unittest.TestCase):
         _silentremove(filename)
         dburi = "sqlite:///%s" % filename
         db = connection.connect(dburi, create=True, verbose=False)
-        self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+        self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         db.execute("DROP TABLE rc_pfn")
         self.assertRaises(DBAdminError, db_verify, db)
         db.close()
         
         db = connection.connect(dburi, create=True, verbose=False)
-        self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+        self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
         _remove(filename)
 
@@ -196,17 +196,17 @@ class TestDBAdmin(unittest.TestCase):
         f.close()
 
         db = connection.connect_by_properties(props_filename, connection.DBType.JDBCRC, create=True, verbose=False)
-        self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+        self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
         _remove(filename)
 
         db = connection.connect_by_properties(props_filename, connection.DBType.MASTER, create=True, verbose=False)
-        self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+        self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
         _remove(filename)
 
         db = connection.connect_by_properties(props_filename, connection.DBType.WORKFLOW, create=True, verbose=False)
-        self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+        self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
         _remove(filename)
         _silentremove(props_filename)
@@ -246,7 +246,7 @@ class TestDBAdmin(unittest.TestCase):
             db.close()
             
             db = connection.connect(dburi, create=True, verbose=False)
-            self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+            self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
             db.close()
             _remove(filename)
             

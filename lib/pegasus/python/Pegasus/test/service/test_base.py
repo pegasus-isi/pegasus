@@ -29,7 +29,7 @@ class OrderParserTestCase(unittest.TestCase):
 
         for e in expressions:
             r = BaseOrderParser(e).get_sort_order()
-            self.assertEquals(r[0][0], e)
+            self.assertEqual(r[0][0], e)
 
     def test_invalid_prefix(self):
         expressions = ['.', '.a', '1.a', '1a.a', '_.a', '_a.a', 'a-.a']
@@ -42,7 +42,7 @@ class OrderParserTestCase(unittest.TestCase):
 
         for e in expressions:
             r = BaseOrderParser(e).get_sort_order()
-            self.assertEquals(r[0][0], e)
+            self.assertEqual(r[0][0], e)
 
     def test_invalid_identifier(self):
         expressions = ['a.', 'a.0', 'a.0a', 'a._', 'a._a', 'a.a-']

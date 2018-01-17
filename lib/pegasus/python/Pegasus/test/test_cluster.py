@@ -42,16 +42,16 @@ class TestRecordParser(unittest.TestCase):
         self.assertTrue("y" in rec)
         self.assertTrue("z" in rec)
 
-        self.assertEquals(rec["x"], "1")
-        self.assertEquals(rec["y"], "2")
-        self.assertEquals(rec["z"], "3")
+        self.assertEqual(rec["x"], "1")
+        self.assertEqual(rec["y"], "2")
+        self.assertEqual(rec["z"], "3")
 
     def testStrings(self):
         rec = self.parse('[cluster-summary foo="bar" baz="bar boo", boo="\'=,- "]')
 
-        self.assertEquals(rec["foo"], "bar")
-        self.assertEquals(rec["baz"], "bar boo")
-        self.assertEquals(rec["boo"], "'=,- ")
+        self.assertEqual(rec["foo"], "bar")
+        self.assertEqual(rec["baz"], "bar boo")
+        self.assertEqual(rec["boo"], "'=,- ")
 
     def _testSpeed(self):
         import time

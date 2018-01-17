@@ -34,7 +34,7 @@ class TestConnection(unittest.TestCase):
         _silentremove(filename)
         dburi = "jdbc:sqlite:%s" % filename
         db = connection.connect(dburi, create=True, verbose=False)
-        self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+        self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
         _remove(filename)
         
@@ -42,13 +42,13 @@ class TestConnection(unittest.TestCase):
         _silentremove(filename)
         dburi = "jdbc:sqlite:%s" % filename
         db = connection.connect(dburi, create=True, verbose=False)
-        self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+        self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
         _remove(filename)
 
         dburi = "jdbc:sqlite:/%s" % filename
         db = connection.connect(dburi, create=True, verbose=False)
-        self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+        self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
         _remove(filename)
 

@@ -25,19 +25,19 @@ from Pegasus.DAX3 import *
 class TestSiteCatalog(unittest.TestCase):
     def test_sc(self):
         sc = SitesCatalog('/home/test')
-        self.assertEquals('sites.xml', sc.filename)
+        self.assertEqual('sites.xml', sc.filename)
 
         sc = SitesCatalog('/home/test', 'sc')
-        self.assertEquals('sc', sc.filename)
+        self.assertEqual('sc', sc.filename)
 
     def test_sc_add_site(self):
         sc = SitesCatalog('/home/test')
         self.assertRaises(Exception, sc.add_site, None)
-        self.assertEquals(len(sc._sites), 1)  # local site
+        self.assertEqual(len(sc._sites), 1)  # local site
 
         sc.add_site('my-site')
         self.assertRaises(Exception, sc.add_site, 'my-site')
-        self.assertEquals(len(sc._sites), 2)
+        self.assertEqual(len(sc._sites), 2)
 
     def test_sc_add_site_profile(self):
         sc = SitesCatalog('/home/test')
@@ -48,7 +48,7 @@ class TestSiteCatalog(unittest.TestCase):
 
         sc.add_site('my-site')
         sc.add_site_profile('my-site', Namespace.ENV, 'my-key')
-        self.assertEquals(len(sc._sites['my-site']['profiles']), 1)
+        self.assertEqual(len(sc._sites['my-site']['profiles']), 1)
 
     def test_sc_add_job_manager(self):
         sc = SitesCatalog('/home/test')
@@ -66,7 +66,7 @@ class TestSiteCatalog(unittest.TestCase):
         sc.add_job_manager('my-site', GridType.GT2, 'iz-login.isi.edu/jobmanager-pbs', SchedulerType.PBS,
                            JobType.COMPUTE)
 
-        self.assertEquals(len(sc._sites['my-site']['grids']), 1)
+        self.assertEqual(len(sc._sites['my-site']['grids']), 1)
 
 
 if __name__ == '__main__':
