@@ -234,7 +234,7 @@ class WorkflowInfo(object):
     def initialize(self, wf_id=None, wf_uuid=None):
 
         if not wf_id and not wf_uuid:
-            raise ValueError, 'Workflow ID or Workflow UUID is required.'
+            raise ValueError('Workflow ID or Workflow UUID is required.')
 
         if wf_id:
             self._wf_id = wf_id
@@ -411,7 +411,7 @@ class WorkflowInfo(object):
                     elif i >= len(display_columns) and i < 4:
                         pass
                     else:
-                        raise ValueError,('Invalid column(%s) in failed jobs listing ' % i)
+                        raise ValueError('Invalid column(%s) in failed jobs listing ' % i)
 
         else:
             # Default sorting order
@@ -466,7 +466,7 @@ class WorkflowInfo(object):
                     if i >= 0 and i < len(display_columns):
                         q = q.order_by(sort_order(display_columns[i]))
                     else:
-                        raise ValueError,('Invalid column(%s) in successful jobs listing ' % i)
+                        raise ValueError('Invalid column(%s) in successful jobs listing ' % i)
 
         else:
             # Default sorting order
@@ -520,7 +520,7 @@ class WorkflowInfo(object):
                     if i >= 0 and i < len(display_columns):
                         q = q.order_by(sort_order(display_columns[i]))
                     else:
-                        raise ValueError,('Invalid column(%s) in other jobs listing ' % i)
+                        raise ValueError('Invalid column(%s) in other jobs listing ' % i)
 
         else:
             # Default sorting order
@@ -637,7 +637,7 @@ class WorkflowInfo(object):
                     elif i >= len(display_columns) and i < 4:
                         pass
                     else:
-                        raise ValueError,('Invalid column(%s) in failed jobs listing ' % i)
+                        raise ValueError('Invalid column(%s) in failed jobs listing ' % i)
 
         else:
             # Default sorting order

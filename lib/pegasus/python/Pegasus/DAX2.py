@@ -114,7 +114,7 @@ class Filename:
 			varname: Only used for stdio files
 		"""
 		if filename is None:
-			raise ValueError, 'filename required'
+			raise ValueError('filename required')
 		self.filename = filename
 		self.link = link
 		self.register = register
@@ -279,7 +279,7 @@ class Job:
 		def __init__(self, file, link=None, register=None, transfer=None, 
 					optional=None, temporaryHint=None):
 			if file is None:
-				raise ValueError, 'file required'
+				raise ValueError('file required')
 			self.file = file
 			self.link = link
 			self.optional = optional
@@ -366,7 +366,7 @@ class Job:
 			compound: ?
 		"""
 		if name is None:
-			raise ValueError, 'name required'
+			raise ValueError('name required')
 		self.name = name
 		self.namespace = namespace
 		self.version = version

@@ -79,7 +79,7 @@ def workflow(username, root_wf_id, wf_id=None):
     wf_uuid = request.args.get('wf_uuid', None)
 
     if not wf_id and not wf_uuid:
-        raise ValueError, 'Workflow ID or Workflow UUID is required'
+        raise ValueError('Workflow ID or Workflow UUID is required')
 
     if wf_id:
         dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id=wf_id)

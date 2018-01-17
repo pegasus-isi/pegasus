@@ -61,7 +61,7 @@ class Dashboard(object):
 
     def __get_wf_db_url(self):
         if not self._wf_db_url:
-            raise ValueError, 'workflow database URL is not set'
+            raise ValueError('workflow database URL is not set')
 
         return self._wf_db_url
 
@@ -268,7 +268,7 @@ class Dashboard(object):
         """
         try:
             if not wf_id and not wf_uuid:
-                raise ValueError, 'Workflow ID or Workflow UUID is required'
+                raise ValueError('Workflow ID or Workflow UUID is required')
 
             workflow = None
             workflow_statistics = None
@@ -301,7 +301,7 @@ class Dashboard(object):
         """
         try:
             if not wf_id and not wf_uuid:
-                raise ValueError, 'Workflow ID or Workflow UUID is required'
+                raise ValueError('Workflow ID or Workflow UUID is required')
 
             workflow = None
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id=wf_id, wf_uuid=wf_uuid)
