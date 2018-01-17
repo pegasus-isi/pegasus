@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import absolute_import
 import os
 import re
 import sys
@@ -15,9 +16,9 @@ from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.tools import utils
 from Pegasus.plots_stats import utils as plot_utils
-from workflow_info import WorkflowInfo, JobInfo , TransformationInfo
-import pegasus_gantt
-import pegasus_host_over_time
+from .workflow_info import WorkflowInfo, JobInfo , TransformationInfo
+from . import pegasus_gantt
+from . import pegasus_host_over_time
 import traceback
 
 from Pegasus.db.workflow.stampede_statistics import StampedeStatistics

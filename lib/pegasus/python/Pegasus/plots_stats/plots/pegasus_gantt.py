@@ -2,6 +2,7 @@
 Pegasus library for generating workflow execution gantt chart
 
 """
+from __future__ import absolute_import
 
 ##
 #  Copyright 2010-2011 University Of Southern California
@@ -28,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 from Pegasus.tools import utils
 from Pegasus.plots_stats import utils as plot_utils
-import populate
+from . import populate
 from datetime import timedelta
 from datetime import datetime
 

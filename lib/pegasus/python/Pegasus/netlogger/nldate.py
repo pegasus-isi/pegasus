@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 import calendar
-import magicdate
+from . import magicdate
 import re
 import time
 
