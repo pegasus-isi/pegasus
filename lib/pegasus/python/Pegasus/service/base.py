@@ -193,7 +193,7 @@ class BaseQueryParser(object):
             f = StringIO.StringIO(expression)
             self._scanner = Scanner(self._lexicon, f, 'query')
 
-            while 1:
+            while True:
                 token = self._scanner.read()
 
                 if token[0] in self._mapper:
