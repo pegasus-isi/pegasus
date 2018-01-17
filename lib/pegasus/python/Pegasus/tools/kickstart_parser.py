@@ -4,6 +4,7 @@
 Pegasus utility functions for pasing a kickstart output file and return wanted information
 
 """
+from __future__ import print_function
 
 ##
 #  Copyright 2007-2010 University Of Southern California
@@ -595,11 +596,11 @@ class Parser:
 if __name__ == "__main__":
 
     # Let's run a test!
-    print "Testing kickstart output file parsing..."
+    print("Testing kickstart output file parsing...")
 
     # Make sure we have an argument
     if len(sys.argv) < 2:
-        print "For testing, please give a kickstart output filename!"
+        print("For testing, please give a kickstart output filename!")
         sys.exit(1)
 
     # Create parser class
@@ -610,4 +611,4 @@ if __name__ == "__main__":
 
     # Print output
     for record in output:
-        print record
+        print(record)

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 import imp
 import unittest
@@ -59,7 +60,7 @@ class TestRecordParser(unittest.TestCase):
         for i in range(0, 10000):
             self.parse('[cluster-summary foo="bar", baz="bar", boo="bar"]')
         end = time.time()
-        print "Elapsed:", (end-start)
+        print("Elapsed:", (end-start))
 
 if __name__ == '__main__':
     unittest.main()

@@ -14,6 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+from __future__ import print_function
 __author__ = "Rafael Ferreira da Silva"
 
 import logging
@@ -145,7 +146,7 @@ def db_create(dburi, engine, db, pegasus_version=None, force=False, verbose=True
         engine.execute(db_version.insert(), version=CURRENT_DB_VERSION, version_number=int(CURRENT_DB_VERSION),
                        version_timestamp=datetime.datetime.now().strftime("%s"))
         if verbose:
-            print "Created Pegasus database in: %s" % dburi
+            print("Created Pegasus database in: %s" % dburi)
     else:
         v = _discover_version(db, pegasus_version=pegasus_version, force=force, verbose=False)
 
@@ -154,7 +155,7 @@ def db_create(dburi, engine, db, pegasus_version=None, force=False, verbose=True
     except OperationalError as e:
         raise DBAdminError(e, db=db, given_version=pegasus_version)
     if verbose and v > 0:
-        print "Your database has been updated."
+        print("Your database has been updated.")
 
 
 def db_current_version(db, parse=False, force=False):
@@ -262,7 +263,7 @@ def db_downgrade(db, pegasus_version=None, force=False, verbose=True):
             break
 
     if verbose:
-        print "Your database was successfully downgraded."
+        print("Your database was successfully downgraded.")
 
 
 def parse_pegasus_version(pegasus_version=None):
@@ -319,8 +320,8 @@ def all_workflows_db(db, update=True, pegasus_version=None, schema_check=True, f
     else:
         msg = ['downgrading', 'Downgraded']
 
-    print ""
-    print "Verifying and %s workflow databases:" % msg[0]
+    print("")
+    print("Verifying and %s workflow databases:" % msg[0])
     i = counts['running']
     for dburi in db_urls:
         log.debug("%s '%s'..." % (msg[0], dburi))
@@ -357,14 +358,14 @@ def all_workflows_db(db, update=True, pegasus_version=None, schema_check=True, f
     f_out.close()
     f_err.close()
 
-    print "\n\nSummary:"
-    print "  Verified/%s: %s/%s" % (msg[1], counts['success'], counts['total'])
-    print "  Failed: %s/%s" % (counts['failed'], counts['total'])
-    print "  Unable to connect: %s/%s" % (counts['unable_to_connect'], counts['total'])
-    print "  Unable to update (active workflows): %s/%s" % (counts['running'], counts['total'])
-    print "\nLog files:"
-    print "  %s.out (Succeeded operations)" % file_prefix
-    print "  %s.err (Failed operations)" % file_prefix
+    print("\n\nSummary:")
+    print("  Verified/%s: %s/%s" % (msg[1], counts['success'], counts['total']))
+    print("  Failed: %s/%s" % (counts['failed'], counts['total']))
+    print("  Unable to connect: %s/%s" % (counts['unable_to_connect'], counts['total']))
+    print("  Unable to update (active workflows): %s/%s" % (counts['running'], counts['total']))
+    print("\nLog files:")
+    print("  %s.out (Succeeded operations)" % file_prefix)
+    print("  %s.err (Failed operations)" % file_prefix)
 
 
 ################################################################################
@@ -455,7 +456,7 @@ def _discover_version(db, pegasus_version=None, force=False, verbose=True):
     if v > current_version:
         _update_version(db, v)
         if verbose:
-            print "Your database has been updated."
+            print("Your database has been updated.")
     else:
         v = 0
     return v

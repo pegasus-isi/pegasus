@@ -1,3 +1,4 @@
+from __future__ import print_function
 __author__ = "Rafael Ferreira da Silva"
 
 import logging
@@ -203,7 +204,7 @@ class VersionCommand(LoggingCommand):
 # ------------------------------------------------------
 def _print_version(data):
     if data:
-        print "Your database is compatible with Pegasus version: %s" % data
+        print("Your database is compatible with Pegasus version: %s" % data)
 
 
 def _set_log_level(debug):

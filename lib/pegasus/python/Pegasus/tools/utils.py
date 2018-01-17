@@ -1,6 +1,7 @@
 """
 utils.py: Provides common functions used by all workflow programs
 """
+from __future__ import print_function
 
 ##
 #  Copyright 2007-2011 University Of Southern California
@@ -687,39 +688,39 @@ def make_boolean(value):
 
 if __name__ == "__main__":
     current_time = int(time.time())
-    print "Testing isodate() function from now=%lu" % (current_time)
-    print " long local timestamp:", isodate(now=current_time)
-    print "   long utc timestamp:", isodate(now=current_time, utc=True)
-    print "short local timestamp:", isodate(now=current_time, short=True)
-    print "  short utc timestamp:", isodate(now=current_time, utc=True, short=True)
-    print
-    print "Testing epochdate() function from above ISO dates"
-    print " long local epochdate:", epochdate(isodate(now=current_time))
-    print "   long utc epochdate:", epochdate(isodate(now=current_time, utc=True))
-    print "short local timestamp:", epochdate(isodate(now=current_time, short=True))
-    print "  short utc timestamp:", epochdate(isodate(now=current_time, utc=True, short=True))
-    print
-    print "Testing find exec"
-    print "Looking for ls...", find_exec('ls')
-    print "Looking for test.pl...", find_exec('test.pl', True)
-    print "Monitord 1", find_exec("pegasus-mointord")
-    print "Monitord 2", find_exec(program="pegasus-monitord",otherdirs=["/usr/local/pegasus/src/4.0-branch/bin","/usr/local/pegasus"])
-    print
-    print "Testing parse_exit() function"
-    print "ec = 5   ==> ", parse_exit(5)
-    print "ec = 129 ==> ", parse_exit(129)
-    print
-    print "Testing log10() function"
-    print "log10(10):", log10(10)
-    print "log10(100.2):", log10(100.2)
-    print version()
-    print slurp_braindb(".")
-    print pipe_out_cmd('ls -lR')
-    print
-    print "Testing quote/unquote functions..."
-    print repr(str(bytearray(xrange(256))))
-    print quote(str(bytearray(xrange(256))))
-    print unquote("carriage return: %0Apercent: %25%0Aquote: %27%0Adouble quote: %22")
-    print
-    print
+    print("Testing isodate() function from now=%lu" % (current_time))
+    print(" long local timestamp:", isodate(now=current_time))
+    print("   long utc timestamp:", isodate(now=current_time, utc=True))
+    print("short local timestamp:", isodate(now=current_time, short=True))
+    print("  short utc timestamp:", isodate(now=current_time, utc=True, short=True))
+    print()
+    print("Testing epochdate() function from above ISO dates")
+    print(" long local epochdate:", epochdate(isodate(now=current_time)))
+    print("   long utc epochdate:", epochdate(isodate(now=current_time, utc=True)))
+    print("short local timestamp:", epochdate(isodate(now=current_time, short=True)))
+    print("  short utc timestamp:", epochdate(isodate(now=current_time, utc=True, short=True)))
+    print()
+    print("Testing find exec")
+    print("Looking for ls...", find_exec('ls'))
+    print("Looking for test.pl...", find_exec('test.pl', True))
+    print("Monitord 1", find_exec("pegasus-mointord"))
+    print("Monitord 2", find_exec(program="pegasus-monitord",otherdirs=["/usr/local/pegasus/src/4.0-branch/bin","/usr/local/pegasus"]))
+    print()
+    print("Testing parse_exit() function")
+    print("ec = 5   ==> ", parse_exit(5))
+    print("ec = 129 ==> ", parse_exit(129))
+    print()
+    print("Testing log10() function")
+    print("log10(10):", log10(10))
+    print("log10(100.2):", log10(100.2))
+    print(version())
+    print(slurp_braindb("."))
+    print(pipe_out_cmd('ls -lR'))
+    print()
+    print("Testing quote/unquote functions...")
+    print(repr(str(bytearray(xrange(256)))))
+    print(quote(str(bytearray(xrange(256)))))
+    print(unquote("carriage return: %0Apercent: %25%0Aquote: %27%0Adouble quote: %22"))
+    print()
+    print()
 

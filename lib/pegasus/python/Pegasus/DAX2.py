@@ -19,6 +19,7 @@ read by Pegasus.
 
 The official DAX schema is here: http://pegasus.isi.edu/schema/dax-2.1.xsd
 """
+from __future__ import print_function
 
 __author__ = "Gideon Juve <juve@usc.edu>"
 __all__ = ["DAX","Filename","Profile","Job","Namespace","LFN",
@@ -896,6 +897,6 @@ if __name__ == '__main__':
 	foo2 = out.getvalue()
 	out.close()
 	
-	print foo1
-	print foo2
+	print(foo1)
+	print(foo2)
 	

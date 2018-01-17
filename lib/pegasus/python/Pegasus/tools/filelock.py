@@ -1,6 +1,7 @@
 """
 filelock.py: Provides NFS-safe locking around a DB File.
 """
+from __future__ import print_function
 
 ##
 #  Copyright 2007-2010 University Of Southern California
@@ -433,17 +434,17 @@ if __name__ == '__main__':
     a.inc('usc')
     c = a.inc('usc')
     if c is None:
-        print "Cannot get counter!"
+        print("Cannot get counter!")
     else:
-        print "Counter is now %d" % (c)
+        print("Counter is now %d" % (c))
     c = a.dec("usc", 3)
     if c is None:
-        print "Cannot get counter!"
+        print("Cannot get counter!")
     else:
-        print "Counter is now %d" % (c)
+        print("Counter is now %d" % (c))
 
     my_dict = {}
     my_dict = a.clone()
     for key in my_dict.keys():
-        print key, "-->", my_dict[key]
-    print "done"
+        print(key, "-->", my_dict[key])
+    print("done")

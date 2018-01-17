@@ -1,6 +1,7 @@
 """
 This file implements the metadata related classes for pegasus-monitord.
 """
+from __future__ import print_function
 
 ##
 #  Copyright 2007-2012 University Of Southern California
@@ -111,14 +112,14 @@ def main():
     b.add_attribute( "size", "10")
     b.add_attribute( "checksum", "XXXXXX")
 
-    print json.dumps(a.__dict__)
+    print(json.dumps(a.__dict__))
 
     l = []
     l.append( a )
     l.append( b )
     l.append( 1 )
 
-    print json.dumps(l, cls=MetadataCustomEncoder, indent=2)
+    print(json.dumps(l, cls=MetadataCustomEncoder, indent=2))
 
     Metadata.write_to_jsonfile(l, "/tmp", "test")
 

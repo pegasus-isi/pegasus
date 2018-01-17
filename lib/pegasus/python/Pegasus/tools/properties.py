@@ -8,6 +8,7 @@ definitions from sys.argv during the module
 initialization. Therefore, it is recommended to use this module
 before parsing other command-line arguments.
 """
+from __future__ import print_function
 
 ##
 #  Copyright 2007-2010 University Of Southern California
@@ -348,4 +349,4 @@ class Properties:
 if __name__ == "__main__":
     a = Properties()
     a.new()
-    print "testing finished!"
+    print("testing finished!")

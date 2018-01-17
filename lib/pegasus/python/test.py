@@ -1,3 +1,4 @@
+from __future__ import print_function
 from future import standard_library
 standard_library.install_aliases()
 
@@ -24,10 +25,10 @@ try:
     else:
         import pysqlite2
 except ImportError as e:
-    print e
-    print "Unable to import Pegasus modules"
-    print "Make sure dependencies are available"
-    print "Set PYTHONPATH or run: python setup.py develop"
+    print(e)
+    print("Unable to import Pegasus modules")
+    print("Make sure dependencies are available")
+    print("Set PYTHONPATH or run: python setup.py develop")
     sys.exit(1)
 
 def discoverTestModules(dirpath):
