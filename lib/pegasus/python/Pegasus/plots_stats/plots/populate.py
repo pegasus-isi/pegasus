@@ -190,7 +190,7 @@ def populate_workflow_details(workflow_stats):
 	
 	# Populating workflow details
 	workflow_info.wf_uuid = wf_det.wf_uuid
-	if global_wf_id_uuid_map.has_key(wf_det.parent_wf_id):
+	if wf_det.parent_wf_id in global_wf_id_uuid_map:
 		workflow_info.parent_wf_uuid =global_wf_id_uuid_map[wf_det.parent_wf_id]
 	workflow_info.submit_dir = wf_det.submit_dir
 	workflow_info.dax_label = wf_det.dax_label
@@ -258,7 +258,7 @@ def populate_job_instance_details(workflow_stats , workflow_info):
 		job_stats_list.append(job_stat)
 		is_job_failed = False
 		restart_count =0
-		if job_name_retry_count_dict.has_key(job_states.job_name):
+		if job_states.job_name in job_name_retry_count_dict:
 			restart_count = job_name_retry_count_dict[job_states.job_name]
 			restart_count +=1
 		job_name_retry_count_dict[job_states.job_name] = restart_count
@@ -266,7 +266,7 @@ def populate_job_instance_details(workflow_stats , workflow_info):
 			is_job_failed = True	
 		populate_individual_job_instance_details(job_states ,job_stat , is_job_failed , job_name_retry_count_dict[job_states.job_name])
 		# Assigning host to job mapping
-		if host_job_mapping.has_key(job_stat.host_name):
+		if job_stat.host_name in host_job_mapping:
 			job_list =host_job_mapping[job_stat.host_name]
 			job_list.append(job_stat)
 		else:
@@ -277,7 +277,7 @@ def populate_job_instance_details(workflow_stats , workflow_info):
 		# Assigning the tranformation name
 		if job_stat.transformation is not None:
 			transformation_stats_dict[job_stat.transformation] = None
-		if not global_transformtion_color_map.has_key(job_stat.transformation):
+		if job_stat.transformation not in global_transformtion_color_map:
 			global_transformtion_color_map[job_stat.transformation]= predefined_colors[color_count%len(predefined_colors)]
 			color_count +=1
 		# Assigning the mapping to the workflow map
@@ -321,7 +321,7 @@ def populate_transformation_details(workflow_stats , workflow_info):
 		trans_info.avg = trans_stats.avg
 		trans_info.total_runtime = trans_stats.sum
 		transformation_stats_dict[trans_stats.transformation] = trans_info
-		if not global_transformtion_color_map.has_key(trans_stats.transformation):
+		if trans_stats.transformation not in global_transformtion_color_map:
 			global_transformtion_color_map[trans_stats.transformation]= predefined_colors[color_count%len(predefined_colors)]
 			color_count +=1
 		# Assigning the mapping to the workflow map
@@ -358,11 +358,11 @@ def populate_chart(wf_uuid , expand = False):
 	if len(sub_wf_uuids) > 0:
 		workflow_info.job_instance_id_sub_wf_uuid_map = get_job_inst_sub_workflow_map(workflow_stampede_stats )
 	config = utils.slurp_braindb(rlb(workflow_info.submit_dir))
-	if (config.has_key('dag')):
+	if ('dag' in config):
 		dag_file_name = config['dag']
 		workflow_info.dag_label = dag_file_name[:dag_file_name.find(".dag")]
 		workflow_info.dag_file_path = os.path.join(rlb(workflow_info.submit_dir), dag_file_name)
-	if (config.has_key('dax')):
+	if ('dax' in config):
 		workflow_info.dax_file_path = config['dax']
 	return workflow_stampede_stats, workflow_info 
 	
@@ -419,8 +419,8 @@ def setup(submit_dir , config_properties):
 	global_base_submit_dir = submit_dir
 	#Getting values from braindump file
 	config = utils.slurp_braindb(submit_dir)
-	if (config.has_key('submit_dir') or config.has_key('run')):
-		if config.has_key('submit_dir'):
+	if ('submit_dir' in config or 'run' in config):
+		if 'submit_dir' in config:
 			global_braindb_submit_dir =  os.path.abspath(config['submit_dir'])
 		else:
 			global_braindb_submit_dir =  os.path.abspath(config['run'])

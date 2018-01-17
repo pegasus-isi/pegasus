@@ -139,7 +139,7 @@ class FIFODict:
         """Add a key.
         If it is new, return True otherwise False.
         """
-        if self._data.has_key(key):
+        if key in self._data:
             return False
         self._data[key] = 1
         removed = self._q.getput(key)
@@ -619,7 +619,7 @@ def sizeToBytes(s):
     if not m:
         raise ValueError("Not of form: <num> <units>")
     value, units = m.groups()
-    if not _BFAC.has_key(units):
+    if units not in _BFAC:
         raise ValueError("Unrecognized units for '%s'" % s)
     return int(value) * _BFAC[units]
 

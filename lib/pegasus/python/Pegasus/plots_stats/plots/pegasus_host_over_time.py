@@ -419,7 +419,7 @@ var hc_scaleMargin = 15;\n"
 	color_name_str = "var hc_color =['yellow','orange' ,'steelblue'"
 	desc_name_str = "var hc_desc=['condor job','resource delay', 'job runtime as seen by dagman'"
 	for k,v in workflow_stat.transformation_color_map.items():
-		if workflow_stat.transformation_statistics_dict.has_key(k):
+		if k in workflow_stat.transformation_statistics_dict:
 			color_name_str += ",'"+v +"'"
 			desc_name_str +=",'"+k +"'"	
 	color_name_str += "];\n"

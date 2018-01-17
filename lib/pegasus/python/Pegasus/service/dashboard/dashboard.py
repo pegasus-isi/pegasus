@@ -187,7 +187,7 @@ class Dashboard(object):
                 if job.seqexec is not None and job.kickstart is not None:
                     seqexec_delay =(float(job.seqexec) - float(job.kickstart))
 
-                if job_retry_count_dict.has_key(job.job_name):
+                if job.job_name in job_retry_count_dict:
                     job_retry_count_dict[job.job_name] += 1
                 else:
                     job_retry_count_dict[job.job_name] = 1

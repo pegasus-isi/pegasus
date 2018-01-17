@@ -196,7 +196,7 @@ class WorkflowLoader(BaseLoader):
             }
 
             # remap attr names
-            if attr_remap.has_key(attr):
+            if attr in attr_remap:
                 attr = attr_remap[attr]
 
             # sanitize argv input
@@ -506,7 +506,7 @@ class WorkflowLoader(BaseLoader):
 
         }
 
-        if not states.has_key(js.event):
+        if js.event not in states:
             # corner case event
             js.state = js.event.split('.')[2].upper()
         else:
@@ -572,7 +572,7 @@ class WorkflowLoader(BaseLoader):
 
         Handles a task edge insert event
         """
-        if not self._task_edge_flush.has_key(linedata['xwf.id']):
+        if linedata['xwf.id'] not in self._task_edge_flush:
             if self._batch:
                 self.hard_flush()
             self._task_edge_flush[linedata['xwf.id']] = True
@@ -596,7 +596,7 @@ class WorkflowLoader(BaseLoader):
         """
         # Flush previous events to ensure that all the batched
         # Job table entries are written.
-        if not self._task_map_flush.has_key(linedata['xwf.id']):
+        if linedata['xwf.id'] not in self._task_map_flush:
             if self._batch:
                 self.hard_flush()
             self._task_map_flush[linedata['xwf.id']] = True
@@ -757,7 +757,7 @@ class WorkflowLoader(BaseLoader):
         host.wf_id = self.wf_uuid_to_root_id(host.wf_uuid)
 
         # handle inserts into the host table
-        if not self.hosts_written_cache.has_key((host.wf_id,host.site,host.hostname,host.ip)):
+        if (host.wf_id,host.site,host.hostname,host.ip) not in self.hosts_written_cache:
             if self._batch:
                 self._batch_cache['batch_events'].append(host)
             else:
@@ -816,7 +816,7 @@ class WorkflowLoader(BaseLoader):
         not in cache, retrieve from st_workflow table in DB and cache.
         Cuts down on DB queries during insert processing.
         """
-        if not self.wf_id_cache.has_key(wf_uuid):
+        if wf_uuid not in self.wf_id_cache:
             query = self.session.query(Workflow).filter(Workflow.wf_uuid == wf_uuid)
             try:
                 self.wf_id_cache[wf_uuid] = query.one().wf_id
@@ -838,7 +838,7 @@ class WorkflowLoader(BaseLoader):
         not in cache, retrieve from st_workflow table in DB and cache.
         Cuts down on DB queries during insert processing.
         """
-        if not self.root_wf_id_cache.has_key(wf_uuid):
+        if wf_uuid not in self.root_wf_id_cache:
             query = self.session.query(Workflow).filter(Workflow.wf_uuid == wf_uuid)
             try:
                 self.root_wf_id_cache[wf_uuid] = query.one().root_wf_id
@@ -861,7 +861,7 @@ class WorkflowLoader(BaseLoader):
 
         Gets and caches task_id for task_meta inserts
         """
-        if not self.task_id_cache.has_key((wf_id, task_dax_id)):
+        if (wf_id, task_dax_id) not in self.task_id_cache:
             query = self.session.query(Task.task_id).filter(Task.wf_id == wf_id).filter(Task.abs_task_id == task_dax_id)
             try:
                 self.task_id_cache[((wf_id, task_dax_id))] = query.one().task_id
@@ -883,7 +883,7 @@ class WorkflowLoader(BaseLoader):
 
         Gets and caches lfn_id for rc_meta, rc_lfn, rc_pfn and wf_files inserts
         """
-        if not self.lfn_id_cache.has_key((wf_id, lfn)):
+        if (wf_id, lfn) not in self.lfn_id_cache:
             id =  self.__get_lfn_id_from_database__(wf_id, lfn )
 
             if id is None:
@@ -937,7 +937,7 @@ class WorkflowLoader(BaseLoader):
         Gets and caches job_id for job_instance inserts and static
         table updating.
         """
-        if not self.job_id_cache.has_key((wf_id, exec_id)):
+        if (wf_id, exec_id) not in self.job_id_cache:
             query = self.session.query(Job.job_id).filter(Job.wf_id == wf_id).filter(Job.exec_job_id == exec_id)
             try:
                 self.job_id_cache[((wf_id, exec_id))] = query.one().job_id
@@ -962,7 +962,7 @@ class WorkflowLoader(BaseLoader):
         wf_id = self.wf_uuid_to_id(o.wf_uuid)
         cached_job_id = self.get_job_id(wf_id, o.exec_job_id)
         uniqueIdIdx = (cached_job_id, o.job_submit_seq)
-        if not self.job_instance_id_cache.has_key(uniqueIdIdx):
+        if uniqueIdIdx not in self.job_instance_id_cache:
             query = self.session.query(JobInstance).filter(JobInstance.job_id == cached_job_id).filter(JobInstance.job_submit_seq == o.job_submit_seq)
             try:
                 self.job_instance_id_cache[uniqueIdIdx] = query.one().job_instance_id
@@ -991,7 +991,7 @@ class WorkflowLoader(BaseLoader):
         wf_id = self.wf_uuid_to_id(host.wf_uuid)
         cached_job_id = self.get_job_id(wf_id, host.exec_job_id)
 
-        if not self.host_cache.has_key((cached_job_id, host.job_submit_seq)):
+        if (cached_job_id, host.job_submit_seq) not in self.host_cache:
             if not host.host_id:
                 try:
                     host.host_id = self.session.query(Host.host_id).filter(Host.wf_id == host.wf_id).filter(Host.site == host.site).filter(Host.hostname == host.hostname).filter(Host.ip == host.ip).one().host_id
@@ -1040,7 +1040,7 @@ class WorkflowLoader(BaseLoader):
             if k[0] == wfs.wf_id:
                 del self.job_id_cache[k]
 
-        if self._task_map_flush.has_key(wfs.wf_uuid):
+        if wfs.wf_uuid in self._task_map_flush:
             del self._task_map_flush[wfs.wf_uuid]
 
 

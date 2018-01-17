@@ -114,7 +114,7 @@ class DashboardLoader(BaseLoader):
             }
 
             # remap attr names
-            if attr_remap.has_key(attr):
+            if attr in attr_remap:
                 attr = attr_remap[attr]
 
             # sanitize argv input
@@ -280,7 +280,7 @@ class DashboardLoader(BaseLoader):
         not in cache, retrieve from st_workflow table in DB and cache.
         Cuts down on DB queries during insert processing.
         """
-        if not self.wf_id_cache.has_key(wf_uuid):
+        if wf_uuid not in self.wf_id_cache:
             query = self.session.query(DashboardWorkflow).filter(DashboardWorkflow.wf_uuid == wf_uuid)
             try:
                 self.wf_id_cache[wf_uuid] = query.one().wf_id
@@ -302,7 +302,7 @@ class DashboardLoader(BaseLoader):
         not in cache, retrieve from st_workflow table in DB and cache.
         Cuts down on DB queries during insert processing.
         """
-        if not self.root_wf_id_cache.has_key(wf_uuid):
+        if wf_uuid not in self.root_wf_id_cache:
             query = self.session.query(Workflow).filter(DashboardWorkflow.wf_uuid == wf_uuid)
             try:
                 self.root_wf_id_cache[wf_uuid] = query.one().root_wf_id

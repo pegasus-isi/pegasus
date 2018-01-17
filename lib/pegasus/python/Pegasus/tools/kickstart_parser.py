@@ -300,7 +300,7 @@ class Parser:
                 for my_element in self._ks_elements[name]:
                     if my_element in attrs:
                         statinfo.add_attribute( my_element, attrs[my_element])
-                if not self._keys.has_key( "outputs"):
+                if "outputs" not in self._keys:
                     self._keys[ "outputs" ] = {} #a dictionary indexed by lfn
                 lfn = self._lfn
                 statinfo.set_id( lfn )

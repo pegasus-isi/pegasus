@@ -459,7 +459,7 @@ class BaseParser(ProcessInterface, DoesLogging):
         if isinstance(item, str):
             item = self._parser.parseLine(item)
         # Normalize the 'level' value
-        if item.has_key('level'):
+        if 'level' in item:
             level = item['level']
             if hasattr(level, 'upper'):
                 lvlname = item['level'].upper()
@@ -595,7 +595,7 @@ class NLSimpleParser(DoesLogging):
             raise BPParseError("BP parse error: " + str(err))
         # higher-level verification
         for key in TS_FIELD, EVENT_FIELD:
-            if not fields.has_key(key):
+            if key not in fields:
                 raise BPParseError("missing required key '{0}'".format(key))
         # Pre-process date, if requested
         if self.parse_date:

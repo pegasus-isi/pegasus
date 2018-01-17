@@ -724,7 +724,7 @@ class StampedeStatistics(object):
         f = {}
         for row in sq_1.all():
             i += 1
-            if not f.has_key(row):
+            if row not in f:
                 f[row] = True
 
         return i - len(f.keys())

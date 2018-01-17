@@ -354,7 +354,7 @@ class InterpolationEngine(object):
             This is similar to a depth-first-search algorithm.
             """
             # Have we been here already?
-            if backtrail.has_key((key, section.name)):
+            if (key, section.name) in backtrail:
                 # Yes - infinite loop detected
                 raise InterpolationLoopError(key)
             # Place a marker on our backtrail so we won't come back here again
@@ -601,7 +601,7 @@ class Section(dict):
             raise ValueError('The key "%s" is not a string.' % key)
         
         # add the comment
-        if not self.comments.has_key(key):
+        if key not in self.comments:
             self.comments[key] = []
             self.inline_comments[key] = ''
         # remove the entry from defaults
@@ -609,13 +609,13 @@ class Section(dict):
             self.defaults.remove(key)
         #
         if isinstance(value, Section):
-            if not self.has_key(key):
+            if key not in self:
                 self.sections.append(key)
             dict.__setitem__(self, key, value)
         elif isinstance(value, dict) and not unrepr:
             # First create the new depth level,
             # then create the section
-            if not self.has_key(key):
+            if key not in self:
                 self.sections.append(key)
             new_depth = self.depth + 1
             dict.__setitem__(
@@ -628,7 +628,7 @@ class Section(dict):
                     indict=value,
                     name=key))
         else:
-            if not self.has_key(key):
+            if key not in self:
                 self.scalars.append(key)
             if not self.main.stringify:
                 if isinstance(value, StringTypes):
@@ -1610,7 +1610,7 @@ class ConfigObj(Section):
                                        NestingError, infile, cur_index)
                     
                 sect_name = self._unquote(sect_name)
-                if parent.has_key(sect_name):
+                if sect_name in parent:
                     self._handle_error('Duplicate section name at line %s.',
                                        DuplicateError, infile, cur_index)
                     continue
@@ -1688,7 +1688,7 @@ class ConfigObj(Section):
                             continue
                 #
                 key = self._unquote(key)
-                if this_section.has_key(key):
+                if key in this_section:
                     self._handle_error(
                         'Duplicate keyword name at line %s.',
                         DuplicateError, infile, cur_index)
@@ -1976,7 +1976,7 @@ class ConfigObj(Section):
             
             section._cs_section_comments[entry] = configspec.comments[entry]
             section._cs_section_inline_comments[entry] = configspec.inline_comments[entry]
-            if not section.has_key(entry):
+            if entry not in section:
                 section[entry] = {}
             self._set_configspec_value(configspec[entry], section[entry])
 
@@ -2010,7 +2010,7 @@ class ConfigObj(Section):
             
         section.configspec = scalars
         for entry in sections:
-            if not section.has_key(entry):
+            if entry not in section:
                 section[entry] = {}
             self._handle_repeat(section[entry], sections[entry])
 

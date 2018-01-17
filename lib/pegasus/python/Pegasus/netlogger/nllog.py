@@ -528,7 +528,7 @@ class OptionParser(optparse.OptionParser):
                      The 'version' argument will override the default
                      version
         """
-        if not kwargs.has_key('version'):
+        if 'version' not in kwargs:
             version_str = "%%prog, NetLogger Toolkit version: %s\n  %s" % (
                 NL_VERSION, NL_CREATE_DATE)
             version_str += "\n\n" + NL_COPYRIGHT

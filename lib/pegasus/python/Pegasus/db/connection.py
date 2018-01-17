@@ -257,7 +257,7 @@ def get_wf_uuid(submit_dir):
 
     # Get wf_uuid for this workflow
     wf_uuid = None
-    if (top_level_wf_params.has_key('wf_uuid')):
+    if ('wf_uuid' in top_level_wf_params):
         wf_uuid = top_level_wf_params['wf_uuid']
     else:
         log.error("workflow id cannot be found in the braindump.txt ")
@@ -411,7 +411,7 @@ def _get_workflow_uri(props=None, submit_dir=None, top_dir=None):
 
     # The default case is a .stampede.db file with the dag name as base
     dag_file_name = ""
-    if top_level_wf_params.has_key('dag'):
+    if 'dag' in top_level_wf_params:
         dag_file_name = top_level_wf_params['dag']
     else:
         raise ConnectionError("DAG file name cannot be found in the braindump.txt.")

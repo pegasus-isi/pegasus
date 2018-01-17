@@ -290,7 +290,7 @@ def print_individual_wf_job_stats(workflow_stats , title):
 		job_stats.seqexec = job.seqexec
 		if job_stats.seqexec is not None and job_stats.kickstart is not None:
 			job_stats.seqexec_delay = (float(job_stats.seqexec) - float(job_stats.kickstart))
-		if job_retry_count_dict.has_key(job.job_name):
+		if job.job_name in job_retry_count_dict:
 			job_retry_count_dict[job.job_name] +=1
 		else:
 			job_retry_count_dict[job.job_name] = 1
