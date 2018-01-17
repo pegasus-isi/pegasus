@@ -173,7 +173,7 @@ def unquote_message(message):
             output.append(' ')
         elif c == '\\':
             try:
-                c = chars.next()
+                c = next(chars)
             except StopIteration:
                 output.append(c)
                 break

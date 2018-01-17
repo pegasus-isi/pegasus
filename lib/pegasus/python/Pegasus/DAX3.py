@@ -2181,14 +2181,14 @@ def parse(infile):
     iterator = iter(iterator)
 
     # Get the document element (should be <adag>)
-    event, root = iterator.next()
+    event, root = next(iterator)
     adag = parse_adag(root)
 
     # This function reads all the children of "node"
     def expand(node):
-        event, elem = iterator.next()
+        event, elem = next(iterator)
         while elem != node:
-            event, elem = iterator.next()
+            event, elem = next(iterator)
 
         # We clear the document element to prevent
         # the memory usage from growing

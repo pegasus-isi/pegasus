@@ -197,7 +197,7 @@ class Builder(object):
         d = {}
         i = iter(map(self.build, o.getChildren()))
         for el in i:
-            d[el] = i.next()
+            d[el] = next(i)
         return d
     
     def build_Tuple(self, o):
