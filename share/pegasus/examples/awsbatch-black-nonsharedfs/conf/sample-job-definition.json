@@ -1,0 +1,26 @@
+
+{
+  "containerProperties": {
+    "mountPoints": [],
+    "image": "XXXXXXXXXXX.dkr.ecr.us-west-2.amazonaws.com/awsbatch/fetch_and_run",
+    "jobRoleArn": "batchJobRole"  ,  
+    "environment": [ { 
+            "name": "PEGASUS_EXAMPLE",
+            "value": "batch-black"
+         }],
+    "vcpus": 1,
+    "command": [
+      "/bin/bash",
+      "-c",
+      "exit $AWS_BATCH_JOB_ATTEMPT"
+    ],
+    "volumes": [],
+    "memory": 500,
+    "ulimits": []
+  },
+  "retryStrategy": {
+    "attempts": 1
+  },
+  "parameters": {},
+  "type": "container"
+}
