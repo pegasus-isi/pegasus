@@ -231,7 +231,7 @@ class Log:
         self._meta = {}
         if meta:
             self._meta[None] = meta
-        if isinstance(logfile,types.StringType):
+        if isinstance(logfile, str):
             try:
                 self._logfile = urlfile(logfile)
             except (socket.gaierror, socket.error, IOError) as E:

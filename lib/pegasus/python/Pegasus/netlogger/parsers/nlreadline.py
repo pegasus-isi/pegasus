@@ -55,7 +55,7 @@ class BufferedReadline:
 
     def xreadlines(self):
         """Override xreadlines() so it calls our readline()."""
-        while 1:
+        while True:
             line = self.readline()
             if line:
                 yield line

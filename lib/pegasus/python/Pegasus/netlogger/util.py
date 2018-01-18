@@ -393,7 +393,7 @@ class ThrottleTimer:
        tt = ThrottleTimer(0.1)
        ...
        tt.start()
-       while 1:
+       while True:
            do_something()
            tt.throttle() # sleeps here
 
