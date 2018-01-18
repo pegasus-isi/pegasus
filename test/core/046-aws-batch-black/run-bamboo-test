@@ -29,7 +29,7 @@ export PYTHONPATH=`pegasus-config --python`
 
 # plan and submit the  workflow
 pegasus-plan \
-    --conf ./conf/pegasusrc \
+    --conf ./pegasusrc \
     --sites aws-batch \
     --cluster horizontal \
     --output-site local \
