@@ -37,4 +37,4 @@ pegasus-plan \
     --dax blackdiamond.dax \
     --force \
     -v \
-#    --submit
+    --submit
