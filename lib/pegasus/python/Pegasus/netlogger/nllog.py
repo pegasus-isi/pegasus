@@ -307,7 +307,7 @@ def profile(func):
     if os.getenv('NETLOGGER_ON', False) in (
         'off','0','no','false','',False):    
         return func    
-    if type(func) is not types.FunctionType:
+    if not isinstance(func, types.FunctionType):
         return func
     
     if func.__module__ == '__main__':
@@ -339,7 +339,7 @@ def profile_result(func):
     if os.getenv('NETLOGGER_ON', False) in (
         'off','0','no','false','',False):    
         return func
-    if type(func) is not types.FunctionType:
+    if not isinstance(func, types.FunctionType):
         return func
     
     if func.__module__ == '__main__':
@@ -387,7 +387,7 @@ class Profiler(type):
         """ decorator for start,end event method profiling with netlogger
         skips any classmethod or staticmethod types.
         """
-        if type(func) is not types.FunctionType:
+        if not isinstance(func, types.FunctionType):
             return func
         
         event = '%s' %func.__name__
@@ -416,8 +416,7 @@ class Profiler(type):
         log.set_meta(pid=os.getpid(), ppid=os.getppid(), gpid=os.getgid())
         keys = []
         if not classdict.get('profiler_skip_all',cls.profiler_skip_all):
-            keys = filter(lambda k: type(classdict[k]) is 
-                          types.FunctionType and k not in 
+            keys = filter(lambda k: isinstance(classdict[k], types.FunctionType) and k not in 
                           classdict.get('profiler_skip_methods',cls.profiler_skip_methods), 
                           classdict.keys())
 

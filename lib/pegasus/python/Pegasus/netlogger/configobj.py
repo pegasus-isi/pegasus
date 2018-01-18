@@ -1657,7 +1657,7 @@ class ConfigObj(Section):
                             try:
                                 value = unrepr(value)
                             except Exception as e:
-                                if type(e) == UnknownType:
+                                if isinstance(e, UnknownType):
                                     msg = 'Unknown name or type in value at line %s.'
                                 else:
                                     msg = 'Parse error in value at line %s.'

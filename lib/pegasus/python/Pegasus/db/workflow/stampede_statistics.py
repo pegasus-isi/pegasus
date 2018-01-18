@@ -1367,9 +1367,9 @@ class StampedeStatistics(object):
     def _get_host_filter(self):
         if self._host_filter == None:
             return None
-        elif type(self._host_filter) == type('str'):
+        elif isinstance(self._host_filter, type('str')):
             return Host.hostname == self._host_filter
-        elif type(self._host_filter) == type([]):
+        elif isinstance(self._host_filter, type([])):
             return Host.hostname.in_(self._host_filter)
         else:
             return None
@@ -1383,16 +1383,16 @@ class StampedeStatistics(object):
             self._xform_filter['exclude'] == None:
             return None
         elif self._xform_filter['include'] != None:
-            if type(self._xform_filter['include']) == type('str'):
+            if isinstance(self._xform_filter['include'], type('str')):
                 return Invocation.transformation == self._xform_filter['include']
-            elif type(self._xform_filter['include']) == type([]):
+            elif isinstance(self._xform_filter['include'], type([])):
                 return Invocation.transformation.in_(self._xform_filter['include'])
             else:
                 return None
         elif self._xform_filter['exclude'] != None:
-            if type(self._xform_filter['exclude']) == type('str'):
+            if isinstance(self._xform_filter['exclude'], type('str')):
                 return Invocation.transformation != self._xform_filter['exclude']
-            elif type(self._xform_filter['exclude']) == type([]):
+            elif isinstance(self._xform_filter['exclude'], type([])):
                 return not_(Invocation.transformation.in_(self._xform_filter['exclude']))
             else:
                 return None
