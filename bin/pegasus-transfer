@@ -1912,10 +1912,10 @@ class GlobusOnlineHandler(TransferHandlerBase):
         failed_l = []        
         
         # src
-        src_ep =transfers_l[0].get_src_host()
+        src_ep = transfers_l[0].get_src_host()
 
         # dst
-        dst = transfers_l[0].get_dst_host()
+        dst_ep = transfers_l[0].get_dst_host()
 
         cred_details = self._creds(transfers_l[0])
         

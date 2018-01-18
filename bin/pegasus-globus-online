@@ -128,7 +128,7 @@ def wait_for_task(transfer_client, task_id, acceptable_faults = None):
     """
     logger.info("Waiting for transfer to complete")
     wait_timeout = 60
-    loop_count = 0
+    loop_counter = 0
 
     while not transfer_client.task_wait(task_id, timeout=wait_timeout):
         loop_counter += 1
@@ -154,7 +154,7 @@ def cancel_task(transfer_client, task_id):
 
 def mkdir(request):
     """
-    mkdir is supported in the Python API yet, we need to alter this
+    mkdir isn't supported recursively in the Python API yet, we need to use transfer
     """
     # global so that we can use it in signal handlers
     global client
@@ -165,7 +165,7 @@ def mkdir(request):
     client, transfer_client = acquire_clients(request)
     
     # make sure we can auto-activate the endpoints
-    activate_endpoint(tranfer_client, request["endpoint"])
+    activate_endpoint(transfer_client, request["endpoint"])
     
     label = None
     if "PEGASUS_WF_UUID" in os.environ and "PEGASUS_DAG_JOB_ID" in os.environ:
@@ -173,7 +173,7 @@ def mkdir(request):
 
     ####update this to operation_mkdir in the future
     #transfer_client.operation_mkdir
-    # set up a new delete transfer
+    #set up a new mkdir transfer
     deadline = datetime.utcnow() + timedelta(hours=24)
     transfer_data = globus_sdk.TransferData(transfer_client, request["endpoint"], request["endpoint"], label=label, deadline=deadline)
     
@@ -195,7 +195,7 @@ def mkdir(request):
         logger.error(err)
         cancel_task(transfer_client, task_id)
         sys.exit(1)
-        logger.info("Mkdir complete")
+    logger.info("Mkdir complete")
 
 
 def transfer(request):
@@ -224,8 +224,8 @@ def transfer(request):
     client, transfer_client = acquire_clients(request)
     
     # make sure we can auto-activate the endpoints
-    activate_endpoint(tranfer_client, request["src_endpoint"])
-    activate_endpoint(tranfer_client, request["dst_endpoint"])
+    activate_endpoint(transfer_client, request["src_endpoint"])
+    activate_endpoint(transfer_client, request["dst_endpoint"])
     
     label = None
     if "PEGASUS_WF_UUID" in os.environ and "PEGASUS_DAG_JOB_ID" in os.environ:
@@ -255,7 +255,7 @@ def transfer(request):
         logger.error(err)
         cancel_task(transfer_client, task_id)
         sys.exit(1)
-        logger.info("Transfer complete")
+    logger.info("Transfer complete")
     
 
 def remove(request):
@@ -272,7 +272,7 @@ def remove(request):
     # connect to the service
     client, transfer_client = acquire_clients(request)
     
-    activate_endpoint(tranfer_client, request["endpoint"])
+    activate_endpoint(transfer_client, request["endpoint"])
 
     label = None
     if "PEGASUS_WF_UUID" in os.environ and "PEGASUS_DAG_JOB_ID" in os.environ:
