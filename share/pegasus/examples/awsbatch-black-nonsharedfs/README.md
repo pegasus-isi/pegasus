@@ -26,7 +26,7 @@ workflows must be based on the above example. Additionally, the Docker
 file for your container image should include these addtional Docker
 run commands to install the yum packages that Pegasus requires.
 
-```
+```dockerfile
 RUN yum -y install perl findutils
 ```
 
@@ -79,9 +79,9 @@ be used for all jobs in the workflow.
 
 To create these we will use the pegasus-aws-batch client and edit the
 sample files in conf/ directory before proceeding
-a) sample-job-definition.json : Edit the attribute named image and replace
+* sample-job-definition.json : Edit the attribute named image and replace
 it with the ARN of the container image you built for your account
-b) sample-compute-env.json : Edit the attributes subnets and
+* sample-compute-env.json : Edit the attributes subnets and
 securityGroupIds 
 
 Update the pegasusrc with your aws account and aws region to use
