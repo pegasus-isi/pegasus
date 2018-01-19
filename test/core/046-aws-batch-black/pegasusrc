@@ -16,9 +16,9 @@ pegasus.integrity.checking = False
 # AWS Batch related properties
 pegasus.aws.region=us-west-2 
 pegasus.aws.account=405596411149
-pegasus.aws.batch.job_definition=arn:aws:batch:us-west-2:405596411149:job-definition/fetch_and_run
-pegasus.aws.batch.compute_environment=arn:aws:batch:us-west-2:405596411149:compute-environment/karan-cmd-test-compute-env
-pegasus.aws.batch.job_queue=arn:aws:batch:us-west-2:405596411149:job-queue/karan-cmd-test-job-queue
+pegasus.aws.batch.job_definition=fetch_and_run
+pegasus.aws.batch.compute_environment=karan-cmd-test-compute-env
+pegasus.aws.batch.job_queue=karan-cmd-test-job-queue
 
 
 
