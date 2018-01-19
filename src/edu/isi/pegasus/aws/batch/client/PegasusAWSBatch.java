@@ -252,7 +252,7 @@ public class PegasusAWSBatch {
         
         key = Synch.AWS_BATCH_PROPERTY_PREFIX + ".job_definition";
         String jobDefinition = getAWSOptionValue(options, "job-definition", props, key, allEntitiesRequired );
-        jsonMap.put(Synch.BATCH_ENTITY_TYPE.job_defintion, jobDefinition );
+        jsonMap.put(Synch.BATCH_ENTITY_TYPE.job_definition, jobDefinition );
         
         key = Synch.AWS_BATCH_PROPERTY_PREFIX + ".compute_environment";
         String computeEnvironment = getAWSOptionValue(options, "compute-environment", props, key , allEntitiesRequired);

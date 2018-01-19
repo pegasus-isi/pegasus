@@ -86,7 +86,7 @@ public class Synch {
     public static final String S3_PREFIX ="s3://";
 
     
-    public enum BATCH_ENTITY_TYPE{ compute_environment, job_defintion, job_queue, s3_bucket};
+    public enum BATCH_ENTITY_TYPE{ compute_environment, job_definition, job_queue, s3_bucket};
     
     public static final String AWS_PROPERTY_PREFIX = "aws";
     
@@ -229,12 +229,12 @@ public class Synch {
     public void setup( EnumMap<BATCH_ENTITY_TYPE, String> entities, boolean allRequired) {
         boolean delete = true;
         
-        String value = getEntityValue(entities, BATCH_ENTITY_TYPE.job_defintion, allRequired );
+        String value = getEntityValue(entities, BATCH_ENTITY_TYPE.job_definition, allRequired );
         if( value != null ){
             if(  !isFile( value ) ){
                 mJobDefinitionARN = value.startsWith( ARN_PREFIX )?
                         value:
-                        constructDefaultARN( BATCH_ENTITY_TYPE.job_defintion, value );
+                        constructDefaultARN(BATCH_ENTITY_TYPE.job_definition, value );
                 
                 mLogger.info("Using existing Job Definition " + mJobDefinitionARN );
                 delete = false;
@@ -244,7 +244,7 @@ public class Synch {
                                                                constructDefaultName( Synch.JOB_DEFINITION_SUFFIX));
                 mLogger.info("Created Job Definition " + mJobDefinitionARN );
             }
-            mDeleteOnExit.put(BATCH_ENTITY_TYPE.job_defintion, delete );
+            mDeleteOnExit.put(BATCH_ENTITY_TYPE.job_definition, delete );
         }
          
         value = getEntityValue(entities, BATCH_ENTITY_TYPE.compute_environment, allRequired );
@@ -335,8 +335,8 @@ public class Synch {
         if( mDeleteOnExit.get(BATCH_ENTITY_TYPE.compute_environment) ){
             entities.put(BATCH_ENTITY_TYPE.compute_environment, mComputeEnvironmentARN );
         }
-        if( mDeleteOnExit.get(BATCH_ENTITY_TYPE.job_defintion) ){
-            entities.put(BATCH_ENTITY_TYPE.job_defintion, mJobDefinitionARN );
+        if( mDeleteOnExit.get(BATCH_ENTITY_TYPE.job_definition) ){
+            entities.put(BATCH_ENTITY_TYPE.job_definition, mJobDefinitionARN );
         }
         if( mDeleteOnExit.get(BATCH_ENTITY_TYPE.s3_bucket) ){
             entities.put(BATCH_ENTITY_TYPE.s3_bucket, mS3Bucket );
@@ -365,7 +365,7 @@ public class Synch {
             mLogger.info( "Attempting to delete compute environment " + value );
             deleted = this.deleteComputeEnvironment( value );
         }
-        value = this.getEntityValue(entities, BATCH_ENTITY_TYPE.job_defintion, false);
+        value = this.getEntityValue(entities, BATCH_ENTITY_TYPE.job_definition, false);
         if( value != null ){
             mLogger.info( "Attempting to delete job definition " + value );
             deleted = this.deleteJobDefinition( value );
@@ -1150,7 +1150,7 @@ public class Synch {
                 arn.append( "compute-environment" );
                 break;
                 
-            case job_defintion:
+            case job_definition:
                 arn.append( "job_definition" );
                 break;  
                 
