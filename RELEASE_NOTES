@@ -5,6 +5,10 @@ We are pleased to announce release of Pegasus 4.8.1
 
 Pegasus 4.8.1 is be a minor bug fix release 
 
+Improvements
+--------------
+1) [PM-1233] – update pyopen ssl to 0.14 or higher
+
 Bugs Fixed
 --------------
 
@@ -20,6 +24,7 @@ Bugs Fixed
 
 5) [PM-1226] - hierarchal workflow with worker package staging fails
 
+6) [PM-1230] – The pegasus python install fails on CentOS 7
 
 ===============================
 Release Notes for Pegasus 4.8.0
