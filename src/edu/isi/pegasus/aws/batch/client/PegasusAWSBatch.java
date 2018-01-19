@@ -152,10 +152,10 @@ public class PegasusAWSBatch {
         
         try{	
             OptionSet options = me.parseCommandLineOptions(args);
-            me.executeCommand( options );
+            result = me.executeCommand( options );
         }
         catch ( Exception e){
-            result = 1;
+            result = 3;
             me.mLogger.error(e);
         }
         finally {
@@ -180,11 +180,13 @@ public class PegasusAWSBatch {
 
     /**
      * Executes the client with the options passed on command line
-     * @param options 
+     * @param options
+     * 
+     * @return exit code with which to exit
      */
-    protected void executeCommand( OptionSet options ) {
+    protected int executeCommand( OptionSet options ) {
         Level logLevel = Level.INFO;
-        
+        int exitcode = 0;
         if( options.has( "log-file") ){
             File f = new File( (String)options.valueOf( "log-file") );
             setupFileLogging( f, true );
@@ -283,7 +285,7 @@ public class PegasusAWSBatch {
             
             if( options.has( "delete" ) ){
                 sc.deleteSetup( jsonMap );
-                return;
+                return exitcode ;
             }
             else{
                 //we do setup both in case of running jobs or just doing setup
@@ -291,7 +293,7 @@ public class PegasusAWSBatch {
             }
             
             if( options.has( "create" ) ) {
-                return;
+                return exitcode;
             }
         } catch (IOException ex) {
             mLogger.error(ex, ex);
@@ -311,7 +313,7 @@ public class PegasusAWSBatch {
             }
         }
         sc.signalToExitAfterJobsComplete();
-        sc.awaitTermination();
+        exitcode = sc.awaitTermination();
         
         //merge logs if required
         if( options.has( "merge-logs") ){
@@ -322,7 +324,7 @@ public class PegasusAWSBatch {
             sc.mergeLogs( stdout, stderr );
         }
         
-
+        return exitcode;
     }
     
     /**

@@ -84,6 +84,17 @@ public class Synch {
      * The s3 prefix
      */
     public static final String S3_PREFIX ="s3://";
+    
+    
+    /**
+     * Exitcode to exit with in case of one or more user tasks failing
+     */
+    public static final int TASK_FAILURE_EXITCODE = 1;
+    
+    /**
+     * Exitcode to exit with in case AWS Batch related issues or internal errrors
+     */
+    public static final int NON_TASK_FAILURE_EXITCODE = 2;
 
     
     public enum BATCH_ENTITY_TYPE{ compute_environment, job_definition, job_queue, s3_bucket};
@@ -184,8 +195,12 @@ public class Synch {
     
     private Logger mLogger;
     
-    
     private AWSJobstateWriter mJobstateWriter;
+    
+    /**
+     * The exitcode with which client should exit
+     */
+    private int mExitCode;
     
     public Synch(){
         
@@ -217,6 +232,7 @@ public class Synch {
         mExecutorService = Executors.newFixedThreadPool(2);
         mBatchClient = BatchClient.builder().region( mAWSRegion ).build();
         mDoneWithJobSubmits = false;
+        mExitCode = 0;
     }
     
     /**
@@ -443,6 +459,7 @@ public class Synch {
         }
         catch( Exception e ){
             mLogger.error( "Unable to submit job " + job, e );
+            mExitCode = Synch.NON_TASK_FAILURE_EXITCODE;
         }
         addJob( job );
         
@@ -528,8 +545,10 @@ public class Synch {
         }
         
         
-        int numDone = 0;
-        int total = awsJobIDs.size();
+        int numDone   = 0;
+        int total     = awsJobIDs.size();
+        int succeeded = 0;
+        int failed    = 0;
         Set<String> doneJobs = new HashSet();
         BatchClient batchClient = BatchClient.builder().region( mAWSRegion ).build();
         CloudWatchLog cwl       = new CloudWatchLog();
@@ -589,7 +608,7 @@ public class Synch {
                             mJobstateWriter.log(summary.jobName(), summary.jobId() , AWSJob.JOBSTATE.succeeded );
                             doneJobs.add( summary.jobId() );
                             numDone++;
-                            
+                            succeeded++;
                             mLogger.debug("Querying for succeeded job details "  + succeededJobID  );
                             Tuple<File,File> log = cwl.retrieve( j );
                             mLogger.debug("Logs retreived for "  + succeededJobID + " to " + log  );
@@ -616,7 +635,7 @@ public class Synch {
                                 //remove the job so that we don't query for detail
                                 awsJobIDs.remove(failedJobID);
                                 numDone++;
-                                
+                                failed++;
                                 mLogger.debug("Querying for failed job details "  + failedJobID   );
                                 Tuple<File,File> log = cwl.retrieve( j );
                                 mLogger.debug("Logs retreived for "  + failedJobID + " to " + log  );
@@ -659,16 +678,20 @@ public class Synch {
                 complainAndShutdown( ex );
                 return;
             }
-            
         }
         
-        
-        mLogger.info( "Done monitoring" );
+        //log tasks completed etc
+        mLogger.info( "Tasks Summary total=" + total + " done=" + numDone + " succeeded=" + succeeded + " failed=" + failed );
         
         try {
             batchClient.close();
         } catch (Exception ex) {
             mLogger.error( null, ex);
+            mExitCode = Synch.NON_TASK_FAILURE_EXITCODE;
+        }
+        
+        if( failed > 0 ){
+            mExitCode = Synch.TASK_FAILURE_EXITCODE;
         }
         
         shutdown();
@@ -686,17 +709,19 @@ public class Synch {
      * Waits on the monitoring thread future to return, to indicate that 
      * that all jobs are completed.
      */
-    public void awaitTermination(){
+    public int awaitTermination(){
         try {
             mMonitoringThreadFuture.get();
         } 
         catch (InterruptedException ie) {
             mLogger.error( "Interruppted while waiting for monitoring thread to complete " , ie);
+            mExitCode = NON_TASK_FAILURE_EXITCODE;
         }
         catch( ExecutionException e ){
             mLogger.error( "Execution exception encountered while waiting for monitoring thread to complete " , e);
-            
+            mExitCode = NON_TASK_FAILURE_EXITCODE;
         }
+        return mExitCode;
     }
     
     public synchronized boolean receivedSignalToExitAfterJobsComplete(){
@@ -709,6 +734,8 @@ public class Synch {
      * @param ex 
      */
     protected void complainAndShutdown(Exception ex) {
+        
+        mExitCode = Synch.NON_TASK_FAILURE_EXITCODE;
         if( ex instanceof InterruptedException  ){
              mLogger.error( "Monitoring Thread was interrupted", ex);
         }
