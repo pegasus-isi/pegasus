@@ -44,8 +44,7 @@ services such as EC2 Container Service , CloudWatchLogs etc.
 The following roles need to be created
 1. AWS Batch Service IAM Role: For convenience and ease of use make
 sure you name the role AWSBatchServiceRole , so that you don't have to
-make other changes.  Complete the procedures listed at [AWS Batch Service IAM Role]
-(https://docs.aws.amazon.com/batch/latest/userguide/service_IAM_role.html). 
+make other changes.  Complete the procedures listed at [AWS Batch Service IAM Role](https://docs.aws.amazon.com/batch/latest/userguide/service_IAM_role.html). 
 
 2. Amazon ECS Instance Role before creating your first compute
 environment. AWS Batch compute environments are populated with Amazon
@@ -54,7 +53,7 @@ locally. The Amazon ECS container agent makes calls to various AWS
 APIs on your behalf, so container instances that run the agent require
 an IAM policy and role for these services to know that the agent 
 belongs to you. Complete the procedures listed at [Amazon ECS Instance
-Role] (https://docs.aws.amazon.com/batch/latest/userguide/instance_IAM_role.html)
+Role](https://docs.aws.amazon.com/batch/latest/userguide/instance_IAM_role.html)
 
 3. Whenever a Pegasus job runs via AWS Batch it needs to fetch data
 from S3 and push data back to S3. To create this job role follow the
