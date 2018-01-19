@@ -107,15 +107,6 @@ is 12.194 seconds
 
 ```
 
-Update the following properties in pegasusrc with the ARN of the job
-definition, compute environment and job queue listed when you run
-pegasus-aws-batch in the previous step
-```ini
-pegasus.aws.batch.job_definition=arn:aws:batch:us-west-2:XXXXXXXXXX:job-definition/pegasus-awsbatch-example-job-definition:1
-pegasus.aws.batch.compute_environment=arn:aws:batch:us-west-2:XXXXXXXXXX:compute-environment/pegasus-awsbatch-example-compute-env
-pegasus.aws.batch.job_queue=arn:aws:batch:us-west-2:XXXXXXXXXX:job-queue/pegasus-awsbatch-example-job-queue
-```
-
 
 ## Run the example
 
