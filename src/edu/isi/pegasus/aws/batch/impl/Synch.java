@@ -1151,7 +1151,7 @@ public class Synch {
                 break;
                 
             case job_definition:
-                arn.append( "job_definition" );
+                arn.append( "job-definition" );
                 break;  
                 
             case job_queue:
