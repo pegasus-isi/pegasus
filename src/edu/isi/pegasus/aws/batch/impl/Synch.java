@@ -224,19 +224,22 @@ public class Synch {
      * accept jobs.
      * 
      * @param entities      entitites to be setup
-     * @param allRequired   whehter all entities should be present
+     * @param allRequired   whether all entities should be present
      */
     public void setup( EnumMap<BATCH_ENTITY_TYPE, String> entities, boolean allRequired) {
         boolean delete = true;
         
         String value = getEntityValue(entities, BATCH_ENTITY_TYPE.job_defintion, allRequired );
         if( value != null ){
-            if( value.startsWith( ARN_PREFIX ) ){
-                mJobDefinitionARN = value;
+            if(  !isFile( value ) ){
+                mJobDefinitionARN = value.startsWith( ARN_PREFIX )?
+                        value:
+                        constructDefaultARN( BATCH_ENTITY_TYPE.job_queue, value );
+                
                 mLogger.info("Using existing Job Definition " + mJobDefinitionARN );
                 delete = false;
             }
-            else{
+            else {
                 mJobDefinitionARN = createJobDefinition( new File(value), 
                                                                constructDefaultName( Synch.JOB_DEFINITION_SUFFIX));
                 mLogger.info("Created Job Definition " + mJobDefinitionARN );
@@ -247,12 +250,14 @@ public class Synch {
         value = getEntityValue(entities, BATCH_ENTITY_TYPE.compute_environment, allRequired );
         delete = true;
         if( value != null ){
-            if( value.startsWith( ARN_PREFIX ) ){
-                mComputeEnvironmentARN = value;
+            if(  !isFile( value ) ){
+                mComputeEnvironmentARN = value.startsWith( ARN_PREFIX )?
+                        value:
+                        constructDefaultARN( BATCH_ENTITY_TYPE.compute_environment, value );
                 mLogger.info("Using existing Compute Environment " + mComputeEnvironmentARN );
                 delete = false;
             }
-            else{
+            else {
                 mComputeEnvironmentARN = createComputeEnvironment( new File(value), 
                                                                    constructDefaultName( Synch.COMPUTE_ENV_SUFFIX) );
                 mLogger.info( "Created Compute Environment " + mComputeEnvironmentARN );
@@ -263,8 +268,10 @@ public class Synch {
         value = getEntityValue(entities, BATCH_ENTITY_TYPE.job_queue, allRequired );
         delete = true;
         if( value != null ){
-            if( value.startsWith( ARN_PREFIX ) ){
-                mJobQueueARN = value;
+            if(  !isFile( value ) ){
+                mJobQueueARN = value.startsWith( ARN_PREFIX )?
+                        value:
+                        constructDefaultARN( BATCH_ENTITY_TYPE.job_queue, value );
                 delete = false;
                 mLogger.info("Using existing Job Queue " + mJobQueueARN );
             }
@@ -1126,6 +1133,39 @@ public class Synch {
     */
 
     /**
+     * constructs default ARN
+     * 
+     * @param type
+     * @param value
+     * @return 
+     */
+    private String constructDefaultARN(BATCH_ENTITY_TYPE type, String value) {
+        //arn:aws:batch:us-west-2:XXXXXXXXXX:compute-environment/pegasus-awsbatch-example-compute-env
+        StringBuffer arn = new StringBuffer();
+        arn.append( "arn:aws:batch:" ).append( this.mAWSRegion ).append( ":" ).
+            append( this.mAWSAccountID ).append( ":" );
+        
+        switch( type ){
+            case compute_environment:
+                arn.append( "compute-environment" );
+                break;
+                
+            case job_defintion:
+                arn.append( "job_definition" );
+                break;  
+                
+            case job_queue:
+                arn.append( "job-queue" );
+                break;
+                
+            default:
+                new RuntimeException( "Unable to construct default ARN for " + type );
+        }
+        arn.append( File.separator ).append( value );
+        return arn.toString();
+    }
+    
+    /**
      * 
      * @param suffix
      * @return 
@@ -1157,6 +1197,25 @@ public class Synch {
                 
     }
     
+    /**
+     * Returns a boolean indicating whether the value has to be treated as a file or not
+     * 
+     * @param value
+     * 
+     * @return boolean
+     */
+    private boolean isFile(String value) {
+        boolean isFile = false;
+        
+        if( value.equalsIgnoreCase( Synch.NULL_VALUE) ){
+            return isFile;
+        }
+        else if( value.contains( File.separator) || new File(value).exists() ){
+            return true;
+        }
+        
+        return isFile;
+    }
     /**
      * Retrieves a property from the object. If not exists throws a runtime 
      * exception

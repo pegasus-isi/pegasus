@@ -86,19 +86,19 @@ public class PegasusAWSBatch {
                 withRequiredArg().ofType( String.class );
         mOptionParser.acceptsAll(asList( "C", "conf"), "the properties file containing to use ").
                 withRequiredArg().ofType( String.class );
-        mOptionParser.acceptsAll(asList( "ce", "compute-environment"), "the json file containing compute environment description to create or the ARN of existing compute environment").
+        mOptionParser.acceptsAll(asList( "ce", "compute-environment"), "the json file containing compute environment description to create or the ARN of existing compute environment or basename of an existing compute environment").
                 withRequiredArg().ofType( String.class );
         mOptionParser.acceptsAll(asList( "c", "create"), "does not run any jobs. Only creates the job definition, compute environment and the job queue");
         mOptionParser.acceptsAll(asList( "d", "delete"), "does not run any jobs. Only deletes the job definition, compute environment and the job queue");
         mOptionParser.acceptsAll(asList( "f", "files"), "comma separated list of files that need to be copied to the associated s3 bucket before any task starts").
                 withRequiredArg().ofType( String.class );
-        mOptionParser.acceptsAll(asList( "j", "job-definition"), "the json file containing job definition to register for executing jobs or the ARN of existing job definition ").
+        mOptionParser.acceptsAll(asList( "j", "job-definition"), "the json file containing job definition to register for executing jobs or the ARN of existing job definition or basename of an existing job definition").
                 withRequiredArg().ofType( String.class );
          mOptionParser.acceptsAll(asList( "m", "merge-logs"), "prefix to use for merging all the tasks' stdout to a single file.").
                 withRequiredArg().ofType( String.class );
         mOptionParser.acceptsAll(asList( "p", "prefix"), "prefix to use for creating compute environment, job definition, job queue and s3 bucket").
                withRequiredArg().ofType( String.class ).required();
-        mOptionParser.acceptsAll(asList( "q", "job-queue"), "the json file containing the job queue description to create or the ARN of existing job queue").
+        mOptionParser.acceptsAll(asList( "q", "job-queue"), "the json file containing the job queue description to create or the ARN of existing job queue or basename of an existing job queue").
                 withRequiredArg().ofType( String.class );
         mOptionParser.acceptsAll(asList( "r", "region"), "the AWS region to run the jobs in ").
                 withRequiredArg().ofType( String.class );
