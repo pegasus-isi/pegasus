@@ -17,8 +17,18 @@ TEST=046-aws-batch-black
 # strip out trailing / from TEST if any
 TEST=`echo ${TEST} | sed -E "s/(.*)(\/)$/\1/"`
 export TEST
-export S3_URL_PREFIX=s3://bamboo@amazon
-export S3_BUCKET=pegasus-batch-bamboo/${TEST}
+
+if [ X${S3_URL_PREFIX} == "X" ]; then 
+    echo -e 'ERROR: Please set S3_URL_PREFIX environment variable corresponding to your S3 credential file. For e.g. \nexport S3_URL_PREFIX=s3://bamboo@amazon' >&2
+    exit 1
+fi
+
+if [ X${S3_BUCKET} == "X" ]; then 
+    echo -e 'ERROR: Please set S3_BUCKET environment variable to point to the bucket you want to use/create for this example. For e.g. \nexport S3_BUCKET=pegasus-batch-bamboo' >&2
+    exit 1
+fi
+export S3_BUCKET=${S3_BUCKET}/${TEST}
+
 
 # generate the input file
 echo "This is sample input to KEG" >f.a
@@ -37,4 +47,4 @@ pegasus-plan \
     --dax blackdiamond.dax \
     --force \
     -v \
-#    --submit
+    --submit
