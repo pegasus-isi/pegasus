@@ -1207,7 +1207,7 @@ public class Synch {
     private boolean isFile(String value) {
         boolean isFile = false;
         
-        if( value.equalsIgnoreCase( Synch.NULL_VALUE) ){
+        if( value.equalsIgnoreCase( Synch.NULL_VALUE) || value.startsWith( Synch.ARN_PREFIX) ){
             return isFile;
         }
         else if( value.contains( File.separator) || new File(value).exists() ){
