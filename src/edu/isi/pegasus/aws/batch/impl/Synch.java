@@ -1121,19 +1121,9 @@ public class Synch {
        return ljr;
         
     }
-    /*
-    public ListJobsRequest createListJobRequest(String basename, String jobQueueSuffix,  JobStatus status) {
-       ListJobsRequest ljr = ListJobsRequest.builder().
-                                                    jobQueue( basename + JOB_QUEUE_SUFFIX ).
-                                                    jobStatus( status ).
-                                             build();
-       return ljr;
-        
-    }
-    */
-
+    
     /**
-     * constructs default ARN
+     * Constructs default ARN
      * 
      * @param type
      * @param value
@@ -1394,86 +1384,3 @@ public class Synch {
     }
     
 }
-
- /*
-    public void monitorSynch( String basename ){
-        long sleepTime = 10 * 1000;
-        Set<String> awsJobIDs = new HashSet();
-        for( Map.Entry<String,AWSJob> entry : this.mJobMap.entrySet() ){
-            AWSJob j = entry.getValue();
-            if( j.getJobState() == AWSJob.JOBSTATE.submitted ){
-                awsJobIDs.add( j.getAWSJobID() );
-            }
-        }
-        
-        
-        //monitor the jobs
-        int numDone = 0;
-        int total = awsJobIDs.size();
-        Set<String> doneJobs = new HashSet();
-        while( true && numDone < total ){
-            try {
-                
-                ListJobsRequest listSucceededJobsRequest = createListJobRequest( basename, JOB_QUEUE_SUFFIX, JobStatus.SUCCEEDED );
-                ListJobsRequest listFailedJobsRequest    = createListJobRequest( basename, JOB_QUEUE_SUFFIX, JobStatus.FAILED );
-                
-                //first query for succeeded
-                System.out.println( "Querying for successful jobs ");
-                ListJobsResponse listJobsResponse = mBatchClient.listJobs( listSucceededJobsRequest );
-                System.out.println( "Retrieved  " + listJobsResponse.jobSummaryList().size() + " responses ");
-                for( JobSummary summary: listJobsResponse.jobSummaryList() ){
-                    String succeededJobID = summary.jobId();
-                    if ( awsJobIDs.contains( succeededJobID) ){
-                        if( !doneJobs.contains(succeededJobID) ){
-                            System.out.println( "AWSJob Succeeded "  + succeededJobID + " " + new Date() );
-                            doneJobs.add( summary.jobId() );
-                            numDone++;
-                        }
-                    }
-                }
-                
-                System.out.println( "Sleeping before querying for failure ");
-                Thread.sleep( sleepTime );
-                if( numDone < total ){
-                    // check for failed jobs
-                    listJobsResponse = mBatchClient.listJobs( listFailedJobsRequest );
-                    for( JobSummary summary: listJobsResponse.jobSummaryList() ){
-                        String failedJobID = summary.jobId();
-                        if ( awsJobIDs.contains(failedJobID) ){
-                            if( !doneJobs.contains(failedJobID) ){
-                                System.out.println("AWSJob Failed "  + failedJobID + " " + new Date() );
-                                doneJobs.add( summary.jobId() );
-                                
-                                //remove the job so that we don't query for detail
-                                awsJobIDs.remove(failedJobID);
-                                
-                                numDone++;
-                            }
-                        }
-                    }
-                }
-                
-                if( numDone < total ){
-                    // still total is not done
-                    System.out.println( "Sleeping before querying for status of remaining jobs ");
-                    Thread.sleep( sleepTime );
-                    //now we query current state for jobs
-                    DescribeJobsRequest jobsRequest = DescribeJobsRequest.builder().
-                                                                jobs(awsJobIDs).
-                                                             build();
-                    DescribeJobsResponse jobsResponse = mBatchClient.describeJobs(jobsRequest);
-                    for( JobDetail jobDetail: jobsResponse.jobs() ){
-                        System.out.println( "Current Status of AWSJob " + jobDetail.jobId() + "->" + jobDetail.status() + " with reason " + jobDetail.statusReason() );
-                        System.out.println( "Detailed AWSJob detail " + jobDetail );
-                    }
-                }
-       
-            } catch (InterruptedException ex) {
-                 mLogger.log( Priority.ERROR, null, ex);
-            }
-        }
-        System.out.println( "Done monitoring");
-        shutdown();
-    }
-    */
-    
