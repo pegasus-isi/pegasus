@@ -9,7 +9,10 @@ Packager:       Pegasus Development Team <pegasus-support@isi.edu>
 
 Source:         pegasus-%{version}.tar.gz
 
-BuildRequires:  python-setuptools, openssl-devel, pyOpenSSL ant, ant-nodeps, ant-apache-regexp, java-devel = 1:1.7.0, gcc, groff, python-devel, gcc-c++, make, jpackage-utils, /usr/share/java-1.7.0, asciidoc, libxslt, fop
+BuildRequires:  python-setuptools, openssl-devel, pyOpenSSL ant, ant-apache-regexp, java-devel = 1:1.7.0, gcc, groff, python-devel, gcc-c++, make, jpackage-utils, /usr/share/java-1.7.0, asciidoc, libxslt, fop, R-devel
+%if 0%{?rhel} < 7
+BuildRequires:  ant-nodeps
+%endif
 Requires:       java, python >= 2.6, condor >= 8.4, graphviz, pyOpenSSL
 
 %define sourcedir %{name}-%{version}
