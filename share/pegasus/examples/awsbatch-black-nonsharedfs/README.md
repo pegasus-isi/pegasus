@@ -19,7 +19,7 @@ All jobs in AWS Batch are run in a container via the Amazon EC2
 container service. The Amazon EC2 container service does not give
 control over the dockerrun command for a container. Hence, Pegasus
 runs jobs on container that is based on the [Amazon Fetch and Run
-Example] (https://aws.amazon.com/blogs/compute/creating-a-simple-fetch-and-run-aws-batch-job/)
+Example](https://aws.amazon.com/blogs/compute/creating-a-simple-fetch-and-run-aws-batch-job/)
 . This container image allows us to fetch user executables
 automatically from S3. All container images referred used for Pegasus
 workflows must be based on the above example. Additionally, the Docker
