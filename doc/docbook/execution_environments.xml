@@ -819,11 +819,11 @@ CLUSTER = workflow.isi.edu
     <title>Local Campus Cluster Using Glite</title>
 
     <para>This section describes the configuration required for Pegasus to
-    generate an executable workflow that uses glite to submit to a Slurm, PBS, or
-    SGE batch system on a local cluster. This environment is referred to
-    as the local campus cluster, as the workflow submit node (Pegasus
-    + HTCondor) need to be installed on a login node (or a node where the local
-    batch scheduler commands can be executed) of the cluster. </para>
+    generate an executable workflow that uses glite to submit to a Slurm, PBS,
+    or SGE batch system on a local cluster. This environment is referred to as
+    the local campus cluster, as the workflow submit node (Pegasus + HTCondor)
+    need to be installed on a login node (or a node where the local batch
+    scheduler commands can be executed) of the cluster.</para>
 
     <note>
       <para>Glite is the old name for BLAH (or BLAHP). BLAH binaries are
@@ -833,40 +833,52 @@ CLUSTER = workflow.isi.edu
       has been renamed BLAH.</para>
     </note>
 
-    <para>This guide covers Slurm, PBS, Moab, and SGE, but glite also works with
-    other PBS-like batch systems, including LSF, Cobalt and others.
-    If you need help configuring Pegasus and HTCondor to work with one of
-    these systems, please contact pegasus-support@isi.edu. For the sake of
-    brevity, the text below will say "PBS", but you should read that as "PBS
-    or PBS-like system such as SGE, Moab, LSF, and others".</para>
+    <para>This guide covers Slurm, PBS, Moab, and SGE, but glite also works
+    with other PBS-like batch systems, including LSF, Cobalt and others. If
+    you need help configuring Pegasus and HTCondor to work with one of these
+    systems, please contact pegasus-support@isi.edu. For the sake of brevity,
+    the text below will say "PBS", but you should read that as "PBS or
+    PBS-like system such as SGE, Moab, LSF, and others".</para>
 
     <para>This is because the glite layer communicates with the batch system
-    running on the cluster using <literal>squeue</literal>/<literal>qsub</literal>/...
-    or equivalent commands. If you can submit jobs to the local scheduler from
-    the workflow submit host, then the
-    local HTCondor can be used to submit jobs via glite (with some
-    modifications described below). If you need to SSH to a different cluster
-    head node in order to submit jobs to the scheduler, then you can use
-    BOSCO, which is <link linkend="bosco"> documented in another
+    running on the cluster using
+    <literal>squeue</literal>/<literal>qsub</literal>/... or equivalent
+    commands. If you can submit jobs to the local scheduler from the workflow
+    submit host, then the local HTCondor can be used to submit jobs via glite
+    (with some modifications described below). If you need to SSH to a
+    different cluster head node in order to submit jobs to the scheduler, then
+    you can use BOSCO, which is <link linkend="bosco"> documented in another
     section</link>.</para>
 
     <tip>
       <para>There is also a way to do remote job submission via glite even if
-      you cannot SSH to the head node. This might be the case, for
-      example, if the head node requires 2-factor authentication (e.g. RSA
-      tokens). This approach is called the "Reverse GAHP" and you can find out
-      more information on the <ulink
-      url="https://github.com/juve/rvgahp">GitHub page</ulink>. All it
-      requires is SSH from the cluster head node back to the workflow submit
-      host.</para>
+      you cannot SSH to the head node. This might be the case, for example, if
+      the head node requires 2-factor authentication (e.g. RSA tokens). This
+      approach is called the "Reverse GAHP" and you can find out more
+      information on the <ulink url="https://github.com/juve/rvgahp">GitHub
+      page</ulink>. All it requires is SSH from the cluster head node back to
+      the workflow submit host.</para>
     </tip>
 
     <para>In either case, you need to modifiy the HTCondor glite installation
-    that will be used to submit jobs to the local scheduler. To do this, run the
-    <literal>pegasus-configure-glite</literal> command. This command will
+    that will be used to submit jobs to the local scheduler. To do this, run
+    the <literal>pegasus-configure-glite</literal> command. This command will
     install all the required scripts to map Pegasus profiles to batch-system
     specific job attributes, and add support for Moab. You may need to run it
     as root depending on how you installed HTCondor.</para>
+
+    <para><tip>
+        <para>HTCondor has an issue for the Slurm configuration when running
+        on Ubuntu systems. Since in Ubuntu, <literal>/bin/sh</literal> does
+        not link to <literal>bash</literal>, the Slurm script will fail when
+        trying to run the <literal>source</literal> command. A quick fix to
+        this issue is to force the script to use <literal>bash</literal>. In
+        the <literal>bls_set_up_local_and_extra_args</literal> function of the
+        <literal>blah_common_submit_functions.sh</literal> script, which is
+        located in the same folder as the installation above, only add
+        <literal>bash</literal> before <literal>$bls_opt_tmp_req_file &gt;&gt;
+        $bls_tmp_file 2&gt; /dev/null</literal> command line.</para>
+      </tip></para>
 
     <para>In order to configure a workflow to use glite you need to create an
     entry in your site catalog for the cluster and set the following
@@ -880,12 +892,11 @@ CLUSTER = workflow.isi.edu
       </listitem>
 
       <listitem>
-          <para><emphasis role="bold">condor</emphasis> profile
-              <emphasis role="bold">grid_resource</emphasis> with value set to
-              <emphasis role="bold">batch slurm</emphasis>,
-              <emphasis role="bold">batch pbs</emphasis>,
-              <emphasis role="bold">batch sge</emphasis> or
-              <emphasis role="bold">batch moab</emphasis>.</para>
+        <para><emphasis role="bold">condor</emphasis> profile <emphasis
+        role="bold">grid_resource</emphasis> with value set to <emphasis
+        role="bold">batch slurm</emphasis>, <emphasis role="bold">batch
+        pbs</emphasis>, <emphasis role="bold">batch sge</emphasis> or
+        <emphasis role="bold">batch moab</emphasis>.</para>
       </listitem>
     </orderedlist>
 
@@ -1526,69 +1537,3 @@ pegasus.transfer.worker.package = true
     </section>
   </section>
 </chapter>
-<?xxe-serial-numbers jb5ikm0k vahi
-(1z141z5 (1z141z6) (1z141z7) (1z141z8 (1z141z9) (1z141za (1z141zb))
-(1z141zc (1z141zd)) (1z141ze) (1z141zf (1z141zg) (1z141zh))) (1z141zi
-(1z141zj) (1z141zk) (1z141zl (1z141zm) (1z141zn (1z141zo (1z141zp))))
-(1z141zq) (1z141zr (1z141zs) (1z141zt) (1z141zu)) (1z141zv) (1z141zw)
-(1z141zx) (1z141zy (1z141zz) (1z14200 (1z14201) (1z14202)) (1z14203
-(1z14204 (1z14205) (1z14206) (1z14207))) (1z14208) (1z14209 (1z1420a
-(1z1420b (1z1420c) (1z1420d))) (1z1420e (1z1420f (1z1420g))) (1z1420h
-(1z1420i (1z1420j))) (1z1420k (1z1420l)))) (1z1420m (1z1420n) (1z1420o)
-(1z1420p) (1z1420q) (1z1420r) (1z1420s))) (1z1420t (1z1420u) (1z1420v
-(1z1420w (1z1420x) (1z1420y (1z1420z (1z14210))))) (1z14211) (1z14212)
-(1z14213 (1z14214)) (1z14215) (1z14216) (1z14217) (1z14218 (1z14219))
-(1z1421a (1z1421b)) (1z1421c) (1z1421d (1z1421e) (1z1421f) (1z1421g
-(1z1421h (1z1421i) (1z1421j (1z1421k (1z1421l))))) (1z1421m (1z1421n))
-(1z1421o (1z1421p))) (1z1421q (1z1421r) (1z1421s) (1z1421t) (1z1421u)
-(1z1421v) (1z1421w))) (1z1421x (1z1421y) (1z1421z) (1z14220 (1z14221)
-(1z14222) (1z14223) (1z14224)) (1z14225 (1z14226 (1z14227) (1z14228
-(1z14229 (1z1422a))))) (1z1422b (1z1422c)) (1z1422d) (1z1422e (1z1422f))
-(1z1422g) (1z1422h) (1z1422i (1z1422j) (1z1422k) (1z1422l) (1z1422m))
-(1z1422n (1z1422o)) (1z1422p) (1z1422q) (1z1422r) (1z1422s (1z1422t))
-(1z1422u) (1z1422v (1z1422w)) (1z1422x (1z1422y (1z1422z (1z14230)))
-(1z14231 (1z14232 (1z14233))) (1z14234 (1z14235 (1z14236)))) (1z14237)
-(1z14238) (1z14239) (1z1423a) (1z1423b)) (1z1423c (1z1423d) (1z1423e
-(1z1423f (1z1423g) (1z1423h (1z1423i (1z1423j))))) (1z1423k (1z1423l))
-(1z1423m (1z1423n)) (1z1423o (1z1423p)) (1z1423q) (1z1423r (1z1423s)
-(1z1423t)) (1z1423u (1z1423v)) (1z1423w (1z1423x)) (1z1423y (1z1423z))
-(1z14240) (1z14241) (1z14242) (1z14243)) (1z14244 (1z14245) (1z14246
-(1z14247)) (1z14248) (1z14249 (1z1424a (1z1424b (1z1424c) (1z1424d)
-(1z1424e))) (1z1424f (1z1424g (1z1424h) (1z1424i) (1z1424j))) (1z1424k
-(1z1424l (1z1424m) (1z1424n) (1z1424o)))) (1z1424p) (1z1424q) (1z1424r)
-(1z1424s (1z1424t (1z1424u)))) (1z1424v (1z1424w) (1z1424x) (1z1424y
-(1z1424z)) (1z14250 (1z14251)) (1z14252 (1z14253) (1z14254) (1z14255))
-(1z14256 (1z14257 (1z14258))) (1z14259 (1z1425a)) (1z1425b) (1z1425c
-(1z1425d (1z1425e (1z1425f) (1z1425g) (1z1425h))) (1z1425i (1z1425j
-(1z1425k) (1z1425l) (1z1425m) (1z1425n) (1z1425o)))) (1z1425p) (1z1425q)
-(1z1425r (1z1425s)) (1z1425t (1z1425u) (1z1425v) (1z1425w) (1z1425x))
-(1z1425y (1z1425z)) (1z14260) (1z14261) (1z14262 (1z14263) (1z14264)
-(1z14265 (1z14266) (1z14267 (1z14268 (1z14269 (1z1426a) (1z1426b)
-(1z1426c) (1z1426d) (1z142bc) (1z1426e) (1z1426f) (1z1426g))) (1z1426h
-(1z1426i (1z1426j) (1z1426k) (1z1426l) (1z1426m) (1z142bd) (1z1426n)
-(1z1426o) (1z1426p)) (1z1426q (1z1426r) (1z1426s) (1z1426t) (1z1426u)
-(1z142be) (1z1426v) (1z1426w) (1z1426x)) (1z1426y (1z1426z) (1z14270)
-(1z14271) (1z14272) (1z142bf) (1z14273) (1z14274) (1z14275)) (1z14276
-(1z14277) (1z14278) (1z14279) (1z1427a) (1z142bg) (1z1427b) (1z1427c)
-(1z1427d)) (1z1427e (1z1427f) (1z1427g) (1z1427h) (1z1427i) (1z142bh)
-(1z1427j) (1z1427k) (1z1427l)) (1z1427m (1z1427n) (1z1427o) (1z1427p)
-(1z1427q) (1z142bi) (1z1427r) (1z1427s) (1z1427t)) (1z1427u (1z1427v)
-(1z1427w) (1z1427x) (1z1427y) (1z142bj) (1z1427z) (1z14280) (1z14281
-(1z14282) (1z14283))) (1z14284 (1z14285) (1z14286) (1z14287) (1z14288)
-(1z142bk) (1z14289) (1z1428a) (1z1428b)) (1z1428c (1z1428d) (1z1428e)
-(1z1428f) (1z1428g) (1z142bl) (1z1428h) (1z1428i) (1z1428j))))) (1z1428k
-(1z1428l))) (1z1428m (1z1428n) (1z1428o (1z1428p) (1z1428q) (1z1428r))))
-(1z1428s (1z1428t) (1z1428u (1z1428v)) (1z1428w) (1z1428x (1z1428y))
-(1z1428z) (1z14290 (1z14291) (1z14292) (1z14293)) (1z14294) (1z14295)
-(1z14296) (1z14297 (1z14298) (1z14299)) (1z1429a) (1z1429b) (1z1429c)
-(1z1429d (1z1429e)) (1z1429f) (1z1429g (1z1429h)) (1z1429i) (1z1429j
-(1z1429k)) (1z1429l) (1z1429m)) (1z1429n (1z1429o) (1z1429p (1z1429q))
-(1z1429r (1z1429s) (1z1429t) (1z1429u) (1z1429v) (1z1429w) (1z1429x))
-(1z1429y) (1z1429z (1z142a0 (1z142a1 (1z142a2) (1z142a3) (1z142a4)))
-(1z142a5 (1z142a6))) (1z142a7) (1z142a8) (1z142a9 (1z142aa)) (1z142ab)
-(1z142ac (1z142ad))) (1z142ae (1z142af) (1z142ag) (1z142ah (1z142ai
-(1z142aj)) (1z142ak (1z142al)) (1z142am (1z142an))) (1z142ao (1z142ap)))
-(1z142aq (1z142ar) (1z142as (1z142at)) (1z142au (1z142av) (1z142aw)
-(1z142ax) (1z142ay)) (1z142az) (1z142b0) (1z142b1) (1z142b2 (1z142b3))
-(1z142b4 (1z142b5))) (1z142b6 (1z142b7) (1z142b8 (1z142b9 (1z142ba)
-(1z142bb)))))?>
