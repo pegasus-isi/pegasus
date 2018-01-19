@@ -234,7 +234,7 @@ public class Synch {
             if(  !isFile( value ) ){
                 mJobDefinitionARN = value.startsWith( ARN_PREFIX )?
                         value:
-                        constructDefaultARN( BATCH_ENTITY_TYPE.job_queue, value );
+                        constructDefaultARN( BATCH_ENTITY_TYPE.job_defintion, value );
                 
                 mLogger.info("Using existing Job Definition " + mJobDefinitionARN );
                 delete = false;
