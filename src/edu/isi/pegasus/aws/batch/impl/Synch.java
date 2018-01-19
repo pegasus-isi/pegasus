@@ -96,7 +96,6 @@ public class Synch {
      */
     public static final int NON_TASK_FAILURE_EXITCODE = 2;
 
-    
     public enum BATCH_ENTITY_TYPE{ compute_environment, job_definition, job_queue, s3_bucket};
     
     public static final String AWS_PROPERTY_PREFIX = "aws";
@@ -680,9 +679,7 @@ public class Synch {
             }
         }
         
-        //log tasks completed etc
-        mLogger.info( "Tasks Summary total=" + total + " done=" + numDone + " succeeded=" + succeeded + " failed=" + failed );
-        
+        mLogger.info( "Shutting down");
         try {
             batchClient.close();
         } catch (Exception ex) {
@@ -696,6 +693,8 @@ public class Synch {
         
         shutdown();
         mLogger.info( "Thread Executor Shutdown successfully " );
+        //log tasks completed etc
+        mLogger.info( getTaskSummaryRecory( total, succeeded, failed));
         
     }
     
@@ -1148,6 +1147,25 @@ public class Synch {
        return ljr;
         
     }
+    
+    /**
+     * Constructs the task summary record
+     * @param total
+     * @param succeeded
+     * @param failed
+     * @return 
+     */
+    private String getTaskSummaryRecory(int total, int succeeded, int failed) {
+        ////[cluster-summary stat="ok", lines=6, tasks=3, succeeded=3, failed=0, extra=0, duration=31.174, start="2018-01-19T06:42:46.879-08:00", pid=69505, app="/usr/bin/pegasus-cluster"]
+        
+        StringBuilder sb = new StringBuilder();
+        sb.append("[cluster-summary tasks=" ).append(  total  ).append( ", " ).
+                append( "succeeded=" ).append( succeeded).append( ", " ).
+                append( "failed=" ).append( failed).append( ", " ).
+                append( "]" );
+        return sb.toString();
+    }
+
     
     /**
      * Constructs default ARN
