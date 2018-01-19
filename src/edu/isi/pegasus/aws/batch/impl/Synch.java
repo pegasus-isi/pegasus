@@ -1142,7 +1142,7 @@ public class Synch {
     private String constructDefaultARN(BATCH_ENTITY_TYPE type, String value) {
         //arn:aws:batch:us-west-2:XXXXXXXXXX:compute-environment/pegasus-awsbatch-example-compute-env
         StringBuffer arn = new StringBuffer();
-        arn.append( "arn:aws:batch:" ).append( this.mAWSRegion ).append( ":" ).
+        arn.append( "arn:aws:batch:" ).append( this.mAWSRegion.value() ).append( ":" ).
             append( this.mAWSAccountID ).append( ":" );
         
         switch( type ){
