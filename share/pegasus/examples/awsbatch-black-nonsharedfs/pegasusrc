@@ -25,7 +25,7 @@ pegasus.aws.region=us-west-2
 # pegasus.aws.batch.job_definition=arn:aws:batch:us-west-2:XXXXXXXXXX:job-definition/fetch_and_run
 
 # ARN of the job definition that you create using pegasus-aws-batch
-# pegasus.aws.batch.compute_environment=arn:aws:batch:us-west-2:XXXXXXXXXX:compute-environment/karan-cmd-test-compute-env
+# pegasus.aws.batch.compute_environment=arn:aws:batch:us-west-2:XXXXXXXXXX:compute-environment/pegasus-awsbatch-example-compute-env
 
 # ARN of the job queue that you create using pegasus-aws-batch
 # pegasus.aws.batch.job_queue=arn:aws:batch:us-west-2:XXXXXXXXXX:job-queue/pegasus-awsbatch-example-job-queue
