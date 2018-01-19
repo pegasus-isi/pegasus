@@ -90,11 +90,7 @@ pegasus.aws.account=[your aws account id - digits]
 ```
 Run the command pegasus-aws-batch 
 ```bash
-$  pegasus-aws-batch --conf ./conf/pegasusrc --prefix
-pegasus-awsbatch-example --create --compute-environment
-./conf/sample-compute-env.json --job-definition
-./conf/sample-job-definition.json --job-queue
-./conf/sample-job-queue.json 
+$  pegasus-aws-batch --conf ./conf/pegasusrc --prefix pegasus-awsbatch-example --create --compute-environment ./conf/sample-compute-env.json --job-definition ./conf/sample-job-definition.json --job-queue ./conf/sample-job-queue.json 
 
 
 ..
