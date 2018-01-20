@@ -80,7 +80,10 @@ class TransformationCatalog:
 
                     # profiles
                     for p in e.profiles:
-                        ppf.write('\tprofile %s "%s" "%s"\n' % (p.namespace, p.key, p.value))
+                        ppf.write(
+                            '\tprofile %s "%s" "%s"\n' %
+                            (p.namespace, p.key, p.value)
+                        )
 
                     # pfns
                     installed = 'INSTALLED'
@@ -91,7 +94,10 @@ class TransformationCatalog:
                         ppf.write('\tsite %s {\n' % pfn.site)
                         # profiles
                         for p in pfn.profiles:
-                            ppf.write('\t\tprofile %s "%s" "%s"\n' % (p.namespace, p.key, p.value))
+                            ppf.write(
+                                '\t\tprofile %s "%s" "%s"\n' %
+                                (p.namespace, p.key, p.value)
+                            )
 
                         ppf.write('\t\tpfn "%s"\n' % pfn.url)
                         if e.arch:
@@ -123,11 +129,15 @@ class TransformationCatalog:
 
                     # profiles
                     for p in c.profiles:
-                        ppf.write('\tprofile %s "%s" "%s"\n' % (p.namespace, p.key, p.value))
+                        ppf.write(
+                            '\tprofile %s "%s" "%s"\n' %
+                            (p.namespace, p.key, p.value)
+                        )
 
                     ppf.write('}\n\n')
 
-
         else:
-            print('\x1b[0;35mWARNING: Transformation Catalog (%s) already exists. Use "force=True" '
-                  'to overwrite it.\n\x1b[0m' % catalog_file)
+            print(
+                '\x1b[0;35mWARNING: Transformation Catalog (%s) already exists. Use "force=True" '
+                'to overwrite it.\n\x1b[0m' % catalog_file
+            )

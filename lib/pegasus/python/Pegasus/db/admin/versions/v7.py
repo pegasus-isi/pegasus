@@ -9,8 +9,8 @@ DB_VERSION = 7
 
 log = logging.getLogger(__name__)
 
-class Version(BaseVersion):
 
+class Version(BaseVersion):
     def __init__(self, connection):
         super(Version, self).__init__(connection)
 

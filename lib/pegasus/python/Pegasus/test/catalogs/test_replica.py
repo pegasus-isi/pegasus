@@ -55,7 +55,9 @@ class TestReplicaCatalog(unittest.TestCase):
         self.assertEqual(len(rc._replicas), 1)
         self.assertEqual(len(rc._replicas[name][path]), 2)
         self.assertEqual(rc._replicas[name][path][0], ('site', 'site-A'))
-        self.assertEqual(rc._replicas[name][path][1], ('meta-name', 'meta-content'))
+        self.assertEqual(
+            rc._replicas[name][path][1], ('meta-name', 'meta-content')
+        )
 
         rc.add(name, path, site='site-A', metadata=meta_set)
         self.assertEqual(len(rc._replicas[name][path]), 2)

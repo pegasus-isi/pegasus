@@ -48,7 +48,10 @@ class TestTransformationCatalog(unittest.TestCase):
         self.assertRaises(Exception, tc.add)
         self.assertEqual(len(tc._containers), 0)
 
-        c = Container('cont-pegasus', ContainerType.DOCKER, 'docker:///rynge/montage:latest')
+        c = Container(
+            'cont-pegasus', ContainerType.DOCKER,
+            'docker:///rynge/montage:latest'
+        )
         tc.add_container(c)
         self.assertEqual(len(tc._containers), 1)
         self.assertEqual(tc._containers[0].name, c.name)

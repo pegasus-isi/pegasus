@@ -25,9 +25,17 @@ from Pegasus.service.monitoring.serializer import PegasusServiceJSONEncoder
 log = logging.getLogger(__name__)
 
 
-def jsonify(obj, indent=5, separators=(',', ': '), cls=PegasusServiceJSONEncoder, **kwargs):
+def jsonify(
+    obj,
+    indent=5,
+    separators=(',', ': '),
+    cls=PegasusServiceJSONEncoder,
+    **kwargs
+):
     if g.query_args.get('pretty_print', False):
-        response_json = json.dumps(obj, indent=indent, separators=separators, cls=cls, **kwargs)
+        response_json = json.dumps(
+            obj, indent=indent, separators=separators, cls=cls, **kwargs
+        )
     else:
         response_json = json.dumps(obj, cls=cls, **kwargs)
 
@@ -208,7 +216,9 @@ def csv_to_json(csv, schema, index):
                     else:
                         obj = OrderedDict()
 
-                    entity_dict = entity_dict.setdefault(row[index[parent]], obj)
+                    entity_dict = entity_dict.setdefault(
+                        row[index[parent]], obj
+                    )
 
                 if row[index[entity]] and hasattr(entity_dict, 'add'):
                     entity_dict.add(row[index[entity]])

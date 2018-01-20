@@ -28,12 +28,14 @@ def dec_to_float(dec):
     else:
         return None
 
+
 @app.template_filter('time_to_date_str')
 def time_to_date_str(ts):
     '''
     Change an integer duration to be represented as a data string
     '''
     return time.strftime('%Y-%m-%d Hour %H', time.localtime(ts))
+
 
 @app.template_filter('to_lower_case')
 def to_lower_case(str):
@@ -42,6 +44,7 @@ def to_lower_case(str):
     '''
     return str.lower()
 
+
 @app.template_filter('to_upper_case')
 def to_upper_case(str):
     '''
@@ -49,12 +52,14 @@ def to_upper_case(str):
     '''
     return str.upper()
 
+
 @app.template_filter('capitalize')
 def capitalize(str):
     '''
     Capitalizes first character of the String
     '''
     return str.capitalize()
+
 
 @app.template_filter('time_to_str')
 def time_to_str(time):
@@ -70,7 +75,9 @@ def time_to_str(time):
     max_units = 2
     num_units = 0
 
-    if time is None or not (isinstance(time, decimal.Decimal) or isinstance(time, float)):
+    if time is None or not (
+        isinstance(time, decimal.Decimal) or isinstance(time, float)
+    ):
         return time
 
     str_time = ''
@@ -123,4 +130,3 @@ def time_to_str(time):
         str_time = '0 secs'
 
     return str_time.strip()
-

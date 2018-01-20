@@ -41,7 +41,6 @@ ADMIN_USERS = None
 USERNAME = ""
 PASSWORD = ""
 
-
 # ENSEMBLE MANAGER CONFIGURATION
 
 # Workflow processing interval in seconds
@@ -55,4 +54,3 @@ STORAGE_DIRECTORY = "/var/pegasus"
 
 # Path to Condor home directory
 #CONDOR_HOME = "/usr"
-

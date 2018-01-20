@@ -11,8 +11,8 @@ from sqlalchemy.exc import *
 
 log = logging.getLogger(__name__)
 
+
 class Version(BaseVersion):
-    
     def __init__(self, connection):
         super(Version, self).__init__(connection)
 
@@ -22,14 +22,21 @@ class Version(BaseVersion):
         if self.db.connection().dialect.name != 'sqlite':
             query += ' AFTER remote_duration'
         self.execute(query)
-        self.execute("ALTER TABLE job_instance ADD COLUMN multiplier_factor INT NOT NULL DEFAULT 1")
+        self.execute(
+            "ALTER TABLE job_instance ADD COLUMN multiplier_factor INT NOT NULL DEFAULT 1"
+        )
         self.execute("ALTER TABLE job_instance ADD COLUMN exitcode INT NULL")
-        
+
         success = ['JOB_SUCCESS', 'POST_SCRIPT_SUCCESS']
-        failure = ['PRE_SCRIPT_FAILED', 'SUBMIT_FAILED', 'JOB_FAILURE', 'POST_SCRIPT_FAILED']
+        failure = [
+            'PRE_SCRIPT_FAILED', 'SUBMIT_FAILED', 'JOB_FAILURE',
+            'POST_SCRIPT_FAILED'
+        ]
 
         try:
-            q = self.db.query(JobInstance.job_instance_id).order_by(JobInstance.job_instance_id)
+            q = self.db.query(JobInstance.job_instance_id).order_by(
+                JobInstance.job_instance_id
+            )
             for r in q.all():
                 qq = self.db.query(Jobstate.state)
                 qq = qq.filter(Jobstate.job_instance_id == r.job_instance_id)
@@ -44,14 +51,14 @@ class Version(BaseVersion):
                     else:
                         pass
         except (OperationalError, ProgrammingError):
-            pass                
-        
+            pass
+
         self.db.commit()
-         
+
     def downgrade(self, force=False):
         """ Downgrade to this version will not be allowed."""
         pass
-    
+
     def execute(self, query):
         try:
             self.db.execute(query)

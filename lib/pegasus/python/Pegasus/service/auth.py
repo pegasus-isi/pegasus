@@ -52,8 +52,11 @@ class PAMAuthentication(BaseAuthentication):
 
 
 def basic_auth_response():
-    return Response('Basic Auth Required', 401,
-                    {'WWW-Authenticate': 'Basic realm="Pegasus Service"'})
+    return Response(
+        'Basic Auth Required', 401, {
+            'WWW-Authenticate': 'Basic realm="Pegasus Service"'
+        }
+    )
 
 
 def is_user_an_admin(username):
@@ -114,7 +117,9 @@ def pull_username(endpoint, values):
 def before():
 
     # Static files do not need to be authenticated.
-    if (request.script_root + request.path).startswith(url_for('static', filename='')):
+    if (request.script_root + request.path).startswith(
+        url_for('static', filename='')
+    ):
         return
 
     #
@@ -167,7 +172,10 @@ def before():
     if g.username != g.user.username:
         # Is user (g.user.username) allowed to view user (g.username) runs?
         if not is_user_an_admin(g.user.username):
-            log.error("User %s is accessing user %s's runs" % (g.user.username, g.username))
+            log.error(
+                "User %s is accessing user %s's runs" %
+                (g.user.username, g.username)
+            )
             abort(403)
 
         # Is user a valid system user?
@@ -181,8 +189,13 @@ def before():
         # If required, set uid and gid of handler process
         if os.getuid() != user_info.uid:
             if os.getuid() != 0:
-                log.error("Pegasus service must run as root to enable process switching")
-                return make_response("Pegasus service must run as root to enable process switching", 500)
+                log.error(
+                    "Pegasus service must run as root to enable process switching"
+                )
+                return make_response(
+                    "Pegasus service must run as root to enable process switching",
+                    500
+                )
 
         os.setgid(user_info.gid)
         os.setuid(user_info.uid)
@@ -195,8 +208,12 @@ def before():
         try:
             os.makedirs(user_pegasus_dir, mode=0o744)
         except OSError:
-            log.info("Invalid Permissions: Could not create user's pegasus directory.")
-            return make_response("Could not find user's Pegasus directory", 404)
+            log.info(
+                "Invalid Permissions: Could not create user's pegasus directory."
+            )
+            return make_response(
+                "Could not find user's Pegasus directory", 404
+            )
 
     # Set master DB URL for the dashboard
     # For testing master_db_url would be pre-populated, so let's not overwrite it here.

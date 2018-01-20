@@ -1,10 +1,11 @@
 # This is a sort-of kitchen sink dax generator for validating that
-# the API produces valid XML for all elements according to the 
+# the API produces valid XML for all elements according to the
 # new DAX 3.3 schema. It tries to generate XML to cover every part
 # of the schema.
 import sys
 
 from Pegasus.DAX3 import *
+
 
 def main():
     # Create a DAX
@@ -15,31 +16,53 @@ def main():
 
     # Add input file to the DAX-level replica catalog
     a = File("f.a")
-    a.metadata("key","value")
-    a.profile("pegasus","foobar","true")
-    a.PFN("gsiftp://site.com/inputs/f.a","site")
+    a.metadata("key", "value")
+    a.profile("pegasus", "foobar", "true")
+    a.PFN("gsiftp://site.com/inputs/f.a", "site")
     diamond.addFile(a)
 
     cfg = File("config.ini")
-    cfg.metadata("size","10")
+    cfg.metadata("size", "10")
     diamond.addFile(cfg)
 
     # Add executables to the DAX-level replica catalog
-    e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", osrelease="5", glibc="3.3", arch="x86_64", installed=True, osversion="2.6")
+    e_preprocess = Executable(
+        namespace="diamond",
+        name="preprocess",
+        version="4.0",
+        os="linux",
+        osrelease="5",
+        glibc="3.3",
+        arch="x86_64",
+        installed=True,
+        osversion="2.6"
+    )
     e_preprocess.profile("pegasus", "barfoo", "false")
-    e_preprocess.metadata("size",100)
-    pfn = PFN("gsiftp://site.com/bin/preprocess","site")
+    e_preprocess.metadata("size", 100)
+    pfn = PFN("gsiftp://site.com/bin/preprocess", "site")
     pfn.profile("pegasus", "baz", "abcd")
     e_preprocess.addPFN(pfn)
     e_preprocess.invoke(what="what", when="when")
     diamond.addExecutable(e_preprocess)
 
-    e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64")
-    e_findrange.addPFN(PFN("gsiftp://site.com/bin/findrange","site"))
+    e_findrange = Executable(
+        namespace="diamond",
+        name="findrange",
+        version="4.0",
+        os="linux",
+        arch="x86_64"
+    )
+    e_findrange.addPFN(PFN("gsiftp://site.com/bin/findrange", "site"))
     diamond.addExecutable(e_findrange)
 
-    e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64")
-    e_analyze.addPFN(PFN("gsiftp://site.com/bin/analyze","site"))
+    e_analyze = Executable(
+        namespace="diamond",
+        name="analyze",
+        version="4.0",
+        os="linux",
+        arch="x86_64"
+    )
+    e_analyze.addPFN(PFN("gsiftp://site.com/bin/analyze", "site"))
     diamond.addExecutable(e_analyze)
 
     # Add transformations to the DAX-level transformation catalog
@@ -59,12 +82,12 @@ def main():
 
     # Add a preprocess job
     preprocess = Job(t_preprocess)
-    preprocess.metadata("key","value")
+    preprocess.metadata("key", "value")
     b1 = File("f.b1")
-    b1.metadata("key","value")
+    b1.metadata("key", "value")
     b2 = File("f.b2")
-    b2.metadata("key","value")
-    preprocess.addArguments("-a preprocess","-T60","-i",a,"-o",b1,b2)
+    b2.metadata("key", "value")
+    preprocess.addArguments("-a preprocess", "-T60", "-i", a, "-o", b1, b2)
     preprocess.profile("pegasus", "site", "local")
     preprocess.setStdin(File("stdin"))
     preprocess.setStdout(File("stdout"))
@@ -79,13 +102,13 @@ def main():
     # Add left Findrange job
     frl = Job(t_findrange, node_label="foo")
     c1 = File("f.c1")
-    frl.addArguments("-a findrange","-T60","-i",b1,"-o",c1)
+    frl.addArguments("-a findrange", "-T60", "-i", b1, "-o", c1)
     diamond.addJob(frl)
 
     # Add right Findrange job
     frr = Job(t_findrange)
     c2 = File("f.c2")
-    frr.addArguments("-a findrange","-T60","-i",b2,"-o",c2)
+    frr.addArguments("-a findrange", "-T60", "-i", b2, "-o", c2)
     frr.uses(b2, link=Link.INPUT)
     frr.uses(c2, link=Link.OUTPUT, transfer=True)
     diamond.addJob(frr)
@@ -93,7 +116,7 @@ def main():
     # Add Analyze job
     analyze = Job(t_analyze)
     d = File("f.d")
-    analyze.addArguments("-a analyze","-T60","-i",c1,c2,"-o",d)
+    analyze.addArguments("-a analyze", "-T60", "-i", c1, c2, "-o", d)
     analyze.uses(c1, link=Link.INPUT)
     analyze.uses(c2, link=Link.INPUT)
     analyze.uses(d, link=Link.OUTPUT, transfer=True, register=True)
@@ -101,7 +124,7 @@ def main():
 
     dax = DAX("file.dax", node_label="apple")
     dax.addArguments("-Dpegasus.properties=foobar")
-    dax.metadata("key","value")
+    dax.metadata("key", "value")
     dax.profile("pegasus", "site", "local")
     dax.setStdin(File("stdin"))
     dax.setStdout(File("stdout"))
@@ -115,7 +138,7 @@ def main():
 
     dag = DAG("file.dag", node_label="pear")
     dag.addArguments("-Dpegasus.properties=foobar")
-    dag.metadata("key","value")
+    dag.metadata("key", "value")
     dag.profile("pegasus", "site", "local")
     dag.setStdin(File("stdin"))
     dag.setStdout(File("stdout"))
@@ -137,6 +160,6 @@ def main():
     import sys
     diamond.writeXML(sys.stdout)
 
+
 if __name__ == '__main__':
     main()
-

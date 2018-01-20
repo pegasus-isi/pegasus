@@ -77,5 +77,7 @@ class ReplicaCatalog:
                         ppf.write('\n')
 
         else:
-            print('\x1b[0;35mWARNING: Replica Catalog (%s) already exists. Use "force=True" '
-                  'to overwrite it.\n\x1b[0m' % catalog_file)
+            print(
+                '\x1b[0;35mWARNING: Replica Catalog (%s) already exists. Use "force=True" '
+                'to overwrite it.\n\x1b[0m' % catalog_file
+            )
