@@ -15,9 +15,10 @@
 #  limitations under the License.
 #
 from __future__ import print_function
-__author__ = 'Rafael Ferreira da Silva'
 
 import os
+
+__author__ = 'Rafael Ferreira da Silva'
 
 
 class ReplicaCatalog:

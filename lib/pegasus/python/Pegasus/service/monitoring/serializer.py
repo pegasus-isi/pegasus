@@ -18,17 +18,18 @@ from decimal import Decimal
 
 from flask import url_for
 from flask.json import JSONEncoder
-
-from sqlalchemy.orm.attributes import instance_state
-
 from Pegasus.db.schema import *
-from Pegasus.service.base import PagedResponse, ErrorResponse, OrderedSet, OrderedDict
-from Pegasus.service.monitoring.resources import RootWorkflowResource, RootWorkflowstateResource
-from Pegasus.service.monitoring.resources import WorkflowResource, WorkflowMetaResource
-from Pegasus.service.monitoring.resources import WorkflowFilesResource, WorkflowstateResource
-from Pegasus.service.monitoring.resources import RCLFNResource, RCPFNResource, RCMetaResource
-from Pegasus.service.monitoring.resources import JobResource, HostResource, JobInstanceResource, JobstateResource
-from Pegasus.service.monitoring.resources import TaskResource, TaskMetaResource, InvocationResource
+from Pegasus.service.base import (
+    ErrorResponse, OrderedDict, OrderedSet, PagedResponse
+)
+from Pegasus.service.monitoring.resources import (
+    HostResource, InvocationResource, JobInstanceResource,
+    JobResource, JobstateResource, RCLFNResource, RCMetaResource,
+    RCPFNResource, RootWorkflowResource, RootWorkflowstateResource,
+    TaskMetaResource, TaskResource, WorkflowFilesResource,
+    WorkflowMetaResource, WorkflowResource, WorkflowstateResource
+)
+from sqlalchemy.orm.attributes import instance_state
 
 log = logging.getLogger(__name__)
 

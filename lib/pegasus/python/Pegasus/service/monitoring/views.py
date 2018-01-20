@@ -14,21 +14,19 @@
 
 __author__ = 'Rajiv Mayani'
 
-import json
-
-import logging
-
 import hashlib
-
+import json
+import logging
 import StringIO
 
-from flask import g, request, make_response, current_app
-
+from flask import current_app, g, make_response, request
 from Pegasus.service import cache
 from Pegasus.service.base import InvalidJSONError, OrderedDict
 from Pegasus.service.monitoring import monitoring_routes
+from Pegasus.service.monitoring.queries import (
+    MasterWorkflowQueries, StampedeWorkflowQueries
+)
 from Pegasus.service.monitoring.utils import jsonify
-from Pegasus.service.monitoring.queries import MasterWorkflowQueries, StampedeWorkflowQueries
 
 log = logging.getLogger(__name__)
 

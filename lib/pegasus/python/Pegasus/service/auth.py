@@ -1,9 +1,8 @@
-import os
-import pam
 import logging
+import os
 
-from flask import request, Response, g, abort, make_response, url_for
-
+import pam
+from flask import Response, abort, g, make_response, request, url_for
 from Pegasus import user
 from Pegasus.service import app
 

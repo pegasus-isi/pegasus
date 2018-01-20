@@ -1,5 +1,6 @@
-import time
 import decimal
+import time
+
 from Pegasus.service import app
 
 

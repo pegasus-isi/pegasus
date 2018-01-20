@@ -14,16 +14,14 @@
 
 __author__ = 'Rajiv Mayani'
 
-import os
 import json
 import logging
-import unittest
+import os
 import StringIO
+import unittest
 
 from flask import g
-
 from Pegasus.service import app
-
 from Pegasus.service.monitoring.resources import *
 
 

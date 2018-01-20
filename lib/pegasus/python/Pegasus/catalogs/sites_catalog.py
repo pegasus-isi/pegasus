@@ -15,12 +15,13 @@
 #  limitations under the License.
 #
 from __future__ import print_function
-__author__ = 'Rafael Ferreira da Silva'
 
 import os
 import platform
 
 from Pegasus.DAX3 import *
+
+__author__ = 'Rafael Ferreira da Silva'
 
 
 class OSType:

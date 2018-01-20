@@ -1,8 +1,8 @@
-import os
 import logging
+import os
 import random
-from OpenSSL import crypto, SSL
 
+from OpenSSL import SSL, crypto
 from Pegasus.command import LoggingCommand
 from Pegasus.service import app
 

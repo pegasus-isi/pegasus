@@ -15,22 +15,23 @@
 #  limitations under the License.
 #
 from __future__ import print_function
-__author__ = "Rafael Ferreira da Silva"
 
-import logging
 import datetime
 import glob
+import logging
 import os
 import shutil
 import subprocess
-import time
 import sys
+import time
 import warnings
 
 from Pegasus.db import connection
 from Pegasus.db.schema import *
 from sqlalchemy import func
 from sqlalchemy.orm.exc import *
+
+__author__ = "Rafael Ferreira da Silva"
 
 log = logging.getLogger(__name__)
 

@@ -14,19 +14,21 @@
 
 __author__ = 'Rajiv Mayani'
 
+import re
 import StringIO
 
-import re
+from plex import (
+    IGNORE, Any, AnyBut, Lexicon, NoCase, Opt, Range, Rep, Rep1, Scanner, Str
+)
+from plex.errors import UnrecognizedInput
+from werkzeug.routing import BaseConverter
 
 try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
 
-from plex import Range, Lexicon, Rep, Rep1, Str, Any, IGNORE, Scanner, AnyBut, NoCase, Opt
-from plex.errors import UnrecognizedInput
 
-from werkzeug.routing import BaseConverter
 
 
 class PagedResponse(object):

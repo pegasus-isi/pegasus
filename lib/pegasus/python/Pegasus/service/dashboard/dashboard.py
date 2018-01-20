@@ -16,13 +16,11 @@ __author__ = "Rajiv Mayani"
 
 from time import localtime, strftime
 
-from sqlalchemy.orm.exc import NoResultFound
-
-from Pegasus.tools import utils
-from Pegasus.plots_stats import utils as stats_utils
 from Pegasus.db.workflow import stampede_statistics
-
+from Pegasus.plots_stats import utils as stats_utils
 from Pegasus.service.dashboard import queries
+from Pegasus.tools import utils
+from sqlalchemy.orm.exc import NoResultFound
 
 
 class NoWorkflowsFoundError(Exception):

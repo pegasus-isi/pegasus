@@ -16,12 +16,11 @@ __author__ = 'Rajiv Mayani'
 
 import logging
 
-from Pegasus.db.schema import DashboardWorkflow, DashboardWorkflowstate
-from Pegasus.db.schema import Workflow, WorkflowMeta, WorkflowFiles, Workflowstate
-from Pegasus.db.schema import RCLFN, RCPFN, RCMeta
-from Pegasus.db.schema import Job, Host, Jobstate
-from Pegasus.db.schema import Task, TaskMeta, JobInstance, Invocation
-
+from Pegasus.db.schema import (
+    RCLFN, RCPFN, DashboardWorkflow, DashboardWorkflowstate, Host,
+    Invocation, Job, JobInstance, Jobstate, RCMeta, Task, TaskMeta,
+    Workflow, WorkflowFiles, WorkflowMeta, Workflowstate
+)
 from Pegasus.service.base import BaseResource
 
 log = logging.getLogger(__name__)

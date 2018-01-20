@@ -17,8 +17,8 @@ import logging
 
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import DBAdminError
-from Pegasus.db.schema import *
 from Pegasus.db.errors import StampedeDBNotFoundError
+from Pegasus.db.schema import *
 from sqlalchemy.orm.exc import *
 from sqlalchemy.util._collections import KeyedTuple
 
