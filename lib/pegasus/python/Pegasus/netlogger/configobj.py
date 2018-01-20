@@ -188,7 +188,7 @@ class Builder(object):
         return m(o)
     
     def build_List(self, o):
-        return map(self.build, o.getChildren())
+        return list(map(self.build, o.getChildren()))
     
     def build_Const(self, o):
         return o.value
@@ -215,7 +215,7 @@ class Builder(object):
         raise UnknownType('Undefined Name')
     
     def build_Add(self, o):
-        real, imag = map(self.build_Const, o.getChildren())
+        real, imag = list(map(self.build_Const, o.getChildren()))
         try:
             real = float(real)
         except TypeError:
@@ -726,7 +726,7 @@ class Section(dict):
 
     def items(self):
         """D.items() -> list of D's (key, value) pairs, as 2-tuples"""
-        return zip((self.scalars + self.sections), self.values())
+        return list(zip((self.scalars + self.sections), self.values()))
 
 
     def keys(self):

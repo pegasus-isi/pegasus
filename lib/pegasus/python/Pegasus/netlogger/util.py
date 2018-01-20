@@ -371,7 +371,7 @@ def getNextNumberedFile(path, mode="w", strip=False, open_file=True):
 
 def getAllNumberedFiles(path):
     nf = _getNumberedFiles(path)
-    return map(lambda x: x[1], nf)
+    return [x[1] for x in nf]
 
 def getLowestNumberedFile(path, mode="r"):
     numbered = _getNumberedFiles(path)
@@ -703,8 +703,8 @@ except ImportError:
     # From: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/213761
     import time, random, md5
     def uuid1():
-      t = long( time.time() * 1000 )
-      r = long( random.random()*100000000000000000 )
+      t = int( time.time() * 1000 )
+      r = int( random.random()*100000000000000000 )
       try:
         a = socket.gethostbyname( socket.gethostname() )
       except:

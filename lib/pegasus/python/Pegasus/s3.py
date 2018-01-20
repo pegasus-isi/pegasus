@@ -1104,7 +1104,7 @@ def get(args):
 
             return False
 
-        keys = filter(keyfilter, b.list(uri.key))
+        keys = [x for x in b.list(uri.key) if keyfilter(x)]
     else:
         # Just get the one key we need to download
         key = b.get_key(uri.key)
