@@ -427,6 +427,334 @@ pegasus.data.configuration    condorio</programlisting>
     </section>
   </section>
 
+  <section id="aws-batch">
+    <title>Amazon AWS Batch</title>
+
+    <para>Unlike the execution environments described in the previous section
+    on Cloud where the user has to start condor workers on the cloud nodes,
+    Amazon provides a managed service called AWS Batch. It automates the
+    notion of provisioning nodes in the cloud, and setting up of a compute
+    environment and a job queue that can submit jobs to those nodes.</para>
+
+    <para>Starting 4.9 release, Pegasus has support for executing horizontally
+    clustered jobs on Amazon AWS Batch Service using the command line tool
+    pegasus-aws-batch. In other words, you can get Pegasus to cluster each
+    level of your workflow into a bag of tasks and run those clustered jobs on
+    Amazon Cloud using AWS Batch Service. In upcoming releases, we plan to add
+    support to pegasus-aws-batch to do dependency management that will allow
+    us to execute the whole workflow in a single AWS Batch job.</para>
+
+    <section id="aws-batch-setup">
+      <title>Setup</title>
+
+      <para>To use AWS Batch as user you need to do some one time setup to get
+      started at running. Please follow the instructions carefully in this
+      section. </para>
+
+      <section>
+        <title>Credentials</title>
+
+        <para>To use AWS Batch for your workflows, we need two credential
+        files </para>
+
+        <orderedlist>
+          <listitem>
+            <para><emphasis role="bold">AWS Credentials File:</emphasis> This
+            is the file that you create and use whenever accessing Amazon EC2
+            and is located at ~/.aws/credentials. For our purposes we need the
+            following information in that file. </para>
+
+            <programlisting><emphasis role="bold">$ cat ~/.aws/credentials</emphasis>
+[default]
+aws_access_key_id = XXXXXXXXXXXX
+aws_secret_access_key = XXXXXXXXXXX
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">S3 Config File:</emphasis> Pegasus
+            workflows use pegasus-s3 command line tool to stage-in input data
+            required by the tasks to S3 and push data output data generated to
+            S3 when user application code runs. These credentials are
+            specified in .s3cfg file usually put in the user home directory.
+            This format of the file is described in the <link
+            linkend="cli-pegasus-s3">pegaus-s3 command line client's man
+            page</link>. A minimalistic file is illustrated below </para>
+
+            <programlisting>$ <emphasis role="bold">cat ~/.s3cfg
+</emphasis>[amazon]
+# end point has to be consistent with the EC2 region you are using. Here we are referring to us-west-2 region.
+endpoint = http://s3-us-west-2.amazonaws.com
+
+
+# Amazon now allows 5TB uploads
+max_object_size = 5120
+multipart_uploads = True
+ranged_downloads = True
+
+
+[user@amazon]
+access_key = XXXXXXXXXXXX
+secret_key = XXXXXXXXXXXX
+</programlisting>
+          </listitem>
+        </orderedlist>
+      </section>
+
+      <section>
+        <title>Setting up Container Image which your jobs run on</title>
+
+        <para>All jobs in AWS Batch are run in a container via the Amazon EC2
+        container service. The Amazon EC2 container service does not give
+        control over the docker run command for a container. Hence, Pegasus
+        runs jobs on container that is based on the <ulink
+        url="https://aws.amazon.com/blogs/compute/creating-a-simple-fetch-and-run-aws-batch-job/">Amazon
+        Fetch and Run Example</ulink> . This container image allows us to
+        fetch user executables automatically from S3. All container images
+        referred used for Pegasus workflows must be based on the above
+        example.</para>
+
+        <para>Additionally, the Docker file for your container image should
+        include these additional Docker run commands to install the yum
+        packages that Pegasus requires. </para>
+
+        <programlisting><emphasis role="bold">RUN yum -y install perl findutils</emphasis></programlisting>
+
+        <para>After you have pushed the Docker image to the Amazon ECR
+        Repository, the image URL for that image you will use later to refer
+        in the job definition to use for your jobs.</para>
+      </section>
+
+      <section>
+        <title>One time AWS Batch Setup</title>
+
+        <para>If you are using AWS Batch for the very first time, then you
+        need to use the Amazon Web console to create a role with your user
+        that will give the AWS Batch services privileges to execute to access
+        other AWS services such as EC2 Container Service , CloudWatchLogs etc.
+        The following roles need to be created</para>
+
+        <orderedlist>
+          <listitem>
+            <para><emphasis role="bold">AWS Batch Service IAM Role:</emphasis>
+            For convenience and ease of use make sure you name the role
+            <emphasis role="bold">AWSBatchServiceRole</emphasis> , so that you
+            don't have to make other changes. Complete the procedures listed
+            at [<ulink
+            url="https://docs.aws.amazon.com/batch/latest/userguide/service_IAM_role.html">AWS
+            Batch Service IAM Role</ulink>.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Amazon ECS Instance Role:</emphasis>
+            AWS Batch compute environments are populated with Amazon ECS
+            container instances, and they run the Amazon ECS container agent
+            locally. The Amazon ECS container agent makes calls to various AWS
+            APIs on your behalf, so container instances that run the agent
+            require an IAM policy and role for these services to know that the
+            agent belongs to you. Complete the procedures listed at <ulink
+            url="https://docs.aws.amazon.com/batch/latest/userguide/instance_IAM_role.html">Amazon
+            ECS Instance Role</ulink>.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">IAM Role:</emphasis> Whenever a
+            Pegasus job runs via AWS Batch it needs to fetch data from S3 and
+            push data back to S3. To create this job role follow the
+            instructions at section <emphasis>Create an IAM role</emphasis> in
+            <ulink
+            url="https://aws.amazon.com/blogs/compute/creating-a-simple-fetch-and-run-aws-batch-job/">Amazon
+            Fetch and Run Example</ulink> to create a IAM role named
+            batchJobRole.</para>
+
+            <note>
+              <para>batchJobRole should have full write access to S3 i.e have
+              the policy <emphasis role="bold">AmazonS3FullAccess</emphasis>
+              attached to it.</para>
+            </note>
+          </listitem>
+        </orderedlist>
+
+        <note>
+          <para>It is important that you name the roles as listed above. Else,
+          you will need to update the same job definition, compute
+          environment, and job queue json files that you use to create the
+          various Batch entities.</para>
+        </note>
+      </section>
+    </section>
+
+    <section>
+      <title>Creation of AWS Batch Entities for your Workflow</title>
+
+      <para>AWS Batch has a notion of </para>
+
+      <orderedlist>
+        <listitem>
+          <para><emphasis role="bold">Job Definition</emphasis> - job
+          definition is something that allows you to use your container image
+          in Amazon EC2 Repository to run one or many AWS Batch jobs. </para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Compute Environment </emphasis>- what
+          sort of compute nodes you want your jobs to run on. </para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Job Queue</emphasis> - the queue that
+          feeds the jobs to a compute environment. </para>
+        </listitem>
+      </orderedlist>
+
+      <para>Currently, with Pegasus you can only use one of each for a
+      workflow i.e the same job definition, compute environment and job queue
+      need to be used for all jobs in the workflow. </para>
+
+      <para>To create the above entities we recommend you to use <emphasis
+      role="bold">pegasus-aws-batch </emphasis>client . You can start with the
+      sample json files present in
+      share/pegasus/examples/awsbatch-black-nonsharedfs directory.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">sample-job-definition.json :</emphasis>
+          Edit the attribute named image and replace it with the ARN of the
+          container image you built for your account </para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">sample-compute-env.json</emphasis> :
+          Edit the attributes subnets and securityGroupIds </para>
+        </listitem>
+      </itemizedlist>
+
+      <para>Before running the pegasus-aws-batch client make sure your
+      properties file has the following properties</para>
+
+      <programlisting>pegasus.aws.region=  [amazon ec2 region]
+pegasus.aws.account=[your aws account id - digits]</programlisting>
+
+      <para>You can then use pegasus-aws-batch client to generate the job
+      definition, the compute environment and job queue to use.</para>
+
+      <programlisting>pegasus-aws-batch --conf ./conf/pegasusrc --prefix pegasus-awsbatch-example --create --compute-environment ./conf/sample-compute-env.json --job-definition ./conf/sample-job-definition.json --job-queue ./conf/sample-job-queue.json 
+
+
+..
+
+2018-01-18 15:16:00.771 INFO  [Synch] Created Job Definition
+arn:aws:batch:us-west-2:405596411149:job-definition/pegasus-awsbatch-example-job-definition:1
+2018-01-18 15:16:07.034 INFO  [Synch] Created Compute Environment
+arn:aws:batch:us-west-2:XXXXXXXXXX:compute-environment/pegasus-awsbatch-example-compute-env
+2018-01-18 15:16:11.291 INFO  [Synch] Created Job Queue
+arn:aws:batch:us-west-2:XXXXXXXXXX:job-queue/pegasus-awsbatch-example-job-queue
+
+2018-01-18 15:16:11.292 INFO  [PegasusAWSBatch] Time taken to execute
+is 12.194 seconds</programlisting>
+
+      <para>You need to add the ARN's of created job definition, compute
+      environment and job queue listed in pegasus-aws-batch output to your
+      pegasusrc file</para>
+
+      <programlisting># Properties required to run on AWS Batch
+
+# the amazon region in which you are running workflows
+pegasus.aws.region=us-west-2 
+
+# your AWS account id ( in digits)
+# pegasus.aws.account=XXXXXXXXXX
+
+# ARN of the job definition that you create using pegasus-aws-batch
+# pegasus.aws.batch.job_definition=arn:aws:batch:us-west-2:XXXXXXXXXX:job-definition/fetch_and_run
+
+# ARN of the job definition that you create using pegasus-aws-batch
+# pegasus.aws.batch.compute_environment=arn:aws:batch:us-west-2:XXXXXXXXXX:compute-environment/pegasus-awsbatch-example-compute-env
+
+# ARN of the job queue that you create using pegasus-aws-batch
+# pegasus.aws.batch.job_queue=arn:aws:batch:us-west-2:XXXXXXXXXX:job-queue/pegasus-awsbatch-example-job-queue
+</programlisting>
+    </section>
+
+    <section>
+      <title>Site Catalog Entry for AWS Batch</title>
+
+      <para>To run jobs on AWS Batch, you need to have an execution site in
+      your site catalog. Here is a sample site catalog to use for running
+      workflows on AWS Batch</para>
+
+      <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                                              xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog 
+                                                 http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0"&gt;
+
+  &lt;site  handle="local" arch="x86_64" os="LINUX" osrelease="" osversion="" glibc=""&gt;
+        &lt;directory  path="/LOCAL/shared-scratch" type="shared-scratch" free-size="" total-size=""&gt;
+                &lt;file-server  operation="all" url="file:///LOCAL/shared-scratch"&gt;
+                &lt;/file-server&gt;
+        &lt;/directory&gt;    
+        &lt;directory  path="/LOCAL/shared-storage" type="shared-storage" free-size="" total-size=""&gt;
+                &lt;file-server  operation="all" url="/LOCAL/shared-storage"&gt;
+                &lt;/file-server&gt;
+        &lt;/directory&gt;
+        &lt;profile namespace="env" key="PEGASUS_HOME"&gt;/usr/bin/..&lt;/profile&gt; 
+  &lt;/site&gt;
+
+    &lt;site handle="aws-batch" arch="x86_64" os="LINUX"&gt;
+        &lt;directory  path="pegasus-batch-bamboo"  type="shared-scratch" free-size="" total-size=""&gt;
+                &lt;file-server  operation="all"  url="s3://user@amazon/pegasus-batch-bamboo"&gt;
+                &lt;/file-server&gt;
+        &lt;/directory&gt;
+
+       &lt;profile namespace="pegasus" key="clusters.num"&gt;1&lt;/profile&gt;
+
+       &lt;profile namespace="pegasus" key="style"&gt;condor&lt;/profile&gt;
+      
+       
+   &lt;/site&gt;
+
+&lt;/sitecatalog&gt;
+</programlisting>
+
+      <para/>
+    </section>
+
+    <section>
+      <title>Properties</title>
+
+      <para>Once the whole setup is complete, before running a workflow make
+      sure you have the following properties in your configuration file</para>
+
+      <programlisting># get clustered jobs running  using AWSBatch
+pegasus.clusterer.job.aggregator AWSBatch
+
+#cluster even single jobs on a level
+pegasus.clusterer.allow.single True
+
+
+# Properties required to run on AWS Batch
+
+# the amazon region in which you are running workflows
+pegasus.aws.region=us-west-2 
+
+# your AWS account id ( in digits)
+# pegasus.aws.account=XXXXXXXXXX
+
+# ARN of the job definition that you create using pegasus-aws-batch
+pegasus.aws.batch.job_definition=pegasus-awsbatch-example-job-definition
+
+# ARN of the job definition that you create using pegasus-aws-batch
+pegasus.aws.batch.compute_environment=pegasus-awsbatch-example-compute-env
+
+# ARN of the job queue that you create using pegasus-aws-batch
+pegasus.aws.batch.job_queue=pegasus-awsbatch-example-job-queue
+
+
+</programlisting>
+    </section>
+  </section>
+
   <section id="pyglidein">
     <title>Remote Cluster using PyGlidein</title>
 
