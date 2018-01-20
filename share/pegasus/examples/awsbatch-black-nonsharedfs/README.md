@@ -90,11 +90,7 @@ pegasus.aws.account=[your aws account id - digits]
 ```
 Run the command pegasus-aws-batch 
 ```bash
-$  pegasus-aws-batch --conf ./conf/pegasusrc --prefix
-pegasus-awsbatch-example --create --compute-environment
-./conf/sample-compute-env.json --job-definition
-./conf/sample-job-definition.json --job-queue
-./conf/sample-job-queue.json 
+$  pegasus-aws-batch --conf ./conf/pegasusrc --prefix pegasus-awsbatch-example --create --compute-environment ./conf/sample-compute-env.json --job-definition ./conf/sample-job-definition.json --job-queue ./conf/sample-job-queue.json 
 
 
 ..
@@ -109,15 +105,6 @@ arn:aws:batch:us-west-2:XXXXXXXXXX:job-queue/pegasus-awsbatch-example-job-queue
 2018-01-18 15:16:11.292 INFO  [PegasusAWSBatch] Time taken to execute
 is 12.194 seconds
 
-```
-
-Update the following properties in pegasusrc with the ARN of the job
-definition, compute environment and job queue listed when you run
-pegasus-aws-batch in the previous step
-```ini
-pegasus.aws.batch.job_definition=arn:aws:batch:us-west-2:XXXXXXXXXX:job-definition/pegasus-awsbatch-example-job-definition:1
-pegasus.aws.batch.compute_environment=arn:aws:batch:us-west-2:XXXXXXXXXX:compute-environment/pegasus-awsbatch-example-compute-env
-pegasus.aws.batch.job_queue=arn:aws:batch:us-west-2:XXXXXXXXXX:job-queue/pegasus-awsbatch-example-job-queue
 ```
 
 

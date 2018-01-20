@@ -1161,7 +1161,7 @@ public class Synch {
         StringBuilder sb = new StringBuilder();
         sb.append("[cluster-summary tasks=" ).append(  total  ).append( ", " ).
                 append( "succeeded=" ).append( succeeded).append( ", " ).
-                append( "failed=" ).append( failed).append( ", " ).
+                append( "failed=" ).append( failed).append( " " ).
                 append( "]" );
         return sb.toString();
     }
