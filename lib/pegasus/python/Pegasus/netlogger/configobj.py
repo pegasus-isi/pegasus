@@ -726,7 +726,7 @@ class Section(dict):
 
     def items(self):
         """D.items() -> list of D's (key, value) pairs, as 2-tuples"""
-        return zip((self.scalars + self.sections), self.values())
+        return list(zip((self.scalars + self.sections), self.values()))
 
 
     def keys(self):
