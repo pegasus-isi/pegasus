@@ -416,9 +416,8 @@ class Profiler(type):
         log.set_meta(pid=os.getpid(), ppid=os.getppid(), gpid=os.getgid())
         keys = []
         if not classdict.get('profiler_skip_all',cls.profiler_skip_all):
-            keys = filter(lambda k: isinstance(classdict[k], types.FunctionType) and k not in 
-                          classdict.get('profiler_skip_methods',cls.profiler_skip_methods), 
-                          classdict.keys())
+            keys = [k for k in classdict.keys() if isinstance(classdict[k], types.FunctionType) and k not in 
+                          classdict.get('profiler_skip_methods',cls.profiler_skip_methods)]
 
         for k in keys:
             classdict[k] = cls.__profile_method(classdict[k])
