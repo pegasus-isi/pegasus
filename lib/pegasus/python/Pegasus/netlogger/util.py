@@ -703,8 +703,8 @@ except ImportError:
     # From: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/213761
     import time, random, md5
     def uuid1():
-      t = long( time.time() * 1000 )
-      r = long( random.random()*100000000000000000 )
+      t = int( time.time() * 1000 )
+      r = int( random.random()*100000000000000000 )
       try:
         a = socket.gethostbyname( socket.gethostname() )
       except:

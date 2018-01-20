@@ -35,6 +35,8 @@ import traceback
 import subprocess
 import urllib
 
+from builtins import int
+
 __all__ = ['quote', 'unquote']
 
 # Compile our regular expressions
@@ -403,7 +405,7 @@ def raw_to_regular(exitcode):
     For signals, it returns the negative signal number (-1 through -127)
     For failures (when exitcode < 0), it returns the special value -128
     """
-    if not isinstance(exitcode, int) and not isinstance(exitcode, long):
+    if not isinstance(exitcode, int):
         return exitcode
     if exitcode < 0:
         return -128
@@ -416,7 +418,7 @@ def regular_to_raw(exitcode):
     """
     This function encodes a regular exitcode into a raw exitcode.
     """
-    if not isinstance(exitcode, int) and not isinstance(exitcode, long) :
+    if not isinstance(exitcode, int):
         logger.warning("exitcode not an integer!")
         return exitcode
     if exitcode == -128:
