@@ -106,7 +106,7 @@ def completeISO(s, is_gmt=False, set_gmt=False):
         else:
             # adjust time GMT to localtime or localtime to GMT
             # easiest at this point to just format string from time
-            p = map(int, parts[:-1] + [0, -1])
+            p = list(map(int, parts[:-1] + [0, -1]))
             if set_gmt:
                 t = time.mktime(p)
                 iso_str = utcFormatISO(t)
@@ -155,7 +155,7 @@ def parseISO(s):
         frac = float(sec[point+1:]) / pow(10, len(sec) - point - 1)
         sec = sec[:point]
     # use calendar to get seconds since epoch
-    args = map(int, (year, month, day, hr, minute, sec)) + [0,1,-1]
+    args = list(map(int, (year, month, day, hr, minute, sec))) + [0,1,-1]
     return calendar.timegm(args) + frac - tz_offs # adjust to GMT
 
 def makeISO(value, is_gmt=False, set_gmt=False):
@@ -272,6 +272,6 @@ def parseSyslogDate(date):
         raise ValueError("bad syslog date '%s'" % date)
     g = m.groups()
     month = MONTHS[g[1]]
-    day, hh, mm, ss, year = map(int, g[2:])        
+    day, hh, mm, ss, year = list(map(int, g[2:]))        
     sec = time.mktime((year, month, day, hh, mm, ss, 0, 0, -1))
     return sec

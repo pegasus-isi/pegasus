@@ -187,7 +187,7 @@ class BPLogger(logging.Logger):
 
     def exception(self, event, err, **kwargs):
         estr = traceback.format_exc()
-        estr = ' | '.join(map(lambda e: e.strip(), estr.split('\n')))
+        estr = ' | '.join([e.strip() for e in estr.split('\n')])
         self.log(logging.ERROR, Level.ERROR, event, msg=str(err),
                  status=-1, traceback=estr, **kwargs)
     exc = exception

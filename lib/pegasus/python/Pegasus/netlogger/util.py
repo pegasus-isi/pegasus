@@ -371,7 +371,7 @@ def getNextNumberedFile(path, mode="w", strip=False, open_file=True):
 
 def getAllNumberedFiles(path):
     nf = _getNumberedFiles(path)
-    return map(lambda x: x[1], nf)
+    return [x[1] for x in nf]
 
 def getLowestNumberedFile(path, mode="r"):
     numbered = _getNumberedFiles(path)
