@@ -17,13 +17,13 @@ present for the example to run
 
 All jobs in AWS Batch are run in a container via the Amazon EC2
 container service. The Amazon EC2 container service does not give
-control over the dockerrun command for a container. Hence, Pegasus
+control over the docker run command for a container. Hence, Pegasus
 runs jobs on container that is based on the [Amazon Fetch and Run
 Example](https://aws.amazon.com/blogs/compute/creating-a-simple-fetch-and-run-aws-batch-job/)
 . This container image allows us to fetch user executables
 automatically from S3. All container images referred used for Pegasus
 workflows must be based on the above example. Additionally, the Docker
-file for your container image should include these addtional Docker
+file for your container image should include these additional Docker
 run commands to install the yum packages that Pegasus requires.
 
 ```dockerfile
@@ -32,13 +32,12 @@ RUN yum -y install perl findutils
 
 ### One time setup
 
-The guide [Setting up with AWS
-Batch](https://docs.aws.amazon.com/batch/latest/userguide/get-set-up-for-aws-batch.html)
-on the amazon website and follow the various steps listed there.
+Follow the various steps listed in the  guide [Setting up with AWS
+Batch](https://docs.aws.amazon.com/batch/latest/userguide/get-set-up-for-aws-batch.html).
 
 If you are using AWS Batch for the very first time, then you need to
 use the Amazon Web console to create a role with your user that will
-give the AWS Batch services priviliges to execute to access other AWS
+give the AWS Batch services privileges to execute to access other AWS
 services such as EC2 Container Service , CloudWatchLogs etc.
 
 The following roles need to be created
