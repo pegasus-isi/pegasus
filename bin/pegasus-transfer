@@ -1957,11 +1957,6 @@ class GlobusOnlineHandler(TransferHandlerBase):
 
 
     def do_removes(self, removes_l):
-        
-        # recursive removes are not supported yet, so just mark them as success
-        if removes_l[0].get_recursive():
-            return [removes_l, []]
-        
         tools = Tools()
         if tools.find("pegasus-globus-online", "help", None, [prog_dir]) is None:
             logger.error("Unable to locate pegasus-globus-online in the $PATH")
@@ -1981,6 +1976,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
                 "transfer_at": cred_details["transfer_at"],
                 "transfer_rt": cred_details["transfer_rt"],
                 "transfer_at_exp": cred_details["transfer_at_exp"],
+                "recursive": removes_l[0].get_recursive(),
                 "files": list()}
         
         for t in removes_l:

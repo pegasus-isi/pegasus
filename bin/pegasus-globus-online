@@ -130,6 +130,7 @@ def wait_for_task(transfer_client, task_id, acceptable_faults = None):
     wait_timeout = 60
     loop_counter = 0
 
+    #### SHOULD CHECK FOR ERRORS ####
     while not transfer_client.task_wait(task_id, timeout=wait_timeout):
         loop_counter += 1
         logger.info("Globus transfer task %s is still running (%d seconds)" % (task_id, loop_counter*wait_timeout))
@@ -171,30 +172,42 @@ def mkdir(request):
     if "PEGASUS_WF_UUID" in os.environ and "PEGASUS_DAG_JOB_ID" in os.environ:
         label = os.environ["PEGASUS_WF_UUID"] + " - " + os.environ["PEGASUS_DAG_JOB_ID"] 
 
-    ####update this to operation_mkdir in the future
-    #transfer_client.operation_mkdir
-    #set up a new mkdir transfer
-    deadline = datetime.utcnow() + timedelta(hours=24)
-    transfer_data = globus_sdk.TransferData(transfer_client, request["endpoint"], request["endpoint"], label=label, deadline=deadline)
-    
     for f in request["files"]:
-        transfer_data.add_item("/dev/null", f + "/.created")
-    
-    # finalize and submit the transfer
-    transfer_result = transfer_client.submit_transfer(transfer_data)
-    task_id = transfer_result["task_id"]
-    
-    # how many faults will we accept before giving up?
-    acceptable_faults = min(100, len(request["files"]) * 3)
+        base_path = ""
+        child_dirs = []
 
-    # wait for the task to complete, and see the tasks and
-    # endpoint ls change
-    try:
-        status = wait_for_task(transfer_client, task_id, acceptable_faults)
-    except Exception, err:
-        logger.error(err)
-        cancel_task(transfer_client, task_id)
-        sys.exit(1)
+        # find base_path with operation_ls
+        base_path = f
+        found = False
+        while (not found) and base_path != "/":
+            found = True
+            base_path, dir_name = os.path.split(base_path)
+            if dir_name not in ["", "/"]:
+                child_dirs.append(dir_name)
+
+            try:
+                response = transfer_client.operation_ls(request["endpoint"], path=base_path, limit=2) 
+            except globus_sdk.TransferAPIError as e:
+                logger.warn("Finding existing parent dir for mkdir " + f)
+                logger.warn(e.message)
+                found = False
+        
+        child_dirs.reverse()
+        path = base_path
+        for child in child_dirs:
+            if path[-1] == "/":
+                path += child
+            else:
+                path = path + "/" + child
+
+            try: 
+                transfer_result = transfer_client.operation_mkdir(request["endpoint"],path)
+            except globus_sdk.TransferAPIError as e:
+                if e.code == "ExternalError.MkdirFailed.Exists":
+                    logger.info(e.message)
+                    pass
+                else:
+                    raise RuntimeError(e.message)
     logger.info("Mkdir complete")
 
 
@@ -208,6 +221,7 @@ def transfer(request):
       "transfer_at":     "secret_auth_token", 
       "transfer_rt":     "secret_refresh_auth_token", 
       "transfer_at_exp": "secret_auth_token_expiration", 
+      "recursive":       [True | False],
       "files":[
          {"src":"/etc/hosts","dst":"/tmp/foobar.txt"},
          {"src":"/etc/hosts","dst":"/tmp/foobar-2.txt"}
@@ -280,7 +294,7 @@ def remove(request):
 
     # set up a new delete transfer
     deadline = datetime.utcnow() + timedelta(hours=24)
-    del_data = globus_sdk.DeleteData(transfer_client, request["endpoint"], label=label, recursive=True, deadline=deadline)
+    del_data = globus_sdk.DeleteData(transfer_client, request["endpoint"], label=label, recursive=request["recursive"], deadline=deadline)
     
     for f in request["files"]:
         del_data.add_item(f)
