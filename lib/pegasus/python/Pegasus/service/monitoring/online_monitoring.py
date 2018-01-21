@@ -159,7 +159,6 @@ class OnlineMonitord:
         trace_id = "{0}:{1}:{2}".format(message["dag_job_id"], message["condor_job_id"], message["pid"])
 
         data = {}
-        data["time"] = int(message["ts"] * 1000000) # microseconds
         data["read_bytes"] = message["bread"]
         data["write_bytes"] = message["bwrite"]
         data["rchar"] = message["rchar"]
@@ -188,6 +187,7 @@ class OnlineMonitord:
             point = [
                 {
                     "measurement": trace_id,
+                    "time": int(message["ts"] * 1000000), # microseconds
                     "fields": data
                 }
             ]
