@@ -4737,7 +4737,7 @@ Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
 Scope       :</emphasis> Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type  </emphasis>      : String
-<emphasis role="bold">Values</emphasis>      : seqexec|mpiexec
+<emphasis role="bold">Values</emphasis>      : seqexec|mpiexec|AWSBatch
 <emphasis role="bold">Default     :</emphasis> seqexec</literallayout></entry>
 
               <entry><para>A large number of workflows executed through the
@@ -4760,6 +4760,14 @@ Scope       :</emphasis> Properties
 
                     <listitem>
                        In this mode, the executable used to run the merged job is "pegasus-mpi-cluster" (PMC) that runs the smaller jobs via mpi on n nodes where n is the nodecount associated with the merged job. The executable "pegasus-mpi-cluster" is a PEGASUS tool distributed in the PEGASUS distribution and is built only if mpi compiler is available. 
+                    </listitem>
+                  </varlistentry>
+
+                  <varlistentry>
+                    <term>AWSBatch</term>
+
+                    <listitem>
+                       In this mode, the executable used to run the merged job is "pegasus-aws-batch"  that runs in local universe on the submit and runs the jobs making up the cluster on AWS Batch. 
                     </listitem>
                   </varlistentry>
                 </variablelist></para></entry>
@@ -5274,6 +5282,153 @@ Scope       :</emphasis> Properties
       </table>
 
       <para/>
+    </section>
+
+    <section id="aws_batch_props">
+      <title>AWS Batch Properties</title>
+
+      <table>
+        <title>Miscellaneous Properties</title>
+
+        <tgroup cols="2">
+          <tbody>
+            <row>
+              <entry><emphasis role="bold">Key Attributes</emphasis></entry>
+
+              <entry><emphasis role="bold">Description</emphasis></entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.aws.account<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.9.0
+<emphasis role="bold">Type        : </emphasis>String
+<emphasis role="bold">Default     :</emphasis> (no default)</literallayout></entry>
+
+              <entry><para>This property is used to specify the amazon account
+              under which you are running jobs.</para></entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.aws.region<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.9.0
+<emphasis role="bold">Type        : </emphasis>String
+<emphasis role="bold">Default     :</emphasis> (no default)</literallayout></entry>
+
+              <entry><para>This property is used to specify the amazon region
+              in which you are running jobs.</para></entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.aws.batch.job_definition<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.9.0
+<emphasis role="bold">Type        : </emphasis>String
+<emphasis role="bold">Default     :</emphasis> (no default)</literallayout></entry>
+
+              <entry><para>This property is used to specify
+              </para><itemizedlist>
+                  <listitem>
+                    <para>the JSON file containing job definition to register
+                    for executing jobs <emphasis
+                    role="bold">OR</emphasis></para>
+                  </listitem>
+
+                  <listitem>
+                    <para>the ARN of existing job definition <emphasis
+                    role="bold">OR</emphasis> </para>
+                  </listitem>
+
+                  <listitem>
+                    <para>basename of an existing job definition </para>
+                  </listitem>
+                </itemizedlist><para> </para></entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.aws.batch.compute_environment<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.9.0
+<emphasis role="bold">Type        : </emphasis>String
+<emphasis role="bold">Default     :</emphasis> (no default)</literallayout></entry>
+
+              <entry><para>This property is used to specify
+              </para><itemizedlist>
+                  <listitem>
+                    <para>the JSON file containing compute environment to
+                    register for executing jobs <emphasis
+                    role="bold">OR</emphasis></para>
+                  </listitem>
+
+                  <listitem>
+                    <para>the ARN of existing compute environment <emphasis
+                    role="bold">OR</emphasis></para>
+                  </listitem>
+
+                  <listitem>
+                    <para>basename of an existing compute environment</para>
+                  </listitem>
+                </itemizedlist><para> </para></entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.aws.batch.job_queue<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.9.0
+<emphasis role="bold">Type        : </emphasis>String
+<emphasis role="bold">Default     :</emphasis> (no default)</literallayout></entry>
+
+              <entry><para>This property is used to specify
+              </para><itemizedlist>
+                  <listitem>
+                    <para>the JSON file containing Job Queue to use for
+                    executing jobs <emphasis role="bold">OR</emphasis></para>
+                  </listitem>
+
+                  <listitem>
+                    <para>the ARN of existing job queue <emphasis
+                    role="bold">OR</emphasis></para>
+                  </listitem>
+
+                  <listitem>
+                    <para>basename of an existing job queue</para>
+                  </listitem>
+                </itemizedlist><para> </para></entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.aws.batch.s3_bucket<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.9.0
+<emphasis role="bold">Type        : </emphasis>URL
+<emphasis role="bold">Default     :</emphasis> (no default)</literallayout></entry>
+
+              <entry><para>This property is used to specify the S3 Bucket URL
+              to use for data transfers while executing jobs on AWS
+              Batch.</para><para> </para></entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
     </section>
 
     <section id="misc__props">
