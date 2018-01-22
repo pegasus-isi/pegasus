@@ -449,20 +449,20 @@ pegasus.data.configuration    condorio</programlisting>
 
       <para>To use AWS Batch as user you need to do some one time setup to get
       started at running. Please follow the instructions carefully in this
-      section. </para>
+      section.</para>
 
       <section>
         <title>Credentials</title>
 
         <para>To use AWS Batch for your workflows, we need two credential
-        files </para>
+        files</para>
 
         <orderedlist>
           <listitem>
             <para><emphasis role="bold">AWS Credentials File:</emphasis> This
             is the file that you create and use whenever accessing Amazon EC2
             and is located at ~/.aws/credentials. For our purposes we need the
-            following information in that file. </para>
+            following information in that file.</para>
 
             <programlisting><emphasis role="bold">$ cat ~/.aws/credentials</emphasis>
 [default]
@@ -479,7 +479,7 @@ aws_secret_access_key = XXXXXXXXXXX
             specified in .s3cfg file usually put in the user home directory.
             This format of the file is described in the <link
             linkend="cli-pegasus-s3">pegaus-s3 command line client's man
-            page</link>. A minimalistic file is illustrated below </para>
+            page</link>. A minimalistic file is illustrated below</para>
 
             <programlisting>$ <emphasis role="bold">cat ~/.s3cfg
 </emphasis>[amazon]
@@ -516,7 +516,7 @@ secret_key = XXXXXXXXXXXX
 
         <para>Additionally, the Docker file for your container image should
         include these additional Docker run commands to install the yum
-        packages that Pegasus requires. </para>
+        packages that Pegasus requires.</para>
 
         <programlisting><emphasis role="bold">RUN yum -y install perl findutils</emphasis></programlisting>
 
@@ -540,7 +540,7 @@ secret_key = XXXXXXXXXXXX
             For convenience and ease of use make sure you name the role
             <emphasis role="bold">AWSBatchServiceRole</emphasis> , so that you
             don't have to make other changes. Complete the procedures listed
-            at [<ulink
+            at <ulink
             url="https://docs.aws.amazon.com/batch/latest/userguide/service_IAM_role.html">AWS
             Batch Service IAM Role</ulink>.</para>
           </listitem>
@@ -587,29 +587,29 @@ secret_key = XXXXXXXXXXXX
     <section>
       <title>Creation of AWS Batch Entities for your Workflow</title>
 
-      <para>AWS Batch has a notion of </para>
+      <para>AWS Batch has a notion of</para>
 
       <orderedlist>
         <listitem>
           <para><emphasis role="bold">Job Definition</emphasis> - job
           definition is something that allows you to use your container image
-          in Amazon EC2 Repository to run one or many AWS Batch jobs. </para>
+          in Amazon EC2 Repository to run one or many AWS Batch jobs.</para>
         </listitem>
 
         <listitem>
           <para><emphasis role="bold">Compute Environment </emphasis>- what
-          sort of compute nodes you want your jobs to run on. </para>
+          sort of compute nodes you want your jobs to run on.</para>
         </listitem>
 
         <listitem>
           <para><emphasis role="bold">Job Queue</emphasis> - the queue that
-          feeds the jobs to a compute environment. </para>
+          feeds the jobs to a compute environment.</para>
         </listitem>
       </orderedlist>
 
       <para>Currently, with Pegasus you can only use one of each for a
       workflow i.e the same job definition, compute environment and job queue
-      need to be used for all jobs in the workflow. </para>
+      need to be used for all jobs in the workflow.</para>
 
       <para>To create the above entities we recommend you to use <emphasis
       role="bold">pegasus-aws-batch </emphasis>client . You can start with the
@@ -620,12 +620,12 @@ secret_key = XXXXXXXXXXXX
         <listitem>
           <para><emphasis role="bold">sample-job-definition.json :</emphasis>
           Edit the attribute named image and replace it with the ARN of the
-          container image you built for your account </para>
+          container image you built for your account</para>
         </listitem>
 
         <listitem>
           <para><emphasis role="bold">sample-compute-env.json</emphasis> :
-          Edit the attributes subnets and securityGroupIds </para>
+          Edit the attributes subnets and securityGroupIds</para>
         </listitem>
       </itemizedlist>
 
@@ -638,8 +638,8 @@ pegasus.aws.account=[your aws account id - digits]</programlisting>
       <para>You can then use pegasus-aws-batch client to generate the job
       definition, the compute environment and job queue to use.</para>
 
-      <programlisting>pegasus-aws-batch --conf ./conf/pegasusrc --prefix pegasus-awsbatch-example --create --compute-environment ./conf/sample-compute-env.json --job-definition ./conf/sample-job-definition.json --job-queue ./conf/sample-job-queue.json 
-
+      <programlisting><emphasis role="bold">$ pegasus-aws-batch --conf ./conf/pegasusrc --prefix pegasus-awsbatch-example --create --compute-environment ./conf/sample-compute-env.json --job-definition ./conf/sample-job-definition.json --job-queue ./conf/sample-job-queue.json 
+</emphasis>
 
 ..
 
