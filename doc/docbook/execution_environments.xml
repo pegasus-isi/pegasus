@@ -438,11 +438,12 @@ pegasus.data.configuration    condorio</programlisting>
 
     <para>Starting 4.9 release, Pegasus has support for executing horizontally
     clustered jobs on Amazon AWS Batch Service using the command line tool
-    pegasus-aws-batch. In other words, you can get Pegasus to cluster each
-    level of your workflow into a bag of tasks and run those clustered jobs on
-    Amazon Cloud using AWS Batch Service. In upcoming releases, we plan to add
-    support to pegasus-aws-batch to do dependency management that will allow
-    us to execute the whole workflow in a single AWS Batch job.</para>
+    <link linkend="cli-pegasus-aws-batch">pegasus-aws-batch</link>. In other
+    words, you can get Pegasus to cluster each level of your workflow into a
+    bag of tasks and run those clustered jobs on Amazon Cloud using AWS Batch
+    Service. In upcoming releases, we plan to add support to pegasus-aws-batch
+    to do dependency management that will allow us to execute the whole
+    workflow in a single AWS Batch job.</para>
 
     <section id="aws-batch-setup">
       <title>Setup</title>
