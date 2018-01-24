@@ -52,8 +52,8 @@ cat >sites.xml <<EOF
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://obelix.isi.edu" mount-point="/nfs/ccg4/scratch-purge-no-backups/ptesting"/>
-                    <internal-mount-point mount-point="/nfs/ccg4/scratch-purge-no-backups/ptesting"/>
+                    <file-server protocol="gsiftp" url="gsiftp://obelix.isi.edu" mount-point="/lizard/scratch-90-days/ptesting"/>
+                    <internal-mount-point mount-point="/lizard/scratch-90-days/ptesting"/>
                 </shared>
             </scratch>
             <storage />

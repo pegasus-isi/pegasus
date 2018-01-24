@@ -52,14 +52,14 @@ cat >sites.xml <<EOF
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://colo-vm63.isi.edu" mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/work"/>
-                    <internal-mount-point mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/work"/>
+                    <file-server protocol="gsiftp" url="gsiftp://colo-vm63.isi.edu" mount-point="/lizard/scratch-90-days/bamboo/work"/>
+                    <internal-mount-point mount-point="/lizard/scratch-90-days/bamboo/work"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://colo-vm63.isi.edu" mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/outputs"/>
-                    <internal-mount-point mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/outputs"/>
+                    <file-server protocol="gsiftp" url="gsiftp://colo-vm63.isi.edu" mount-point="/lizard/scratch-90-days/bamboo/outputs"/>
+                    <internal-mount-point mount-point="/lizard/scratch-90-days/bamboo/outputs"/>
                 </shared>
             </storage>
         </head-fs>
@@ -67,7 +67,7 @@ cat >sites.xml <<EOF
         <profile namespace="pegasus" key="style">condor</profile>
         <profile namespace="condor" key="requirements">(TARGET.FileSystemDomain =!= &quot;&quot;)</profile>
         <profile namespace="env" key="MONTAGE_HOME" >/ccg/software/montage/current</profile>
-        <profile namespace="env" key="PEGASUS_HOME" >/nfs/ccg4/scratch-purge-no-backups/bamboo/installs/pegasus-$PEGASUS_VERSION</profile>
+        <profile namespace="env" key="PEGASUS_HOME" >/lizard/scratch-90-days/bamboo/installs/pegasus-$PEGASUS_VERSION</profile>
         <profile namespace="env" key="http_proxy" >http://workflow.isi.edu:3128</profile>
     </site>
 </sitecatalog>
