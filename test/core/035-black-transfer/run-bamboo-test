@@ -11,7 +11,7 @@ fi
 
 TOPDIR=`pwd`
 
-CONDOR_POOL_SHARED_FS=/nfs/ccg4/scratch-purge-no-backups/bamboo
+CONDOR_POOL_SHARED_FS=/lizard/scratch-90-days/bamboo
 mkdir -p $CONDOR_POOL_SHARED_FS/inputs
 
 # generate the input file

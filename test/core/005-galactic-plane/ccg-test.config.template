@@ -20,11 +20,11 @@ name:             CCG
 globus_location:  /ccg/software/globus/5.0.4
 montage_location: /ccg/software/montage/Montage_v3.3_mats
 gridftp_server:   colo-vm63.isi.edu
-work_dir:         /nfs/ccg4/scratch-purge-no-backups/bamboo/galactic-plane-test
+work_dir:         /lizard/scratch-90-days/bamboo/galactic-plane-test
 
 [output]
 name:             CCG_Data
 storage_proto:    gridftp
 storage_url:      gsiftp://colo-vm63.isi.edu
-storage_mount:    /nfs/ccg4/scratch-purge-no-backups/bamboo/outputs
+storage_mount:    /lizard/scratch-90-days/bamboo/outputs
 

@@ -145,7 +145,7 @@ STATUS=$(($STATUS + $?))
 
 if [ $STATUS -ne 0 ]; then
     echo "Test failed, creating tarball..."
-    DIR="/nfs/ccg3/scratch-purge-no-backups/pegasus-failures"
+    DIR="/lizard/scratch-90-days/pegasus-failures"
     if ! [ -d "$DIR" ]; then
         mkdir -p "$DIR"
         chmod 1777 "$DIR"

@@ -1204,7 +1204,7 @@ project:
                       set -e
                       set -x
 
-                      TARGET_DIR=/nfs/ccg4/scratch-purge-no-backups/bamboo/installs
+                      TARGET_DIR=/lizard/scratch-90-days/bamboo/installs
 
                       NAME=`cd dist && ls | grep -v tar | grep pegasus`
                       echo "Found $NAME"

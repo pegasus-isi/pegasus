@@ -281,7 +281,7 @@ def generate_sc():
     sc.write("        <profile namespace=\"condor\" key=\"should_transfer_files\">True</profile>\n")
     sc.write("        <profile namespace=\"condor\" key=\"when_to_transfer_output\">ON_EXIT</profile>\n")
     sc.write("        <profile namespace=\"condor\" key=\"requirements\">(FileSystemDomain != &quot;&quot;)</profile>\n")
-    sc.write("        <profile namespace=\"env\" key=\"PEGASUS_HOME\" >/nfs/ccg4/scratch-purge-no-backups/bamboo/installs/pegasus-%s</profile>\n" %(os.environ['PEGASUS_VERSION']))
+    sc.write("        <profile namespace=\"env\" key=\"PEGASUS_HOME\" >/lizard/scratch-90-days/bamboo/installs/pegasus-%s</profile>\n" %(os.environ['PEGASUS_VERSION']))
     sc.write("        <profile namespace=\"env\" key=\"GLOBUS_LOCATION\" >%s</profile>\n" % (cluster_globus_location))
     sc.write("        <profile namespace=\"env\" key=\"MONTAGE_HOME\" >%s</profile>\n" %(cluster_montage_location))
     sc.write("    </site>\n")

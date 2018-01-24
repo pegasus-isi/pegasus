@@ -11,7 +11,7 @@ if [ "x$PEGASUS_BIN_DIR" = "x" ]; then
     exit 1
 fi 
 
-export REMOTE_PEGASUS_HOME=/nfs/ccg4/scratch-purge-no-backups/bamboo/installs/pegasus-`pegasus-version`
+export REMOTE_PEGASUS_HOME=/lizard/scratch-90-days/bamboo/installs/pegasus-`pegasus-version`
 
 # build the dax generator
 export PYTHONPATH=`pegasus-config --python`
