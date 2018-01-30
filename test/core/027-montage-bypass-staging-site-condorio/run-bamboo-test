@@ -40,6 +40,15 @@ tr $BINARY:3.0 {
         profile pegasus "clusters.size" "20"
     }
 }
+tr $BINARY {
+    site local {
+        pfn "/ccg/software/montage/current/bin/$BINARY"
+        arch "x86_64"
+        os "linux"
+        type "STAGEABLE"
+        profile pegasus "clusters.size" "20"
+    }
+}
 EOF
 done
 
