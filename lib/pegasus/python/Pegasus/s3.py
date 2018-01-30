@@ -472,7 +472,7 @@ def cp(args):
     if destbucket is None:
         if options.create:
             info("Creating destination bucket %s" % dest.bucket)
-            destbucket = conn.create_bucket(dest.bucket)
+            destbucket = conn.create_bucket(dest.bucket, location=conn.location)
         else:
             raise Exception("Destination bucket %s does not exist "
                             "(see -c)" % dest.bucket)
@@ -563,7 +563,14 @@ def mkdir(args):
     for uri in buckets:
         info("Creating %s" % uri)
         conn = get_connection(config, uri)
-        conn.create_bucket(uri.bucket, location=conn.location)
+        try:
+            conn.create_bucket(uri.bucket, location=conn.location)
+        except Exception, e:
+            if hasattr(e, "error_message") and \
+               "bucket succeeded and you already own it" in e.error_message:
+                continue
+            raise
+
 
 def rmdir(args):
     parser = option_parser("rmdir URL...")
@@ -806,7 +813,7 @@ def put(args):
             info("Bucket %s exists" % uri.bucket)
         else:
             info("Creating bucket %s" % uri.bucket)
-            conn.create_bucket(uri.bucket)
+            conn.create_bucket(uri.bucket, location=conn.location)
 
     b = Bucket(connection=conn, name=uri.bucket)
 
