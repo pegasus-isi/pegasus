@@ -249,7 +249,7 @@ def transfer(request):
     #transfer_client.operation_mkdir
     # set up a new delete transfer
     deadline = datetime.utcnow() + timedelta(hours=24)
-    transfer_data = globus_sdk.TransferData(transfer_client, request["src_endpoint"], request["dst_endpoint"], label=label, deadline=deadline)
+    transfer_data = globus_sdk.TransferData(transfer_client, request["src_endpoint"], request["dst_endpoint"], label=label, deadline=deadline, notify_on_succeeded=False, notify_on_failed=False, notify_on_inactive=False)
     
     for pair in request["files"]:
         transfer_data.add_item(pair["src"], pair["dst"])
@@ -294,7 +294,7 @@ def remove(request):
 
     # set up a new delete transfer
     deadline = datetime.utcnow() + timedelta(hours=24)
-    del_data = globus_sdk.DeleteData(transfer_client, request["endpoint"], label=label, recursive=request["recursive"], deadline=deadline)
+    del_data = globus_sdk.DeleteData(transfer_client, request["endpoint"], label=label, recursive=request["recursive"], deadline=deadline, notify_on_succeeded=False, notify_on_failed=False, notify_on_inactive=False)
     
     for f in request["files"]:
         del_data.add_item(f)
