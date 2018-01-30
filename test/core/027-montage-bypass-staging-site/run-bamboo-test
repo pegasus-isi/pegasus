@@ -13,7 +13,7 @@ DEGREES=0.5
 
 TOP_DIR=`pwd`
 
-export PATH=/ccg/software/montage/Montage_v3.3_mats/bin:$PATH
+export PATH=/ccg/software/montage/current/bin:$PATH
 
 # unique directory for this run
 RUN_ID=`/bin/date +'%F_%H%M%S'`
@@ -29,11 +29,11 @@ cp $TOP_DIR/pegasusrc .
 # create the transformation catalogue (tc)
 echo
 echo "Creating the transformation catalog..."
-for BINARY in `(cd /ccg/software/montage/Montage_v3.3_mats/bin/ && ls)`; do
+for BINARY in `(cd /ccg/software/montage/current/bin/ && ls)`; do
     cat >>tc <<EOF
 tr $BINARY:3.3 {
     site CCG {
-        pfn "/ccg/software/montage/Montage_v3.3_mats/bin/$BINARY"
+        pfn "/ccg/software/montage/current/bin/$BINARY"
         arch "x86_64"
         os "linux"
         type "INSTALLED"
@@ -80,7 +80,7 @@ cat >sites.xml <<EOF
         <profile namespace="condor" key="requirements">(TARGET.FileSystemDomain =!= &quot;&quot;)</profile>
         <profile namespace="condor" key="should_transfer_files">Yes</profile>
         <profile namespace="condor" key="when_to_transfer_output">ON_EXIT</profile>
-        <profile namespace="env" key="MONTAGE_HOME" >/ccg/software/montage/Montage_v3.3_mats</profile>
+        <profile namespace="env" key="MONTAGE_HOME" >/ccg/software/montage/current</profile>
         <profile namespace="env" key="http_proxy" >http://workflow.isi.edu:3128</profile>
     </site>
     <site handle="CCGData">

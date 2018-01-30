@@ -13,12 +13,12 @@ overlap:   0.1
 
 [local]
 work_dir:         [WORK_DIR]
-montage_location: /ccg/software/montage/Montage_v3.3_mats
+montage_location: /ccg/software/montage/current
 
 [cluster]
 name:             CCG
 globus_location:  /ccg/software/globus/5.0.4
-montage_location: /ccg/software/montage/Montage_v3.3_mats
+montage_location: /ccg/software/montage/current
 gridftp_server:   colo-vm63.isi.edu
 work_dir:         /lizard/scratch-90-days/bamboo/galactic-plane-test
 
