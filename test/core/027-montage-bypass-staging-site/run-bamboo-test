@@ -108,7 +108,7 @@ echo
 echo "Adding input images to the replica catalog..."
 echo "  " `cat cache.list | wc -l` "images found"
 cat cache.list | grep -v ".fits " >rc
-perl -p -i -e 's/ipac/local/' rc
+perl -p -i -e 's/ipac_cluster/local/' rc
 cat url.list | sed 's/\.gz http/ http/' >>rc
 
 echo "Planning  the workflow..."
@@ -123,6 +123,10 @@ pegasus-plan \
     | tee $TOP_DIR/plan.out
 
 WORK_DIR=`cat $TOP_DIR/plan.out | grep pegasus-run | sed -E 's/.*pegasus-run[ ]+//'` 
+if [ "x$WORK_DIR" = "x" ]; then
+    echo "Unable to determine work directory from the planner output"
+    exit 1
+fi
 echo "work directory is $WORK_DIR"
 cd $WORK_DIR
 
