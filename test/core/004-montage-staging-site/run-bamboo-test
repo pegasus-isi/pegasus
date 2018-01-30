@@ -56,7 +56,7 @@ cat >sites.xml <<EOF
         <profile namespace="condor" key="requirements">(TARGET.FileSystemDomain =!= &quot;&quot;)</profile>
         <profile namespace="condor" key="should_transfer_files">Yes</profile>
         <profile namespace="condor" key="when_to_transfer_output">ON_EXIT</profile>
-        <profile namespace="env" key="MONTAGE_HOME" >/ccg/software/montage/Montage_v3.3_mats</profile>
+        <profile namespace="env" key="MONTAGE_HOME" >/ccg/software/montage/current</profile>
         <profile namespace="env" key="GLOBUS_LOCATION" >/ccg/software/globus/default</profile>
         <profile namespace="env" key="http_proxy" >http://workflow.isi.edu:3128</profile>
     </site>
