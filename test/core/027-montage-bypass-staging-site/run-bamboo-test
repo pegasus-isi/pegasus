@@ -31,7 +31,7 @@ echo
 echo "Creating the transformation catalog..."
 for BINARY in `(cd /ccg/software/montage/current/bin/ && ls)`; do
     cat >>tc <<EOF
-tr $BINARY:3.3 {
+tr $BINARY:3.0 {
     site CCG {
         pfn "/ccg/software/montage/current/bin/$BINARY"
         arch "x86_64"
@@ -108,7 +108,7 @@ echo
 echo "Adding input images to the replica catalog..."
 echo "  " `cat cache.list | wc -l` "images found"
 cat cache.list | grep -v ".fits " >rc
-perl -p -i -e 's/ipac_cluster/local/' rc
+perl -p -i -e 's/ipac/local/' rc
 cat url.list | sed 's/\.gz http/ http/' >>rc
 
 echo "Planning  the workflow..."

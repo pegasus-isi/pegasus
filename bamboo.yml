@@ -1426,7 +1426,7 @@ project:
             - key: T005
               name: 005-galactic-plane
               description: TODO
-              enabled: true
+              enabled: false
               tasks:
                 - !script
                   description: Cleanup
