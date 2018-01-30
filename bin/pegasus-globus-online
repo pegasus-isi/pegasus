@@ -115,10 +115,15 @@ def activate_endpoint(transfer_client, endpoint):
     Try to Auto-Activate a Globus Online endpoint - only auto-activate is allowed for now
     """
     logger.info("Activating " + endpoint)
-    res = transfer_client.endpoint_autoactivate(endpoint, if_expires_in=3600)
-    while (res["code"] == "AutoActivationFailed"):
-        logger.critical("Endpoint %s requires manual activation" % endpoint)
-        logger.critical("Please log into Globus Online and activate the endpoint there")
+    try:
+        res = transfer_client.endpoint_autoactivate(endpoint, if_expires_in=3600)
+        if (res["code"] == "AutoActivationFailed"):
+            logger.critical("Endpoint \"%s\" requires manual activation" % endpoint)
+            logger.critical("Please log into Globus Online and activate the endpoint there")
+            sys.exit(1)
+    except globus_sdk.TransferAPIError as e:
+        logger.critical("Endpoint \"%s\" auto-activation ERROR" % endpoint)
+        logger.critical(e.message)
         sys.exit(1)
 
 
@@ -155,7 +160,7 @@ def cancel_task(transfer_client, task_id):
 
 def mkdir(request):
     """
-    mkdir isn't supported recursively in the Python API yet, we need to use transfer
+    operation_mkdir doesn't support recursive creation of directories
     """
     # global so that we can use it in signal handlers
     global client
@@ -168,10 +173,6 @@ def mkdir(request):
     # make sure we can auto-activate the endpoints
     activate_endpoint(transfer_client, request["endpoint"])
     
-    label = None
-    if "PEGASUS_WF_UUID" in os.environ and "PEGASUS_DAG_JOB_ID" in os.environ:
-        label = os.environ["PEGASUS_WF_UUID"] + " - " + os.environ["PEGASUS_DAG_JOB_ID"] 
-
     for f in request["files"]:
         base_path = ""
         child_dirs = []
@@ -184,7 +185,6 @@ def mkdir(request):
             base_path, dir_name = os.path.split(base_path)
             if dir_name not in ["", "/"]:
                 child_dirs.append(dir_name)
-
             try:
                 response = transfer_client.operation_ls(request["endpoint"], path=base_path, limit=2) 
             except globus_sdk.TransferAPIError as e:
