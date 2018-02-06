@@ -54,6 +54,8 @@ PACKAGES+=idna
 PACKAGES+=certifi
 PACKAGES+=urllib3
 PACKAGES+=pytz
+PACKAGES+=pyjwt
+PACKAGES+=globus_sdk
 
 PYOPENSSL_ARGS=
 ifeq ($(OSID),macos10)
@@ -109,6 +111,8 @@ $(LIBDIR)/idna: idna-2.6.tar.gz
 $(LIBDIR)/certifi: python-certifi-2017.11.05.tar.gz
 $(LIBDIR)/urllib3: urllib3-1.22.tar.gz
 $(LIBDIR)/pytz: pytz-2017.3.tar.gz
+$(LIBDIR)/pyjwt: pyjwt-1.5.3.tar.gz
+$(LIBDIR)/globus_sdk: globus-sdk-python-1.4.1.tar.gz
 
 
 clean:

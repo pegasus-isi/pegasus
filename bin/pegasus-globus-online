@@ -46,12 +46,7 @@ lib_ext_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=Tru
 os.sys.path.insert(0, lib_dir)
 os.sys.path.insert(0, lib_ext_dir)
 
-try:
-    import globus_sdk
-except ImportError, e:
-    sys.stderr.write("ERROR: Unable to load Globus SDK: %s\n" % e)
-    sys.stderr.write("Please see http://globus-sdk-python.readthedocs.io/en/stable/installation/\n")
-    exit(1)
+import globus_sdk
 
 # --- global variables ----------------------------------------------------------------
 

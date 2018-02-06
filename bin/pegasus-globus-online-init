@@ -1,8 +1,22 @@
 #!/usr/bin/env python
 import os
-import globus_sdk
+import sys
+import subprocess
 from optparse import OptionParser
 from ConfigParser import ConfigParser
+
+# Use pegasus-config to find our lib path
+bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
+pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python"
+lib_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python-externals"
+lib_ext_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+
+# Insert this directory in our search path
+os.sys.path.insert(0, lib_dir)
+os.sys.path.insert(0, lib_ext_dir)
+
+import globus_sdk
 
 client_id = "a69d49b0-1de4-4554-a955-05f0cb6cc2cc"
 config_file = os.path.expanduser("~/.pegasus/globus.conf")
@@ -29,24 +43,24 @@ get_input = getattr(__builtins__, 'raw_input', input)
 auth_code = get_input('Please enter the code you get after login here: ').strip()
 token_response = client.oauth2_exchange_code_for_tokens(auth_code)
 
-auth_data = token_response.by_resource_server['auth.globus.org']
+#auth_data = token_response.by_resource_server['auth.globus.org']
 transfer_data = token_response.by_resource_server['transfer.api.globus.org']
 
 # get tokens as strings and their expiration timestamp
-auth_at = auth_data['access_token']
-auth_rt = auth_data['refresh_token']
-auth_at_exp = auth_data['expires_at_seconds']
+#auth_at = auth_data['access_token']
+#auth_rt = auth_data['refresh_token']
+#auth_at_exp = auth_data['expires_at_seconds']
 transfer_at = transfer_data['access_token']
 transfer_rt = transfer_data['refresh_token']
 transfer_at_exp = transfer_data['expires_at_seconds']
 
 
-config.set("oauth", "auth_at", auth_at)
-config.set("oauth", "auth_rt", auth_rt)
-config.set("oauth", "auth_at_exp", auth_at_exp)
-config.set("oauth", "transfer_at", transfer_at)
-config.set("oauth", "transfer_rt", transfer_rt)
-config.set("oauth", "transfer_at_exp", transfer_at_exp)
+#config.set("oauth", "auth_at", auth_at) # globus auth access token
+#config.set("oauth", "auth_rt", auth_rt) # globus auth access refresh token
+#config.set("oauth", "auth_at_exp", auth_at_exp) # globus auth access expiration time
+config.set("oauth", "transfer_at", transfer_at) # transfer access token
+config.set("oauth", "transfer_rt", transfer_rt) # transfer refresh token
+config.set("oauth", "transfer_at_exp", transfer_at_exp) # transfer expiration time
 
 cfg = open(config_file, "w+")
 config.write(cfg)
