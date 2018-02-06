@@ -65,7 +65,7 @@ for SUBTEST in \
     echo 
     echo "$SUBTEST tests..."
     echo
-    timed_transfer 0 30 "(cd $SUBTEST && ./run)"
+    timed_transfer 0 90 "(cd $SUBTEST && ./run)"
 done
 
 

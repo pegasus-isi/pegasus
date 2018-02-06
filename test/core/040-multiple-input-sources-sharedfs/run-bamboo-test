@@ -41,8 +41,8 @@ cat >sites.xml <<EOF
     </site>
 
     <site  handle="condorpool" arch="x86_64" os="LINUX">
-        <directory type="shared-scratch" path="/nfs/ccg4/scratch-purge-no-backups/bamboo/$UUID">
-            <file-server operation="all" url="gsiftp://colo-vm63.isi.edu/nfs/ccg4/scratch-purge-no-backups/bamboo/$UUID"/>
+        <directory type="shared-scratch" path="/lizard/scratch-90-days/bamboo/$UUID">
+            <file-server operation="all" url="gsiftp://colo-vm63.isi.edu/lizard/scratch-90-days/bamboo/$UUID"/>
         </directory>
         <profile namespace="pegasus" key="style" >condor</profile>
         <profile namespace="condor" key="universe" >vanilla</profile>

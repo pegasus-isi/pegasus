@@ -42,7 +42,7 @@ echo "This is sample input to KEG" > ${input_file}
 mkdir -p outputs
 mkdir -p staging-site
 
-export REMOTE_PEGASUS_HOME=/nfs/ccg4/scratch-purge-no-backups/bamboo/installs/pegasus-`pegasus-version`
+export REMOTE_PEGASUS_HOME=/lizard/scratch-90-days/bamboo/installs/pegasus-`pegasus-version`
 
 # build the dax generator
 export PYTHONPATH=`pegasus-config --python`
@@ -81,14 +81,14 @@ cat > sites.xml << EOF
 	<head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg4/scratch-purge-no-backups/$USER/scratch/$RUN_ID"/>
-                    <internal-mount-point mount-point="/nfs/ccg4/scratch-purge-no-backups/$USER/scratch/$RUN_ID"/>
+                    <file-server protocol="file" url="file://" mount-point="/lizard/scratch-90-days/$USER/scratch/$RUN_ID"/>
+                    <internal-mount-point mount-point="/lizard/scratch-90-days/$USER/scratch/$RUN_ID"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg4/scratch-purge-no-backups/$USER/storage/black-diamond-output/$RUN_ID"/>
-                    <internal-mount-point mount-point="/nfs/ccg4/scratch-purge-no-backups/testing/$USER/black-diamond-output/$RUN_ID"/>
+                    <file-server protocol="file" url="file://" mount-point="/lizard/scratch-90-days/$USER/storage/black-diamond-output/$RUN_ID"/>
+                    <internal-mount-point mount-point="/lizard/scratch-90-days/testing/$USER/black-diamond-output/$RUN_ID"/>
                 </shared>
             </storage>
         </head-fs>

@@ -32,13 +32,9 @@ perl -p -i -e "s/\\@PEGASUS_VERSION\\@/$VERSION/g" pegasus.spec
 perl -p -i -e "s/\\@DATE\\@/$DATE_RPM/g" pegasus.spec
 perl -p -i -e "s/^Release:.*/Release:        $RELEASE_VERSION/g" pegasus.spec
 
-# special sauce for el7
-DIST=`./release-tools/getosid | perl -pe 's/rhel/.el/'`
-if (rpmbuild --showrc | grep ": dist" | grep "el7") >/dev/null 2>&1; then
-    perl -p -i -e 's@BuildRequires: .*@BuildRequires:  python-setuptools, openssl-devel, ant, pyOpenSSL, ant-apache-regexp, java-1.8.0-openjdk-devel, gcc, groff, python-devel, gcc-c++, make, asciidoc, libxslt, fop, R-devel@' pegasus.spec
-fi
-
 cp pegasus.spec build/rpm/SPECS/
+
+DIST=`./release-tools/getosid | perl -pe 's/rhel/.el/'`
 
 rpmbuild -ba --define "_topdir $TOP_DIR/build/rpm" --define "dist $DIST" pegasus.spec
 

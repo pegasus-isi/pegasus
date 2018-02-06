@@ -107,11 +107,11 @@ cat >sites.xml <<EOF
         <grid  type="gt5" contact="obelix.isi.edu/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
         <grid  type="gt5" contact="obelix.isi.edu/jobmanager-condor" scheduler="Condor" jobtype="compute"/>
 
-        <directory type="shared-scratch" path="/nfs/ccg4/scratch-purge-no-backups/CCG/scratch">
-            <file-server operation="all" url="gsiftp://obelix.isi.edu/nfs/ccg4/scratch-purge-no-backups/CCG/scratch"/>
+        <directory type="shared-scratch" path="/lizard/scratch-90-days/CCG/scratch">
+            <file-server operation="all" url="gsiftp://obelix.isi.edu/lizard/scratch-90-days/CCG/scratch"/>
         </directory>
-        <directory type="local-storage" path="/nfs/ccg4/scratch-purge-no-backups/CCG/outputs">
-            <file-server operation="all" url="gsiftp://obelix.isi.edu/nfs/ccg4/scratch-purge-no-backups/CCG/outputs"/>
+        <directory type="local-storage" path="/lizard/scratch-90-days/CCG/outputs">
+            <file-server operation="all" url="gsiftp://obelix.isi.edu/lizard/scratch-90-days/CCG/outputs"/>
         </directory>
 
         <profile namespace="env" key="PEGASUS_HOME">$CONDOR_POOL_PEGASUS_HOME</profile>

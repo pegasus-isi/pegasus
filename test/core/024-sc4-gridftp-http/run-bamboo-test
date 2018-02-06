@@ -59,9 +59,9 @@ cat >sites.xml <<EOF
         <profile namespace="condor" key="universe" >vanilla</profile>
     </site>
     <site  handle="staging_site" arch="x86_64" os="LINUX">
-        <directory type="shared-scratch" path="/nfs/ccg4/scratch-purge-no-backups/http-scratch/ptesting">
+        <directory type="shared-scratch" path="/lizard/scratch-90-days/http-scratch/ptesting">
             <file-server operation="get" url="http://obelix.isi.edu/shared-scratch/ptesting"/>
-            <file-server operation="put" url="gsiftp://obelix.isi.edu/nfs/ccg4/scratch-purge-no-backups/http-scratch/ptesting"/>
+            <file-server operation="put" url="gsiftp://obelix.isi.edu/lizard/scratch-90-days/http-scratch/ptesting"/>
         </directory>
     </site>
 </sitecatalog>

@@ -1204,7 +1204,7 @@ project:
                       set -e
                       set -x
 
-                      TARGET_DIR=/nfs/ccg4/scratch-purge-no-backups/bamboo/installs
+                      TARGET_DIR=/lizard/scratch-90-days/bamboo/installs
 
                       NAME=`cd dist && ls | grep -v tar | grep pegasus`
                       echo "Found $NAME"
@@ -1476,7 +1476,7 @@ project:
             - key: T005
               name: 005-galactic-plane
               description: TODO
-              enabled: true
+              enabled: false
               tasks:
                 - !script
                   description: Cleanup
@@ -3776,7 +3776,7 @@ project:
       triggers:
         - !scheduled
           description: Nightly Build
-          cronExpression: "0 0 1 * * ?"
+          cronExpression: "0 0 21 * * ?"
           onlyRunIfOtherPlansArePassing:
             planKeys:
               - PEGASUS-BNT48
