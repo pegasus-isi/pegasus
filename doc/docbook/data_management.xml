@@ -1596,16 +1596,19 @@ exec /usr/bin/ssh $extra_opts $port_str $remote_host $remote_program
       the workflow are for Globus Online endpoints.</para>
 
       <para>There are two levels of credentials required. One is for the
-      workflow to use the Globus Online API, which is handled by a X.509
-      proxy. The second level is for the endpoints, which the user will have
-      have manage via the Globus Online web interface. The required steps
-      are:</para>
+      workflow to use the Globus Online API, which is handled by OAuth tokens,
+      provided by Globus Auth service. The second level is for the endpoints,
+      which the user will have have manage via the Globus Online web interface.
+      The required steps are:</para>
 
       <orderedlist>
         <listitem>
-          <para>Using the <ulink url="https://docs.globus.org/cli/">CLI
-          interface</ulink>, update your user profile, and add your X.509
-          DN.</para>
+          <para>Using <emphasis>pegasus-globus-online-init</emphasis>, provide 
+          authorization to Pegasus and retrieve your trasnfer access tokens. 
+          By default Pegasus acquires temporary tokens that expire within a few days.
+          Using --permanent option you can request refreshable tokens that last indefinetely
+          (or until access is revoked).
+          </para>
         </listitem>
 
         <listitem>
@@ -1618,12 +1621,11 @@ exec /usr/bin/ssh $extra_opts $port_str $remote_host $remote_program
       </orderedlist>
 
       <para>URLs for Globus Online endpoint data follows the following scheme:
-      <emphasis>go://[globus_username]@[endpoint]/[path]</emphasis>. For
-      example, for a user with the Globus Online username
-      <emphasis>bob</emphasis> and his private endpoint
+      <emphasis>go://[endpoint]/[path]</emphasis>. For example, for a user with
+      the Globus Online private endpoint
       <emphasis>bob#researchdata</emphasis> and a file
       <emphasis>/home/bsmith/experiment/1.dat</emphasis>, the URL would be:
-      <emphasis>go://bob@bob#researchdata/home/bsmith/experiment/1.dat</emphasis></para>
+      <emphasis>go://bob#researchdata/home/bsmith/experiment/1.dat</emphasis></para>
     </section>
   </section>
 
