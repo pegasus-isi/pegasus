@@ -1854,18 +1854,20 @@ class GlobusOnlineHandler(TransferHandlerBase):
             logger.error("Unable to locate pegasus-globus-online in the $PATH")
             return [[], mkdir_l]
 
+        if not os.path.isfile(os.path.expanduser("~/.pegasus/globus.conf")):
+            logger.error("Unable to locate globus config file ~/.pegasus/globus.conf")
+            return [[], mkdir_l]
+
         successful_l = []
         failed_l = []        
         
-        r = re.search("([\w-]+)@([\w#-]+)", mkdir_l[0].get_host())
-        if not r:
-            raise RuntimeError("Unable to determine username from URL")
-
-        env = self._creds(mkdir_l[0])
+        cred_details = self._creds(mkdir_l[0])
         
-        spec = {"globus_username": r.group(1),
-                "endpoint": r.group(2),
-                "x509_proxy": env["X509_USER_PROXY"],
+        spec = {"endpoint": mkdir_l[0].get_host(),
+                "client_id": cred_details["client_id"],
+                "transfer_at": cred_details["transfer_at"],
+                "transfer_rt": cred_details["transfer_rt"],
+                "transfer_at_exp": cred_details["transfer_at_exp"],
                 "files": list()}
         
         for t in mkdir_l:
@@ -1884,7 +1886,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
         if logger.isEnabledFor(logging.DEBUG):
             cmd += " --debug"
         try:
-            tc = TimedCommand(cmd, env_overrides=env)
+            tc = TimedCommand(cmd)
             tc.run()
             successful_l = list(mkdir_l)
         except RuntimeError, err:
@@ -1902,28 +1904,27 @@ class GlobusOnlineHandler(TransferHandlerBase):
             logger.error("Unable to locate pegasus-globus-online in the $PATH")
             return [[], transfers_l]
 
+        if not os.path.isfile(os.path.expanduser("~/.pegasus/globus.conf")):
+            logger.error("Unable to locate globus config file ~/.pegasus/globus.conf")
+            return [[], mkdir_l]
+        
         successful_l = []
         failed_l = []        
         
         # src
-        r = re.search("([\w-]+)@([\w#-]+)", transfers_l[0].get_src_host())
-        if not r:
-            raise RuntimeError("Unable to determine username from URL")
-        globus_username = r.group(1)
-        src_ep = r.group(2)
+        src_ep = transfers_l[0].get_src_host()
 
         # dst
-        r = re.search("([\w-]+)@([\w#-]+)", transfers_l[0].get_dst_host())
-        if not r:
-            raise RuntimeError("Unable to determine username from URL")
-        dst_ep = r.group(2)
+        dst_ep = transfers_l[0].get_dst_host()
 
-        env = self._creds(transfers_l[0])
+        cred_details = self._creds(transfers_l[0])
         
-        spec = {"globus_username": globus_username,
-                "src_endpoint": src_ep,
+        spec = {"src_endpoint": src_ep,
                 "dst_endpoint": dst_ep,
-                "x509_proxy": env["X509_USER_PROXY"],
+                "client_id": cred_details["client_id"],
+                "transfer_at": cred_details["transfer_at"],
+                "transfer_rt": cred_details["transfer_rt"],
+                "transfer_at_exp": cred_details["transfer_at_exp"],
                 "files": list()}
         
         for t in transfers_l:
@@ -1943,7 +1944,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
         if logger.isEnabledFor(logging.DEBUG):
             cmd += " --debug"
         try:
-            tc = TimedCommand(cmd, env_overrides=env)
+            tc = TimedCommand(cmd)
             tc.run()
             successful_l = list(transfers_l)
         except RuntimeError, err:
@@ -1956,28 +1957,26 @@ class GlobusOnlineHandler(TransferHandlerBase):
 
 
     def do_removes(self, removes_l):
-        
-        # recursive removes are not supported yet, so just mark them as success
-        if removes_l[0].get_recursive():
-            return [removes_l, []]
-        
         tools = Tools()
         if tools.find("pegasus-globus-online", "help", None, [prog_dir]) is None:
             logger.error("Unable to locate pegasus-globus-online in the $PATH")
             return [[], removes_l]
 
+        if not os.path.isfile(os.path.expanduser("~/.pegasus/globus.conf")):
+            logger.error("Unable to locate globus config file ~/.pegasus/globus.conf")
+            return [[], mkdir_l]
+        
         successful_l = []
         failed_l = []        
         
-        r = re.search("([\w-]+)@([\w#-]+)", removes_l[0].get_host())
-        if not r:
-            raise RuntimeError("Unable to determine username from URL")
-
-        env = self._creds(removes_l[0])
+        cred_details = self._creds(removes_l[0])
         
-        spec = {"globus_username": r.group(1),
-                "endpoint": r.group(2),
-                "x509_proxy": env["X509_USER_PROXY"],
+        spec = {"endpoint": removes_l[0].get_host(),
+                "client_id": cred_details["client_id"],
+                "transfer_at": cred_details["transfer_at"],
+                "transfer_rt": cred_details["transfer_rt"],
+                "transfer_at_exp": cred_details["transfer_at_exp"],
+                "recursive": removes_l[0].get_recursive(),
                 "files": list()}
         
         for t in removes_l:
@@ -1996,7 +1995,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
         if logger.isEnabledFor(logging.DEBUG):
             cmd += " --debug"
         try:
-            tc = TimedCommand(cmd, env_overrides=env)
+            tc = TimedCommand(cmd)
             tc.run()
             successful_l = list(removes_l)
         except RuntimeError, err:
@@ -2013,27 +2012,46 @@ class GlobusOnlineHandler(TransferHandlerBase):
         """
         The credential used for Globus Online is just to contact the service
         """
-        
-        env_override = {}
 
-        if "X509_USER_PROXY" in os.environ:
-            env["X509_USER_PROXY"] = os.environ["X509_USER_PROXY"]
+        logger.info("Parsing globus config file for OAuth credentials")
         
-        # mkdirs and removes
-        if isinstance(sample_transfer, Mkdir) or isinstance(sample_transfer, Remove):
-            key = "X509_USER_PROXY_" + sample_transfer.get_site_label()
-            if key in os.environ:
-                env_override["X509_USER_PROXY"] = os.environ[key]
-            return env_override
-        
-        # must be a standard transfer
-        key = "X509_USER_PROXY_" + sample_transfer.get_src_site_label()
-        if key in os.environ:
-            env_override["X509_USER_PROXY"] = os.environ[key]
-   
-        return env_override
+        config = ConfigParser.ConfigParser()
+        config.read(os.path.expanduser("~/.pegasus/globus.conf"))
 
-    
+        cred_details = { "client_id": None,
+                         "transfer_at": None,
+                         "transfer_rt": None,
+                         "transfer_at_exp": 0
+                       }
+
+        try :
+            cred_details["client_id"] = config.get("oauth", "client_id")
+        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+            logger.error("No client_id was supplied")
+            raise RuntimeError("No client_id was supplied for Globus App")
+
+        try:
+            cred_details["transfer_at"]= config.get("oauth", "transfer_at")
+        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+            logger.info("No transfer_access_token was supplied")
+
+        try:
+            cred_details["transfer_at_exp"] = config.get("oauth", "transfer_at_exp")
+        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+            logger.info("No transfer_access_token_expiration was supplied, defaults to 0")
+
+        try :
+            cred_details["transfer_rt"] = config.get("oauth", "transfer_rt")
+        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+            logger.info("No transfer_refresh_token was supplied")
+            if (cred_details["transfer_at"] is None) or (cred_details["transfer_at_exp"] < int(time.time()) - 3600):
+                logger.error("transfer_access_token is missing or expiring soon")
+                raise RuntimeError("Globus transfer_access_token is missing or expiring soon")
+
+        logger.info("End of parsing globus config file for OAuth credentials")
+        
+        return cred_details
+
 
 class GSHandler(TransferHandlerBase):
     """
