@@ -39,6 +39,10 @@ public class Metadata extends Namespace {
      */
     public static final String NAMESPACE_NAME = Profile.METADATA;
     
+    //some predefined keys that Pegasus uses for integrity checking
+    public static final String CHECKSUM_TYPE_KEY  = "checksum.type";
+    public static final String CHECKSUM_VALUE_KEY = "checksum.value";
+    
     /**
      * The name of the implementing namespace. It should be one of the valid
      * namespaces always.

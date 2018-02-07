@@ -1488,8 +1488,17 @@ public class PegasusLite implements GridStart {
     protected void addIntegrityCheckInvocation(StringBuffer sb,  Collection<PegasusFile> files ) {
         for( PegasusFile file: files ){
             if( file.isDataFile() ){
-                sb.append( PegasusLite.PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME ).append( " --verify=" ).
-                   append( file.getLFN() ).append( " 1>&2" ).append( "\n" );
+                boolean generate = ( file.isRawInputFile() )?
+                    //PM-1250 for raw input files, an extra check to see if 
+                    //there is a checksum associated or not
+                    file.getAllMetadata().containsKey( Metadata.CHECKSUM_VALUE_KEY ):
+                    //we always generate invocation for intermediate files
+                    true;
+                
+                if( generate ){
+                    sb.append( PegasusLite.PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME ).append( " --verify=" ).
+                       append( file.getLFN() ).append( " 1>&2" ).append( "\n" );
+                }
             }
         }
     }
