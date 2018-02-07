@@ -721,6 +721,15 @@ public class PegasusFile extends Data {
         return this.mIsRawInput;
      }
 
+    /**
+     * Returns a boolean indicating whether there is a checksum associated with
+     * the file or not. 
+     * 
+     * @return 
+     */
+    public boolean hasCheckSum() {
+        return this.getAllMetadata().containsKey( Metadata.CHECKSUM_VALUE_KEY );
+    }
 
     /**
      * Returns a copy of the existing data object.
