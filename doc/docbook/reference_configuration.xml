@@ -2694,7 +2694,7 @@ Default     :</emphasis> (no default)</literallayout></entry>
 
               <entry><para>The database driver class is dynamically loaded, as
               required by the schema. Currently, only MySQL 5.x, PostGreSQL
-              7.3 and SQlite are supported. Their respective JDBC3 driver is
+              &gt;= 8.1 and SQlite are supported. Their respective JDBC3 driver is
               provided as part and parcel of the PEGASUS.</para><para>The * in
               the property name can be replaced by a catalog name to apply the
               property only for that catalog. Valid catalog names
@@ -2774,7 +2774,7 @@ Scope       :</emphasis> Properties
               "pegasus.catalog.[catalog-name].db." prefix from them. The
               catalog-name can be replaced by the following values provenance
               for Provenance Catalog (PTC), replica for Replica Catalog
-              (RC)</para><para>Postgres 7.3 parses the following properties:
+              (RC)</para><para>Postgres &gt;= 8.1 parses the following properties:
               <screen>
 pegasus.catalog.*.db.user
 pegasus.catalog.*.db.password
