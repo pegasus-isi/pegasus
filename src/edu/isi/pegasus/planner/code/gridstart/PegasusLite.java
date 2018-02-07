@@ -1491,7 +1491,7 @@ public class PegasusLite implements GridStart {
                 boolean generate = ( file.isRawInputFile() )?
                     //PM-1250 for raw input files, an extra check to see if 
                     //there is a checksum associated or not
-file.hasCheckSum():
+                    file.hasCheckSum():
                     //we always generate invocation for intermediate files
                     true;
                 
