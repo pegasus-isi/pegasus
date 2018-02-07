@@ -35,11 +35,6 @@ PACKAGES+=pam.py
 #PACKAGES+=cryptography
 PACKAGES+=plex
 PACKAGES+=future
-ifeq ($(shell which pg_config),)
-    $(warning WARNING: pg_config not found: skipping python postgresql library)
-else
-    PACKAGES+=psycopg2
-endif
 ifeq ($(shell which mysql_config),)
     $(warning WARNING: mysql_config not found: skipping python mysql library)
 else
@@ -89,7 +84,6 @@ $(LIBDIR)/cffi: cffi-1.10.0.tar.gz
 $(LIBDIR)/cryptography: cryptography-2.0.3.tar.gz
 $(LIBDIR)/plex: plex-2.0.0dev.tar.gz
 $(LIBDIR)/MySQLdb: MySQL-python-1.2.5.tar.gz
-$(LIBDIR)/psycopg2: psycopg2-2.7.3.2.tar.gz
 $(LIBDIR)/ordereddict.py: ordereddict-1.1.tar.gz
 $(LIBDIR)/future: future-0.16.0.tar.gz
 

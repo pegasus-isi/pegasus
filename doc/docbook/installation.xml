@@ -66,6 +66,12 @@ Python 2.6.2</programlisting></para>
         url="http://www.globus.org/">http://www.globus.org/</ulink> for more
         information.</para>
       </listitem>
+      <listitem>
+        <para><emphasis role="bold">psycopg2</emphasis>. Python module for
+          PostgreSQL access. Only needed if you want to store the runtime
+          database in PostgreSQL (default is SQLite)
+        </para>
+      </listitem>
     </itemizedlist>
   </section>
 
