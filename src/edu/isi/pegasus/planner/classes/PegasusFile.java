@@ -181,6 +181,13 @@ public class PegasusFile extends Data {
      * Metadata attributes associated with the file.
      */
     protected Metadata mMetadata;
+    
+    /**
+     * Boolean indicating whether a file is raw input for the wf/fetched from the
+     * RC.
+     */
+    protected boolean mIsRawInput;
+    
 
     /**
      * The default constructor.
@@ -199,6 +206,7 @@ public class PegasusFile extends Data {
         mSize        = -1;
         mLink        = LINKAGE.NONE;
         mMetadata    = new Metadata();
+        mIsRawInput  = false;
     }
 
     /**
@@ -363,6 +371,16 @@ public class PegasusFile extends Data {
         else{
             throw new IllegalArgumentException( "Invalid Type passed " + type );
         }
+    }
+    
+    /**
+     * Sets the flag denoting  that file is a raw input file that is fetched
+     * from the RC
+     * 
+     * @param raw boolean parameter indicating whether file is raw input or not.
+     */
+    public void setRawInput( boolean raw ){
+        this.mIsRawInput = true;
     }
 
 
@@ -692,6 +710,16 @@ public class PegasusFile extends Data {
      public boolean isDataFile(){
         return (this.mType == PegasusFile.DATA_FILE);
      }
+     
+     /**
+      * Returns a boolean indicating if a file that is being staged is a RAW
+      * input file
+      *
+      * @return boolean  
+      */
+     public boolean isRawInputFile(){
+        return this.mIsRawInput;
+     }
 
 
     /**
@@ -707,6 +735,7 @@ public class PegasusFile extends Data {
         pf.mTransferFlag = mTransferFlag;
         pf.mSize         = mSize;
         pf.mMetadata     = (Metadata) this.mMetadata.clone();
+        pf.mIsRawInput   = mIsRawInput;
         return pf;
     }
 

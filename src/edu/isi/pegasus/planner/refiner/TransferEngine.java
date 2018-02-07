@@ -54,12 +54,9 @@ import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
-import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.PlannerCache;
-
-import edu.isi.pegasus.planner.mapper.SubmitMapper;
 
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.mapper.SubmitMapperFactory;
@@ -69,9 +66,6 @@ import edu.isi.pegasus.planner.mapper.OutputMapper;
 import edu.isi.pegasus.planner.mapper.OutputMapperFactory;
 import edu.isi.pegasus.planner.mapper.StagingMapper;
 import edu.isi.pegasus.planner.mapper.StagingMapperFactory;
-import edu.isi.pegasus.planner.mapper.output.Hashed;
-import edu.isi.pegasus.planner.namespace.Metadata;
-
 
 import java.io.File;
 import java.io.IOException;
@@ -702,6 +696,9 @@ public class TransferEngine extends Engine {
                 //by parent jobs should be looked up in the replica catalog
                 //we don't consider the value of the transfer flag
                 vRCSearchFiles.addElement(pf);
+                
+                //PM-1250 any file fetched from RC is a raw input file
+                pf.setRawInput( true );
             }
         }
 
