@@ -40,7 +40,11 @@ PACKAGES+=idna
 PACKAGES+=certifi
 PACKAGES+=urllib3
 PACKAGES+=pyjwt
-PACKAGES+=globus_sdk
+ifeq ($(shell python --version 2>&1 | grep " 2.6"),)
+    PACKAGES+=globus_sdk
+else
+    $(warning WARNING: globus_sdk does not work with Python 2.6: skipping globus_sdk library)
+endif
 
 ifeq ($(shell which mysql_config),)
     $(warning WARNING: mysql_config not found: skipping python mysql library)
