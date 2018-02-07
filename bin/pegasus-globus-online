@@ -34,7 +34,6 @@ import signal
 from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 from httplib import EXPECTATION_FAILED
-from globusonline.transfer.api_client import api_result
 
 # Use pegasus-config to find our lib path
 bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
@@ -47,13 +46,7 @@ lib_ext_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=Tru
 os.sys.path.insert(0, lib_dir)
 os.sys.path.insert(0, lib_ext_dir)
 
-try:
-    from globusonline.transfer.api_client import TransferAPIClient, Transfer, Delete
-    from globusonline.transfer.api_client import x509_proxy
-except ImportError, e:
-    sys.stderr.write("ERROR: Unable to load GlobusOnline library: %s\n" % e)
-    sys.stderr.write("Please see https://github.com/globusonline/transfer-api-client-python\n")
-    exit(1)
+import globus_sdk
 
 # --- global variables ----------------------------------------------------------------
 
@@ -62,7 +55,8 @@ prog_base = os.path.split(sys.argv[0])[1]   # Name of this program
 
 logger = logging.getLogger("my_logger")
 
-api = None
+client = None
+transfer_client = None
 task_id = None
 
 # --- functions ----------------------------------------------------------------
@@ -90,149 +84,139 @@ def setup_logger(debug_flag):
 
 def prog_sigint_handler(signum, frame):
     logger.warn("Exiting due to signal %d" % (signum))
-    if api is not None:
-        cancel_task(api, task_id)
+    if transfer_client is not None:
+        cancel_task(transfer_client, task_id)
     sys.exit(1)
 
 
-def activate_ep(api, ep):
+def acquire_clients(request):
+    # connect to the service
+    client = globus_sdk.NativeAppAuthClient(request["client_id"])
+    
+    if request["transfer_rt"] is None:
+        authorizer = globus_sdk.AccessTokenAuthorizer(request["transfer_at"])
+    else:
+        authorizer = globus_sdk.RefreshTokenAuthorizer(request["transfer_rt"], 
+                                                       client, 
+                                                       access_token=request["transfer_at"], 
+                                                       expires_at=int(request["transfer_at_exp"]))
+
+    transfer_client = globus_sdk.TransferClient(authorizer=authorizer)
+    return client, transfer_client
+
+
+def activate_endpoint(transfer_client, endpoint):
     """
-    Activate a Globus Online endpoint - only auto-activate is allowed for now
+    Try to Auto-Activate a Globus Online endpoint - only auto-activate is allowed for now
     """
-    logger.info("Activating " + ep)
+    logger.info("Activating " + endpoint)
     try:
-        api.endpoint_autoactivate(ep)
-    except Exception, err:
-        logger.critical("Unable to activate endpoint: : %s" % (err))
-        logger.critical("Please log into Globus Online and activate the endpoint there")
+        res = transfer_client.endpoint_autoactivate(endpoint, if_expires_in=3600)
+        if (res["code"] == "AutoActivationFailed"):
+            logger.critical("Endpoint \"%s\" requires manual activation" % endpoint)
+            logger.critical("Please log into Globus Online and activate the endpoint there")
+            sys.exit(1)
+    except globus_sdk.TransferAPIError as e:
+        logger.critical("Endpoint \"%s\" auto-activation ERROR" % endpoint)
+        logger.critical(e.message)
         sys.exit(1)
 
 
-def wait_for_task(api, task_id, acceptable_faults = None):
+def wait_for_task(transfer_client, task_id, acceptable_faults = None):
     """
     Wait for a task to complete
     """
     logger.info("Waiting for transfer to complete")
-    poll_interval = 60
-    connection_error_count = 0
-    old_details = None
-    while True:
-        
-        # make sure we can recover if our connection gets dropped
-        code, reason, data = api.task(task_id, fields="status,nice_status_details,files,faults")
-        if code != 200:
-            logger.error("Got code %s from the server" %(code))
-            connection_error_count += 1
-            if connection_error_count > 20:
-                raise RuntimeError("Too many http errors from the Globus Online service")
-            time.sleep(poll_interval)
-            continue
-        # reset the error counter
-        connection_error_count = 0
-            
-        status = data["status"]
-        details = data["nice_status_details"]
-        files = int(data["files"])
-        faults = int(data["faults"])
-        logger.debug("%s : %s" %(status, data['nice_status_details']))
-        
-        # standard states
-        if status in ["SUCCEEDED"]:
-            return True
-        if status in ["FAILED"]:
-            raise RuntimeError("GlobusOnline reports the transfer failed: %s" %(data['nice_status_details']))
-        if status in ["INACTIVE"]:
-            raise RuntimeError("GlobusOnline has suspended your transfer: %s" %(data['nice_status_details']))
-        
-        # too many faults?
-        if acceptable_faults is not None and faults > acceptable_faults:
-            raise RuntimeError("Too many faults: %d" %(faults))
-        
-        # did we get a new nice status updates?
-        if old_details is None and details is not None:
-            logger.info(details)
-        elif details is not None and SequenceMatcher(None, details, old_details).ratio() < .5:
-            logger.debug("Ratio: %f" %(SequenceMatcher(None, details, old_details)))
-            logger.info(details)
-        old_details = details
-                  
-        time.sleep(poll_interval)
+    wait_timeout = 60
+    loop_counter = 0
+
+    #### SHOULD CHECK FOR ERRORS ####
+    while not transfer_client.task_wait(task_id, timeout=wait_timeout):
+        loop_counter += 1
+        logger.info("Globus transfer task %s is still running (%d seconds)" % (task_id, loop_counter*wait_timeout))
+        task_errors = transfer_client.task_event_list(task_id=task_id, num_results=1, filter="is_error:1")
+        for error in task_errors:
+            raise RuntimeError("Error on globus transfer task %s at %s: %s" % (task_id, error["time"], error["description"]))
         
     return None
 
 
-def cancel_task(api, task_id):
+def cancel_task(transfer_client, task_id):
     """
-    Cancel a task - useful when a transfer has too many faults or we catch a signal
+    Cancel a task - useful when a transfer has errors or we catch a signal
     """
     logger.info("Canceling transfer")
     try:
-        api.task_cancel(task_id)
+        res = transfer_client.cancel_task(task_id)
+        logger.info("Globus transfer task %s has been canceled" % task_id)
     except:
         pass
 
 
 def mkdir(request):
     """
-    mkdir is not supported in the Python API yet, so translate it to a transfer
+    operation_mkdir doesn't support recursive creation of directories
     """
-    
     # global so that we can use it in signal handlers
-    global api
+    global client
+    global transfer_client
     global task_id
     
     # connect to the service
-    api = TransferAPIClient(request["globus_username"], cert_file = request["x509_proxy"])
-
-    # make sure we can auto-activate the endpoints
-    ep = activate_ep(api, request["endpoint"])
+    client, transfer_client = acquire_clients(request)
     
-    label = None
-    if "PEGASUS_WF_UUID" in os.environ and "PEGASUS_DAG_JOB_ID" in os.environ:
-        label = os.environ["PEGASUS_WF_UUID"] + " - " + os.environ["PEGASUS_DAG_JOB_ID"] 
-
-    # set up a new transfer
-    code, message, data = api.transfer_submission_id()
-    submission_id = data["value"]    
-    deadline = datetime.utcnow() + timedelta(hours=24)
-    t = Transfer(submission_id,
-                 request["endpoint"],
-                 request["endpoint"], 
-                 deadline = deadline,
-                 label = label,
-                 notify_on_succeeded = False,
-                 notify_on_failed = False,
-                 notify_on_inactive = False)
+    # make sure we can auto-activate the endpoints
+    activate_endpoint(transfer_client, request["endpoint"])
     
     for f in request["files"]:
-        t.add_item("/dev/null", f + "/.created")
-    
-    # finalize and submit the transfer
-    code, reason, data = api.transfer(t)
-    task_id = data["task_id"]
-    
-    # how many faults will we accept before giving up?
-    acceptable_faults = min(100, len(request["files"]) * 3)
+        base_path = ""
+        child_dirs = []
 
-    # wait for the task to complete, and see the tasks and
-    # endpoint ls change
-    try:
-        status = wait_for_task(api, task_id, acceptable_faults)
-    except Exception, err:
-        logger.error(err)
-        cancel_task(api, task_id)
-        sys.exit(1)
-        logger.info("Mkdir complete")
+        # find base_path with operation_ls
+        base_path = f
+        found = False
+        while (not found) and base_path != "/":
+            found = True
+            base_path, dir_name = os.path.split(base_path)
+            if dir_name not in ["", "/"]:
+                child_dirs.append(dir_name)
+            try:
+                response = transfer_client.operation_ls(request["endpoint"], path=base_path, limit=2) 
+            except globus_sdk.TransferAPIError as e:
+                logger.warn("Finding existing parent dir for mkdir " + f)
+                logger.warn(e.message)
+                found = False
+        
+        child_dirs.reverse()
+        path = base_path
+        for child in child_dirs:
+            if path[-1] == "/":
+                path += child
+            else:
+                path = path + "/" + child
+
+            try: 
+                transfer_result = transfer_client.operation_mkdir(request["endpoint"],path)
+            except globus_sdk.TransferAPIError as e:
+                if e.code == "ExternalError.MkdirFailed.Exists":
+                    logger.info(e.message)
+                    pass
+                else:
+                    raise RuntimeError(e.message)
+    logger.info("Mkdir complete")
 
 
 def transfer(request):
     """
     takes a transfer specification parsed from json:
     {
-      "globus_username": "rynge",
-      "x509_proxy": "/tmp/...",
-      "src_endpoint": "rynge#obelix",
-      "dst_endpoint": "rynge#workflow",
+      "client_id":       "globus oauth client id",
+      "src_endpoint":    "rynge#obelix",
+      "dst_endpoint":    "rynge#workflow",
+      "transfer_at":     "secret_auth_token", 
+      "transfer_rt":     "secret_refresh_auth_token", 
+      "transfer_at_exp": "secret_auth_token_expiration", 
+      "recursive":       [True | False],
       "files":[
          {"src":"/etc/hosts","dst":"/tmp/foobar.txt"},
          {"src":"/etc/hosts","dst":"/tmp/foobar-2.txt"}
@@ -241,39 +225,33 @@ def transfer(request):
     """
     
     # global so that we can use it in signal handlers
-    global api
+    global client
+    global transfer_client
     global task_id
     
     # connect to the service
-    api = TransferAPIClient(request["globus_username"], cert_file = request["x509_proxy"])
-
+    client, transfer_client = acquire_clients(request)
+    
     # make sure we can auto-activate the endpoints
-    src_ep = activate_ep(api, request["src_endpoint"])
-    dst_ep = activate_ep(api, request["dst_endpoint"])
-
+    activate_endpoint(transfer_client, request["src_endpoint"])
+    activate_endpoint(transfer_client, request["dst_endpoint"])
+    
     label = None
     if "PEGASUS_WF_UUID" in os.environ and "PEGASUS_DAG_JOB_ID" in os.environ:
         label = os.environ["PEGASUS_WF_UUID"] + " - " + os.environ["PEGASUS_DAG_JOB_ID"] 
 
-    # set up a new transfer
-    code, message, data = api.transfer_submission_id()
-    submission_id = data["value"]    
+    ####update this to operation_mkdir in the future
+    #transfer_client.operation_mkdir
+    # set up a new delete transfer
     deadline = datetime.utcnow() + timedelta(hours=24)
-    t = Transfer(submission_id,
-                 request["src_endpoint"],
-                 request["dst_endpoint"], 
-                 deadline = deadline,
-                 label = label,
-                 notify_on_succeeded = False,
-                 notify_on_failed = False,
-                 notify_on_inactive = False)
+    transfer_data = globus_sdk.TransferData(transfer_client, request["src_endpoint"], request["dst_endpoint"], label=label, deadline=deadline, notify_on_succeeded=False, notify_on_failed=False, notify_on_inactive=False)
     
     for pair in request["files"]:
-        t.add_item(pair["src"], pair["dst"])
+        transfer_data.add_item(pair["src"], pair["dst"])
     
     # finalize and submit the transfer
-    code, reason, data = api.transfer(t)
-    task_id = data["task_id"]
+    transfer_result = transfer_client.submit_transfer(transfer_data)
+    task_id = transfer_result["task_id"]
     
     # how many faults will we accept before giving up?
     acceptable_faults = min(100, len(request["files"]) * 3)
@@ -281,13 +259,13 @@ def transfer(request):
     # wait for the task to complete, and see the tasks and
     # endpoint ls change
     try:
-        status = wait_for_task(api, task_id, acceptable_faults)
+        status = wait_for_task(transfer_client, task_id, acceptable_faults)
     except Exception, err:
         logger.error(err)
-        cancel_task(api, task_id)
+        cancel_task(transfer_client, task_id)
         sys.exit(1)
     logger.info("Transfer complete")
-
+    
 
 def remove(request):
     """
@@ -296,49 +274,40 @@ def remove(request):
     """
     
     # global so that we can use it in signal handlers
-    global api
+    global client
+    global transfer_client
     global task_id
     
     # connect to the service
-    api = TransferAPIClient(request["globus_username"], cert_file = request["x509_proxy"])
-
-    # make sure we can auto-activate the endpoints
-    ep = activate_ep(api, request["endpoint"])
+    client, transfer_client = acquire_clients(request)
+    
+    activate_endpoint(transfer_client, request["endpoint"])
 
     label = None
     if "PEGASUS_WF_UUID" in os.environ and "PEGASUS_DAG_JOB_ID" in os.environ:
         label = os.environ["PEGASUS_WF_UUID"] + " - " + os.environ["PEGASUS_DAG_JOB_ID"] 
 
-    # set up a new transfer
-    code, message, data = api.transfer_submission_id()
-    submission_id = data["value"]    
+    # set up a new delete transfer
     deadline = datetime.utcnow() + timedelta(hours=24)
-    t = Transfer(submission_id,
-                 request["endpoint"],
-                 request["endpoint"], 
-                 deadline = deadline,
-                 label = label,
-                 notify_on_succeeded = False,
-                 notify_on_failed = False,
-                 notify_on_inactive = False)
+    del_data = globus_sdk.DeleteData(transfer_client, request["endpoint"], label=label, recursive=request["recursive"], deadline=deadline, notify_on_succeeded=False, notify_on_failed=False, notify_on_inactive=False)
     
     for f in request["files"]:
-        t.add_item("/dev/null", f)
-
-    # finalize and submit the transfer
-    code, reason, data = api.transfer(t)
-    task_id = data["task_id"]
+        del_data.add_item(f)
     
+    # finalize and submit the transfer
+    delete_result = transfer_client.submit_delete(del_data)
+    task_id = delete_result["task_id"]
+
     # how many faults will we accept before giving up?
     acceptable_faults = min(100, len(request["files"]) * 3)
 
     # wait for the task to complete, and see the tasks and
     # endpoint ls change
     try:
-        status = wait_for_task(api, task_id, acceptable_faults)
+        status = wait_for_task(transfer_client, task_id, acceptable_faults)
     except Exception, err:
         logger.error(err)
-        cancel_task(api, task_id)
+        cancel_task(transfer_client, task_id)
         sys.exit(1)
     logger.info("Delete complete")
 
@@ -349,16 +318,11 @@ def main():
     prog_usage = "usage: %s [options]" % (prog_base)
     parser = optparse.OptionParser(usage=prog_usage)
     
-    parser.add_option("--mkdir", action = "store_true", dest = "mkdir",
-                      help = "Select mkdir mode")
-    parser.add_option("--transfer", action = "store_true", dest = "transfer",
-                      help = "Select transfer mode")
-    parser.add_option("--remove", action = "store_true", dest = "remove",
-                      help = "Select remove mode")
-    parser.add_option("--file", action = "store", dest = "file",
-                      help = "File containing GO URL pairs to be transferred")
-    parser.add_option("-d", "--debug", action = "store_true", dest = "debug",
-                      help = "Enables debugging output")
+    parser.add_option("--mkdir", action = "store_true", dest = "mkdir", help = "Select mkdir mode")
+    parser.add_option("--transfer", action = "store_true", dest = "transfer", help = "Select transfer mode")
+    parser.add_option("--remove", action = "store_true", dest = "remove", help = "Select remove mode")
+    parser.add_option("--file", action = "store", dest = "file", help = "File containing GO URL pairs to be transferred")
+    parser.add_option("-d", "--debug", action = "store_true", dest = "debug", help = "Enables debugging output")
     
     # Parse command line options
     (options, args) = parser.parse_args()
