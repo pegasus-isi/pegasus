@@ -7,9 +7,17 @@ prefix = $(PEGASUS_HOME)
 endif
 
 .ONESHELL:
-all clean distclean install:
+all install:
 	for i in $(TARGET); do \
 	    if [ -d $$i ]; then \
 		$(MAKE) -C $$i $@ || exit 1; \
+	    fi; \
+	done
+
+.ONESHELL:
+clean distclean:
+	for i in $(TARGET); do \
+	    if [ -d $$i ]; then \
+		$(MAKE) -C $$i $@ || true; \
 	    fi; \
 	done
