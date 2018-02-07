@@ -18,7 +18,7 @@ os.sys.path.insert(0, lib_ext_dir)
 
 import globus_sdk
 
-client_id = "a69d49b0-1de4-4554-a955-05f0cb6cc2cc"
+client_id = "d7382f5a-4ea3-4b69-b094-99c392fc820d"
 config_file = os.path.expanduser("~/.pegasus/globus.conf")
 
 parser = OptionParser(description="Initialize Globus OAuth Tokens")
@@ -43,21 +43,14 @@ get_input = getattr(__builtins__, 'raw_input', input)
 auth_code = get_input('Please enter the code you get after login here: ').strip()
 token_response = client.oauth2_exchange_code_for_tokens(auth_code)
 
-#auth_data = token_response.by_resource_server['auth.globus.org']
 transfer_data = token_response.by_resource_server['transfer.api.globus.org']
 
 # get tokens as strings and their expiration timestamp
-#auth_at = auth_data['access_token']
-#auth_rt = auth_data['refresh_token']
-#auth_at_exp = auth_data['expires_at_seconds']
 transfer_at = transfer_data['access_token']
 transfer_rt = transfer_data['refresh_token']
 transfer_at_exp = transfer_data['expires_at_seconds']
 
 
-#config.set("oauth", "auth_at", auth_at) # globus auth access token
-#config.set("oauth", "auth_rt", auth_rt) # globus auth access refresh token
-#config.set("oauth", "auth_at_exp", auth_at_exp) # globus auth access expiration time
 config.set("oauth", "transfer_at", transfer_at) # transfer access token
 config.set("oauth", "transfer_rt", transfer_rt) # transfer refresh token
 config.set("oauth", "transfer_at_exp", transfer_at_exp) # transfer expiration time
