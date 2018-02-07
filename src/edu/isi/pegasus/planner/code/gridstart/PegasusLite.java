@@ -1514,6 +1514,15 @@ public class PegasusLite implements GridStart {
      */
     protected boolean modifyJobForIntegrityChecks(Job job, File file, String baseSubmitDir) {
         
+        //sanity check
+        //for jobs with no input files, we don't need to transfer 
+        //any meta file
+        if( job.getInputFiles().isEmpty() ){
+            mLogger.log( "No meta file to transfer, as no input files assocaited with job " + job.getID(),
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            return true;
+        }
+        
         if( file != null ){
             //associate the file.
             job.condorVariables.addIPFileForTransfer( file.getAbsolutePath() );
