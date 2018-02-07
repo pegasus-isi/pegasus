@@ -62,8 +62,6 @@ import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -84,8 +82,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * The class that takes in a dax job specified in the DAX and renders it into
@@ -669,6 +665,10 @@ public class SUBDAXGenerator{
         //not the prescript
         Job preScriptJob = new DAXJob();
         
+        //PM-1179 we need to tie this back into the graph
+        //as we are creating a new job and using that
+        preScriptJob.setGraphNodeReference( dagJob.getGraphNodeReference() );
+        
         //make sure the relative submit dir is same as dag job
         preScriptJob.setRelativeSubmitDirectory( dagJob.getRelativeSubmitDirectory());
         
@@ -851,6 +851,11 @@ public class SUBDAXGenerator{
        
         //for time being use the old functions.
         Job job = new DAXJob();
+        
+        //PM-1179 we need to tie this back into the graph
+        //as we are creating a new job and using that
+        job.setGraphNodeReference( subdaxJob.getGraphNodeReference() );
+        
         //the parent directory where the submit file for condor dagman has to
         //reside. the submit files for the corresponding partition are one level
         //deeper.
