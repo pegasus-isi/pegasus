@@ -430,11 +430,8 @@ def check_integrity(fname, meta_data):
             if "_attributes" in entry and "checksum.value" in entry["_attributes"]:
                 expected_sha256 = entry["_attributes"]["checksum.value"]
     if expected_sha256 is None:
-        logger.warn("No checksum in the meta data for " + fname)
-        # we are ignoring missing checksums for now - this is temporary until
-        # the planner becomes smarter and will plan what files will be checked
-        # and which ones will not
-        return True
+        logger.error("No checksum in the meta data for " + fname)
+        return False
 
     current_sha256 = generate_sha256(fname)
     
