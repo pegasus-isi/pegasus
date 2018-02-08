@@ -13,6 +13,10 @@
  * Southern California. All rights reserved.
  */
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -52,4 +56,27 @@ int pegasus_integrity_xml(const char *fname, char *xml) {
     return rc;
 }
 
+int print_pegasus_integrity_xml_blob(FILE *out) {
+    /* purpose: if exists, reads .pegasus-integrity-ks.xml for cwd
+     * paramtr: out: output stream to print to
+     * returns: 1 on success
+     */
+    char buf[2048];
+    int fd;
+    int len;
+
+    if ((fd = open(".pegasus-integrity-ks.xml", O_RDONLY)) == -1 ) {
+        /* missing file is ok */
+        return 1;
+    }
+    while ((len = read(fd, buf, 2048))) {
+        fprintf(out, "%s", buf);
+    }
+    close(fd);
+
+    /* remove the file so it is not picked up by HTCondor */
+    unlink(".pegasus-integrity-ks.xml");
+
+    return 1;
+}
 

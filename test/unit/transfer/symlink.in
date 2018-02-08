@@ -1,0 +1,11 @@
+[
+ { "type": "transfer",
+   "id": 1,
+   "src_urls": [
+     { "site_label": "computesite", "url": "file://$PWD/index.html", "priority": 100 }
+   ],
+   "dest_urls": [
+     { "site_label": "computesite", "url": "file://$PWD/deep/index.html" }
+   ] }
+]
+

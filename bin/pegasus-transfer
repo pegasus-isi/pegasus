@@ -277,16 +277,23 @@ class Transfer(TransferBase):
         Initializes the transfer class
         """
         super(Transfer, self).__init__()       
+
+        self.lfn = ""
         
         self._src_urls = []
         self._dst_urls = []
        
         self.attempts = 0
         self.allow_grouping = True       # can this transfer be grouped with others?
+        self.generate_checksum = False   # should we generate checksums as we transfer?
   
   
     def __str__(self):
         return "%s -> %s" %(self._src_urls[0].get_url(), self._dst_urls[0].get_url())
+
+
+    def set_lfn(self, lfn):
+        self.lfn = lfn
 
         
     def add_src(self, site_label, url, priority=None):
@@ -677,6 +684,17 @@ class TransferHandlerBase(object):
         return (item in self._protocol_map)
 
 
+    def _pre_transfer_attempt(self, transfer):
+        """
+        A common callback from do_transfers for things like integrity checking
+        """
+
+        # do we need to calculate integrity checksums?
+        if transfer.generate_checksum and \
+           transfer.get_src_proto() == "file":
+            self._generate_integrity_checksum(transfer.lfn, transfer.get_src_path()) 
+
+
     def _post_transfer_attempt(self, transfer, was_successful, t_start, t_end=None):
         """
         A common callback from do_transfers to collect statistics for transfers
@@ -684,6 +702,12 @@ class TransferHandlerBase(object):
         
         if t_end is None:
             t_end = time.time()
+
+        # do we need to calculate integrity checksums?
+        if was_successful and \
+           transfer.generate_checksum and \
+           transfer.get_dst_proto() == "file":
+            self._generate_integrity_checksum(transfer.lfn, transfer.get_dst_path()) 
         
         # keep track of transfer attempts
         transfer.attempts += 1
@@ -713,7 +737,31 @@ class TransferHandlerBase(object):
                 except Exception, e:
                     logger.error(e)
    
-    
+
+    def _generate_integrity_checksum(self, lfn, fname):
+        """
+        Call out to pegasus-integrity to generate a checksum for the file.
+        The information goes to .pegasus-integrity-ks.xml so that kickstart
+        can pick it up at the end.
+        """
+        global integrity_checksummed
+
+        if lfn is None or lfn == "":
+            logger.error("lfn is required when enabling checksumming")
+            return
+        
+        if lfn in integrity_checksummed:
+            return
+
+        cmd = "pegasus-integrity --generate-xml=\"%s\" --full-statcall-lfn=\"%s\" >>.pegasus-integrity-ks.xml" % (fname, lfn)
+        try:
+            tc = TimedCommand(cmd, log_cmd=False)
+            tc.run()
+            integrity_checksummed.append(lfn)
+        except RuntimeError, err:
+            logger.error(err)
+
+
     def _check_similar(self, a, b):
         """
         compares two transfers, and determines if they are similar enough to be
@@ -844,6 +892,8 @@ class FileHandler(TransferHandlerBase):
                 failed_l.append(t)
                 self._post_transfer_attempt(t, False, t_start)
                 continue
+
+            self._pre_transfer_attempt(t)
             
             if os.path.exists(t.get_src_path()) \
                and os.path.exists(t.get_dst_path()):
@@ -1039,7 +1089,7 @@ class GridFtpHandler(TransferHandlerBase):
             
             if len(similar_list) > 1:
                 logger.debug("%d similar gsiftp transfers grouped together" %(len(similar_list)))
-    
+             
             # we now have a list of similar transfers - break up and send the
             # first one with create dir and the rest with no create dir options
             first = similar_list.pop()
@@ -1122,6 +1172,7 @@ class GridFtpHandler(TransferHandlerBase):
         # if srcs are local, verify them first
         local_ok = True
         for t in transfers:
+            self._pre_transfer_attempt(t)
             if t.get_src_proto() == "file":
                 # src has to exist and be readable
                 if not verify_local_file(t.get_src_path()):
@@ -1375,6 +1426,8 @@ class HTTPHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
         for t in transfers:
+            
+            self._pre_transfer_attempt(t)
 
             prepare_local_dir(os.path.dirname(t.get_dst_path()))
             
@@ -1473,6 +1526,8 @@ class IRodsHandler(TransferHandlerBase):
         failed_l = []
         for t in transfer_list:   
    
+            self._pre_transfer_attempt(t)
+
             # log in to irods
             env = None
             sitename = t.get_src_site_label()
@@ -1715,6 +1770,8 @@ class S3Handler(TransferHandlerBase):
         successful_l = []
         failed_l = []
         for t in transfers:
+
+            self._pre_transfer_attempt(t)
 
             t_start = time.time()
             env = {}
@@ -2122,6 +2179,8 @@ class GSHandler(TransferHandlerBase):
             env = self._gsutil_env(transfers_l[0].get_dst_site_label())
         
         for t in transfers_l:
+            
+            self._pre_transfer_attempt(t)
 
             t_start = time.time()
             cmd = ""
@@ -2296,6 +2355,8 @@ class GFALHandler(TransferHandlerBase):
         
         for t in transfers_l:
 
+            self._pre_transfer_attempt(t)
+
             t_start = time.time()
         
             if t.get_dst_proto() == "file":
@@ -2437,6 +2498,9 @@ class ScpHandler(TransferHandlerBase):
 
         # limit the size of the groups to keep command lines short
         for t_group in self._similar_groups(transfers, max_transfers_in_group = max_transfers_in_group):
+
+            for t in t_group:
+                self._pre_transfer_attempt(t)
         
             t_base = t_group[0]
         
@@ -2688,6 +2752,9 @@ class GSIScpHandler(TransferHandlerBase):
 
         # limit the size of the groups to keep command lines short
         for t_group in self._similar_groups(transfers, max_transfers_in_group = max_transfers_in_group):
+
+            for t in t_group:
+                self._pre_transfer_attempt(t)
         
             t_base = t_group[0]
         
@@ -2893,6 +2960,7 @@ class StashHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
         for t in transfers_l:
+            self._pre_transfer_attempt(t)
             t_start = time.time()
 
             # stashcp wants just the path with a single leading slash
@@ -2938,6 +3006,7 @@ class SymlinkHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
         for t in transfer_l:
+            self._pre_transfer_attempt(t)
             t_start = time.time()
 
             prepare_local_dir(os.path.dirname(t.get_dst_path()))
@@ -3012,6 +3081,7 @@ class DockerHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
         for t in transfers_l:
+            self._pre_transfer_attempt(t)
             t_start = time.time()
 
             # docker wants just the path
@@ -3061,6 +3131,7 @@ class SingularityHubHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
         for t in transfers_l:
+            self._pre_transfer_attempt(t)
             t_start = time.time()
 
             # singularity pull --name only accepts a filename, not a full path, so
@@ -3482,6 +3553,9 @@ symlink_file_transfer = False
 # try to create them over and over again
 remote_dirs_created = {}
 
+# track which lfns we have already checksummed
+integrity_checksummed = []
+
 # many commands need to know how long the command line can be
 max_cmd_len = 0
 
@@ -3744,6 +3818,10 @@ def json_object_decoder(obj):
     """
     if 'type' in obj and obj['type'] == 'transfer':
         t = Transfer()
+        if 'lfn' in obj:
+            t.set_lfn(obj['lfn'])
+        if 'generate_checksum' in obj:
+            t.generate_checksum = obj['generate_checksum']
         # src
         for surl in obj['src_urls']:
             priority = None
@@ -3926,7 +4004,7 @@ def main():
         logger.critical('Error reading transfer list: %s' % (err))
         myexit(1)
 
-    # store symlink option in global variable
+    # store options in global variables
     symlink_file_transfer = options.symlink
     
     # queues to track the work

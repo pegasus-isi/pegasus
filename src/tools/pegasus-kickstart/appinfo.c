@@ -39,6 +39,7 @@
 #include "statinfo.h"
 #include "appinfo.h"
 #include "error.h"
+#include "checksum.h"
 
 #define XML_SCHEMA_URI "http://pegasus.isi.edu/schema/invocation"
 #define XML_SCHEMA_VERSION "2.3"
@@ -241,6 +242,9 @@ static size_t convert2XML(FILE *out, const AppInfo* run) {
             printXMLStatInfo(out, 2, "statcall", "final", &run->final[i], includeData, useCDATA, 1);
         }
     }
+
+    /* If xml blob file exists (for example, created via pegasus-transfer), include it */
+    print_pegasus_integrity_xml_blob(out);
 
     /* Default <statcall> records */
     printXMLStatInfo(out, 2, "statcall", "stdin", &run->input, includeData, useCDATA, 1);
