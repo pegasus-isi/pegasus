@@ -1517,7 +1517,22 @@ public class PegasusLite implements GridStart {
         //sanity check
         //for jobs with no input files, we don't need to transfer 
         //any meta file
-        if( job.getInputFiles().isEmpty() ){
+        boolean empty = job.getInputFiles().isEmpty();
+        
+        //staged executables appear in job input files, we need to do stricter
+        //check for that job to determine if meta file should be generated or not
+        if( job.userExecutablesStagedForJob() ){
+            for( PegasusFile pf : job.getInputFiles() ){
+                if( pf.isExecutable() ){
+                   empty = true;
+                }
+                else{
+                    empty = false;
+                    break;
+                }
+            }
+        }
+        if(  empty ){
             mLogger.log( "No meta file to transfer, as no input files assocaited with job " + job.getID(),
                          LogManager.DEBUG_MESSAGE_LEVEL );
             return true;
