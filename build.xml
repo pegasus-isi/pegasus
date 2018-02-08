@@ -621,8 +621,12 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
         <arg line="-c 'make test'"/>
     </exec>
   </target>
+  
+  <target name="test-transfer" description="Run transfer unit tests">
+    <exec executable="./test.sh" dir="test/unit/transfer" failonerror="true" />
+  </target>
 
-  <target name="test" depends="test-python,test-java,test-kickstart,test-pmc" description="Run all unit tests"/>
+  <target name="test" depends="test-python,test-java,test-kickstart,test-pmc,test-transfer" description="Run all unit tests"/>
 
 </project>
 

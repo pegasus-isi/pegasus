@@ -481,6 +481,41 @@ function test_integrity {
     return $?
 }
 
+function test_integrity_xml_inc {
+    # generate a file to include
+    rm -f .test.out .pegasus-integrity-ks.xml
+    ../../../../bin/pegasus-integrity --generate-xml=test.sh --full-statcall-lfn=foo.sh >>.pegasus-integrity-ks.xml
+    rc=$?
+
+    if [ $rc -ne 0 ]; then
+        echo "pegasus-integrity failed to run"
+        return 1
+    fi
+
+    kickstart ls
+    rc=$?
+
+    if [ $rc -ne 0 ]; then
+        echo "Kickstart failed to run"
+        return 1
+    fi
+
+    # verify it has the right output
+    if ! (grep 'statcall error="0" id="final" lfn="foo.sh"' test.out) >/dev/null 2>&1; then
+        echo "Unable to find the included integrity data in ks output"
+        return 1
+    fi
+    if ! (grep 'checksum type="sha256"' test.out) >/dev/null 2>&1; then
+        echo "Unable to find the included integrity data in ks output"
+        return 1
+    fi
+
+    return 0
+}
+
+# make sure we start cleanly
+rm -f .pegasus-integrity-ks.xml
+
 # RUN THE TESTS
 run_test lotsofprocs
 run_test lotsofprocs_buffer
@@ -520,5 +555,6 @@ run_test test_not_executable
 run_test test_wrapper
 run_test test_metadata
 run_test test_integrity
+run_test test_integrity_xml_inc
 
 

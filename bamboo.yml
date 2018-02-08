@@ -71,7 +71,7 @@ project:
           description: Run Unit Tests on Code and Binaries
           jobs:
             - key: D9CUT
-              name: Debian 9 C Unit Tests
+              name: Debian 9 Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -79,7 +79,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "tar xzf pegasus-source.tar.gz"
                 - !script
-                  description: C Unit Tests
+                  description: Unit Tests
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
@@ -91,7 +91,7 @@ project:
                       --rm \
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       --entrypoint ant \
-                      pegasus/pegasus:${TAG} test-kickstart test-pmc
+                      pegasus/pegasus:${TAG} test-kickstart test-pmc test-transfer
               artifactDependencies:
                 - name: pegasus-source
               requirements:
@@ -160,7 +160,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: D10CUT
-              name: Debian 10 C Unit Tests
+              name: Debian 10 Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -168,7 +168,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "tar xzf pegasus-source.tar.gz"
                 - !script
-                  description: C Unit Tests
+                  description: Unit Tests
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
@@ -180,7 +180,7 @@ project:
                       --rm \
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       --entrypoint ant \
-                      pegasus/pegasus:${TAG} test-kickstart test-pmc
+                      pegasus/pegasus:${TAG} test-kickstart test-pmc test-transfer
               artifactDependencies:
                 - name: pegasus-source
               requirements:
@@ -249,7 +249,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: OCUT
-              name: OSX C Unit Tests
+              name: OSX Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -257,14 +257,14 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "tar xzf pegasus-source.tar.gz"
                 - !script
-                  description: C Unit Tests
+                  description: Unit Tests
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       # We need /usr/local/bin because of homebrew
                       export PATH=$PATH:/usr/local/bin:/Library/TeX/texbin
                       cd pegasus-source
-                      ant test-kickstart
+                      ant test-kickstart test-transfer
               artifactDependencies:
                 - name: pegasus-source
               requirements:
@@ -274,7 +274,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key:  R6CUT
-              name: RHEL 6 C Unit Tests
+              name: RHEL 6 Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -282,7 +282,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "tar xzf pegasus-source.tar.gz"
                 - !script
-                  description: C Unit Tests
+                  description: Unit Tests
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
@@ -294,7 +294,7 @@ project:
                       --rm \
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       --entrypoint ant \
-                      pegasus/pegasus:${TAG} test-kickstart test-pmc
+                      pegasus/pegasus:${TAG} test-kickstart test-pmc test-transfer
               artifactDependencies:
                 - name: pegasus-source
               requirements:
@@ -363,7 +363,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: R7CUT
-              name: RHEL 7 C Unit Tests
+              name: RHEL 7 Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -371,7 +371,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "tar xzf pegasus-source.tar.gz"
                 - !script
-                  description: C Unit Tests
+                  description: Unit Tests
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
@@ -383,7 +383,7 @@ project:
                       --rm \
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       --entrypoint ant \
-                      pegasus/pegasus:${TAG} test-kickstart test-pmc
+                      pegasus/pegasus:${TAG} test-kickstart test-pmc test-transfer
               artifactDependencies:
                 - name: pegasus-source
               requirements:
@@ -452,7 +452,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTCUZ
-              name: Ubuntu Zesty C Unit Tests
+              name: Ubuntu Zesty Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -460,7 +460,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "tar xzf pegasus-source.tar.gz"
                 - !script
-                  description: C Unit Tests
+                  description: Unit Tests
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
@@ -472,7 +472,7 @@ project:
                       --rm \
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       --entrypoint ant \
-                      pegasus/pegasus:${TAG} test-kickstart test-pmc
+                      pegasus/pegasus:${TAG} test-kickstart test-pmc test-transfer
               artifactDependencies:
                 - name: pegasus-source
               requirements:
