@@ -481,6 +481,14 @@ function test_integrity {
     return $?
 }
 
+function test_integrity_failure {
+    alias pegasus-integrity=/bin/false
+    kickstart -s testintegrity.data touch testintegrity.data
+    rc=$?
+    unalias pegasus-integrity
+    return $rc
+}
+
 function test_integrity_xml_inc {
     # generate a file to include
     rm -f .test.out .pegasus-integrity-ks.xml
@@ -555,6 +563,7 @@ run_test test_not_executable
 run_test test_wrapper
 run_test test_metadata
 run_test test_integrity
+run_test test_integrity_failure
 run_test test_integrity_xml_inc
 
 

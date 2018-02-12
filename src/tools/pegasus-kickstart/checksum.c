@@ -30,15 +30,14 @@ int pegasus_integrity_xml(const char *fname, char *xml) {
      */
     char buf[2048];
     char cmd[2048];
-    int rc = 0;
 
     strcpy(cmd, "pegasus-integrity --generate-xml=");
     strcat(cmd, fname);
-    //strcat(cmd, " 2>/dev/null");
+    strcat(cmd, " 2>/dev/null");
 
     FILE *p = popen(cmd, "r");
     if (p == NULL) {
-        return rc;
+        return 0;
     }
     if (fgets(buf, sizeof(buf), p) != NULL) {
         /* make sure we got a full checksum */
@@ -47,13 +46,16 @@ int pegasus_integrity_xml(const char *fname, char *xml) {
             {
                 buf[strlen(buf) - 1] = '\0';
             }
-            strcpy(xml, buf);
-            rc = 1;
         }
     }
-    pclose(p);
+    if (pclose(p) != 0) {
+        return 0;
+    } 
 
-    return rc;
+    /* all good, copy the buffer */
+    strcpy(xml, buf);
+
+    return 1;
 }
 
 int print_pegasus_integrity_xml_blob(FILE *out) {
