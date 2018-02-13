@@ -1399,7 +1399,7 @@ public class TransferEngine extends Engine {
             //PM-1250 if no checksum exists then set pegasus-transfer
             //to generate checksum. Later on a dial might be required here
             if( !ft.hasCheckSum() ){
-                ft.setGenerateCheckum( true );
+                pf.setGenerateCheckum( true );
             }
             
             //select from the various replicas
