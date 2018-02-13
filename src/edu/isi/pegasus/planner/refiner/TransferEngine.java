@@ -749,9 +749,12 @@ public class TransferEngine extends Engine {
                                                     destPool,
                                                     path,
                                                     localTransfer );
+            
             if (ft != null) {
+                //PM-1250 for time being always have pegasus-transfer
+                //generate checksums of file staged to output site
+                ft.setGenerateCheckum( true );
                 vFileTX.add(ft);
-
             }
 
         }
