@@ -2,12 +2,27 @@
 
 set -e
 
-if [ -x "/usr/bin/python2.7" ]; then
-    echo "/usr/bin/python2.7"
-elif [ -x "/usr/bin/python2.6" ]; then
-    echo "/usr/bin/python2.6"
-else
-    echo "ERROR: Unable to locate python2.7 or python2.6" >&2
-    exit 1
+# allow override for users who really do not like the system python
+# note that this can cause issues with the worker package as
+# jobs can land on a system with a different python
+if [ "x$PEGASUS_PYTHON" != "x" ]; then
+    echo "$PEGASUS_PYTHON"
+    exit 0
 fi
+
+# determine the version of /usr/bin/python
+VERSION=`/usr/bin/python -V 2>&1 | sed -e 's/^.* \([0-9]\.[0-9]\).*$/\1/'`
+
+if ! (echo "$VERSION" | grep "^2") >/dev/null 2>&1; then
+    echo "WARNING: Pegasus has only been tested with Python 2.6 and 2.7" >&2
+fi
+
+# to be specific, expand the path if possible
+if [ -e "/usr/bin/python$VERSION" ]; then
+    echo "/usr/bin/python$VERSION"
+    exit 0
+fi
+
+echo "/usr/bin/python"
+
 
