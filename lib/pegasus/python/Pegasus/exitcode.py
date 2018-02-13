@@ -309,12 +309,10 @@ def generate_meta_file( outfile, meta_file):
                 for lfn in record["outputs"].keys():
                     files.append( record["outputs"][lfn] )
 
-    # if we enable by default, then only generate meta file if
-    # there is a need for it.
-    if len(files) > 0:
-        directory = os.path.dirname(meta_file)
-        basename  = os.path.basename(meta_file)
-        Metadata.write_to_jsonfile(files, directory,basename, prefix="pegasus-exitcode")
+    # always generate a meta file even if it is a zero byte file
+    directory = os.path.dirname(meta_file)
+    basename  = os.path.basename(meta_file)
+    Metadata.write_to_jsonfile(files, directory,basename, prefix="pegasus-exitcode")
 
 
 
