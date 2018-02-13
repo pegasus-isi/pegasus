@@ -1396,6 +1396,12 @@ public class TransferEngine extends Engine {
             //to the associated PegasusFile that is associated with the compute jobs
             pf.addMetadata( rl.getAllMetadata() );
             
+            //PM-1250 if no checksum exists then set pegasus-transfer
+            //to generate checksum. Later on a dial might be required here
+            if( !ft.hasCheckSum() ){
+                ft.setGenerateCheckum( true );
+            }
+            
             //select from the various replicas
             candidateLocations =  mReplicaSelector.selectAndOrderReplicas( rl, 
                                                                     executionSiteHandle,

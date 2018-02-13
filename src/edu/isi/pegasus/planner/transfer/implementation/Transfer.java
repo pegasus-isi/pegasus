@@ -34,7 +34,6 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.classes.Job;
-import static edu.isi.pegasus.planner.classes.Job.COMPUTE_JOB;
 import static edu.isi.pegasus.planner.classes.Job.INTER_POOL_JOB;
 import static edu.isi.pegasus.planner.classes.Job.STAGE_IN_JOB;
 import static edu.isi.pegasus.planner.classes.Job.STAGE_OUT_JOB;
@@ -46,7 +45,6 @@ import java.util.List;
 import java.util.ArrayList;
 
 
-import java.io.File;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Metadata;
@@ -472,6 +470,11 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             urlPair.append(" { \"type\": \"transfer\",\n");
             urlPair.append("   \"lfn\": ").append("\"").append(ft.getLFN()).append("\"").append(",\n");
             urlPair.append("   \"id\": ").append(num).append(",\n");
+            
+            //PM-1250
+            if( ft.generateChecksum() ){
+                urlPair.append("   \"generate_checksum\": ").append( true ).append(",\n");
+            }
             
             //PM-1190 dump any metadata that planner knows of about the file
             Metadata m = ft.getAllMetadata();
