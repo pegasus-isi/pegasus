@@ -1383,9 +1383,6 @@ public class TransferEngine extends Engine {
             //propogated for optional transfers.
             ft.setTransferFlag(pf.getTransferFlag());
             
-            //PM-1190 associate metadata with the FileTransfer
-            ft.setMetadata( pf.getAllMetadata());
-
             ReplicaLocation candidateLocations = null;
             if( nv != null ){
                 //we have the replica already selected as a result
@@ -1401,9 +1398,13 @@ public class TransferEngine extends Engine {
             
             //PM-1250 if no checksum exists then set pegasus-transfer
             //to generate checksum. Later on a dial might be required here
-            if( !ft.hasCheckSum() ){
+            if( !pf.hasCheckSum() ){
+                ft.setGenerateCheckum( true );
                 pf.setGenerateCheckum( true );
             }
+            
+            //PM-1190 associate metadata with the FileTransfer
+            ft.setMetadata( pf.getAllMetadata());
             
             //select from the various replicas
             candidateLocations =  mReplicaSelector.selectAndOrderReplicas( rl, 
