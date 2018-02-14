@@ -72,7 +72,8 @@ int print_pegasus_integrity_xml_blob(FILE *out) {
         return 1;
     }
     while ((len = read(fd, buf, 4096))) {
-        fprintf(out, "%s", buf);
+        buf[len + 1] = '\0';
+        fprintf(out, "%.*s", len, buf);
     }
     close(fd);
 
