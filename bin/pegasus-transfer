@@ -746,6 +746,12 @@ class TransferHandlerBase(object):
         """
         global integrity_checksummed
 
+        tools = Tools()
+
+        if tools.find("pegasus-integrity", "help", None, [prog_dir]) is None:
+            logger.error("Unable to do integrity checking because pegasus-integrity not found")
+            return 
+
         if lfn is None or lfn == "":
             logger.error("lfn is required when enabling checksumming")
             return
@@ -753,7 +759,7 @@ class TransferHandlerBase(object):
         if lfn in integrity_checksummed:
             return
 
-        cmd = "pegasus-integrity --generate-xml=\"%s\" --full-statcall-lfn=\"%s\" >>.pegasus-integrity-ks.xml" % (fname, lfn)
+        cmd = "%s --generate-xml=\"%s\" --full-statcall-lfn=\"%s\" >>.pegasus-integrity-ks.xml" % (tools.full_path("pegasus-integrity"), fname, lfn)
         try:
             tc = TimedCommand(cmd, log_cmd=False)
             tc.run()

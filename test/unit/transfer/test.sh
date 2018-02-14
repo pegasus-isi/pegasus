@@ -17,7 +17,7 @@ function run_test {
 }
 
 function transfer {
-    pegasus-transfer "$@" >test.out 2>test.err
+    ../../../bin/pegasus-transfer "$@" >test.out 2>test.err
     RC=$?
     return $RC
 }
@@ -81,10 +81,6 @@ function test_symlink {
 
 # make sure we start cleanly
 rm -f .pegasus-integrity-ks.xml index.html data.txt
-
-# environment setup
-BINDIR=`(cd ../../../bin && pwd)`
-export PATH=$BINDIR:$PATH
 
 # RUN THE TESTS
 run_test test_integrity
