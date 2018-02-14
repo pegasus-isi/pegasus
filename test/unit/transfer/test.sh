@@ -33,6 +33,11 @@ function test_integrity {
         echo "ERROR: expected file .pegasus-integrity-ks.xml was not created"
         return 1
     fi
+    # make sure it has a statinfo entry
+    if ! (grep statinfo .pegasus-integrity-ks.xml) >/dev/null 2>&1; then
+        echo "ERROR: .pegasus-integrity-ks.xml does not contain a statinfo entry"
+        return 1
+    fi
     rm -f .pegasus-integrity-ks.xml
     return 0
 }

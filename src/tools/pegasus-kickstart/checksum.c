@@ -28,8 +28,8 @@ int pegasus_integrity_xml(const char *fname, char *xml) {
      *          xml: the buffer for the calculated checksum
      * returns: 1 on success
      */
-    char buf[2048];
-    char cmd[2048];
+    char buf[4096];
+    char cmd[4096];
 
     strcpy(cmd, "pegasus-integrity --generate-xml=");
     strcat(cmd, fname);
@@ -63,7 +63,7 @@ int print_pegasus_integrity_xml_blob(FILE *out) {
      * paramtr: out: output stream to print to
      * returns: 1 on success
      */
-    char buf[2048];
+    char buf[4096];
     int fd;
     int len;
 
@@ -71,7 +71,7 @@ int print_pegasus_integrity_xml_blob(FILE *out) {
         /* missing file is ok */
         return 1;
     }
-    while ((len = read(fd, buf, 2048))) {
+    while ((len = read(fd, buf, 4096))) {
         fprintf(out, "%s", buf);
     }
     close(fd);
