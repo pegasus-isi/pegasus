@@ -1598,13 +1598,13 @@ exec /usr/bin/ssh $extra_opts $port_str $remote_host $remote_program
       <para>There are two levels of credentials required. One is for the
       workflow to use the Globus Online API, which is handled by OAuth tokens,
       provided by Globus Auth service. The second level is for the endpoints,
-      which the user will have have manage via the Globus Online web interface.
+      which the user will have to manage via the Globus Online web interface.
       The required steps are:</para>
 
       <orderedlist>
         <listitem>
           <para>Using <emphasis>pegasus-globus-online-init</emphasis>, provide 
-          authorization to Pegasus and retrieve your trasnfer access tokens. 
+          authorization to Pegasus and retrieve your transfer access tokens. 
           By default Pegasus acquires temporary tokens that expire within a few days.
           Using --permanent option you can request refreshable tokens that last indefinetely
           (or until access is revoked).
