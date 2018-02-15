@@ -759,13 +759,16 @@ class TransferHandlerBase(object):
         if lfn in integrity_checksummed:
             return
 
+        self.lock.acquire()
         cmd = "%s --generate-xml=\"%s\" --full-statcall-lfn=\"%s\" >>.pegasus-integrity-ks.xml" % (tools.full_path("pegasus-integrity"), fname, lfn)
         try:
-            tc = TimedCommand(cmd, log_cmd=False)
+            tc = TimedCommand(cmd)
             tc.run()
             integrity_checksummed.append(lfn)
         except RuntimeError, err:
             logger.error(err)
+        finally:
+            self.lock.release()
 
 
     def _check_similar(self, a, b):
@@ -3474,6 +3477,8 @@ class SimilarWorkSet:
                 t_one = Transfer()
                 t_one.add_src(transfer.get_src_site_label(), transfer.src_url())
                 t_one.add_dst("local", "file://" + self._tmp_name)
+                # checksum after the first step
+                t_one.generate_checksum = transfer.generate_checksum
                 t_two =  Transfer()
                 t_two.add_src("local", "file://" + self._tmp_name)
                 t_two.add_dst(transfer.get_dst_site_label(), transfer.dst_url())
