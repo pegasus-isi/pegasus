@@ -17,6 +17,6 @@
 
 extern int pegasus_integrity_xml(const char *fname, char *xml);
 
-extern int print_pegasus_integrity_xml_blob(FILE *out);
+extern int print_pegasus_integrity_xml_blob(FILE *out, const char *fname);
 
 #endif /* _CHECKSUM_H */

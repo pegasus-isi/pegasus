@@ -58,8 +58,8 @@ int pegasus_integrity_xml(const char *fname, char *xml) {
     return 1;
 }
 
-int print_pegasus_integrity_xml_blob(FILE *out) {
-    /* purpose: if exists, reads .pegasus-integrity-ks.xml for cwd
+int print_pegasus_integrity_xml_blob(FILE *out, const char *fname) {
+    /* purpose: if exists, reads the integrity data and puts in the xml
      * paramtr: out: output stream to print to
      * returns: 1 on success
      */
@@ -67,7 +67,7 @@ int print_pegasus_integrity_xml_blob(FILE *out) {
     int fd;
     int len;
 
-    if ((fd = open(".pegasus-integrity-ks.xml", O_RDONLY)) == -1 ) {
+    if ((fd = open(fname, O_RDONLY)) == -1 ) {
         /* missing file is ok */
         return 1;
     }
@@ -76,9 +76,6 @@ int print_pegasus_integrity_xml_blob(FILE *out) {
         fprintf(out, "%.*s", len, buf);
     }
     close(fd);
-
-    /* remove the file so it is not picked up by HTCondor */
-    unlink(".pegasus-integrity-ks.xml");
 
     return 1;
 }

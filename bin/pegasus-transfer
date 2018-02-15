@@ -760,10 +760,11 @@ class TransferHandlerBase(object):
             return
 
         self.lock.acquire()
-        cmd = "%s --generate-xml=\"%s\" --full-statcall-lfn=\"%s\" >>.pegasus-integrity-ks.xml" % (tools.full_path("pegasus-integrity"), fname, lfn)
+        cmd = "%s --generate-xml=\"%s\" --full-statcall-lfn=\"%s\"" % (tools.full_path("pegasus-integrity"), fname, lfn)
         try:
             tc = TimedCommand(cmd)
             tc.run()
+            # track what lfns we have checksummed so far
             integrity_checksummed.append(lfn)
         except RuntimeError, err:
             logger.error(err)
@@ -3475,11 +3476,14 @@ class SimilarWorkSet:
                 # transfer as that is the one which will have to go back to the
                 # failed queue in case of failure
                 t_one = Transfer()
+                t_one.lfn = transfer.lfn
                 t_one.add_src(transfer.get_src_site_label(), transfer.src_url())
                 t_one.add_dst("local", "file://" + self._tmp_name)
                 # checksum after the first step
                 t_one.generate_checksum = transfer.generate_checksum
+                
                 t_two =  Transfer()
+                t_two.lfn = transfer.lfn
                 t_two.add_src("local", "file://" + self._tmp_name)
                 t_two.add_dst(transfer.get_dst_site_label(), transfer.dst_url())
                 try:

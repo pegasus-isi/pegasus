@@ -23,22 +23,22 @@ function transfer {
 }
 
 function test_integrity {
-    rm -f .pegasus-integrity-ks.xml
+    rm -f $KICKSTART_INTEGRITY_DATA
     if ! (transfer --file web-to-local.in); then
         echo "ERROR: pegasus-transfer exited non-zero"
         return 1
     fi
-    # was .pegasus-integrity-ks.xml created?
-    if [ ! -e .pegasus-integrity-ks.xml ]; then
-        echo "ERROR: expected file .pegasus-integrity-ks.xml was not created"
+    # was $KICKSTART_INTEGRITY_DATA created?
+    if [ ! -e $KICKSTART_INTEGRITY_DATA ]; then
+        echo "ERROR: expected file $KICKSTART_INTEGRITY_DATA was not created"
         return 1
     fi
     # make sure it has a statinfo entry
-    if ! (grep statinfo .pegasus-integrity-ks.xml) >/dev/null 2>&1; then
-        echo "ERROR: .pegasus-integrity-ks.xml does not contain a statinfo entry"
+    if ! (grep statinfo $KICKSTART_INTEGRITY_DATA) >/dev/null 2>&1; then
+        echo "ERROR: $KICKSTART_INTEGRITY_DATA does not contain a statinfo entry"
         return 1
     fi
-    rm -f .pegasus-integrity-ks.xml
+    rm -f $KICKSTART_INTEGRITY_DATA
     return 0
 }
 
@@ -48,23 +48,23 @@ function test_local_cp {
 }
 
 function test_integrity_local_cp {
-    rm -f .pegasus-integrity-ks.xml
+    rm -f $KICKSTART_INTEGRITY_DATA
     if ! (transfer --file cp.in); then
         echo "ERROR: pegasus-transfer exited non-zero"
         return 1
     fi
-    # was .pegasus-integrity-ks.xml created?
-    if [ ! -e .pegasus-integrity-ks.xml ]; then
-        echo "ERROR: expected file .pegasus-integrity-ks.xml was not created"
+    # was $KICKSTART_INTEGRITY_DATA created?
+    if [ ! -e $KICKSTART_INTEGRITY_DATA ]; then
+        echo "ERROR: expected file $KICKSTART_INTEGRITY_DATA was not created"
         return 1
     fi
-    ENTRY_COUNT=`cat .pegasus-integrity-ks.xml | grep "entry generated" | wc -l`
+    ENTRY_COUNT=`cat $KICKSTART_INTEGRITY_DATA | grep "entry generated" | wc -l`
     if [ $ENTRY_COUNT != 1 ]; then
-        echo "ERROR: .pegasus-integrity-ks.xml does not have 2 entries!"
-        cat .pegasus-integrity-ks.xml
+        echo "ERROR: $KICKSTART_INTEGRITY_DATA does not have 2 entries!"
+        cat $KICKSTART_INTEGRITY_DATA
         return 1
     fi
-    rm -f .pegasus-integrity-ks.xml data.txt
+    rm -f $KICKSTART_INTEGRITY_DATA data.txt
     return 0
 }
 
@@ -79,8 +79,8 @@ function test_symlink {
     return 0
 }
 
-# make sure we start cleanly
-rm -f .pegasus-integrity-ks.xml index.html data.txt
+export KICKSTART_INTEGRITY_DATA=ks.integrity.$$
+rm -f $KICKSTART_INTEGRITY_DATA
 
 # RUN THE TESTS
 run_test test_integrity
@@ -89,6 +89,6 @@ run_test test_integrity_local_cp
 run_test test_symlink
 
 # cleanup
-rm -f .pegasus-integrity-ks.xml index.html data.txt
+rm -f $KICKSTART_INTEGRITY_DATA index.html data.txt
 
 

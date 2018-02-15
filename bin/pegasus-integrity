@@ -519,20 +519,29 @@ def main():
         logger.error("One, and only one, of --generate-* and --verify needs to be specified")
         parser.print_help()
         sys.exit(1)
+
+    if options.full_statcall_lfn and not "KICKSTART_INTEGRITY_DATA" in os.environ:
+        logger.error("--full-statcall-lfn can only be used inside kickstart")
+        sys.exit(1)
     
     if options.generate_file:
         results = generate_sha256(options.generate_file)
         if not results:
             myexit(1)
         print(results)
-    
-    if options.generate_xml:
+
+    elif options.generate_xml:
         results = generate_xml(options.generate_xml, options.full_statcall_lfn)
         if not results:
             myexit(1)
-        print(results)
+        if options.full_statcall_lfn:
+            f = open(os.environ["KICKSTART_INTEGRITY_DATA"], "a")
+            f.write(results)
+            f.close()
+        else:
+            print(results)
 
-    if options.verify_file:
+    elif options.verify_file:
         # read all the .meta files in the current working dir
         meta_data = []
         for meta_file in glob.glob("*.meta"):

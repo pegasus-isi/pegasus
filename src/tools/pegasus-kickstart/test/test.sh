@@ -492,17 +492,8 @@ function test_integrity_failure {
 function test_integrity_xml_inc {
     # do this test multiple times
     for I in `seq 100`; do
-        # generate a file to include
-        rm -f .test.out .pegasus-integrity-ks.xml
-        ../../../../bin/pegasus-integrity --generate-xml=test.sh --full-statcall-lfn=foo.sh >>.pegasus-integrity-ks.xml
-        rc=$?
     
-        if [ $rc -ne 0 ]; then
-            echo "pegasus-integrity failed to run"
-            return 1
-        fi
-    
-        kickstart ls
+        kickstart ../../../../bin/pegasus-integrity --generate-xml=test.sh --full-statcall-lfn=test.sh
         rc=$?
     
         if [ $rc -ne 0 ]; then
@@ -511,7 +502,7 @@ function test_integrity_xml_inc {
         fi
     
         # verify it has the right output
-        if ! (grep 'statcall error="0" id="final" lfn="foo.sh"' test.out) >/dev/null 2>&1; then
+        if ! (grep 'statcall error="0" id="final" lfn="test.sh"' test.out) >/dev/null 2>&1; then
             echo "Unable to find the included integrity data in ks output"
             return 1
         fi
