@@ -783,6 +783,8 @@ class TransferHandlerBase(object):
                 return False
             if os.path.dirname(a.get_dst_path()) != os.path.dirname(b.get_dst_path()):
                 return False
+            if a.generate_checksum != b.generate_checksum:
+                return False
 
             # also check that we are not renaming the files
             if os.path.basename(a.get_src_path()) != os.path.basename(a.get_dst_path()):
@@ -3354,12 +3356,15 @@ class SimilarWorkSet:
 
         # can we find one handler which can handle both source
         # and destination protocols directly?
-        for h in self._available_handlers:
-            if h.protocol_check(src_proto, dst_proto):
-                self._primary_handler = h
-                logger.debug("Selected %s for handling these transfers" 
-                             %(h._name))
-                return
+        # (sometimes we want to force split transfer to do things like
+        #  local checksumming)
+        if not self.force_split_transfers(transfers_l[0]):
+            for h in self._available_handlers:
+                if h.protocol_check(src_proto, dst_proto):
+                    self._primary_handler = h
+                    logger.debug("Selected %s for handling these transfers" 
+                                 %(h._name))
+                    return
 
         # we need to split the transfer from src to local file,
         # and then transfer the local file to the dst
@@ -3503,6 +3508,22 @@ class SimilarWorkSet:
             return True
         return False
         
+
+    def force_split_transfers(self, transfer):
+        """
+        Examine the transfer and determine if we want to force split transfers
+        for example in the case where we have gsiftp->gsiftp and asked to
+        do checksumming
+        """
+        # only worry about checksumming now
+        if transfer.generate_checksum is None or transfer.generate_checksum == False:
+            return False
+
+        if transfer.get_src_proto() == "gsiftp" and \
+           transfer.get_dst_proto() == "gsiftp":
+            return True
+
+        return False
         
 
 class WorkThread(threading.Thread):
