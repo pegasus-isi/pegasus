@@ -12,11 +12,10 @@ install_requires = [
     "Jinja2==2.7",
     "Flask-SQLAlchemy==0.16",
     "Flask-Cache==0.13.1",
-    "WTForms==1.0.3",
-    "requests==2.8.0",
+    "requests==2.18.4",
     "MarkupSafe==0.18",
     "itsdangerous==0.21",
-    "boto==2.5.2",
+    "boto==2.28.0",
     "pam==0.1.4",
     "pyOpenSSL==16.2.0",
     "plex==2.0.0dev"
