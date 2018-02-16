@@ -22,7 +22,6 @@ PACKAGES+=flask_cache
 PACKAGES+=flask_sqlalchemy.py
 PACKAGES+=jinja2
 PACKAGES+=markupsafe
-PACKAGES+=wtforms
 PACKAGES+=werkzeug
 PACKAGES+=requests
 PACKAGES+=itsdangerous.py
@@ -82,7 +81,6 @@ $(LIBDIR)/flask_cache: Flask-Cache-0.13.1.tar.gz
 $(LIBDIR)/flask_sqlalchemy.py: Flask-SQLAlchemy-0.16.tar.gz
 $(LIBDIR)/jinja2: Jinja2-2.7.tar.gz
 $(LIBDIR)/markupsafe: MarkupSafe-0.18.tar.gz
-$(LIBDIR)/wtforms: WTForms-1.0.3.tar.gz
 $(LIBDIR)/werkzeug: Werkzeug-0.9.3.tar.gz
 $(LIBDIR)/requests: requests-2.18.4.tar.gz
 $(LIBDIR)/itsdangerous.py: itsdangerous-0.21.tar.gz
