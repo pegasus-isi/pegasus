@@ -41,7 +41,7 @@ project:
                       # We need a versioned copy to put on the website that
                       # excludes git files, but include the generated docs
                       (cd pegasus-source && ant dist-source swamp-tarballs && mv dist/pegasus-$VERSION.tar.gz dist/pegasus-swamp*-$VERSION.tar.gz ..)
-                      
+
                       # pegasus-source.tar.gz is a tarball which is used to in subsequent buildsteps
                       # make this a copy of the generated source tarball to keep everyhing
                       # consistent
@@ -1167,6 +1167,8 @@ project:
           value: xenial
         - key: TAG_UBUNTU_17
           value: zesty
+        - key: TAG_UBUNTU_18
+          value: bionic
 
     - key: TVM49
       name: Tutorial VM (master)
