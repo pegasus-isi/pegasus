@@ -1553,7 +1553,16 @@ public class PegasusLite implements GridStart {
         GraphNode node = job.getGraphNodeReference();
         for( GraphNode parentNode : node.getParents() ){
             Job parent = (Job)parentNode.getContent();
-            if( parent.getJobType() == Job.COMPUTE_JOB || parent.getJobType() == Job.STAGE_IN_JOB){
+            boolean addMeta = false;
+            if( job.getJobType() == Job.COMPUTE_JOB ){
+                //we need meta files for only compute  and stage-in jobs that are parents
+                addMeta = ( parent.getJobType() == Job.COMPUTE_JOB || parent.getJobType() == Job.STAGE_IN_JOB);
+            }
+            else if( job.getJobType() == Job.STAGE_OUT_JOB ){
+                //PM-1252 we need meta files for only compute jobs that are parents
+                addMeta = ( parent.getJobType() == Job.COMPUTE_JOB );
+            }
+            if( addMeta ){
                 //we need meta files for only compute  and stage-in jobs that are parents
                 StringBuilder metaFile = new StringBuilder();
                 metaFile.append( baseSubmitDir ).append( File.separator ).
