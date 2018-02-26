@@ -284,8 +284,9 @@ class Transfer(TransferBase):
         self._dst_urls = []
        
         self.attempts = 0
-        self.allow_grouping = True       # can this transfer be grouped with others?
-        self.generate_checksum = False   # should we generate checksums as we transfer?
+        self.allow_grouping = True          # can this transfer be grouped with others?
+        self.generate_checksum = False      # should we generate checksums as we transfer?
+        self.verify_checksum_remote = False # should we generate checksums as we transfer?
   
   
     def __str__(self):
@@ -771,7 +772,7 @@ class TransferHandlerBase(object):
         finally:
             self.lock.release()
 
-
+    
     def _check_similar(self, a, b):
         """
         compares two transfers, and determines if they are similar enough to be
@@ -3403,6 +3404,7 @@ class SimilarWorkSet:
         assert self._transfers is not None
         
         success_list = []
+        verify_list = []
         failed_list = []
         
         # mkdirs
@@ -3437,14 +3439,7 @@ class SimilarWorkSet:
         self._tmp_name = None
         if self._secondary_handler is not None:
             # we have a two stage transfer to deal with and we need a temp file
-            tmp_fd, self._tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-two-stage-",
-                                                      suffix=".data")
-            # the temp file is only used in shell callouts, so let's close
-            # the fd to make sure we are not leaving any open fds around
-            try:
-                os.close(tmp_fd)
-            except:
-                pass
+            self._tmp_name = self.get_temp_file()
             # open the permission up to make sure files downstream
             # get sane permissions to inherit
             os.chmod(self._tmp_name, 0644)
@@ -3460,11 +3455,6 @@ class SimilarWorkSet:
             # one handler to rule them all!
             try:
                 (success_list, failed_list) = self._primary_handler.do_transfers(self._transfers)
-                # accounting
-                for t in success_list:
-                    self._completed_q.put(t)
-                for t in failed_list: 
-                    self._failed_q.put(t)
             except Exception, e:
                 logger.exception("Exception while doing transfer:")
                 raise
@@ -3495,17 +3485,48 @@ class SimilarWorkSet:
                     logger.exception("Exception while doing transfer:")
                     raise
                 if len(s) == 1:
-                    self._completed_q.put(transfer)
+                    success_list.append(transfer)
                 else:
-                    self._failed_q.put(transfer)
+                    failed_list.append(transfer)
         
         # remove temp file
-        if self._tmp_name is not None:
-            logger.debug("Removing temporary file %s" %(self._tmp_name))
-            try:
-                os.unlink(self._tmp_name)
-            except:
-                pass
+        self.clean_up_temp_file(self._tmp_name)
+
+        # verify that the remotely stored file's checksum matches - this means
+        # pulling the file back to the local filesystem and verifying the checksum
+        verify_list = success_list
+        success_list = []
+        for t in verify_list:
+            if t.verify_checksum_remote:
+
+                logger.info("Pulling back " + t.lfn + " to verify checksum")
+                
+                temp_name = self.get_temp_file()
+                t_verify =  Transfer()
+                t_verify.lfn = t.lfn
+                t_verify.add_src(t.get_dst_site_label(), t.dst_url())
+                t_verify.add_dst("local", "file://" + temp_name)
+                (success_verify, failed_verify) = self._primary_handler.do_transfers([t_verify])
+                if failed_verify is []:
+                    failed_list.append(t)
+                    self.clean_up_temp_file(temp_name)
+                    continue
+                
+                # verify checksum of the newly pulled back file
+                if self.verify_integrity_checksum(t_verify.lfn, temp_name):
+                    success_list.append(t)
+                else:
+                    failed_list.append(t)
+                self.clean_up_temp_file(temp_name)
+            else:
+                # no verification needed
+                success_list.append(t)
+
+        # accounting
+        for t in success_list:
+            self._completed_q.put(t)
+        for t in failed_list: 
+            self._failed_q.put(t)
 
 
     def has_gridftp_transfers(self):
@@ -3533,7 +3554,58 @@ class SimilarWorkSet:
             return True
 
         return False
+    
+
+    def verify_integrity_checksum(self, lfn, fname):
+        """
+        Call out to pegasus-integrity to verify a checksum for the file.
+        """
+
+        tools = Tools()
+
+        if tools.find("pegasus-integrity", "help", None, [prog_dir]) is None:
+            logger.error("Unable to do integrity checking because pegasus-integrity not found")
+            return 
+
+        if lfn is None or lfn == "":
+            logger.error("lfn is required when enabling checksumming")
+            return
         
+        cmd = "%s --verify=\"%s\" --lfn=\"%s\"" % (tools.full_path("pegasus-integrity"), fname, lfn)
+        try:
+            tc = TimedCommand(cmd)
+            tc.run()
+        except RuntimeError, err:
+            logger.error(err)
+            return False
+        return True
+
+
+    def get_temp_file(self):
+        """
+        Creates a new temporary file, returns the filename
+        """
+        # temp file to transfer to
+        tmp_fd, self._tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-",
+                suffix=".data")
+        # the temp file is only used in shell callouts, so let's close
+        # the fd to make sure we are not leaving any open fds around
+        try:
+            os.close(tmp_fd)
+        except:
+            pass
+        return self._tmp_name
+
+
+    def clean_up_temp_file(self, fname):
+        """
+        Cleans up a temp file
+        """
+        try:
+            os.unlink(fname)
+        except:
+            pass
+
 
 class WorkThread(threading.Thread):
     """
@@ -3858,6 +3930,8 @@ def json_object_decoder(obj):
             t.set_lfn(obj['lfn'])
         if 'generate_checksum' in obj:
             t.generate_checksum = obj['generate_checksum']
+        if 'verify_checksum_remote' in obj:
+            t.verify_checksum_remote = obj['verify_checksum_remote']
         # src
         for surl in obj['src_urls']:
             priority = None

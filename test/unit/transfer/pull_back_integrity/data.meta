@@ -1,0 +1,11 @@
+[
+  {
+    "_type": "file", 
+    "_id": "data.txt", 
+    "_attributes": {
+      "checksum.type": "sha256", 
+      "checksum.value": "6d98c47ed9d05469abd6a22aed3d7ca30a5a1118b5cad241bfbbb483a8aa50c4",
+      "size": "14"
+    }
+  }
+]

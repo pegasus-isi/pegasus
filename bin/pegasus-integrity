@@ -452,21 +452,24 @@ def generate_xml(fname, full_statcall_lfn):
     return xml
 
 
-def check_integrity(fname, meta_data):
+def check_integrity(fname, lfn, meta_data):
     """
     Checks the integrity of a file given a set of metadata
     """
 
     ts_start = time.time()
+
+    if lfn is None or lfn == "":
+        lfn = fname
     
     # find the expected checksum in the metadata
     expected_sha256 = None
     for entry in meta_data:
-        if entry["_id"] == fname:
+        if entry["_id"] == lfn:
             if "_attributes" in entry and "checksum.value" in entry["_attributes"]:
                 expected_sha256 = entry["_attributes"]["checksum.value"]
     if expected_sha256 is None:
-        logger.error("No checksum in the meta data for " + fname)
+        logger.error("No checksum in the meta data for " + lfn)
         return False
 
     current_sha256 = generate_sha256(fname)
@@ -479,7 +482,7 @@ def check_integrity(fname, meta_data):
                      %(fname, expected_sha256, current_sha256, ts_end - ts_start))
         return False
     
-    logger.info("%s: Checksum verified (timing: %.3f)" %(fname, ts_end - ts_start))
+    logger.info("%s - %s: Checksum verified (timing: %.3f)" %(lfn, fname, ts_end - ts_start))
 
     return True
 
@@ -507,6 +510,8 @@ def main():
                       help = "Used with --generate-xml to specify that a full statcall section should be generated for the provided lfn")
     parser.add_option("", "--verify", action = "store", dest = "verify_file",
                       help = "Verify the hash for the given file.")
+    parser.add_option("", "--lfn", action = "store", dest = "lfn",
+                      help = "Use a specific LFN for the file. Useful when filename is not matching the expected LFN.")
     parser.add_option("", "--debug", action = "store_true", dest = "debug",
                       help = "Enables debugging output.")
     
@@ -554,7 +559,7 @@ def main():
             pprint.PrettyPrinter(indent=4).pprint(meta_data)
     
         # now check the file
-        results = check_integrity(options.verify_file, meta_data)
+        results = check_integrity(options.verify_file, options.lfn, meta_data)
         if not results:
             myexit(1)
         
