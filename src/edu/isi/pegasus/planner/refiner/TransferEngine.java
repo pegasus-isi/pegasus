@@ -753,7 +753,8 @@ public class TransferEngine extends Engine {
             if (ft != null) {
                 //PM-1250 for time being always have pegasus-transfer
                 //generate checksums of file staged to output site
-                ft.setGenerateCheckum( true );
+                //later on set the dial for whehter to check the checksum or not
+                //ft.setGenerateCheckum( true );
                 vFileTX.add(ft);
             }
 
