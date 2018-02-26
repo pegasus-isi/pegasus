@@ -17,7 +17,7 @@ function run_test {
 }
 
 function transfer {
-    ../../../bin/pegasus-transfer "$@" >test.out 2>test.err
+    $TRANSFER_LOCATION "$@" >$TEST_DIR/test.out 2>$TEST_DIR/test.err
     RC=$?
     return $RC
 }
@@ -79,6 +79,14 @@ function test_symlink {
     return 0
 }
 
+function test_pull_back_integrity {
+    (cd pull_back_integrity && rm -f remote.txt && transfer --file pullback.in && rm -f remote.txt)
+}
+
+export TEST_DIR=`pwd`
+
+export TRANSFER_LOCATION=`cd ../../.. && pwd`/bin/pegasus-transfer
+
 export KICKSTART_INTEGRITY_DATA=ks.integrity.$$
 rm -f $KICKSTART_INTEGRITY_DATA
 
@@ -87,6 +95,7 @@ run_test test_integrity
 run_test test_local_cp
 run_test test_integrity_local_cp
 run_test test_symlink
+run_test test_pull_back_integrity
 
 # cleanup
 rm -f $KICKSTART_INTEGRITY_DATA index.html data.txt

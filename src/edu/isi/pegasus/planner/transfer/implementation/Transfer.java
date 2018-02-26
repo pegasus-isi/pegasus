@@ -472,8 +472,15 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             urlPair.append("   \"id\": ").append(num).append(",\n");
             
             //PM-1250
-            if( ft.generateChecksum() ){
+            if(jobClass == Job.STAGE_IN_JOB && ft.generateChecksum() ){
                 urlPair.append("   \"generate_checksum\": ").append( true ).append(",\n");
+            }
+
+            // PM-1251 - Pull back files from the stageout site and verify checksum to
+            // ensure the files were properly transferred and stored
+            // TODO: integrity knob
+            if (jobClass == Job.STAGE_OUT_JOB) {
+                urlPair.append("   \"verify_checksum_remote\": ").append( true ).append(",\n");
             }
             
             //PM-1190 dump any metadata that planner knows of about the file
