@@ -263,7 +263,7 @@ public class Kickstart implements GridStart {
     /**
      * whether integrity checking is turned on or not
      */
-    private boolean mIntegrityCheckingOn ;
+    private boolean mDoIntegrityChecking ;
     
     private Integrity mIntegrityHandler;
     
@@ -286,7 +286,7 @@ public class Kickstart implements GridStart {
         mInvokeLength = mProps.getGridStartInvokeLength();
         
         mGenerateLOF  = mProps.generateLOFFiles();
-        mIntegrityCheckingOn = mProps.doIntegrityChecking();
+        mDoIntegrityChecking = mProps.doIntegrityChecking();
         mConcDAG      = dag;
         mSiteStore    = bag.getHandleToSiteStore();
         mTCHandle     = bag.getHandleToTransformationCatalog();
@@ -474,7 +474,7 @@ public class Kickstart implements GridStart {
     public boolean enable( Job job, boolean isGlobusJob ){
         boolean result = this.enable( job, isGlobusJob, mDoStat , true, false );
         //PM-1252 special handling for integrity checking for stageout jobs
-        if( this.mIntegrityCheckingOn && job.getJobType() == Job.STAGE_OUT_JOB ){
+        if( this.mDoIntegrityChecking && job.getJobType() == Job.STAGE_OUT_JOB ){
             //PM-1252 we only need to transfer the meta files for parent compute jobs
             if( !this.mIntegrityHandler.modifyJobForIntegrityChecks( job , null, this.mSubmitDir )) {
                 throw new RuntimeException( "Unable to modify job for integrity checks" );
@@ -657,7 +657,7 @@ public class Kickstart implements GridStart {
        }
 
         
-        String statArgs = generateStatArgumentOptions( job, stat, mRegisterOutputs, addPostScript, mIntegrityCheckingOn );
+        String statArgs = generateStatArgumentOptions(job, stat, mRegisterOutputs, addPostScript, mDoIntegrityChecking );
         if( !statArgs.isEmpty() ){
             gridStartArgs.append( statArgs );
         }

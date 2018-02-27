@@ -41,6 +41,11 @@ import java.util.List;
 public class Integrity {
     
     /**
+     * Basename for our pegasus integrity check tool in the worker pacakge.
+     */
+    public static final String PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME = "pegasus-integrity";
+    
+    /**
      * The LogManager object which is used to log all the messages.
      */
     protected LogManager mLogger;
@@ -93,7 +98,7 @@ public class Integrity {
                     true;
                 
                 if( generate ){
-                    sb.append( PegasusLite.PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME ).append( " --verify=" ).
+                    sb.append( Integrity.PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME ).append( " --verify=" ).
                        append( file.getLFN() ).append( " 1>&2" ).append( "\n" );
                 }
             }
