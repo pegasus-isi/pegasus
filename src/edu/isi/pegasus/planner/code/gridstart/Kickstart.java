@@ -265,6 +265,8 @@ public class Kickstart implements GridStart {
      */
     private boolean mIntegrityCheckingOn ;
     
+    private Integrity mIntegrityHandler;
+    
     /**
      * Initializes the GridStart implementation.
      *
@@ -318,6 +320,9 @@ public class Kickstart implements GridStart {
             mDisableKickstartStatCompletely = !mDoStat;
         }
         mLogger.log( "Kickstart Stating Disabled Completely - " + mDisableKickstartStatCompletely, LogManager.CONFIG_MESSAGE_LEVEL );
+        
+        mIntegrityHandler = new Integrity();
+        mIntegrityHandler.initialize(bag, dag);
     }
 
      /**
@@ -467,7 +472,15 @@ public class Kickstart implements GridStart {
      *         the constituentJob is scheduled.
      */
     public boolean enable( Job job, boolean isGlobusJob ){
-        return this.enable( job, isGlobusJob, mDoStat , true, false );
+        boolean result = this.enable( job, isGlobusJob, mDoStat , true, false );
+        //PM-1252 special handling for integrity checking for stageout jobs
+        if( this.mIntegrityCheckingOn && job.getJobType() == Job.STAGE_OUT_JOB ){
+            //PM-1252 we only need to transfer the meta files for parent compute jobs
+            if( !this.mIntegrityHandler.modifyJobForIntegrityChecks( job , null, this.mSubmitDir )) {
+                throw new RuntimeException( "Unable to modify job for integrity checks" );
+            }
+        }
+        return result;
     }
 
 

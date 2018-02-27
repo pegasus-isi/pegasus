@@ -587,13 +587,6 @@ public class PegasusLite implements GridStart {
         //for all auxillary jobs let kickstart figure what to do
         else{
             mKickstartGridStartImpl.enable( job, isGlobusJob );
-            //PM-1252 special handling for integrity checking for stageout jobs
-            if( mDoIntegrityChecking && job.getJobType() == Job.STAGE_OUT_JOB ){
-                //PM-1252 we only need to transfer the meta files for parent compute jobs
-                if( !modifyJobForIntegrityChecks( job , null, this.mSubmitDir )) {
-                    throw new RuntimeException( "Unable to modify job for integrity checks" );
-                }
-            }
         }
 
         
