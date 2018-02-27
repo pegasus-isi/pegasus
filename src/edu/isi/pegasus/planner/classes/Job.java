@@ -1141,6 +1141,16 @@ public class Job extends Data implements GraphNodeContent{
     public String getStagingSiteHandle( ){
         return this.mStagingSite;
     }
+    
+    /**
+     * Sets the data configuration in which a job is supposed to run.
+     * 
+     * @param conf the set data configuration  
+     */
+    public void setDataConfiguration( String conf ){
+        this.vdsNS.construct( Pegasus.DATA_CONFIGURATION_KEY, conf );
+    }
+    
 
     /**
      * Returns the data configuration in which a job is supposed to run.

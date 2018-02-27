@@ -708,7 +708,7 @@ public class SUBDAXGenerator{
         
         //to ensure pegasuslite invocation set mode to nonsharedfs
         //and we dont want any kickstart involved
-        preScriptJob.vdsNS.construct( Pegasus.DATA_CONFIGURATION_KEY, PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE);
+        preScriptJob.setDataConfiguration( PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE );
         
         //ensure that the pegasuslite log gets directed to a err file , as
         //HTCondor DAGMan eats up prescript outputs by default
