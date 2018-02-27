@@ -754,7 +754,7 @@ public class TransferEngine extends Engine {
                 //PM-1250 for time being always have pegasus-transfer
                 //generate checksums of file staged to output site
                 //later on set the dial for whehter to check the checksum or not
-                //ft.setGenerateCheckum( true );
+                //ft.setChecksumComputedInWF( true );
                 vFileTX.add(ft);
             }
 
@@ -1400,8 +1400,8 @@ public class TransferEngine extends Engine {
             //PM-1250 if no checksum exists then set pegasus-transfer
             //to generate checksum. Later on a dial might be required here
             if( !pf.hasRCCheckSum() ){
-                ft.setGenerateCheckum( true );
-                pf.setGenerateCheckum( true );
+                ft.setChecksumComputedInWF( true );
+                pf.setChecksumComputedInWF( true );
             }
             
             //PM-1190 associate metadata with the FileTransfer

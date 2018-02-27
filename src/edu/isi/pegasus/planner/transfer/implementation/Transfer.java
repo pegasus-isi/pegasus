@@ -472,7 +472,7 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             urlPair.append("   \"id\": ").append(num).append(",\n");
             
             //PM-1250
-            if(jobClass == Job.STAGE_IN_JOB && ft.generateChecksum() ){
+            if(jobClass == Job.STAGE_IN_JOB && ft.checksumComputedInWF() ){
                 urlPair.append("   \"generate_checksum\": ").append( true ).append(",\n");
             }
 

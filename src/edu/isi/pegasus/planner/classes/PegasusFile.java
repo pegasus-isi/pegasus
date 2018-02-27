@@ -188,10 +188,10 @@ public class PegasusFile extends Data {
     protected boolean mIsRawInput;
     
     /**
-     * Boolean indicating whether file should be checksummed during transfer
-     * by pegasus-transfer
+     * Boolean indicating whether file checksum is computed during workflow
+     * execution either by pegasus-transfer or by some jobs.
      */
-    protected boolean mGenerateChecksum;
+    protected boolean mChecksumComputedInWF;
     
 
     /**
@@ -212,7 +212,7 @@ public class PegasusFile extends Data {
         mLink        = LINKAGE.NONE;
         mMetadata    = new Metadata();
         mIsRawInput  = false;
-        mGenerateChecksum = false;
+        mChecksumComputedInWF = false;
     }
 
     /**
@@ -390,12 +390,13 @@ public class PegasusFile extends Data {
     }
 
     /**
-     * Sets the flag denoting  that file needs to be checksummed during transfer
+     * Sets the flag denoting  that file needs to be checksummed during workflow
+     * execution or not.
      * 
      * @param checksum  whether to generate checksum or not
      */
-    public void setGenerateCheckum( boolean checksum ){
-        this.mGenerateChecksum = true;
+    public void setChecksumComputedInWF( boolean checksum ){
+        this.mChecksumComputedInWF = true;
     }
 
     /**
@@ -741,8 +742,8 @@ public class PegasusFile extends Data {
       *
       * @return boolean  
       */
-     public boolean generateChecksum(){
-        return this.mGenerateChecksum;
+     public boolean checksumComputedInWF(){
+        return this.mChecksumComputedInWF;
      }
 
     /**
@@ -769,7 +770,7 @@ public class PegasusFile extends Data {
         pf.mSize         = mSize;
         pf.mMetadata     = (Metadata) this.mMetadata.clone();
         pf.mIsRawInput   = mIsRawInput;
-        pf.mGenerateChecksum = this.mGenerateChecksum;
+        pf.mChecksumComputedInWF = this.mChecksumComputedInWF;
         return pf;
     }
 
