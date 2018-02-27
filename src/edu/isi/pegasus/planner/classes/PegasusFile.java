@@ -19,7 +19,6 @@ package edu.isi.pegasus.planner.classes;
 
 import java.util.BitSet;
 
-import edu.isi.pegasus.planner.dax.File;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import java.util.Iterator;
 
@@ -748,11 +747,11 @@ public class PegasusFile extends Data {
 
     /**
      * Returns a boolean indicating whether there is a checksum associated with
-     * the file or not. 
+     * the file or not in the Replica Catalog or not beforehand. 
      * 
      * @return 
      */
-    public boolean hasCheckSum() {
+    public boolean hasRCCheckSum() {
         return this.getAllMetadata().containsKey( Metadata.CHECKSUM_VALUE_KEY );
     }
 
