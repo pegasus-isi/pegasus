@@ -418,9 +418,10 @@ public class GridStartFactory {
         }
         
         String propValue = mProps.getGridStart();
-        if ( job.vdsNS.containsKey( Pegasus.DATA_CONFIGURATION_KEY ) ){
+        String conf = job.getDataConfiguration();
+        if ( conf != null ){
             //pick up on the basis of the data configuration key value
-            String conf = job.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY );
+            //String conf = job.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY );
             
             if( (conf.equalsIgnoreCase( PegasusConfiguration.CONDOR_CONFIGURATION_VALUE) ||
                 conf.equalsIgnoreCase( PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE ) ) &&

@@ -475,7 +475,7 @@ public class PegasusLite implements GridStart {
             StringBuilder error = new StringBuilder();
             error.append( "Job " ).append( job.getID() ).
                   append( " cannot be wrapped with PegasusLite. Invalid data.configuration associated " ).
-                  append( job.vdsNS.get( Pegasus.DATA_CONFIGURATION_KEY ) );
+                  append( job.getDataConfiguration() );
             throw new RuntimeException( error.toString() );
                 
         }

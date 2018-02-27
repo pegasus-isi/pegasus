@@ -130,7 +130,7 @@ public class PegasusConfiguration {
             throw new RuntimeException( "Internal Planner Error: Data Configuration should have been set for job " + job.getID() );
         }
         
-        String conf = job.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY );
+        String conf = job.getDataConfiguration();
         //shortcut for condorio
         if( conf.equalsIgnoreCase( PegasusConfiguration.CONDOR_CONFIGURATION_VALUE) ){
             //sanity check against the command line option
@@ -390,7 +390,7 @@ public class PegasusConfiguration {
      * @return 
      */
     public boolean jobSetupForWorkerNodeExecution( Job job ){
-        String configuration  = job.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY ) ;
+        String configuration  = job.getDataConfiguration();
 
         return ( configuration == null )?
                 false: //DEFAULT is sharedfs case if nothing is specified
@@ -409,7 +409,7 @@ public class PegasusConfiguration {
      * @return boolean
      */
     public boolean jobSetupForCondorIO( Job job, PegasusProperties properties ){
-        String configuration  = job.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY ) ;
+        String configuration  = job.getDataConfiguration();;
 
         return ( configuration == null )?
                 this.setupForCondorIO( properties ):

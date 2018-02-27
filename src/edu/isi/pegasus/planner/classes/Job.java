@@ -1143,6 +1143,15 @@ public class Job extends Data implements GraphNodeContent{
     }
 
     /**
+     * Returns the data configuration in which a job is supposed to run.
+     * 
+     * @return the set data configuration or not null
+     */
+    public String getDataConfiguration(){
+        return this.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY );
+    }
+    
+    /**
      * Returns the name of the job.
      *
      * @return String

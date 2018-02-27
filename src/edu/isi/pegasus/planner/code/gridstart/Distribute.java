@@ -323,7 +323,7 @@ public class Distribute implements GridStart {
             StringBuilder error = new StringBuilder();
             error.append( "Job " ).append( job.getID() ).
                   append( " cannot be wrapped with Distribute. It works only in sharedfs case. Invalid data.configuration associated " ).
-                  append( job.vdsNS.get( Pegasus.DATA_CONFIGURATION_KEY ) );
+                  append( job.getDataConfiguration() );
             throw new RuntimeException( error.toString() );
                 
         }
