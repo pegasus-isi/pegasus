@@ -769,6 +769,7 @@ public class PegasusFile extends Data {
         pf.mSize         = mSize;
         pf.mMetadata     = (Metadata) this.mMetadata.clone();
         pf.mIsRawInput   = mIsRawInput;
+        pf.mGenerateChecksum = this.mGenerateChecksum;
         return pf;
     }
 
