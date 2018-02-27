@@ -80,7 +80,7 @@ function test_symlink {
 }
 
 function test_pull_back_integrity {
-    (cd pull_back_integrity && rm -f remote.txt && transfer --file pullback.in && rm -f remote.txt)
+    (cd pull_back_integrity && rm -f remote* && transfer --file pullback.in && rm -f remote*)
 }
 
 export TEST_DIR=`pwd`

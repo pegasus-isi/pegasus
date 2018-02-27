@@ -3499,25 +3499,40 @@ class SimilarWorkSet:
         for t in verify_list:
             if t.verify_checksum_remote:
 
-                logger.info("Pulling back " + t.lfn + " to verify checksum")
+                local_name = None
+                temp_name = None
+
+                # local files are a special case
+                if t.get_dst_proto() == "file":
+                    local_name = t.get_dst_path()
+                else:
+                    # first verify that we can actually pull the file back
+                    if not self._primary_handler.protocol_check(t.get_dst_proto(), "file"):
+                        logger.warn("Unable to pull file from " + t.get_dst_proto() + 
+                                    " to local file. Skipping integrity check.")
+                        continue
+
+                    logger.info("Pulling back " + t.lfn + " to verify checksum")
+                    temp_name = self.get_temp_file()
+                    t_verify =  Transfer()
+                    t_verify.lfn = t.lfn
+                    t_verify.add_src(t.get_dst_site_label(), t.dst_url())
+                    t_verify.add_dst("local", "file://" + temp_name)
+                    (success_verify, failed_verify) = self._primary_handler.do_transfers([t_verify])
+                    if failed_verify is []:
+                        failed_list.append(t)
+                        self.clean_up_temp_file(temp_name)
+                        continue
+                    local_name = temp_name
                 
-                temp_name = self.get_temp_file()
-                t_verify =  Transfer()
-                t_verify.lfn = t.lfn
-                t_verify.add_src(t.get_dst_site_label(), t.dst_url())
-                t_verify.add_dst("local", "file://" + temp_name)
-                (success_verify, failed_verify) = self._primary_handler.do_transfers([t_verify])
-                if failed_verify is []:
-                    failed_list.append(t)
-                    self.clean_up_temp_file(temp_name)
-                    continue
-                
-                # verify checksum of the newly pulled back file
-                if self.verify_integrity_checksum(t_verify.lfn, temp_name):
+                # verify checksum of the now locally accessible file
+                if self.verify_integrity_checksum(t.lfn, local_name):
                     success_list.append(t)
                 else:
                     failed_list.append(t)
-                self.clean_up_temp_file(temp_name)
+
+                if temp_name is not None:
+                    self.clean_up_temp_file(temp_name)
             else:
                 # no verification needed
                 success_list.append(t)

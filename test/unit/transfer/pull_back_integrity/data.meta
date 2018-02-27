@@ -7,5 +7,14 @@
       "checksum.value": "6d98c47ed9d05469abd6a22aed3d7ca30a5a1118b5cad241bfbbb483a8aa50c4",
       "size": "14"
     }
+  },
+  {
+    "_type": "file", 
+    "_id": "test.txt", 
+    "_attributes": {
+      "checksum.type": "sha256", 
+      "checksum.value": "9537f177655939dac0c41f1744daaec8f969cec9033c60e1df69139b56fc37a3",
+      "size": "27"
+    }
   }
 ]
