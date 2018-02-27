@@ -479,7 +479,7 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             // PM-1251 - Pull back files from the stageout site and verify checksum to
             // ensure the files were properly transferred and stored
             // TODO: integrity knob
-            if (jobClass == Job.STAGE_OUT_JOB) {
+            if (jobClass == Job.STAGE_OUT_JOB && ft.checksumComputedInWF() ) {
                 urlPair.append("   \"verify_checksum_remote\": ").append( true ).append(",\n");
             }
             

@@ -231,7 +231,11 @@ public class TransferEngine extends Engine {
      */
     private final String mOutputSite;
     
-
+    /**
+     * Whether to do integrity checking or not.
+     */
+    protected boolean mDoIntegrityChecking ;
+    
     /**
      * Overloaded constructor.
      *
@@ -254,6 +258,8 @@ public class TransferEngine extends Engine {
         
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mSRMServiceURLToMountPointMap = constructSiteToSRMServerMap( mProps );
+        
+        mDoIntegrityChecking            = mProps.doIntegrityChecking();
         
         mDag = reducedDag;
         mDeletedJobs     = deletedJobs;
@@ -751,10 +757,11 @@ public class TransferEngine extends Engine {
                                                     localTransfer );
             
             if (ft != null) {
-                //PM-1250 for time being always have pegasus-transfer
-                //generate checksums of file staged to output site
-                //later on set the dial for whehter to check the checksum or not
-                //ft.setChecksumComputedInWF( true );
+                if( this.mDoIntegrityChecking && this.mPegasusConfiguration.jobSetupForWorkerNodeExecution(job) ){
+                    //PM-1252 for files generated in the workflow , the checksum will be computed 
+                    //in the PegasusLite invocation
+                    ft.setChecksumComputedInWF( true );
+                }
                 vFileTX.add(ft);
             }
 
