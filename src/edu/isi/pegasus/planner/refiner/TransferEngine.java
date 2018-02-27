@@ -1523,6 +1523,15 @@ public class TransferEngine extends Engine {
                 //add locations of input data on the remote site to the transient RC
                 bypassFirstLevelStaging = this.bypassStagingForInputFile( selLoc , pf , job  );
                 if( bypassFirstLevelStaging ){
+                    //PM-1250 if no checksum exists in RC
+                    //then make sure checksum computation is set to false
+                    //for bypassed inputs we have no way to compute
+                    //checksums in the workflow
+                    if( !pf.hasRCCheckSum() ){
+                        ft.setChecksumComputedInWF( false );
+                        pf.setChecksumComputedInWF( false );
+                    }
+                    
                     //only the files for which we bypass first level staging , we
                     //store them in the planner cache as a GET URL and associate with the compute site
                     //PM-698 . we have to clone since original site attribute will be different
