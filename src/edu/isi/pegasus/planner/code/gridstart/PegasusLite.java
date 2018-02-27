@@ -587,6 +587,13 @@ public class PegasusLite implements GridStart {
         //for all auxillary jobs let kickstart figure what to do
         else{
             mKickstartGridStartImpl.enable( job, isGlobusJob );
+            //PM-1252 special handling for integrity checking for stageout jobs
+            if( mDoIntegrityChecking && job.getJobType() == Job.STAGE_OUT_JOB ){
+                //PM-1252 we only need to transfer the meta files for parent compute jobs
+                if( !modifyJobForIntegrityChecks( job , null, this.mSubmitDir )) {
+                    throw new RuntimeException( "Unable to modify job for integrity checks" );
+                }
+            }
         }
 
         
@@ -1524,6 +1531,7 @@ public class PegasusLite implements GridStart {
         //for jobs with no input files, we don't need to transfer 
         //any meta file
         boolean empty = job.getInputFiles().isEmpty();
+        boolean isCompute = job.getJobType() == Job.COMPUTE_JOB ;
         
         //staged executables appear in job input files, we need to do stricter
         //check for that job to determine if meta file should be generated or not
@@ -1538,7 +1546,8 @@ public class PegasusLite implements GridStart {
                 }
             }
         }
-        if(  empty ){
+        if(  empty && isCompute ){
+            //PM-1252 only for compute jobs we have this short circuit
             mLogger.log( "No meta file to transfer, as no input files assocaited with job " + job.getID(),
                          LogManager.DEBUG_MESSAGE_LEVEL );
             return true;
