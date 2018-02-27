@@ -742,7 +742,7 @@ public class PegasusFile extends Data {
       *
       * @return boolean  
       */
-     public boolean checksumComputedInWF(){
+     public boolean hasChecksumComputedInWF(){
         return this.mChecksumComputedInWF;
      }
 
