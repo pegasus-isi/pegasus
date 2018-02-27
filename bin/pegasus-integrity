@@ -481,8 +481,11 @@ def check_integrity(fname, lfn, meta_data):
         logger.error("%s: Expected checksum (%s) does not match the calculated checksum (%s) (timing: %.3f)" \
                      %(fname, expected_sha256, current_sha256, ts_end - ts_start))
         return False
-    
-    logger.info("%s - %s: Checksum verified (timing: %.3f)" %(lfn, fname, ts_end - ts_start))
+   
+    if lfn != fname:
+        logger.info("%s (lfn: %s): Checksum verified (timing: %.3f)" %(fname, lfn, ts_end - ts_start))
+    else:
+        logger.info("%s: Checksum verified (timing: %.3f)" %(fname, ts_end - ts_start))
 
     return True
 
