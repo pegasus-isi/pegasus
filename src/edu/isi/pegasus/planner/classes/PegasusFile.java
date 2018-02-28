@@ -396,7 +396,7 @@ public class PegasusFile extends Data {
      * @param checksum  whether to generate checksum or not
      */
     public void setChecksumComputedInWF( boolean checksum ){
-        this.mChecksumComputedInWF = true;
+        this.mChecksumComputedInWF = checksum;
     }
 
     /**
