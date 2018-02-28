@@ -216,7 +216,7 @@ public class DAX2CDAG implements Callback {
                 //continue;
                 
                 //PM-1253 explicitly complain instead of silently allowing this
-                throw new RuntimeException( "File " + pf + " is listed as input and output for job " + job.getID() );
+                throw new RuntimeException( "File " + lfn + " is listed as input and output for job " + job.getID() );
             }
             dinfo.updateLFNMap(lfn,"o");
             if( this.mAddDataDependencies ){
