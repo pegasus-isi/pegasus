@@ -89,6 +89,17 @@ tr level2::sleep {
 
 EOF
 
+# determine TEST_NAME to setup site catalog
+if [ X${testdir} = "X" ]; then
+    testdir=`dirname  $0`
+fi
+TESTDIR=$(cd $testdir && pwd)
+TEST_NAME=`basename $TESTDIR`
+
+# unique directory for this run
+RUN_ID=`/bin/date +'%F_%H%M%S'`
+TEST_DIR_ADDON=${TEST_NAME}/${RUN_ID}
+
 # create the site catalog for both outer level and inner level workflow
 cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -107,11 +118,11 @@ cat >sites.xml <<EOF
         <grid  type="gt5" contact="obelix.isi.edu/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
         <grid  type="gt5" contact="obelix.isi.edu/jobmanager-condor" scheduler="Condor" jobtype="compute"/>
 
-        <directory type="shared-scratch" path="/lizard/scratch-90-days/CCG/scratch">
-            <file-server operation="all" url="gsiftp://obelix.isi.edu/lizard/scratch-90-days/CCG/scratch"/>
+        <directory type="shared-scratch" path="/lizard/scratch-90-days/CCG/scratch/${TEST_DIR_ADDON}">
+            <file-server operation="all" url="gsiftp://obelix.isi.edu/lizard/scratch-90-days/CCG/scratch/${TEST_DIR_ADDON}"/>
         </directory>
         <directory type="local-storage" path="/lizard/scratch-90-days/CCG/outputs">
-            <file-server operation="all" url="gsiftp://obelix.isi.edu/lizard/scratch-90-days/CCG/outputs"/>
+            <file-server operation="all" url="gsiftp://obelix.isi.edu/lizard/scratch-90-days/CCG/outputs/${TEST_DIR_ADDON}"/>
         </directory>
 
         <profile namespace="env" key="PEGASUS_HOME">$CONDOR_POOL_PEGASUS_HOME</profile>
