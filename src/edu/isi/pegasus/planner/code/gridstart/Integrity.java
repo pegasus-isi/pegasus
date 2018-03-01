@@ -97,6 +97,11 @@ public class Integrity {
                     //we always generate invocation for intermediate files
                     true;
                 
+                //PM-1254 disable check for checkpoint files
+                if( file.isCheckpointFile() ){
+                    generate = false;
+                }
+                
                 if( generate ){
                     sb.append( Integrity.PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME ).append( " --verify=" ).
                        append( file.getLFN() ).append( " 1>&2" ).append( "\n" );

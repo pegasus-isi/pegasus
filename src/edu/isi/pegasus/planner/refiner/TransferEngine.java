@@ -761,6 +761,11 @@ public class TransferEngine extends Engine {
                     //PM-1252 for files generated in the workflow , the checksum will be computed 
                     //in the PegasusLite invocation
                     ft.setChecksumComputedInWF( true );
+                    
+                    //PM-1254 disable for time being for checkpoint files
+                    if( ft.isCheckpointFile() ){
+                        ft.setChecksumComputedInWF( false );
+                    }
                 }
                 vFileTX.add(ft);
             }
