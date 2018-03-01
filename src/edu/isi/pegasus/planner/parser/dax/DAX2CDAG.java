@@ -212,10 +212,12 @@ public class DAX2CDAG implements Callback {
             //job then it is a pass through LFN. Should be tagged
             //as i only, as we want it staged in\
             if( job.inputFiles.contains( pf ) ){
-                //dont add to lfn map in DagInfo
-                //continue;
-                
                 //PM-1253 explicitly complain instead of silently allowing this
+                //only allow for for checkpoint files, that 
+                //are flagged as both input and output
+                if( pf.isCheckpointFile() ){
+                    continue;
+                }
                 throw new RuntimeException( "File " + lfn + " is listed as input and output for job " + job.getID() );
             }
             dinfo.updateLFNMap(lfn,"o");
