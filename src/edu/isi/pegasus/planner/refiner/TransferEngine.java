@@ -849,6 +849,7 @@ public class TransferEngine extends Engine {
             ft.addDestination(stagingSiteHandle,sharedScratchGetURL);
             ft.setURLForRegistrationOnDestination( sharedScratchGetURL );
             ft.setMetadata( pf.getAllMetadata() );
+            ft.setType( pf.getType() );
         }
         //the source dir is the exec dir
         //on exec pool and dest dir
@@ -876,6 +877,7 @@ public class TransferEngine extends Engine {
                 return ft;
             }
             ft.setMetadata( pf.getAllMetadata() );
+            ft.setType( pf.getType() );
 
             //add all the possible destination urls iterating through
             //the list of grid ftp servers associated with the dest pool.
