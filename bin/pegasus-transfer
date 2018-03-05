@@ -3069,7 +3069,7 @@ class SingularityHubHandler(TransferHandlerBase):
             target_name = hashlib.sha224(t.get_dst_path()).hexdigest()
 
             prepare_local_dir(os.path.dirname(t.get_dst_path()))
-            cmd = "%s pull --name '%s' '%s' && mv '%s.simg' '%s'" \
+            cmd = "%s pull --name '%s' '%s' && mv %s* '%s'" \
                 % (tools.full_path("singularity"), target_name, t.src_url(), \
                    target_name, t.get_dst_path())
             try:
