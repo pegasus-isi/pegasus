@@ -291,11 +291,15 @@ def exitcode(outfile, status=None, rename=True,
 
     # Next check if metadata file needs to be generated
     if generate_meta:
+        files_metadata= parse_metadata_from_kickstart(outfile)
+        # always generate a meta file even if it is a zero byte file
+        directory = os.path.dirname(meta_file)
+        basename  = os.path.basename(meta_file)
+        Metadata.write_to_jsonfile(files_metadata, directory,basename, prefix="pegasus-exitcode")
 
-        generate_meta_file(outfile, meta_file)
 
 
-def generate_meta_file( outfile, meta_file):
+def parse_metadata_from_kickstart( outfile ):
     # First assume we will find rotated file
     parser = kickstart_parser.Parser(outfile)
     kickstart_output = parser.parse_stampede()
@@ -309,10 +313,7 @@ def generate_meta_file( outfile, meta_file):
                 for lfn in record["outputs"].keys():
                     files.append( record["outputs"][lfn] )
 
-    # always generate a meta file even if it is a zero byte file
-    directory = os.path.dirname(meta_file)
-    basename  = os.path.basename(meta_file)
-    Metadata.write_to_jsonfile(files, directory,basename, prefix="pegasus-exitcode")
+    return files
 
 
 
@@ -387,6 +388,10 @@ def main(args):
                       dest="log_filename",
                       help="Name of the common log file in which stdout/stderr will"
                            "be redirected.")
+    parser.add_option("-M", "--metadata-log", action="store", type="string",
+                      dest="metadata_wf_log",
+                      help="Name of the common log file in which the metadata parsed "
+                           "from .out file is placed in append mode for the workflow")
 
     (options, args) = parser.parse_args(args)
 
@@ -407,7 +412,8 @@ def main(args):
         exitcode(outfile, status=options.status, rename=options.rename,
                  failure_messages=options.failure_messages,
                  success_messages=options.success_messages,
-                 generate_meta=options.generate_meta)
+                 generate_meta=options.generate_meta,
+                 metadata_wf_log=options.metadata_wf_log)
         log['exitcode'] = 0
         _write_logs(options.log_filename)
         sys.exit(0)
