@@ -727,6 +727,67 @@ public class ADag extends Data implements Graph{
     public void setFlowTimestamp( String timestamp ){
        this.mDAGInfo.setFlowTimestamp(timestamp);
     }
+    
+    /**
+     * Returns the name of the file on the basis of the metadata associated
+     * with the DAG.In case of Condor dagman, it is the name of the .dag file that is
+     * written out.
+     * 
+     * The basename of the .dag file is dependant on whether the
+     * basename prefix has been specified at runtime or not by command line
+     * options.
+     *
+     * @param options 
+     * @param suffix the suffix to be applied at the end.
+     *
+     * @return the name of the dagfile.
+     */
+    protected  String getDAGFilename( PlannerOptions options, String suffix ){
+        return getDAGFilename( options,
+                               this.getLabel(),
+                               this.getIndex(),
+                               suffix );
+    }
+
+    /**
+     * Returns the name of the file on the basis of the metadata associated
+     * with the DAG.
+     * In case of Condor dagman, it is the name of the .dag file that is
+     * written out. The basename of the .dag file is dependant on whether the
+     * basename prefix has been specified at runtime or not by command line
+     * options.
+     *
+     * @param options  the options passed to the planner.
+     * @param name   the name attribute in dax
+     * @param index  the index attribute in dax.
+     * @param suffix the suffix to be applied at the end.
+     *
+     * @return the name of the dagfile.
+     */
+    public static String getDAGFilename( PlannerOptions options,
+                                         String name,
+                                         String index,
+                                         String suffix ){
+        //constructing the name of the dagfile
+        StringBuffer sb = new StringBuffer();
+        String bprefix = options.getBasenamePrefix();
+        if( bprefix != null){
+            //the prefix is not null using it
+            sb.append(bprefix);
+        }
+        else{
+            //generate the prefix from the name of the dag
+            sb.append( name ).append("-").
+                append( index );
+        }
+        //append the suffix
+        sb.append( suffix );
+
+
+
+        return sb.toString();
+
+    }
 
     /**
      * It determines the root Nodes for the ADag looking at the relation pairs
