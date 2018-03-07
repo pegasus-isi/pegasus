@@ -25,6 +25,7 @@ import logging
 import tempfile
 
 import os
+from cStringIO import StringIO
 
 __author__ = "Karan Vahi <vahi@isi.edu>"
 
@@ -87,6 +88,30 @@ class FileMetadata( Metadata ):
     def __init__(self):
         super(FileMetadata, self).__init__()
         self._type = "file"
+
+    def convert_to_rce(self):
+        """
+        Converts to a file based RC description
+        :return:
+        """
+
+        rce = StringIO()
+        rce.write(  self.get_id() )
+        pfn = self.get_attribute_value( "pfn")
+        if pfn is None:
+            pfn = "@@PFN@@"
+        if( pfn ):
+            rce.write(" ")
+            rce.write(pfn)
+
+        for key in self.get_attribute_keys():
+            rce.write(" ")
+            rce.write(key)
+            rce.write("=")
+            rce.write("\"")
+            rce.write(self.get_attribute_value(key))
+            rce.write("\"")
+        return rce.getvalue()
 
 
 

@@ -237,9 +237,25 @@ def get_errfile(outfile):
     errfile = left + ".err" + right
     return errfile
 
+def append_to_wf_metadata_log(files_metadata, logfile):
+    """
+    Writes out file metadata to a logfile in the File RC format
+
+    :param files_metadata:    list of FileMetadata objects
+    :param logfile:           the log file to append the info to
+    :return:
+    """
+    # writing to log file (concurrency safe)
+    with io.open(logfile, 'a', encoding='utf8') as outfile:
+        for file_metadata in files_metadata:
+            res = file_metadata.convert_to_rce()
+            outfile.write(unicode(res + '\n'))
+
+
 
 def exitcode(outfile, status=None, rename=True,
              failure_messages=[], success_messages=[],
+             wf_metadata_log=None,
              generate_meta=True):
     if not os.path.isfile(outfile):
         raise JobFailed("%s does not exist" % outfile)
@@ -291,12 +307,15 @@ def exitcode(outfile, status=None, rename=True,
 
     # Next check if metadata file needs to be generated
     if generate_meta:
-        files_metadata= parse_metadata_from_kickstart(outfile)
+        files_metadata = parse_metadata_from_kickstart(outfile)
         # always generate a meta file even if it is a zero byte file
         directory = os.path.dirname(meta_file)
         basename  = os.path.basename(meta_file)
         Metadata.write_to_jsonfile(files_metadata, directory,basename, prefix="pegasus-exitcode")
 
+        if wf_metadata_log and files_metadata:
+            # PM-1257 write files metadata to workflow log
+            append_to_wf_metadata_log(files_metadata, wf_metadata_log)
 
 
 def parse_metadata_from_kickstart( outfile ):
@@ -389,7 +408,7 @@ def main(args):
                       help="Name of the common log file in which stdout/stderr will"
                            "be redirected.")
     parser.add_option("-M", "--metadata-log", action="store", type="string",
-                      dest="metadata_wf_log",
+                      dest="wf_metadata_log",
                       help="Name of the common log file in which the metadata parsed "
                            "from .out file is placed in append mode for the workflow")
 
@@ -413,7 +432,7 @@ def main(args):
                  failure_messages=options.failure_messages,
                  success_messages=options.success_messages,
                  generate_meta=options.generate_meta,
-                 metadata_wf_log=options.metadata_wf_log)
+                 wf_metadata_log=options.wf_metadata_log)
         log['exitcode'] = 0
         _write_logs(options.log_filename)
         sys.exit(0)
