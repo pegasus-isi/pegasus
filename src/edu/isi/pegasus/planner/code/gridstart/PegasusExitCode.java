@@ -77,6 +77,11 @@ public class PegasusExitCode implements POSTScript  {
     protected String mExitCodeLogPath;
 
     /**
+     * The path to the log file that file metadata should log to 
+     */
+    protected String mWFCacheMetadataLog;
+    
+    /**
      * The properties that need to be passed to the postscript invocation
      * on the command line in the java format.
      */
@@ -120,6 +125,12 @@ public class PegasusExitCode implements POSTScript  {
         mExitParserPath       = (path == null ) ? getDefaultExitCodePath() : path;
         mPostScriptProperties = getPostScriptProperties( properties );
         mExitCodeLogPath      = globalLog;
+        
+        //cheating here stripping suffix
+        String basename = globalLog.contains( "." )?
+                            globalLog.substring(0, globalLog.indexOf( ".") ):
+                            globalLog;
+        mWFCacheMetadataLog  = basename + ".cache.meta";
     }
 
     /**
@@ -174,6 +185,9 @@ public class PegasusExitCode implements POSTScript  {
 
         //PM-928 set it to write to global log file per workflow
         defaultOptions.append( " -l " ).append( this.mExitCodeLogPath );
+        
+        //PM-1257 set it to write to global log file per workflow
+        defaultOptions.append( " -M " ).append( this.mWFCacheMetadataLog );
         
         //put the extra options into the exitcode arguments
         //in the correct order.
