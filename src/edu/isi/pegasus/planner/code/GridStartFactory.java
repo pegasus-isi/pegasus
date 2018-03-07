@@ -210,7 +210,7 @@ public class GridStartFactory {
     /**
      * path to the log file to which postscripts should log
      */
-    private String mPostScriptLoG;
+    private String mPostScriptLog;
 
     /**
      * The default constructor.
@@ -234,7 +234,7 @@ public class GridStartFactory {
         mProps     = bag.getPegasusProperties();
         mSubmitDir = bag.getPlannerOptions().getSubmitDirectory() ;
         mDAG       = dag;
-        mPostScriptLoG = postScriptLog;
+        mPostScriptLog = postScriptLog;
 //        mPostScriptScope = mProps.getPOSTScriptScope();
 
         //load all the known implementations and initialize them
@@ -387,11 +387,11 @@ public class GridStartFactory {
 
 
             //load via reflection and register in the cache
-            obj = this.loadPOSTScript( mProps,
+            obj = this.loadPOSTScript(mProps,
                                        mSubmitDir,
                                        //mProps.getPOSTScriptPath( postScriptType ),
                                        job.dagmanVariables.getPOSTScriptPath( postScriptType ),
-                                       mPostScriptLoG,
+                                       mPostScriptLog,
                                        className );
             this.registerPOSTScript( postScriptType, (POSTScript)obj );
         }
