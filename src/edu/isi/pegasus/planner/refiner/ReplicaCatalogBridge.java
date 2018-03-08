@@ -37,6 +37,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
@@ -55,6 +56,7 @@ import java.util.StringTokenizer;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Metadata;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 
 /**
@@ -957,51 +959,77 @@ public class ReplicaCatalogBridge
      */
     private ReplicaStore getReplicaStoreFromFiles( Set files ) {
         ReplicaStore store = new ReplicaStore();
-        Properties cacheProps = mProps.getVDSProperties().matchingSubset(
-                                                              ReplicaCatalog.c_prefix,
-                                                              false );
-
+        
         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_LOAD_TRANSIENT_CACHE, 
                                LoggingKeys.DAX_ID,
                                mDag.getAbstractWorkflowName() );
 
-        ReplicaCatalog simpleFile;
-        Map wildcardConstraint = null;
-        
-        //all cache files are loaded in readonly mode
-        cacheProps.setProperty( ReplicaCatalogBridge.CACHE_READ_ONLY_KEY, "true" );
-        
         for ( Iterator it = files.iterator(); it.hasNext() ; ) {
             //read each of the cache file and load in memory
             String  file = ( String ) it.next();
-            //set the appropriate property to designate path to file
-            cacheProps.setProperty( ReplicaCatalogBridge.CACHE_REPLICA_CATALOG_KEY, file );
-
-            mLogger.log("Loading  file: " + file,  LogManager.DEBUG_MESSAGE_LEVEL);
-            try{
-                simpleFile = ReplicaFactory.loadInstance( CACHE_REPLICA_CATALOG_IMPLEMENTER,
-                                                          cacheProps );
-            }
-            catch( Exception e ){
-                mLogger.log( "Unable to load cache file " + file,
-                             e,
-                             LogManager.ERROR_MESSAGE_LEVEL );
-                continue;
-            }
+        
             //suck in all the entries into the cache replica store.
-            //returns an unmodifiable collection. so merging an issue..
-            store.add( simpleFile.lookup( mSearchFiles ) );
-
-            //no wildcards as we only want to load mappings for files that
-            //we require
-            //mCacheStore.add( simpleFile.lookup( wildcardConstraint ) );
-
-            //close connection
-            simpleFile.close();
+            Map<String,Collection<ReplicaCatalogEntry>> cacheMap = lookupFromCacheFile(  file, mSearchFiles );
+            store.add( cacheMap );
+            mLogger.log( "Loaded " + cacheMap.size() + " entry from file " + file,
+                         LogManager.DEBUG_MESSAGE_LEVEL );  
         }
 
         mLogger.logEventCompletion();
         return store;
+    }
+    
+    /**
+     * Retrieves locations of search files from a cache file
+     * 
+     * @param file          the cache file
+     * @param searchFiles   lfn's to search for
+     * @return 
+     */
+    private Map<String,Collection<ReplicaCatalogEntry>> lookupFromCacheFile(String file, Set<String> searchFiles ){
+        Properties cacheProps = mProps.getVDSProperties().matchingSubset(
+                                                              ReplicaCatalog.c_prefix,
+                                                              false );
+        Map<String,Collection<ReplicaCatalogEntry>> found = new HashMap();
+        ReplicaCatalog simpleFile;
+        //all cache files are loaded in readonly mode
+        cacheProps.setProperty( ReplicaCatalogBridge.CACHE_READ_ONLY_KEY, "true" );
+        
+        
+        //set the appropriate property to designate path to file
+        cacheProps.setProperty( ReplicaCatalogBridge.CACHE_REPLICA_CATALOG_KEY, file );
+
+        mLogger.log("Loading  file: " + file,  LogManager.DEBUG_MESSAGE_LEVEL);
+        try{
+            simpleFile = ReplicaFactory.loadInstance( CACHE_REPLICA_CATALOG_IMPLEMENTER,
+                                                      cacheProps );
+        }
+        catch( Exception e ){
+            mLogger.log( "Unable to load cache file " + file,
+                         e,
+                         LogManager.ERROR_MESSAGE_LEVEL );
+            return found;
+        }
+        //suck in all the entries into the cache replica store.
+        //returns an unmodifiable collection. so merging an issue..
+        Map<String,Collection<ReplicaCatalogEntry>> m = simpleFile.lookup( searchFiles ) ;
+        
+        //only add entries for which we have a PFN
+        for( String lfn: m.keySet() ){
+            Collection<ReplicaCatalogEntry> rces = m.get(lfn);
+            if( !rces.isEmpty() ){
+                found.put( lfn, rces );
+            }
+        }
+
+        //no wildcards as we only want to load mappings for files that
+        //we require
+        //mCacheStore.add( simpleFile.lookup( wildcardConstraint ) );
+
+        //close connection
+        simpleFile.close();
+        return found;
+        
     }
     
     /**
