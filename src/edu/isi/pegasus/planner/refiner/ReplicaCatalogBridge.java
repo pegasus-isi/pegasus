@@ -970,6 +970,39 @@ public class ReplicaCatalogBridge
         
             //suck in all the entries into the cache replica store.
             Map<String,Collection<ReplicaCatalogEntry>> cacheMap = lookupFromCacheFile(  file, mSearchFiles );
+            
+            File metaCacheFile = new File( file + ".meta" );
+            if( metaCacheFile.exists() ){
+                //PM-1257 rerieve metatadata from cache.meta file that can include
+                //checksum data and merge in cache map
+                Map<String,Collection<ReplicaCatalogEntry>> metadataCacheMap = lookupFromCacheFile(  file + ".meta", mSearchFiles );
+                for( Map.Entry<String,Collection<ReplicaCatalogEntry>> metadataEntry : metadataCacheMap.entrySet()){
+                    String lfn = metadataEntry.getKey();
+                    
+                    for( ReplicaCatalogEntry metadataRCE: metadataEntry.getValue() ){
+                        //check if entry has a checksum value
+                        if( metadataRCE.hasAttribute( Metadata.CHECKSUM_VALUE_KEY) ){ 
+                            String checksum = (String) metadataRCE.getAttribute( Metadata.CHECKSUM_VALUE_KEY) ;
+                            String type = (String) metadataRCE.getAttribute( Metadata.CHECKSUM_TYPE_KEY) ;
+                            //update entry in the cache map with this
+                            Collection<ReplicaCatalogEntry> cacheEntries = cacheMap.get(lfn) ;
+                            if( cacheEntries != null  ){
+                                for( ReplicaCatalogEntry cacheRCE: cacheEntries ){
+                                    cacheRCE.addAttribute( Metadata.CHECKSUM_VALUE_KEY, checksum);
+                                    if( type != null ){
+                                        cacheRCE.addAttribute( Metadata.CHECKSUM_TYPE_KEY, type);
+                                    }
+                                }
+                            }
+                            //update with first checksum value found for lfn
+                            break;
+                        }
+                    }
+                    
+                }
+            }
+                
+            
             store.add( cacheMap );
             mLogger.log( "Loaded " + cacheMap.size() + " entry from file " + file,
                          LogManager.DEBUG_MESSAGE_LEVEL );  
