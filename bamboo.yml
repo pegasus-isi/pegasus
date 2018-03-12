@@ -40,7 +40,7 @@ project:
 
                       # We need a versioned copy to put on the website that
                       # excludes git files, but include the generated docs
-                      (cd pegasus-source && ant dist-source && mv dist/pegasus-$VERSION.tar.gz ..)
+                      (cd pegasus-source && ant dist-source swamp-tarballs && mv dist/pegasus-$VERSION.tar.gz ..)
                       
                       # pegasus-source.tar.gz is a tarball which is used to in subsequent buildsteps
                       # make this a copy of the generated source tarball to keep everyhing
@@ -60,8 +60,8 @@ project:
                 - name: pegasus-source-versioned-swamp-c
                   copyPattern: 'pegasus-swamp-c-?.*.tar.gz'
                   isShared: true
-                - name: pegasus-source-versioned-swamp-perl
-                  copyPattern: 'pegasus-swamp-perl-?.*.tar.gz'
+                - name: pegasus-source-versioned-swamp-java
+                  copyPattern: 'pegasus-swamp-java-?.*.tar.gz'
                   isShared: true
                 - name: pegasus-source-versioned-swamp-python
                   copyPattern: 'pegasus-swamp-python-?.*.tar.gz'
@@ -1110,7 +1110,7 @@ project:
                 - name: pegasus-source
                 - name: pegasus-source-versioned
                 - name: pegasus-source-versioned-swamp-c
-                - name: pegasus-source-versioned-swamp-perl
+                - name: pegasus-source-versioned-swamp-java
                 - name: pegasus-source-versioned-swamp-python
                 - name: pegasus-srcrpm
                 - name: pegasus-worker-x86_64_deb_8

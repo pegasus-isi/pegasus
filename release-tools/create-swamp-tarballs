@@ -25,7 +25,7 @@ rm -rf pegasus-$VERSION
 tar xzf pegasus-$VERSION.tar.gz
 mv pegasus-$VERSION pegasus-swamp-python-$VERSION
 cd pegasus-swamp-python-$VERSION/bin
-for FILE in `find . -type f | sed 's/^\.//'`; do
+for FILE in `find . -type f | sed 's/^\.\///'`; do
 	if (head -n 1 $FILE | grep python) >/dev/null 2>&1; then
 		mv $FILE $FILE.py
 	elif (head -n 1 $FILE | grep perl) >/dev/null 2>&1; then
@@ -36,10 +36,10 @@ done
 cd ../../
 tar czf pegasus-swamp-python-$VERSION.tar.gz pegasus-swamp-python-$VERSION
 
-mv pegasus-swamp-python-$VERSION pegasus-swamp-perl-$VERSION
-tar czf pegasus-swamp-perl-$VERSION.tar.gz pegasus-swamp-perl-$VERSION
+mv pegasus-swamp-python-$VERSION pegasus-swamp-java-$VERSION
+tar czf pegasus-swamp-java-$VERSION.tar.gz pegasus-swamp-java-$VERSION
 
-mv pegasus-swamp-perl-$VERSION pegasus-swamp-c-$VERSION
+mv pegasus-swamp-java-$VERSION pegasus-swamp-c-$VERSION
 tar czf pegasus-swamp-c-$VERSION.tar.gz pegasus-swamp-c-$VERSION
 
 rm -rf pegasus-swamp-c-$VERSION
