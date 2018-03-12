@@ -1042,7 +1042,7 @@ project:
       triggers:
         - !scheduled
           description: Nightly Build
-          cronExpression: "0 0 19 * * ?"
+          cronExpression: "0 0 21 * * ?"
       notifications:
         - !email
           address: pegasus-svn@isi.edu
@@ -1156,7 +1156,7 @@ project:
       triggers:
         - !scheduled
           description: Nightly Build
-          cronExpression: "0 0 5 * * ?"
+          cronExpression: "0 0 22 * * ?"
           onlyRunIfOtherPlansArePassing:
             planKeys:
               - PEGASUS-BNT48
@@ -3776,7 +3776,7 @@ project:
       triggers:
         - !scheduled
           description: Nightly Build
-          cronExpression: "0 0 21 * * ?"
+          cronExpression: "0 0 6 * * ?"
           onlyRunIfOtherPlansArePassing:
             planKeys:
               - PEGASUS-BNT48
