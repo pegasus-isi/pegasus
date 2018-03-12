@@ -57,6 +57,15 @@ project:
                 - name: pegasus-source-versioned
                   copyPattern: 'pegasus-?.*.tar.gz'
                   isShared: true
+                - name: pegasus-source-versioned-swamp-c
+                  copyPattern: 'pegasus-swamp-c-?.*.tar.gz'
+                  isShared: true
+                - name: pegasus-source-versioned-swamp-perl
+                  copyPattern: 'pegasus-swamp-perl-?.*.tar.gz'
+                  isShared: true
+                - name: pegasus-source-versioned-swamp-python
+                  copyPattern: 'pegasus-swamp-python-?.*.tar.gz'
+                  isShared: true
                 - name: pegasus-source
                   copyPattern: 'pegasus-source.tar.gz'
                   isShared: true
@@ -1026,6 +1035,7 @@ project:
                       DOWNLOADS=pegasus/$VERSION
                       mkdir -p $DOWNLOADS
                       mv pegasus-4*.tar.gz $DOWNLOADS/
+                      mv pegasus-swamp-*.tar.gz $DOWNLOADS/
                       mv pegasus-python-source-*.tar.gz $DOWNLOADS/
                       mv pegasus-binary-*.tar.gz $DOWNLOADS/
                       mv pegasus-worker-*.tar.gz $DOWNLOADS/
@@ -1099,6 +1109,9 @@ project:
                 #- name: pegasus-rpm-x86_rhel_6
                 - name: pegasus-source
                 - name: pegasus-source-versioned
+                - name: pegasus-source-versioned-swamp-c
+                - name: pegasus-source-versioned-swamp-perl
+                - name: pegasus-source-versioned-swamp-python
                 - name: pegasus-srcrpm
                 - name: pegasus-worker-x86_64_deb_8
                 - name: pegasus-worker-x86_64_deb_9
