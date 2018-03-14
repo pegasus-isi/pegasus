@@ -3776,7 +3776,7 @@ project:
       triggers:
         - !scheduled
           description: Nightly Build
-          cronExpression: "0 0 6 * * ?"
+          cronExpression: "0 0 8 * * ?"
           onlyRunIfOtherPlansArePassing:
             planKeys:
               - PEGASUS-BNT48
