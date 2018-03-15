@@ -76,16 +76,16 @@ def check_table_exists(engine, table):
     try:
         engine.execute(table.select().limit(1))
         return True
-    
+
     except OperationalError, e:
         if "no such table" in str(e).lower() or "unknown" in str(e).lower() \
           or "no such column" in str(e).lower():
             return False
-        raise OperationalError(e)
+        raise
     except ProgrammingError, e:
         if "doesn't exist" in str(e).lower():
             return False
-        raise ProgrammingError(e)
+        raise
 # --------------------------------------------------------------------
 
 
