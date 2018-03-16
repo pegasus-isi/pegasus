@@ -229,6 +229,8 @@ class AMQPEventSink(EventSink):
                  ssl=False, connect_timeout=None, **kw):
         super(AMQPEventSink, self).__init__()
         self._encoder = encoder
+
+        self._log.info( "Connecting to host: %s:%s virtual host: %s exchange: %s with user: %s ssl: %s" %(host, port, virtual_host, exch, userid, ssl ))
         self._conn = amqp.Connection(host="%s:%s" % (host, port),
                                      userid=userid, password=password,
                                      virtual_host=virtual_host, ssl=ssl,
@@ -268,6 +270,8 @@ def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, **kw):
 
     url = OutputURL(dest)
 
+    log.info( "Connecting workflow event sink to %s" %dest)
+
     # Pick an encoder
 
     def pick_encfn(enc_name, namespace ):
@@ -296,13 +300,24 @@ def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, **kw):
         sink = TCPEventSink(url.host, url.port, encoder=pick_encfn(enc, prefix), **kw)
         _type, _name = "network", "%s:%s" % (url.host, url.port)
     elif url.scheme == 'amqp':
+        # amqp://[USERNAME:PASSWORD@]<hostname>[:port]/[<virtualhost>]/<exchange_name>
         if amqp is None:
             raise Exception("AMQP destination selected, but cannot import AMQP library")
         if url.port is None:
             url.port = 5672 # RabbitMQ default
-        while url.path.startswith('/'):
-            url.path = url.path[1:]
-        sink = AMQPEventSink(url.host, url.port, exch=url.path,
+
+        # PM-1258 parse exchange and virtual host info
+        exchange = None
+        virtual_host= None
+        path_comp=url.path.split('/')
+        if path_comp is not None:
+            exchange=path_comp.pop()
+        if path_comp is not None:
+            virtual_host=path_comp.pop()
+            if len(virtual_host) == 0:
+                virtual_host = None
+
+        sink = AMQPEventSink(url.host, url.port, virtual_host=virtual_host, exch=exchange,
                              userid = url.user, password=url.password, ssl=True,
                              encoder=pick_encfn(enc,prefix), **kw)
         _type, _name="AMQP", "%s:%s/%s" % (url.host, url.port, url.path)
