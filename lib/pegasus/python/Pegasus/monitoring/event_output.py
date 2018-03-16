@@ -318,7 +318,7 @@ def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, **kw):
                 virtual_host = None
 
         sink = AMQPEventSink(url.host, url.port, virtual_host=virtual_host, exch=exchange,
-                             userid = url.user, password=url.password, ssl=True,
+                             userid = url.user, password=url.password, ssl=False,
                              encoder=pick_encfn(enc,prefix), **kw)
         _type, _name="AMQP", "%s:%s/%s" % (url.host, url.port, url.path)
     else:
