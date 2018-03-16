@@ -223,7 +223,6 @@ class AMQPEventSink(EventSink):
     """
     EXCH_OPTS = {'type' : 'topic', 'durable' : True, 'auto_delete' : False}
     DEFAULT_AMQP_VIRTUAL_HOST="pegasus"  #should be /
-    DEFAULT_ROUTING_KEY = "stampede"
 
     def __init__(self, host, port, exch=None, encoder=None,
                  userid='guest', password='guest', virtual_host=DEFAULT_AMQP_VIRTUAL_HOST,
@@ -243,7 +242,7 @@ class AMQPEventSink(EventSink):
         self._log.trace("send.start event=%s", full_event)
         data = self._encoder(event=event, **kw)
         self._channel.basic_publish(amqp.Message(body=data),
-                                    exchange=self._exch, routing_key=self.DEFAULT_ROUTING_KEY)
+                                    exchange=self._exch, routing_key=full_event)
         self._log.trace("send.end event=%s", event)
 
     def close(self):
