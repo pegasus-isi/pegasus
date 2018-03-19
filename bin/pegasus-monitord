@@ -288,7 +288,7 @@ out = os.path.abspath(out)
 # Infer run directory
 run = os.path.dirname(out)
 if not os.path.isdir(run):
-    logger.critical("Run directory does not exist")
+    logger.critical("Run directory %s does not exist" %run)
     exit(1)
 os.chdir(run)
 
