@@ -203,9 +203,9 @@ def parse_properties(my_file, hashref={}):
 
 class Properties:
 
-    def __init__(self):
+    def __init__(self, props=None):
         # Initialize class variables
-        self.m_config = {}
+        self.m_config = props or {}
 
     def new(self, config_file=None, rundir_propfile=None):
         """
@@ -312,7 +312,7 @@ class Properties:
                     my_newkey = my_key
                 if len(my_newkey) > 0:
                     # Only copy if my_newkey is not empty
-                    my_result[my_newkey] = self.m_config[key]
+                    my_result[my_newkey] = self.m_config[my_key]
 
         return my_result
 
