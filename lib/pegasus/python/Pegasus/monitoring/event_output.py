@@ -25,6 +25,7 @@ import logging
 import urlparse
 
 from Pegasus.tools import utils
+from Pegasus.tools import properties
 from Pegasus.netlogger import nlapi
 from Pegasus.db.workflow_loader import WorkflowLoader
 from Pegasus.db.dashboard_loader import DashboardLoader
@@ -252,6 +253,38 @@ class AMQPEventSink(EventSink):
         self._conn.close()
         self._log.trace("close.end")
 
+
+class MultiplexEventSink(EventSink):
+    """
+    Sends events to multiple end points
+    """
+
+    def __init__(self, dest, prefix=STAMPEDE_NS,  props=None, **kw):
+        super( MultiplexEventSink, self ).__init__()
+        self._endpoints = {}
+        additional_sink_props = props.propertyset("pegasus.catalog.workflow" + ".", True)
+
+        # we delete from our copy pegasus.catalog.workflow.url as we want with default prefix
+        if "url" in additional_sink_props.keys():
+            del additional_sink_props["url"]
+
+        additional_sink_props["default.url"] = dest
+        for key in additional_sink_props:
+            if key.endswith( ".url" ):
+
+                # remove from our copy pegasus.catalog.workflow.url if exists
+                p = props.propertyset("pegasus.catalog.workflow" + ".", False)
+                if "pegasus.catalog.workflow.url" in p.keys():
+                    del p["pegasus.catalog.workflow.url"]
+                endpoint_props = properties.Properties(p)
+
+                self._endpoints[ key[0:key.rfind(".url")] ] = create_wf_event_sink(additional_sink_props[key], prefix=prefix, props=endpoint_props, multiplexed = True, **kw)
+
+        a = properties.Properties(additional_sink_props)
+        #for endpoint in self._endpoints:
+
+
+
 def bson_encode(event, **kw):
     """
     Adapt bson.dumps() to NetLogger's Log.write() signature.
@@ -259,7 +292,7 @@ def bson_encode(event, **kw):
     kw['event'] = STAMPEDE_NS + event
     return bson.dumps(kw)
 
-def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, **kw):
+def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, multiplexed = False, **kw):
     """
     Create & return subclass of EventSink, chosen by value of 'dest'
     and parameterized by values (if any) in 'kw'.
@@ -267,6 +300,11 @@ def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, **kw):
 
     if dest is None:
         return None
+
+    # PM-898 are additional URL's to populate specified
+    if not multiplexed and multiplex( dest, props ):
+        return MultiplexEventSink(dest,  prefix, props, **kw)
+
 
     url = OutputURL(dest)
 
@@ -330,3 +368,23 @@ def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, **kw):
 
     return sink
 
+
+def multiplex( dest, props=None):
+    """
+    Determines whether we need to multiplex and events to multiple sinks
+    :param dest:
+    :param props:
+    :return:
+    """
+    if props is None:
+        return False
+
+    additional_sink_props = props.propertyset("pegasus.catalog.workflow" + ".", False)
+    multiplex = False
+    for key in additional_sink_props:
+        if key == "pegasus.catalog.workflow.url":
+            pass
+        if key.endswith(".url"):
+            multiplex = True
+            break
+    return multiplex
