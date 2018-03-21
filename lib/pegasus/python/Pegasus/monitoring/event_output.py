@@ -18,11 +18,10 @@ Functions for output pegasus-monitord events to various destinations.
 #  limitations under the License.
 ##
 
-import os
-import sys
 import socket
 import logging
 import urlparse
+import traceback
 
 from Pegasus.tools import utils
 from Pegasus.tools import properties
@@ -278,12 +277,32 @@ class MultiplexEventSink(EventSink):
                 self._endpoints[ key[0:key.rfind(".url")] ] = create_wf_event_sink(additional_sink_props[key], prefix=prefix, props=endpoint_props, multiplexed = True, **kw)
 
     def send(self, event, kw):
+        remove_endpoints=[]
         for key in self._endpoints:
-            self._endpoints[key].send(event, kw)
+            sink = self._endpoints[key]
+            try:
+                sink.send(event, kw)
+            except:
+                self._log.error(traceback.format_exc())
+                self._log.error("[multiplex event sender] error sending event. Disabling endpoint %s" %key )
+                self.close_sink( sink )
+                remove_endpoints.append( key )
+
+        # remove endpoints that are disabled
+        for key in remove_endpoints:
+            del self._endpoints[key]
+
 
     def close(self):
         for key in self._endpoints:
-            self._endpoints[key].close()
+            self._log.debug("[multiplex event sender] Closing endpoint %s" % key)
+            self.close_sink(self._endpoints[key])
+
+    def close_sink(self, sink):
+        try:
+            sink.close()
+        except:
+            pass
 
 
 def bson_encode(event, **kw):
