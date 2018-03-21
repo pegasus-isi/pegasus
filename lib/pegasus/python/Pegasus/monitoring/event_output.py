@@ -292,7 +292,6 @@ class MultiplexEventSink(EventSink):
         for key in remove_endpoints:
             del self._endpoints[key]
 
-
     def close(self):
         for key in self._endpoints:
             self._log.debug("[multiplex event sender] Closing endpoint %s" % key)
@@ -304,6 +303,11 @@ class MultiplexEventSink(EventSink):
         except:
             pass
 
+    def flush(self):
+        "Clients call this to flush events to the sink"
+        for key in self._endpoints:
+            self._log.debug("[multiplex event sender] Flushing endpoint %s" % key)
+            self._endpoints[key].flush()
 
 def bson_encode(event, **kw):
     """
