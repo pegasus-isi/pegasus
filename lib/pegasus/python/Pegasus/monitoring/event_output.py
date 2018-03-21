@@ -277,9 +277,13 @@ class MultiplexEventSink(EventSink):
 
                 self._endpoints[ key[0:key.rfind(".url")] ] = create_wf_event_sink(additional_sink_props[key], prefix=prefix, props=endpoint_props, multiplexed = True, **kw)
 
-        a = properties.Properties(additional_sink_props)
-        #for endpoint in self._endpoints:
+    def send(self, event, kw):
+        for key in self._endpoints:
+            self._endpoints[key].send(event, kw)
 
+    def close(self):
+        for key in self._endpoints:
+            self._endpoints[key].close()
 
 
 def bson_encode(event, **kw):
