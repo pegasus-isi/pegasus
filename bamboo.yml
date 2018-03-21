@@ -40,8 +40,8 @@ project:
 
                       # We need a versioned copy to put on the website that
                       # excludes git files, but include the generated docs
-                      (cd pegasus-source && ant dist-source && mv dist/pegasus-$VERSION.tar.gz ..)
-                      
+                      (cd pegasus-source && ant dist-source swamp-tarballs && mv dist/pegasus-$VERSION.tar.gz dist/pegasus-swamp*-$VERSION.tar.gz ..)
+
                       # pegasus-source.tar.gz is a tarball which is used to in subsequent buildsteps
                       # make this a copy of the generated source tarball to keep everyhing
                       # consistent
@@ -56,6 +56,15 @@ project:
                   isShared: true
                 - name: pegasus-source-versioned
                   copyPattern: 'pegasus-?.*.tar.gz'
+                  isShared: true
+                - name: pegasus-source-versioned-swamp-c
+                  copyPattern: 'pegasus-swamp-c-?.*.tar.gz'
+                  isShared: true
+                - name: pegasus-source-versioned-swamp-java
+                  copyPattern: 'pegasus-swamp-java-?.*.tar.gz'
+                  isShared: true
+                - name: pegasus-source-versioned-swamp-python
+                  copyPattern: 'pegasus-swamp-python-?.*.tar.gz'
                   isShared: true
                 - name: pegasus-source
                   copyPattern: 'pegasus-source.tar.gz'
@@ -1026,6 +1035,7 @@ project:
                       DOWNLOADS=pegasus/$VERSION
                       mkdir -p $DOWNLOADS
                       mv pegasus-4*.tar.gz $DOWNLOADS/
+                      mv pegasus-swamp-*.tar.gz $DOWNLOADS/
                       mv pegasus-python-source-*.tar.gz $DOWNLOADS/
                       mv pegasus-binary-*.tar.gz $DOWNLOADS/
                       mv pegasus-worker-*.tar.gz $DOWNLOADS/
@@ -1099,6 +1109,9 @@ project:
                 #- name: pegasus-rpm-x86_rhel_6
                 - name: pegasus-source
                 - name: pegasus-source-versioned
+                - name: pegasus-source-versioned-swamp-c
+                - name: pegasus-source-versioned-swamp-java
+                - name: pegasus-source-versioned-swamp-python
                 - name: pegasus-srcrpm
                 - name: pegasus-worker-x86_64_deb_8
                 - name: pegasus-worker-x86_64_deb_9
@@ -1131,7 +1144,7 @@ project:
       triggers:
         - !scheduled
           description: Nightly Build
-          cronExpression: "0 0 19 * * ?"
+          cronExpression: "0 0 21 * * ?"
       notifications:
         - !email
           address: pegasus-svn@isi.edu
@@ -1154,6 +1167,8 @@ project:
           value: xenial
         - key: TAG_UBUNTU_17
           value: zesty
+        - key: TAG_UBUNTU_18
+          value: bionic
 
     - key: TVM49
       name: Tutorial VM (master)
@@ -1245,7 +1260,7 @@ project:
       triggers:
         - !scheduled
           description: Nightly Build
-          cronExpression: "0 0 1 * * ?"
+          cronExpression: "0 0 20 * * ?"
           onlyRunIfOtherPlansArePassing:
             planKeys:
               - PEGASUS-BNT49
@@ -3865,7 +3880,7 @@ project:
       triggers:
         - !scheduled
           description: Nightly Build
-          cronExpression: "0 0 2 * * ?"
+          cronExpression: "0 0 1 * * ?"
           onlyRunIfOtherPlansArePassing:
             planKeys:
               - PEGASUS-BNT49

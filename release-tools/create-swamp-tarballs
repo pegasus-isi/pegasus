@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Generate 3 identical tarballs, for Python, Perl and C SWAMP testing
+# Rename Python and Perl scripts to have extensions
+
+set -e
+
+VERSION=$1
+
+if [ "x$VERSION" = "x" ]; then
+    echo "Please specify a version for the source tarball"
+    exit 1
+fi
+
+# make sure we are in a source dir
+if [ ! -e build.xml ]; then
+    echo "This does not look a like a source directory. Exiting..."
+    exit 1
+fi
+
+TOP_DIR=`pwd`
+
+cd dist
+rm -rf pegasus-$VERSION
+tar xzf pegasus-$VERSION.tar.gz
+mv pegasus-$VERSION pegasus-swamp-python-$VERSION
+cd pegasus-swamp-python-$VERSION/bin
+for FILE in `find . -type f | sed 's/^\.\///'`; do
+	if (head -n 1 $FILE | grep python) >/dev/null 2>&1; then
+		mv $FILE $FILE.py
+	elif (head -n 1 $FILE | grep perl) >/dev/null 2>&1; then
+		mv $FILE $FILE.pl
+	fi
+done
+
+cd ../../
+tar czf pegasus-swamp-python-$VERSION.tar.gz pegasus-swamp-python-$VERSION
+
+mv pegasus-swamp-python-$VERSION pegasus-swamp-java-$VERSION
+tar czf pegasus-swamp-java-$VERSION.tar.gz pegasus-swamp-java-$VERSION
+
+mv pegasus-swamp-java-$VERSION pegasus-swamp-c-$VERSION
+tar czf pegasus-swamp-c-$VERSION.tar.gz pegasus-swamp-c-$VERSION
+
+rm -rf pegasus-swamp-c-$VERSION
+
+

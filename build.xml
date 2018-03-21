@@ -581,6 +581,12 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <arg line="${pegasus.version} ${dist.osid}"/>
     </exec>
   </target>
+  
+  <target name="swamp-tarballs" depends="dist-source" description="Build source tarballs for SWAMP">
+    <exec executable="release-tools/create-swamp-tarballs" failonerror="true">
+      <arg line="${pegasus.version}"/>
+    </exec>
+  </target>
 
   <target name="test-java" depends="dist-common,jar,compile-externals" description="Run java unit tests">
     <mkdir dir="${junitreport.dir}"/>
