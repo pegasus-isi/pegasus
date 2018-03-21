@@ -276,6 +276,18 @@ class Properties:
 
         return my_old_val
 
+    def remove(self, key):
+        """
+        Removes a property matching the key
+        :param key:
+        :return: the old value if it exists
+        """
+        value = None
+        if key in self.m_config.keys():
+            value = self.m_config[key]
+            del self.m_config[key]
+        return value
+
     def keyset(self, predicate=None):
         """
         Finds a subset of keys that matches a predicate

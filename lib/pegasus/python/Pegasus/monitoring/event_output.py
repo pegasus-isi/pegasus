@@ -271,12 +271,9 @@ class MultiplexEventSink(EventSink):
         additional_sink_props["default.url"] = dest
         for key in additional_sink_props:
             if key.endswith( ".url" ):
-
                 # remove from our copy pegasus.catalog.workflow.url if exists
-                p = props.propertyset("pegasus.catalog.workflow" + ".", False)
-                if "pegasus.catalog.workflow.url" in p.keys():
-                    del p["pegasus.catalog.workflow.url"]
-                endpoint_props = properties.Properties(p)
+                endpoint_props = properties.Properties(props.propertyset("pegasus.catalog.workflow" + ".", False))
+                endpoint_props.remove("pegasus.catalog.workflow.url")
 
                 self._endpoints[ key[0:key.rfind(".url")] ] = create_wf_event_sink(additional_sink_props[key], prefix=prefix, props=endpoint_props, multiplexed = True, **kw)
 
