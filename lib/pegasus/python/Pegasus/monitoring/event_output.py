@@ -299,7 +299,7 @@ def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, multipl
         return None
 
     # PM-898 are additional URL's to populate specified
-    if not multiplexed and multiplex( dest, props ):
+    if not multiplexed and multiplex( dest, prefix , props ):
         return MultiplexEventSink(dest,  prefix, props, **kw)
 
 
@@ -366,7 +366,7 @@ def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, multipl
     return sink
 
 
-def multiplex( dest, props=None):
+def multiplex( dest, prefix, props=None):
     """
     Determines whether we need to multiplex and events to multiple sinks
     :param dest:
@@ -374,6 +374,10 @@ def multiplex( dest, props=None):
     :return:
     """
     if props is None:
+        return False
+
+    # we never attempt multiplex on dashboard sink
+    if prefix == DASHBOARD_NS:
         return False
 
     additional_sink_props = props.propertyset("pegasus.catalog.workflow" + ".", False)
