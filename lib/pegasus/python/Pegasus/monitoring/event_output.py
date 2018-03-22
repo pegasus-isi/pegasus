@@ -191,6 +191,8 @@ class FileEventSink(EventSink):
     def send(self, event, kw):
         self._log.trace("send.start event=%s", event)
         self._output.write(self._encoder(event=event, **kw))
+        if self._encoder == json_encode:
+            self._output.write('\n')
         self._log.trace("send.end event=%s", event)
 
     def close(self):
