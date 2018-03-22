@@ -22,6 +22,7 @@ import socket
 import logging
 import urlparse
 import traceback
+import json
 
 from Pegasus.tools import utils
 from Pegasus.tools import properties
@@ -206,6 +207,8 @@ class FileEventSink(EventSink):
     def send(self, event, kw):
         self._log.trace("send.start event=%s", event)
         self._output.write(self._encoder(event=event, **kw))
+        if self._encoder == json_encode:
+            self._output.write('\n')
         self._log.trace("send.end event=%s", event)
 
     def close(self):
@@ -274,7 +277,7 @@ class MultiplexEventSink(EventSink):
     Sends events to multiple end points
     """
 
-    def __init__(self, dest, prefix=STAMPEDE_NS,  props=None, **kw):
+    def __init__(self, dest, enc, prefix=STAMPEDE_NS,  props=None, **kw):
         super( MultiplexEventSink, self ).__init__()
         self._endpoints = {}
         additional_sink_props = props.propertyset("pegasus.catalog.workflow" + ".", True)
@@ -290,7 +293,8 @@ class MultiplexEventSink(EventSink):
                 endpoint_props = properties.Properties(props.propertyset("pegasus.catalog.workflow" + ".", False))
                 endpoint_props.remove("pegasus.catalog.workflow.url")
 
-                self._endpoints[ key[0:key.rfind(".url")] ] = create_wf_event_sink(additional_sink_props[key], prefix=prefix, props=endpoint_props, multiplexed = True, **kw)
+                self._endpoints[ key[0:key.rfind(".url")] ] = create_wf_event_sink(additional_sink_props[key], enc=enc,
+                                                                                   prefix=prefix, props=endpoint_props, multiplexed = True, **kw)
 
     def send(self, event, kw):
         remove_endpoints=[]
@@ -332,6 +336,13 @@ def bson_encode(event, **kw):
     kw['event'] = STAMPEDE_NS + event
     return bson.dumps(kw)
 
+def json_encode(event, **kw):
+    """
+    Adapt bson.dumps() to NetLogger's Log.write() signature.
+    """
+    kw['event'] = STAMPEDE_NS + event
+    return json.dumps(kw)
+
 def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, multiplexed = False, **kw):
     """
     Create & return subclass of EventSink, chosen by value of 'dest'
@@ -343,7 +354,7 @@ def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, multipl
 
     # PM-898 are additional URL's to populate specified
     if not multiplexed and multiplex( dest, prefix , props ):
-        return MultiplexEventSink(dest,  prefix, props, **kw)
+        return MultiplexEventSink(dest, enc, prefix, props, **kw)
 
 
     url = OutputURL(dest)
@@ -361,6 +372,8 @@ def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, multipl
             if bson is None:
                 raise Exception("BSON encoding selected, but cannot import bson library")
             encfn = bson_encode
+        elif enc_name == 'json':
+            encfn = json_encode
         else:
             raise ValueError("Unknown encoding '%s'" % (enc_name))
         return encfn

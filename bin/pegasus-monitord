@@ -113,6 +113,7 @@ MONITORD_WF_RETRY_FILE = "monitord.subwf" # filename for writing persistent sub-
 MAX_SLEEP_TIME = 10                       # in seconds
 SLEEP_WAIT_NOTIFICATION = 5               # in seconds
 DAGMAN_OUT_MAX_READ_SIZE = 32768          # at most the maximum bytes to read while parsing dagman.out file
+DEFAULT_ENCODING = "bp"                   # default way of encoding events generated
 
 unsubmitted_events = {"UN_READY": 1,
                       "PRE_SCRIPT_STARTED": 1,
@@ -268,8 +269,8 @@ grp.add_option("-d", "--dest", action="store", dest="event_dest", metavar="PATH 
                "For x-tcp scheme, params are TCP host[:port=14380]. "
                "For DB, use SQLAlchemy engine URL. "
                "(default=sqlite:///<dagman-output-file>.stampede.db)",   default=None)
-grp.add_option("-e", "--encoding", action='store', dest='enc', default="bp", metavar='FORMAT',
-                help="How to encode log events: bson | bp (default=%default)")
+grp.add_option("-e", "--encoding", action='store', dest='enc', metavar='FORMAT',
+                help="How to encode log events: bson | json| bp (default=bp)")
 parser.add_option_group(grp)
 
 # Parse command-line options
@@ -446,6 +447,9 @@ else:
     if props.property("pegasus.monitord.encoding") is not None:
         # Get encoding from property
         encoding = props.property("pegasus.monitord.encoding")
+
+if encoding is None:
+    encoding = DEFAULT_ENCODING
 
 # Check if the user-provided jsd file is an absolute path, if so, we
 # disable recursive mode
