@@ -1,0 +1,50 @@
+#!/bin/bash
+
+set -e
+
+# this variable is expanded by the planner when
+# parsing in the sites.xml file in the conf directory
+TOPDIR=`pwd`
+export TOPDIR
+
+# pegasus bin directory is needed to find keg
+BIN_DIR=`pegasus-config --bin`
+PEGASUS_LOCAL_BIN_DIR=$BIN_DIR
+export PEGASUS_LOCAL_BIN_DIR
+
+TEST=046-aws-batch-black
+
+# strip out trailing / from TEST if any
+TEST=`echo ${TEST} | sed -E "s/(.*)(\/)$/\1/"`
+export TEST
+
+if [ X${S3_URL_PREFIX} == "X" ]; then 
+    echo -e 'ERROR: Please set S3_URL_PREFIX environment variable corresponding to your S3 credential file. For e.g. \nexport S3_URL_PREFIX=s3://bamboo@amazon' >&2
+    exit 1
+fi
+
+if [ X${S3_BUCKET} == "X" ]; then 
+    echo -e 'ERROR: Please set S3_BUCKET environment variable to point to the bucket you want to use/create for this example.  Only the name without any / in the name. Note the S3 bucket names have to be globally unique.' >&2
+    exit 1
+fi
+export S3_BUCKET=${S3_BUCKET}/${TEST}
+
+
+# generate the input file
+echo "This is sample input to KEG" >f.a
+
+# generate the dax
+export PYTHONPATH=`pegasus-config --python`
+./blackdiamond.py $BIN_DIR > blackdiamond.dax
+
+# plan and submit the  workflow
+pegasus-plan \
+    --conf ./conf/pegasusrc \
+    --sites aws-batch \
+    --cluster horizontal \
+    --output-site local \
+    --dir dags \
+    --dax blackdiamond.dax \
+    --force \
+    -v \
+    --submit

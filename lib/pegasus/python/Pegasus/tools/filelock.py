@@ -1,6 +1,7 @@
 """
 filelock.py: Provides NFS-safe locking around a DB File.
 """
+from __future__ import print_function
 
 ##
 #  Copyright 2007-2010 University Of Southern California
@@ -275,7 +276,7 @@ class Intent:
         # returns: None on error, underlying object otherwise
 
         # Create key if not already there
-        if not self.m_count.has_key(self.m_pid):
+        if self.m_pid not in self.m_count:
             self.m_count[self.m_pid] = 0
 
         if self.m_count[self.m_pid] == 0:
@@ -307,7 +308,7 @@ class Intent:
         """
         # purpose: detects already tied databases
         # returns: reference count for lock
-        if not self.m_count.has_key(self.m_pid):
+        if self.m_pid not in self.m_count:
             return 0
         
         return self.m_count[self.m_pid]
@@ -370,7 +371,7 @@ class Intent:
         my_db = self.dbtie()
 
         if my_db is not None:
-            if my_db.has_key(key):
+            if key in my_db:
                 val = int(my_db[key])
                 val = val + incr
             else:
@@ -400,7 +401,7 @@ class Intent:
         my_db = self.dbtie()
 
         if my_db is not None:
-            if my_db.has_key(key):
+            if key in my_db:
                 val = int(my_db[key])
                 val = val - decr
             else:
@@ -433,17 +434,17 @@ if __name__ == '__main__':
     a.inc('usc')
     c = a.inc('usc')
     if c is None:
-        print "Cannot get counter!"
+        print("Cannot get counter!")
     else:
-        print "Counter is now %d" % (c)
+        print("Counter is now %d" % (c))
     c = a.dec("usc", 3)
     if c is None:
-        print "Cannot get counter!"
+        print("Cannot get counter!")
     else:
-        print "Counter is now %d" % (c)
+        print("Counter is now %d" % (c))
 
     my_dict = {}
     my_dict = a.clone()
     for key in my_dict.keys():
-        print key, "-->", my_dict[key]
-    print "done"
+        print(key, "-->", my_dict[key])
+    print("done")

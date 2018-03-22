@@ -526,7 +526,7 @@ public class RCClient extends Toolkit {
 		    Iterator i = words.listIterator();
 		    String lfn = (String) i.next();
 		    ReplicaCatalogEntry rce = new ReplicaCatalogEntry(
-			    (String) i.next());
+			    noquote((String) i.next()));
 
 		    while (i.hasNext()) {
 			String attr = (String) i.next();
@@ -664,7 +664,7 @@ public class RCClient extends Toolkit {
 		Iterator i = words.listIterator();
 		String lfn = (String) i.next();
 		ReplicaCatalogEntry rce = new ReplicaCatalogEntry(
-			(String) i.next());
+			noquote( (String) i.next() ) );
 
 		while (i.hasNext()) {
 		    String attr = (String) i.next();

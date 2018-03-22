@@ -1,0 +1,33 @@
+[
+ { "type": "transfer",
+   "lfn": "data.txt",
+   "id": 1,
+   "verify_checksum_remote": true, 
+   "src_urls": [
+     { "site_label": "computesite", "url": "file://$PWD/data.txt", "priority": 100 }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "file://$PWD/remote.txt" }
+   ] },
+ { "type": "transfer",
+   "lfn": "data.txt",
+   "id": 2,
+   "verify_checksum_remote": true, 
+   "src_urls": [
+     { "site_label": "computesite", "url": "file://$PWD/data.txt", "priority": 100 }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "symlink://$PWD/remote2.txt" }
+   ] },
+ { "type": "transfer",
+   "lfn": "test.txt",
+   "id": 3,
+   "verify_checksum_remote": true, 
+   "src_urls": [
+     { "site_label": "computesite", "url": "https://pegasus.isi.edu/static/bamboo/test.txt", "priority": 100 }
+   ],
+   "dest_urls": [
+     { "site_label": "computesite", "url": "file://$PWD/remote3.txt" }
+   ] }
+]
+

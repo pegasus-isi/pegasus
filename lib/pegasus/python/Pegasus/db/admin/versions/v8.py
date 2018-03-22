@@ -9,8 +9,8 @@ DB_VERSION = 8
 
 log = logging.getLogger(__name__)
 
-class Version(BaseVersion):
 
+class Version(BaseVersion):
     def __init__(self, connection):
         super(Version, self).__init__(connection)
 
@@ -23,10 +23,12 @@ class Version(BaseVersion):
         log.info("Updating to version %s" % DB_VERSION)
         try:
             log.info("Updating master_workflowstate...")
-            self.db.execute("ALTER TABLE master_workflowstate ADD reason TEXT NULL")
+            self.db.execute(
+                "ALTER TABLE master_workflowstate ADD reason TEXT NULL"
+            )
         except (OperationalError, ProgrammingError):
             pass
-        except Exception, e:
+        except Exception as e:
             self.db.rollback()
             log.exception(e)
             raise Exception(e)

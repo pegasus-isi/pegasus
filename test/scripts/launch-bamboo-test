@@ -32,8 +32,7 @@ if [ -e pegasusrc ]; then
     echo "" >> pegasusrc
     cat ../common.properties >> pegasusrc
 else
-    echo "ERROR Test $TEST not setup with pegasusrc file"
-    exit 1
+    echo "Warning: Test $TEST not setup with pegasusrc file"
 fi
 
 #Launch the test
@@ -115,15 +114,15 @@ fi
 if cat monitord.log | grep -E '(ERR)|(CRITICAL)' >/dev/null 2>&1; then
     echo "monitord log contains errors:"
     echo
-    cat monitord.log
+    grep -E '(ERR)|(CRITICAL)' monitord.log
     echo
     STATUS=$(($STATUS + 1))
 fi
 
-if cat monitord.log | grep -v "DAGMan was aborted for workflow" | grep WARN | grep -v -E '(read_stdout_stderr_files)|(unable to read error file)|(truncating std)' >/dev/null 2>&1; then
+if cat monitord.log | grep -v "DAGMan was aborted for workflow" | grep WARN | grep -v -E '(read_stdout_stderr_files)|(unable to read error file)|(unable to read output file)|(truncating std)' >/dev/null 2>&1; then
     echo "monitord log contains warnings:"
     echo
-    cat monitord.log
+    grep WARN monitord.log
     echo
     STATUS=$(($STATUS + 1))
 fi
@@ -145,7 +144,7 @@ STATUS=$(($STATUS + $?))
 
 if [ $STATUS -ne 0 ]; then
     echo "Test failed, creating tarball..."
-    DIR="/nfs/ccg3/scratch-purge-no-backups/pegasus-failures"
+    DIR="/lizard/scratch-90-days/pegasus-failures"
     if ! [ -d "$DIR" ]; then
         mkdir -p "$DIR"
         chmod 1777 "$DIR"

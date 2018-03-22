@@ -120,12 +120,12 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
         if backup or not init:
             _check_db_permissions(dburi, db_type, mask)
 
-    except exc.OperationalError, e:
+    except exc.OperationalError as e:
         if "mysql" in dburi and "unknown database" in str(e).lower():
             raise ConnectionError("MySQL database should be previously created: %s (%s)" % (e.message, dburi),
                                   given_version=pegasus_version, db_type=db_type)
         raise ConnectionError("%s (%s)" % (e.message, dburi), given_version=pegasus_version, db_type=db_type)
-    except Exception, e:
+    except Exception as e:
         raise ConnectionError("%s (%s)" % (e.message, dburi), given_version=pegasus_version, db_type=db_type)
 
     Session = orm.sessionmaker(bind=engine, autoflush=False, autocommit=False,
@@ -138,7 +138,7 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
             from Pegasus.db.admin.admin_loader import db_create
             db_create(dburi, engine, db, pegasus_version=pegasus_version, force=force, verbose=verbose)
 
-        except exc.OperationalError, e:
+        except exc.OperationalError as e:
             if 'database is locked' in str(e).lower():
                 # database is locked, getting PIDs and commands
                 p = urlparse(dburi)
@@ -257,7 +257,7 @@ def get_wf_uuid(submit_dir):
 
     # Get wf_uuid for this workflow
     wf_uuid = None
-    if (top_level_wf_params.has_key('wf_uuid')):
+    if ('wf_uuid' in top_level_wf_params):
         wf_uuid = top_level_wf_params['wf_uuid']
     else:
         log.error("workflow id cannot be found in the braindump.txt ")
@@ -365,7 +365,7 @@ def _get_master_uri(props=None):
     # check for writability and create directory if required
     if not os.path.isdir(dir):
         try:
-            os.mkdir(dir, 0755)
+            os.mkdir(dir, 0o755)
         except OSError:
             raise ConnectionError("Unable to create directory: %s" % dir)
     elif not os.access(dir, os.W_OK):
@@ -378,8 +378,8 @@ def _get_master_uri(props=None):
         try:
             # touch the file
             open(filename, 'w').close()
-            os.chmod(filename, 0600)
-        except Exception, e:
+            os.chmod(filename, 0o600)
+        except Exception as e:
             log.warning("unable to initialize MASTER db %s." % filename)
             log.exception(e)
             return None
@@ -411,7 +411,7 @@ def _get_workflow_uri(props=None, submit_dir=None, top_dir=None):
 
     # The default case is a .stampede.db file with the dag name as base
     dag_file_name = ""
-    if top_level_wf_params.has_key('dag'):
+    if 'dag' in top_level_wf_params:
         dag_file_name = top_level_wf_params['dag']
     else:
         raise ConnectionError("DAG file name cannot be found in the braindump.txt.")
@@ -446,7 +446,7 @@ def _validate(dburi):
             if dburi.startswith("mysql:"):
                 imp.find_module('MySQLdb')
 
-    except ImportError, e:
+    except ImportError as e:
         raise ConnectionError("Missing Python module: %s (%s)" % (e.message, dburi))
 
 
@@ -492,7 +492,7 @@ def _parse_props(dburi, props, db_type=None, connect_args=None):
                 if timeout:
                     connect_args[DBKey.TIMEOUT] = timeout
 
-            except ValueError, e:
+            except ValueError as e:
                 raise ConnectionError("Timeout properties should be set in seconds: %s (%s)" % (e.message, dburi),
                                       db_type=db_type)
 

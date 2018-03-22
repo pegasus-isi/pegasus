@@ -20,9 +20,9 @@ class ExitcodeTestCase(unittest.TestCase):
     def test_unquote_messages(self):
         messages = ["a b","c+d","e\\+f"]
         uqmessages = exitcode.unquote_messages(messages)
-        self.assertEquals(uqmessages[0], "a b")
-        self.assertEquals(uqmessages[1], "c d")
-        self.assertEquals(uqmessages[2], "e+f")
+        self.assertEqual(uqmessages[0], "a b")
+        self.assertEqual(uqmessages[1], "c d")
+        self.assertEqual(uqmessages[2], "e+f")
 
     def test_has_any_failure_messages(self):
         hafm = exitcode.has_any_failure_messages

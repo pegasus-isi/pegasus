@@ -178,6 +178,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
            classpathref="build.aws.classpath"
            includeantruntime="false">
       <compilerarg value="${compile.lint}"/>
+      <classpath refid="build.classpath" />
     </javac>
   </target>
 
@@ -514,16 +515,16 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
   <target name="dist-clean">
     <delete dir="${dist.dir}"/>
     <delete dir="build"/>
-    <exec executable="${make}" dir="src/tools" failonerror="true">
+    <exec executable="${make}" dir="src/tools" failonerror="false">
       <arg line="distclean"/>
     </exec>
-    <exec executable="${make}" dir="src/tools/pegasus-mpi-cluster" failonerror="true">
+    <exec executable="${make}" dir="src/tools/pegasus-mpi-cluster" failonerror="false">
       <arg line="distclean"/>
     </exec>
-    <exec executable="${make}" dir="src/externals" failonerror="true">
+    <exec executable="${make}" dir="src/externals" failonerror="false">
       <arg line="clean"/>
     </exec>
-    <exec executable="${dist.python}" dir="lib/pegasus/python" failonerror="true">
+    <exec executable="${dist.python}" dir="lib/pegasus/python" failonerror="false">
       <arg line="setup.py clean --all"/>
     </exec>
     <delete>
@@ -534,22 +535,22 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
   <target name="clean" description="Delete all build artifacts">
     <delete dir="dist"/>
     <delete dir="build"/>
-    <exec executable="${make}" dir="src/tools" failonerror="true">
+    <exec executable="${make}" dir="src/tools" failonerror="false">
       <arg line="distclean"/>
     </exec>
-    <exec executable="${make}" dir="src/tools/pegasus-mpi-cluster" failonerror="true">
+    <exec executable="${make}" dir="src/tools/pegasus-mpi-cluster" failonerror="false">
       <arg line="distclean"/>
     </exec>
-    <exec executable="${make}" dir="src/externals" failonerror="true">
+    <exec executable="${make}" dir="src/externals" failonerror="false">
       <arg line="clean"/>
     </exec>
-    <exec executable="${make}" dir="doc/manpages" failonerror="true">
+    <exec executable="${make}" dir="doc/manpages" failonerror="false">
       <arg line="clean"/>
     </exec>
-    <exec executable="${make}" dir="doc/docbook" failonerror="true">
+    <exec executable="${make}" dir="doc/docbook" failonerror="false">
       <arg line="clean"/>
     </exec>
-    <exec executable="${dist.python}" dir="lib/pegasus/python" failonerror="true">
+    <exec executable="${dist.python}" dir="lib/pegasus/python" failonerror="false">
       <arg line="setup.py clean --all"/>
     </exec>
     <delete>
@@ -557,7 +558,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </delete>
   </target>
 
-  <target name="dist-source" description="Build source tarball">
+  <target name="dist-source" depends="doc,dist-clean" description="Build source tarball">
     <exec executable="release-tools/create-source-tar" failonerror="true">
       <arg line="${pegasus.version}"/>
     </exec>
@@ -580,6 +581,12 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <arg line="${pegasus.version} ${dist.osid}"/>
     </exec>
   </target>
+  
+  <target name="swamp-tarballs" depends="dist-source" description="Build source tarballs for SWAMP">
+    <exec executable="release-tools/create-swamp-tarballs" failonerror="true">
+      <arg line="${pegasus.version}"/>
+    </exec>
+  </target>
 
   <target name="test-java" depends="dist-common,jar,compile-externals" description="Run java unit tests">
     <mkdir dir="${junitreport.dir}"/>
@@ -590,6 +597,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
       <classpath>
         <path refid="build.classpath"/>
+        <path refid="build.aws.classpath"/>
         <path location="${dist.jars}/pegasus.jar"/>
         <path location="${dist.jars}/pegasus-test.jar"/>
         <path location="${dist.jars}/vdl.jar"/>
@@ -619,8 +627,12 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
         <arg line="-c 'make test'"/>
     </exec>
   </target>
+  
+  <target name="test-transfer" description="Run transfer unit tests">
+    <exec executable="./test.sh" dir="test/unit/transfer" failonerror="true" />
+  </target>
 
-  <target name="test" depends="test-python,test-java,test-kickstart,test-pmc" description="Run all unit tests"/>
+  <target name="test" depends="test-python,test-java,test-kickstart,test-pmc,test-transfer" description="Run all unit tests"/>
 
 </project>
 

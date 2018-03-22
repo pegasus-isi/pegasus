@@ -187,7 +187,7 @@ class BPLogger(logging.Logger):
 
     def exception(self, event, err, **kwargs):
         estr = traceback.format_exc()
-        estr = ' | '.join(map(lambda e: e.strip(), estr.split('\n')))
+        estr = ' | '.join([e.strip() for e in estr.split('\n')])
         self.log(logging.ERROR, Level.ERROR, event, msg=str(err),
                  status=-1, traceback=estr, **kwargs)
     exc = exception
@@ -307,16 +307,16 @@ def profile(func):
     if os.getenv('NETLOGGER_ON', False) in (
         'off','0','no','false','',False):    
         return func    
-    if type(func) is not types.FunctionType:
+    if not isinstance(func, types.FunctionType):
         return func
     
     if func.__module__ == '__main__':
-        f = func.func_globals['__file__'] or 'unknown'
+        f = func.__globals__['__file__'] or 'unknown'
         event = '%s' %os.path.splitext(os.path.basename(f))[0]
         log = _logger('script')
         log.set_meta(file=f, pid=os.getpid(), ppid=os.getppid(), gpid=os.getgid())
     else:
-        event = '%s' %func.func_name
+        event = '%s' %func.__name__
         log = _logger('%s' %func.__module__)
         log.set_meta(pid=os.getpid(), ppid=os.getppid(), gpid=os.getgid())
 
@@ -339,16 +339,16 @@ def profile_result(func):
     if os.getenv('NETLOGGER_ON', False) in (
         'off','0','no','false','',False):    
         return func
-    if type(func) is not types.FunctionType:
+    if not isinstance(func, types.FunctionType):
         return func
     
     if func.__module__ == '__main__':
-        f = func.func_globals['__file__'] or 'unknown'
+        f = func.__globals__['__file__'] or 'unknown'
         event = '%s' %os.path.splitext(os.path.basename(f))[0]
         log = _logger('script')
         log.set_meta(file=f, pid=os.getpid(), ppid=os.getppid(), gpid=os.getgid())
     else:
-        event = '%s' %func.func_name
+        event = '%s' %func.__name__
         log = _logger('%s' %func.__module__)
         log.set_meta(pid=os.getpid(), ppid=os.getppid(), gpid=os.getgid())
 
@@ -387,10 +387,10 @@ class Profiler(type):
         """ decorator for start,end event method profiling with netlogger
         skips any classmethod or staticmethod types.
         """
-        if type(func) is not types.FunctionType:
+        if not isinstance(func, types.FunctionType):
             return func
         
-        event = '%s' %func.func_name
+        event = '%s' %func.__name__
         def nl_profile_method(self, *args, **kw):
             self._log.debug("%s.start" %event)
             try:
@@ -416,10 +416,8 @@ class Profiler(type):
         log.set_meta(pid=os.getpid(), ppid=os.getppid(), gpid=os.getgid())
         keys = []
         if not classdict.get('profiler_skip_all',cls.profiler_skip_all):
-            keys = filter(lambda k: type(classdict[k]) is 
-                          types.FunctionType and k not in 
-                          classdict.get('profiler_skip_methods',cls.profiler_skip_methods), 
-                          classdict.keys())
+            keys = [k for k in classdict.keys() if isinstance(classdict[k], types.FunctionType) and k not in 
+                          classdict.get('profiler_skip_methods',cls.profiler_skip_methods)]
 
         for k in keys:
             classdict[k] = cls.__profile_method(classdict[k])
@@ -528,7 +526,7 @@ class OptionParser(optparse.OptionParser):
                      The 'version' argument will override the default
                      version
         """
-        if not kwargs.has_key('version'):
+        if 'version' not in kwargs:
             version_str = "%%prog, NetLogger Toolkit version: %s\n  %s" % (
                 NL_VERSION, NL_CREATE_DATE)
             version_str += "\n\n" + NL_COPYRIGHT
@@ -644,7 +642,7 @@ class OptionParser(optparse.OptionParser):
                         handler = _tfrh(logfile, when=tm_unit, interval=tm_interval)
                     else:
                         handler = logging.FileHandler(logfile)
-                except IOError,err:
+                except IOError as err:
                     self.error("Cannot open log file '%s': %s" % (logfile, err))
                 sys.stderr = handler.stream
                 handler.setFormatter(logging.Formatter("%(message)s"))
@@ -666,7 +664,7 @@ class OptionParser(optparse.OptionParser):
                         handler = _tfrh(logfile, when=tm_unit, interval=tm_interval)
                     else:
                         handler = logging.FileHandler(logfile)
-                except IOError,err:
+                except IOError as err:
                     self.error("Cannot open log file '%s': %s" % (logfile, err))
                 handler.setFormatter(logging.Formatter("%(message)s"))
         if handler:

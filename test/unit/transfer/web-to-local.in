@@ -1,0 +1,13 @@
+[
+ { "type": "transfer",
+   "lfn": "index.html",
+   "generate_checksum": true, 
+   "id": 1,
+   "src_urls": [
+     { "site_label": "computesite", "url": "https://pegasus.isi.edu/", "priority": 100 }
+   ],
+   "dest_urls": [
+     { "site_label": "computesite", "url": "file://$PWD/index.html" }
+   ] }
+]
+

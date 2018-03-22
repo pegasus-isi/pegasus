@@ -1,0 +1,34 @@
+pegasus.catalog.site.file=./conf/sites.xml
+
+pegasus.data.configuration = nonsharedfs
+
+pegasus.catalog.replica  File
+pegasus.catalog.replica.file ./conf/rc.data
+
+
+pegasus.clusterer.job.aggregator AWSBatch
+
+#cluster even single jobs on a level
+pegasus.clusterer.allow.single True
+
+pegasus.integrity.checking = False
+
+pegasus.register False
+
+# Properties required to run on AWS Batch
+pegasus.aws.region=us-west-2 
+
+# your AWS account id ( in digits)
+# pegasus.aws.account=XXXXXXXXXX
+
+# ARN of the job definition that you create using pegasus-aws-batch
+pegasus.aws.batch.job_definition=pegasus-awsbatch-example-job-definition
+
+# ARN of the job definition that you create using pegasus-aws-batch
+pegasus.aws.batch.compute_environment=pegasus-awsbatch-example-compute-env
+
+# ARN of the job queue that you create using pegasus-aws-batch
+pegasus.aws.batch.job_queue=pegasus-awsbatch-example-job-queue
+
+
+

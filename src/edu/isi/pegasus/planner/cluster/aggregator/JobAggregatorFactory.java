@@ -47,7 +47,7 @@ public class JobAggregatorFactory {
     /**
      * The name of the class in this package, that corresponds to seqexec.
      * This is required to load the correct class, even though the user
-     * specifyies a class that matches on ignoring case, but not directly.
+     * specifies a class that matches on ignoring case, but not directly.
      */
     public static final String SEQ_EXEC_CLASS = "SeqExec";
 
@@ -55,9 +55,24 @@ public class JobAggregatorFactory {
     /**
      * The name of the class in this package, that corresponds to mpiexec.
      * This is required to load the correct class, even though the user
-     * specifyies a class that matches on ignoring case, but not directly.
+     * specifies a class that matches on ignoring case, but not directly.
      */
     public static final String MPI_EXEC_CLASS = "MPIExec";
+    
+       
+    /**
+     * The name of the class in this package, that corresponds to short name
+     * used in properties for AWSBatch.
+     * 
+     */
+    public static final String AWS_BATCH_SHORTNAME = "aws-batch";
+    
+    /**
+     * The name of the class in this package, that corresponds to AWSBatch.
+     * This is required to load the correct class, even though the user
+     * specifies a class that matches on ignoring case, but not directly.
+     */
+    public static final String AWS_BATCH_IMPLEMENTING_CLASS = AWSBatch.class.getCanonicalName();
 
     /**
      * Loads the implementing class corresponding to the mode specified by the user
@@ -126,6 +141,9 @@ public class JobAggregatorFactory {
             }
             else if(className.equalsIgnoreCase(SEQ_EXEC_CLASS)){
                 className = SEQ_EXEC_CLASS;
+            }
+            else if(className.equalsIgnoreCase( JobAggregatorFactory.AWS_BATCH_SHORTNAME )){
+                className = JobAggregatorFactory.AWS_BATCH_IMPLEMENTING_CLASS;
             }
 
             //prepend the package name if required

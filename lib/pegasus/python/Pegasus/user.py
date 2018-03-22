@@ -34,7 +34,7 @@ def get_user_by_uid(uid):
     try:
         pw = pwd.getpwuid(uid)
         return __user_from_pwd(pw)
-    except KeyError, e:
+    except KeyError as e:
         raise NoSuchUser(uid)
 
 

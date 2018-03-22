@@ -37,6 +37,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
+import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
@@ -55,11 +56,9 @@ import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.namespace.Condor;
-import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
-import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
 import edu.isi.pegasus.planner.refiner.DeployWorkerPackage;
 
@@ -70,7 +69,6 @@ import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -191,11 +189,6 @@ public class PegasusLite implements GridStart {
      * PegasusLite log goes.
      */
     public static final String PEGASUS_LITE_LOG_ENV_KEY = "pegasus_lite_log_file";
-    
-    /**
-     * Basename for our pegasus integrity check tool in the worker pacakge.
-     */
-    public static final String PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME = "pegasus-integrity";
     
     /**
      * Stores the major version of the planner.
@@ -338,6 +331,8 @@ public class PegasusLite implements GridStart {
      * Whether to do integrity checking or not.
      */
     protected boolean mDoIntegrityChecking ;
+    
+    private Integrity mIntegrityHandler;
 
     /**
      * The shell wrapper to use to wrap job in container
@@ -409,6 +404,9 @@ public class PegasusLite implements GridStart {
         mLocalPathToPegasusLiteCommon = getSubmitHostPathToPegasusLiteCommon( );
         mContainerWrapperFactory = new ContainerShellWrapperFactory();
         mContainerWrapperFactory.initialize(bag);
+        
+        mIntegrityHandler = new Integrity();
+        mIntegrityHandler.initialize(bag, dag);
     }
     
     /**
@@ -474,7 +472,7 @@ public class PegasusLite implements GridStart {
             StringBuilder error = new StringBuilder();
             error.append( "Job " ).append( job.getID() ).
                   append( " cannot be wrapped with PegasusLite. Invalid data.configuration associated " ).
-                  append( job.vdsNS.get( Pegasus.DATA_CONFIGURATION_KEY ) );
+                  append( job.getDataConfiguration() );
             throw new RuntimeException( error.toString() );
                 
         }
@@ -978,20 +976,24 @@ public class PegasusLite implements GridStart {
            
             //PM-1190 we do integrity checks only for compute jobs
             if( mDoIntegrityChecking && isCompute){
-                appendStderrFragment( sb, "Checking file integrity for input files" );
-                sb.append( "# do file integrity checks" ).append( '\n' );
-                addIntegrityCheckInvocation( sb, job.getInputFiles() );
-                
-                //check if planner knows of any checksums from the replica catalog
-                //and generate an input meta file!
-                File metaFile = generateChecksumMetadataFile( job.getFileFullPath( mSubmitDir,  ".in.meta"),
-                                                              job.getInputFiles() );
-                
-                //modify job for transferring the .meta files
-                if( !modifyJobForIntegrityChecks( job , metaFile, this.mSubmitDir )) {
-                    throw new RuntimeException( "Unable to modify job for integrity checks" );
+                //we cannot enable integrity checking for DAX or dag jobs
+                //as the prescript is not run as a full condor job
+                if( !(job instanceof DAXJob || job instanceof DAGJob) ){
+                    appendStderrFragment( sb, "Checking file integrity for input files" );
+                    sb.append( "# do file integrity checks" ).append( '\n' );
+                    mIntegrityHandler.addIntegrityCheckInvocation( sb, job.getInputFiles() );
+
+                    //check if planner knows of any checksums from the replica catalog
+                    //and generate an input meta file!
+                    File metaFile = mIntegrityHandler.generateChecksumMetadataFile( job.getFileFullPath( mSubmitDir,  ".in.meta"),
+                                                                  job.getInputFiles() );
+
+                    //modify job for transferring the .meta files
+                    if( !mIntegrityHandler.modifyJobForIntegrityChecks( job , metaFile, this.mSubmitDir )) {
+                        throw new RuntimeException( "Unable to modify job for integrity checks" );
+                    }
+                    sb.append( "\n" );
                 }
-                sb.append( "\n" );
             }
             
             
@@ -1412,7 +1414,7 @@ public class PegasusLite implements GridStart {
      * @param jobname  the name of the job
      * @param site     the site 
      */
-    private void complainForHeadNodeFileServer(String jobname, String site) {
+     void complainForHeadNodeFileServer(String jobname, String site) {
         StringBuffer error = new StringBuffer();
         error.append( "[PegasusLite] " );
         if( jobname != null ){
@@ -1480,120 +1482,4 @@ public class PegasusLite implements GridStart {
         
     }
 
-    /**
-     * Adds the integrity check invocations for jobs input files
-     * @param sb 
-     * @param files 
-     */
-    protected void addIntegrityCheckInvocation(StringBuffer sb,  Collection<PegasusFile> files ) {
-        for( PegasusFile file: files ){
-            if( file.isDataFile() ){
-                sb.append( PegasusLite.PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME ).append( " --verify=" ).
-                   append( file.getLFN() ).append( " 1>&2" ).append( "\n" );
-            }
-        }
-    }
-
-    /**
-     * Updates the job tracking of the meta files of the parents
-     * 
-     * @param job
-     * @param file metadata file that may need to be associated
-     * @param baseSubmitDir
-     * 
-     * @return 
-     */
-    protected boolean modifyJobForIntegrityChecks(Job job, File file, String baseSubmitDir) {
-        
-        if( file != null ){
-            //associate the file.
-            job.condorVariables.addIPFileForTransfer( file.getAbsolutePath() );
-        }
-        
-        //try and get hold of the parents
-        GraphNode node = job.getGraphNodeReference();
-        for( GraphNode parentNode : node.getParents() ){
-            Job parent = (Job)parentNode.getContent();
-            if( parent.getJobType() == Job.COMPUTE_JOB ){
-                //we need meta files for only compute jobs that are parents
-                StringBuilder metaFile = new StringBuilder();
-                metaFile.append( baseSubmitDir ).append( File.separator ).
-                         append( parent.getRelativeSubmitDirectory() ).append( File.separator ).
-                         append( parent.getID() ).append( ".meta" );
-                job.condorVariables.addIPFileForTransfer( metaFile.toString() );
-            }
-            
-        }
-        
-        return true;
-    }
-
-    /**
-     * Generate a metadata file containing the metadata for input files if it
-     * exists
-     * 
-     * @param name
-     * @param files
-     * 
-     * @return A metafile with the suffix, else null
-     */
-    protected File generateChecksumMetadataFile( String name, Collection<PegasusFile> files) {
-        
-        
-        //subset files that have any metadata associated with them
-        List<PegasusFile> metaFiles = new LinkedList();
-        for( PegasusFile file: files ){
-            if( file.isDataFile() ){
-                Metadata m = file.getAllMetadata();
-                if( !m.isEmpty() ){
-                    metaFiles.add( file );
-                }
-            }
-        }
-        if( metaFiles.isEmpty() ){
-            //nothing to write
-            return null;
-        }
-           
-        File metaFile = null;
-        PrintWriter pw = null;
-        try {
-            metaFile = new File( name); 
-            pw = new PrintWriter( metaFile );
-            pw.println( "[" );
-            StringBuilder sb = new StringBuilder();
-            for( PegasusFile pf : metaFiles ){
-                sb.append( "\n" ).append( "\t{" );
-                sb.append( "\n" ).append( "\t\t").append( "\"_type\": \"file\"").append( ","); 
-                sb.append( "\n" ).append( "\t\t").append( "\"_id\": \"").append( pf.getLFN()).append( "\"").append( ","); 
-                
-                sb.append( "\n" ).append( "\t\t").append( "\"_attributes\": {");
-                Metadata m = pf.getAllMetadata();
-                for( Iterator<String> it = m.getProfileKeyIterator(); it.hasNext(); ){
-                    String key = it.next();
-                    sb.append( "\n" ).append( "\t\t\t");
-                    sb.append( "\"").append( key ).append( "\"" ).append( ":" ).append( "\"" ).append( m.get(key)).append( "\"").
-                       append(",");
-                }
-                //remove trailing ,
-                sb = sb.deleteCharAt( sb.length() - 1 );
-                sb.append( "\n" ).append( "\t\t").append( "}"); //end of attributes
-                
-                //end of pegasus file
-                sb.append( "\n" ).append( "\t").append( "}").append( ",");
-            }
-            //remove trailing ,
-            sb = sb.deleteCharAt( sb.length() - 1 );
-            pw.print( sb );
-            pw.println( "\n]" );
-        } catch (FileNotFoundException ex) {
-            throw new RuntimeException( "Unable to generate input metadata file  " + name, ex );
-        }
-        finally{
-            if ( pw != null ){
-                pw.close();
-            }
-        }
-        return metaFile;
-    }
 }

@@ -156,13 +156,13 @@ class WorkflowLoader(BaseLoader):
                     self.jobstate(linedata)
                 else:
                     self.log.error('No handler for event type "%s" defined', linedata['event'])
-            except exc.IntegrityError, e:
+            except exc.IntegrityError as e:
                 # This is raised when an attempted insert violates the
                 # schema (unique indexes, etc).
                 self.log.exception(e)
                 self.log.error('Insert failed for event "%s"', linedata['event'])
                 self.session.rollback()
-            except exc.OperationalError, e:
+            except exc.OperationalError as e:
                 self.log.error('Connection seemingly lost - attempting to refresh. Retry %s' %retry)
                 self.session.rollback()
                 self.check_connection()
@@ -221,7 +221,7 @@ class WorkflowLoader(BaseLoader):
             }
 
             # remap attr names
-            if attr_remap.has_key(attr):
+            if attr in attr_remap:
                 attr = attr_remap[attr]
 
             # sanitize argv input
@@ -304,12 +304,12 @@ class WorkflowLoader(BaseLoader):
 
         try:
             self.session.commit()
-        except exc.IntegrityError, e:
+        except exc.IntegrityError as e:
             self.log.exception(e)
             self.log.error('Integrity error on batch flush: batch will need to be committed per-event which will take longer')
             self.session.rollback()
             self.hard_flush(batch_flush=False, retry=retry)
-        except exc.OperationalError, e:
+        except exc.OperationalError as e:
             self.log.exception(e)
             self.log.error('Connection problem during commit in hard_flush(): reattempting batch. Retry %s' %retry)
             self.session.rollback()
@@ -329,11 +329,11 @@ class WorkflowLoader(BaseLoader):
         try:
             # commit the map host to job events . no retries for this.
             self.session.commit()
-        except exc.IntegrityError, e:
+        except exc.IntegrityError as e:
             self.log.exception(e)
             self.log.error('Integrity error on host_map_events in hard_flush()')
             self.session.rollback()
-        except exc.OperationalError, e:
+        except exc.OperationalError as e:
             self.log.exception(e)
             self.log.error('Connection problem on host_map_events during commit in hard_flush()')
             self.session.rollback()
@@ -531,7 +531,7 @@ class WorkflowLoader(BaseLoader):
 
         }
 
-        if not states.has_key(js.event):
+        if js.event not in states:
             # corner case event
             js.state = js.event.split('.')[2].upper()
         else:
@@ -597,7 +597,7 @@ class WorkflowLoader(BaseLoader):
 
         Handles a task edge insert event
         """
-        if not self._task_edge_flush.has_key(linedata['xwf.id']):
+        if linedata['xwf.id'] not in self._task_edge_flush:
             if self._batch:
                 self.hard_flush()
             self._task_edge_flush[linedata['xwf.id']] = True
@@ -621,7 +621,7 @@ class WorkflowLoader(BaseLoader):
         """
         # Flush previous events to ensure that all the batched
         # Job table entries are written.
-        if not self._task_map_flush.has_key(linedata['xwf.id']):
+        if linedata['xwf.id'] not in self._task_map_flush:
             if self._batch:
                 self.hard_flush()
             self._task_map_flush[linedata['xwf.id']] = True
@@ -636,10 +636,10 @@ class WorkflowLoader(BaseLoader):
         try:
             task = self.session.query(Task).filter(Task.wf_id == wf_id).filter(Task.abs_task_id == linedata['task.id']).one()
             task.job_id = job_id
-        except orm.exc.MultipleResultsFound, e:
+        except orm.exc.MultipleResultsFound as e:
             self.log.error('Multiple task results: cant map task: %s ', linedata)
             return
-        except orm.exc.NoResultFound, e:
+        except orm.exc.NoResultFound as e:
             self.log.error('No task found: cant map task: %s ', linedata)
             return
 
@@ -749,10 +749,10 @@ class WorkflowLoader(BaseLoader):
         try:
             job_inst = self.session.query(JobInstance).filter(JobInstance.job_id == job_id).filter(JobInstance.job_submit_seq == linedata['job_inst.id']).one()
             job_inst.subwf_id = subwf_id
-        except orm.exc.MultipleResultsFound, e:
+        except orm.exc.MultipleResultsFound as e:
             self.log.error('Multiple job instance results: cant map subwf: %s ', linedata)
             return
-        except orm.exc.NoResultFound, e:
+        except orm.exc.NoResultFound as e:
             self.log.error('No job instance found: cant map subwf: %s ', linedata)
             return
 
@@ -782,7 +782,7 @@ class WorkflowLoader(BaseLoader):
         host.wf_id = self.wf_uuid_to_root_id(host.wf_uuid)
 
         # handle inserts into the host table
-        if not self.hosts_written_cache.has_key((host.wf_id,host.site,host.hostname,host.ip)):
+        if (host.wf_id,host.site,host.hostname,host.ip) not in self.hosts_written_cache:
             if self._batch:
                 self._batch_cache['batch_events'].append(host)
             else:
@@ -934,14 +934,14 @@ class WorkflowLoader(BaseLoader):
         not in cache, retrieve from st_workflow table in DB and cache.
         Cuts down on DB queries during insert processing.
         """
-        if not self.wf_id_cache.has_key(wf_uuid):
+        if wf_uuid not in self.wf_id_cache:
             query = self.session.query(Workflow).filter(Workflow.wf_uuid == wf_uuid)
             try:
                 self.wf_id_cache[wf_uuid] = query.one().wf_id
-            except orm.exc.MultipleResultsFound, e:
+            except orm.exc.MultipleResultsFound as e:
                 self.log.error('Multiple wf_id results for wf_uuid %s : %s', wf_uuid, e)
                 return None
-            except orm.exc.NoResultFound, e:
+            except orm.exc.NoResultFound as e:
                 self.log.error('No wf_id results for wf_uuid %s : %s', wf_uuid, e)
                 return None
 
@@ -956,14 +956,14 @@ class WorkflowLoader(BaseLoader):
         not in cache, retrieve from st_workflow table in DB and cache.
         Cuts down on DB queries during insert processing.
         """
-        if not self.root_wf_id_cache.has_key(wf_uuid):
+        if wf_uuid not in self.root_wf_id_cache:
             query = self.session.query(Workflow).filter(Workflow.wf_uuid == wf_uuid)
             try:
                 self.root_wf_id_cache[wf_uuid] = query.one().root_wf_id
-            except orm.exc.MultipleResultsFound, e:
+            except orm.exc.MultipleResultsFound as e:
                 self.log.error('Multiple wf_id results for wf_uuid %s : %s', wf_uuid, e)
                 return None
-            except orm.exc.NoResultFound, e:
+            except orm.exc.NoResultFound as e:
                 self.log.error('No wf_id results for wf_uuid %s : %s', wf_uuid, e)
                 return None
 
@@ -979,14 +979,14 @@ class WorkflowLoader(BaseLoader):
 
         Gets and caches task_id for task_meta inserts
         """
-        if not self.task_id_cache.has_key((wf_id, task_dax_id)):
+        if (wf_id, task_dax_id) not in self.task_id_cache:
             query = self.session.query(Task.task_id).filter(Task.wf_id == wf_id).filter(Task.abs_task_id == task_dax_id)
             try:
                 self.task_id_cache[((wf_id, task_dax_id))] = query.one().task_id
-            except orm.exc.MultipleResultsFound, e:
+            except orm.exc.MultipleResultsFound as e:
                 self.log.error('Multiple results found for wf_uuid/task_dax_id: %s/%s', wf_id, task_dax_id)
                 return None
-            except orm.exc.NoResultFound, e:
+            except orm.exc.NoResultFound as e:
                 self.log.error('No results found for wf_uuid/task_dax_id: %s/%s', wf_id, task_dax_id)
                 return None
 
@@ -1001,7 +1001,7 @@ class WorkflowLoader(BaseLoader):
 
         Gets and caches lfn_id for rc_meta, rc_lfn, rc_pfn and wf_files inserts
         """
-        if not self.lfn_id_cache.has_key((wf_id, lfn)):
+        if (wf_id, lfn) not in self.lfn_id_cache:
             id =  self.__get_lfn_id_from_database__(wf_id, lfn )
 
             if id is None:
@@ -1036,10 +1036,10 @@ class WorkflowLoader(BaseLoader):
         lfn_id = None
         try:
             lfn_id = query.one().lfn_id
-        except orm.exc.MultipleResultsFound, e:
+        except orm.exc.MultipleResultsFound as e:
             self.log.error('Multiple results found for wf_uuid/lfn: %s/%s', wf_id, lfn)
             return None
-        except orm.exc.NoResultFound, e:
+        except orm.exc.NoResultFound as e:
             return None
 
         return lfn_id
@@ -1055,14 +1055,14 @@ class WorkflowLoader(BaseLoader):
         Gets and caches job_id for job_instance inserts and static
         table updating.
         """
-        if not self.job_id_cache.has_key((wf_id, exec_id)):
+        if (wf_id, exec_id) not in self.job_id_cache:
             query = self.session.query(Job.job_id).filter(Job.wf_id == wf_id).filter(Job.exec_job_id == exec_id)
             try:
                 self.job_id_cache[((wf_id, exec_id))] = query.one().job_id
-            except orm.exc.MultipleResultsFound, e:
+            except orm.exc.MultipleResultsFound as e:
                 self.log.error('Multiple results found for wf_uuid/exec_job_id: %s/%s', wf_id, exec_id)
                 return None
-            except orm.exc.NoResultFound, e:
+            except orm.exc.NoResultFound as e:
                 self.log.error('No results found for wf_uuid/exec_job_id: %s/%s', wf_id, exec_id)
                 return None
 
@@ -1080,15 +1080,15 @@ class WorkflowLoader(BaseLoader):
         wf_id = self.wf_uuid_to_id(o.wf_uuid)
         cached_job_id = self.get_job_id(wf_id, o.exec_job_id)
         uniqueIdIdx = (cached_job_id, o.job_submit_seq)
-        if not self.job_instance_id_cache.has_key(uniqueIdIdx):
+        if uniqueIdIdx not in self.job_instance_id_cache:
             query = self.session.query(JobInstance).filter(JobInstance.job_id == cached_job_id).filter(JobInstance.job_submit_seq == o.job_submit_seq)
             try:
                 self.job_instance_id_cache[uniqueIdIdx] = query.one().job_instance_id
-            except orm.exc.MultipleResultsFound, e:
+            except orm.exc.MultipleResultsFound as e:
                 if not quiet:
                     self.log.error('Multple job_instance_id results for tuple %s : %s', uniqueIdIdx, e)
                 return None
-            except orm.exc.NoResultFound, e:
+            except orm.exc.NoResultFound as e:
                 if not quiet:
                     self.log.error('No job_instance_id results for tuple %s : %s', uniqueIdIdx, e)
                 return None
@@ -1109,11 +1109,11 @@ class WorkflowLoader(BaseLoader):
         wf_id = self.wf_uuid_to_id(host.wf_uuid)
         cached_job_id = self.get_job_id(wf_id, host.exec_job_id)
 
-        if not self.host_cache.has_key((cached_job_id, host.job_submit_seq)):
+        if (cached_job_id, host.job_submit_seq) not in self.host_cache:
             if not host.host_id:
                 try:
                     host.host_id = self.session.query(Host.host_id).filter(Host.wf_id == host.wf_id).filter(Host.site == host.site).filter(Host.hostname == host.hostname).filter(Host.ip == host.ip).one().host_id
-                except orm.exc.MultipleResultsFound, e:
+                except orm.exc.MultipleResultsFound as e:
                     self.log.error('Multiple host_id results for host: %s', host)
             job_instance = self.session.query(JobInstance).filter(JobInstance.job_id == cached_job_id).filter(JobInstance.job_submit_seq == host.job_submit_seq).one()
             job_instance.host_id = host.host_id
@@ -1158,7 +1158,7 @@ class WorkflowLoader(BaseLoader):
             if k[0] == wfs.wf_id:
                 del self.job_id_cache[k]
 
-        if self._task_map_flush.has_key(wfs.wf_uuid):
+        if wfs.wf_uuid in self._task_map_flush:
             del self._task_map_flush[wfs.wf_uuid]
 
 

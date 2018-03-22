@@ -9,9 +9,13 @@ Packager:       Pegasus Development Team <pegasus-support@isi.edu>
 
 Source:         pegasus-%{version}.tar.gz
 
-BuildRoot:      %{_tmppath}/%{name}-root
-
-BuildRequires:  python-setuptools, openssl-devel, pyOpenSSL ant, ant-nodeps, ant-apache-regexp, java7-devel, gcc, groff, python-devel, gcc-c++, make, jpackage-utils, /usr/share/java-1.7.0, asciidoc, libxslt, fop
+BuildRequires:  python-setuptools, openssl-devel, pyOpenSSL ant, ant-apache-regexp, gcc, groff, python-devel, gcc-c++, make, jpackage-utils, asciidoc, libxslt, fop, R-devel
+%if 0%{?rhel} < 7
+BuildRequires:  ant-nodeps, java-1.8.0-openjdk-devel, /usr/share/java-1.8.0
+%endif
+%if 0%{?rhel} >= 7
+BuildRequires:  java-devel = 1:1.8.0, /usr/share/java-1.8.0
+%endif
 Requires:       java, python >= 2.6, condor >= 8.4, graphviz, pyOpenSSL
 
 %define sourcedir %{name}-%{version}
@@ -39,7 +43,6 @@ strip dist/pegasus-%{version}/bin/pegasus-kickstart
 strip dist/pegasus-%{version}/bin/pegasus-keg
 
 %install
-rm -Rf %{buildroot}
 
 mkdir -p %{buildroot}/%{_sysconfdir}/%{name}
 mkdir -p %{buildroot}/%{_bindir}
@@ -56,11 +59,6 @@ rm -f %{buildroot}/%{_datadir}/%{name}/java/COPYING.*
 rm -f %{buildroot}/%{_datadir}/%{name}/java/EXCEPTIONS.*
 rm -f %{buildroot}/%{_datadir}/%{name}/java/LICENSE.*
 rm -f %{buildroot}/%{_datadir}/%{name}/java/NOTICE.*
-
-%clean
-ant clean
-rm -Rf %{buildroot}
-
 
 %files
 %defattr(-,root,root,-)

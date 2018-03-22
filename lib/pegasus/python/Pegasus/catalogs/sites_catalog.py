@@ -14,12 +14,14 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-__author__ = 'Rafael Ferreira da Silva'
+from __future__ import print_function
 
 import os
 import platform
 
 from Pegasus.DAX3 import *
+
+__author__ = 'Rafael Ferreira da Silva'
 
 
 class OSType:
@@ -104,7 +106,9 @@ class SitesCatalog:
         :param value: Profile value (default: '')
         """
         if not handle or not namespace or not key:
-            raise Exception('A site handle, a namespace, and a key should be provided.')
+            raise Exception(
+                'A site handle, a namespace, and a key should be provided.'
+            )
 
         if handle not in self._sites:
             raise ('There are no entries for site "%s".' % handle)
@@ -122,7 +126,9 @@ class SitesCatalog:
         :param jobtype: Type of Jobs in the executable workflow the grid supports
         """
         if not handle or not type or not contact or not scheduler:
-            raise Exception('A site handle, and a jobmanager type, contact, and scheduler should be provided.')
+            raise Exception(
+                'A site handle, and a jobmanager type, contact, and scheduler should be provided.'
+            )
 
         if handle not in self._sites:
             raise ('There are no entries for site "%s".' % handle)
@@ -144,27 +150,42 @@ class SitesCatalog:
         if not os.path.isfile(sites_catalog_file) or force:
             with open(sites_catalog_file, 'w') as ppf:
                 ppf.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-                ppf.write('<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" '
-                          'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
-                          'xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog '
-                          'http://pegasus.isi.edu/schema/sc-4.1.xsd" version="4.1">\n')
+                ppf.write(
+                    '<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" '
+                    'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
+                    'xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog '
+                    'http://pegasus.isi.edu/schema/sc-4.1.xsd" version="4.1">\n'
+                )
 
                 # writing sites
                 for handle in self._sites:
-                    ppf.write('\t<site handle="%s" arch="%s" os="%s">\n' % (
-                        handle, self._sites[handle]['arch'], self._sites[handle]['os']))
+                    ppf.write(
+                        '\t<site handle="%s" arch="%s" os="%s">\n' % (
+                            handle, self._sites[handle]['arch'],
+                            self._sites[handle]['os']
+                        )
+                    )
 
                     # directories
                     dirs = self._sites[handle]['directories']
                     for dir in dirs:
-                        ppf.write('\t\t<directory type="%s" path="%s">\n' % (dir, dirs[dir]['path']))
-                        ppf.write('\t\t\t<file-server operation="all" url="file://%s"/>\n' % dirs[dir]['path'])
+                        ppf.write(
+                            '\t\t<directory type="%s" path="%s">\n' %
+                            (dir, dirs[dir]['path'])
+                        )
+                        ppf.write(
+                            '\t\t\t<file-server operation="all" url="file://%s"/>\n'
+                            % dirs[dir]['path']
+                        )
                         ppf.write('\t\t</directory>\n')
 
                     # grids
                     for grid in self._sites[handle]['grids']:
-                        ppf.write('\t\t<grid type="%s" contact="%s" scheduler="%s" ' % (
-                            grid['type'], grid['contact'], grid['scheduler']))
+                        ppf.write(
+                            '\t\t<grid type="%s" contact="%s" scheduler="%s" '
+                            %
+                            (grid['type'], grid['contact'], grid['scheduler'])
+                        )
 
                         if 'jobtype' in grid:
                             ppf.write('jobtype="%s" ' % grid['jobtype'])
@@ -172,15 +193,19 @@ class SitesCatalog:
 
                     # site profiles
                     for p in self._sites[handle]['profiles']:
-                        ppf.write('\t\t<profile namespace="%s" key="%s">%s</profile>\n' % (
-                            p['namespace'], p['key'], p['value']))
+                        ppf.write(
+                            '\t\t<profile namespace="%s" key="%s">%s</profile>\n'
+                            % (p['namespace'], p['key'], p['value'])
+                        )
 
                     ppf.write('\t</site>\n')
                 ppf.write('</sitecatalog>\n')
 
         else:
-            print('\x1b[0;35mWARNING: Sites Catalog (%s) already exists. Use "force=True" '
-                  'to overwrite it.\n\x1b[0m' % sites_catalog_file)
+            print(
+                '\x1b[0;35mWARNING: Sites Catalog (%s) already exists. Use "force=True" '
+                'to overwrite it.\n\x1b[0m' % sites_catalog_file
+            )
 
     def _create_local_site(self):
         """
@@ -197,12 +222,14 @@ class SitesCatalog:
         # create local site
         self._sites = self._create_site('local', platform.machine(), os)
         self._sites['local']['directories'] = {
-            DirectoryType.SHARED_SCRATCH: {
-                'path': self.workflow_dir + '/scratch'
-            },
-            DirectoryType.SHARED_STORAGE: {
-                'path': self.workflow_dir + '/output'
-            }
+            DirectoryType.SHARED_SCRATCH:
+                {
+                    'path': self.workflow_dir + '/scratch'
+                },
+            DirectoryType.SHARED_STORAGE:
+                {
+                    'path': self.workflow_dir + '/output'
+                }
         }
 
     def _create_site(self, handle, arch, os):
@@ -214,11 +241,12 @@ class SitesCatalog:
         :return: The dictionary object of the site
         """
         return {
-            handle: {
-                'arch': arch,
-                'os': os,
-                'directories': {},
-                'grids': [],
-                'profiles': []
-            }
+            handle:
+                {
+                    'arch': arch,
+                    'os': os,
+                    'directories': {},
+                    'grids': [],
+                    'profiles': []
+                }
         }

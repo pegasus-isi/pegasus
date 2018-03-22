@@ -49,8 +49,8 @@ class TestBundle(unittest.TestCase):
         self.zipfile.close()
         bundle = Bundle(self.filename)
         p = bundle.get_properties()
-        self.assertEquals(p["foo"], "bar")
-        self.assertEquals(p["baz"], "boo")
+        self.assertEqual(p["foo"], "bar")
+        self.assertEqual(p["baz"], "boo")
 
     def test_verify(self):
         self.zipfile.writestr(PROPERTIES_NAME, "pegasus.dax.file=%s" % __file__)
@@ -97,7 +97,7 @@ class TestBundle(unittest.TestCase):
         try:
             bundle.unpack(dirname)
             self.assertTrue(os.path.isfile(filename))
-            self.assertEquals(open(filename).read(), "hello=world")
+            self.assertEqual(open(filename).read(), "hello=world")
         finally:
             shutil.rmtree(dirname)
 

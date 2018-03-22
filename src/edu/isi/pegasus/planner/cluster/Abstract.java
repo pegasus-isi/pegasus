@@ -36,7 +36,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.cluster.aggregator.MPIExec;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.util.LinkedList;
 
@@ -92,6 +91,10 @@ public abstract class Abstract implements Clusterer {
      */
     protected ADag mScheduledDAG;
 
+    /**
+     * Boolean indicating whether to disallow clustering of single jobs.
+     */
+    private boolean mDisallowClusteringOfSingleJobs;
 
     /**
      * The Abstract constructor.
@@ -155,6 +158,7 @@ public abstract class Abstract implements Clusterer {
 
         mScheduledDAG = dag;
         mProps = bag.getPegasusProperties();
+        mDisallowClusteringOfSingleJobs = !mProps.allowClusteringOfSingleJobs();
         mJobAggregatorFactory.initialize( dag, bag );
 
         //PM-747
@@ -225,7 +229,10 @@ public abstract class Abstract implements Clusterer {
         if( size == 1 &&
                 //PM-745 we want to launch a label based cluster via
                 //the clustering executable
-                ( aggregator == null ||  !( partition.hasAssociatedLabel() ) )){
+                ( aggregator == null || 
+                  this.mDisallowClusteringOfSingleJobs || 
+                  !( partition.hasAssociatedLabel() )
+                )){
             //no need to collapse one job. go to the next iteration
             mLogger.log("\t No clustering for partition " + pID,
                         LogManager.DEBUG_MESSAGE_LEVEL);

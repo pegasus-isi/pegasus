@@ -1540,4 +1540,31 @@ Sample Value  : </emphasis></emphasis> Integer<emphasis role="bold">
       </note>
     </section>
   </section>
+  
+  <section id="job_memory_retries">
+    <title>Increase Memory Requirements for Retries</title>
+
+    <para><emphasis>Issue:</emphasis> Setting memory limits for codes
+        with varying amounts of memory requirments can be challenging. Some
+        codes do not use much RAM most of the time, but once in a while
+        require more RAM due to for example initial condition and hitting
+        a particular spot in the algorithm.
+    </para>
+    
+    <para><emphasis>Solution:</emphasis> A common approach is to provide
+        a smaller limit for the first try of a job, and if the job fails,
+        increase the limit for subsequent tries. This can be accomplished
+        with an expression for the
+        <emphasis role="bold">request_memory</emphasis> attribute. For
+        example, setting the attribute in the site catalog, setting
+        the limit to 1 GB for the first try, and then 4 GB for remaining
+        tries: 
+    </para>
+
+    <programlisting>
+        &lt;profile namespace="condor" key="request_memory"&gt; ifthenelse(isundefined(DAGNodeRetry) || DAGNodeRetry == 0, 1024, 4096) &lt;/profile&gt;
+    </programlisting>
+
+  </section>
+
 </chapter>

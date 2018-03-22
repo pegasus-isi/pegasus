@@ -139,7 +139,7 @@ class FIFODict:
         """Add a key.
         If it is new, return True otherwise False.
         """
-        if self._data.has_key(key):
+        if key in self._data:
             return False
         self._data[key] = 1
         removed = self._q.getput(key)
@@ -286,7 +286,7 @@ def daemonize(log=None, root_log=None, close_fds=True):
         if pid > 0:
             # parent: exit
             sys.exit(0) 
-    except OSError, err: 
+    except OSError as err: 
         log.exc( "fork.1.failed", err)
         sys.exit(1)
     log.debug("daemonize.fork2")
@@ -296,7 +296,7 @@ def daemonize(log=None, root_log=None, close_fds=True):
         if pid > 0:
             # parent: exit
             sys.exit(0) 
-    except OSError, err: 
+    except OSError as err: 
         log.exc("daemonize.fork2.failed", err)
         sys.exit(1)
     # child: decouple from parent environment
@@ -371,7 +371,7 @@ def getNextNumberedFile(path, mode="w", strip=False, open_file=True):
 
 def getAllNumberedFiles(path):
     nf = _getNumberedFiles(path)
-    return map(lambda x: x[1], nf)
+    return [x[1] for x in nf]
 
 def getLowestNumberedFile(path, mode="r"):
     numbered = _getNumberedFiles(path)
@@ -393,7 +393,7 @@ class ThrottleTimer:
        tt = ThrottleTimer(0.1)
        ...
        tt.start()
-       while 1:
+       while True:
            do_something()
            tt.throttle() # sleeps here
 
@@ -542,7 +542,7 @@ class IncConfigObj(configobj.ConfigObj):
         # Call superclass with list of lines we built
         try:
             configobj.ConfigObj.__init__(self, lines, **kw)
-        except configobj.ParseError, E:
+        except configobj.ParseError as E:
             # Report correct file and line on parse error
             m = re.search('line "(\d+)"', str(E))
             if m is None:
@@ -619,7 +619,7 @@ def sizeToBytes(s):
     if not m:
         raise ValueError("Not of form: <num> <units>")
     value, units = m.groups()
-    if not _BFAC.has_key(units):
+    if units not in _BFAC:
         raise ValueError("Unrecognized units for '%s'" % s)
     return int(value) * _BFAC[units]
 
@@ -703,13 +703,13 @@ except ImportError:
     # From: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/213761
     import time, random, md5
     def uuid1():
-      t = long( time.time() * 1000 )
-      r = long( random.random()*100000000000000000L )
+      t = int( time.time() * 1000 )
+      r = int( random.random()*100000000000000000 )
       try:
         a = socket.gethostbyname( socket.gethostname() )
       except:
         # if we can't get a network address, just imagine one
-        a = random.random()*100000000000000000L
+        a = random.random()*100000000000000000
       data = str(t)+' '+str(r)+' '+str(a)
       data = md5.md5(data).hexdigest()
       return "%s-%s-%s-%s-%s" % (data[0:8], data[8:12], data[12:16],

@@ -32,6 +32,7 @@ import edu.isi.pegasus.common.util.DynamicLoader;
 import java.util.Map;
 import java.util.HashMap;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.cluster.aggregator.AWSBatch;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 
 /**
@@ -209,7 +210,7 @@ public class GridStartFactory {
     /**
      * path to the log file to which postscripts should log
      */
-    private String mPostScriptLoG;
+    private String mPostScriptLog;
 
     /**
      * The default constructor.
@@ -233,7 +234,7 @@ public class GridStartFactory {
         mProps     = bag.getPegasusProperties();
         mSubmitDir = bag.getPlannerOptions().getSubmitDirectory() ;
         mDAG       = dag;
-        mPostScriptLoG = postScriptLog;
+        mPostScriptLog = postScriptLog;
 //        mPostScriptScope = mProps.getPOSTScriptScope();
 
         //load all the known implementations and initialize them
@@ -386,11 +387,11 @@ public class GridStartFactory {
 
 
             //load via reflection and register in the cache
-            obj = this.loadPOSTScript( mProps,
+            obj = this.loadPOSTScript(mProps,
                                        mSubmitDir,
                                        //mProps.getPOSTScriptPath( postScriptType ),
                                        job.dagmanVariables.getPOSTScriptPath( postScriptType ),
-                                       mPostScriptLoG,
+                                       mPostScriptLog,
                                        className );
             this.registerPOSTScript( postScriptType, (POSTScript)obj );
         }
@@ -417,13 +418,19 @@ public class GridStartFactory {
         }
         
         String propValue = mProps.getGridStart();
-        if ( job.vdsNS.containsKey( Pegasus.DATA_CONFIGURATION_KEY ) ){
+        String conf = job.getDataConfiguration();
+        if ( conf != null ){
             //pick up on the basis of the data configuration key value
-            String conf = job.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY );
+            //String conf = job.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY );
             
             if( (conf.equalsIgnoreCase( PegasusConfiguration.CONDOR_CONFIGURATION_VALUE) ||
                 conf.equalsIgnoreCase( PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE ) ) &&
                         propValue == null ){
+                
+                if( job instanceof AggregatedJob && job.getTXName().equals( AWSBatch.COLLAPSE_LOGICAL_NAME) ){
+                    return PegasusAWSBatchGS.CLASSNAME;
+                }
+                
                 //PegasusLite for condorio and nonsharedfs mode
                 //as long as user did not specify explicilty in the properties file
                 return "PegasusLite";

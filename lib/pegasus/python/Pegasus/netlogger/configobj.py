@@ -188,7 +188,7 @@ class Builder(object):
         return m(o)
     
     def build_List(self, o):
-        return map(self.build, o.getChildren())
+        return list(map(self.build, o.getChildren()))
     
     def build_Const(self, o):
         return o.value
@@ -197,7 +197,7 @@ class Builder(object):
         d = {}
         i = iter(map(self.build, o.getChildren()))
         for el in i:
-            d[el] = i.next()
+            d[el] = next(i)
         return d
     
     def build_Tuple(self, o):
@@ -215,7 +215,7 @@ class Builder(object):
         raise UnknownType('Undefined Name')
     
     def build_Add(self, o):
-        real, imag = map(self.build_Const, o.getChildren())
+        real, imag = list(map(self.build_Const, o.getChildren()))
         try:
             real = float(real)
         except TypeError:
@@ -354,7 +354,7 @@ class InterpolationEngine(object):
             This is similar to a depth-first-search algorithm.
             """
             # Have we been here already?
-            if backtrail.has_key((key, section.name)):
+            if (key, section.name) in backtrail:
                 # Yes - infinite loop detected
                 raise InterpolationLoopError(key)
             # Place a marker on our backtrail so we won't come back here again
@@ -601,7 +601,7 @@ class Section(dict):
             raise ValueError('The key "%s" is not a string.' % key)
         
         # add the comment
-        if not self.comments.has_key(key):
+        if key not in self.comments:
             self.comments[key] = []
             self.inline_comments[key] = ''
         # remove the entry from defaults
@@ -609,13 +609,13 @@ class Section(dict):
             self.defaults.remove(key)
         #
         if isinstance(value, Section):
-            if not self.has_key(key):
+            if key not in self:
                 self.sections.append(key)
             dict.__setitem__(self, key, value)
         elif isinstance(value, dict) and not unrepr:
             # First create the new depth level,
             # then create the section
-            if not self.has_key(key):
+            if key not in self:
                 self.sections.append(key)
             new_depth = self.depth + 1
             dict.__setitem__(
@@ -628,7 +628,7 @@ class Section(dict):
                     indict=value,
                     name=key))
         else:
-            if not self.has_key(key):
+            if key not in self:
                 self.scalars.append(key)
             if not self.main.stringify:
                 if isinstance(value, StringTypes):
@@ -726,7 +726,7 @@ class Section(dict):
 
     def items(self):
         """D.items() -> list of D's (key, value) pairs, as 2-tuples"""
-        return zip((self.scalars + self.sections), self.values())
+        return list(zip((self.scalars + self.sections), self.values()))
 
 
     def keys(self):
@@ -1610,7 +1610,7 @@ class ConfigObj(Section):
                                        NestingError, infile, cur_index)
                     
                 sect_name = self._unquote(sect_name)
-                if parent.has_key(sect_name):
+                if sect_name in parent:
                     self._handle_error('Duplicate section name at line %s.',
                                        DuplicateError, infile, cur_index)
                     continue
@@ -1656,8 +1656,8 @@ class ConfigObj(Section):
                             comment = ''
                             try:
                                 value = unrepr(value)
-                            except Exception, e:
-                                if type(e) == UnknownType:
+                            except Exception as e:
+                                if isinstance(e, UnknownType):
                                     msg = 'Unknown name or type in value at line %s.'
                                 else:
                                     msg = 'Parse error in value at line %s.'
@@ -1669,7 +1669,7 @@ class ConfigObj(Section):
                         comment = ''
                         try:
                             value = unrepr(value)
-                        except Exception, e:
+                        except Exception as e:
                             if isinstance(e, UnknownType):
                                 msg = 'Unknown name or type in value at line %s.'
                             else:
@@ -1688,7 +1688,7 @@ class ConfigObj(Section):
                             continue
                 #
                 key = self._unquote(key)
-                if this_section.has_key(key):
+                if key in this_section:
                     self._handle_error(
                         'Duplicate keyword name at line %s.',
                         DuplicateError, infile, cur_index)
@@ -1938,11 +1938,11 @@ class ConfigObj(Section):
                                        raise_errors=True,
                                        file_error=True,
                                        list_values=False)
-            except ConfigObjError, e:
+            except ConfigObjError as e:
                 # FIXME: Should these errors have a reference
                 #        to the already parsed ConfigObj ?
                 raise ConfigspecError('Parsing configspec failed: %s' % e)
-            except IOError, e:
+            except IOError as e:
                 raise IOError('Reading configspec failed: %s' % e)
         
         self._set_configspec_value(configspec, self)
@@ -1976,7 +1976,7 @@ class ConfigObj(Section):
             
             section._cs_section_comments[entry] = configspec.comments[entry]
             section._cs_section_inline_comments[entry] = configspec.inline_comments[entry]
-            if not section.has_key(entry):
+            if entry not in section:
                 section[entry] = {}
             self._set_configspec_value(configspec[entry], section[entry])
 
@@ -2010,7 +2010,7 @@ class ConfigObj(Section):
             
         section.configspec = scalars
         for entry in sections:
-            if not section.has_key(entry):
+            if entry not in section:
                 section[entry] = {}
             self._handle_repeat(section[entry], sections[entry])
 
@@ -2244,7 +2244,7 @@ class ConfigObj(Section):
                                         val,
                                         missing=missing
                                         )
-            except validator.baseErrorClass, e:
+            except validator.baseErrorClass as e:
                 if not preserve_errors or isinstance(e, self._vdtMissingValue):
                     out[entry] = False
                 else:

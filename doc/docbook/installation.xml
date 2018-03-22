@@ -33,15 +33,13 @@ Java HotSpot(TM) Client VM (build 1.6.0_07-87, mixed mode, sharing)</programlist
         <para><programlisting># <emphasis role="bold">python -v</emphasis>
 Python 2.6.2</programlisting></para>
 
-        <note><para><emphasis role="bold">Non-standard Python installation:</emphasis>
-        Built-in Python installations may lead to a malfunction of the Pegasus installation.
-        If you get the error message below, this means that you are not using the Python
-        version provided by your system. To fix this, you may change your
-        <emphasis role="bold">shebang</emphasis> to point to the Python installed in your
-        system.</para>
-
-        <programlisting>Could not locate column in row for column 'dbversion.version_number'</programlisting>
-        </note>
+        <para><emphasis role="bold">Non-standard Python installation:</emphasis>
+        Pegasus will use the system Python by default. If you want to override this
+        behavior, please set the <emphasis role="bold">PEGASUS_PYTHON</emphasis>
+        environment variable during the build. This environment variable is only 
+        for build time configuration. Once built, Pegasus will continue to use the
+        build time specified Python install.
+        </para>
       </listitem>
 
       <listitem>
@@ -65,6 +63,12 @@ Python 2.6.2</programlisting></para>
         data transfers. See <ulink
         url="http://www.globus.org/">http://www.globus.org/</ulink> for more
         information.</para>
+      </listitem>
+      <listitem>
+        <para><emphasis role="bold">psycopg2</emphasis>. Python module for
+          PostgreSQL access. Only needed if you want to store the runtime
+          database in PostgreSQL (default is SQLite)
+        </para>
       </listitem>
     </itemizedlist>
   </section>

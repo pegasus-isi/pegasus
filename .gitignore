@@ -1,34 +1,139 @@
-.pc
-build
-dist
-*stamp
+#-------
+# VSCode
+#-------
+
+.vscode
+
+
+#---------
+# IntelliJ
+#---------
+
+*.iml
+.idea/
+
+
+#--------
+# Eclipse
+#--------
+
 .classpath
-pegasus.spec
 .project
+.settings/
+
+
+#-----------
+# JavaScript
+#-----------
+
+npm-debug.log
+node_modules/
+bower_components/
+
+
+#-------
+# Python
+#-------
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*,cover
+.hypothesis/
+
+# Translations
+*.mo
+*.pot
+
+# Flask stuff
+instance/
+.webassets-cache
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# pyenv
+.python-version
+
+# virtualenv
+.venv/
+
+
+#--------
+# Vagrant
+#--------
+
+.vagrant
+
+
+#----------
+# PhantomJS
+#----------
+
+ghostdriver.log
+
+
+# Original File
+
+.pc
+*stamp
 .pydevproject
 .externalToolBuilders
-.settings
-var
-.idea
-.venv
-
 *.o
 *.lo
 *.la
 *.al
 .libs
-#*#
 .#*
 .*.rej
 *.rej
 .*~
 *~
 .DS_Store
-*.pyc
-*.pyo
-*.so
 *.so.[0-9]*
-*.a 
+*.a
 .*.swp
-*.iml
-.vagrant

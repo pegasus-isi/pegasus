@@ -54,12 +54,9 @@ import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
-import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.PlannerCache;
-
-import edu.isi.pegasus.planner.mapper.SubmitMapper;
 
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.mapper.SubmitMapperFactory;
@@ -69,9 +66,6 @@ import edu.isi.pegasus.planner.mapper.OutputMapper;
 import edu.isi.pegasus.planner.mapper.OutputMapperFactory;
 import edu.isi.pegasus.planner.mapper.StagingMapper;
 import edu.isi.pegasus.planner.mapper.StagingMapperFactory;
-import edu.isi.pegasus.planner.mapper.output.Hashed;
-import edu.isi.pegasus.planner.namespace.Metadata;
-
 
 import java.io.File;
 import java.io.IOException;
@@ -237,7 +231,11 @@ public class TransferEngine extends Engine {
      */
     private final String mOutputSite;
     
-
+    /**
+     * Whether to do integrity checking or not.
+     */
+    protected boolean mDoIntegrityChecking ;
+    
     /**
      * Overloaded constructor.
      *
@@ -260,6 +258,8 @@ public class TransferEngine extends Engine {
         
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mSRMServiceURLToMountPointMap = constructSiteToSRMServerMap( mProps );
+        
+        mDoIntegrityChecking            = mProps.doIntegrityChecking();
         
         mDag = reducedDag;
         mDeletedJobs     = deletedJobs;
@@ -702,6 +702,9 @@ public class TransferEngine extends Engine {
                 //by parent jobs should be looked up in the replica catalog
                 //we don't consider the value of the transfer flag
                 vRCSearchFiles.addElement(pf);
+                
+                //PM-1250 any file fetched from RC is a raw input file
+                pf.setRawInput( true );
             }
         }
 
@@ -752,9 +755,19 @@ public class TransferEngine extends Engine {
                                                     destPool,
                                                     path,
                                                     localTransfer );
+            
             if (ft != null) {
+                if( this.mDoIntegrityChecking && this.mPegasusConfiguration.jobSetupForWorkerNodeExecution(job) ){
+                    //PM-1252 for files generated in the workflow , the checksum will be computed 
+                    //in the PegasusLite invocation
+                    ft.setChecksumComputedInWF( true );
+                    
+                    //PM-1254 disable for time being for checkpoint files
+                    if( ft.isCheckpointFile() ){
+                        ft.setChecksumComputedInWF( false );
+                    }
+                }
                 vFileTX.add(ft);
-
             }
 
         }
@@ -836,6 +849,7 @@ public class TransferEngine extends Engine {
             ft.addDestination(stagingSiteHandle,sharedScratchGetURL);
             ft.setURLForRegistrationOnDestination( sharedScratchGetURL );
             ft.setMetadata( pf.getAllMetadata() );
+            ft.setType( pf.getType() );
         }
         //the source dir is the exec dir
         //on exec pool and dest dir
@@ -863,6 +877,7 @@ public class TransferEngine extends Engine {
                 return ft;
             }
             ft.setMetadata( pf.getAllMetadata() );
+            ft.setType( pf.getType() );
 
             //add all the possible destination urls iterating through
             //the list of grid ftp servers associated with the dest pool.
@@ -1383,9 +1398,6 @@ public class TransferEngine extends Engine {
             //propogated for optional transfers.
             ft.setTransferFlag(pf.getTransferFlag());
             
-            //PM-1190 associate metadata with the FileTransfer
-            ft.setMetadata( pf.getAllMetadata());
-
             ReplicaLocation candidateLocations = null;
             if( nv != null ){
                 //we have the replica already selected as a result
@@ -1398,6 +1410,16 @@ public class TransferEngine extends Engine {
             //PM-1190 add any retrieved metadata from the replica catalog
             //to the associated PegasusFile that is associated with the compute jobs
             pf.addMetadata( rl.getAllMetadata() );
+            
+            //PM-1250 if no checksum exists then set pegasus-transfer
+            //to generate checksum. Later on a dial might be required here
+            if( !pf.hasRCCheckSum() ){
+                ft.setChecksumComputedInWF( true );
+                pf.setChecksumComputedInWF( true );
+            }
+            
+            //PM-1190 associate metadata with the FileTransfer
+            ft.setMetadata( pf.getAllMetadata());
             
             //select from the various replicas
             candidateLocations =  mReplicaSelector.selectAndOrderReplicas( rl, 
@@ -1508,6 +1530,15 @@ public class TransferEngine extends Engine {
                 //add locations of input data on the remote site to the transient RC
                 bypassFirstLevelStaging = this.bypassStagingForInputFile( selLoc , pf , job  );
                 if( bypassFirstLevelStaging ){
+                    //PM-1250 if no checksum exists in RC
+                    //then make sure checksum computation is set to false
+                    //for bypassed inputs we have no way to compute
+                    //checksums in the workflow
+                    if( !pf.hasRCCheckSum() ){
+                        ft.setChecksumComputedInWF( false );
+                        pf.setChecksumComputedInWF( false );
+                    }
+                    
                     //only the files for which we bypass first level staging , we
                     //store them in the planner cache as a GET URL and associate with the compute site
                     //PM-698 . we have to clone since original site attribute will be different

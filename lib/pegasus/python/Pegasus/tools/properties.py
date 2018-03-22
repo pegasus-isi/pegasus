@@ -8,6 +8,7 @@ definitions from sys.argv during the module
 initialization. Therefore, it is recommended to use this module
 before parsing other command-line arguments.
 """
+from __future__ import print_function
 
 ##
 #  Copyright 2007-2010 University Of Southern California
@@ -202,9 +203,9 @@ def parse_properties(my_file, hashref={}):
 
 class Properties:
 
-    def __init__(self):
+    def __init__(self, props=None):
         # Initialize class variables
-        self.m_config = {}
+        self.m_config = props or {}
 
     def new(self, config_file=None, rundir_propfile=None):
         """
@@ -275,6 +276,18 @@ class Properties:
 
         return my_old_val
 
+    def remove(self, key):
+        """
+        Removes a property matching the key
+        :param key:
+        :return: the old value if it exists
+        """
+        value = None
+        if key in self.m_config.keys():
+            value = self.m_config[key]
+            del self.m_config[key]
+        return value
+
     def keyset(self, predicate=None):
         """
         Finds a subset of keys that matches a predicate
@@ -311,7 +324,7 @@ class Properties:
                     my_newkey = my_key
                 if len(my_newkey) > 0:
                     # Only copy if my_newkey is not empty
-                    my_result[my_newkey] = self.m_config[key]
+                    my_result[my_newkey] = self.m_config[my_key]
 
         return my_result
 
@@ -348,4 +361,4 @@ class Properties:
 if __name__ == "__main__":
     a = Properties()
     a.new()
-    print "testing finished!"
+    print("testing finished!")

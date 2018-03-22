@@ -2,50 +2,26 @@
 
 set -e
 
-#######################################################################
-#
-#  Settings
-#
-
-DEGREES=0.5
-
-#######################################################################
-
 TOP_DIR=`pwd`
 
-export PATH=/ccg/software/montage/Montage_v3.3_mats/bin:$PATH
+export PATH=/ccg/software/montage/current/bin:$PATH
 
 # unique directory for this run
 RUN_ID=`/bin/date +'%F_%H%M%S'`
 RUN_DIR=`pwd`/work/$RUN_ID
 
-echo "Work directory: $RUN_DIR"
+rm -rf montage-workflow-v2
+git clone https://github.com/pegasus-isi/montage-workflow-v2.git
 
-mkdir -p $RUN_DIR/inputs
-
-cd $RUN_DIR
-cp $TOP_DIR/pegasusrc .
-
-# create the transformation catalogue (tc)
 echo
-echo "Creating the transformation catalog..."
-for BINARY in `(cd /ccg/software/montage/Montage_v3.3_mats/bin/ && ls)`; do
-    cat >>tc <<EOF
-tr $BINARY:3.3 {
-    site CCG {
-        pfn "/ccg/software/montage/Montage_v3.3_mats/bin/$BINARY"
-        arch "x86_64"
-        os "linux"
-        type "INSTALLED"
-        profile pegasus "clusters.size" "20"
-    }
-}
-EOF
-done
+cd montage-workflow-v2
+./montage-workflow.py --center "275.196290 -16.171530" \
+                      --degrees 0.2 \
+                      --band 2mass:j:green \
+                      --band 2mass:h:blue \
+                      --band 2mass:k:red
 
-# site catalog
-echo
-echo "Creating the site catalog..."
+# override the site catalog
 cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
@@ -65,9 +41,6 @@ cat >sites.xml <<EOF
                 </shared>
             </storage>
         </head-fs>
-        <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
-        <profile namespace="env" key="GLOBUS_LOCATION" >/ccg/software/globus/default</profile>
-        <profile namespace="env" key="GLOBUS_TCP_PORT_RANGE" >40000,50000</profile>
         <profile namespace="env" key="http_proxy" >http://workflow.isi.edu:3128</profile>
     </site>
     <site handle="CCG" arch="x86_64" os="LINUX">
@@ -75,12 +48,8 @@ cat >sites.xml <<EOF
             <scratch />
             <storage />
         </head-fs>
-        <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
         <profile namespace="pegasus" key="style">condor</profile>
-        <profile namespace="condor" key="requirements">(TARGET.FileSystemDomain =!= &quot;&quot;)</profile>
-        <profile namespace="condor" key="should_transfer_files">Yes</profile>
-        <profile namespace="condor" key="when_to_transfer_output">ON_EXIT</profile>
-        <profile namespace="env" key="MONTAGE_HOME" >/ccg/software/montage/Montage_v3.3_mats</profile>
+        <profile namespace="env" key="MONTAGE_HOME" >/ccg/software/montage/current</profile>
         <profile namespace="env" key="http_proxy" >http://workflow.isi.edu:3128</profile>
     </site>
     <site handle="CCGData">
@@ -93,50 +62,37 @@ cat >sites.xml <<EOF
             </scratch>
             <storage />
         </head-fs>
-        <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
-        <profile namespace="env" key="GLOBUS_LOCATION" >/ccg/software/globus/default</profile>
-        <profile namespace="env" key="http_proxy" >http://workflow.isi.edu:3128</profile>
     </site>
 </sitecatalog>
 EOF
 
-echo
-echo "Running mDAG (finding input images, generating DAX, ...)..."
-mDAG 2mass j M17 $DEGREES $DEGREES 0.0002777778 . "file://$RUN_DIR" "file://$RUN_DIR/inputs"
-
-echo
-echo "Adding input images to the replica catalog..."
-echo "  " `cat cache.list | wc -l` "images found"
-cat cache.list | grep -v ".fits " >rc
-perl -p -i -e 's/ipac_cluster/local/' rc
-cat url.list | sed 's/\.gz http/ http/' >>rc
-
-echo "Planning  the workflow..."
 pegasus-plan \
-    --conf pegasusrc \
-    --sites CCG \
-    --staging-site CCGData \
-    --dir work \
-    --output-site local \
-    --dax dag.xml \
-    --cluster horizontal \
-    | tee $TOP_DIR/plan.out
+        --conf ../pegasusrc \
+        --dir work \
+        --relative-dir `date +'%s'` \
+        --dax data/montage.dax \
+        --sites CCG \
+        --staging-site CCGData \
+        --output-site local \
+        --cluster horizontal \
+        | tee $TOP_DIR/plan.out
+
 
 WORK_DIR=`cat $TOP_DIR/plan.out | grep pegasus-run | sed -E 's/.*pegasus-run[ ]+//'` 
+if [ "x$WORK_DIR" = "x" ]; then
+    echo "Unable to determine work directory from the planner output"
+    exit 1
+fi
 echo "work directory is $WORK_DIR"
 cd $WORK_DIR
 
-# retrive all the src url's from the stage-in files
-set +e
-grep  -A 1 src_urls `find . -name 'stage_in*.in'` | grep site_label | grep -v "file://"
-EC=$?
-set -e
-
-if [ $EC -eq 0 ]; then
-    # all non file URL's should be directly retrieved from the jobs
-    echo "The stage in jobs have non file URL's" 
-    exit 1
-fi
+# make sure that none of the http inputs are in the stage in jobs
+for STAGE_IN in `find $WORK_DIR -name stage_in_\*.in`; do
+    if (cat $STAGE_IN | grep "http://") >/dev/null 2>&1; then
+        echo "Error: $STAGE_IN has a http:// file even though we asked for a bypass"
+        exit 1
+    fi
+done
 
 # now we are good to submit
 echo "Submitting the workflow for execution"

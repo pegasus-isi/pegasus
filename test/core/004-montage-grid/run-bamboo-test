@@ -52,14 +52,14 @@ cat >sites.xml <<EOF
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://obelix.isi.edu" mount-point="/nfs/ccg4/scratch-purge-no-backups/ptesting"/>
-                    <internal-mount-point mount-point="/nfs/ccg4/scratch-purge-no-backups/ptesting"/>
+                    <file-server protocol="gsiftp" url="gsiftp://obelix.isi.edu" mount-point="/lizard/scratch-90-days/ptesting"/>
+                    <internal-mount-point mount-point="/lizard/scratch-90-days/ptesting"/>
                 </shared>
             </scratch>
             <storage />
         </head-fs>
         <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
-        <profile namespace="env" key="MONTAGE_HOME" >/ccg/software/montage/Montage_v3.3_mats</profile>
+        <profile namespace="env" key="MONTAGE_HOME" >/ccg/software/montage/current</profile>
         <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
         <profile namespace="env" key="http_proxy" >http://workflow.isi.edu:3128</profile>
     </site>

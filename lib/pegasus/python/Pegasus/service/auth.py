@@ -1,9 +1,8 @@
-import os
-import pam
 import logging
+import os
 
-from flask import request, Response, g, abort, make_response, url_for
-
+import pam
+from flask import Response, abort, g, make_response, request, url_for
 from Pegasus import user
 from Pegasus.service import app
 
@@ -43,7 +42,7 @@ class PAMAuthentication(BaseAuthentication):
     def authenticate(self):
         try:
             return pam.authenticate(self.username, self.password)
-        except Exception, e:
+        except Exception as e:
             log.exception(e)
             return False
 
@@ -52,8 +51,11 @@ class PAMAuthentication(BaseAuthentication):
 
 
 def basic_auth_response():
-    return Response('Basic Auth Required', 401,
-                    {'WWW-Authenticate': 'Basic realm="Pegasus Service"'})
+    return Response(
+        'Basic Auth Required', 401, {
+            'WWW-Authenticate': 'Basic realm="Pegasus Service"'
+        }
+    )
 
 
 def is_user_an_admin(username):
@@ -114,7 +116,9 @@ def pull_username(endpoint, values):
 def before():
 
     # Static files do not need to be authenticated.
-    if (request.script_root + request.path).startswith(url_for('static', filename='')):
+    if (request.script_root + request.path).startswith(
+        url_for('static', filename='')
+    ):
         return
 
     #
@@ -138,7 +142,7 @@ def before():
 
     try:
         g.user = auth.get_user()
-    except user.NoSuchUser, e:
+    except user.NoSuchUser as e:
         log.error("No such user: %s" % username)
         return basic_auth_response()
 
@@ -167,13 +171,16 @@ def before():
     if g.username != g.user.username:
         # Is user (g.user.username) allowed to view user (g.username) runs?
         if not is_user_an_admin(g.user.username):
-            log.error("User %s is accessing user %s's runs" % (g.user.username, g.username))
+            log.error(
+                "User %s is accessing user %s's runs" %
+                (g.user.username, g.username)
+            )
             abort(403)
 
         # Is user a valid system user?
         try:
             user_info = user.get_user_by_username(g.username)
-        except user.NoSuchUser, e:
+        except user.NoSuchUser as e:
             log.error('User %s is not a valid user' % g.username)
             abort(400)
 
@@ -181,8 +188,13 @@ def before():
         # If required, set uid and gid of handler process
         if os.getuid() != user_info.uid:
             if os.getuid() != 0:
-                log.error("Pegasus service must run as root to enable process switching")
-                return make_response("Pegasus service must run as root to enable process switching", 500)
+                log.error(
+                    "Pegasus service must run as root to enable process switching"
+                )
+                return make_response(
+                    "Pegasus service must run as root to enable process switching",
+                    500
+                )
 
         os.setgid(user_info.gid)
         os.setuid(user_info.uid)
@@ -193,10 +205,14 @@ def before():
     if not os.path.isdir(user_pegasus_dir):
         log.info("User's pegasus directory does not exist. Creating one...")
         try:
-            os.makedirs(user_pegasus_dir, mode=0744)
+            os.makedirs(user_pegasus_dir, mode=0o744)
         except OSError:
-            log.info("Invalid Permissions: Could not create user's pegasus directory.")
-            return make_response("Could not find user's Pegasus directory", 404)
+            log.info(
+                "Invalid Permissions: Could not create user's pegasus directory."
+            )
+            return make_response(
+                "Could not find user's Pegasus directory", 404
+            )
 
     # Set master DB URL for the dashboard
     # For testing master_db_url would be pre-populated, so let's not overwrite it here.

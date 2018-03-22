@@ -370,6 +370,9 @@ int main(int argc, char* argv[]) {
 
     /* Set the PATH variable before we copy env into appinfo */
     set_path();
+    
+    /* Tell the app where to write integritydata */
+    setenv("KICKSTART_INTEGRITY_DATA", appinfo.integritydata.file.name, 1);
 
     /* Tell the app where to write metadata */
     setenv("KICKSTART_METADATA", appinfo.metadata.file.name, 1);

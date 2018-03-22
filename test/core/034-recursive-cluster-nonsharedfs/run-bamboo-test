@@ -53,14 +53,14 @@ cat >sites.xml <<EOF
        <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://colo-vm63.isi.edu" mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/$UUID/scratch"/>
-                    <internal-mount-point mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/$UUID/scratch"/>
+                    <file-server protocol="gsiftp" url="gsiftp://colo-vm63.isi.edu" mount-point="/lizard/scratch-90-days/bamboo/$UUID/scratch"/>
+                    <internal-mount-point mount-point="/lizard/scratch-90-days/bamboo/$UUID/scratch"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://colo-vm63.isi.edu" mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/$UUID/outputs"/>
-                    <internal-mount-point mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/$UUID/outputs"/>
+                    <file-server protocol="gsiftp" url="gsiftp://colo-vm63.isi.edu" mount-point="/lizard/scratch-90-days/bamboo/$UUID/outputs"/>
+                    <internal-mount-point mount-point="/lizard/scratch-90-days/bamboo/$UUID/outputs"/>
                 </shared>
             </storage>
         </head-fs>

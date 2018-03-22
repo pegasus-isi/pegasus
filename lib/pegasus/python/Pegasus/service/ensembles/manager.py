@@ -173,7 +173,7 @@ class WorkflowProcessor:
             os.kill(pid, 0)
             # If that succeeds, the process is still running
             return True
-        except OSError, e:
+        except OSError as e:
             # errno 3 is No Such Process
             if e.errno != 3:
                 raise
@@ -194,7 +194,7 @@ class WorkflowProcessor:
 
         try:
             self.find_submitdir()
-        except Exception, e:
+        except Exception as e:
             log.exception(e)
             return False
 
@@ -379,7 +379,7 @@ class EnsembleProcessor:
         p = self.Processor(self.dao, workflow)
         try:
             p.plan()
-        except Exception, e:
+        except Exception as e:
             log.error("Planning failed for workflow %s" % workflow.name)
             log.exception(e)
             workflow.set_state(EnsembleWorkflowStates.PLAN_FAILED)
@@ -437,7 +437,7 @@ class EnsembleProcessor:
         p = self.Processor(self.dao, workflow)
         try:
             p.run()
-        except Exception, e:
+        except Exception as e:
             log.debug("Running of workflow %s failed" % workflow.name)
             log.exception(e)
             workflow.set_state(EnsembleWorkflowStates.RUN_FAILED)
@@ -490,13 +490,13 @@ class EnsembleProcessor:
         edir = self.ensemble.get_localdir()
         if not os.path.isdir(edir):
             log.info("Creating ensemble directory: %s" % edir)
-            os.makedirs(edir, 0700)
+            os.makedirs(edir, 0o700)
 
         log.info("Processing %d ensemble workflows..." % len(self.workflows))
         for w in self.workflows:
             try:
                 self.handle_workflow(w)
-            except Exception, e:
+            except Exception as e:
                 log.error("Processing workflow %s of ensemble %s" % (w.name, self.ensemble.name))
                 log.exception(e)
                 self.dao.session.rollback()

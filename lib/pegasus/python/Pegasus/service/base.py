@@ -14,19 +14,21 @@
 
 __author__ = 'Rajiv Mayani'
 
+import re
 import StringIO
 
-import re
+from plex import (
+    IGNORE, Any, AnyBut, Lexicon, NoCase, Opt, Range, Rep, Rep1, Scanner, Str
+)
+from plex.errors import UnrecognizedInput
+from werkzeug.routing import BaseConverter
 
 try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
 
-from plex import Range, Lexicon, Rep, Rep1, Str, Any, IGNORE, Scanner, AnyBut, NoCase, Opt
-from plex.errors import UnrecognizedInput
 
-from werkzeug.routing import BaseConverter
 
 
 class PagedResponse(object):
@@ -134,10 +136,14 @@ class BaseQueryParser(object):
         prefix = letter + Rep(letter) + Str('.')
 
         identifier = prefix + letter + Rep(letter | digit | Str('_'))
-        comparators = NoCase(Str('=', '!=', '<', '<=', '>', '>=', 'like', 'in'))
-        string_literal = Str('\'') + Rep(AnyBut('\'') | Str(' ') | Str("\\'")) + Str('\'')
+        comparators = NoCase(
+            Str('=', '!=', '<', '<=', '>', '>=', 'like', 'in')
+        )
+        string_literal = Str('\'') + Rep(AnyBut('\'') | Str(' ')
+                                         | Str("\\'")) + Str('\'')
         integer_literal = Opt(Str('+', '-')) + Rep1(digit)
-        float_literal = Opt(Str('+', '-')) + Rep1(digit) + Str('.') + Rep1(digit)
+        float_literal = Opt(Str('+', '-')
+                            ) + Rep1(digit) + Str('.') + Rep1(digit)
 
         operands = NoCase(Str('AND', 'OR'))
         null = Str('NULL')
@@ -153,19 +159,18 @@ class BaseQueryParser(object):
         FLOAT_LITERAL = 9
         IDENTIFIER = 10
 
-        self._lexicon = Lexicon([
-            (whitespace, IGNORE),
-            (comma, COMMA),
-            (open_parenthesis, OPEN_PARENTHESIS),
-            (close_parenthesis, CLOSE_PARENTHESIS),
-            (null, NULL),
-            (operands, OPERAND),
-            (comparators, COMPARATOR),
-            (string_literal, STRING_LITERAL),
-            (integer_literal, INTEGER_LITERAL),
-            (float_literal, FLOAT_LITERAL),
-            (identifier, IDENTIFIER)
-        ])
+        self._lexicon = Lexicon(
+            [
+                (whitespace,
+                 IGNORE), (comma, COMMA), (open_parenthesis, OPEN_PARENTHESIS),
+                (close_parenthesis,
+                 CLOSE_PARENTHESIS), (null, NULL), (operands, OPERAND),
+                (comparators, COMPARATOR), (string_literal, STRING_LITERAL),
+                (integer_literal,
+                 INTEGER_LITERAL), (float_literal,
+                                    FLOAT_LITERAL), (identifier, IDENTIFIER)
+            ]
+        )
 
         self._mapper = {
             COMMA: self.comma_handler,
@@ -193,7 +198,7 @@ class BaseQueryParser(object):
             f = StringIO.StringIO(expression)
             self._scanner = Scanner(self._lexicon, f, 'query')
 
-            while 1:
+            while True:
                 token = self._scanner.read()
 
                 if token[0] in self._mapper:
@@ -239,7 +244,9 @@ class BaseQueryParser(object):
 
         if self._parenthesis_count <= 0:
             file, line, char_pos = self._scanner.position()
-            msg = 'Invalid parenthesis order: Line: %d Char: %d' % (line, char_pos)
+            msg = 'Invalid parenthesis order: Line: %d Char: %d' % (
+                line, char_pos
+            )
             raise InvalidQueryError(msg)
         else:
             self._parenthesis_count -= 1
@@ -259,7 +266,9 @@ class BaseQueryParser(object):
             self._state = 0
         else:
             file, line, char_pos = self._scanner.position()
-            msg = 'NULL found out of order: Line: %d Char: %d' % (line, char_pos)
+            msg = 'NULL found out of order: Line: %d Char: %d' % (
+                line, char_pos
+            )
             raise InvalidQueryError(msg)
 
     def operand_handler(self, text):
@@ -271,7 +280,9 @@ class BaseQueryParser(object):
             self._state = 3 if self._condition[1] == 'IN' else 2
         else:
             file, line, char_pos = self._scanner.position()
-            msg = 'Comparator %r found out of order: Line: %d Char: %d' % (text, line, char_pos)
+            msg = 'Comparator %r found out of order: Line: %d Char: %d' % (
+                text, line, char_pos
+            )
             raise InvalidQueryError(msg)
 
     def string_literal_handler(self, text):
@@ -283,7 +294,9 @@ class BaseQueryParser(object):
             self._in_collection.append(text.strip("'"))
         else:
             file, line, char_pos = self._scanner.position()
-            msg = 'String literal %r found out of order: Line: %d Char: %d' % (text, line, char_pos)
+            msg = 'String literal %r found out of order: Line: %d Char: %d' % (
+                text, line, char_pos
+            )
             raise InvalidQueryError(msg)
 
     def integer_literal_handler(self, text):
@@ -295,7 +308,9 @@ class BaseQueryParser(object):
             self._in_collection.append(text.strip())
         else:
             file, line, char_pos = self._scanner.position()
-            msg = 'Integer literal %s found out of order: Line: %d Char: %d' % (text, line, char_pos)
+            msg = 'Integer literal %s found out of order: Line: %d Char: %d' % (
+                text, line, char_pos
+            )
             raise InvalidQueryError(msg)
 
     def float_literal_handler(self, text):
@@ -307,7 +322,9 @@ class BaseQueryParser(object):
             self._in_collection.append(text.strip())
         else:
             file, line, char_pos = self._scanner.position()
-            msg = 'Integer literal %d found out of order: Line: %d Char: %d' % (text, line, char_pos)
+            msg = 'Integer literal %d found out of order: Line: %d Char: %d' % (
+                text, line, char_pos
+            )
             raise InvalidQueryError(msg)
 
     def identifier_handler(self, text):
@@ -322,7 +339,9 @@ class BaseQueryParser(object):
             self._state = 0
         else:
             file, line, char_pos = self._scanner.position()
-            msg = 'Field %r found out of order: Line: %d Char: %d' % (text, line, char_pos)
+            msg = 'Field %r found out of order: Line: %d Char: %d' % (
+                text, line, char_pos
+            )
             raise InvalidQueryError(msg)
 
     def evaluate(self):
@@ -351,15 +370,14 @@ class BaseQueryParser(object):
             'IN': 'in_'
         }
 
-        operators = {
-            'AND': 'and_',
-            'OR': 'or_'
-        }
+        operators = {'AND': 'and_', 'OR': 'or_'}
 
         operands = []
 
         def condition_expansion(expr, field):
-            operands.append('%s.%s ( %s )' % (field, comparator[expr[1]], expr[2]))
+            operands.append(
+                '%s.%s ( %s )' % (field, comparator[expr[1]], expr[2])
+            )
 
         for token in self._postfix_result:
             if isinstance(token, tuple):
@@ -371,7 +389,10 @@ class BaseQueryParser(object):
                 operand_1 = operands.pop()
 
                 if token in operators:
-                    operands.append('%s ( %s, %s )' % (operators[token], operand_1, operand_2))
+                    operands.append(
+                        '%s ( %s, %s )' %
+                        (operators[token], operand_1, operand_2)
+                    )
 
         return operands.pop()
 
@@ -396,7 +417,9 @@ class BaseOrderParser(object):
     #   Must start with a-z OR A-Z
     #   Can contain a-z OR A-Z OR 0-9 OR _
     #
-    IDENTIFIER_PATTERN = re.compile('^([a-zA-Z][a-zA-Z0-9_]*\.)?([a-zA-Z][a-zA-Z0-9_]*)$')
+    IDENTIFIER_PATTERN = re.compile(
+        '^([a-zA-Z][a-zA-Z0-9_]*\.)?([a-zA-Z][a-zA-Z0-9_]*)$'
+    )
 
     def __init__(self, expression):
         self.expression = expression
@@ -404,7 +427,7 @@ class BaseOrderParser(object):
 
         try:
             self._parse_expression()
-        except UnrecognizedInput, e:
+        except UnrecognizedInput as e:
             raise InvalidOrderError(str(e))
 
     def _parse_expression(self):
@@ -416,14 +439,18 @@ class BaseOrderParser(object):
             length = len(token)
 
             if length == 0 or length > 2:
-                raise InvalidOrderError('Invalid ORDER clause %r' % ' '.join(token))
+                raise InvalidOrderError(
+                    'Invalid ORDER clause %r' % ' '.join(token)
+                )
 
             self.identifier_handler(token[0])
 
             if length == 2:
                 self.order_handler(token[1])
 
-        self._sort_order = [tuple(order_clause) for order_clause in self._sort_order]
+        self._sort_order = [
+            tuple(order_clause) for order_clause in self._sort_order
+        ]
 
     def identifier_handler(self, identifier):
         match = BaseOrderParser.IDENTIFIER_PATTERN.match(identifier)
@@ -481,7 +508,9 @@ class BaseResource(object):
     def prefixed_fields(self):
         if self._prefixed_fields is None:
             self._prefixed_fields = set([field for field in self.fields])
-            self._prefixed_fields |= set(['%s.%s' % (self.prefix, field) for field in self.fields])
+            self._prefixed_fields |= set(
+                ['%s.%s' % (self.prefix, field) for field in self.fields]
+            )
 
         return self._prefixed_fields
 
@@ -496,7 +525,9 @@ class BaseResource(object):
         resource = alias if alias else self._resource
         suffix = self._split_identifier(field)
         if len(suffix) == 2:
-            suffix = field if ignore_prefix is False and suffix[0] != self.prefix else suffix[1]
+            suffix = field if ignore_prefix is False and suffix[
+                0
+            ] != self.prefix else suffix[1]
 
         else:
             suffix = suffix[0]

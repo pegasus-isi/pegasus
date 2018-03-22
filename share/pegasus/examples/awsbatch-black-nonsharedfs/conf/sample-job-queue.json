@@ -1,0 +1,9 @@
+{
+  "priority": 10,
+  "state": "ENABLED",
+  "computeEnvironmentOrder": [
+    {
+      "order": 1
+    }
+  ]
+}

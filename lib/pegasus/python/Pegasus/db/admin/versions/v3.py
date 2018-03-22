@@ -11,21 +11,22 @@ from sqlalchemy.exc import *
 
 log = logging.getLogger(__name__)
 
-class Version(BaseVersion):
 
+class Version(BaseVersion):
     def __init__(self, connection):
         super(Version, self).__init__(connection)
-
 
     def update(self, force=False):
         "Add plan_command field to ensemble_workflow table"
         log.info("Updating to version %s" % DB_VERSION)
         # TODO We might need to check to see if the field already exists first
         try:
-            self.db.execute("ALTER TABLE ensemble_workflow ADD plan_command VARCHAR(1024) NOT NULL default './plan.sh'")
+            self.db.execute(
+                "ALTER TABLE ensemble_workflow ADD plan_command VARCHAR(1024) NOT NULL default './plan.sh'"
+            )
         except (OperationalError, ProgrammingError):
             pass
-        except Exception, e:
+        except Exception as e:
             self.db.rollback()
             log.exception(e)
             raise Exception(e)

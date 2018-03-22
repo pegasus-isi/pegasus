@@ -19,6 +19,7 @@ read by Pegasus.
 
 The official DAX schema is here: http://pegasus.isi.edu/schema/dax-2.1.xsd
 """
+from __future__ import print_function
 
 __author__ = "Gideon Juve <juve@usc.edu>"
 __all__ = ["DAX","Filename","Profile","Job","Namespace","LFN",
@@ -113,7 +114,7 @@ class Filename:
 			varname: Only used for stdio files
 		"""
 		if filename is None:
-			raise ValueError, 'filename required'
+			raise ValueError('filename required')
 		self.filename = filename
 		self.link = link
 		self.register = register
@@ -278,7 +279,7 @@ class Job:
 		def __init__(self, file, link=None, register=None, transfer=None, 
 					optional=None, temporaryHint=None):
 			if file is None:
-				raise ValueError, 'file required'
+				raise ValueError('file required')
 			self.file = file
 			self.link = link
 			self.optional = optional
@@ -365,7 +366,7 @@ class Job:
 			compound: ?
 		"""
 		if name is None:
-			raise ValueError, 'name required'
+			raise ValueError('name required')
 		self.name = name
 		self.namespace = namespace
 		self.version = version
@@ -896,6 +897,6 @@ if __name__ == '__main__':
 	foo2 = out.getvalue()
 	out.close()
 	
-	print foo1
-	print foo2
+	print(foo1)
+	print(foo2)
 	

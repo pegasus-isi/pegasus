@@ -18,8 +18,8 @@
         <profile namespace="env" key="PATH" >/ccg/software/singularity/default/bin:/usr/bin:/bin</profile>
     </site>
     <site  handle="staging" arch="x86_64" os="LINUX">
-        <directory type="shared-scratch" path="/nfs/ccg4/scratch-purge-no-backups/044-singularity-nonsharedfs-hub">
-            <file-server operation="all" url="gsiftp://colo-vm63.isi.edu/nfs/ccg4/scratch-purge-no-backups/044-singularity-nonsharedfs-hub"/>
+        <directory type="shared-scratch" path="/lizard/scratch-90-days/044-singularity-nonsharedfs-hub">
+            <file-server operation="all" url="gsiftp://colo-vm63.isi.edu/lizard/scratch-90-days/044-singularity-nonsharedfs-hub"/>
         </directory>
     </site>
 </sitecatalog>

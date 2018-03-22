@@ -480,6 +480,9 @@ size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
         if (pegasus_integrity_xml(real, chksum_xml)) {
             fprintf(out, "%*s%s\n", indent+2, "",  chksum_xml);
         }
+        else {
+            fprintf(out, "%*s<!-- pegasus-integrity callout failed -->\n", indent+2, "");
+        }
         if (real) {
             free((void*) real);
         }

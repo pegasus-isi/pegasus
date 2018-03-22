@@ -2,129 +2,51 @@
 
 set -e
 
-#######################################################################
-#
-#  Settings
-#
-
-DEGREES=0.5
-
-#######################################################################
-
 TOP_DIR=`pwd`
 
-export PATH=/ccg/software/montage/Montage_v3.3_mats/bin:$PATH
+export PATH=/ccg/software/montage/current/bin:$PATH
 export LD_LIBRARY_PATH=/ccg/software/sqlite/3.8.11.1/lib:$LD_LIBRARY_PATH
 
-# unique directory for this run
-RUN_ID=`/bin/date +'%F_%H%M%S'`
-RUN_DIR=`pwd`/work/$RUN_ID
-
-echo "Work directory: $RUN_DIR"
-
-mkdir -p $RUN_DIR/inputs
-
-cd $RUN_DIR
-cp $TOP_DIR/pegasusrc .
-
-# create the transformation catalogue (tc)
-echo
-echo "Creating the transformation catalog..."
-for BINARY in `(cd /ccg/software/montage/Montage_v3.3_mats/bin/ && ls)`; do
-    cat >>tc <<EOF
-tr $BINARY:3.3 {
-    site CCG {
-        pfn "/ccg/software/montage/Montage_v3.3_mats/bin/$BINARY"
-        arch "x86_64"
-        os "linux"
-        type "INSTALLED"
-        profile pegasus "clusters.num" "20"
-    }
-}
-EOF
-done
-
-# site catalog
-echo
-echo "Creating the site catalog..."
-cat >sites.xml <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site handle="local" arch="x86_64" os="LINUX" osrelease="deb" osversion="8">
-        <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
-        <head-fs>
-            <scratch>
-                <shared>
-                    <file-server protocol="file" url="file://" mount-point="$RUN_DIR/scratch"/>
-                    <internal-mount-point mount-point="$RUN_DIR/scratch"/>
-                </shared>
-            </scratch>
-            <storage>
-                <shared>
-                    <file-server protocol="file" url="file://" mount-point="$RUN_DIR/outputs"/>
-                    <internal-mount-point mount-point="$RUN_DIR/outputs"/>
-                </shared>
-            </storage>
-        </head-fs>
-        <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
-        <profile namespace="env" key="GLOBUS_LOCATION" >/ccg/software/globus/default</profile>
-        <profile namespace="env" key="GLOBUS_TCP_PORT_RANGE" >40000,50000</profile>
-        <profile namespace="env" key="http_proxy" >http://workflow.isi.edu:3128</profile>
-        <profile namespace="env" key="LD_LIBRARY_PATH">/ccg/software/sqlite/3.8.11.1/lib:$LD_LIBRARY_PATH</profile>
-    </site>
-    <site handle="CCG" arch="x86_64" os="LINUX">
-        <head-fs>
-            <scratch />
-            <storage />
-        </head-fs>
-        <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
-        <profile namespace="pegasus" key="style">condor</profile>
-        <profile namespace="env" key="MONTAGE_HOME" >/ccg/software/montage/Montage_v3.3_mats</profile>
-        <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
-        <profile namespace="env" key="http_proxy" >http://workflow.isi.edu:3128</profile>
-        <profile namespace="env" key="LD_LIBRARY_PATH">/ccg/software/sqlite/3.8.11.1/lib:$LD_LIBRARY_PATH</profile>
-    </site>
-</sitecatalog>
-EOF
+rm -rf montage-workflow-v2
+git clone https://github.com/pegasus-isi/montage-workflow-v2.git
 
 echo
-echo "Running mDAG (finding input images, generating DAX, ...)..."
-mDAG 2mass j M17 $DEGREES $DEGREES 0.0002777778 . "file://$RUN_DIR" "file://$RUN_DIR/inputs"
+cd montage-workflow-v2
+./montage-workflow.py --center "275.196290 -16.171530" \
+                      --degrees 0.2 \
+                      --band 2mass:j:green \
+                      --band 2mass:h:blue \
+                      --band 2mass:k:red
 
-#get all output files to transfer  and register
-sed -i.bak -e 's/transfer=\"false\"/transfer=\"true\"/g' dag.xml
-sed -i.bak -e 's/register=\"false\"/register=\"true\"/g' dag.xml
-
-#set tbl and dag.xml files to register false, as them are inout
-sed -i.bak -r 's/(\<uses name=\"images_.*tbl\" link=\"output\").*/\1 register=\"false\" \/>/g' dag.xml 
-sed -i.bak -r 's/(\<uses name=\"dag_.*xml\" link=\"output\").*/\1 register=\"false\" \/>/g' dag.xml
-
-echo
-echo "Adding input images to the replica catalog..."
-echo "  " `cat cache.list | wc -l` "images found"
-cat cache.list | grep -v ".fits " | sed 's/\.gz http/ http/' >rc
-perl -p -i -e 's/ipac_cluster/local/' rc
-cat url.list | sed 's/\.gz http/ http/' >>rc
-
-sqlitedb=`mktemp -p ${RUN_DIR} pegasus-XXXX.jdbcrc.sqlite.db`
+sqlitedb=`mktemp -p ${PWD} pegasus-XXXX.jdbcrc.sqlite.db`
 sqlitedburl=jdbc:sqlite:/${sqlitedb}
-echo "" >> pegasusrc
-echo "pegasus.catalog.replica.db.url = ${sqlitedburl}" >> pegasusrc
+cat >>pegasus.properties <<EOF
+pegasus.stageout.clusters = 20
+
+#we don't want errors for registration to be masked because of retries
+dagman.retry 0
+
+pegasus.catalog.replica = JDBCRC
+pegasus.catalog.replica.db.driver sqlite
+pegasus.catalog.*.timeout = 30
+
+pegasus.catalog.replica.db.url = ${sqlitedburl}
+EOF
 
 echo "Creating jdbcrc $sqlitedb"
 pegasus-db-admin create ${sqlitedburl}
 
 echo "Inserting input entries in the database..."
-pegasus-rc-client -vvv --conf pegasusrc --insert rc
+pegasus-rc-client -vvv --conf pegasus.properties --insert data/rc.txt
 
 echo "Planning and submitting the workflow..."
 pegasus-plan \
-    --conf pegasusrc \
-    --sites CCG \
+    --conf pegasus.properties \
+    --sites condor_pool \
     --dir work \
     --output-site local \
     --cleanup leaf \
-    --dax dag.xml \
+    --dax data/montage.dax \
     --cluster horizontal \
     --submit | tee $TOP_DIR/plan.out
 

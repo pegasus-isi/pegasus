@@ -2319,7 +2319,7 @@ public class PegasusProperties implements Cloneable {
      * Returns a comma separated list for the node collapsing criteria for the
      * execution pools. This determines how many jobs one fat node gobbles up.
      *
-     * Referred to by the "pegasus.cluster.nodes" property.
+     * Referred to by the "pegasus.clusterer.nodes" property.
      *
      * @return  the value specified in the properties file, else null.
      */
@@ -2390,7 +2390,7 @@ public class PegasusProperties implements Cloneable {
     /**
      * Returns a boolean indicating whether seqexec trips on the first job failure.
      *
-     * Referred to by the "pegasus.cluster.job.aggregator.seqexec.firstjobfail" property.
+     * Referred to by the "pegasus.clusterer.job.aggregator.seqexec.firstjobfail" property.
      *
      * @return the value specified in the properties file, else true
      *
@@ -2401,6 +2401,22 @@ public class PegasusProperties implements Cloneable {
     }
 
     /**
+     * Returns a boolean indicating whether clustering should be allowed for 
+     * single jobs or not
+     *
+     * Referred to by the "pegasus.clusterer.allow.single" property.
+     *
+     * @return the value specified in the properties file, else false
+     *
+     */
+    public boolean allowClusteringOfSingleJobs(){
+        return Boolean.parse( mProps.getProperty( "pegasus.clusterer.allow.single" ),
+                              false );
+    }
+
+    
+    
+    /**
      * Returns a boolean indicating whether to enable integrity checking or not.
      *
      * Referred to by the "pegasus.integrity.checking" property.
@@ -2410,7 +2426,7 @@ public class PegasusProperties implements Cloneable {
      */
     public boolean doIntegrityChecking() {
         return Boolean.parse( mProps.getProperty( "pegasus.integrity.checking" ),
-                              false );
+                              true );
     }
 
 

@@ -277,16 +277,24 @@ class Transfer(TransferBase):
         Initializes the transfer class
         """
         super(Transfer, self).__init__()       
+
+        self.lfn = ""
         
         self._src_urls = []
         self._dst_urls = []
        
         self.attempts = 0
-        self.allow_grouping = True       # can this transfer be grouped with others?
+        self.allow_grouping = True          # can this transfer be grouped with others?
+        self.generate_checksum = False      # should we generate checksums as we transfer?
+        self.verify_checksum_remote = False # should we generate checksums as we transfer?
   
   
     def __str__(self):
         return "%s -> %s" %(self._src_urls[0].get_url(), self._dst_urls[0].get_url())
+
+
+    def set_lfn(self, lfn):
+        self.lfn = lfn
 
         
     def add_src(self, site_label, url, priority=None):
@@ -677,6 +685,17 @@ class TransferHandlerBase(object):
         return (item in self._protocol_map)
 
 
+    def _pre_transfer_attempt(self, transfer):
+        """
+        A common callback from do_transfers for things like integrity checking
+        """
+
+        # do we need to calculate integrity checksums?
+        if transfer.generate_checksum and \
+           transfer.get_src_proto() == "file":
+            self._generate_integrity_checksum(transfer.lfn, transfer.get_src_path()) 
+
+
     def _post_transfer_attempt(self, transfer, was_successful, t_start, t_end=None):
         """
         A common callback from do_transfers to collect statistics for transfers
@@ -684,6 +703,12 @@ class TransferHandlerBase(object):
         if t_end is None:
             t_end = time.time()
 
+        # do we need to calculate integrity checksums?
+        if was_successful and \
+           transfer.generate_checksum and \
+           transfer.get_dst_proto() == "file":
+            self._generate_integrity_checksum(transfer.lfn, transfer.get_dst_path()) 
+        
         # keep track of transfer attempts
         if isinstance(transfer, list):
             for t in transfer:
@@ -716,6 +741,40 @@ class TransferHandlerBase(object):
                 except Exception, e:
                     logger.error(e)
    
+
+    def _generate_integrity_checksum(self, lfn, fname):
+        """
+        Call out to pegasus-integrity to generate a checksum for the file.
+        The information goes to .pegasus-integrity-ks.xml so that kickstart
+        can pick it up at the end.
+        """
+        global integrity_checksummed
+
+        tools = Tools()
+
+        if tools.find("pegasus-integrity", "help", None, [prog_dir]) is None:
+            logger.error("Unable to do integrity checking because pegasus-integrity not found")
+            return 
+
+        if lfn is None or lfn == "":
+            logger.error("lfn is required when enabling checksumming")
+            return
+        
+        if lfn in integrity_checksummed:
+            return
+
+        self.lock.acquire()
+        cmd = "%s --generate-xml=\"%s\" --full-statcall-lfn=\"%s\"" % (tools.full_path("pegasus-integrity"), fname, lfn)
+        try:
+            tc = TimedCommand(cmd)
+            tc.run()
+            # track what lfns we have checksummed so far
+            integrity_checksummed.append(lfn)
+        except RuntimeError, err:
+            logger.error(err)
+        finally:
+            self.lock.release()
+
     
     def _check_similar(self, a, b):
         """
@@ -731,6 +790,8 @@ class TransferHandlerBase(object):
             if os.path.dirname(a.get_src_path()) != os.path.dirname(b.get_src_path()):
                 return False
             if os.path.dirname(a.get_dst_path()) != os.path.dirname(b.get_dst_path()):
+                return False
+            if a.generate_checksum != b.generate_checksum:
                 return False
 
             # also check that we are not renaming the files
@@ -845,6 +906,8 @@ class FileHandler(TransferHandlerBase):
                 failed_l.append(t)
                 self._post_transfer_attempt(t, False, t_start)
                 continue
+
+            self._pre_transfer_attempt(t)
             
             if os.path.exists(t.get_src_path()) \
                and os.path.exists(t.get_dst_path()):
@@ -1040,7 +1103,7 @@ class GridFtpHandler(TransferHandlerBase):
             
             if len(similar_list) > 1:
                 logger.debug("%d similar gsiftp transfers grouped together" %(len(similar_list)))
-    
+             
             # we now have a list of similar transfers - break up and send the
             # first one with create dir and the rest with no create dir options
             first = similar_list.pop()
@@ -1123,6 +1186,7 @@ class GridFtpHandler(TransferHandlerBase):
         # if srcs are local, verify them first
         local_ok = True
         for t in transfers:
+            self._pre_transfer_attempt(t)
             if t.get_src_proto() == "file":
                 # src has to exist and be readable
                 if not verify_local_file(t.get_src_path()):
@@ -1375,6 +1439,8 @@ class HTTPHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
         for t in transfers:
+            
+            self._pre_transfer_attempt(t)
 
             prepare_local_dir(os.path.dirname(t.get_dst_path()))
             
@@ -1473,6 +1539,8 @@ class IRodsHandler(TransferHandlerBase):
         failed_l = []
         for t in transfer_list:   
    
+            self._pre_transfer_attempt(t)
+
             # log in to irods
             env = None
             sitename = t.get_src_site_label()
@@ -1715,6 +1783,8 @@ class S3Handler(TransferHandlerBase):
         successful_l = []
         failed_l = []
         for t in transfers:
+
+            self._pre_transfer_attempt(t)
 
             t_start = time.time()
             env = {}
@@ -2052,7 +2122,6 @@ class GlobusOnlineHandler(TransferHandlerBase):
         
         return cred_details
 
-    
 
 class GSHandler(TransferHandlerBase):
     """
@@ -2123,6 +2192,8 @@ class GSHandler(TransferHandlerBase):
             env = self._gsutil_env(transfers_l[0].get_dst_site_label())
         
         for t in transfers_l:
+            
+            self._pre_transfer_attempt(t)
 
             t_start = time.time()
             cmd = ""
@@ -2297,6 +2368,8 @@ class GFALHandler(TransferHandlerBase):
         
         for t in transfers_l:
 
+            self._pre_transfer_attempt(t)
+
             t_start = time.time()
         
             if t.get_dst_proto() == "file":
@@ -2438,6 +2511,9 @@ class ScpHandler(TransferHandlerBase):
 
         # limit the size of the groups to keep command lines short
         for t_group in self._similar_groups(transfers, max_transfers_in_group = max_transfers_in_group):
+
+            for t in t_group:
+                self._pre_transfer_attempt(t)
         
             t_base = t_group[0]
         
@@ -2689,6 +2765,9 @@ class GSIScpHandler(TransferHandlerBase):
 
         # limit the size of the groups to keep command lines short
         for t_group in self._similar_groups(transfers, max_transfers_in_group = max_transfers_in_group):
+
+            for t in t_group:
+                self._pre_transfer_attempt(t)
         
             t_base = t_group[0]
         
@@ -2894,6 +2973,7 @@ class StashHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
         for t in transfers_l:
+            self._pre_transfer_attempt(t)
             t_start = time.time()
 
             # stashcp wants just the path with a single leading slash
@@ -2939,6 +3019,7 @@ class SymlinkHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
         for t in transfer_l:
+            self._pre_transfer_attempt(t)
             t_start = time.time()
 
             prepare_local_dir(os.path.dirname(t.get_dst_path()))
@@ -3013,6 +3094,7 @@ class DockerHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
         for t in transfers_l:
+            self._pre_transfer_attempt(t)
             t_start = time.time()
 
             # docker wants just the path
@@ -3062,6 +3144,7 @@ class SingularityHubHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
         for t in transfers_l:
+            self._pre_transfer_attempt(t)
             t_start = time.time()
 
             # singularity pull --name only accepts a filename, not a full path, so
@@ -3070,7 +3153,7 @@ class SingularityHubHandler(TransferHandlerBase):
             target_name = hashlib.sha224(t.get_dst_path()).hexdigest()
 
             prepare_local_dir(os.path.dirname(t.get_dst_path()))
-            cmd = "%s pull --name '%s' '%s' && mv '%s.simg' '%s'" \
+            cmd = "%s pull --name '%s' '%s' && mv %s* '%s'" \
                 % (tools.full_path("singularity"), target_name, t.src_url(), \
                    target_name, t.get_dst_path())
             try:
@@ -3283,12 +3366,15 @@ class SimilarWorkSet:
 
         # can we find one handler which can handle both source
         # and destination protocols directly?
-        for h in self._available_handlers:
-            if h.protocol_check(src_proto, dst_proto):
-                self._primary_handler = h
-                logger.debug("Selected %s for handling these transfers" 
-                             %(h._name))
-                return
+        # (sometimes we want to force split transfer to do things like
+        #  local checksumming)
+        if not self.force_split_transfers(transfers_l[0]):
+            for h in self._available_handlers:
+                if h.protocol_check(src_proto, dst_proto):
+                    self._primary_handler = h
+                    logger.debug("Selected %s for handling these transfers" 
+                                 %(h._name))
+                    return
 
         # we need to split the transfer from src to local file,
         # and then transfer the local file to the dst
@@ -3323,6 +3409,7 @@ class SimilarWorkSet:
         assert self._transfers is not None
         
         success_list = []
+        verify_list = []
         failed_list = []
         
         # mkdirs
@@ -3357,14 +3444,7 @@ class SimilarWorkSet:
         self._tmp_name = None
         if self._secondary_handler is not None:
             # we have a two stage transfer to deal with and we need a temp file
-            tmp_fd, self._tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-two-stage-",
-                                                      suffix=".data")
-            # the temp file is only used in shell callouts, so let's close
-            # the fd to make sure we are not leaving any open fds around
-            try:
-                os.close(tmp_fd)
-            except:
-                pass
+            self._tmp_name = self.get_temp_file()
             # open the permission up to make sure files downstream
             # get sane permissions to inherit
             os.chmod(self._tmp_name, 0644)
@@ -3380,11 +3460,6 @@ class SimilarWorkSet:
             # one handler to rule them all!
             try:
                 (success_list, failed_list) = self._primary_handler.do_transfers(self._transfers)
-                # accounting
-                for t in success_list:
-                    self._completed_q.put(t)
-                for t in failed_list: 
-                    self._failed_q.put(t)
             except Exception, e:
                 logger.exception("Exception while doing transfer:")
                 raise
@@ -3396,9 +3471,14 @@ class SimilarWorkSet:
                 # transfer as that is the one which will have to go back to the
                 # failed queue in case of failure
                 t_one = Transfer()
+                t_one.lfn = transfer.lfn
                 t_one.add_src(transfer.get_src_site_label(), transfer.src_url())
                 t_one.add_dst("local", "file://" + self._tmp_name)
+                # checksum after the first step
+                t_one.generate_checksum = transfer.generate_checksum
+                
                 t_two =  Transfer()
+                t_two.lfn = transfer.lfn
                 t_two.add_src("local", "file://" + self._tmp_name)
                 t_two.add_dst(transfer.get_dst_site_label(), transfer.dst_url())
                 try:
@@ -3410,17 +3490,63 @@ class SimilarWorkSet:
                     logger.exception("Exception while doing transfer:")
                     raise
                 if len(s) == 1:
-                    self._completed_q.put(transfer)
+                    success_list.append(transfer)
                 else:
-                    self._failed_q.put(transfer)
+                    failed_list.append(transfer)
         
         # remove temp file
-        if self._tmp_name is not None:
-            logger.debug("Removing temporary file %s" %(self._tmp_name))
-            try:
-                os.unlink(self._tmp_name)
-            except:
-                pass
+        self.clean_up_temp_file(self._tmp_name)
+
+        # verify that the remotely stored file's checksum matches - this means
+        # pulling the file back to the local filesystem and verifying the checksum
+        verify_list = success_list
+        success_list = []
+        for t in verify_list:
+            if t.verify_checksum_remote:
+
+                local_name = None
+                temp_name = None
+
+                # local files are a special case
+                if t.get_dst_proto() == "file":
+                    local_name = t.get_dst_path()
+                else:
+                    # first verify that we can actually pull the file back
+                    if not self._primary_handler.protocol_check(t.get_dst_proto(), "file"):
+                        logger.warn("Unable to pull file from " + t.get_dst_proto() + 
+                                    " to local file. Skipping integrity check.")
+                        continue
+
+                    logger.info("Pulling back " + t.lfn + " to verify checksum")
+                    temp_name = self.get_temp_file()
+                    t_verify =  Transfer()
+                    t_verify.lfn = t.lfn
+                    t_verify.add_src(t.get_dst_site_label(), t.dst_url())
+                    t_verify.add_dst("local", "file://" + temp_name)
+                    (success_verify, failed_verify) = self._primary_handler.do_transfers([t_verify])
+                    if failed_verify is []:
+                        failed_list.append(t)
+                        self.clean_up_temp_file(temp_name)
+                        continue
+                    local_name = temp_name
+                
+                # verify checksum of the now locally accessible file
+                if self.verify_integrity_checksum(t.lfn, local_name):
+                    success_list.append(t)
+                else:
+                    failed_list.append(t)
+
+                if temp_name is not None:
+                    self.clean_up_temp_file(temp_name)
+            else:
+                # no verification needed
+                success_list.append(t)
+
+        # accounting
+        for t in success_list:
+            self._completed_q.put(t)
+        for t in failed_list: 
+            self._failed_q.put(t)
 
 
     def has_gridftp_transfers(self):
@@ -3432,7 +3558,74 @@ class SimilarWorkSet:
             return True
         return False
         
+
+    def force_split_transfers(self, transfer):
+        """
+        Examine the transfer and determine if we want to force split transfers
+        for example in the case where we have gsiftp->gsiftp and asked to
+        do checksumming
+        """
+        # only worry about checksumming now
+        if transfer.generate_checksum is None or transfer.generate_checksum == False:
+            return False
+
+        if transfer.get_src_proto() == "gsiftp" and \
+           transfer.get_dst_proto() == "gsiftp":
+            return True
+
+        return False
+    
+
+    def verify_integrity_checksum(self, lfn, fname):
+        """
+        Call out to pegasus-integrity to verify a checksum for the file.
+        """
+
+        tools = Tools()
+
+        if tools.find("pegasus-integrity", "help", None, [prog_dir]) is None:
+            logger.error("Unable to do integrity checking because pegasus-integrity not found")
+            return 
+
+        if lfn is None or lfn == "":
+            logger.error("lfn is required when enabling checksumming")
+            return
         
+        cmd = "%s --verify=\"%s\" --lfn=\"%s\"" % (tools.full_path("pegasus-integrity"), fname, lfn)
+        try:
+            tc = TimedCommand(cmd)
+            tc.run()
+        except RuntimeError, err:
+            logger.error(err)
+            return False
+        return True
+
+
+    def get_temp_file(self):
+        """
+        Creates a new temporary file, returns the filename
+        """
+        # temp file to transfer to
+        tmp_fd, self._tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-",
+                suffix=".data")
+        # the temp file is only used in shell callouts, so let's close
+        # the fd to make sure we are not leaving any open fds around
+        try:
+            os.close(tmp_fd)
+        except:
+            pass
+        return self._tmp_name
+
+
+    def clean_up_temp_file(self, fname):
+        """
+        Cleans up a temp file
+        """
+        try:
+            os.unlink(fname)
+        except:
+            pass
+
 
 class WorkThread(threading.Thread):
     """
@@ -3487,6 +3680,9 @@ symlink_file_transfer = False
 # track remote directories created so that don't have to
 # try to create them over and over again
 remote_dirs_created = {}
+
+# track which lfns we have already checksummed
+integrity_checksummed = []
 
 # many commands need to know how long the command line can be
 max_cmd_len = 0
@@ -3750,6 +3946,12 @@ def json_object_decoder(obj):
     """
     if 'type' in obj and obj['type'] == 'transfer':
         t = Transfer()
+        if 'lfn' in obj:
+            t.set_lfn(obj['lfn'])
+        if 'generate_checksum' in obj:
+            t.generate_checksum = obj['generate_checksum']
+        if 'verify_checksum_remote' in obj:
+            t.verify_checksum_remote = obj['verify_checksum_remote']
         # src
         for surl in obj['src_urls']:
             priority = None
@@ -3932,7 +4134,7 @@ def main():
         logger.critical('Error reading transfer list: %s' % (err))
         myexit(1)
 
-    # store symlink option in global variable
+    # store options in global variables
     symlink_file_transfer = options.symlink
     
     # queues to track the work

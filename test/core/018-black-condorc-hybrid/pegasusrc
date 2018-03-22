@@ -8,3 +8,7 @@ pegasus.condor.logs.symlink = false
 
 pegasus.data.configuration = condorio
 pegasus.transfer.worker.package = true
+
+# there are compute jobs that are not launched by kicstart
+# hence enable integrity checking
+pegasus.integrity.checking= false

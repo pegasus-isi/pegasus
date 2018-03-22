@@ -14,9 +14,11 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-__author__ = 'Rafael Ferreira da Silva'
+from __future__ import print_function
 
 import os
+
+__author__ = 'Rafael Ferreira da Silva'
 
 
 class ReplicaCatalog:
@@ -76,5 +78,7 @@ class ReplicaCatalog:
                         ppf.write('\n')
 
         else:
-            print('\x1b[0;35mWARNING: Replica Catalog (%s) already exists. Use "force=True" '
-                  'to overwrite it.\n\x1b[0m' % catalog_file)
+            print(
+                '\x1b[0;35mWARNING: Replica Catalog (%s) already exists. Use "force=True" '
+                'to overwrite it.\n\x1b[0m' % catalog_file
+            )

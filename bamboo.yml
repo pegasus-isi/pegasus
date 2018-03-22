@@ -39,28 +39,32 @@ project:
                       (cd pegasus-source && ant clean)
 
                       # We need a versioned copy to put on the website that
-                      # excludes git files
-                      cp -a pegasus-source pegasus-source-$VERSION
-                      #tar -czf pegasus-source-$VERSION.tar.gz --exclude=.git --exclude=.gitignore pegasus-source-$VERSION
-                      tar -czf pegasus-source-$VERSION.tar.gz pegasus-source-$VERSION
+                      # excludes git files, but include the generated docs
+                      (cd pegasus-source && ant dist-source swamp-tarballs && mv dist/pegasus-$VERSION.tar.gz dist/pegasus-swamp*-$VERSION.tar.gz ..)
+
+                      # pegasus-source.tar.gz is a tarball which is used to in subsequent buildsteps
+                      # make this a copy of the generated source tarball to keep everyhing
+                      # consistent
+                      (cd pegasus-source/dist && tar xzf ../../pegasus-$VERSION.tar.gz && mv pegasus-$VERSION pegasus-source && tar -czf ../../pegasus-source.tar.gz pegasus-source && rm -rf pegasus-source)
 
                       # Create the source tarball for python source files using setup.py
                       (cd pegasus-source && ant dist-python-source && mv dist/pegasus-python-source-$VERSION.tar.gz ..)
 
-
-                      # Create a source tarball with documentation and
-                      # setup files to be used as the input to later
-                      # build stages so we don't have to build the documentation
-                      # multiple times
-                      (cd pegasus-source && ant doc dist-clean)
-                      #tar -czf pegasus-source.tar.gz --exclude=.git --exclude=.gitignore pegasus-source
-                      tar -czf pegasus-source.tar.gz pegasus-source
               artifactDefinitions:
                 - name: pegasus-python-source-versioned
                   copyPattern: 'pegasus-python-source-*.tar.gz'
                   isShared: true
                 - name: pegasus-source-versioned
                   copyPattern: 'pegasus-source-*.tar.gz'
+                  isShared: true
+                - name: pegasus-source-versioned-swamp-c
+                  copyPattern: 'pegasus-swamp-c-?.*.tar.gz'
+                  isShared: true
+                - name: pegasus-source-versioned-swamp-java
+                  copyPattern: 'pegasus-swamp-java-?.*.tar.gz'
+                  isShared: true
+                - name: pegasus-source-versioned-swamp-python
+                  copyPattern: 'pegasus-swamp-python-?.*.tar.gz'
                   isShared: true
                 - name: pegasus-source
                   copyPattern: 'pegasus-source.tar.gz'
@@ -71,8 +75,8 @@ project:
         - name: Unit Tests
           description: Run Unit Tests on Code and Binaries
           jobs:
-            - key: CUT
-              name: C Unit Tests
+            - key: D9CUT
+              name: Debian 9 Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -80,7 +84,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "tar xzf pegasus-source.tar.gz"
                 - !script
-                  description: C Unit Tests
+                  description: Unit Tests
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
@@ -92,7 +96,7 @@ project:
                       --rm \
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       --entrypoint ant \
-                      pegasus/pegasus:${TAG} test-kickstart test-pmc
+                      pegasus/pegasus:${TAG} test-kickstart test-pmc test-transfer
               artifactDependencies:
                 - name: pegasus-source
               requirements:
@@ -100,6 +104,403 @@ project:
                   matchType: !exists exists
               requirements:
                 - capabilityKey: mpi
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+
+                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+
+                      /opt/docker/docker-bamboo-wrapper run \
+                      --rm \
+                      --entrypoint ant \
+                      --env "USER=bamboo" \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
+                      pegasus/pegasus:${TAG} test-python
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: D10CUT
+              name: Debian 10 Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      TAG=${bamboo_TAG_DEBIAN_10}
+
+                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+
+                      /opt/docker/docker-bamboo-wrapper run \
+                      --rm \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
+                      --entrypoint ant \
+                      pegasus/pegasus:${TAG} test-kickstart test-pmc test-transfer
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: D10JUT
+              name: Debian 10 Java Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Java Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      TAG=${bamboo_TAG_DEBIAN_10}
+
+                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+
+                      /opt/docker/docker-bamboo-wrapper run \
+                      --rm \
+                      --entrypoint ant \
+                      --env "USER=bamboo" \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
+                      pegasus/pegasus:${TAG} test-java
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: D10PUT
+              name: Debian 10 Python Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Python Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      TAG=${bamboo_TAG_DEBIAN_10}
+
+                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+
+                      /opt/docker/docker-bamboo-wrapper run \
+                      --rm \
+                      --entrypoint ant \
+                      --env "USER=bamboo" \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
+                      pegasus/pegasus:${TAG} test-python
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: OCUT
+              name: OSX Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      # We need /usr/local/bin because of homebrew
+                      export PATH=$PATH:/usr/local/bin:/Library/TeX/texbin
+                      cd pegasus-source
+                      ant test-kickstart test-transfer
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: platform
+                  matchType: !equals
+                    matchValue: macos
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key:  R6CUT
+              name: RHEL 6 Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      TAG=${bamboo_TAG_CENTOS_6}
+
+                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+
+                      /opt/docker/docker-bamboo-wrapper run \
+                      --rm \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
+                      --entrypoint ant \
+                      pegasus/pegasus:${TAG} test-kickstart test-pmc test-transfer
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: R6JUT
+              name: RHEL 6 Java Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Java Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      TAG=${bamboo_TAG_CENTOS_6}
+
+                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+
+                      /opt/docker/docker-bamboo-wrapper run \
+                      --rm \
+                      --entrypoint ant \
+                      --env "USER=bamboo" \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
+                      pegasus/pegasus:${TAG} test-java
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: R6PUT
+              name: RHEL 6 Python Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Python Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      TAG=${bamboo_TAG_CENTOS_6}
+
+                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+
+                      /opt/docker/docker-bamboo-wrapper run \
+                      --rm \
+                      --entrypoint ant \
+                      --env "USER=bamboo" \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
+                      pegasus/pegasus:${TAG} test-python
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: R7CUT
+              name: RHEL 7 Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      TAG=${bamboo_TAG_CENTOS_7}
+
+                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+
+                      /opt/docker/docker-bamboo-wrapper run \
+                      --rm \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
+                      --entrypoint ant \
+                      pegasus/pegasus:${TAG} test-kickstart test-pmc test-transfer
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: R7JUT
+              name: RHEL 7 Java Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Java Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      TAG=${bamboo_TAG_CENTOS_7}
+
+                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+
+                      /opt/docker/docker-bamboo-wrapper run \
+                      --rm \
+                      --entrypoint ant \
+                      --env "USER=bamboo" \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
+                      pegasus/pegasus:${TAG} test-java
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: R7PUT
+              name: RHEL 7 Python Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Python Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      TAG=${bamboo_TAG_CENTOS_7}
+
+                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+
+                      /opt/docker/docker-bamboo-wrapper run \
+                      --rm \
+                      --entrypoint ant \
+                      --env "USER=bamboo" \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
+                      pegasus/pegasus:${TAG} test-python
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: UTCUZ
+              name: Ubuntu Zesty Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      TAG=${bamboo_TAG_UBUNTU_17}
+
+                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+
+                      /opt/docker/docker-bamboo-wrapper run \
+                      --rm \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
+                      --entrypoint ant \
+                      pegasus/pegasus:${TAG} test-kickstart test-pmc test-transfer
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: UTJUZ
+              name: Ubuntu Zesty Java Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Java Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      TAG=${bamboo_TAG_UBUNTU_17}
+
+                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+
+                      /opt/docker/docker-bamboo-wrapper run \
+                      --rm \
+                      --entrypoint ant \
+                      --env "USER=bamboo" \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
+                      pegasus/pegasus:${TAG} test-java
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: UTPUZ
+              name: Ubuntu Zesty Python Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Python Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      TAG=${bamboo_TAG_UBUNTU_17}
+
+                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+
+                      /opt/docker/docker-bamboo-wrapper run \
+                      --rm \
+                      --entrypoint ant \
+                      --env "USER=bamboo" \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
+                      pegasus/pegasus:${TAG} test-python
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: system.docker.executable
                   matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
@@ -355,6 +756,49 @@ project:
                   matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
+            - key: BDEB10
+              name: Build x86_64 Debian 10
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Binary Packages
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      TAG=${bamboo_TAG_DEBIAN_10}
+
+                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+
+                      /opt/docker/docker-bamboo-wrapper run \
+                      --rm \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
+                      --entrypoint ant \
+                      pegasus/pegasus:${TAG} \
+                      clean dist-deb dist-worker dist-release
+              artifactDefinitions:
+                - name: pegasus-binary-x86_64_deb_10
+                  copyPattern: 'pegasus-binary-*-x86_64_deb_10.tar.gz'
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-deb-x86_64_deb_10
+                  copyPattern: '*.deb'
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-worker-x86_64_deb_10
+                  copyPattern: 'pegasus-worker-*-x86_64_deb_10.tar.gz'
+                  location: pegasus-source/dist
+                  isShared: true
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
             - key: BXOSX
               name: Build x86_64 OSX
               tasks:
@@ -474,7 +918,8 @@ project:
 
                       DOWNLOADS=pegasus/$VERSION
                       mkdir -p $DOWNLOADS
-                      mv pegasus-source-*.tar.gz $DOWNLOADS/
+                      mv pegasus-4*.tar.gz $DOWNLOADS/
+                      mv pegasus-swamp-*.tar.gz $DOWNLOADS/
                       mv pegasus-python-source-*.tar.gz $DOWNLOADS/
                       mv pegasus-binary-*.tar.gz $DOWNLOADS/
                       mv pegasus-worker-*.tar.gz $DOWNLOADS/
@@ -484,6 +929,39 @@ project:
                       mv *.dmg $DOWNLOADS/
                       mv pegasus-r-dax3*.tar.gz $DOWNLOADS/
 
+                      # debian
+                      mkdir -p $DOWNLOADS/debian/dists/jessie/main/binary-amd64
+                      cp $DOWNLOADS/pegasus_*deb8_amd64.deb $DOWNLOADS/debian/dists/jessie/main/binary-amd64/
+                      mkdir -p $DOWNLOADS/debian/dists/stretch/main/binary-amd64
+                      cp $DOWNLOADS/pegasus_*deb9_amd64.deb $DOWNLOADS/debian/dists/stretch/main/binary-amd64/
+                      mkdir -p $DOWNLOADS/debian/dists/buster/main/binary-amd64
+                      cp $DOWNLOADS/pegasus_*deb10_amd64.deb $DOWNLOADS/debian/dists/buster/main/binary-amd64/
+
+                      # ubuntu
+                      mkdir -p $DOWNLOADS/ubuntu/dists/xenial/main/binary-amd64
+                      cp $DOWNLOADS/pegasus_*ubuntu16_amd64.deb $DOWNLOADS/ubuntu/dists/xenial/main/binary-amd64/
+                      mkdir -p $DOWNLOADS/ubuntu/dists/zesty/main/binary-amd64
+                      cp $DOWNLOADS/pegasus_*ubuntu17_amd64.deb $DOWNLOADS/ubuntu/dists/zesty/main/binary-amd64/
+
+                      # rheh
+                      mkdir -p $DOWNLOADS/rhel/src
+                      cp $DOWNLOADS/pegasus-*.src.rpm $DOWNLOADS/rhel/src/
+                      mkdir -p $DOWNLOADS/rhel/6/x86_64
+                      cp $DOWNLOADS/pegasus-*el6.x86_64.rpm $DOWNLOADS/rhel/6/x86_64/
+                      mkdir -p $DOWNLOADS/rhel/7/x86_64
+                      cp $DOWNLOADS/pegasus-*el7.x86_64.rpm $DOWNLOADS/rhel/7/x86_64/
+
+                      # standard filenames for RPMs - used by tutorial VM
+                      cd pegasus/$VERSION
+                      if [ ! -e pegasus-$VERSION-1.el6.x86_64.rpm ]; then
+                          cp pegasus-*el6.x86_64.rpm pegasus-$VERSION-1.el6.x86_64.rpm
+                      fi
+                      if [ ! -e pegasus-$VERSION-1.el7.x86_64.rpm ]; then
+                          cp pegasus-*el7.x86_64.rpm pegasus-$VERSION-1.el7.x86_64.rpm
+                      fi
+                      cd ../..
+
+                      # no files should be left behind
                       ls -l
 
                       scp -r $DOWNLOADS download.pegasus.isi.edu:/srv/download.pegasus.isi.edu/public_html/pegasus/
@@ -494,6 +972,8 @@ project:
               artifactDependencies:
                 - name: pegasus-binary-x86_64_deb_7
                 - name: pegasus-binary-x86_64_deb_8
+                - name: pegasus-binary-x86_64_deb_9
+                - name: pegasus-binary-x86_64_deb_10
                 - name: pegasus-binary-x86_64_macos
                 - name: pegasus-binary-x86_64_rhel_6
                 - name: pegasus-binary-x86_64_rhel_7
@@ -501,7 +981,10 @@ project:
                 - name: pegasus-binary-x86_rhel_6
                 - name: pegasus-deb-x86_64_deb_7
                 - name: pegasus-deb-x86_64_deb_8
-                - name: pegasus-deb-x86_64_ubuntu_14
+                - name: pegasus-deb-x86_64_deb_9
+                - name: pegasus-deb-x86_64_deb_10
+                - name: pegasus-deb-x86_64_ubuntu_16
+                - name: pegasus-deb-x86_64_ubuntu_17
                 - name: pegasus-dmg-x86_64_macos
                 - name: pegasus-doc
                 - name: pegasus-python-source-versioned
@@ -510,9 +993,14 @@ project:
                 - name: pegasus-rpm-x86_rhel_6
                 - name: pegasus-source
                 - name: pegasus-source-versioned
+                - name: pegasus-source-versioned-swamp-c
+                - name: pegasus-source-versioned-swamp-java
+                - name: pegasus-source-versioned-swamp-python
                 - name: pegasus-srcrpm
                 - name: pegasus-worker-x86_64_deb_7
                 - name: pegasus-worker-x86_64_deb_8
+                - name: pegasus-worker-x86_64_deb_9
+                - name: pegasus-worker-x86_64_deb_10
                 - name: pegasus-worker-x86_64_macos
                 - name: pegasus-worker-x86_64_rhel_6
                 - name: pegasus-worker-x86_64_rhel_7
@@ -520,25 +1008,30 @@ project:
                 - name: pegasus-worker-x86_rhel_6
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
-#      permissions:
-#        user:
-#          mayani: !permission ADMIN
-#        other: !userType
-#          ANONYMOUS_USERS: !permission VIEW
-#          LOGGED_IN_USERS: !permission VIEW
-
-#      triggers:
-#        - !scheduled
-#          description: Nightly Build
-#          cronExpression: "0 0 19 * * ?"
-
-#      notifications:
-#        - !email
-#          address: pegasus-svn@isi.edu
-#          event: !event JOB_HUNG
-#        - !email
-#          address: pegasus-svn@isi.edu
-#          event: !event FAILED_BUILDS_AND_FIRST_SUCCESSFUL
+      permissions:
+        user:
+          mayani:
+            -  !permission ADMIN
+        group:
+          ccg-users:
+            -  !permission VIEW
+            -  !permission BUILD
+        other:
+          !userType ANONYMOUS_USERS:
+            -  !permission VIEW
+          !userType LOGGED_IN_USERS:
+            -  !permission VIEW
+      triggers:
+        - !scheduled
+          description: Nightly Build
+          cronExpression: "0 0 21 * * ?"
+      notifications:
+        - !email
+          address: pegasus-svn@isi.edu
+          event: !event JOB_HUNG
+        - !email
+          address: pegasus-svn@isi.edu
+          event: !event FAILED_BUILDS_AND_FIRST_SUCCESSFUL
       variables:
         - key: TAG_CENTOS_6
           value: panorama-centos6
@@ -547,11 +1040,17 @@ project:
         - key: TAG_DEBIAN_7
           value: panorama-wheezy
         - key: TAG_DEBIAN_8
-          value: panorama-jessie
-        - key: TAG_UBUNTU_12
-          value: panorama-precise
-        - key: TAG_UBUNTU_14
-          value: panorama-trusty
+          value: jessie
+        - key: TAG_DEBIAN_9
+          value: stretch
+        - key: TAG_DEBIAN_10
+          value: buster
+        - key: TAG_UBUNTU_16
+          value: xenial
+        - key: TAG_UBUNTU_17
+          value: zesty
+        - key: TAG_UBUNTU_18
+          value: bionic
 
     - key: WTPANORAMA
       name: Workflow Tests (panorama)
@@ -560,6 +1059,108 @@ project:
           name: Pegasus
           url: https://github.com/pegasus-isi/pegasus.git
           branch: panorama
+      stages:
+        - name: Build Tutorial VM
+          description: Build Tutorial VM
+          jobs:
+            - key: TV
+              name: Tutorial VM
+              description: Generate Pegasus Tutorial VMs for VirtualBox and AWS EC2.
+              tasks:
+                - !checkout
+                  description: Checks the Pegasus code out from our source repository
+                  forceCleanBuild: true
+                  repositories:
+                    - name: Pegasus
+                - !script
+                  description: Build and Deploy VM
+                  environmentVariables: PATH=/usr/local/bin
+                  workingSubDirectory: release-tools/tutorial_vm
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      set -e
+                      set -x
+
+                      export PACKER_CACHE_DIR=~/.packer_cache
+                      VERSION=`../getversion`
+
+                      if [ "$USER" == "root" ]; then
+                          echo "ERROR: Bamboo agent running as root! Restart as user 'bamboo'"
+                          exit 1
+                      fi
+
+                      PACKER_LOG=1 ./build-vm.sh "${VERSION}"
+                - !script
+                  description: Cleanup
+                  isFinal: true
+                  environmentVariables: PATH=/usr/local/bin
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      VERSION=`release-tools/getversion`
+
+                      echo "#################################################"
+                      echo "Cleanup, ignore errors reported beyond this point"
+                      echo "#################################################"
+
+                      VBoxManage controlvm    "pegasus-tutorial-base-vm-${VERSION}" poweroff
+                      VBoxManage discardstate "pegasus-tutorial-base-vm-${VERSION}"
+                      VBoxManage unregistervm --delete "pegasus-tutorial-base-vm-${VERSION}"
+
+                      VBoxManage controlvm    "PegasusTutorialVM-${VERSION}" poweroff
+                      VBoxManage discardstate "PegasusTutorialVM-${VERSION}"
+                      VBoxManage unregistervm --delete "PegasusTutorialVM-${VERSION}"
+
+                      rm -rf ~/VirtualBox\ VMs/{pegasus-tutorial-base-vm-${VERSION},"PegasusTutorialVM-${VERSION}"}
+
+                      exit 0
+              requirements:
+                - capabilityKey: awscli.installed
+                  matchType: !equals
+                    matchValue: 'true'
+                - capabilityKey: system.builder.command.packer
+                  matchType: !exists exists
+                - capabilityKey: virtualbox.installed
+                  matchType: !equals
+                    matchValue: 'true'
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+      permissions:
+        user:
+          mayani:
+            -  !permission ADMIN
+        group:
+          ccg-users:
+            -  !permission VIEW
+            -  !permission BUILD
+        other:
+          !userType ANONYMOUS_USERS:
+            -  !permission VIEW
+          !userType LOGGED_IN_USERS:
+            -  !permission VIEW
+      triggers:
+        - !scheduled
+          description: Nightly Build
+          cronExpression: "0 0 20 * * ?"
+          onlyRunIfOtherPlansArePassing:
+            planKeys:
+              - PEGASUS-BNT49
+      notifications:
+        - !email
+          address: pegasus-svn@isi.edu
+          event: !event JOB_HUNG
+        - !email
+          address: pegasus-svn@isi.edu
+          event: !event FAILED_BUILDS_AND_FIRST_SUCCESSFUL
+
+    - key: WT49
+      name: Workflow Tests (master)
+      scm:
+        - !git
+          name: Pegasus
+          url: https://github.com/pegasus-isi/pegasus.git
+          branch: master
       stages:
         - name: Setup
           description: Setup
@@ -589,7 +1190,7 @@ project:
                       set -e
                       set -x
 
-                      TARGET_DIR=/nfs/ccg4/scratch-purge-no-backups/bamboo/installs
+                      TARGET_DIR=/lizard/scratch-90-days/bamboo/installs
 
                       NAME=`cd dist && ls | grep -v tar | grep pegasus`
                       echo "Found $NAME"
@@ -861,6 +1462,7 @@ project:
             - key: T005
               name: 005-galactic-plane
               description: TODO
+              enabled: false
               tasks:
                 - !script
                   description: Cleanup
@@ -2672,12 +3274,64 @@ project:
                 - name: tests
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: false
-#      permissions:
-#        user:
-#          mayani: !permission ADMIN
-#        other: !userType
-#          ANONYMOUS_USERS: !permission VIEW
-#          LOGGED_IN_USERS: !permission VIEW
+            - key: JDBCPERF
+              name: 041-jdbcrc-performance
+              description: JDBC RC performance
+              tasks:
+                - !script
+                  description: Cleanup
+                  enabled: true
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "rm -rf pegasus/ test/"
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xf tests.tar"
+                - !script
+                  description: Run Test
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+                      test/scripts/launch-bamboo-test-no-jobs ${bamboo_shortJobName}
+              requirements:
+                - capabilityKey: condor
+                  matchType: !exists exists
+                - capabilityKey: performance
+                  matchType: !exists exists
+              artifactDependencies:
+                - name: tests
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: false
+      permissions:
+        user:
+          mayani:
+            -  !permission ADMIN
+        group:
+          ccg-users:
+            -  !permission VIEW
+            -  !permission BUILD
+        other:
+          !userType ANONYMOUS_USERS:
+            -  !permission VIEW
+          !userType LOGGED_IN_USERS:
+            -  !permission VIEW
+      triggers:
+        - !scheduled
+          description: Nightly Build
+          cronExpression: "0 0 1 * * ?"
+          onlyRunIfOtherPlansArePassing:
+            planKeys:
+              - PEGASUS-BNT49
+      notifications:
+        - !email
+          address: pegasus-svn@isi.edu
+          event: !event JOB_HUNG
+        - !email
+          address: pegasus-svn@isi.edu
+          event: !event FAILED_BUILDS_AND_FIRST_SUCCESSFUL
 
 #      triggers:
 #        - !scheduled

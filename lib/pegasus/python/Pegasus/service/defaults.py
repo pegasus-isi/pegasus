@@ -41,7 +41,6 @@ ADMIN_USERS = None
 USERNAME = ""
 PASSWORD = ""
 
-
 # ENSEMBLE MANAGER CONFIGURATION
 
 # Workflow processing interval in seconds

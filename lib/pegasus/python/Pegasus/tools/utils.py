@@ -1,6 +1,7 @@
 """
 utils.py: Provides common functions used by all workflow programs
 """
+from __future__ import print_function
 
 ##
 #  Copyright 2007-2011 University Of Southern California
@@ -33,6 +34,8 @@ import datetime
 import traceback
 import subprocess
 import urllib
+
+from builtins import int
 
 __all__ = ['quote', 'unquote']
 
@@ -404,7 +407,7 @@ def raw_to_regular(exitcode):
     For signals, it returns the negative signal number (-1 through -127)
     For failures (when exitcode < 0), it returns the special value -128
     """
-    if type(exitcode) is not int and type(exitcode) is not long:
+    if not isinstance(exitcode, int):
         return exitcode
     if exitcode < 0:
         return -128
@@ -417,7 +420,7 @@ def regular_to_raw(exitcode):
     """
     This function encodes a regular exitcode into a raw exitcode.
     """
-    if not type(exitcode) is int and not type(exitcode) is long :
+    if not isinstance(exitcode, int):
         logger.warning("exitcode not an integer!")
         return exitcode
     if exitcode == -128:
@@ -525,7 +528,7 @@ def pid_running(filename):
                     # Now let's see if process still around...
                     try:
                         os.kill(my_pid, 0)
-                    except OSError, err:
+                    except OSError as err:
                         if err.errno == errno.ESRCH:
                             # pid is not found, monitoring cannot be running
                             logger.info("pid %d not running anymore..." % (my_pid))
@@ -689,39 +692,39 @@ def make_boolean(value):
 
 if __name__ == "__main__":
     current_time = int(time.time())
-    print "Testing isodate() function from now=%lu" % (current_time)
-    print " long local timestamp:", isodate(now=current_time)
-    print "   long utc timestamp:", isodate(now=current_time, utc=True)
-    print "short local timestamp:", isodate(now=current_time, short=True)
-    print "  short utc timestamp:", isodate(now=current_time, utc=True, short=True)
-    print
-    print "Testing epochdate() function from above ISO dates"
-    print " long local epochdate:", epochdate(isodate(now=current_time))
-    print "   long utc epochdate:", epochdate(isodate(now=current_time, utc=True))
-    print "short local timestamp:", epochdate(isodate(now=current_time, short=True))
-    print "  short utc timestamp:", epochdate(isodate(now=current_time, utc=True, short=True))
-    print
-    print "Testing find exec"
-    print "Looking for ls...", find_exec('ls')
-    print "Looking for test.pl...", find_exec('test.pl', True)
-    print "Monitord 1", find_exec("pegasus-mointord")
-    print "Monitord 2", find_exec(program="pegasus-monitord",otherdirs=["/usr/local/pegasus/src/4.0-branch/bin","/usr/local/pegasus"])
-    print
-    print "Testing parse_exit() function"
-    print "ec = 5   ==> ", parse_exit(5)
-    print "ec = 129 ==> ", parse_exit(129)
-    print
-    print "Testing log10() function"
-    print "log10(10):", log10(10)
-    print "log10(100.2):", log10(100.2)
-    print version()
-    print slurp_braindb(".")
-    print pipe_out_cmd('ls -lR')
-    print
-    print "Testing quote/unquote functions..."
-    print repr(str(bytearray(xrange(256))))
-    print quote(str(bytearray(xrange(256))))
-    print unquote("carriage return: %0Apercent: %25%0Aquote: %27%0Adouble quote: %22")
-    print
-    print
+    print("Testing isodate() function from now=%lu" % (current_time))
+    print(" long local timestamp:", isodate(now=current_time))
+    print("   long utc timestamp:", isodate(now=current_time, utc=True))
+    print("short local timestamp:", isodate(now=current_time, short=True))
+    print("  short utc timestamp:", isodate(now=current_time, utc=True, short=True))
+    print()
+    print("Testing epochdate() function from above ISO dates")
+    print(" long local epochdate:", epochdate(isodate(now=current_time)))
+    print("   long utc epochdate:", epochdate(isodate(now=current_time, utc=True)))
+    print("short local timestamp:", epochdate(isodate(now=current_time, short=True)))
+    print("  short utc timestamp:", epochdate(isodate(now=current_time, utc=True, short=True)))
+    print()
+    print("Testing find exec")
+    print("Looking for ls...", find_exec('ls'))
+    print("Looking for test.pl...", find_exec('test.pl', True))
+    print("Monitord 1", find_exec("pegasus-mointord"))
+    print("Monitord 2", find_exec(program="pegasus-monitord",otherdirs=["/usr/local/pegasus/src/4.0-branch/bin","/usr/local/pegasus"]))
+    print()
+    print("Testing parse_exit() function")
+    print("ec = 5   ==> ", parse_exit(5))
+    print("ec = 129 ==> ", parse_exit(129))
+    print()
+    print("Testing log10() function")
+    print("log10(10):", log10(10))
+    print("log10(100.2):", log10(100.2))
+    print(version())
+    print(slurp_braindb("."))
+    print(pipe_out_cmd('ls -lR'))
+    print()
+    print("Testing quote/unquote functions...")
+    print(repr(str(bytearray(xrange(256)))))
+    print(quote(str(bytearray(xrange(256)))))
+    print(unquote("carriage return: %0Apercent: %25%0Aquote: %27%0Adouble quote: %22"))
+    print()
+    print()
 

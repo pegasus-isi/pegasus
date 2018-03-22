@@ -513,6 +513,10 @@ function pegasus_lite_get_system()
         elif [ -e /etc/debian_version ]; then
             osname="deb"
             osversion=`cat /etc/debian_version`
+            # yet to be released Debian 10
+            if (echo "$osversion" | grep "buster") >/dev/null 2>&1; then
+                osversion="10"
+            fi
         elif [ -e /etc/fedora-release ]; then
             osname="fedora"
             osversion=`cat /etc/fedora-release | grep -o -E '[0-9]+'`

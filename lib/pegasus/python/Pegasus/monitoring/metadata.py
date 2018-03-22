@@ -1,6 +1,7 @@
 """
 This file implements the metadata related classes for pegasus-monitord.
 """
+from __future__ import print_function
 
 ##
 #  Copyright 2007-2012 University Of Southern California
@@ -24,6 +25,7 @@ import logging
 import tempfile
 
 import os
+from cStringIO import StringIO
 
 __author__ = "Karan Vahi <vahi@isi.edu>"
 
@@ -69,7 +71,7 @@ class Metadata( object ):
             logger.debug( "Written out metadata to %s", temp_file.name )
             # rename the file to the name to assure atomicity
             os.rename( temp_file.name, os.path.join(directory,name))
-        except Exception, e:
+        except Exception as e:
             # Error sending this event... disable the sink from now on...
             logger.warning(" unable to write out  metadata to directory %s with name %s ", directory, name)
             logger.exception(e)
@@ -86,6 +88,30 @@ class FileMetadata( Metadata ):
     def __init__(self):
         super(FileMetadata, self).__init__()
         self._type = "file"
+
+    def convert_to_rce(self):
+        """
+        Converts to a file based RC description
+        :return:
+        """
+
+        rce = StringIO()
+        rce.write(  self.get_id() )
+        pfn = self.get_attribute_value( "pfn")
+        if pfn is None:
+            pfn = "@@PFN@@"
+        if( pfn ):
+            rce.write(" ")
+            rce.write(pfn)
+
+        for key in self.get_attribute_keys():
+            rce.write(" ")
+            rce.write(key)
+            rce.write("=")
+            rce.write("\"")
+            rce.write(self.get_attribute_value(key))
+            rce.write("\"")
+        return rce.getvalue()
 
 
 
@@ -111,14 +137,14 @@ def main():
     b.add_attribute( "size", "10")
     b.add_attribute( "checksum", "XXXXXX")
 
-    print json.dumps(a.__dict__)
+    print(json.dumps(a.__dict__))
 
     l = []
     l.append( a )
     l.append( b )
     l.append( 1 )
 
-    print json.dumps(l, cls=MetadataCustomEncoder, indent=2)
+    print(json.dumps(l, cls=MetadataCustomEncoder, indent=2))
 
     Metadata.write_to_jsonfile(l, "/tmp", "test")
 

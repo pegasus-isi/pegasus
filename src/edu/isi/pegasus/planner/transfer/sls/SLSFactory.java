@@ -209,7 +209,7 @@ public class SLSFactory {
      * @return 
      */
     private String getSLSShortName(Job job) {
-       String conf = job.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY );
+       String conf = job.getDataConfiguration();
             
        return ( conf != null && (conf.equalsIgnoreCase( PegasusConfiguration.CONDOR_CONFIGURATION_VALUE) ))?
                CONDORIO_SLS_IMPL_CLASS:

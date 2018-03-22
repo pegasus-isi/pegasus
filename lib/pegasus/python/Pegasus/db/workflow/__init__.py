@@ -41,7 +41,7 @@ class WorkflowBase(object):
                 continue
             try:
                 retval += '\n%s* %s : %s' % (spacer * self._indent, i, eval('self.%s' % i))
-            except NotImplementedError, e:
+            except NotImplementedError as e:
                 retval += '\n%s* %s : WARNING: %s' % (spacer * self._indent, i,e)
         return retval
 
@@ -73,8 +73,7 @@ class Workflow(WorkflowBase):
         @type   wf_id: string
         @param  wf_id: the unique wf_uuid as defined by Pegasus
         """
-        raise NotImplementedError, \
-            'initialize not yet implemented'
+        raise NotImplementedError('initialize not yet implemented')
 
     @property
     def wf_uuid(self):
@@ -84,8 +83,7 @@ class Workflow(WorkflowBase):
         @rtype:     string
         @return:    The wf_uuid of the current workflow
         """
-        raise NotImplementedError, \
-            'wf_uuid not yet implemented'
+        raise NotImplementedError('wf_uuid not yet implemented')
 
     @property
     def dax_label(self):
@@ -95,8 +93,7 @@ class Workflow(WorkflowBase):
         @rtype:     string
         @return:    The dax_label of the current workflow.
         """
-        raise NotImplementedError, \
-            'dax_label not yet implemented'
+        raise NotImplementedError('dax_label not yet implemented')
 
     @property
     def timestamp(self):
@@ -106,8 +103,7 @@ class Workflow(WorkflowBase):
         @rtype:     python datetime obj (utc)
         @return:    The workflow timestamp
         """
-        raise NotImplementedError, \
-            'timestamp not yet implemented'
+        raise NotImplementedError('timestamp not yet implemented')
 
     @property
     def submit_hostname(self):
@@ -117,8 +113,7 @@ class Workflow(WorkflowBase):
         @rtype:     string
         @return:    The workflow submit host
         """
-        raise NotImplementedError, \
-            'submit_hostname not yet implemented'
+        raise NotImplementedError('submit_hostname not yet implemented')
 
     @property
     def submit_dir(self):
@@ -128,8 +123,7 @@ class Workflow(WorkflowBase):
         @rtype:     string
         @return:    The workflow submit directory
         """
-        raise NotImplementedError, \
-            'submit_dir not yet implemented'
+        raise NotImplementedError('submit_dir not yet implemented')
 
     @property
     def planner_arguments(self):
@@ -139,8 +133,7 @@ class Workflow(WorkflowBase):
         @rtype:     string
         @return:    The workflow planner arguments
         """
-        raise NotImplementedError, \
-            'planner_arguments not yet implemented'
+        raise NotImplementedError('planner_arguments not yet implemented')
 
     @property
     def user(self):
@@ -150,8 +143,7 @@ class Workflow(WorkflowBase):
         @rtype:     string
         @return:    The workflow user
         """
-        raise NotImplementedError, \
-            'user not yet implemented'
+        raise NotImplementedError('user not yet implemented')
 
     @property
     def grid_dn(self):
@@ -161,8 +153,7 @@ class Workflow(WorkflowBase):
         @rtype:     string
         @return:    The grid DN of the workflow
         """
-        raise NotImplementedError, \
-            'grid_dn not yet implemented'
+        raise NotImplementedError('grid_dn not yet implemented')
 
     @property
     def planner_version(self):
@@ -172,8 +163,7 @@ class Workflow(WorkflowBase):
         @rtype:     string
         @return:    The planner version of the workflow
         """
-        raise NotImplementedError, \
-            'planner_version not yet implemented'
+        raise NotImplementedError('planner_version not yet implemented')
 
     @property
     def parent_wf_uuid(self):
@@ -183,8 +173,7 @@ class Workflow(WorkflowBase):
         @rtype:     string
         @return:    The parent wf_uuid if it exists
         """
-        raise NotImplementedError, \
-            'parent_wf_uuid not yet implemented'
+        raise NotImplementedError('parent_wf_uuid not yet implemented')
 
     @property
     def sub_wf_uuids(self):
@@ -197,8 +186,7 @@ class Workflow(WorkflowBase):
         @rtype:     List of strings
         @return:    The wf_uuids of any sub-workflows.
         """
-        raise NotImplementedError, \
-            'sub_wf_uuids not yet implemented'
+        raise NotImplementedError('sub_wf_uuids not yet implemented')
 
     @property
     def start_events(self):
@@ -216,8 +204,7 @@ class Workflow(WorkflowBase):
         @rtype:     List of Workflowstate object instances (or None)
         @return:    Returns a list with workflow start events.
         """
-        raise NotImplementedError, \
-            'start_events not yet implemented'
+        raise NotImplementedError('start_events not yet implemented')
 
     @property
     def end_events(self):
@@ -235,8 +222,7 @@ class Workflow(WorkflowBase):
         @rtype:     List of Workflowstate object instances (or None)
         @return:    Returns a list with workflow end events.
         """
-        raise NotImplementedError, \
-            'end_events not yet implemented'
+        raise NotImplementedError('end_events not yet implemented')
 
     @property
     def is_running(self):
@@ -248,8 +234,7 @@ class Workflow(WorkflowBase):
         @rtype:     boolean
         @return:    Indicates if the workflow is running.
         """
-        raise NotImplementedError, \
-            'is_running not yet implemented'
+        raise NotImplementedError('is_running not yet implemented')
 
     @property
     def is_restarted(self):
@@ -261,8 +246,7 @@ class Workflow(WorkflowBase):
         @rtype:     boolean
         @return:    Indicates if the workflow has been restarted.
         """
-        raise NotImplementedError, \
-            'is_restarted not yet implemented'
+        raise NotImplementedError('is_restarted not yet implemented')
 
     @property
     def restart_count(self):
@@ -273,8 +257,7 @@ class Workflow(WorkflowBase):
         @rtype:     integer
         @return:    Number of workflow restarts.
         """
-        raise NotImplementedError, \
-            'restart_count not yet implemented'
+        raise NotImplementedError('restart_count not yet implemented')
 
     @property
     def total_time(self):
@@ -287,8 +270,7 @@ class Workflow(WorkflowBase):
         @rtype:     python datetime.timedelta object or None
         @return:    The total time of the workflow.
         """
-        raise NotImplementedError, \
-            'total_time not yet implemented'
+        raise NotImplementedError('total_time not yet implemented')
 
     @property
     def jobs(self):
@@ -302,8 +284,7 @@ class Workflow(WorkflowBase):
         @rtype:     list of Job objects
         @return:    List of job objects associated with current wf
         """
-        raise NotImplementedError, \
-            'jobs not yet implemented'
+        raise NotImplementedError('jobs not yet implemented')
 
     @property
     def total_jobs_executed(self):
@@ -314,8 +295,7 @@ class Workflow(WorkflowBase):
         @rtype:     integer
         @return:    Number of jobs executed
         """
-        raise NotImplementedError, \
-            'total_jobs_executed not yet implemented'
+        raise NotImplementedError('total_jobs_executed not yet implemented')
 
     @property
     def successful_jobs(self):
@@ -326,8 +306,7 @@ class Workflow(WorkflowBase):
         @rtype:     integer
         @return:    Number of sucessfully executed jobs
         """
-        raise NotImplementedError, \
-            'successful_jobs not yet implemented'
+        raise NotImplementedError('successful_jobs not yet implemented')
 
     @property
     def failed_jobs(self):
@@ -338,8 +317,7 @@ class Workflow(WorkflowBase):
         @rtype:     integer
         @return:    Number of failed jobs
         """
-        raise NotImplementedError, \
-            'failed_jobs not yet implemented'
+        raise NotImplementedError('failed_jobs not yet implemented')
 
     @property
     def restarted_jobs(self):
@@ -349,8 +327,7 @@ class Workflow(WorkflowBase):
         @rtype:     integer
         @return:    Number of restarted jobs
         """
-        raise NotImplementedError, \
-            'restarted_jobs not yet implemented'
+        raise NotImplementedError('restarted_jobs not yet implemented')
 
     @property
     def submitted_jobs(self):
@@ -360,8 +337,7 @@ class Workflow(WorkflowBase):
         @rtype:     integer
         @return:    Number of submitted jobs
         """
-        raise NotImplementedError, \
-            'submitted_jobs not yet implemented'
+        raise NotImplementedError('submitted_jobs not yet implemented')
 
     @property
     def jobtypes_executed(self):
@@ -376,8 +352,7 @@ class Workflow(WorkflowBase):
         @return:    A dictionary of a count of the jobtypes
                     that were executed in the current workflow.
         """
-        raise NotImplementedError, \
-            'jobtypes_executed not yet implemented'
+        raise NotImplementedError('jobtypes_executed not yet implemented')
 
 class Workflowstate(WorkflowBase):
     """
@@ -408,8 +383,7 @@ class Workflowstate(WorkflowBase):
         @type   timestamp: float
         @param  timestamp: the epoch timestamp as reported by Pegasus.
         """
-        raise NotImplementedError, \
-            'initialize not yet implemented'
+        raise NotImplementedError('initialize not yet implemented')
 
     @property
     def state(self):
@@ -420,8 +394,7 @@ class Workflowstate(WorkflowBase):
         @rtype:     string or None
         @return:    Return current job state
         """
-        raise NotImplementedError, \
-            'state not implemented yet'
+        raise NotImplementedError('state not implemented yet')
 
     @property
     def timestamp(self):
@@ -432,8 +405,7 @@ class Workflowstate(WorkflowBase):
         @rtype:     python datetime obj (utc) or None
         @return:    Return timestamp of current job state
         """
-        raise NotImplementedError, \
-            'timestamp not implemented yet'
+        raise NotImplementedError('timestamp not implemented yet')
 
 
 class Job(WorkflowBase):
@@ -471,8 +443,7 @@ class Job(WorkflowBase):
         @param  job_id: the sequence number as defined
                 by tailstatd
         """
-        raise NotImplementedError, \
-            'initialize not yet implemented'
+        raise NotImplementedError('initialize not yet implemented')
 
     @property
     def job_submit_seq(self):
@@ -482,8 +453,7 @@ class Job(WorkflowBase):
         @rtype:     integer
         @return:    Return job_submit_seq of current job
         """
-        raise NotImplementedError, \
-            'job_submit_seq not yet implemented'
+        raise NotImplementedError('job_submit_seq not yet implemented')
 
     @property
     def name(self):
@@ -493,8 +463,7 @@ class Job(WorkflowBase):
         @rtype:     string
         @return:    Return job name
         """
-        raise NotImplementedError, \
-            'name not yet implemented'
+        raise NotImplementedError('name not yet implemented')
 
     @property
     def host(self):
@@ -505,8 +474,7 @@ class Job(WorkflowBase):
         @return:    Return a host object with host info for
                     current job.
         """
-        raise NotImplementedError, \
-            'host not yet implemented'
+        raise NotImplementedError('host not yet implemented')
 
     @property
     def condor_id(self):
@@ -516,8 +484,7 @@ class Job(WorkflowBase):
         @rtype:     string (looks like a float however)
         @return:    Return job condor_id
         """
-        raise NotImplementedError, \
-            'condor_id not yet implemented'
+        raise NotImplementedError('condor_id not yet implemented')
 
     @property
     def jobtype(self):
@@ -527,8 +494,7 @@ class Job(WorkflowBase):
         @rtype:     string
         @return:    Return jobtype
         """
-        raise NotImplementedError, \
-            'jobtype not yet implemented'
+        raise NotImplementedError('jobtype not yet implemented')
 
     @property
     def clustered(self):
@@ -542,8 +508,7 @@ class Job(WorkflowBase):
         @return:    Return True or False depending on if the
                     job is clustered or not.
         """
-        raise NotImplementedError, \
-            'clustered not yet implemented'
+        raise NotImplementedError('clustered not yet implemented')
 
     @property
     def site_name(self):
@@ -553,8 +518,7 @@ class Job(WorkflowBase):
         @rtype:     string
         @return:    Return site_name for current job
         """
-        raise NotImplementedError, \
-            'site_name not yet implemented'
+        raise NotImplementedError('site_name not yet implemented')
 
     @property
     def remote_user(self):
@@ -565,8 +529,7 @@ class Job(WorkflowBase):
         @rtype:     string
         @return:    Return remote_user for current job.
         """
-        raise NotImplementedError, \
-            'remote_user not yet implemented'
+        raise NotImplementedError('remote_user not yet implemented')
 
     @property
     def remote_working_dir(self):
@@ -577,8 +540,7 @@ class Job(WorkflowBase):
         @rtype:     string
         @return:
         """
-        raise NotImplementedError, \
-            'remote_working_dir not yet implemented'
+        raise NotImplementedError('remote_working_dir not yet implemented')
 
     @property
     def cluster_start_time(self):
@@ -591,8 +553,7 @@ class Job(WorkflowBase):
         @rtype:     python datetime obj (utc) or None
         @return:    Return job cluster start time.
         """
-        raise NotImplementedError, \
-            'cluster_start_time not yet implemented'
+        raise NotImplementedError('cluster_start_time not yet implemented')
 
     @property
     def cluster_duration(self):
@@ -605,8 +566,7 @@ class Job(WorkflowBase):
         @rtype:     float (from db)
         @return:
         """
-        raise NotImplementedError, \
-            'cluster_duration not yet implemented'
+        raise NotImplementedError('cluster_duration not yet implemented')
 
     @property
     def tasks(self):
@@ -620,8 +580,7 @@ class Job(WorkflowBase):
         @rtype:     list of Task objects
         @return:    List of task objects associated with current job
         """
-        raise NotImplementedError, \
-            'tasks not yet implemented'
+        raise NotImplementedError('tasks not yet implemented')
 
     @property
     def is_restart(self):
@@ -634,8 +593,7 @@ class Job(WorkflowBase):
         @return:    Return True or False if the job is a restart
                     or not.
         """
-        raise NotImplementedError, \
-            'is_restart not yet implemented'
+        raise NotImplementedError('is_restart not yet implemented')
 
     @property
     def is_success(self):
@@ -647,8 +605,7 @@ class Job(WorkflowBase):
         @rtype:     boolean
         @return:    Return True or False if the job is a restart
         """
-        raise NotImplementedError, \
-            'is_success not yet implemented'
+        raise NotImplementedError('is_success not yet implemented')
 
     @property
     def is_failure(self):
@@ -660,8 +617,7 @@ class Job(WorkflowBase):
         @rtype:     boolean
         @return:    Return True or False if the job is a restart
         """
-        raise NotImplementedError, \
-            'is_failure not yet implemented'
+        raise NotImplementedError('is_failure not yet implemented')
 
     @property
     def current_state(self):
@@ -679,8 +635,7 @@ class Job(WorkflowBase):
         @rtype:     Jobstate object instance
         @return:    Return the current/last jobstate event.
         """
-        raise NotImplementedError, \
-            'current_state not yet implemented'
+        raise NotImplementedError('current_state not yet implemented')
 
     @property
     def all_jobstates(self):
@@ -700,8 +655,7 @@ class Job(WorkflowBase):
         @return:    Returns a list with all the jobstates this job
                     has moved through.
         """
-        raise NotImplementedError, \
-            'all_jobstates not yet implemented'
+        raise NotImplementedError('all_jobstates not yet implemented')
 
     @property
     def submit_time(self):
@@ -711,8 +665,7 @@ class Job(WorkflowBase):
         @rtype:     python datetime obj (utc) or None
         @return:    Return the submit time of this job
         """
-        raise NotImplementedError, \
-            'submit_time not yet implemented'
+        raise NotImplementedError('submit_time not yet implemented')
 
     @property
     def elapsed_time(self):
@@ -724,8 +677,7 @@ class Job(WorkflowBase):
         @rtype:     python datetime.timedelta or None
         @return:    Return the elapsed time of this job
         """
-        raise NotImplementedError, \
-            'elapsed_time not yet implemented'
+        raise NotImplementedError('elapsed_time not yet implemented')
 
     @property
     def edge_parents(self):
@@ -738,8 +690,7 @@ class Job(WorkflowBase):
         @rtype:     list containing Job objects
         @return:    Return the parent edge Job objects.
         """
-        raise NotImplementedError, \
-            'edge_parents not yet implemented'
+        raise NotImplementedError('edge_parents not yet implemented')
 
     @property
     def edge_children(self):
@@ -752,8 +703,7 @@ class Job(WorkflowBase):
         @rtype:     list containing Job objects
         @return:    Return the child edge Job objects.
         """
-        raise NotImplementedError, \
-            'edge_children not yet implemented'
+        raise NotImplementedError('edge_children not yet implemented')
 
 
 class Jobstate(WorkflowBase):
@@ -790,8 +740,7 @@ class Jobstate(WorkflowBase):
         @param  job_id: the sequence number as defined
                 by tailstatd
         """
-        raise NotImplementedError, \
-            'initialize not yet implemented'
+        raise NotImplementedError('initialize not yet implemented')
 
     @property
     def state(self):
@@ -802,8 +751,7 @@ class Jobstate(WorkflowBase):
         @rtype:     string or None
         @return:    Return current job state
         """
-        raise NotImplementedError, \
-            'state not implemented yet'
+        raise NotImplementedError('state not implemented yet')
 
     @property
     def timestamp(self):
@@ -814,8 +762,7 @@ class Jobstate(WorkflowBase):
         @rtype:     python datetime obj (utc) or None
         @return:    Return timestamp of current job state
         """
-        raise NotImplementedError, \
-            'timestamp not implemented yet'
+        raise NotImplementedError('timestamp not implemented yet')
 
 
 class Host(WorkflowBase):
@@ -852,8 +799,7 @@ class Host(WorkflowBase):
         @param  job_id: the sequence number as defined
                 by tailstatd
         """
-        raise NotImplementedError, \
-            'initialize not yet implemented'
+        raise NotImplementedError('initialize not yet implemented')
 
     @property
     def site_name(self):
@@ -865,8 +811,7 @@ class Host(WorkflowBase):
         @rtype:     string or None
         @return:    Return host site name or None
         """
-        raise NotImplementedError, \
-            'site_name not yet implemented'
+        raise NotImplementedError('site_name not yet implemented')
 
     @property
     def hostname(self):
@@ -878,8 +823,7 @@ class Host(WorkflowBase):
         @rtype:     string or None
         @return:    Return hostname or None
         """
-        raise NotImplementedError, \
-            'hostname not yet implemented'
+        raise NotImplementedError('hostname not yet implemented')
 
     @property
     def ip_address(self):
@@ -891,8 +835,7 @@ class Host(WorkflowBase):
         @rtype:     string or None
         @return:    Return host ip address or None
         """
-        raise NotImplementedError, \
-            'ip_address not yet implemented'
+        raise NotImplementedError('ip_address not yet implemented')
 
     @property
     def uname(self):
@@ -904,8 +847,7 @@ class Host(WorkflowBase):
         @rtype:     string or None
         @return:    Return host uname or None.
         """
-        raise NotImplementedError, \
-            'uname not yet implemented'
+        raise NotImplementedError('uname not yet implemented')
 
     @property
     def total_ram(self):
@@ -917,8 +859,7 @@ class Host(WorkflowBase):
         @rtype:     integer or None
         @return:    Return host RAM or None
         """
-        raise NotImplementedError, \
-            'total_ram not yet implemented'
+        raise NotImplementedError('total_ram not yet implemented')
 
 
 class Task(WorkflowBase):
@@ -960,8 +901,7 @@ class Task(WorkflowBase):
         @param  task_id: the sequence number as defined
                 by tailstatd
         """
-        raise NotImplementedError, \
-            'initialize not yet implemented'
+        raise NotImplementedError('initialize not yet implemented')
 
     @property
     def task_submit_seq(self):
@@ -972,8 +912,7 @@ class Task(WorkflowBase):
         @rtype:     int
         @return:    submit sequence number
         """
-        raise NotImplementedError, \
-            'task_submit_seq not yet implemented'
+        raise NotImplementedError('task_submit_seq not yet implemented')
 
     @property
     def start_time(self):
@@ -984,8 +923,7 @@ class Task(WorkflowBase):
         @rtype:     python datetime obj (utc)
         @return:    Return task start time
         """
-        raise NotImplementedError, \
-            'start_time not yet implemented'
+        raise NotImplementedError('start_time not yet implemented')
 
     @property
     def duration(self):
@@ -996,8 +934,7 @@ class Task(WorkflowBase):
         @rtype:     float (from db)
         @return:    Return the duration of this task
         """
-        raise NotImplementedError, \
-            'duration not yet implemented'
+        raise NotImplementedError('duration not yet implemented')
 
     @property
     def exitcode(self):
@@ -1008,8 +945,7 @@ class Task(WorkflowBase):
         @rtype:     integer
         @return:    Return the task exitcode
         """
-        raise NotImplementedError, \
-            'exitcode not yet implemented'
+        raise NotImplementedError('exitcode not yet implemented')
 
     @property
     def transformation(self):
@@ -1020,8 +956,7 @@ class Task(WorkflowBase):
         @rtype:     string
         @return:    Return task transformation
         """
-        raise NotImplementedError, \
-            'transformation not yet implemented'
+        raise NotImplementedError('transformation not yet implemented')
 
     @property
     def executable(self):
@@ -1032,8 +967,7 @@ class Task(WorkflowBase):
         @rtype:     string
         @return:    Return the task executable
         """
-        raise NotImplementedError, \
-            'executable not yet implemented'
+        raise NotImplementedError('executable not yet implemented')
 
     @property
     def arguments(self):
@@ -1043,8 +977,7 @@ class Task(WorkflowBase):
         @rtype:     string
         @return:    Return the task arguments
         """
-        raise NotImplementedError, \
-            'arguments not yet implemented'
+        raise NotImplementedError('arguments not yet implemented')
 
 # Base class for discovery/wf_uuid querying.
 
@@ -1065,8 +998,7 @@ class Discovery(object):
         @rtype:     list
         @return:    Returns a list of wf_uuid strings.
         """
-        raise NotImplementedError, \
-            'fetch_all not yet implemented'
+        raise NotImplementedError('fetch_all not yet implemented')
 
     def time_threshold(self, startTime=None, endTime=None):
         """
@@ -1088,5 +1020,4 @@ class Discovery(object):
         @rtype:     list
         @return:    Returns a list of wf_uuid strings.
         """
-        raise NotImplementedError, \
-            'time_threshold not yet implemented'
+        raise NotImplementedError('time_threshold not yet implemented')

@@ -1,12 +1,15 @@
-from future import standard_library
-standard_library.install_aliases()
+from __future__ import print_function
 
 import os
 import sys
 from unittest import TestLoader, TestSuite, TextTestRunner
 
+from future import standard_library
+
+standard_library.install_aliases()
+
 # The service only works on python >= 2.5
-if sys.version_info >= (2,5):
+if sys.version_info >= (2, 5):
     test_service = True
 else:
     test_service = False
@@ -15,7 +18,7 @@ else:
 try:
     import Pegasus
     import sqlalchemy
-    if sys.version_info >= (2,5):
+    if sys.version_info >= (2, 5):
         import sqlite3
         import boto
         import requests
@@ -23,12 +26,13 @@ try:
         import Pegasus.service
     else:
         import pysqlite2
-except ImportError, e:
-    print e
-    print "Unable to import Pegasus modules"
-    print "Make sure dependencies are available"
-    print "Set PYTHONPATH or run: python setup.py develop"
+except ImportError as e:
+    print(e)
+    print("Unable to import Pegasus modules")
+    print("Make sure dependencies are available")
+    print("Set PYTHONPATH or run: python setup.py develop")
     sys.exit(1)
+
 
 def discoverTestModules(dirpath):
     modules = []
@@ -39,6 +43,7 @@ def discoverTestModules(dirpath):
         elif name.endswith(".py") and name.startswith("test_"):
             modules.append(path.replace(".py", "").replace("/", "."))
     return modules
+
 
 loader = TestLoader()
 alltests = TestSuite()
@@ -62,4 +67,3 @@ if result.wasSuccessful():
     sys.exit(0)
 else:
     sys.exit(1)
-

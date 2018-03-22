@@ -81,7 +81,7 @@ cont centos-base{
 
      # URL to image in a docker hub or a url to an existing docker
      # file exported as a tar file
-     image "docker:///centos"
+     image "docker:///centos:7"
 
      # optional site attribute to tell pegasus which site tar file
      # exists. useful for handling file URL's correctly

@@ -39,6 +39,7 @@
 #include "statinfo.h"
 #include "appinfo.h"
 #include "error.h"
+#include "checksum.h"
 
 #define XML_SCHEMA_URI "http://pegasus.isi.edu/schema/invocation"
 #define XML_SCHEMA_VERSION "2.3"
@@ -242,6 +243,9 @@ static size_t convert2XML(FILE *out, const AppInfo* run) {
         }
     }
 
+    /* If xml blob file exists (for example, created via pegasus-transfer), include it */
+    print_pegasus_integrity_xml_blob(out, run->integritydata.file.name);
+
     /* Default <statcall> records */
     printXMLStatInfo(out, 2, "statcall", "stdin", &run->input, includeData, useCDATA, 1);
     updateStatInfo(&(((AppInfo*) run)->output));
@@ -342,6 +346,10 @@ int initAppInfo(AppInfo* appinfo, int argc, char* const* argv) {
     /* metadata */
     pattern(tempname, tempsize, tempdir, "/", "ks.meta.XXXXXX");
     initStatInfoAsTemp(&appinfo->metadata, tempname);
+    
+    /* integrity data */
+    pattern(tempname, tempsize, tempdir, "/", "ks.integrity.XXXXXX");
+    initStatInfoAsTemp(&appinfo->integritydata, tempname);
 
     /* original argument vector */
     appinfo->argc = argc;
@@ -448,6 +456,7 @@ void deleteAppInfo(AppInfo* runinfo) {
     deleteStatInfo(&runinfo->logfile);
     deleteStatInfo(&runinfo->kickstart);
     deleteStatInfo(&runinfo->metadata);
+    deleteStatInfo(&runinfo->integritydata);
 
     if (runinfo->icount && runinfo->initial) {
         for (i=0; i<runinfo->icount; ++i) {

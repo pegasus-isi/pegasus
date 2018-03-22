@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 import time
@@ -40,9 +41,9 @@ class EnsembleClientCommand(Command):
 
         try:
             result = response.json()
-            print "ERROR:", result["message"]
+            print("ERROR:", result["message"])
         except:
-            print "ERROR:", response.text
+            print("ERROR:", response.text)
 
         exit(1)
 
@@ -88,7 +89,7 @@ class ServerCommand(LoggingCommand):
             # Make sure the environment is OK for the ensemble manager
             try:
                 manager.check_environment()
-            except manager.EMError, e:
+            except manager.EMError as e:
                 log.warning("%s: Ensemble manager disabled" % e.message)
             else:
                 mgr = manager.EnsembleManager()
@@ -115,9 +116,9 @@ class EnsemblesCommand(EnsembleClientCommand):
         result = response.json()
         fmt = "%-20s %-8s %-24s %-24s %12s %12s"
         if len(result) > 0:
-            print fmt % ("NAME","STATE","CREATED","UPDATED","MAX PLANNING","MAX RUNNING")
+            print(fmt % ("NAME","STATE","CREATED","UPDATED","MAX PLANNING","MAX RUNNING"))
         for r in result:
-            print fmt % (r["name"], r["state"], formatts(r["created"]), formatts(r["updated"]), r["max_planning"], r["max_running"])
+            print(fmt % (r["name"], r["state"], formatts(r["created"]), formatts(r["updated"]), r["max_planning"], r["max_running"]))
 
 class CreateCommand(EnsembleClientCommand):
     description = "Create ensemble"
@@ -228,20 +229,20 @@ class WorkflowsCommand(EnsembleClientCommand):
 
         if self.options.long:
             for w in result:
-                print "ID:      ",w["id"]
-                print "Name:    ",w["name"]
-                print "Created: ",formatts(w["created"])
-                print "Updated: ",formatts(w["updated"])
-                print "State:   ",w["state"]
-                print "Priority:",w["priority"]
-                print "UUID:    ",w["wf_uuid"]
-                print "URL:     ",w["href"]
-                print
+                print("ID:      ",w["id"])
+                print("Name:    ",w["name"])
+                print("Created: ",formatts(w["created"]))
+                print("Updated: ",formatts(w["updated"]))
+                print("State:   ",w["state"])
+                print("Priority:",w["priority"])
+                print("UUID:    ",w["wf_uuid"])
+                print("URL:     ",w["href"])
+                print()
         else:
             fmt = "%-20s %-15s %-8s %-24s %-24s"
-            print fmt % ("NAME","STATE","PRIORITY","CREATED","UPDATED")
+            print(fmt % ("NAME","STATE","PRIORITY","CREATED","UPDATED"))
             for w in result:
-                print fmt % (w["name"],w["state"],w["priority"],formatts(w["created"]),formatts(w["updated"]))
+                print(fmt % (w["name"],w["state"],w["priority"],formatts(w["created"]),formatts(w["updated"])))
 
 class StatusCommand(EnsembleClientCommand):
     description = "Check workflow status"
@@ -259,17 +260,17 @@ class StatusCommand(EnsembleClientCommand):
 
         result = response.json()
 
-        print "ID:           %s" % result['id']
-        print "Name:         %s" % result['name']
-        print "Plan Command: %s" % result['plan_command']
-        print "Created:      %s" % formatts(result['created'])
-        print "Updated:      %s" % formatts(result['updated'])
-        print "State:        %s" % result['state']
-        print "UUID:         %s" % (result['wf_uuid'] or "")
-        print "Priority:     %s" % result['priority']
-        print "Base Dir:     %s" % result['basedir']
-        print "Submit Dir:   %s" % (result['submitdir'] or "")
-        print "Log:          %s" % result['log']
+        print("ID:           %s" % result['id'])
+        print("Name:         %s" % result['name'])
+        print("Plan Command: %s" % result['plan_command'])
+        print("Created:      %s" % formatts(result['created']))
+        print("Updated:      %s" % formatts(result['updated']))
+        print("State:        %s" % result['state'])
+        print("UUID:         %s" % (result['wf_uuid'] or ""))
+        print("Priority:     %s" % result['priority'])
+        print("Base Dir:     %s" % result['basedir'])
+        print("Submit Dir:   %s" % (result['submitdir'] or ""))
+        print("Log:          %s" % result['log'])
 
 class AnalyzeCommand(EnsembleClientCommand):
     description = "Analyze workflow status"
@@ -297,7 +298,7 @@ class StateChangeCommand(EnsembleClientCommand):
         response = self.post("/ensembles/%s" % self.args[0], data={"state":self.newstate})
         result = response.json()
 
-        print "State:", result["state"]
+        print("State:", result["state"])
 
 class PauseCommand(StateChangeCommand):
     description = "Pause active ensemble"
@@ -347,8 +348,8 @@ class ConfigCommand(EnsembleClientCommand):
 
         result = response.json()
 
-        print "Max Planning:",result["max_planning"]
-        print "Max Running:",result["max_running"]
+        print("Max Planning:",result["max_planning"])
+        print("Max Running:",result["max_running"])
 
 class WorkflowStateChangeCommand(EnsembleClientCommand):
     def run(self):
@@ -365,7 +366,7 @@ class WorkflowStateChangeCommand(EnsembleClientCommand):
 
         result = response.json()
 
-        print "State:", result["state"]
+        print("State:", result["state"])
 
 class ReplanCommand(WorkflowStateChangeCommand):
     description = "Replan failed workflow"
@@ -407,7 +408,7 @@ class PriorityCommand(EnsembleClientCommand):
 
         result = response.json()
 
-        print "Priority:", result["priority"]
+        print("Priority:", result["priority"])
 
 class EnsembleCommand(CompoundCommand):
     description = "Client for ensemble management"

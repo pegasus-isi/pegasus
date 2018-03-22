@@ -16,12 +16,11 @@ __author__ = 'Rajiv Mayani'
 
 import logging
 
-from Pegasus.db.schema import DashboardWorkflow, DashboardWorkflowstate
-from Pegasus.db.schema import Workflow, WorkflowMeta, WorkflowFiles, Workflowstate
-from Pegasus.db.schema import RCLFN, RCPFN, RCMeta
-from Pegasus.db.schema import Job, Host, Jobstate
-from Pegasus.db.schema import Task, TaskMeta, JobInstance, Invocation
-
+from Pegasus.db.schema import (
+    RCLFN, RCPFN, DashboardWorkflow, DashboardWorkflowstate, Host,
+    Invocation, Job, JobInstance, Jobstate, RCMeta, Task, TaskMeta,
+    Workflow, WorkflowFiles, WorkflowMeta, Workflowstate
+)
 from Pegasus.service.base import BaseResource
 
 log = logging.getLogger(__name__)
@@ -62,6 +61,7 @@ class CombinationResource(BaseResource):
     CombinationResource allows us
 
     """
+
     def __init__(self, *resources):
         self._resources = resources
         self._resource_map = {}
@@ -115,7 +115,9 @@ class CombinationResource(BaseResource):
         return self._field_prefix_map
 
     def get_field_prefix(self, field):
-        return self.field_prefix_map[field] if field in self.field_prefix_map else None
+        return self.field_prefix_map[
+            field
+        ] if field in self.field_prefix_map else None
 
     def mapped_fields(self, alias=None):
         if self._mapped_fields:
@@ -126,7 +128,9 @@ class CombinationResource(BaseResource):
         for resource in self._resources:
             for field in self.prefixed_fields:
                 if field in resource.prefixed_fields:
-                    mapped_fields[field] = resource.get_mapped_field(field, alias)
+                    mapped_fields[field] = resource.get_mapped_field(
+                        field, alias
+                    )
 
         return mapped_fields
 
@@ -141,39 +145,28 @@ class CombinationResource(BaseResource):
 
 class RootWorkflowResource(BaseResource):
     def __init__(self, alias=None):
-        super(RootWorkflowResource, self).__init__(alias if alias else DashboardWorkflow)
+        super(RootWorkflowResource,
+              self).__init__(alias if alias else DashboardWorkflow)
 
         self._prefix = 'r'
 
         self._fields = [
-            'wf_id',
-            'wf_uuid',
-            'submit_hostname',
-            'submit_dir',
-            'planner_arguments',
-            'planner_version',
-            'user',
-            'grid_dn',
-            'dax_label',
-            'dax_version',
-            'dax_file',
-            'dag_file_name',
+            'wf_id', 'wf_uuid', 'submit_hostname', 'submit_dir',
+            'planner_arguments', 'planner_version', 'user', 'grid_dn',
+            'dax_label', 'dax_version', 'dax_file', 'dag_file_name',
             'timestamp'
         ]
 
 
 class RootWorkflowstateResource(BaseResource):
     def __init__(self, alias=None):
-        super(RootWorkflowstateResource, self).__init__(alias if alias else DashboardWorkflowstate)
+        super(RootWorkflowstateResource,
+              self).__init__(alias if alias else DashboardWorkflowstate)
 
         self._prefix = 'ws'
 
         self._fields = [
-            'wf_id',
-            'state',
-            'status',
-            'restart_count',
-            'timestamp'
+            'wf_id', 'state', 'status', 'restart_count', 'timestamp'
         ]
 
 
@@ -184,51 +177,37 @@ class WorkflowResource(BaseResource):
         self._prefix = 'w'
 
         self._fields = [
-            'wf_id',
-            'root_wf_id',
-            'parent_wf_id',
-            'wf_uuid',
-            'submit_hostname',
-            'submit_dir',
-            'planner_arguments',
-            'planner_version',
-            'user',
-            'grid_dn',
-            'dax_label',
-            'dax_version',
-            'dax_file',
-            'dag_file_name',
-            'timestamp'
+            'wf_id', 'root_wf_id', 'parent_wf_id', 'wf_uuid',
+            'submit_hostname', 'submit_dir', 'planner_arguments',
+            'planner_version', 'user', 'grid_dn', 'dax_label', 'dax_version',
+            'dax_file', 'dag_file_name', 'timestamp'
         ]
 
 
 class WorkflowMetaResource(BaseResource):
     def __init__(self, alias=None):
-        super(WorkflowMetaResource, self).__init__(alias if alias else WorkflowMeta)
+        super(WorkflowMetaResource,
+              self).__init__(alias if alias else WorkflowMeta)
 
         self._prefix = 'wm'
 
-        self._fields = [
-            'key',
-            'value'
-        ]
+        self._fields = ['key', 'value']
 
 
 class WorkflowFilesResource(BaseResource):
     def __init__(self, alias=None):
-        super(WorkflowFilesResource, self).__init__(alias if alias else WorkflowFiles)
+        super(WorkflowFilesResource,
+              self).__init__(alias if alias else WorkflowFiles)
 
         self._prefix = 'wf'
 
-        self._fields = [
-            'wf_id',
-            'task_id'
-        ]
+        self._fields = ['wf_id', 'task_id']
 
 
 class WorkflowstateResource(RootWorkflowstateResource):
     def __init__(self, alias=None):
-        super(WorkflowstateResource, self).__init__(alias if alias else Workflowstate)
+        super(WorkflowstateResource,
+              self).__init__(alias if alias else Workflowstate)
 
 
 class JobResource(BaseResource):
@@ -238,16 +217,8 @@ class JobResource(BaseResource):
         self._prefix = 'j'
 
         self._fields = [
-            'job_id',
-            'exec_job_id',
-            'submit_file',
-            'type_desc',
-            'max_retries',
-            'clustered',
-            'task_count',
-            'executable',
-            'argv',
-            'task_count'
+            'job_id', 'exec_job_id', 'submit_file', 'type_desc', 'max_retries',
+            'clustered', 'task_count', 'executable', 'argv', 'task_count'
         ]
 
 
@@ -258,12 +229,7 @@ class HostResource(BaseResource):
         self._prefix = 'h'
 
         self._fields = [
-            'host_id',
-            'site',
-            'hostname',
-            'ip',
-            'uname',
-            'total_memory'
+            'host_id', 'site', 'hostname', 'ip', 'uname', 'total_memory'
         ]
 
 
@@ -274,10 +240,7 @@ class JobstateResource(BaseResource):
         self._prefix = 'js'
 
         self._fields = [
-            'job_instance_id',
-            'state',
-            'jobstate_submit_seq',
-            'timestamp'
+            'job_instance_id', 'state', 'jobstate_submit_seq', 'timestamp'
         ]
 
 
@@ -288,11 +251,7 @@ class TaskResource(BaseResource):
         self._prefix = 't'
 
         self._fields = [
-            'task_id',
-            'abs_task_id',
-            'type_desc',
-            'transformation',
-            'argv'
+            'task_id', 'abs_task_id', 'type_desc', 'transformation', 'argv'
         ]
 
 
@@ -302,57 +261,36 @@ class TaskMetaResource(BaseResource):
 
         self._prefix = 'tm'
 
-        self._fields = [
-            'key',
-            'value'
-        ]
+        self._fields = ['key', 'value']
 
 
 class JobInstanceResource(BaseResource):
     def __init__(self, alias=None):
-        super(JobInstanceResource, self).__init__(alias if alias else JobInstance)
+        super(JobInstanceResource,
+              self).__init__(alias if alias else JobInstance)
 
         self._prefix = 'ji'
 
         self._fields = [
-            'job_instance_id',
-            'host_id',
-            'job_submit_seq',
-            'sched_id',
-            'site',
-            'user',
-            'work_dir',
-            'cluster_start',
-            'cluster_duration',
-            'local_duration',
-            'subwf_id',
-            'stdout_text',
-            'stderr_text',
-            'stdin_file',
-            'stdout_file',
-            'stderr_file',
-            'multiplier_factor',
+            'job_instance_id', 'host_id', 'job_submit_seq', 'sched_id', 'site',
+            'user', 'work_dir', 'cluster_start', 'cluster_duration',
+            'local_duration', 'subwf_id', 'stdout_text', 'stderr_text',
+            'stdin_file', 'stdout_file', 'stderr_file', 'multiplier_factor',
             'exitcode'
         ]
 
 
 class InvocationResource(BaseResource):
     def __init__(self, alias=None):
-        super(InvocationResource, self).__init__(alias if alias else Invocation)
+        super(InvocationResource,
+              self).__init__(alias if alias else Invocation)
 
         self._prefix = 'i'
 
         self._fields = [
-            'invocation_id',
-            'job_instance_id',
-            'abs_task_id',
-            'task_submit_seq',
-            'start_time',
-            'remote_duration',
-            'remote_cpu_time',
-            'exitcode',
-            'transformation',
-            'executable',
+            'invocation_id', 'job_instance_id', 'abs_task_id',
+            'task_submit_seq', 'start_time', 'remote_duration',
+            'remote_cpu_time', 'exitcode', 'transformation', 'executable',
             'argv'
         ]
 
@@ -363,10 +301,7 @@ class RCLFNResource(BaseResource):
 
         self._prefix = 'l'
 
-        self._fields = [
-            'lfn_id',
-            'lfn'
-        ]
+        self._fields = ['lfn_id', 'lfn']
 
 
 class RCPFNResource(BaseResource):
@@ -375,11 +310,7 @@ class RCPFNResource(BaseResource):
 
         self._prefix = 'p'
 
-        self._fields = [
-            'pfn_id',
-            'pfn',
-            'site'
-        ]
+        self._fields = ['pfn_id', 'pfn', 'site']
 
 
 class RCMetaResource(BaseResource):
@@ -388,7 +319,4 @@ class RCMetaResource(BaseResource):
 
         self._prefix = 'rm'
 
-        self._fields = [
-            'key',
-            'value'
-        ]
+        self._fields = ['key', 'value']

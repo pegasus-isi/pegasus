@@ -14,21 +14,19 @@
 
 __author__ = 'Rajiv Mayani'
 
-import json
-
-import logging
-
 import hashlib
-
+import json
+import logging
 import StringIO
 
-from flask import g, request, make_response, current_app
-
+from flask import current_app, g, make_response, request
 from Pegasus.service import cache
 from Pegasus.service.base import InvalidJSONError, OrderedDict
 from Pegasus.service.monitoring import monitoring_routes
+from Pegasus.service.monitoring.queries import (
+    MasterWorkflowQueries, StampedeWorkflowQueries
+)
 from Pegasus.service.monitoring.utils import jsonify
-from Pegasus.service.monitoring.queries import MasterWorkflowQueries, StampedeWorkflowQueries
 
 log = logging.getLogger(__name__)
 
@@ -49,8 +47,9 @@ def add_m_wf_id(endpoint, values):
     """
     If the endpoint expects m_wf_id, then set it's value to g.url_m_wf_id.
     """
-    if current_app.url_map.is_endpoint_expecting(endpoint,
-                                                 'm_wf_id') and 'm_wf_id' not in values and 'url_m_wf_id' in g:
+    if current_app.url_map.is_endpoint_expecting(
+        endpoint, 'm_wf_id'
+    ) and 'm_wf_id' not in values and 'url_m_wf_id' in g:
         values.setdefault('m_wf_id', g.url_m_wf_id)
 
 
@@ -60,7 +59,10 @@ def pull_url_context(endpoint, values):
     Create a context which can be used when generating url in link section of the responses.
     """
     url_context = {}
-    keys = ['wf_id', 'job_id', 'task_id', 'job_instance_id', 'host_id', 'instance_id']
+    keys = [
+        'wf_id', 'job_id', 'task_id', 'job_instance_id', 'host_id',
+        'instance_id'
+    ]
 
     if values:
         for key in keys:
@@ -111,8 +113,12 @@ def compute_stampede_db_url():
         root_workflow = queries.get_root_workflow(m_wf_id)
         queries.close()
 
-        cache.set(_get_cache_key(root_workflow.wf_id), root_workflow, timeout=600)
-        cache.set(_get_cache_key(root_workflow.wf_uuid), root_workflow, timeout=600)
+        cache.set(
+            _get_cache_key(root_workflow.wf_id), root_workflow, timeout=600
+        )
+        cache.set(
+            _get_cache_key(root_workflow.wf_uuid), root_workflow, timeout=600
+        )
 
     g.url_m_wf_id = root_workflow.wf_id
     g.m_wf_id = root_workflow.wf_uuid
@@ -127,8 +133,13 @@ def get_query_args():
         try:
             return int(value)
         except ValueError as e:
-            log.exception('Query Argument %s = %s is not a valid int' % (q_arg, value))
-            e = ValueError('Expecting integer for argument %s, found %r' % (q_arg, str(value)))
+            log.exception(
+                'Query Argument %s = %s is not a valid int' % (q_arg, value)
+            )
+            e = ValueError(
+                'Expecting integer for argument %s, found %r' %
+                (q_arg, str(value))
+            )
             e.codes = ('INVALID_QUERY_ARGUMENT', 400)
             raise e
 
@@ -145,24 +156,30 @@ def get_query_args():
             return False
 
         else:
-            log.exception('Query Argument %s = %s is not a valid boolean' % (q_arg, value))
-            e = ValueError('Expecting boolean for argument %s, found %r' % (q_arg, str(value)))
+            log.exception(
+                'Query Argument %s = %s is not a valid boolean' %
+                (q_arg, value)
+            )
+            e = ValueError(
+                'Expecting boolean for argument %s, found %r' %
+                (q_arg, str(value))
+            )
             e.codes = ('INVALID_QUERY_ARGUMENT', 400)
             raise e
 
-    query_args = OrderedDict([
-        ('pretty-print', to_bool),
-        ('start-index', to_int),
-        ('max-results', to_int),
-        ('query', to_str),
-        ('order', to_str)
-    ])
+    query_args = OrderedDict(
+        [
+            ('pretty-print', to_bool), ('start-index', to_int),
+            ('max-results', to_int), ('query', to_str), ('order', to_str)
+        ]
+    )
 
     is_post = request.method == 'POST'
 
     for arg, cast in query_args.iteritems():
         if arg in request.args:
-            g.query_args[arg.replace('-', '_')] = cast(arg, request.args.get(arg))
+            g.query_args[arg.replace('-',
+                                     '_')] = cast(arg, request.args.get(arg))
 
         # POST Query Argument overrides GET Query Argument with the same name
         if is_post and arg in request.form:
@@ -288,7 +305,9 @@ Workflow
 
 
 @monitoring_routes.route('/root/<string:m_wf_id>/workflow')
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/query', methods=['POST'])
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/query', methods=['POST']
+)
 def get_workflows(username, m_wf_id):
     """
     Returns a collection of workflows.
@@ -365,7 +384,10 @@ Workflow Meta
 
 
 @monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/meta')
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/meta/query', methods=['POST'])
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/meta/query',
+    methods=['POST']
+)
 def get_workflow_meta(username, m_wf_id, wf_id):
     """
     Returns a collection of workflow's metadata.
@@ -429,8 +451,13 @@ Workflow Files
 """
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/files')
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/files/query', methods=['POST'])
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/files'
+)
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/files/query',
+    methods=['POST']
+)
 def get_workflow_files(username, m_wf_id, wf_id):
     """
     Returns a collection of workflows.
@@ -482,10 +509,20 @@ Workflow State
 """
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/state')
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/state;recent=<boolean:recent>')
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/state/query', methods=['POST'])
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/state;recent=<boolean:recent>/query', methods=['POST'])
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/state'
+)
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/state;recent=<boolean:recent>'
+)
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/state/query',
+    methods=['POST']
+)
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/state;recent=<boolean:recent>/query',
+    methods=['POST']
+)
 def get_workflow_state(username, m_wf_id, wf_id, recent=False):
     """
     Returns a collection of Workflow States.
@@ -508,7 +545,9 @@ def get_workflow_state(username, m_wf_id, wf_id, recent=False):
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    paged_response = queries.get_workflow_state(wf_id, recent=recent, **g.query_args)
+    paged_response = queries.get_workflow_state(
+        wf_id, recent=recent, **g.query_args
+    )
 
     if paged_response.total_records == 0:
         log.debug('Total records is 0; returning HTTP 204 No content')
@@ -546,7 +585,10 @@ Job
 
 
 @monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job')
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/query', methods=['POST'])
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/job/query',
+    methods=['POST']
+)
 def get_workflow_jobs(username, m_wf_id, wf_id):
     """
     Returns a collection of Jobs.
@@ -582,7 +624,9 @@ def get_workflow_jobs(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>')
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>'
+)
 def get_job(username, m_wf_id, wf_id, job_id):
     """
     Returns job identified by m_wf_id, wf_id, job_id.
@@ -627,7 +671,10 @@ Host
 
 
 @monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/host')
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/host/query', methods=['POST'])
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/host/query',
+    methods=['POST']
+)
 def get_workflow_hosts(username, m_wf_id, wf_id):
     """
     Returns a collection of Hosts.
@@ -663,7 +710,9 @@ def get_workflow_hosts(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/host/<int:host_id>')
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/host/<int:host_id>'
+)
 def get_host(username, m_wf_id, wf_id, host_id):
     """
     Returns host identified by m_wf_id, wf_id, host_id.
@@ -705,11 +754,23 @@ Job State
 """
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state')
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state;recent=<boolean:recent>')
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state/query', methods=['POST'])
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state;recent=<boolean:recent>/query', methods=['POST'])
-def get_job_instance_states(username, m_wf_id, wf_id, job_id, job_instance_id, recent=False):
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state'
+)
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state;recent=<boolean:recent>'
+)
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state/query',
+    methods=['POST']
+)
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state;recent=<boolean:recent>/query',
+    methods=['POST']
+)
+def get_job_instance_states(
+    username, m_wf_id, wf_id, job_id, job_instance_id, recent=False
+):
     """
     Returns a collection of Job States.
 
@@ -731,7 +792,9 @@ def get_job_instance_states(username, m_wf_id, wf_id, job_id, job_instance_id, r
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    paged_response = queries.get_job_instance_states(wf_id, job_id, job_instance_id, recent=recent, **g.query_args)
+    paged_response = queries.get_job_instance_states(
+        wf_id, job_id, job_instance_id, recent=recent, **g.query_args
+    )
 
     if paged_response.total_records == 0:
         log.debug('Total records is 0; returning HTTP 204 No content')
@@ -765,7 +828,10 @@ Task
 
 
 @monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/task')
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/task/query', methods=['POST'])
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/task/query',
+    methods=['POST']
+)
 def get_workflow_tasks(username, m_wf_id, wf_id):
     """
     Returns a collection of Tasks.
@@ -801,8 +867,13 @@ def get_workflow_tasks(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/task')
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/task/query', methods=['POST'])
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/task'
+)
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/task/query',
+    methods=['POST']
+)
 def get_job_tasks(username, m_wf_id, wf_id, job_id):
     """
     Returns a collection of Tasks.
@@ -838,7 +909,9 @@ def get_job_tasks(username, m_wf_id, wf_id, job_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/task/<int:task_id>')
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/task/<int:task_id>'
+)
 def get_task(username, m_wf_id, wf_id, task_id):
     """
     Returns task identified by m_wf_id, wf_id, task_id.
@@ -878,8 +951,13 @@ Task Meta
 """
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/task/<int:task_id>/meta')
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/task/<int:task_id>/meta/query', methods=['POST'])
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/task/<int:task_id>/meta'
+)
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/task/<int:task_id>/meta/query',
+    methods=['POST']
+)
 def get_task_meta(username, m_wf_id, wf_id, task_id):
     """
     Returns a collection of task's metadata.
@@ -947,10 +1025,20 @@ Job Instance
 """
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance')
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance;recent=<boolean:recent>')
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/query', methods=['POST'])
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance;recent=<boolean:recent>/query', methods=['POST'])
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance'
+)
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance;recent=<boolean:recent>'
+)
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/query',
+    methods=['POST']
+)
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance;recent=<boolean:recent>/query',
+    methods=['POST']
+)
 def get_job_instances(username, m_wf_id, wf_id, job_id, recent=False):
     """
     Returns a collection of JobInstances.
@@ -972,7 +1060,9 @@ def get_job_instances(username, m_wf_id, wf_id, job_id, recent=False):
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    paged_response = queries.get_job_instances(wf_id, job_id, recent=recent, **g.query_args)
+    paged_response = queries.get_job_instances(
+        wf_id, job_id, recent=recent, **g.query_args
+    )
 
     if paged_response.total_records == 0:
         log.debug('Total records is 0; returning HTTP 204 No content')
@@ -986,7 +1076,9 @@ def get_job_instances(username, m_wf_id, wf_id, job_id, recent=False):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job-instance/<int:job_instance_id>')
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/job-instance/<int:job_instance_id>'
+)
 def get_job_instance(username, m_wf_id, wf_id, job_instance_id):
     """
     Returns job instance identified by m_wf_id, wf_id, job_id, job_instance_id.
@@ -1036,8 +1128,13 @@ Invocation
 """
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/invocation')
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/invocation/query', methods=['POST'])
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/invocation'
+)
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/invocation/query',
+    methods=['POST']
+)
 def get_workflow_invocations(username, m_wf_id, wf_id):
     """
     Returns a collection of Invocations.
@@ -1059,7 +1156,7 @@ def get_workflow_invocations(username, m_wf_id, wf_id):
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    paged_response = queries.get_workflow_invocations(wf_id,**g.query_args)
+    paged_response = queries.get_workflow_invocations(wf_id, **g.query_args)
 
     if paged_response.total_records == 0:
         log.debug('Total records is 0; returning HTTP 204 No content')
@@ -1073,12 +1170,21 @@ def get_workflow_invocations(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/invocation')
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/invocation/query', methods=['POST'])
-def get_job_instance_invocations(username, m_wf_id, wf_id, job_id, job_instance_id):
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/invocation'
+)
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/invocation/query',
+    methods=['POST']
+)
+def get_job_instance_invocations(
+    username, m_wf_id, wf_id, job_id, job_instance_id
+):
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    paged_response = queries.get_job_instance_invocations(wf_id, job_id, job_instance_id,**g.query_args)
+    paged_response = queries.get_job_instance_invocations(
+        wf_id, job_id, job_instance_id, **g.query_args
+    )
 
     if paged_response.total_records == 0:
         log.debug('Total records is 0; returning HTTP 204 No content')
@@ -1092,7 +1198,9 @@ def get_job_instance_invocations(username, m_wf_id, wf_id, job_id, job_instance_
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/invocation/<int:invocation_id>')
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/invocation/<int:invocation_id>'
+)
 def get_invocation(username, m_wf_id, wf_id, invocation_id):
     """
     Returns invocation identified by m_wf_id, wf_id, invocation_id.
@@ -1184,7 +1292,8 @@ def batch(username):
 
     responses = StringIO.StringIO()
     responses.write('[')
-    headers = [('Authorization', request.headers.get('Authorization'))] if request.authorization else []
+    headers = [('Authorization', request.headers.get('Authorization'))
+               ] if request.authorization else []
 
     application = current_app._get_current_object()
     for index, req in enumerate(requests):
@@ -1193,7 +1302,9 @@ def batch(username):
         body = req.get('body', None)
 
         with application.app_context():
-            with application.test_request_context(path, method=method, data=body, headers=headers):
+            with application.test_request_context(
+                path, method=method, data=body, headers=headers
+            ):
                 try:
                     # Pre process Request
                     rv = application.preprocess_request()
@@ -1210,7 +1321,10 @@ def batch(username):
                 # Post process Request
                 response = application.process_response(response)
 
-        responses.write('{"status": %d,"response": %s}' % (response.status_code, _read_response(response)))
+        responses.write(
+            '{"status": %d,"response": %s}' %
+            (response.status_code, _read_response(response))
+        )
 
         if index + 1 < len(requests):
             responses.write(',')
@@ -1225,8 +1339,13 @@ Views
 """
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/running')
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/running/query', methods=['POST'])
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/job/running'
+)
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/job/running/query',
+    methods=['POST']
+)
 def get_running_jobs(username, m_wf_id, wf_id):
     """
     Returns a collection of running Jobs.
@@ -1262,8 +1381,13 @@ def get_running_jobs(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/successful')
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/successful/query', methods=['POST'])
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/job/successful'
+)
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/job/successful/query',
+    methods=['POST']
+)
 def get_successful_jobs(username, m_wf_id, wf_id):
     """
     Returns a collection of successful Jobs.
@@ -1299,8 +1423,13 @@ def get_successful_jobs(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failed')
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failed/query', methods=['POST'])
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failed'
+)
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failed/query',
+    methods=['POST']
+)
 def get_failed_jobs(username, m_wf_id, wf_id):
     """
     Returns a collection of failed Jobs.
@@ -1336,8 +1465,13 @@ def get_failed_jobs(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failing')
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failing/query', methods=['POST'])
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failing'
+)
+@monitoring_routes.route(
+    '/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failing/query',
+    methods=['POST']
+)
 def get_failing_jobs(username, m_wf_id, wf_id):
     """
     Returns a collection of failing Jobs.

@@ -225,7 +225,7 @@ function test_timeout_fail {
 }
 
 function test_timeout_kill {
-    kickstart -k 1 -K 5 python ignoreterm.py 30
+    kickstart -k 5 -K 5 python ignoreterm.py 30
     rc=$?
     if [ $rc -eq 0 ]; then
         echo "Expected non-zero exit"
@@ -481,6 +481,43 @@ function test_integrity {
     return $?
 }
 
+function test_integrity_failure {
+    alias pegasus-integrity=/bin/false
+    kickstart -s testintegrity.data touch testintegrity.data
+    rc=$?
+    unalias pegasus-integrity
+    return $rc
+}
+
+function test_integrity_xml_inc {
+    # do this test multiple times
+    for I in `seq 100`; do
+    
+        kickstart ../../../../bin/pegasus-integrity --generate-xml=test.sh --full-statcall-lfn=test.sh
+        rc=$?
+    
+        if [ $rc -ne 0 ]; then
+            echo "Kickstart failed to run"
+            return 1
+        fi
+    
+        # verify it has the right output
+        if ! (grep 'statcall error="0" id="final" lfn="test.sh"' test.out) >/dev/null 2>&1; then
+            echo "Unable to find the included integrity data in ks output"
+            return 1
+        fi
+        if ! (grep 'checksum type="sha256"' test.out) >/dev/null 2>&1; then
+            echo "Unable to find the included integrity data in ks output"
+            return 1
+        fi
+    done
+
+    return 0
+}
+
+# make sure we start cleanly
+rm -f .pegasus-integrity-ks.xml
+
 # RUN THE TESTS
 run_test lotsofprocs
 run_test lotsofprocs_buffer
@@ -520,5 +557,7 @@ run_test test_not_executable
 run_test test_wrapper
 run_test test_metadata
 run_test test_integrity
+run_test test_integrity_failure
+run_test test_integrity_xml_inc
 
 

@@ -9,8 +9,8 @@ DB_VERSION = 7
 
 log = logging.getLogger(__name__)
 
-class Version(BaseVersion):
 
+class Version(BaseVersion):
     def __init__(self, connection):
         super(Version, self).__init__(connection)
 
@@ -26,7 +26,7 @@ class Version(BaseVersion):
             self.db.execute("ALTER TABLE workflowstate ADD reason TEXT NULL")
         except (OperationalError, ProgrammingError):
             pass
-        except Exception, e:
+        except Exception as e:
             self.db.rollback()
             log.exception(e)
             raise Exception(e)
@@ -36,7 +36,7 @@ class Version(BaseVersion):
             self.db.execute("ALTER TABLE jobstate ADD reason TEXT NULL")
         except (OperationalError, ProgrammingError):
             pass
-        except Exception, e:
+        except Exception as e:
             self.db.rollback()
             log.exception(e)
             raise Exception(e)

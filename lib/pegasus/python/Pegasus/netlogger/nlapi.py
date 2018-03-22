@@ -231,10 +231,10 @@ class Log:
         self._meta = {}
         if meta:
             self._meta[None] = meta
-        if isinstance(logfile,types.StringType):
+        if isinstance(logfile, str):
             try:
                 self._logfile = urlfile(logfile)
-            except (socket.gaierror, socket.error, IOError), E:
+            except (socket.gaierror, socket.error, IOError) as E:
                 raise self.OpenError(E)
         else:
             self._logfile = logfile
@@ -359,9 +359,9 @@ class Log:
                     fields.append("level=%s" % level)
             if kw:
                 self._append(fields, kw)
-            if self._meta.has_key(event):
+            if event in self._meta:
                 self._append(fields, self._meta[event])
-            if self._meta.has_key(None):
+            if None in self._meta:
                 self._append(fields, self._meta[None])
             buf = FIELD_SEP.join(fields)
         else:
@@ -371,12 +371,12 @@ class Log:
             if isinstance(level, int):
                 level = Level.getName(level).upper()
             # print traceback later
-            if kw.has_key('traceback'):
+            if 'traceback' in kw:
                 tbstr = kw['traceback']
                 del kw['traceback']
             else:
                 tbstr = None
-            if kw.has_key('msg'):
+            if 'msg' in kw:
                 msg = kw['msg']
                 del kw['msg']
             else:
@@ -443,7 +443,7 @@ def urlfile(url):
         elif path == '&':
             fileobj = sys.stderr
         else:
-            if query_data.has_key('append'):
+            if 'append' in query_data:
                 is_append = boolparse(query_data['append'])
                 open_flag = 'aw'[is_append]
             else:

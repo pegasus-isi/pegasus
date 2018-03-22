@@ -97,7 +97,7 @@ class WorkflowInfo:
 				job_info += ( "\"postD\":" +  job_stat_det['postD'] +" , ")
 				job_info += ( "\"state\":" +  job_stat_det['state'] +" , ")
 				job_info += ( "\"transformation\": \"" +  job_stat_det['transformation'] +"\"  , ")
-				if self.transformation_color_map.has_key(job_stat_det['transformation']):
+				if job_stat_det['transformation'] in self.transformation_color_map:
 					job_info += ( "\"color\": \"" +  self.transformation_color_map[job_stat_det['transformation']] +"\"  , ")
 				else:
 					# there is no compute task
@@ -105,7 +105,7 @@ class WorkflowInfo:
 				if plot_utils.isSubWfJob(job_stat_det['name']):
 					job_info += ( "\"sub_wf\":1 , "  )
 					corresponding_dax =''
-					if (self.job_instance_id_sub_wf_uuid_map.has_key(job_stat_det['instance_id'])): 
+					if (job_stat_det['instance_id'] in self.job_instance_id_sub_wf_uuid_map): 
 						corresponding_dax = self.job_instance_id_sub_wf_uuid_map[job_stat_det['instance_id']]
 						job_info += ( "\"sub_wf_name\":\""+ corresponding_dax+ "." + extn +"\"")
 					else:
@@ -137,7 +137,7 @@ class WorkflowInfo:
 			trans_info += ( "\"max\":"  +  trans_stat_det['max'] +" , ")
 			trans_info += ( "\"avg\":"    +  trans_stat_det['avg']  +" , ")
 			trans_info += ( "\"total\":"    +  trans_stat_det['total']  +" , ")
-			if self.transformation_color_map.has_key(trans_stat_det['name']):
+			if trans_stat_det['name'] in self.transformation_color_map:
 				trans_info += ( "\"color\": \"" +  self.transformation_color_map[trans_stat_det['name']] +"\"  ")
 			else:
 				# there is no compute task
@@ -180,7 +180,7 @@ class WorkflowInfo:
 			job_info += ( "\"postD\":" +  job_stat_det['postD'] +" , ")
 			job_info += ( "\"state\":" +  job_stat_det['state'] +" , ")
 			job_info += ( "\"transformation\": \"" +  job_stat_det['transformation'] +"\"  , ")
-			if self.transformation_color_map.has_key(job_stat_det['transformation']):
+			if job_stat_det['transformation'] in self.transformation_color_map:
 				job_info += ( "\"color\": \"" +  self.transformation_color_map[job_stat_det['transformation']] +"\"  , ")
 			else:
 				# there is no compute task
@@ -188,7 +188,7 @@ class WorkflowInfo:
 			if plot_utils.isSubWfJob(job_stat_det['name']):
 				job_info += ( "\"sub_wf\":1 , "  )
 				corresponding_dax =''
-				if (self.job_instance_id_sub_wf_uuid_map.has_key(job_stat_det['instance_id'])): 
+				if (job_stat_det['instance_id'] in self.job_instance_id_sub_wf_uuid_map): 
 					corresponding_dax = self.job_instance_id_sub_wf_uuid_map[job_stat_det['instance_id']]
 					job_info += ( "\"sub_wf_name\":\""+ corresponding_dax+ "." + extn+"\"")
 				else:

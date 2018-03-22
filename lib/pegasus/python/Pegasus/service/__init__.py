@@ -12,21 +12,29 @@ if os.path.isfile(conf):
     app.config.from_pyfile(conf)
 del conf
 
+
 # Find pegasus home
 def get_pegasus_home():
     home = os.getenv("PEGASUS_HOME", None)
     if home is not None:
         if not os.path.isdir(home):
-            raise ImportError("Invalid value for PEGASUS_HOME environment variable: %s" % home)
+            raise ImportError(
+                "Invalid value for PEGASUS_HOME environment variable: %s" %
+                home
+            )
         return home
 
     home = app.config.get("PEGASUS_HOME", None)
     if home is not None:
         if not os.path.isdir(home):
-            raise ImportError("Invalid directory for PEGASUS_HOME in configuration file: %s" % home)
+            raise ImportError(
+                "Invalid directory for PEGASUS_HOME in configuration file: %s"
+                % home
+            )
         return home
 
     return None
+
 
 from flask.ext.cache import Cache
 cache = Cache(app)
@@ -44,4 +52,3 @@ app.url_map.converters['boolean'] = BooleanConverter
 app.url_map.strict_slashes = False
 
 from Pegasus.service import auth, filters, dashboard, monitoring
-

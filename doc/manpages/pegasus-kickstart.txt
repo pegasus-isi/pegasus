@@ -505,9 +505,9 @@ will be signalled, and the other stages will be skipped.
 
 Output Format
 -------------
-Refer to <http://pegasus.isi.edu/wms/docs/schemas/iv-2.2/iv-2.2.html>
+Refer to <https://pegasus.isi.edu/documentation/schemas/iv-2.2/iv-2.2.html>
 for an up-to-date description of elements and their attributes. Check with
-<http://pegasus.isi.edu/documentation> for invocation schemas with a higher 
+<https://pegasus.isi.edu/documentation> for invocation schemas with a higher 
 version number.
 
 

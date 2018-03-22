@@ -117,7 +117,7 @@ class Workflow:
             # Send event to corresponding sink
             logger.trace("Sending record to DB %s, %s", event, kwargs)
             self._sink.send(event, kwargs)
-        except Exception, e:
+        except Exception as e:
             # Error sending this event... disable the sink from now on...
             logger.warning("error sending event for %s: %s, %s", self._wf_uuid, event, kwargs)
             logger.exception(e)

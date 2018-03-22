@@ -2,6 +2,7 @@
 Pegasus library for generating workflow execution gantt chart
 
 """
+from __future__ import absolute_import
 
 ##
 #  Copyright 2010-2011 University Of Southern California
@@ -28,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 from Pegasus.tools import utils
 from Pegasus.plots_stats import utils as plot_utils
-import populate
+from . import populate
 from datetime import timedelta
 from datetime import datetime
 
@@ -460,7 +461,7 @@ var scaleMargin = 15;\n"
 	color_name_str = "var color =['darkblue','yellow','orange' ,'steelblue', 'purple'"
 	desc_name_str = "var desc=['pre script','condor job','resource delay', 'job runtime as seen by dagman','post script '"
 	for k,v in workflow_stat.transformation_color_map.items():
-		if workflow_stat.transformation_statistics_dict.has_key(k):
+		if k in workflow_stat.transformation_statistics_dict:
 			color_name_str += ",'"+v +"'"
 			desc_name_str +=",'"+k +"'"	
 	color_name_str += "];\n"

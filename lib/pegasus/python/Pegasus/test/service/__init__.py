@@ -11,8 +11,8 @@ from flask import json
 
 from Pegasus.service import app
 
-class TestCase(unittest.TestCase):
 
+class TestCase(unittest.TestCase):
     def setUp(self):
         # We want our test cases quiet
         logging.basicConfig(level=logging.ERROR)
@@ -27,6 +27,7 @@ class TestCase(unittest.TestCase):
         # Remove the temp dir
         if os.path.isdir(self.tmpdir):
             shutil.rmtree(self.tmpdir)
+
 
 class DBTestCase(TestCase):
     "This test case is for tests that require the database"
@@ -44,14 +45,15 @@ class DBTestCase(TestCase):
         os.remove(self.dbfile)
         TestCase.tearDown(self)
 
-class UserTestCase(DBTestCase):
 
+class UserTestCase(DBTestCase):
     def setUp(self):
         DBTestCase.setUp(self)
         self.username = "scott"
         self.password = "tiger"
 
         app.config.update(AUTHENTICATION="NoAuthentication")
+
 
 class APITestCase(UserTestCase):
     def setUp(self):
@@ -61,6 +63,7 @@ class APITestCase(UserTestCase):
 
         # Patch the Flask/Werkzeug open to support required features
         orig_open = self.app.open
+
         def myopen(*args, **kwargs):
             headers = kwargs.get("headers", [])
 
@@ -90,8 +93,10 @@ class APITestCase(UserTestCase):
         self.delete = self.app.delete
         self.put = self.app.put
 
+
 from werkzeug.serving import make_server, BaseWSGIServer
 import threading
+
 
 class TestWSGIServer(threading.Thread):
     def __init__(self, *args, **kwargs):
@@ -108,8 +113,8 @@ class TestWSGIServer(threading.Thread):
         self.server.server_close()
         self.join()
 
-class ClientTestCase(APITestCase):
 
+class ClientTestCase(APITestCase):
     def setUp(self):
         APITestCase.setUp(self)
         self.host = "127.0.0.1"
@@ -130,13 +135,14 @@ class ClientTestCase(APITestCase):
         sys.stdout.truncate(0)
         stderr = sys.stderr.getvalue()
         sys.stderr.truncate(0)
-        return (stdout,stderr)
+        return (stdout, stderr)
 
     def tearDown(self):
         sys.stdout = self.oldstdout
         sys.stderr = self.oldstderr
         self.server.shutdown()
         APITestCase.tearDown(self)
+
 
 def IntegrationTest(f):
     def wrapper(*args, **kwargs):
@@ -149,6 +155,7 @@ def IntegrationTest(f):
 
     return wrapper
 
+
 def PerformanceTest(f):
     def wrapper(*args, **kwargs):
         env = os.getenv("ENABLE_PERFORMANCE_TESTS", None)
@@ -159,4 +166,3 @@ def PerformanceTest(f):
         return f(*args, **kwargs)
 
     return wrapper
-

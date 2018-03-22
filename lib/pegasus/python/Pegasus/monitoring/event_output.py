@@ -18,13 +18,13 @@ Functions for output pegasus-monitord events to various destinations.
 #  limitations under the License.
 ##
 
-import os
-import sys
 import socket
 import logging
 import urlparse
+import traceback
 
 from Pegasus.tools import utils
+from Pegasus.tools import properties
 from Pegasus.netlogger import nlapi
 from Pegasus.db.workflow_loader import WorkflowLoader
 from Pegasus.db.dashboard_loader import DashboardLoader
@@ -239,13 +239,14 @@ class AMQPEventSink(EventSink):
     """
     EXCH_OPTS = {'type' : 'topic', 'durable' : True, 'auto_delete' : False}
     DEFAULT_AMQP_VIRTUAL_HOST="pegasus"  #should be /
-    DEFAULT_ROUTING_KEY = "stampede"
 
     def __init__(self, host, port, exch=None, encoder=None,
                  userid='guest', password='guest', virtual_host=DEFAULT_AMQP_VIRTUAL_HOST,
                  ssl=False, connect_timeout=None, **kw):
         super(AMQPEventSink, self).__init__()
         self._encoder = encoder
+
+        self._log.info( "Connecting to host: %s:%s virtual host: %s exchange: %s with user: %s ssl: %s" %(host, port, virtual_host, exch, userid, ssl ))
         self._conn = amqp.Connection(host="%s:%s" % (host, port),
                                      userid=userid, password=password,
                                      virtual_host=virtual_host, ssl=ssl,
@@ -259,13 +260,70 @@ class AMQPEventSink(EventSink):
         self._log.trace("send.start event=%s", full_event)
         data = self._encoder(event=event, **kw)
         self._channel.basic_publish(amqp.Message(body=data),
-                                    exchange=self._exch, routing_key=self.DEFAULT_ROUTING_KEY)
+                                    exchange=self._exch, routing_key=full_event)
         self._log.trace("send.end event=%s", event)
 
     def close(self):
         self._log.trace("close.start")
         self._conn.close()
         self._log.trace("close.end")
+
+
+class MultiplexEventSink(EventSink):
+    """
+    Sends events to multiple end points
+    """
+
+    def __init__(self, dest, prefix=STAMPEDE_NS,  props=None, **kw):
+        super( MultiplexEventSink, self ).__init__()
+        self._endpoints = {}
+        additional_sink_props = props.propertyset("pegasus.catalog.workflow" + ".", True)
+
+        # we delete from our copy pegasus.catalog.workflow.url as we want with default prefix
+        if "url" in additional_sink_props.keys():
+            del additional_sink_props["url"]
+
+        additional_sink_props["default.url"] = dest
+        for key in additional_sink_props:
+            if key.endswith( ".url" ):
+                # remove from our copy pegasus.catalog.workflow.url if exists
+                endpoint_props = properties.Properties(props.propertyset("pegasus.catalog.workflow" + ".", False))
+                endpoint_props.remove("pegasus.catalog.workflow.url")
+
+                self._endpoints[ key[0:key.rfind(".url")] ] = create_wf_event_sink(additional_sink_props[key], prefix=prefix, props=endpoint_props, multiplexed = True, **kw)
+
+    def send(self, event, kw):
+        remove_endpoints=[]
+        for key in self._endpoints:
+            sink = self._endpoints[key]
+            try:
+                sink.send(event, kw)
+            except:
+                self._log.error(traceback.format_exc())
+                self._log.error("[multiplex event sender] error sending event. Disabling endpoint %s" %key )
+                self.close_sink( sink )
+                remove_endpoints.append( key )
+
+        # remove endpoints that are disabled
+        for key in remove_endpoints:
+            del self._endpoints[key]
+
+    def close(self):
+        for key in self._endpoints:
+            self._log.debug("[multiplex event sender] Closing endpoint %s" % key)
+            self.close_sink(self._endpoints[key])
+
+    def close_sink(self, sink):
+        try:
+            sink.close()
+        except:
+            pass
+
+    def flush(self):
+        "Clients call this to flush events to the sink"
+        for key in self._endpoints:
+            self._log.debug("[multiplex event sender] Flushing endpoint %s" % key)
+            self._endpoints[key].flush()
 
 def bson_encode(event, **kw):
     """
@@ -274,7 +332,7 @@ def bson_encode(event, **kw):
     kw['event'] = STAMPEDE_NS + event
     return bson.dumps(kw)
 
-def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, **kw):
+def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, multiplexed = False, **kw):
     """
     Create & return subclass of EventSink, chosen by value of 'dest'
     and parameterized by values (if any) in 'kw'.
@@ -283,7 +341,14 @@ def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, **kw):
     if dest is None:
         return None
 
+    # PM-898 are additional URL's to populate specified
+    if not multiplexed and multiplex( dest, prefix , props ):
+        return MultiplexEventSink(dest,  prefix, props, **kw)
+
+
     url = OutputURL(dest)
+
+    log.info( "Connecting workflow event sink to %s" %dest)
 
     # Pick an encoder
 
@@ -313,14 +378,25 @@ def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, **kw):
         sink = TCPEventSink(url.host, url.port, encoder=pick_encfn(enc, prefix), **kw)
         _type, _name = "network", "%s:%s" % (url.host, url.port)
     elif url.scheme == 'amqp':
+        # amqp://[USERNAME:PASSWORD@]<hostname>[:port]/[<virtualhost>]/<exchange_name>
         if amqp is None:
             raise Exception("AMQP destination selected, but cannot import AMQP library")
         if url.port is None:
             url.port = 5672 # RabbitMQ default
-        while url.path.startswith('/'):
-            url.path = url.path[1:]
-        sink = AMQPEventSink(url.host, url.port, exch=url.path,
-                             userid = url.user, password=url.password, ssl=True,
+
+        # PM-1258 parse exchange and virtual host info
+        exchange = None
+        virtual_host= None
+        path_comp=url.path.split('/')
+        if path_comp is not None:
+            exchange=path_comp.pop()
+        if path_comp is not None:
+            virtual_host=path_comp.pop()
+            if len(virtual_host) == 0:
+                virtual_host = None
+
+        sink = AMQPEventSink(url.host, url.port, virtual_host=virtual_host, exch=exchange,
+                             userid = url.user, password=url.password, ssl=False,
                              encoder=pick_encfn(enc,prefix), **kw)
         _type, _name="AMQP", "%s:%s/%s" % (url.host, url.port, url.path)
     else:
@@ -332,3 +408,27 @@ def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, **kw):
 
     return sink
 
+
+def multiplex( dest, prefix, props=None):
+    """
+    Determines whether we need to multiplex and events to multiple sinks
+    :param dest:
+    :param props:
+    :return:
+    """
+    if props is None:
+        return False
+
+    # we never attempt multiplex on dashboard sink
+    if prefix == DASHBOARD_NS:
+        return False
+
+    additional_sink_props = props.propertyset("pegasus.catalog.workflow" + ".", False)
+    multiplex = False
+    for key in additional_sink_props:
+        if key == "pegasus.catalog.workflow.url":
+            pass
+        if key.endswith(".url"):
+            multiplex = True
+            break
+    return multiplex

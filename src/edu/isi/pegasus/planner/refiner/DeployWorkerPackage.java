@@ -1078,7 +1078,7 @@ public class DeployWorkerPackage
             //add to the set only if the job is
             //being run in the work directory
             //this takes care of local site create dir
-            String conf = job.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY);
+            String conf = job.getDataConfiguration();
             if( conf != null && job.runInWorkDirectory()){
                 
                 if( conf.equalsIgnoreCase( PegasusConfiguration.SHARED_FS_CONFIGURATION_VALUE) ){

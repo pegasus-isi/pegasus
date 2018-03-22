@@ -57,7 +57,7 @@ public class JobQueue {
                 input = new FileInputStream( f );
                 JsonNode root =  mapper.readTree( input );
                 System.out.println(  root );
-                return this.createJobQueueRequest(root, name) ;
+                return this.createJobQueueRequest(root, name, ceARN) ;
             }
             else{
                 //create a default one
@@ -95,7 +95,7 @@ public class JobQueue {
                 if( node.isArray() ){
                     for( JsonNode ceNode : node ){
                         if( ceNode.has( "input") ){
-                            ceRequests.add( this.createJobQueueRequest ( ceNode.get( "input" ), null ));
+                            ceRequests.add( this.createJobQueueRequest ( ceNode.get( "input" ), null , null));
                          }
                     }
                 }
@@ -118,8 +118,9 @@ public class JobQueue {
      * Populates the builder , with information from the node
      *  @param node the json file
      * @param name   the name to assign if does not exist already
+     * @param ceARN  the ceARN to associate if not existing in json doc
      */
-    private CreateJobQueueRequest createJobQueueRequest( final JsonNode node,String name) {
+    private CreateJobQueueRequest createJobQueueRequest( final JsonNode node,String name, String ceARN ) {
         
         CreateJobQueueRequest.Builder builder  = CreateJobQueueRequest.builder();
         /*
@@ -136,7 +137,7 @@ public class JobQueue {
          }
         */
         if( node.has( "computeEnvironmentOrder") ){
-            builder.computeEnvironmentOrder( this.createComputeEnvironmentOrder( node.get( "computeEnvironmentOrder" ) ));
+            builder.computeEnvironmentOrder( this.createComputeEnvironmentOrder( node.get( "computeEnvironmentOrder" ) , ceARN));
         }
         
         if( node.has( "jobQueueName") ){
@@ -159,7 +160,14 @@ public class JobQueue {
     }
 
 
-    private Collection<ComputeEnvironmentOrder> createComputeEnvironmentOrder( final JsonNode node ) {
+    /**
+     * 
+     * @param node
+     * 
+     * @param ceARN  the ceARN to associate if not existing in json doc
+     * @return 
+     */
+    private Collection<ComputeEnvironmentOrder> createComputeEnvironmentOrder( final JsonNode node, String ceARN ) {
         List<ComputeEnvironmentOrder> ceos = new LinkedList();
         /*
         [ 
@@ -174,6 +182,9 @@ public class JobQueue {
                 ComputeEnvironmentOrder.Builder builder = ComputeEnvironmentOrder.builder();
                 if( ceo.has( "computeEnvironment") ){
                     builder.computeEnvironment( ceo.get( "computeEnvironment" ).asText() );
+                }
+                else{
+                    builder.computeEnvironment(ceARN);
                 }
                 if( ceo.has( "order") ){
                     builder.order( ceo.get( "order" ).asInt() );

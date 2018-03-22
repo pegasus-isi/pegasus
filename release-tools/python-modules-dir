@@ -15,7 +15,8 @@ PYTHON=$($(dirname $0)/get-system-python)
 
 VERSION=`$PYTHON -V 2>&1 | sed -e 's/^.* \([0-9]\.[0-9]\).*$/\1/'`
 
-FINAL_LOCATION="NONE"
+# default
+FINAL_LOCATION="$SYSLIB/python$VERSION/dist-packages"
 
 for LOCATION in \
     "/usr/$SYSLIB/python$VERSION/dist-packages" \

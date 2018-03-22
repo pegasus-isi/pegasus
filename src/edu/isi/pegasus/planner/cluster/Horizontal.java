@@ -123,6 +123,10 @@ public class Horizontal implements Clusterer,
      */
     private PPS mPPS;
 
+    /**
+     * Boolean indicating whether to disallow clustering of single jobs.
+     */
+    private boolean mDisallowClusteringOfSingleJobs;
 
     /**
      * Singleton access to the job comparator.
@@ -178,6 +182,7 @@ public class Horizontal implements Clusterer,
     public void initialize( ADag dag , PegasusBag bag  )  throws ClustererException{
         mScheduledDAG = dag;
         mProps = bag.getPegasusProperties();
+        mDisallowClusteringOfSingleJobs = !mProps.allowClusteringOfSingleJobs();
         mJobAggregatorFactory.initialize( dag, bag );
 
         mJobMap = new HashMap();
@@ -349,7 +354,7 @@ public class Horizontal implements Clusterer,
             //the pool name on which the job is to run is the key
             key = (String)entry.getKey();
 
-            if( size <= 1 ){
+            if( size <= 1 && mDisallowClusteringOfSingleJobs ){
                 //no need to cluster one job. go to the next iteration
                 mLogger.log("\t No clustering of jobs mapped to execution site " + key,
                             LogManager.DEBUG_MESSAGE_LEVEL);
@@ -359,14 +364,14 @@ public class Horizontal implements Clusterer,
             JobAggregator aggregator = mJobAggregatorFactory.loadInstance( (Job)l.get(0) );
             if(aggregator.entryNotInTC(key)){
                 //no need to cluster one job. go to the next iteration
-                mLogger.log("\t No clustering for jobs mapped to execution site "  + key + " as nojob aggregator entry  in tc ",
+                mLogger.log("\t No clustering for jobs mapped to execution site "  + key + " as no job aggregator entry  in tc ",
                             LogManager.WARNING_MESSAGE_LEVEL);
                 continue;
             }
 
             //checks made ensure that l is not empty at this point
             cFactor = getCollapseFactor( key, (Job) l.get(0), size );
-            if( cFactor[0] == 1 && cFactor[1] == 0 ){
+            if( cFactor[0] == 1 && cFactor[1] == 0 && mDisallowClusteringOfSingleJobs ){
                 mLogger.log("\t Collapse factor of (" + cFactor[0] + "," + cFactor[1] +
                             ") determined for pool. " + key +
                             ". Skipping clustering", LogManager.DEBUG_MESSAGE_LEVEL);

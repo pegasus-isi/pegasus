@@ -33,7 +33,7 @@ try:
     import boto.s3.connection
     from boto.s3.bucket import Bucket
     from boto.s3.key import Key
-except ImportError, e:
+except ImportError as e:
     sys.stderr.write("ERROR: Unable to load boto library: %s\n" % e)
     exit(1)
 
@@ -114,7 +114,7 @@ class WorkThread(threading.Thread):
                 fn()
         except Queue.Empty:
             return
-        except Exception, e:
+        except Exception as e:
             traceback.print_exc()
             self.exception = e
 
@@ -472,7 +472,7 @@ def cp(args):
     if destbucket is None:
         if options.create:
             info("Creating destination bucket %s" % dest.bucket)
-            destbucket = conn.create_bucket(dest.bucket)
+            destbucket = conn.create_bucket(dest.bucket, location=conn.location)
         else:
             raise Exception("Destination bucket %s does not exist "
                             "(see -c)" % dest.bucket)
@@ -563,7 +563,14 @@ def mkdir(args):
     for uri in buckets:
         info("Creating %s" % uri)
         conn = get_connection(config, uri)
-        conn.create_bucket(uri.bucket, location=conn.location)
+        try:
+            conn.create_bucket(uri.bucket, location=conn.location)
+        except Exception, e:
+            if hasattr(e, "error_message") and \
+               "bucket succeeded and you already own it" in e.error_message:
+                continue
+            raise
+
 
 def rmdir(args):
     parser = option_parser("rmdir URL...")
@@ -806,7 +813,7 @@ def put(args):
             info("Bucket %s exists" % uri.bucket)
         else:
             info("Creating bucket %s" % uri.bucket)
-            conn.create_bucket(uri.bucket)
+            conn.create_bucket(uri.bucket, location=conn.location)
 
     b = Bucket(connection=conn, name=uri.bucket)
 
@@ -895,14 +902,14 @@ def put(args):
 
                     info("Completing upload")
                     upload.complete_upload()
-                except Exception, e:
+                except Exception as e:
                     # If there is an error, then we need to try and abort
                     # the multipart upload so that it doesn't hang around
                     # forever on the server.
                     try:
                         info("Aborting multipart upload")
                         upload.cancel_upload()
-                    except Exception, f:
+                    except Exception as f:
                         sys.stderr.write("ERROR: Unable to abort multipart"
                             " upload (use lsup/rmup): %s\n" % f)
                     raise e
@@ -1104,7 +1111,7 @@ def get(args):
 
             return False
 
-        keys = filter(keyfilter, b.list(uri.key))
+        keys = [x for x in b.list(uri.key) if keyfilter(x)]
     else:
         # Just get the one key we need to download
         key = b.get_key(uri.key)
@@ -1223,7 +1230,7 @@ def main():
         fn = globals()[command]
         try:
             fn(args)
-        except Exception, e:
+        except Exception as e:
             # Just raise the exception if the user wants more info
             if VERBOSE or DEBUG: raise
 

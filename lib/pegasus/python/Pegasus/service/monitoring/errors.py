@@ -17,18 +17,16 @@ __author__ = 'Rajiv Mayani'
 import logging
 
 from flask import make_response
-
-from sqlalchemy.orm.exc import NoResultFound
-
-from Pegasus.service.base import ErrorResponse, InvalidQueryError, InvalidOrderError, InvalidJSONError
+from Pegasus.service.base import (
+    ErrorResponse, InvalidJSONError, InvalidOrderError, InvalidQueryError
+)
 from Pegasus.service.monitoring import monitoring_routes
 from Pegasus.service.monitoring.utils import jsonify
-
+from sqlalchemy.orm.exc import NoResultFound
 
 log = logging.getLogger(__name__)
 
 JSON_HEADER = {'Content-Type': 'application/json'}
-
 """
 Error
 
@@ -85,7 +83,8 @@ def invalid_json_error(error):
 def catch_all(error):
     log.exception(error)
 
-    app_code, http_code = error.codes if hasattr(error, 'codes') else ('UNKNOWN', 500)
+    app_code, http_code = error.codes if hasattr(error, 'codes'
+                                                 ) else ('UNKNOWN', 500)
 
     e = ErrorResponse(app_code, error.message)
     response_json = jsonify(e)

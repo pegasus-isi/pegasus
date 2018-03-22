@@ -395,7 +395,7 @@ class BaseParser(ProcessInterface, DoesLogging):
             # main processing for the module
             try:
                 result = self.process(item)
-            except (ValueError, KeyError), E:
+            except (ValueError, KeyError) as E:
                 if self._ufile:
                     self._ufile.write(line)
                 else:
@@ -459,7 +459,7 @@ class BaseParser(ProcessInterface, DoesLogging):
         if isinstance(item, str):
             item = self._parser.parseLine(item)
         # Normalize the 'level' value
-        if item.has_key('level'):
+        if 'level' in item:
             level = item['level']
             if hasattr(level, 'upper'):
                 lvlname = item['level'].upper()
@@ -558,11 +558,11 @@ class NLBaseParser(BaseParser):
            generator function, yielding the result of parseLine() for
            each line in the input stream
         """
-        for line_num, line in enumerate(self._infile.xreadlines()):
+        for line_num, line in enumerate(self._infile):
             try:
                 d = self.parseLine(line)
                 yield d
-            except ValueError,E:
+            except ValueError as E:
                 if self.err_cb is False:
                     pass
                 else:
@@ -591,11 +591,11 @@ class NLSimpleParser(DoesLogging):
         """
         try:
             fields = _bp_extract(line, validate=self.verify)
-        except BPError, err:
+        except BPError as err:
             raise BPParseError("BP parse error: " + str(err))
         # higher-level verification
         for key in TS_FIELD, EVENT_FIELD:
-            if not fields.has_key(key):
+            if key not in fields:
                 raise BPParseError("missing required key '{0}'".format(key))
         # Pre-process date, if requested
         if self.parse_date:
@@ -645,7 +645,7 @@ if HAVE_PYPARSING:
         def parseLine(self, line):
             try:
                 rlist = self.nvp.parseString(line).asList()
-            except ParseException, E:
+            except ParseException as E:
                 raise ValueError(E)
             result = {}
             for a in rlist:

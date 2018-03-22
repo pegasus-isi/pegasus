@@ -322,7 +322,7 @@ def convert_stats_to_base_time(stats_by_time, date_time_filter = 'hour', isHost 
 			if isHost:
 				id += formatted_stats_by_hour['host'] + ":" 
 			id += corresponding_day
-			if day_to_hour_mapping.has_key(id):
+			if id in day_to_hour_mapping:
 				formatted_stats_by_day = day_to_hour_mapping[id]
 				formatted_stats_by_day['count'] += formatted_stats_by_hour['count']
 				formatted_stats_by_day['runtime'] += formatted_stats_by_hour['runtime']

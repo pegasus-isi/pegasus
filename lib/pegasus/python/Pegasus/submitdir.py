@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 from os.path import expanduser
 
@@ -213,7 +214,7 @@ class SubmitDir(object):
 
         if not self.is_archived():
             # Archive the files
-            print "Creating archive..."
+            print("Creating archive...")
             tar = tarfile.open(name=tmparchname, mode="w:gz")
             for name, path in visit(self.submitdir):
                 tar.add(name=path, arcname=name)
@@ -229,7 +230,7 @@ class SubmitDir(object):
         # We do this here, instead of doing it in the loop above
         # because we want to make sure there are no errors in creating
         # the archive before we start removing files
-        print "Removing files..."
+        print("Removing files...")
         for name, path in visit(self.submitdir):
             if os.path.isfile(path) or os.path.islink(path):
                 os.remove(path)
@@ -337,7 +338,7 @@ class SubmitDir(object):
         # Confirm that they want to delete the workflow
         while True:
             sys.stdout.write("Are you sure you want to delete this workflow? This operation cannot be undone. [y/n]: ")
-            answer = raw_input().strip().lower()
+            answer = input().strip().lower()
             if answer == "y":
                 break
             if answer == "n":
@@ -381,10 +382,10 @@ class SubmitDir(object):
         # Check to see if it already exists and just update it
         wf = mdb.get_master_workflow(self.wf_uuid)
         if wf is not None:
-            print "Workflow is already in master db"
+            print("Workflow is already in master db")
             old_submit_dir = wf.submit_dir
             if old_submit_dir != self.submitdir:
-                print "Updating path..."
+                print("Updating path...")
                 wf.submit_dir = self.submitdir
                 wf.db_url = connection.url_by_submitdir(self.submitdir, connection.DBType.WORKFLOW)
                 mdbsession.commit()
@@ -399,7 +400,7 @@ class SubmitDir(object):
         # Get workflow record
         wf = db.get_workflow(self.wf_uuid)
         if wf is None:
-            print "No database record for that workflow exists"
+            print("No database record for that workflow exists")
             return
 
         # Update the workflow record
@@ -459,7 +460,7 @@ class SubmitDir(object):
             # Check to see if it even exists
             wf = mdb.get_master_workflow(self.wf_uuid)
             if wf is None:
-                print "Workflow is not in master DB"
+                print("Workflow is not in master DB")
             else:
                 # Delete the workflow (this will delete the master_workflowstate entries as well)
                 mdb.delete_master_workflow(self.wf_uuid)
