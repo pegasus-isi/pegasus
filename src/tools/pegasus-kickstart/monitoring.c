@@ -284,6 +284,8 @@ static size_t base64_encode(const char *data, size_t input_length, char *encoded
 static void send_rabbitmq(MonitoringContext *ctx, ProcStats *stats) {
     debug("Sending stats to rabbitmq endpoint");
 
+    char routing_key[] = "kickstart.inv.online";
+
     char msg[1024];
     if (json_encode(ctx, stats, msg, 1024) < 0) {
         error("Unable to json encode message");
@@ -299,7 +301,7 @@ static void send_rabbitmq(MonitoringContext *ctx, ProcStats *stats) {
     char payload[1024];
     if (snprintf(payload, 1024,
         "{\"properties\":{},\"routing_key\":\"%s\",\"payload\":\"%s\",\"payload_encoding\":\"base64\"}",
-        ctx->wf_uuid, b64msg) >= 1024) {
+        routing_key, b64msg) >= 1024) {
         error("RabbitMQ payload too large for buffer");
         return;
     }
