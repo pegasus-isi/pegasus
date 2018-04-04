@@ -21,7 +21,7 @@ from Pegasus.DAX3 import *
 
 
 # Create a abstract dag
-diamond = ADAG("diamond")
+diamond = ADAG("diamond.dax")
 
 
 # Add a preprocess job
