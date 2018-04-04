@@ -411,7 +411,8 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
                         //set the internal primary id for job
                         //dagJob.setName( constructJobID( dagJob ) );
-                        dagJob.setName( dagJob.generateName( this.mJobPrefix) );
+                        dagJob.setName( makeDAGManCompliant( 
+                                            dagJob.generateName( this.mJobPrefix) ));
                         return dagJob;
                     }
                     else if (element.equals( "dax" ) ){
@@ -449,7 +450,8 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
                         //set the internal primary id for job
                         //daxJob.setName( constructJobID( daxJob ) );
-                        daxJob.setName( daxJob.generateName( this.mJobPrefix) );
+                        daxJob.setName( makeDAGManCompliant( 
+                                            daxJob.generateName( this.mJobPrefix) ) );
                         return daxJob;
                     }
 
