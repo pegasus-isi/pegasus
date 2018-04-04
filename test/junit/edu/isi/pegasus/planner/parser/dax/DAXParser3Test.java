@@ -169,6 +169,87 @@ public class DAXParser3Test {
         mLogger.logEventCompletion();
     }
     
+    /**
+     * 
+     */
+    @Test
+    public void testDAGManCompliantWithNoSpecialChar() {
+        
+        int set = 1;
+        //test with no deep storage structure enabled
+        mLogger.logEventStart( "test.planner.parser.dax", "set", Integer.toString(set++) );
+        DAXParser3 p = new DAXParser3( mBag, null);
+        String name = "name";
+        assertEquals( name,
+                      p.makeDAGManCompliant(name) );
+        mLogger.logEventCompletion();
+    }
+    
+    /**
+     * 
+     */
+    @Test
+    public void testDAGManCompliantWithDotSpecialChar() {
+        
+        int set = 1;
+        //test with no deep storage structure enabled
+        mLogger.logEventStart( "test.planner.parser.dax", "set", Integer.toString(set++) );
+        DAXParser3 p = new DAXParser3( mBag, null);
+        String name = "blackdiamond.dax";
+        assertEquals( "blackdiamond_dax",
+                      p.makeDAGManCompliant(name) );
+        mLogger.logEventCompletion();
+    }
+    
+    /**
+     * 
+     */
+    @Test
+    public void testDAGManCompliantWithPlusSpecialChar() {
+        
+        int set = 1;
+        //test with no deep storage structure enabled
+        mLogger.logEventStart( "test.planner.parser.dax", "set", Integer.toString(set++) );
+        DAXParser3 p = new DAXParser3( mBag, null);
+        String name = "blackdiamond+dax";
+        assertEquals( "blackdiamond_dax",
+                      p.makeDAGManCompliant(name) );
+        mLogger.logEventCompletion();
+    }
+    
+    
+    /**
+     * 
+     */
+    @Test
+    public void testDAGManCompliantWithMultipleSpecialChar() {
+        
+        int set = 1;
+        //test with no deep storage structure enabled
+        mLogger.logEventStart( "test.planner.parser.dax", "set", Integer.toString(set++) );
+        DAXParser3 p = new DAXParser3( mBag, null);
+        String name = "black.diamond+dax";
+        assertEquals( "black_diamond_dax",
+                      p.makeDAGManCompliant(name) );
+        mLogger.logEventCompletion();
+    }
+    
+    /**
+     * 
+     */
+    @Test
+    public void testDAGManCompliantWithRepeatedMultipleSpecialChar() {
+        
+        int set = 1;
+        //test with no deep storage structure enabled
+        mLogger.logEventStart( "test.planner.parser.dax", "set", Integer.toString(set++) );
+        DAXParser3 p = new DAXParser3( mBag, null);
+        String name = "black.diam.ond+dax++";
+        assertEquals( "black_diam_ond_dax__",
+                      p.makeDAGManCompliant(name) );
+        mLogger.logEventCompletion();
+    }
+    
     @After
     public void tearDown() {
         mLogger = null;
