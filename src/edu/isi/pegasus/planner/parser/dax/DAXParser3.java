@@ -281,6 +281,10 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                     for ( int i=0; i < names.size(); ++i ) {
                         String name = (String) names.get( i );
                         String value = (String) values.get( i );
+                        if( name.equals( "name") ){
+                            //PM-1262 make the name dagman compliant
+                            value = makeDAGManCompliant( value );
+                        }
                         m.put( name, value );
                     }
 
@@ -1246,25 +1250,40 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
      */
     protected String constructJobID( Job j ){
         //construct the jobname/primary key for job
-        StringBuffer name = new StringBuffer();
+        StringBuilder name = new StringBuilder();
 
         //prepend a job prefix to job if required
         if (mJobPrefix != null) {
             name.append(mJobPrefix);
         }
         
-        //PM-1222 strip out any . from transformation name
-        String txName = j.getTXName();
-        if( txName != null && txName.indexOf( ".") != -1 ){
-            txName = txName.replaceAll( "\\.", "_" );
-        }
-        
         //append the name and id recevied from dax
-        name.append( txName );
+        name.append( j.getTXName() );
         name.append("_");
         name.append(j.getLogicalID());
-        return name.toString();
+        
+        //PM-1222 strip out any . from transformation name
+        return this.makeDAGManCompliant( name.toString() );
     }
+    
+    
+    /**
+     * Generate a dagman compliant value.
+     * Currently dagman disallows . and + in the names
+     * 
+     * @param name
+     * 
+     * @return updated name 
+     */
+    protected String makeDAGManCompliant(String name ){
+        //PM-1262 and PM-1222
+        if( name != null ){
+            name = name.replaceAll( "[\\.\\+]", "_" );
+        }
+        
+        return name;
+    }
+    
 
     /**
      * Sanity check on the version that this parser works on.
