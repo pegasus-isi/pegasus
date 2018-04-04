@@ -160,8 +160,9 @@ public class MPIExec extends Abstract {
         File stdIn = null;
         try {
             BufferedWriter writer;
-//            String name = job.getID() + ".in";
-            stdIn = new File(mDirectory,name);
+            //PM-1261 the .in file should be in the same directory where all job submit files go
+            File directory = new File( this.mDirectory, ((AggregatedJob)job).getRelativeSubmitDirectory() );
+            stdIn = new File( directory ,name);
             writer = new BufferedWriter(new FileWriter( stdIn ));
 
             //traverse throught the jobs to determine input/output files
