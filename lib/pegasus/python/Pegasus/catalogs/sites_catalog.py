@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#  Copyright 2017 University Of Southern California
+#  Copyright 2017-2018 University Of Southern California
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -107,7 +107,7 @@ class SitesCatalog:
             raise Exception('A site handle, a namespace, and a key should be provided.')
 
         if handle not in self._sites:
-            raise ('There are no entries for site "%s".' % handle)
+            raise Exception('There are no entries for site "%s".' % handle)
 
         profile = {'namespace': namespace, 'key': key, 'value': value}
         self._sites[handle]['profiles'].append(profile)
@@ -125,7 +125,7 @@ class SitesCatalog:
             raise Exception('A site handle, and a jobmanager type, contact, and scheduler should be provided.')
 
         if handle not in self._sites:
-            raise ('There are no entries for site "%s".' % handle)
+            raise Exception('There are no entries for site "%s".' % handle)
 
         grid = {'type': type, 'contact': contact, 'scheduler': scheduler}
 
