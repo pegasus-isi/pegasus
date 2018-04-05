@@ -560,6 +560,10 @@ public class DAXParser2 extends Parser implements DAXParser {
         for(int i = 0; i < attrs.getLength(); i++){
             key = attrs.getLocalName(i);
             value = attrs.getValue(i);
+            if( key.equals( "name") ){
+                //PM-1262 make the name dagman compliant
+                value = Parser.makeDAGManCompliant( value );
+            }
             //should probably check for valid attributes before setting
             mp.put(key,value);
             //System.out.println(key + " --> " + value);
@@ -893,7 +897,10 @@ public class DAXParser2 extends Parser implements DAXParser {
         
         handleJobTagStart( mCurrentJobSubInfo  );
         
-        mCurrentJobSubInfo.setName( ((DAXJob)mCurrentJobSubInfo).generateName( this.mJobPrefix) );
+        mCurrentJobSubInfo.setName( 
+                Parser.makeDAGManCompliant(
+                        ((DAXJob)mCurrentJobSubInfo).generateName( this.mJobPrefix )
+                ) );
     }
     
     /**
