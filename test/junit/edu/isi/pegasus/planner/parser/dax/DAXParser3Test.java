@@ -180,7 +180,7 @@ public class DAXParser3Test {
         mLogger.logEventStart( "test.planner.parser.dax", "set", Integer.toString(set++) );
         String name = "name";
         assertEquals( name,
-                      DAXParser.makeDAGManCompliant(name) );
+                      Parser.makeDAGManCompliant(name) );
         mLogger.logEventCompletion();
     }
     
@@ -195,7 +195,7 @@ public class DAXParser3Test {
         mLogger.logEventStart( "test.planner.parser.dax", "set", Integer.toString(set++) );
         String name = "blackdiamond.dax";
         assertEquals( "blackdiamond_dax",
-                      DAXParser.makeDAGManCompliant(name) );
+                      Parser.makeDAGManCompliant(name) );
         mLogger.logEventCompletion();
     }
     
@@ -210,7 +210,7 @@ public class DAXParser3Test {
         mLogger.logEventStart( "test.planner.parser.dax", "set", Integer.toString(set++) );
         String name = "blackdiamond+dax";
         assertEquals( "blackdiamond_dax",
-                      DAXParser.makeDAGManCompliant(name) );
+                      Parser.makeDAGManCompliant(name) );
         mLogger.logEventCompletion();
     }
     
@@ -226,7 +226,7 @@ public class DAXParser3Test {
         mLogger.logEventStart( "test.planner.parser.dax", "set", Integer.toString(set++) );
         String name = "black.diamond+dax";
         assertEquals( "black_diamond_dax",
-                      DAXParser.makeDAGManCompliant(name) );
+                      Parser.makeDAGManCompliant(name) );
         mLogger.logEventCompletion();
     }
     
@@ -241,7 +241,7 @@ public class DAXParser3Test {
         mLogger.logEventStart( "test.planner.parser.dax", "set", Integer.toString(set++) ); 
         String name = "black.diam.ond+dax++";
         assertEquals( "black_diam_ond_dax__",
-                      DAXParser.makeDAGManCompliant(name) );
+                      Parser.makeDAGManCompliant(name) );
         mLogger.logEventCompletion();
     }
     

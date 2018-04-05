@@ -53,6 +53,25 @@ public abstract class Parser extends DefaultHandler{
      * Default parser name. Using Xerces at present.
      */
     protected final String DEFAULT_PARSER_NAME = "org.apache.xerces.parsers.SAXParser";
+    
+    
+    /**
+     * Generate a dagman compliant value.
+     * Currently dagman disallows . and + in the names
+     * 
+     * @param name
+     * 
+     * @return updated name 
+     */
+    public static String makeDAGManCompliant(String name ){
+        //PM-1262 and PM-1222
+        if( name != null ){
+            name = name.replaceAll( "[\\.\\+]", "_" );
+        }
+        
+        return name;
+    }
+
 
     /**
      * Locator object to determine on which line in the xml has the error

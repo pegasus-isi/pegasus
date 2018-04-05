@@ -61,6 +61,7 @@ import edu.isi.pegasus.planner.dax.Invoke.WHEN;
 import edu.isi.pegasus.planner.dax.MetaData;
 import edu.isi.pegasus.planner.namespace.Hints;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.parser.Parser;
 import edu.isi.pegasus.planner.parser.StackBasedXMLParser;
 import java.io.FileReader;
 import org.xml.sax.InputSource;
@@ -283,7 +284,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         String value = (String) values.get( i );
                         if( name.equals( "name") ){
                             //PM-1262 make the name dagman compliant
-                            value = DAXParser.makeDAGManCompliant( value );
+                            value = Parser.makeDAGManCompliant( value );
                         }
                         m.put( name, value );
                     }
@@ -411,7 +412,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
                         //set the internal primary id for job
                         //dagJob.setName( constructJobID( dagJob ) );
-                        dagJob.setName( DAXParser.makeDAGManCompliant( 
+                        dagJob.setName( Parser.makeDAGManCompliant( 
                                             dagJob.generateName( this.mJobPrefix) ));
                         return dagJob;
                     }
@@ -450,7 +451,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
                         //set the internal primary id for job
                         //daxJob.setName( constructJobID( daxJob ) );
-                        daxJob.setName( DAXParser.makeDAGManCompliant( 
+                        daxJob.setName( Parser.makeDAGManCompliant( 
                                             daxJob.generateName( this.mJobPrefix) ) );
                         return daxJob;
                     }
@@ -1265,7 +1266,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
         name.append(j.getLogicalID());
         
         //PM-1222 strip out any . from transformation name
-        return DAXParser.makeDAGManCompliant( name.toString() );
+        return Parser.makeDAGManCompliant( name.toString() );
     }
     
     
