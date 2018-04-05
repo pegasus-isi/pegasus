@@ -25,6 +25,23 @@ import edu.isi.pegasus.planner.parser.dax.Callback;
  * @version $Revision$
  */
 public interface DAXParser {
+    
+    /**
+     * Generate a dagman compliant value.
+     * Currently dagman disallows . and + in the names
+     * 
+     * @param name
+     * 
+     * @return updated name 
+     */
+    public static String makeDAGManCompliant(String name ){
+        //PM-1262 and PM-1222
+        if( name != null ){
+            name = name.replaceAll( "[\\.\\+]", "_" );
+        }
+        
+        return name;
+    }
 
     /**
      * Set the DAXCallback for the parser to call out to.
