@@ -200,7 +200,7 @@ public class PMC extends Abstract {
         MPIExec pmcAggregator = (MPIExec)aggregator;
         String name = pmcBasename( dag );
         //PM-660 designate that the graph is for the whole workflow
-        pmcAggregator.generatePMCInputFile(workflow, name, false );
+        pmcAggregator.generatePMCInputFile(workflow, name, ".", false );
 
         //lets generate the PBS input file
         mPBS.generateCode( dag );

@@ -142,7 +142,7 @@ public class MPIExec extends Abstract {
      * @return path to the input file
      */
     protected File writeOutInputFileForJobAggregator(AggregatedJob job) {
-        return this.generatePMCInputFile(job, job.getID() + ".in", true );
+        return this.generatePMCInputFile(job, job.getID() + ".in", job.getRelativeSubmitDirectory(), true );
     }
 
 
@@ -151,17 +151,18 @@ public class MPIExec extends Abstract {
      *
      * @param job   the aggregated job
      * @param name  the name of PMC file to be generated
+     * @param relativeDir relative submit directory for the job 
      * @param isClustered  a boolean indicating whetehre the graph belongs to a
      *                     clustered job or not.
      *
      * @return path to the input file
      */
-    public File generatePMCInputFile(Graph job, String name , boolean isClustered ) {
+    public File generatePMCInputFile(Graph job, String name , String relativeDir, boolean isClustered ) {
         File stdIn = null;
         try {
             BufferedWriter writer;
             //PM-1261 the .in file should be in the same directory where all job submit files go
-            File directory = new File( this.mDirectory, ((AggregatedJob)job).getRelativeSubmitDirectory() );
+            File directory = new File( this.mDirectory, relativeDir );
             stdIn = new File( directory ,name);
             writer = new BufferedWriter(new FileWriter( stdIn ));
 
