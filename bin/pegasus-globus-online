@@ -347,10 +347,10 @@ def retrieveGlobusTransferLogs(transfer_client, task_id, amqp_url):
 
     task_show = json.loads(str(task_show), object_pairs_hook=OrderedDict)
     task_show.pop("event_link", None)
-    task_show["events"] = []
+    task_show["transfer_events"] = []
 
     for event in task_events:
-        task_show["events"].append(event.data)
+        task_show["transfer_events"].append(event.data)
 
     task_show["wf_uuid"] = None
     task_show["dag_job_id"] = None
@@ -361,6 +361,7 @@ def retrieveGlobusTransferLogs(transfer_client, task_id, amqp_url):
     if "PEGASUS_DAG_JOB_ID" in os.environ:
         task_show["dag_job_id"] = os.environ["PEGASUS_DAG_JOB_ID"]
 
+    task_show["event"] = "transfer.inv.go"
     amqp_channel.basic_publish(exchange=exchange_name, routing_key="transfer.inv.go", body=json.dumps(task_show, indent=2))
     
     amqp_conn.close()

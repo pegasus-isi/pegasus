@@ -163,7 +163,8 @@ static void send_http_msg(char *url, char *msg) {
 
 static size_t json_encode(MonitoringContext *ctx, ProcStats *stats, char *buf, size_t maxsize) {
     size_t size = snprintf(buf, maxsize,
-            "{\"ts\":%.6lf,"
+            "{\"event\":\"kickstart.inv.online\","
+            "\"ts\":%.6lf,"
             "\"hostname\":\"%s\","
             "\"site\":\"%s\","
             "\"wf_uuid\":\"%s\","
