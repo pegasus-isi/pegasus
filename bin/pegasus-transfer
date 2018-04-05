@@ -2013,6 +2013,8 @@ class GlobusOnlineHandler(TransferHandlerBase):
         cmd = tools.full_path("pegasus-globus-online") + " --transfer --file " + tmp_name
         if logger.isEnabledFor(logging.DEBUG):
             cmd += " --debug"
+        if publish_enabled:
+            cmd += " --publish"
         try:
             tc = TimedCommand(cmd)
             tc.run()
@@ -4069,6 +4071,7 @@ def main():
     global stats_start
     global stats_end
     global symlink_file_transfer
+    global publish_enabled
     
     # dup stderr onto stdout
     sys.stderr = sys.stdout
@@ -4097,6 +4100,8 @@ def main():
                              " are both file URLs with the same site_label" +
                              " then the source file will be symlinked" +
                              " to the destination rather than being copied.")
+    parser.add_option("-p", "--publish", action = "store_true", dest = "publish",
+                      help = "Enables publishing of statistics to AMQP.")
     parser.add_option("-d", "--debug", action = "store_true", dest = "debug",
                       help = "Enables debugging ouput.")
     
@@ -4108,13 +4113,18 @@ def main():
     signal.signal(signal.SIGINT, prog_sigint_handler)
     
     attempts_max = options.max_attempts
-    
+
     if options.threads is None or options.threads == 0:
         if "PEGASUS_TRANSFER_THREADS" in os.environ:
             options.threads = int(os.environ["PEGASUS_TRANSFER_THREADS"])
         else:
             options.threads = 8
         
+    if options.publish or "PEGASUS_TRANSFER_PUBLISH" in os.environ:
+        publish_enabled = True
+    else:
+        publish_enabled = False
+
     # stdin or file input?
     input_data = None
     if options.file is None:
