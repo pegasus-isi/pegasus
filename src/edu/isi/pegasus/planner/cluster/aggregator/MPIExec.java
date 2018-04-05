@@ -127,8 +127,14 @@ public class MPIExec extends Abstract {
         String stdin = job.getStdIn();
         job.setStdIn( "" );
         
-        //slight cheating here.
-        File stdinFile = new File( mDirectory, stdin );
+        //PM-1261
+        // the stdin is just set to basename even if a job is in deep directory 
+        //structure. For Condor FILE IO we need to construct the right path
+        //to the deep directory structure. WE don;t do something similar for
+        //other auxillary jobs as we are directly connecting their stdin via the
+        //stdin key in condor submit files
+        File stdinFile = new File( new File( mDirectory, job.getRelativeSubmitDirectory() ),
+                                    stdin );
 
         job.condorVariables.addIPFileForTransfer( stdinFile.getAbsolutePath() );
         return;
