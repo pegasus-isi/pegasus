@@ -23,6 +23,7 @@ import logging
 import urlparse
 import traceback
 import json
+import ssl
 
 from Pegasus.tools import utils
 from Pegasus.tools import properties
@@ -42,7 +43,7 @@ except:
 
 amqp = None
 try:
-    from amqplib import client_0_8 as amqp
+    import pika as amqp
 except:
     log.info("cannot import AMQP library")
 
@@ -240,20 +241,24 @@ class AMQPEventSink(EventSink):
     """
     Write wflow event logs to an AMQP server.
     """
-    EXCH_OPTS = {'type' : 'topic', 'durable' : True, 'auto_delete' : False}
+    EXCH_OPTS = {'exchange_type' : 'topic', 'durable' : True, 'auto_delete' : False}
     DEFAULT_AMQP_VIRTUAL_HOST="pegasus"  #should be /
 
     def __init__(self, host, port, exch=None, encoder=None,
                  userid='guest', password='guest', virtual_host=DEFAULT_AMQP_VIRTUAL_HOST,
-                 ssl=False, connect_timeout=None, **kw):
+                 ssl_enabled=False, connect_timeout=None, **kw):
         super(AMQPEventSink, self).__init__()
         self._encoder = encoder
 
-        self._log.info( "Connecting to host: %s:%s virtual host: %s exchange: %s with user: %s ssl: %s" %(host, port, virtual_host, exch, userid, ssl ))
-        self._conn = amqp.Connection(host="%s:%s" % (host, port),
-                                     userid=userid, password=password,
-                                     virtual_host=virtual_host, ssl=ssl,
-                                     connect_timeout=connect_timeout, **kw)
+        self._log.info( "Connecting to host: %s:%s virtual host: %s exchange: %s with user: %s ssl: %s" %(host, port, virtual_host, exch, userid, ssl_enabled ))
+        creds = amqp.PlainCredentials(userid, password)
+        parameters = amqp.ConnectionParameters(host=host, 
+                                               port=port,
+                                               ssl=ssl_enabled,
+                                               ssl_options={"certs_reqs": ssl.CERT_NONE},
+                                               virtual_host=virtual_host,
+                                               credentials=creds)
+        self._conn = amqp.BlockingConnection(parameters)
         self._channel = self._conn.channel()
         self._exch = exch
         self._channel.exchange_declare(exch, **self.EXCH_OPTS)
@@ -262,8 +267,7 @@ class AMQPEventSink(EventSink):
         full_event = STAMPEDE_NS + event
         self._log.trace("send.start event=%s", full_event)
         data = self._encoder(event=event, **kw)
-        self._channel.basic_publish(amqp.Message(body=data),
-                                    exchange=self._exch, routing_key=full_event)
+        self._channel.basic_publish(body=data, exchange=self._exch, routing_key=full_event)
         self._log.trace("send.end event=%s", event)
 
     def close(self):
@@ -409,7 +413,7 @@ def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, multipl
                 virtual_host = None
 
         sink = AMQPEventSink(url.host, url.port, virtual_host=virtual_host, exch=exchange,
-                             userid = url.user, password=url.password, ssl=False,
+                             userid = url.user, password=url.password, ssl_enabled=False,
                              encoder=pick_encfn(enc,prefix), **kw)
         _type, _name="AMQP", "%s:%s/%s" % (url.host, url.port, url.path)
     else:
