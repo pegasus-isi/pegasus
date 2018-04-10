@@ -330,6 +330,8 @@ def retrieveGlobusTransferLogs(transfer_client, task_id, amqp_url):
     Default exchange is "monitoring"
     """
 
+    EXCH_OPTS = {'exchange_type' : 'topic', 'durable' : True, 'auto_delete' : False}
+    
     parsed_url = urlparse.urlparse(amqp_url)
 
     if parsed_url.path.count("/") > 1 :
@@ -341,6 +343,7 @@ def retrieveGlobusTransferLogs(transfer_client, task_id, amqp_url):
 
     amqp_conn = amqp.connect(amqp_url)
     amqp_channel = amqp_conn.channel()
+    amqp_channel.exchange_declare(exchange_name, **EXCH_OPTS)
 
     task_show = transfer_client.get_task(task_id)
     task_events = transfer_client.task_event_list(task_id, None)
