@@ -127,8 +127,14 @@ public class MPIExec extends Abstract {
         String stdin = job.getStdIn();
         job.setStdIn( "" );
         
-        //slight cheating here.
-        File stdinFile = new File( mDirectory, stdin );
+        //PM-1261
+        // the stdin is just set to basename even if a job is in deep directory 
+        //structure. For Condor FILE IO we need to construct the right path
+        //to the deep directory structure. WE don;t do something similar for
+        //other auxillary jobs as we are directly connecting their stdin via the
+        //stdin key in condor submit files
+        File stdinFile = new File( new File( mDirectory, job.getRelativeSubmitDirectory() ),
+                                    stdin );
 
         job.condorVariables.addIPFileForTransfer( stdinFile.getAbsolutePath() );
         return;
@@ -142,7 +148,7 @@ public class MPIExec extends Abstract {
      * @return path to the input file
      */
     protected File writeOutInputFileForJobAggregator(AggregatedJob job) {
-        return this.generatePMCInputFile(job, job.getID() + ".in", true );
+        return this.generatePMCInputFile(job, job.getID() + ".in", job.getRelativeSubmitDirectory(), true );
     }
 
 
@@ -151,17 +157,18 @@ public class MPIExec extends Abstract {
      *
      * @param job   the aggregated job
      * @param name  the name of PMC file to be generated
+     * @param relativeDir relative submit directory for the job 
      * @param isClustered  a boolean indicating whetehre the graph belongs to a
      *                     clustered job or not.
      *
      * @return path to the input file
      */
-    public File generatePMCInputFile(Graph job, String name , boolean isClustered ) {
+    public File generatePMCInputFile(Graph job, String name , String relativeDir, boolean isClustered ) {
         File stdIn = null;
         try {
             BufferedWriter writer;
             //PM-1261 the .in file should be in the same directory where all job submit files go
-            File directory = new File( this.mDirectory, ((AggregatedJob)job).getRelativeSubmitDirectory() );
+            File directory = new File( this.mDirectory, relativeDir );
             stdIn = new File( directory ,name);
             writer = new BufferedWriter(new FileWriter( stdIn ));
 

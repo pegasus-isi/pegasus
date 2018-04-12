@@ -88,9 +88,6 @@
 {% endif %}
 
 {% if config == "glite" or config == "bosco" %}
-        <!-- This tells glite what scheduler to use. It can be 'pbs' or 'sge' -->
-        <profile namespace="condor" key="grid_resource">pbs</profile>
-
         <!-- This tells glite what batch queue to submit jobs to -->
         <profile namespace="pegasus" key="queue">{{compute_queue}}</profile>
 	
@@ -101,10 +98,18 @@
 {% endif %}
 
 {% if tutorial_setup == "usc-hpcc" %}
+	<!-- usc is SLURM now -->
+	<!-- This tells glite what scheduler to use. It can be 'pbs' or 'sge' -->
+        <profile namespace="condor" key="grid_resource">batch slurm</profile>
+
+
 	<!-- This profile tells Pegasus where the worker package is installed on the site -->
         <!-- Without this, Pegasus will automatically stage a worker package to the site -->
         <profile namespace="env"   key="PEGASUS_HOME">/home/rcf-proj/gmj/pegasus/SOFTWARE/pegasus/default</profile> 
 {% elif tutorial_setup == "bw-glite" %}
+	<!-- This tells glite what scheduler to use. It can be 'pbs' or 'sge' -->
+        <profile namespace="condor" key="grid_resource">batch pbs</profile>
+
 	<!-- This profile tells Pegasus where the worker package is installed on the site -->
         <!-- Without this, Pegasus will automatically stage a worker package to the site -->
         <profile namespace="env"  key="PEGASUS_HOME">/mnt/a/u/training/instr006/SOFTWARE/install/pegasus/default</profile> 

@@ -178,7 +178,7 @@ class Workflow(object):
         elif self.tutorial_setup == "usc-hpcc":
             self.sitename = "usc-hpcc"
             self.config = "glite"
-            self.compute_queue = "default"
+            self.compute_queue = "route_queue"
             # for running the whole workflow as mpi job
             self.properties["pegasus.job.aggregator"] = "mpiexec"
         elif self.tutorial_setup == "osg":
