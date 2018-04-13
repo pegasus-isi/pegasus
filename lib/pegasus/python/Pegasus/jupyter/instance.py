@@ -457,14 +457,16 @@ class Instance:
                 )
             basename = self.submit_dir + '/' + self.dax.name + '-0.dag'
 
-        out, err = subprocess.Popen(
+        sp = subprocess.Popen(
             'pegasus-graphviz -o %s.dot %s' % (basename, basename),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             shell=True,
             cwd=self.base_dir
-        ).communicate()
-        if err:
+        )
+        out, err = sp.communicate()
+
+        if sp.returncode != 0 and err:
             raise Exception(err)
 
         out, err = subprocess.Popen(
