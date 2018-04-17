@@ -106,7 +106,7 @@ $(LIBDIR)/MySQLdb: MySQL-python-1.2.5.tar.gz
 $(LIBDIR)/ordereddict.py: ordereddict-1.1.tar.gz
 $(LIBDIR)/future: future-0.16.0.tar.gz
 $(LIBDIR)/influxdb: influxdb-4.1.1.tar.gz
-$(LIBDIR)/pika: pika-0.11.0.tar.gz
+$(LIBDIR)/pika: pika-0.11.2.tar.gz
 $(LIBDIR)/dateutil: python-dateutil-2.6.1.tar.gz
 $(LIBDIR)/six: six-1.11.0.tar.gz
 $(LIBDIR)/chardet: chardet-3.0.4.tar.gz

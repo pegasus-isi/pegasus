@@ -257,7 +257,8 @@ class AMQPEventSink(EventSink):
                                                ssl=ssl_enabled,
                                                ssl_options={"certs_reqs": ssl.CERT_NONE},
                                                virtual_host=virtual_host,
-                                               credentials=creds)
+                                               credentials=creds,
+                                               heartbeat=0)
         self._conn = amqp.BlockingConnection(parameters)
         self._channel = self._conn.channel()
         self._exch = exch
