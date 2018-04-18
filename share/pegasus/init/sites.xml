@@ -88,8 +88,18 @@
 {% endif %}
 
 {% if config == "glite" or config == "bosco" %}
+{% if tutorial_setup == "usc-hpcc" %}
+	
+	<!-- This tells glite what batch queue to submit jobs to 
+	     Uncomment and specify the SLURM partition to which you
+	     want the jobs to go to. USC HPCC does not allow quick
+	     partition to be explicitly specified
+	  -->
+        <profile namespace="pegasus" key="queue">{{compute_queue}}</profile>
+{% else %}
         <!-- This tells glite what batch queue to submit jobs to -->
         <profile namespace="pegasus" key="queue">{{compute_queue}}</profile>
+{% endif %}
 	
 {% if generate_tutorial == true %}
 	<!--- This tells pegasus to have the auxillary jobs run on submit host 
