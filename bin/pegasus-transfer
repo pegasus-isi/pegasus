@@ -700,6 +700,7 @@ class TransferHandlerBase(object):
         """
         A common callback from do_transfers to collect statistics for transfers
         """
+        
         if t_end is None:
             t_end = time.time()
 
@@ -710,12 +711,8 @@ class TransferHandlerBase(object):
             self._generate_integrity_checksum(transfer.lfn, transfer.get_dst_path()) 
         
         # keep track of transfer attempts
-        if isinstance(transfer, list):
-            for t in transfer:
-                t.attempts += 1
-        else:
-            transfer.attempts += 1
-
+        transfer.attempts += 1
+        
         stats.add_stats(transfer, was_successful, t_start, t_end)
 
         # Introduce errors! The PEGASUS_TRANSFER_ERROR_RATE env variable can
@@ -872,7 +869,9 @@ class TransferHandlerBase(object):
 
 
 class FileHandler(TransferHandlerBase):
-    ""
+    """
+    Uses system commands to act on file:// URLs
+    """
     
     _name = "FileHandler"
     _mkdir_cleanup_protocols = ["file"]
@@ -1253,7 +1252,8 @@ class GridFtpHandler(TransferHandlerBase):
         # as we don't know which transfers in the set succeeded/failed, we have
         # to mark them all the same (for example, one failure means all transfers
         # gets marked as failed)
-        self._post_transfer_attempt(transfers, transfer_success, t_start)
+        for t in transfers:
+            self._post_transfer_attempt(t, transfer_success, t_start)
     
         os.unlink(tmp_name)
     
@@ -2594,13 +2594,13 @@ class ScpHandler(TransferHandlerBase):
             except RuntimeError, err:
                 self._log_filter_ssh_output(tc.get_outerr())
                 logger.error(err)
-                self._post_transfer_attempt(t_group, False, t_start)
                 for t in t_group:
+                    self._post_transfer_attempt(t, False, t_start)
                     failed_l.append(t)
                 continue
             self._log_filter_ssh_output(tc.get_outerr())
-            self._post_transfer_attempt(t_group, True, t_start)
             for t in t_group:
+                self._post_transfer_attempt(t, True, t_start)
                 successful_l.append(t)
         
         return [successful_l, failed_l]    
@@ -3190,45 +3190,40 @@ class Stats:
         self._site_pair_bytes = {}
     
 
-    def add_stats(self, transfers, was_successful, t_start, t_end):
-        if not isinstance(transfers, list):
-            transfers = [transfers]
+    def add_stats(self, transfer, was_successful, t_start, t_end):
 
-        total_bytes = 0
-        for transfer in transfers:
-            key = transfer.get_src_site_label() + "->" + transfer.get_dst_site_label()
-            if key not in self._site_pair_count:
-                self._site_pair_count[key] = 0
-                self._site_pair_bytes[key] = 0
-            self._site_pair_count[key] += 1
-            self._total_count += 1
+        key = transfer.get_src_site_label() + "->" + transfer.get_dst_site_label()
+        if key not in self._site_pair_count:
+            self._site_pair_count[key] = 0
+            self._site_pair_bytes[key] = 0
+        self._site_pair_count[key] += 1
+        self._total_count += 1
+        
+        # do we have a local component?
+        local_filename = None
+        bytes = 0
+        if transfer.get_src_proto() == "file":
+            local_filename = transfer.get_src_path()
+        elif transfer.get_dst_proto() == "file":
+            local_filename = transfer.get_dst_path()
 
-            # do we have a local component?
-            local_filename = None
-            bytes = 0
-            if transfer.get_src_proto() == "file":
-                local_filename = transfer.get_src_path()
-            elif transfer.get_dst_proto() == "file":
-                local_filename = transfer.get_dst_path()
-
-            if local_filename is None:
-                self._detected_3rd_party = True
-                return
-            else:
-                try:
-                    s = os.stat(local_filename)
-                    bytes = s[stat.ST_SIZE]
-                    self._total_bytes += bytes
-                    self._site_pair_bytes[key] += bytes
-                    total_bytes += bytes
-                except Exception, err:
-                    pass # ignore
-
+        if local_filename is None:
+            self._detected_3rd_party = True
+            return
+        else:
+            try:
+                s = os.stat(local_filename)
+                bytes = s[stat.ST_SIZE]
+                self._total_bytes += bytes
+                self._site_pair_bytes[key] += bytes
+            except Exception, err:
+                pass # ignore
+            
         # call out to panorama if asked to do so, but make sure that failures
         # do not stop us
         try: 
             p = Panorama()
-            p.transfers(transfers, was_successful, t_start, t_end, total_bytes)
+            p.one_transfer(transfer, was_successful, t_start, t_end, bytes)
         except Exception, e:
             logger.warn("Panorama send failure: " + e)
 
@@ -3272,7 +3267,7 @@ class Panorama:
     
     __metaclass__ = Singleton
 
-    def transfers(self, transfers, was_successful, t_start, t_end, bytes):
+    def one_transfer(self, transfer, was_successful, t_start, t_end, filesize):
         
         if "KICKSTART_MON_ENDPOINT_URL" not in os.environ:
             return
@@ -3290,16 +3285,16 @@ class Panorama:
         payload += " dag_job_id=" + os.environ["PEGASUS_DAG_JOB_ID"]
         payload += " hostname=" + socket.getfqdn()
         payload += " condor_job_id=" + os.environ["CONDOR_JOBID"]
-        #payload += " src_url=" + transfer.src_url()
-        #payload += " src_site_name=" + transfer.get_src_site_label()
-        #payload += " dst_url=" + transfer.dst_url()
-        #payload += " dst_site_name=" + transfer.get_dst_site_label()
+        payload += " src_url=" + transfer.src_url()
+        payload += " src_site_name=" + transfer.get_src_site_label()
+        payload += " dst_url=" + transfer.dst_url()
+        payload += " dst_site_name=" + transfer.get_dst_site_label()
         payload += " transfer_start_ts=%.0f" %(t_start)
         payload += " transfer_duration=%.0f" % (t_end - t_start)
-        if bytes is not None and bytes > 0:
-            payload += " bytes_transferred=%.0f" %(bytes)
+        if filesize is not None and filesize > 0:
+            payload += " bytes_transferred=%.0f" %(filesize)
         payload += "  "
-
+        
         logger.debug(payload)
         data = "{\"properties\":{},\"routing_key\":\"%s\",\"payload\":\"%s\",\"payload_encoding\":\"base64\"}" \
                %(os.environ["PEGASUS_WF_UUID"], base64.encodestring(payload))
@@ -4072,7 +4067,7 @@ def main():
     global stats_end
     global symlink_file_transfer
     global publish_enabled
-    
+
     # dup stderr onto stdout
     sys.stderr = sys.stdout
     
@@ -4101,7 +4096,9 @@ def main():
                              " then the source file will be symlinked" +
                              " to the destination rather than being copied.")
     parser.add_option("-p", "--publish", action = "store_true", dest = "publish",
-                      help = "Enables publishing of statistics to AMQP.")
+                      help = "Enables publishing of statistics to AMQP." +
+                             " This option can also be set via the" +
+                             " PEGASUS_TRANSFER_PUBLISH enviroment variable.")
     parser.add_option("-d", "--debug", action = "store_true", dest = "debug",
                       help = "Enables debugging ouput.")
     
@@ -4113,13 +4110,13 @@ def main():
     signal.signal(signal.SIGINT, prog_sigint_handler)
     
     attempts_max = options.max_attempts
-
+    
     if options.threads is None or options.threads == 0:
         if "PEGASUS_TRANSFER_THREADS" in os.environ:
             options.threads = int(os.environ["PEGASUS_TRANSFER_THREADS"])
         else:
             options.threads = 8
-        
+    
     if options.publish or "PEGASUS_TRANSFER_PUBLISH" in os.environ:
         publish_enabled = True
     else:
