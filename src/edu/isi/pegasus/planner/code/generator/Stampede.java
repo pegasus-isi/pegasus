@@ -437,8 +437,8 @@ public class Stampede implements CodeGenerator {
         mLogFormatter.addEvent( Stampede.JOB_EVENT_NAME, Stampede.WORKFLOW_ID_KEY , wfuuid  );
 
         mLogFormatter.add( Stampede.JOB_ID_KEY, job.getID() );
-
-        mLogFormatter.add( Stampede.JOB_SUBMIT_FILE_KEY, job.getID() + ".sub" );
+        // PM-1244 generate the relative path for the submit file to be populated into stampede database
+        mLogFormatter.add( Stampede.JOB_SUBMIT_FILE_KEY, job.getFileRelativePath( ".sub" ) );
         mLogFormatter.add( Stampede.TYPE_KEY, Integer.toString( job.getJobType() ));
         mLogFormatter.add( Stampede.TYPE_DESCRIPTION_KEY, job.getJobTypeDescription() );
 
