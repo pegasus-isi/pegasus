@@ -23,6 +23,8 @@ import os
 import sys
 import re
 import logging
+import cStringIO
+import json
 
 from Pegasus.tools import utils
 
@@ -34,6 +36,9 @@ MAX_OUTPUT_LENGTH = 2**16-1  # Only keep stdout to 64K
 
 #some constants
 NOOP_JOB_PREFIX = "noop_"                  # prefix for noop jobs for which .out and err files are not created
+
+MONITORING_EVENT_START_MARKER = "@@@PEGASUS_MONITORING_PAYLOAD - START @@@"
+MONITORING_EVENT_END_MARKER = "@@@PEGASUS_MONITORING_PAYLOAD - END @@@"
 
 # Used in parse_sub_file
 re_rsl_string = re.compile(r"^\s*globusrsl\W", re.IGNORECASE)
@@ -103,6 +108,7 @@ class Job:
         self._error_file = None
         self._stdout_text = None
         self._stderr_text = None
+        self._additional_monitoring_events = None
         self._job_dagman_out = None    # _CONDOR_DAGMAN_LOG from environment
                                        # line for pegasus-plan and subdax_ jobs
         self._kickstart_parsed = False # Flag indicating if the kickstart
@@ -381,6 +387,7 @@ class Job:
             if "stdout" in my_record:
                 # PM-1152 we always attempt to store upto MAX_OUTPUT_LENGTH
                 stdout = self.get_snippet_to_populate(my_record["stdout"], my_task_number, stdout_size, "stdout")
+                #self._additional_monitoring_events = self.get_additional_monitoring_events( my_record["stdout"], my_task_number, stdout_size, "stdout")
                 if stdout is not None:
                     try:
                         stdout_text_list.append(utils.quote("#@ %d stdout\n" % (my_task_number)))
@@ -580,3 +587,25 @@ class Job:
                 stdout =  task_output[:-(task_output_size - remaining)]
 
         return stdout
+
+    def get_additional_monitoring_events(self, task_output ):
+        """
+
+        :param task_output:
+        :param task number:          the task number
+        :param current_buffer_size:  the current size of the buffer that is storing job stdout for all tasks
+        :param type:                 whether stdout or stderr for logging
+        :return:
+        """
+        events = []
+
+        start = 0
+        start = task_output.find(MONITORING_EVENT_START_MARKER, start)
+        while start != -1:
+            end = task_output.find( MONITORING_EVENT_END_MARKER, start )
+            payload = task_output[start + len(MONITORING_EVENT_START_MARKER):end ]
+            events.append(json.loads(payload) )
+            start = task_output.find(MONITORING_EVENT_START_MARKER, end)
+
+        return events
+

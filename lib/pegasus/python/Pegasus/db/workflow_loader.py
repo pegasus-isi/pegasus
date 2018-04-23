@@ -75,6 +75,7 @@ class WorkflowLoader(BaseLoader):
             'stampede.rc.pfn'    : self.rc_pfn,
             'stampede.wf.map.file' : self.wf_task_file_map,
             'stampede.static.meta.end': self.noop,
+            'stampede.task.monitoring': self.noop,
         }
 
         # Dicts for caching FK lookups
