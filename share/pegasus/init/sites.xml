@@ -93,9 +93,11 @@
 	<!-- This tells glite what batch queue to submit jobs to 
 	     Uncomment and specify the SLURM partition to which you
 	     want the jobs to go to. USC HPCC does not allow quick
-	     partition to be explicitly specified
+	     partition to be explicitly specified.
 	  -->
+	<!--
         <profile namespace="pegasus" key="queue">{{compute_queue}}</profile>
+	--> 
 {% else %}
         <!-- This tells glite what batch queue to submit jobs to -->
         <profile namespace="pegasus" key="queue">{{compute_queue}}</profile>
