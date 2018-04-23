@@ -1788,8 +1788,9 @@ class Workflow:
 
             # Make sure we include the wf_uuid ,
             kwargs["xwf__id"] = my_job._wf_uuid
-            kwargs["monitoring__event"] = event["event"] or "monitoring.additional"
-            payload = event["payload"] or None
+            kwargs["monitoring__event"] = event["monitoring_event"] if "monitoring_event" in event else "monitoring.additional"
+
+            payload = event["payload"] if "payload" in event else None
             if payload is None:
                 logger.error( "No payload retrieved from event %s" %event)
 
