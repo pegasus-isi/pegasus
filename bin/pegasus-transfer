@@ -2957,11 +2957,41 @@ class GSIScpHandler(TransferHandlerBase):
 
 class StashHandler(TransferHandlerBase):
     """
-    Uses the OSG stashcp command to trasfer from stash to file
+    Uses the OSG stashcp command to trasfer from/to stash
     """
     
     _name = "StashHandler"
-    _protocol_map = ["stash->file"]
+    _mkdir_cleanup_protocols = ["stash"]
+    _protocol_map = ["stash->file", "file->stash"]
+    
+    
+    def do_mkdirs(self, transfers):
+        
+        # noop for now
+        return [transfers, []]
+        
+        tools = Tools()
+        if tools.find("stashcp") is None:
+            logger.error("Unable to do Stash mkdir because stashcp could not be found")
+            return [[], transfers_l]
+
+        successful_l = []
+        failed_l = []
+        for t in transfers:
+
+            # copy a 0-byte file to create the dir
+            cmd = "%s /dev/null '%s/.create'" \
+                   %(tools.full_path("stashcp"), t.get_url())
+            try:
+                tc = TimedCommand(cmd)
+                tc.run()
+            except RuntimeError, err:
+                logger.error(err)
+                failed_l.append(t)
+                continue
+            successful_l.append(t)
+        return [successful_l, failed_l]
+
 
     def do_transfers(self, transfers_l):
         
@@ -2976,20 +3006,36 @@ class StashHandler(TransferHandlerBase):
             self._pre_transfer_attempt(t)
             t_start = time.time()
 
-            # stashcp wants just the path with a single leading slash
-            src_path = t.src_url()
-            src_path = re.sub('^stash:', '', src_path)
-            src_path = re.sub('^/+', '', src_path)
-            src_path = '/' + src_path
-    
-            local_dir = os.path.dirname(t.get_dst_path())
-            prepare_local_dir(local_dir)
-            cmd = "%s '%s' '%s'" \
-                % (tools.full_path("stashcp"), src_path, local_dir)
-            remote_fname = os.path.basename(t.get_src_path())
-            local_fname = os.path.basename(t.get_dst_path())
-            if remote_fname != local_fname:
-               cmd += " && mv '%s' '%s'" %(remote_fname, local_fname)
+            if t.get_dst_proto() == "stash":
+                # write
+                if os.path.exists("/stash"):
+                    # hack for now - local cp
+                    src_path = t.get_src_path()
+                    dst_path = "/stash" + t.get_dst_path()
+
+                    prepare_local_dir(os.path.dirname(dst_path))
+                    cmd = "/bin/cp '%s' '%s'" %(src_path, dst_path)
+                else:
+                    cmd = "%s '%s' '%s'" \
+                         %(tools.full_path("stashcp"), \
+                           t.get_src_path(), t.dst_url())
+            else:
+                # read
+                # stashcp wants just the path with a single leading slash
+                src_path = t.src_url()
+                src_path = re.sub('^stash:', '', src_path)
+                src_path = re.sub('^/+', '', src_path)
+                src_path = '/' + src_path
+        
+                local_dir = os.path.dirname(t.get_dst_path())
+                prepare_local_dir(local_dir)
+                cmd = "%s '%s' '%s'" \
+                    % (tools.full_path("stashcp"), src_path, local_dir)
+                remote_fname = os.path.basename(t.get_src_path())
+                local_fname = os.path.basename(t.get_dst_path())
+                if remote_fname != local_fname:
+                   cmd += " && mv '%s' '%s'" %(remote_fname, local_fname)
+
             try:
                 tc = TimedCommand(cmd)
                 tc.run()
@@ -3003,6 +3049,26 @@ class StashHandler(TransferHandlerBase):
             successful_l.append(t)
         
         return [successful_l, failed_l]  
+
+    
+    def do_removes(self, transfers_l):
+        # local rm for now
+        successful_l = []
+        failed_l = []
+        for t in transfers:
+            cmd = "/bin/rm -f"
+            if t.get_recursive():
+                cmd += " -r "
+            cmd += " '/stash%s' " % (t.get_path())
+            try:
+                tc = TimedCommand(cmd)
+                tc.run()
+            except RuntimeError, err:
+                logger.error(err)
+                failed_l.append(t)
+                continue
+            successful_l.append(t)
+        return [successful_l, failed_l]
 
 
 class SymlinkHandler(TransferHandlerBase):
