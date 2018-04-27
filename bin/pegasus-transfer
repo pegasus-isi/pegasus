@@ -4260,7 +4260,10 @@ def main():
             time.sleep(d)
         while not failed_q.empty():
             t = failed_q.get()
-            t.allow_grouping = False # only allow grouping on the first try
+            if attempt_current >= 2:
+                # only allow grouping the first 2 attempts, then fall back
+                # to single file transfers
+                t.allow_grouping = False 
             ready_q.put(t)
     
     logger.info('-' * 80)
