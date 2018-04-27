@@ -258,32 +258,32 @@ class Instance:
         if submit:
             cmd.append('--submit')
 
-            # plan the workflow
-            out, err = subprocess.Popen(
-                ' '.join(cmd),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                shell=True,
-                cwd=self.base_dir
-            ).communicate()
-            if err:
-                raise Exception(err)
+        # plan the workflow
+        out, err = subprocess.Popen(
+            ' '.join(cmd),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=True,
+            cwd=self.base_dir
+        ).communicate()
+        if err:
+            raise Exception(err)
 
-            for line in out.decode('utf8').split('\n'):
-                if 'pegasus-run' in line:
-                    self.submit_dir = line.split('pegasus-run')[1].strip()
-                    print('The pegasus workflow has been successfully planned.\n' \
-                          'Please, use the ```submit()``` method to start the workflow execution.\n\n'
-                          '\x1b[1;34mPegasus submit dir: %s\x1b[0m' % self.submit_dir)
+        for line in out.decode('utf8').split('\n'):
+            if 'pegasus-run' in line:
+                self.submit_dir = line.split('pegasus-run')[1].strip()
+                print('The pegasus workflow has been successfully planned.\n' \
+                      'Please, use the ```submit()``` method to start the workflow execution.\n\n'
+                      '\x1b[1;34mPegasus submit dir: %s\x1b[0m' % self.submit_dir)
 
-                    break
-                elif 'pegasus-status -l' in line:
-                    self.submit_dir = line.split('pegasus-status -l')[1
-                                                                      ].strip()
-                    print('The pegasus workflow has been successfully planned and started to run.\n' \
-                          'Please, use the status() method to follow the progress of the workflow execution.\n\n'
-                          '\x1b[1;34mPegasus submit dir: %s\x1b[0m' % self.submit_dir)
-                    break
+                break
+            elif 'pegasus-status -l' in line:
+                self.submit_dir = line.split('pegasus-status -l')[1
+                                                                  ].strip()
+                print('The pegasus workflow has been successfully planned and started to run.\n' \
+                      'Please, use the status() method to follow the progress of the workflow execution.\n\n'
+                      '\x1b[1;34mPegasus submit dir: %s\x1b[0m' % self.submit_dir)
+                break
 
     def submit(self):
         """
@@ -456,14 +456,16 @@ class Instance:
                 )
             basename = self.submit_dir + '/' + self.dax.name + '-0.dag'
 
-        out, err = subprocess.Popen(
+        sp = subprocess.Popen(
             'pegasus-graphviz -o %s.dot %s' % (basename, basename),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             shell=True,
             cwd=self.base_dir
-        ).communicate()
-        if err:
+        )
+        out, err = sp.communicate()
+
+        if sp.returncode != 0 and err:
             raise Exception(err)
 
         out, err = subprocess.Popen(

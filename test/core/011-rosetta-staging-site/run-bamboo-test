@@ -72,6 +72,7 @@ cat >sites.xml <<EOF
             <storage />
         </head-fs>
         <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
+        <profile namespace="env" key="PEGASUS_FORCE_GUC" >1</profile>
     </site>
     <site  handle="CCG_Staging" arch="x86_64" os="LINUX">
         <head-fs>
