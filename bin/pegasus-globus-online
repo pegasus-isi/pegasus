@@ -137,9 +137,13 @@ def wait_for_task(transfer_client, task_id, acceptable_faults = None):
     while not transfer_client.task_wait(task_id, timeout=wait_timeout):
         loop_counter += 1
         logger.info("Globus transfer task %s is still running (%d seconds)" % (task_id, loop_counter*wait_timeout))
-        task_errors = transfer_client.task_event_list(task_id=task_id, num_results=1, filter="is_error:1")
+        task_errors = transfer_client.task_event_list(task_id=task_id, num_results=20, filter="is_error:1")
         for error in task_errors:
-            raise RuntimeError("Error on globus transfer task %s at %s: %s" % (task_id, error["time"], error["description"]))
+            details = re.sub(r"\n|\r", " ", error["description"])
+            if re.search(r"System error in mkdir.*File exists", details):
+                logger.info("Ignoring mkdir error: " + details)
+            else:
+                raise RuntimeError("Error on globus transfer task %s at %s: %s" % (task_id, error["time"], details))
         
     return None
 
@@ -202,7 +206,7 @@ def mkdir(request):
                 transfer_result = transfer_client.operation_mkdir(request["endpoint"],path)
             except globus_sdk.TransferAPIError as e:
                 if e.code == "ExternalError.MkdirFailed.Exists":
-                    logger.info(e.message)
+                    logger.warn("Directory already exists: " + path)
                     pass
                 else:
                     raise RuntimeError(e.message)

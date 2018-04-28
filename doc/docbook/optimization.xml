@@ -1208,7 +1208,9 @@ tr B {
     <xi:include xpointer="table-default-job-categories"
     xmlns:xi="http://www.w3.org/2001/XInclude"/>
     </para>
-    
+
+    <para>See <link linkend="job_throttling">Job Throttling</link> for details
+        on how to set these values.</para> 
 
     <para>Information on how to control manully the maxinum number of stagein
     and stageout jobs can be found in the <link
