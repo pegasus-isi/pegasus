@@ -1788,7 +1788,11 @@ class Workflow:
 
             # Make sure we include the wf_uuid ,
             kwargs["xwf__id"] = my_job._wf_uuid
-            kwargs["monitoring__event"] = event["monitoring_event"] if "monitoring_event" in event else "monitoring.additional"
+            kwargs["job__id"] = my_job._exec_job_id
+            kwargs["job_inst__id"] = my_job._job_submit_seq
+            if my_job._sched_id is not None:
+                kwargs["sched__id"] = my_job._sched_id
+            kwargs["monitoring_event"] = event["monitoring_event"] if "monitoring_event" in event else "monitoring.additional"
 
             payload = event["payload"] if "payload" in event else None
             if payload is None:
