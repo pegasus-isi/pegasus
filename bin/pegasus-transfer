@@ -3057,7 +3057,7 @@ class StashHandler(TransferHandlerBase):
         # local rm for now
         successful_l = []
         failed_l = []
-        for t in transfers:
+        for t in transfers_l:
             cmd = "/bin/rm -f"
             if t.get_recursive():
                 cmd += " -r "
