@@ -49,7 +49,7 @@ public class CondorEnvironmentEscapeTest {
         m.put( "three", "3");
         ENV env = new ENV( m );
         
-        String expected = "\"one=1 two=2 three=3 \"";
+        String expected = "\"one=1 two=2 three=3\"";
         String result  = mEscape.escape(env); 
         assertEquals( expected, result ) ;
     }
@@ -100,8 +100,8 @@ public class CondorEnvironmentEscapeTest {
         m.put( "three", "spacey 'quoted' value");
         ENV env = new ENV( m );
         
-        //should print out "one=1 two=""2"" three='spacey ''quoted'' value' "
-        String expected = "\"one=1 two=\"\"2\"\" three='spacey ''quoted'' value' \"";
+        //should print out "one=1 two=""2"" three='spacey ''quoted'' value'"
+        String expected = "\"one=1 two=\"\"2\"\" three='spacey ''quoted'' value'\"";
         String result  = mEscape.escape(env); 
         assertEquals( expected, result ) ;
     }
