@@ -712,7 +712,7 @@ public class InterPoolEngine extends Engine implements Refiner {
         //load the transformation selector. different
         //selectors may end up being loaded for different jobs.
         mTXSelector = TransformationSelector.loadTXSelector(selector);
-        entries    = mTXSelector.getTCEntry(entries);
+        entries    = mTXSelector.getTCEntry( entries, job.getSiteHandle() );
         return (entries == null || entries.size() == 0)?
                 null:
                  entries.size() > 1?

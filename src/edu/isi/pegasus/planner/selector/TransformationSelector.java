@@ -50,10 +50,13 @@ public abstract class TransformationSelector {
      * TransformationCatalogEntry objects as a list depending on the type of selection algorithm.
      * The Random and RoundRobin implementation ensure that only one entry is
      * returned and should be run last when chaining multiple selectors
-     * @param tcentries List
+     * 
+     * @param tcentries      List
+     * @param preferredSite  the preferred site for selecting the TC entries
+     * 
      * @return List
      */
-    public abstract List getTCEntry( List tcentries );
+    public abstract List getTCEntry( List tcentries, String preferredSite );
 
     /**
      * Loads the implementing class corresponding to the mode specified by the

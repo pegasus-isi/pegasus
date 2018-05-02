@@ -538,7 +538,7 @@ public class DeployWorkerPackage
                                         site );
 
             //get selected entries
-            List selectedEntries = selector.getTCEntry( entries );
+            List selectedEntries = selector.getTCEntry( entries, site );
             if( selectedEntries == null || selectedEntries.size() == 0 ){
                 throw new RuntimeException( "Unable to find a valid location to stage " +
                                             Separator.combine( DeployWorkerPackage.TRANSFORMATION_NAMESPACE,
@@ -1423,7 +1423,7 @@ public class DeployWorkerPackage
                                    DeployWorkerPackage.TRANSFORMATION_VERSION,
                                    site );
 
-            selectedEntries = selector.getTCEntry( entries );
+            selectedEntries = selector.getTCEntry( entries , site);
         }catch( Exception e ){ /*ignore*/}
 
         if( selectedEntries != null && selectedEntries.size() > 0 ){

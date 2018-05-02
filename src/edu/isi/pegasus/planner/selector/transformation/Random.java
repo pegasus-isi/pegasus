@@ -39,9 +39,11 @@ public class Random
      * Transformation Catalog Entries returned by the TCMapper.
      *
      * @param tcentries List TransformationCatalogEntry objects returned by the TCMapper.
+     * @param preferredSite  the preferred site for selecting the TC entries
+     * 
      * @return TransformationCatalogEntry Single TransformationCatalogEntry object
      */
-    public List getTCEntry( List tcentries ) {
+    public List getTCEntry( List tcentries, String preferredSite ) {
         int no_of_entries = tcentries.size();
         int recSelected = new Double( Math.random() * no_of_entries ).intValue();
         String message = "Random TC Record selected is " + ( recSelected + 1 ) +
