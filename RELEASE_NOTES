@@ -1,4 +1,47 @@
 ===============================
+Release Notes for Pegasus 4.8.2
+===============================
+
+We are happy to announce the release of Pegasus 4.8.2 . Pegasus 4.8.2 
+is a minor bug fix release.
+
+Improvements
+--------------
+
+1)  [PM-1244] – analyzer is not showing location of submit file
+
+2)  [PM-1262] – Condor DagMan no longer allows . in job names 
+
+3)  [PM-1264] – update pegasus-init and usc tutorial to account for
+    	         the SLURM upgrade
+
+Bugs Fixed
+--------------
+
+1) [PM-1245] – Blank space in remote_environment variable generates blank
+   	       export command 
+
+2) [PM-1249] – Build fails against newer PostgreSQL
+
+3) [PM-1253] – Planner should complain for same file designated as
+   	       input and output
+
+4) [PM-1255] – Singularity 2.4.(2?) pull cli has changed
+
+5) [PM-1256] – rc-client does not strip quotes from PFN while
+   	       populating 
+
+6) [PM-1259] – unable to change encoding for events via properties
+
+7) [PM-1261] – PMC .in files are not generated into the 00/00 pattern 
+   	       folder
+
+8) [PM-1263] – Invalid raise statement in Python
+
+9) [PM-1266] – Jupyter API does not only plans the workflow without 
+   	       submitting it
+
+===============================
 Release Notes for Pegasus 4.8.1
 ===============================
 We are pleased to announce release of Pegasus 4.8.1
