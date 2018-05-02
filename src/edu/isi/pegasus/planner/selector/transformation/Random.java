@@ -19,6 +19,7 @@ import edu.isi.pegasus.planner.selector.TransformationSelector;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.common.PegRandom;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,22 +42,33 @@ public class Random
      * This method randomly selects one of the records from numerous valid
      * Transformation Catalog Entries returned by the TCMapper.
      *
-     * @param tcentries List TransformationCatalogEntry objects returned by the TCMapper.
+     * @param tcEntries List TransformationCatalogEntry objects returned by the TCMapper.
      * @param preferredSite  the preferred site for selecting the TC entries
      * 
      * @return TransformationCatalogEntry Single TransformationCatalogEntry object
      */
-    public List getTCEntry( List<TransformationCatalogEntry> tcentries, String preferredSite ) {
+    public List getTCEntry( List<TransformationCatalogEntry> tcEntries, String preferredSite ) {
+        
+        //prefer entries to select from that are on the preferred site
+        List<TransformationCatalogEntry> preferredEntries = new LinkedList();
+        for( TransformationCatalogEntry entry: tcEntries ){
+            if( entry.getResourceId().equals( preferredSite ) ){
+                preferredEntries.add( entry );
+            }
+        }
+        List<TransformationCatalogEntry> selectFrom = preferredEntries.size() > 0 ?
+                preferredEntries:
+                tcEntries;
+        
+        TransformationCatalogEntry selected = selectFrom.size() > 1?
+                                                //select a random entry
+                                                (TransformationCatalogEntry) selectFrom.get( PegRandom.getInteger( selectFrom.size() - 1 )):
+                                                //return the first one
+                                                (TransformationCatalogEntry) selectFrom.get(0);
         
         
-        
-        int no_of_entries = tcentries.size();
-        int recSelected = new Double( Math.random() * no_of_entries ).intValue();
-        String message = "Random TC Record selected is " + ( recSelected + 1 ) +
-            " amongst " + no_of_entries + " possible";
-        mLogger.log( message,LogManager.DEBUG_MESSAGE_LEVEL);
         List result = new ArrayList( 1 );
-        result.add( tcentries.get( recSelected ) );
+        result.add( selected );
         return result;
     }
 
