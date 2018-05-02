@@ -31,6 +31,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.common.util.FactoryException;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 import java.util.List;
 
@@ -56,7 +57,7 @@ public abstract class TransformationSelector {
      * 
      * @return List
      */
-    public abstract List getTCEntry( List tcentries, String preferredSite );
+    public abstract List getTCEntry( List<TransformationCatalogEntry> tcentries, String preferredSite );
 
     /**
      * Loads the implementing class corresponding to the mode specified by the

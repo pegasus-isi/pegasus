@@ -45,7 +45,7 @@ public class Installed
      * @return List returns a List of TransformationCatalogEntry objects of type INSTALLED
      *
      */
-    public List getTCEntry( List tcentries, String preferredSite ) {
+    public List getTCEntry( List<TransformationCatalogEntry> tcentries, String preferredSite ) {
         List results = null;
         for ( Iterator i = tcentries.iterator(); i.hasNext(); ) {
             TransformationCatalogEntry tc = ( TransformationCatalogEntry ) i.

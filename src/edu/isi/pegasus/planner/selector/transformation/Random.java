@@ -18,8 +18,11 @@ package edu.isi.pegasus.planner.selector.transformation;
 import edu.isi.pegasus.planner.selector.TransformationSelector;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -43,7 +46,10 @@ public class Random
      * 
      * @return TransformationCatalogEntry Single TransformationCatalogEntry object
      */
-    public List getTCEntry( List tcentries, String preferredSite ) {
+    public List getTCEntry( List<TransformationCatalogEntry> tcentries, String preferredSite ) {
+        
+        
+        
         int no_of_entries = tcentries.size();
         int recSelected = new Double( Math.random() * no_of_entries ).intValue();
         String message = "Random TC Record selected is " + ( recSelected + 1 ) +
