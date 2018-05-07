@@ -4321,7 +4321,7 @@ def main():
         # retry failed transfers with a random delay - useful when
         # large workflows overwhelm data services
         if not failed_q.empty() and attempt_current < attempts_max:
-            d = min(5 ** (attempt_current + 1) + random.randint(1, 20), 300)
+            d = min(5 ** (attempt_current + 2) + random.randint(1, 20), 300)
             logger.debug("Sleeping for %d seconds before the next attempt" %(d))
             time.sleep(d)
         while not failed_q.empty():
