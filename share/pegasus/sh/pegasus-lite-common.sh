@@ -510,6 +510,10 @@ function pegasus_lite_get_system()
 
         if [ "X$osname" = "Xubuntu" ]; then
             osversion=`cat /etc/issue | head -n1 | awk '{print $2;}'` 
+            # 18 LTS
+            if (grep -i "bionic" /etc/issue) >/dev/null 2>&1; then
+                osversion="18"
+            fi
         elif [ -e /etc/debian_version ]; then
             osname="deb"
             osversion=`cat /etc/debian_version`
