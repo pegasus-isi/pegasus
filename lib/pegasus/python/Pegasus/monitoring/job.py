@@ -20,10 +20,10 @@ This file implements the Job class for pegasus-monitord.
 
 # Import Python modules
 import os
-import sys
+import collections
 import re
 import logging
-import cStringIO
+from cStringIO import StringIO
 import json
 
 from Pegasus.tools import utils
@@ -588,24 +588,34 @@ class Job:
 
         return stdout
 
-    def get_additional_monitoring_events(self, task_output ):
+    def split_task_output(self, task_output):
         """
-
+        Splits task output in to user app data and monitoring events for pegasus use
         :param task_output:
-        :param task number:          the task number
-        :param current_buffer_size:  the current size of the buffer that is storing job stdout for all tasks
         :param type:                 whether stdout or stderr for logging
         :return:
         """
+        TaskOutput = collections.namedtuple('TaskOutput', ['user_data', 'events'])
         events = []
-
+        task_data = StringIO()
         start = 0
+        end = 0
+
+        #print task_output
         start = task_output.find(MONITORING_EVENT_START_MARKER, start)
+        if start == -1 :
+            # no monitoring marker found
+            task_data.write( task_output )
+            return TaskOutput(task_data.getvalue(), events)
+
         while start != -1:
+            task_data.write(task_output[end:start])
             end = task_output.find( MONITORING_EVENT_END_MARKER, start )
             payload = task_output[start + len(MONITORING_EVENT_START_MARKER):end ]
             events.append(json.loads(payload) )
             start = task_output.find(MONITORING_EVENT_START_MARKER, end)
 
-        return events
+        task_data.write(task_output[end + len(MONITORING_EVENT_END_MARKER):])
+
+        return TaskOutput(task_data.getvalue(), events)
 
