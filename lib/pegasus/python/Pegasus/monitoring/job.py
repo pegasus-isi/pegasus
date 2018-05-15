@@ -387,9 +387,10 @@ class Job:
 
             #PM-641 optimization Modified string concatenation to a list join 
             if "stdout" in my_record:
+                task_output = self.split_task_output( my_record["stdout"])
+                self._additional_monitoring_events = task_output.events
                 # PM-1152 we always attempt to store upto MAX_OUTPUT_LENGTH
-                stdout = self.get_snippet_to_populate(my_record["stdout"], my_task_number, stdout_size, "stdout")
-                #self._additional_monitoring_events = self.get_additional_monitoring_events( my_record["stdout"], my_task_number, stdout_size, "stdout")
+                stdout = self.get_snippet_to_populate( task_output.user_data, my_task_number, stdout_size, "stdout")
                 if stdout is not None:
                     try:
                         stdout_text_list.append(utils.quote("#@ %d stdout\n" % (my_task_number)))

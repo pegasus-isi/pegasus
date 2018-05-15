@@ -1888,9 +1888,9 @@ class Workflow:
                     self.db_send_task_start(my_job, "MAIN_JOB", my_task_id, record)
                     self.db_send_task_end(my_job, "MAIN_JOB", my_task_id, record)
 
-                    task_output = my_job.split_task_output(record["stdout"])
-                    if task_output.events:
-                        self.db_send_task_monitoring_events( my_job, my_task_id, task_output.events )
+                    # PM-1265 send additional monitoring events if any
+                    if my_job._additional_monitoring_events:
+                        self.db_send_task_monitoring_events( my_job, my_task_id, my_job._additional_monitoring_events )
 
                     # PM-992
                     # for outputs in xml record send information as file metadata
