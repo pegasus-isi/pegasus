@@ -56,6 +56,8 @@ re_parse_input = re.compile(r"^\s*intput\s*=\s*(\S+)")
 re_parse_output = re.compile(r"^\s*output\s*=\s*(\S+)")
 re_parse_error = re.compile(r"^\s*error\s*=\s*(\S+)")
 
+TaskOutput = collections.namedtuple('TaskOutput', ['user_data', 'events'])
+
 class Job:
     """
     Class used to keep information needed to track a particular job
@@ -595,7 +597,7 @@ class Job:
         :param type:                 whether stdout or stderr for logging
         :return:
         """
-        TaskOutput = collections.namedtuple('TaskOutput', ['user_data', 'events'])
+
         events = []
         task_data = StringIO()
         start = 0
