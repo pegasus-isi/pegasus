@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#  Copyright 2017 University Of Southern California
+#  Copyright 2017-2018 University Of Southern California
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ log = logging.getLogger(__name__)
 # -------------------------------------------------------------------
 # DB Admin configuration
 # -------------------------------------------------------------------
-CURRENT_DB_VERSION = 8
+CURRENT_DB_VERSION = 9
 DB_MIN_VERSION = 4
 
 COMPATIBILITY = {
@@ -58,7 +58,10 @@ COMPATIBILITY = {
     '4.6.2': 6,
     '4.7.0': 8,
     '4.7.3': 8,
-    '4.8.0': 8
+    '4.8.0': 8,
+    '4.8.1': 8,
+    '4.8.2': 8,
+    '4.9.0': 9
 }
 
 # -------------------------------------------------------------------

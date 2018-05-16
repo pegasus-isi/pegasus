@@ -1,3 +1,20 @@
+#!/usr/bin/env python
+#
+#  Copyright 2018 University Of Southern California
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+
 __author__ = "Monte Goode"
 __author__ = "Karan Vahi"
 __author__ = "Rafael Ferreira da Silva"
@@ -53,6 +70,7 @@ def get_missing_tables(db):
         st_task_edge,
         st_task_meta,
         st_invocation,
+        st_integrity_meta,
         # MASTER
         pg_workflow,
         pg_workflowstate,
@@ -180,6 +198,9 @@ class TaskMeta(SABase):
     pass
 
 class Invocation(SABase):
+    pass
+
+class IntegrityMeta(SABase):
     pass
 
 # ---------------------------------------------
@@ -408,7 +429,9 @@ orm.mapper(JobInstance, st_job_instance, properties = {
     #with the postscript status.
     'child_tsk':relation(Invocation, backref='st_job_instance', cascade='all, delete-orphan', passive_deletes=True, lazy=True),
     'child_jst':relation(Jobstate, backref='st_job_instance', cascade='all, delete-orphan', passive_deletes=True, lazy=True),
+    'child_integrity_meta':relation(IntegrityMeta, backref='st_integrity_meta', cascade='all, delete-orphan', passive_deletes=True, lazy=True),
 })
+
 
 # st_jobstate definition
 # ==> Same information that currently goes into jobstate.log file,
@@ -521,6 +544,23 @@ st_workflow_files = Table('workflow_files', metadata,
                           )
 
 orm.mapper(WorkflowFiles, st_workflow_files)
+
+
+st_integrity_meta = Table('integrity_meta', metadata,
+                          Column('integrity_id', KeyInteger, primary_key=True, nullable=False),
+                          Column('job_instance_id', KeyInteger, ForeignKey('job_instance.job_instance_id', ondelete='CASCADE'), nullable=False, primary_key=True),
+                          Column('type', Enum('check',
+                                              'compute', name='integrity_type_desc'), nullable=False, primary_key=True),
+                          Column('file_type', Enum('input',
+                                                   'output', name='integrity_file_type_desc'), primary_key=True),
+                          Column('count', INT, nullable=False),
+                          Column('duration', NUMERIC(10,3), nullable=False),
+                          **table_keywords
+                          )
+
+Index('integrity_id_KEY', st_integrity_meta.c.integrity_id, unique=True)
+
+orm.mapper(IntegrityMeta, st_integrity_meta)
 
 
 # ---------------------------------------------
