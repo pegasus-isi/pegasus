@@ -114,7 +114,7 @@ def get_compatible_version(version):
     """
     if version == CURRENT_DB_VERSION:
         out, err = subprocess.Popen(
-            '%s/pegasus-version' % os.path.dirname(sys.argv[0]),
+            '%s/pegasus-version' % os.path.dirname(os.path.realpath(sys.argv[0])),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             shell=True,
