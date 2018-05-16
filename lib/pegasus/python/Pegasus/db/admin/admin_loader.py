@@ -113,8 +113,18 @@ def get_compatible_version(version):
     :return: the equivalent Pegasus version
     """
     if version == CURRENT_DB_VERSION:
+        # find pegasus-version path
+        path = os.environ['PATH']
+        paths = path.split(os.pathsep)
+        pegasus_version = None
+        for p in paths:
+            f = os.path.join(p, 'pegasus-version')
+            if os.path.isfile(f):
+                pegasus_version = f
+                break
+
         out, err = subprocess.Popen(
-            '%s/pegasus-version' % os.path.dirname(os.path.realpath(sys.argv[0])),
+            pegasus_version,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             shell=True,
