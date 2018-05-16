@@ -64,6 +64,7 @@ COMPATIBILITY = {
     '4.9.0': 9
 }
 
+
 # -------------------------------------------------------------------
 
 
@@ -114,14 +115,21 @@ def get_compatible_version(version):
     """
     if version == CURRENT_DB_VERSION:
         # find pegasus-version path
-        path = os.environ['PATH']
-        paths = path.split(os.pathsep)
         pegasus_version = None
+        paths = os.environ['PATH'].split(os.pathsep)
         for p in paths:
             f = os.path.join(p, 'pegasus-version')
             if os.path.isfile(f):
                 pegasus_version = f
                 break
+
+        if not pegasus_version and os.environ.has_key('PEGASUS_HOME'):
+            f = os.path.join(os.environ['PEGASUS_HOME'], 'bin/pegasus-version')
+            if os.path.isfile(f):
+                pegasus_version = f
+
+        if not pegasus_version:
+            raise DBAdminError('Unable to find pegasus-version in PATH or PEGASUS_HOME variables')
 
         out, err = subprocess.Popen(
             pegasus_version,
@@ -161,9 +169,7 @@ def get_class(version, db):
 
 
 # -------------------------------------------------------------------
-def db_create(
-    dburi, engine, db, pegasus_version=None, force=False, verbose=True
-):
+def db_create(dburi, engine, db, pegasus_version=None, force=False, verbose=True):
     """
     Create/Update the Pegasus database from the schema.
     :param dburi: URL to the db
@@ -355,7 +361,7 @@ def parse_pegasus_version(pegasus_version=None):
 
 
 def all_workflows_db(
-    db, update=True, pegasus_version=None, schema_check=True, force=False
+        db, update=True, pegasus_version=None, schema_check=True, force=False
 ):
     """
     Update/Downgrade all completed workflow databases listed in master_workflow table.
