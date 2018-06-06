@@ -548,18 +548,18 @@ orm.mapper(WorkflowFiles, st_workflow_files)
 
 st_integrity_meta = Table('integrity_meta', metadata,
                           Column('integrity_id', KeyInteger, primary_key=True, nullable=False),
-                          Column('job_instance_id', KeyInteger, ForeignKey('job_instance.job_instance_id', ondelete='CASCADE'), nullable=False, primary_key=True),
+                          Column('job_instance_id', KeyInteger, ForeignKey('job_instance.job_instance_id', ondelete='CASCADE'), nullable=False),
                           Column('type', Enum('check',
-                                              'compute', name='integrity_type_desc'), nullable=False, primary_key=True),
+                                              'compute', name='integrity_type_desc'), nullable=False),
                           Column('file_type', Enum('input',
-                                                   'output', name='integrity_file_type_desc'), primary_key=True),
+                                                   'output', name='integrity_file_type_desc')),
                           Column('count', INT, nullable=False),
                           Column('duration', NUMERIC(10,3), nullable=False),
                           **table_keywords
                           )
 
 Index('integrity_id_KEY', st_integrity_meta.c.integrity_id, unique=True)
-
+Index('UNIQUE_INTEGRITY', st_integrity_meta.c.job_instance_id, st_integrity_meta.c.type, st_integrity_meta.c.file_type, unique=True)
 orm.mapper(IntegrityMeta, st_integrity_meta)
 
 
