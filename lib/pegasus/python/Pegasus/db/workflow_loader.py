@@ -72,6 +72,7 @@ class WorkflowLoader(BaseLoader):
             'stampede.xwf.meta' : self.workflow_meta,
             'stampede.task.meta' : self.task_meta,
             'stampede.rc.meta'   : self.rc_meta,
+            'stampede.int.meta'  : self.int_meta,
             'stampede.rc.pfn'    : self.rc_pfn,
             'stampede.wf.map.file' : self.wf_task_file_map,
             'stampede.static.meta.end': self.noop,
@@ -664,6 +665,28 @@ class WorkflowLoader(BaseLoader):
         #errors that happen if we put them in the batch cache update_events
         rc_meta.merge_to_db(self.session)
 
+
+    def int_meta(self, linedata):
+        """
+        @type   linedata: dict
+        @param  linedata: One line of BP data dict-ified.
+
+        Handles a invocation insert event.
+        """
+        int_meta = self.linedataToObject(linedata, IntegrityMeta())
+        self.log.trace('int_meta: %s', IntegrityMeta)
+
+        int_meta.wf_id = self.wf_uuid_to_id(int_meta.wf_uuid)
+
+        int_meta.job_instance_id = self.get_job_instance_id(int_meta)
+        if int_meta.job_instance_id == None:
+            self.log.error('Could not determine job_instance_id for int_meta: %s', int_meta)
+            return
+
+        if self._batch:
+            self._batch_cache['batch_events'].append(int_meta)
+        else:
+            int_meta.commit_to_db(self.session)
 
     def rc_pfn(self, linedata):
         """

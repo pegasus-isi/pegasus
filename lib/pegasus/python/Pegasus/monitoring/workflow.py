@@ -1765,6 +1765,41 @@ class Workflow:
                 kwargs[ "value" ] = metadata.get_attribute_value(key)
                 self.output_to_db( "rc.meta", kwargs)
 
+
+    def db_send_integrity_metadata( self, my_job, my_task_id, files ):
+        """
+        This function sends aggregated integrity metadata if found.
+        :param my_job:
+        :param my_task_id:
+        :param files: a dictionary indexed by lfn where value is a map of metadata attributes
+        :return:
+        """
+        # Check if database is configured
+        if self._sink is None:
+            return
+
+        # Start empty
+        logger.debug("Generating output integrity metadata events for job %s " % (my_job._exec_job_id))
+        count = 0
+        duration = 0.0
+        timing_key = "checksum.timing"
+        for file in files:
+            if timing_key in file.get_attribute_keys():
+                count = count + 1
+                duration += float(file.get_attribute_value(timing_key))
+
+        if count > 0:
+            kwargs = {}
+            # Make sure we include the wf_uuid, name, and job_submit_seq
+            kwargs["xwf__id"] = my_job._wf_uuid
+            kwargs["job__id"] = my_job._exec_job_id
+            kwargs["job_inst__id"] = my_job._job_submit_seq
+            kwargs["count"] = count
+            kwargs["duration"] = duration
+            kwargs["file_type"] = "output"
+            kwargs["type"]  = "compute"
+            self.output_to_db( "int.meta", kwargs)
+
     def db_send_task_monitoring_events(self, my_job, task_id, events) :
         """
                This function sends additional monitoring events
@@ -1896,10 +1931,12 @@ class Workflow:
                     # for outputs in xml record send information as file metadata
                     if "outputs" in record:
                         # Start empty
-                        files = []
+                        output_files = []
                         for lfn in record["outputs"].keys():
-                            files.append( record["outputs"][lfn] )
+                            output_files.append( record["outputs"][lfn] )
                         self.db_send_files_metadata( my_job, my_task_id, record["outputs"] )
+                        if output_files:
+                            self.db_send_integrity_metadata( my_job, my_task_id, output_files )
                         
                     # Increment task id counter
                     my_task_id = my_task_id + 1
