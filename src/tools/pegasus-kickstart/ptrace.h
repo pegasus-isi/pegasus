@@ -5,8 +5,8 @@
 
 #include <linux/version.h>
 
-/* do not enable ptrace on arm */
-#ifndef __arm__
+/* only enable ptrace on x86 or amd64 */
+#if defined(__i386__) || defined(__amd64__)
 
 /* The ptrace options we need were not all available until 2.5.60 */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,60)
@@ -50,7 +50,7 @@
 
 #endif /* Linux >= version */
 
-#endif /* arm */
+#endif /* x86 or amd64 */
 
 #endif /* Linux */
 
