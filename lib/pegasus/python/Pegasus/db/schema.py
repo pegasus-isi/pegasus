@@ -548,6 +548,7 @@ orm.mapper(WorkflowFiles, st_workflow_files)
 
 st_integrity_meta = Table('integrity_meta', metadata,
                           Column('integrity_id', KeyInteger, primary_key=True, nullable=False),
+                          Column('wf_id', KeyInteger, ForeignKey('workflow.wf_id', ondelete='CASCADE'), nullable=False),
                           Column('job_instance_id', KeyInteger, ForeignKey('job_instance.job_instance_id', ondelete='CASCADE'), nullable=False),
                           Column('type', Enum('check',
                                               'compute', name='integrity_type_desc'), nullable=False),
