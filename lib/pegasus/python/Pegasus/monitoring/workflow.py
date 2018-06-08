@@ -30,6 +30,7 @@ import traceback
 # Import other Pegasus modules
 from Pegasus.tools import utils
 from Pegasus.monitoring.job import Job
+from Pegasus.monitoring.job import IntegrityMetric
 from Pegasus.tools import kickstart_parser
 from Pegasus.monitoring.metadata import Metadata
 
@@ -1766,7 +1767,30 @@ class Workflow:
                 self.output_to_db( "rc.meta", kwargs)
 
 
-    def db_send_integrity_metadata( self, my_job, my_task_id, files ):
+    def compute_integrity_metric( self,  files ):
+        """
+        This function computes integrity metric from a single kickstart record
+        :param my_job:
+        :param my_task_id:
+        :param files: a dictionary indexed by lfn where value is a map of metadata attributes
+        :return:
+        """
+        if files is None:
+            return None
+
+        count = 0
+        duration = 0.0
+        timing_key = "checksum.timing"
+
+        for file in files:
+            if timing_key in file.get_attribute_keys():
+                count = count + 1
+                duration += float(file.get_attribute_value(timing_key))
+
+        return IntegrityMetric( "compute", "output", count, duration) if count > 0 else None
+
+
+    def db_send_integrity_metadata( self, my_job, my_task_id ):
         """
         This function sends aggregated integrity metadata if found.
         :param my_job:
@@ -1780,24 +1804,18 @@ class Workflow:
 
         # Start empty
         logger.debug("Generating output integrity metadata events for job %s " % (my_job._exec_job_id))
-        count = 0
-        duration = 0.0
-        timing_key = "checksum.timing"
-        for file in files:
-            if timing_key in file.get_attribute_keys():
-                count = count + 1
-                duration += float(file.get_attribute_value(timing_key))
 
-        if count > 0:
+        for metric in my_job._integrity_metrics:
             kwargs = {}
             # Make sure we include the wf_uuid, name, and job_submit_seq
             kwargs["xwf__id"] = my_job._wf_uuid
             kwargs["job__id"] = my_job._exec_job_id
             kwargs["job_inst__id"] = my_job._job_submit_seq
-            kwargs["count"] = count
-            kwargs["duration"] = duration
-            kwargs["file_type"] = "output"
-            kwargs["type"]  = "compute"
+            kwargs["type"] = metric.type
+            kwargs["file_type"] = metric.file_type
+            kwargs["count"] = metric.count
+            kwargs["duration"] = metric.duration
+
             self.output_to_db( "int.meta", kwargs)
 
     def db_send_task_monitoring_events(self, my_job, task_id, events) :
@@ -1934,9 +1952,8 @@ class Workflow:
                         output_files = []
                         for lfn in record["outputs"].keys():
                             output_files.append( record["outputs"][lfn] )
+                        my_job.add_integrity_metric( self.compute_integrity_metric(output_files))
                         self.db_send_files_metadata( my_job, my_task_id, record["outputs"] )
-                        if output_files:
-                            self.db_send_integrity_metadata( my_job, my_task_id, output_files )
                         
                     # Increment task id counter
                     my_task_id = my_task_id + 1
@@ -2020,6 +2037,9 @@ class Workflow:
                 record["resource"] = my_job._site_name
                 # Send event to the database
                 self.db_send_host_info(my_job, record)
+
+        # send any integrity related metrics computed for the jobinstance
+        self.db_send_integrity_metadata( my_job, my_task_id )
 
         # register any files associated with the job
         self.register_files( my_job )

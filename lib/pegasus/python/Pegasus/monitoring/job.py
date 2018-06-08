@@ -58,6 +58,37 @@ re_parse_error = re.compile(r"^\s*error\s*=\s*(\S+)")
 
 TaskOutput = collections.namedtuple('TaskOutput', ['user_data', 'events'])
 
+
+class IntegrityMetric:
+    """
+    Class for storing integrity metrics and combining them based solely on type and file type combination
+    """
+
+    def __init__(self, type, file_type, count = 0, duration = 0.0 ):
+        self.type = type
+        self.file_type = file_type
+        self.count = count
+        self.duration = duration
+
+    def __eq__(self, other):
+        return self.type == other.type and self.file_type == other.file_type
+
+    def __hash__(self):
+        return hash(self.key())
+
+    def __str__(self):
+        return "(%s,%s,%s,%s)" %(self.type, self.file_type, self.count, self.duration)
+
+    def key(self):
+        return self.type + ":" + self.file_type
+
+    def merge(self, other):
+        if self == other:
+            self.count += other.count
+            self.duration  += other.duration
+            return
+        raise KeyError( "Objects not compatible %s %s" %(self, other))
+
 class Job:
     """
     Class used to keep information needed to track a particular job
@@ -118,6 +149,26 @@ class Job:
         self._has_rotated_stdout_err_files = False #Flag indicating whether we detected that job stdout|stderr
                                                   #was rotated or not, as is the default case.
         self._deferred_job_end_kwargs = None
+        self._integrity_metrics = set()
+
+    def add_integrity_metric(self, metric):
+        """
+        adds an integrity metric, if a metric with the same key already exists we retrive
+        existing value and add the contents of metric passed
+        :param metric:
+        :return:
+        """
+        if metric is None:
+            return
+
+        for m in self._integrity_metrics:
+            if metric == m:
+                # add to existing metric
+                m.merge(metric)
+                break
+        else:
+            self._integrity_metrics.add(metric)
+
 
     def set_job_state(self, job_state, sched_id, timestamp, status):
         """
