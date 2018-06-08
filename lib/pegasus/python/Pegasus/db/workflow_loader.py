@@ -673,8 +673,8 @@ class WorkflowLoader(BaseLoader):
 
         Handles a invocation insert event.
         """
-        int_meta = self.linedataToObject(linedata, IntegrityMeta())
-        self.log.trace('int_meta: %s', IntegrityMeta)
+        int_meta = self.linedataToObject(linedata, IntegrityMetrics())
+        self.log.trace('int_meta: %s', IntegrityMetrics)
 
         int_meta.wf_id = self.wf_uuid_to_id(int_meta.wf_uuid)
 

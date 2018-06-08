@@ -200,7 +200,7 @@ class TaskMeta(SABase):
 class Invocation(SABase):
     pass
 
-class IntegrityMeta(SABase):
+class IntegrityMetrics(SABase):
     pass
 
 # ---------------------------------------------
@@ -429,7 +429,7 @@ orm.mapper(JobInstance, st_job_instance, properties = {
     #with the postscript status.
     'child_tsk':relation(Invocation, backref='st_job_instance', cascade='all, delete-orphan', passive_deletes=True, lazy=True),
     'child_jst':relation(Jobstate, backref='st_job_instance', cascade='all, delete-orphan', passive_deletes=True, lazy=True),
-    'child_integrity_meta':relation(IntegrityMeta, backref='st_integrity_meta', cascade='all, delete-orphan', passive_deletes=True, lazy=True),
+    'child_integrity_meta':relation(IntegrityMetrics, backref='st_integrity_meta', cascade='all, delete-orphan', passive_deletes=True, lazy=True),
 })
 
 
@@ -546,7 +546,7 @@ st_workflow_files = Table('workflow_files', metadata,
 orm.mapper(WorkflowFiles, st_workflow_files)
 
 
-st_integrity_meta = Table('integrity_meta', metadata,
+st_integrity_meta = Table('integrity_metrics', metadata,
                           Column('integrity_id', KeyInteger, primary_key=True, nullable=False),
                           Column('wf_id', KeyInteger, ForeignKey('workflow.wf_id', ondelete='CASCADE'), nullable=False),
                           Column('job_instance_id', KeyInteger, ForeignKey('job_instance.job_instance_id', ondelete='CASCADE'), nullable=False),
@@ -561,7 +561,7 @@ st_integrity_meta = Table('integrity_meta', metadata,
 
 Index('integrity_id_KEY', st_integrity_meta.c.integrity_id, unique=True)
 Index('UNIQUE_INTEGRITY', st_integrity_meta.c.job_instance_id, st_integrity_meta.c.type, st_integrity_meta.c.file_type, unique=True)
-orm.mapper(IntegrityMeta, st_integrity_meta)
+orm.mapper(IntegrityMetrics, st_integrity_meta)
 
 
 # ---------------------------------------------
