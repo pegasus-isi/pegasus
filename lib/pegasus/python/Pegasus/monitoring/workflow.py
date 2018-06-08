@@ -1790,7 +1790,7 @@ class Workflow:
         return IntegrityMetric( "compute", "output", count, duration) if count > 0 else None
 
 
-    def db_send_integrity_metadata( self, my_job, my_task_id ):
+    def db_send_integrity_metrics(self, my_job, my_task_id):
         """
         This function sends aggregated integrity metadata if found.
         :param my_job:
@@ -1803,7 +1803,7 @@ class Workflow:
             return
 
         # Start empty
-        logger.debug("Generating output integrity metadata events for job %s " % (my_job._exec_job_id))
+        logger.debug("Generating output integrity metric events for job %s " % (my_job._exec_job_id))
 
         for metric in my_job._integrity_metrics:
             kwargs = {}
@@ -2039,7 +2039,7 @@ class Workflow:
                 self.db_send_host_info(my_job, record)
 
         # send any integrity related metrics computed for the jobinstance
-        self.db_send_integrity_metadata( my_job, my_task_id )
+        self.db_send_integrity_metrics(my_job, my_task_id)
 
         # register any files associated with the job
         self.register_files( my_job )
