@@ -72,7 +72,7 @@ class WorkflowLoader(BaseLoader):
             'stampede.xwf.meta' : self.workflow_meta,
             'stampede.task.meta' : self.task_meta,
             'stampede.rc.meta'   : self.rc_meta,
-            'stampede.int.meta'  : self.int_meta,
+            'stampede.int.metric'  : self.int_metric,
             'stampede.rc.pfn'    : self.rc_pfn,
             'stampede.wf.map.file' : self.wf_task_file_map,
             'stampede.static.meta.end': self.noop,
@@ -666,7 +666,7 @@ class WorkflowLoader(BaseLoader):
         rc_meta.merge_to_db(self.session)
 
 
-    def int_meta(self, linedata):
+    def int_metric(self, linedata):
         """
         @type   linedata: dict
         @param  linedata: One line of BP data dict-ified.

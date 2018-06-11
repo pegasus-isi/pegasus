@@ -1816,7 +1816,7 @@ class Workflow:
             kwargs["count"] = metric.count
             kwargs["duration"] = metric.duration
 
-            self.output_to_db( "int.meta", kwargs)
+            self.output_to_db( "int.metric", kwargs)
 
     def db_send_task_monitoring_events(self, my_job, task_id, events) :
         """
