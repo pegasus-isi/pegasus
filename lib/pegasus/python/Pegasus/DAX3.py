@@ -1166,7 +1166,10 @@ class Transformation(UseMixin, InvokeMixin, MetadataMixin):
 
         # Uses
         def getlink(a):
-            return a.link
+            if a.link is not None:
+                return a.link
+            # Python 3 - make sure we return a string
+            return ""
 
         used = list(self.used)
         used.sort(key=getlink)
@@ -1291,7 +1294,10 @@ class AbstractJob(ProfileMixin, UseMixin, InvokeMixin, MetadataMixin):
 
         # Uses
         def getlink(a):
-            return a.link
+            if a.link is not None:
+                return a.link
+            # Python 3 - make sure we return a string
+            return ""
 
         used = list(self.used)
         used.sort(key=getlink)
