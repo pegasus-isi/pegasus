@@ -452,8 +452,14 @@ class Job:
                         logger.exception( "Unable to parse stdout section from kickstart record for task %s from file %s " %(my_task_number, self.get_rotated_out_filename() ))
 
             if "stderr" in my_record:
+                task_error = self.split_task_output(my_record["stderr"])
+                if self._additional_monitoring_events:
+                    # add the events to those retrieved from the application stderr
+                    self._additional_monitoring_events.append(task_error.events)
+                else:
+                    self._additional_monitoring_events = task_error.events
                 # Note: we are populating task stderr from kickstart record to job stdout only
-                stderr = self.get_snippet_to_populate( signal_message + my_record["stderr"], my_task_number, stdout_size, "stderr")
+                stderr = self.get_snippet_to_populate( signal_message + task_error.user_data, my_task_number, stdout_size, "stderr")
                 if stderr is not None:
                     try:
                         stdout_text_list.append(utils.quote("#@ %d stderr\n" % (my_task_number)))
