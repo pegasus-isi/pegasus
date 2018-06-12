@@ -134,25 +134,22 @@ def get_compatible_version(version):
             if os.path.isfile(f):
                 pegasus_version = f
 
-        if not pegasus_version:
-            raise DBAdminError('Unable to find pegasus-version in PATH or PEGASUS_HOME variables')
-
-        out, err = subprocess.Popen(
-            pegasus_version,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            shell=True,
-            cwd=os.getcwd()
-        ).communicate()
-        if err:
-            raise DBAdminError(err.decode('utf8').strip())
-
-        return out.decode('utf8').strip()
+        if pegasus_version:
+            out, err = subprocess.Popen(
+                pegasus_version,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                shell=True,
+                cwd=os.getcwd()
+            ).communicate()
+            if err:
+                raise DBAdminError(err.decode('utf8').strip())
+            return out.decode('utf8').strip()
 
     print_version = None
     previous_version = None
 
-    if version > CURRENT_DB_VERSION:
+    if version >= CURRENT_DB_VERSION:
         pv = -1
         for ver in COMPATIBILITY:
             if COMPATIBILITY[ver] > pv and ver > previous_version:
