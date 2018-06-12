@@ -512,7 +512,11 @@ class Job:
 
         try:
             ERR = open(my_err_file, 'r')
-            self._stderr_text = utils.quote(ERR.read())
+            # PM-1274 parse any monitoring events such as integrity related
+            # from PegasusLite .err file
+            job_stderr = self.split_task_output(ERR.read())
+            self._stderr_text = utils.quote(job_stderr.user_data)
+            self._additional_monitoring_events += job_stderr.events
         except IOError:
             self._stderr_text = None
             if not self.is_noop_job():
@@ -669,7 +673,10 @@ class Job:
             task_data.write(task_output[end:start])
             end = task_output.find( MONITORING_EVENT_END_MARKER, start )
             payload = task_output[start + len(MONITORING_EVENT_START_MARKER):end ]
-            events.append(json.loads(payload) )
+            try:
+                events.append(json.loads(payload) )
+            except:
+                logger.error( "Unable to convert payload %s to JSON" %payload)
             start = task_output.find(MONITORING_EVENT_START_MARKER, end)
 
         task_data.write(task_output[end + len(MONITORING_EVENT_END_MARKER):])
