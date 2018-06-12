@@ -141,7 +141,7 @@ class Job:
         self._error_file = None
         self._stdout_text = None
         self._stderr_text = None
-        self._additional_monitoring_events = None
+        self._additional_monitoring_events = []
         self._job_dagman_out = None    # _CONDOR_DAGMAN_LOG from environment
                                        # line for pegasus-plan and subdax_ jobs
         self._kickstart_parsed = False # Flag indicating if the kickstart
@@ -439,7 +439,7 @@ class Job:
             #PM-641 optimization Modified string concatenation to a list join 
             if "stdout" in my_record:
                 task_output = self.split_task_output( my_record["stdout"])
-                self._additional_monitoring_events = task_output.events
+                self._additional_monitoring_events += task_output.events
                 # PM-1152 we always attempt to store upto MAX_OUTPUT_LENGTH
                 stdout = self.get_snippet_to_populate( task_output.user_data, my_task_number, stdout_size, "stdout")
                 if stdout is not None:
@@ -453,12 +453,9 @@ class Job:
 
             if "stderr" in my_record:
                 task_error = self.split_task_output(my_record["stderr"])
-                if self._additional_monitoring_events:
-                    # add the events to those retrieved from the application stderr
-                    self._additional_monitoring_events.append(task_error.events)
-                else:
-                    self._additional_monitoring_events = task_error.events
-                # Note: we are populating task stderr from kickstart record to job stdout only
+                 # add the events to those retrieved from the application stderr
+                self._additional_monitoring_events += task_error.events
+                 # Note: we are populating task stderr from kickstart record to job stdout only
                 stderr = self.get_snippet_to_populate( signal_message + task_error.user_data, my_task_number, stdout_size, "stderr")
                 if stderr is not None:
                     try:
