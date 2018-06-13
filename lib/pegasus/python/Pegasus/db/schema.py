@@ -70,7 +70,7 @@ def get_missing_tables(db):
         st_task_edge,
         st_task_meta,
         st_invocation,
-        st_integrity_meta,
+        st_integrity_metrics,
         # MASTER
         pg_workflow,
         pg_workflowstate,
@@ -429,7 +429,7 @@ orm.mapper(JobInstance, st_job_instance, properties = {
     #with the postscript status.
     'child_tsk':relation(Invocation, backref='st_job_instance', cascade='all, delete-orphan', passive_deletes=True, lazy=True),
     'child_jst':relation(Jobstate, backref='st_job_instance', cascade='all, delete-orphan', passive_deletes=True, lazy=True),
-    'child_integrity_meta':relation(IntegrityMetrics, backref='st_integrity_meta', cascade='all, delete-orphan', passive_deletes=True, lazy=True),
+    'child_integrity_metrics':relation(IntegrityMetrics, backref='st_integrity_metrics', cascade='all, delete-orphan', passive_deletes=True, lazy=True),
 })
 
 
@@ -546,22 +546,20 @@ st_workflow_files = Table('workflow_files', metadata,
 orm.mapper(WorkflowFiles, st_workflow_files)
 
 
-st_integrity_meta = Table('integrity_metrics', metadata,
-                          Column('integrity_id', KeyInteger, primary_key=True, nullable=False),
-                          Column('wf_id', KeyInteger, ForeignKey('workflow.wf_id', ondelete='CASCADE'), nullable=False),
-                          Column('job_instance_id', KeyInteger, ForeignKey('job_instance.job_instance_id', ondelete='CASCADE'), nullable=False),
-                          Column('type', Enum('check',
-                                              'compute', name='integrity_type_desc'), nullable=False),
-                          Column('file_type', Enum('input',
-                                                   'output', name='integrity_file_type_desc')),
-                          Column('count', INT, nullable=False),
-                          Column('duration', NUMERIC(10,3), nullable=False),
-                          **table_keywords
-                          )
+st_integrity_metrics = Table('integrity_metrics', metadata,
+                             Column('integrity_id', KeyInteger, primary_key=True, nullable=False),
+                             Column('wf_id', KeyInteger, ForeignKey('workflow.wf_id', ondelete='CASCADE'), nullable=False),
+                             Column('job_instance_id', KeyInteger, ForeignKey('job_instance.job_instance_id', ondelete='CASCADE'), nullable=False),
+                             Column('type', Enum('check', 'compute', name='integrity_type_desc'), nullable=False),
+                             Column('file_type', Enum('input', 'output', name='integrity_file_type_desc')),
+                             Column('count', INT, nullable=False),
+                             Column('duration', NUMERIC(10,3), nullable=False),
+                             **table_keywords
+                             )
 
-Index('integrity_id_KEY', st_integrity_meta.c.integrity_id, unique=True)
-Index('UNIQUE_INTEGRITY', st_integrity_meta.c.job_instance_id, st_integrity_meta.c.type, st_integrity_meta.c.file_type, unique=True)
-orm.mapper(IntegrityMetrics, st_integrity_meta)
+Index('integrity_id_KEY', st_integrity_metrics.c.integrity_id, unique=True)
+Index('UNIQUE_INTEGRITY', st_integrity_metrics.c.job_instance_id, st_integrity_metrics.c.type, st_integrity_metrics.c.file_type, unique=True)
+orm.mapper(IntegrityMetrics, st_integrity_metrics)
 
 
 # ---------------------------------------------
