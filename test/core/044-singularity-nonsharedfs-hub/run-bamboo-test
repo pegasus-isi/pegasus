@@ -38,9 +38,10 @@ perl -p -i -e 's/montage-workflow-v2/fedora-montage/' data/tc.txt
 cp ../sites.xml sites.xml
 
 # run in nonsharedfs mode
-perl -p -i -e 's/condorio/nonsharedfs/' pegasus.properties
+perl -p -i -e 's/condorio/nonsharedfs/' ../pegasusrc
 
 pegasus-plan \
+        --conf ../pegasusrc \
         --dir work \
         --relative-dir `date +'%s'` \
         --dax data/montage.dax \

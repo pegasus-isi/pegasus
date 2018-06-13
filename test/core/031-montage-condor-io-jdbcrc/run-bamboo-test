@@ -17,28 +17,28 @@ cd montage-workflow-v2
                       --band 2mass:h:blue \
                       --band 2mass:k:red
 
-cat >>pegasus.properties <<EOF
+cat >>../pegasusrc <<EOF
 pegasus.stageout.clusters = 20
 
 #we don't want errors for registration to be masked because of retries
 dagman.retry 0
 EOF
-cat $HOME/.jdbcrc-test-48.conf >> pegasus.properties
+cat $HOME/.jdbcrc-test-48.conf >> ../pegasusrc
 
 echo "Updating the database..."
-pegasus-db-admin update --conf pegasus.properties -t jdbcrc
+pegasus-db-admin update --conf ../pegasusrc -t jdbcrc
 
 echo "Cleanning the database..."
-pegasus-rc-client --conf pegasus.properties list >tmp.list
-pegasus-rc-client --conf pegasus.properties --delete tmp.list
+pegasus-rc-client --conf ../pegasusrc list >tmp.list
+pegasus-rc-client --conf ../pegasusrc --delete tmp.list
 rm -f tmp.list
 
 echo "Inserting new data on the database..."
-pegasus-rc-client -vvv --conf pegasus.properties --insert data/rc.txt
+pegasus-rc-client -vvv --conf ../pegasusrc --insert data/rc.txt
 
 echo "Planning and submitting the workflow..."
 pegasus-plan \
-    --conf pegasus.properties \
+    --conf ../pegasusrc \
     --sites condor_pool \
     --dir work \
     --output-site local \
