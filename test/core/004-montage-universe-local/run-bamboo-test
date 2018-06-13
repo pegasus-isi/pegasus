@@ -60,7 +60,7 @@ cat >sites.xml <<EOF
 EOF
 
 pegasus-plan \
-        --conf ../pegasusrc \
+        --conf pegasus.properties \
         --dir work \
         --relative-dir `date +'%s'` \
         --dax data/montage.dax \
