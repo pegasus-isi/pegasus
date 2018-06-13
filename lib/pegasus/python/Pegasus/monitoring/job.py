@@ -151,6 +151,29 @@ class Job:
         self._deferred_job_end_kwargs = None
         self._integrity_metrics = set()
 
+    def _add_additional_monitoring_events(self, events):
+        """
+        add monitoring events to the job, separating any integrity metrics,
+        since Integrity metrics are stored internally not as addditonal monitoring event
+        :param events:
+        :return:
+        """
+        for event in events:
+            if "monitoring_event" in event:
+                name = event["monitoring_event"]
+                if name == "int.metric":
+                    # split elements in payload to IntegrityMetric
+                    # add it internally for aggregation
+                    for m in event["payload"]:
+                        print m
+                        metric = IntegrityMetric(type=m.get("event"),
+                                                 file_type=m.get("file_type"),
+                                                 count=m["count"] if "count" in m else 0,
+                                                 duration=m["duration"] if "duration" in m else 0.0)
+                        self.add_integrity_metric(metric)
+            else:
+                self._additional_monitoring_events.append(event)
+
     def add_integrity_metric(self, metric):
         """
         adds an integrity metric, if a metric with the same key already exists we retrive
@@ -439,7 +462,7 @@ class Job:
             #PM-641 optimization Modified string concatenation to a list join 
             if "stdout" in my_record:
                 task_output = self.split_task_output( my_record["stdout"])
-                self._additional_monitoring_events += task_output.events
+                self._add_additional_monitoring_events(task_output.events)
                 # PM-1152 we always attempt to store upto MAX_OUTPUT_LENGTH
                 stdout = self.get_snippet_to_populate( task_output.user_data, my_task_number, stdout_size, "stdout")
                 if stdout is not None:
@@ -454,7 +477,7 @@ class Job:
             if "stderr" in my_record:
                 task_error = self.split_task_output(my_record["stderr"])
                  # add the events to those retrieved from the application stderr
-                self._additional_monitoring_events += task_error.events
+                self._add_additional_monitoring_events(task_error.events)
                  # Note: we are populating task stderr from kickstart record to job stdout only
                 stderr = self.get_snippet_to_populate( signal_message + task_error.user_data, my_task_number, stdout_size, "stderr")
                 if stderr is not None:
@@ -516,7 +539,7 @@ class Job:
             # from PegasusLite .err file
             job_stderr = self.split_task_output(ERR.read())
             self._stderr_text = utils.quote(job_stderr.user_data)
-            self._additional_monitoring_events += job_stderr.events
+            self._add_additional_monitoring_events(job_stderr.events)
         except IOError:
             self._stderr_text = None
             if not self.is_noop_job():
