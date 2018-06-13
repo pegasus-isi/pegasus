@@ -165,7 +165,6 @@ class Job:
                     # split elements in payload to IntegrityMetric
                     # add it internally for aggregation
                     for m in event["payload"]:
-                        print m
                         metric = IntegrityMetric(type=m.get("event"),
                                                  file_type=m.get("file_type"),
                                                  count=m["count"] if "count" in m else 0,
