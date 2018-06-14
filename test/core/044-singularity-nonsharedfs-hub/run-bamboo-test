@@ -27,6 +27,8 @@ singularity exec \
                              --band dss:DSS2B:blue \
                              --band dss:DSS2R:red
 
+cat pegasus.properties >> ../pegasusrc
+
 # rc needs to have paths "outside" the image
 perl -p -i -e "s;/srv/data;$PWD/data;g" data/rc.txt
 

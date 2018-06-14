@@ -20,6 +20,9 @@ cd montage-workflow-v2
 
 sqlitedb=`mktemp -p ${PWD} pegasus-XXXX.jdbcrc.sqlite.db`
 sqlitedburl=jdbc:sqlite:/${sqlitedb}
+
+cat pegasus.properties >> ../pegasusrc
+
 cat >>../pegasusrc <<EOF
 pegasus.stageout.clusters = 20
 
