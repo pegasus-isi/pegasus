@@ -90,7 +90,7 @@ fi
 #-------------------------------
 
 # Get AMI ID from log-02.txt
-AMI_ID=`grep "aws: AMIs were created" log-01.txt  | grep --extended-regexp --only-matching --word-regexp ami-.*`
+AMI_ID=`grep "aws: AMIs were created" log-01.txt  | grep --extended-regexp --only-matching --word-regexp ami-[a-zA-Z0-9]*`
 
 # Copy Image
 NEW_AMI=`aws ec2 copy-image --source-region 'us-west-2' \
