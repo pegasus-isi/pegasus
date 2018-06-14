@@ -103,5 +103,11 @@ aws ec2 wait image-available --image-id "${NEW_AMI}"
 # Make it public
 aws ec2 modify-image-attribute --image-id "${NEW_AMI}" --launch-permission "{\"Add\": [{\"Group\":\"all\"}]}"
 
+# Get snapshot associated with old AMI
+SNAP_ID=`aws ec2 describe-images --image-ids ${AMI_ID} --query 'Images[*].BlockDeviceMappings[*].Ebs.SnapshotId'`
+
 # De-register Old AMI
 aws ec2 deregister-image --image-id "${AMI_ID}"
+
+# Delete old AMI's snapshot
+aws ec2 delete-snapshot --snapshot-id "${SNAP_ID}"
