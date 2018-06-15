@@ -112,3 +112,7 @@ aws ec2 deregister-image --image-id "${AMI_ID}"
 
 # Delete old AMI's snapshot
 aws ec2 delete-snapshot --snapshot-id "${SNAP_ID}"
+
+# Tag new AMI and snapshot
+NEW_SNAP=`aws ec2 describe-images --image-ids ${NEW_AMI} --query 'Images[*].BlockDeviceMappings[*].Ebs.SnapshotId'`
+aws ec2 create-tags --resources "${NEW_AMI}" "${NEW_SNAP}" --tags Key=Name,Value="Pegasus Tutorial VM ${VM_VERSION}"
