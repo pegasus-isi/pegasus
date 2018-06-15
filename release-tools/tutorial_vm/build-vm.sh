@@ -98,7 +98,8 @@ NEW_AMI=`aws ec2 copy-image --source-region 'us-west-2' \
                    --name "Pegasus Tutorial VM ${VM_VERSION}" \
                    --description "Pegasus Tutorial VM ${VM_VERSION}"`
 
-aws ec2 wait image-available --image-id "${NEW_AMI}"
+WAIT="aws ec2 wait image-available --image-id ${NEW_AMI}"
+$WAIT || $WAIT
 
 # Make it public
 aws ec2 modify-image-attribute --image-id "${NEW_AMI}" --launch-permission "{\"Add\": [{\"Group\":\"all\"}]}"
