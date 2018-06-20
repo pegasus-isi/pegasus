@@ -7,6 +7,10 @@ from sqlalchemy import exc
 import time
 
 class DashboardLoader(BaseLoader):
+
+
+    MAX_RETRIES = 10 # maximum number of retries in case of operational errors that arise because of database locked/connection dropped
+
     """Load into the Stampede Dashboard SQL schema through SQLAlchemy.
 
     Parameters:
@@ -157,7 +161,12 @@ class DashboardLoader(BaseLoader):
             return
 
         self.log.debug('Hard flush: batch_flush=%s', batch_flush)
+        if retry == self.MAX_RETRIES + 1:
+            #PM-1013 see if max retries is reached
+            self.log.error( 'Maximum number of retries reached for dashboard_loader.hard_flush() method %s' %self.MAX_RETRIES )
+            raise RuntimeError( 'Maximum number of retries reached for dashboard_loader.hard_flush() method %s' %self.MAX_RETRIES )
 
+        retry = retry + 1
         self.check_connection()
 
         if self._perf:
@@ -184,11 +193,11 @@ class DashboardLoader(BaseLoader):
         except exc.IntegrityError, e:
             self.log.error('Integrity error on batch flush: %s - batch will need to be committed per-event which will take longer', e)
             self.session.rollback()
-            self.hard_flush(batch_flush=False)
+            self.hard_flush(batch_flush=False,retry=retry)
         except exc.OperationalError, e:
             self.log.error('Connection problem during commit: %s - reattempting batch', e)
             self.session.rollback()
-            self.hard_flush()
+            self.hard_flush(retry=retry)
 
         for host in self._batch_cache['host_map_events']:
             self.map_host_to_job_instance(host)
