@@ -248,8 +248,8 @@ class WorkflowLoader(BaseLoader):
 
         if retry == self.MAX_RETRIES + 1:
             #PM-1013 see if max retries is reached
-            self.log.error( 'Maximum number of retries reached for stampede_loader.hard_flush() method %s' %self.MAX_RETRIES )
-            raise RuntimeError( 'Maximum number of retries reached for stampede_loader.hard_flush() method %s' %self.MAX_RETRIES )
+            self.log.error( 'Maximum number of retries reached for workflow_loader.hard_flush() method %s' %self.MAX_RETRIES )
+            raise RuntimeError( 'Maximum number of retries reached for workflow_loader.hard_flush() method %s' %self.MAX_RETRIES )
 
         retry = retry + 1
         self.check_connection()
