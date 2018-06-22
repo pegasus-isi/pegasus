@@ -40,7 +40,7 @@ echo "Creating jdbcrc $sqlitedb"
 pegasus-db-admin create ${sqlitedburl}
 
 echo "Inserting input entries in the database..."
-pegasus-rc-client -vvv --conf pegasus.properties --insert data/rc.txt
+pegasus-rc-client -vvv --conf ../pegasusrc --insert data/rc.txt
 
 echo "Planning and submitting the workflow..."
 pegasus-plan \
