@@ -20,7 +20,10 @@ cd montage-workflow-v2
 
 sqlitedb=`mktemp -p ${PWD} pegasus-XXXX.jdbcrc.sqlite.db`
 sqlitedburl=jdbc:sqlite:/${sqlitedb}
-cat >>pegasus.properties <<EOF
+
+cat pegasus.properties >> ../pegasusrc
+
+cat >>../pegasusrc <<EOF
 pegasus.stageout.clusters = 20
 
 #we don't want errors for registration to be masked because of retries
@@ -37,11 +40,11 @@ echo "Creating jdbcrc $sqlitedb"
 pegasus-db-admin create ${sqlitedburl}
 
 echo "Inserting input entries in the database..."
-pegasus-rc-client -vvv --conf pegasus.properties --insert data/rc.txt
+pegasus-rc-client -vvv --conf ../pegasusrc --insert data/rc.txt
 
 echo "Planning and submitting the workflow..."
 pegasus-plan \
-    --conf pegasus.properties \
+    --conf ../pegasusrc \
     --sites condor_pool \
     --dir work \
     --output-site local \

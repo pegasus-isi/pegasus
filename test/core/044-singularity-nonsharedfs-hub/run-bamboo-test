@@ -27,6 +27,8 @@ singularity exec \
                              --band dss:DSS2B:blue \
                              --band dss:DSS2R:red
 
+cat pegasus.properties >> ../pegasusrc
+
 # rc needs to have paths "outside" the image
 perl -p -i -e "s;/srv/data;$PWD/data;g" data/rc.txt
 
@@ -38,9 +40,10 @@ perl -p -i -e 's/montage-workflow-v2/fedora-montage/' data/tc.txt
 cp ../sites.xml sites.xml
 
 # run in nonsharedfs mode
-perl -p -i -e 's/condorio/nonsharedfs/' pegasus.properties
+perl -p -i -e 's/condorio/nonsharedfs/' ../pegasusrc
 
 pegasus-plan \
+        --conf ../pegasusrc \
         --dir work \
         --relative-dir `date +'%s'` \
         --dax data/montage.dax \
