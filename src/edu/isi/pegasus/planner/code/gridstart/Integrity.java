@@ -87,6 +87,7 @@ public class Integrity {
      * @param files 
      */
     protected void addIntegrityCheckInvocation(StringBuffer sb,  Collection<PegasusFile> files ) {
+    	StringBuilder flist = new StringBuilder();
         for( PegasusFile file: files ){
             if( file.isDataFile() ){
                 boolean generate = ( file.isRawInputFile() )?
@@ -103,10 +104,16 @@ public class Integrity {
                 }
                 
                 if( generate ){
-                    sb.append( Integrity.PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME ).append( " --verify=" ).
-                       append( file.getLFN() ).append( " 1>&2" ).append( "\n" );
+                	if (flist.length() > 0) {
+                		flist.append(":");
+                	}
+                	flist.append(file.getLFN());
                 }
             }
+        }
+        if (flist.length() > 0) {
+            sb.append( Integrity.PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME ).append( " --print-timings --verify=" ).
+            append( flist ).append( " 1>&2" ).append( "\n" );        	
         }
     }
 

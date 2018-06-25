@@ -549,6 +549,7 @@ class TimedCommand(object):
         self._process = None
         self._out_file = None
         self._outerr = ""
+        self._duration = 0.0
 
         # used in exceptions
         self._cmd_for_exc = cmd
@@ -577,6 +578,8 @@ class TimedCommand(object):
         # temp file for the stdout/stderr
         self._out_file = tempfile.TemporaryFile(prefix="pegasus-transfer-", suffix=".out")
         
+        ts_start = time.time()
+        
         thread = threading.Thread(target=target)
         thread.start()
 
@@ -600,6 +603,8 @@ class TimedCommand(object):
                 logger.info(stdout)
             self._out_file.close()
             raise RuntimeError("Command timed out after %d seconds: %s" %(self._timeout_secs, self._cmd_for_exc))
+        
+        self._duration = time.time() - ts_start
         
         # log the output
         self._out_file.seek(0)
@@ -625,6 +630,13 @@ class TimedCommand(object):
         returns the exit code from the process
         """
         return self._process.returncode
+    
+    def get_duration(self):
+        """
+        returns the timing of the command (seconds)
+        """
+        return self._duration
+        
     
 
 class TransferHandlerBase(object):
@@ -761,7 +773,7 @@ class TransferHandlerBase(object):
             return
 
         self.lock.acquire()
-        cmd = "%s --generate-xml=\"%s\" --full-statcall-lfn=\"%s\"" % (tools.full_path("pegasus-integrity"), fname, lfn)
+        cmd = "%s --generate-xml=\"%s=%s\"" % (tools.full_path("pegasus-integrity"), lfn, fname)
         try:
             tc = TimedCommand(cmd)
             tc.run()
@@ -770,6 +782,7 @@ class TransferHandlerBase(object):
         except RuntimeError, err:
             logger.error(err)
         finally:
+            stats.add_integrity_generate(tc.get_duration())
             self.lock.release()
 
     
@@ -3252,6 +3265,12 @@ class Stats:
         self._total_bytes = 0
         self._site_pair_count = {}
         self._site_pair_bytes = {}
+        
+        # integrity timings
+        self._integrity_verify_count = 0
+        self._integrity_verify_duration = 0.0
+        self._integrity_generate_count = 0
+        self._integrity_generate_duration = 0.0
     
 
     def add_stats(self, transfer, was_successful, t_start, t_end):
@@ -3295,8 +3314,48 @@ class Stats:
     def all_transfers_done(self):
         self._t_end_global = time.time()
 
+    
+    def add_integrity_generate(self, duration):
+        self._integrity_generate_count += 1
+        self._integrity_generate_duration += duration
+
+
+    def add_integrity_verify(self, duration):
+        self._integrity_verify_count += 1
+        self._integrity_verify_duration += duration
+        
 
     def stats_summary(self):
+        
+        # integrity timings
+        if self._integrity_verify_count > 0:
+            data = {
+                'ts': int(time.time()), 
+                'monitoring_event': 'int.metric', 
+                'payload': [ {
+                    'event': 'check',
+                    'file_type': 'input',
+                    'count': self._integrity_verify_count,
+                    'duration': self._integrity_verify_duration
+                    }
+                ]
+            }
+            logger.info('@@@PEGASUS_MONITORING_PAYLOAD - START@@@' +json.dumps(data) + '@@@PEGASUS_MONITORING_PAYLOAD - END@@@')
+        if self._integrity_generate_count > 0:
+            data = {
+                'ts': int(time.time()), 
+                'monitoring_event': 'int.metric', 
+                'payload': [ {
+                    'event': 'compute',
+                    'file_type': 'output',
+                    'count': self._integrity_generate_count,
+                    'duration': self._integrity_generate_duration
+                    }
+                ]
+            }
+            logger.info('@@@PEGASUS_MONITORING_PAYLOAD - START@@@' +json.dumps(data) + '@@@PEGASUS_MONITORING_PAYLOAD - END@@@')
+        
+        # standard stats
         if self._t_end_global is None or self._t_end_global is 0:
             self.all_transfers_done()
         
@@ -3323,7 +3382,7 @@ class Stats:
                         self._site_pair_count[key],
                         iso_prefix_formatted(self._site_pair_bytes[key]), total_secs, 
                         iso_prefix_formatted(Bps), iso_prefix_formatted(Bps*8)))
-
+            
 
 class Panorama:
     """ Singleton for sending Panorama live stats
@@ -3633,8 +3692,6 @@ class SimilarWorkSet:
         if transfer.get_src_proto() == "gsiftp" and \
            transfer.get_dst_proto() == "gsiftp":
             return True
-
-        return False
     
 
     def verify_integrity_checksum(self, lfn, fname):
@@ -3643,7 +3700,7 @@ class SimilarWorkSet:
         """
 
         tools = Tools()
-
+        
         if tools.find("pegasus-integrity", "help", None, [prog_dir]) is None:
             logger.error("Unable to do integrity checking because pegasus-integrity not found")
             return 
@@ -3652,13 +3709,15 @@ class SimilarWorkSet:
             logger.error("lfn is required when enabling checksumming")
             return
         
-        cmd = "%s --verify=\"%s\" --lfn=\"%s\"" % (tools.full_path("pegasus-integrity"), fname, lfn)
+        cmd = "%s --verify=\"%s=%s\"" % (tools.full_path("pegasus-integrity"), lfn, fname)
         try:
             tc = TimedCommand(cmd)
             tc.run()
         except RuntimeError, err:
             logger.error(err)
             return False
+        finally:
+            stats.add_integrity_verify(tc.get_duration())
         return True
 
 
@@ -3756,6 +3815,7 @@ stats = Stats()
 
 # singleton - but should we make it a global instead?
 tools = Tools()
+
 
 # --- functions ----------------------------------------------------------------
 

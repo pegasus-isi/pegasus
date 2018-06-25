@@ -31,7 +31,7 @@ int pegasus_integrity_xml(const char *fname, char *xml) {
     char buf[4096];
     char cmd[4096];
 
-    strcpy(cmd, "pegasus-integrity --generate-xml=");
+    strcpy(cmd, "pegasus-integrity --generate-xmls=");
     strcat(cmd, fname);
     strcat(cmd, " 2>/dev/null");
 

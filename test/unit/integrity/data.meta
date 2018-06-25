@@ -1,0 +1,20 @@
+[
+  {
+    "_type": "file", 
+    "_id": "data.1", 
+    "_attributes": {
+      "checksum.type": "sha256", 
+      "checksum.value": "d2a84f4b8b650937ec8f73cd8be2c74add5a911ba64df27458ed8229da804a26",
+      "size": "14"
+    }
+  },
+  {
+    "_type": "file", 
+    "_id": "foo.2", 
+    "_attributes": {
+      "checksum.type": "sha256", 
+      "checksum.value": "cda6cdd121c2ac84c7aa12e15cfc7e07503ca7a4d11f4f3df791d4e0fbc7d80f",
+      "size": "27"
+    }
+  }
+]

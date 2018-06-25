@@ -392,7 +392,7 @@ project:
                       --rm \
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       --entrypoint ant \
-                      pegasus/pegasus:${TAG} test-kickstart test-pmc test-transfer
+                      pegasus/pegasus:${TAG} test-kickstart test-pmc test-transfer test-integrity
               artifactDependencies:
                 - name: pegasus-source
               requirements:
@@ -481,7 +481,7 @@ project:
                       --rm \
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       --entrypoint ant \
-                      pegasus/pegasus:${TAG} test-kickstart test-pmc test-transfer
+                      pegasus/pegasus:${TAG} test-kickstart test-pmc test-transfer test-integrity
               artifactDependencies:
                 - name: pegasus-source
               requirements:
@@ -570,7 +570,7 @@ project:
                       --rm \
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       --entrypoint ant \
-                      pegasus/pegasus:${TAG} test-kickstart test-pmc test-transfer
+                      pegasus/pegasus:${TAG} test-kickstart test-pmc test-transfer test-integrity
               artifactDependencies:
                 - name: pegasus-source
               requirements:
