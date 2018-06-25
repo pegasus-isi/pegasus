@@ -939,13 +939,13 @@ public class PegasusLite implements GridStart {
                         sb.append( " --symlink " );
                     }
                     sb.append( " 1>&2" ).append( " << 'EOF'" ).append( '\n' );
-                    sb.append( convertToTransferInputFormat( inputFiles, "input" ) );
+                    sb.append( convertToTransferInputFormat( inputFiles, PegasusFile.LINKAGE.input ) );
                     sb.append( "EOF" ).append( '\n' );
                     sb.append( '\n' );
                 }
                 
                 //PM-779 checkpoint files need to be setup to never fail
-                String checkPointFragment = checkpointFilesToPegasusLite( job, sls, chkpointFiles, "input");
+                String checkPointFragment = checkpointFilesToPegasusLite( job, sls, chkpointFiles, PegasusFile.LINKAGE.input);
                 if( !checkPointFragment.isEmpty() ){
                     appendStderrFragment( sb, "Staging in checkpoint files" );
                     sb.append( "# stage in checkpoint files " ).append( '\n' );
@@ -1070,7 +1070,7 @@ public class PegasusLite implements GridStart {
                 }
                 
                 //PM-779 checkpoint files need to be setup to never fail
-                String checkPointFragment = checkpointFilesToPegasusLite( job, sls, chkpointFiles, "output");
+                String checkPointFragment = checkpointFilesToPegasusLite( job, sls, chkpointFiles, PegasusFile.LINKAGE.output);
                 if( !checkPointFragment.isEmpty() ){
                     appendStderrFragment( sb, "Staging out checkpoint files" );
                     sb.append( "# stage out checkpoint files " ).append( '\n' );
@@ -1085,7 +1085,7 @@ public class PegasusLite implements GridStart {
                     sb.append( postJob );
 
                     sb.append( " 1>&2" ).append( " << 'EOF'" ).append( '\n' );
-                    sb.append( convertToTransferInputFormat( outputFiles, "output" ) );
+                    sb.append( convertToTransferInputFormat( outputFiles, PegasusFile.LINKAGE.output ) );
                     sb.append( "EOF" ).append( '\n' );
                     sb.append( '\n' );
                 }
@@ -1153,7 +1153,7 @@ public class PegasusLite implements GridStart {
      * @return  the blurb containing the files in the input format for the transfer
      *          executable
      */
-    protected StringBuffer convertToTransferInputFormat( Collection<FileTransfer> files, String fileType ){
+    protected StringBuffer convertToTransferInputFormat( Collection<FileTransfer> files, PegasusFile.LINKAGE fileType ){
         StringBuffer sb = new StringBuffer();
         
         sb.append("[\n");
@@ -1439,7 +1439,7 @@ public class PegasusLite implements GridStart {
      * @param fileType  type of files to be transferred
      * @return string representation of the PegasusLite fragment
      */
-    private String checkpointFilesToPegasusLite(Job job, SLS sls, Collection<FileTransfer> files, String fileType) {
+    private String checkpointFilesToPegasusLite(Job job, SLS sls, Collection<FileTransfer> files, PegasusFile.LINKAGE fileType) {
         StringBuilder sb = new StringBuilder();
         if( !files.isEmpty() ){
             sb.append( "set +e " ).append( "\n");

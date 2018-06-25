@@ -46,6 +46,7 @@ import java.util.ArrayList;
 
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
@@ -457,9 +458,9 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
         //PM-1272 figure out file_type based on job type
         //both stage out and intersite are classified as output
         int type = job.getJobType();
-        String fileType = "output";
+        PegasusFile.LINKAGE fileType = PegasusFile.LINKAGE.output;
         if( type == Job.STAGE_IN_JOB || type == Job.STAGE_IN_WORKER_PACKAGE_JOB ){
-            fileType = "input";
+            fileType = PegasusFile.LINKAGE.input;
         }
         
         int num = 1;
