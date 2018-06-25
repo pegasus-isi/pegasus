@@ -42,7 +42,7 @@ public class PegasusFile extends Data {
      * Enumeration for denoting type of linkage
      */
     public static enum LINKAGE {
-        INPUT, OUTPUT, INOUT, NONE
+        input, output, inout, none
     };
 
 
@@ -209,7 +209,7 @@ public class PegasusFile extends Data {
         mType        = DATA_FILE;
         mTransferFlag= this.TRANSFER_MANDATORY;
         mSize        = -1;
-        mLink        = LINKAGE.NONE;
+        mLink        = LINKAGE.none;
         mMetadata    = new Metadata();
         mIsRawInput  = false;
         mChecksumComputedInWF = false;

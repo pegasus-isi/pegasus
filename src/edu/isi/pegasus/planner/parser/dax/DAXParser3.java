@@ -373,7 +373,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         return null;
                     }
                     PegasusFile pf = new PegasusFile( file );
-                    pf.setLinkage( LINKAGE.INPUT );
+                    pf.setLinkage(LINKAGE.input );
                     
                     if( element.equals( "dag" ) ){
                         DAGJob dagJob = new DAGJob( j );
@@ -805,11 +805,11 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                                 //cleaner for DAX API to have checkpoint files marked
                                 //via linkage. Planner still treats it as a type
                                 pf.setType( value );
-                                pf.setLinkage(LINKAGE.INOUT);
+                                pf.setLinkage(LINKAGE.inout);
                                 this.log( element, name, value );
                             }
                             else{
-                                pf.setLinkage( PegasusFile.LINKAGE.valueOf( value.toUpperCase() ) );
+                                pf.setLinkage( PegasusFile.LINKAGE.valueOf( value.toLowerCase() ) );
                                 this.log( element, name, value );
                             }
                        
@@ -1177,13 +1177,13 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         //uses appears in job
                         Job j = ( Job )parent;
 
-                        if( pf.getLinkage().equals( LINKAGE.INPUT ) ){
+                        if( pf.getLinkage().equals(LINKAGE.input ) ){
                             j.addInputFile(pf);
                         }
-                        else if( pf.getLinkage().equals( LINKAGE.OUTPUT ) ){
+                        else if( pf.getLinkage().equals(LINKAGE.output ) ){
                             j.addOutputFile(pf);
                         }
-                        else if( pf.getLinkage().equals( LINKAGE.INOUT ) ){
+                        else if( pf.getLinkage().equals(LINKAGE.inout ) ){
                             j.addInputFile(pf);
                             j.addOutputFile(pf);
                         }
