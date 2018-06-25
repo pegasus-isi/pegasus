@@ -454,6 +454,14 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
     	// format is a JSON list
     	writer.write("[\n");
     	
+        //PM-1272 figure out file_type based on job type
+        //both stage out and intersite are classified as output
+        int type = job.getJobType();
+        String fileType = "output";
+        if( type == Job.STAGE_IN_JOB || type == Job.STAGE_IN_WORKER_PACKAGE_JOB ){
+            fileType = "input";
+        }
+        
         int num = 1;
         for( Iterator it = files.iterator(); it.hasNext(); ){
             FileTransfer ft = (FileTransfer) it.next();
@@ -468,6 +476,7 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             	urlPair.append(" ,\n");
             }
             urlPair.append(" { \"type\": \"transfer\",\n");
+            urlPair.append("   \"file_type\": ").append("\"").append( fileType ).append("\"").append(",\n");
             urlPair.append("   \"lfn\": ").append("\"").append(ft.getLFN()).append("\"").append(",\n");
             urlPair.append("   \"id\": ").append(num).append(",\n");
             

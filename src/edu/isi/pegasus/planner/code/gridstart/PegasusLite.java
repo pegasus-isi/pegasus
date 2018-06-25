@@ -939,13 +939,13 @@ public class PegasusLite implements GridStart {
                         sb.append( " --symlink " );
                     }
                     sb.append( " 1>&2" ).append( " << 'EOF'" ).append( '\n' );
-                    sb.append( convertToTransferInputFormat( inputFiles ) );
+                    sb.append( convertToTransferInputFormat( inputFiles, "input" ) );
                     sb.append( "EOF" ).append( '\n' );
                     sb.append( '\n' );
                 }
                 
                 //PM-779 checkpoint files need to be setup to never fail
-                String checkPointFragment = checkpointFilesToPegasusLite( job, sls, chkpointFiles);
+                String checkPointFragment = checkpointFilesToPegasusLite( job, sls, chkpointFiles, "input");
                 if( !checkPointFragment.isEmpty() ){
                     appendStderrFragment( sb, "Staging in checkpoint files" );
                     sb.append( "# stage in checkpoint files " ).append( '\n' );
@@ -1070,7 +1070,7 @@ public class PegasusLite implements GridStart {
                 }
                 
                 //PM-779 checkpoint files need to be setup to never fail
-                String checkPointFragment = checkpointFilesToPegasusLite( job, sls, chkpointFiles);
+                String checkPointFragment = checkpointFilesToPegasusLite( job, sls, chkpointFiles, "output");
                 if( !checkPointFragment.isEmpty() ){
                     appendStderrFragment( sb, "Staging out checkpoint files" );
                     sb.append( "# stage out checkpoint files " ).append( '\n' );
@@ -1085,7 +1085,7 @@ public class PegasusLite implements GridStart {
                     sb.append( postJob );
 
                     sb.append( " 1>&2" ).append( " << 'EOF'" ).append( '\n' );
-                    sb.append( convertToTransferInputFormat( outputFiles ) );
+                    sb.append( convertToTransferInputFormat( outputFiles, "output" ) );
                     sb.append( "EOF" ).append( '\n' );
                     sb.append( '\n' );
                 }
@@ -1147,12 +1147,13 @@ public class PegasusLite implements GridStart {
      * Convers the collection of files into an input format suitable for the
      * transfer executable
      * 
-     * @param files   Collection of <code>FileTransfer</code> objects.
+     * @param files    Collection of <code>FileTransfer</code> objects.
+     * @param fileType file type of transfers
      * 
      * @return  the blurb containing the files in the input format for the transfer
      *          executable
      */
-    protected StringBuffer convertToTransferInputFormat( Collection<FileTransfer> files ){
+    protected StringBuffer convertToTransferInputFormat( Collection<FileTransfer> files, String fileType ){
         StringBuffer sb = new StringBuffer();
         
         sb.append("[\n");
@@ -1165,6 +1166,8 @@ public class PegasusLite implements GridStart {
             }
             Collection<String> sourceSites = ft.getSourceSites( );
             sb.append(" { \"type\": \"transfer\",\n");
+            sb.append("   \"file_type\": ").append("\"").append( fileType ).append("\"").append(",\n");
+            sb.append("   \"lfn\": ").append("\"").append(ft.getLFN()).append("\"").append(",\n");
             sb.append("   \"id\": ").append(num).append(",\n");
             sb.append("   \"src_urls\": [");
             
@@ -1433,15 +1436,16 @@ public class PegasusLite implements GridStart {
      * @param job       the job being wrapped with PegasusLite
      * @param sls       associated SLS implementation
      * @param files     the checkpoint files
+     * @param fileType  type of files to be transferred
      * @return string representation of the PegasusLite fragment
      */
-    private String checkpointFilesToPegasusLite(Job job, SLS sls, Collection<FileTransfer> files) {
+    private String checkpointFilesToPegasusLite(Job job, SLS sls, Collection<FileTransfer> files, String fileType) {
         StringBuilder sb = new StringBuilder();
         if( !files.isEmpty() ){
             sb.append( "set +e " ).append( "\n");
             sb.append(  sls.invocationString( job, null ) );
             sb.append( " 1>&2" ).append( " << 'EOF'" ).append( '\n' );
-            sb.append( convertToTransferInputFormat( files ) );
+            sb.append( convertToTransferInputFormat( files, fileType ) );
             sb.append( "EOF" ).append( '\n' );
             sb.append( "ec=$?" ).append( '\n' );
             sb.append( "set -e").append( '\n' );
