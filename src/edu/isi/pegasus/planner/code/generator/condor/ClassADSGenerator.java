@@ -20,6 +20,7 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.DagInfo;
 import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
@@ -73,6 +74,11 @@ public class ClassADSGenerator {
      * @see org.griphyn.cPlanner.classes.DagInfo#flowIDName
      */
     public static final String WF_NAME_AD_KEY = "pegasus_wf_name";
+    
+    /**
+     * The classad for generating the workflow app key
+     */
+    public static final String WF_APP_KEY = "pegasus_wf_app";
 
     /**
      * The classad for the timestamp.
@@ -90,6 +96,7 @@ public class ClassADSGenerator {
      * The classad for generating the DAX ID
      */
     public static final String DAX_JOB_ID_KEY = "pegasus_wf_dax_job_id";
+    
 
     /**
      * The class ad for job Class.
@@ -135,8 +142,9 @@ public class ClassADSGenerator {
      * @param writer is an open stream for the Condor submit file.
      * @param dag    the workflow object containing metadata about the workflow
      *               like the workflow id and the release version.
+     * @param name   the name of the app
      */
-    public static void generate( PrintWriter writer, ADag dag ) {
+    public static void generate( PrintWriter writer, ADag dag , String appName) {
         //get hold of the object holding the metadata
         //information about the workflow
         //pegasus is the generator
@@ -154,6 +162,11 @@ public class ClassADSGenerator {
         //the workflow name
         writer.println(
                 generateClassAdAttribute(WF_NAME_AD_KEY, dag.getFlowName() ));
+        
+        //PM-1277 associate app from properties
+        if( appName != null ){
+            writer.println( generateClassAdAttribute( WF_APP_KEY, appName) ); 
+        }
         
         //the workflow time
         if ( dag.getMTime() != null) {
@@ -173,11 +186,12 @@ public class ClassADSGenerator {
      *               like the workflow id and the release version.
      * @param job    the <code>Job</code> object for which the writer stream
      *               is passed.
+     * @paran appName the app name
      **/
-    public static void generate( PrintWriter writer, ADag dag, Job job ) {
+    public static void generate( PrintWriter writer, ADag dag, Job job, String appName ) {
 
         //get all the workflow classads
-        generate( writer, dag );
+        generate( writer, dag, appName );
 
         //get the job classads
 
