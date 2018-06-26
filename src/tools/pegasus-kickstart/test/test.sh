@@ -493,7 +493,7 @@ function test_integrity_xml_inc {
     # do this test multiple times
     for I in `seq 100`; do
     
-        kickstart ../../../../bin/pegasus-integrity --generate-xml=testintegrity.data=testintegrity.data
+        kickstart ../../../../bin/pegasus-integrity --generate-fullstat-xmls=testintegrity.data=testintegrity.data
         rc=$?
     
         if [ $rc -ne 0 ]; then
