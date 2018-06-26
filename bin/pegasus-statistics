@@ -750,7 +750,7 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
         wwt = stats_utils.get_workflow_wall_time(states)
         wcjwt, wcgpt, wcbpt = workflow_stats.get_workflow_cum_job_wall_time()
         ssjwt, ssgpt, ssbpt = workflow_stats.get_submit_side_job_wall_time()
-
+        int_metrics_summary = workflow_stats.get_summary_integrity_metrics()
         if output_format == "text":
             def myfmt(val):
                 if val is None: return "-"
@@ -761,6 +761,17 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
             summary_str += "%-57s: %s\n" % ("Cumulative job wall time as seen from submit side", myfmt(ssjwt))
             summary_str += "%-57s: %s\n" % ("Cumulative job badput wall time", myfmt(wcbpt))
             summary_str += "%-57s: %s\n" % ("Cumulative job badput wall time as seen from submit side", myfmt(ssbpt))
+            # PM-1260 integrity metrics summary
+            if int_metrics_summary:
+                summary_str += "\nIntegrity Metrics\n"
+                for result in int_metrics_summary:
+                    type = result.type
+                    if result.type == "check":
+                        type = "checked"
+                    if result.type == "compute":
+                        type = "computed"
+                    summary_str += "%s files checksums %s with total duration of %s\n" %( result.count, type, myfmt(result.duration))
+
         else:
             def myfmt(val):
                 if val is None: return ""
