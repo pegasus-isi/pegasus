@@ -761,17 +761,6 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
             summary_str += "%-57s: %s\n" % ("Cumulative job wall time as seen from submit side", myfmt(ssjwt))
             summary_str += "%-57s: %s\n" % ("Cumulative job badput wall time", myfmt(wcbpt))
             summary_str += "%-57s: %s\n" % ("Cumulative job badput wall time as seen from submit side", myfmt(ssbpt))
-            # PM-1260 integrity metrics summary
-            if int_metrics_summary:
-                summary_str += "\nIntegrity Metrics\n"
-                for result in int_metrics_summary:
-                    type = result.type
-                    if result.type == "check":
-                        type = "checked"
-                    if result.type == "compute":
-                        type = "computed"
-                    summary_str += "%s files checksums %s with total duration of %s\n" %( result.count, type, myfmt(result.duration))
-
         else:
             def myfmt(val):
                 if val is None: return ""
@@ -782,6 +771,24 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
             summary_str += "cumulative_job_walltime_from_submit_side,%s\n" % myfmt(ssjwt)
             summary_str += "workflow_cumulative_badput_time,%s\n" % myfmt(wcbpt)
             summary_str += "cumulative_job_badput_walltime_from_submit_side,%s\n" % myfmt(ssbpt)
+
+        # PM-1260 integrity metrics summary
+        int_metrics_summary = workflow_stats.get_summary_integrity_metrics()
+        if int_metrics_summary and output_format == "text":
+            def myfmt(val):
+                if val is None:
+                    return "-"
+                else:
+                    return format_seconds(val)
+
+            summary_str += "\nIntegrity Metrics\n"
+            for result in int_metrics_summary:
+                type = result.type
+                if result.type == "check":
+                    type = "checked"
+                if result.type == "compute":
+                    type = "computed"
+                summary_str += "%s files checksums %s with total duration of %s\n" % (result.count, type, myfmt(result.duration))
 
     return summary_str
 
