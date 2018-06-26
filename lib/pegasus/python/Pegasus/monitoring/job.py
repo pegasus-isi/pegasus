@@ -37,8 +37,8 @@ MAX_OUTPUT_LENGTH = 2**16-1  # Only keep stdout to 64K
 #some constants
 NOOP_JOB_PREFIX = "noop_"                  # prefix for noop jobs for which .out and err files are not created
 
-MONITORING_EVENT_START_MARKER = "@@@PEGASUS_MONITORING_PAYLOAD - START @@@"
-MONITORING_EVENT_END_MARKER = "@@@PEGASUS_MONITORING_PAYLOAD - END @@@"
+MONITORING_EVENT_START_MARKER = "@@@MONITORING_PAYLOAD - START@@@"
+MONITORING_EVENT_END_MARKER = "@@@MONITORING_PAYLOAD - END@@@"
 
 # Used in parse_sub_file
 re_rsl_string = re.compile(r"^\s*globusrsl\W", re.IGNORECASE)
