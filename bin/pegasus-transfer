@@ -280,6 +280,8 @@ class Transfer(TransferBase):
 
         self.lfn = ""
         
+        self.file_type = "unknown"
+        
         self._src_urls = []
         self._dst_urls = []
        
@@ -295,6 +297,10 @@ class Transfer(TransferBase):
 
     def set_lfn(self, lfn):
         self.lfn = lfn
+
+
+    def set_file_type(self, file_type):
+        self.file_type = file_type
 
         
     def add_src(self, site_label, url, priority=None):
@@ -705,7 +711,7 @@ class TransferHandlerBase(object):
         # do we need to calculate integrity checksums?
         if transfer.generate_checksum and \
            transfer.get_src_proto() == "file":
-            self._generate_integrity_checksum(transfer.lfn, transfer.get_src_path()) 
+            self._generate_integrity_checksum(transfer.lfn, transfer.get_src_path(), transfer.file_type) 
 
 
     def _post_transfer_attempt(self, transfer, was_successful, t_start, t_end=None):
@@ -720,7 +726,7 @@ class TransferHandlerBase(object):
         if was_successful and \
            transfer.generate_checksum and \
            transfer.get_dst_proto() == "file":
-            self._generate_integrity_checksum(transfer.lfn, transfer.get_dst_path()) 
+            self._generate_integrity_checksum(transfer.lfn, transfer.get_dst_path(), transfer.file_type) 
         
         # keep track of transfer attempts
         transfer.attempts += 1
@@ -751,10 +757,10 @@ class TransferHandlerBase(object):
                     logger.error(e)
    
 
-    def _generate_integrity_checksum(self, lfn, fname):
+    def _generate_integrity_checksum(self, lfn, fname, file_type):
         """
         Call out to pegasus-integrity to generate a checksum for the file.
-        The information goes to .pegasus-integrity-ks.xml so that kickstart
+        The information goes to $KICKSTART_INTEGRITY_DATA so that kickstart
         can pick it up at the end.
         """
         global integrity_checksummed
@@ -782,7 +788,8 @@ class TransferHandlerBase(object):
         except RuntimeError, err:
             logger.error(err)
         finally:
-            stats.add_integrity_generate(tc.get_duration())
+            # do not do any timing here - it is in the kickstart record
+            #stats.add_integrity_generate(file_type, tc.get_duration())
             self.lock.release()
 
     
@@ -3267,10 +3274,10 @@ class Stats:
         self._site_pair_bytes = {}
         
         # integrity timings
-        self._integrity_verify_count = 0
-        self._integrity_verify_duration = 0.0
-        self._integrity_generate_count = 0
-        self._integrity_generate_duration = 0.0
+        self._integrity_verify_count = {}
+        self._integrity_verify_duration = {}
+        self._integrity_generate_count = {}
+        self._integrity_generate_duration = {}
     
 
     def add_stats(self, transfer, was_successful, t_start, t_end):
@@ -3315,45 +3322,55 @@ class Stats:
         self._t_end_global = time.time()
 
     
-    def add_integrity_generate(self, duration):
-        self._integrity_generate_count += 1
-        self._integrity_generate_duration += duration
+    def add_integrity_generate(self, file_type, duration):
+        if file_type is None or file_type == '':
+            file_type = 'unknown'
+        if file_type not in self._integrity_generate_count:
+            self._integrity_generate_count[file_type] = 0
+            self._integrity_generate_duration[file_type] = 0.0
+        self._integrity_generate_count[file_type] += 1
+        self._integrity_generate_duration[file_type] += duration
 
 
-    def add_integrity_verify(self, duration):
-        self._integrity_verify_count += 1
-        self._integrity_verify_duration += duration
+    def add_integrity_verify(self, file_type, duration):
+        if file_type is None or file_type == '':
+            file_type = 'unknown'
+        if file_type not in self._integrity_verify_count:
+            self._integrity_verify_count[file_type] = 0
+            self._integrity_verify_duration[file_type] = 0.0
+        self._integrity_verify_count[file_type] += 1
+        self._integrity_verify_duration[file_type] += duration
         
 
     def stats_summary(self):
         
         # integrity timings
-        if self._integrity_verify_count > 0:
+        for file_type in self._integrity_verify_count.keys():
             data = {
                 'ts': int(time.time()), 
                 'monitoring_event': 'int.metric', 
                 'payload': [ {
                     'event': 'check',
-                    'file_type': 'input',
-                    'count': self._integrity_verify_count,
-                    'duration': self._integrity_verify_duration
+                    'file_type': file_type,
+                    'count': self._integrity_verify_count[file_type],
+                    'duration': '%.3f' % self._integrity_verify_duration[file_type]
                     }
                 ]
             }
-            logger.info('@@@PEGASUS_MONITORING_PAYLOAD - START@@@' +json.dumps(data) + '@@@PEGASUS_MONITORING_PAYLOAD - END@@@')
-        if self._integrity_generate_count > 0:
+            logger.info('@@@MONITORING_PAYLOAD - START@@@' +json.dumps(data) + '@@@MONITORING_PAYLOAD - END@@@')
+        for file_type in self._integrity_generate_count.keys():
             data = {
                 'ts': int(time.time()), 
                 'monitoring_event': 'int.metric', 
                 'payload': [ {
                     'event': 'compute',
-                    'file_type': 'output',
-                    'count': self._integrity_generate_count,
-                    'duration': self._integrity_generate_duration
+                    'file_type': file_type,
+                    'count': self._integrity_generate_count[file_type],
+                    'duration': '%.3f' % self._integrity_generate_duration[file_type]
                     }
                 ]
             }
-            logger.info('@@@PEGASUS_MONITORING_PAYLOAD - START@@@' +json.dumps(data) + '@@@PEGASUS_MONITORING_PAYLOAD - END@@@')
+            logger.info('@@@MONITORING_PAYLOAD - START@@@' +json.dumps(data) + '@@@MONITORING_PAYLOAD - END@@@')
         
         # standard stats
         if self._t_end_global is None or self._t_end_global is 0:
@@ -3651,7 +3668,7 @@ class SimilarWorkSet:
                     local_name = temp_name
                 
                 # verify checksum of the now locally accessible file
-                if self.verify_integrity_checksum(t.lfn, local_name):
+                if self.verify_integrity_checksum(t.lfn, local_name, t.file_type):
                     success_list.append(t)
                 else:
                     failed_list.append(t)
@@ -3694,7 +3711,7 @@ class SimilarWorkSet:
             return True
     
 
-    def verify_integrity_checksum(self, lfn, fname):
+    def verify_integrity_checksum(self, lfn, fname, file_type):
         """
         Call out to pegasus-integrity to verify a checksum for the file.
         """
@@ -3717,7 +3734,7 @@ class SimilarWorkSet:
             logger.error(err)
             return False
         finally:
-            stats.add_integrity_verify(tc.get_duration())
+            stats.add_integrity_verify(file_type, tc.get_duration())
         return True
 
 
@@ -4069,6 +4086,8 @@ def json_object_decoder(obj):
         t = Transfer()
         if 'lfn' in obj:
             t.set_lfn(obj['lfn'])
+        if 'file_type' in obj:
+            t.set_file_type(obj['file_type'])
         if 'generate_checksum' in obj:
             t.generate_checksum = obj['generate_checksum']
         if 'verify_checksum_remote' in obj:

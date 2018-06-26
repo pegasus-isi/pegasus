@@ -464,10 +464,10 @@ def generate_fullstat_xml(lfn, pfn):
             %(s.st_mode, s.st_size, s.st_ino, s.st_nlink,
               iso8601(s.st_mtime), iso8601(s.st_atime), iso8601(s.st_ctime),
               s.st_uid, uname, s.st_gid, gname))
-
-    xml += '<checksum type="sha256" value="%s" timing="%.3f"/>' %(sha256, ts_end - ts_start)
-    xml += '\n  </statcall>\n'
+    xml += '    <checksum type="sha256" value="%s" timing="%.3f"/>\n' %(sha256, ts_end - ts_start)
+    xml += '  </statcall>\n'
     return xml
+
 
 def check_integrity(fname, lfn, meta_data):
     '''
@@ -519,11 +519,11 @@ def dump_timing_json():
                 'event': 'check',
                 'file_type': 'input',
                 'count': total_count,
-                'duration': total_timing
+                'duration': '%.3f' % total_timing
             }
         ]
     }
-    print('@@@PEGASUS_MONITORING_PAYLOAD - START@@@' +json.dumps(data) + '@@@PEGASUS_MONITORING_PAYLOAD - END@@@')
+    print('@@@MONITORING_PAYLOAD - START@@@' +json.dumps(data) + '@@@MONITORING_PAYLOAD - END@@@')
 
 # --- main ----------------------------------------------------------------------------
 

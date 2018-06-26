@@ -1,6 +1,7 @@
 [
  { "type": "transfer",
    "lfn": "data.txt",
+   "file_type": "output",
    "id": 1,
    "generate_checksum": true, 
    "src_urls": [
