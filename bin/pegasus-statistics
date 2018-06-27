@@ -37,6 +37,7 @@ workflow_summary_time_file_name = "summary-time"
 workflow_statistics_file_name = "workflow"
 job_statistics_file_name = "jobs"
 logical_transformation_statistics_file_name = "breakdown"
+logical_integrity_statistics_file_name = "integrity"
 time_statistics_file_name = "time"
 time_statistics_per_host_file_name = "time-per-host"
 text_file_extension = ".txt"
@@ -46,6 +47,7 @@ calc_wf_summary = False
 calc_jb_stats = False
 calc_tf_stats = False
 calc_ti_stats = False
+calc_int_stats = False
 time_filter = None
 NEW_LINE_STR = "\n"
 DEFAULT_OUTPUT_DIR = "statistics"
@@ -57,6 +59,11 @@ uses_PMC=False
 transformation_stats_col_name_text = ["Transformation", "Count", "Succeeded", "Failed", "Min", "Max", "Mean", "Total"]
 transformation_stats_col_name_csv = ["Workflow_Id", "Dax_Label", "Transformation", "Count", "Succeeded", "Failed", "Min", "Max", "Mean", "Total"]
 transformation_stats_col_size = [25, 10, 10, 8, 10, 10, 10, 10]
+
+# Integrity file column names
+integrity_stats_col_name_text = ["Type", "File Type", "Count", "Total Duration" ]
+integrity_stats_col_name_csv = ["Workflow_Id", "Dax_Label", "Type", "File Type", "Count", "Total Duration"]
+integrity_stats_col_size = [10, 15, 10, 25]
 
 # Jobs file column names
 job_stats_col_name_text = ['Job', 'Try', 'Site', 'Kickstart', 'Mult', 'Kickstart-Mult', 'CPU-Time', 'Post', 'CondorQTime', 'Resource', 'Runtime', 'Seqexec', 'Seqexec-Delay', 'Exitcode', 'Hostname']
@@ -257,6 +264,20 @@ def formatted_transformation_stats_legends():
 # Total(sec)     - the cumulative of invocation runtime corresponding
 #                  to the transformation."""
 
+def formatted_integrity_stats_legends():
+    return """
+# Integrity Statistics Breakdown
+# Type           - the type of integrity metric. 
+                   check - means checksum was compared for a file,
+                   compute - means a checksum was generated for a file
+# File Type      - the type of file: input or output from a job perspective
+# Count          - the number of times done
+# Total Duration - sum of duration in seconds for the 'count' number 
+                   of records matching the particular type,
+                   file-type combo
+"""
+
+
 def formatted_time_stats_legends_text():
     return """
 # Job instance statistics per FILTER:
@@ -420,6 +441,16 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
             transformation_stats_file_csv = os.path.join(output_dir, logical_transformation_statistics_file_name + csv_file_extension)
             write_to_file(transformation_stats_file_csv, "w", formatted_transformation_stats_legends())
 
+    global calc_int_stats
+    if calc_int_stats:
+        if file_type == FILE_TYPE_TXT:
+            integrity_stats_file_txt = os.path.join(output_dir, logical_integrity_statistics_file_name + text_file_extension)
+            write_to_file(integrity_stats_file_txt, "w", formatted_integrity_stats_legends())
+
+        if file_type == FILE_TYPE_CSV:
+            integrity_stats_file_csv = os.path.join(output_dir, logical_integrity_statistics_file_name + csv_file_extension)
+            write_to_file(integrity_stats_file_csv, "w", formatted_integrity_stats_legends())
+
     global calc_ti_stats
     if calc_ti_stats:
         try:
@@ -452,7 +483,7 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
 
             errors += 1
 
-    if calc_jb_stats or calc_tf_stats or calc_wf_stats:
+    if calc_jb_stats or calc_tf_stats or calc_wf_stats or calc_int_stats:
         for sub_wf_uuid in wf_uuid_list:
             try:
                 individual_workflow_stats = StampedeStatistics(output_db_url, False)
@@ -516,6 +547,30 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
                         remove_file(transformation_stats_file_txt)
                     if file_type == FILE_TYPE_CSV:
                         remove_file(transformation_stats_file_csv)
+
+                    errors += 1
+
+            if calc_int_stats:
+                try:
+                    logger.debug("Generating integrity statistics information for workflow " + workflow_id + " ... ")
+                    individual_workflow_stats.set_job_filter('all')
+                    if file_type == FILE_TYPE_TXT:
+                        content = print_wf_integrity_stats(individual_workflow_stats, workflow_id, dax_label, "text")
+                        write_to_file(integrity_stats_file_txt, "a", content)
+
+                    if file_type == FILE_TYPE_CSV:
+                        content = print_wf_integrity_stats(individual_workflow_stats, workflow_id, dax_label, "csv")
+                        write_to_file(integrity_stats_file_csv, "a", content)
+                except Exception:
+                    logger.error(traceback.format_exc())
+                    logger.warn('integrity statistics generation failed')
+                    logger.debug('integrity statistics generation failed', exc_info=1)
+
+                    calc_int_stats = False
+                    if file_type == FILE_TYPE_TXT:
+                        remove_file(integrity_stats_file_txt)
+                    if file_type == FILE_TYPE_CSV:
+                        remove_file(integrity_stats_file_csv)
 
                     errors += 1
 
@@ -657,6 +712,34 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
                 remove_file(transformation_stats_file_txt)
             if file_type == FILE_TYPE_CSV:
                 remove_file(transformation_stats_file_csv)
+            errors += 1
+
+    if calc_int_stats:
+        expanded_workflow_stats.set_job_filter('all')
+        pre_stats_output = stats_output
+
+        try:
+            stats_output += "%-30s: " % "Integrity statistics"
+
+            if file_type == FILE_TYPE_TXT:
+                content = print_wf_integrity_stats(expanded_workflow_stats , "All", "", "text")
+                write_to_file(integrity_stats_file_txt, "a", content)
+                stats_output += integrity_stats_file_txt + "\n"
+
+            if file_type == FILE_TYPE_CSV:
+                content = print_wf_integrity_stats(expanded_workflow_stats , "ALL", "", "csv")
+                write_to_file(integrity_stats_file_csv, "a", content)
+                stats_output += integrity_stats_file_csv + "\n"
+        except Exception:
+            logger.warn('integrity statistics generation failed')
+            logger.debug('integrity statistics generation failed', exc_info=1)
+            stats_output = pre_stats_output
+
+            calc_int_stats = False
+            if file_type == FILE_TYPE_TXT:
+                remove_file(integrity_stats_file_txt)
+            if file_type == FILE_TYPE_CSV:
+                remove_file(integrity_stats_file_csv)
 
             errors += 1
 
@@ -750,7 +833,6 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
         wwt = stats_utils.get_workflow_wall_time(states)
         wcjwt, wcgpt, wcbpt = workflow_stats.get_workflow_cum_job_wall_time()
         ssjwt, ssgpt, ssbpt = workflow_stats.get_submit_side_job_wall_time()
-        int_metrics_summary = workflow_stats.get_summary_integrity_metrics()
         if output_format == "text":
             def myfmt(val):
                 if val is None: return "-"
@@ -1060,6 +1142,64 @@ def print_wf_transformation_stats(stats, workflow_id, dax_label, fmt):
     return NEW_LINE_STR.join(report) + NEW_LINE_STR
 
 
+def print_wf_integrity_stats(stats, workflow_id, dax_label, fmt):
+    """
+    Prints the integrity statistics of workflow
+    stats       : workflow statistics object reference
+    workflow_id : UUID of workflow
+    dax_label   : Name of workflow
+    format      : Format of report ('text' or 'csv')
+    """
+    if fmt not in ['text','csv']:
+        print "Output format %s not recognized!" % fmt
+        sys.exit(1)
+
+    report = ["\n"]
+
+    if fmt == "text":
+        # In text file, we need a line with the workflow id first
+        report.append("# %s (%s)" % (workflow_id, dax_label or "All"))
+
+    col_names = integrity_stats_col_name_text
+    if fmt == "csv": col_names = integrity_stats_col_name_csv
+
+    integrity_statistics = stats.get_integrity_metrics()
+
+    if fmt == "text":
+        max_length = [max(0, len(col_names[i])) for i in range(4)]
+        columns = ['' for i in range(4)]
+        # figure out max lengths?
+        for i in integrity_statistics:
+            max_length[0] = max(max_length[0], len(i.type))
+            max_length[1] = max(max_length[0], len(i.file_type))
+            max_length[2] = max(max_length[1], len(str(i.count)))
+            max_length[3] = max(max_length[2], len(str(i.duration)))
+
+        max_length = [i + 1 for i in max_length]
+
+    header_printed = False
+
+    for i in integrity_statistics:
+        content = [i.type, i.file_type, str(i.count), str(i.duration)]
+
+        if fmt == "text":
+            for i in range(0, 4):
+                columns[i] = col_names[i].ljust(max_length[i])
+                content[i] = content[i].ljust(max_length[i])
+
+        if fmt == "csv":
+            columns = integrity_stats_col_name_csv
+            content = [workflow_id, dax_label] + content
+
+        if not header_printed:
+            header_printed = True
+            report.append(print_row(columns, integrity_stats_col_size, fmt))
+
+        report.append(print_row(content, integrity_stats_col_size, fmt))
+
+    return NEW_LINE_STR.join(report) + NEW_LINE_STR
+
+
 def print_statistics_by_time_and_host(stats, fmt, combined=True, per_host=True):
     """
     Prints the job instance and invocation statistics sorted by time
@@ -1162,7 +1302,7 @@ def main():
     if not options.statistics_level:
         options.statistics_level = set(['summary'])
 
-    sl = options.statistics_level - set(['all', 'summary', 'wf_stats', 'jb_stats', 'tf_stats', 'ti_stats'])
+    sl = options.statistics_level - set(['all', 'summary', 'wf_stats', 'jb_stats', 'tf_stats', 'ti_stats', 'int_stats'])
     if sl:
         sys.stderr.write("Invalid value(s) for statistics_level, ignoring %s\n" % ','.join(sl))
 
@@ -1239,12 +1379,14 @@ def main():
     global calc_jb_stats
     global calc_tf_stats
     global calc_ti_stats
+    global calc_int_stats
     sl = options.statistics_level
     logger.info("Statistics level is %s" % sl)
     if 'all' in sl:
         calc_wf_stats = True
         calc_wf_summary = True
         calc_tf_stats = True
+        calc_int_stats = True
         calc_ti_stats = True
         if not multiple_wf:
             calc_jb_stats = True
@@ -1263,6 +1405,9 @@ def main():
 
     if 'tf_stats' in sl:
         calc_tf_stats = True
+
+    if 'int_stats' in sl:
+        calc_int_stats = True
 
     global file_type
     file_type = options.filetype
