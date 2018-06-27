@@ -785,9 +785,9 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
             for result in int_metrics_summary:
                 type = result.type
                 if result.type == "check":
-                    type = "checked"
+                    type = "compared"
                 if result.type == "compute":
-                    type = "computed"
+                    type = "generated"
                 summary_str += "%s files checksums %s with total duration of %s\n" % (result.count, type, myfmt(result.duration))
 
     return summary_str
@@ -1134,9 +1134,9 @@ def main():
     parser.add_option("-c","--conf", action = "store", type = "string", dest = "config_properties", default=None,
                       help = "Specifies the properties file to use. This option overrides all other property files.")
     parser.add_option("-s", "--statistics-level", action="store", dest="statistics_level",
-                      # choices=['all', 'summary', 'wf_stats', 'jb_stats', 'tf_stats', 'ti_stats'],
+                      # choices=['all', 'summary', 'wf_stats', 'jb_stats', 'tf_stats', 'ti_stats','int_stats'],
                       default='summary',
-                      help="Comma separated list. Valid levels are: all,summary,wf_stats,jb_stats,tf_stats,ti_stats; Default is '%default'.")
+                      help="Comma separated list. Valid levels are: all,summary,wf_stats,jb_stats,tf_stats,ti_stats,int_stats; Default is '%default'.")
     parser.add_option("-t", "--time-filter", action = "store", dest = "time_filter",
                       choices=['day', 'hour'], default='day',
                       help = "Valid levels are: day,hour; Default is '%default'.")
