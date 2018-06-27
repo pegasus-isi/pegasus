@@ -795,7 +795,7 @@ class StampedeStatistics(object):
             q = q.filter(IntegrityMetrics.wf_id == Workflow.wf_id)
             q = q.filter(Workflow.root_wf_id == self._root_wf_id)
         else:
-            q = q.filter(Job.wf_id.in_(self._wfs))
+            q = q.filter(IntegrityMetrics.wf_id.in_(self._wfs))
 
         # at most two records grouped by type compute | check
         return q.all()
@@ -821,12 +821,15 @@ class StampedeStatistics(object):
             q = q.filter(IntegrityMetrics.wf_id == Workflow.wf_id)
             q = q.filter(Workflow.root_wf_id == self._root_wf_id)
         else:
-            q = q.filter(Job.wf_id.in_(self._wfs))
+            q = q.filter(IntegrityMetrics.wf_id.in_(self._wfs))
 
+        """
         for result in q.all():
             print result
             print result.type
             print result.file_type
+        """
+        return q.all()
 
     def get_submit_side_job_wall_time(self):
         """
