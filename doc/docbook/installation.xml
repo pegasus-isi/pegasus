@@ -135,6 +135,8 @@ Complete!</programlisting>
     <title>Ubuntu</title>
     
     <para>Binary packages provided for: 14.04 LTS (Trusty Tahr) x86_64, 16.04 (Xenial Xerus) x86_64</para>
+    
+    <para><emphasis role="bold">For 16.04 (Xenial Xerus) based systems:</emphasis></para>
 
     <para>To be able to install and upgrade from the Pegasus apt repository,
     you will have to trust the repository key. You only need to add the
@@ -142,7 +144,22 @@ Complete!</programlisting>
 
 <programlisting># <emphasis role="bold">wget -O - http://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -</emphasis></programlisting>
 
-    <para>Create repository file, update and install Pegasus (currently available releases are precise and trusty):</para>
+    <para>Create repository file, update and install Pegasus:</para>
+
+    <programlisting># echo 'deb http://download.pegasus.isi.edu/pegasus/ubuntu xenial main' &gt;/etc/apt/sources.list.d/pegasus.list
+# apt-get update
+# apt-get install pegasus
+</programlisting>
+
+    <para><emphasis role="bold">For 14.04 (Trusty Tahr) based systems:</emphasis></para>
+
+    <para>To be able to install and upgrade from the Pegasus apt repository,
+    you will have to trust the repository key. You only need to add the
+    repository key once:</para>
+
+<programlisting># <emphasis role="bold">wget -O - http://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -</emphasis></programlisting>
+
+    <para>Create repository file, update and install Pegasus:</para>
 
     <programlisting># echo 'deb http://download.pegasus.isi.edu/pegasus/ubuntu trusty main' &gt;/etc/apt/sources.list.d/pegasus.list
 # apt-get update
