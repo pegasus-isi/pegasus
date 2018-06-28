@@ -4,8 +4,6 @@ set -e
 
 TOP_DIR=`pwd`
 
-export PATH=/ccg/software/singularity/default/bin:$PATH
-
 rm -rf montage-workflow-v2
 git clone https://github.com/pegasus-isi/montage-workflow-v2.git
 

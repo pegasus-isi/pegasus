@@ -8,14 +8,10 @@
             <file-server operation="all" url="file://${PWD}/work/outputs"/>
         </directory>
         <profile namespace="env" key="http_proxy" >workflow.isi.edu:3128</profile>
-        <!-- special path until singularity rpm goes to 2.3 -->
-        <profile namespace="env" key="PATH" >/ccg/software/singularity/default/bin:/usr/bin:/bin</profile>
     </site>
     <site  handle="condor_pool" arch="x86_64" os="LINUX">
         <profile namespace="pegasus" key="style" >condor</profile>
         <profile namespace="env" key="http_proxy" >workflow.isi.edu:3128</profile>
-        <!-- special path until singularity rpm goes to 2.3 -->
-        <profile namespace="env" key="PATH" >/ccg/software/singularity/default/bin:/usr/bin:/bin</profile>
     </site>
     <site  handle="staging" arch="x86_64" os="LINUX">
         <directory type="shared-scratch" path="/lizard/scratch-90-days/044-singularity-nonsharedfs-hub">

@@ -29,6 +29,8 @@ javac $testdir/BlackDiamondDAX.java
 # generate the dax
 java BlackDiamondDAX /usr blackdiamond.dax
 
+VERSION=`pegasus-version`
+
 # create the site catalog
 cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -61,7 +63,7 @@ cat >sites.xml <<EOF
             <file-server operation="all" url="gsiftp://obelix.isi.edu/lizard/scratch-90-days/CCG/${TEST_NAME}/outputs"/>
         </directory>
         <profile namespace="pegasus" key="clusters.num">1</profile>
-        <profile namespace="env" key="PEGASUS_HOME">/usr</profile>        
+        <profile namespace="env" key="PEGASUS_HOME">/lizard/scratch-90-days/bamboo/installs/pegasus-${VERSION}</profile>        
     </site>
 
 
