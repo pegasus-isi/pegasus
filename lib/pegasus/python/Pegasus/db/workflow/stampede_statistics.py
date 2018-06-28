@@ -800,7 +800,7 @@ class StampedeStatistics(object):
         # at most two records grouped by type compute | check
         return q.all()
 
-    def get_integrity_metrics( self ):
+    def get_integrity_metrics(self):
         """
 
         :param type:    whether integrity type is check | compute

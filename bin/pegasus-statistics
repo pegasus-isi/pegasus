@@ -89,6 +89,7 @@ time_host_stats_col_name_csv = ["stat_type", "date", "host", "count", "runtime (
 time_host_stats_col_name_text = ["Date", "Host", "Count", "Runtime (sec)"]
 time_host_stats_col_size = [23, 25, 10, 20]
 
+
 class JobStatistics:
     def __init__(self):
         self.name = None
@@ -101,7 +102,7 @@ class JobStatistics:
         self.condor_delay = None
         self.resource = None
         self.runtime = None
-        self.condorQlen =None
+        self.condorQlen = None
         self.seqexec = None
         self.seqexec_delay = None
         self.retry_count = 0
@@ -267,12 +268,12 @@ def formatted_transformation_stats_legends():
 def formatted_integrity_stats_legends():
     return """
 # Integrity Statistics Breakdown
-# Type           - the type of integrity metric. 
+# Type           - the type of integrity metric.
                    check - means checksum was compared for a file,
                    compute - means a checksum was generated for a file
 # File Type      - the type of file: input or output from a job perspective
 # Count          - the number of times done
-# Total Duration - sum of duration in seconds for the 'count' number 
+# Total Duration - sum of duration in seconds for the 'count' number
                    of records matching the particular type,
                    file-type combo
 """
@@ -364,7 +365,7 @@ def print_row(row, sizes, fmt):
     sizes : list of column widths for text format
     fmt   : format of the row ('text' or 'csv')
     """
-    if fmt in ["text","txt"]:
+    if fmt in ["text", "txt"]:
         return "".join(value.ljust(sizes[i]) for i,value in enumerate(row))
     elif fmt == "csv":
         return ",".join(row)
