@@ -353,12 +353,68 @@ class StampedeWorkflowStatistics(object):
         else:
             if self.all_workflows:
                 q = self.__filter_roots_only(q)
-                q = q.filter (Invocation.wf_id == Workflow.wf_id)
+                q = q.filter(Invocation.wf_id == Workflow.wf_id)
             else:
                 q = q.filter(Invocation.wf_id.in_(self._root_wf_id))
 
         q = q.filter(Invocation.transformation != 'condor::dagman')
         return q.first()
+
+
+    def get_summary_integrity_metrics(self):
+        """
+
+        :param type:    whether integrity type is check | compute
+        :param file_type: file type input or output
+        :return:
+        """
+        q = self.session.query(IntegrityMetrics.type,
+                                func.sum(IntegrityMetrics.duration).label("duration"),
+                                func.sum(IntegrityMetrics.count).label("count"))
+
+        q = q.group_by(IntegrityMetrics.type)
+
+        if self._expand:
+            q = self.__filter_all(q)
+            q = q.filter(IntegrityMetrics.wf_id == Workflow.wf_id)
+        else:
+            if self.all_workflows:
+                q = self.__filter_roots_only(q)
+                q = q.filter(IntegrityMetrics.wf_id == Workflow.wf_id)
+            else:
+                q = q.filter(IntegrityMetrics.wf_id.in_(self._wfs))
+
+        # at most two records grouped by type compute | check
+        return q.all()
+
+
+    def get_integrity_metrics(self):
+        """
+
+        :param type:    whether integrity type is check | compute
+        :param file_type: file type input or output
+        :return:
+        """
+        q = self.session.query( IntegrityMetrics.type,
+                                IntegrityMetrics.file_type,
+                                func.sum(IntegrityMetrics.duration).label("duration"),
+                                func.sum(IntegrityMetrics.count).label("count"))
+
+        q = q.group_by(IntegrityMetrics.type)
+        q = q.group_by(IntegrityMetrics.file_type)
+
+        if self._expand:
+            q = self.__filter_all(q)
+            q = q.filter(IntegrityMetrics.wf_id == Workflow.wf_id)
+        else:
+            if self.all_workflows:
+                q = self.__filter_roots_only(q)
+                q = q.filter(IntegrityMetrics.wf_id == Workflow.wf_id)
+            else:
+                q = q.filter(IntegrityMetrics.wf_id.in_(self._wfs))
+
+        return q.all()
+
 
     def get_submit_side_job_wall_time(self):
         """
