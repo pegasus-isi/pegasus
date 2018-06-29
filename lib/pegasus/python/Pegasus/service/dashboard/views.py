@@ -622,6 +622,14 @@ def job_stats(username, root_wf_id, wf_id):
 
 
 @dashboard_routes.route(
+    '/u/<username>/r/<root_wf_id>/w/<wf_id>/statistics/integrity', methods=['GET']
+)
+def integrity_stats(username, root_wf_id, wf_id):
+    dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
+    return json.dumps(dashboard.integrity_stats())
+
+
+@dashboard_routes.route(
     '/u/<username>/r/<root_wf_id>/w/<wf_id>/statistics/time', methods=['GET']
 )
 def time_stats(username, root_wf_id, wf_id):

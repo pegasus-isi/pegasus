@@ -266,6 +266,42 @@ class Dashboard(object):
         finally:
             Dashboard.close(workflow)
 
+    def integrity_stats(self):
+        try:
+            workflow = stampede_statistics.StampedeStatistics(
+                self.__get_wf_db_url(), False
+            )
+            workflow.initialize(root_wf_id=self._wf_id)
+            individual_stats = self._integrity_stats(workflow)
+
+            workflow2 = stampede_statistics.StampedeStatistics(
+                self.__get_wf_db_url()
+            )
+            workflow2.initialize(self._root_wf_uuid)
+            all_stats = self._integrity_stats(workflow2)
+
+            return {'individual': individual_stats, 'all': all_stats}
+
+        finally:
+            Dashboard.close(workflow)
+            Dashboard.close(workflow2)
+
+    def _integrity_stats(self, workflow):
+        # tasks
+        table = []
+        workflow.set_job_filter('nonsub')
+        stats = workflow.get_integrity_metrics()
+
+        for s in stats:
+            table.append({
+                "type": s.type,
+                "file_type": s.file_type,
+                "count": int(s.count),
+                "duration": float(s.duration)
+            })
+
+        return table
+
     def plots_gantt_chart(self):
         try:
             #Expand has to be set to false. The method does not provide information when expand set to True.

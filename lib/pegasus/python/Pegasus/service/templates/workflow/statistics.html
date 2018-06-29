@@ -53,21 +53,22 @@
                 <h3 href="{{ url_for ('.workflow_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="workflow_stats">
                     Workflow Statistics
                 </h3>
+                <div id="workflow_stats"></div>
 
-                <div id="workflow_stats">
-                </div>
                 <h3 href="{{ url_for ('.job_breakdown_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}"
                     title="job_breakdown_stats">Job Breakdown Statistics
                 </h3>
+                <div id="job_breakdown_stats"></div>
 
-                <div id="job_breakdown_stats">
-                </div>
                 <h3 href="{{ url_for ('.job_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="job_stats">Job
                     Statistics
                 </h3>
+                <div id="job_stats"></div>
 
-                <div id="job_stats">
-                </div>
+                <h3 href="{{ url_for ('.integrity_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="int_stats">
+                    Integrity Statistics
+                </h3>
+                <div id="int_stats"></div>
             </div>
         </div>
     </section>
