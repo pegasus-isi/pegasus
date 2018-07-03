@@ -139,6 +139,14 @@
         <profile namespace="condor" key="+ProjectName">"PegasusTraining"</profile>
 
 {% endif %}
+
+{% if generate_tutorial == true and tutorial == "population" %}
+	<!-- This ensures that when a job runs enough memory and 
+	     diskspace available to stage and run the container -->
+        <profile namespace="condor" key="request_memory" >2  GB</profile>
+        <profile namespace="condor" key="request_disk" >5 GB</profile>
+{% endif %}
+
        <!-- This profile tells Pegasus to create two clustered jobs
             per level of the workflow, when horizontal clustering is
             enabled -->
