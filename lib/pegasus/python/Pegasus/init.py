@@ -1,6 +1,7 @@
 import sys
 import os
 import pwd
+import shutil, errno
 from jinja2 import Environment, FileSystemLoader
 
 
@@ -19,6 +20,7 @@ class TutorialExample:
     MERGE = ("Merge", "merge")
     EPA = ("EPA (requires R)", "r-epa")
     DIAMOND = ("Diamond", "diamond")
+    CONTAINER = ("Population Modeling using Containers", "population")
     MPI = ("MPI Hello World", "mpi-hw")
 
 
@@ -106,6 +108,19 @@ class Workflow(object):
         t.stream(**self.__dict__).dump(path)
         os.chmod(path, mode)
 
+    def copy_dir(self, src, dest):
+        #self.mkdir(dest)
+        if not src.startswith("/"):
+            src = os.path.join(self.sharedir,src)
+        try:
+            dest = os.path.join(self.workflowdir, dest)
+            shutil.copytree(src, dest)
+        except OSError as exc:  # python >2.5
+            if exc.errno == errno.ENOTDIR:
+                shutil.copy(src, dest)
+            else:
+                raise
+
     def mkdir(self, path):
         "Make relative directory in workflowdir"
         path = os.path.join(self.workflowdir, path)
@@ -134,7 +149,8 @@ class Workflow(object):
                 TutorialExample.PIPELINE,
                 TutorialExample.SPLIT,
                 TutorialExample.MERGE,
-                TutorialExample.EPA
+                TutorialExample.EPA,
+                TutorialExample.CONTAINER,
             ]
             if self.tutorial_setup != "osg":
                 examples.append(TutorialExample.DIAMOND)
@@ -195,7 +211,8 @@ class Workflow(object):
 
     def generate(self):
         os.makedirs(self.workflowdir)
-        self.mkdir("input")
+        if self.tutorial != "population":
+            self.mkdir("input")
         self.mkdir("output")
 
         if self.generate_tutorial:
@@ -226,6 +243,12 @@ class Workflow(object):
                 self.copy_template("r-epa/setupvar.R", "bin/setupvar.R", mode=0o755)
                 self.copy_template("r-epa/weighted.average.R", "bin/weighted.average.R", mode=0o755)
                 self.copy_template("r-epa/cumulative.percentiles.R", "bin/cumulative.percentiles.R", mode=0o755)
+            elif self.tutorial == "population":
+                self.copy_template("%s/Dockerfile" % self.tutorial, "Dockerfile")
+                self.copy_template("%s/Singularity" % self.tutorial, "Singularity")
+                self.copy_dir("%s/scripts" % self.tutorial, "scripts")
+                self.copy_dir("%s/data" % self.tutorial, "input")
+                # copy the mpi wrapper, c code and mpi
             elif self.tutorial == "mpi-hw":
                 # copy the mpi wrapper, c code and mpi example
                 # Executables used by the mpi-hw workflow

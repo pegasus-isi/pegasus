@@ -1,0 +1,82 @@
+# image comes from Singularity Hub
+cont gis {
+    type "singularity"
+    image "shub://pegasus-isi/darpa_population_modeling"
+}
+
+tr county_population_raster {
+    site local {
+        type "STAGEABLE"
+        container "gis"	
+	arch "{{arch}}"
+        os "{{os}}"
+        pfn "file://{{workflowdir}}/scripts/county_population_raster.py"
+    }
+}
+
+tr full_res_pop_raster {
+    site local {
+        type "STAGEABLE"
+        container "gis"
+	arch "{{arch}}"
+        os "{{os}}"
+        pfn "file://{{workflowdir}}/scripts/full_res_pop_raster.py"
+    }
+}
+
+tr raster_to_png {
+    site local {
+        type "STAGEABLE"
+        container "gis"
+	arch "{{arch}}"
+        os "{{os}}"
+        pfn "file://{{workflowdir}}/scripts/raster_to_png.sh"
+    }
+}
+
+tr animate {
+    site local {
+        type "STAGEABLE"
+        container "gis"
+	arch "{{arch}}"
+        os "{{os}}"
+        pfn "file://{{workflowdir}}/scripts/animate.sh"
+    }
+}
+
+
+
+{% if generate_tutorial == true and tutorial_setup == "usc-hpcc" %}
+
+# pegasus mpi clustering executable
+tr pegasus::mpiexec{
+   site {{sitename}} {
+        pfn "/home/rcf-proj/gmj/pegasus/SOFTWARE/pegasus/pegasus-mpi-cluster-wrapper"
+        arch "{{arch}}"
+        os "{{os}}"
+
+        type "INSTALLED"
+        profile pegasus "clusters.size" "2" 
+
+        # the various parameters to specify the size of the MPI job
+        # in which the workflow runs on the cluster
+        profile globus "jobtype" "mpi"
+
+	# This specifies the maximum runtime for the job in seconds. It
+	# should be an integer value. Pegasus converts it to the
+	# "hh:mm:ss" format required by PBS.
+        profile pegasus "runtime" "600"
+
+        # specfiy the ppn parameter.
+        profile pegasus "ppn" "4"
+
+        # specify the nodes parameter
+        profile pegasus "nodes" "1"
+
+        #specify the pmem parameter
+        profile pegasus "memory" "1gb"
+
+
+    }
+}
+{% endif %}
