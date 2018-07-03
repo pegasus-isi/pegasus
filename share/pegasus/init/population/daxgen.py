@@ -27,12 +27,12 @@ dax.metadata("created", time.ctime())
 
 # common library
 geospatial = File('geospatial.py')
-geospatial.addPFN(PFN('file://' + top_dir + '/geospatial.py', 'local'))
+geospatial.addPFN(PFN('file://' + top_dir + '/scripts/geospatial.py', 'local'))
 dax.addFile(geospatial)
 
 # config file
 config = File('county_cohort_pop_config.ini')
-config.addPFN(PFN('file://' + top_dir + '/config/county_cohort_pop_config.ini', 'local'))
+config.addPFN(PFN('file://' + top_dir + '/scripts/config/county_cohort_pop_config.ini', 'local'))
 dax.addFile(config)
 
 # shapefile (set of files)
