@@ -48,12 +48,10 @@ for fname in glob.glob('input/' + basename + '.*'):
 
 # distribution tif
 dist_tif = File('ss_pop_spatial_dist.tif')
-dist_tif.addPFN(PFN('file://' + top_dir + '/input/ss_pop_spatial_dist.tif', 'local'))
 dax.addFile(dist_tif)
 
 # legend
 legend = File('legend.png')
-legend.addPFN(PFN('file://' + top_dir + '/graphics/legend.png', 'local'))
 dax.addFile(legend)
 
 
