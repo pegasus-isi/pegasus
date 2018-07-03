@@ -29,7 +29,7 @@ for fname in glob.glob('input/' + basename + '.*'):
     # do not include input/ in the lfn
     fname = re.sub('input/', '', fname)
     f = File(fname)
-    f.addPFN(PFN('file://' + top_dir + '/input/' + fname, 'local'))
+    #f.addPFN(PFN('file://' + top_dir + '/input/' + fname, 'local'))
     dax.addFile(f)
     shapefiles.append(f)
 
