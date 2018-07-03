@@ -17,7 +17,7 @@ if len(sys.argv) != 2:
 daxfile = sys.argv[1]
 USER = pwd.getpwuid(os.getuid())[0]
 
-dax = ADAG("kimetrica")
+dax = ADAG("population")
 
 # Add some workflow-level metadata
 dax.metadata("creator", "%s@%s" % (USER, os.uname()[1]))
