@@ -25,17 +25,17 @@ dax.addFile(config)
 # shapefile (set of files)
 shapefiles = []
 basename = "SouthSudan_CountyPopulation"
-for fname in glob.glob('data/' + basename + '.*'):
-    # do not include data/ in the lfn
-    fname = re.sub('data/', '', fname)
+for fname in glob.glob('input/' + basename + '.*'):
+    # do not include input/ in the lfn
+    fname = re.sub('input/', '', fname)
     f = File(fname)
-    f.addPFN(PFN('file://' + top_dir + '/data/' + fname, 'local'))
+    f.addPFN(PFN('file://' + top_dir + '/input/' + fname, 'local'))
     dax.addFile(f)
     shapefiles.append(f)
 
 # distribution tif
 dist_tif = File('ss_pop_spatial_dist.tif')
-dist_tif.addPFN(PFN('file://' + top_dir + '/data/ss_pop_spatial_dist.tif', 'local'))
+dist_tif.addPFN(PFN('file://' + top_dir + '/input/ss_pop_spatial_dist.tif', 'local'))
 dax.addFile(dist_tif)
 
 # legend
