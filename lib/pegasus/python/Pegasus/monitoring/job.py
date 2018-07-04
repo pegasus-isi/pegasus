@@ -549,6 +549,13 @@ class Job:
         # Done populating Job class with information from the output file
         return my_invocation_found
 
+    def get_job_state(self):
+        """
+        Returns the current job state
+        :return:
+        """
+        return self._job_state
+
     def get_rotated_out_filename(self):
         """
         Returns the name of the rotated .out file for the job on the basis
