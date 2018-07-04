@@ -2155,6 +2155,8 @@ class Workflow:
         else:
             my_out_of_order_events_detected = False
 
+        # PM-1281 track previous job state
+        previous_job_state = my_job.get_job_state()
         # Update job state
         my_job.set_job_state(job_state, sched_id, self._current_timestamp, status)
 
@@ -2308,13 +2310,20 @@ class Workflow:
             self.db_send_job_end( my_job, 0, parse_job_output_on_job_success_failure )
         elif job_state == "JOB_FAILURE":
             self.db_send_job_end(my_job, -1, parse_job_output_on_job_success_failure)
-        elif job_state == "JOB_ABORTED":
-            #job abort should trigger a job failure to account for case
-            #when no postscript is associated and failure does not get
-            #captured.
+        elif job_state == "JOB_ABORTED" :
+            # job abort should trigger a job failure to account for case
+            # when no postscript is associated and failure does not get
+            # captured.
             my_job._main_job_exitcode = 1
             self.db_send_job_brief( my_job, "abort.info")
-            self.db_send_job_end(my_job, -1, True );
+            # PM-1281 we only flush to stampede backend if job was not
+            # aborted because of JOB_HELD reasons.
+            # This allows us to update the event with task stdout and stderr from kickstart record
+            # when the associated POSTSCRIPT fails
+            flush = True
+            if previous_job_state is not None and ( previous_job_state == "JOB_HELD" or previous_job_state == "JOB_HELD_REASON"):
+                flush = parse_job_output_on_job_success_failure
+            self.db_send_job_end(my_job, -1, flush );
         elif job_state == job_held_state: # JOB_HELD_REASON or JOB_HELD states
             # PM-749 we send the JOB_HELD event once we know the reason for it.
             self.db_send_job_brief(my_job, "held.start", reason=reason)
