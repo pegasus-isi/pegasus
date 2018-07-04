@@ -246,6 +246,7 @@ class Workflow(object):
             elif self.tutorial == "population":
                 self.copy_template("%s/Dockerfile" % self.tutorial, "Dockerfile")
                 self.copy_template("%s/Singularity" % self.tutorial, "Singularity")
+                self.copy_template("%s/tc.txt" % self.tutorial, "tc.txt.containers")
                 self.copy_dir("%s/scripts" % self.tutorial, "scripts")
                 self.copy_dir("%s/data" % self.tutorial, "input")
                 # copy the mpi wrapper, c code and mpi
