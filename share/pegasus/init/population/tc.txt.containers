@@ -1,6 +1,13 @@
+# image comes from Singularity Hub
+cont gis {
+    type "singularity"
+    image "shub://pegasus-isi/darpa_population_modeling"
+}
+
 tr county_population_raster {
     site local {
         type "STAGEABLE"
+        container "gis"	
 	arch "{{arch}}"
         os "{{os}}"
         pfn "file://{{workflowdir}}/scripts/county_population_raster.py"
@@ -10,6 +17,7 @@ tr county_population_raster {
 tr full_res_pop_raster {
     site local {
         type "STAGEABLE"
+        container "gis"
 	arch "{{arch}}"
         os "{{os}}"
         pfn "file://{{workflowdir}}/scripts/full_res_pop_raster.py"
@@ -19,6 +27,7 @@ tr full_res_pop_raster {
 tr raster_to_png {
     site local {
         type "STAGEABLE"
+        container "gis"
 	arch "{{arch}}"
         os "{{os}}"
         pfn "file://{{workflowdir}}/scripts/raster_to_png.sh"
@@ -28,6 +37,7 @@ tr raster_to_png {
 tr animate {
     site local {
         type "STAGEABLE"
+        container "gis"
 	arch "{{arch}}"
         os "{{os}}"
         pfn "file://{{workflowdir}}/scripts/animate.sh"
