@@ -59,7 +59,7 @@ dax.addJob(animate)
 
 # add one job per year
 # we have data till 2030
-for year in range(2017, 2020):
+for year in range(2017, 2021):
 
     # create a job to process the shape file
     j1 = Job("county_population_raster")
