@@ -6,7 +6,7 @@ from jinja2 import Environment, FileSystemLoader
 
 
 class TutorialEnv:
-    LOCAL_MACHINE = ("Local Machine", "submit-host")
+    LOCAL_MACHINE = ("Local Machine Condor Pool", "submit-host")
     USC_HPCC_CLUSTER = ("USC HPCC Cluster", "usc-hpcc")
     OSG_FROM_ISI = ("OSG from ISI submit node", "osg")
     XSEDE_BOSCO = ("XSEDE, with Bosco", "xsede-bosco")
@@ -168,7 +168,7 @@ class Workflow(object):
 
         # Determine what kind of site catalog we need to generate
         self.config = optionlist("What does your computing infrastructure look like?", [
-            ("Local Machine", "condorpool"),
+            ("Local Machine Condor Pool", "condorpool"),
             ("Remote Cluster using Globus GRAM", "globus"),
             ("Remote Cluster using CREAMCE", "creamce"),
             ("Local PBS Cluster with Glite", "glite"),
