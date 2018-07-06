@@ -76,7 +76,7 @@ class CreateCountyLevelCohorts(luigi.Task):
     fname_out = luigi.Parameter(default='county_level_cohort_out.tif')
     year = luigi.Parameter(default=2017)
 
-    def requires(self) -> Dict[str, luigi.Task]:
+    def requires(self):
         return NotImplementedError(
             'Method must specify \n'
             '{geoshape_file: Shapefile with aggregated population data,\n'
