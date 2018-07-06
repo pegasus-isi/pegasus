@@ -1447,6 +1447,120 @@ pegasus-statistics -Dpegasus.monitord.output='&lt;DB_URL&gt;' -o &lt;OUTPUT_DIR&
           </tbody>
         </tgroup>
       </table>
+
+      <para><emphasis role="bold">Integrity statistics file per workflow
+      [integrity.txt]</emphasis></para>
+
+      <para>Integrity statistics file contains integrity metrics grouped by
+      file type (input or output) and integrity type (check or compute). A
+      sample table is shown below. It shows the following statistics about
+      integrity checks.</para>
+
+      <para><itemizedlist>
+          <listitem>
+            <para><emphasis role="bold">Type</emphasis> - the type of
+            integrity metric. Check means checksum was compared for a file,
+            and compute means a checksum was generated for a file.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">File type</emphasis> - the type of
+            file: input or output from a job perspective.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Count</emphasis> - the number of times
+            type, file type integrity check was performed.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Total duration</emphasis> - sum of
+            duration in seconds for the 'count' number of records matching the
+            particular type, file-type combo.</para>
+          </listitem>
+        </itemizedlist><table>
+          <title>Integrity Statistics</title>
+
+          <tgroup align="center" cols="5">
+            <thead>
+              <row>
+                <entry align="center">#</entry>
+
+                <entry align="center">Type</entry>
+
+                <entry align="center">File Type</entry>
+
+                <entry align="center">Count</entry>
+
+                <entry align="center">Total Duration</entry>
+              </row>
+            </thead>
+
+            <tbody>
+              <row>
+                <entry>4555392d-1b37-407c-98d3-60fb86cb9d57</entry>
+
+                <entry/>
+
+                <entry/>
+
+                <entry/>
+
+                <entry/>
+              </row>
+
+              <row>
+                <entry/>
+
+                <entry>check</entry>
+
+                <entry>input</entry>
+
+                <entry>5</entry>
+
+                <entry>0.164</entry>
+              </row>
+
+              <row>
+                <entry/>
+
+                <entry>check</entry>
+
+                <entry>output</entry>
+
+                <entry>5</entry>
+
+                <entry>1.456</entry>
+              </row>
+
+              <row>
+                <entry/>
+
+                <entry>compute</entry>
+
+                <entry>input</entry>
+
+                <entry>5</entry>
+
+                <entry>0.693</entry>
+              </row>
+
+              <row>
+                <entry/>
+
+                <entry>compute</entry>
+
+                <entry>output</entry>
+
+                <entry>5</entry>
+
+                <entry>0.758</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table></para>
+
+      <para> </para>
     </section>
 
     <section>
@@ -1800,6 +1914,10 @@ Service not running as root: Will not be able to switch users
         <listitem>
           <para>Job specific statistics</para>
         </listitem>
+
+        <listitem>
+          <para>Integrity statistics</para>
+        </listitem>
       </orderedlist>
 
       <figure>
@@ -2080,8 +2198,8 @@ Service not running as root: Will not be able to switch users
             <listitem>
               <para>NOTIFICATION_CONDITION is the condition when the
               notification needs to be sent. The notification conditions are
-              enumerated in <link
-              linkend="notification_conditions_table">this table</link></para>
+              enumerated in <link linkend="notification_conditions_table">this
+              table</link></para>
             </listitem>
 
             <listitem>
