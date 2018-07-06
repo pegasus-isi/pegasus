@@ -235,7 +235,6 @@ class Workflow(object):
             elif self.tutorial == "split":
                 # Split workflow input file
                 self.copy_template("split/pegasus.html", "input/pegasus.html")
-                self.copy_template("plan_cluster_dax.sh", "plan_cluster_dax.sh", mode=0o755)
             elif self.tutorial == "r-epa":
                 # Executables used by the R-EPA workflow
                 self.mkdir("bin")
@@ -274,6 +273,7 @@ class Workflow(object):
 
         self.copy_template("sites.xml", "sites.xml")
         self.copy_template("plan_dax.sh", "plan_dax.sh", mode=0o755)
+        self.copy_template("plan_cluster_dax.sh", "plan_cluster_dax.sh", mode=0o755)
         self.copy_template("generate_dax.sh", "generate_dax.sh", mode=0o755)
         self.copy_template("README.md", "README.md")
         self.copy_template("rc.txt", "rc.txt")
