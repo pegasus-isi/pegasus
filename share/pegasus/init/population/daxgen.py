@@ -27,12 +27,10 @@ dax.metadata("created", time.ctime())
 
 # common library
 geospatial = File('geospatial.py')
-geospatial.addPFN(PFN('file://' + top_dir + '/scripts/geospatial.py', 'local'))
 dax.addFile(geospatial)
 
 # config file
 config = File('county_cohort_pop_config.ini')
-config.addPFN(PFN('file://' + top_dir + '/scripts/config/county_cohort_pop_config.ini', 'local'))
 dax.addFile(config)
 
 # shapefile (set of files)
@@ -42,7 +40,6 @@ for fname in glob.glob('input/' + basename + '.*'):
     # do not include input/ in the lfn
     fname = re.sub('input/', '', fname)
     f = File(fname)
-    #f.addPFN(PFN('file://' + top_dir + '/input/' + fname, 'local'))
     dax.addFile(f)
     shapefiles.append(f)
 
@@ -54,7 +51,6 @@ dax.addFile(dist_tif)
 legend = File('legend.png')
 dax.addFile(legend)
 
-
 # animate - this is the final job, but will be built up in the loops below
 animate = Job("animate")
 out_anim = File('animation.gif')
@@ -63,19 +59,19 @@ dax.addJob(animate)
 
 # add one job per year
 # we have data till 2030
-for year in range(2017, 2020):
+for year in range(2017, 2021):
 
     # create a job to process the shape file
     j1 = Job("county_population_raster")
 
     # we need the geospatial lib
     j1.uses(geospatial, link=Link.INPUT)
-    
+
     # config file
     j1.uses(config, link=Link.INPUT)
     j1.addArguments('--config', config)
 
-    # shape file
+    # add input shapes file
     for f in shapefiles:
         j1.uses(f, link=Link.INPUT)
     j1.addArguments('--shapefile', basename + '.shp')
@@ -83,7 +79,7 @@ for year in range(2017, 2020):
     # year
     j1.addArguments('--year', str(year))
 
-    # outputs
+    # add outputs
     tif = File('county_level_pop_' + str(year) + '.tif')
     j1.uses(tif, link=Link.OUTPUT, transfer=True)
     j1.addArguments('--outfile', tif)
@@ -112,7 +108,7 @@ for year in range(2017, 2020):
     dax.addJob(j3)
     dax.depends(parent=j2, child=j3)
 
-    # add to animate job
+    # add file dependencies to the  animate job
     animate.uses(png, link=Link.INPUT)
     dax.depends(parent=j3, child=animate)
 

@@ -1452,7 +1452,7 @@ project:
 
                       mkdir -p $TARGET_DIR
                       rm -rf $TARGET_DIR/$NAME
-                      cp -a dist/$NAME $TARGET_DIR
+                      cp -r dist/$NAME $TARGET_DIR
                 - !script
                   description: Create Test Tarball
                   inlineScript:

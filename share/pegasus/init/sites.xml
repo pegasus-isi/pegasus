@@ -36,7 +36,6 @@
         <directory type="shared-scratch" path="{{workflowdir}}/{{sitename}}/scratch">
             <file-server operation="all" url="file://{{workflowdir}}/{{sitename}}/scratch"/>
         </directory>
-
 {% else %}
         <grid type="batch" contact="username@cluster.example.edu" scheduler="PBS" jobtype="compute"/>
         <grid type="batch" contact="username@cluster.example.edu" scheduler="PBS" jobtype="auxillary"/>
@@ -59,12 +58,10 @@
         <!-- These profiles tell Pegasus that the site is a plain Condor pool -->
         <profile namespace="pegasus" key="style">condor</profile>
         <profile namespace="condor" key="universe">vanilla</profile>
-
 {% endif %}
 {% if config == "globus" %}
         <!-- This profile tells Pegasus that the site is a grid site -->
         <profile namespace="pegasus" key="style">globus</profile>
-
 {% endif %}
 {% if config == "creamce" %}
         <!-- This profile tells Pegasus that the site is a cream site -->
@@ -76,7 +73,6 @@
         <!-- Staring with HTCondor 8.0, additional cream attributes 
              can be passed by setting cream_attributes -->
         <profile namespace="condor" key="cream_attributes">key1=value1;key2=value2</profile>
-
 {% endif %}
 {% if config == "glite" %}
         <profile namespace="pegasus" key="style">glite</profile>
@@ -86,7 +82,6 @@
         <profile namespace="pegasus" key="style">ssh</profile>
 
 {% endif %}
-
 {% if config == "glite" or config == "bosco" %}
 {% if tutorial_setup == "usc-hpcc" %}
 	
@@ -102,13 +97,11 @@
         <!-- This tells glite what batch queue to submit jobs to -->
         <profile namespace="pegasus" key="queue">{{compute_queue}}</profile>
 {% endif %}
-	
 {% if generate_tutorial == true %}
 	<!--- This tells pegasus to have the auxillary jobs run on submit host 
 	      and not go through the local PBS queue -->
 	<profile namespace="pegasus" key="auxillary.local">true</profile>
 {% endif %}
-
 {% if tutorial_setup == "usc-hpcc" %}
 	<!-- usc is SLURM now -->
 	<!-- This tells glite what scheduler to use. It can be 'pbs' or 'sge' -->
@@ -129,29 +122,23 @@
         <!-- This tells what account/project to use. It maps to the '-A' PBS argument. -->
         <profile namespace="pegasus" key="project">MYPROJ123</profile>
 {% endif %}
-
 {% endif %}
-
 {% if generate_tutorial == true and tutorial_setup == "osg" %}
 	<profile namespace="pegasus" key="style" >condor</profile>
         <profile namespace="condor" key="universe" >vanilla</profile>
         <profile namespace="condor" key="requirements">OSGVO_OS_STRING == "RHEL 6" &amp;&amp; Arch == "X86_64" &amp;&amp;  HAS_MODULES == True</profile>
         <profile namespace="condor" key="+ProjectName">"PegasusTraining"</profile>
-
 {% endif %}
-
 {% if generate_tutorial == true and tutorial == "population" %}
 	<!-- This ensures that when a job runs enough memory and 
 	     diskspace available to stage and run the container -->
         <profile namespace="condor" key="request_memory" >2  GB</profile>
         <profile namespace="condor" key="request_disk" >5 GB</profile>
 {% endif %}
-
-       <!-- This profile tells Pegasus to create two clustered jobs
+        <!-- This profile tells Pegasus to create two clustered jobs
             per level of the workflow, when horizontal clustering is
             enabled -->
 	<profile namespace="pegasus" key="clusters.num" >2</profile>
-
     </site>
 
 {% if generate_tutorial == true and tutorial_setup == "osg" %}
