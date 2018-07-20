@@ -44,7 +44,7 @@ prog_base = os.path.split(sys.argv[0])[1]
 # Use pegasus-config to find our lib path
 bin_dir = os.path.abspath(os.path.dirname(__file__))
 pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --python-dump"
-exec subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+exec(subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0])
 
 # Insert this directory in our search path
 os.sys.path.insert(0, pegasus_python_dir)
@@ -974,7 +974,7 @@ else:
                 # If in replay mode or recovery mode and it is a DB,
                 # attempt to purge wf_uuid_first
                 eo.purge_wf_uuid_from_database(run, event_dest)
-        except Exception, e:
+        except Exception as e:
             logger.exception(e)
             logger.error("error flushing previous wf_uuid from database... continuing...")
             logger.error("cannot create events output... disabling event output!")
@@ -994,7 +994,7 @@ else:
                 # If in replay mode or recovery mode and it is a DB,
                 # attempt to purge wf_uuid_first
                 eo.purge_wf_uuid_from_dashboard_database(run, dashboard_event_dest)
-        except Exception, e:
+        except Exception as e:
             logger.exception(e)
             logger.error("error flushing previous wf_uuid from dashboard database... continuing...")
             logger.error("cannot create events output... disabling event output!")
@@ -1100,7 +1100,7 @@ while (len(wfs) > 0):
 
             try:
                 f_stat = os.stat(workflow_entry.dagman_out)
-            except OSError, e:
+            except OSError as e:
                 if errno.errorcode[e.errno] == 'ENOENT':
                     # File doesn't exist yet, keep looking
                     workflow_entry.n_retries = workflow_entry.n_retries + 1
