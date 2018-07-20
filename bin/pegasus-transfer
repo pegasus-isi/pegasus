@@ -753,7 +753,7 @@ class TransferHandlerBase(object):
                     f = open(transfer.get_dst_path(), "a")
                     f.write("Here be dragons! Eh, I mean pegai!")
                     f.close()
-                except Exception, e:
+                except Exception as e:
                     logger.error(e)
    
 
@@ -785,7 +785,7 @@ class TransferHandlerBase(object):
             tc.run()
             # track what lfns we have checksummed so far
             integrity_checksummed.append(lfn)
-        except RuntimeError, err:
+        except RuntimeError as err:
             logger.error(err)
         finally:
             # do not do any timing here - it is in the kickstart record
@@ -905,7 +905,7 @@ class FileHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 failed_l.append(t)
                 continue
@@ -959,7 +959,7 @@ class FileHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 failed_l.append(t)
                 self._post_transfer_attempt(t, False, t_start)
@@ -981,7 +981,7 @@ class FileHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 failed_l.append(t)
                 continue
@@ -1050,7 +1050,7 @@ class GridFtpHandler(TransferHandlerBase):
                     tc = TimedCommand(cmd, env_overrides=env)
                     tc.run()
                     success = True
-                except RuntimeError, err:
+                except RuntimeError as err:
                     logger.error(err)
 
             if success:
@@ -1265,7 +1265,7 @@ class GridFtpHandler(TransferHandlerBase):
             tc = TimedCommand(cmd, env_overrides=env)
             tc.run()
             transfer_success = True
-        except Exception, err:
+        except Exception as err:
             logger.error(err)
             gsiftp_failures += 1
     
@@ -1487,7 +1487,7 @@ class HTTPHandler(TransferHandlerBase):
                 tc = TimedCommand(cmd, env_overrides=env)
                 tc.run()
                 stats_add(t.get_dst_path())
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 # wget and curl might leave 0 sized files behind after failures
                 # make sure those get cleaned up
@@ -1523,7 +1523,7 @@ class IRodsHandler(TransferHandlerBase):
         
         try:
             env = self._irods_login(mkdir_list[0].get_site_label())
-        except Exception, loginErr:
+        except Exception as loginErr:
             logger.error(loginErr)
             logger.error("Unable to log into irods")
             return [[], mkdir_list]
@@ -1536,7 +1536,7 @@ class IRodsHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd, env_overrides = env)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 failed_l.append(t)
                 continue
@@ -1568,7 +1568,7 @@ class IRodsHandler(TransferHandlerBase):
                 sitename = t.get_dst_site_label()
             try:
                 env = self._irods_login(sitename)
-            except Exception, loginErr:
+            except Exception as loginErr:
                 logger.error(loginErr)
                 logger.error("Unable to log into irods")
                 return [[], transfer_list]
@@ -1610,7 +1610,7 @@ class IRodsHandler(TransferHandlerBase):
                     stats_add(t.get_dst_path())
                 else:
                     stats_add(t.get_src_path())
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
@@ -1629,7 +1629,7 @@ class IRodsHandler(TransferHandlerBase):
 
         try:
             env = self._irods_login(removes_list[0].get_site_label())
-        except Exception, loginErr:
+        except Exception as loginErr:
             logger.error(loginErr)
             logger.error("Unable to log into irods")
             return [[], removes_list]
@@ -1645,7 +1645,7 @@ class IRodsHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd, env_overrides = env, log_outerr = False)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 if tc.get_exit_code() == 3:
                     # file does not exist, which is success
                     pass
@@ -1784,7 +1784,7 @@ class S3Handler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd, env_overrides=env)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 failed_l.append(t)
                 continue
@@ -1834,7 +1834,7 @@ class S3Handler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd, env_overrides=env)
                 tc.run()
-            except Exception, err:
+            except Exception as err:
                 logger.error(err)
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
@@ -1892,7 +1892,7 @@ class S3Handler(TransferHandlerBase):
             tc = TimedCommand(cmd, env_overrides=env)
             tc.run()
             success = True
-        except RuntimeError, err:
+        except RuntimeError as err:
             logger.error(err)
         
         # as we don't know which removes in the set succeeded/failed, we have
@@ -1979,7 +1979,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
             tc = TimedCommand(cmd)
             tc.run()
             successful_l = list(mkdir_l)
-        except RuntimeError, err:
+        except RuntimeError as err:
             logger.error(err)
             failed_l = list(mkdir_l)
         
@@ -2037,7 +2037,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
             tc = TimedCommand(cmd)
             tc.run()
             successful_l = list(transfers_l)
-        except RuntimeError, err:
+        except RuntimeError as err:
             logger.error(err)
             failed_l = list(transfers_l)
         
@@ -2088,7 +2088,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
             tc = TimedCommand(cmd)
             tc.run()
             successful_l = list(removes_l)
-        except RuntimeError, err:
+        except RuntimeError as err:
             logger.error(err)
             failed_l = list(removes_l)
         
@@ -2184,7 +2184,7 @@ class GSHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd, env_overrides=env)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 # if the bucket already exists, we call it a success
                 if "already exists" not in tc.get_outerr():
                     logger.error(err)
@@ -2238,7 +2238,7 @@ class GSHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd, env_overrides=env)
                 tc.run()
-            except Exception, err:
+            except Exception as err:
                 logger.error(err)
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
@@ -2272,7 +2272,7 @@ class GSHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd, env_overrides=env)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 # file not found is success
                 if "No URLs matched" not in tc.get_outerr():
                     logger.error(err)
@@ -2324,7 +2324,7 @@ class GSHandler(TransferHandlerBase):
             conf.set("Credentials", "gs_service_key_file", env["GOOGLE_PKCS12"])
             conf.write(tmp_file)
             tmp_file.close()
-        except Exception, err:
+        except Exception as err:
             logger.error(err)
             raise RuntimeError("Unable to convert boto config file")
         env["BOTO_CONFIG"] = self._tmp_name
@@ -2366,7 +2366,7 @@ class GFALHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd, env_overrides=self._gfal_creds(t))
                 tc.run()
-            except Exception, err:
+            except Exception as err:
                 logger.error(err)
                 failed_l.append(t)
                 continue
@@ -2410,7 +2410,7 @@ class GFALHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd, env_overrides=self._gfal_creds(t))
                 tc.run()
-            except Exception, err:
+            except Exception as err:
                 logger.error(err)
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
@@ -2443,7 +2443,7 @@ class GFALHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd, env_overrides=self._gfal_creds(t))
                 tc.run()
-            except Exception, err:
+            except Exception as err:
                 logger.error(err)
                 failed_l.append(t)
                 continue
@@ -2510,7 +2510,7 @@ class ScpHandler(TransferHandlerBase):
             tc = TimedCommand(cmd, log_outerr=False)
             try:
                 tc.run()
-            except Exception, err:
+            except Exception as err:
                 logger.error(err)
                 self._log_filter_ssh_output(tc.get_outerr())
                 failed_l.append(t)
@@ -2609,7 +2609,7 @@ class ScpHandler(TransferHandlerBase):
                 t_start = time.time()
                 tc = TimedCommand(cmd, log_outerr=False)
                 tc.run()    
-            except RuntimeError, err:
+            except RuntimeError as err:
                 self._log_filter_ssh_output(tc.get_outerr())
                 logger.error(err)
                 for t in t_group:
@@ -2659,7 +2659,7 @@ class ScpHandler(TransferHandlerBase):
             tc = TimedCommand(cmd, log_outerr=False)
             try:
                 tc.run()
-            except Exception, err:
+            except Exception as err:
                 logger.error(err)
                 self._log_filter_ssh_output(tc.get_outerr())
                 for t in t_group:
@@ -2759,7 +2759,7 @@ class GSIScpHandler(TransferHandlerBase):
             tc = TimedCommand(cmd, log_outerr=False, env_overrides=self._gsi_creds(t))
             try:
                 tc.run()
-            except Exception, err:
+            except Exception as err:
                 logger.error(err)
                 self._log_filter_ssh_output(tc.get_outerr())
                 failed_l.append(t)
@@ -2842,7 +2842,7 @@ class GSIScpHandler(TransferHandlerBase):
                 t_start = time.time()
                 tc = TimedCommand(cmd, log_outerr=False, env_overrides=self._gsi_creds(t_base))
                 tc.run()    
-            except RuntimeError, err:
+            except RuntimeError as err:
                 self._log_filter_ssh_output(tc.get_outerr())
                 logger.error(err)
                 for t in t_group:
@@ -2892,7 +2892,7 @@ class GSIScpHandler(TransferHandlerBase):
             tc = TimedCommand(cmd, log_outerr=False, env_overrides=self._gsi_creds(t_base))
             try:
                 tc.run()
-            except Exception, err:
+            except Exception as err:
                 logger.error(err)
                 self._log_filter_ssh_output(tc.get_outerr())
                 for t in t_group:
@@ -3005,7 +3005,7 @@ class StashHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 failed_l.append(t)
                 continue
@@ -3059,7 +3059,7 @@ class StashHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
@@ -3083,7 +3083,7 @@ class StashHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 failed_l.append(t)
                 continue
@@ -3133,7 +3133,7 @@ class SymlinkHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd, timeout_secs = 60)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
@@ -3154,7 +3154,7 @@ class SymlinkHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 failed_l.append(t)
                 continue
@@ -3194,7 +3194,7 @@ class DockerHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
@@ -3245,7 +3245,7 @@ class SingularityHubHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
@@ -3306,7 +3306,7 @@ class Stats:
                 bytes = s[stat.ST_SIZE]
                 self._total_bytes += bytes
                 self._site_pair_bytes[key] += bytes
-            except Exception, err:
+            except Exception as err:
                 pass # ignore
             
         # call out to panorama if asked to do so, but make sure that failures
@@ -3314,7 +3314,7 @@ class Stats:
         try: 
             p = Panorama()
             p.one_transfer(transfer, was_successful, t_start, t_end, bytes)
-        except Exception, e:
+        except Exception as e:
             logger.warn("Panorama send failure: " + e)
 
 
@@ -3445,7 +3445,7 @@ class Panorama:
         req.add_header("Authorization", authheader)
         try:
             u = urllib2.urlopen(req)
-        except IOError, e:
+        except IOError as e:
              logger.error("Unable to publish to Panorama: " + str(e))
              return
         data = u.read()
@@ -3553,7 +3553,7 @@ class SimilarWorkSet:
         if isinstance(self._transfers[0], Mkdir):
             try:
                 (success_list, failed_list) = self._primary_handler.do_mkdirs(self._transfers)
-            except Exception, e:
+            except Exception as e:
                 logger.error("Exception while doing mkdirs")
                 raise
             # accounting
@@ -3567,7 +3567,7 @@ class SimilarWorkSet:
         if isinstance(self._transfers[0], Remove):
             try:
                 (success_list, failed_list) = self._primary_handler.do_removes(self._transfers)
-            except Exception, e:
+            except Exception as e:
                 logger.error("Exception while doing removes")
                 raise
             # accounting
@@ -3597,7 +3597,7 @@ class SimilarWorkSet:
             # one handler to rule them all!
             try:
                 (success_list, failed_list) = self._primary_handler.do_transfers(self._transfers)
-            except Exception, e:
+            except Exception as e:
                 logger.exception("Exception while doing transfer:")
                 raise
  
@@ -3623,7 +3623,7 @@ class SimilarWorkSet:
                     if len(s) == 1:
                         os.chmod(self._tmp_name, 0644)
                         [s, f] = self._secondary_handler.do_transfers([t_two])
-                except Exception, e:
+                except Exception as e:
                     logger.exception("Exception while doing transfer:")
                     raise
                 if len(s) == 1:
@@ -3730,7 +3730,7 @@ class SimilarWorkSet:
         try:
             tc = TimedCommand(cmd)
             tc.run()
-        except RuntimeError, err:
+        except RuntimeError as err:
             logger.error(err)
             return False
         finally:
@@ -3792,7 +3792,7 @@ class WorkThread(threading.Thread):
                 ts.do_transfers()
         except Queue.Empty:
             return
-        except Exception, e:
+        except Exception as e:
             self.exception = e
             self.tb = traceback.format_exc()
 
@@ -4005,7 +4005,7 @@ def prepare_local_dir(path):
         logger.debug("Creating local directory " + path)
         try:
             os.makedirs(path, 0755)
-        except os.error, err:
+        except os.error as err:
             # if dir already exists, ignore the error
             if not(os.path.isdir(path)):
                 raise RuntimeError(err)
@@ -4042,7 +4042,7 @@ def stats_add(filename):
     try:
         s = os.stat(filename)
         stats_total_bytes = stats_total_bytes + s[stat.ST_SIZE]
-    except Exception, err:
+    except Exception as err:
         pass # ignore
 
 
@@ -4169,7 +4169,7 @@ def read_v1_format(input, inputs_l):
                     inputs_l.append(url_pair)
                     url_pair = None
 
-    except Exception, err:
+    except Exception as err:
         logger.critical('Error reading url list: %s' % (err))
         myexit(1)
 
@@ -4180,7 +4180,7 @@ def read_json_format(input, inputs_l):
     """
     try:
         data = json.loads(input, object_hook=json_object_decoder)
-    except Exception, err:
+    except Exception as err:
         logger.critical('Error parsing the transfer specification JSON: ' + str(err))
         myexit(1)
 
@@ -4264,13 +4264,13 @@ def main():
         logger.info("Reading transfer specification from %s" % (options.file))
         try:
             input_file = open(options.file, 'r')
-        except Exception, err:
+        except Exception as err:
             logger.critical('Error opening input file: %s' % (err))
             myexit(1)
     try:
         input_data = input_file.read()
         input_file.close()
-    except Exception, err:
+    except Exception as err:
         logger.critical('Error reading transfer list: %s' % (err))
         myexit(1)
 
@@ -4301,7 +4301,7 @@ def main():
     # check environment
     try:
         env_setup()
-    except Exception, err:
+    except Exception as err:
         logger.critical(err)
         myexit(1)
     
