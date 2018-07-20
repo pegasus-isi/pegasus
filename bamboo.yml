@@ -608,7 +608,7 @@ project:
                   matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
-            - key: UTPUZ
+            - key: UBPUZ
               name: Ubuntu Bionic Python Unit Tests
               tasks:
                 - !script
