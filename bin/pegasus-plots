@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import os
 import re
 import sys
@@ -401,7 +402,7 @@ padding-top:25px;
 		plots_output += NEW_LINE_STR
 		plots_output +=  NEW_LINE_STR
 		plots_output += "".center(100, '*')
-		print plots_output
+		print(plots_output)
 	except IOError:
 		logger.error("Unable to write to file " + data_file)
 		sys.exit(1)

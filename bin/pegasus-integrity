@@ -5,6 +5,7 @@ Pegasus utility for checking file integrity after transfers
 
 Usage: pegasus-integrity-check [options]
 '''
+from __future__ import print_function
 
 ##
 #  Copyright 2007-2017 University Of Southern California
@@ -354,7 +355,7 @@ def read_meta_data(f):
         fp = open(f, 'r')
         data = json.load(fp)
         fp.close()
-    except Exception, err:
+    except Exception as err:
         logger.critical('Error parsing the meta data: ' + str(err))
     return data
 

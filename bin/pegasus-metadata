@@ -5,6 +5,7 @@ Pegasus Metadata is a tool to query metadata collected by Pegasus workflows.
 
 Usage: pegasus-metadata [-h] [-v] [-c] {task,file,workflow} ... submit_dir
 """
+from __future__ import print_function
 
 ##
 #  Copyright 2007-2012 University Of Southern California
@@ -81,7 +82,7 @@ def get_workflow_uri(submit_dir):
 
 def render_metas(metas, indent=''):
     if not metas:
-        print '%sNo metadata found' % indent
+        print('%sNo metadata found' % indent)
         return
 
     max_key_len = 0
@@ -92,7 +93,7 @@ def render_metas(metas, indent=''):
     max_key_len += 1
 
     for meta in metas:
-        print '%s%s: %s' % (indent, meta.key.ljust(max_key_len), meta.value)
+        print('%s%s: %s' % (indent, meta.key.ljust(max_key_len), meta.value))
 
 
 def workflow_metadata(recursive=False, submit_dir='.', *args, **kwargs):
@@ -109,13 +110,13 @@ def workflow_metadata(recursive=False, submit_dir='.', *args, **kwargs):
             wfs = queries.get_workflows(root_wf_uuid, order='w.root_wf_id, w.parent_wf_id')
 
             for wf in wfs.records:
-                print 'Workflow %s' % wf.wf_uuid
+                print('Workflow %s' % wf.wf_uuid)
                 workflow_metas = queries.get_workflow_meta(wf_uuid).records
                 render_metas(workflow_metas, '    ')
 
         else:
             workflow_metas = queries.get_workflow_meta(wf_uuid).records
-            print 'Workflow %s' % wf_uuid
+            print('Workflow %s' % wf_uuid)
             render_metas(workflow_metas, '    ')
 
     except ValueError as e:
@@ -154,7 +155,7 @@ def task_metadata(abs_task_id=None, submit_dir='.', *args, **kwargs):
         task_id = workflow.records[0].task_id
         task_metas = queries.get_task_meta(task_id).records
 
-        print 'Task', abs_task_id
+        print('Task', abs_task_id)
         render_metas(task_metas, '    ')
 
     except ValueError as e:
@@ -193,7 +194,7 @@ def file_metadata(file_name=None, list_files=False, trace=False, submit_dir='.',
             workflow_files = queries.get_workflow_files(wf_uuid)
 
             if workflow_files.total_filtered == 0:
-                print 'No files found'
+                print('No files found')
 
         else:
             logging.debug('Get file metadata for lfn %r' % file_name)
@@ -218,23 +219,23 @@ def file_metadata(file_name=None, list_files=False, trace=False, submit_dir='.',
 
             if root_wf:
                 root_wf_metas = queries.get_workflow_meta(root_wf.wf_id).records
-                print 'Root Workflow %s' % root_wf.wf_uuid
+                print('Root Workflow %s' % root_wf.wf_uuid)
                 render_metas(root_wf_metas, '    ')
-                print
+                print()
 
             wf_metas = queries.get_workflow_meta(wf_id).records
-            print 'Workflow %s' % wf.wf_uuid
+            print('Workflow %s' % wf.wf_uuid)
             render_metas(wf_metas, '    ')
-            print
+            print()
 
             task = queries.get_task(task_id)
             task_metas = queries.get_task_meta(task_id).records
-            print 'Task %s' % task.abs_task_id
+            print('Task %s' % task.abs_task_id)
             render_metas(task_metas, '    ')
-            print
+            print()
 
         for wf_file in workflow_files.records:
-            print 'File %s' % wf_file.lfn
+            print('File %s' % wf_file.lfn)
             render_metas(wf_file.meta, '    ')
 
     except ValueError as e:

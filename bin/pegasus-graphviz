@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import sys
 import os
 import xml.sax.handler
@@ -190,7 +191,7 @@ class DAXHandler(xml.sax.handler.ContentHandler):
                 f.parents.append(self.last_job)
                 self.last_job.children.append(f)
             elif link == "inout":
-                print "WARNING: inout file %s of %s creates a cycle." % (f.id, self.last_job)
+                print("WARNING: inout file %s of %s creates a cycle." % (f.id, self.last_job))
                 f.children.append(self.last_job)
                 f.parents.append(self.last_job)
                 self.last_job.parents.append(f)
@@ -299,7 +300,7 @@ def remove_xforms(dag, xforms):
     for id in nodes.keys():
         node = nodes[id]
         if isinstance(node, Job) and node.xform in xforms:
-            print "Removing %s" % job.id
+            print("Removing %s" % job.id)
             for p in node.parents:
                 p.children.remove(node)
             for c in node.children:
