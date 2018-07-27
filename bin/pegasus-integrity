@@ -23,6 +23,7 @@ from __future__ import print_function
 #  limitations under the License.
 ##
 
+from builtins import object
 import cmd
 import errno
 import glob
@@ -45,6 +46,7 @@ import traceback
 
 from datetime import datetime
 from subprocess import STDOUT
+from future.utils import with_metaclass
 
 __author__ = 'Mats Rynge <rynge@isi.edu>'
 
@@ -63,11 +65,9 @@ class Singleton(type):
         return cls._instances[cls]
 
 
-class Tools(object):
+class Tools(with_metaclass(Singleton, object)):
     '''Singleton for detecting and maintaining tools we depend on
     '''
-    
-    __metaclass__ = Singleton
     
     _info = {}
 

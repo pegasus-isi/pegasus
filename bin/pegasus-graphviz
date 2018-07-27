@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from __future__ import print_function
+from builtins import object
 import sys
 import os
 import xml.sax.handler
@@ -45,7 +46,7 @@ for l in [.70, .55]:
         rgb = colorsys.hls_to_rgb(h/100.0, l, s)
         COLORS.append(rgb2hex(*rgb))
 
-class DAG:
+class DAG(object):
     def __init__(self):
         self.nodes = {}
 
@@ -96,7 +97,7 @@ class File(Node):
     def renderNode(self, renderer):
         renderer.renderNode(self.id, self.label, fillcolor="#ffed6f", shape="rect")
 
-class Stack:
+class Stack(object):
     def __init__(self):
         self.items = []
 
