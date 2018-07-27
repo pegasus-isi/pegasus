@@ -6,7 +6,6 @@ import re
 import sys
 import logging
 import optparse
-import commands
 import subprocess
 import shutil
 from datetime import timedelta
@@ -112,7 +111,7 @@ def generate_dag_graph(wf_info, output_dir):
 		dag_cmd += " --output " + dot_file_path
 		dag_cmd += " " + dag_file_path
 		logger.debug("Executing command :\n" + dag_cmd)
-		status, output = commands.getstatusoutput(dag_cmd)
+		status, output = subprocess.getstatusoutput(dag_cmd)
 		if status == 0:
 			logger.info("Finished executing command." )
 		else:
@@ -127,7 +126,7 @@ def generate_dag_graph(wf_info, output_dir):
 		dot_png_cmd += " -Tpng -o" + png_file_path
 		dot_png_cmd += " " + dot_file_path
 		logger.debug("Executing command :\n" + dot_png_cmd)
-		status, output = commands.getstatusoutput(dot_png_cmd)
+		status, output = subprocess.getstatusoutput(dot_png_cmd)
 		if status == 0:
 			logger.debug("Finished executing command." )
 			return status
@@ -156,7 +155,7 @@ def generate_dax_graph(wf_info, output_dir, create_dax_files=False):
 			dax_cmd += " --files "
 		dax_cmd += " "+ dax_file_path
 		logger.debug("Executing command :\n"  + dax_cmd)
-		status, output = commands.getstatusoutput(dax_cmd)
+		status, output = subprocess.getstatusoutput(dax_cmd)
 		if status == 0:
 			logger.debug("Finished executing command." )
 		else:
@@ -172,7 +171,7 @@ def generate_dax_graph(wf_info, output_dir, create_dax_files=False):
 		dot_png_cmd +=" -Tpng -o" + png_file_path
 		dot_png_cmd += " "+ dot_file_path
 		logger.debug("Executing command :\n"  + dot_png_cmd)
-		status, output = commands.getstatusoutput(dot_png_cmd)
+		status, output = subprocess.getstatusoutput(dot_png_cmd)
 		if status == 0:
 			logger.debug("Finished executing command." )
 			return status

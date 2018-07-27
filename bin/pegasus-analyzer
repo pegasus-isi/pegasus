@@ -33,11 +33,13 @@ import sys
 import time
 import errno
 import logging
-import commands
+import subprocess
 import optparse
 import traceback
 import subprocess
 import tempfile
+
+from builtins import object
 
 root_logger = logging.getLogger()
 logger = logging.getLogger("pegasus-analyzer")
@@ -72,7 +74,7 @@ re_ks_invocation = re.compile( r'^[/\w]*pegasus-kickstart\b[^/]*[\s]+([/\w-]*)\b
 
 # --- classes -------------------------------------------------------------------------
 
-class Job:
+class Job(object):
 
     def __init__(self, job_name, job_state=""):
         """
@@ -679,7 +681,7 @@ def invoke_monitord(dagman_out_file, output_dir):
     logger.info("running: %s" % (monitord_cmd))
 
     try:
-        status, output = commands.getstatusoutput(monitord_cmd)
+        status, output = subprocess.getstatusoutput(monitord_cmd)
     except:
         logger.error("could not invoke monitord, exiting...")
         sys.exit(1)

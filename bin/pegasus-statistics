@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from __future__ import print_function
+
 import os
 import re
 import sys
@@ -7,6 +8,8 @@ import logging
 import optparse
 import subprocess
 import traceback
+
+from builtins import object
 
 root_logger = logging.getLogger()
 logger = logging.getLogger("pegasus-statistics")
@@ -91,7 +94,7 @@ time_host_stats_col_name_text = ["Date", "Host", "Count", "Runtime (sec)"]
 time_host_stats_col_size = [23, 25, 10, 20]
 
 
-class JobStatistics:
+class JobStatistics(object):
     def __init__(self):
         self.name = None
         self.site = None
