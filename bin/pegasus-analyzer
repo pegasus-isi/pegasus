@@ -39,8 +39,6 @@ import traceback
 import subprocess
 import tempfile
 
-from builtins import object
-
 root_logger = logging.getLogger()
 logger = logging.getLogger("pegasus-analyzer")
 
@@ -56,6 +54,8 @@ os.sys.path.insert(0, lib_dir)
 os.sys.path.insert(0, lib_ext_dir)
 
 # Import our modules
+from builtins import object
+
 from Pegasus.tools import utils
 from Pegasus.tools import kickstart_parser
 from Pegasus.db import connection

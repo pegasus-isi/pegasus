@@ -9,8 +9,6 @@ import optparse
 import subprocess
 import traceback
 
-from builtins import object
-
 root_logger = logging.getLogger()
 logger = logging.getLogger("pegasus-statistics")
 
@@ -24,6 +22,8 @@ lib_ext_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=Tru
 # Insert this directory in our search path
 os.sys.path.insert(0, lib_dir)
 os.sys.path.insert(0, lib_ext_dir)
+
+from builtins import object
 
 from Pegasus.tools import utils
 from Pegasus.plots_stats import utils as stats_utils

@@ -23,7 +23,6 @@ Usage: pegasus-monitord [options] dagoutfile
 #  limitations under the License.
 ##
 
-from builtins import object
 import os
 import re
 import sys
@@ -50,6 +49,8 @@ exec(subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).commun
 # Insert this directory in our search path
 os.sys.path.insert(0, pegasus_python_dir)
 os.sys.path.insert(0, pegasus_python_externals_dir)
+
+from builtins import object
 
 from Pegasus.db import connection
 from Pegasus.tools import utils
