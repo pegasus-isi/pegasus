@@ -163,7 +163,7 @@ class DBEventSink(EventSink):
     def send(self, event, kw):
         self._log.trace("send.start event=%s", event)
         d = {'event' : self._namespace + event}
-        for k, v in kw.iteritems():
+        for k, v in kw.items():
             d[k.replace('__','.')] = v
         self._db.process(d)
         self._log.trace("send.end event=%s", event)

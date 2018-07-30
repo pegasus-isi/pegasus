@@ -80,7 +80,7 @@ def add_url_context(endpoint, values):
     If there is a URL context, gene
     """
     if values and 'url_context' in g:
-        for key, value in g.url_context.iteritems():
+        for key, value in g.url_context.items():
             if current_app.url_map.is_endpoint_expecting(endpoint, key):
                 values.setdefault(key, value)
 
@@ -176,7 +176,7 @@ def get_query_args():
 
     is_post = request.method == 'POST'
 
-    for arg, cast in query_args.iteritems():
+    for arg, cast in query_args.items():
         if arg in request.args:
             g.query_args[arg.replace('-',
                                      '_')] = cast(arg, request.args.get(arg))
