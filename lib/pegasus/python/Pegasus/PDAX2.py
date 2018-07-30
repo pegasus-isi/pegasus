@@ -25,7 +25,7 @@ __all__ = ["PDAX","Partition"]
 __version__ = "2.0"
 
 import datetime, pwd, os
-from cStringIO import StringIO
+from io import StringIO
 
 SCHEMA_NAMESPACE = u"http://pegasus.isi.edu/schema/PDAX"
 SCHEMA_LOCATION = u"http://pegasus.isi.edu/schema/pdax-2.0.xsd"

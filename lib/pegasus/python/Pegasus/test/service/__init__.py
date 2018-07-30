@@ -5,7 +5,7 @@ import tempfile
 import shutil
 import base64
 import logging
-from StringIO import StringIO
+from io import StringIO
 
 from flask import json
 

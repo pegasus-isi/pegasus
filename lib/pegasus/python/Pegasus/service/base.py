@@ -15,7 +15,7 @@
 __author__ = 'Rajiv Mayani'
 
 import re
-import StringIO
+from io import StringIO
 
 from plex import (
     IGNORE, Any, AnyBut, Lexicon, NoCase, Opt, Range, Rep, Rep1, Scanner, Str
@@ -195,7 +195,7 @@ class BaseQueryParser(object):
         http://www.sunshine2k.de/coding/java/SimpleParser/SimpleParser.html
         """
         try:
-            f = StringIO.StringIO(expression)
+            f = StringIO(expression)
             self._scanner = Scanner(self._lexicon, f, 'query')
 
             while True:
@@ -472,7 +472,7 @@ class BaseOrderParser(object):
         return self._sort_order
 
     def __str__(self):
-        s = StringIO.StringIO()
+        s = StringIO()
 
         for i in self._sort_order:
             s.write(str(i))

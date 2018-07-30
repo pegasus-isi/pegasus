@@ -23,7 +23,7 @@ import os
 import collections
 import re
 import logging
-from cStringIO import StringIO
+from io import StringIO
 import json
 
 from Pegasus.tools import utils

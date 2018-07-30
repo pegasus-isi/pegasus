@@ -1233,7 +1233,7 @@ class TestParse(unittest.TestCase):
 #    def testLargeWorkflow(self):
 #        """It shouldn't take >10s to build or parse a 20k job workflow"""
 #        import time
-#        from cStringIO import StringIO
+#        from io import StringIO
 #        start = time.time()
 #        a = ADAG("bigun")
 #        x = Job("xform")
