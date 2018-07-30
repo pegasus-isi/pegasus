@@ -445,1087 +445,230 @@ pegasus-statistics -Dpegasus.monitord.output='&lt;DB_URL&gt;' -o &lt;OUTPUT_DIR&
 
 </programlisting>
 
-      <para>pegasus-statistics summary which is printed on the stdout contains
-      the following information.</para>
-
-      <itemizedlist>
-        <listitem>
-          <para><emphasis role="bold">Workflow summary</emphasis> - Summary of
-          the workflow execution. In case of hierarchical workflow the
-          calculation shows the statistics across all the sub workflows.It
-          shows the following statistics about tasks, jobs and sub
-          workflows.</para>
-
-          <itemizedlist>
-            <listitem>
-              <para><emphasis role="bold">Succeeded</emphasis> - total count
-              of succeeded tasks/jobs/sub workflows.</para>
-            </listitem>
-
-            <listitem>
-              <para><emphasis role="bold">Failed</emphasis> - total count of
-              failed tasks/jobs/sub workflows.</para>
-            </listitem>
-
-            <listitem>
-              <para><emphasis role="bold">Incomplete</emphasis> - total count
-              of tasks/jobs/sub workflows that are not in succeeded or failed
-              state. This includes all the jobs that are not submitted,
-              submitted but not completed etc. This is calculated as
-              difference between 'total' count and sum of 'succeeded' and
-              'failed' count.</para>
-            </listitem>
-
-            <listitem>
-              <para><emphasis role="bold">Total</emphasis> - total count of
-              tasks/jobs/sub workflows.</para>
-            </listitem>
-
-            <listitem>
-              <para><emphasis role="bold">Retries</emphasis> - total retry
-              count of tasks/jobs/sub workflows.</para>
-            </listitem>
-
-            <listitem>
-              <para><emphasis role="bold">Total Run</emphasis> - total count
-              of tasks/jobs/sub workflows executed during workflow run. This
-              is the cumulative of total retries, succeeded and failed
-              count.</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Workflow wall time</emphasis> - The wall
-          time from the start of the workflow execution to the end as reported
-          by the DAGMAN.In case of rescue dag the value is the cumulative of
-          all retries.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Workflow cummulate job wall
-          time</emphasis> - The sum of the wall time of all jobs as reported
-          by kickstart. In case of job retries the value is the cumulative of
-          all retries. For workflows having sub workflow jobs (i.e SUBDAG and
-          SUBDAX jobs), the wall time value includes jobs from the sub
-          workflows as well. This value is multiplied by the multiplier_factor
-          in the job instance table.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Cumulative job wall time as seen from
-          submit side</emphasis> - The sum of the wall time of all jobs as
-          reported by DAGMan. This is similar to the regular cumulative job
-          wall time, but includes job management overhead and delays. In case
-          of job retries the value is the cumulative of all retries. For
-          workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs), the
-          wall time value includes jobs from the sub workflows. This value is
-          multiplied by the multiplier_factor in the job instance
-          table.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Integrity Metrics </emphasis></para>
-
-          <itemizedlist>
-            <listitem>
-              <para>Number of files for which the checksum was compared
-              against a previously computed or provided checksum and total
-              duration in seconds spent in doing it. </para>
-            </listitem>
-
-            <listitem>
-              <para>Number of files for which the checksum was generated
-              during workflow execution and total duration in seconds spent in
-              doing it. </para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-      </itemizedlist>
-
       <para>pegasus-statistics generates the following statistics files based
       on the command line options set.</para>
 
-      <para><emphasis role="bold">Workflow statistics file per workflow
-      [workflow.txt]</emphasis></para>
-
-      <para>Workflow statistics file per workflow contains the following
-      information about each workflow run. In case of hierarchal workflows,
-      the file contains a table for each sub workflow. The file also contains
-      a 'Total' table at the bottom which is the cumulative of all the
-      individual statistics details.</para>
-
-      <para>A sample table is shown below. It shows the following statistics
-      about tasks, jobs and sub workflows.</para>
-
-      <itemizedlist>
-        <listitem>
-          <para><emphasis role="bold">Workflow retries</emphasis> - number of
-          times a workflow was retried.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Succeeded</emphasis> - total count of
-          succeeded tasks/jobs/sub workflows.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Failed</emphasis> - total count of
-          failed tasks/jobs/sub workflows.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Incomplete</emphasis> - total count of
-          tasks/jobs/sub workflows that are not in succeeded or failed state.
-          This includes all the jobs that are not submitted, submitted but not
-          completed etc. This is calculated as difference between 'total'
-          count and sum of 'succeeded' and 'failed' count.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Total</emphasis> - total count of
-          tasks/jobs/sub workflows.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Retries</emphasis> - total retry count
-          of tasks/jobs/sub workflows.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Total Run</emphasis> - total count of
-          tasks/jobs/sub workflows executed during workflow run. This is the
-          cumulative of total retries, succeeded and failed count.</para>
-        </listitem>
-      </itemizedlist>
-
-      <table>
-        <title>Workflow Statistics</title>
-
-        <tgroup align="center" cols="9">
-          <thead>
-            <row>
-              <entry align="center">#</entry>
-
-              <entry align="center">Type</entry>
-
-              <entry align="center">Succeeded</entry>
-
-              <entry align="center">Failed</entry>
-
-              <entry align="center">Incomplete</entry>
-
-              <entry align="center">Total</entry>
-
-              <entry align="center">Retries</entry>
-
-              <entry align="center">Total Run</entry>
-
-              <entry align="center">Workflow Retries</entry>
-            </row>
-          </thead>
-
-          <tbody>
-            <row>
-              <entry>2a6df11b-9972-4ba0-b4ba-4fd39c357af4</entry>
-
-              <entry/>
-
-              <entry/>
-
-              <entry/>
-
-              <entry/>
-
-              <entry/>
-
-              <entry/>
-
-              <entry/>
-
-              <entry>0</entry>
-            </row>
-
-            <row>
-              <entry/>
-
-              <entry>Tasks</entry>
-
-              <entry>4</entry>
-
-              <entry>0</entry>
-
-              <entry>0</entry>
-
-              <entry>4</entry>
-
-              <entry>0</entry>
-
-              <entry>4</entry>
-
-              <entry/>
-            </row>
-
-            <row>
-              <entry/>
-
-              <entry>Jobs</entry>
-
-              <entry>13</entry>
-
-              <entry>0</entry>
-
-              <entry>0</entry>
-
-              <entry>13</entry>
-
-              <entry>0</entry>
-
-              <entry>13</entry>
-
-              <entry/>
-            </row>
-
-            <row>
-              <entry/>
-
-              <entry>Sub Workflows</entry>
-
-              <entry>0</entry>
-
-              <entry>0</entry>
-
-              <entry>0</entry>
-
-              <entry>0</entry>
-
-              <entry>0</entry>
-
-              <entry>0</entry>
-
-              <entry/>
-            </row>
-          </tbody>
-        </tgroup>
-      </table>
-
-      <para><emphasis role="bold">Job statistics file per workflow
-      [jobs.txt]</emphasis></para>
-
-      <para>Job statistics file per workflow contains the following details
-      about the job instances in each workflow. A sample file is shown
-      below.</para>
-
-      <itemizedlist>
-        <listitem>
-          <para><emphasis role="bold">Job</emphasis> - the name of the job
-          instance</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Try</emphasis> - the number representing
-          the job instance run count.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Site</emphasis> - the site where the job
-          instance ran.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Kickstart(sec.)</emphasis> - the actual
-          duration of the job instance in seconds on the remote compute
-          node.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Mult</emphasis> - multiplier factor from
-          the job instance table for the job.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Kickstart_Mult</emphasis> - value of the
-          Kickstart column multiplied by Mult.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">CPU-Time</emphasis> - remote CPU time
-          computed as the stime + utime (when Kickstart is not used, this is
-          empty).</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Post(sec.)</emphasis> - the postscript
-          time as reported by DAGMan.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">CondorQTime(sec.)</emphasis> - the time
-          between submission by DAGMan and the remote Grid submission. It is
-          an estimate of the time spent in the condor q on the submit node
-          .</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Resource(sec.)</emphasis> - the time
-          between the remote Grid submission and start of remote execution .
-          It is an estimate of the time job instance spent in the remote queue
-          .</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Runtime(sec.)</emphasis> - the time
-          spent on the resource as seen by Condor DAGMan . Is always
-          &gt;=kickstart .</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Seqexec(sec.)</emphasis> - the time
-          taken for the completion of a clustered job instance .</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Seqexec-Delay(sec.)</emphasis> - the
-          time difference between the time for the completion of a clustered
-          job instance and sum of all the individual tasks kickstart time
-          .</para>
-        </listitem>
-      </itemizedlist>
-
-      <table>
-        <title>Job statistics</title>
-
-        <tgroup align="center" cols="13">
-          <thead>
-            <row>
-              <entry align="center">Job</entry>
-
-              <entry align="center">Try</entry>
-
-              <entry align="center">Site</entry>
-
-              <entry align="center">Kickstart</entry>
-
-              <entry align="center">Mult</entry>
-
-              <entry align="center">Kickstart_Mult</entry>
-
-              <entry align="center">CPU-Time</entry>
-
-              <entry align="center">Post</entry>
-
-              <entry align="center">CondorQTime</entry>
-
-              <entry align="center">Resource</entry>
-
-              <entry align="center">Runtime</entry>
-
-              <entry align="center">Seqexec</entry>
-
-              <entry align="center">Seqexec-Delay</entry>
-            </row>
-          </thead>
-
-          <tbody>
-            <row>
-              <entry>analyze_ID0000004</entry>
-
-              <entry>1</entry>
-
-              <entry>local</entry>
-
-              <entry>60.002</entry>
-
-              <entry>1</entry>
-
-              <entry>60.002</entry>
-
-              <entry>59.843</entry>
-
-              <entry>5.0</entry>
-
-              <entry>0.0</entry>
-
-              <entry>-</entry>
-
-              <entry>62.0</entry>
-
-              <entry>-</entry>
-
-              <entry>-</entry>
-            </row>
-
-            <row>
-              <entry>create_dir_diamond_0_local</entry>
-
-              <entry>1</entry>
-
-              <entry>local</entry>
-
-              <entry>0.027</entry>
-
-              <entry>1</entry>
-
-              <entry>0.027</entry>
-
-              <entry>0.003</entry>
-
-              <entry>5.0</entry>
-
-              <entry>5.0</entry>
-
-              <entry>-</entry>
-
-              <entry>0.0</entry>
-
-              <entry>-</entry>
-
-              <entry>-</entry>
-            </row>
-
-            <row>
-              <entry>findrange_ID0000002</entry>
-
-              <entry>1</entry>
-
-              <entry>local</entry>
-
-              <entry>60.001</entry>
-
-              <entry>10</entry>
-
-              <entry>600.01</entry>
-
-              <entry>59.921</entry>
-
-              <entry>5.0</entry>
-
-              <entry>0.0</entry>
-
-              <entry>-</entry>
-
-              <entry>60.0</entry>
-
-              <entry>-</entry>
-
-              <entry>-</entry>
-            </row>
-
-            <row>
-              <entry>findrange_ID0000003</entry>
-
-              <entry>1</entry>
-
-              <entry>local</entry>
-
-              <entry>60.002</entry>
-
-              <entry>10</entry>
-
-              <entry>600.02</entry>
-
-              <entry>59.912</entry>
-
-              <entry>5.0</entry>
-
-              <entry>10.0</entry>
-
-              <entry>-</entry>
-
-              <entry>61.0</entry>
-
-              <entry>-</entry>
-
-              <entry>-</entry>
-            </row>
-
-            <row>
-              <entry>preprocess_ID0000001</entry>
-
-              <entry>1</entry>
-
-              <entry>local</entry>
-
-              <entry>60.002</entry>
-
-              <entry>1</entry>
-
-              <entry>60.002</entry>
-
-              <entry>59.898</entry>
-
-              <entry>5.0</entry>
-
-              <entry>5.0</entry>
-
-              <entry>-</entry>
-
-              <entry>60.0</entry>
-
-              <entry>-</entry>
-
-              <entry>-</entry>
-            </row>
-
-            <row>
-              <entry>register_local_1_0</entry>
-
-              <entry>1</entry>
-
-              <entry>local</entry>
-
-              <entry>0.459</entry>
-
-              <entry>1</entry>
-
-              <entry>0.459</entry>
-
-              <entry>0.432</entry>
-
-              <entry>6.0</entry>
-
-              <entry>5.0</entry>
-
-              <entry>-</entry>
-
-              <entry>0.0</entry>
-
-              <entry>-</entry>
-
-              <entry>-</entry>
-            </row>
-
-            <row>
-              <entry>register_local_1_1</entry>
-
-              <entry>1</entry>
-
-              <entry>local</entry>
-
-              <entry>0.338</entry>
-
-              <entry>1</entry>
-
-              <entry>0.338</entry>
-
-              <entry>0.331</entry>
-
-              <entry>5.0</entry>
-
-              <entry>5.0</entry>
-
-              <entry>-</entry>
-
-              <entry>0.0</entry>
-
-              <entry>-</entry>
-
-              <entry>-</entry>
-            </row>
-
-            <row>
-              <entry>register_local_2_0</entry>
-
-              <entry>1</entry>
-
-              <entry>local</entry>
-
-              <entry>0.348</entry>
-
-              <entry>1</entry>
-
-              <entry>0.348</entry>
-
-              <entry>0.342</entry>
-
-              <entry>5.0</entry>
-
-              <entry>5.0</entry>
-
-              <entry>-</entry>
-
-              <entry>0.0</entry>
-
-              <entry>-</entry>
-
-              <entry>-</entry>
-            </row>
-
-            <row>
-              <entry>stage_in_local_local_0</entry>
-
-              <entry>1</entry>
-
-              <entry>local</entry>
-
-              <entry>0.39</entry>
-
-              <entry>1</entry>
-
-              <entry>0.39</entry>
-
-              <entry>0.032</entry>
-
-              <entry>5.0</entry>
-
-              <entry>5.0</entry>
-
-              <entry>-</entry>
-
-              <entry>0.0</entry>
-
-              <entry>-</entry>
-
-              <entry>-</entry>
-            </row>
-
-            <row>
-              <entry>stage_out_local_local_0_0</entry>
-
-              <entry>1</entry>
-
-              <entry>local</entry>
-
-              <entry>0.165</entry>
-
-              <entry>1</entry>
-
-              <entry>0.165</entry>
-
-              <entry>0.108</entry>
-
-              <entry>5.0</entry>
-
-              <entry>10.0</entry>
-
-              <entry>-</entry>
-
-              <entry>0.0</entry>
-
-              <entry>-</entry>
-
-              <entry>-</entry>
-            </row>
-
-            <row>
-              <entry>stage_out_local_local_1_0</entry>
-
-              <entry>1</entry>
-
-              <entry>local</entry>
-
-              <entry>0.147</entry>
-
-              <entry>1</entry>
-
-              <entry>0.147</entry>
-
-              <entry>0.098</entry>
-
-              <entry>7.0</entry>
-
-              <entry>5.0</entry>
-
-              <entry>-</entry>
-
-              <entry>0.0</entry>
-
-              <entry>-</entry>
-
-              <entry>-</entry>
-            </row>
-
-            <row>
-              <entry>stage_out_local_local_1_1</entry>
-
-              <entry>1</entry>
-
-              <entry>local</entry>
-
-              <entry>0.139</entry>
-
-              <entry>1</entry>
-
-              <entry>0.139</entry>
-
-              <entry>0.089</entry>
-
-              <entry>5.0</entry>
-
-              <entry>6.0</entry>
-
-              <entry>-</entry>
-
-              <entry>0.0</entry>
-
-              <entry>-</entry>
-
-              <entry>-</entry>
-            </row>
-
-            <row>
-              <entry>stage_out_local_local_2_0</entry>
-
-              <entry>1</entry>
-
-              <entry>local</entry>
-
-              <entry>0.145</entry>
-
-              <entry>1</entry>
-
-              <entry>0.145</entry>
-
-              <entry>0.101</entry>
-
-              <entry>5.0</entry>
-
-              <entry>5.0</entry>
-
-              <entry>-</entry>
-
-              <entry>0.0</entry>
-
-              <entry>-</entry>
-
-              <entry>-</entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </table>
-
-      <para><emphasis role="bold">Transformation statistics file per workflow
-      [breakdown.txt]</emphasis></para>
-
-      <para>Transformation statistics file per workflow contains information
-      about the invocations in each workflow grouped by transformation name. A
-      sample file is shown below.</para>
-
-      <itemizedlist>
-        <listitem>
-          <para><emphasis role="bold">Transformation</emphasis> - name of the
-          transformation.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Count</emphasis> - the number of times
-          invocations with a given transformation name was executed.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Succeeded</emphasis> - the count of
-          succeeded invocations with a given logical transformation name
-          .</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Failed</emphasis> - the count of failed
-          invocations with a given logical transformation name .</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Min (sec.)</emphasis> - the minimum
-          runtime value of invocations with a given logical transformation
-          name times the multipler_factor.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Max (sec.)</emphasis> - the minimum
-          runtime value of invocations with a given logical transformation
-          name times the multiplier_factor.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Mean (sec.)</emphasis> - the mean of the
-          invocation runtimes with a given logical transformation name times
-          the multiplier_factor.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Total (sec.)</emphasis> - the cumulative
-          of runtime value of invocations with a given logical transformation
-          name times the multiplier_factor.</para>
-        </listitem>
-      </itemizedlist>
-
-      <table>
-        <title>Transformation Statistics</title>
-
-        <tgroup align="center" cols="8">
-          <thead>
-            <row>
-              <entry align="center">Transformation</entry>
-
-              <entry align="center">Count</entry>
-
-              <entry align="center">Succeeded</entry>
-
-              <entry align="center">Failed</entry>
-
-              <entry align="center">Min</entry>
-
-              <entry align="center">Max</entry>
-
-              <entry align="center">Mean</entry>
-
-              <entry align="center">Total</entry>
-            </row>
-          </thead>
-
-          <tbody>
-            <row>
-              <entry>dagman::post</entry>
-
-              <entry>13</entry>
-
-              <entry>13</entry>
-
-              <entry>0</entry>
-
-              <entry>5.0</entry>
-
-              <entry>7.0</entry>
-
-              <entry>5.231</entry>
-
-              <entry>68.0</entry>
-            </row>
-
-            <row>
-              <entry>diamond::analyze</entry>
-
-              <entry>1</entry>
-
-              <entry>1</entry>
-
-              <entry>0</entry>
-
-              <entry>60.002</entry>
-
-              <entry>60.002</entry>
-
-              <entry>60.002</entry>
-
-              <entry>60.002</entry>
-            </row>
-
-            <row>
-              <entry>diamond::findrange</entry>
-
-              <entry>2</entry>
-
-              <entry>2</entry>
-
-              <entry>0</entry>
-
-              <entry>600.01</entry>
-
-              <entry>600.02</entry>
-
-              <entry>600.02</entry>
-
-              <entry>1200.03</entry>
-            </row>
-
-            <row>
-              <entry>diamond::preprocess</entry>
-
-              <entry>1</entry>
-
-              <entry>1</entry>
-
-              <entry>0</entry>
-
-              <entry>60.002</entry>
-
-              <entry>60.002</entry>
-
-              <entry>60.002</entry>
-
-              <entry>60.002</entry>
-            </row>
-
-            <row>
-              <entry>pegasus::dirmanager</entry>
-
-              <entry>1</entry>
-
-              <entry>1</entry>
-
-              <entry>0</entry>
-
-              <entry>0.027</entry>
-
-              <entry>0.027</entry>
-
-              <entry>0.027</entry>
-
-              <entry>0.027</entry>
-            </row>
-
-            <row>
-              <entry>pegasus::pegasus-transfer</entry>
-
-              <entry>5</entry>
-
-              <entry>5</entry>
-
-              <entry>0</entry>
-
-              <entry>0.139</entry>
-
-              <entry>0.39</entry>
-
-              <entry>0.197</entry>
-
-              <entry>0.986</entry>
-            </row>
-
-            <row>
-              <entry>pegasus::rc-client</entry>
-
-              <entry>3</entry>
-
-              <entry>3</entry>
-
-              <entry>0</entry>
-
-              <entry>0.338</entry>
-
-              <entry>0.459</entry>
-
-              <entry>0.382</entry>
-
-              <entry>1.145</entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </table>
-
-      <para><emphasis role="bold">Time statistics file
-      [time.txt]</emphasis></para>
-
-      <para>Time statistics file contains job instance and invocation
-      statistics information grouped by time and host. The time grouping can
-      be on day/hour. The file contains the following tables Job instance
-      statistics per day/hour, Invocation statistics per day/hour, Job
-      instance statistics by host per day/hour and Invocation by host per
-      day/hour. A sample Invocation statistics by host per day table is shown
-      below.</para>
-
-      <itemizedlist>
-        <listitem>
-          <para><emphasis role="bold">Job instance statistics per
-          day/hour</emphasis> - the number of job instances run, total runtime
-          sorted by day/hour.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Invocation statistics per
-          day/hour</emphasis> - the number of invocations , total runtime
-          sorted by day/hour.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Job instance statistics by host per
-          day/hour</emphasis> - the number of job instances run, total runtime
-          on each host sorted by day/hour.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Invocation statistics by host per
-          day/hour</emphasis> - the number of invocations , total runtime on
-          each host sorted by day/hour.</para>
-        </listitem>
-      </itemizedlist>
-
-      <table>
-        <title>Invocation statistics by host per day</title>
-
-        <tgroup align="center" cols="4">
-          <thead>
-            <row>
-              <entry align="center">Date [YYYY-MM-DD]</entry>
-
-              <entry align="center">Host</entry>
-
-              <entry align="center">Count</entry>
-
-              <entry align="center">Runtime (Sec.)</entry>
-            </row>
-          </thead>
-
-          <tbody>
-            <row>
-              <entry>2011-07-15</entry>
-
-              <entry>butterfly.isi.edu</entry>
-
-              <entry>54</entry>
-
-              <entry>625.094</entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </table>
-
-      <para><emphasis role="bold">Integrity statistics file per workflow
-      [integrity.txt]</emphasis></para>
-
-      <para>Integrity statistics file contains integrity metrics grouped by
-      file type (input or output) and integrity type (check or compute). A
-      sample table is shown below. It shows the following statistics about
-      integrity checks.</para>
-
-      <para><itemizedlist>
+      <section id="peg_stats_summary">
+        <title id="peg_stats_jobs">Summary Statistics File
+        [summary.txt]</title>
+
+        <para>The summary statistics are listed on the stdout by default, and
+        can be written out to a file by providing the -s summary
+        option.</para>
+
+        <itemizedlist>
           <listitem>
-            <para><emphasis role="bold">Type</emphasis> - the type of
-            integrity metric. Check means checksum was compared for a file,
-            and compute means a checksum was generated for a file.</para>
+            <para><emphasis role="bold">Workflow summary</emphasis> - Summary
+            of the workflow execution. In case of hierarchical workflow the
+            calculation shows the statistics across all the sub workflows.It
+            shows the following statistics about tasks, jobs and sub
+            workflows.</para>
+
+            <itemizedlist>
+              <listitem>
+                <para><emphasis role="bold">Succeeded</emphasis> - total count
+                of succeeded tasks/jobs/sub workflows.</para>
+              </listitem>
+
+              <listitem>
+                <para><emphasis role="bold">Failed</emphasis> - total count of
+                failed tasks/jobs/sub workflows.</para>
+              </listitem>
+
+              <listitem>
+                <para><emphasis role="bold">Incomplete</emphasis> - total
+                count of tasks/jobs/sub workflows that are not in succeeded or
+                failed state. This includes all the jobs that are not
+                submitted, submitted but not completed etc. This is calculated
+                as difference between 'total' count and sum of 'succeeded' and
+                'failed' count.</para>
+              </listitem>
+
+              <listitem>
+                <para><emphasis role="bold">Total</emphasis> - total count of
+                tasks/jobs/sub workflows.</para>
+              </listitem>
+
+              <listitem>
+                <para><emphasis role="bold">Retries</emphasis> - total retry
+                count of tasks/jobs/sub workflows.</para>
+              </listitem>
+
+              <listitem>
+                <para><emphasis role="bold">Total Run</emphasis> - total count
+                of tasks/jobs/sub workflows executed during workflow run. This
+                is the cumulative of total retries, succeeded and failed
+                count.</para>
+              </listitem>
+            </itemizedlist>
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">File type</emphasis> - the type of
-            file: input or output from a job perspective.</para>
+            <para><emphasis role="bold">Workflow wall time</emphasis> - The
+            wall time from the start of the workflow execution to the end as
+            reported by the DAGMAN.In case of rescue dag the value is the
+            cumulative of all retries.</para>
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">Count</emphasis> - the number of times
-            type, file type integrity check was performed.</para>
+            <para><emphasis role="bold">Workflow cummulate job wall
+            time</emphasis> - The sum of the wall time of all jobs as reported
+            by kickstart. In case of job retries the value is the cumulative
+            of all retries. For workflows having sub workflow jobs (i.e SUBDAG
+            and SUBDAX jobs), the wall time value includes jobs from the sub
+            workflows as well. This value is multiplied by the
+            multiplier_factor in the job instance table.</para>
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">Total duration</emphasis> - sum of
-            duration in seconds for the 'count' number of records matching the
-            particular type, file-type combo.</para>
+            <para><emphasis role="bold">Cumulative job wall time as seen from
+            submit side</emphasis> - The sum of the wall time of all jobs as
+            reported by DAGMan. This is similar to the regular cumulative job
+            wall time, but includes job management overhead and delays. In
+            case of job retries the value is the cumulative of all retries.
+            For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX
+            jobs), the wall time value includes jobs from the sub workflows.
+            This value is multiplied by the multiplier_factor in the job
+            instance table.</para>
           </listitem>
-        </itemizedlist><table>
-          <title>Integrity Statistics</title>
 
-          <tgroup align="center" cols="5">
+          <listitem>
+            <para><emphasis role="bold">Integrity Metrics </emphasis></para>
+
+            <itemizedlist>
+              <listitem>
+                <para>Number of files for which the checksum was compared
+                against a previously computed or provided checksum and total
+                duration in seconds spent in doing it.</para>
+              </listitem>
+
+              <listitem>
+                <para>Number of files for which the checksum was generated
+                during workflow execution and total duration in seconds spent
+                in doing it.</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+        </itemizedlist>
+      </section>
+
+      <section id="peg_stats_workflow">
+        <title>Workflow statistics file per workflow [workflow.txt]</title>
+
+        <para>Workflow statistics file per workflow contains the following
+        information about each workflow run. In case of hierarchal workflows,
+        the file contains a table for each sub workflow. The file also
+        contains a 'Total' table at the bottom which is the cumulative of all
+        the individual statistics details.</para>
+
+        <para>A sample table is shown below. It shows the following statistics
+        about tasks, jobs and sub workflows.</para>
+
+        <itemizedlist>
+          <listitem>
+            <para><emphasis role="bold">Workflow retries</emphasis> - number
+            of times a workflow was retried.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Succeeded</emphasis> - total count of
+            succeeded tasks/jobs/sub workflows.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Failed</emphasis> - total count of
+            failed tasks/jobs/sub workflows.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Incomplete</emphasis> - total count of
+            tasks/jobs/sub workflows that are not in succeeded or failed
+            state. This includes all the jobs that are not submitted,
+            submitted but not completed etc. This is calculated as difference
+            between 'total' count and sum of 'succeeded' and 'failed'
+            count.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Total</emphasis> - total count of
+            tasks/jobs/sub workflows.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Retries</emphasis> - total retry count
+            of tasks/jobs/sub workflows.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Total Run</emphasis> - total count of
+            tasks/jobs/sub workflows executed during workflow run. This is the
+            cumulative of total retries, succeeded and failed count.</para>
+          </listitem>
+        </itemizedlist>
+
+        <table>
+          <title>Workflow Statistics</title>
+
+          <tgroup align="center" cols="9">
             <thead>
               <row>
                 <entry align="center">#</entry>
 
                 <entry align="center">Type</entry>
 
-                <entry align="center">File Type</entry>
+                <entry align="center">Succeeded</entry>
 
-                <entry align="center">Count</entry>
+                <entry align="center">Failed</entry>
 
-                <entry align="center">Total Duration</entry>
+                <entry align="center">Incomplete</entry>
+
+                <entry align="center">Total</entry>
+
+                <entry align="center">Retries</entry>
+
+                <entry align="center">Total Run</entry>
+
+                <entry align="center">Workflow Retries</entry>
               </row>
             </thead>
 
             <tbody>
               <row>
-                <entry>4555392d-1b37-407c-98d3-60fb86cb9d57</entry>
+                <entry>2a6df11b-9972-4ba0-b4ba-4fd39c357af4</entry>
 
                 <entry/>
 
                 <entry/>
 
                 <entry/>
+
+                <entry/>
+
+                <entry/>
+
+                <entry/>
+
+                <entry/>
+
+                <entry>0</entry>
+              </row>
+
+              <row>
+                <entry/>
+
+                <entry>Tasks</entry>
+
+                <entry>4</entry>
+
+                <entry>0</entry>
+
+                <entry>0</entry>
+
+                <entry>4</entry>
+
+                <entry>0</entry>
+
+                <entry>4</entry>
 
                 <entry/>
               </row>
@@ -1533,55 +676,925 @@ pegasus-statistics -Dpegasus.monitord.output='&lt;DB_URL&gt;' -o &lt;OUTPUT_DIR&
               <row>
                 <entry/>
 
-                <entry>check</entry>
+                <entry>Jobs</entry>
 
-                <entry>input</entry>
+                <entry>13</entry>
 
-                <entry>5</entry>
+                <entry>0</entry>
 
-                <entry>0.164</entry>
+                <entry>0</entry>
+
+                <entry>13</entry>
+
+                <entry>0</entry>
+
+                <entry>13</entry>
+
+                <entry/>
               </row>
 
               <row>
                 <entry/>
 
-                <entry>check</entry>
+                <entry>Sub Workflows</entry>
 
-                <entry>output</entry>
+                <entry>0</entry>
 
-                <entry>5</entry>
+                <entry>0</entry>
 
-                <entry>1.456</entry>
-              </row>
+                <entry>0</entry>
 
-              <row>
+                <entry>0</entry>
+
+                <entry>0</entry>
+
+                <entry>0</entry>
+
                 <entry/>
-
-                <entry>compute</entry>
-
-                <entry>input</entry>
-
-                <entry>5</entry>
-
-                <entry>0.693</entry>
-              </row>
-
-              <row>
-                <entry/>
-
-                <entry>compute</entry>
-
-                <entry>output</entry>
-
-                <entry>5</entry>
-
-                <entry>0.758</entry>
               </row>
             </tbody>
           </tgroup>
-        </table></para>
+        </table>
+      </section>
 
-      <para/>
+      <section>
+        <title>Job statistics file per workflow [jobs.txt]</title>
+
+        <para>Job statistics file per workflow contains the following details
+        about the job instances in each workflow. A sample file is shown
+        below.</para>
+
+        <itemizedlist>
+          <listitem>
+            <para><emphasis role="bold">Job</emphasis> - the name of the job
+            instance</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Try</emphasis> - the number
+            representing the job instance run count.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Site</emphasis> - the site where the
+            job instance ran.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Kickstart(sec.)</emphasis> - the
+            actual duration of the job instance in seconds on the remote
+            compute node.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Mult</emphasis> - multiplier factor
+            from the job instance table for the job.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Kickstart_Mult</emphasis> - value of
+            the Kickstart column multiplied by Mult.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">CPU-Time</emphasis> - remote CPU time
+            computed as the stime + utime (when Kickstart is not used, this is
+            empty).</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Post(sec.)</emphasis> - the postscript
+            time as reported by DAGMan.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">CondorQTime(sec.)</emphasis> - the
+            time between submission by DAGMan and the remote Grid submission.
+            It is an estimate of the time spent in the condor q on the submit
+            node .</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Resource(sec.)</emphasis> - the time
+            between the remote Grid submission and start of remote execution .
+            It is an estimate of the time job instance spent in the remote
+            queue .</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Runtime(sec.)</emphasis> - the time
+            spent on the resource as seen by Condor DAGMan . Is always
+            &gt;=kickstart .</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Seqexec(sec.)</emphasis> - the time
+            taken for the completion of a clustered job instance .</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Seqexec-Delay(sec.)</emphasis> - the
+            time difference between the time for the completion of a clustered
+            job instance and sum of all the individual tasks kickstart time
+            .</para>
+          </listitem>
+        </itemizedlist>
+
+        <table>
+          <title>Job statistics</title>
+
+          <tgroup align="center" cols="13">
+            <thead>
+              <row>
+                <entry align="center">Job</entry>
+
+                <entry align="center">Try</entry>
+
+                <entry align="center">Site</entry>
+
+                <entry align="center">Kickstart</entry>
+
+                <entry align="center">Mult</entry>
+
+                <entry align="center">Kickstart_Mult</entry>
+
+                <entry align="center">CPU-Time</entry>
+
+                <entry align="center">Post</entry>
+
+                <entry align="center">CondorQTime</entry>
+
+                <entry align="center">Resource</entry>
+
+                <entry align="center">Runtime</entry>
+
+                <entry align="center">Seqexec</entry>
+
+                <entry align="center">Seqexec-Delay</entry>
+              </row>
+            </thead>
+
+            <tbody>
+              <row>
+                <entry>analyze_ID0000004</entry>
+
+                <entry>1</entry>
+
+                <entry>local</entry>
+
+                <entry>60.002</entry>
+
+                <entry>1</entry>
+
+                <entry>60.002</entry>
+
+                <entry>59.843</entry>
+
+                <entry>5.0</entry>
+
+                <entry>0.0</entry>
+
+                <entry>-</entry>
+
+                <entry>62.0</entry>
+
+                <entry>-</entry>
+
+                <entry>-</entry>
+              </row>
+
+              <row>
+                <entry>create_dir_diamond_0_local</entry>
+
+                <entry>1</entry>
+
+                <entry>local</entry>
+
+                <entry>0.027</entry>
+
+                <entry>1</entry>
+
+                <entry>0.027</entry>
+
+                <entry>0.003</entry>
+
+                <entry>5.0</entry>
+
+                <entry>5.0</entry>
+
+                <entry>-</entry>
+
+                <entry>0.0</entry>
+
+                <entry>-</entry>
+
+                <entry>-</entry>
+              </row>
+
+              <row>
+                <entry>findrange_ID0000002</entry>
+
+                <entry>1</entry>
+
+                <entry>local</entry>
+
+                <entry>60.001</entry>
+
+                <entry>10</entry>
+
+                <entry>600.01</entry>
+
+                <entry>59.921</entry>
+
+                <entry>5.0</entry>
+
+                <entry>0.0</entry>
+
+                <entry>-</entry>
+
+                <entry>60.0</entry>
+
+                <entry>-</entry>
+
+                <entry>-</entry>
+              </row>
+
+              <row>
+                <entry>findrange_ID0000003</entry>
+
+                <entry>1</entry>
+
+                <entry>local</entry>
+
+                <entry>60.002</entry>
+
+                <entry>10</entry>
+
+                <entry>600.02</entry>
+
+                <entry>59.912</entry>
+
+                <entry>5.0</entry>
+
+                <entry>10.0</entry>
+
+                <entry>-</entry>
+
+                <entry>61.0</entry>
+
+                <entry>-</entry>
+
+                <entry>-</entry>
+              </row>
+
+              <row>
+                <entry>preprocess_ID0000001</entry>
+
+                <entry>1</entry>
+
+                <entry>local</entry>
+
+                <entry>60.002</entry>
+
+                <entry>1</entry>
+
+                <entry>60.002</entry>
+
+                <entry>59.898</entry>
+
+                <entry>5.0</entry>
+
+                <entry>5.0</entry>
+
+                <entry>-</entry>
+
+                <entry>60.0</entry>
+
+                <entry>-</entry>
+
+                <entry>-</entry>
+              </row>
+
+              <row>
+                <entry>register_local_1_0</entry>
+
+                <entry>1</entry>
+
+                <entry>local</entry>
+
+                <entry>0.459</entry>
+
+                <entry>1</entry>
+
+                <entry>0.459</entry>
+
+                <entry>0.432</entry>
+
+                <entry>6.0</entry>
+
+                <entry>5.0</entry>
+
+                <entry>-</entry>
+
+                <entry>0.0</entry>
+
+                <entry>-</entry>
+
+                <entry>-</entry>
+              </row>
+
+              <row>
+                <entry>register_local_1_1</entry>
+
+                <entry>1</entry>
+
+                <entry>local</entry>
+
+                <entry>0.338</entry>
+
+                <entry>1</entry>
+
+                <entry>0.338</entry>
+
+                <entry>0.331</entry>
+
+                <entry>5.0</entry>
+
+                <entry>5.0</entry>
+
+                <entry>-</entry>
+
+                <entry>0.0</entry>
+
+                <entry>-</entry>
+
+                <entry>-</entry>
+              </row>
+
+              <row>
+                <entry>register_local_2_0</entry>
+
+                <entry>1</entry>
+
+                <entry>local</entry>
+
+                <entry>0.348</entry>
+
+                <entry>1</entry>
+
+                <entry>0.348</entry>
+
+                <entry>0.342</entry>
+
+                <entry>5.0</entry>
+
+                <entry>5.0</entry>
+
+                <entry>-</entry>
+
+                <entry>0.0</entry>
+
+                <entry>-</entry>
+
+                <entry>-</entry>
+              </row>
+
+              <row>
+                <entry>stage_in_local_local_0</entry>
+
+                <entry>1</entry>
+
+                <entry>local</entry>
+
+                <entry>0.39</entry>
+
+                <entry>1</entry>
+
+                <entry>0.39</entry>
+
+                <entry>0.032</entry>
+
+                <entry>5.0</entry>
+
+                <entry>5.0</entry>
+
+                <entry>-</entry>
+
+                <entry>0.0</entry>
+
+                <entry>-</entry>
+
+                <entry>-</entry>
+              </row>
+
+              <row>
+                <entry>stage_out_local_local_0_0</entry>
+
+                <entry>1</entry>
+
+                <entry>local</entry>
+
+                <entry>0.165</entry>
+
+                <entry>1</entry>
+
+                <entry>0.165</entry>
+
+                <entry>0.108</entry>
+
+                <entry>5.0</entry>
+
+                <entry>10.0</entry>
+
+                <entry>-</entry>
+
+                <entry>0.0</entry>
+
+                <entry>-</entry>
+
+                <entry>-</entry>
+              </row>
+
+              <row>
+                <entry>stage_out_local_local_1_0</entry>
+
+                <entry>1</entry>
+
+                <entry>local</entry>
+
+                <entry>0.147</entry>
+
+                <entry>1</entry>
+
+                <entry>0.147</entry>
+
+                <entry>0.098</entry>
+
+                <entry>7.0</entry>
+
+                <entry>5.0</entry>
+
+                <entry>-</entry>
+
+                <entry>0.0</entry>
+
+                <entry>-</entry>
+
+                <entry>-</entry>
+              </row>
+
+              <row>
+                <entry>stage_out_local_local_1_1</entry>
+
+                <entry>1</entry>
+
+                <entry>local</entry>
+
+                <entry>0.139</entry>
+
+                <entry>1</entry>
+
+                <entry>0.139</entry>
+
+                <entry>0.089</entry>
+
+                <entry>5.0</entry>
+
+                <entry>6.0</entry>
+
+                <entry>-</entry>
+
+                <entry>0.0</entry>
+
+                <entry>-</entry>
+
+                <entry>-</entry>
+              </row>
+
+              <row>
+                <entry>stage_out_local_local_2_0</entry>
+
+                <entry>1</entry>
+
+                <entry>local</entry>
+
+                <entry>0.145</entry>
+
+                <entry>1</entry>
+
+                <entry>0.145</entry>
+
+                <entry>0.101</entry>
+
+                <entry>5.0</entry>
+
+                <entry>5.0</entry>
+
+                <entry>-</entry>
+
+                <entry>0.0</entry>
+
+                <entry>-</entry>
+
+                <entry>-</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+      </section>
+
+      <section id="peg_stats_transformation">
+        <title>Transformation statistics file per workflow
+        [breakdown.txt]</title>
+
+        <para>Transformation statistics file per workflow contains information
+        about the invocations in each workflow grouped by transformation name.
+        A sample file is shown below.</para>
+
+        <itemizedlist>
+          <listitem>
+            <para><emphasis role="bold">Transformation</emphasis> - name of
+            the transformation.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Count</emphasis> - the number of times
+            invocations with a given transformation name was executed.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Succeeded</emphasis> - the count of
+            succeeded invocations with a given logical transformation name
+            .</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Failed</emphasis> - the count of
+            failed invocations with a given logical transformation name
+            .</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Min (sec.)</emphasis> - the minimum
+            runtime value of invocations with a given logical transformation
+            name times the multipler_factor.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Max (sec.)</emphasis> - the minimum
+            runtime value of invocations with a given logical transformation
+            name times the multiplier_factor.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Mean (sec.)</emphasis> - the mean of
+            the invocation runtimes with a given logical transformation name
+            times the multiplier_factor.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Total (sec.)</emphasis> - the
+            cumulative of runtime value of invocations with a given logical
+            transformation name times the multiplier_factor.</para>
+          </listitem>
+        </itemizedlist>
+
+        <table>
+          <title>Transformation Statistics</title>
+
+          <tgroup align="center" cols="8">
+            <thead>
+              <row>
+                <entry align="center">Transformation</entry>
+
+                <entry align="center">Count</entry>
+
+                <entry align="center">Succeeded</entry>
+
+                <entry align="center">Failed</entry>
+
+                <entry align="center">Min</entry>
+
+                <entry align="center">Max</entry>
+
+                <entry align="center">Mean</entry>
+
+                <entry align="center">Total</entry>
+              </row>
+            </thead>
+
+            <tbody>
+              <row>
+                <entry>dagman::post</entry>
+
+                <entry>13</entry>
+
+                <entry>13</entry>
+
+                <entry>0</entry>
+
+                <entry>5.0</entry>
+
+                <entry>7.0</entry>
+
+                <entry>5.231</entry>
+
+                <entry>68.0</entry>
+              </row>
+
+              <row>
+                <entry>diamond::analyze</entry>
+
+                <entry>1</entry>
+
+                <entry>1</entry>
+
+                <entry>0</entry>
+
+                <entry>60.002</entry>
+
+                <entry>60.002</entry>
+
+                <entry>60.002</entry>
+
+                <entry>60.002</entry>
+              </row>
+
+              <row>
+                <entry>diamond::findrange</entry>
+
+                <entry>2</entry>
+
+                <entry>2</entry>
+
+                <entry>0</entry>
+
+                <entry>600.01</entry>
+
+                <entry>600.02</entry>
+
+                <entry>600.02</entry>
+
+                <entry>1200.03</entry>
+              </row>
+
+              <row>
+                <entry>diamond::preprocess</entry>
+
+                <entry>1</entry>
+
+                <entry>1</entry>
+
+                <entry>0</entry>
+
+                <entry>60.002</entry>
+
+                <entry>60.002</entry>
+
+                <entry>60.002</entry>
+
+                <entry>60.002</entry>
+              </row>
+
+              <row>
+                <entry>pegasus::dirmanager</entry>
+
+                <entry>1</entry>
+
+                <entry>1</entry>
+
+                <entry>0</entry>
+
+                <entry>0.027</entry>
+
+                <entry>0.027</entry>
+
+                <entry>0.027</entry>
+
+                <entry>0.027</entry>
+              </row>
+
+              <row>
+                <entry>pegasus::pegasus-transfer</entry>
+
+                <entry>5</entry>
+
+                <entry>5</entry>
+
+                <entry>0</entry>
+
+                <entry>0.139</entry>
+
+                <entry>0.39</entry>
+
+                <entry>0.197</entry>
+
+                <entry>0.986</entry>
+              </row>
+
+              <row>
+                <entry>pegasus::rc-client</entry>
+
+                <entry>3</entry>
+
+                <entry>3</entry>
+
+                <entry>0</entry>
+
+                <entry>0.338</entry>
+
+                <entry>0.459</entry>
+
+                <entry>0.382</entry>
+
+                <entry>1.145</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+      </section>
+
+      <section id="peg_stats_time">
+        <title>Time statistics file [time.txt]</title>
+
+        <para>Time statistics file contains job instance and invocation
+        statistics information grouped by time and host. The time grouping can
+        be on day/hour. The file contains the following tables Job instance
+        statistics per day/hour, Invocation statistics per day/hour, Job
+        instance statistics by host per day/hour and Invocation by host per
+        day/hour. A sample Invocation statistics by host per day table is
+        shown below.</para>
+
+        <itemizedlist>
+          <listitem>
+            <para><emphasis role="bold">Job instance statistics per
+            day/hour</emphasis> - the number of job instances run, total
+            runtime sorted by day/hour.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Invocation statistics per
+            day/hour</emphasis> - the number of invocations , total runtime
+            sorted by day/hour.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Job instance statistics by host per
+            day/hour</emphasis> - the number of job instances run, total
+            runtime on each host sorted by day/hour.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Invocation statistics by host per
+            day/hour</emphasis> - the number of invocations , total runtime on
+            each host sorted by day/hour.</para>
+          </listitem>
+        </itemizedlist>
+
+        <table>
+          <title>Invocation statistics by host per day</title>
+
+          <tgroup align="center" cols="4">
+            <thead>
+              <row>
+                <entry align="center">Date [YYYY-MM-DD]</entry>
+
+                <entry align="center">Host</entry>
+
+                <entry align="center">Count</entry>
+
+                <entry align="center">Runtime (Sec.)</entry>
+              </row>
+            </thead>
+
+            <tbody>
+              <row>
+                <entry>2011-07-15</entry>
+
+                <entry>butterfly.isi.edu</entry>
+
+                <entry>54</entry>
+
+                <entry>625.094</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+      </section>
+
+      <section>
+        <title id="peg_stats_integrity">Integrity statistics file per workflow
+        [integrity.txt]</title>
+
+        <para>Integrity statistics file contains integrity metrics grouped by
+        file type (input or output) and integrity type (check or compute). A
+        sample table is shown below. It shows the following statistics about
+        integrity checks.</para>
+
+        <para><itemizedlist>
+            <listitem>
+              <para><emphasis role="bold">Type</emphasis> - the type of
+              integrity metric. Check means checksum was compared for a file,
+              and compute means a checksum was generated for a file.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">File type</emphasis> - the type of
+              file: input or output from a job perspective.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">Count</emphasis> - the number of
+              times type, file type integrity check was performed.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">Total duration</emphasis> - sum of
+              duration in seconds for the 'count' number of records matching
+              the particular type, file-type combo.</para>
+            </listitem>
+          </itemizedlist><table>
+            <title>Integrity Statistics</title>
+
+            <tgroup align="center" cols="5">
+              <thead>
+                <row>
+                  <entry align="center">#</entry>
+
+                  <entry align="center">Type</entry>
+
+                  <entry align="center">File Type</entry>
+
+                  <entry align="center">Count</entry>
+
+                  <entry align="center">Total Duration</entry>
+                </row>
+              </thead>
+
+              <tbody>
+                <row>
+                  <entry>4555392d-1b37-407c-98d3-60fb86cb9d57</entry>
+
+                  <entry/>
+
+                  <entry/>
+
+                  <entry/>
+
+                  <entry/>
+                </row>
+
+                <row>
+                  <entry/>
+
+                  <entry>check</entry>
+
+                  <entry>input</entry>
+
+                  <entry>5</entry>
+
+                  <entry>0.164</entry>
+                </row>
+
+                <row>
+                  <entry/>
+
+                  <entry>check</entry>
+
+                  <entry>output</entry>
+
+                  <entry>5</entry>
+
+                  <entry>1.456</entry>
+                </row>
+
+                <row>
+                  <entry/>
+
+                  <entry>compute</entry>
+
+                  <entry>input</entry>
+
+                  <entry>5</entry>
+
+                  <entry>0.693</entry>
+                </row>
+
+                <row>
+                  <entry/>
+
+                  <entry>compute</entry>
+
+                  <entry>output</entry>
+
+                  <entry>5</entry>
+
+                  <entry>0.758</entry>
+                </row>
+              </tbody>
+            </tgroup>
+          </table></para>
+      </section>
     </section>
 
     <section>
