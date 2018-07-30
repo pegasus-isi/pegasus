@@ -247,7 +247,6 @@ working dir : /lfs1/work/pegasus/run0004
 
       <programlisting>$ <emphasis><emphasis role="bold">pegasus-statistics /scratch/grid-setup/run0001/ -s all</emphasis> </emphasis>
 
-
 #
 # Pegasus Workflow Management System - http://pegasus.isi.edu
 #
@@ -273,7 +272,7 @@ working dir : /lfs1/work/pegasus/run0004
 #   The wall time from the start of the workflow execution to the end as
 #   reported by the DAGMAN.In case of rescue dag the value is the
 #   cumulative of all retries.
-# Workflow cumulative job wall time:
+# Cumulative job wall time:
 #   The sum of the wall time of all jobs as reported by kickstart.
 #   In case of job retries the value is the cumulative of all retries.
 #   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
@@ -285,14 +284,7 @@ working dir : /lfs1/work/pegasus/run0004
 #   is the cumulative of all retries. For workflows having sub workflow
 #   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
 #   from the sub workflows as well.
-# Cumulative job wall time as seen from submit side:
-#   The sum of the wall time of all jobs as reported by DAGMan.
-#   This is similar to the regular cumulative job wall time, but includes
-#   job management overhead and delays. In case of job retries the value
-#   is the cumulative of all retries. For workflows having sub workflow
-#   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
-#   from the sub workflows as well.
-# Workflow cumulative job badput wall time:
+# Cumulative job badput wall time:
 #   The sum of the wall time of all failed jobs as reported by kickstart.
 #   In case of job retries the value is the cumulative of all retries.
 #   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
@@ -304,19 +296,30 @@ working dir : /lfs1/work/pegasus/run0004
 #   is the cumulative of all retries. For workflows having sub workflow
 #   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
 #   from the sub workflows as well.
-
 ------------------------------------------------------------------------------
 Type           Succeeded Failed  Incomplete  Total     Retries   Total+Retries
-Tasks          4         0       0           4         0         4
-Jobs           17        0       0           17        0         17
-Sub-Workflows  0         0       0           0         0         0
+Tasks          4         0       0           4         0         4            
+Jobs           20        0       0           20        0         20           
+Sub-Workflows  0         0       0           0         0         0            
 ------------------------------------------------------------------------------
 
-Workflow wall time                                       : 5 mins, 18 secs
-Workflow cumulative job wall time                        : 4 mins, 2 secs
-Cumulative job wall time as seen from submit side        : 4 mins, 10 secs
-Workflow cumulative job badput wall time                 : 0
-Cumulative job badput wall time as seen from submit side : 0
+Workflow wall time                                       : 6 mins, 55 secs
+Cumulative job wall time                                 : 4 mins, 58 secs
+Cumulative job wall time as seen from submit side        : 5 mins, 11 secs
+Cumulative job badput wall time                          : 0.0 secs
+Cumulative job badput wall time as seen from submit side : 0.0 secs
+
+Integrity Metrics
+5 files checksums compared with total duration of 0.439 secs
+8 files checksums generated with total duration of 1.031 secs
+
+Summary                       : ./statistics/summary.txt
+Workflow execution statistics : ./statistics/workflow.txt
+Job instance statistics       : ./statistics/jobs.txt
+Transformation statistics     : ./statistics/breakdown.txt
+Integrity statistics          : ./statistics/integrity.txt
+Time statistics               : ./statistics/time.txt
+
 
 </programlisting>
 
@@ -519,6 +522,24 @@ pegasus-statistics -Dpegasus.monitord.output='&lt;DB_URL&gt;' -o &lt;OUTPUT_DIR&
           wall time value includes jobs from the sub workflows. This value is
           multiplied by the multiplier_factor in the job instance
           table.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Integrity Metrics </emphasis></para>
+
+          <itemizedlist>
+            <listitem>
+              <para>Number of files for which the checksum was compared
+              against a previously computed or provided checksum and total
+              duration in seconds spent in doing it. </para>
+            </listitem>
+
+            <listitem>
+              <para>Number of files for which the checksum was generated
+              during workflow execution and total duration in seconds spent in
+              doing it. </para>
+            </listitem>
+          </itemizedlist>
         </listitem>
       </itemizedlist>
 
@@ -1560,7 +1581,7 @@ pegasus-statistics -Dpegasus.monitord.output='&lt;DB_URL&gt;' -o &lt;OUTPUT_DIR&
           </tgroup>
         </table></para>
 
-      <para> </para>
+      <para/>
     </section>
 
     <section>
