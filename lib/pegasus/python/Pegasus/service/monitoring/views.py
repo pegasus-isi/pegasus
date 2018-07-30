@@ -17,7 +17,7 @@ __author__ = 'Rajiv Mayani'
 import hashlib
 import json
 import logging
-from io import StringIO
+import StringIO
 
 from flask import current_app, g, make_response, request
 from Pegasus.service import cache
@@ -1260,7 +1260,7 @@ Batch Response
 
 
 def _read_response(response):
-    output = StringIO()
+    output = StringIO.StringIO()
     try:
         for line in response.response:
             output.write(line)
@@ -1290,7 +1290,7 @@ def batch(username):
         log.exception('Invalid JSON')
         raise InvalidJSONError(e.message)
 
-    responses = StringIO()
+    responses = StringIO.StringIO()
     responses.write('[')
     headers = [('Authorization', request.headers.get('Authorization'))
                ] if request.authorization else []

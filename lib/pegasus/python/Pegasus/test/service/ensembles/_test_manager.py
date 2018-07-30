@@ -3,7 +3,7 @@ import sys
 import time
 import subprocess
 import logging
-from io import StringIO
+from StringIO import StringIO
 
 from Pegasus.db import schema as dash
 

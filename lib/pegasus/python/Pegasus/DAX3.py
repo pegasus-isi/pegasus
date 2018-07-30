@@ -156,7 +156,10 @@ if sys.version_info >= (3, 0):
     # compatibility with Python 3
     from past.builtins import basestring
 
-from io import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 SCHEMA_NAMESPACE = "http://pegasus.isi.edu/schema/DAX"
 SCHEMA_LOCATION = "http://pegasus.isi.edu/schema/dax-3.6.xsd"

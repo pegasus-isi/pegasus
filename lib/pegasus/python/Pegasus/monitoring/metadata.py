@@ -25,7 +25,7 @@ import logging
 import tempfile
 
 import os
-from io import StringIO
+from cStringIO import StringIO
 
 __author__ = "Karan Vahi <vahi@isi.edu>"
 

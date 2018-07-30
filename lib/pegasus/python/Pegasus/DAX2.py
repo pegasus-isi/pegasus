@@ -27,7 +27,7 @@ __all__ = ["DAX","Filename","Profile","Job","Namespace","LFN",
 __version__ = "2.1"
 
 import datetime, pwd, os
-from io import StringIO
+from cStringIO import StringIO
 import xml.sax
 import xml.sax.handler
 import shlex

@@ -17,7 +17,7 @@ __author__ = 'Rajiv Mayani'
 import json
 import logging
 import os
-from io import StringIO
+import StringIO
 import unittest
 
 from flask import g
@@ -28,7 +28,7 @@ from Pegasus.service.monitoring.resources import *
 class JSONResponseMixin(object):
     @staticmethod
     def read_response(response):
-        output = StringIO()
+        output = StringIO.StringIO()
 
         try:
             for line in response.response:
