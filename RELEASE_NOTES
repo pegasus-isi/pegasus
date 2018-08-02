@@ -1,4 +1,41 @@
 ===============================
+Release Notes for Pegasus 4.8.3
+===============================
+We are happy to announce the release of Pegasus 4.8.3 . Pegasus 4.8.3
+s a minor bug fix release
+
+New Features
+--------------
+
+1) [PM-1280] – incorporate container based example in pegasus-init
+   	        pegasus-init was updated to include a population
+   	        modeling example using containers. Updated tutorial
+   	        instructions using that example can be found at
+   	        http://pegasus.isi.edu/tutorial/isi/index.php 
+
+2)   [PM-1283] – tutorial vm should be updated to be able to run the
+     	         containers tutorial 
+
+Improvements
+--------------
+1) [PM-1285] – Exporting environmental variables in containers with the
+same technique
+
+Bugs Fixed
+--------------
+1) [PM-1275] – kickstart build fails on arm64
+
+2) [PM-1276] – unbounded recursion in database loader for dashboard in
+   	       monitord
+
+3) [PM-1281] – pegasus-analyzer does not show task stdout/stderr for
+   	       held jobs
+
+4) [PM-1200] – updated singularity mode to not mount /tmp and /var/tmp
+   	       as scratch.  Newer singularity versions do that
+   	       automatically and complain if re-mounting
+
+===============================
 Release Notes for Pegasus 4.8.2
 ===============================
 
