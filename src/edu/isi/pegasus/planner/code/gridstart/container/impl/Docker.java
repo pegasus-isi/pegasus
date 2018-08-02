@@ -106,26 +106,6 @@ public class Docker extends Abstract{
         //assume docker is available in path
         sb.append( "docker run ");
         
-        //environment variables are set in the job as -e
-        ENV containerENVProfiles = (ENV) c.getProfilesObject().get(Profiles.NAMESPACES.env);
-        for( Iterator it = containerENVProfiles.getProfileKeyIterator(); it.hasNext(); ){
-            String key = (String)it.next();
-            String value = (String) containerENVProfiles.get( key );
-            
-            //check for env variables that are constructed based on condor job classds 
-            //such asCONDOR_JOBID=$(cluster).$(process). these are set by condor
-            //and can only picked up from the shell when a job runs on a node
-            //so we only set the key
-            boolean fromShell = value.contains( "$(" );
-            sb.append( "-e ").append( key );
-            if( !fromShell ){
-                //append the value
-                sb.append( "=" ).
-                append( "\"" ).append( value ).append( "\"" );
-            }
-            sb.append( " " );
-        }
-        
         //directory where job is run is mounted as scratch
         sb.append( "-v $PWD:").append( CONTAINER_WORKING_DIRECTORY ).append( " ");
         sb.append( "-w=").append( CONTAINER_WORKING_DIRECTORY ).append( " ");     
@@ -204,10 +184,36 @@ public class Docker extends Abstract{
             WORKER_PACKAGE_SETUP_SNIPPET = Docker.constructContainerWorkerPackagePreamble();
         }
         StringBuilder sb = new StringBuilder();
+        Container c = job.getContainer();
+        
         sb.append( "\n" );
         appendStderrFragment( sb, Abstract.PEGASUS_LITE_MESSAGE_PREFIX, "Writing out script to launch user task in container" );
         sb.append( "\n" );
         sb.append( "cat <<EOF > " ).append( scriptName ).append( "\n" );
+        
+        sb.append( "#!/bin/bash" ).append( "\n" );
+        sb.append( "set -e" ).append( "\n" );
+        
+        //set the job environment variables explicitly in the -cont.sh file
+        sb.append("# setting environment variables for job").append( '\n' );
+        ENV containerENVProfiles = (ENV) c.getProfilesObject().get(Profiles.NAMESPACES.env);
+        for( Iterator it = containerENVProfiles.getProfileKeyIterator(); it.hasNext(); ){
+            String key = (String)it.next();
+            String value = (String) containerENVProfiles.get( key );
+            
+            //check for env variables that are constructed based on condor job classds 
+            //such asCONDOR_JOBID=$(cluster).$(process). these are set by condor
+            //and can only picked up from the shell when a job runs on a node
+            //so we only set the key
+            boolean fromShell = value.contains( "$(" );
+            sb.append( "-e ").append( key );
+            if( !fromShell ){
+                //append the value
+                sb.append( "=" ).
+                append( "\"" ).append( value ).append( "\"" );
+            }
+            sb.append( " " );
+        }
         
         if( WORKER_PACKAGE_SETUP_SNIPPET == null ){
             WORKER_PACKAGE_SETUP_SNIPPET = Docker.constructContainerWorkerPackagePreamble();
@@ -256,8 +262,7 @@ public class Docker extends Abstract{
      */
     protected static String constructContainerWorkerPackagePreamble() {
         StringBuilder sb = new StringBuilder();
-        sb.append( "#!/bin/bash" ).append( "\n" );
-        sb.append( "set -e" ).append( "\n" );
+        
         sb.append( "pegasus_lite_version_major=$pegasus_lite_version_major" ).append( "\n" );
         sb.append( "pegasus_lite_version_minor=$pegasus_lite_version_minor" ).append( "\n" );
         sb.append( "pegasus_lite_version_patch=$pegasus_lite_version_patch" ).append( "\n" );
