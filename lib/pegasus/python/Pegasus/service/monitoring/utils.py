@@ -192,13 +192,13 @@ def csv_to_json(csv, schema, index):
         raise ValueError('index must be of type dictionary')
 
     # Start
-    root = [entity for entity in schema.iterkeys()][0]
+    root = [entity for entity in schema][0]
 
     uniq_dict = {}
 
     # Pass 1
     for row in csv:
-        for entity, entity_def in schema.iteritems():
+        for entity, entity_def in schema.items():
             if entity_def == 'root':
                 entity_dict = uniq_dict.setdefault(root, OrderedSet())
                 entity_dict.add(row[index[entity]])
@@ -224,7 +224,7 @@ def csv_to_json(csv, schema, index):
 
     # Pass 2
     for row in csv:
-        for entity, entity_def in schema.iteritems():
+        for entity, entity_def in schema.items():
             if entity_def == 'root':
                 continue
 

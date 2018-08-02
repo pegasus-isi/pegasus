@@ -1811,7 +1811,7 @@ class ADAG(InvokeMixin, MetadataMixin):
         # Automatically determine dependencies
 
         # Traverse each job
-        for job_id, job in self.jobs.iteritems():
+        for job_id, job in self.jobs.items():
             file_used = job.used
 
             # If job produces to stdout, identify it as an output file
@@ -1835,7 +1835,7 @@ class ADAG(InvokeMixin, MetadataMixin):
                 else:
                     mapping[f.name][1].add(job)
 
-        for file_name, io in mapping.iteritems():
+        for file_name, io in mapping.items():
             # Go through the mapping and for each file add dependencies between the
             # job producing a file and the jobs consuming the file
             inputs = io[0]

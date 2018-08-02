@@ -421,11 +421,11 @@ class emit_dot(object):
         self.out.write('    edge [arrowhead=normal,arrowsize=1.0]\n\n')
 
         # Render nodes
-        for n in dag.nodes.itervalues():
+        for n in dag.nodes.values():
             n.renderNode(self)
 
         # Render edges
-        for p in dag.nodes.itervalues():
+        for p in dag.nodes.values():
             for c in p.children:
                 c.renderEdge(self, p)
 
