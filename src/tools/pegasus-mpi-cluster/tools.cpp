@@ -171,7 +171,7 @@ struct cpuinfo get_host_cpuinfo() {
             // cores it has
             if (new_socket) {
                 cpu_t cores;
-                if (sscanf(rec.c_str(), "cpu cores\t: %"SCNcpu_t, &cores) != 1) {
+                if (sscanf(rec.c_str(), "cpu cores\t: %" SCNcpu_t, &cores) != 1) {
                     myfailures("Error reading 'cpu cores' field from /proc/cpuinfo");
                 }
                 c.cores += cores;
@@ -189,7 +189,7 @@ struct cpuinfo get_host_cpuinfo() {
     if (c.threads == 0 || c.cores == 0 || c.sockets == 0 ||
             c.cores > c.threads || c.sockets > c.cores ||
             c.threads % c.cores > 0 || c.cores % c.sockets > 0) {
-        myfailure("Invalid cpuinfo: %"PRIcpu_t" %"PRIcpu_t" %"PRIcpu_t, c.threads, c.cores, c.sockets);
+        myfailure("Invalid cpuinfo: %" PRIcpu_t " %" PRIcpu_t " %" PRIcpu_t, c.threads, c.cores, c.sockets);
     }
     return c;
 }

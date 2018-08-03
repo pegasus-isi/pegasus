@@ -350,7 +350,7 @@ void TaskHandler::child_process() {
         char env_bindings[1024];
         for (vector<cpu_t>::iterator i = bindings.begin(); i != bindings.end(); i++) {
             cpu_t core = *i;
-            off += snprintf(env_bindings + off, sizeof(env_bindings) - off, "%"PRIcpu_t",", core);
+            off += snprintf(env_bindings + off, sizeof(env_bindings) - off, "%" PRIcpu_t ",", core);
         }
         env_bindings[off-1] = '\0';
         setenv("PMC_AFFINITY", env_bindings, 1);
@@ -926,9 +926,9 @@ int Worker::run() {
     comm->send_message(&regmsg, 0);
     log_trace("Worker %d: Host name: %s", rank, host_name.c_str());
     log_trace("Worker %d: Host memory: %u MB", rank, this->host_memory);
-    log_trace("Worker %d: Host threads/CPUs: %"PRIcpu_t, rank, this->host_threads);
-    log_trace("Worker %d: Host cores: %"PRIcpu_t, rank, this->host_cores);
-    log_trace("Worker %d: Host sockets: %"PRIcpu_t, rank, this->host_sockets);
+    log_trace("Worker %d: Host threads/CPUs: %" PRIcpu_t, rank, this->host_threads);
+    log_trace("Worker %d: Host cores: %" PRIcpu_t, rank, this->host_cores);
+    log_trace("Worker %d: Host sockets: %" PRIcpu_t, rank, this->host_sockets);
 
     // Get worker's host rank
     HostrankMessage *hrmsg = dynamic_cast<HostrankMessage *>(comm->recv_message());

@@ -141,7 +141,7 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
 
     char *env_host_cpus = getenv("PMC_HOST_CPUS");
     if (env_host_cpus != NULL) {
-        if (sscanf(env_host_cpus, "%"SCNcpu_t, &host_cpus) != 1) {
+        if (sscanf(env_host_cpus, "%" SCNcpu_t, &host_cpus) != 1) {
             argerror("Invalid value for PMC_HOST_CPUS");
             return 1;
         }
@@ -253,7 +253,7 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
                 return 1;
             }
             string host_cpus_string = flags.front();
-            if (sscanf(host_cpus_string.c_str(), "%"SCNcpu_t, &host_cpus) != 1) {
+            if (sscanf(host_cpus_string.c_str(), "%" SCNcpu_t, &host_cpus) != 1) {
                 argerror("Invalid value for --host-cpus");
                 return 1;
             }

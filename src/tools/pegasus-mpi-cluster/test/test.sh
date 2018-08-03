@@ -660,7 +660,7 @@ function test_complex_args {
 }
 
 function test_PM848 {
-    OUTPUT=$(mpiexec -n 11 $PMC --host-cpus 22 test/PM848.dag 2>&1)
+    OUTPUT=$(mpiexec -n 4 $PMC --host-cpus 8 test/PM848.dag 2>&1)
     RC=$?
 
     if [ $RC -ne 0 ]; then

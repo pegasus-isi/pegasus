@@ -100,7 +100,7 @@ vector<cpu_t> Host::allocate_resources(Task *task) {
     cpu_t threads_needed = task->cpus;
     cpu_t cores_needed = task->cpus / threads_per_core;
     cpu_t sockets_needed = task->cpus / threads_per_socket;
-    log_trace("Task %s requires %"PRIcpu_t" sockets, %"PRIcpu_t" cores, and %"PRIcpu_t" threads\n",
+    log_trace("Task %s requires %" PRIcpu_t " sockets, %" PRIcpu_t " cores, and %" PRIcpu_t " threads\n",
               task->name.c_str(), sockets_needed, cores_needed, threads_needed);
 
     // Determine what the aligned unit step size is
@@ -146,7 +146,7 @@ vector<cpu_t> Host::allocate_resources(Task *task) {
     for (vector<cpu_t>::iterator i=bindings.begin(); i!=bindings.end(); i++) {
         cpu_t j = *i;
         cpus[j] = task;
-        log_trace("Assigned CPU %"PRIcpu_t" to task %s", j, task->name.c_str());
+        log_trace("Assigned CPU %" PRIcpu_t " to task %s", j, task->name.c_str());
     }
 
     return bindings;
