@@ -979,11 +979,11 @@ CLUSTER = workflow.isi.edu
 
               <entry align="center">Key in +remote_cerequirements</entry>
 
+              <entry>SLURM parameter</entry>
+
               <entry>PBS Parameter</entry>
 
               <entry>SGE Parameter</entry>
-
-              <entry>SLURM parameter</entry>
 
               <entry>Moab Parameter</entry>
 
@@ -999,11 +999,11 @@ CLUSTER = workflow.isi.edu
 
               <entry>CORES</entry>
 
+              <entry>--ntasks cores</entry>
+
               <entry>n/a</entry>
 
               <entry>-pe ompi</entry>
-
-              <entry>--ntasks cores</entry>
 
               <entry>n/a</entry>
 
@@ -1026,11 +1026,11 @@ CLUSTER = workflow.isi.edu
 
               <entry>NODES</entry>
 
+              <entry>--nodes nodes</entry>
+
               <entry>-l nodes</entry>
 
               <entry>n/a</entry>
-
-              <entry>--nodes nodes</entry>
 
               <entry>-l nodes</entry>
 
@@ -1045,9 +1045,9 @@ CLUSTER = workflow.isi.edu
 
               <entry>PROCS</entry>
 
-              <entry>-l ppn</entry>
-
               <entry>n/a</entry>
+
+              <entry>-l ppn</entry>
 
               <entry>n/a</entry>
 
@@ -1064,11 +1064,11 @@ CLUSTER = workflow.isi.edu
 
               <entry>WALLTIME</entry>
 
+              <entry>--time walltime</entry>
+
               <entry>-l walltime</entry>
 
               <entry>-l h_rt</entry>
-
-              <entry>--time walltime</entry>
 
               <entry>-l walltime</entry>
 
@@ -1085,11 +1085,11 @@ CLUSTER = workflow.isi.edu
 
               <entry>PER_PROCESS_MEMORY</entry>
 
+              <entry>--mem memory</entry>
+
               <entry>-l pmem</entry>
 
               <entry>-l h_vmem</entry>
-
-              <entry>--mem memory</entry>
 
               <entry>--mem-per-cpu pmem</entry>
 
@@ -1108,9 +1108,9 @@ CLUSTER = workflow.isi.edu
 
               <entry>PROJECT</entry>
 
-              <entry>-A project_name</entry>
+              <entry>--account project_name</entry>
 
-              <entry>n/a</entry>
+              <entry>-A project_name</entry>
 
               <entry>n/a</entry>
 
@@ -1125,13 +1125,13 @@ CLUSTER = workflow.isi.edu
             <row>
               <entry>pegasus.queue</entry>
 
+              <entry>--partition</entry>
+
               <entry>n/a</entry>
 
               <entry>-q</entry>
 
               <entry>-q</entry>
-
-              <entry>n/a</entry>
 
               <entry>-q</entry>
 
@@ -1150,11 +1150,11 @@ CLUSTER = workflow.isi.edu
 
               <entry>TOTAL_MEMORY</entry>
 
+              <entry>--mem memory</entry>
+
               <entry>-l mem</entry>
 
               <entry>n/a</entry>
-
-              <entry>--mem memory</entry>
 
               <entry>-l mem</entry>
 
@@ -1169,12 +1169,12 @@ CLUSTER = workflow.isi.edu
               <entry>pegasus.glite.arguments</entry>
 
               <entry>EXTRA_ARGUMENTS</entry>
+              
+              <entry>prefixed by "#SBATCH"</entry>
 
               <entry>prefixed by "#PBS"</entry>
 
               <entry>prefixed by "#?"</entry>
-
-              <entry>prefixed by "#SBATCH"</entry>
 
               <entry>prefixed by "#MSUB"</entry>
 
