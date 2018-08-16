@@ -62,7 +62,7 @@ public class CondorEnvironmentEscape {
     private char[] mEscapable = { '\'', '\"'};
     
     /**
-     * The characater to use if whitespace is detected
+     * The character to use if whitespace is detected
      */
     private static final char WHITESPACE_ENCLOSING_CHARACTER = '\'';
 
@@ -105,7 +105,7 @@ public class CondorEnvironmentEscape {
      */
     public String escape( ENV env ){
         StringBuilder result = new StringBuilder();
-        
+        char whitespace = ' ';
         //whole environment is enclosed in double quotes
         result.append( "\"" );
         for( Iterator it = env.getProfileKeyIterator(); it.hasNext(); ){
@@ -113,7 +113,12 @@ public class CondorEnvironmentEscape {
             result.append( key );
             result.append(  "=" );
             result.append( this.escape( (String)env.get(key)));
-            result.append( " " );
+            result.append( whitespace );
+        }
+        
+        //PM-1245 remove trailing whitespace
+        if( result.charAt( result.length() - 1 ) == whitespace ){
+            result.deleteCharAt( result.length() -1 );
         }
         
         //end enclosing double quotes

@@ -327,6 +327,11 @@ public class CondorGenerator extends Abstract {
      * Boolean indicating whether to assign concurrency limits or not.
      */
     private boolean mAssociateConcurrencyLimits;
+    
+    /**
+     * The app name picked from pegasus properties
+     */
+    private String mAppName;
 
 
     /**
@@ -362,6 +367,11 @@ public class CondorGenerator extends Abstract {
         mSiteStore   = bag.getHandleToSiteStore();
         mAssignDefaultJobPriorities = mProps.assignDefaultJobPriorities();
         mAssociateConcurrencyLimits = mProps.associateCondorConcurrencyLimits();
+        mAppName     = mProps.getProperty( PegasusProperties.PEGASUS_APP_METRICS_PREFIX );
+        if( mAppName == null ){
+            //can still be null but it is fine
+            mAppName = mProps.getProperty( PegasusProperties.PEGASUS_APP_METRICS_PREFIX + ".name" );
+        }
 
         //instantiate and intialize the style factory
         mStyleFactory.initialize( bag );
@@ -705,7 +715,7 @@ public class CondorGenerator extends Abstract {
         //workflow id
         StringWriter classADWriter = new StringWriter();
         PrintWriter pwClassADWriter = new PrintWriter( classADWriter );
-        ClassADSGenerator.generate( pwClassADWriter, dag, job );
+        ClassADSGenerator.generate( pwClassADWriter, dag, job, mAppName );
         
         if( mAssociateConcurrencyLimits ){
             //PM-933, PM-1000 associate the corresponding concurrency limits

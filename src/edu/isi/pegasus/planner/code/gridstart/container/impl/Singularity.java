@@ -97,7 +97,7 @@ public class Singularity extends Abstract{
         sb.append( "singularity exec ");
         
         //exec --pwd /srv --scratch /var/tmp --scratch /tmp --home $PWD:/srv
-        sb.append( "--pwd ").append( CONTAINER_WORKING_DIRECTORY ).append( " --scratch /var/tmp --scratch /tmp ");
+        sb.append( "--pwd ").append( CONTAINER_WORKING_DIRECTORY ).append( " ");
         sb.append( "--home $PWD:" ).append( CONTAINER_WORKING_DIRECTORY ).append( " " );
         
         //we are running directly against image file. no loading

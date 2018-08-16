@@ -29,6 +29,13 @@ if [ -n "${JOBNAME}" ]; then
     echo "#SBATCH --job-name ${JOBNAME}"
 fi
 
+if [ -n "${PROJECT}" ]; then
+    echo "#SBATCH --account ${PROJECT}"
+fi
+
+if [ -n "${QUEUE}" ]; then
+    echo "#SBATCH --partition ${QUEUE}"
+fi
 
 # if a user passed any extra arguments set them in the end
 # for example "-N testjob -l walltime=01:23:45 -l nodes=2"

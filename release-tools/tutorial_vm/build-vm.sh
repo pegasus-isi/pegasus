@@ -90,7 +90,7 @@ fi
 #-------------------------------
 
 # Get AMI ID from log-02.txt
-AMI_ID=`grep "aws: AMIs were created" log-01.txt  | grep --extended-regexp --only-matching --word-regexp ami-.*`
+AMI_ID=`grep "aws: AMIs were created" log-01.txt  | grep --extended-regexp --only-matching --word-regexp ami-[a-zA-Z0-9]*`
 
 # Copy Image
 NEW_AMI=`aws ec2 copy-image --source-region 'us-west-2' \
@@ -98,10 +98,21 @@ NEW_AMI=`aws ec2 copy-image --source-region 'us-west-2' \
                    --name "Pegasus Tutorial VM ${VM_VERSION}" \
                    --description "Pegasus Tutorial VM ${VM_VERSION}"`
 
-aws ec2 wait image-available --image-id "${NEW_AMI}"
+WAIT="aws ec2 wait image-available --image-id ${NEW_AMI}"
+$WAIT || $WAIT
 
 # Make it public
 aws ec2 modify-image-attribute --image-id "${NEW_AMI}" --launch-permission "{\"Add\": [{\"Group\":\"all\"}]}"
 
+# Get snapshot associated with old AMI
+SNAP_ID=`aws ec2 describe-images --image-ids ${AMI_ID} --query 'Images[*].BlockDeviceMappings[*].Ebs.SnapshotId'`
+
 # De-register Old AMI
 aws ec2 deregister-image --image-id "${AMI_ID}"
+
+# Delete old AMI's snapshot
+aws ec2 delete-snapshot --snapshot-id "${SNAP_ID}"
+
+# Tag new AMI and snapshot
+NEW_SNAP=`aws ec2 describe-images --image-ids ${NEW_AMI} --query 'Images[*].BlockDeviceMappings[*].Ebs.SnapshotId'`
+aws ec2 create-tags --resources "${NEW_AMI}" "${NEW_SNAP}" --tags Key=Name,Value="Pegasus Tutorial VM ${VM_VERSION}"

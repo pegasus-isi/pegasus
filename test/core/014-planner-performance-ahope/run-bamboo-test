@@ -7,12 +7,12 @@
 # dax - if these limit is exeeded, the test fails. This is used
 # to detect big improvements in the planner which would mean it
 # is time to lower the upper (and lower) limits of this test
-MIN_SECONDS=200
+MIN_SECONDS=20
 
 
 # Max number of seconds allowed for the planner to plan the
 # dax - if these limit is exeeded, the test fails
-MAX_SECONDS=600
+MAX_SECONDS=60
 
 # set the java heap max to get the planner to not fail for
 # the 4.3 branch. we keep same for master for comparison

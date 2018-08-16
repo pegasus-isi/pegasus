@@ -2,11 +2,12 @@ from __future__ import print_function
 import sys
 import os
 import pwd
+import shutil, errno
 from jinja2 import Environment, FileSystemLoader
 
 
 class TutorialEnv:
-    LOCAL_MACHINE = ("Local Machine", "submit-host")
+    LOCAL_MACHINE = ("Local Machine Condor Pool", "submit-host")
     USC_HPCC_CLUSTER = ("USC HPCC Cluster", "usc-hpcc")
     OSG_FROM_ISI = ("OSG from ISI submit node", "osg")
     XSEDE_BOSCO = ("XSEDE, with Bosco", "xsede-bosco")
@@ -20,6 +21,7 @@ class TutorialExample:
     MERGE = ("Merge", "merge")
     EPA = ("EPA (requires R)", "r-epa")
     DIAMOND = ("Diamond", "diamond")
+    CONTAINER = ("Population Modeling using Containers", "population")
     MPI = ("MPI Hello World", "mpi-hw")
 
 
@@ -107,6 +109,19 @@ class Workflow(object):
         t.stream(**self.__dict__).dump(path)
         os.chmod(path, mode)
 
+    def copy_dir(self, src, dest):
+        #self.mkdir(dest)
+        if not src.startswith("/"):
+            src = os.path.join(self.sharedir,src)
+        try:
+            dest = os.path.join(self.workflowdir, dest)
+            shutil.copytree(src, dest)
+        except OSError as exc:  # python >2.5
+            if exc.errno == errno.ENOTDIR:
+                shutil.copy(src, dest)
+            else:
+                raise
+
     def mkdir(self, path):
         "Make relative directory in workflowdir"
         path = os.path.join(self.workflowdir, path)
@@ -135,7 +150,8 @@ class Workflow(object):
                 TutorialExample.PIPELINE,
                 TutorialExample.SPLIT,
                 TutorialExample.MERGE,
-                TutorialExample.EPA
+                TutorialExample.EPA,
+                TutorialExample.CONTAINER,
             ]
             if self.tutorial_setup != "osg":
                 examples.append(TutorialExample.DIAMOND)
@@ -153,7 +169,7 @@ class Workflow(object):
 
         # Determine what kind of site catalog we need to generate
         self.config = optionlist("What does your computing infrastructure look like?", [
-            ("Local Machine", "condorpool"),
+            ("Local Machine Condor Pool", "condorpool"),
             ("Remote Cluster using Globus GRAM", "globus"),
             ("Remote Cluster using CREAMCE", "creamce"),
             ("Local PBS Cluster with Glite", "glite"),
@@ -196,7 +212,8 @@ class Workflow(object):
 
     def generate(self):
         os.makedirs(self.workflowdir)
-        self.mkdir("input")
+        if self.tutorial != "population":
+            self.mkdir("input")
         self.mkdir("output")
 
         if self.generate_tutorial:
@@ -219,7 +236,6 @@ class Workflow(object):
             elif self.tutorial == "split":
                 # Split workflow input file
                 self.copy_template("split/pegasus.html", "input/pegasus.html")
-                self.copy_template("plan_cluster_dax.sh", "plan_cluster_dax.sh", mode=0o755)
             elif self.tutorial == "r-epa":
                 # Executables used by the R-EPA workflow
                 self.mkdir("bin")
@@ -227,6 +243,13 @@ class Workflow(object):
                 self.copy_template("r-epa/setupvar.R", "bin/setupvar.R", mode=0o755)
                 self.copy_template("r-epa/weighted.average.R", "bin/weighted.average.R", mode=0o755)
                 self.copy_template("r-epa/cumulative.percentiles.R", "bin/cumulative.percentiles.R", mode=0o755)
+            elif self.tutorial == "population":
+                self.copy_template("%s/Dockerfile" % self.tutorial, "Dockerfile")
+                self.copy_template("%s/Singularity" % self.tutorial, "Singularity")
+                self.copy_template("%s/tc.txt.containers" % self.tutorial, "tc.txt.containers")
+                self.copy_dir("%s/scripts" % self.tutorial, "scripts")
+                self.copy_dir("%s/data" % self.tutorial, "input")
+                # copy the mpi wrapper, c code and mpi
             elif self.tutorial == "mpi-hw":
                 # copy the mpi wrapper, c code and mpi example
                 # Executables used by the mpi-hw workflow
@@ -251,6 +274,7 @@ class Workflow(object):
 
         self.copy_template("sites.xml", "sites.xml")
         self.copy_template("plan_dax.sh", "plan_dax.sh", mode=0o755)
+        self.copy_template("plan_cluster_dax.sh", "plan_cluster_dax.sh", mode=0o755)
         self.copy_template("generate_dax.sh", "generate_dax.sh", mode=0o755)
         self.copy_template("README.md", "README.md")
         self.copy_template("rc.txt", "rc.txt")

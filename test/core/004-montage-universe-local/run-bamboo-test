@@ -30,6 +30,8 @@ cd montage-workflow-v2
                       --band 2mass:h:blue \
                       --band 2mass:k:red
 
+cat pegasus.properties >> ../pegasusrc
+
 # site catalog
 echo
 echo "Creating the site catalog..."
@@ -60,7 +62,7 @@ cat >sites.xml <<EOF
 EOF
 
 pegasus-plan \
-        --conf pegasus.properties \
+        --conf ../pegasusrc \
         --dir work \
         --relative-dir `date +'%s'` \
         --dax data/montage.dax \

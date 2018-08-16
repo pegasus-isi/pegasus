@@ -1197,7 +1197,7 @@ project:
 
                       mkdir -p $TARGET_DIR
                       rm -rf $TARGET_DIR/$NAME
-                      cp -a dist/$NAME $TARGET_DIR
+                      cp -r dist/$NAME $TARGET_DIR
                 - !script
                   description: Create Test Tarball
                   inlineScript:
@@ -1233,10 +1233,10 @@ project:
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "rm -rf pegasus/ test/"
+                    scriptBody: "rm -rf /scitech/home/bamboo/.pegasus/workflow.db"
                 - !script
                   description: Untar source
                   inlineScript:

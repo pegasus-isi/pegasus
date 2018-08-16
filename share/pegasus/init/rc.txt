@@ -13,3 +13,7 @@ pegasus.html file://{{workflowdir}}/input/pegasus.html   site="local"
 {% if generate_tutorial == true and tutorial == "mpi-hw" %}
 f.in file://{{workflowdir}}/input/f.in   site="local"
 {% endif %}
+{% if generate_tutorial == true and tutorial == "population" %}
+county_cohort_pop_config.ini file://{{workflowdir}}/scripts/config/county_cohort_pop_config.ini site="local"
+geospatial.py file://{{workflowdir}}/scripts/geospatial.py site="local"
+{% endif %}

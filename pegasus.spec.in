@@ -20,6 +20,10 @@ Requires:       java, python >= 2.6, condor >= 8.4, graphviz, pyOpenSSL
 
 %define sourcedir %{name}-%{version}
 
+# rpmbuild might add python3 as a dependency due to some Singularity example
+# workflows. This is a false dependency, so make sure it is excluded.
+%global __requires_exclude ^/usr/bin/python3$
+
 %description
 The Pegasus project encompasses a set of technologies that
 help workflow-based applications execute in a number of

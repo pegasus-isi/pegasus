@@ -1,0 +1,35 @@
+tr county_population_raster {
+    site local {
+        type "STAGEABLE"
+	arch "{{arch}}"
+        os "{{os}}"
+        pfn "file://{{workflowdir}}/scripts/county_population_raster.py"
+    }
+}
+
+tr full_res_pop_raster {
+    site local {
+        type "STAGEABLE"
+	arch "{{arch}}"
+        os "{{os}}"
+        pfn "file://{{workflowdir}}/scripts/full_res_pop_raster.py"
+    }
+}
+
+tr raster_to_png {
+    site local {
+        type "STAGEABLE"
+	arch "{{arch}}"
+        os "{{os}}"
+        pfn "file://{{workflowdir}}/scripts/raster_to_png.sh"
+    }
+}
+
+tr animate {
+    site local {
+        type "STAGEABLE"
+	arch "{{arch}}"
+        os "{{os}}"
+        pfn "file://{{workflowdir}}/scripts/animate.sh"
+    }
+}
