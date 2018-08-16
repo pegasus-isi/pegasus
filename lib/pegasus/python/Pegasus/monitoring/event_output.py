@@ -242,14 +242,38 @@ class AMQPEventSink(EventSink):
         self._channel = self._conn.channel()
         self._exch = exch
         self._channel.exchange_declare(exch, **self.EXCH_OPTS)
+        self.configure_filters(props.property("events"))
+
+    def configure_filters(self, events):
+        self._event_filters = set()
+        if events is None:
+            # add pre-configured specific events
+            self._event_filters.add( STAMPEDE_NS + "xwf.end")
+            return
+
+        for event in events.split(","):
+            self._event_filters.add(event)
+
 
     def send(self, event, kw):
         full_event = STAMPEDE_NS + event
+        if self.ignore(full_event):
+            return
+
         self._log.trace("send.start event=%s", full_event)
         data = self._encoder(event=event, **kw)
         self._channel.basic_publish(amqp.Message(body=data),
                                     exchange=self._exch, routing_key=full_event)
         self._log.trace("send.end event=%s", event)
+
+    def ignore(self, event):
+        if "*" in self._event_filters:
+            # we want all events
+            return False
+
+        return event not in self._event_filters
+
+
 
     def close(self):
         self._log.trace("close.start")
