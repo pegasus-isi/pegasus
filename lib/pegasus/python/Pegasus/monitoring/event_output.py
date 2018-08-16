@@ -229,8 +229,9 @@ class AMQPEventSink(EventSink):
 
     def __init__(self, host, port, exch=None, encoder=None,
                  userid='guest', password='guest', virtual_host=DEFAULT_AMQP_VIRTUAL_HOST,
-                 ssl=False, connect_timeout=None, **kw):
+                 ssl=False, props=None, connect_timeout=None, **kw):
         super(AMQPEventSink, self).__init__()
+        self._log.info( "Properties received %s", props)
         self._encoder = encoder
 
         self._log.info( "Connecting to host: %s:%s virtual host: %s exchange: %s with user: %s ssl: %s" %(host, port, virtual_host, exch, userid, ssl ))
@@ -264,20 +265,14 @@ class MultiplexEventSink(EventSink):
     def __init__(self, dest, enc, prefix=STAMPEDE_NS,  props=None, **kw):
         super( MultiplexEventSink, self ).__init__()
         self._endpoints = {}
-        additional_sink_props = props.propertyset("pegasus.catalog.workflow" + ".", True)
-
-        # we delete from our copy pegasus.catalog.workflow.url as we want with default prefix
-        if "url" in additional_sink_props.keys():
-            del additional_sink_props["url"]
-
-        additional_sink_props["default.url"] = dest
-        for key in additional_sink_props:
+        self._log.info("Multiplexed Event Sink Connection Properties  %s", props)
+        for key in props.keyset():
             if key.endswith( ".url" ):
-                # remove from our copy pegasus.catalog.workflow.url if exists
-                endpoint_props = properties.Properties(props.propertyset("pegasus.catalog.workflow" + ".", False))
-                endpoint_props.remove("pegasus.catalog.workflow.url")
+                sink_name= key[0:key.rfind(".url")]
 
-                self._endpoints[ key[0:key.rfind(".url")] ] = create_wf_event_sink(additional_sink_props[key], enc=enc,
+                # remove from our copy sink_name properties if they exist
+                endpoint_props = properties.Properties( props.propertyset(sink_name + ".", remove=True ))
+                self._endpoints[ sink_name ] = create_wf_event_sink(props.property(key), enc=enc,
                                                                                    prefix=prefix, props=endpoint_props, multiplexed = True, **kw)
 
     def send(self, event, kw):
@@ -336,9 +331,20 @@ def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, multipl
     if dest is None:
         return None
 
+    # we only subset the properties and strip off prefix once
+    if not multiplexed:
+        sink_props = properties.Properties(props.propertyset("pegasus.catalog.workflow" + ".", True))
+        # we delete from our copy pegasus.catalog.workflow.url as we want with default prefix
+        if "url" in sink_props.keyset():
+            del sink_props["url"]
+            sink_props.property( "default.url", dest )
+    else:
+        sink_props = props
+
     # PM-898 are additional URL's to populate specified
     if not multiplexed and multiplex( dest, prefix , props ):
-        return MultiplexEventSink(dest, enc, prefix, props, **kw)
+        sink_props.property("default.url", dest)
+        return MultiplexEventSink(dest, enc, prefix, sink_props, **kw)
 
 
     url = OutputURL(dest)
@@ -394,11 +400,11 @@ def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, multipl
 
         sink = AMQPEventSink(url.host, url.port, virtual_host=virtual_host, exch=exchange,
                              userid = url.user, password=url.password, ssl=False,
-                             encoder=pick_encfn(enc,prefix), **kw)
+                             encoder=pick_encfn(enc,prefix),props=sink_props, **kw)
         _type, _name="AMQP", "%s:%s/%s" % (url.host, url.port, url.path)
     else:
         # load the appropriate DBEvent on basis of prefix passed
-        sink = DBEventSink(dest, namespace=prefix, props=props, **kw)
+        sink = DBEventSink(dest, namespace=prefix, props=sink_props, **kw)
         _type, _name = "DB", dest
 
     log.info("output type=%s namespace=%s name=%s" % (_type, prefix, _name))
