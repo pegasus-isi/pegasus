@@ -1125,6 +1125,8 @@ CLUSTER = workflow.isi.edu
             <row>
               <entry>pegasus.queue</entry>
 
+              <entry>QUEUE</entry>
+              
               <entry>--partition</entry>
 
               <entry>n/a</entry>
