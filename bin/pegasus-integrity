@@ -457,8 +457,16 @@ def generate_fullstat_xml(lfn, pfn):
         # if we can't stat, just return
         return ''
 
-    uname = pwd.getpwuid(s.st_uid).pw_name
-    gname = grp.getgrgid(s.st_gid).gr_name
+    uname = ''
+    try:
+        uname = pwd.getpwuid(s.st_uid).pw_name
+    except:
+        pass
+    gname = ''
+    try:
+        gname = grp.getgrgid(s.st_gid).gr_name
+    except:
+        pass
     xml += ('    <statinfo mode="0%o" size="%d" inode="%d" nlink="%d"' 
             ' mtime="%s" atime="%s" ctime="%s"'
             ' uid="%d" user="%s" gid="%d" group="%s"/>\n'
