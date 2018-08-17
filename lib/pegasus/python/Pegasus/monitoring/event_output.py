@@ -289,19 +289,18 @@ class AMQPEventSink(EventSink):
         self._channel = self._conn.channel()
         self._exch = exch
         self._channel.exchange_declare(exch, **self.EXCH_OPTS)
+        self._event_filters = set()
         self.configure_filters(props.property("events"))
 
     def configure_filters(self, events):
-        self._event_filters = set()
         event_regexes = set()
-        
+
         if events is None:
             # add pre-configured specific events
             event_regexes.add(re.compile(STAMPEDE_NS + "xwf.*"))
-            return
-
-        for exp in events.split(","):
-            event_regexes.add(re.compile(exp))
+        else:
+            for exp in events.split(","):
+                event_regexes.add(re.compile(exp))
 
         # go through each regex and match against accepted events once
         for regex in event_regexes:
