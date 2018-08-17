@@ -289,7 +289,7 @@ class AMQPEventSink(EventSink):
         self._channel = self._conn.channel()
         self._exch = exch
         self._channel.exchange_declare(exch, **self.EXCH_OPTS)
-        self._event_filters = set()
+        self._handled_events = set()
         self.configure_filters(props.property("events"))
 
     def configure_filters(self, events):
@@ -307,9 +307,9 @@ class AMQPEventSink(EventSink):
             # go through each list of accepted events to check match
             for event in self._acceptedEvents:
                 if regex.search(event) is not None:
-                    self._event_filters.add(event)
+                    self._handled_events.add(event)
 
-        self._log.debug( "Events Handled %s", self._event_filters)
+        self._log.debug( "Events Handled %s", self._handled_events)
 
 
     def send(self, event, kw):
@@ -328,7 +328,7 @@ class AMQPEventSink(EventSink):
         #    # we want all events
         #    return False
 
-        return event not in self._event_filters
+        return event not in self._handled_events
 
 
 
