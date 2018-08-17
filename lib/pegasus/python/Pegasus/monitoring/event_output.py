@@ -23,6 +23,7 @@ import logging
 import urlparse
 import traceback
 import json
+import re
 
 from Pegasus.tools import utils
 from Pegasus.tools import properties
@@ -49,6 +50,7 @@ except:
 # Event name-spaces
 STAMPEDE_NS = "stampede."
 DASHBOARD_NS = "dashboard."
+
 
 
 def purge_wf_uuid_from_database(rundir, output_db):
@@ -127,6 +129,51 @@ class EventSink(object):
     """
     def __init__(self):
         self._log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
+        # Set listing events handled to be kept consistent with dict in workflow loader
+        self._acceptedEvents = (
+            'stampede.wf.plan',
+            'stampede.wf.map.task_job',
+            'stampede.static.start',
+            'stampede.static.end',
+            'stampede.xwf.start',
+            'stampede.xwf.end',
+            'stampede.xwf.map.subwf_job',
+            'stampede.task.info',
+            'stampede.task.edge',
+            'stampede.job.info',
+            'stampede.job.edge',
+            'stampede.job_inst.pre.start',
+            'stampede.job_inst.pre.term',
+            'stampede.job_inst.pre.end',
+            'stampede.job_inst.submit.start',
+            'stampede.job_inst.submit.end',
+            'stampede.job_inst.held.start',
+            'stampede.job_inst.held.end',
+            'stampede.job_inst.main.start',
+            'stampede.job_inst.main.term',
+            'stampede.job_inst.main.end',
+            'stampede.job_inst.post.start',
+            'stampede.job_inst.post.term',
+            'stampede.job_inst.post.end',
+            'stampede.job_inst.host.info',
+            'stampede.job_inst.image.info',
+            'stampede.job_inst.abort.info',
+            'stampede.job_inst.grid.submit.start',
+            'stampede.job_inst.grid.submit.end',
+            'stampede.job_inst.globus.submit.start',
+            'stampede.job_inst.globus.submit.end',
+            'stampede.inv.start',
+            'stampede.inv.end',
+            'stampede.static.meta.start',
+            'stampede.xwf.meta',
+            'stampede.task.meta',
+            'stampede.rc.meta',
+            'stampede.int.metric',
+            'stampede.rc.pfn',
+            'stampede.wf.map.file',
+            'stampede.static.meta.end',
+            'stampede.task.monitoring'
+        )
 
     def send(self, event, kw):
         """
@@ -251,8 +298,14 @@ class AMQPEventSink(EventSink):
             self._event_filters.add( STAMPEDE_NS + "xwf.end")
             return
 
-        for event in events.split(","):
-            self._event_filters.add(event)
+        for exp in events.split(","):
+            regex = re.compile( exp )
+            # go through each list of accepted events to check match
+            for event in self._acceptedEvents:
+                if regex.search(event) is not None:
+                    self._event_filters.add(event)
+
+        self._log.debug( "Events Handled %s", self._event_filters)
 
 
     def send(self, event, kw):
@@ -267,9 +320,9 @@ class AMQPEventSink(EventSink):
         self._log.trace("send.end event=%s", event)
 
     def ignore(self, event):
-        if "*" in self._event_filters:
-            # we want all events
-            return False
+        #if "*" in self._event_filters:
+        #    # we want all events
+        #    return False
 
         return event not in self._event_filters
 
