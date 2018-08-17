@@ -293,13 +293,18 @@ class AMQPEventSink(EventSink):
 
     def configure_filters(self, events):
         self._event_filters = set()
+        event_regexes = set()
+        
         if events is None:
             # add pre-configured specific events
-            self._event_filters.add( STAMPEDE_NS + "xwf.end")
+            event_regexes.add(re.compile(STAMPEDE_NS + "xwf.*"))
             return
 
         for exp in events.split(","):
-            regex = re.compile( exp )
+            event_regexes.add(re.compile(exp))
+
+        # go through each regex and match against accepted events once
+        for regex in event_regexes:
             # go through each list of accepted events to check match
             for event in self._acceptedEvents:
                 if regex.search(event) is not None:
