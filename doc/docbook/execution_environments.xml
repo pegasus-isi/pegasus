@@ -1129,8 +1129,6 @@ CLUSTER = workflow.isi.edu
               
               <entry>--partition</entry>
 
-              <entry>n/a</entry>
-
               <entry>-q</entry>
 
               <entry>-q</entry>
