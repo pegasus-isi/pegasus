@@ -290,6 +290,7 @@ class AMQPEventSink(EventSink):
         self._exch = exch
         self._channel.exchange_declare(exch, **self.EXCH_OPTS)
         self._handled_events = set()
+        self._handle_all_events = False
         self.configure_filters(props.property("events"))
 
     def configure_filters(self, events):
@@ -300,7 +301,13 @@ class AMQPEventSink(EventSink):
             event_regexes.add(re.compile(STAMPEDE_NS + "xwf.*"))
         else:
             for exp in events.split(","):
-                event_regexes.add(re.compile(exp))
+                if exp == "*":
+                    # short circuit
+                    self._handle_all_events = True
+                    self._log.debug("Events Handled: All")
+                    return
+                else:
+                    event_regexes.add(re.compile(exp))
 
         # go through each regex and match against accepted events once
         for regex in event_regexes:
@@ -309,7 +316,7 @@ class AMQPEventSink(EventSink):
                 if regex.search(event) is not None:
                     self._handled_events.add(event)
 
-        self._log.debug( "Events Handled %s", self._handled_events)
+        self._log.debug( "Events Handled: %s", self._handled_events)
 
 
     def send(self, event, kw):
@@ -324,9 +331,9 @@ class AMQPEventSink(EventSink):
         self._log.trace("send.end event=%s", event)
 
     def ignore(self, event):
-        #if "*" in self._event_filters:
-        #    # we want all events
-        #    return False
+        if self._handle_all_events:
+            # we want all events
+             return False
 
         return event not in self._handled_events
 
