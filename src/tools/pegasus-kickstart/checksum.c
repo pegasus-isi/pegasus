@@ -71,7 +71,7 @@ int print_pegasus_integrity_xml_blob(FILE *out, const char *fname) {
         /* missing file is ok */
         return 1;
     }
-    while ((len = read(fd, buf, 4096))) {
+    while ((len = read(fd, buf, 4096 - 1))) {
         buf[len + 1] = '\0';
         fprintf(out, "%.*s", len, buf);
     }
