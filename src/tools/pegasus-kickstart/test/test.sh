@@ -515,6 +515,15 @@ function test_integrity_xml_inc {
     return 0
 }
 
+function test_w_with_rel_exec {
+    mkdir -p subdir
+    cp /bin/date subdir/my_unique_exe
+    kickstart -w $PWD/subdir ./my_unique_exe
+    ec=$?
+    rm -rf subdir
+    return $ec
+}
+
 # make sure we start cleanly
 rm -f .pegasus-integrity-ks.xml
 
@@ -559,5 +568,6 @@ run_test test_metadata
 run_test test_integrity
 run_test test_integrity_failure
 run_test test_integrity_xml_inc
+run_test test_w_with_rel_exec
 
 
