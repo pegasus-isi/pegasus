@@ -593,7 +593,7 @@ public class CPlanner extends Executable{
             //also log in the planner metrics where the properties are
             mPMetrics.setProperties( mProps.getPropertiesInSubmitDirectory() );
         } catch (IOException ioe) {
-            String error = (state == 0) ? "Unable to write  to directory" : "Unable to write out properties to directory";
+            String error = (state == 0) ? "Unable to write to directory " : "Unable to write out properties to directory ";
             throw new RuntimeException( error + mPOptions.getSubmitDirectory(), ioe );
 
         }
