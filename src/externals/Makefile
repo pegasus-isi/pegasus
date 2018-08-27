@@ -82,7 +82,7 @@ $(LIBDIR)/sqlalchemy: SQLAlchemy-0.8.0.tar.gz
 $(LIBDIR)/flask: Flask-0.12.4.tar.gz
 $(LIBDIR)/flask_cache: Flask-Cache-0.13.1.tar.gz
 $(LIBDIR)/flask_sqlalchemy.py: Flask-SQLAlchemy-0.16.tar.gz
-$(LIBDIR)/jinja2: Jinja2-2.10.tar.gz
+$(LIBDIR)/jinja2: Jinja2-2.8.1.tar.gz
 $(LIBDIR)/markupsafe: MarkupSafe-1.0.tar.gz
 $(LIBDIR)/wtforms: WTForms-1.0.3.tar.gz
 $(LIBDIR)/werkzeug: Werkzeug-0.14.1.tar.gz
