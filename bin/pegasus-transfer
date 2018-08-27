@@ -3274,7 +3274,8 @@ class Stats:
         self._site_pair_bytes = {}
         
         # integrity timings
-        self._integrity_verify_count = {}
+        self._integrity_verify_count_succeeded = {}
+        self._integrity_verify_count_failed = {}
         self._integrity_verify_duration = {}
         self._integrity_generate_count = {}
         self._integrity_generate_duration = {}
@@ -3323,6 +3324,8 @@ class Stats:
 
     
     def add_integrity_generate(self, file_type, duration):
+        # this is not currently used, and thus does not handle
+        # success/failed counts
         if file_type is None or file_type == '':
             file_type = 'unknown'
         if file_type not in self._integrity_generate_count:
@@ -3332,27 +3335,32 @@ class Stats:
         self._integrity_generate_duration[file_type] += duration
 
 
-    def add_integrity_verify(self, file_type, duration):
+    def add_integrity_verify(self, file_type, duration, success):
         if file_type is None or file_type == '':
             file_type = 'unknown'
-        if file_type not in self._integrity_verify_count:
-            self._integrity_verify_count[file_type] = 0
+        if file_type not in self._integrity_verify_count_succeeded:
+            self._integrity_verify_count_succeeded[file_type] = 0
+            self._integrity_verify_count_failed[file_type] = 0
             self._integrity_verify_duration[file_type] = 0.0
-        self._integrity_verify_count[file_type] += 1
+        if success:
+            self._integrity_verify_count_succeeded[file_type] += 1
+        else:
+            self._integrity_verify_count_failed[file_type] += 1
         self._integrity_verify_duration[file_type] += duration
         
 
     def stats_summary(self):
         
         # integrity timings
-        for file_type in self._integrity_verify_count.keys():
+        for file_type in self._integrity_verify_count_succeeded.keys():
             data = {
                 'ts': int(time.time()), 
                 'monitoring_event': 'int.metric', 
                 'payload': [ {
                     'event': 'check',
                     'file_type': file_type,
-                    'count': self._integrity_verify_count[file_type],
+                    'succeeded': self._integrity_verify_count_succeeded[file_type],
+                    'failed': self._integrity_verify_count_failed[file_type],
                     'duration': '%.3f' % self._integrity_verify_duration[file_type]
                     }
                 ]
@@ -3365,7 +3373,8 @@ class Stats:
                 'payload': [ {
                     'event': 'compute',
                     'file_type': file_type,
-                    'count': self._integrity_generate_count[file_type],
+                    'succeeded': self._integrity_generate_count[file_type],
+                    'failed': 0,
                     'duration': '%.3f' % self._integrity_generate_duration[file_type]
                     }
                 ]
@@ -3730,11 +3739,11 @@ class SimilarWorkSet:
         try:
             tc = TimedCommand(cmd)
             tc.run()
+            stats.add_integrity_verify(file_type, tc.get_duration(), True)
         except RuntimeError as err:
             logger.error(err)
+            stats.add_integrity_verify(file_type, tc.get_duration(), False)
             return False
-        finally:
-            stats.add_integrity_verify(file_type, tc.get_duration())
         return True
 
 

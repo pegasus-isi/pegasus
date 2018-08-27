@@ -285,7 +285,8 @@ prog_base = os.path.split(sys.argv[0])[1]   # Name of this program
 
 logger = logging.getLogger('my_logger')
 
-total_count = 0
+count_succeeded = 0
+count_failed = 0
 total_timing = 0.0
 
 # --- functions ----------------------------------------------------------------
@@ -488,7 +489,8 @@ def check_integrity(fname, lfn, meta_data):
     Checks the integrity of a file given a set of metadata
     '''
     
-    global total_count
+    global count_succeeded
+    global count_failed
     global total_timing
 
     ts_start = time.time()
@@ -510,15 +512,16 @@ def check_integrity(fname, lfn, meta_data):
     
     ts_end = time.time()
 
-    total_count += 1
     total_timing += ts_end - ts_start
     
     # now compare them
     if current_sha256 != expected_sha256:
         logger.error('%s: Expected checksum (%s) does not match the calculated checksum (%s) (timing: %.3f)' \
                      %(fname, expected_sha256, current_sha256, ts_end - ts_start))
+        count_failed += 1
         return False
 
+    count_succeeded += 1
     return True
 
 
@@ -532,7 +535,8 @@ def dump_timing_json():
         'payload': [ {
                 'event': 'check',
                 'file_type': 'input',
-                'count': total_count,
+                'succeeded': count_succeeded,
+                'failed': count_failed,
                 'duration': '%.3f' % total_timing
             }
         ]
