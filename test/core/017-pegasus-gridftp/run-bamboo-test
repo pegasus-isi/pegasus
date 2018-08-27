@@ -25,23 +25,23 @@ fi
 TEMPNAME=$(mktemp pegasus-gridftp-test-XXXXX)
 
 # Create directories
-run_test "pegasus-gridftp mkdir gsiftp://colo-vm63.isi.edu/tmp/${TEMPNAME}"
-run_test "pegasus-gridftp mkdir gsiftp://colo-vm63.isi.edu/tmp/${TEMPNAME}/a"
-run_test "pegasus-gridftp mkdir -p gsiftp://colo-vm63.isi.edu/tmp/${TEMPNAME}/b/c"
+run_test "pegasus-gridftp mkdir gsiftp://bamboo.isi.edu/tmp/${TEMPNAME}"
+run_test "pegasus-gridftp mkdir gsiftp://bamboo.isi.edu/tmp/${TEMPNAME}/a"
+run_test "pegasus-gridftp mkdir -p gsiftp://bamboo.isi.edu/tmp/${TEMPNAME}/b/c"
 
-run_test "globus-url-copy file://${PWD}/$TEMPNAME gsiftp://colo-vm63.isi.edu/tmp/${TEMPNAME}/a/1.dat"
-run_test "globus-url-copy file://${PWD}/$TEMPNAME gsiftp://colo-vm63.isi.edu/tmp/${TEMPNAME}/b/c/2.dat"
-run_test "globus-url-copy file://${PWD}/$TEMPNAME gsiftp://colo-vm63.isi.edu/tmp/${TEMPNAME}/b/c/3.dat"
+run_test "globus-url-copy file://${PWD}/$TEMPNAME gsiftp://bamboo.isi.edu/tmp/${TEMPNAME}/a/1.dat"
+run_test "globus-url-copy file://${PWD}/$TEMPNAME gsiftp://bamboo.isi.edu/tmp/${TEMPNAME}/b/c/2.dat"
+run_test "globus-url-copy file://${PWD}/$TEMPNAME gsiftp://bamboo.isi.edu/tmp/${TEMPNAME}/b/c/3.dat"
 
-run_test "pegasus-gridftp ls gsiftp://colo-vm63.isi.edu/tmp/${TEMPNAME}/b/c"
-run_test "pegasus-gridftp ls -a gsiftp://colo-vm63.isi.edu/tmp/${TEMPNAME}/b/c"
-run_test "pegasus-gridftp ls -l gsiftp://colo-vm63.isi.edu/tmp/${TEMPNAME}/b/c"
+run_test "pegasus-gridftp ls gsiftp://bamboo.isi.edu/tmp/${TEMPNAME}/b/c"
+run_test "pegasus-gridftp ls -a gsiftp://bamboo.isi.edu/tmp/${TEMPNAME}/b/c"
+run_test "pegasus-gridftp ls -l gsiftp://bamboo.isi.edu/tmp/${TEMPNAME}/b/c"
 
-run_test "pegasus-gridftp rm gsiftp://colo-vm63.isi.edu/tmp/${TEMPNAME}/b/c/2.dat"
-run_test "pegasus-gridftp rm -r gsiftp://colo-vm63.isi.edu/tmp/${TEMPNAME}/b"
-run_test "pegasus-gridftp rm -f gsiftp://colo-vm63.isi.edu/tmp/${TEMPNAME}/b"
+run_test "pegasus-gridftp rm gsiftp://bamboo.isi.edu/tmp/${TEMPNAME}/b/c/2.dat"
+run_test "pegasus-gridftp rm -r gsiftp://bamboo.isi.edu/tmp/${TEMPNAME}/b"
+run_test "pegasus-gridftp rm -f gsiftp://bamboo.isi.edu/tmp/${TEMPNAME}/b"
 
-run_test "pegasus-gridftp rm -r -f gsiftp://colo-vm63.isi.edu/tmp/${TEMPNAME}"
+run_test "pegasus-gridftp rm -r -f gsiftp://bamboo.isi.edu/tmp/${TEMPNAME}"
 
 rm -f pegasus-gridftp-test-*
 

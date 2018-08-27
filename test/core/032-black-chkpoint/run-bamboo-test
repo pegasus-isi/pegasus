@@ -45,7 +45,7 @@ cat >sites.xml <<EOF
 
     <site handle="cartman-data" arch="x86" os="LINUX">
          <directory type="shared-scratch" path="${TOPDIR}/staging-site/scratch">
-            <file-server operation="all" url="gsiftp://colo-vm63.isi.edu/${TOPDIR}/staging-site/scratch"/>
+            <file-server operation="all" url="gsiftp://bamboo.isi.edu/${TOPDIR}/staging-site/scratch"/>
         </directory>
 
     </site>

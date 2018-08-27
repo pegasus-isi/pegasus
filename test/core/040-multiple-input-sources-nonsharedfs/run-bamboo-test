@@ -48,7 +48,7 @@ cat >sites.xml <<EOF
 
      <site  handle="staging" arch="x86_64" os="LINUX">
         <directory type="shared-scratch" path="/lizard/scratch-90-days/bamboo/$UUID">
-            <file-server operation="all" url="gsiftp://colo-vm63.isi.edu/lizard/scratch-90-days/bamboo/$UUID"/>
+            <file-server operation="all" url="gsiftp://bamboo.isi.edu/lizard/scratch-90-days/bamboo/$UUID"/>
         </directory>
     </site>
 

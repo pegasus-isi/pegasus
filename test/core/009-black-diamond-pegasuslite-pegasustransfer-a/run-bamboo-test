@@ -49,7 +49,7 @@ cat > sites.xml <<EOF
 </site>
 <site  handle="cartman-data" arch="x86" os="LINUX" osrelease="" osversion="" glibc="">
         <directory  path="${TOPDIR}/staging-site/scratch" type="shared-scratch" free-size="" total-size="">
-                <file-server  operation="all" url="gsiftp://colo-vm63.isi.edu/${TOPDIR}/staging-site/scratch">
+                <file-server  operation="all" url="gsiftp://bamboo.isi.edu/${TOPDIR}/staging-site/scratch">
                 </file-server>
         </directory>
         <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu">
