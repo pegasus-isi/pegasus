@@ -1815,8 +1815,17 @@ class Workflow:
             kwargs["file_type"] = metric.file_type
             kwargs["count"] = metric.count if metric.count > 0 else metric.succeeded + metric.failed
             kwargs["duration"] = metric.duration
-
             self.output_to_db( "int.metric", kwargs)
+
+            if metric.failed > 0:
+                # PM-1295 setup an event to populate the tags table
+                nkwargs = kwargs.copy()
+                del nkwargs["duration"]
+                del nkwargs["type"]
+                del nkwargs["file_type"]
+                nkwargs["name"] = "int.error"
+                nkwargs["count"] = metric.failed
+                self.output_to_db("job_inst.tag", nkwargs)
 
     def db_send_task_monitoring_events(self, my_job, task_id, events) :
         """

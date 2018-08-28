@@ -66,6 +66,7 @@ class WorkflowLoader(BaseLoader):
             'stampede.job_inst.grid.submit.end' : self.jobstate,
             'stampede.job_inst.globus.submit.start' : self.noop, # good
             'stampede.job_inst.globus.submit.end' : self.jobstate,
+            'stampede.job_inst.tag' : self.tag,
             'stampede.inv.start' : self.noop, # good
             'stampede.inv.end' : self.invocation,
             'stampede.static.meta.start': self.static_meta_start,
@@ -671,10 +672,10 @@ class WorkflowLoader(BaseLoader):
         @type   linedata: dict
         @param  linedata: One line of BP data dict-ified.
 
-        Handles a invocation insert event.
+        Handles a integrity metric event
         """
         int_meta = self.linedataToObject(linedata, IntegrityMetrics())
-        self.log.trace('int_meta: %s', IntegrityMetrics)
+        self.log.trace('int_meta: %s', int_meta)
 
         int_meta.wf_id = self.wf_uuid_to_id(int_meta.wf_uuid)
 
@@ -687,6 +688,28 @@ class WorkflowLoader(BaseLoader):
             self._batch_cache['batch_events'].append(int_meta)
         else:
             int_meta.commit_to_db(self.session)
+
+    def tag(self, linedata):
+        """
+        @type   linedata: dict
+        @param  linedata: One line of BP data dict-ified.
+
+        Handles a job_instance tag event
+        """
+        tag = self.linedataToObject(linedata, Tag())
+        self.log.trace('job_inst.tag: %s', tag)
+
+        tag.wf_id = self.wf_uuid_to_id(tag.wf_uuid)
+
+        tag.job_instance_id = self.get_job_instance_id(tag)
+        if tag.job_instance_id == None:
+            self.log.error('Could not determine job_instance_id for tag: %s', tag)
+            return
+
+        if self._batch:
+            self._batch_cache['batch_events'].append(tag)
+        else:
+            tag.commit_to_db(self.session)
 
     def rc_pfn(self, linedata):
         """
