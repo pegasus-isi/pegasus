@@ -1491,7 +1491,7 @@ project:
                   enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "rm -rf /scitech/home/bamboo/.pegasus/workflow.db"
+                    scriptBody: "#rm -rf /scitech/home/bamboo/.pegasus/workflow.db"
                 - !script
                   description: Untar source
                   inlineScript:
