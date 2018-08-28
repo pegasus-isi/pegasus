@@ -66,7 +66,7 @@ def get_missing_tables(db):
         st_job_edge,
         st_job_instance,
         st_jobstate,
-        st_tags,
+        st_tag,
         st_task,
         st_task_edge,
         st_task_meta,
@@ -189,7 +189,7 @@ class JobInstance(SABase):
 class Jobstate(SABase):
     pass
 
-class Tags(SABase):
+class Tag(SABase):
     pass
 
 class Task(SABase):
@@ -434,7 +434,7 @@ orm.mapper(JobInstance, st_job_instance, properties = {
     'child_tsk':relation(Invocation, backref='st_job_instance', cascade='all, delete-orphan', passive_deletes=True, lazy=True),
     'child_jst':relation(Jobstate, backref='st_job_instance', cascade='all, delete-orphan', passive_deletes=True, lazy=True),
     'child_integrity_metrics':relation(IntegrityMetrics, backref='st_integrity_metrics', cascade='all, delete-orphan', passive_deletes=True, lazy=True),
-    'child_tags':relation(Tags, backref='st_tags', cascade='all, delete-orphan', passive_deletes=True, lazy=True),
+    'child_tag':relation(Tag, backref='st_tag', cascade='all, delete-orphan', passive_deletes=True, lazy=True),
 })
 
 
@@ -468,7 +468,7 @@ Index('UNIQUE_JOBSTATE',
 orm.mapper(Jobstate, st_jobstate)
 
 
-st_tags = Table('tags', metadata,
+st_tag = Table('tag', metadata,
     Column('tag_id', KeyInteger, primary_key=True, nullable=False),
     Column('wf_id', KeyInteger, ForeignKey('workflow.wf_id', ondelete='CASCADE'), nullable=False),
     Column('job_instance_id', KeyInteger, ForeignKey('job_instance.job_instance_id', ondelete='CASCADE'), nullable=False),
@@ -477,9 +477,9 @@ st_tags = Table('tags', metadata,
     **table_keywords
 )
 
-Index('tag_id_KEY', st_tags.c.tag_id, unique=True)
-Index('UNIQUE_TAG', st_tags.c.job_instance_id, st_tags.c.wf_id, unique=True)
-orm.mapper(Tags, st_tags)
+Index('tag_id_KEY', st_tag.c.tag_id, unique=True)
+Index('UNIQUE_TAG', st_tag.c.job_instance_id, st_tag.c.wf_id, unique=True)
+orm.mapper(Tag, st_tag)
 
 
 st_task = Table('task', metadata,
