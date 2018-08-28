@@ -298,7 +298,8 @@ class AMQPEventSink(EventSink):
 
         if events is None:
             # add pre-configured specific events
-            event_regexes.add(re.compile(STAMPEDE_NS + "xwf.*"))
+            event_regexes.add(re.compile(STAMPEDE_NS + "job_inst.tag"))
+            event_regexes.add(re.compile(STAMPEDE_NS + "job_inv.end"))
         else:
             for exp in events.split(","):
                 if exp == "*":
