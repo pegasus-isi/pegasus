@@ -64,10 +64,12 @@ class IntegrityMetric:
     Class for storing integrity metrics and combining them based solely on type and file type combination
     """
 
-    def __init__(self, type, file_type, count = 0, duration = 0.0 ):
+    def __init__(self, type, file_type, count = 0, succeeded = 0, failed = 0, duration = 0.0 ):
         self.type = type
         self.file_type = file_type
         self.count = count
+        self.succeeded = succeeded
+        self.failed = failed
         self.duration = duration
 
     def __eq__(self, other):
@@ -77,7 +79,7 @@ class IntegrityMetric:
         return hash(self.key())
 
     def __str__(self):
-        return "(%s,%s,%s,%s)" %(self.type, self.file_type, self.count, self.duration)
+        return "(%s,%s,%s, %s, %s , %s)" %(self.type, self.file_type, self.count, self.succeeded, self.failed, self.duration)
 
     def key(self):
         return self.type + ":" + self.file_type
@@ -85,6 +87,8 @@ class IntegrityMetric:
     def merge(self, other):
         if self == other:
             self.count += other.count
+            self.succeeded += other.succeeded
+            self.failed += other.failed
             self.duration  += other.duration
             return
         raise KeyError( "Objects not compatible %s %s" %(self, other))
@@ -168,6 +172,8 @@ class Job:
                         metric = IntegrityMetric(type=m.get("event"),
                                                  file_type=m.get("file_type"),
                                                  count=m["count"] if "count" in m else 0,
+                                                 succeeded=m["succeeded"] if "succeeded" in m else 0,
+                                                 failed=m["failed"] if "failed" in m else 0,
                                                  duration=m["duration"] if "duration" in m else 0.0)
                         self.add_integrity_metric(metric)
             else:

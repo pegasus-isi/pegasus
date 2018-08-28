@@ -1813,7 +1813,7 @@ class Workflow:
             kwargs["job_inst__id"] = my_job._job_submit_seq
             kwargs["type"] = metric.type
             kwargs["file_type"] = metric.file_type
-            kwargs["count"] = metric.count
+            kwargs["count"] = metric.count if metric.count > 0 else metric.succeeded + metric.failed
             kwargs["duration"] = metric.duration
 
             self.output_to_db( "int.metric", kwargs)
