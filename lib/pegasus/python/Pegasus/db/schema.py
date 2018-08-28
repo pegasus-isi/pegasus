@@ -472,7 +472,7 @@ st_tags = Table('tags', metadata,
     Column('tag_id', KeyInteger, primary_key=True, nullable=False),
     Column('wf_id', KeyInteger, ForeignKey('workflow.wf_id', ondelete='CASCADE'), nullable=False),
     Column('job_instance_id', KeyInteger, ForeignKey('job_instance.job_instance_id', ondelete='CASCADE'), nullable=False),
-    Column('type', VARCHAR(255), nullable=False),
+    Column('name', VARCHAR(255), nullable=False),
     Column('count', INT, nullable=False),
     **table_keywords
 )
