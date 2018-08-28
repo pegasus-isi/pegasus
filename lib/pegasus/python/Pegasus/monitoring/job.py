@@ -173,7 +173,7 @@ class Job:
                                                  file_type=m.get("file_type"),
                                                  count=m["count"] if "count" in m else 0,
                                                  succeeded=m["succeeded"] if "succeeded" in m else 0,
-                                                 faied=m["failed"] if "failed" in m else 0,
+                                                 failed=m["failed"] if "failed" in m else 0,
                                                  duration=m["duration"] if "duration" in m else 0.0)
                         self.add_integrity_metric(metric)
             else:
