@@ -22,10 +22,7 @@ class Version(BaseVersion):
         """
         log.info('Updating to version %s' % DB_VERSION)
         try:
-            log.debug('Creating integrity_meta table...')
-            self.db.execute(
-                "CREATE TABLE tag ( tag_id INTEGER NOT NULL, wf_id INTEGER NOT NULL, job_instance_id INTEGER NOT NULL, name VARCHAR(255) NOT NULL, count INTEGER NOT NULL, PRIMARY KEY (tag_id), FOREIGN KEY(wf_id) REFERENCES workflow (wf_id) ON DELETE CASCADE, FOREIGN KEY(job_instance_id) REFERENCES job_instance (job_instance_id) ON DELETE CASCADE )"
-            )
+            log.debug('Creating tag table...')
         except (OperationalError, ProgrammingError):
             pass
         except Exception as e:

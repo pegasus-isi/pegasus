@@ -71,7 +71,7 @@ def get_missing_tables(db):
         st_task_edge,
         st_task_meta,
         st_invocation,
-        st_integrity_metrics,
+        st_integrity,
         # MASTER
         pg_workflow,
         pg_workflowstate,
@@ -433,7 +433,7 @@ orm.mapper(JobInstance, st_job_instance, properties = {
     #with the postscript status.
     'child_tsk':relation(Invocation, backref='st_job_instance', cascade='all, delete-orphan', passive_deletes=True, lazy=True),
     'child_jst':relation(Jobstate, backref='st_job_instance', cascade='all, delete-orphan', passive_deletes=True, lazy=True),
-    'child_integrity_metrics':relation(IntegrityMetrics, backref='st_integrity_metrics', cascade='all, delete-orphan', passive_deletes=True, lazy=True),
+    'child_integrity':relation(IntegrityMetrics, backref='st_integrity', cascade='all, delete-orphan', passive_deletes=True, lazy=True),
     'child_tag':relation(Tag, backref='st_tag', cascade='all, delete-orphan', passive_deletes=True, lazy=True),
 })
 
@@ -565,7 +565,7 @@ st_workflow_files = Table('workflow_files', metadata,
 orm.mapper(WorkflowFiles, st_workflow_files)
 
 
-st_integrity_metrics = Table('integrity_metrics', metadata,
+st_integrity = Table('integrity', metadata,
                              Column('integrity_id', KeyInteger, primary_key=True, nullable=False),
                              Column('wf_id', KeyInteger, ForeignKey('workflow.wf_id', ondelete='CASCADE'), nullable=False),
                              Column('job_instance_id', KeyInteger, ForeignKey('job_instance.job_instance_id', ondelete='CASCADE'), nullable=False),
@@ -576,9 +576,9 @@ st_integrity_metrics = Table('integrity_metrics', metadata,
                              **table_keywords
                              )
 
-Index('integrity_id_KEY', st_integrity_metrics.c.integrity_id, unique=True)
-Index('UNIQUE_INTEGRITY', st_integrity_metrics.c.job_instance_id, st_integrity_metrics.c.type, st_integrity_metrics.c.file_type, unique=True)
-orm.mapper(IntegrityMetrics, st_integrity_metrics)
+Index('integrity_id_KEY', st_integrity.c.integrity_id, unique=True)
+Index('UNIQUE_INTEGRITY', st_integrity.c.job_instance_id, st_integrity.c.type, st_integrity.c.file_type, unique=True)
+orm.mapper(IntegrityMetrics, st_integrity)
 
 
 # ---------------------------------------------
