@@ -584,11 +584,11 @@ class Job:
             # PM-1274 parse any monitoring events such as integrity related
             # from PegasusLite .err file
             job_stderr = self.split_task_output(ERR.read())
-            buffer = job_stderr.user_data
-            if len(buffer) > my_max_encoded_length:
-                buffer = buffer[:my_max_encoded_length]
-            self._stderr_text = utils.quote(buffer)
-            
+            buf = job_stderr.user_data
+            if len(buf) > my_max_encoded_length:
+                buf = buf[:my_max_encoded_length]
+            self._stderr_text = utils.quote(buf)
+
             if store_monitoring_events:
                 self._add_additional_monitoring_events(job_stderr.events)
         except IOError:
