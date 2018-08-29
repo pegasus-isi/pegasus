@@ -648,6 +648,13 @@ class Job:
         if run_dir is None:
             # PM-1157 pick from the job submit directory associated with the job
             run_dir = self._job_submit_dir
+            basename = self._exec_job_id + ".out"
+            if self._has_rotated_stdout_err_files:
+                basename += ".%03d" % (self._job_output_counter)
+            my_out_file = os.path.join(run_dir, basename)
+        else:
+            # PM-1297 run_dir is only set for prescript failures
+            my_out_file = self._output_file
 
         if self._output_file is None:
             # This is the case for SUBDAG jobs
@@ -656,12 +663,6 @@ class Job:
             # PM-1157 output file has absolute path from submit file
             # interferes with replay mode on another directory
             # basename = self._output_file
-
-            basename = self._exec_job_id + ".out"
-            if self._has_rotated_stdout_err_files:
-                basename += ".%03d" % ( self._job_output_counter)
-
-            my_out_file = os.path.join(run_dir, basename)
 
             try:
                 OUT = open(my_out_file, 'r')
