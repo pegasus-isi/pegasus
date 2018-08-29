@@ -598,6 +598,46 @@ class Job:
         else:
             ERR.close()
 
+
+    def read_job_out_file(self, run_dir=None, store_monitoring_events=True):
+        """
+        This function reads both stdout and stderr files and populates
+        these fields in the Job class.
+        """
+        my_max_encoded_length = MAX_OUTPUT_LENGTH - 2000
+        if self._output_file is None:
+            # This is the case for SUBDAG jobs
+            self._stdout_text = None
+
+        run_dir = self._job_submit_dir
+
+        # PM-1157 output file has absolute path from submit file
+        # interferes with replay mode on another directory
+        # basename = self._output_file
+
+        basename = self._exec_job_id + ".out"
+        if self._has_rotated_stdout_err_files:
+            basename += ".%03d" % (self._job_output_counter)
+
+        my_out_file = os.path.join(run_dir, basename)
+        try:
+            OUT = open(my_out_file, 'r')
+            job_stdout = self.split_task_output(OUT.read())
+            buf = job_stdout.user_data
+            if len(buf) > my_max_encoded_length:
+                buf = buf[:my_max_encoded_length]
+            self._stdout_text = utils.quote(buf)
+
+            if store_monitoring_events:
+                self._add_additional_monitoring_events(job_stdout.events)
+        except IOError:
+            self._stdout_text = None
+            if not self.is_noop_job():
+                logger.warning("unable to read output file: %s, continuing..." % (my_out_file))
+        else:
+            OUT.close()
+
+
     def read_stdout_stderr_files(self, run_dir=None):
         """
         This function reads both stdout and stderr files and populates

@@ -2035,7 +2035,7 @@ class Workflow:
 
             # Read stdout/stderr files, if not disabled by user
             if self._store_stdout_stderr:
-                my_job.read_stdout_stderr_files()
+                my_job.read_job_out_file()
 
             # parse_kickstart will be False for subdag jobs
             if my_job._exec_job_id.startswith("subdax_") or not parse_kickstart:
