@@ -1787,7 +1787,7 @@ class Workflow:
                 count = count + 1
                 duration += float(file.get_attribute_value(timing_key))
 
-        return IntegrityMetric( "compute", "output", count, duration) if count > 0 else None
+        return IntegrityMetric( "compute", "output", count=count, duration=duration) if count > 0 else None
 
 
     def db_send_integrity_metrics(self, my_job, my_task_id):
