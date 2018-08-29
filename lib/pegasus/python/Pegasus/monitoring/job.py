@@ -599,7 +599,7 @@ class Job:
             ERR.close()
 
 
-    def read_job_out_file(self, run_dir=None, store_monitoring_events=True):
+    def read_job_out_file(self, out_file=None, store_monitoring_events=True):
         """
         This function reads both stdout and stderr files and populates
         these fields in the Job class.
@@ -609,19 +609,21 @@ class Job:
             # This is the case for SUBDAG jobs
             self._stdout_text = None
 
-        run_dir = self._job_submit_dir
+        if out_file is None:
+            # PM-1297 only construct relative path if out_file is not explicitly specified
+            run_dir = self._job_submit_dir
 
-        # PM-1157 output file has absolute path from submit file
-        # interferes with replay mode on another directory
-        # basename = self._output_file
+            # PM-1157 output file has absolute path from submit file
+            # interferes with replay mode on another directory
+            # basename = self._output_file
 
-        basename = self._exec_job_id + ".out"
-        if self._has_rotated_stdout_err_files:
-            basename += ".%03d" % (self._job_output_counter)
+            basename = self._exec_job_id + ".out"
+            if self._has_rotated_stdout_err_files:
+                basename += ".%03d" % (self._job_output_counter)
+            out_file = os.path.join(run_dir, basename)
 
-        my_out_file = os.path.join(run_dir, basename)
         try:
-            OUT = open(my_out_file, 'r')
+            OUT = open(out_file, 'r')
             job_stdout = self.split_task_output(OUT.read())
             buf = job_stdout.user_data
             if len(buf) > my_max_encoded_length:
@@ -633,7 +635,7 @@ class Job:
         except IOError:
             self._stdout_text = None
             if not self.is_noop_job():
-                logger.warning("unable to read output file: %s, continuing..." % (my_out_file))
+                logger.warning("unable to read output file: %s, continuing..." % (out_file))
         else:
             OUT.close()
 

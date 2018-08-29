@@ -2378,7 +2378,7 @@ class Workflow:
             #the dagman output gets populated
             if self._job_info[my_job._exec_job_id][8] is not None:
                 my_job._output_file = self._job_info[my_job._exec_job_id][8] + ".%03d" % (my_job._job_output_counter)
-                my_job.read_stdout_stderr_files(self._run_dir)
+                my_job.read_job_out_file(my_job._output_file)
 
             # PM-704 and send the job end event to record failure
             # in addition to the brief
