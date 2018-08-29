@@ -1919,6 +1919,9 @@ class Workflow:
             my_job._main_job_exitcode = my_pegasuslite_ec
             logger.debug ("Pegasus Lite Exitcode for job %s is %s" %( my_job._exec_job_id, my_pegasuslite_ec) )
 
+        # PM-1295 attempt to read the job stderr file always
+        my_job.read_job_error_file()
+
         if len(my_output) > 0:
             # Parsing the output file resulted in some info... let's parse it
 

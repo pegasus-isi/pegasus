@@ -528,30 +528,6 @@ class Job:
         if not my_cluster_found:
             logger.debug("cannot find cluster record in output")
 
-        # Finally, read error file only 
-        #my_err_file = os.path.join(run_dir, self._error_file)
-        basename = self._exec_job_id + ".err"
-        my_err_file = os.path.join(run_dir, basename)
-
-        if my_invocation_found:
-            # in my job output there were some invocation records
-            # assume then that they are rotated also
-            my_err_file = my_err_file + ".%03d" % (self._job_output_counter)
-
-        try:
-            ERR = open(my_err_file, 'r')
-            # PM-1274 parse any monitoring events such as integrity related
-            # from PegasusLite .err file
-            job_stderr = self.split_task_output(ERR.read())
-            self._stderr_text = utils.quote(job_stderr.user_data)
-            self._add_additional_monitoring_events(job_stderr.events)
-        except IOError:
-            self._stderr_text = None
-            if not self.is_noop_job():
-                logger.warning("unable to read error file: %s, continuing..." % (my_err_file))
-        else:
-            ERR.close()
-
         # Done populating Job class with information from the output file
         return my_invocation_found
 
@@ -585,6 +561,32 @@ class Job:
             basename += ".%03d" % ( self._job_output_counter)
 
         return basename
+
+    def read_job_error_file(self, store_monitoring_events=True):
+        """
+
+        :param store_monitoring_events: whether to store any parsed monitoring events in the job
+        :return:
+        """
+        # Finally, read error file only
+        run_dir = self._job_submit_dir
+        basename = self.get_rotated_err_filename()
+        my_err_file = os.path.join(run_dir, basename)
+
+        try:
+            ERR = open(my_err_file, 'r')
+            # PM-1274 parse any monitoring events such as integrity related
+            # from PegasusLite .err file
+            job_stderr = self.split_task_output(ERR.read())
+            self._stderr_text = utils.quote(job_stderr.user_data)
+            if store_monitoring_events:
+                self._add_additional_monitoring_events(job_stderr.events)
+        except IOError:
+            self._stderr_text = None
+            if not self.is_noop_job():
+                logger.warning("unable to read error file: %s, continuing..." % (my_err_file))
+        else:
+            ERR.close()
 
     def read_stdout_stderr_files(self, run_dir=None):
         """
