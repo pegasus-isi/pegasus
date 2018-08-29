@@ -22,7 +22,7 @@ class Version(BaseVersion):
         """
         log.info('Updating to version %s' % DB_VERSION)
         try:
-            log.debug('Creating integrity_meta table...')
+            log.debug('Creating integrity_metrics table...')
             self.db.execute(
                 "CREATE TABLE integrity_metrics ( integrity_id INTEGER NOT NULL, wf_id INTEGER NOT NULL, job_instance_id INTEGER NOT NULL, type VARCHAR(7) NOT NULL, file_type VARCHAR(6), count INTEGER NOT NULL, duration NUMERIC(10, 3) NOT NULL, PRIMARY KEY (integrity_id), FOREIGN KEY(wf_id) REFERENCES workflow (wf_id) ON DELETE CASCADE, FOREIGN KEY(job_instance_id) REFERENCES job_instance (job_instance_id) ON DELETE CASCADE, CONSTRAINT integrity_type_desc CHECK (type IN ('check', 'compute')), CONSTRAINT integrity_file_type_desc CHECK (file_type IN ('input', 'output')) )"
             )
