@@ -628,7 +628,7 @@ class Job:
             buf = job_stdout.user_data
             if len(buf) > my_max_encoded_length:
                 buf = buf[:my_max_encoded_length]
-            self._stdout_text = utils.quote(buf)
+            self._stdout_text = utils.quote("#@ 1 stdout\n" + buf)
 
             if store_monitoring_events:
                 self._add_additional_monitoring_events(job_stdout.events)
