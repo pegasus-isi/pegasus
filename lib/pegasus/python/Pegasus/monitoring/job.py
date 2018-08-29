@@ -568,7 +568,7 @@ class Job:
         :param store_monitoring_events: whether to store any parsed monitoring events in the job
         :return:
         """
-
+        my_max_encoded_length = MAX_OUTPUT_LENGTH - 2000
         if self._error_file is None:
             # This is the case for SUBDAG jobs
             self._stderr_text = None
@@ -584,7 +584,11 @@ class Job:
             # PM-1274 parse any monitoring events such as integrity related
             # from PegasusLite .err file
             job_stderr = self.split_task_output(ERR.read())
-            self._stderr_text = utils.quote(job_stderr.user_data)
+            buffer = job_stderr.user_data
+            if len(buffer) > my_max_encoded_length:
+                buffer = buffer[:my_max_encoded_length]
+            self._stderr_text = utils.quote(buffer)
+            
             if store_monitoring_events:
                 self._add_additional_monitoring_events(job_stderr.events)
         except IOError:
