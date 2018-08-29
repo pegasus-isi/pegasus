@@ -556,7 +556,7 @@ class Job:
         of the current counter
         """
 
-        basename = self._error_file
+        basename = self._exec_job_id + ".err"
         if self._has_rotated_stdout_err_files:
             basename += ".%03d" % ( self._job_output_counter)
 
@@ -568,6 +568,12 @@ class Job:
         :param store_monitoring_events: whether to store any parsed monitoring events in the job
         :return:
         """
+
+        if self._error_file is None:
+            # This is the case for SUBDAG jobs
+            self._stderr_text = None
+            return
+
         # Finally, read error file only
         run_dir = self._job_submit_dir
         basename = self.get_rotated_err_filename()
