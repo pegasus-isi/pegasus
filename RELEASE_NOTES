@@ -1,8 +1,35 @@
 ===============================
+Release Notes for Pegasus 4.8.4
+===============================
+We are happy to announce the release of Pegasus 4.8.4 . Pegasus 4.8.4
+is a minor bug fix release.
+
+Improvements
+--------------
+1) [PM-1294] – update flask dependency
+
+2) [PM-1277] – pegasus workflows on OSG should appear in OSG gratia
+
+3) [PM-1288] – pegasus.project profile key is not set for SLURM
+submissions
+
+Bugs Fixed
+--------------
+1) [PM-1282] – pegasus.runtime doesn’t affect walltime
+
+2) [PM-1287] – python3 added as a rpm dep, even though it is not a
+   	       true depedency
+
+3) [PM-1290] – Queue is not handled correctly in Glite
+
+4) [PM-1297] – monitord does not prescript log in case of planning
+   	       failure for sub workflows 
+
+===============================
 Release Notes for Pegasus 4.8.3
 ===============================
 We are happy to announce the release of Pegasus 4.8.3 . Pegasus 4.8.3
-s a minor bug fix release
+is a minor bug fix release
 
 New Features
 --------------
