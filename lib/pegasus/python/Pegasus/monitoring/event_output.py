@@ -162,6 +162,7 @@ class EventSink(object):
             'stampede.job_inst.grid.submit.end',
             'stampede.job_inst.globus.submit.start',
             'stampede.job_inst.globus.submit.end',
+            'stampede.job_inst.tag',
             'stampede.inv.start',
             'stampede.inv.end',
             'stampede.static.meta.start',
