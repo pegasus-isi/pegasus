@@ -800,6 +800,27 @@ class StampedeStatistics(object):
         # at most two records grouped by type compute | check
         return q.all()
 
+    def get_tag_metrics(self, name):
+        """
+
+        :param name:    what type of tag to aggregate on
+        :return:
+        """
+        q = self.session.query(Tag.name,
+                                func.sum(Tag.count).label("count"))
+
+        q = q.group_by(Tag.name)
+        q = q.filter(Tag.name == name )
+
+        if self._expand:
+            q = q.filter(Tag.wf_id == Workflow.wf_id)
+            q = q.filter(Workflow.root_wf_id == self._root_wf_id)
+        else:
+            q = q.filter(Tag.wf_id.in_(self._wfs))
+
+
+        return q.all()
+
     def get_integrity_metrics(self):
         """
 

@@ -877,6 +877,14 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
                     type = "generated"
                 summary_str += "%s files checksums %s with total duration of %s\n" % (result.count, type, myfmt(result.duration))
 
+            summary_str += "\nIntegrity Errors\n"
+            int_error_summary = workflow_stats.get_tag_metrics("int.error")
+            for result in int_error_summary:
+                type = result.name
+                if result.name == "int.error":
+                    type = "integrity"
+                summary_str += "A total of %s %s errors encountered in the workflow\n" %( result.count, type)
+
     return summary_str
 
 def print_individual_workflow_stats(workflow_stats, workflow_id, dax_label, output_format):
