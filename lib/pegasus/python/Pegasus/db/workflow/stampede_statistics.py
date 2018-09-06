@@ -390,7 +390,7 @@ class StampedeStatistics(object):
 
         return q.count()
 
-    def get_total_succeeded_failed_jobs_status(self):
+    def get_total_succeeded_failed_jobs_status(self, classify_error=False, tag=None):
         """
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totalsucceeded_failed_jobs
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totalsucceededfailedjobs
@@ -415,6 +415,15 @@ class StampedeStatistics(object):
             func.sum (case([(JobInstance.exitcode != 0, 1)], else_=0)).label ("failed"))
         q = q.filter(JobInstance.job_id == sq_1.c.jobid)
         q = q.filter(JobInstance.job_submit_seq == sq_1.c.jss)
+
+        if classify_error:
+            if tag is None:
+                self.log.error( "for error classification you need to specify tag")
+                return None
+
+            q = q.filter(JobInstance.job_instance_id == Tag.job_instance_id)
+            q = q.filter(Tag.name == tag)
+            q = q.filter(Tag.count > 0)
 
         return q.one()
 

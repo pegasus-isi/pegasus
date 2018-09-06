@@ -785,6 +785,7 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
         # Jobs
         total_jobs = workflow_stats.get_total_jobs_status()
         total_succeeded_failed_jobs = workflow_stats.get_total_succeeded_failed_jobs_status()
+        total_failed_jobs_integrity = workflow_stats.get_total_succeeded_failed_jobs_status(classify_error=True, tag="int.error")
         total_succeeded_jobs = total_succeeded_failed_jobs.succeeded
         total_failed_jobs = total_succeeded_failed_jobs.failed
         total_unsubmitted_jobs = total_jobs - (total_succeeded_jobs + total_failed_jobs)
@@ -884,6 +885,9 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
                 if result.name == "int.error":
                     type = "integrity"
                 summary_str += "A total of %s %s errors encountered in the workflow\n" %( result.count, type)
+
+            # PM-1295 jobs where last_job_instance failed and there were integrity errors in those last job instances
+            summary_str += "%s job failures had integrity errors\n" % (total_failed_jobs_integrity.failed or 0)
 
     return summary_str
 
