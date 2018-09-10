@@ -869,7 +869,9 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
                 else:
                     return format_seconds(val)
 
-            summary_str += "\nIntegrity Metrics\n"
+            summary_str += """
+# Integrity Metrics
+# Number of files for which checksums were compared/computed along with total time spent doing it. \n"""
             for result in int_metrics_summary:
                 type = result.type
                 if result.type == "check":
@@ -878,16 +880,22 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
                     type = "generated"
                 summary_str += "%s files checksums %s with total duration of %s\n" % (result.count, type, myfmt(result.duration))
 
-            summary_str += "\nIntegrity Errors\n"
+            summary_str += """
+# Integrity Errors
+# Total:    
+#       Total number of integrity errors encountered across all job executions(including retries) of a workflow. 
+# Failures: 
+#       Number of failed jobs where the last job instance had integrity errors.
+"""
             int_error_summary = workflow_stats.get_tag_metrics("int.error")
             for result in int_error_summary:
                 type = result.name
                 if result.name == "int.error":
                     type = "integrity"
-                summary_str += "A total of %s %s errors encountered in the workflow\n" %( result.count, type)
+                summary_str += "Total:    A total of %s %s errors encountered in the workflow\n" %( result.count, type)
 
             # PM-1295 jobs where last_job_instance failed and there were integrity errors in those last job instances
-            summary_str += "%s job failures had integrity errors\n" % (total_failed_jobs_integrity.failed or 0)
+            summary_str += "Failures: %s job failures had integrity errors\n" % (total_failed_jobs_integrity.failed or 0)
 
     return summary_str
 
