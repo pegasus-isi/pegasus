@@ -167,7 +167,8 @@ public class Container implements Cloneable {
         if( this.mType.equals( Container.TYPE.singularity) ){
             
             String suffix = null;
-            if( protocol.startsWith( PegasusURL.SINGULARITY_PROTOCOL_SCHEME ) ){
+            if( protocol.startsWith( PegasusURL.SINGULARITY_PROTOCOL_SCHEME ) ||
+                protocol.startsWith( PegasusURL.DOCKER_PROTOCOL_SCHEME )){
                 //default suffix while pulling from singularity hub is .simg
                 suffix = ".simg";
             }
