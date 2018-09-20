@@ -841,6 +841,7 @@ pyglidein_server.py --port 11001 --constraint "'WantStampede2 == True'"
     be created using the provided <emphasis>create_glidein_tarball.py</emphasis>
     script, but an easier way is using the already prepared tarball from 
     <ulink url=""></ulink> and injecting your pool password file. For example:
+    </para>
 
     <programlisting>
 $ wget https://download.pegasus.isi.edu/pyglidein/glidein.tar.gz
