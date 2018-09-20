@@ -106,6 +106,11 @@ public class TransformationCatalogReservedWord
     public static final int DOCKERFILE = 14;
     
     /**
+     * token value for reserved word "mount"
+     */
+    public static final int MOUNT_POINT = 15;
+    
+    /**
      * Singleton implementation of a symbol table for reserved words.
      */
     private static java.util.Map mSymbolTable = null;
@@ -148,6 +153,8 @@ public class TransformationCatalogReservedWord
                     new TransformationCatalogReservedWord(TransformationCatalogReservedWord.IMAGE_SITE ));
             mSymbolTable.put( "dockerfile",
                     new TransformationCatalogReservedWord(TransformationCatalogReservedWord.DOCKERFILE ));
+            mSymbolTable.put( "mount",
+                    new TransformationCatalogReservedWord(TransformationCatalogReservedWord.MOUNT_POINT ));
         }
 
         return mSymbolTable;

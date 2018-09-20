@@ -563,6 +563,11 @@ public class TransformationCatalogTextParser {
                     container.addProfile(this.getProfile() );
                     break;
                     
+                case TransformationCatalogReservedWord.MOUNT_POINT:
+                    value = getQuotedValue( "mount" );
+                    container.addMountPoint(value);
+                break;
+                    
                 default:
                     throw new ScannerException(mScanner.getLineNumber(),
                         "invalid reserved word " + attribute + " used to configure a container entry");
