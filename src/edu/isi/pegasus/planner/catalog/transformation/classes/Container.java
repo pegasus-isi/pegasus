@@ -346,7 +346,7 @@ public class Container implements Cloneable {
      * 
      * @return 
      */
-    public Iterable<MountPoint> getMountPoints() {
+    public Collection<MountPoint> getMountPoints() {
         return this.mMountPoints;
     }
 
@@ -441,7 +441,7 @@ public class Container implements Cloneable {
     /**
      * Class to capture the mount point
      */
-    private static class MountPoint {
+    public static class MountPoint {
         
         /**
          *
@@ -646,7 +646,8 @@ public class Container implements Cloneable {
 
            }
            catch( CloneNotSupportedException e ){
-               //somewhere in the hierarch chain clone is not implemented
+               e.printStackTrace();
+               //somewhere in the hierarchy chain clone is not implemented
                throw new RuntimeException("Clone not implemented in the base class of " + this.getClass().getName(),
                                           e );
            }
