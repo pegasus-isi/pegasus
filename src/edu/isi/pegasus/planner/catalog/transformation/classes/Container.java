@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
  */
 public class Container implements Cloneable {
 
+   
     
     /**
      * The types of container supported.
@@ -340,6 +341,15 @@ public class Container implements Cloneable {
         this.mMountPoints.add( new MountPoint( mount)  );
     }
     
+    /**
+     * Returns iterator to the mount points
+     * 
+     * @return 
+     */
+    public Iterable<MountPoint> getMountPoints() {
+        return this.mMountPoints;
+    }
+
 
     /**
      * Set the type of the container.
@@ -420,6 +430,9 @@ public class Container implements Cloneable {
         for( Profile p: this.getProfiles()){
              sb.append( "\t" ).append( "profile   " ).append("\t").append( p.getProfileNamespace() ).append( "\t" ).
                                append( p.getProfileKey()).append( " " ).append( p.getProfileValue()).append( "\n");
+        }
+        for( MountPoint mp: this.getMountPoints()){
+             sb.append( "\t" ).append( "mount   " ).append("\t").append( mp ).append( "\n");
         }
         sb.append( "}").append("\n");
         return sb.toString();
