@@ -441,7 +441,7 @@ public class Container implements Cloneable {
     /**
      * Class to capture the mount point
      */
-    public static class MountPoint {
+    public static class MountPoint implements Cloneable {
         
         /**
          *
