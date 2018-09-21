@@ -798,11 +798,27 @@ pegasus.aws.batch.job_queue=pegasus-awsbatch-example-job-queue
     url="http://research.cs.wisc.edu/htcondor/manual/current/3_8Security.html#SECTION00483400000000000000">PASSWORD</ulink>
     authentication. Make a copy of the HTCondor pool password file. You will
     need it on the cluster, and it is a binary file, so make sure you cp
-    instead of a copy-and-paste of the file contents. To get the server
-    started:</para>
+    instead of a copy-and-paste of the file contents.</para>
+
+    <para>Follow the installation instructions provided in the PyGlidein
+    <ulink url="https://github.com/WIPACrepo/pyglidein">repo</ulink>. Note that
+    you can use virtualenv if you do not want to do a system-wide install:
+    </para>
 
     <programlisting>
-./server.py --port 11001  
+$ module load python2   (might not be needed on your system) 
+$ virtualenv pyglidein
+New python executable in /home/user/pyglidein/bin/python
+Installing setuptools, pip, wheel...done.
+$ . pyglidein/bin/activate
+$ pip install pyglidein
+...
+    </programlisting>
+
+    <para>Then, to get the server started:</para>
+
+    <programlisting>
+pyglidein_server --port 11001  
     </programlisting>
 
     <para>By default, the pyglidein server will use all jobs in the system to
@@ -812,60 +828,39 @@ pegasus.aws.batch.job_queue=pegasus-awsbatch-example-job-queue
     True</emphasis> attribute, and then we could start the server with:</para>
 
     <programlisting>
-./server.py --port 11001 --constraint "'WantStampede2 == True'"  
+pyglidein_server.py --port 11001 --constraint "'WantStampede2 == True'"  
     </programlisting>
 
     <para>One the server is running, you can check status by pointing a web
     browser to it.</para>
 
-    <para>Next step is to create a <emphasis>glidein.tar.gz</emphasis> file
+    <para>The client (running on the cluster you want glideins on), requires
+    a few configuration files and a <emphasis>glidein.tar.gz</emphasis> file
     containing the HTCondor binaries, our pool password file, and a modified
-    job wrapper script. This can be accomplished by building HTCondor with the
-    <emphasis>create_glidein_tarball.py</emphasis> script, but first we need
-    to modify <emphasis>glidein_template/</emphasis>. Start by copying your
-    pool password file over the existing <emphasis>passwdfile</emphasis>
-    file.</para>
-
-    <para>Edit <emphasis>user_job_wrapper.sh</emphasis>. We don't need most of
-    it, so edit it to read:</para>
+    job wrapper script. This <emphasis>glidein.tar.gz</emphasis> file can 
+    be created using the provided <emphasis>create_glidein_tarball.py</emphasis>
+    script, but an easier way is using the already prepared tarball from 
+    <ulink url=""></ulink> and injecting your pool password file. For example:
+    </para>
 
     <programlisting>
-#!/bin/bash
-
-# This script is started just before the user job
-# It is referenced by the USER_JOB_WRAPPER
-
-export HOME=$PWD
-
-# fix PATH and LD_LIBRARY_PATH
-export PATH=$PATH:/usr/bin:/bin
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib:/usr/lib/x86_64-linux-gnu:/lib64:/lib:/lib/x86_64-linux-gnu
-
-GLIDEIN_DIR=$GLIDEIN_LOCAL_TMP_DIR
-if [ ! -d $GLIDEIN_DIR ]; then
-    GLIDEIN_DIR=$PWD
-fi
-JOB_WRAPPER="${GLIDEIN_DIR}/job_wrapper.sh"
-
-# fall through to next/default job wrapper
-if [ ! -e $JOB_WRAPPER ]; then
-    exec "$@"
-else
-    exec ${JOB_WRAPPER} "$@"
-fi   
+$ wget https://download.pegasus.isi.edu/pyglidein/glidein.tar.gz
+$ mkdir glidein
+$ cd glidein
+$ tar xzf ../glidein.tar.gz
+$ cp /some/path/to/poolpasswd passwdfile
+$ tar czf ../glidein.tar.gz
+$ cd ..
+$ rm -rf glidein
     </programlisting>
 
-    <para>Create the glidein.tar.gz by running:</para>
+    <para>You can serve this file over for example http, but as it now contains
+    your pool password, we recommend you copy the <emphasis>glidein.tar.gz</emphasis>
+    to the remote cluster via scp.</para>
 
-    <programlisting>
-python create_glidein_tarball.py
-    </programlisting>
-
-    <para>Once you have the glidein.tar.gz file, copy it to the Git checkout
-    you have on the remote cluster. Then move over there for the remaining
-    steps. Create a configuration file for your glidein under
-    <emphasis>configs/</emphasis>. Here is an example for TACC
-    Stampede2:</para>
+    <para>Create a configuration file for your glidein. Here is an example for TACC
+        Stampede2 (other config file examples available under configs/ in the PyGlidein
+        GitHub repo):</para>
 
     <programlisting>
 [Mode]
@@ -908,8 +903,7 @@ CLUSTER = workflow.isi.edu
     </programlisting>
 
     <para>This configuration will obviously look different for different
-    clusters. <emphasis>configs/</emphasis> has a bunch of example configs,
-    but a few things to note:</para>
+    clusters. A few things to note:</para>
 
     <itemizedlist>
       <listitem>
@@ -931,10 +925,21 @@ CLUSTER = workflow.isi.edu
       </listitem>
     </itemizedlist>
 
+    <para>We also need <emphasis>secrets</emphasis> file. We are not using any
+        remote logging in this example, but the file still has to exist with the
+        following content:
+    </para>
+
+    <programlisting>
+[StartdLogging]
+access_key = 
+secret_key =
+    </programlisting>
+
     <para>At this point we can try our first glidein:</para>
 
     <programlisting>
-./client.py --config=$HOME/git/pyglidein/configs/stampede2.config
+pyglidein_client --config=stampede2.config --secrets=secrets
     </programlisting>
 
     <para>Once we have a seen a successful glidein, we can add the client to
@@ -942,7 +947,7 @@ CLUSTER = workflow.isi.edu
 
     <programlisting>
 # m  h  dom mon dow   command
-*/10 *   *   *   *    (cd ~/git/pyglidein/ &amp;&amp; ./client.py --config=$HOME/git/pyglidein/configs/stampede2.config) &gt;~/cron-pyglidein.log 2&gt;&amp;1
+*/10 *   *   *   *    (cd ~/pyglidein/ &amp;&amp; pyglidein_client --config=stampede2.config --secrets=secrets) &gt;~/cron-pyglidein.log 2&gt;&amp;1
     </programlisting>
 
     <para>With this setup, glideins will now appear automatically based on the
