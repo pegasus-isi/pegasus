@@ -39,6 +39,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.classes.Profile;
@@ -367,8 +368,8 @@ public class Transfer   implements SLS {
         String containerLFN = null;
         if( c != null ){
             containerLFN = c.getLFN();
-            if( this.mUseSymLinks ){
-                mLogger.log( "Symlink of data files will be disabled because job " + job.getID() + " is launched in a container " + containerLFN,
+            if( this.mUseSymLinks && c.getMountPoints().isEmpty()){
+                mLogger.log( "Symlink of data files will be disabled because job " + job.getID() + " is launched in a container and no host mounts specified " + containerLFN,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             }
         }
@@ -457,13 +458,31 @@ public class Transfer   implements SLS {
             
             if( symlink && containerLFN != null ){
                 //PM-1197 special handling for the case where job is to be
-                //launched in a container
+                //launched in a container.Normally, we can only symlink the 
+                //container image.
                 
                 if( !pf.getLFN().equals( containerLFN ) ){
-                    //we can only symlink the container image.
-                    //data files can't be symlinked , as source directories are
-                    //not mounted in the container
                     symlink = false;
+                    //PM-1298 check if source file directory is mounted
+                    NameValue existingFileSource = ft.getSourceURL();
+                    String sourceURL = existingFileSource.getValue();
+                    String sourcePath = new PegasusURL(sourceURL).getPath();
+                    for( Container.MountPoint mp: c.getMountPoints()){
+                        String hostSourceDir = mp.getSourceDirectory();
+                        if( sourcePath.startsWith( hostSourceDir ) ){
+                            //replace the source mount point part of source dir
+                            //with the destination dir
+                            sourcePath = sourcePath.replaceFirst( hostSourceDir, mp.getDestinationDirectory() );
+                            //construct the source file url back
+                            StringBuilder replacedPath = new StringBuilder();
+                            replacedPath.append( PegasusURL.FILE_URL_SCHEME ).append( "//").append( sourcePath );
+                            existingFileSource.setValue( replacedPath.toString() );
+                            symlink = true;
+                            mLogger.log( "Replaced source URL on host " + sourceURL + " with path in the container " + existingFileSource.getValue(),
+                                         LogManager.DEBUG_MESSAGE_LEVEL);
+                            break;
+                        }
+                    }
                 }
             }
             
