@@ -608,7 +608,7 @@ public class Container implements Cloneable {
         public String toString(){
            StringBuffer sb = new StringBuffer();
            sb.append( this.getSourceDirectory() ).append( ":" ).
-              append( this.getDestinationDirectory() ).append( ":" );
+              append( this.getDestinationDirectory() );
            if( this.getMountOptions() != null ){
                sb.append( ":" ).append( this.getMountOptions() );
            }
@@ -678,7 +678,6 @@ public class Container implements Cloneable {
 
            }
            catch( CloneNotSupportedException e ){
-               e.printStackTrace();
                //somewhere in the hierarchy chain clone is not implemented
                throw new RuntimeException("Clone not implemented in the base class of " + this.getClass().getName(),
                                           e );
