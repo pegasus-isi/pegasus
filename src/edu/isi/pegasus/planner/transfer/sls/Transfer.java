@@ -395,6 +395,7 @@ public class Transfer   implements SLS {
             StringBuffer url = new StringBuffer();
 
             Collection<ReplicaCatalogEntry> cacheLocations = null;
+            Collection<ReplicaCatalogEntry> sources = new LinkedList();
             boolean symlink = false;
             String computeSite = job.getSiteHandle();
             if( mBypassStagingForInputs ){
@@ -438,7 +439,9 @@ public class Transfer   implements SLS {
                 url.append( File.separator).append( mStagingMapper.getRelativeDirectory(stagingSite, lfn) );
                 
                 url.append( File.separator ).append( lfn );
-                ft.addSource( stagingSite, url.toString() );
+                
+                //ft.addSource( stagingSite, url.toString() );
+                sources.add( new ReplicaCatalogEntry( url.toString(), stagingSite) );
             }
             else{
                 //construct the URL wrt to the planner cache location
@@ -446,12 +449,14 @@ public class Transfer   implements SLS {
                 for( ReplicaCatalogEntry cacheLocation: cacheLocations ){
                     url = new StringBuffer();
                     url.append( cacheLocation.getPFN() );
-                    ft.addSource(cacheLocation);
+                    
+                    //ft.addSource(cacheLocation);
+                    sources.add((ReplicaCatalogEntry) cacheLocation.clone());
                     
                     symlink = ( mUseSymLinks && //specified in configuration
                                 !pf.isCheckpointFile() && //can only do symlinks for data files . not checkpoint files
                                 !pf.isExecutable() && //can only do symlinks for data files . not executables
-                                ft.getSourceURL().getKey().equals( job.getSiteHandle()) && //source URL logically on the same site where job is to be run
+                                cacheLocation.getResourceHandle().equals( job.getSiteHandle()) && //source URL logically on the same site where job is to be run
                                 url.toString().startsWith( PegasusURL.FILE_URL_SCHEME ) ); //source URL is a file URL
                 }
             }
@@ -464,26 +469,32 @@ public class Transfer   implements SLS {
                 if( !pf.getLFN().equals( containerLFN ) ){
                     symlink = false;
                     //PM-1298 check if source file directory is mounted
-                    NameValue existingFileSource = ft.getSourceURL();
-                    String sourceURL = existingFileSource.getValue();
-                    String sourcePath = new PegasusURL(sourceURL).getPath();
-                    for( Container.MountPoint mp: c.getMountPoints()){
-                        String hostSourceDir = mp.getSourceDirectory();
-                        if( sourcePath.startsWith( hostSourceDir ) ){
-                            //replace the source mount point part of source dir
-                            //with the destination dir
-                            sourcePath = sourcePath.replaceFirst( hostSourceDir, mp.getDestinationDirectory() );
-                            //construct the source file url back
-                            StringBuilder replacedPath = new StringBuilder();
-                            replacedPath.append( PegasusURL.FILE_URL_SCHEME ).append( "//").append( sourcePath );
-                            existingFileSource.setValue( replacedPath.toString() );
-                            symlink = true;
-                            mLogger.log( "Replaced source URL on host " + sourceURL + " with path in the container " + existingFileSource.getValue(),
-                                         LogManager.DEBUG_MESSAGE_LEVEL);
-                            break;
+                    for( ReplicaCatalogEntry source : sources){
+                        String sourceURL = source.getPFN();
+                        String sourcePath = new PegasusURL(sourceURL).getPath();
+                        for( Container.MountPoint mp: c.getMountPoints()){
+                            String hostSourceDir = mp.getSourceDirectory();
+                            if( sourcePath.startsWith( hostSourceDir ) ){
+                                //replace the source mount point part of source dir
+                                //with the destination dir
+                                sourcePath = sourcePath.replaceFirst( hostSourceDir, mp.getDestinationDirectory() );
+                                //construct the source file url back
+                                StringBuilder replacedPath = new StringBuilder();
+                                replacedPath.append( PegasusURL.FILE_URL_SCHEME ).append( "//").append( sourcePath );
+                                symlink = true;
+                                source.setPFN( replacedPath.toString() );
+                                mLogger.log( "Replaced source URL on host " + sourceURL + " with path in the container " + source.getPFN(),
+                                             LogManager.DEBUG_MESSAGE_LEVEL);
+                                break;
+                            }
                         }
                     }
                 }
+            }
+            
+            //add all the sources
+            for ( ReplicaCatalogEntry source : sources){
+                ft.addSource( source );
             }
             
             //if the source URL is already present at the compute site
