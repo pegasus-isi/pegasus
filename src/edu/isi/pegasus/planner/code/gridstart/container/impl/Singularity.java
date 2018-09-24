@@ -100,6 +100,11 @@ public class Singularity extends Abstract{
         sb.append( "--pwd ").append( CONTAINER_WORKING_DIRECTORY ).append( " ");
         sb.append( "--home $PWD:" ).append( CONTAINER_WORKING_DIRECTORY ).append( " " );
         
+        //PM-1298 mount any host directories if specified
+        for( Container.MountPoint  mp : c.getMountPoints() ){
+            sb.append( "-B ").append( mp ).append( " ");
+        }
+        
         //we are running directly against image file. no loading
         sb.append( c.getLFN() ).append( " " );
         
