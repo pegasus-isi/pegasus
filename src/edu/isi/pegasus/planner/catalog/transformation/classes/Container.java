@@ -341,6 +341,38 @@ public class Container implements Cloneable {
         this.mMountPoints.add( new MountPoint( mount)  );
     }
     
+    
+    /**
+     * Return a local file URL path in the container based on the mount points 
+     * in the container. If the file URL has no mounted path in container, then 
+     * returns null
+     * 
+     * @param url the file URL
+     * @return path in the container as a file URL if mounted, else null
+     */
+    public String getPathInContainer( String url ){
+        //sanity check
+        if( url == null || !url.startsWith( PegasusURL.FILE_URL_SCHEME )){
+            return null;
+        }
+        
+        String sourcePath = new PegasusURL(url).getPath();
+        StringBuilder replacedURL = new StringBuilder();
+        for( Container.MountPoint mp: this.getMountPoints()){
+            String hostSourceDir = mp.getSourceDirectory();
+            if( sourcePath.startsWith( hostSourceDir ) ){
+                //replace the source mount point part of source dir
+                //with the destination dir
+                sourcePath = sourcePath.replaceFirst( hostSourceDir, mp.getDestinationDirectory() );
+                //construct the source file url back
+                replacedURL.append( PegasusURL.FILE_URL_SCHEME ).append( "//").append( sourcePath );
+                break;
+            }
+        }
+        
+        return replacedURL.length() == 0 ? null : replacedURL.toString();
+    }
+    
     /**
      * Returns iterator to the mount points
      * 

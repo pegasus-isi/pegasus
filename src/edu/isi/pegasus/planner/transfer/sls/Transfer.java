@@ -465,29 +465,19 @@ public class Transfer   implements SLS {
                 //PM-1197 special handling for the case where job is to be
                 //launched in a container.Normally, we can only symlink the 
                 //container image.
-                
                 if( !pf.getLFN().equals( containerLFN ) ){
                     symlink = false;
                     //PM-1298 check if source file directory is mounted
                     for( ReplicaCatalogEntry source : sources){
                         String sourceURL = source.getPFN();
-                        String sourcePath = new PegasusURL(sourceURL).getPath();
-                        for( Container.MountPoint mp: c.getMountPoints()){
-                            String hostSourceDir = mp.getSourceDirectory();
-                            if( sourcePath.startsWith( hostSourceDir ) ){
-                                //replace the source mount point part of source dir
-                                //with the destination dir
-                                sourcePath = sourcePath.replaceFirst( hostSourceDir, mp.getDestinationDirectory() );
-                                //construct the source file url back
-                                StringBuilder replacedPath = new StringBuilder();
-                                replacedPath.append( PegasusURL.FILE_URL_SCHEME ).append( "//").append( sourcePath );
-                                symlink = true;
-                                source.setPFN( replacedPath.toString() );
-                                mLogger.log( "Replaced source URL on host " + sourceURL + " with path in the container " + source.getPFN(),
-                                             LogManager.DEBUG_MESSAGE_LEVEL);
-                                break;
-                            }
+                        String replacedURL = c.getPathInContainer( sourceURL);
+                        if( replacedURL != null ){
+                            symlink = true;
+                            source.setPFN( replacedURL );
+                            mLogger.log( "Replaced source URL on host " + sourceURL + " with path in the container " + source.getPFN(),
+                                         LogManager.DEBUG_MESSAGE_LEVEL);
                         }
+                         
                     }
                 }
             }
