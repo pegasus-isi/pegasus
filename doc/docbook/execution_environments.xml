@@ -797,7 +797,7 @@ pegasus.aws.batch.job_queue=pegasus-awsbatch-example-job-queue
     HTCondor configured for <ulink
     url="http://research.cs.wisc.edu/htcondor/manual/current/3_8Security.html#SECTION00483400000000000000">PASSWORD</ulink>
     authentication. Make a copy of the HTCondor pool password file. You will
-    need it on the cluster, and it is a binary file, so make sure you cp
+    need it later in the configuration, and it is a binary file, so make sure you cp
     instead of a copy-and-paste of the file contents.</para>
 
     <para>Follow the installation instructions provided in the PyGlidein
@@ -818,17 +818,17 @@ $ pip install pyglidein
     <para>Then, to get the server started:</para>
 
     <programlisting>
-pyglidein_server --port 11001  
+pyglidein_server --port 22001  
     </programlisting>
 
     <para>By default, the pyglidein server will use all jobs in the system to
     determine if glideins are needed. If you want user jobs to explicitly let
     us know they want glideins, you can pass a constraint for the server to
-    use. For example, jobs could have the <emphasis>+WantStampede2 =
+    use. For example, jobs could have the <emphasis>+WantPSCBridges =
     True</emphasis> attribute, and then we could start the server with:</para>
 
     <programlisting>
-pyglidein_server.py --port 11001 --constraint "'WantStampede2 == True'"  
+pyglidein_server --port 22001 --constraint "'WantPSCBridges == True'"  
     </programlisting>
 
     <para>One the server is running, you can check status by pointing a web
@@ -849,7 +849,7 @@ $ mkdir glidein
 $ cd glidein
 $ tar xzf ../glidein.tar.gz
 $ cp /some/path/to/poolpasswd passwdfile
-$ tar czf ../glidein.tar.gz
+$ tar czf ../glidein.tar.gz .
 $ cd ..
 $ rm -rf glidein
     </programlisting>
@@ -858,8 +858,8 @@ $ rm -rf glidein
     your pool password, we recommend you copy the <emphasis>glidein.tar.gz</emphasis>
     to the remote cluster via scp.</para>
 
-    <para>Create a configuration file for your glidein. Here is an example for TACC
-        Stampede2 (other config file examples available under configs/ in the PyGlidein
+    <para>Create a configuration file for your glidein. Here is an example for PSC
+        Bridges (other config file examples available under configs/ in the PyGlidein
         GitHub repo):</para>
 
     <programlisting>
@@ -867,36 +867,47 @@ $ rm -rf glidein
 debug = True
 
 [Glidein]
-address = http://workflow.isi.edu:11001/jsonrpc
-site = TACC-Stampede2
-tarball = /home1/00384/rynge/git/pyglidein/glidein.tar.gz
+address = http://workflow.isi.edu:22001/jsonrpc
+site = PSC-Bridges
+tarball = /home/rynge/pyglidein-config/glidein.tar.gz
 
 [Cluster]
 user = rynge
 os = RHEL7
 scheduler = slurm
-submit_command = sbatch
-walltime_hrs = 48
-max_total_jobs = 10
 max_idle_jobs = 1
-limit_per_submit = 1
+limit_per_submit = 2
+walltime_hrs = 48
+partitions = RM
 
+[RM]
 gpu_only = False
 whole_node = True
-whole_node_cpus = 1
-whole_node_memory = 96000
-whole_node_disk = 30000
+whole_node_memory = 120000
+whole_node_cpus = 28
+whole_node_disk = 8000000
 whole_node_gpus = 0
+partition = RM
 group_jobs = False
-partition = normal
-running_cmd = squeue -u $USER -t RUNNING -p normal -h | wc -l
-idle_cmd = squeue -u $USER -t PENDING -p normal -h | wc -l
+submit_command = sbatch
+running_cmd = squeue -u $USER -t RUNNING -h -p RM | wc -l
+idle_cmd = squeue -u $USER -t PENDING -h -p RM | wc -l
 
 [SubmitFile]
 filename = submit.slurm
-local_dir = /tmp/$SLURM_JOB_ID
-custom_header = #SBATCH -A TG-ABC00001
+local_dir = $LOCAL
+sbatch = #SBATCH
+custom_header = #SBATCH -C EGRESS
+    #SBATCH --account=ABC123
 cvmfs_job_wrapper = False
+
+[StartdLogging]
+send_startd_logs = False
+url = s3.amazonaws.com
+bucket = pyglidein-logging-bridges
+
+[StardChecks]
+enable_startd_checks = True
 
 [CustomEnv]
 CLUSTER = workflow.isi.edu
@@ -923,6 +934,22 @@ CLUSTER = workflow.isi.edu
         variable, the glideins will try to register into the IceCube
         infrastructure.</para>
       </listitem>
+      
+      <listitem>
+          <para><emphasis role="bold">#SBATCH -C EGRESS</emphasis> is PSC Bridges
+              specific and enables outbound network connectivity from the compute
+              nodes.
+        </para>
+      </listitem>
+      
+      <listitem>
+          <para><emphasis role="bold">#SBATCH --account=ABC123</emphasis> specifies
+              which allocation to charge the job to. This is a required setting on 
+              many, but not all, HPC systems. On PSC Bridges, you can get a list of
+              your allocation by running the <emphasis>projects</emphasis> command,
+              and looking for the <emphasis>Charge ID</emphasis> field.
+        </para>
+      </listitem>
     </itemizedlist>
 
     <para>We also need <emphasis>secrets</emphasis> file. We are not using any
@@ -939,7 +966,7 @@ secret_key =
     <para>At this point we can try our first glidein:</para>
 
     <programlisting>
-pyglidein_client --config=stampede2.config --secrets=secrets
+pyglidein_client --config=bridges.config --secrets=secrets
     </programlisting>
 
     <para>Once we have a seen a successful glidein, we can add the client to
@@ -947,7 +974,7 @@ pyglidein_client --config=stampede2.config --secrets=secrets
 
     <programlisting>
 # m  h  dom mon dow   command
-*/10 *   *   *   *    (cd ~/pyglidein/ &amp;&amp; pyglidein_client --config=stampede2.config --secrets=secrets) &gt;~/cron-pyglidein.log 2&gt;&amp;1
+*/10 *   *   *   *    (cd ~/pyglidein/ &amp;&amp; pyglidein_client --config=bridges.config --secrets=secrets) &gt;~/cron-pyglidein.log 2&gt;&amp;1
     </programlisting>
 
     <para>With this setup, glideins will now appear automatically based on the
