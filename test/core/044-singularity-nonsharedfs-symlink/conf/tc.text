@@ -88,7 +88,7 @@ cont centos-base{
      image_site "local"
 
      # mount point in the container
-     mount "/lizard:/lizard"
+     mount "/lizard/scratch-90-days/${TEST_NAME}:/existing/data"
   
      # specify env profile via env option do docker run
      profile env "JAVA_HOME" "/opt/java/1.6"	    
