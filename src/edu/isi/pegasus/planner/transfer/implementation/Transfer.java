@@ -481,6 +481,11 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             urlPair.append("   \"lfn\": ").append("\"").append(ft.getLFN()).append("\"").append(",\n");
             urlPair.append("   \"id\": ").append(num).append(",\n");
             
+            //PM-1298 
+            if( !ft.verifySymlinkTarget() ){
+                urlPair.append("   \"verify_symlink_target\": false").append(",\n");
+            }
+            
             //PM-1250
             if(jobClass == Job.STAGE_IN_JOB && ft.hasChecksumComputedInWF() ){
                 urlPair.append("   \"generate_checksum\": ").append( true ).append(",\n");

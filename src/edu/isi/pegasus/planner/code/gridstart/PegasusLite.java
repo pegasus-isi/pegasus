@@ -1169,6 +1169,12 @@ public class PegasusLite implements GridStart {
             sb.append("   \"file_type\": ").append("\"").append( fileType ).append("\"").append(",\n");
             sb.append("   \"lfn\": ").append("\"").append(ft.getLFN()).append("\"").append(",\n");
             sb.append("   \"id\": ").append(num).append(",\n");
+           
+            //PM-1298 
+            if( !ft.verifySymlinkTarget() ){
+                sb.append("   \"verify_symlink_target\": false").append(",\n");
+            }
+            
             sb.append("   \"src_urls\": [");
             
             boolean notFirst = false;
