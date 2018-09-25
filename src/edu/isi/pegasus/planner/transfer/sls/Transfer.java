@@ -476,7 +476,7 @@ public class Transfer   implements SLS {
                             source.setPFN( replacedURL );
                             // we don't want pegasus-transfer to fail in PegasusLite
                             // on the missing source path that is only visible in the container
-                            ft.setVerifySymlinkTarget( false );
+                            ft.setVerifySymlinkSource( false );
                             mLogger.log( "Replaced source URL on host " + sourceURL + " with path in the container " + source.getPFN(),
                                          LogManager.DEBUG_MESSAGE_LEVEL);
                         }

@@ -83,7 +83,7 @@ public class FileTransfer extends PegasusFile {
     /**
      * A boolean indicating to force symlinks even if source does not exist
      */
-    private boolean mVerifySymlinkTarget;
+    private boolean mVerifySymlinkSource;
 
     /**
      * Default constructor.
@@ -96,7 +96,7 @@ public class FileTransfer extends PegasusFile {
         mDestMap     = new LinkedHashMap<String,List<ReplicaCatalogEntry>>();
         mPriority    = 0;
         mURLForRegistrationOnDestination = null;
-        mVerifySymlinkTarget = true;
+        mVerifySymlinkSource = true;
     }
 
     /**
@@ -115,7 +115,7 @@ public class FileTransfer extends PegasusFile {
         this.mSourceMap    = new LinkedHashMap<String,List<ReplicaCatalogEntry>>();
         this.mDestMap      = new LinkedHashMap<String,List<ReplicaCatalogEntry>>();
         this.mPriority     = 0;
-        this.mVerifySymlinkTarget = true;
+        this.mVerifySymlinkSource = true;
         this.mURLForRegistrationOnDestination = null;
         this.mMetadata     = pf.getAllMetadata();
     }
@@ -134,7 +134,7 @@ public class FileTransfer extends PegasusFile {
         mDestMap     = new LinkedHashMap<String,List<ReplicaCatalogEntry>>();
         this.mPriority     = 0;
         this.mURLForRegistrationOnDestination = null;
-        this.mVerifySymlinkTarget = true;
+        this.mVerifySymlinkSource = true;
     }
 
     /**
@@ -153,7 +153,7 @@ public class FileTransfer extends PegasusFile {
         mFlags       = (BitSet)flags.clone();
         this.mPriority     = 0;
         this.mURLForRegistrationOnDestination = null;
-        this.mVerifySymlinkTarget = true;
+        this.mVerifySymlinkSource = true;
     }
 
 
@@ -298,8 +298,8 @@ public class FileTransfer extends PegasusFile {
      * 
      * @param verify   the force associated with the FileTransfer
      */
-    public void setVerifySymlinkTarget( boolean verify ){
-        this.mVerifySymlinkTarget = verify;
+    public void setVerifySymlinkSource( boolean verify ){
+        this.mVerifySymlinkSource = verify;
     }
 
 
@@ -308,8 +308,8 @@ public class FileTransfer extends PegasusFile {
      * 
      * @return boolean
      */
-    public boolean verifySymlinkTarget( ){
-        return this.mVerifySymlinkTarget;
+    public boolean verifySymlinkSource( ){
+        return this.mVerifySymlinkSource;
     }
 
     /**
@@ -530,7 +530,7 @@ public class FileTransfer extends PegasusFile {
         ft.mPriority    = this.mPriority;
         ft.mURLForRegistrationOnDestination = this.mURLForRegistrationOnDestination;
         ft.mMetadata    = (Metadata) this.mMetadata.clone();
-        ft.mVerifySymlinkTarget = this.mVerifySymlinkTarget;
+        ft.mVerifySymlinkSource = this.mVerifySymlinkSource;
         //the maps are not cloned underneath
 
         return ft;

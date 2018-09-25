@@ -1171,8 +1171,8 @@ public class PegasusLite implements GridStart {
             sb.append("   \"id\": ").append(num).append(",\n");
            
             //PM-1298 
-            if( !ft.verifySymlinkTarget() ){
-                sb.append("   \"verify_symlink_target\": false").append(",\n");
+            if( !ft.verifySymlinkSource() ){
+                sb.append("   \"verify_symlink_source\": false").append(",\n");
             }
             
             sb.append("   \"src_urls\": [");

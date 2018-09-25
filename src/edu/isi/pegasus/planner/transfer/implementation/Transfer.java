@@ -482,8 +482,8 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             urlPair.append("   \"id\": ").append(num).append(",\n");
             
             //PM-1298 
-            if( !ft.verifySymlinkTarget() ){
-                urlPair.append("   \"verify_symlink_target\": false").append(",\n");
+            if( !ft.verifySymlinkSource() ){
+                urlPair.append("   \"verify_symlink_source\": false").append(",\n");
             }
             
             //PM-1250
