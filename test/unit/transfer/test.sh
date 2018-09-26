@@ -16,8 +16,12 @@ function run_test {
     fi
 }
 
+function skip_test {
+    echo "Skipping" "$@"
+}
+
 function transfer {
-    $TRANSFER_LOCATION "$@" >$TEST_DIR/test.out 2>$TEST_DIR/test.err
+    $TRANSFER_LOCATION --max-attempts=1 "$@" >$TEST_DIR/test.out 2>$TEST_DIR/test.err
     RC=$?
     return $RC
 }
@@ -74,11 +78,40 @@ function test_integrity_local_cp {
     return 0
 }
 
+function test_containers {
+    rm -f *-image.tar.gz
+    if ! (transfer --file containers.in); then
+        echo "ERROR: pegasus-transfer exited non-zero"
+        return 1
+    fi
+    # check docker->singularity file
+    if ! (file singularity-docker-image.tar.gz | grep "/usr/bin/env run-singularity") >/dev/null 2>&1; then
+        echo "singularity-docker-image.tar.gz is not in Singularity format"
+        return 1
+    fi
+    rm -f *-image.tar.gz
+    return 0
+}
+
 function test_symlink {
     rm -rf deep
-    transfer --symlink --file symlink.in 
+    if ! (transfer --symlink --file symlink.in); then
+        echo "ERROR: pegasus-transfer exited non-zero"
+        return 1
+    fi
     if [ ! -L deep/index.html ]; then
         echo "ERROR: deep/index.html is not a symlink"
+        return 1
+    fi
+    rm -rf deep
+    return 0
+}
+
+function test_symlink_should_fail {
+    rm -rf deep
+    # we expect transfer to fail here
+    if (transfer --symlink --file symlink-fail.in); then
+        echo "ERROR: pegasus-transfer did not fail as expected"
         return 1
     fi
     rm -rf deep
@@ -102,7 +135,7 @@ function test_integrity_kickstart_large {
         cat <<EOF >>transfers.in
  { "type": "transfer",
    "lfn": "file_$TID.data",
-   "file_type": "input",
+   "linkage": "input",
    "generate_checksum": true, 
    "id": $TID,
    "src_urls": [
@@ -150,7 +183,13 @@ rm -f $KICKSTART_INTEGRITY_DATA
 run_test test_integrity
 run_test test_local_cp
 run_test test_integrity_local_cp
+if (docker image list && singularity --version) >/dev/null 2>&1; then
+    run_test test_containers
+else
+    skip_test test_containers
+fi
 run_test test_symlink
+run_test test_symlink_should_fail
 run_test test_pull_back_integrity
 run_test test_integrity_kickstart_large
 

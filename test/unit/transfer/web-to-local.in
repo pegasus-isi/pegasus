@@ -1,7 +1,7 @@
 [
  { "type": "transfer",
    "lfn": "index.html",
-   "file_type": "input",
+   "linkage": "input",
    "generate_checksum": true, 
    "id": 1,
    "src_urls": [

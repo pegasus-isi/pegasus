@@ -2,6 +2,7 @@
  { "type": "transfer",
    "lfn": "data.txt",
    "id": 1,
+   "linkage": "input",
    "verify_checksum_remote": true, 
    "src_urls": [
      { "site_label": "computesite", "url": "file://$PWD/data.txt", "priority": 100 }
@@ -12,6 +13,7 @@
  { "type": "transfer",
    "lfn": "data.txt",
    "id": 2,
+   "linkage": "input",
    "verify_checksum_remote": true, 
    "src_urls": [
      { "site_label": "computesite", "url": "file://$PWD/data.txt", "priority": 100 }
@@ -22,6 +24,7 @@
  { "type": "transfer",
    "lfn": "test.txt",
    "id": 3,
+   "linkage": "output",
    "verify_checksum_remote": true, 
    "src_urls": [
      { "site_label": "computesite", "url": "https://pegasus.isi.edu/static/bamboo/test.txt", "priority": 100 }
