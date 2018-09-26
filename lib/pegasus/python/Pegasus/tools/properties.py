@@ -207,6 +207,16 @@ class Properties:
         # Initialize class variables
         self.m_config = props or {}
 
+
+    def __delitem__(self, key):
+        """
+        Delete a property from the underlying dictionary.
+
+        :param key:
+        :return:
+        """
+        del self.m_config[key]
+
     def new(self, config_file=None, rundir_propfile=None):
         """
         Initialize instance variable, processing the appropriate
