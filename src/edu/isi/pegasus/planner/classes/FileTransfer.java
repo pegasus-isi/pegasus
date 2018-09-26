@@ -444,6 +444,17 @@ public class FileTransfer extends PegasusFile {
     public boolean isTransferringExecutableFile(){
         return this.isExecutable();
     }
+    
+    /**
+     * Returns a boolean indicating if a file that is being staged is a
+     * container or not.
+     * 
+     * @return boolean indicating whether a file is container or not.
+     */
+    public boolean isTransferringContainer() {
+        return this.isContainerFile();
+    }
+
 
     /**
      * Returns a single url from the map passed. If the random parameter is set,
@@ -601,4 +612,5 @@ public class FileTransfer extends PegasusFile {
         return sb.toString();
     }
 
+    
 }

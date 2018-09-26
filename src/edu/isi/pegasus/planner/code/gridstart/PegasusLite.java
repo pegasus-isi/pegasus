@@ -1204,6 +1204,10 @@ public class PegasusLite implements GridStart {
             sb.append("     {");
             sb.append(" \"site_label\": \"").append(nv.getKey()).append("\",");
             sb.append(" \"url\": \"").append(nv.getValue()).append("\"");
+            //PM-1300 tag that we are transferring a container
+            if( ft.isTransferringContainer() ){
+                sb.append(" \"type\": \"").append( ft.typeToString()).append("\"");
+            }
             sb.append(" }\n");
             sb.append("   ]");
             sb.append(" }\n"); // end of this transfer

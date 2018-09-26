@@ -588,8 +588,8 @@ public class InterPoolEngine extends Engine implements Refiner {
        
         FileTransfer fTx = new FileTransfer( c.getLFN(),
                                                  job.jobName);
-        fTx.setType(FileTransfer.DATA_FILE);
-
+        fTx.setType( c.getType());
+       
         String site = c.getImageSite();
         if( site == null ){
             site = "CONTAINER_SITE";

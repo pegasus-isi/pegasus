@@ -542,6 +542,12 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             urlPair.append("     {");
             urlPair.append(" \"site_label\": \"").append(dest.getKey()).append("\",");
             urlPair.append(" \"url\": \"").append(dest.getValue()).append("\"");
+            
+            //PM-1300 tag that we are transferring a container
+            if( ft.isTransferringContainer() ){
+                urlPair.append(" \"type\": \"").append( ft.typeToString()).append("\"");
+            }
+
             urlPair.append(" }\n");
             urlPair.append("   ]");
             urlPair.append(" }\n"); // end of this transfer
