@@ -1148,12 +1148,12 @@ public class PegasusLite implements GridStart {
      * transfer executable
      * 
      * @param files    Collection of <code>FileTransfer</code> objects.
-     * @param fileType file type of transfers
+     * @param linkage file type of transfers
      * 
      * @return  the blurb containing the files in the input format for the transfer
      *          executable
      */
-    protected StringBuffer convertToTransferInputFormat( Collection<FileTransfer> files, PegasusFile.LINKAGE fileType ){
+    protected StringBuffer convertToTransferInputFormat( Collection<FileTransfer> files, PegasusFile.LINKAGE linkage ){
         StringBuffer sb = new StringBuffer();
         
         sb.append("[\n");
@@ -1166,7 +1166,7 @@ public class PegasusLite implements GridStart {
             }
             Collection<String> sourceSites = ft.getSourceSites( );
             sb.append(" { \"type\": \"transfer\",\n");
-            sb.append("   \"file_type\": ").append("\"").append( fileType ).append("\"").append(",\n");
+            sb.append("   \"linkage\": ").append("\"").append( linkage ).append("\"").append(",\n");
             sb.append("   \"lfn\": ").append("\"").append(ft.getLFN()).append("\"").append(",\n");
             sb.append("   \"id\": ").append(num).append(",\n");
            
