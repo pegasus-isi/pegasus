@@ -74,6 +74,7 @@ class PegasusURL:
     A representation of a URL, including site label and priority
     """
     url = None
+    file_type = None
     site_label = ""
     priority = 0
     # the url broken down, for convenience
@@ -82,9 +83,10 @@ class PegasusURL:
     path = ""
     
 
-    def __init__(self, url, site_label, priority=0):
+    def __init__(self, url, file_type, site_label, priority=0):
         # the url should be URL decoded to work with our shell callouts
         self.url = urllib.unquote(url)
+        self.file_type = file_type
         # make the site label to match site labels in the env
         self.site_label = string.replace(site_label, "-", "_")
         self.priority = priority
@@ -182,7 +184,7 @@ class Mkdir(TransferBase):
         self._target_url = None
     
     def set_url(self, site_label, url):
-        self._target_url = PegasusURL(url, site_label)
+        self._target_url = PegasusURL(url, None, site_label)
 
     
     def get_url(self):
@@ -226,7 +228,7 @@ class Remove(TransferBase):
 
     
     def set_url(self, site_label, url):
-        self._target_url = PegasusURL(url, site_label)
+        self._target_url = PegasusURL(url, None, site_label)
 
     
     def get_recursive(self):
@@ -280,7 +282,8 @@ class Transfer(TransferBase):
 
         self.lfn = ""
         
-        self.file_type = "unknown"
+        self.linkage = "unknown"
+        self.verify_symlink_source = True
         
         self._src_urls = []
         self._dst_urls = []
@@ -299,24 +302,28 @@ class Transfer(TransferBase):
         self.lfn = lfn
 
 
-    def set_file_type(self, file_type):
-        self.file_type = file_type
+    def set_linkage(self, linkage):
+        self.linkage = linkage
 
-        
-    def add_src(self, site_label, url, priority=None):
+
+    def set_verify_symlink_source(self, verify_symlink_source):
+        self.verify_symlink_source = verify_symlink_source
+
+
+    def add_src(self, site_label, url, file_type=None, priority=None):
         if priority is None:
             priority = random.randint(1,100)
-        u = PegasusURL(url, site_label, priority)
+        u = PegasusURL(url, file_type, site_label, priority)
         self._src_urls.append(u)
         # keep the list sorted
         self._src_urls = sorted(self._src_urls, key=lambda url: url.priority, reverse=True)
         self._update_sub_transfer_count()
 
     
-    def add_dst(self, site_label, url, priority=None):
+    def add_dst(self, site_label, url, file_type=None, priority=None):
         if priority is None:
             priority = random.randint(1,100)
-        u = PegasusURL(url, site_label, priority)
+        u = PegasusURL(url, file_type, site_label, priority)
         self._dst_urls.append(u)
         # keep the list sorted
         self._dst_urls = sorted(self._dst_urls, key=lambda url: url.priority, reverse=True)
@@ -357,6 +364,14 @@ class Transfer(TransferBase):
 
     def get_dst_proto(self):
         return self._dst_urls[0].proto
+
+
+    def get_src_type(self):
+        return self._src_urls[0].file_type
+
+
+    def get_dst_type(self):
+        return self._dst_urls[0].file_type
 
 
     def get_src_host(self):
@@ -711,7 +726,7 @@ class TransferHandlerBase(object):
         # do we need to calculate integrity checksums?
         if transfer.generate_checksum and \
            transfer.get_src_proto() == "file":
-            self._generate_integrity_checksum(transfer.lfn, transfer.get_src_path(), transfer.file_type) 
+            self._generate_integrity_checksum(transfer.lfn, transfer.get_src_path(), transfer.linkage) 
 
 
     def _post_transfer_attempt(self, transfer, was_successful, t_start, t_end=None):
@@ -726,7 +741,7 @@ class TransferHandlerBase(object):
         if was_successful and \
            transfer.generate_checksum and \
            transfer.get_dst_proto() == "file":
-            self._generate_integrity_checksum(transfer.lfn, transfer.get_dst_path(), transfer.file_type) 
+            self._generate_integrity_checksum(transfer.lfn, transfer.get_dst_path(), transfer.linkage) 
         
         # keep track of transfer attempts
         transfer.attempts += 1
@@ -757,7 +772,7 @@ class TransferHandlerBase(object):
                     logger.error(e)
    
 
-    def _generate_integrity_checksum(self, lfn, fname, file_type):
+    def _generate_integrity_checksum(self, lfn, fname, linkage):
         """
         Call out to pegasus-integrity to generate a checksum for the file.
         The information goes to $KICKSTART_INTEGRITY_DATA so that kickstart
@@ -789,7 +804,7 @@ class TransferHandlerBase(object):
             logger.error(err)
         finally:
             # do not do any timing here - it is in the kickstart record
-            #stats.add_integrity_generate(file_type, tc.get_duration())
+            #stats.add_integrity_generate(linkage, tc.get_duration())
             self.lock.release()
 
     
@@ -942,7 +957,8 @@ class FileHandler(TransferHandlerBase):
                     continue
 
             # first check that the src file exists, and that it can be opened
-            if not self._verify_read_access(t.get_src_path()):
+            if t.verify_symlink_source and \
+               not self._verify_read_access(t.get_src_path()):
                 logger.error("ln: src (%s) does not exist, or we do not have permission to read it" \
                              % t.get_src_path())
                 failed_l.append(t)
@@ -3111,7 +3127,8 @@ class SymlinkHandler(TransferHandlerBase):
             prepare_local_dir(os.path.dirname(t.get_dst_path()))
     
             # we do not allow dangling symlinks
-            if not os.path.exists(t.get_src_path()):
+            if t.verify_symlink_source and \
+               not os.path.exists(t.get_src_path()):
                 logger.warning("Symlink source (%s) does not exist" % (t.get_src_path()))
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
@@ -3212,7 +3229,7 @@ class SingularityHubHandler(TransferHandlerBase):
     """
     
     _name = "SingularityHubHandler"
-    _protocol_map = ["shub->file"]
+    _protocol_map = ["shub->file", "docker->singularity"]
 
     def do_transfers(self, transfers_l):
         
@@ -3323,59 +3340,59 @@ class Stats:
         self._t_end_global = time.time()
 
     
-    def add_integrity_generate(self, file_type, duration):
+    def add_integrity_generate(self, linkage, duration):
         # this is not currently used, and thus does not handle
         # success/failed counts
-        if file_type is None or file_type == '':
-            file_type = 'unknown'
-        if file_type not in self._integrity_generate_count:
-            self._integrity_generate_count[file_type] = 0
-            self._integrity_generate_duration[file_type] = 0.0
-        self._integrity_generate_count[file_type] += 1
-        self._integrity_generate_duration[file_type] += duration
+        if linkage is None or linkage == '':
+            linkage = 'unknown'
+        if linkage not in self._integrity_generate_count:
+            self._integrity_generate_count[linkage] = 0
+            self._integrity_generate_duration[linkage] = 0.0
+        self._integrity_generate_count[linkage] += 1
+        self._integrity_generate_duration[linkage] += duration
 
 
-    def add_integrity_verify(self, file_type, duration, success):
-        if file_type is None or file_type == '':
-            file_type = 'unknown'
-        if file_type not in self._integrity_verify_count_succeeded:
-            self._integrity_verify_count_succeeded[file_type] = 0
-            self._integrity_verify_count_failed[file_type] = 0
-            self._integrity_verify_duration[file_type] = 0.0
+    def add_integrity_verify(self, linkage, duration, success):
+        if linkage is None or linkage == '':
+            linkage = 'unknown'
+        if linkage not in self._integrity_verify_count_succeeded:
+            self._integrity_verify_count_succeeded[linkage] = 0
+            self._integrity_verify_count_failed[linkage] = 0
+            self._integrity_verify_duration[linkage] = 0.0
         if success:
-            self._integrity_verify_count_succeeded[file_type] += 1
+            self._integrity_verify_count_succeeded[linkage] += 1
         else:
-            self._integrity_verify_count_failed[file_type] += 1
-        self._integrity_verify_duration[file_type] += duration
+            self._integrity_verify_count_failed[linkage] += 1
+        self._integrity_verify_duration[linkage] += duration
         
 
     def stats_summary(self):
         
         # integrity timings
-        for file_type in self._integrity_verify_count_succeeded.keys():
+        for linkage in self._integrity_verify_count_succeeded.keys():
             data = {
                 'ts': int(time.time()), 
                 'monitoring_event': 'int.metric', 
                 'payload': [ {
                     'event': 'check',
-                    'file_type': file_type,
-                    'succeeded': self._integrity_verify_count_succeeded[file_type],
-                    'failed': self._integrity_verify_count_failed[file_type],
-                    'duration': '%.3f' % self._integrity_verify_duration[file_type]
+                    'file_type': linkage,
+                    'succeeded': self._integrity_verify_count_succeeded[linkage],
+                    'failed': self._integrity_verify_count_failed[linkage],
+                    'duration': '%.3f' % self._integrity_verify_duration[linkage]
                     }
                 ]
             }
             logger.info('@@@MONITORING_PAYLOAD - START@@@' +json.dumps(data) + '@@@MONITORING_PAYLOAD - END@@@')
-        for file_type in self._integrity_generate_count.keys():
+        for linkage in self._integrity_generate_count.keys():
             data = {
                 'ts': int(time.time()), 
                 'monitoring_event': 'int.metric', 
                 'payload': [ {
                     'event': 'compute',
-                    'file_type': file_type,
-                    'succeeded': self._integrity_generate_count[file_type],
+                    'file_type': linkage,
+                    'succeeded': self._integrity_generate_count[linkage],
                     'failed': 0,
-                    'duration': '%.3f' % self._integrity_generate_duration[file_type]
+                    'duration': '%.3f' % self._integrity_generate_duration[linkage]
                     }
                 ]
             }
@@ -3509,6 +3526,12 @@ class SimilarWorkSet:
 
         src_proto = transfers_l[0].get_src_proto()
         dst_proto = transfers_l[0].get_dst_proto()
+
+        # if file_type is set, it overrides the protocol in the handler mapping
+        if transfers_l[0].get_src_type() is not None:
+            src_proto = transfers_l[0].get_src_type()
+        if transfers_l[0].get_dst_type() is not None:
+            dst_proto = transfers_l[0].get_dst_type()
 
         # can we find one handler which can handle both source
         # and destination protocols directly?
@@ -3677,7 +3700,7 @@ class SimilarWorkSet:
                     local_name = temp_name
                 
                 # verify checksum of the now locally accessible file
-                if self.verify_integrity_checksum(t.lfn, local_name, t.file_type):
+                if self.verify_integrity_checksum(t.lfn, local_name, t.linkage):
                     success_list.append(t)
                 else:
                     failed_list.append(t)
@@ -3720,7 +3743,7 @@ class SimilarWorkSet:
             return True
     
 
-    def verify_integrity_checksum(self, lfn, fname, file_type):
+    def verify_integrity_checksum(self, lfn, fname, linkage):
         """
         Call out to pegasus-integrity to verify a checksum for the file.
         """
@@ -3739,10 +3762,10 @@ class SimilarWorkSet:
         try:
             tc = TimedCommand(cmd)
             tc.run()
-            stats.add_integrity_verify(file_type, tc.get_duration(), True)
+            stats.add_integrity_verify(linkage, tc.get_duration(), True)
         except RuntimeError as err:
             logger.error(err)
-            stats.add_integrity_verify(file_type, tc.get_duration(), False)
+            stats.add_integrity_verify(linkage, tc.get_duration(), False)
             return False
         return True
 
@@ -4095,23 +4118,31 @@ def json_object_decoder(obj):
         t = Transfer()
         if 'lfn' in obj:
             t.set_lfn(obj['lfn'])
-        if 'file_type' in obj:
-            t.set_file_type(obj['file_type'])
+        if 'linkage' in obj:
+            t.set_linkage(obj['linkage'])
+        if 'verify_symlink_source' in obj:
+            t.set_verify_symlink_source(obj['verify_symlink_source'])
         if 'generate_checksum' in obj:
             t.generate_checksum = obj['generate_checksum']
         if 'verify_checksum_remote' in obj:
             t.verify_checksum_remote = obj['verify_checksum_remote']
         # src
         for surl in obj['src_urls']:
+            file_type = None
+            if 'type' in surl:
+                file_type = surl['type'] 
             priority = None
             if 'priority' in surl:
                 priority = int(surl['priority']) 
-            t.add_src(surl['site_label'], surl['url'], priority)
+            t.add_src(surl['site_label'], surl['url'], file_type, priority)
         for durl in obj['dest_urls']:
+            file_type = None
+            if 'type' in durl:
+                file_type = durl['type'] 
             priority = None
             if 'priority' in durl:
                 priority = int(durl['priority']) 
-            t.add_dst(durl['site_label'], durl['url'], priority)
+            t.add_dst(durl['site_label'], durl['url'], file_type, priority)
         return t
     elif 'type' in obj and obj['type'] == 'mkdir':
         m = Mkdir()

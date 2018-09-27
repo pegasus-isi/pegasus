@@ -545,6 +545,7 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             
             //PM-1300 tag that we are transferring a container
             if( ft.isTransferringContainer() ){
+                urlPair.append(",");
                 urlPair.append(" \"type\": \"").append( ft.typeToString()).append("\"");
             }
 
