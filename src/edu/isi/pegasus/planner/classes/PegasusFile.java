@@ -112,13 +112,13 @@ public class PegasusFile extends Data {
      * The string value of a file that is of type docker container
      * @see DOCKER_CONTAINER#DOCKER_CONTAINER_FILE
      */
-    public static final String DOCKER_TYPE = "cont.docker";
+    public static final String DOCKER_TYPE = "docker";
     
     /**
      * The string value of a file that is of type docker container
      * @see SINGULARITY_CONTAINER#SINGULARITY_CONTAINER_FILE
      */
-    public static final String SINGULARITY_TYPE = "cont.singularity";
+    public static final String SINGULARITY_TYPE = "singularity";
     
     
     /**
