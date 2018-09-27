@@ -3185,7 +3185,7 @@ class DockerHandler(TransferHandlerBase):
     """
     
     _name = "DockerHandler"
-    _protocol_map = ["docker->file"]
+    _protocol_map = ["docker->file", "docker->file::docker"]
 
     def do_transfers(self, transfers_l):
         
@@ -3229,7 +3229,7 @@ class SingularityHubHandler(TransferHandlerBase):
     """
     
     _name = "SingularityHubHandler"
-    _protocol_map = ["shub->file", "docker->singularity"]
+    _protocol_map = ["shub->file", "shub->file::singularity", "docker->file::singularity"]
 
     def do_transfers(self, transfers_l):
         
@@ -3527,11 +3527,11 @@ class SimilarWorkSet:
         src_proto = transfers_l[0].get_src_proto()
         dst_proto = transfers_l[0].get_dst_proto()
 
-        # if file_type is set, it overrides the protocol in the handler mapping
+        # if file_type is set, it adds to the protocol in the handler mapping
         if transfers_l[0].get_src_type() is not None:
-            src_proto = transfers_l[0].get_src_type()
+            src_proto = src_proto + '::' + transfers_l[0].get_src_type()
         if transfers_l[0].get_dst_type() is not None:
-            dst_proto = transfers_l[0].get_dst_type()
+            dst_proto = dst_proto + '::' + transfers_l[0].get_dst_type()
 
         # can we find one handler which can handle both source
         # and destination protocols directly?
