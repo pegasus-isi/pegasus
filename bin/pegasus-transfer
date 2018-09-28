@@ -3528,13 +3528,14 @@ class SimilarWorkSet:
         dst_proto = transfers_l[0].get_dst_proto()
 
         # if file_type is set, it adds to the protocol in the handler mapping,
-        # but only for file://
-        if transfers_l[0].get_src_type() is not None and \
-           src_proto == 'file':
-            src_proto = src_proto + '::' + transfers_l[0].get_src_type()
-        if transfers_l[0].get_dst_type() is not None and \
-           dst_proto == 'file':
-            dst_proto = dst_proto + '::' + transfers_l[0].get_dst_type()
+        # but only for docker/singularity to file://
+        #if transfers_l[0].get_src_type() is not None and \
+        #   src_proto == 'file':
+        #    src_proto = src_proto + '::' + transfers_l[0].get_src_type()
+        if src_proto == 'docker' or src_proto == 'shub':
+            if transfers_l[0].get_dst_type() is not None and \
+               dst_proto == 'file':
+                dst_proto = dst_proto + '::' + transfers_l[0].get_dst_type()
 
         # can we find one handler which can handle both source
         # and destination protocols directly?
@@ -3557,12 +3558,12 @@ class SimilarWorkSet:
         # to docker and singularity transfers
         middle_in_proto = 'file'
         if (transfers_l[0].get_src_proto() == 'docker' or \
-            transfers_l[0].get_src_proto() == 'singularity') and \
+            transfers_l[0].get_src_proto() == 'shub') and \
            transfers_l[0].get_dst_type() is not None:
             middle_in_proto = 'file::' + transfers_l[0].get_dst_type()
         middle_out_proto = 'file'
-        if transfers_l[0].get_src_type() is not None:
-            middle_out_proto = 'file::' + transfers_l[0].get_src_type()
+        #if transfers_l[0].get_src_type() is not None:
+        #    middle_out_proto = 'file::' + transfers_l[0].get_src_type()
 
         for h in self._available_handlers:
             if h.protocol_check(src_proto, middle_in_proto):
