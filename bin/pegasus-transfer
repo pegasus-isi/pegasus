@@ -3527,10 +3527,13 @@ class SimilarWorkSet:
         src_proto = transfers_l[0].get_src_proto()
         dst_proto = transfers_l[0].get_dst_proto()
 
-        # if file_type is set, it adds to the protocol in the handler mapping
-        if transfers_l[0].get_src_type() is not None:
+        # if file_type is set, it adds to the protocol in the handler mapping,
+        # but only for file://
+        if transfers_l[0].get_src_type() is not None and \
+           src_proto == 'file':
             src_proto = src_proto + '::' + transfers_l[0].get_src_type()
-        if transfers_l[0].get_dst_type() is not None:
+        if transfers_l[0].get_dst_type() is not None and \
+           dst_proto == 'file':
             dst_proto = dst_proto + '::' + transfers_l[0].get_dst_type()
 
         # can we find one handler which can handle both source
@@ -3547,8 +3550,18 @@ class SimilarWorkSet:
 
         # we need to split the transfer from src to local file,
         # and then transfer the local file to the dst
+
+        # carry the types so that for example docker->gsiftp::docker
+        # becomes docker->file::docker + file->gsiftp
+        middle_in_proto = 'file'
+        if transfers_l[0].get_dst_type() is not None:
+            middle_in_proto = 'file::' + transfers_l[0].get_dst_type()
+        middle_out_proto = 'file'
+        if transfers_l[0].get_src_type() is not None:
+            middle_out_proto = 'file::' + transfers_l[0].get_src_type()
+
         for h in self._available_handlers:
-            if h.protocol_check(src_proto, "file"):
+            if h.protocol_check(src_proto, middle_in_proto):
                 self._primary_handler = h
                 break
         for h in self._available_handlers:
@@ -3557,7 +3570,7 @@ class SimilarWorkSet:
             # the file to be copied
             if dst_proto == "symlink":
                 dst_proto = "file"
-            if h.protocol_check("file", dst_proto):
+            if h.protocol_check(middle_out_proto, dst_proto):
                 self._secondary_handler = h
                 break
         if self._primary_handler is None or self._secondary_handler is None:
