@@ -86,7 +86,7 @@ public class Integrity {
      * @param sb 
      * @param files 
      */
-    protected void addIntegrityCheckInvocation(StringBuffer sb,  Collection<PegasusFile> files ) {
+    public void addIntegrityCheckInvocation(StringBuilder sb,  Collection<PegasusFile> files ) {
     	StringBuilder flist = new StringBuilder();
         for( PegasusFile file: files ){
             if( file.isDataFile() ){
@@ -126,7 +126,7 @@ public class Integrity {
      * 
      * @return 
      */
-    protected boolean modifyJobForIntegrityChecks(Job job, File file, String baseSubmitDir) {
+    public boolean modifyJobForIntegrityChecks(Job job, File file, String baseSubmitDir) {
         
         //sanity check
         //for jobs with no input files, we don't need to transfer 
@@ -195,7 +195,7 @@ public class Integrity {
      * 
      * @return A metafile with the suffix, else null
      */
-    protected File generateChecksumMetadataFile( String name, Collection<PegasusFile> files) {
+    public File generateChecksumMetadataFile( String name, Collection<PegasusFile> files) {
         
         
         //subset files that have any metadata associated with them
