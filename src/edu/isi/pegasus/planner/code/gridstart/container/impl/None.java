@@ -16,6 +16,7 @@
 
 package edu.isi.pegasus.planner.code.gridstart.container.impl;
 
+import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -35,9 +36,10 @@ public class None extends Abstract {
     /**
      * Initiailizes the Container  shell wrapper
      * @param bag 
+     * @param dag 
      */
-    public void initialize( PegasusBag bag ){
-        super.initialize(bag);
+    public void initialize( PegasusBag bag, ADag dag ){
+        super.initialize(bag, dag);
     }
     
     /**
@@ -51,6 +53,11 @@ public class None extends Abstract {
      */
     public String wrap( Job job ){
         StringBuilder sb = new StringBuilder();
+        
+        sb.append( super.enableForIntegrity(job) );
+        sb.append( "set +e" ).append( '\n' );//PM-701
+        sb.append( "job_ec=0" ).append( "\n" );
+        
         appendStderrFragment( sb, Abstract.PEGASUS_LITE_MESSAGE_PREFIX, "Executing the user task" );
         sb.append( job.getRemoteExecutable() ).append( job.getArguments() ).append( '\n' );
         //capture exitcode of the job
@@ -67,6 +74,10 @@ public class None extends Abstract {
      */
     public String wrap( AggregatedJob job ){
         StringBuilder sb = new StringBuilder();
+        
+        sb.append( super.enableForIntegrity(job) );
+        sb.append( "set +e" ).append( '\n' );//PM-701
+        sb.append( "job_ec=0" ).append( "\n" );
         
         try{
             appendStderrFragment( sb, Abstract.PEGASUS_LITE_MESSAGE_PREFIX, "Executing the user's clustered task" );

@@ -16,8 +16,13 @@
 package edu.isi.pegasus.planner.code.gridstart.container.impl;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.DAGJob;
+import edu.isi.pegasus.planner.classes.DAXJob;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.code.gridstart.Integrity;
 import edu.isi.pegasus.planner.code.gridstart.container.ContainerShellWrapper;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.io.BufferedReader;
@@ -61,6 +66,15 @@ public abstract class Abstract implements ContainerShellWrapper{
      */
     protected PlannerOptions mPOptions;
     
+    
+    
+    /**
+     * Whether to do integrity checking or not.
+     */
+    protected boolean mDoIntegrityChecking ;
+    
+    private Integrity mIntegrityHandler;
+    
     /**
      * Appends a fragment to the pegasus lite script that logs a message to
      * stderr
@@ -97,12 +111,52 @@ public abstract class Abstract implements ContainerShellWrapper{
     /**
      * Initiailizes the Container  shell wrapper
      * @param bag 
+     * @param dag 
      */
-    public void initialize( PegasusBag bag ){
+    public void initialize( PegasusBag bag, ADag dag ){
         mLogger    = bag.getLogger();
+        mProps     = bag.getPegasusProperties();
         mPOptions  = bag.getPlannerOptions();
         mSubmitDir = mPOptions.getSubmitDirectory();
+        mDoIntegrityChecking  = mProps.doIntegrityChecking();
+        mIntegrityHandler = new Integrity();
+        mIntegrityHandler.initialize(bag, dag);
     }
+    
+    /**
+     * Enables a job for integrity checking 
+     * 
+     * @param job
+     * @return 
+     */
+    protected StringBuilder enableForIntegrity( Job job ){
+        StringBuilder sb = new StringBuilder();
+        boolean isCompute = job.getJobType() == Job.COMPUTE_JOB;
+        //PM-1190 we do integrity checks only for compute jobs
+        if( mDoIntegrityChecking && isCompute){
+            //we cannot enable integrity checking for DAX or dag jobs
+            //as the prescript is not run as a full condor job
+            if( !(job instanceof DAXJob || job instanceof DAGJob) ){
+                appendStderrFragment( sb, "", "Checking file integrity for input files" );
+                sb.append( "# do file integrity checks" ).append( '\n' );
+                mIntegrityHandler.addIntegrityCheckInvocation( sb,  job.getInputFiles() );
+
+                //check if planner knows of any checksums from the replica catalog
+                //and generate an input meta file!
+                File metaFile = mIntegrityHandler.generateChecksumMetadataFile( job.getFileFullPath( mSubmitDir,  ".in.meta"),
+                                                              job.getInputFiles() );
+
+                //modify job for transferring the .meta files
+                if( !mIntegrityHandler.modifyJobForIntegrityChecks( job , metaFile, this.mSubmitDir )) {
+                    throw new RuntimeException( "Unable to modify job for integrity checks" );
+                }
+                sb.append( "\n" );
+            }
+        }
+        
+        return sb;
+    }
+    
     
     /**
      * Convenience method to slurp in contents of a file into memory.

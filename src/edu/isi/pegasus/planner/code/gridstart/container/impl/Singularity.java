@@ -18,6 +18,7 @@ package edu.isi.pegasus.planner.code.gridstart.container.impl;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
+import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -53,9 +54,10 @@ public class Singularity extends Abstract{
     /**
      * Initiailizes the Container  shell wrapper
      * @param bag 
+     * @param dag 
      */
-    public void initialize( PegasusBag bag ){
-        super.initialize(bag);
+    public void initialize( PegasusBag bag, ADag dag ){
+        super.initialize(bag, dag);
     }
     
     /**
@@ -197,6 +199,12 @@ public class Singularity extends Abstract{
             WORKER_PACKAGE_SETUP_SNIPPET = Singularity.constructContainerWorkerPackagePreamble();
         }
         sb.append( WORKER_PACKAGE_SETUP_SNIPPET );
+        
+        //PM-1305 the integrity check should happen in the container
+        sb.append( super.enableForIntegrity(job) );
+        
+        sb.append( "set +e" ).append( '\n' );//PM-701
+        sb.append( "job_ec=0" ).append( "\n" );
         
         appendStderrFragment( sb, Abstract.CONTAINER_MESSAGE_PREFIX, "Launching user task");
         sb.append( "\n" );

@@ -18,6 +18,7 @@ package edu.isi.pegasus.planner.code.gridstart.container.impl;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
+import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -57,10 +58,10 @@ public class Docker extends Abstract{
     
     /**
      * Initiailizes the Container  shell wrapper
-     * @param bag 
+     * @param bag @param dag 
      */
-    public void initialize( PegasusBag bag ){
-        super.initialize(bag);
+    public void initialize( PegasusBag bag, ADag dag ){
+        super.initialize(bag, dag);
     }
     
     /**
@@ -91,7 +92,9 @@ public class Docker extends Abstract{
         sb.append( "fi" ).append( "\n" );
         sb.append( "\n" );
         
-        sb.append( "set +e" ).append( "\n" );
+        sb.append( "set +e" ).append( '\n' );//PM-701
+        sb.append( "job_ec=0" ).append( "\n" );
+        
         
         //sets up the variables used for docker run command
         //FIXME docker_init has to be passed the name of the tar file?
@@ -227,6 +230,9 @@ public class Docker extends Abstract{
             WORKER_PACKAGE_SETUP_SNIPPET = Docker.constructContainerWorkerPackagePreamble();
         }
         sb.append( WORKER_PACKAGE_SETUP_SNIPPET );
+        
+        //PM-1305 the integrity check should happen in the container
+        sb.append( super.enableForIntegrity(job) );
         
         appendStderrFragment( sb, Abstract.CONTAINER_MESSAGE_PREFIX, "Launching user task");
         sb.append( "\n" );

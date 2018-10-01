@@ -326,13 +326,6 @@ public class PegasusLite implements GridStart {
      */
     protected boolean mAllowWPDownloadFromWebsite;
     
-    
-    /**
-     * Whether to do integrity checking or not.
-     */
-    protected boolean mDoIntegrityChecking ;
-    
-    private Integrity mIntegrityHandler;
 
     /**
      * The shell wrapper to use to wrap job in container
@@ -370,7 +363,6 @@ public class PegasusLite implements GridStart {
         mEnforceStrictChecksOnWPVersion = mProps.enforceStrictChecksForWorkerPackage();
         mUseSymLinks                    = mProps.getUseOfSymbolicLinks();
         mAllowWPDownloadFromWebsite     = mProps.allowDownloadOfWorkerPackageFromPegasusWebsite();
-        mDoIntegrityChecking            = mProps.doIntegrityChecking();
         
         mChmodOnExecutionSiteMap = new HashMap<String,String>();
 
@@ -403,10 +395,8 @@ public class PegasusLite implements GridStart {
         
         mLocalPathToPegasusLiteCommon = getSubmitHostPathToPegasusLiteCommon( );
         mContainerWrapperFactory = new ContainerShellWrapperFactory();
-        mContainerWrapperFactory.initialize(bag);
+        mContainerWrapperFactory.initialize(bag, dag);
         
-        mIntegrityHandler = new Integrity();
-        mIntegrityHandler.initialize(bag, dag);
     }
     
     /**
@@ -974,6 +964,9 @@ public class PegasusLite implements GridStart {
                 sb.append( '\n' );
             }
            
+            
+            
+            /*
             //PM-1190 we do integrity checks only for compute jobs
             if( mDoIntegrityChecking && isCompute){
                 //we cannot enable integrity checking for DAX or dag jobs
@@ -995,17 +988,20 @@ public class PegasusLite implements GridStart {
                     sb.append( "\n" );
                 }
             }
-            
+            */
             
             //sb.append( "# execute the tasks" ).append( '\n' ).
+            /** Not clear where to put?
             sb.append( "set +e" ).append( '\n' );//PM-701
-
+            sb.append( "job_ec=0" ).append( "\n" );
+            */
+            
             writer.print( sb.toString() );
             writer.flush();
             
+            
             sb = new StringBuffer();
             
-            sb.append( "job_ec=0" ).append( "\n" );
             //enable the job via kickstart
             //separate calls for aggregated and normal jobs
             ContainerShellWrapper containerWrapper = this.mContainerWrapperFactory.loadInstance(job);
