@@ -16,6 +16,7 @@
 
 package edu.isi.pegasus.planner.code.gridstart.container;
 
+import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -31,13 +32,14 @@ public interface ContainerShellWrapper {
     /**
      * The version number associated with this API.
      */
-    public static final String VERSION = "1.0";
+    public static final String VERSION = "1.1";
     
     /**
      * Initiailizes the Container  shell wrapper
      * @param bag 
+     * @param dag 
      */
-    public void initialize( PegasusBag bag );
+    public void initialize( PegasusBag bag, ADag dag );
     
     /**
      * Returns the snippet to wrap a single job execution

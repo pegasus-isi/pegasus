@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
+import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import java.util.HashMap;
 import java.util.Map;
@@ -92,6 +93,7 @@ public class ContainerShellWrapperFactory {
      * A boolean indicating that the factory has been initialized.
      */
     private boolean mInitialized;
+    private ADag mDAG;
     
     /**
      * 
@@ -105,15 +107,17 @@ public class ContainerShellWrapperFactory {
      * Initializes the factory with known GridStart implementations.
      *
      * @param bag   the bag of objects that is used for initialization.
+     * @param dag 
      */
-    public void initialize( PegasusBag bag ){
+    public void initialize( PegasusBag bag, ADag dag ){
         mBag       = bag;
+        mDAG       = dag;
        
         //load all the known implementations and initialize them
         for( int i = 0; i < CONTAINER_IMPLEMENTING_CLASSES.length; i++){
             //load via reflection just once
             registerContainerShellWrapper( CONTAINER_SHORT_NAMES[i],
-                               this.loadInstance( bag, CONTAINER_IMPLEMENTING_CLASSES[i] )
+                               this.loadInstance( bag, dag, CONTAINER_IMPLEMENTING_CLASSES[i] )
                              );
         }
 
@@ -156,7 +160,7 @@ public class ContainerShellWrapperFactory {
             }
         }
         
-        return loadInstance( mBag, shortName );
+        return loadInstance( mBag, mDAG, shortName );
 
     }
 
@@ -164,8 +168,10 @@ public class ContainerShellWrapperFactory {
      * This method loads the appropriate code generator as specified by the
      * user at runtime.
      *
-     *
+     * @param bag
+     * @param dag 
      * @param className  the name of the implementing class.
+     * 
      *
      * @return the instance of the class implementing this interface.
      *
@@ -174,7 +180,7 @@ public class ContainerShellWrapperFactory {
      *
      * @see #DEFAULT_PACKAGE_NAME
      */
-    private static ContainerShellWrapper loadInstance( PegasusBag bag, String className )
+    private static ContainerShellWrapper loadInstance( PegasusBag bag, ADag dag, String className )
         throws ContainerShellWrapperFactoryException{
 
         //prepend the package name if classname is actually just a basename
@@ -190,7 +196,7 @@ public class ContainerShellWrapperFactory {
             DynamicLoader dl = new DynamicLoader( className );
             containerShellWrapper = (ContainerShellWrapper) dl.instantiate( new Object[0] );
             //initialize the loaded code generator
-            containerShellWrapper.initialize( bag );
+            containerShellWrapper.initialize( bag, dag );
         }
         catch (Exception e) {
             throw new ContainerShellWrapperFactoryException(
