@@ -182,10 +182,14 @@ public class PegasusProperties implements Cloneable {
 
     
     /**
-     * An enum defining The scope for cleanup algorithm
+     * An enum defining The dial for cleanup algorithm
      */
     public enum CLEANUP_SCOPE{ fullahead, deferred };
 
+    /**
+     * An enum defining the dial for integrity checking
+     */
+    public enum INTEGRITY_DIAL{ none, full };
 
     /**
      * The default DAXCallback that is loaded, if none is specified by the user.
@@ -1772,7 +1776,7 @@ public class PegasusProperties implements Cloneable {
      */
     
 /*    public String getPOSTScriptScope() {
-        return mProps.getProperty( "pegasus.exitcode.scope",
+        return mProps.getProperty( "pegasus.exitcode.dial",
                                    DEFAULT_POSTSCRIPT_MODE );
     }
 */
@@ -2419,14 +2423,38 @@ public class PegasusProperties implements Cloneable {
     /**
      * Returns a boolean indicating whether to enable integrity checking or not.
      *
-     * Referred to by the "pegasus.integrity.checking" property.
      *
-     * @return the value specified in the properties file, else false
+     * @return true if integrity dial is set as full or not specified, else false
      *
      */
     public boolean doIntegrityChecking() {
-        return Boolean.parse( mProps.getProperty( "pegasus.integrity.checking" ),
-                              true );
+        return this.getIntegrityDial() == INTEGRITY_DIAL.full;
+    }
+    
+    /**
+     * Returns the integrity dial enum
+     * 
+     * Referred to by the "pegasus.integrity.checking" property.
+     *
+     * @return the value specified in the properties file, else INTEGRITY_DIAL.full
+     * 
+     * @see INTEGRITY_DIAL
+     */
+    public INTEGRITY_DIAL getIntegrityDial(){
+        INTEGRITY_DIAL dial = INTEGRITY_DIAL.full;
+        String value = mProps.getProperty(  "pegasus.integrity.checking" );
+        if( value == null ){
+            return dial;
+        }
+        
+        //try to assign a dial value
+        try{
+            dial = INTEGRITY_DIAL.valueOf( value );
+        }catch( IllegalArgumentException iae ){
+            throw new IllegalArgumentException( "Invalid value specified for integrity checking " + value, iae);
+        }
+        
+        return dial;
     }
 
 
