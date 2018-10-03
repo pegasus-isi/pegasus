@@ -1760,6 +1760,9 @@ class Workflow:
             # Make sure we include the wf_uuid ,
             kwargs["xwf__id"] = my_job._wf_uuid
             kwargs["lfn__id"] = lfn
+
+            # PM-1307 Add timestamp
+            kwargs["ts"] = self._current_timestamp
             for key in metadata.get_attribute_keys():
                 #send an event per metadata key value pair
                 kwargs[ "key" ] = key
@@ -1815,6 +1818,8 @@ class Workflow:
             kwargs["file_type"] = metric.file_type
             kwargs["count"] = metric.count if metric.count > 0 else metric.succeeded + metric.failed
             kwargs["duration"] = metric.duration
+            # PM-1307 Add timestamp
+            kwargs["ts"] = self._current_timestamp
             self.output_to_db( "int.metric", kwargs)
 
             if metric.failed > 0:
