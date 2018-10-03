@@ -16,7 +16,7 @@ BuildRequires:  ant-nodeps, java-1.8.0-openjdk-devel, /usr/share/java-1.8.0
 %if 0%{?rhel} >= 7
 BuildRequires:  java-devel = 1:1.8.0, /usr/share/java-1.8.0
 %endif
-Requires:       java, python >= 2.6, condor >= 8.4, graphviz, pyOpenSSL
+Requires:       java, python >= 2.6, condor >= 8.6, graphviz, pyOpenSSL, python-amqplib
 
 %define sourcedir %{name}-%{version}
 
