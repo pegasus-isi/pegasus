@@ -5,7 +5,7 @@ pegasus.data.configuration = condorio
 pegasus.catalog.replica  File
 pegasus.catalog.replica.file ./conf/rc.data
 
-pegasus.integrity.checking = true
+pegasus.integrity.checking = full
 
 
 

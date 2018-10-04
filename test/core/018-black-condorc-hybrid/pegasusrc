@@ -11,4 +11,4 @@ pegasus.transfer.worker.package = true
 
 # there are compute jobs that are not launched by kicstart
 # hence enable integrity checking
-pegasus.integrity.checking= false
+pegasus.integrity.checking= none
