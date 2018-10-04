@@ -1861,6 +1861,9 @@ class Workflow:
                 kwargs["sched__id"] = my_job._sched_id
             kwargs["monitoring_event"] = event["monitoring_event"] if "monitoring_event" in event else "monitoring.additional"
 
+            #PM-1307 check if ts is defined in the event
+            kwargs["ts"] = event["ts"] if "ts" in event else self._current_timestamp
+
             payload = event["payload"] if "payload" in event else None
             if payload is None:
                 logger.error( "No payload retrieved from event %s" %event)
