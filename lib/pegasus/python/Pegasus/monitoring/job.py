@@ -176,8 +176,8 @@ class Job:
                                                  failed=m["failed"] if "failed" in m else 0,
                                                  duration=m["duration"] if "duration" in m else 0.0)
                         self.add_integrity_metric(metric)
-            else:
-                self._additional_monitoring_events.append(event)
+                else:
+                    self._additional_monitoring_events.append(event)
 
     def add_integrity_metric(self, metric):
         """
