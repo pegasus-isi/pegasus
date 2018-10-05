@@ -2137,7 +2137,7 @@ public class TransferEngine extends Engine {
     private void complainForNoCandidateInput(ReplicaLocation rl, String destinationSite, boolean runTransferOnLocalSite) throws RuntimeException{
         StringBuilder error = new StringBuilder();
         error.append( "Unable to select a Physical Filename (PFN) for file with logical filename (LFN) as ").
-              append( rl.getLFN() ).append( " for destination site for transfer (" ).append( destinationSite ).
+              append( rl.getLFN() ).append( " for transfer to destination site (" ).append(  destinationSite ).
               append( "). runTransferOnLocalSite:").append( runTransferOnLocalSite ).
               append( " amongst ").append( rl.getPFNList() );
         
