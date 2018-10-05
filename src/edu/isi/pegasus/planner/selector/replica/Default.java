@@ -34,7 +34,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * The default replica selector that is used if non is specifed by the user.
+ * The default replica selector that is used if non is specified by the user.
  * This gives preference to a replica residing on the same site as the site,
  * where it is required to be staged to. If there is no such replica, then a
  * random replica is selected.
@@ -240,9 +240,7 @@ public class Default implements ReplicaSelector {
             
             //check if a File URL is allowable or not
             if( removeFileURL(rce, preferredSite, allowLocalFileURLs) ){
-                mLogger.log( "File URL " + rce + " not included as the site attribute is a mismatch to the site name (" + preferredSite 
-                             +  ") allowLocalFileURLs " +  allowLocalFileURLs , 
-                             LogManager.WARNING_MESSAGE_LEVEL );
+                this.warnForFileURL(rce, preferredSite, allowLocalFileURLs);
                 continue;
             }
 
@@ -362,6 +360,15 @@ public class Default implements ReplicaSelector {
      */
     public String description(){
         return mDescription;
+    }
+    
+    
+    protected void warnForFileURL( ReplicaCatalogEntry rce, String destinationSite, boolean allowLocalFileURLs){
+        StringBuilder sb = new StringBuilder();
+        sb.append( "File URL " ).append( rce ).append( " not included as the site attribute (" ).
+           append( rce.getResourceHandle() ).append( ") is a mismatch to the destination site for transfer (").
+           append( destinationSite ).append(  "). allowLocalFileURLs: " ).append( allowLocalFileURLs );
+        mLogger.log( sb.toString(), LogManager.WARNING_MESSAGE_LEVEL );
     }
 
 
