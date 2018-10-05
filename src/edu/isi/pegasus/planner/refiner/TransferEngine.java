@@ -1404,12 +1404,7 @@ public class TransferEngine extends Engine {
                                                                     executionSiteHandle,
                                                                     runTransferOnLocalSite );
             if( candidateLocations.getPFNCount() == 0 ){
-                StringBuilder error = new StringBuilder();
-                error.append( "Unable to select a Physical Filename (PFN) for file with logical filename (LFN) as ").
-                      append( rl.getLFN() ).append( " for preferred site " ).append( executionSiteHandle ).
-                      append( "with runTransferOnLocalSite - ").append( runTransferOnLocalSite ).
-                      append( " amongst ").append( rl.getPFNList() );
-                throw new RuntimeException( error.toString() );
+                complainForNoCandidateInput( rl, executionSiteHandle, runTransferOnLocalSite );
             }
             
             //check if we need to replace url prefix for 
@@ -2127,6 +2122,46 @@ public class TransferEngine extends Engine {
             throw new RuntimeException( "Error while determining relative submit dir for job " + job.getID() , ex);
         }
         return relative;
+        
+    }
+
+    /**
+     * Throws an exception with a detailed message as to why replica selection failed
+     * 
+     * @param rl
+     * @param destinationSite
+     * @param runTransferOnLocalSite 
+     * 
+     * @throws RuntimeException
+     */
+    private void complainForNoCandidateInput(ReplicaLocation rl, String destinationSite, boolean runTransferOnLocalSite) throws RuntimeException{
+        StringBuilder error = new StringBuilder();
+        error.append( "Unable to select a Physical Filename (PFN) for file with logical filename (LFN) as ").
+              append( rl.getLFN() ).append( " for destination site for transfer (" ).append( destinationSite ).
+              append( "). runTransferOnLocalSite:").append( runTransferOnLocalSite ).
+              append( " amongst ").append( rl.getPFNList() );
+        
+        //PM-1248 traverse through to check if any file URL's available
+        Collection<ReplicaCatalogEntry> localSiteFileRCEs = new LinkedList();
+        for ( Iterator it = rl.pfnIterator(); it.hasNext(); ) {
+            ReplicaCatalogEntry rce = ( ReplicaCatalogEntry ) it.next();
+            String site = rce.getResourceHandle();
+            //check if equal to the execution pool
+            if ( site != null && site.equals( "local" ) ) {
+                if ( rce.getPFN().startsWith( PegasusURL.FILE_URL_SCHEME ) ) {
+                    localSiteFileRCEs.add(rce);
+                }
+            }
+        }
+        if( !localSiteFileRCEs.isEmpty() ){
+            error.append( "\n" ).
+                  append( "If any of the following file URLs are also accessible on the site (" ).
+                  append( destinationSite ).append( ") consider setting the pegasus profile ").append( "\"" ).
+                  append( Pegasus.LOCAL_VISIBLE_KEY ).append( "\"" ).append( " to true in the site catalog for site: " ).
+                  append( destinationSite ).append( "\n" ).
+                  append( localSiteFileRCEs );
+        }
+        throw new RuntimeException( error.toString() );
         
     }
 

@@ -362,7 +362,13 @@ public class Default implements ReplicaSelector {
         return mDescription;
     }
     
-    
+    /***
+     * Warn for file URL not being selected because of mismatch in site attributes
+     * 
+     * @param rce               
+     * @param destinationSite
+     * @param allowLocalFileURLs 
+     */
     protected void warnForFileURL( ReplicaCatalogEntry rce, String destinationSite, boolean allowLocalFileURLs){
         StringBuilder sb = new StringBuilder();
         sb.append( "File URL " ).append( rce ).append( " not included as the site attribute (" ).
