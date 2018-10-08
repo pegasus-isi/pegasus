@@ -424,7 +424,7 @@ def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, multipl
 
     # we only subset the properties and strip off prefix once
     if not multiplexed:
-        sink_props = properties.Properties(props.propertyset("pegasus.catalog.workflow" + ".", True))
+        sink_props = get_workflow_connect_props(props)
         # we delete from our copy pegasus.catalog.workflow.url as we want with default prefix
         if "url" in sink_props.keyset():
             del sink_props["url"]
@@ -526,3 +526,25 @@ def multiplex( dest, prefix, props=None):
             multiplex = True
             break
     return multiplex
+
+
+def get_workflow_connect_props( props ):
+    """
+    Returns connection properties for workflow database
+
+    :param props:
+    :return:
+    """
+
+    if props is None:
+        return None
+
+    # first get the default one's with the star notation
+    connect_props = properties.Properties(props.propertyset("pegasus.catalog.*.", True))
+
+    # over ride these with workflow specific
+    addons = props.propertyset("pegasus.catalog.workflow" + ".", True)
+    for key in addons:
+        connect_props.property( key, addons[key])
+
+    return connect_props
