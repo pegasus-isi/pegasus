@@ -282,6 +282,12 @@ class AMQPEventSink(EventSink):
         self._log.info( "Properties received %s", props)
         self._encoder = encoder
 
+        if connect_timeout is None:
+            # pick timeout from properties
+            connect_timeout = props.property("timeout")
+            if connect_timeout:
+                connect_timeout = float(connect_timeout)
+
         self._log.info( "Connecting to host: %s:%s virtual host: %s exchange: %s with user: %s ssl: %s" %(host, port, virtual_host, exch, userid, ssl ))
         self._conn = amqp.Connection(host="%s:%s" % (host, port),
                                      userid=userid, password=password,
