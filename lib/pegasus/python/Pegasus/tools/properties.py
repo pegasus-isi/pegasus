@@ -367,6 +367,13 @@ class Properties:
             my_file.close()
 
         return my_count
+
+    def __str__(self):
+        """
+        Returns string representation
+        :return:
+        """
+        return self.m_config.__str__()
     
 if __name__ == "__main__":
     a = Properties()
