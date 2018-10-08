@@ -441,8 +441,13 @@ def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, multipl
     # PM-898 are additional URL's to populate specified
     if not multiplexed and multiplex( dest, prefix , props ):
         sink_props.property("default.url", dest)
-        return MultiplexEventSink(dest, enc, prefix, sink_props, **kw)
+        # any properties that don't have a . , remap to default.propname
+        for key in sink_props.keyset():
+            if key.find(".") == -1:
+                sink_props.property("default." + key, sink_props.property(key))
+                del sink_props[key]
 
+        return MultiplexEventSink(dest, enc, prefix, sink_props, **kw)
 
     url = OutputURL(dest)
 
