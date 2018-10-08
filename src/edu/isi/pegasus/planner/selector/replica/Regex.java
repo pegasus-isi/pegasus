@@ -147,9 +147,7 @@ public class Regex extends Default {
             
             //check if a File URL is allowable or not
             if( removeFileURL(rce, preferredSite, allowLocalFileURLs) ){
-                mLogger.log( "[RegexReplicaSelector] File URL " + rce + " not included as the site attribute is a mismatch to the site name (" + preferredSite 
-                             +  ") allowLocalFileURLs " +  allowLocalFileURLs , 
-                             LogManager.WARNING_MESSAGE_LEVEL );
+                this.warnForFileURL(rce, preferredSite, allowLocalFileURLs);
                 continue;
             }
 
@@ -234,9 +232,7 @@ public class Regex extends Default {
             
             //check if a File URL is allowable or not
             if( removeFileURL(rce, preferredSite, allowLocalFileURLs) ){
-                mLogger.log( "[RegexReplicaSelector] File URL " + rce + " not included as the site attribute is a mismatch to the site name (" + preferredSite 
-                             +  ") allowLocalFileURLs " +  allowLocalFileURLs , 
-                             LogManager.WARNING_MESSAGE_LEVEL );
+                this.warnForFileURL(rce, preferredSite, allowLocalFileURLs);
                 continue;
             }
             //System.out.println( "PFN is " + pfn );
