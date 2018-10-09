@@ -13,7 +13,21 @@ class BaseLoader(object):
         """
         self.log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
         self.dburi = dburi
-        self.session = connection.connect(dburi, create=True, props=props, db_type=db_type, backup=backup)
+
+        # PM-898 all props passed should have pegasus prefix stripped off
+        # so they are more like connect_args to be used for database
+        connect_args = {}
+        for key in props.keyset():
+            # we don't pass url in connect args
+            if key != "url":
+                connect_args[key] = props.property(key)
+
+        # make sure timeout is an int
+        if "timeout" in connect_args:
+            connect_args["timeout"] = int(connect_args["timeout"])
+
+        #self.session = connection.connect(dburi, create=True, props=props, db_type=db_type, backup=backup)
+        self.session = connection.connect(dburi, create=True, connect_args=connect_args, db_type=db_type, backup=backup)
 
         # flags and state for batching
         self._batch = batch
