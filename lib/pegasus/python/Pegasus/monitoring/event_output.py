@@ -31,6 +31,7 @@ from Pegasus.netlogger import nlapi
 from Pegasus.db.workflow_loader import WorkflowLoader
 from Pegasus.db.dashboard_loader import DashboardLoader
 from Pegasus.db import expunge
+from Pegasus.db import connection
 
 log = logging.getLogger(__name__)
 
@@ -369,7 +370,7 @@ class MultiplexEventSink(EventSink):
 
                 # remove from our copy sink_name properties if they exist
                 endpoint_props = properties.Properties( props.propertyset(sink_name + ".", remove=True ))
-                self._endpoints[ sink_name ] = create_wf_event_sink(props.property(key), enc=enc,
+                self._endpoints[ sink_name ] = create_wf_event_sink(props.property(key), db_type=connection.DBType.WORKFLOW, enc=enc,
                                                                                    prefix=prefix, props=endpoint_props, multiplexed = True, **kw)
 
     def send(self, event, kw):
@@ -419,7 +420,7 @@ def json_encode(event, **kw):
     kw['event'] = STAMPEDE_NS + event
     return json.dumps(kw)
 
-def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, multiplexed = False, **kw):
+def create_wf_event_sink(dest, db_type, enc=None, prefix=STAMPEDE_NS, props=None, multiplexed = False, **kw):
     """
     Create & return subclass of EventSink, chosen by value of 'dest'
     and parameterized by values (if any) in 'kw'.
@@ -430,7 +431,7 @@ def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, multipl
 
     # we only subset the properties and strip off prefix once
     if not multiplexed:
-        sink_props = get_workflow_connect_props(props)
+        sink_props = get_workflow_connect_props(props, db_type)
         # we delete from our copy pegasus.catalog.workflow.url as we want with default prefix
         if "url" in sink_props.keyset():
             del sink_props["url"]
@@ -539,7 +540,7 @@ def multiplex( dest, prefix, props=None):
     return multiplex
 
 
-def get_workflow_connect_props( props ):
+def get_workflow_connect_props( props, db_type ):
     """
     Returns connection properties for workflow database
 
@@ -553,8 +554,12 @@ def get_workflow_connect_props( props ):
     # first get the default one's with the star notation
     connect_props = properties.Properties(props.propertyset("pegasus.catalog.*.", True))
 
-    # over ride these with workflow specific
-    addons = props.propertyset("pegasus.catalog.workflow" + ".", True)
+    prefix = "pegasus.catalog.workflow"
+    if db_type == connection.DBType.MASTER:
+        prefix = "pegasus.catalog.dashboard"
+
+    # over ride these with workflow specific or dashboard specific props
+    addons = props.propertyset( prefix + ".", True)
     for key in addons:
         connect_props.property( key, addons[key])
 
