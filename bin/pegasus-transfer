@@ -1592,7 +1592,7 @@ class IRodsHandler(TransferHandlerBase):
             if t.get_dst_proto() == "file":
                 # irods->file
                 prepare_local_dir(os.path.dirname(t.get_dst_path()))
-                cmd = "iget -v -f -r -T -K -N 4"
+                cmd = "iget -v -f -T -K -N 4"
                 if len(t.get_src_host()) > 0 and t.attempts <= 1:
                     cmd += " -R " + t.get_src_host()
                 cmd += " '" + t.get_src_path() + "'"
@@ -1611,7 +1611,7 @@ class IRodsHandler(TransferHandlerBase):
                 except:
                     # ignore errors from the mkdir command
                     pass
-                cmd = "iput -v -f -r -T -K -N 4"
+                cmd = "iput -v -f -T -K -N 4"
                 if len(t.get_dst_host()) > 0 and t.attempts <= 1:
                     cmd += " -R " + t.get_dst_host()
                 cmd += " '" + t.get_src_path() + "'"
