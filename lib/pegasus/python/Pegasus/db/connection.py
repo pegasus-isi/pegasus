@@ -111,8 +111,10 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
     init = _db_is_file(dburi)
 
     try:
-        log.debug("Connecting to: %s" % dburi)
+        log.debug("Connecting to: %s with connection params as %s" % (dburi, connect_args))
         # parse connection properties
+        # PM-898 monitord sends props as None and connect_args has the
+        # right values for the connection
         connect_args = _parse_props(dburi, props, db_type, connect_args)
 
         engine = create_engine(dburi, echo=echo, pool_recycle=True, connect_args=connect_args)
