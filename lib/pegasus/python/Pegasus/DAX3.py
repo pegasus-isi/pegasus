@@ -1606,6 +1606,9 @@ class ADAG(InvokeMixin, MetadataMixin):
         self.invocations = set()
         self._metadata = set()
 
+        # PM-1311 always associate dax.api metadata
+        self.metadata("dax.api", "python")
+
     def __unicode__(self):
         return u"<ADAG %s>" % self.name
 
