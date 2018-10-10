@@ -32,6 +32,7 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.common.util.XMLWriter;
 import edu.isi.pegasus.planner.dax.Invoke.WHEN;
+import edu.isi.pegasus.planner.namespace.Metadata;
 
 /**
  * <pre>
@@ -179,6 +180,12 @@ public class ADAG {
      * The version to report.
      */
     public static final String SCHEMA_VERSION = "3.6";
+    
+    /**
+     * The type of DAX API generated
+     */
+    private static final String DAX_API_TYPE = "java";
+    
     /**
      * The Name / Label of the DAX
      */
@@ -272,6 +279,7 @@ public class ADAG {
         mTransformations = new LinkedHashSet<Transformation>();
         mExecutables = new LinkedHashSet<Executable>();
         mMetaDataAttributes = new LinkedHashSet<MetaData>();
+        mMetaDataAttributes.add( new MetaData(Metadata.DAX_API_KEY, DAX_API_TYPE));
         mFiles = new LinkedList<File>();
         mInvokes = new LinkedList<Invoke>();
         mDependencies = new LinkedHashMap<String, Set<Edge>>();
