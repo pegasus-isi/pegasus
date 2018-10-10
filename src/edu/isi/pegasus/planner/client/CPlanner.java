@@ -50,6 +50,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
 import edu.isi.pegasus.planner.common.Shiwa;
 import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.DAXParserFactory;
 import edu.isi.pegasus.planner.parser.Parser;
@@ -517,6 +518,7 @@ public class CPlanner extends Executable{
         mPMetrics.setRootWorkflowUUID( orgDag.getRootWorkflowUUID() );
         mPMetrics.setWorkflowUUID( orgDag.getWorkflowUUID() );
         mPMetrics.setWorkflowMetrics( orgDag.getWorkflowMetrics() );
+        mPMetrics.setDAXAPI( orgDag.getDAXAPI() );
        
         //write out a the relevant properties to submit directory
         int state = 0;

@@ -25,6 +25,7 @@ import com.google.gson.annotations.SerializedName;
 
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.namespace.Metadata;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -39,6 +40,8 @@ import java.util.Properties;
  * @version $Revision$
  */
 public class PlannerMetrics extends Data{
+
+    
     
     /**
      * The base submit directory where the files are being created.
@@ -93,6 +96,11 @@ public class PlannerMetrics extends Data{
      * The planner version
      */
     @Expose @SerializedName( "version" ) private  final String mVersion = new Version().getVersion();
+    
+    /**
+     * The DAX API used
+     */
+    @Expose @SerializedName( "dax_api" ) private String mDAXAPI ;
 
     /**
      * The name of the client
@@ -172,6 +180,7 @@ public class PlannerMetrics extends Data{
         mType = "metrics";
         mPlannerArguments = "";
         mUsesPMC = false;
+        mDAXAPI  = Metadata.DEFAULT_DAX_API;
         //we want metrics to be serialized only if user specified
         //mApplicationMetrics = new Properties();
     }
@@ -290,6 +299,25 @@ public class PlannerMetrics extends Data{
      */
     public void setUser( String user ){
         mUser = user;
+    }
+    
+    /**
+     * Returns the DAX API used
+     *
+     * @return the dax api.
+     */
+    public String getDAXAPI( ){
+        return mDAXAPI;
+    }
+
+
+    /**
+     * Sets the user.
+     *
+     * @param api the api used
+     */
+    public void setDAXAPI( String api ){
+        mDAXAPI = api;
     }
 
     /**
@@ -653,6 +681,7 @@ public class PlannerMetrics extends Data{
 
         append( sb, "client", this.mClient );
         append( sb, "version", this.mVersion );
+        append( sb, "dax_api", this.mDAXAPI );
         append( sb, "user", this.mUser );
         append( sb, "vogroup", this.mVOGroup );
         append( sb, "submitdir.base", this.mBaseSubmitDirectory );
@@ -714,6 +743,7 @@ public class PlannerMetrics extends Data{
         pm.setRelativeSubmitDirectory( this.mRelativeSubmitDirectory );
         pm.setProperties( this.mPropertiesPath );
         pm.setDAX( this.mDAXPath );
+        pm.setDAXAPI( this.mDAXAPI );
         pm.setDataConfiguration( this.mDataConfiguration );
         pm.setPlannerOptions( this.mPlannerArguments);
         pm.setUsesPMC( this.mUsesPMC );

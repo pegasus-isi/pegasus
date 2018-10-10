@@ -43,6 +43,10 @@ public class Metadata extends Namespace {
     public static final String CHECKSUM_TYPE_KEY  = "checksum.type";
     public static final String CHECKSUM_VALUE_KEY = "checksum.value";
     
+    //some other predefinded keys that we use
+    public static final String DAX_API_KEY = "dax.api";
+    public static final String DEFAULT_DAX_API = "xml";
+    
     /**
      * The name of the implementing namespace. It should be one of the valid
      * namespaces always.

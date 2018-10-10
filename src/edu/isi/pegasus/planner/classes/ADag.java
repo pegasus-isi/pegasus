@@ -504,6 +504,17 @@ public class ADag extends Data implements Graph{
     public String getDAXVersion(  ) {
         return this.mDAGInfo.getDAXVersion();
     }
+    
+    /**
+     * Returns the DAX API associated as metadata
+     * 
+     * @return the value
+     */
+    public String getDAXAPI() {
+        String daxAPI = this.getMetadata( Metadata.DAX_API_KEY);
+        daxAPI = ( daxAPI == null )? Metadata.DEFAULT_DAX_API : daxAPI;
+        return daxAPI;
+    }
 
     /**
      * Returns the last modified time for the file containing the workflow
@@ -1158,9 +1169,6 @@ public class ADag extends Data implements Graph{
     public void setGraphNodeReference(GraphNode node) {
         throw new UnsupportedOperationException( "GraphNode reference not set for ADag"); 
     }
-    
 
     
-    
-
 }
