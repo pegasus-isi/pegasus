@@ -4114,7 +4114,7 @@ project:
           event: !event JOB_HUNG
         - !customNotification
           event: !event JOB_HUNG
-          pluginKey: com.atlassian.bamboo.plugins.bamboo-slack:recipient.slack
+          notificationRecipientType: com.atlassian.bamboo.plugins.bamboo-slack:recipient.slack
           configure:
             webhookUrl: https://hooks.slack.com/services/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
             channel: '#github-notifications'
