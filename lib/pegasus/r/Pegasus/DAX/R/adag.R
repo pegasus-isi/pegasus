@@ -584,6 +584,7 @@ WriteXML <- function(adag, out) {
   cat('>\n')
 
   # Metadata
+  cat('\t<metadata key="dax.api">R</metadata>\n')
   for(m in adag$metadata.mixin$metadata.l) {
     cat('\t')
     cat(capture.output(WriteElement(ToXML(m), level=1)))
