@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#  Copyright 2017 University Of Southern California
+#  Copyright 2017-2018 University Of Southern California
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -127,6 +127,13 @@ class TransformationCatalog:
 
                     if c.imagesite:
                         ppf.write('\timage_site "%s"\n' % c.imagesite)
+
+                    if c.dockerfile:
+                        ppf.write('\tdockerfile "%s"\n' % c.dockerfile)
+
+                    # mount
+                    for m in c.mount:
+                        ppf.write('\tmount "%s"\n' % m)
 
                     # profiles
                     for p in c.profiles:

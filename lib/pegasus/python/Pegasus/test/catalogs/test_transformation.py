@@ -50,7 +50,9 @@ class TestTransformationCatalog(unittest.TestCase):
 
         c = Container(
             'cont-pegasus', ContainerType.DOCKER,
-            'docker:///rynge/montage:latest'
+            'docker:///rynge/montage:latest',
+            'local', '/URL',
+            ['/Volumes/Work/lfs1:/shared-data/:ro', '/data1:/shared-data1']
         )
         tc.add_container(c)
         self.assertEqual(len(tc._containers), 1)

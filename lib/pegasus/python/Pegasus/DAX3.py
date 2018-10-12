@@ -712,13 +712,15 @@ class Container(ProfileMixin):
         mycontainer = Container("myapp", type="docker", image="docker:///rynge/montage:latest")
     """
 
-    def __init__(self, name, type, image, imagesite=None):
+    def __init__(self, name, type, image, imagesite=None, dockerfile=None, mount=None):
         """
         Arguments:
             name: Container name
             type: Container type (see ContainerType)
             image: URL to image in a container hub OR URL to an existing container image
             imagesite: optional site attribute to tell pegasus which site tar file exist
+            dockerfile: a url to an existing docker file to build container image from scratch
+            mount: list of volumes to be mounted
         """
         if not name:
             raise FormatError("Invalid name", name)
@@ -730,6 +732,8 @@ class Container(ProfileMixin):
         self.type = type
         self.image = image
         self.imagesite = imagesite
+        self.dockerfile = dockerfile
+        self.mount = mount if mount else []
         self.profiles = set()
 
     def __unicode__(self):
@@ -742,14 +746,16 @@ class Container(ProfileMixin):
         return hash((self.name,
                      self.type,
                      self.image,
-                     self.imagesite))
+                     self.imagesite,
+                     self.dockerfile))
 
     def __eq__(self, other):
         if isinstance(other, Container):
             return self.name == other.name and \
                    self.type == other.type and \
                    self.image == other.image and \
-                   self.imagesite == other.imagesite
+                   self.imagesite == other.imagesite and \
+                   self.dockerfile == other.dockerfile
         return False
 
 
