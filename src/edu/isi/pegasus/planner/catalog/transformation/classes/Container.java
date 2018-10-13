@@ -20,7 +20,10 @@ import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
 import java.util.Collection;
+import java.io.File;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -185,15 +188,16 @@ public class Container implements Cloneable {
             }
             else{ 
                 //determine the suffix in the URL
-                int dotIndex = path.indexOf( '.' );
+                String basename = new File(path).getName();
+                int dotIndex = basename.indexOf( '.' );
                 if( dotIndex != -1  ){
-                    suffix = path.substring(dotIndex);
+                    suffix = basename.substring(dotIndex);
                     if( !Container.getsupportedSingularityExtensions().contains( suffix ) ){
                         throw new RuntimeException( "Invalid suffix " + suffix + " determined singularity image url " + url );
                     }
                 }
                 else{
-                    throw new RuntimeException( "Unable to compute singularity extension from url " + url );
+                    throw new RuntimeException( "Unable to compute singularity extension from " + basename + " for url " + url );
                 }
             }
             lfn = lfn + suffix;
