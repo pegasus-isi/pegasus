@@ -184,7 +184,9 @@ public class Container implements Cloneable {
                     }
                 }
                 else{
-                    throw new RuntimeException( "Unable to compute singularity extension from " + basename + " for url " + url );
+                    //throw new RuntimeException( "Unable to compute singularity extension from " + basename + " for url " + url );
+                    //PM-1313 cannot compute a suffix . just have it empty
+                    suffix = "";
                 }
             }
             lfn = lfn + suffix;
