@@ -66,6 +66,11 @@ public class ContainerTest {
     }
     
     @Test
+    public void testSingulartiyHTTPSPostImg() {
+        this.testSingulartiy( "test", "test.simg", "http://pegasus.isi.edu/container.php?rid=/centos-7.simg" );
+    }
+    
+    @Test
     public void testSingulartiyHTTPTar() {
         this.testSingulartiy( "test", "test.tar", "http:///pegasus.isi.edu/images/singularity/centos-7.tar" );
     }
