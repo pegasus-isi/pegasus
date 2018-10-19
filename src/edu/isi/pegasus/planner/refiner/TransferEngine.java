@@ -631,9 +631,9 @@ public class TransferEngine extends Engine {
                 String sourceURL = selLoc.getPFN();
 
                 //check if the URL's match
-                if (sourceURL.trim().equalsIgnoreCase(putDestURL.trim())){
+                if ( new PegasusURL(sourceURL).equals( new PegasusURL(putDestURL)) ){
                     String msg = "The leaf file " + lfn +
-                        " is already at the output pool " + destSite;
+                        " is already at the output site " + destSite;
                     mLogger.log(msg,LogManager.INFO_MESSAGE_LEVEL);
                     flag = true;
                     break;
