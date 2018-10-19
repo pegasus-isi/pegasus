@@ -5,6 +5,8 @@
 
 package edu.isi.pegasus.common.util;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -211,6 +213,63 @@ public class PegasusURL {
         mPath = "";
         mURL = "";
     }
+    
+    
+    /**
+     * Matches if two Pegasus URL objects are the same
+     * If the both URL's are file URL's then it does a canonical match on the 
+     * path component , else just a string match
+     *
+     * @return true  if URL match
+     */
+    public boolean equals(Object obj) {
+       // null check
+       if (obj == null) {
+           return false;
+       }
+
+       // see if type of objects match
+       if (!(obj instanceof PegasusURL)) {
+           return false;
+       }
+
+       PegasusURL url = (PegasusURL) obj;
+       String scheme1 = this.getProtocol();
+       String scheme2 = url.getProtocol();
+
+       //match on protocol
+       boolean result = (scheme1 == null && scheme2 == null)
+               || (scheme1 != null && scheme2 != null && scheme1.equals(scheme2));
+       
+       //match on hostname
+       if( result ){
+           String hostname1 = this.getHost();
+           String hostname2 = url.getHost();
+
+            //match on protocol
+            result = (hostname1 == null && hostname2 == null)
+                    || (hostname1 != null && hostname2 != null && hostname1.equals(hostname2));
+       }
+       
+       //match on just the path component
+       if( result ){
+           String path1 = this.getPath();
+           String path2 = url.getPath();
+
+            //match on protocol
+            result = (path1 != null && path2 != null);
+            if( result ){
+               try {
+                   result = new File( path1 ).getCanonicalPath().equals( new File( path2 ).getCanonicalPath() );
+               } catch (IOException ex) {
+                   System.err.println( "ERROR: In Pegasus URL equal match " + ex.getMessage() );    
+               }
+            }
+       }
+       
+       return result;
+    }
+                
 
     /**
      * The contents represented as a string
@@ -252,6 +311,8 @@ public class PegasusURL {
         url = "gsiftp://dataserver.phys.uwm.edu/~/griphyn_test/ligodemo_output/" ;
         System.out.println( url );
         System.out.println( new PegasusURL(url) );
+        
+        System.out.println( new PegasusURL(url).equals( new PegasusURL("gsiftp://dataserver.phys.uwm.edu/dest.php?x:=griphyn_test//ligodemo_output/")));
 
         //should print
         //protocol -> file , host ->  , path -> /tmp/path/to/input/file , url-prefix -> file://
