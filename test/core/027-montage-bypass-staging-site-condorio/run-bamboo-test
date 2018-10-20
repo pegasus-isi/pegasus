@@ -29,7 +29,7 @@ for line in `cat data/rc.txt.ORIG | egrep -v '^#'`; do
     url=`echo $line | awk '{print $2}' | sed 's/"//g'`
     if (echo $url | grep http:) >/dev/null 2>&1; then
         echo "$url"
-        curl -s -o inputs/$lfn $url
+        curl -s -L -o inputs/$lfn $url
         echo "$lfn \"file://${PWD}/inputs/${lfn}\" pool=\"local\"" >>data/rc.txt
     else
         echo $line >>data/rc.txt

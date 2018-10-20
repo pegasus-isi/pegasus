@@ -1392,7 +1392,7 @@ class HTTPHandler(TransferHandlerBase):
                 cmd = tools.full_path('curl')
                 if not logger.isEnabledFor(logging.DEBUG):
                     cmd += " -s -S"
-                cmd += " --insecure" + \
+                cmd += " --insecure --location" + \
                        " -o '" + t.get_dst_path() + "'" + \
                        " '" + t.src_url() + "'"
 
