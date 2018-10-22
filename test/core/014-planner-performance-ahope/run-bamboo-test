@@ -12,7 +12,7 @@ MIN_SECONDS=20
 
 # Max number of seconds allowed for the planner to plan the
 # dax - if these limit is exeeded, the test fails
-MAX_SECONDS=200
+MAX_SECONDS=400
 
 # set the java heap max to get the planner to not fail for
 # the 4.3 branch. we keep same for master for comparison
