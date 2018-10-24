@@ -53,6 +53,14 @@ except ImportError:
     # Fall back to Python 2's urllib
     import urllib as urllib
 
+# Bad ulimits (for example -s 16000000) can prevent new threads from
+# being created. Let's try setting the stack size to something sane
+# but not worry if the attempt fails.
+try:
+    threading.stack_size(2 * 1024 ** 2)
+except:
+    pass
+
 # panorama real time monitoring
 if "KICKSTART_MON_ENDPOINT_URL" in os.environ:
     import urllib2
