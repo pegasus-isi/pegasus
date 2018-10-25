@@ -1068,7 +1068,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
             </row>
 
             <row>
-              <entry>wget</entry>
+                <entry>curl / wget</entry>
 
               <entry>staging files from a HTTP server</entry>
             </row>
@@ -1108,6 +1108,12 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
               <entry>gsiscp</entry>
 
               <entry>staging files using gsiscp and X509</entry>
+            </row>
+
+            <row>
+              <entry>stashcp</entry>
+
+              <entry>staging files to and from OSG Stash service</entry>
             </row>
 
             <row>
@@ -1497,6 +1503,18 @@ site corbusier {
     &lt;/site&gt;
 &lt;/sitecatalog&gt;
 </programlisting>
+    </section>
+    
+    <section id="transfer_stashcp">
+      <title>OSG Stash / stashcp data access</title>
+
+      <para>
+        Open Science Grid provides a data service called Stash, and the command
+        line tool <emphasis>stashcp</emphasis> for interacting with the Stash
+        data. An example on how to set up the site catalog and URLs can be
+        found in the <ulink="https://support.opensciencegrid.org/support/solutions/articles/5000639789-pegasus">OSG User Support Pegasus tutorial</ulink>
+      </para>
+
     </section>
 
     <section id="transfer_irods">
