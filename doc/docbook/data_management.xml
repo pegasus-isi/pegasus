@@ -1512,7 +1512,7 @@ site corbusier {
         Open Science Grid provides a data service called Stash, and the command
         line tool <emphasis>stashcp</emphasis> for interacting with the Stash
         data. An example on how to set up the site catalog and URLs can be
-        found in the <ulink="https://support.opensciencegrid.org/support/solutions/articles/5000639789-pegasus">OSG User Support Pegasus tutorial</ulink>
+        found in the <ulink url="https://support.opensciencegrid.org/support/solutions/articles/5000639789-pegasus">OSG User Support Pegasus tutorial</ulink>
       </para>
 
     </section>

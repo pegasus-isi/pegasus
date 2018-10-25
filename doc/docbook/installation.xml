@@ -68,6 +68,7 @@ Python 2.6.2</programlisting></para>
           PostgreSQL access. Only needed if you want to store the runtime
           database in PostgreSQL (default is SQLite)
         </para>
+      </listitem>
       <listitem>
         <para><emphasis role="bold">python-amqplib</emphasis>. Python module for
           sending workflow events to RabbitMQ. This is optional, and has
