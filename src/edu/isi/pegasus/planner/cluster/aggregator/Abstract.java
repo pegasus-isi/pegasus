@@ -311,9 +311,9 @@ public abstract class Abstract implements JobAggregator {
                 //PM-1194 we want to merge only those jobs whose containers match
                 //if( job.getContainer() != firstC ){
                 Container c = job.getContainer();
-                if( ( firstC == null && c != null ) ||
-                        ( firstC != null && c == null ) ||
-                        ( !firstC.getName().equalsIgnoreCase( c.getName() ) )){
+                boolean match = ( firstC == null && c == null ) ||
+                                  firstC != null && c != null && firstC.getName().equalsIgnoreCase( c.getName() ); 
+                if( !match ){
                     StringBuilder error = new StringBuilder();
                     error.append( "Cannot cluster jobs with different types of containers associated. " ).
                           append( "Container for job " ).append( job.getID() ).append( " - " ).append( job.getContainer()).
