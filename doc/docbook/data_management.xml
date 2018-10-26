@@ -2442,11 +2442,12 @@ File f.d
   <section id="integrity_checking">
     <title>Integrity Checking</title>
 
-    <para>Pegasus now adds checksum computation and integrity checking steps
+    <para>Pegasus adds checksum computation and integrity checking steps
     for non shared filesystem deployments (nonsharedfs and condorio). The main
     motivation to do this is to ensure that any data transferred for a
     workflow does not get inadvertently corrupted during data transfers
-    performed during workflow execution. Users now have options to specify
+    performed during workflow execution, or at rest at a staging site.
+    Users now have options to specify
     <emphasis role="bold">sha256</emphasis> checksums for the input files in
     the replica catalog. If checksums are not provided, then Pegasus will
     compute the checksums for the files during data transfers, and enforce
@@ -2483,7 +2484,7 @@ File f.d
       </listitem>
 
       <listitem>
-        <para>after the workflow output data has been transferred to user
+        <para>after the workflow output data has been transferred to storage
         servers - This ensures that output data staged to the final location
         was not corrupted in transit. </para>
       </listitem>
@@ -2531,8 +2532,7 @@ File f.d
 
       <itemizedlist>
         <listitem>
-          <para><emphasis role="bold">none</emphasis> - integrity checking is
-          not turned off</para>
+          <para><emphasis role="bold">none</emphasis> - no integrity checking</para>
         </listitem>
 
         <listitem>
