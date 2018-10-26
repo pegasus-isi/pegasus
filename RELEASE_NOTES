@@ -1,4 +1,26 @@
 ===============================
+Release Notes for Pegasus 4.8.5
+===============================
+We are happy to announce the release of Pegasus 4.8.5 . Pegasus 4.8.5
+is a minor bug fix release and the last release in the 4.8 series.
+
+Improvements
+--------------
+1) [PM-1248] – Planning fails in shared-fs mode with cryptic message.
+
+Bugs Fixed
+--------------
+1) [PM-1314] – incorrect way of computing suffix for singularity
+   	       images
+
+2) [PM-1315] – Exception when data reuse removes all jobs. 
+
+3) [PM-1316] – Transformation that uses a regular file, but defines it
+   	       in RC raises an exception, unlike in older versions
+
+4) [PM-1317] – Pegasus plan fails on container task clustering
+
+===============================
 Release Notes for Pegasus 4.8.4
 ===============================
 We are happy to announce the release of Pegasus 4.8.4 . Pegasus 4.8.4
