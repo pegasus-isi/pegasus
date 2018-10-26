@@ -4472,6 +4472,89 @@ E.g.<emphasis role="bold">
         <para>To get all events you can just specify * as the value to the
         property.</para>
       </note>
+
+      <section id="amqp_rabbitmq_es">
+          <title>Monitord, RabbitMQ, ElasticSearch Example</title>
+
+          <para>The AMQP support in Monitord is still a work in progress, but even the current functionality provides
+              basic support for getting the monitoring data into ElasticSearch. In our development environment, we use
+              a RabbitMQ instance with a simple exhange/queue. The configuration required for Pegasus is:
+		  </para>
+
+          <programlisting># help Pegasus developers collect data on integrity failures                                        
+pegasus.monitord.encoding = json                                                                    
+pegasus.catalog.workflow.amqp.url = amqp://friend:donatedata@msgs.pegasus.isi.edu:5672/prod/workflows
+          </programlisting>
+
+          <para>On the other side of the queue, Logstash is configured to receive the messages and forward them to
+             ElasticSearch. The Logstash pipeline looks something like:
+          </para>
+
+          <programlisting>
+input {
+  rabbitmq {
+    type =&gt; "workflow-events"
+    host =&gt; "msg.pegasus.isi.edu"
+    vhost =&gt; "prod"
+    queue =&gt; "workflows-es"
+    heartbeat =&gt; 30
+    durable =&gt; true
+    password =&gt; "XXXXXX"
+    user =&gt; "prod-logstash"
+  }
+}
+
+filter {
+  if [type] == "workflow-events" {
+    mutate {
+      convert =&gt; {
+        "dur" =&gt; "float"
+        "remote_cpu_time" =&gt; "float"
+      }
+    }
+    date {
+      # set @timestamp from the ts of the actual event
+      match =&gt; [ "ts", "UNIX" ]
+    }
+    date {
+      match =&gt; [ "start_time", "UNIX" ]
+      target =&gt; "start_time_human"
+    }
+    fingerprint {
+      # create unique document ids
+      source =&gt; "ts"
+      concatenate_sources =&gt; true
+      method =&gt; "SHA1"
+      key =&gt; "Pegasus Event"
+      target =&gt; "[@metadata][fingerprint]"
+    }
+  }
+}
+  
+output {
+  if [type] == "workflow-events" {
+    elasticsearch {
+      "hosts" =&gt; ["es1.isi.edu:9200", "es2.isi.edu:9200"]
+      "sniffing" =&gt; false
+      "document_type" =&gt; "workflow-events"
+      "document_id" =&gt; "%{[@metadata][fingerprint]}"
+      "index" =&gt; "workflow-events-%{+YYYY.MM.dd}"
+      "template" =&gt; "/usr/share/logstash/templates/workflow-events.json"
+      "template_name" =&gt; "workflow-events-*"
+      "template_overwrite" =&gt; true
+    }
+  }
+
+}
+          </programlisting>
+
+          <para>Once the data is ElasticSearch, you can easily create for example Grafana dashboard like:
+          </para>
+
+          <imagedata fileref="images/grafana.png" width="100%"/>
+        
+      </section>
+
     </section>
   </section>
 </chapter>
