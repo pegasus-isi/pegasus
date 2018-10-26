@@ -292,7 +292,7 @@ public abstract class Abstract implements JobAggregator {
         Set ipFiles = new HashSet();
         Set opFiles = new HashSet();
         boolean userExecutablesStaged = false;
-        Container c = firstJob.getContainer();
+        Container firstC = firstJob.getContainer();
         for( Iterator it = jobs.iterator(); it.hasNext(); ) {
                 job = (Job) it.next();
                 ipFiles.addAll( job.getInputFiles() );
@@ -309,7 +309,11 @@ public abstract class Abstract implements JobAggregator {
                 mergedJob.mergeProfiles( job );
 
                 //PM-1194 we want to merge only those jobs whose containers match
-                if( job.getContainer() != c ){
+                //if( job.getContainer() != firstC ){
+                Container c = job.getContainer();
+                if( ( firstC == null && c != null ) ||
+                        ( firstC != null && c == null ) ||
+                        ( !firstC.getName().equalsIgnoreCase( c.getName() ) )){
                     StringBuilder error = new StringBuilder();
                     error.append( "Cannot cluster jobs with different types of containers associated. " ).
                           append( "Container for job " ).append( job.getID() ).append( " - " ).append( job.getContainer()).
@@ -319,7 +323,7 @@ public abstract class Abstract implements JobAggregator {
         }
 
         //PM-1194 set the container for clustered job
-        mergedJob.setContainer( c );
+        mergedJob.setContainer( firstC );
         
         mergedJob.setExecutableStagingForJob(userExecutablesStaged);
         
