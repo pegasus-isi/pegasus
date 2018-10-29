@@ -8,15 +8,12 @@
     <title>DAX XML Schema</title>
 
     <para>The DAX format is described by the XML schema instance document
-    <ulink
-    url="schemas/dax-3.6/dax-3.6.xsd">dax-3.6.xsd</ulink>.
-    A local copy of the schema definition is provided in the
-    <quote>etc</quote> directory. The documentation of the XML schema and its
-    elements can be found in <ulink
-    url="schemas/dax-3.6/dax-3.6.html">dax-3.6.html</ulink>
-    as well as locally in
-    <filename>doc/schemas/dax-3.6/dax-3.6.html</filename> in your Pegasus
-    distribution.</para>
+    <ulink url="schemas/dax-3.6/dax-3.6.xsd">dax-3.6.xsd</ulink>. A local copy
+    of the schema definition is provided in the <quote>etc</quote> directory.
+    The documentation of the XML schema and its elements can be found in
+    <ulink url="schemas/dax-3.6/dax-3.6.html">dax-3.6.html</ulink> as well as
+    locally in <filename>doc/schemas/dax-3.6/dax-3.6.html</filename> in your
+    Pegasus distribution.</para>
 
     <section>
       <title>DAX XML Schema In Detail</title>
@@ -140,6 +137,7 @@
 
         <table>
           <title>Root element attributes</title>
+
           <tgroup cols="4">
             <thead>
               <row>
@@ -159,9 +157,7 @@
 
                 <entry>required</entry>
 
-                <entry>
-                  <emphasis>VersionPattern</emphasis>
-                </entry>
+                <entry><emphasis>VersionPattern</emphasis></entry>
 
                 <entry>Version number of DAX instance document. Must be
                 3.6.</entry>
@@ -470,6 +466,7 @@
 
           <table>
             <title>executable element attributes</title>
+
             <tgroup cols="4">
               <thead>
                 <row>
@@ -801,6 +798,7 @@
 
           <table>
             <title>invoke element attributes</title>
+
             <tgroup cols="3">
               <thead>
                 <row>
@@ -880,6 +878,7 @@
 
           <table>
             <title>invoke/executable environment variables</title>
+
             <tgroup cols="3">
               <thead>
                 <row>
@@ -1212,11 +1211,11 @@
   <section id="dax_generator_api">
     <title>DAX Generator API</title>
 
-    <para>The DAX generating APIs support Java, Perl, Python, and R. This 
-    section will show in each language the necessary code, using Pegasus-provided
-    libraries, to generate the diamond DAX example above. There may be minor
-    differences in details, e.g. to show-case certain features, but
-    effectively all generate the same basic diamond.</para>
+    <para>The DAX generating APIs support Java, Perl, Python, and R. This
+    section will show in each language the necessary code, using
+    Pegasus-provided libraries, to generate the diamond DAX example above.
+    There may be minor differences in details, e.g. to show-case certain
+    features, but effectively all generate the same basic diamond.</para>
 
     <section id="api-java">
       <title>The Java DAX Generator API</title>
@@ -1561,10 +1560,9 @@ f.close()</programlisting>
       <filename class="directory">lib/perl</filename> of the Pegasus
       installation. The actual code is longer, and will not require these
       settings, only the example below does. The Perl API is documented using
-      <ulink url="perl/">perldoc</ulink>.
-      For each of the modules you can invoke
-      <application>perldoc</application>, if your <envar>PERL5LIB</envar>
-      variable is set.</para>
+      <ulink url="perl/">perldoc</ulink>. For each of the modules you can
+      invoke <application>perldoc</application>, if your
+      <envar>PERL5LIB</envar> variable is set.</para>
 
       <para>The steps to generate a DAX from Perl are similar to the Java
       steps. However, since most methods to the classes are deeply within the
@@ -1731,32 +1729,42 @@ $adag-&gt;invoke( INVOKE_ON_ERROR,
 
 my $xmlns = shift;
 $adag-&gt;toXML( \*STDOUT, '', $xmlns );</programlisting>
+
+      <note>
+        <para>Please note that the Perl DAX API is deprecated starting 4.9.0
+        Release and will be removed in the 5.0 Release.</para>
+      </note>
     </section>
-    
+
     <section id="api-r">
       <title>The R DAX Generator API</title>
 
-      <para>The R DAX API provided with the Pegasus distribution allows easy 
-      creation of complex and large workflows in R environments. The API follows 
-      the <ulink url="http://google.github.io/styleguide/Rguide.xml">Google' R 
-      style guide</ulink>, and all objects and methods are defined using the 
+      <para>The R DAX API provided with the Pegasus distribution allows easy
+      creation of complex and large workflows in R environments. The API
+      follows the <ulink
+      url="http://google.github.io/styleguide/Rguide.xml">Google' R style
+      guide</ulink>, and all objects and methods are defined using the
       <emphasis>S3</emphasis> OOP system.</para>
-      
+
       <para>The API can be installed as follows:</para>
+
       <orderedlist>
-          <listitem>
-              <para>Installing from source package (.tar.gz) in an R 
-               environment:</para>
-              <programlisting>install.packages("/path/to/source/package.tar.gz", repo=NULL)</programlisting>
-              <para>The source package can be obtained using 
-              <code>pegasus-config --r</code> or from the <ulink 
-              url="http://pegasus.isi.edu/downloads">Pegasus' downloads</ulink> 
-              page.</para>
-          </listitem>
+        <listitem>
+          <para>Installing from source package (.tar.gz) in an R
+          environment:</para>
+
+          <programlisting>install.packages("/path/to/source/package.tar.gz", repo=NULL)</programlisting>
+
+          <para>The source package can be obtained using <code>pegasus-config
+          --r</code> or from the <ulink
+          url="http://pegasus.isi.edu/downloads">Pegasus' downloads</ulink>
+          page.</para>
+        </listitem>
       </orderedlist>
-      <para>The R API is well documented using <ulink 
+
+      <para>The R API is well documented using <ulink
       url="http://http://roxygen.org">Roxygen</ulink>. In an R environment, it
-      can be accessed using <code>help(package=dax3)</code>. A <ulink 
+      can be accessed using <code>help(package=dax3)</code>. A <ulink
       url="r/dax3-manual.pdf">PDF manual</ulink> is also available.</para>
 
       <para>The steps involved in creating a DAX using the API are</para>
@@ -1818,11 +1826,11 @@ $adag-&gt;toXML( \*STDOUT, '', $xmlns );</programlisting>
         </listitem>
       </orderedlist>
 
-      <para>An example R code that generates the diamond dax show previously is
-      listed below. A workflow example code can be found in the Pegasus 
+      <para>An example R code that generates the diamond dax show previously
+      is listed below. A workflow example code can be found in the Pegasus
       distribution in the <filename
-      class="directory">examples/grid-blackdiamond-r</filename> directory
-      as <filename>blackdiamond.R</filename>:</para>
+      class="directory">examples/grid-blackdiamond-r</filename> directory as
+      <filename>blackdiamond.R</filename>:</para>
 
       <programlisting id="api-r-example">#!/usr/bin/Rscript
 #
@@ -1904,8 +1912,7 @@ diamond &lt;- Depends(diamond, parent=frr, child=analyze)
 WriteXML(diamond, stdout())
 
 </programlisting>
-
-    </section>    
+    </section>
   </section>
 
   <section id="dax_no_api">
@@ -3836,7 +3843,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
             role="bold">job</emphasis>/2/<emphasis
             role="bold">state</emphasis> query clause can only contain fields
             from the <link linkend="resource-job-state">Job State</link>
-            resource. </para>
+            resource.</para>
           </listitem>
 
           <listitem>
@@ -3872,6 +3879,7 @@ Where QUERY can be( r.wf_id &gt;= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.w
 
         <para><table frame="box" rules="all">
             <title>Query Prefix</title>
+
             <caption/>
 
             <thead>
@@ -3886,7 +3894,9 @@ Where QUERY can be( r.wf_id &gt;= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.w
 
             <tbody>
               <tr>
-                <td><emphasis role="bold">Root Workflow</emphasis></td>
+                <td>
+                  <emphasis role="bold">Root Workflow</emphasis>
+                </td>
 
                 <td>r</td>
 
@@ -3894,7 +3904,9 @@ Where QUERY can be( r.wf_id &gt;= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.w
               </tr>
 
               <tr>
-                <td><emphasis role="bold">Workflow</emphasis></td>
+                <td>
+                  <emphasis role="bold">Workflow</emphasis>
+                </td>
 
                 <td>w</td>
 
@@ -3902,7 +3914,9 @@ Where QUERY can be( r.wf_id &gt;= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.w
               </tr>
 
               <tr>
-                <td><emphasis role="bold">Workflow Metadata</emphasis></td>
+                <td>
+                  <emphasis role="bold">Workflow Metadata</emphasis>
+                </td>
 
                 <td>wm</td>
 
@@ -3910,7 +3924,9 @@ Where QUERY can be( r.wf_id &gt;= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.w
               </tr>
 
               <tr>
-                <td><emphasis role="bold">Workflow Files</emphasis></td>
+                <td>
+                  <emphasis role="bold">Workflow Files</emphasis>
+                </td>
 
                 <td>wf</td>
 
@@ -3918,7 +3934,9 @@ Where QUERY can be( r.wf_id &gt;= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.w
               </tr>
 
               <tr>
-                <td><emphasis role="bold">Workflow State</emphasis></td>
+                <td>
+                  <emphasis role="bold">Workflow State</emphasis>
+                </td>
 
                 <td>ws</td>
 
@@ -3926,7 +3944,9 @@ Where QUERY can be( r.wf_id &gt;= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.w
               </tr>
 
               <tr>
-                <td><emphasis role="bold">Job</emphasis></td>
+                <td>
+                  <emphasis role="bold">Job</emphasis>
+                </td>
 
                 <td>j</td>
 
@@ -3934,7 +3954,9 @@ Where QUERY can be( r.wf_id &gt;= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.w
               </tr>
 
               <tr>
-                <td><emphasis role="bold">Host</emphasis></td>
+                <td>
+                  <emphasis role="bold">Host</emphasis>
+                </td>
 
                 <td>h</td>
 
@@ -3942,7 +3964,9 @@ Where QUERY can be( r.wf_id &gt;= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.w
               </tr>
 
               <tr>
-                <td><emphasis role="bold">Job State</emphasis></td>
+                <td>
+                  <emphasis role="bold">Job State</emphasis>
+                </td>
 
                 <td>js</td>
 
@@ -3950,7 +3974,9 @@ Where QUERY can be( r.wf_id &gt;= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.w
               </tr>
 
               <tr>
-                <td><emphasis role="bold">Task</emphasis></td>
+                <td>
+                  <emphasis role="bold">Task</emphasis>
+                </td>
 
                 <td>t</td>
 
@@ -3958,7 +3984,9 @@ Where QUERY can be( r.wf_id &gt;= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.w
               </tr>
 
               <tr>
-                <td><emphasis role="bold">Task Metadata</emphasis></td>
+                <td>
+                  <emphasis role="bold">Task Metadata</emphasis>
+                </td>
 
                 <td>tm</td>
 
@@ -3966,7 +3994,9 @@ Where QUERY can be( r.wf_id &gt;= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.w
               </tr>
 
               <tr>
-                <td><emphasis role="bold">Job Instance</emphasis></td>
+                <td>
+                  <emphasis role="bold">Job Instance</emphasis>
+                </td>
 
                 <td>ji</td>
 
@@ -3974,7 +4004,9 @@ Where QUERY can be( r.wf_id &gt;= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.w
               </tr>
 
               <tr>
-                <td><emphasis role="bold">Job</emphasis></td>
+                <td>
+                  <emphasis role="bold">Job</emphasis>
+                </td>
 
                 <td>i</td>
 
@@ -3982,7 +4014,9 @@ Where QUERY can be( r.wf_id &gt;= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.w
               </tr>
 
               <tr>
-                <td><emphasis role="bold">RC LFN</emphasis></td>
+                <td>
+                  <emphasis role="bold">RC LFN</emphasis>
+                </td>
 
                 <td>l</td>
 
@@ -3990,7 +4024,9 @@ Where QUERY can be( r.wf_id &gt;= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.w
               </tr>
 
               <tr>
-                <td><emphasis role="bold">RC PFN</emphasis></td>
+                <td>
+                  <emphasis role="bold">RC PFN</emphasis>
+                </td>
 
                 <td>p</td>
 
@@ -3998,7 +4034,9 @@ Where QUERY can be( r.wf_id &gt;= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.w
               </tr>
 
               <tr>
-                <td><emphasis role="bold">RC Metadata</emphasis></td>
+                <td>
+                  <emphasis role="bold">RC Metadata</emphasis>
+                </td>
 
                 <td>rm</td>
 
