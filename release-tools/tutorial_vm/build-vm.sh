@@ -15,6 +15,8 @@ fi
 
 export AWS_PROFILE='vm-import@pegasus'
 export AWS_DEFAULT_PROFILE=${AWS_PROFILE}
+export AWS_MAX_ATTEMPTS=600
+export AWS_POLL_DELAY_SECONDS=5
 
 URL='http://mirrors.usc.edu/pub/linux/distributions/centos/7/isos/x86_64'
 ISO=`curl --silent ${URL}/sha256sum.txt | grep 'Minimal'`
