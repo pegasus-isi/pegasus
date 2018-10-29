@@ -113,7 +113,9 @@ class TransformationCatalog:
 
                         # reference to container
                         if e.container:
-                            ppf.write('\t\tcontainer "%s"\n' % e.container)
+                            ppf.write('\t\tcontainer "%s"\n' %
+                                      e.container.name
+                            )
 
                         ppf.write('\t}\n')
 
