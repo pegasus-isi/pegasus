@@ -17,7 +17,7 @@
     Java, Perl, or Python format</para>
 
     <note>
-       We highly recommend using the DAX API. 
+       We highly recommend using the DAX API. The Perl DAX API is deprecated starting 4.9.0 Release and will be removed in the 5.0 Release.
     </note>
 
     <para>Advanced users who can read XML schema definitions can generate a
