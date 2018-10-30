@@ -927,7 +927,7 @@ public class PegasusLite implements GridStart {
                     sb.append( "# stage in container file " ).append( '\n' );
                     sb.append(  sls.invocationString( job, null ) );
                     sb.append( " 1>&2" ).append( " << 'EOF'" ).append( '\n' );
-                    sb.append( convertToTransferInputFormat( inputFiles, PegasusFile.LINKAGE.input ) );
+                    sb.append( convertToTransferInputFormat( containerFiles, PegasusFile.LINKAGE.input ) );
                     sb.append( "EOF" ).append( '\n' );
                     sb.append( '\n' );
                 }
