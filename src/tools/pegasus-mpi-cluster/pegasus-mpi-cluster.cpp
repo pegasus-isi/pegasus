@@ -447,6 +447,10 @@ int main(int argc, char *argv[]) {
         // processes has hit an unsolvable problem and we
         // need to abort the entire workflow.
         fprintf(stderr, "ABORT: %s\n", error.what());
+        // ensure that abort() is not eating our errors
+        fflush(stdout);
+        fflush(stderr);
+        sleep(1);
         comm.abort(1);
     }
 }
