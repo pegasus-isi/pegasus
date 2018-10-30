@@ -908,17 +908,32 @@ public class PegasusLite implements GridStart {
                 //as we want to stage them separately
                 Collection<FileTransfer> inputFiles = new LinkedList();
                 Collection<FileTransfer> chkpointFiles = new LinkedList();
+                Collection<FileTransfer> containerFiles = new LinkedList();
                 for(FileTransfer ft: files ){
                     if( ft.isCheckpointFile() ){
                         chkpointFiles.add(ft);
+                    }
+                    else if( ft.isContainerFile() ){
+                        containerFiles.add(ft);
                     }
                     else{
                         inputFiles.add(ft);
                     }
                 }
-                
-                //stage the input files first
-                if( !inputFiles.isEmpty() ){
+
+                //stage the container first
+                if( !containerFiles.isEmpty() ){
+                    appendStderrFragment( sb, "Staging in container" );
+                    sb.append( "# stage in container file " ).append( '\n' );
+                    sb.append(  sls.invocationString( job, null ) );
+                    sb.append( " 1>&2" ).append( " << 'EOF'" ).append( '\n' );
+                    sb.append( convertToTransferInputFormat( inputFiles, PegasusFile.LINKAGE.input ) );
+                    sb.append( "EOF" ).append( '\n' );
+                    sb.append( '\n' );
+                }
+
+                //stage input files if this is a dax or a dag job
+                if( (job instanceof DAXJob || job instanceof DAGJob) && (!inputFiles.isEmpty()) ){
                     appendStderrFragment( sb, "Staging in input data and executables" );
                     sb.append( "# stage in data and executables" ).append( '\n' );
                     sb.append(  sls.invocationString( job, null ) );
@@ -933,38 +948,8 @@ public class PegasusLite implements GridStart {
                     sb.append( "EOF" ).append( '\n' );
                     sb.append( '\n' );
                 }
-                
-                //PM-779 checkpoint files need to be setup to never fail
-                String checkPointFragment = checkpointFilesToPegasusLite( job, sls, chkpointFiles, PegasusFile.LINKAGE.input);
-                if( !checkPointFragment.isEmpty() ){
-                    appendStderrFragment( sb, "Staging in checkpoint files" );
-                    sb.append( "# stage in checkpoint files " ).append( '\n' );
-                    sb.append( checkPointFragment );
-                }
-                
-                //associate any credentials if required with the job
-                associateCredentials( job, files );
-            }
 
-            if( job.userExecutablesStagedForJob() ){
-                appendStderrFragment( sb, "Setting the xbit for executables staged" );
-                sb.append( "# set the xbit for any executables staged" ).append( '\n' );
-                for( Iterator it = job.getInputFiles().iterator(); it.hasNext(); ){
-                    PegasusFile pf = ( PegasusFile )it.next();
-                    if( pf.getType() == PegasusFile.EXECUTABLE_FILE ){
-                        sb.append( "if [ ! -x " + pf.getLFN() + " ]; then\n" );
-                        sb.append( "    " );
-                        sb.append( getPathToChmodExecutable( job.getSiteHandle() ) );
-                        sb.append( " +x " );
-                        sb.append( pf.getLFN() ).append( "\n" );
-                        sb.append( "fi\n" );
-                    }
-
-                }
-                sb.append( '\n' );
             }
-           
-            
             
             /*
             //PM-1190 we do integrity checks only for compute jobs
@@ -1030,66 +1015,6 @@ public class PegasusLite implements GridStart {
             //arguments passed
             job.setArguments( "" );
 
-            
-            if(  isCompute && //PM-971 for non compute jobs we don't do any sls transfers
-                 sls.needsSLSOutputTransfers( job ) ){
-                 
-                FileServer stagingSiteServerForStore = stagingSiteEntry.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
-                 if( stagingSiteServerForStore == null ){
-                    this.complainForHeadNodeFileServer( job.getID(),  job.getStagingSiteHandle());
-                 }
-
-                 String stagingSiteDirectoryForStore      = mSiteStore.getInternalWorkDirectory( job, true );
-                
-                //construct the postjob that transfers the output files
-                //back to head node exectionSiteDirectory
-                //to fix later. right now post constituentJob only created is pre constituentJob
-                //created
-                Collection<FileTransfer> files = sls.determineSLSOutputTransfers( job,
-                                                            sls.getSLSOutputLFN( job ),
-                                                            stagingSiteServerForStore,
-                                                            stagingSiteDirectoryForStore,
-                                                            workerNodeDir );
-
-
-                //PM-779 split the checkpoint files from the output files
-                //as we want to stage them separately
-                Collection<FileTransfer> outputFiles = new LinkedList();
-                Collection<FileTransfer> chkpointFiles = new LinkedList();
-                for(FileTransfer ft: files ){
-                    if( ft.isCheckpointFile() ){
-                        chkpointFiles.add(ft);
-                    }
-                    else{
-                        outputFiles.add(ft);
-                    }
-                }
-                
-                //PM-779 checkpoint files need to be setup to never fail
-                String checkPointFragment = checkpointFilesToPegasusLite( job, sls, chkpointFiles, PegasusFile.LINKAGE.output);
-                if( !checkPointFragment.isEmpty() ){
-                    appendStderrFragment( sb, "Staging out checkpoint files" );
-                    sb.append( "# stage out checkpoint files " ).append( '\n' );
-                    sb.append( checkPointFragment );
-                }
-                
-                if( !outputFiles.isEmpty() ){
-                    //generate the stage out fragment for staging out outputs
-                    String postJob = sls.invocationString( job, null );
-                    appendStderrFragment( sb, "Staging out output files" );
-                    sb.append( "# stage out" ).append( '\n' );
-                    sb.append( postJob );
-
-                    sb.append( " 1>&2" ).append( " << 'EOF'" ).append( '\n' );
-                    sb.append( convertToTransferInputFormat( outputFiles, PegasusFile.LINKAGE.output ) );
-                    sb.append( "EOF" ).append( '\n' );
-                    sb.append( '\n' );
-                }
-                
-                //associate any credentials if required with the job
-                associateCredentials( job, files );
-            }
-            
             sb.append( "\n" );
             sb.append( "# clear the trap, and exit cleanly" ).append( '\n' );
             sb.append( "trap - EXIT" ).append( '\n' );
@@ -1436,33 +1361,6 @@ public class PegasusLite implements GridStart {
         
     }
 
-    /**
-     * Takes in the checkpoint files, and generates a pegasus-transfer invocation
-     * that should succeed in case of errors
-     * 
-     * @param job       the job being wrapped with PegasusLite
-     * @param sls       associated SLS implementation
-     * @param files     the checkpoint files
-     * @param fileType  type of files to be transferred
-     * @return string representation of the PegasusLite fragment
-     */
-    private String checkpointFilesToPegasusLite(Job job, SLS sls, Collection<FileTransfer> files, PegasusFile.LINKAGE fileType) {
-        StringBuilder sb = new StringBuilder();
-        if( !files.isEmpty() ){
-            sb.append( "set +e " ).append( "\n");
-            sb.append(  sls.invocationString( job, null ) );
-            sb.append( " 1>&2" ).append( " << 'EOF'" ).append( '\n' );
-            sb.append( convertToTransferInputFormat( files, fileType ) );
-            sb.append( "EOF" ).append( '\n' );
-            sb.append( "ec=$?" ).append( '\n' );
-            sb.append( "set -e").append( '\n' );
-            sb.append( "if [ $ec -ne 0 ]; then").append( '\n' );
-            sb.append( "    echo \" Ignoring failure while transferring chkpoint files. Exicode was $ec\" 1>&2").append( '\n' );
-            sb.append( "fi" ).append( '\n' );
-            sb.append( "\n" );
-        }
-        return sb.toString();
-    }
 
     /**
      * Appends a fragment to the pegasus lite script that logs a message to
