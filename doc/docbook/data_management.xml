@@ -2523,6 +2523,29 @@ File f.d
         and have not specified the checksums in the replica catalog.</para>
       </listitem>
     </itemizedlist>
+    
+    <section id="integrity_checking_stats">
+        <title>Integrity Checking Statistics</title>
+
+        <para>
+            <link linkend="cli-pegasus-statistics">pegasus-statistics</link> now includes a section containing
+            integrity statistics:
+        </para>
+
+<programlisting>
+	# Integrity Metrics
+	# Number of files for which checksums were compared/computed along with total time spent doing it. 
+	171 files checksums generated with total duration of 8.705 secs
+	
+	# Integrity Errors
+	# Total:    
+	#       Total number of integrity errors encountered across all job executions(including retries) of a workflow. 
+	# Failures: 
+	#       Number of failed jobs where the last job instance had integrity errors.
+	Failures: 0 job failures had integrity errors
+</programlisting>
+ 
+    </section>
 
     <section id="integrity_checking_dials">
       <title>Integrity Checking Dials</title>
