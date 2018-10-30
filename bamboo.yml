@@ -1039,10 +1039,6 @@ project:
             -  !permission VIEW
           !userType LOGGED_IN_USERS:
             -  !permission VIEW
-      triggers:
-        - !scheduled
-          description: Nightly Build
-          cronExpression: "0 0 21 * * ?"
       notifications:
         - !email
           address: pegasus-svn@isi.edu
@@ -1153,13 +1149,6 @@ project:
             -  !permission VIEW
           !userType LOGGED_IN_USERS:
             -  !permission VIEW
-      triggers:
-        - !scheduled
-          description: Nightly Build
-          cronExpression: "0 0 22 * * ?"
-          onlyRunIfOtherPlansArePassing:
-            planKeys:
-              - PEGASUS-BNT48
       notifications:
         - !email
           address: pegasus-svn@isi.edu
@@ -3773,13 +3762,6 @@ project:
             -  !permission VIEW
           !userType LOGGED_IN_USERS:
             -  !permission VIEW
-      triggers:
-        - !scheduled
-          description: Nightly Build
-          cronExpression: "0 0 20 * * ?"
-          onlyRunIfOtherPlansArePassing:
-            planKeys:
-              - PEGASUS-BNT48
       notifications:
         - !email
           address: pegasus-svn@isi.edu
