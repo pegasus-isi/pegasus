@@ -243,11 +243,13 @@ function pegasus_lite_setup_work_dir()
 
         # make sure there is enough available diskspace
         cd $d
-        free=`df -kP . | awk '{if (NR==2) print $4}'`
-        free_human=`df --si . | awk '{if (NR==2) print $4}'`
-        if [ "x$free" == "x" -o $free -lt $PEGASUS_WN_TMP_MIN_SPACE ]; then
-            pegasus_lite_log "  Workdir: not enough disk space available in $d"
-            continue
+        free=`(df -kP . | awk '{if (NR==2) print $4}') 2>/dev/null`
+        free_human=`(df --si . | awk '{if (NR==2) print $4}') 2>/dev/null`
+        if [ "x$free" != "x" ]; then
+            if [ $free -lt $PEGASUS_WN_TMP_MIN_SPACE ]; then
+                pegasus_lite_log "  Workdir: not enough disk space available in $d"
+                continue
+            fi
         fi
 
         if touch $d/.dirtest.$$ >/dev/null 2>&1; then
@@ -260,7 +262,7 @@ function pegasus_lite_setup_work_dir()
             # PM-968 if provided, copy lof files from the HTCondor iwd to the PegasusLite work dir
             find $pegasus_lite_start_dir -name \*.lof -exec cp {} $pegasus_lite_work_dir/ \; >/dev/null 2>&1
 
-	    # PM-1190 if provided, copy meta files from the HTCondor iwd to the PegasusLite work dir
+            # PM-1190 if provided, copy meta files from the HTCondor iwd to the PegasusLite work dir
             find $pegasus_lite_start_dir -name \*.meta -exec cp {} $pegasus_lite_work_dir/ \; >/dev/null 2>&1
 
             pegasus_lite_log "Changing cwd to $pegasus_lite_work_dir"
