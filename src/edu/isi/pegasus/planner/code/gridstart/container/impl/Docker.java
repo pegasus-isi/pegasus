@@ -231,6 +231,8 @@ public class Docker extends Abstract{
         }
         sb.append( WORKER_PACKAGE_SETUP_SNIPPET );
         
+        sb.append( super.inputFilesToPegasusLite(job) );
+
         //PM-1305 the integrity check should happen in the container
         sb.append( super.enableForIntegrity(job) );
         
@@ -259,6 +261,10 @@ public class Docker extends Abstract{
                 sb.append( job.getRemoteExecutable()).append( " " ).
                    append( job.getArguments() ).append( "\n" );
         }
+
+        sb.append( "set -e" ).append( '\n' );//PM-701
+        sb.append( super.outputFilesToPegasusLite(job) );
+
         sb.append( "EOF").append( "\n" );
         //appendStderrFragment( sb, "Writing out script to launch user TASK in docker container (END)" );
         sb.append( "\n" );
