@@ -985,6 +985,60 @@ public class PegasusLite implements GridStart {
             //arguments passed
             job.setArguments( "" );
 
+
+            //transfer any output files created by dax/dag jobs
+            if( (job instanceof DAXJob || job instanceof DAGJob) && 
+                 isCompute && //PM-971 for non compute jobs we don't do any sls transfers
+                 sls.needsSLSOutputTransfers( job ) ){
+                 
+                FileServer stagingSiteServerForStore = stagingSiteEntry.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
+                 if( stagingSiteServerForStore == null ){
+                    this.complainForHeadNodeFileServer( job.getID(),  job.getStagingSiteHandle());
+                 }
+
+                 String stagingSiteDirectoryForStore      = mSiteStore.getInternalWorkDirectory( job, true );
+                
+                //construct the postjob that transfers the output files
+                //back to head node exectionSiteDirectory
+                //to fix later. right now post constituentJob only created is pre constituentJob
+                //created
+                Collection<FileTransfer> files = sls.determineSLSOutputTransfers( job,
+                                                            sls.getSLSOutputLFN( job ),
+                                                            stagingSiteServerForStore,
+                                                            stagingSiteDirectoryForStore,
+                                                            workerNodeDir );
+
+
+                //PM-779 split the checkpoint files from the output files
+                //as we want to stage them separately
+                Collection<FileTransfer> outputFiles = new LinkedList();
+                Collection<FileTransfer> chkpointFiles = new LinkedList();
+                for(FileTransfer ft: files ){
+                    if( ft.isCheckpointFile() ){
+                        chkpointFiles.add(ft);
+                    }
+                    else{
+                        outputFiles.add(ft);
+                    }
+                }
+
+                if( !outputFiles.isEmpty() ){
+                    //generate the stage out fragment for staging out outputs
+                    String postJob = sls.invocationString( job, null );
+                    appendStderrFragment( sb, "Staging out output files" );
+                    sb.append( "# stage out" ).append( '\n' );
+                    sb.append( postJob );
+
+                    sb.append( " 1>&2" ).append( " << 'EOF'" ).append( '\n' );
+                    sb.append( convertToTransferInputFormat( outputFiles, PegasusFile.LINKAGE.output ) );
+                    sb.append( "EOF" ).append( '\n' );
+                    sb.append( '\n' );
+                }
+                
+                //associate any credentials if required with the job
+                associateCredentials( job, files );
+            }
+
             sb.append( "\n" );
             sb.append( "# clear the trap, and exit cleanly" ).append( '\n' );
             sb.append( "trap - EXIT" ).append( '\n' );

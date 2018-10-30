@@ -54,6 +54,7 @@ public class None extends Abstract {
     public String wrap( Job job ){
         StringBuilder sb = new StringBuilder();
         
+        sb.append( super.inputFilesToPegasusLite(job) );
         sb.append( super.enableForIntegrity(job) );
         sb.append( "set +e" ).append( '\n' );//PM-701
         sb.append( "job_ec=0" ).append( "\n" );
@@ -62,6 +63,8 @@ public class None extends Abstract {
         sb.append( job.getRemoteExecutable() ).append( job.getArguments() ).append( '\n' );
         //capture exitcode of the job
         sb.append( "job_ec=$?" ).append( "\n" );
+        sb.append( "set -e" ).append( '\n' );//PM-701
+        sb.append( super.outputFilesToPegasusLite(job) );
         return sb.toString();
     }
     
@@ -75,6 +78,7 @@ public class None extends Abstract {
     public String wrap( AggregatedJob job ){
         StringBuilder sb = new StringBuilder();
         
+        sb.append( super.inputFilesToPegasusLite(job) );
         sb.append( super.enableForIntegrity(job) );
         sb.append( "set +e" ).append( '\n' );//PM-701
         sb.append( "job_ec=0" ).append( "\n" );
@@ -103,6 +107,9 @@ public class None extends Abstract {
         catch( IOException ioe ){
             throw new RuntimeException( "[Pegasus-Lite] Error while wrapping job " + job.getID(), ioe );
         }
+
+        sb.append( "set -e" ).append( '\n' );//PM-701
+        sb.append( super.outputFilesToPegasusLite(job) );
         return sb.toString();
     }
     
