@@ -951,36 +951,6 @@ public class PegasusLite implements GridStart {
 
             }
             
-            /*
-            //PM-1190 we do integrity checks only for compute jobs
-            if( mDoIntegrityChecking && isCompute){
-                //we cannot enable integrity checking for DAX or dag jobs
-                //as the prescript is not run as a full condor job
-                if( !(job instanceof DAXJob || job instanceof DAGJob) ){
-                    appendStderrFragment( sb, "Checking file integrity for input files" );
-                    sb.append( "# do file integrity checks" ).append( '\n' );
-                    mIntegrityHandler.addIntegrityCheckInvocation( sb, job.getInputFiles() );
-
-                    //check if planner knows of any checksums from the replica catalog
-                    //and generate an input meta file!
-                    File metaFile = mIntegrityHandler.generateChecksumMetadataFile( job.getFileFullPath( mSubmitDir,  ".in.meta"),
-                                                                  job.getInputFiles() );
-
-                    //modify job for transferring the .meta files
-                    if( !mIntegrityHandler.modifyJobForIntegrityChecks( job , metaFile, this.mSubmitDir )) {
-                        throw new RuntimeException( "Unable to modify job for integrity checks" );
-                    }
-                    sb.append( "\n" );
-                }
-            }
-            */
-            
-            //sb.append( "# execute the tasks" ).append( '\n' ).
-            /** Not clear where to put?
-            sb.append( "set +e" ).append( '\n' );//PM-701
-            sb.append( "job_ec=0" ).append( "\n" );
-            */
-            
             writer.print( sb.toString() );
             writer.flush();
             
