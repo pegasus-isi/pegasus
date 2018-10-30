@@ -52,7 +52,7 @@ export PYTHONPATH=`pegasus-config --python`
 cat > sites.xml << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site handle="local" arch="x86_64" os="LINUX" osrelease="deb" osversion="8">
+    <site handle="local" arch="x86_64" os="LINUX" osrelease="deb" osversion="9">
         <head-fs>
             <scratch>
                 <shared>
@@ -69,7 +69,7 @@ cat > sites.xml << EOF
         </head-fs>
 	<profile namespace="pegasus" key="clusters.num">1</profile>
     </site>
-    <site handle="condorpool" arch="x86_64"  os="LINUX" osrelease="deb" osversion="8">
+    <site handle="condorpool" arch="x86_64"  os="LINUX" osrelease="deb" osversion="9">
         <head-fs>
             <scratch />
             <storage />
@@ -77,7 +77,7 @@ cat > sites.xml << EOF
         <profile namespace="pegasus" key="style">condor</profile>
         <profile namespace="condor" key="universe">vanilla</profile>
     </site>
-    <site handle="sharedfs" arch="x86_64"  os="LINUX" osrelease="deb" osversion="8">
+    <site handle="sharedfs" arch="x86_64"  os="LINUX" osrelease="deb" osversion="9">
 	<head-fs>
             <scratch>
                 <shared>
