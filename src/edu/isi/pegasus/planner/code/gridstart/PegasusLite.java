@@ -1112,60 +1112,6 @@ public class PegasusLite implements GridStart {
         return sb;
     }
 
-    /**
-     * Returns the path to the chmod executable for a particular execution
-     * site by looking up the transformation executable.
-     * 
-     * @param site   the execution site.
-     * 
-     * @return   the path to chmod executable
-     */
-    protected String getPathToChmodExecutable( String site ){
-        String path;
-
-        //check if the internal map has anything
-        path = mChmodOnExecutionSiteMap.get( site );
-
-        if( path != null ){
-            //return the cached path
-            return path;
-        }
-
-        List entries;
-        try {
-            //try to look up the transformation catalog for the path
-            entries = mTCHandle.lookup( PegasusLite.XBIT_TRANSFORMATION_NS,
-                          PegasusLite.XBIT_TRANSFORMATION,
-                          PegasusLite.XBIT_TRANSFORMATION_VERSION,
-                          site,
-                          TCType.INSTALLED );
-        } catch (Exception e) {
-            //non sensical catching
-            mLogger.log("Unable to retrieve entries from TC " +
-                        e.getMessage(), LogManager.ERROR_MESSAGE_LEVEL );
-            return null;
-        }
-
-        TransformationCatalogEntry entry = ( entries == null ) ?
-                                       null: //try using a default one
-                                       (TransformationCatalogEntry) entries.get(0);
-
-        if( entry == null ){
-            //construct the path the default path.
-            //construct the path to it
-            StringBuffer sb = new StringBuffer();
-            sb.append( File.separator ).append( "bin" ).append( File.separator ).
-               append( PegasusLite.XBIT_EXECUTABLE_BASENAME  );
-            path = sb.toString();
-        }
-        else{
-            path = entry.getPhysicalTransformation();
-        }
-
-        mChmodOnExecutionSiteMap.put( site, path );
-
-        return path;
-    }
 
      /**
      * Sets the xbit on the file.
