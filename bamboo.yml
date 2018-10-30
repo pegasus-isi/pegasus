@@ -931,7 +931,7 @@ project:
                   description: Binary Packages
                   taskConfig:
                     label: Ant
-                    environmentVariables: "PATH=${PATH}:/usr/local/bin:/Library/TeX/texbin"
+                    environmentVariables: 'PATH="${PATH}:/usr/local/bin:/Library/TeX/texbin" LDFLAGS="-L/usr/local/opt/openssl/lib" CPPFLAGS="-I/usr/local/opt/openssl/include"'
                     target: dist-worker dist-release dist-macos
                     buildJdk: JDK
                     workingSubDirectory: pegasus-source
