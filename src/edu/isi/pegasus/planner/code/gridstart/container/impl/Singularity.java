@@ -168,6 +168,7 @@ public class Singularity extends Abstract{
         sb.append( "\n" );
         sb.append( "cat <<EOF > " ).append( scriptName ).append( "\n" );
         sb.append( "#!/bin/bash" ).append( "\n" );
+        appendStderrFragment( sb, Abstract.CONTAINER_MESSAGE_PREFIX, "Now in pegasus lite container script" );
         sb.append( "set -e" ).append( "\n" );
         
         //set the job environment variables explicitly in the -cont.sh file
@@ -237,6 +238,7 @@ public class Singularity extends Abstract{
         sb.append( "set -e" ).append( '\n' );//PM-701
         sb.append( super.outputFilesToPegasusLite(job) );
 
+        appendStderrFragment( sb, Abstract.CONTAINER_MESSAGE_PREFIX, "Exiting pegasus lite container script" );
         sb.append( "EOF").append( "\n" );
         sb.append( "\n" );
         sb.append( "\n" );
