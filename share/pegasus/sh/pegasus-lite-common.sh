@@ -293,6 +293,22 @@ function container_init()
     cont_group=`id -g -n $cont_user` 
     cont_name=${PEGASUS_DAG_JOB_ID}-`date -u +%s`
 
+    # copy credentials into the pwd as this will become the container directory
+    for base in X509_USER_PROXY S3CFG BOTO_CONFIG SSH_PRIVATE_KEY irodsEnvFile GOOGLE_PKCS12 ; do
+        for key in `(env | grep -i ^$base | sed 's/=.*//') 2>/dev/null`; do
+            eval val="\$$key"
+            cred="`basename ${val}`"
+            dest="`pwd`/${cred}"
+            if [ ! -f $dest ] ; then
+                cp $val $dest
+                chmod 600 $dest
+                pegasus_lite_log "Copied credential \$$key to $dest"
+                eval $key=$dest
+                eval val="\$$key"
+                pegasus_lite_log "Set \$$key to $val"
+            fi
+        done
+    done
 }
 
 function docker_init()
