@@ -385,9 +385,18 @@ function pegasus_lite_init()
             eval val="\$$key"
             # expand the path
             if ! (echo $val | grep "^/") >/dev/null 2>&1; then
+                # the key is passed as a relative path so prepend the pwd
                 eval $key=`pwd`/"$val"
                 eval val="\$$key"
                 pegasus_lite_log "Expanded \$$key to $val"
+            else
+                # check that the key can be found at the absolute path
+                # otherwise look for it in the current directory
+                if [ ! -e "$val" ]; then
+                    eval $key=`pwd`/`basename $val`
+                    eval val="\$$key"
+                    pegasus_lite_log "Set \$$key to $val"
+                fi
             fi
             if [ -e "$val" ]; then
                 chmod 0600 "$val"
