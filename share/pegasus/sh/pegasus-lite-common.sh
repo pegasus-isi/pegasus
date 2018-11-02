@@ -284,6 +284,32 @@ function pegasus_lite_setup_work_dir()
     return 1
 }
 
+function container_env()
+{
+    # This function will grab environment variables and update them for use inside the container.
+    # Updated variables will be echoed to stdout, so the result can be redirected into the 
+    # container script.
+
+    inside_work_dir=$1
+
+    # copy credentials into the pwd as this will become the container directory
+    for base in X509_USER_PROXY S3CFG BOTO_CONFIG SSH_PRIVATE_KEY irodsEnvFile GOOGLE_PKCS12 ; do
+        for key in `(env | grep -i ^$base | sed 's/=.*//') 2>/dev/null`; do
+            eval val="\$$key"
+            cred="`basename ${val}`"
+            dest="`pwd`/$cred"
+            dest_inside="$inside_work_dir/$cred"
+            if [ ! -f $dest ] ; then
+                cp $val $dest
+                chmod 600 $dest
+                pegasus_lite_log "Copied credential \$$key to $dest"
+                echo "export $key=\"$dest_inside\""
+                pegasus_lite_log "Set \$$key to $dest_inside (for inside the container)"
+            fi
+        done
+    done
+}
+
 function container_init()
 {
     # setup common variables
@@ -292,60 +318,43 @@ function container_init()
     cont_groupid=`id -g`
     cont_group=`id -g -n $cont_user` 
     cont_name=${PEGASUS_DAG_JOB_ID}-`date -u +%s`
-
-    # copy credentials into the pwd as this will become the container directory
-    for base in X509_USER_PROXY S3CFG BOTO_CONFIG SSH_PRIVATE_KEY irodsEnvFile GOOGLE_PKCS12 ; do
-        for key in `(env | grep -i ^$base | sed 's/=.*//') 2>/dev/null`; do
-            eval val="\$$key"
-            cred="`basename ${val}`"
-            dest="`pwd`/${cred}"
-            if [ ! -f $dest ] ; then
-                cp $val $dest
-                chmod 600 $dest
-                pegasus_lite_log "Copied credential \$$key to $dest"
-                eval $key=$dest
-                eval val="\$$key"
-                pegasus_lite_log "Set \$$key to $val"
-            fi
-        done
-    done
 }
 
 function docker_init()
 {
     set -e
 
-    container_init
-    
     if [ $# -ne 1 ]; then 
-	pegasus_lite_log "docker_init should be passed a docker url or a file"
-	return 1
+        pegasus_lite_log "docker_init should be passed a docker url or a file"
+        return 1
     fi
+    
+    container_init
 
     # check if an image file was passed
     image_file=$1
     cont_image=""
 
     if [ "X${image_file}" != "X" ] ; then
-		
-	if [ -e ${image_file} ] ; then
-	    pegasus_lite_log "container file is ${image_file}"
-	    # try and load the image
-	    images=`docker load -i ${image_file} | sed -E "s/^Loaded image:(.*)$/\1/"`
+                
+        if [ -e ${image_file} ] ; then
+            pegasus_lite_log "container file is ${image_file}"
+            # try and load the image
+            images=`docker load -i ${image_file} | sed -E "s/^Loaded image:(.*)$/\1/"`
 
-	    #docker load can list multiple images, which might be aliases for same image
-	    for image in $images ; do
-		cont_image=$image
-	    done
-	fi
-	
+            #docker load can list multiple images, which might be aliases for same image
+            for image in $images ; do
+                cont_image=$image
+            done
+        fi
+        
     fi
     
     if [ "X${cont_image}" = "X" ]; then
-	pegasus_lite_log "Unable to load image from $image_file"
-	return 1
+        pegasus_lite_log "Unable to load image from $image_file"
+        return 1
     else
-	pegasus_lite_log "Loaded docker image $cont_image"
+        pegasus_lite_log "Loaded docker image $cont_image"
     fi
 
     set +e
@@ -355,13 +364,12 @@ function singularity_init()
 {
     set -e
 
-    # set the common variables used in the pegasus lite job.sh files
-    container_init
-    
     if [ $# -ne 1 ]; then 
-	pegasus_lite_log "singularity_init should be passed a docker url or a file"
-	return 1
+        pegasus_lite_log "singularity_init should be passed a docker url or a file"
+        return 1
     fi
+    
+    container_init
 
     # for singularity we don't need to load anything like in docker.
     
