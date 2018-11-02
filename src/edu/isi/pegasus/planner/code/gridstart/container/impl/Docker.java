@@ -225,6 +225,11 @@ public class Docker extends Abstract{
             }
             sb.append( '\n' );
         }
+
+        // update and include runtime environment variables such as credentials
+        sb.append( "EOF\n" );
+        sb.append( "container_env " ).append( Docker.CONTAINER_WORKING_DIRECTORY ).append( " >> ").append( scriptName ).append( "\n" );
+        sb.append( "cat <<EOF2 >> " ).append( scriptName ).append( "\n" );
         
         if( WORKER_PACKAGE_SETUP_SNIPPET == null ){
             WORKER_PACKAGE_SETUP_SNIPPET = Docker.constructContainerWorkerPackagePreamble();
@@ -265,7 +270,7 @@ public class Docker extends Abstract{
         sb.append( "set -e" ).append( '\n' );//PM-701
         sb.append( super.outputFilesToPegasusLite(job) );
 
-        sb.append( "EOF").append( "\n" );
+        sb.append( "EOF2").append( "\n" );
         //appendStderrFragment( sb, "Writing out script to launch user TASK in docker container (END)" );
         sb.append( "\n" );
         sb.append( "\n" );
@@ -293,8 +298,8 @@ public class Docker extends Abstract{
         
         sb.append( "pegasus_lite_version_allow_wp_auto_download=$pegasus_lite_version_allow_wp_auto_download" ).append( "\n" );
         sb.append( "pegasus_lite_work_dir=" ).append( Docker.CONTAINER_WORKING_DIRECTORY ).append( "\n" );
-        sb.append( "echo \\$PWD" ).append( "  1>&2" ).append( "\n" );
-        
+       
+        sb.append( "\n" );  
         sb.append( ". pegasus-lite-common.sh" ).append( "\n" );
         sb.append( "pegasus_lite_init" ).append( "\n" ).append( "\n" );
 

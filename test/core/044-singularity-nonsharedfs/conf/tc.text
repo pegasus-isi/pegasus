@@ -20,7 +20,7 @@ tr diamond::preprocess:4.0 {
     type "STAGEABLE" 
 
     #optional attribute to specify the container to use
-    container "centos-base"
+    container "osgvo-el7"
   }
 }
 
@@ -46,7 +46,7 @@ tr diamond::findrange:4.0 {
     type "STAGEABLE" 
 
     #optional attribute to specify the container to use
-    container "centos-base"
+    container "osgvo-el7"
   }
 }
 
@@ -72,16 +72,16 @@ tr diamond::analyze:4.0 {
     type "STAGEABLE" 
 
     #optional attribute to specify the container to use
-    container "centos-base"
+    container "osgvo-el7"
   }
 }
 
-cont centos-base{
+cont osgvo-el7 {
      type "singularity"
 
      # URL to image in a docker hub or a url to an existing
      # singularity image file
-     image "gsiftp://bamboo.isi.edu/lfs1/bamboo-tests/data/centos7.img"
+     image "gsiftp://bamboo.isi.edu/lfs1/bamboo-tests/data/osgvo-el7.img"
 
      # optional site attribute to tell pegasus which site tar file
      # exists. useful for handling file URL's correctly

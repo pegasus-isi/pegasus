@@ -194,6 +194,11 @@ public class Singularity extends Abstract{
             sb.append( '\n' );
         }
         
+        // update and include runtime environment variables such as credentials
+        sb.append( "EOF\n" );
+        sb.append( "container_env " ).append( Singularity.CONTAINER_WORKING_DIRECTORY ).append( " >> ").append( scriptName ).append( "\n" );
+        sb.append( "cat <<EOF2 >> " ).append( scriptName ).append( "\n" );
+        
         //PM-1214 worker package setup in container should happen after
         //the environment variables have been set.
         if( WORKER_PACKAGE_SETUP_SNIPPET == null ){
@@ -239,7 +244,7 @@ public class Singularity extends Abstract{
         sb.append( super.outputFilesToPegasusLite(job) );
 
         appendStderrFragment( sb, Abstract.CONTAINER_MESSAGE_PREFIX, "Exiting pegasus lite container script" );
-        sb.append( "EOF").append( "\n" );
+        sb.append( "EOF2").append( "\n" );
         sb.append( "\n" );
         sb.append( "\n" );
         
