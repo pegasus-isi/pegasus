@@ -20,7 +20,7 @@ tr diamond::preprocess:4.0 {
     type "STAGEABLE" 
 
     #optional attribute to specify the container to use
-    container "centos-base"
+    container "centos-osgvo-el7"
   }
 }
 
@@ -46,7 +46,7 @@ tr diamond::findrange:4.0 {
     type "STAGEABLE" 
 
     #optional attribute to specify the container to use
-    container "centos-base"
+    container "centos-osgvo-el7"
   }
 }
 
@@ -72,16 +72,16 @@ tr diamond::analyze:4.0 {
     type "STAGEABLE" 
 
     #optional attribute to specify the container to use
-    container "centos-base"
+    container "centos-osgvo-el7"
   }
 }
 
-cont centos-base{
+cont centos-osgvo-el7{
      type "docker"
 
      # URL to image in a docker hub or a url to an existing docker
      # file exported as a tar file
-     image "docker:///centos:7"
+     image "docker:///opensciencegrid/osgvo-el7"
 
      # optional site attribute to tell pegasus which site tar file
      # exists. useful for handling file URL's correctly
