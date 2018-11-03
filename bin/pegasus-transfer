@@ -1050,7 +1050,7 @@ class GridFtpHandler(TransferHandlerBase):
                 return [successful_l, failed_l]
 
             if tools.find("globus-url-copy") == None:
-                logger.error("Unable to do gsiftp mkdir because globus-url-copy could not be found")
+                logger.error("Unable to do gsiftp mkdir because gfal-mkdir/globus-url-copy could not be found")
                 return [[], mkdirs_l]
             
             for target in mkdirs_l:
@@ -1110,7 +1110,7 @@ class GridFtpHandler(TransferHandlerBase):
             return [successful_l, failed_l]
         
         if tools.find("globus-url-copy", "-version", "([0-9]+\.[0-9]+)") is None:
-            logger.error("Unable to do gsiftp transfers because globus-url-copy could not be found")
+            logger.error("Unable to do gsiftp transfers because gfal-copy/globus-url-copy could not be found")
             return [[], transfers_l]
         
         # create lists with similar (same src host/path, same dst host/path)

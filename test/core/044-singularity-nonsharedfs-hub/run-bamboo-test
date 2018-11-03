@@ -14,8 +14,6 @@ cd montage-workflow-v2
 
 # Create the workflow inside a Singularity container, but note
 # that this image has Pegasus installed as we need the DAX API.
-# The actual workflow execution is using an image without
-# Pegasus to trigger the automatic worker package deployment.
 singularity exec \
     --bind $PWD:/srv --pwd /srv \
     shub://pegasus-isi/montage-workflow-v2 \
@@ -29,10 +27,6 @@ cat pegasus.properties >> ../pegasusrc
 
 # rc needs to have paths "outside" the image
 perl -p -i -e "s;/srv/data;$PWD/data;g" data/rc.txt
-
-# update the tc with an image which does not have Pegasus
-# already installed
-perl -p -i -e 's/montage-workflow-v2/fedora-montage/' data/tc.txt
 
 # custom site catalog
 cp ../sites.xml sites.xml
