@@ -225,7 +225,6 @@ function pegasus_lite_setup_work_dir()
     fi
 
     targets="$PEGASUS_WN_TMP $_CONDOR_SCRATCH_DIR $OSG_WN_TMP $TG_NODE_SCRATCH $TG_CLUSTER_SCRATCH $SCRATCH $TMPDIR $TMP /tmp"
-    unset TMPDIR
 
     if [ "x$PEGASUS_WN_TMP_MIN_SPACE" = "x" ]; then
         PEGASUS_WN_TMP_MIN_SPACE=1000000
