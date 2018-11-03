@@ -293,14 +293,14 @@ function container_env()
     inside_work_dir=$1
 
     # copy credentials into the pwd as this will become the container directory
-    for base in X509_USER_PROXY S3CFG BOTO_CONFIG SSH_PRIVATE_KEY irodsEnvFile GOOGLE_PKCS12 ; do
+    for base in X509_USER_PROXY S3CFG BOTO_CONFIG SSH_PRIVATE_KEY irodsEnvFile GOOGLE_PKCS12 _CONDOR_CREDS ; do
         for key in `(env | grep -i ^$base | sed 's/=.*//') 2>/dev/null`; do
             eval val="\$$key"
             cred="`basename ${val}`"
             dest="`pwd`/$cred"
             dest_inside="$inside_work_dir/$cred"
-            if [ ! -f $dest ] ; then
-                cp $val $dest
+            if [ ! -e $dest ] ; then
+                cp -R $val $dest
                 chmod 600 $dest
                 pegasus_lite_log "Copied credential \$$key to $dest"
                 echo "export $key=\"$dest_inside\""
