@@ -4,7 +4,7 @@
 # Uncomment this to turn on verbose mode.
 export DH_VERBOSE=1
 
-JAVA_HOME := $(firstword $(wildcard /usr/lib/jvm/java-8-openjdk-$(DEB_HOST_ARCH)) $(wildcard /usr/lib/jvm/java-7-openjdk-$(DEB_HOST_ARCH)) $(wildcard /usr/lib/jvm/java-6-openjdk-$(DEB_HOST_ARCH)) )
+JAVA_HOME := $(firstword $(wildcard /usr/lib/jvm/java-8-openjdk-$(DEB_HOST_ARCH)) )
 PATH := ${JAVA_HOME}/bin:${PATH}
 
 
