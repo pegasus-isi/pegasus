@@ -3051,7 +3051,14 @@ class StashHandler(TransferHandlerBase):
             t_start = time.time()
 
             if t.get_dst_proto() == "stash":
-                # write
+                # write file:// to stash://
+            
+                # src has to exist and be readable
+                if not verify_local_file(t.get_src_path()):
+                    self._post_transfer_attempt(t, False, t_start)
+                    failed_l.append(t)
+                    continue
+
                 if os.path.exists("/stash"):
                     # hack for now - local cp
                     src_path = t.get_src_path()
