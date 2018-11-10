@@ -1277,7 +1277,6 @@ public class TransferEngine extends Engine {
         Collection<FileTransfer> localFileTransfers = new LinkedList();
         Collection<FileTransfer> remoteFileTransfers = new LinkedList();
 
-
         String jobName = job.logicalName;
         String stagingSiteHandle   = job.getStagingSiteHandle();
         String executionSiteHandle   = job.getSiteHandle();
@@ -1432,9 +1431,7 @@ public class TransferEngine extends Engine {
             //check if we need to replace url prefix for 
             //symbolic linking
             boolean symLinkSelectedLocation = false;
-            //is set to false later, on basis of property value
-            boolean bypassFirstLevelStaging = true;
-
+            boolean bypassFirstLevelStagingPossible = false; //PM-1327 tracks whether one of candidate locations can trigger bypass for that file 
             int candidateNum = 0; 
             //PM-1082 we want to select only one destination put URL
             //with preference for symlinks
@@ -1442,7 +1439,7 @@ public class TransferEngine extends Engine {
             String preferredDestPutURL = destPutURL;
             for( ReplicaCatalogEntry selLoc : candidateLocations.getPFNList()){
                 candidateNum++;
-                
+                boolean bypassFirstLevelStagingForCandidateLocation = false;
                 if ( symLinkSelectedLocation = 
                         ( mUseSymLinks && 
                           selLoc.getResourceHandle().equals( job.getStagingSiteHandle() ) &&
@@ -1523,8 +1520,8 @@ public class TransferEngine extends Engine {
                 }
                 
                 //add locations of input data on the remote site to the transient RC
-                bypassFirstLevelStaging = this.bypassStagingForInputFile( selLoc , pf , job  );
-                if( bypassFirstLevelStaging ){
+                bypassFirstLevelStagingForCandidateLocation = this.bypassStagingForInputFile( selLoc , pf , job  );
+                if( bypassFirstLevelStagingForCandidateLocation ){
                     //PM-1250 if no checksum exists in RC
                     //then make sure checksum computation is set to false
                     //for bypassed inputs we have no way to compute
@@ -1549,6 +1546,7 @@ public class TransferEngine extends Engine {
                     //ensure the input file does not get cleaned up by the
                     //InPlace cleanup algorithm
                     pf.setForCleanup( false );
+                    bypassFirstLevelStagingPossible = true;
                     continue;
                 }
                 else{
@@ -1585,7 +1583,7 @@ public class TransferEngine extends Engine {
                 ft.addDestination(stagingSiteHandle,preferredDestPutURL);
             }
             
-            if ( !bypassFirstLevelStaging ) {
+            if ( !bypassFirstLevelStagingPossible ) {
                 //no bypass of input file staging. we need to add
                 //data stage in nodes for the lfn
                 if(  symLinkSelectedLocation || //symlinks can run only on staging site
