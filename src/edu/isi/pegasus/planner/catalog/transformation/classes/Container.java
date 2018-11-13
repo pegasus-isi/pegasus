@@ -190,7 +190,12 @@ public class Container implements Cloneable {
                 //determine the suffix in the URL
                 String basename = new File(path).getName();
                 int dotIndex = basename.indexOf( '.' );
-                if( dotIndex != -1  ){
+                
+                //PM-1326 check if there is tag version specified
+                if( basename.contains( ":" ) ){
+                    suffix = "";
+                }
+                else if( dotIndex != -1  ){
                     suffix = basename.substring(dotIndex);
                     if( !Container.getsupportedSingularityExtensions().contains( suffix ) ){
                         throw new RuntimeException( "Invalid suffix " + suffix + " determined singularity image url " + url );

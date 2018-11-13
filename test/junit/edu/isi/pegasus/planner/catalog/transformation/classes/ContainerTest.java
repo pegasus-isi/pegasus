@@ -49,6 +49,14 @@ public class ContainerTest {
     public void testSingularityFileCVMFS() {
         this.testSingulartiy( "test", "test", "file:///cvmfs/singularity.opensciencegrid.org/pycbc/pycbc-el7:latest" );
     }
+    @Test
+    public void testSingularityFileCVMFSTagVersion(){
+        this.testSingulartiy( "test", "test", "file://localhost/cvmfs/singularity.opensciencegrid.org/pycbc/pycbc-el7:latest");
+    }
+    @Test
+    public void testSingularityFileCVMFSTagVersionWithDot(){
+        this.testSingulartiy( "test", "test", "file://localhost/cvmfs/singularity.opensciencegrid.org/pycbc/pycbc-el7:v1.13.0");
+    }
     
     @Test
     public void testSingulartiyHUB() {
@@ -94,7 +102,6 @@ public class ContainerTest {
     public void testSingulartiyHTTPTarCPIO() {
         this.testSingulartiy( "test", "test.cpio.gz", "http:///pegasus.isi.edu/images/singularity/centos-7.cpio.gz" );
     }
-    
     
     public void testSingulartiy( String name, String expectedLFN, String url ) {
         Container c = new Container( name ) ;
