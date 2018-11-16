@@ -46,6 +46,11 @@ public class Integrity {
     public static final String PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME = "pegasus-integrity";
     
     /**
+     * The stdin file descriptor keyword
+     */
+    public static final String STDIN_FILE_DESCRIPTOR = "stdin";
+    
+    /**
      * The LogManager object which is used to log all the messages.
      */
     protected LogManager mLogger;
@@ -60,8 +65,6 @@ public class Integrity {
      * the workflow.
      */
     protected String mSubmitDir;
-    
-     
     
     public Integrity(){
         
@@ -84,9 +87,11 @@ public class Integrity {
     /**
      * Adds the integrity check invocations for jobs input files
      * @param sb 
-     * @param files 
+     * @param files
+     * 
+     * @return a colon separated list of files to be passed via the stdin
      */
-    public void addIntegrityCheckInvocation(StringBuilder sb,  Collection<PegasusFile> files ) {
+    public String addIntegrityCheckInvocation(StringBuilder sb,  Collection<PegasusFile> files ) {
     	StringBuilder flist = new StringBuilder();
         for( PegasusFile file: files ){
             if( file.isDataFile() ){
@@ -104,17 +109,18 @@ public class Integrity {
                 }
                 
                 if( generate ){
-                	if (flist.length() > 0) {
-                		flist.append(":");
-                	}
-                	flist.append(file.getLFN());
+                    if (flist.length() > 0) {
+                            flist.append(":");
+                    }
+                    flist.append(file.getLFN());
                 }
             }
         }
         if (flist.length() > 0) {
             sb.append( Integrity.PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME ).append( " --print-timings --verify=" ).
-            append( flist ).append( " 1>&2" ).append( "\n" );        	
+            append( STDIN_FILE_DESCRIPTOR );        	
         }
+        return flist.toString();
     }
 
     /**

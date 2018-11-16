@@ -499,8 +499,14 @@ public abstract class Abstract implements ContainerShellWrapper{
             if( !(job instanceof DAXJob || job instanceof DAGJob) ){
                 appendStderrFragment( sb, "", "Checking file integrity for input files" );
                 sb.append( "# do file integrity checks" ).append( '\n' );
-                mIntegrityHandler.addIntegrityCheckInvocation( sb,  job.getInputFiles() );
-
+                String filesToVerify = mIntegrityHandler.addIntegrityCheckInvocation( sb,  job.getInputFiles() );
+                if (filesToVerify.length() > 0) {
+                    sb.append( " 1>&2" ).append( " << 'eof'" ).append( '\n' );
+                    sb.append( filesToVerify );
+                    sb.append( '\n' );
+                    sb.append( "eof" ).append( '\n' );
+                }
+                
                 //check if planner knows of any checksums from the replica catalog
                 //and generate an input meta file!
                 File metaFile = mIntegrityHandler.generateChecksumMetadataFile( job.getFileFullPath( mSubmitDir,  ".in.meta"),
