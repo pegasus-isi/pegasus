@@ -85,6 +85,9 @@ cont centos-pycbc{
     # singularity image 
     image  "file:///cvmfs/singularity.opensciencegrid.org/pycbc/pycbc-el7:latest"
 
+    # we are symlinking from /lizard
+    mount "/lizard:/lizard"
+
     # optional site attribute to tell pegasus which site tar file 
     # exists. useful for handling file URL's correctly 
     image_site "condorpool" 
