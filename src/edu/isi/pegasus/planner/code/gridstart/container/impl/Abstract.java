@@ -213,10 +213,12 @@ public abstract class Abstract implements ContainerShellWrapper{
             sb.append("   \"lfn\": ").append("\"").append(ft.getLFN()).append("\"").append(",\n");
             sb.append("   \"id\": ").append(num).append(",\n");
            
-            //PM-1298 
-            if( !ft.verifySymlinkSource() ){
+            //PM-1321 , PM-1298 commented because transfers are inside 
+            //the container. We should fail if symlink does not exist
+            /*if( !ft.verifySymlinkSource() ){
                 sb.append("   \"verify_symlink_source\": false").append(",\n");
             }
+            */
             
             sb.append("   \"src_urls\": [");
             
