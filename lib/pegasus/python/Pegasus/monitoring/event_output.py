@@ -370,8 +370,12 @@ class MultiplexEventSink(EventSink):
 
                 # remove from our copy sink_name properties if they exist
                 endpoint_props = properties.Properties( props.propertyset(sink_name + ".", remove=True ))
-                self._endpoints[ sink_name ] = create_wf_event_sink(props.property(key), db_type=connection.DBType.WORKFLOW, enc=enc,
+                try:
+                    self._endpoints[ sink_name ] = create_wf_event_sink(props.property(key), db_type=connection.DBType.WORKFLOW, enc=enc,
                                                                                    prefix=prefix, props=endpoint_props, multiplexed = True, **kw)
+                except:
+                    self._log.error("[multiplex event sender] Unable to connect to endpoint %s with props %s . Disabling" % (sink_name,endpoint_props))
+                    self._log.error(traceback.format_exc())
 
     def send(self, event, kw):
         remove_endpoints=[]
