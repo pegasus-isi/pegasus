@@ -70,6 +70,14 @@ function test_verify_multiple {
     return 0
 }
 
+function test_verify_multiple_stdin {
+    if ! (echo "data.1:foo.2=data.2" | integrity --print-timings --verify=stdin); then
+        echo "ERROR: pegasus-integrity exited non-zero"
+        return 1
+    fi
+    return 0
+}
+
 export TEST_DIR=`pwd`
 
 export INTEGRITY_LOCATION=`cd ../../.. && pwd`/bin/pegasus-integrity
@@ -81,6 +89,7 @@ run_test test_generate_xml_single
 run_test test_generate_xml_multiple
 run_test test_verify_single
 run_test test_verify_multiple
+run_test test_verify_multiple_stdin
 
 
 

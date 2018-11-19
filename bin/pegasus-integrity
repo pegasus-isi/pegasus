@@ -630,8 +630,15 @@ def main():
         if options.debug: 
             pprint.PrettyPrinter(indent=4).pprint(meta_data)
 
+        # the files can be provided directly, or via stdin
+        files = ''
+        if options.verify_files == 'stdin':
+            files = sys.stdin.read().strip()
+        else:
+            files = options.verify_files
+
         # now check the files    
-        for f in str.split(options.verify_files, ':'):
+        for f in str.split(files, ':'):
             # lfn can be encoded in the file name in the format lfn=pfn
             lfn = None
             pfn = f
