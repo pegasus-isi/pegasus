@@ -61,8 +61,7 @@
       </listitem>
 
       <listitem>
-        <para>Pulls in all the relevant input data, executables and the
-        container image to that directory</para>
+        <para>Pulls the container image to that directory</para>
       </listitem>
 
       <listitem>
@@ -77,11 +76,30 @@
       </listitem>
 
       <listitem>
-        <para>Container will run a job specific script that figures out the
-        appropriate Pegasus worker to use in the container if not already
-        installed, and sets up the job environment to use it, before launching
-        the user application using
-        <emphasis>pegasus-kickstart.</emphasis></para>
+        <para>Container will run a job specific script that figures created by
+        PegasusLite that does the following:</para>
+
+        <orderedlist numeration="loweralpha">
+          <listitem>
+            <para>Figures the appropriate Pegasus worker to use in the
+            container if not already installed</para>
+          </listitem>
+
+          <listitem>
+            <para>Sets up the job environment to use including transfer and
+            setup of any credentials transferred as part of PegasusLite</para>
+          </listitem>
+
+          <listitem>
+            <para>Pulls in all the relevant input data, executables required
+            by the job</para>
+          </listitem>
+
+          <listitem>
+            <para>Launches the user application using
+            <emphasis>pegasus-kickstart.</emphasis></para>
+          </listitem>
+        </orderedlist>
       </listitem>
 
       <listitem>
@@ -98,9 +116,12 @@
       </listitem>
     </orderedlist>
 
-    <para>The above model, allows for all credential handling required for
-    data transfers to be handled outside the container within the PegasusLite
-    job.</para>
+    <note>
+      <para>Starting Pegasus 4.9.1 the container data transfer model has been
+      changed. Instead of data transfers for the job occurring outside the
+      container in the PegasusLite wrapper, they now happen when the user job
+      starts in the container.</para>
+    </note>
   </section>
 
   <section id="container-transfers">
@@ -180,7 +201,7 @@
     case of Docker, and as .img file in case of Singularity</para>
 
     <section id="container-symlinking">
-      <title>Symlinking</title>
+      <title>Symlinking and File Copy From Host OS</title>
 
       <para>Since, Pegasus by default only mounts the job directory determined
       by PegasusLite into the application container, symlinking of input data
@@ -189,15 +210,15 @@
       mounted in the container using the <emphasis><emphasis
       role="bold">mount</emphasis></emphasis> key word. We recommend to keep
       the source and destination directories to be the same i.e. the host path
-      is mounted in the same location in the container. This is because the
-      data transfers for the job happens in PegasusLite before the container
-      is invoked. While we do support different source and destination
-      directories in the mount format, it will create broken symlinks in the
-      worker node that will resolve correctly in the container. </para>
+      is mounted in the same location in the container.</para>
+
+      <para>The above is also true for the case, where you input datasets are
+      on the shared filesystem on the compute site and you want a file copy to
+      happen, when PegasusLite job starts the container. </para>
 
       <para>For example in the example below, we have input datasets
       accessible on /lizard on the compute nodes, and mounting them as
-      read-only into the container at /lizard </para>
+      read-only into the container at /lizard</para>
 
       <programlisting>cont centos-base{
      type "singularity"
@@ -230,7 +251,7 @@ pegasus.transfer.bypass.input.staging true
 </programlisting>
 
       <para>f you don't set pegasus.transfer.bypass.input.staging then you
-      still can have symlinking if </para>
+      still can have symlinking if</para>
 
       <orderedlist>
         <listitem>
