@@ -2187,8 +2187,18 @@ class Workflow:
                 logger.warning("trying to add job twice: %s, %s" % (jobid, my_job_submit_seq))
                 return
 
-            #PM-833 determine the job submit directory based on the path to the submit file
-            job_submit_dir = self.determine_job_submit_directory(jobid, self._job_info[jobid][0])
+            # PM-1334 log extra errors if dag file is not populated
+            job_submit_dir=self._run_dir
+            if not self._job_info:
+                logger.error("_job_info not populated for dag . Check if dag file was parsed by monitord %s %s" %(self._dag_file_name, self._out_file))
+                logger.error("Using workflow submit directory %s as job submit dir for %s " %(self._run_dir, jobid))
+            else:
+                #PM-833 determine the job submit directory based on the path to the submit file
+                try:
+                    job_submit_dir = self.determine_job_submit_directory(jobid, self._job_info[jobid][0])
+                except KeyError:
+                    logger.error("Job %s not in _job_info for %s %s" %(jobid, self._out_file, self._dag_file_name))
+                    logger.error("Using workflow submit directory %s as job submit dir for %s " % (self._run_dir, jobid))
 
             # Create new job container
             my_job = Job(self._wf_uuid, jobid, job_submit_dir, my_job_submit_seq)
