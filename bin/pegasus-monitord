@@ -763,7 +763,11 @@ def process_dagman_out(wf, log_line):
             my_dag = my_expr.group(1)
             # Parse dag file
             logger.info("using dag %s" % (my_dag))
-            wf.parse_dag_file(my_dag)
+
+            # PM-1334 potential fix. we parse dag file now in workflow constructor when we determine
+            # there is a new workflow to track
+            # wf.parse_dag_file(my_dag)
+
             # Send the delayed workflow start event to database
             wf.change_wf_state("start")
         elif re_parse_condor_version.search(log_line) is not None:

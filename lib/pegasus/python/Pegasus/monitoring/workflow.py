@@ -157,7 +157,7 @@ class Workflow:
 
         # If we already have jobs in our _job_info dictionary, skip reading the dag file
         if len(self._job_info) > 0:
-            logger.debug("skipping parsing the dag file, already have job info loaded...")
+            logger.warning("skipping parsing the dag file, already have job info loaded...")
             return
 
         dag_file = os.path.join(self._run_dir, dag_file)
@@ -1069,6 +1069,9 @@ class Workflow:
         if (self._sink is not None and self._parent_workflow_id is not None
             and parent_jobid is not None and parent_jobseq is not None):
             self.db_send_subwf_link(self._wf_uuid, self._parent_workflow_id, parent_jobid, parent_jobseq)
+
+        # PM-1334 parse the dag file always in the constructor
+        self.parse_dag_file(self._dag_file_name)
 
     def map_subwf(self, parent_jobid, parent_jobseq, wf_info):
         """
@@ -2187,8 +2190,18 @@ class Workflow:
                 logger.warning("trying to add job twice: %s, %s" % (jobid, my_job_submit_seq))
                 return
 
-            #PM-833 determine the job submit directory based on the path to the submit file
-            job_submit_dir = self.determine_job_submit_directory(jobid, self._job_info[jobid][0])
+            # PM-1334 log extra errors if dag file is not populated
+            job_submit_dir=self._run_dir
+            if not self._job_info:
+                logger.error("_job_info not populated for dag . Check if dag file was parsed by monitord %s %s" %(self._dag_file_name, self._out_file))
+                logger.error("Using workflow submit directory %s as job submit dir for %s " %(self._run_dir, jobid))
+            else:
+                #PM-833 determine the job submit directory based on the path to the submit file
+                try:
+                    job_submit_dir = self.determine_job_submit_directory(jobid, self._job_info[jobid][0])
+                except KeyError:
+                    logger.error("Job %s not in _job_info for %s %s" %(jobid, self._out_file, self._dag_file_name))
+                    logger.error("Using workflow submit directory %s as job submit dir for %s " % (self._run_dir, jobid))
 
             # Create new job container
             my_job = Job(self._wf_uuid, jobid, job_submit_dir, my_job_submit_seq)
