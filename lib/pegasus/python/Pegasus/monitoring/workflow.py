@@ -1070,6 +1070,9 @@ class Workflow:
             and parent_jobid is not None and parent_jobseq is not None):
             self.db_send_subwf_link(self._wf_uuid, self._parent_workflow_id, parent_jobid, parent_jobseq)
 
+        # PM-1334 parse the dag file always in the constructor
+        self.parse_dag_file(self._dag_file_name)
+
     def map_subwf(self, parent_jobid, parent_jobseq, wf_info):
         """
         This function creates a link between a subworkflow and its parent job
