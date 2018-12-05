@@ -1257,9 +1257,10 @@ class GridFtpHandler(TransferHandlerBase):
                                         t.dst_url_encoded()))
     
         tmp_file.close()
-       
-        logger.info("Grouped %d similar gsiftp transfers together in"
-                    " temporary file %s" %(num_pairs, tmp_name))
+      
+        if num_pairs > 1:
+            logger.info("Grouped %d similar gsiftp transfers together in"
+                        " temporary file %s" %(num_pairs, tmp_name))
     
         t_start = time.time()
         transfer_success = False
