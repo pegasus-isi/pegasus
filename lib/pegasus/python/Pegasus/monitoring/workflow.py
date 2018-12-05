@@ -157,7 +157,7 @@ class Workflow:
 
         # If we already have jobs in our _job_info dictionary, skip reading the dag file
         if len(self._job_info) > 0:
-            logger.debug("skipping parsing the dag file, already have job info loaded...")
+            logger.warning("skipping parsing the dag file, already have job info loaded...")
             return
 
         dag_file = os.path.join(self._run_dir, dag_file)
