@@ -12,6 +12,7 @@ class TutorialEnv:
     OSG_FROM_ISI = ("OSG from ISI submit node", "osg")
     XSEDE_BOSCO = ("XSEDE, with Bosco", "xsede-bosco")
     BLUEWATERS_GLITE = ("Bluewaters, with Glite", "bw-glite")
+    TACC_WRANGLER = ("TACC Wrangler with Glite", "wrangler-glite")
 
 
 class TutorialExample:
@@ -141,7 +142,8 @@ class Workflow(object):
                 TutorialEnv.USC_HPCC_CLUSTER,
                 TutorialEnv.OSG_FROM_ISI,
                 TutorialEnv.XSEDE_BOSCO,
-                TutorialEnv.BLUEWATERS_GLITE
+                TutorialEnv.BLUEWATERS_GLITE,
+                TutorialEnv.TACC_WRANGLER
             ])
 
             # figure out what example options to provide
@@ -156,7 +158,7 @@ class Workflow(object):
             if self.tutorial_setup != "osg":
                 examples.append(TutorialExample.DIAMOND)
 
-            if self.tutorial_setup == "bw-glite":
+            if self.tutorial_setup == "bw-glite" or self.tutorial_setup == "wrangler-glite":
                 examples.append(TutorialExample.MPI)
 
             self.tutorial = optionlist("What tutorial workflow do you want?", examples)
@@ -206,6 +208,10 @@ class Workflow(object):
             self.sitename = "condorpool"
         elif self.tutorial_setup == "bw-glite":
             self.sitename = "bluewaters"
+            self.config = "glite"
+            self.compute_queue = "normal"
+        elif self.tutorial_setup == "wrangler-glite":
+            self.sitename = "wrangler"
             self.config = "glite"
             self.compute_queue = "normal"
         return
