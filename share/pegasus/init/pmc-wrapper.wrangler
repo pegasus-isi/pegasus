@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+
+export TACC_MPI_GETMODE=mvapich2_ssh
+export MPICH_HOME=/opt/apps/intel15/mvapich2/2.1
+export LD_LIBRARY_PATH=/opt/apps/intel15/mvapich2/2.1/lib:/opt/apps/intel15/mvapich2/2.1/lib/shared:/opt/apps/intel/15/composer_xe_2015.3.187/mpirt/lib/intel64:/opt/apps/intel/15/composer_xe_2015.3.187/ipp/lib/intel64:/opt/apps/intel/15/composer_xe_2015.3.187/mkl/lib/intel64:/opt/apps/intel/15/composer_xe_2015.3.187/tbb/lib/intel64:/opt/apps/intel/15/composer_xe_2015.3.187/tbb/lib/intel64/gcc4.4:/opt/apps/intel/15/composer_xe_2015.3.187/compiler/lib/intel64:/opt/apps/gcc/4.9.1/lib:/opt/apps/gcc/4.9.1/lib64
+
+
+#ibrun -np 48 /home/00384/rynge/software/pegasus/4.9.0dev/bin/pegasus-mpi-cluster "$@"
+ibrun /home/00340/vahik/SOFTWARE/install/pegasus/default/pegasus-mpi-cluster "$@"

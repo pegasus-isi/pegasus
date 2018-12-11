@@ -188,6 +188,7 @@ class Workflow(object):
         Set up tutorial for pre-defined computing environments
         :return:
         """
+
         if self.tutorial_setup is None:
             self.tutorial_setup = "submit-host"
 
@@ -285,6 +286,9 @@ class Workflow(object):
         self.copy_template("README.md", "README.md")
         self.copy_template("rc.txt", "rc.txt")
         self.copy_template("pegasus.properties", "pegasus.properties")
+
+        if self.tutorial_setup == "wrangler-glite":
+            self.copy_template("pmc-wrapper.wrangler", "bin/pmc-wrapper", mode=0o755)
 
         if self.generate_tutorial:
             sys.stdout.write("Pegasus Tutorial setup for example workflow - %s for execution on %s in directory %s\n"

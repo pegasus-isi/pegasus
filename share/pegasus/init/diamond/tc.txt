@@ -52,3 +52,16 @@ tr analyze {
 {% endif %}
     }
 }
+
+{% if generate_tutorial == true and tutorial_setup == "wrangler-glite" %}
+tr pegasus::mpiexec {
+  site {{sitename}} {
+    profile pegasus "cores" "48"
+    profile pegasus "nodes" "1"
+    profile pegasus "runtime" "43200"
+    profile pegasus "change.dir" "true"
+    pfn "{{workflowdir}}/bin/pmc-wrapper"
+    type "INSTALLED"
+  }
+}
+{% endif %}
