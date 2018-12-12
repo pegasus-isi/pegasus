@@ -4,7 +4,7 @@
 INSTALL = install
 BIN_DIR = ./bin
 RM      = rm -f
-CXX     = cc
+CXX     = mpicxx
 CXXFLAGS += -O
 LD      = $(CXX)
 

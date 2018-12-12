@@ -12,6 +12,10 @@ tr preprocess {
 	profile pegasus "cores" "1"
 	profile pegasus "ppn" "1"
 {% endif %}
+{% if tutorial_setup == "wrangler-glite" %}
+        profile pegasus "cores" "1"
+        profile pegasus "nodes" "1"
+{% endif %}
     }
 }
 
@@ -25,7 +29,10 @@ tr findrange {
         profile pegasus "cores" "1"
         profile pegasus "ppn" "1"
 {% endif %}
-
+{% if tutorial_setup == "wrangler-glite" %}
+        profile pegasus "cores" "1"
+        profile pegasus "nodes" "1"
+{% endif %}
     }
 }
 
@@ -39,5 +46,22 @@ tr analyze {
         profile pegasus "cores" "1"
         profile pegasus "ppn" "1"
 {% endif %}
+{% if tutorial_setup == "wrangler-glite" %}
+        profile pegasus "cores" "1"
+        profile pegasus "nodes" "1"
+{% endif %}
     }
 }
+
+{% if generate_tutorial == true and tutorial_setup == "wrangler-glite" %}
+tr pegasus::mpiexec {
+  site {{sitename}} {
+    profile pegasus "cores" "48"
+    profile pegasus "nodes" "1"
+    profile pegasus "runtime" "43200"
+    profile pegasus "change.dir" "true"
+    pfn "{{workflowdir}}/bin/pmc-wrapper"
+    type "INSTALLED"
+  }
+}
+{% endif %}

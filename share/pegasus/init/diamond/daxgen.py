@@ -31,6 +31,7 @@ preprocess.addArguments("-i",a,"-o",b1,"-o",b2)
 preprocess.uses(a, link=Link.INPUT)
 preprocess.uses(b1, link=Link.OUTPUT, transfer=False, register=False)
 preprocess.uses(b2, link=Link.OUTPUT, transfer=False, register=False)
+preprocess.addProfile(Profile("pegasus", "label", "cluster-1"))
 diamond.addJob(preprocess)
 
 # Add left Findrange job
@@ -40,6 +41,7 @@ c1 = File("f.c1")
 frl.addArguments("-i",b1,"-o",c1)
 frl.uses(b1, link=Link.INPUT)
 frl.uses(c1, link=Link.OUTPUT, transfer=False, register=False)
+frl.addProfile(Profile("pegasus", "label", "cluster-1"))
 diamond.addJob(frl)
 
 # Add right Findrange job
@@ -49,6 +51,7 @@ c2 = File("f.c2")
 frr.addArguments("-i",b2,"-o",c2)
 frr.uses(b2, link=Link.INPUT)
 frr.uses(c2, link=Link.OUTPUT, transfer=False, register=False)
+frr.addProfile(Profile("pegasus", "label", "cluster-1"))
 diamond.addJob(frr)
 
 # Add Analyze job
@@ -59,6 +62,7 @@ analyze.addArguments("-i",c1,"-i",c2,"-o",d)
 analyze.uses(c1, link=Link.INPUT)
 analyze.uses(c2, link=Link.INPUT)
 analyze.uses(d, link=Link.OUTPUT, transfer=True, register=False)
+analyze.addProfile(Profile("pegasus", "label", "cluster-1"))
 diamond.addJob(analyze)
 
 # Add control-flow dependencies

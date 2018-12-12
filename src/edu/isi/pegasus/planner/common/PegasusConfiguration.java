@@ -18,10 +18,13 @@
 package edu.isi.pegasus.planner.common;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.DirectoryLayout;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServerType;
 import edu.isi.pegasus.planner.catalog.site.classes.InternalMountPoint;
+import edu.isi.pegasus.planner.catalog.site.classes.SharedDirectory;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.Job;
@@ -32,7 +35,11 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactory;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -184,7 +191,14 @@ public class PegasusConfiguration {
     public void updateSiteStoreAndOptions( SiteStore store, PlannerOptions  options ) {
         //sanity check to make sure that output outputSite is loaded
         String outputSite = options.getOutputSite();
-            
+        
+        //check for local site or create a default entry
+        if(  !store.list().contains( "local" ) ){
+            store.addEntry( constructDefaultLocalSiteEntry( options ) );
+            mLogger.log( "Constructed default site catalog entry for local site " + store.lookup( "local"), 
+                         LogManager.CONFIG_MESSAGE_LEVEL );
+        }
+        
         if( options.getOutputSite() != null ){
             if( !store.list().contains( outputSite  ) ){
                 StringBuffer error = new StringBuffer( );
@@ -205,8 +219,10 @@ public class PegasusConfiguration {
             options.setOutputSite( outputSite );
             
             SiteCatalogEntry entry = store.lookup( outputSite );
-            
-            
+            if( entry == null ){
+                throw new RuntimeException( "No entry found in site catalog for output site: " + outputSite );
+            }
+
             //we first check for local directory
             DirectoryLayout storageDirectory = entry.getDirectory( Directory.TYPE.local_storage );
             if( storageDirectory == null || storageDirectory.isEmpty()){
@@ -240,7 +256,7 @@ public class PegasusConfiguration {
             if( imp == null || imp.getMountPoint() == null ){
                 //now throw an error
                 throw new RuntimeException( "No internal mount point specified  for HeadNode Storage Directory  for output site " + outputSite );
-            
+
             }
 
 
@@ -283,10 +299,11 @@ public class PegasusConfiguration {
                     }
                 }
             }
-            
+
             //log the updated output site entry
             mLogger.log( "Updated output site entry is " + entry,
                          LogManager.DEBUG_MESSAGE_LEVEL );
+
         }
         
         //PM-960 lets do some post processing of the sites
@@ -473,5 +490,40 @@ public class PegasusConfiguration {
         return sb.toString();
     }
 
+    /**
+     * Constructs default SiteCatalogEntry for local site
+     * 
+     * @param options
+     * @return 
+     */
+    private SiteCatalogEntry constructDefaultLocalSiteEntry(PlannerOptions  options) {
+       String submitDir = options.getSubmitDirectory();
+       File scratch = new File( new File(submitDir).getParent(), "wf-scratch" );
+       File output = new File( new File(submitDir).getParent(), "wf-output" );
+       
+       SiteCatalogEntry site = new SiteCatalogEntry( "local" );
+       site.setOS( SysInfo.OS.linux );
+       site.setArchitecture( SysInfo.Architecture.x86_64 );
+       site.addDirectory( constructFileServerDirectory(Directory.TYPE.shared_scratch, scratch ));
+       site.addDirectory( constructFileServerDirectory(Directory.TYPE.shared_storage, output ));
+       
+       return site;
+    }
+
+    /**
+     * Construct a file server based directory 
+     * 
+     * @param type
+     * @param dir
+     * @return 
+     */
+    private Directory constructFileServerDirectory(Directory.TYPE type, File dir ){
+       Map<FileServer.OPERATION,List<FileServer>> m = new HashMap();
+       List<FileServer> servers = new LinkedList();
+       servers.add( new FileServer( "file", "file:///", dir.getAbsolutePath()) );
+       m.put(FileServerType.OPERATION.all, servers  );
+       return new Directory( new SharedDirectory(m, new InternalMountPoint(dir.getAbsolutePath())), 
+                                             type);
+    }
     
 }
