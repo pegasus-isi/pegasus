@@ -49,6 +49,37 @@ public class SysInfo implements Cloneable {
         x86, x86_64, ppc, ppc_64, ia64,  sparcv7, sparcv9, amd64
     }
 
+    /**
+     * Computes OS from a release
+     * 
+     * @param release
+     * @return 
+     */
+    
+    public static OS computeOS( OS_RELEASE release ){
+        OS os = OS.linux;
+        switch( release ){
+            case rhel:
+            case deb:
+            case ubuntu:
+            case fedora:
+            case suse:
+            case sles:
+            case freebsd:
+                os = OS.linux;
+                break;
+            case macos:
+                os = OS.macosx;
+                break;
+            case sunos:
+                os = OS.sunos;
+                break;
+            default:
+                throw new RuntimeException( "Unable to compute OS from release " + release );
+                
+        }
+        return os;
+    }
     
     /**
      * The default OS the entry is associated with if none is specified

@@ -161,6 +161,17 @@ public class Version {
      * 
      * @return 
      */
+    public SysInfo.OS getOS(){
+        return SysInfo.computeOS( this.getOSRelease() );
+    }
+    
+    
+    
+    /**
+     * Return the OS Release
+     * 
+     * @return 
+     */
     public SysInfo.OS_RELEASE getOSRelease(){
        String platform = this.getPlatform();
        Matcher matcher = mPlatformPattern.matcher( platform );

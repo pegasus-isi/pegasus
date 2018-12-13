@@ -511,7 +511,7 @@ public class PegasusConfiguration {
        
        SiteCatalogEntry site = new SiteCatalogEntry( "local" );
        site.setOS( mVersion.getOS() );
-       site.setArchitecture( mVersion.getArchitecture());
+       site.setArchitecture( mVersion.getArchitecture() );
        site.addDirectory( constructFileServerDirectory(Directory.TYPE.shared_scratch, scratch ));
        site.addDirectory( constructFileServerDirectory(Directory.TYPE.shared_storage, output ));
        
