@@ -18,6 +18,7 @@
 package edu.isi.pegasus.planner.common;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.DirectoryLayout;
@@ -92,6 +93,12 @@ public class PegasusConfiguration {
      */
     private LogManager mLogger;
     
+    
+    /**
+     * The Version to use
+     */
+    private Version mVersion;
+    
     /**
      * Overloaded Constructor
      * 
@@ -99,6 +106,7 @@ public class PegasusConfiguration {
      */
     public PegasusConfiguration( LogManager logger ){
         mLogger = logger;
+        mVersion = new Version();
     }
 
     /**
@@ -502,8 +510,8 @@ public class PegasusConfiguration {
        File output = new File( new File(submitDir).getParent(), "wf-output" );
        
        SiteCatalogEntry site = new SiteCatalogEntry( "local" );
-       site.setOS( SysInfo.OS.linux );
-       site.setArchitecture( SysInfo.Architecture.x86_64 );
+       site.setOS( mVersion.getOS() );
+       site.setArchitecture( mVersion.getArchitecture() );
        site.addDirectory( constructFileServerDirectory(Directory.TYPE.shared_scratch, scratch ));
        site.addDirectory( constructFileServerDirectory(Directory.TYPE.shared_storage, output ));
        
