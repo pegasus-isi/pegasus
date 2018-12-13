@@ -63,6 +63,7 @@ public class SysInfo implements Cloneable {
             case deb:
             case ubuntu:
             case fedora:
+            case fc:
             case suse:
             case sles:
             case freebsd:
