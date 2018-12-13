@@ -34,6 +34,13 @@ public class SysInfo implements Cloneable {
     public enum OS {
         linux, sunos, aix, macosx, windows
     }
+    
+    /**
+     * Enumerates the new OS Release supported in Pegasus.
+     */
+    public enum OS_RELEASE {
+        rhel, deb, ubuntu, fedora, suse, sles, freebsd, macos, sunos 
+    }
 
     /**
      * Enumerates the new architecture types supported in Pegasus.

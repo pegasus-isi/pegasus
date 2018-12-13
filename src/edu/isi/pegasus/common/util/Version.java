@@ -161,17 +161,17 @@ public class Version {
      * 
      * @return 
      */
-    public SysInfo.OS getOS(){
+    public SysInfo.OS_RELEASE getOSRelease(){
        String platform = this.getPlatform();
        Matcher matcher = mPlatformPattern.matcher( platform );
-       String os = null;
+       String release = null;
        if(  matcher.matches() ){
-             os = matcher.group(2);
+             release = matcher.group(2);
        }
        else{
-          throw new RuntimeException( "Unable to determine OS from  " + platform );
+          throw new RuntimeException( "Unable to determine OS Release from  " + platform );
        }
-       return SysInfo.OS.valueOf(os);
+       return SysInfo.OS_RELEASE.valueOf(release);
  
     }
     

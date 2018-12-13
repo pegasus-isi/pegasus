@@ -65,9 +65,9 @@ public class VersionTest {
     }
     
     @Test
-    public void testOS() {
-        SysInfo.OS os = ver.getOS();
-        Assert.assertTrue(os != null);
+    public void testOSReleaese() {
+        SysInfo.OS_RELEASE release = ver.getOSRelease();
+        Assert.assertTrue(release != null);
     }
 }
 
