@@ -89,7 +89,7 @@ public class SysInfo implements Cloneable {
     /**
      * The default OS the entry is associated with if none is specified
      */
-    public static final OS_RELEASE DEFAULT_OS_RELEASE = OS_RELEASE.rhel;
+    public static final OS_RELEASE DEFAULT_OS_RELEASE = null;
 
     /**
      * The default Architecture the entry is associated with if none is specified
@@ -244,6 +244,11 @@ public class SysInfo implements Cloneable {
      * @param release the os releaseof the site.
      */
     public void setOSRelease( String release ){
+        if( release.length() == 0 ){
+            //set the default release to rhel
+            mOSRelease = SysInfo.DEFAULT_OS_RELEASE;
+            return;
+        }
         mOSRelease = OS_RELEASE.valueOf(release);
     }
 
@@ -254,7 +259,7 @@ public class SysInfo implements Cloneable {
      * @return  the OS
      */
     public String getOSRelease( ){
-        return mOSRelease.toString();
+        return (mOSRelease == null) ? "": mOSRelease.toString();
     }
 
     /**
