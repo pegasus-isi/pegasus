@@ -85,6 +85,11 @@ public class SysInfo implements Cloneable {
      * The default OS the entry is associated with if none is specified
      */
     public static final OS DEFAULT_OS = OS.linux;
+    
+    /**
+     * The default OS the entry is associated with if none is specified
+     */
+    public static final OS_RELEASE DEFAULT_OS_RELEASE = OS_RELEASE.rhel;
 
     /**
      * The default Architecture the entry is associated with if none is specified
@@ -104,7 +109,7 @@ public class SysInfo implements Cloneable {
     /**
      * The Operating System Release. Optional.
      */
-    protected String mOSRelease;
+    protected OS_RELEASE mOSRelease;
 
     /**
      * The Operating System Version. Optional.
@@ -124,7 +129,7 @@ public class SysInfo implements Cloneable {
     public SysInfo(){
         mArchitecture = SysInfo.DEFAULT_ARCHITECTURE;
         mOS           = SysInfo.DEFAULT_OS;
-        mOSRelease    = "";
+        mOSRelease    = SysInfo.DEFAULT_OS_RELEASE;
         mOSVersion    = "";
         mGlibc        = "";
     }
@@ -164,7 +169,7 @@ public class SysInfo implements Cloneable {
          } else {
         	 mArchitecture = SysInfo.DEFAULT_ARCHITECTURE;
              mOS           = SysInfo.DEFAULT_OS;
-             mOSRelease    = "";
+             mOSRelease    = SysInfo.DEFAULT_OS_RELEASE;
              mOSVersion    = "";
              mGlibc        = "";
          }
@@ -239,7 +244,7 @@ public class SysInfo implements Cloneable {
      * @param release the os releaseof the site.
      */
     public void setOSRelease( String release ){
-        mOSRelease = release;
+        mOSRelease = OS_RELEASE.valueOf(release);
     }
 
 
@@ -249,7 +254,7 @@ public class SysInfo implements Cloneable {
      * @return  the OS
      */
     public String getOSRelease( ){
-        return mOSRelease;
+        return mOSRelease.toString();
     }
 
     /**
