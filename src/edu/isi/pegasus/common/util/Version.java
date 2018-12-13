@@ -14,8 +14,11 @@
  */
 package edu.isi.pegasus.common.util;
 
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import java.io.*;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This class solely defines the version numbers of PEGASUS. The template
@@ -37,14 +40,26 @@ public class Version {
      * Basename of the build stamp file.
      */
     public static final String STAMP_FILENAME = "stamp";
+    
+    private static final String mPlatformRegex =
+                                        "(x86|x86_64|ia64|ppc)_([a-zA-Z0-9]*)_([0-9]*)";
 
+    /**
+     * Stores compiled patterns at first use, quasi-Singleton.
+     */
+    private static Pattern mPlatformPattern = null;
+    
     private Properties props = new Properties();
-
+    
     public Version() {
         try {
             props.load(Version.class.getClassLoader().getResourceAsStream("pegasus.build.properties"));
         } catch (IOException ioe) {
             throw new RuntimeException("Unable to load pegasus build properties", ioe);
+        }
+        //compile the pattern only once.
+        if( mPlatformPattern == null ){
+             mPlatformPattern = Pattern.compile( mPlatformRegex );
         }
     }
 
@@ -121,6 +136,45 @@ public class Version {
     public String getPlatform() {
         return props.getProperty("pegasus.build.platform");
     }
+    
+    /**
+     * Return the architecture 
+     * 
+     * @return 
+     */
+    public SysInfo.Architecture getArchitecture(){
+       String platform = this.getPlatform();
+       Matcher matcher = mPlatformPattern.matcher( platform );
+       String arch = null;
+       if(  matcher.matches() ){
+             arch = matcher.group(1);
+       }
+       else{
+          throw new RuntimeException( "Unable to determine architecture from  " + platform );
+       }
+       return SysInfo.Architecture.valueOf(arch);
+ 
+    }
+    
+    /**
+     * Return the OS 
+     * 
+     * @return 
+     */
+    public SysInfo.OS getOS(){
+       String platform = this.getPlatform();
+       Matcher matcher = mPlatformPattern.matcher( platform );
+       String os = null;
+       if(  matcher.matches() ){
+             os = matcher.group(2);
+       }
+       else{
+          throw new RuntimeException( "Unable to determine OS from  " + platform );
+       }
+       return SysInfo.OS.valueOf(os);
+ 
+    }
+    
 
     /**
      * @return The Git hash that this version of Pegasus was built from
