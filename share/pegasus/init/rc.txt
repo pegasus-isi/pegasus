@@ -11,7 +11,7 @@
 pegasus.html file://{{workflowdir}}/input/pegasus.html   site="local"
 {% endif %}
 {% if generate_tutorial == true and tutorial == "diamond" %}
-pegasus.html file://{{workflowdir}}/input/f.a   site="local"
+f.a file://{{workflowdir}}/input/f.a   site="local"
 {% endif %}
 {% if generate_tutorial == true and tutorial == "mpi-hw" %}
 f.in file://{{workflowdir}}/input/f.in   site="local"
