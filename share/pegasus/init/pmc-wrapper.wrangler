@@ -8,4 +8,4 @@ export LD_LIBRARY_PATH=/opt/apps/intel15/mvapich2/2.1/lib:/opt/apps/intel15/mvap
 
 
 #ibrun -np 48 /home/00384/rynge/software/pegasus/4.9.0dev/bin/pegasus-mpi-cluster "$@"
-ibrun /home/00340/vahik/SOFTWARE/install/pegasus/default/pegasus-mpi-cluster "$@"
+ibrun /home/00340/vahik/SOFTWARE/install/pegasus/default/bin/pegasus-mpi-cluster "$@"
