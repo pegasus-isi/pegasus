@@ -556,7 +556,7 @@ function pegasus_lite_get_system()
                 osversion="10"
             fi
         elif [ -e /etc/fedora-release ]; then
-            osname="fedora"
+            osname="fc"
             osversion=`cat /etc/fedora-release | grep -o -E '[0-9]+'`
         elif [ -e /etc/redhat-release ]; then
             osname="rhel"

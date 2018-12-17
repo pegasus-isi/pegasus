@@ -95,6 +95,7 @@ class Workflow(object):
         self.generate_tutorial = False
         self.tutorial_setup = None
         self.compute_queue = "default"
+        self.project = "MYPROJ123"
         sysname, _, _, _, machine = os.uname()
         if sysname == 'Darwin':
             self.os = "MACOSX"
@@ -160,6 +161,7 @@ class Workflow(object):
 
             if self.tutorial_setup == "bw-glite" or self.tutorial_setup == "wrangler-glite":
                 examples.append(TutorialExample.MPI)
+                self.project = query("What project your jobs should run under. For example on TACC there are like : TG-DDM160003 ?")
 
             self.tutorial = optionlist("What tutorial workflow do you want?", examples)
 
@@ -242,6 +244,7 @@ class Workflow(object):
                 self.copy_template("diamond/f.a", "input/f.a")
             elif self.tutorial == "split":
                 # Split workflow input file
+                self.mkdir("bin")
                 self.copy_template("split/pegasus.html", "input/pegasus.html")
             elif self.tutorial == "r-epa":
                 # Executables used by the R-EPA workflow
