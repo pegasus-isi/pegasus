@@ -29,7 +29,6 @@ import errno
 import shutil
 import logging
 import calendar
-import commands
 import datetime
 import traceback
 import subprocess
@@ -394,7 +393,7 @@ def version():
     """
     Obtains Pegasus version
     """
-    my_output = commands.getstatusoutput("pegasus-version")
+    my_output = subprocess.check_output("pegasus-version")
 
     return my_output[1]
 
