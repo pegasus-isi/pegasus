@@ -42,7 +42,7 @@ public class Container implements Cloneable {
     /**
      * The types of container supported.
      */
-    public static enum TYPE{ docker, singularity };
+    public static enum TYPE{ docker, singularity, shifter };
     
     /**
      * Singularity is picky about extensions as it uses that for loading the container image

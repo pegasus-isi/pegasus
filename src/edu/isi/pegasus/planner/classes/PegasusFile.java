@@ -115,11 +115,17 @@ public class PegasusFile extends Data {
     public static final String DOCKER_TYPE = "docker";
     
     /**
-     * The string value of a file that is of type docker container
+     * The string value of a file that is of type singularity container
      * @see SINGULARITY_CONTAINER#SINGULARITY_CONTAINER_FILE
      */
     public static final String SINGULARITY_TYPE = "singularity";
     
+        
+    /**
+     * The string value of a file that is of type shifter container
+     * @see SHIFTER_CONTAINER#SHIFTER_CONTAINER_FILE
+     */
+    public static final String SHIFTER_TYPE = "shifter";
     
     /**
      * The string value of a file that is of type other.
@@ -153,9 +159,14 @@ public class PegasusFile extends Data {
     public static final int SINGULARITY_CONTAINER_FILE = 4;
     
     /**
+     * The type denoting that a logical file is a shifter container file.
+     */
+    public static final int SHIFTER_CONTAINER_FILE = 5;
+    
+    /**
      * The type denoting that a logical file is an other file.
      */
-    public static final int OTHER_FILE = 5;
+    public static final int OTHER_FILE = 6;
     
     /**
      * The logical name of the file.
@@ -401,6 +412,9 @@ public class PegasusFile extends Data {
         else if( type.equals( PegasusFile.SINGULARITY_TYPE )){
             setType(PegasusFile.SINGULARITY_CONTAINER_FILE );
         }
+        else if( type.equals( PegasusFile.SHIFTER_TYPE )){
+            setType(PegasusFile.SHIFTER_CONTAINER_FILE );
+        }
         else if( type.equals( PegasusFile.OTHER_TYPE )){
             setType( PegasusFile.OTHER_FILE );
         }
@@ -430,6 +444,10 @@ public class PegasusFile extends Data {
                 setType( SINGULARITY_TYPE );
                 break;
                 
+            case shifter:
+                setType( SHIFTER_TYPE );
+                break;
+                    
             default:
                 throw new IllegalArgumentException( "Invalid Type passed " + type );
         }
