@@ -894,6 +894,10 @@ public class PegasusFile extends Data {
                 result = SINGULARITY_TYPE;
                 break;
                 
+            case SHIFTER_CONTAINER_FILE:
+                result = SHIFTER_TYPE;
+                break;
+                
             case OTHER_FILE:
                 result = OTHER_TYPE;
                 break;
