@@ -16,6 +16,7 @@
 
 package edu.isi.pegasus.planner.code.gridstart.container.impl;
 
+import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.ADag;
@@ -97,7 +98,9 @@ public class Shifter extends Abstract{
         
         //assume shifter is available in path
         sb.append( "shifter ");
+        
         sb.append(  "--image " ).append( c.getLFN() ).append( " " );
+        
        
         //PM-1298 mount any host directories if specified
         sb.append( "--volume ");
@@ -291,5 +294,27 @@ public class Shifter extends Abstract{
         
         return sb.toString();
         
+    }
+
+    /**
+     * Computes the image URL to use for passing to the shifter command
+     * @param c
+     * @return 
+     */
+    private String computeShifterImageName(Container c) {
+        StringBuilder sb = new StringBuilder();
+        PegasusURL url = c.getImageURL();
+        String protocol = url.getProtocol();
+        if( protocol != null && !protocol.equalsIgnoreCase( "shifter") ){
+            sb.append( protocol ).append( ":" );
+        }
+        String path = url.getPath();
+        if( path.startsWith( File.separator ) ){
+           sb.append( path.substring( 1 ) ); 
+        }
+        else{
+            sb.append( path );
+        }
+        return sb.toString();
     }
 }
