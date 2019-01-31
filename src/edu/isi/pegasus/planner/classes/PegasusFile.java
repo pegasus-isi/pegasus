@@ -811,8 +811,10 @@ public class PegasusFile extends Data {
       * @return boolean indicating whether a file is a container file or not.
       */
     public boolean isContainerFile() {
-       return (this.mType == PegasusFile.DOCKER_CONTAINER_FILE || 
-                this.mType == PegasusFile.SINGULARITY_CONTAINER_FILE);
+       return ( this.mType == PegasusFile.DOCKER_CONTAINER_FILE || 
+                this.mType == PegasusFile.SINGULARITY_CONTAINER_FILE ||
+                this.mType == PegasusFile.SHIFTER_CONTAINER_FILE
+               );
     }
      
      /**
