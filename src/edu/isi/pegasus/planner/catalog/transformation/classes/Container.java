@@ -211,7 +211,7 @@ public class Container implements Cloneable {
         }
         else if( this.mType.equals( Container.TYPE.shifter ) ){
             StringBuilder sb = new StringBuilder();
-            if( protocol != null && !protocol.equalsIgnoreCase( "shifter") ){
+            if( protocol != null && !protocol.equalsIgnoreCase( PegasusURL.SHIFTER_PROTOCOL_SCHEME ) ){
                 sb.append( protocol ).append( ":" );
             }
             if( path.startsWith( File.separator ) ){

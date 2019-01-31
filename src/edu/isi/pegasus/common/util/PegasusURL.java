@@ -59,6 +59,11 @@ public class PegasusURL {
     public static String SINGULARITY_PROTOCOL_SCHEME = "shub";
     
     /**
+     * shifter hub protocol scheme
+     */
+    public static String SHIFTER_PROTOCOL_SCHEME = "shifter";
+    
+    /**
      * Docker hub protocol scheme
      */
     public static String DOCKER_PROTOCOL_SCHEME = "docker";
