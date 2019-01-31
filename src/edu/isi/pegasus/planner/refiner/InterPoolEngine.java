@@ -577,7 +577,9 @@ public class InterPoolEngine extends Engine implements Refiner {
      */
     private FileTransfer handleFileTransfersForAssociatedContainer(Job job, TransformationCatalogEntry entry) {
         Container c = entry.getContainer();
-        if( c== null ){
+        if( c == null  || 
+            //PM-1345 we don't transfer any shifter containers
+            c.getType() == Container.TYPE.shifter ){
             //nothing to do
             return null;
         }
