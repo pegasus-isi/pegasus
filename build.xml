@@ -620,9 +620,10 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </exec>
   </target>
 
-  <target name="test-kickstart" description="Run kickstart unit tests">
+  <target name="test-kickstart" depends="dist" description="Run kickstart unit tests">
     <exec executable="/bin/sh" dir="src/tools/pegasus-kickstart" failonerror="true">
         <arg line="-c 'make test'"/>
+        <env key="PEGASUS_BIN_DIR" value="${dist.bin}"/>
     </exec>
   </target>
 

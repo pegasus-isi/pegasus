@@ -493,7 +493,7 @@ function test_integrity_xml_inc {
     # do this test multiple times
     for I in `seq 100`; do
     
-        kickstart ../../../../bin/pegasus-integrity --generate-fullstat-xmls=testintegrity.data=testintegrity.data
+        kickstart pegasus-integrity --generate-fullstat-xmls=testintegrity.data=testintegrity.data
         rc=$?
     
         if [ $rc -ne 0 ]; then
@@ -530,11 +530,12 @@ export START_DIR=`pwd`
 rm -f .pegasus-integrity-ks.xml
 rm -rf tempbin
 
-# ensure we have a good pegasus-integrity in the path
-cd ../../../../bin/
-rm -f pegasus-integrity
-ln -s pegasus-python-wrapper pegasus-integrity
-cd $START_DIR
+# we require a PEGASUS_BIN_DIR as we depend on other Pegasus CLIs
+if [ "x$PEGASUS_BIN_DIR" = "x" ]; then
+    echo "Please define PEGASUS_BIN_DIR before running these tests" >&2
+    exit 1
+fi
+export PATH=$PEGASUS_BIN_DIR:$PATH
 
 # RUN THE TESTS
 run_test lotsofprocs
