@@ -170,7 +170,14 @@ EOF
 
 export TEST_DIR=`pwd`
 
-export TRANSFER_LOCATION="python "`cd ../../.. && pwd`/lib/pegasus/python/Pegasus/cli/pegasus-transfer.py
+cd ../../../bin
+rm -f pegasus-transfer pegasus-integrity
+ln -s pegasus-python-wrapper pegasus-transfer
+ln -s pegasus-python-wrapper pegasus-integrity
+
+export TRANSFER_LOCATION=`pwd`/pegasus-transfer
+
+cd $TEST_DIR
 export KICKSTART_LOCATION=`cd ../../../src/tools/pegasus-kickstart && pwd`/pegasus-kickstart
 
 # we require kickstart
@@ -183,11 +190,11 @@ rm -f $KICKSTART_INTEGRITY_DATA
 run_test test_integrity
 run_test test_local_cp
 run_test test_integrity_local_cp
-if (docker image list && singularity --version) >/dev/null 2>&1; then
-    run_test test_containers
-else
+#if (docker image list && singularity --version) >/dev/null 2>&1; then
+#    run_test test_containers
+#else
     skip_test test_containers
-fi
+#fi
 run_test test_symlink
 run_test test_symlink_should_fail
 run_test test_pull_back_integrity
