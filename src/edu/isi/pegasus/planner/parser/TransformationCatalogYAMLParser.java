@@ -520,8 +520,10 @@ public class TransformationCatalogYAMLParser {
 					if (Profile.namespaceValid(profileName)) {
 						Map<String, String> profileMap = (Map<String, String>) profileMapsEntries.getValue();
 						for (Entry<String, String> profileMapEntries : profileMap.entrySet()) {
-							profiles.addProfile(new Profile(profileName, niceString(profileMapEntries.getKey()),
-									niceString(profileMapEntries.getValue())));
+							Object key = profileMapEntries.getKey();
+							Object value = profileMapEntries.getValue();
+							profiles.addProfile(new Profile(profileName, niceString(String.valueOf(key)),
+									niceString(String.valueOf(value))));
 						}
 					}
 				}
@@ -530,8 +532,10 @@ public class TransformationCatalogYAMLParser {
 		if (metaObj != null) {
 			Map<String, String> metaMap = (Map<String, String>) metaObj;
 			for (Entry<String, String> profileMapEntries : metaMap.entrySet()) {
-				profiles.addProfile(new Profile(Profile.METADATA, niceString(profileMapEntries.getKey()),
-						niceString(profileMapEntries.getValue())));
+				Object key = profileMapEntries.getKey();
+				Object value = profileMapEntries.getValue();
+				profiles.addProfile(new Profile(Profile.METADATA, niceString(String.valueOf(key)),
+						niceString(String.valueOf(value))));
 			}
 		}
 		return profiles;
