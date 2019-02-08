@@ -267,6 +267,7 @@ project:
                     scriptBody: "tar xzf pegasus-source.tar.gz"
                 - !script
                   description: Unit Tests
+                  environmentVariables: 'PATH="${PATH}:/usr/local/bin:/Library/TeX/texbin" LDFLAGS="-L/usr/local/opt/openssl/lib" CPPFLAGS="-I/usr/local/opt/openssl/include"'
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
