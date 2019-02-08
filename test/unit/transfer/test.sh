@@ -175,9 +175,11 @@ rm -f pegasus-transfer pegasus-integrity
 ln -s pegasus-python-wrapper pegasus-transfer
 ln -s pegasus-python-wrapper pegasus-integrity
 
+export PATH=`pwd`:$PATH
 export TRANSFER_LOCATION=`pwd`/pegasus-transfer
 
 cd $TEST_DIR
+
 export KICKSTART_LOCATION=`cd ../../../src/tools/pegasus-kickstart && pwd`/pegasus-kickstart
 
 # we require kickstart
