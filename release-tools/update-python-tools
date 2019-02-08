@@ -20,3 +20,14 @@ for f in "$1"/*; do
     fi
 done
 
+# this is the newer style tools - using a bash wrapper to determine
+# python version at runtime
+cd $1
+for TOOL in \
+    pegasus-integrity \
+    pegasus-transfer \
+    pegasus-s3 \
+; do
+    ln -s pegasus-python-wrapper $TOOL
+done
+

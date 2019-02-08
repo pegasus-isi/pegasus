@@ -80,7 +80,7 @@ function test_verify_multiple_stdin {
 
 export TEST_DIR=`pwd`
 
-export INTEGRITY_LOCATION=`cd ../../.. && pwd`/bin/pegasus-integrity
+export INTEGRITY_LOCATION="python "`cd ../../.. && pwd`/lib/pegasus/python/Pegasus/cli/pegasus-integrity.py
 
 # RUN THE TESTS
 run_test test_generate_single

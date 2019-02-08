@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Wrapper for CLI Python tools - main purpose is to select a good
+# Python version to use, then execute the real tool 
+
+# Determine the full path of where this tool was run from
+PEGASUS_BIN_DIR=`dirname $0`
+PEGASUS_BIN_DIR=`cd $PEGASUS_BIN_DIR && pwd`
+
+# The base name is used to decide what Python tool to invoke
+BASE_NAME=`basename $0`
+
+# Look for a python in a pre-determined order
+for PEXE in $PEGASUS_PYTHON /usr/bin/python /usr/bin/python3 `which python 2>/dev/null`; do
+    if [ -e "$PEXE" ]; then
+        break
+    fi
+done
+
+if [ "x$PEXE" = "x" ]; then
+    echo "ERROR: Unable to find Python!" >&2
+    exit 1
+fi
+
+# Build a full path to our real Python tool
+TOOL_PATH=`$PEGASUS_BIN_DIR/pegasus-config --python`/Pegasus/cli/$BASE_NAME.py
+
+# now execute
+exec $PEXE $TOOL_PATH "$@"
+

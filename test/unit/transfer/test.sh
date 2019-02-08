@@ -170,7 +170,7 @@ EOF
 
 export TEST_DIR=`pwd`
 
-export TRANSFER_LOCATION=`cd ../../.. && pwd`/bin/pegasus-transfer
+export TRANSFER_LOCATION="python "`cd ../../.. && pwd`/lib/pegasus/python/Pegasus/cli/pegasus-transfer.py
 export KICKSTART_LOCATION=`cd ../../../src/tools/pegasus-kickstart && pwd`/pegasus-kickstart
 
 # we require kickstart
