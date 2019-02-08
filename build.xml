@@ -115,7 +115,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <fileset dir="bin">
           <include name="pegasus-config"/>
           <include name="pegasus-python-wrapper"/>
-	  <include name="pegasus-db-admin"/>
+          <include name="pegasus-db-admin"/>
       </fileset>
       <filterset>
         <filter token="PEGASUS_VERSION" value="${pegasus.version}"/>
@@ -375,7 +375,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <!-- bin -->
     <copy preservelastmodified="true" todir="${dist.bin}">
       <fileset dir="bin">
-          <include name="pegasus-python-wrapper"/>
+          <exclude name="pegasus-python-wrapper"/>
           <!-- add script files to copy as necessary -->
       </fileset>
     </copy>
@@ -394,7 +394,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </copy>
 
     <copy preservelastmodified="true" todir="${dist.dir}" file="LICENSE"/>
-
+    
     <package-binary name="pegasus-worker-${pegasus.version}-${dist.arch}"/>
   </target>
 
@@ -484,6 +484,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
         <include name="RELEASE_NOTES"/>
       </fileset>
     </copy>
+    
   </target>
 
   <macrodef name="package-binary">
@@ -492,7 +493,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <!-- creates the binary tarball -->
       <exec executable="sh" dir="dist" failonerror="true">
         <arg value="-c"/>
-        <arg value="tar --exclude=\.git --exclude=\.gitignore -cf @{name}.tar pegasus-${pegasus.version}"/>
+        <arg value="tar --exclude=\.git --exclude=\.gitignore --exclude=pegasus-python-wrapper -cf @{name}.tar pegasus-${pegasus.version}"/>
       </exec>
       <gzip src="dist/@{name}.tar" destfile="dist/@{name}.tar.gz"/>
       <delete file="dist/@{name}.tar"/>
@@ -645,7 +646,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </exec>
   </target>
 
-  <target name="test" depends="test-python,test-kickstart,test-pmc,test-transfer,test-integrity,test-java" description="Run all unit tests"/>
+  <target name="test" depends="dist,test-python,test-kickstart,test-pmc,test-transfer,test-integrity,test-java" description="Run all unit tests"/>
 
 </project>
 

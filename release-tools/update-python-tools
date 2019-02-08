@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -eo pipefail
 
 PYTHON=$($(dirname $0)/get-system-python)
 
@@ -29,6 +29,7 @@ for TOOL in \
     pegasus-s3 \
 ; do
     rm -f $TOOL
-    ln -s pegasus-python-wrapper $TOOL
+    cat pegasus-python-wrapper | sed "s/%%BASE_NAME%%/$TOOL/" >$TOOL
+    chmod 755 $TOOL
 done
 
