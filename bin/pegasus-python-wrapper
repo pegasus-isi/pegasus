@@ -22,8 +22,9 @@ if [ "x$PEXE" = "x" ]; then
     exit 1
 fi
 
-# Build a full path to our real Python tool
-TOOL_PATH=`$PEGASUS_BIN_DIR/pegasus-config --python`/Pegasus/cli/$BASE_NAME.py
+# Build a full path to our real Python tool (we used to depend on pegasus-config
+# here, but as that has a dependency on perl, we are shortcutting it)
+TOOL_PATH=$PEGASUS_BIN_DIR/../@PYTHON_LIBDIR@/Pegasus/cli/$BASE_NAME.py
 
 # now execute
 exec $PEXE $TOOL_PATH "$@"

@@ -114,6 +114,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <copy preservelastmodified="true" todir="${dist.bin}">
       <fileset dir="bin">
           <include name="pegasus-config"/>
+          <include name="pegasus-python-wrapper"/>
 	  <include name="pegasus-db-admin"/>
       </fileset>
       <filterset>
@@ -403,6 +404,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <fileset dir="bin">
         <exclude name=".gitignore"/>
         <exclude name="pegasus-config"/>
+        <exclude name="pegasus-python-wrapper"/>
       </fileset>
     </copy>
     <chmod perm="0755" type="file">
@@ -630,12 +632,16 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </exec>
   </target>
   
-  <target name="test-transfer" description="Run transfer unit tests">
-    <exec executable="./test.sh" dir="test/unit/transfer" failonerror="true" />
+  <target name="test-transfer" depends="dist" description="Run transfer unit tests">
+    <exec executable="./test.sh" dir="test/unit/transfer" failonerror="true">
+        <arg line="${dist.bin}"/>
+    </exec>
   </target>
   
-  <target name="test-integrity" description="Run integrity unit tests">
-    <exec executable="./test.sh" dir="test/unit/integrity" failonerror="true" />
+  <target name="test-integrity" depends="dist" description="Run integrity unit tests">
+    <exec executable="./test.sh" dir="test/unit/integrity" failonerror="true">
+        <arg line="${dist.bin}"/>
+    </exec>
   </target>
 
   <target name="test" depends="test-python,test-kickstart,test-pmc,test-transfer,test-integrity,test-java" description="Run all unit tests"/>
