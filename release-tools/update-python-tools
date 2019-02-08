@@ -28,6 +28,7 @@ for TOOL in \
     pegasus-transfer \
     pegasus-s3 \
 ; do
+    rm -f $TOOL
     ln -s pegasus-python-wrapper $TOOL
 done
 

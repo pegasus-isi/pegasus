@@ -524,8 +524,17 @@ function test_w_with_rel_exec {
     return $ec
 }
 
+export START_DIR=`pwd`
+
 # make sure we start cleanly
 rm -f .pegasus-integrity-ks.xml
+rm -rf tempbin
+
+# ensure we have a good pegasus-integrity in the path
+cd ../../../../bin/
+rm -f pegasus-integrity
+ln -s pegasus-python-wrapper pegasus-integrity
+cd $START_DIR
 
 # RUN THE TESTS
 run_test lotsofprocs
