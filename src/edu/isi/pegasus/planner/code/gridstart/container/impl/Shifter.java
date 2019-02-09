@@ -113,9 +113,6 @@ public class Shifter extends Abstract{
         
         sb.append( "--workdir=" ).append( CONTAINER_WORKING_DIRECTORY ).append( " ");
         
-        //we are running directly against image file. no loading
-        sb.append( c.getLFN() ).append( " " );
-        
         //the script that sets up pegasus worker package and execute
         //user application
         sb.append( "./" ).append( scriptName ).append( " " );
