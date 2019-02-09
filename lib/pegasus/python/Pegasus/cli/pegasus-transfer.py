@@ -3650,7 +3650,7 @@ class SimilarWorkSet:
             self._tmp_name = self.get_temp_file()
             # open the permission up to make sure files downstream
             # get sane permissions to inherit
-            os.chmod(self._tmp_name, 0644)
+            os.chmod(self._tmp_name, 0o0644)
             logger.debug("Using temporary file %s for transfers" 
                          %(self._tmp_name))
         
@@ -3687,7 +3687,7 @@ class SimilarWorkSet:
                 try:
                     [s, f] = self._primary_handler.do_transfers([t_one])
                     if len(s) == 1:
-                        os.chmod(self._tmp_name, 0644)
+                        os.chmod(self._tmp_name, 0o0644)
                         [s, f] = self._secondary_handler.do_transfers([t_two])
                 except Exception as e:
                     logger.exception("Exception while doing transfer:")
@@ -4037,10 +4037,10 @@ def check_cred_fs_permissions(path):
     """
     if not os.path.exists(path):
         raise Exception("Credential file %s does not exist" %(path))
-    if oct(os.stat(path).st_mode & 0777) != '0600':
+    if oct(os.stat(path).st_mode & 0o0777) != '0600':
         logger.warning("%s found to have weak permissions. chmod to 0600."
                        %(path))
-        os.chmod(path, 0600)
+        os.chmod(path, 0o0600)
 
 
 
@@ -4070,7 +4070,7 @@ def prepare_local_dir(path):
     if not(os.path.exists(path)):
         logger.debug("Creating local directory " + path)
         try:
-            os.makedirs(path, 0755)
+            os.makedirs(path, 0o0755)
         except os.error as err:
             # if dir already exists, ignore the error
             if not(os.path.isdir(path)):
