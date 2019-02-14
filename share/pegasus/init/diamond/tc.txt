@@ -58,7 +58,7 @@ tr pegasus::mpiexec {
   site {{sitename}} {
     profile pegasus "cores" "48"
     profile pegasus "nodes" "1"
-    profile pegasus "runtime" "43200"
+    profile pegasus "runtime" "3600"
     profile pegasus "change.dir" "true"
     pfn "{{workflowdir}}/bin/pmc-wrapper"
     type "INSTALLED"
