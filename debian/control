@@ -18,6 +18,7 @@ Build-Depends: debhelper (>= 9),
        python-dev,
        python-openssl,
        python-setuptools,
+       python-yaml,
        r-base-dev,
        texlive-latex-base, texlive-fonts-recommended,
        xsltproc,
@@ -29,7 +30,7 @@ Homepage: http://pegasus.isi.edu
 Package: pegasus
 Architecture: any
 Depends: openjdk-8-jre | openjdk-8-jre-headless,
-  perl, python, python-openssl, ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
+  perl, python, python-openssl, python-yaml, ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
 Recommends: condor
 Description: Workflow management system for HTCondor, Grid, and Clouds
  The Pegasus project encompasses a set of technologies the help
