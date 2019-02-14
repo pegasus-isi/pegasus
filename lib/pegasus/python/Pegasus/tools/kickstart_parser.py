@@ -28,11 +28,14 @@ from __future__ import print_function
 
 from xml.parsers import expat
 from Pegasus.monitoring.metadata import FileMetadata
+from pprint import pprint
 import re
 import sys
 import logging
 import traceback
 import os
+import yaml
+
 
 # Regular expressions used in the kickstart parser
 re_parse_props = re.compile(r'(\S+)\s*=\s*([^",]+)')
@@ -485,9 +488,10 @@ class Parser:
 
         return self._keys
 
-    def parse(self, keys_dict, tasks=True, clustered=True):
+    def parse_xml(self, keys_dict, tasks=True, clustered=True):
         """
-        This function parses the kickstart output file, looking for
+        This function parses the previous XML based ks records,
+        looking for
         the keys specified in the keys_dict variable. It returns a
         list of dictionaries containing the found keys. Look at the
         parse_stampede function for details about how to pass keys
@@ -548,6 +552,67 @@ class Parser:
 
         return my_reply
 
+    def parse(self, keys_dict, tasks=True, clustered=True):
+        """
+        This function parses the kickstart output file, looking for
+        the keys specified in the keys_dict variable. It returns a
+        list of dictionaries containing the found keys. Look at the
+        parse_stampede function for details about how to pass keys
+        using the keys_dict structure. The function will return an
+        empty list if no records are found or if an error happens.
+        """
+
+        # Place keys_dict in the _ks_elements
+        self._ks_elements = keys_dict
+
+        # Try to open the file
+        if self.open() == False:
+            return my_reply
+
+        logger.debug( "Started reading records from kickstart file %s" %(self._kickstart_output_file))
+        
+        # read the whole file
+        raw = self._fh.read()
+        self.close()
+
+        # first check if this is an old XML based record
+        if re.search("^<\?xml ", raw):
+            return self.parse_xml(keys_dict, tasks=True, clustered=True)
+
+        # if we get here, we have yaml
+        
+        # but trim until we can parse - some schedulers add pre/post information to stdout
+        start = 0
+        end = len(raw)
+        
+        while len(raw) > 0 and raw[0] != "-":
+            start = raw.find("\n") + 1
+            if start == -1:
+                break
+            raw = raw[start:]
+        
+        parsed = False
+        while not parsed:
+            try:
+                data = yaml.safe_load(raw)
+                parsed = True
+            except:
+                # maybe some non-yaml at the end - back up a line
+                end = raw.rfind("\n")
+                if end == -1:
+                    break
+                raw = raw[:end]
+
+        if not parsed:
+            logger.warning("KICKSTART-PARSE-ERROR --> error parsing invocation record in file %s"
+                           % (self._kickstart_output_file))
+            return []
+
+        if data is None:
+            data = []
+
+        return data
+
     def parse_stampede(self):
         """
         This function works similarly to the parse function above,
@@ -598,6 +663,12 @@ if __name__ == "__main__":
     # Let's run a test!
     print("Testing kickstart output file parsing...")
 
+    # log to the console
+    console = logging.StreamHandler()
+    console.setLevel(logging.DEBUG)
+    logger.addHandler(console)
+    logger.debug("Logger has been configured")
+
     # Make sure we have an argument
     if len(sys.argv) < 2:
         print("For testing, please give a kickstart output filename!")
@@ -611,4 +682,5 @@ if __name__ == "__main__":
 
     # Print output
     for record in output:
-        print(record)
+        pprint(record)
+

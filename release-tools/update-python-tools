@@ -24,9 +24,10 @@ done
 # python version at runtime
 cd $1
 for TOOL in \
+    pegasus-exitcode \
     pegasus-integrity \
-    pegasus-transfer \
     pegasus-s3 \
+    pegasus-transfer \
 ; do
     rm -f $TOOL
     cat pegasus-python-wrapper | sed "s/%%BASE_NAME%%/$TOOL/" >$TOOL

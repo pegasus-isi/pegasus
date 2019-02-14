@@ -339,7 +339,7 @@ int addLFNToStatInfo(StatInfo* info, const char* lfn) {
     return 0;
 }
 
-size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
+size_t printYAMLStatInfo(FILE *out, int indent, const char* id,
                         const StatInfo* info, int includeData, int useCDATA,
                         int allowTruncate) {
     char *real = NULL;
@@ -349,19 +349,17 @@ size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
         return 0;
     }
 
-    /* start main tag */
-    fprintf(out, "%*s<%s error=\"%d\"", indent, "", tag, info->error);
-    if (id != NULL) {
-        fprintf(out, " id=\"%s\"", id);
+    fprintf(out, "%*s%s:\n", indent, "", id);
+    if (info->error != 0) {
+        fprintf(out, "%*serror: %d\n", indent+2, "", info->error);
     }
     if (info->lfn != NULL) {
-        fprintf(out, " lfn=\"%s\"", info->lfn);
+        fprintf(out, "%*slfn: \"%s\"\n", indent+2, "", info->lfn);
     }
-    fprintf(out, ">\n");
 
     /* NEW: ignore "file not found" error for "kickstart" */
     if (id != NULL && info->error == 2 && strcmp(id, "kickstart") == 0) {
-        fprintf(out, "%*s<!-- ignore above error -->\n", indent+2, "");
+        fprintf(out, "%*snote: ignore error - it is just a warning\n", indent+2, "");
     }
 
     /* either a <name> or <descriptor> sub element */
@@ -382,49 +380,34 @@ size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
                 }
             }
 
-            fprintf(out, "%*s<temporary name=\"%s\" descriptor=\"%d\"/>\n",
-                    indent+2, "", info->file.name, info->file.descriptor);
+            fprintf(out, "%*stemporary_name: %s\n%*sdescriptor: %d\n",
+                    indent+2, "", info->file.name, indent+2, "", info->file.descriptor);
             break;
 
         case IS_FIFO: /* <fifo> element */
-            fprintf(out, "%*s<fifo name=\"%s\" descriptor=\"%d\" count=\"%zu\" rsize=\"%zu\" wsize=\"%zu\"/>\n",
-                    indent+2, "", info->file.name, info->file.descriptor,
-                    info->client.fifo.count, info->client.fifo.rsize,
-                    info->client.fifo.wsize);
+            fprintf(out, "%*sfifo_name: \"%s\"\n%*sdescriptor: %d\n%*scount: %zu\n%*srsize: %zu\n%*swsize: %zu\n",
+                    indent+2, "", info->file.name,
+                    indent+2, "", info->file.descriptor,
+                    indent+2, "", info->client.fifo.count,
+                    indent+2, "", info->client.fifo.rsize,
+                    indent+2, "", info->client.fifo.wsize);
             break;
 
         case IS_FILE: /* <file> element */
             real = realpath(info->file.name, NULL);
-            fprintf(out, "%*s<file name=\"%s\"", indent+2, "", real ? real : info->file.name);
+            fprintf(out, "%*sfile_name: %s\n", indent+2, "", real ? real : info->file.name);
             if (real) {
                 free((void*) real);
-            }
-
-            if (info->error == 0 &&
-                S_ISREG(info->info.st_mode) &&
-                info->info.st_size > 0) {
-
-                /* optional hex information */
-                size_t i, end = sizeof(info->client.header);
-                if (info->info.st_size < end) end = info->info.st_size;
-
-                fprintf(out, ">");
-                for (i=0; i<end; ++i) {
-                    fprintf(out, "%02X", info->client.header[i]);
-                }
-                fprintf(out, "</file>\n");
-            } else {
-                fprintf(out, "/>\n");
             }
             break;
 
         case IS_HANDLE: /* <descriptor> element */
-            fprintf(out, "%*s<descriptor number=\"%u\"/>\n", indent+2, "",
+            fprintf(out, "%*sdescriptor_number: %u\n", indent+2, "",
                     info->file.descriptor);
             break;
 
         default: /* this must not happen! */
-            fprintf(out, "%*s<!-- ERROR: No valid file info available -->\n",
+            fprintf(out, "%*serror: No valid file info available\n",
                     indent+2, "");
             break;
     }
@@ -435,40 +418,37 @@ size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
         struct passwd* user = getpwuid(info->info.st_uid);
         struct group* group = getgrgid(info->info.st_gid);
 
-        fprintf(out, "%*s<statinfo mode=\"0%o\"", indent+2, "",
-                info->info.st_mode);
+        fprintf(out, "%*smode: 0o%o\n", indent+2, "", info->info.st_mode);
 
         /* Grmblftz, are we in 32bit, 64bit LFS on 32bit, or 64bit on 64 */
         sizer(my, sizeof(my), sizeof(info->info.st_size), &info->info.st_size);
-        fprintf(out, " size=\"%s\"", my);
+        fprintf(out, "%*ssize: %s\n", indent+2, "", my);
 
         sizer(my, sizeof(my), sizeof(info->info.st_ino), &info->info.st_ino);
-        fprintf(out, " inode=\"%s\"", my);
+        fprintf(out, "%*sinode: %s\n", indent+2, "", my);
 
         sizer(my, sizeof(my), sizeof(info->info.st_nlink), &info->info.st_nlink);
-        fprintf(out, " nlink=\"%s\"", my);
+        fprintf(out, "%*snlink: %s\n", indent+2, "", my);
 
         sizer(my, sizeof(my), sizeof(info->info.st_blksize), &info->info.st_blksize);
-        fprintf(out, " blksize=\"%s\"", my);
+        fprintf(out, "%*sblksize: %s\n", indent+2, "", my);
 
         /* st_blocks is new in iv-1.8 */
         sizer(my, sizeof(my), sizeof(info->info.st_blocks), &info->info.st_blocks);
-        fprintf(out, " blocks=\"%s\"", my);
+        fprintf(out, "%*sblocks: %s\n", indent+2, "", my);
 
-        fprintf(out, " mtime=\"%s\"", fmtisodate(info->info.st_mtime, -1));
-        fprintf(out, " atime=\"%s\"", fmtisodate(info->info.st_atime, -1));
-        fprintf(out, " ctime=\"%s\"", fmtisodate(info->info.st_ctime, -1));
+        fprintf(out, "%*smtime: %s\n", indent+2, "", fmtisodate(info->info.st_mtime, -1));
+        fprintf(out, "%*satime: %s\n", indent+2, "", fmtisodate(info->info.st_atime, -1));
+        fprintf(out, "%*sctime: %s\n", indent+2, "", fmtisodate(info->info.st_ctime, -1));
 
-        fprintf(out, " uid=\"%d\"", info->info.st_uid);
+        fprintf(out, "%*suid: %d\n", indent+2, "", info->info.st_uid);
         if (user) {
-            fprintf(out, " user=\"%s\"", user->pw_name);
+            fprintf(out, "%*suser: %s\n", indent+2, "", user->pw_name);
         }
-        fprintf(out, " gid=\"%d\"", info->info.st_gid);
+        fprintf(out, "%*sgid: %d\n", indent+2, "", info->info.st_gid);
         if (group) {
-            fprintf(out, " group=\"%s\"", group->gr_name);
+            fprintf(out, "%*sgroup: %s\n", indent+2, "", group->gr_name);
         }
-
-        fprintf(out, "/>\n");
     }
 
     /* checksum the files if the checksum tools are available
@@ -477,11 +457,12 @@ size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
     if (id != NULL && info->error == 0 && strcmp(id, "final") == 0) {
         char chksum_xml[2048];
         real = realpath(info->file.name, NULL);
-        if (pegasus_integrity_xml(real, chksum_xml)) {
-            fprintf(out, "%*s%s\n", indent+2, "",  chksum_xml);
+        if (pegasus_integrity_yaml(real, chksum_xml)) {
+            //fprintf(out, "%*s%s\n", indent+2, "",  chksum_xml);
+            fprintf(out, chksum_xml);
         }
         else {
-            fprintf(out, "%*s<!-- pegasus-integrity callout failed -->\n", indent+2, "");
+            fprintf(out, "%*sintegrity_error: pegasus-integrity callout failed\n", indent+4, "");
         }
         if (real) {
             free((void*) real);
@@ -504,19 +485,15 @@ size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
         info->error == 0 &&
         fsize > 0 && dsize > 0) {
 
-        fprintf(out, "%*s<data%s", indent+2, "",
-                (fsize > dsize ? " truncated=\"true\"" : ""));
+        fprintf(out, "%*sdata_truncated: %s\n", indent+2, "",
+                (fsize > dsize ? "true" : "false"));
+        fprintf(out, "%*sdata: |\n", indent+2, "");
         if (fsize > 0) {
+            /* initial indent */
+            fprintf(out, "%*s", indent+4, "");
             char buf [BUFSIZ];
             int fd = dup(info->file.descriptor);
-
-            fprintf(out, ">");
             if (fd != -1) {
-
-                if (useCDATA) {
-                    fprintf(out, "<![CDATA[");
-                }
-
                 /* Get the last dsize bytes of the file */
                 size_t offset = 0;
                 if (fsize > dsize) {
@@ -533,28 +510,16 @@ size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
                                     info->file.name, strerror(errno));
                             break;
                         }
-                        if (useCDATA) {
-                            fwrite(buf, rsize, 1, out);
-                        } else {
-                            xmlquote(out, buf, rsize);
-                        }
+                        yamldump(out, indent+4, buf, rsize);
                         total += rsize;
                     }
                 }
                 close(fd);
-
-                if (useCDATA) {
-                    fprintf(out, "]]>");
-                }
             }
-
-            fprintf(out, "</data>\n");
-        } else {
-            fprintf(out, "/>\n");
+            /* final newline */
+            fprintf(out, "\n");
         }
     }
-
-    fprintf(out, "%*s</%s>\n", indent, "", tag);
 
     return 0;
 }

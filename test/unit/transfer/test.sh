@@ -157,7 +157,7 @@ EOF
     cp ../test.out kickstart-record.txt
 
     # make sure we have a full record
-    if ! (tail -n 1 kickstart-record.txt | grep '</invocation>') >/dev/null 2>&1; then
+    if ! (tail -n 40 kickstart-record.txt | grep 'metadata:') >/dev/null 2>&1; then
         echo "Incomplete kickstart record"
         cd ..
         return 1

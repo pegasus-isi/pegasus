@@ -8,6 +8,7 @@ import sys
 import os
 import uuid
 from optparse import OptionParser
+from pprint import pprint
 
 from Pegasus.cluster import RecordParser
 from Pegasus.tools import kickstart_parser
@@ -138,6 +139,16 @@ def check_kickstart_records(txt):
     regex = re.compile(r'raw="(-?[0-9]+)"')
     succeeded = 0
     e = 0
+   
+    # yaml
+    for m in re.finditer(r"raw: ([0-9]+)", txt):
+        raw = int(m.group(1))
+        log['app_exitcode'] = raw
+        if raw != 0:
+            raise JobFailed("task exited with raw status %d" % raw)
+        succeeded = succeeded + 1
+
+    # xml
     while True:
         b = txt.find("<status", e)
         if b < 0: break

@@ -192,16 +192,16 @@ static int formatLimit(FILE *out, size_t indent, const SingleLimitInfo* l) {
         return 0;
     }
 
-    fprintf(out, "%*s<soft id=\"%s\">%s</soft>\n", (int)indent, "", id,
+    fprintf(out, "%*s%s_soft: %s\n", (int)indent, "", id,
             value2string(value, sizeof(value), l->limit.rlim_cur));
-    fprintf(out, "%*s<hard id=\"%s\">%s</hard>\n", (int)indent, "", id,
+    fprintf(out, "%*s%s_hard: %s\n", (int)indent, "", id,
             value2string(value, sizeof(value), l->limit.rlim_max));
 
     return 0;
 }
 
-int printXMLLimitInfo(FILE *out, int indent, const LimitInfo* limits) {
-    /* purpose: format the rusage record into the given stream as XML.
+int printYAMLLimitInfo(FILE *out, int indent, const LimitInfo* limits) {
+    /* purpose: format the rusage record into the given stream as YAML.
      * paramtr: out (IO): the stream
      *          indent (IN): indentation level
      *          limits (IN): observed resource limits
@@ -213,11 +213,10 @@ int printXMLLimitInfo(FILE *out, int indent, const LimitInfo* limits) {
         return 0;
     }
 
-    fprintf(out, "%*s<resource>\n", indent, "");
+    fprintf(out, "%*slimits:\n", indent, "");
     for (int i=0; i<limits->size; ++i) {
         formatLimit(out, indent+2, &limits->limits[i]);
     }
-    fprintf(out, "%*s</resource>\n", indent, "");
 
     return 0;
 }

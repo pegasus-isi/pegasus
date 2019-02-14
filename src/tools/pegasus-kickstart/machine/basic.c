@@ -104,24 +104,15 @@ int startBasicMachine(FILE *out, int indent, const char* tag,
     }
 
     /* <machine> open tag */
-    fprintf(out, "%*s<%s page-size=\"%lu\">\n", indent-2, "", tag,
-            machine->pagesize);
-
-    /* <stamp> */
-    fprintf(out, "%*s<stamp>%s</stamp>\n", indent, "",
-            fmtisodate(machine->stamp.tv_sec,
-                       machine->stamp.tv_usec));
+    fprintf(out, "%*s%s:\n", indent-2, "", tag);
+    fprintf(out, "%*s  page-size: %lu\n", indent-2, "", 
+                 machine->pagesize);
 
     /* <uname> */
-    fprintf(out, "%*s<uname", indent, "");
-    fprintf(out, " system=\"%s\"", machine->uname.sysname);
-    fprintf(out, " nodename=\"%s\"", machine->uname.nodename);
-    fprintf(out, " release=\"%s\"", machine->uname.release);
-    fprintf(out, " machine=\"%s\"", machine->uname.machine);
-    fprintf(out, ">%s</uname>\n", machine->uname.version);
-
-    /* <"provider"> grouping tag */
-    fprintf(out, "%*s<%s>\n", indent, "", machine->provider);
+    fprintf(out, "%*s  uname_system: %s\n", indent-2, "", machine->uname.sysname);
+    fprintf(out, "%*s  uname_nodename: %s\n", indent-2, "", machine->uname.nodename);
+    fprintf(out, "%*s  uname_release: %s\n", indent-2, "", machine->uname.release);
+    fprintf(out, "%*s  uname_machine: %s\n", indent-2, "", machine->uname.machine);
 
     return 0;
 }
@@ -140,12 +131,6 @@ int finalBasicMachine(FILE *out, int indent, const char* tag,
         return 0;
     }
 
-    /* </"provider"> close tag */
-    fprintf(out, "%*s</%s>\n", indent, "", machine->provider);
-
-    /* </machine> close tag */
-    fprintf(out, "%*s</%s>\n", indent-2, "", tag);
-
     return 0;
 }
 
@@ -163,25 +148,21 @@ int printBasicMachine(FILE *out, int indent, const char* tag,
         startBasicMachine(out, indent+2, tag, ptr);
 
 #if defined(_SC_PHYS_PAGES) || defined(_SC_AVPHYS_PAGES)
-        fprintf(out, "%*s<ram", indent, "");
 #ifdef _SC_PHYS_PAGES
-        fprintf(out, " total=\"%llu\"", ptr->ram_total / 1024);
+        fprintf(out, "%*s  ram_total: %llu\n", indent-2, "", ptr->ram_total / 1024);
 #endif /* _SC_PHYS_PAGES */
 #ifdef _SC_AVPHYS_PAGES
-        fprintf(out, " avail=\"%llu\"", ptr->ram_avail / 1024);
+        fprintf(out, "%*s  ram_avail: %llu\n", indent-2, "", ptr->ram_avail / 1024);
 #endif /* _SC_AVPHYS_PAGES */
-        fprintf(out, "/>\n");
 #endif /* _SC_PHYS_PAGES || _SC_AVPHYS_PAGES */
 
 #if defined(_SC_NPROCESSORS_CONF) || defined(_SC_NPROCESSORS_ONLN)
-        fprintf(out, "%*s<cpu", indent, "");
 #ifdef _SC_NPROCESSORS_CONF
-        fprintf(out, " total=\"%hu\"", ptr->cpu_total);
+        fprintf(out, "%*s  cpu_total: %hu\n", indent-2, "", ptr->cpu_total);
 #endif /* _SCN_PROCESSORS_CONF */
 #ifdef _SC_NPROCESSORS_ONLN
-        fprintf(out, " online=\"%hu\"", ptr->cpu_online);
+        fprintf(out, "%*s  cpu_online=\"%hu\"", indent-2, "", ptr->cpu_online);
 #endif /* _SC_NPROCESSORS_ONLN */
-        fprintf(out, "/>\n");
 #endif /* _SC_NPROCESSORS_CONF || _SC_NPROCESSORS_ONLN */
 
         finalBasicMachine(out, indent+2, tag, ptr);

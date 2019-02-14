@@ -47,7 +47,7 @@ extern int make_application_executable;
 
 extern void initJobInfo(JobInfo* jobinfo, int argc, char* const* argv, const char *wrapper);
 extern void initJobInfoFromString(JobInfo* jobinfo, const char* commandline);
-extern int printXMLJobInfo(FILE *out, int indent, const char* tag, const JobInfo* job);
+extern int printYAMLJobInfo(FILE *out, int indent, const char* tag, const JobInfo* job);
 extern void deleteJobInfo(JobInfo* jobinfo);
 
 #endif /* _JOBINFO_H */

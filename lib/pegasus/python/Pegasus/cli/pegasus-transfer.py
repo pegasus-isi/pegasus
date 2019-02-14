@@ -802,7 +802,7 @@ class TransferHandlerBase(object):
             return
 
         self.lock.acquire()
-        cmd = "%s --generate-fullstat-xml=\"%s=%s\"" % (tools.full_path("pegasus-integrity"), lfn, fname)
+        cmd = "%s --generate-fullstat-yaml=\"%s=%s\"" % (tools.full_path("pegasus-integrity"), lfn, fname)
         try:
             tc = TimedCommand(cmd)
             tc.run()

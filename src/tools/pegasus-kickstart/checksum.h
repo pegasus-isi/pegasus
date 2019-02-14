@@ -15,8 +15,8 @@
 #ifndef _CHECKSUM_H
 #define _CHECKSUM_H
 
-extern int pegasus_integrity_xml(const char *fname, char *xml);
+extern int pegasus_integrity_yaml(const char *fname, char *xml);
 
-extern int print_pegasus_integrity_xml_blob(FILE *out, const char *fname);
+extern int print_pegasus_integrity_yaml_blob(FILE *out, const char *fname);
 
 #endif /* _CHECKSUM_H */
