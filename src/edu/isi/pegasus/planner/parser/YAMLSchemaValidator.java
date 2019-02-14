@@ -131,7 +131,6 @@ public class YAMLSchemaValidator {
 		// result
 		for (final ProcessingMessage processingMessage : report) {
 			if (processingMessage.getLogLevel().equals(LogLevel.ERROR)) {
-				System.out.println(processingMessage);
 				JsonNode jsonNode = processingMessage.asJson();
 				String reason = jsonNode.get("keyword").asText();
 				StringBuilder errorMessage = new StringBuilder();

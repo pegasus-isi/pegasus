@@ -33,6 +33,7 @@ import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo.Architecture;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo.OS;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -45,6 +46,12 @@ import edu.isi.pegasus.planner.test.TestSetup;
  */
 public class YAMLTest {
 
+	private static final String CORRECT_FILE = "transformationcatalogue_test.yaml";
+
+	private static final String ERROR_FILE = "transformationcatalogue_test_error.yaml";
+	
+	private static final String INVALID_YAML_FILE = "transformationcatalogue_test_invalid.yaml";
+
 	private PegasusBag mBag;
 
 	private PegasusProperties mProps;
@@ -54,7 +61,9 @@ public class YAMLTest {
 	private TestSetup mTestSetup;
 
 	private static int mTestNumber = 1;
-	private YAML mCatalog;
+
+	private YAML mCorrectCatalog;
+
 	private static final String PROPERTIES_BASENAME = "properties";
 
 	@BeforeClass
@@ -83,16 +92,15 @@ public class YAMLTest {
 
 		mLogger = mTestSetup.loadLogger(mProps);
 		mLogger.setLevel(LogManager.INFO_MESSAGE_LEVEL);
-		mLogger.logEventStart("test.catalog.transformation.impl.Text", "setup", "0");
+		mLogger.logEventStart("test.catalog.transformation.impl.YAML", "setup", "0");
 		mBag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
 		mBag.add(PegasusBag.PEGASUS_PROPERTIES, mProps);
 		// mBag.add( PegasusBag.PLANNER_OPTIONS, mTestSetup.loadPlannerOptions() );
 
-		// load the transformation catalog backend
-		mCatalog = new YAML();
 		mProps.setProperty(PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
-				new File(mTestSetup.getInputDirectory(), "transformationcatalogue_test.yaml").getAbsolutePath());
-		mCatalog.initialize(mBag);
+				new File(mTestSetup.getInputDirectory(), CORRECT_FILE).getAbsolutePath());
+		mCorrectCatalog = new YAML();
+		mCorrectCatalog.initialize(mBag);
 		mLogger.logEventCompletion();
 	}
 
@@ -100,9 +108,10 @@ public class YAMLTest {
 	public void testWholeCount() throws Exception {
 		mLogger.logEventStart("test.catalog.transformation.impl.YAML", "whole-count-test",
 				Integer.toString(mTestNumber++));
-		List<TransformationCatalogEntry> entries = mCatalog.getContents();
+		List<TransformationCatalogEntry> entries = mCorrectCatalog.getContents();
 		assertEquals("Expected total number of entries", 3, entries.size());
-		List<TransformationCatalogEntry> kegEntries = mCatalog.lookup("example", "keg", "1.0", (String) null, null);
+		List<TransformationCatalogEntry> kegEntries = mCorrectCatalog.lookup("example", "keg", "1.0", (String) null,
+				null);
 		assertEquals("Expected total number of keg entries", 2, kegEntries.size());
 		mLogger.logEventCompletion();
 	}
@@ -111,19 +120,42 @@ public class YAMLTest {
 	public void testKegCount() throws Exception {
 		mLogger.logEventStart("test.catalog.transformation.impl.YAML", "keg-count-test",
 				Integer.toString(mTestNumber++));
-		List<TransformationCatalogEntry> kegEntries = mCatalog.lookup("example", "keg", "1.0", (String) null, null);
+		List<TransformationCatalogEntry> kegEntries = mCorrectCatalog.lookup("example", "keg", "1.0", (String) null,
+				null);
 		assertEquals("Expected total number of keg entries", 2, kegEntries.size());
 		mLogger.logEventCompletion();
 
 	}
 
 	@Test
-	public void testMetadataKeyword() throws Exception {
-		mLogger.logEventStart("test.catalog.transformation.impl.Text", "metadata-keyword",
+	public void testContainer() throws Exception {
+		mLogger.logEventStart("test.catalog.transformation.impl.YAML", "keg-site-test",
 				Integer.toString(mTestNumber++));
-		List<TransformationCatalogEntry> entries = mCatalog.lookup(null, "myxform", null, "condorpool", null);
+		List<TransformationCatalogEntry> kegEntries = mCorrectCatalog.lookup(null, "myxform", null, "condorpool", null);
+		TransformationCatalogEntry entry = kegEntries.get(0);
+		Container containerInfo = entry.getContainer();
+		assertEquals("centos-pegasus", containerInfo.getName());
+		assertEquals("optional site", containerInfo.getImageSite());
+		assertEquals("docker:///rynge/montage:latest", containerInfo.getImageURL().getURL());
+		testProfile(containerInfo, Profile.ENV, "JAVA_HOME", "/opt/java/1.6");
+		mLogger.logEventCompletion();
+
+	}
+
+	private void testProfile(Container containerInfo, String env, String key, String value) {
+		Profile p = new Profile(env, key, value);
+		List profiles = containerInfo.getProfiles();
+		assertTrue("Entry " + containerInfo, profiles.contains(p));
+	}
+
+	@Test
+	public void testMetadataKeyword() throws Exception {
+		mLogger.logEventStart("test.catalog.transformation.impl.YAML", "metadata-keyword",
+				Integer.toString(mTestNumber++));
+		List<TransformationCatalogEntry> entries = mCorrectCatalog.lookup(null, "myxform", null, "condorpool", null);
 		TransformationCatalogEntry entry = entries.get(0);
 		SysInfo info = entry.getSysInfo();
+		assertEquals("Expected attribute ", "INSTALLED", entry.getType().name());
 		assertEquals("Expected attribute ", null, entry.getLogicalNamespace());
 		assertEquals("Expected attribute ", "myxform", entry.getLogicalName());
 		assertEquals("Expected attribute ", null, entry.getLogicalVersion());
@@ -136,6 +168,46 @@ public class YAMLTest {
 		testProfile(entry, Profile.METADATA, "version", "2.0");
 		mLogger.logEventCompletion();
 
+	}
+
+	@Test
+	public void testErrorYAMLFile() {
+		PegasusBag mBag = new PegasusBag();
+		PegasusProperties mErrorProps = mTestSetup.loadPropertiesFromFile(PROPERTIES_BASENAME, new LinkedList());
+		mBag.add(PegasusBag.PEGASUS_PROPERTIES, mErrorProps);
+		mBag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+		mBag.add(PegasusBag.PEGASUS_PROPERTIES, mErrorProps);
+		mLogger.logEventStart("test.catalog.transformation.impl.YAML", "setup", "0");
+
+		YAML mCorrectCatalog = new YAML();
+		mErrorProps.setProperty(PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
+				new File(mTestSetup.getInputDirectory(), ERROR_FILE).getAbsolutePath());
+		try {
+			mCorrectCatalog.initialize(mBag);
+		} catch (RuntimeException e) {
+			assertTrue(e.getCause().getMessage().contains("Unknown fields [\"unknown\"] present in transformations details"));
+			assertTrue(e.getCause().getMessage().contains("Missing required fields [\"arch\"] in transformations details"));
+		}
+	}
+	
+
+	@Test
+	public void testInvalidYAMLFile() {
+		PegasusBag mBag = new PegasusBag();
+		PegasusProperties mErrorProps = mTestSetup.loadPropertiesFromFile(PROPERTIES_BASENAME, new LinkedList());
+		mBag.add(PegasusBag.PEGASUS_PROPERTIES, mErrorProps);
+		mBag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+		mBag.add(PegasusBag.PEGASUS_PROPERTIES, mErrorProps);
+		mLogger.logEventStart("test.catalog.transformation.impl.YAML", "setup", "0");
+
+		YAML mCorrectCatalog = new YAML();
+		mErrorProps.setProperty(PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
+				new File(mTestSetup.getInputDirectory(), INVALID_YAML_FILE).getAbsolutePath());
+		try {
+			mCorrectCatalog.initialize(mBag);
+		} catch (RuntimeException e) {
+			assertTrue(e.getCause().getMessage().contains("line 6: Problem in the line :6, column:4 with tag profile:^"));
+		}
 	}
 
 	private void testProfile(TransformationCatalogEntry entry, String namespace, String key, String value) {

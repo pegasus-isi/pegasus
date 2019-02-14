@@ -128,9 +128,7 @@ public class TransformationCatalogYAMLParser {
 	/**
 	 * Schema file name;
 	 **/
-	private static final String SCHEMA_FILENAME = "/home/mukund/temp/pegasus_mybranch/share/pegasus/schema/transformationcatalog.json";
-
-	//private static final String SCHEMA_FILENAME = "http://pegasus.isi.edu/schema/transformationcatalog.json";
+	private static final String SCHEMA_FILENAME = "http://pegasus.isi.edu/schema/transformationcatalog.json";
 	/**
 	 * Schema File Object;
 	 **/
@@ -550,7 +548,7 @@ public class TransformationCatalogYAMLParser {
 	public static void main(String[] args) throws ScannerException {
 		try {
 			InputStream r = new FileInputStream(
-					new File("/home/mukund/workspace/YAMLTesting/transformationcatalogue_v2.yaml"));
+					new File("transformationcatalogue.yaml"));
 
 			LogManager logger = LogManagerFactory.loadSingletonInstance();
 			logger.setLevel(LogManager.DEBUG_MESSAGE_LEVEL);

@@ -17,10 +17,10 @@
          - condor: 
             "more": "test"
         pfn: "/path/to/keg"
-        arch: x86
+        unknown: "unknown"
         os: "linux"
         osrelease: fc
-        osversion: 4
+        osversion: "as"
         type: INSTALLED
      
       - name: "wind"
