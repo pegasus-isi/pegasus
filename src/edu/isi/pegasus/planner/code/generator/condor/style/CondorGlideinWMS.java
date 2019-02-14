@@ -67,7 +67,15 @@ public class CondorGlideinWMS extends Condor {
             universe.equalsIgnoreCase( Condor.PARALLEL_UNIVERSE ) ){
 
             job.condorVariables.construct("should_transfer_files", "YES");
-            job.condorVariables.construct("when_to_transfer_output", "ON_EXIT");
+            String wtto = (String) job.condorVariables.get( Condor.WHEN_TO_TRANSFER_OUTPUT_KEY );
+            if( wtto == null ){
+                //default value
+                job.condorVariables.construct( Condor.WHEN_TO_TRANSFER_OUTPUT_KEY, "ON_EXIT" );
+            }
+            else{
+                //PM-1350 prefer the value specified by the user
+                job.condorVariables.construct( Condor.WHEN_TO_TRANSFER_OUTPUT_KEY, wtto );
+            }
 
             // job requirements - steer the jobs to the glideins at the right site
             String req = "(IS_MONITOR_VM == False)" +
