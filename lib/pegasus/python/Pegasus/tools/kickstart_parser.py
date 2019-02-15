@@ -587,7 +587,7 @@ class Parser:
         
         while len(raw) > 0 and raw[0] != "-":
             start = raw.find("\n") + 1
-            if start == -1:
+            if start <= 0:
                 break
             raw = raw[start:]
         
