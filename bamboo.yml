@@ -462,7 +462,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTCUZ
-              name: Ubuntu Zesty Unit Tests
+              name: Ubuntu Xenial Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -474,7 +474,7 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_17}
+                      TAG=${bamboo_TAG_UBUNTU_16}
 
                       /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
 
@@ -491,7 +491,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTJUZ
-              name: Ubuntu Zesty Java Unit Tests
+              name: Ubuntu Xenial Java Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -503,7 +503,7 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_17}
+                      TAG=${bamboo_TAG_UBUNTU_16}
 
                       /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
 
@@ -521,7 +521,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTPUZ
-              name: Ubuntu Zesty Python Unit Tests
+              name: Ubuntu Xenial Python Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -533,7 +533,7 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_17}
+                      TAG=${bamboo_TAG_UBUNTU_16}
 
                       /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
 
@@ -1007,7 +1007,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXUZ
-              name: Build x86_64 Ubuntu Zesty
+              name: Build x86_64 Ubuntu Xenial
               tasks:
                 - !script
                   description: Untar source
@@ -1019,7 +1019,7 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_17}
+                      TAG=${bamboo_TAG_UBUNTU_16}
 
                       /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
 
@@ -1144,8 +1144,8 @@ project:
                       # ubuntu
                       mkdir -p $DOWNLOADS/ubuntu/dists/xenial/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*ubuntu16_amd64.deb $DOWNLOADS/ubuntu/dists/xenial/main/binary-amd64/
-                      mkdir -p $DOWNLOADS/ubuntu/dists/zesty/main/binary-amd64
-                      cp $DOWNLOADS/pegasus_*ubuntu17_amd64.deb $DOWNLOADS/ubuntu/dists/zesty/main/binary-amd64/
+                      #mkdir -p $DOWNLOADS/ubuntu/dists/zesty/main/binary-amd64
+                      #cp $DOWNLOADS/pegasus_*ubuntu17_amd64.deb $DOWNLOADS/ubuntu/dists/zesty/main/binary-amd64/
                       mkdir -p $DOWNLOADS/ubuntu/dists/bionic/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*ubuntu18_amd64.deb $DOWNLOADS/ubuntu/dists/bionic/main/binary-amd64/
 
