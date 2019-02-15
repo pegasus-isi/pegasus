@@ -44,7 +44,7 @@ function test_integrity {
         return 1
     fi
     # make sure it has a statinfo entry
-    if ! (grep statinfo $KICKSTART_INTEGRITY_DATA) >/dev/null 2>&1; then
+    if ! (grep "\"index.html\":" $KICKSTART_INTEGRITY_DATA) >/dev/null 2>&1; then
         echo "ERROR: $KICKSTART_INTEGRITY_DATA does not contain a statinfo entry"
         return 1
     fi
