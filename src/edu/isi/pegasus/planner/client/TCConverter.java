@@ -70,9 +70,15 @@ public class TCConverter
     private static String TEXT_FORMAT = "Text";
     
     /**
+     * YAML Format
+     **/
+    
+    private static String YAML_FORMAT = "YAML";
+    
+    /**
      * The supported transformation formats.
      */
-    private static final String[] SUPPORTED_TRANSFORMATION_FORMAT = {TEXT_FORMAT ,FILE_FORMAT};
+    private static final String[] SUPPORTED_TRANSFORMATION_FORMAT = {TEXT_FORMAT ,FILE_FORMAT, YAML_FORMAT};
     
     
     /**
