@@ -652,7 +652,7 @@ class Parser:
         self.close()
 
         # first check if this is an old XML based record
-        if re.search("^<\?xml ", raw):
+        if re.search("^<\?xml ", raw, re.MULTILINE):
             return self.parse_xml(keys_dict, tasks=True, clustered=True)
 
         # if we get here, we have yaml
@@ -660,7 +660,6 @@ class Parser:
 
         data = []
         buffer = ""
-        parsed = ""
         for line in raw.splitlines(True):
             if ( line.find("[cluster-task") == 0 ):
                 # Check if we want task records too
@@ -675,23 +674,17 @@ class Parser:
                     data.append(self.parse_clustered_record(line))
             elif line[0] not in [" ", "-", "\n"]:
                 # we have a buffer we want to parse
-                if len(buffer) < 10:
+                if buffer.count("\n") < 10:
+                    # ignore "short" buffers
                     continue
                 try:
                     data.append(yaml.safe_load())
-                    # do we need to do any more validation here?
-                    parsed = True
                 except:
                     logger.warning("KICKSTART-PARSE-ERROR --> yaml error in %s"
                                    % (self._kickstart_output_file))
                 buffer = ""
             else:
                 buffer += line
-
-        if not parsed:
-            logger.warning("KICKSTART-PARSE-ERROR --> error parsing invocation record in file %s"
-                           % (self._kickstart_output_file))
-            return []
 
         # translate from the yaml dict structure to what we want using the keys-dict
         new_data = []
