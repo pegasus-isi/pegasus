@@ -389,6 +389,82 @@ class Parser:
         elif self._parsing_signalled == True:
             self._keys["signalled"]["action"] += data
 
+    def dicts_remap(self, src, src_keys, dst, dst_keys):
+        """
+        Pulls data from a provided location in a src dict, and inserts
+        the data at a provided location in the dst dic - this is used
+        to transition from the old xml format to the new yaml format
+        """
+        for key in src_keys:
+            if key in src:
+                src = src[key]
+            else:
+                src = None
+                break
+
+        for key in dst_keys[:-1]:
+            if key not in dst:
+                dst[key] = {}
+            dst = dst[key]
+
+        dst[dst_keys[-1]] = src
+
+    def map_yaml_to_ver2_format(self, data):
+        """
+        Maps from new yaml dict format to old v2 format we used with the xml records
+        """
+        # unmappable:
+        #  "file": ["name"]
+
+        # new format -> old format
+        my_map = [ [ ["hostname"],                               ["invocation", "hostname"] ],
+                   [ ["resource"],                               ["invocation", "resource"] ],
+                   [ ["user"],                                   ["invocation", "user"] ],
+                   [ ["hostaddr"],                               ["invocation", "hostaddr"] ],
+                   [ ["transformation"],                         ["invocation", "transformation"] ],
+                   [ ["derivation"],                             ["invocation", "derivation"] ],
+                   [ ["mainjob", "duration"],                    ["mainjob", "duration"] ] ,
+                   [ ["mainjob", "start"],                       ["mainjob", "start"] ] ,
+                   [ ["usage", "utime"],                         ["usage", "utime"] ] ,
+                   [ ["usage", "stime"],                         ["usage", "stime"] ] ,
+                   [ ["machine", "ram_total"],                   ["ram", "total"] ] ,
+                   [ ["machine", "uname_system"],                ["uname", "system"] ] ,
+                   [ ["machine", "uname_release"],               ["uname", "release"] ] ,
+                   [ ["machine", "uname_machine"],               ["uname", "machine"] ] ,
+                   [ ["mainjob", "status", "raw"],               ["status", "raw"] ] ,
+                   [ ["mainjob", "status", "signalled_signal"],  ["signalled", "signal"] ] ,
+                   [ ["mainjob", "status", "signalled_name"],    ["signalled", "action"] ] ,
+                   [ ["mainjob", "status", "corefile"],          ["signalled", "corefile"] ] ,
+                   [ ["mainjob", "status", "regular_exitcode"],  ["regular", "exitcode"] ] ,
+                   [ ["cwd"],                                    ["cwd"] ] ,
+                   [ ["files", "stdout", "data"],                ["stdout"] ] ,
+                   [ ["files", "stderr", "data"],                ["stderr"] ] ]
+
+
+        #        stampede_elements = {"invocation": ["hostname", "resource", "user", "hostaddr", "transformation", "derivation"],
+        #                             "mainjob": ["duration", "start"],
+        #                             "usage": ["utime", "stime"],
+        #                             "ram": ["total"],
+        #                             "uname": ["system", "release", "machine"],
+        #                             "file": ["name"],
+        #                             "status": ["raw"],
+        #                             "signalled": ["signal", "corefile", "action"], #action is the char data in signalled element
+        #                             "regular": ["exitcode"],
+        #                             "argument-vector": [],
+        #                             "cwd": [],
+        #                             "stdout": [],
+        #                             "stderr": [],
+        #                             "statinfo": ["lfn", "size", "ctime", "user" ],
+        #                             "checksum": ["type", "value", "timing"],
+        #                             "type": ["type", "value"]}
+
+        new_data = {}
+        for mapping in my_map:
+            self.dicts_remap(data, mapping[0], new_data, mapping[1])
+
+        return new_data
+
+
     def parse_invocation_record(self, buffer=''):
         """
         Parses the xml record in buffer, returning the desired keys.
@@ -580,38 +656,49 @@ class Parser:
             return self.parse_xml(keys_dict, tasks=True, clustered=True)
 
         # if we get here, we have yaml
-        
-        # but trim until we can parse - some schedulers add pre/post information to stdout
-        start = 0
-        end = len(raw)
-        
-        while len(raw) > 0 and raw[0] != "-":
-            start = raw.find("\n") + 1
-            if start <= 0:
-                break
-            raw = raw[start:]
-        
-        parsed = False
-        while not parsed:
-            try:
-                data = yaml.safe_load(raw)
-                parsed = True
-            except:
-                # maybe some non-yaml at the end - back up a line
-                end = raw.rfind("\n")
-                if end == -1:
-                    break
-                raw = raw[:end]
+        # but this could still be a mix of yaml, cluster info and schedulers pre/post info
+
+        data = []
+        buffer = ""
+        parsed = ""
+        for line in raw.splitlines(True):
+            if ( line.find("[cluster-task") == 0 ):
+                # Check if we want task records too
+                if tasks:
+                    # We have a clustered record, parse it!
+                    data.append(self.parse_task_record(line))
+            elif ( line.find("[cluster-summary") == 0 ):
+                # Check if we want clustered records too
+                if clustered:
+                    # Clustered records are seqexec summary records for clustered jobs
+                    # We have a clustered record, parse it!
+                    data.append(self.parse_clustered_record(line))
+            elif line[0] not in [" ", "-", "\n"]:
+                # we have a buffer we want to parse
+                if len(buffer) < 10:
+                    continue
+                try:
+                    data.append(yaml.safe_load())
+                    # do we need to do any more validation here?
+                    parsed = True
+                except:
+                    logger.warning("KICKSTART-PARSE-ERROR --> yaml error in %s"
+                                   % (self._kickstart_output_file))
+                buffer = ""
+            else:
+                buffer += line
 
         if not parsed:
             logger.warning("KICKSTART-PARSE-ERROR --> error parsing invocation record in file %s"
                            % (self._kickstart_output_file))
             return []
 
-        if data is None:
-            data = []
+        # translate from the yaml dict structure to what we want using the keys-dict
+        new_data = []
+        for entry in data:
+            new_data.append(self.map_yaml_to_ver2_format(entry))
 
-        return data
+        return new_data
 
     def parse_stampede(self):
         """

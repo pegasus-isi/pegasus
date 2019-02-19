@@ -155,7 +155,7 @@ static size_t convert2YAML(FILE *out, const AppInfo* run) {
     if (run->wf_label && strlen(run->wf_label)) {
         fprintf(out, "  wf-label: \"");
         yamlquote(out, run->wf_label, strlen(run->wf_label));
-        fprintf(out, "\"");
+        fprintf(out, "\"\n");
     }
     if (run->wf_stamp && strlen(run->wf_stamp)) {
         fprintf(out, "  wf-stamp: \"");
