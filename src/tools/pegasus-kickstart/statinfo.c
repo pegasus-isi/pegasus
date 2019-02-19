@@ -462,7 +462,7 @@ size_t printYAMLStatInfo(FILE *out, int indent, const char* id,
             fprintf(out, chksum_xml);
         }
         else {
-            fprintf(out, "%*sintegrity_error: pegasus-integrity callout failed\n", indent+4, "");
+            fprintf(out, "%*sintegrity_error: pegasus-integrity callout failed\n", indent+2, "");
         }
         if (real) {
             free((void*) real);

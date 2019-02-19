@@ -402,6 +402,9 @@ class Parser:
                 src = None
                 break
 
+        if src is None:
+            return
+
         for key in dst_keys[:-1]:
             if key not in dst:
                 dst[key] = {}
@@ -461,6 +464,19 @@ class Parser:
         new_data = {}
         for mapping in my_map:
             self.dicts_remap(data, mapping[0], new_data, mapping[1])
+
+        # some mappings are based on lfns
+        if "files" in data:
+            for lfn in data["files"]:
+                self.dicts_remap(data, ["files", lfn, "size"], new_data, ["statinfo", lfn, "size"])
+                self.dicts_remap(data, ["files", lfn, "ctime"], new_data, ["statinfo", lfn, "ctime"])
+                self.dicts_remap(data, ["files", lfn, "user"], new_data, ["statinfo", lfn, "user"])
+                self.dicts_remap(data, ["files", lfn, "sha256"], new_data, ["checksum", lfn, "value"])
+                self.dicts_remap(data, ["files", lfn, "checksum_timing"], new_data, ["checksum", lfn, "timing"])
+                # type does not exist in the src
+                if "checksum" in new_data and \
+                    lfn in new_data["checksum"]:
+                        new_data["checksum"][lfn]["type"] = "sha256"
 
         return new_data
 
@@ -678,13 +694,20 @@ class Parser:
                     # ignore "short" buffers
                     continue
                 try:
-                    data.append(yaml.safe_load())
-                except:
-                    logger.warning("KICKSTART-PARSE-ERROR --> yaml error in %s"
-                                   % (self._kickstart_output_file))
+                    data.append(yaml.safe_load(buffer)[0])
+                except Exception as e:
+                    logger.warning("KICKSTART-PARSE-ERROR --> yaml error in %s : %s"
+                                   % (self._kickstart_output_file, str(e)))
                 buffer = ""
             else:
                 buffer += line
+
+        # is there still stuff in the buffer?
+        try:
+            data.append(yaml.safe_load(buffer)[0])
+        except Exception as e:
+            logger.warning("KICKSTART-PARSE-ERROR --> yaml error in %s : %s"
+                           % (self._kickstart_output_file, str(e)))
 
         # translate from the yaml dict structure to what we want using the keys-dict
         new_data = []

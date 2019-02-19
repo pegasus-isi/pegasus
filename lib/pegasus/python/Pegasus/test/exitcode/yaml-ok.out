@@ -124,7 +124,7 @@
       user: bamboo
       gid: 100
       group: users
-        integrity_error: pegasus-integrity callout failed
+      integrity_error: pegasus-integrity callout failed
     stdin:
       file_name: /dev/null
       mode: 0o20666
