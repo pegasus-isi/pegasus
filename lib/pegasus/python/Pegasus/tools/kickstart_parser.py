@@ -479,9 +479,9 @@ class Parser:
                 meta = FileMetadata()
                 meta._id = lfn
                 if "size" in data["files"][lfn]:
-                    meta.add_attribute("size",file_data["size"])
+                    meta.add_attribute("size",str(file_data["size"]))
                 if "ctime" in data["files"][lfn]:
-                    meta.add_attribute("ctime", file_data["ctime"])
+                    meta.add_attribute("ctime", str(file_data["ctime"]))
                 if "sha256" in data["files"][lfn]:
                     meta.add_attribute("checksum", file_data["sha256"])
                 # what else?
