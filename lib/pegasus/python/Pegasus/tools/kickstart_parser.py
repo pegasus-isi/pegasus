@@ -105,7 +105,7 @@ class Parser:
 
         return True
 
-    def read_record(self):
+    def read_xml_record(self):
         """
         This function reads an invocation record from the kickstart
         output file. We also look for the struct at the end of a file
@@ -215,10 +215,13 @@ class Parser:
 
     def is_invocation_record(self, buffer=''):
         """
-        Returns True if buffer contains an invocation record.
+        Returns True if buffer contains an invocation record either xml or invocation
         """
-        if buffer.find("<invocation") == -1:
-            return False
+        # first check for yaml
+        if buffer.find("- invocation:") == -1:
+            # no yaml check for xml
+            if buffer.find("<invocation") == -1:
+                return False
         return True
 
     def is_task_record(self, buffer=''):
@@ -515,7 +518,31 @@ class Parser:
         return new_data
 
 
-    def parse_invocation_record(self, buffer=''):
+    def parse_yaml_invocation_record(self, buffer=''):
+        """
+        Parses the YAML record in buffer returning an invocation record
+        :param buffer:
+        :return:
+        """
+        entry = {}
+
+        # Check if we have an invocation record
+        if self.is_invocation_record(buffer) == False:
+            return entry
+
+        try:
+            entry = yaml.safe_load(buffer)[0]
+        except Exception as e:
+            logger.warning("KICKSTART-PARSE-ERROR --> yaml error in %s : %s"
+                           % (self._kickstart_output_file, str(e)))
+
+        # translate from the yaml dict structure to what we want using the keys-dict
+        return self.map_yaml_to_ver2_format(entry)
+
+
+
+
+    def parse_xml_invocation_record(self, buffer=''):
         """
         Parses the xml record in buffer, returning the desired keys.
         """
@@ -637,14 +664,14 @@ class Parser:
 
         self._record_number = 0
         # Read first record
-        my_buffer = self.read_record()
+        my_buffer = self.read_xml_record()
 
         # Loop while we still have record to read
         while my_buffer is not None:
             if self.is_invocation_record(my_buffer) == True:
                 # We have an invocation record, parse it!
                 try:
-                    my_record = self.parse_invocation_record(my_buffer)
+                    my_record = self.parse_xml_invocation_record(my_buffer)
                 except:
                     logger.warning("KICKSTART-PARSE-ERROR --> error parsing invocation record in file %s"
                                    % (self._kickstart_output_file))
@@ -671,7 +698,7 @@ class Parser:
                 pass
 
             # Read next record
-            my_buffer = self.read_record()
+            my_buffer = self.read_xml_record()
 
         # Lastly, close the file
         self.close()
@@ -690,6 +717,7 @@ class Parser:
 
         # Place keys_dict in the _ks_elements
         self._ks_elements = keys_dict
+        my_reply = []
 
         # Try to open the file
         if self.open() == False:
@@ -709,9 +737,15 @@ class Parser:
         # but this could still be a mix of yaml, cluster info and schedulers pre/post info
 
         data = []
+
         buffer = ""
         for line in raw.splitlines(True):
             if ( line.find("[cluster-task") == 0 ):
+                # parse the current kickstart record
+                payload = self.parse_yaml_invocation_record(buffer)
+                if payload:
+                    data.append(payload)
+                buffer = ""
                 # Check if we want task records too
                 if tasks:
                     # We have a clustered record, parse it!
@@ -727,11 +761,11 @@ class Parser:
                 if buffer.count("\n") < 10:
                     # ignore "short" buffers
                     continue
-                try:
-                    data.append(yaml.safe_load(buffer)[0])
-                except Exception as e:
-                    logger.warning("KICKSTART-PARSE-ERROR --> yaml error in %s : %s"
-                                   % (self._kickstart_output_file, str(e)))
+
+                # parse the current kickstart record
+                payload = self.parse_yaml_invocation_record(buffer)
+                if payload:
+                    data.append(payload)
                 buffer = ""
             else:
                 buffer += line
@@ -739,18 +773,13 @@ class Parser:
         # is there still stuff in the buffer?
         if buffer.count("\n") > 10:
             # ignore "short" buffers
-            try:
-                data.append(yaml.safe_load(buffer)[0])
-            except Exception as e:
-                logger.warning("KICKSTART-PARSE-ERROR --> yaml error in %s : %s"
-                               % (self._kickstart_output_file, str(e)))
+            # parse the current kickstart record
+            payload = self.parse_yaml_invocation_record(buffer)
+            if payload:
+                data.append(payload)
+            buffer = ""
 
-        # translate from the yaml dict structure to what we want using the keys-dict
-        new_data = []
-        for entry in data:
-            new_data.append(self.map_yaml_to_ver2_format(entry))
-
-        return new_data
+        return data
 
     def parse_stampede(self):
         """
