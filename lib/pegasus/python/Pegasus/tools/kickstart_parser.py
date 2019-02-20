@@ -472,16 +472,18 @@ class Parser:
         # some mappings are based on lfns
         if "files" in data:
             for lfn in data["files"]:
-                if lfn in ["stdin", "stdout", "stderr", "final", "metadata"]:
+                file_data = data["files"][lfn]
+                output = file_data["output"] if "output" in file_data.keys() else False
+                if not output:
                     continue
                 meta = FileMetadata()
                 meta._id = lfn
                 if "size" in data["files"][lfn]:
-                    meta.add_attribute("size", data["files"][lfn]["size"])
+                    meta.add_attribute("size",file_data["size"])
                 if "ctime" in data["files"][lfn]:
-                    meta.add_attribute("ctime", data["files"][lfn]["ctime"])
+                    meta.add_attribute("ctime", file_data["ctime"])
                 if "sha256" in data["files"][lfn]:
-                    meta.add_attribute("checksum", data["files"][lfn]["sha256"])
+                    meta.add_attribute("checksum", file_data["sha256"])
                 # what else?
 
                 new_data["outputs"][lfn] = meta
