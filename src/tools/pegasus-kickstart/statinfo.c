@@ -349,7 +349,18 @@ size_t printYAMLStatInfo(FILE *out, int indent, const char* id,
         return 0;
     }
 
-    fprintf(out, "%*s%s:\n", indent, "", id);
+    if (strcmp(id, "initial") == 0 || strcmp(id, "final") == 0) {
+        if (info->lfn != NULL) {
+            fprintf(out, "%*s%s:\n", indent, "", info->lfn);
+        }
+        else {
+            fprintf(out, "%*s%s:\n", indent, "", info->file.name);
+        }
+    }
+    else {
+        fprintf(out, "%*s%s:\n", indent, "", id);
+    }
+
     if (info->error != 0) {
         fprintf(out, "%*serror: %d\n", indent+2, "", info->error);
     }
@@ -455,6 +466,7 @@ size_t printYAMLStatInfo(FILE *out, int indent, const char* id,
      * and it is a "final" entry
      */
     if (id != NULL && info->error == 0 && strcmp(id, "final") == 0) {
+         fprintf(out, "%*soutput: True\n", indent+2, "");
         char chksum_xml[2048];
         real = realpath(info->file.name, NULL);
         if (pegasus_integrity_yaml(real, chksum_xml)) {
