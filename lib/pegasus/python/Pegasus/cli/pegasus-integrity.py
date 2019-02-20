@@ -484,6 +484,7 @@ def generate_fullstat_yaml(lfn, pfn):
              '      user: %s\n'
              '      gid: %d\n'
              '      group: %s\n'
+             '      output: True\n'
              %(s.st_mode, s.st_size, s.st_ino, s.st_nlink,
                iso8601(s.st_mtime), iso8601(s.st_atime), iso8601(s.st_ctime),
                s.st_uid, uname, s.st_gid, gname))

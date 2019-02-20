@@ -482,6 +482,9 @@ class Tools(object):
             path_entries = os.environ["PATH"].split(":")
             if "" in path_entries:
                 path_entries.remove("")
+            # if we have PEGASUS_HOME set, and try to invoke a Pegasus tool, prepend
+            if 'PEGASUS_HOME' in os.environ and executable.find("pegasus-") == 0:
+                path_entries.insert(0, os.environ['PEGASUS_HOME'] + '/bin')
             if path_prepend is not None:
                 for entry in path_prepend:
                     path_entries.insert(0, entry)
