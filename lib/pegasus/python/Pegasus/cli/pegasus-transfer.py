@@ -23,7 +23,6 @@ Usage: pegasus-transfer [options]
 ##
 
 import cmd
-import ConfigParser
 import errno
 import hashlib
 import json
@@ -31,7 +30,6 @@ import logging
 import math
 import optparse
 import os
-import Queue
 import random
 import re
 import signal
@@ -45,6 +43,16 @@ import threading
 import time
 import traceback
 from subprocess import STDOUT
+
+try:
+    import configparser
+except:
+    import ConfigParser as configparser
+
+try:
+    import queue
+except:
+    import Queue as queue
 
 try:
     # Python 3.0 and later
@@ -482,6 +490,9 @@ class Tools(object):
             path_entries = os.environ["PATH"].split(":")
             if "" in path_entries:
                 path_entries.remove("")
+            # if we have PEGASUS_HOME set, and try to invoke a Pegasus tool, prepend
+            if 'PEGASUS_HOME' in os.environ and executable.find("pegasus-") == 0:
+                path_entries.insert(0, os.environ['PEGASUS_HOME'] + '/bin')
             if path_prepend is not None:
                 for entry in path_prepend:
                     path_entries.insert(0, entry)
@@ -2130,7 +2141,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
 
         logger.info("Parsing globus config file for OAuth credentials")
         
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         config.read(os.path.expanduser("~/.pegasus/globus.conf"))
 
         cred_details = { "client_id": None,
@@ -2141,23 +2152,23 @@ class GlobusOnlineHandler(TransferHandlerBase):
 
         try :
             cred_details["client_id"] = config.get("oauth", "client_id")
-        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+        except (configparser.NoSectionError, configparser.NoOptionError):
             logger.error("No client_id was supplied")
             raise RuntimeError("No client_id was supplied for Globus App")
 
         try:
             cred_details["transfer_at"]= config.get("oauth", "transfer_at")
-        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+        except (configparser.NoSectionError, configparser.NoOptionError):
             logger.info("No transfer_access_token was supplied")
 
         try:
             cred_details["transfer_at_exp"] = config.get("oauth", "transfer_at_exp")
-        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+        except (configparser.NoSectionError, configparser.NoOptionError):
             logger.info("No transfer_access_token_expiration was supplied, defaults to 0")
 
         try :
             cred_details["transfer_rt"] = config.get("oauth", "transfer_rt")
-        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+        except (configparser.NoSectionError, configparser.NoOptionError):
             logger.info("No transfer_refresh_token was supplied")
             if (cred_details["transfer_at"] is None) or (cred_details["transfer_at_exp"] < int(time.time()) - 3600):
                 logger.error("transfer_access_token is missing or expiring soon")
@@ -2344,7 +2355,7 @@ class GSHandler(TransferHandlerBase):
         except:
           raise RuntimeError("Unable to create tmp file for gs boto file")
         try:
-            conf = ConfigParser.SafeConfigParser()
+            conf = configparser.SafeConfigParser()
             conf.read(env["BOTO_CONFIG"])
             conf.set("Credentials", "gs_service_key_file", env["GOOGLE_PKCS12"])
             conf.write(tmp_file)
@@ -3856,7 +3867,7 @@ class WorkThread(threading.Thread):
                 logger.debug("Thread " + str(self.thread_id) +
                              " is executing transfer " + str(ts))
                 ts.do_transfers()
-        except Queue.Empty:
+        except queue.Empty:
             return
         except Exception as e:
             self.exception = e
@@ -4353,9 +4364,9 @@ def main():
     
     # queues to track the work
     inputs_l = []
-    ready_q = Queue.Queue()
-    failed_q = Queue.Queue()
-    completed_q = Queue.Queue()
+    ready_q = queue.Queue()
+    failed_q = queue.Queue()
+    completed_q = queue.Queue()
     
     # determine format, and read the transfer specification
     if input_data[0:5] == "# src":
@@ -4392,7 +4403,7 @@ def main():
     approx_transfer_per_thread = total_transfers / (float)(options.threads)
     while not done:
     
-        tset_q = Queue.Queue()
+        tset_q = queue.Queue()
     
         attempt_current = attempt_current + 1
         logger.info('-' * 80)
@@ -4421,7 +4432,7 @@ def main():
                             # done, put the last transfer back
                             ready_q.put(t_next)
                             t_next = None
-                except Queue.Empty:
+                except queue.Empty:
                     pass
                 
                 # magic!
@@ -4451,7 +4462,7 @@ def main():
             
             # transfers might have multiple sources/destinations and
             # we should try them all in each round
-            failed_q_updated = Queue.Queue()
+            failed_q_updated = queue.Queue()
             while not failed_q.empty():
                 t = failed_q.get()
                 t.move_to_next_sub_transfer()
