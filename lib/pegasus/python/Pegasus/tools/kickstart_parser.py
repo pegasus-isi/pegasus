@@ -29,13 +29,16 @@ from __future__ import print_function
 from xml.parsers import expat
 from Pegasus.monitoring.metadata import FileMetadata
 from pprint import pprint
+from datetime import datetime
+
 import re
 import sys
 import logging
 import traceback
-import os
 import yaml
-
+import yaml.constructor
+yaml.constructor.SafeConstructor.yaml_constructors[u'tag:yaml.org,2002:timestamp'] = \
+    yaml.constructor.SafeConstructor.yaml_constructors[u'tag:yaml.org,2002:str']
 
 # Regular expressions used in the kickstart parser
 re_parse_props = re.compile(r'(\S+)\s*=\s*([^",]+)')
@@ -481,7 +484,7 @@ class Parser:
                 if "size" in data["files"][lfn]:
                     meta.add_attribute("size",str(file_data["size"]))
                 if "ctime" in data["files"][lfn]:
-                    meta.add_attribute("ctime", str(file_data["ctime"]))
+                    meta.add_attribute("ctime", file_data["ctime"])
                 if "sha256" in data["files"][lfn]:
                     meta.add_attribute("checksum", file_data["sha256"])
                 # what else?
