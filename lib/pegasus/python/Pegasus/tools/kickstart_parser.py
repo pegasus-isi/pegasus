@@ -420,25 +420,26 @@ class Parser:
         #  "file": ["name"]
 
         # new format -> old format
-        my_map = [ [ ["hostname"],                               ["invocation", "hostname"] ],
-                   [ ["resource"],                               ["invocation", "resource"] ],
-                   [ ["user"],                                   ["invocation", "user"] ],
-                   [ ["hostaddr"],                               ["invocation", "hostaddr"] ],
-                   [ ["transformation"],                         ["invocation", "transformation"] ],
-                   [ ["derivation"],                             ["invocation", "derivation"] ],
-                   [ ["mainjob", "duration"],                    ["mainjob", "duration"] ] ,
-                   [ ["mainjob", "start"],                       ["mainjob", "start"] ] ,
-                   [ ["usage", "utime"],                         ["usage", "utime"] ] ,
-                   [ ["usage", "stime"],                         ["usage", "stime"] ] ,
-                   [ ["machine", "ram_total"],                   ["ram", "total"] ] ,
-                   [ ["machine", "uname_system"],                ["uname", "system"] ] ,
-                   [ ["machine", "uname_release"],               ["uname", "release"] ] ,
-                   [ ["machine", "uname_machine"],               ["uname", "machine"] ] ,
-                   [ ["mainjob", "status", "raw"],               ["status", "raw"] ] ,
-                   [ ["mainjob", "status", "signalled_signal"],  ["signalled", "signal"] ] ,
-                   [ ["mainjob", "status", "signalled_name"],    ["signalled", "action"] ] ,
-                   [ ["mainjob", "status", "corefile"],          ["signalled", "corefile"] ] ,
-                   [ ["mainjob", "status", "regular_exitcode"],  ["regular", "exitcode"] ] ,
+        my_map = [ [ ["hostname"],                               ["hostname"] ],
+                   [ ["resource"],                               ["resource"] ],
+                   [ ["user"],                                   ["user"] ],
+                   [ ["hostaddr"],                               ["hostaddr"] ],
+                   [ ["transformation"],                         ["transformation"] ],
+                   [ ["derivation"],                             ["derivation"] ],
+                   [ ["mainjob", "duration"],                    ["duration"] ] ,
+                   [ ["mainjob", "start"],                       ["start"] ] ,
+                   [ ["usage", "utime"],                         ["utime"] ] ,
+                   [ ["usage", "stime"],                         ["stime"] ] ,
+                   [ ["machine", "ram_total"],                   ["ram"] ] ,
+                   [ ["machine", "uname_system"],                ["system"] ] ,
+                   [ ["machine", "uname_release"],               ["release"] ] ,
+                   [ ["machine", "uname_machine"],               ["machine"] ] ,
+                   [ ["mainjob", "executable", "file_name"],     ["name"] ] ,
+                   [ ["mainjob", "status", "raw"],               ["raw"] ] ,
+                   [ ["mainjob", "status", "signalled_signal"],  ["signal"] ] ,
+                   [ ["mainjob", "status", "signalled_name"],    ["action"] ] ,
+                   [ ["mainjob", "status", "corefile"],          ["corefile"] ] ,
+                   [ ["mainjob", "status", "regular_exitcode"],  ["exitcode"] ] ,
                    [ ["cwd"],                                    ["cwd"] ] ,
                    [ ["files", "stdout", "data"],                ["stdout"] ] ,
                    [ ["files", "stderr", "data"],                ["stderr"] ] ]
@@ -462,21 +463,28 @@ class Parser:
         #                             "type": ["type", "value"]}
 
         new_data = {}
+        new_data['invocation'] = True
+        new_data["checksum"] = {}
+        new_data["outputs"] = {}
         for mapping in my_map:
             self.dicts_remap(data, mapping[0], new_data, mapping[1])
 
         # some mappings are based on lfns
         if "files" in data:
             for lfn in data["files"]:
-                self.dicts_remap(data, ["files", lfn, "size"], new_data, ["statinfo", lfn, "size"])
-                self.dicts_remap(data, ["files", lfn, "ctime"], new_data, ["statinfo", lfn, "ctime"])
-                self.dicts_remap(data, ["files", lfn, "user"], new_data, ["statinfo", lfn, "user"])
-                self.dicts_remap(data, ["files", lfn, "sha256"], new_data, ["checksum", lfn, "value"])
-                self.dicts_remap(data, ["files", lfn, "checksum_timing"], new_data, ["checksum", lfn, "timing"])
-                # type does not exist in the src
-                if "checksum" in new_data and \
-                    lfn in new_data["checksum"]:
-                        new_data["checksum"][lfn]["type"] = "sha256"
+                if lfn in ["stdin", "stdout", "stderr", "final", "metadata"]:
+                    continue
+                meta = FileMetadata()
+                meta._id = lfn
+                if "size" in data["files"][lfn]:
+                    meta.add_attribute("size", data["files"][lfn]["size"])
+                if "ctime" in data["files"][lfn]:
+                    meta.add_attribute("ctime", data["files"][lfn]["ctime"])
+                if "sha256" in data["files"][lfn]:
+                    meta.add_attribute("checksum", data["files"][lfn]["sha256"])
+                # what else?
+
+                new_data["outputs"][lfn] = meta
 
         return new_data
 
@@ -703,11 +711,13 @@ class Parser:
                 buffer += line
 
         # is there still stuff in the buffer?
-        try:
-            data.append(yaml.safe_load(buffer)[0])
-        except Exception as e:
-            logger.warning("KICKSTART-PARSE-ERROR --> yaml error in %s : %s"
-                           % (self._kickstart_output_file, str(e)))
+        if buffer.count("\n") > 10:
+            # ignore "short" buffers
+            try:
+                data.append(yaml.safe_load(buffer)[0])
+            except Exception as e:
+                logger.warning("KICKSTART-PARSE-ERROR --> yaml error in %s : %s"
+                               % (self._kickstart_output_file, str(e)))
 
         # translate from the yaml dict structure to what we want using the keys-dict
         new_data = []
