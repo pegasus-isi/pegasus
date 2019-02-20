@@ -481,12 +481,33 @@ class Parser:
                     continue
                 meta = FileMetadata()
                 meta._id = lfn
+
+                """
+                add whatever 4.9 attributes are
+                  {
+                    "_type": "file", 
+                    "_id": "f.b2", 
+                    "_attributes": {
+                      "ctime": "2019-02-19T16:42:52-08:00", 
+                      "checksum.timing": "0.144", 
+                      "user": "vahi", 
+                      "checksum.type": "sha256", 
+                      "checksum.value": "4a77bee20a28a446506ef7531ffc038053f52e5211d93a95fe5193746af8d23a", 
+                      "size": "123"
+                    }
+                  }, 
+                """
+                if "user" in data["files"][lfn]:
+                    meta.add_attribute("user",str(file_data["user"]))
                 if "size" in data["files"][lfn]:
                     meta.add_attribute("size",str(file_data["size"]))
                 if "ctime" in data["files"][lfn]:
                     meta.add_attribute("ctime", file_data["ctime"])
                 if "sha256" in data["files"][lfn]:
-                    meta.add_attribute("checksum", file_data["sha256"])
+                    meta.add_attribute("checksum.type", "sha256")
+                    meta.add_attribute("checksum.value", file_data["sha256"])
+                    if "checksum_timing" in data["files"][lfn]:
+                        meta.add_attribute("checksum_timing", str(file_data["checksum_timing"]))
                 # what else?
 
                 new_data["outputs"][lfn] = meta
