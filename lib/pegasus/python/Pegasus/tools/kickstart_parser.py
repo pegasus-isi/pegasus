@@ -29,13 +29,16 @@ from __future__ import print_function
 from xml.parsers import expat
 from Pegasus.monitoring.metadata import FileMetadata
 from pprint import pprint
+from datetime import datetime
+
 import re
 import sys
 import logging
 import traceback
-import os
 import yaml
-
+import yaml.constructor
+yaml.constructor.SafeConstructor.yaml_constructors[u'tag:yaml.org,2002:timestamp'] = \
+    yaml.constructor.SafeConstructor.yaml_constructors[u'tag:yaml.org,2002:str']
 
 # Regular expressions used in the kickstart parser
 re_parse_props = re.compile(r'(\S+)\s*=\s*([^",]+)')
@@ -472,16 +475,39 @@ class Parser:
         # some mappings are based on lfns
         if "files" in data:
             for lfn in data["files"]:
-                if lfn in ["stdin", "stdout", "stderr", "final", "metadata"]:
+                file_data = data["files"][lfn]
+                output = file_data["output"] if "output" in file_data.keys() else False
+                if not output:
                     continue
                 meta = FileMetadata()
                 meta._id = lfn
+
+                """
+                add whatever 4.9 attributes are
+                  {
+                    "_type": "file", 
+                    "_id": "f.b2", 
+                    "_attributes": {
+                      "ctime": "2019-02-19T16:42:52-08:00", 
+                      "checksum.timing": "0.144", 
+                      "user": "vahi", 
+                      "checksum.type": "sha256", 
+                      "checksum.value": "4a77bee20a28a446506ef7531ffc038053f52e5211d93a95fe5193746af8d23a", 
+                      "size": "123"
+                    }
+                  }, 
+                """
+                if "user" in data["files"][lfn]:
+                    meta.add_attribute("user",str(file_data["user"]))
                 if "size" in data["files"][lfn]:
-                    meta.add_attribute("size", data["files"][lfn]["size"])
+                    meta.add_attribute("size",str(file_data["size"]))
                 if "ctime" in data["files"][lfn]:
-                    meta.add_attribute("ctime", data["files"][lfn]["ctime"])
+                    meta.add_attribute("ctime", file_data["ctime"])
                 if "sha256" in data["files"][lfn]:
-                    meta.add_attribute("checksum", data["files"][lfn]["sha256"])
+                    meta.add_attribute("checksum.type", "sha256")
+                    meta.add_attribute("checksum.value", file_data["sha256"])
+                    if "checksum_timing" in data["files"][lfn]:
+                        meta.add_attribute("checksum_timing", str(file_data["checksum_timing"]))
                 # what else?
 
                 new_data["outputs"][lfn] = meta
