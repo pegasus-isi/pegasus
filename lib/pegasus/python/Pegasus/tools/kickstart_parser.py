@@ -562,6 +562,59 @@ class XMLParser( Parser ):
 
         return my_reply
 
+    def parse_xml_invocation_record(self, buffer=''):
+        """
+        Parses the xml record in buffer, returning the desired keys.
+        """
+        # Initialize variables
+        self._parsing_arguments = False
+        self._parsing_main_job = False
+        self._parsing_machine = False
+        self._parsing_stdout = False
+        self._parsing_stderr = False
+        self._parsing_data = False
+        self._parsing_cwd = False
+        self._parsing_signalled = False
+        self._arguments = []
+        self._stdout = ""
+        self._stderr = ""
+        self._cwd = ""
+        self._keys = {}
+
+        # Check if we have an invocation record
+        if self.is_invocation_record(buffer) == False:
+            return self._keys
+
+        # Add invocation key to our response
+        self._keys["invocation"] = True
+
+        # Prepend XML header
+        buffer = '<?xml version="1.0" encoding="ISO-8859-1"?>\n' + buffer
+
+        # Create parser
+        self._my_parser = expat.ParserCreate()
+        self._my_parser.StartElementHandler = self.start_element
+        self._my_parser.EndElementHandler = self.end_element
+        self._my_parser.CharacterDataHandler = self.char_data
+
+        # Parse everything!
+        output = self._my_parser.Parse(buffer)
+
+        # Add cwd, arguments, stdout, and stderr to keys
+        if "cwd" in self._ks_elements:
+            self._keys["cwd"] = self._cwd
+
+        if "argument-vector" in self._ks_elements:
+            self._keys["argument-vector"] = " ".join(self._arguments)
+
+        if "stdout" in self._ks_elements:
+            self._keys["stdout"] = self._stdout
+
+        if "stderr" in self._ks_elements:
+            self._keys["stderr"] = self._stderr
+
+        return self._keys
+
     def read_xml_record(self):
         """
         This function reads an invocation record from the kickstart
