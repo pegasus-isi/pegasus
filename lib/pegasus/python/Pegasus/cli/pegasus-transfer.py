@@ -24,7 +24,6 @@ Usage: pegasus-transfer [options]
 
 import cmd
 import errno
-import functools
 import hashlib
 import json
 import logging
@@ -223,7 +222,6 @@ class Mkdir(TransferBase):
         return self._target_url.path
 
 
-@functools.total_ordering
 class Remove(TransferBase):
     """
     Represents a single remove request
@@ -294,7 +292,18 @@ class Remove(TransferBase):
         return self.__cmp__(other) < 0
 
 
-@functools.total_ordering
+    def __le__(self, other):
+        return self.__cmp__(other) <= 0
+
+
+    def __gt__(self, other):
+        return self.__cmp__(other) > 0
+
+
+    def __ge__(self, other):
+        return self.__cmp__(other) >= 0
+
+
 class Transfer(TransferBase):
     """
     Represents a single transfer request.
@@ -459,6 +468,18 @@ class Transfer(TransferBase):
 
     def __lt__(self, other):
         return self.__cmp__(other) < 0
+
+
+    def __le__(self, other):
+        return self.__cmp__(other) <= 0
+
+
+    def __gt__(self, other):
+        return self.__cmp__(other) > 0
+
+
+    def __ge__(self, other):
+        return self.__cmp__(other) >= 0
 
 
     def _update_sub_transfer_count(self):
