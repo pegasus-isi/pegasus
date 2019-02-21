@@ -187,16 +187,19 @@ class Parser(object):
             return my_reply
 
         logger.debug( "Started reading records from kickstart file %s" %(self._kickstart_output_file))
-        
-        # read the whole file
-        raw = self._fh.read()
-        self.close()
 
-        # load the appropriate parser
-        self._parser = YAMLParser(self._kickstart_output_file)
-        # first check if this is an old XML based record
-        if re.search("^<\?xml ", raw, re.MULTILINE):
-            self._parser = XMLParser(self._kickstart_output_file)
+        # load the appropriate parser by checking for first instance of xml header or invocation
+        yaml_parser = True
+        for line in self._fh:
+            if line.find("^<?xml") != -1:
+                yaml_parser = False
+                break
+            elif line.find("- invocation:") == -1:
+                yaml_parser = True
+                break
+
+        self.close()
+        self._parser = YAMLParser(self._kickstart_output_file) if yaml_parser else  XMLParser(self._kickstart_output_file)
 
         return self._parser.parse(keys_dict, tasks, clustered)
 
