@@ -217,10 +217,10 @@ int printDarwinInfo(FILE *out, int indent, const MachineDarwinInfo *ptr) {
     /* <ram .../> tag */
     fprintf(out, "%*sram_total: %"PRIu64"\n%*sram_avail: %"PRIu64"\n%*sram_active: %"PRIu64"\n%*sram_inactive: %"PRIu64"\n%*sram_wired: %"PRIu64"\n",
             indent, "", ptr->ram_total / 1024,
-            indent, "", pptr->ram_avail / 1024,
-            indent, "", pptr->ram_active / 1024,
-            indent, "", pptr->ram_inactive / 1024,
-            indent, "", pptr->ram_wired / 1024);
+            indent, "", ptr->ram_avail / 1024,
+            indent, "", ptr->ram_active / 1024,
+            indent, "", ptr->ram_inactive / 1024,
+            indent, "", ptr->ram_wired / 1024);
 
     /* <swap .../> tag */
     fprintf(out, "%*sswap_total: %"PRIu64"\n%*sswap_avail: %"PRIu64"\n%s*swap_used: %"PRIu64"\n",
