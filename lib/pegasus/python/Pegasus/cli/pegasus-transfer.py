@@ -34,7 +34,6 @@ import random
 import re
 import signal
 import stat
-import string
 import socket
 import subprocess
 import sys
@@ -116,13 +115,13 @@ class PegasusURL:
     def _parse_url(self):
                     
         # default protocol is file://
-        if string.find(self.url, ":") == -1:
+        if self.url.find(":") == -1:
             logger.debug("URL without protocol (" + self.url + ") - assuming file://")
             self.url = "file://" + self.url
 
         # file url is a special cases as it can contain relative paths and
         # env vars
-        if string.find(self.url, "file:") == 0:
+        if self.url.find("file:") == 0:
             self.proto = "file"
             # file urls can either start with file://[\w]*/ or file: (no //)
             self.path = re.sub("^file:(//(localhost)?)?", "", self.url)
@@ -131,7 +130,7 @@ class PegasusURL:
         
         # symlink url is a special cases as it can contain relative paths and
         # env vars
-        if string.find(self.url, "symlink:") == 0:
+        if self.url.find("symlink:") == 0:
             self.proto = "symlink"
             # symlink urls can either start with symlink://[\w]*/ or
             # symlink: (no //)
