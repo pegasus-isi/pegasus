@@ -248,7 +248,7 @@ int printDarwinInfo(FILE *out, int indent, const MachineDarwinInfo *ptr) {
     /* <proc> element */
     for (DarwinState s = STATE_TOTAL; s < MAX_STATE; ++s) {
         if (ptr->pid_state[s]) {
-            fprintf(out, "%*sproc_%s=: %u\n", indent, "", state_names[s], ptr->pid_state[s]);
+            fprintf(out, "%*sproc_%s: %u\n", indent, "", state_names[s], ptr->pid_state[s]);
         }
     }
 
@@ -275,7 +275,7 @@ int printMachine(FILE *out, int indent, const char* tag, const void* data) {
     startBasicMachine(out, indent, tag, ptr->basic);
 
     /* Print contents of <darwin> */
-    printDarwinInfo(out, indent+2, ptr);
+    printDarwinInfo(out, indent, ptr);
 
     /* finish tag */
     finalBasicMachine(out, indent, tag, ptr->basic);
