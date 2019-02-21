@@ -215,40 +215,42 @@ int printDarwinInfo(FILE *out, int indent, const MachineDarwinInfo *ptr) {
     };
 
     /* <ram .../> tag */
-    fprintf(out, "%*s<ram total=\"%"PRIu64"\" avail=\"%"PRIu64"\" active=\"%"PRIu64"\" inactive=\"%"PRIu64"\" wired=\"%"PRIu64"\"/>\n",
-            indent, "",
-            ptr->ram_total / 1024,
-            ptr->ram_avail / 1024,
-            ptr->ram_active / 1024,
-            ptr->ram_inactive / 1024,
-            ptr->ram_wired / 1024);
+    fprintf(out, "%*sram_total: %"PRIu64"\n%*sram_avail: %"PRIu64"\n%*sram_active: %"PRIu64"\n%*sram_inactive: %"PRIu64"\n%*sram_wired: %"PRIu64"\n",
+            indent, "", ptr->ram_total / 1024,
+            indent, "", pptr->ram_avail / 1024,
+            indent, "", pptr->ram_active / 1024,
+            indent, "", pptr->ram_inactive / 1024,
+            indent, "", pptr->ram_wired / 1024);
 
     /* <swap .../> tag */
-    fprintf(out, "%*s<swap total=\"%"PRIu64"\" avail=\"%"PRIu64"\" used=\"%"PRIu64"\"/>\n", indent, "",
-            ptr->swap_total / 1024,
-            ptr->swap_avail / 1024,
-            ptr->swap_used / 1024);
+    fprintf(out, "%*sswap_total: %"PRIu64"\n%*sswap_avail: %"PRIu64"\n%s*swap_used: %"PRIu64"\n",
+            indent, "", ptr->swap_total / 1024,
+            indent, "", ptr->swap_avail / 1024,
+            indent, "", ptr->swap_used / 1024);
 
     /* <boot> element */
-    fprintf(out, "%*s<boot>%s</boot>\n", indent, "",
+    fprintf(out, "%*sboot: %s\n", indent, "",
             fmtisodate(ptr->boottime.tv_sec, ptr->boottime.tv_usec));
 
     /* <cpu> element */
-    fprintf(out, "%*s<cpu count=\"%hu\" speed=\"%lu\" vendor=\"%s\">%s</cpu>\n",
-            indent, "", ptr->cpu_count, ptr->megahertz, ptr->vendor_id, ptr->model_name);
+    fprintf(out, "%*scpu_count: %hu\n%*scpu_speed: %lu\n%*scpu_vendor: %s\n%*scpu_name: %s\n",
+            indent, "", ptr->cpu_count, 
+            indent, "", ptr->megahertz,
+            indent, "", ptr->vendor_id,
+            indent, "", ptr->model_name);
 
     /* loadavg data */
-    fprintf(out, "%*s<load min1=\"%.2f\" min5=\"%.2f\" min15=\"%.2f\"/>\n",
-            indent, "", ptr->load[0], ptr->load[1], ptr->load[2]);
+    fprintf(out, "%*sload_min1: %.2f\n%*sload_min5: %.2f\n%*sload_min15: %.2f\n",
+            indent, "", ptr->load[0],
+            indent, "", ptr->load[1],
+            indent, "", ptr->load[2]);
 
     /* <proc> element */
-    fprintf(out, "%*s<proc", indent, "");
     for (DarwinState s = STATE_TOTAL; s < MAX_STATE; ++s) {
         if (ptr->pid_state[s]) {
-            fprintf(out, " %s=\"%u\"", state_names[s], ptr->pid_state[s]);
+            fprintf(out, "%*sproc_%s=: %u\n", indent, "", state_names[s], ptr->pid_state[s]);
         }
     }
-    fprintf(out, "/>\n");
 
     return 0;
 }
