@@ -104,7 +104,7 @@ class PegasusURL:
         self.url = urllib.unquote(url)
         self.file_type = file_type
         # make the site label to match site labels in the env
-        self.site_label = string.replace(site_label, "-", "_")
+        self.site_label = site_label.replace("-", "_")
         self.priority = priority
         # fill out the rest of the members
         self._parse_url()
