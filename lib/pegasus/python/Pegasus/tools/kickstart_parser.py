@@ -290,7 +290,7 @@ class YAMLParser( Parser ):
         for line in raw.splitlines(True):
             if (line.find("[cluster-task") == 0):
                 # parse the current kickstart record
-                payload = self.parse_yaml_invocation_record(buffer)
+                payload = self.parse_invocation_record(buffer)
                 if payload:
                     data.append(payload)
                 buffer = ""
@@ -311,7 +311,7 @@ class YAMLParser( Parser ):
                     continue
 
                 # parse the current kickstart record
-                payload = self.parse_yaml_invocation_record(buffer)
+                payload = self.parse_invocation_record(buffer)
                 if payload:
                     data.append(payload)
                 buffer = ""
@@ -322,7 +322,7 @@ class YAMLParser( Parser ):
         if buffer.count("\n") > 10:
             # ignore "short" buffers
             # parse the current kickstart record
-            payload = self.parse_yaml_invocation_record(buffer)
+            payload = self.parse_invocation_record(buffer)
             if payload:
                 data.append(payload)
             buffer = ""
@@ -451,7 +451,7 @@ class YAMLParser( Parser ):
 
         return new_data
 
-    def parse_yaml_invocation_record(self, buffer=''):
+    def parse_invocation_record(self, buffer=''):
         """
         Parses the YAML record in buffer returning an invocation record
         :param buffer:
@@ -521,14 +521,14 @@ class XMLParser( Parser ):
 
         self._record_number = 0
         # Read first record
-        my_buffer = self.read_xml_record()
+        my_buffer = self.read_record()
 
         # Loop while we still have record to read
         while my_buffer is not None:
             if self.is_invocation_record(my_buffer) == True:
                 # We have an invocation record, parse it!
                 try:
-                    my_record = self.parse_xml_invocation_record(my_buffer)
+                    my_record = self.parse_invocation_record(my_buffer)
                 except:
                     logger.warning("KICKSTART-PARSE-ERROR --> error parsing invocation record in file %s"
                                    % (self._kickstart_output_file))
@@ -555,14 +555,14 @@ class XMLParser( Parser ):
                 pass
 
             # Read next record
-            my_buffer = self.read_xml_record()
+            my_buffer = self.read_record()
 
         # Lastly, close the file
         self.close()
 
         return my_reply
 
-    def parse_xml_invocation_record(self, buffer=''):
+    def parse_invocation_record(self, buffer=''):
         """
         Parses the xml record in buffer, returning the desired keys.
         """
@@ -615,7 +615,7 @@ class XMLParser( Parser ):
 
         return self._keys
 
-    def read_xml_record(self):
+    def read_record(self):
         """
         This function reads an invocation record from the kickstart
         output file. We also look for the struct at the end of a file
