@@ -191,10 +191,10 @@ class Parser(object):
         # load the appropriate parser by checking for first instance of xml header or invocation
         yaml_parser = True
         for line in self._fh:
-            if line.find("^<?xml") != -1:
+            if line.find("<?xml") != -1:
                 yaml_parser = False
                 break
-            elif line.find("- invocation:") == -1:
+            elif line.find("- invocation:") != -1:
                 yaml_parser = True
                 break
 
