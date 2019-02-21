@@ -285,23 +285,27 @@ class Remove(TransferBase):
 
 
     def __eq__(self, other):
-        return self.__cmp__(other) == 0
+        return self._target_url.proto == other._target_url.proto and \
+               self._target_url.host == other._target_url.host and \
+               self._target_url.path == other._target_url.path
 
 
     def __lt__(self, other):
-        return self.__cmp__(other) < 0
+        return self._target_url.proto < other._target_url.proto or \
+               self._target_url.host < other._target_url.host or \
+               self._target_url.path < other._target_url.path
 
 
     def __le__(self, other):
-        return self.__cmp__(other) <= 0
+        return self.__lt__(other) or self.__eq__(other)
 
 
     def __gt__(self, other):
-        return self.__cmp__(other) > 0
+        return not (self.__lt__(other) or self.__eq__(other))
 
 
     def __ge__(self, other):
-        return self.__cmp__(other) >= 0
+        return not (self.__lt__(other))
 
 
 class Transfer(TransferBase):
@@ -463,23 +467,33 @@ class Transfer(TransferBase):
 
 
     def __eq__(self, other):
-        return self.__cmp__(other) == 0
+        return self._src_urls[0].proto == other._src_urls[0].proto and \
+               self._dst_urls[0].proto == other._dst_urls[0].proto and \
+               self._src_urls[0].host == other._src_urls[0].host and \
+               self._dst_urls[0].host == other._dst_urls[0].host and \
+               self._src_urls[0].path == other._src_urls[0].path and \
+               self._dst_urls[0].path == other._dst_urls[0].path
 
 
     def __lt__(self, other):
-        return self.__cmp__(other) < 0
+        return self._src_urls[0].proto < other._src_urls[0].proto or \
+               self._dst_urls[0].proto < other._dst_urls[0].proto or \
+               self._src_urls[0].host < other._src_urls[0].host or \
+               self._dst_urls[0].host < other._dst_urls[0].host or \
+               self._src_urls[0].path < other._src_urls[0].path or \
+               self._dst_urls[0].path < other._dst_urls[0].path
 
 
     def __le__(self, other):
-        return self.__cmp__(other) <= 0
+        return self.__lt__(other) or self.__eq__(other)
 
 
     def __gt__(self, other):
-        return self.__cmp__(other) > 0
+        return not (self.__lt__(other) or self.__eq__(other))
 
 
     def __ge__(self, other):
-        return self.__cmp__(other) >= 0
+        return not (self.__lt__(other))
 
 
     def _update_sub_transfer_count(self):
