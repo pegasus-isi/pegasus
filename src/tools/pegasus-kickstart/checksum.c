@@ -19,6 +19,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "checksum.h"
 
@@ -37,7 +38,15 @@ int pegasus_integrity_yaml(const char *fname, char *yaml) {
     /* in case of failure */
     *yaml = '\0';
 
-    strcpy(cmd, "pegasus-integrity --generate-yaml=");
+    cmd[0] = '\0';
+
+    /* use PEGASUS_HOME if set */
+    if (getenv("PEGASUS_HOME") != NULL) {
+        strcat(cmd, getenv("PEGASUS_HOME"));
+        strcat(cmd, "/");
+    }
+
+    strcat(cmd, "pegasus-integrity --generate-yaml=");
     strcat(cmd, fname);
     strcat(cmd, " 2>/dev/null");
 

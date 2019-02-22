@@ -60,6 +60,23 @@ except ImportError:
     # Fall back to Python 2's urllib
     import urllib as urllib
 
+# see https://www.python.org/dev/peps/pep-0469/
+try:
+    dict.iteritems
+except AttributeError:
+    # Python 3
+    def itervalues(d):
+        return iter(d.values())
+    def iteritems(d):
+        return iter(d.items())
+else:
+    # Python 2
+    def itervalues(d):
+        return d.itervalues()
+    def iteritems(d):
+        return d.iteritems()
+
+
 # Bad ulimits (for example -s 16000000) can prevent new threads from
 # being created. Let's try setting the stack size to something sane
 # but not worry if the attempt fails.
@@ -655,7 +672,7 @@ class TimedCommand(object):
             
             # custom environment for the subshell
             sub_env = os.environ.copy()
-            for key, value in self._env_overrides.iteritems():
+            for key, value in iteritems(self._env_overrides):
                 logger.debug("ENV override: %s = %s" %(key, value))
                 sub_env[key] = value
             
@@ -3501,7 +3518,7 @@ class Stats:
                    iso_prefix_formatted(self._total_bytes), total_secs, 
                    iso_prefix_formatted(Bps), iso_prefix_formatted(Bps*8)))
         
-        for key, value in self._site_pair_count.iteritems():
+        for key, value in iteritems(self._site_pair_count):
             Bps = self._site_pair_bytes[key] / total_secs
             logger.info("       Between sites %s : %d transfers, %sB transferred in %.0f seconds. Rate: %sB/s (%sb/s)" \
                         %( key,
