@@ -23,7 +23,9 @@ import os
 import collections
 import re
 import logging
-from cStringIO import StringIO
+# PM-1332 cannot use cStringIO since job stdout can have unicode characters
+# cStringIO only supports ASCII
+from StringIO import StringIO
 import json
 
 from Pegasus.tools import utils
@@ -684,19 +686,18 @@ class Job:
         """
 
         events = []
-        task_data = StringIO()
         start = 0
         end = 0
 
         #print task_output
         start = task_output.find(MONITORING_EVENT_START_MARKER, start)
 
-        try:
-            if start == -1 :
-                # no monitoring marker found
-                task_data.write(task_output)
-                return TaskOutput(task_data.getvalue(), events)
+        if start == -1 :
+            # no monitoring marker found
+            return TaskOutput(task_output, events)
 
+        task_data = StringIO()
+        try:
             while start != -1:
                 task_data.write(task_output[end:start])
                 end = task_output.find( MONITORING_EVENT_END_MARKER, start )
