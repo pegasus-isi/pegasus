@@ -500,134 +500,137 @@ class Transfer(TransferBase):
         self._sub_transfer_count = len(self._src_urls) * len(self._dst_urls)
 
 
-class Singleton(type):
-    """Implementation of the singleton pattern"""
-    _instances = {}
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = \
-                super(Singleton, cls).__call__(*args, **kwargs)
-            cls.lock = threading.Lock()
-        return cls._instances[cls]
-
-
 class Tools(object):
-    """Singleton for detecting and maintaining tools we depend on
     """
+    Singleton for detecting and maintaining tools we depend on
+    """
+   
+    # singleton
+    instance = None
+
+    def __init__(self):
+        if not Tools.instance:
+            Tools.instance = Tools.__Tools()
+
+    def __getattr__(self, name):
+        return getattr(self.instance, name)
     
-    __metaclass__ = Singleton
+    class __Tools():   	 
+
+        _info = {}
+
+        def __init__(self):
+            self.lock = threading.Lock()
     
-    _info = {}
-
-    def find(self, executable, version_arg=None, version_regex=None, path_prepend=None):
-
-        self.lock.acquire()
-        try:
-            if executable in self._info:
-                if self._info[executable] is None:
-                    return None
-                return self._info[executable]
+        def find(self, executable, version_arg=None, version_regex=None, path_prepend=None):
+    
+            self.lock.acquire()
+            try:
+                if executable in self._info:
+                    if self._info[executable] is None:
+                        return None
+                    return self._info[executable]
+                
+                logger.debug("Trying to detect availability/location of tool: %s"
+                             %(executable))
+    
+                # initialize the global tool info for this executable
+                self._info[executable] = {}
+                self._info[executable]['full_path'] = None
+                self._info[executable]['version'] = None
+                self._info[executable]['version_major'] = None
+                self._info[executable]['version_minor'] = None
+                self._info[executable]['version_patch'] = None
             
-            logger.debug("Trying to detect availability/location of tool: %s"
-                         %(executable))
-
-            # initialize the global tool info for this executable
-            self._info[executable] = {}
-            self._info[executable]['full_path'] = None
-            self._info[executable]['version'] = None
-            self._info[executable]['version_major'] = None
-            self._info[executable]['version_minor'] = None
-            self._info[executable]['version_patch'] = None
-        
-            # figure out the full path to the executable
-            path_entries = os.environ["PATH"].split(":")
-            if "" in path_entries:
-                path_entries.remove("")
-            # if we have PEGASUS_HOME set, and try to invoke a Pegasus tool, prepend
-            if 'PEGASUS_HOME' in os.environ and executable.find("pegasus-") == 0:
-                path_entries.insert(0, os.environ['PEGASUS_HOME'] + '/bin')
-            if path_prepend is not None:
-                for entry in path_prepend:
-                    path_entries.insert(0, entry)
-            
-            # now walk the path
-            full_path = None
-            for entry in path_entries:
-                full_path = entry + "/" + executable
-                if os.path.isfile(full_path) and os.access(full_path, os.X_OK):
-                    break
+                # figure out the full path to the executable
+                path_entries = os.environ["PATH"].split(":")
+                if "" in path_entries:
+                    path_entries.remove("")
+                # if we have PEGASUS_HOME set, and try to invoke a Pegasus tool, prepend
+                if 'PEGASUS_HOME' in os.environ and executable.find("pegasus-") == 0:
+                    path_entries.insert(0, os.environ['PEGASUS_HOME'] + '/bin')
+                if path_prepend is not None:
+                    for entry in path_prepend:
+                        path_entries.insert(0, entry)
+                
+                # now walk the path
                 full_path = None
+                for entry in path_entries:
+                    full_path = entry + "/" + executable
+                    if os.path.isfile(full_path) and os.access(full_path, os.X_OK):
+                        break
+                    full_path = None
+                
+                if full_path == None:
+                    logger.info("Command '%s' not found in the current environment"
+                                %(executable))
+                    self._info[executable] = None
+                    return self._info[executable]
+                self._info[executable]['full_path'] = full_path
             
-            if full_path == None:
-                logger.info("Command '%s' not found in the current environment"
-                            %(executable))
-                self._info[executable] = None
-                return self._info[executable]
-            self._info[executable]['full_path'] = full_path
-        
-            # version
-            if version_regex is None:
-                version = "N/A"
-            else:
-                version = backticks(executable + " " + version_arg + " 2>&1")
-                version = version.replace('\n', "")
-                re_version = re.compile(version_regex)
+                # version
+                if version_regex is None:
+                    version = "N/A"
+                else:
+                    version = backticks(executable + " " + version_arg + " 2>&1")
+                    version = version.replace('\n', "")
+                    re_version = re.compile(version_regex)
+                    result = re_version.search(version)
+                    if result:
+                        version = result.group(1)
+                    self._info[executable]['version'] = version
+            
+                # if possible, break up version into major, minor, patch
+                re_version = re.compile("([0-9]+)\.([0-9]+)(\.([0-9]+)){0,1}")
                 result = re_version.search(version)
                 if result:
-                    version = result.group(1)
-                self._info[executable]['version'] = version
-        
-            # if possible, break up version into major, minor, patch
-            re_version = re.compile("([0-9]+)\.([0-9]+)(\.([0-9]+)){0,1}")
-            result = re_version.search(version)
-            if result:
-                self._info[executable]['version_major'] = int(result.group(1))
-                self._info[executable]['version_minor'] = int(result.group(2))
-                self._info[executable]['version_patch'] = result.group(4)
-            if self._info[executable]['version_patch'] is None or \
-               self._info[executable]['version_patch'] == "":
-                self._info[executable]['version_patch'] = None
-            else:
-                self._info[executable]['version_patch'] = \
-                    int(self._info[executable]['version_patch'])
-        
-            logger.info("Tool found: %s   Version: %s   Path: %s" 
-                        % (executable, version, full_path))
-            return self._info[executable]['full_path']
-        finally:
-            self.lock.release()
-
-
-    def full_path(self, executable):
-        """ Returns the full path to a given executable """
-        self.lock.acquire()
-        try:
-            if executable in self._info and self._info[executable] is not None:
+                    self._info[executable]['version_major'] = int(result.group(1))
+                    self._info[executable]['version_minor'] = int(result.group(2))
+                    self._info[executable]['version_patch'] = result.group(4)
+                if self._info[executable]['version_patch'] is None or \
+                   self._info[executable]['version_patch'] == "":
+                    self._info[executable]['version_patch'] = None
+                else:
+                    self._info[executable]['version_patch'] = \
+                        int(self._info[executable]['version_patch'])
+            
+                logger.info("Tool found: %s   Version: %s   Path: %s" 
+                            % (executable, version, full_path))
                 return self._info[executable]['full_path']
-            return None
-        finally:
-            self.lock.release()
-
-
-    def major_version(self, executable):
-        """ Returns the detected major version given executable """
-        self.lock.acquire()
-        try:
-            if executable in self._info and self._info[executable] is not None:
-                return self._info[executable]['version_major']
-            return None
-        finally:
-            self.lock.release()
+            finally:
+                self.lock.release()
     
-    def minor_version(self, executable):
-        """ Returns the detected minor version given executable """
-        self.lock.acquire()
-        try:
-            if executable in self._info and self._info[executable] is not None:
-                return self._info[executable]['version_minor']
-            return None
-        finally:
-            self.lock.release()
+    
+        def full_path(self, executable):
+            """ Returns the full path to a given executable """
+            self.lock.acquire()
+            try:
+                if executable in self._info and self._info[executable] is not None:
+                    return self._info[executable]['full_path']
+                return None
+            finally:
+                self.lock.release()
+    
+    
+        def major_version(self, executable):
+            """ Returns the detected major version given executable """
+            self.lock.acquire()
+            try:
+                if executable in self._info and self._info[executable] is not None:
+                    return self._info[executable]['version_major']
+                return None
+            finally:
+                self.lock.release()
+        
+        def minor_version(self, executable):
+            """ Returns the detected minor version given executable """
+            self.lock.acquire()
+            try:
+                if executable in self._info and self._info[executable] is not None:
+                    return self._info[executable]['version_minor']
+                return None
+            finally:
+                self.lock.release()
                 
 
 class TimedCommand(object):
@@ -3508,53 +3511,64 @@ class Stats:
             
 
 class Panorama:
-    """ Singleton for sending Panorama live stats
     """
-    
-    __metaclass__ = Singleton
+    Singleton for sending Panorama live stats
+    """
+   
+    # singleton
+    instance = None
 
-    def one_transfer(self, transfer, was_successful, t_start, t_end, filesize):
-        
-        if "KICKSTART_MON_ENDPOINT_URL" not in os.environ:
-            return
-        
-        # status follows UNIX exit code convention
-        status = 1
-        if was_successful:
-            status = 0
-        
-        payload = "ts=%.0f" %(time.time())
-        payload += " event=data_transfer"
-        payload += " level=INFO"
-        payload += " status=" + str(status) 
-        payload += " wf_uuid=" + os.environ["PEGASUS_WF_UUID"]
-        payload += " dag_job_id=" + os.environ["PEGASUS_DAG_JOB_ID"]
-        payload += " hostname=" + socket.getfqdn()
-        payload += " condor_job_id=" + os.environ["CONDOR_JOBID"]
-        payload += " src_url=" + transfer.src_url()
-        payload += " src_site_name=" + transfer.get_src_site_label()
-        payload += " dst_url=" + transfer.dst_url()
-        payload += " dst_site_name=" + transfer.get_dst_site_label()
-        payload += " transfer_start_ts=%.0f" %(t_start)
-        payload += " transfer_duration=%.0f" % (t_end - t_start)
-        if filesize is not None and filesize > 0:
-            payload += " bytes_transferred=%.0f" %(filesize)
-        payload += "  "
-        
-        logger.debug(payload)
-        data = "{\"properties\":{},\"routing_key\":\"%s\",\"payload\":\"%s\",\"payload_encoding\":\"base64\"}" \
-               %(os.environ["PEGASUS_WF_UUID"], base64.encodestring(payload))
-        logger.debug(data)
-        req = urllib2.Request(os.environ["KICKSTART_MON_ENDPOINT_URL"], data)
-        base64string = base64.encodestring(os.environ["KICKSTART_MON_ENDPOINT_CREDENTIALS"])[:-1]
-        authheader =  "Basic %s" % base64string
-        req.add_header("Authorization", authheader)
-        try:
-            u = urllib2.urlopen(req)
-        except IOError as e:
-             logger.error("Unable to publish to Panorama: " + str(e))
-             return
-        data = u.read()
+    def __init__(self):
+        if not Panorama.instance:
+            Panorama.instance = Panorama.__Panorama()
+
+    def __getattr__(self, name):
+        return getattr(self.instance, name)
+    
+    class __Panorama():   	 
+    
+        def one_transfer(self, transfer, was_successful, t_start, t_end, filesize):
+            
+            if "KICKSTART_MON_ENDPOINT_URL" not in os.environ:
+                return
+            
+            # status follows UNIX exit code convention
+            status = 1
+            if was_successful:
+                status = 0
+            
+            payload = "ts=%.0f" %(time.time())
+            payload += " event=data_transfer"
+            payload += " level=INFO"
+            payload += " status=" + str(status) 
+            payload += " wf_uuid=" + os.environ["PEGASUS_WF_UUID"]
+            payload += " dag_job_id=" + os.environ["PEGASUS_DAG_JOB_ID"]
+            payload += " hostname=" + socket.getfqdn()
+            payload += " condor_job_id=" + os.environ["CONDOR_JOBID"]
+            payload += " src_url=" + transfer.src_url()
+            payload += " src_site_name=" + transfer.get_src_site_label()
+            payload += " dst_url=" + transfer.dst_url()
+            payload += " dst_site_name=" + transfer.get_dst_site_label()
+            payload += " transfer_start_ts=%.0f" %(t_start)
+            payload += " transfer_duration=%.0f" % (t_end - t_start)
+            if filesize is not None and filesize > 0:
+                payload += " bytes_transferred=%.0f" %(filesize)
+            payload += "  "
+            
+            logger.debug(payload)
+            data = "{\"properties\":{},\"routing_key\":\"%s\",\"payload\":\"%s\",\"payload_encoding\":\"base64\"}" \
+                   %(os.environ["PEGASUS_WF_UUID"], base64.encodestring(payload))
+            logger.debug(data)
+            req = urllib2.Request(os.environ["KICKSTART_MON_ENDPOINT_URL"], data)
+            base64string = base64.encodestring(os.environ["KICKSTART_MON_ENDPOINT_CREDENTIALS"])[:-1]
+            authheader =  "Basic %s" % base64string
+            req.add_header("Authorization", authheader)
+            try:
+                u = urllib2.urlopen(req)
+            except IOError as e:
+                 logger.error("Unable to publish to Panorama: " + str(e))
+                 return
+            data = u.read()
 
 
 
