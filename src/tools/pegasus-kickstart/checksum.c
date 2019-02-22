@@ -43,7 +43,7 @@ int pegasus_integrity_yaml(const char *fname, char *yaml) {
     /* use PEGASUS_HOME if set */
     if (getenv("PEGASUS_HOME") != NULL) {
         strcat(cmd, getenv("PEGASUS_HOME"));
-        strcat(cmd, "/");
+        strcat(cmd, "/bin/");
     }
 
     strcat(cmd, "pegasus-integrity --generate-yaml=");
