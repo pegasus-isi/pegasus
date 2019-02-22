@@ -46,12 +46,6 @@ else
     $(warning WARNING: globus_sdk does not work with Python 2.6: skipping globus_sdk library)
 endif
 
-ifeq ($(shell which mysql_config),)
-    $(warning WARNING: mysql_config not found: skipping python mysql library)
-else
-    PACKAGES+=MySQLdb
-endif
-
 PYOPENSSL_ARGS=
 ifeq ($(OSID),macos10)
     OPENSSL:=$(shell brew --prefix openssl)
@@ -94,7 +88,6 @@ $(LIBDIR)/enum34: enum34-1.1.6.tar.gz
 $(LIBDIR)/cffi: cffi-1.10.0.tar.gz
 $(LIBDIR)/cryptography: cryptography-2.0.3.tar.gz
 $(LIBDIR)/plex: plex-2.0.0dev.tar.gz
-$(LIBDIR)/MySQLdb: MySQL-python-1.2.5.tar.gz
 $(LIBDIR)/ordereddict.py: ordereddict-1.1.tar.gz
 $(LIBDIR)/future: future-0.16.0.tar.gz
 $(LIBDIR)/chardet: chardet-3.0.4.tar.gz
