@@ -67,10 +67,12 @@ class Metadata( object ):
     def write_to_jsonfile( metadata_list, directory  , name, prefix="pegasus-monitord"):
         try:
             temp_file = tempfile.NamedTemporaryFile( dir=directory, prefix=prefix , suffix=".meta", delete=False)
-            jsonify(  metadata_list, temp_file )
+            jsonify(metadata_list, temp_file)
             logger.debug( "Written out metadata to %s", temp_file.name )
+            os.chmod(temp_file.name, 0o644)
             # rename the file to the name to assure atomicity
             os.rename( temp_file.name, os.path.join(directory,name))
+
         except Exception as e:
             # Error sending this event... disable the sink from now on...
             logger.warning(" unable to write out  metadata to directory %s with name %s ", directory, name)
