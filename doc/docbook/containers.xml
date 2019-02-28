@@ -122,6 +122,67 @@
       container in the PegasusLite wrapper, they now happen when the user job
       starts in the container.</para>
     </note>
+
+    <para>
+    In versions of Pegasus >= 4.9.1 the transfers are handled from within the container, and thus
+    container recipes require some extra attention. An example that prepares a container for
+    GridFTP transfers is provided below.
+    </para>
+
+    <para>
+    In this example there are three sections. 
+    
+    <itemizedlist>
+      <listitem><para>Essential Packages</para></listitem>
+      <listitem><para>Install Globus Toolkit</para></listitem>
+      <listitem><para>Install CA Certs</para></listitem>
+    </itemizedlist>
+    
+    From the "Essential Packages", <emphasis role="bold">python</emphasis> and
+    either <emphasis role="bold">curl</emphasis> or <emphasis role="bold">wget</emphasis> have to be
+    present. "Install Globus Toolkit", sets up the enviroment for GridFTP transfers. And "Install CA Certs"
+    copies the grid certificates in the container.
+    </para>
+    
+    <note>
+      <para>
+      Globus Toolkit introduced some breaking changes on August 2018 to its authentication module,
+      and some sites haven't upgraded their installations (eg. NERSC). GridFTP in order
+      to authenticate successfully, requires the libglobus-gssapi-gsi4 package to be pinned to
+      the version 13.8-1. The code snipet below contains installation directives to handle this
+      but they are commented out.
+      </para>
+   </note>
+
+   <programlisting>
+FROM ubuntu:18.04
+
+#### Essential Packages ####
+RUN apt-get update &amp;&amp;\
+apt-get install -y software-properties-common curl wget python unzip &amp;&amp;\
+rm -rf /var/lib/apt/lists/*
+
+#### Install Globus Toolkit ####
+RUN wget -nv http://www.globus.org/ftppub/gt6/installers/repo/globus-toolkit-repo_latest_all.deb &amp;&amp;\
+dpkg -i globus-toolkit-repo_latest_all.deb &amp;&amp;\
+apt-get update &amp;&amp;\
+# apt-get install -y libglobus-gssapi-gsi4=13.8-1+gt6.bionic &amp;&amp;\
+# apt-mark hold libglobus-gssapi-gsi4 &amp;&amp;\
+apt-get install -y globus-data-management-client &amp;&amp;\
+rm -f globus-toolkit-repo_latest_all.deb &amp;&amp;\
+rm -rf /var/lib/apt/lists/*
+
+#### Install CA Certs ####
+RUN mkdir -p /etc/grid-security &amp;&amp;\
+cd /etc/grid-security &amp;&amp;\
+wget -nv https://download.pegasus.isi.edu/containers/certificates.tar.gz &amp;&amp;\
+tar xzf certificates.tar.gz &amp;&amp;\
+rm -f certificates.tar.gz
+
+##########################################
+#### Your Container Specific Commands ####
+##########################################
+   </programlisting>
   </section>
 
   <section id="container-transfers">
