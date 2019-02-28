@@ -2427,7 +2427,7 @@ class GFALHandler(TransferHandlerBase):
                     self._post_transfer_attempt(t, False, t_start)
                     continue        
     
-            cmd = "gfal-copy -f -p"
+            cmd = "gfal-copy -f -p -K md5 -t 7200 -T 7200"
             if logger.isEnabledFor(logging.DEBUG):
                 cmd = cmd + " -v"
             cmd = cmd + " '%s' '%s'" % (t.src_url(), t.dst_url())

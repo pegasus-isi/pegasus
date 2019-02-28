@@ -660,6 +660,9 @@ public abstract class Abstract implements ContainerShellWrapper{
             else if( c.getType().equals( Container.TYPE.singularity) ){
                 return Singularity.CONTAINER_WORKING_DIRECTORY;
             }
+            if( c.getType().equals( Container.TYPE.shifter) ){
+                return Shifter.CONTAINER_WORKING_DIRECTORY;
+            }
             else{
                 Container.TYPE type = c.getType();
                 throw new RuntimeException( "Unsupported Container of type " + type );

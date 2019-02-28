@@ -23,7 +23,9 @@ import os
 import collections
 import re
 import logging
-from cStringIO import StringIO
+# PM-1332 cannot use cStringIO since job stdout can have unicode characters
+# cStringIO only supports ASCII
+from StringIO import StringIO
 import json
 
 from Pegasus.tools import utils
@@ -684,28 +686,34 @@ class Job:
         """
 
         events = []
-        task_data = StringIO()
         start = 0
         end = 0
 
         #print task_output
         start = task_output.find(MONITORING_EVENT_START_MARKER, start)
+
         if start == -1 :
             # no monitoring marker found
-            task_data.write( task_output )
+            return TaskOutput(task_output, events)
+
+        task_data = StringIO()
+        try:
+            while start != -1:
+                task_data.write(task_output[end:start])
+                end = task_output.find( MONITORING_EVENT_END_MARKER, start )
+                payload = task_output[start + len(MONITORING_EVENT_START_MARKER):end ]
+                try:
+                    events.append(json.loads(payload) )
+                except:
+                    logger.error( "Unable to convert payload %s to JSON" %payload)
+                start = task_output.find(MONITORING_EVENT_START_MARKER, end)
+
+            task_data.write(task_output[end + len(MONITORING_EVENT_END_MARKER):])
+        except Exception as e:
+            logger.error( "Unable to parse monitoring events from job stdout for job %s" %self._exec_job_id)
+            logger.exception(e)
+            # return the whole task output as is
             return TaskOutput(task_data.getvalue(), events)
-
-        while start != -1:
-            task_data.write(task_output[end:start])
-            end = task_output.find( MONITORING_EVENT_END_MARKER, start )
-            payload = task_output[start + len(MONITORING_EVENT_START_MARKER):end ]
-            try:
-                events.append(json.loads(payload) )
-            except:
-                logger.error( "Unable to convert payload %s to JSON" %payload)
-            start = task_output.find(MONITORING_EVENT_START_MARKER, end)
-
-        task_data.write(task_output[end + len(MONITORING_EVENT_END_MARKER):])
 
         return TaskOutput(task_data.getvalue(), events)
 

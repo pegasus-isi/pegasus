@@ -56,6 +56,12 @@ public class ContainerShellWrapperFactory {
      */
     public static final String SINGULARITY_SHELL_WRAPPER_CLASS =
                     "Singularity";
+    
+    /**
+     * The name of the class implementing the Shifter shell wrapper
+     */
+    public static final String SHIFTER_SHELL_WRAPPER_CLASS =
+                    "Shifter";
 
     /**
      * The name of the class implementing the Stampede Event Generator
@@ -69,6 +75,7 @@ public class ContainerShellWrapperFactory {
     public static String[] CONTAINER_SHORT_NAMES = {
                                            "docker",
                                            "singularity",
+                                           "shifter",
                                            "none"
                                           };
     /**
@@ -77,6 +84,7 @@ public class ContainerShellWrapperFactory {
     public static String[] CONTAINER_IMPLEMENTING_CLASSES = {
                                                      DOCKER_SHELL_WRAPPER_CLASS,
                                                      SINGULARITY_SHELL_WRAPPER_CLASS,
+                                                     SHIFTER_SHELL_WRAPPER_CLASS,
                                                      NO_SHELL_WRAPPER_CLASS
                                                     };
     /**
@@ -154,6 +162,9 @@ public class ContainerShellWrapperFactory {
             }
             else if( c.getType().equals( Container.TYPE.singularity) ){
                 shortName = ContainerShellWrapperFactory.SINGULARITY_SHELL_WRAPPER_CLASS;
+            }
+            else if( c.getType().equals( Container.TYPE.shifter) ){
+                shortName = ContainerShellWrapperFactory.SHIFTER_SHELL_WRAPPER_CLASS;
             }
             else{
                 throw new ContainerShellWrapperFactoryException( "Unsupported Container Shell Wrapper of type " + type );

@@ -42,7 +42,7 @@ public class Container implements Cloneable {
     /**
      * The types of container supported.
      */
-    public static enum TYPE{ docker, singularity };
+    public static enum TYPE{ docker, singularity, shifter };
     
     /**
      * Singularity is picky about extensions as it uses that for loading the container image
@@ -208,6 +208,19 @@ public class Container implements Cloneable {
                 }
             }
             lfn = lfn + suffix;
+        }
+        else if( this.mType.equals( Container.TYPE.shifter ) ){
+            StringBuilder sb = new StringBuilder();
+            if( protocol != null && !protocol.equalsIgnoreCase( PegasusURL.SHIFTER_PROTOCOL_SCHEME ) ){
+                sb.append( protocol ).append( ":" );
+            }
+            if( path.startsWith( File.separator ) ){
+               sb.append( path.substring( 1 ) ); 
+            }
+            else{
+                sb.append( path );
+            }
+            lfn = sb.toString();
         }
         return lfn;
     }

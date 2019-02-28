@@ -370,9 +370,23 @@ function singularity_init()
     
     container_init
 
-    # for singularity we don't need to load anything like in docker.
-    
+    # for singularity we don't need to load anything like in docker.    
 }
+
+function shifter_init()
+{
+    set -e
+
+    if [ $# -ne 1 ]; then
+        pegasus_lite_log "shifter_init should be passed a docker url or a file"
+	return 1
+    fi
+
+    container_init
+
+    # for shifter we don't need to load anything like in docker.
+}
+
 
 function pegasus_lite_init()
 {
@@ -556,7 +570,7 @@ function pegasus_lite_get_system()
                 osversion="10"
             fi
         elif [ -e /etc/fedora-release ]; then
-            osname="fedora"
+            osname="fc"
             osversion=`cat /etc/fedora-release | grep -o -E '[0-9]+'`
         elif [ -e /etc/redhat-release ]; then
             osname="rhel"

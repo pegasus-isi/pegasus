@@ -17,7 +17,7 @@
     Java, Perl, or Python format</para>
 
     <note>
-       We highly recommend using the DAX API. The Perl DAX API is deprecated starting 4.9.0 Release and will be removed in the 5.0 Release.
+       We highly recommend using the DAX API. The Perl DAX API is deprecated starting 4.9.0 Release and will be removed in the 5.0 Release. 
     </note>
 
     <para>Advanced users who can read XML schema definitions can generate a
@@ -1223,7 +1223,7 @@ cont centos-pegasus{
             docker|singularity hub or URL to an existing docker image exported
             as a tar file or singularity image. Example of a docker hub URL is
             docker:///rynge/montage:latest, while for singularity
-            shub://pegasus-isi/fedora-montage</para>
+            shub://singularity-hub.org/pegasus-isi/fedora-montage</para>
           </listitem>
 
           <listitem>
