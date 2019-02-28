@@ -125,7 +125,7 @@
 
     <para>
     In versions of Pegasus >= 4.9.1 the transfers are handled from within the container, and thus
-    container recipes require some extra attention. An example that prepares a container for
+    container recipes require some extra attention. A Dockerfile example that prepares a container for
     GridFTP transfers is provided below.
     </para>
 
@@ -146,7 +146,7 @@
     
     <note>
       <para>
-      Globus Toolkit introduced some breaking changes on August 2018 to its authentication module,
+      Globus Toolkit introduced some breaking changes in August 2018 to its authentication module,
       and some sites haven't upgraded their installations (eg. NERSC). GridFTP in order
       to authenticate successfully, requires the libglobus-gssapi-gsi4 package to be pinned to
       the version 13.8-1. The code snipet below contains installation directives to handle this
@@ -155,6 +155,10 @@
    </note>
 
    <programlisting>
+##########################################
+#### This Container Supports GridFTP  ####
+##########################################
+
 FROM ubuntu:18.04
 
 #### Essential Packages ####
