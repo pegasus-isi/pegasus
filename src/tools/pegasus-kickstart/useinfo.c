@@ -17,7 +17,7 @@
 #include "utils.h"
 #include "useinfo.h"
 
-int printXMLUseInfo(FILE *out, int indent, const char* id,
+int printYAMLUseInfo(FILE *out, int indent, const char* id,
                     const struct rusage* use) {
     /* purpose: format the rusage record into the given stream as XML.
      * paramtr: out (IO): the stream
@@ -29,10 +29,11 @@ int printXMLUseInfo(FILE *out, int indent, const char* id,
     char b[4][32];
 
     /* <usage> */
-    fprintf(out, "%*s<%s utime=\"%.3f\" stime=\"%.3f\"", indent, "",
-            id, doubletime(use->ru_utime), doubletime(use->ru_stime));
+    fprintf(out, "%*s%s:\n", indent, "", id);
+    fprintf(out, "%*s  utime: %.3f\n", indent, "", doubletime(use->ru_utime));
+    fprintf(out, "%*s  stime: %.3f\n", indent, "", doubletime(use->ru_stime));
 
-    fprintf(out, " maxrss=\"%lu\"", 
+    fprintf(out, "%*s  maxrss: %lu\n", indent, "", 
 #ifdef DARWIN
             /* On Mac OS X this is in bytes */
             use->ru_maxrss / 1024
@@ -42,23 +43,23 @@ int printXMLUseInfo(FILE *out, int indent, const char* id,
 #endif
     );
 
-    fprintf(out, " minflt=\"%s\" majflt=\"%s\" nswap=\"%s\"",
-            sizer(b[0], 32, sizeof(use->ru_minflt), &(use->ru_minflt)),
-            sizer(b[1], 32, sizeof(use->ru_majflt), &(use->ru_majflt)),
-            sizer(b[2], 32, sizeof(use->ru_nswap), &(use->ru_nswap)));
+    fprintf(out, "%*s  minflt: %s\n%*s  majflt: %s\n%*s  nswap: %s\n",
+            indent, "", sizer(b[0], 32, sizeof(use->ru_minflt), &(use->ru_minflt)),
+            indent, "", sizer(b[1], 32, sizeof(use->ru_majflt), &(use->ru_majflt)),
+            indent, "", sizer(b[2], 32, sizeof(use->ru_nswap), &(use->ru_nswap)));
 
-    fprintf(out, " inblock=\"%s\" outblock=\"%s\"",
-            sizer(b[0], 32, sizeof(use->ru_inblock), &(use->ru_inblock)),
-            sizer(b[1], 32, sizeof(use->ru_oublock), &(use->ru_oublock)));
+    fprintf(out, "%*s  inblock: %s\n%*s  outblock: %s\n",
+            indent, "", sizer(b[0], 32, sizeof(use->ru_inblock), &(use->ru_inblock)),
+            indent, "", sizer(b[1], 32, sizeof(use->ru_oublock), &(use->ru_oublock)));
 
-    fprintf(out, " msgsnd=\"%s\" msgrcv=\"%s\"",
-            sizer(b[2], 32, sizeof(use->ru_msgsnd), &(use->ru_msgsnd)),
-            sizer(b[3], 32, sizeof(use->ru_msgrcv), &(use->ru_msgrcv)));
+    fprintf(out, "%*s  msgsnd: %s\n%*s  msgrcv: %s\n",
+            indent, "", sizer(b[2], 32, sizeof(use->ru_msgsnd), &(use->ru_msgsnd)),
+            indent, "", sizer(b[3], 32, sizeof(use->ru_msgrcv), &(use->ru_msgrcv)));
 
-    fprintf(out, " nsignals=\"%s\" nvcsw=\"%s\" nivcsw=\"%s\"/>\n",
-            sizer(b[0], 32, sizeof(use->ru_nsignals), &(use->ru_nsignals)),
-            sizer(b[1], 32, sizeof(use->ru_nvcsw), &(use->ru_nvcsw)),
-            sizer(b[2], 32, sizeof(use->ru_nivcsw), &(use->ru_nivcsw)));
+    fprintf(out, "%*s  nsignals: %s\n%*s  nvcsw: %s\n%*s  nivcsw: %s\n",
+            indent, "", sizer(b[0], 32, sizeof(use->ru_nsignals), &(use->ru_nsignals)),
+            indent, "", sizer(b[1], 32, sizeof(use->ru_nvcsw), &(use->ru_nvcsw)),
+            indent, "", sizer(b[2], 32, sizeof(use->ru_nivcsw), &(use->ru_nivcsw)));
 
     return 0;
 }

@@ -2,11 +2,6 @@
 
 KICKSTART=../pegasus-kickstart
 
-if [ -z "$(which xmllint)" ]; then
-    echo "ERROR: xmllint not found"
-    exit 1
-fi
-
 function run_test {
     echo "Running" "$@"
     "$@"
@@ -25,10 +20,10 @@ function run_test {
 function kickstart {
     $KICKSTART "$@" >test.out 2>test.err
     RC=$?
-    xmllint test.out >/dev/null
+    ../../../../release-tools/yaml-validator test.out >/dev/null
     if [ $? -ne 0 ]; then
         cat test.err test.out
-        echo "Invalid XML"
+        echo "Invalid YAML"
         exit 1
     fi
     return $RC
@@ -163,18 +158,18 @@ function test_missing_args {
     done
 }
 
-function test_xmlquote {
+function test_quoting {
     kickstart cat xmlquote.txt
     rc=$?
     if ! [[ $(cat test.out) =~ "Jens Vöckler" ]]; then
         echo "Expected UTF-8 umlaut in output"
         return 1
     fi
-    if ! [[ $(cat test.out) =~ "&quot;Gideon Juve&quot;" ]]; then
+    if ! [[ $(cat test.out) =~ "\"Gideon Juve\"" ]]; then
         echo "Expected quotes to be escaped"
         return 1
     fi
-    if ! [[ $(cat test.out) =~ "&lt;some xml=&quot;goes&quot;&gt;here&lt;/some&gt;" ]]; then
+    if ! [[ $(cat test.out) =~ "<some xml=\"goes\">here</some>" ]]; then
         echo "Expected XML to be escaped"
         return 1
     fi
@@ -271,7 +266,7 @@ function test_timeout_mainjob_cleanup {
         echo "Expected SIGTERM"
         return 1
     fi
-    if ! [[ $(cat test.out) =~ ">Cleanup job" ]]; then
+    if ! [[ $(cat test.out) =~ "  cleanup:" ]]; then
         echo "Expected cleanup job to run"
         return 1
     fi
@@ -289,7 +284,7 @@ function test_timeout_pre {
         echo "Expected SIGTERM"
         return 1
     fi
-    if [[ $(cat test.out) =~ ">Main job" ]]; then
+    if [[ $(cat test.out) =~ "  mainjob:" ]]; then
         echo "Did not expect main job to run"
         return 1
     fi
@@ -307,7 +302,7 @@ function test_timeout_post {
         echo "Expected SIGTERM"
         return 1
     fi
-    if ! [[ $(cat test.out) =~ ">Main job" ]]; then
+    if ! [[ $(cat test.out) =~ "  mainjob:" ]]; then
         echo "Expected main job to run"
         return 1
     fi
@@ -325,7 +320,7 @@ function test_timeout_cleanup {
         echo "Did not expect SIGTERM"
         return 1
     fi
-    if ! [[ $(cat test.out) =~ ">Main job" ]]; then
+    if ! [[ $(cat test.out) =~ "  mainjob:" ]]; then
         echo "Expected main job to run"
         return 1
     fi
@@ -361,7 +356,7 @@ function test_failure_environment {
         echo "Expected non-zero exit"
         return 1
     fi
-    if ! [[ $(cat test.out) =~ "<environment>" ]]; then
+    if ! [[ $(cat test.out) =~ "  environment:" ]]; then
         echo "Expected environment"
         return 1
     fi
@@ -380,7 +375,7 @@ function test_quote_env_var {
         return 1
     fi
 
-    if ! [[ $(cat test.out) =~ "GIDEON&quot;" ]]; then
+    if ! [[ $(cat test.out) =~ "GIDEON\\\"\": " ]]; then
         echo "Expected environment variable name to be quoted"
         return 1
     fi
@@ -489,11 +484,11 @@ function test_integrity_failure {
     return $rc
 }
 
-function test_integrity_xml_inc {
+function test_integrity_yaml_inc {
     # do this test multiple times
     for I in `seq 100`; do
     
-        kickstart ../../../../bin/pegasus-integrity --generate-fullstat-xmls=testintegrity.data=testintegrity.data
+        kickstart pegasus-integrity --generate-fullstat-yaml=testintegrity.data=testintegrity.data
         rc=$?
     
         if [ $rc -ne 0 ]; then
@@ -502,11 +497,11 @@ function test_integrity_xml_inc {
         fi
     
         # verify it has the right output
-        if ! (grep 'statcall error="0" id="final" lfn="testintegrity.data"' test.out) >/dev/null 2>&1; then
+        if ! (grep '"testintegrity.data":' test.out) >/dev/null 2>&1; then
             echo "Unable to find the included integrity data in ks output"
             return 1
         fi
-        if ! (grep 'checksum type="sha256"' test.out) >/dev/null 2>&1; then
+        if ! (grep ' sha256:' test.out) >/dev/null 2>&1; then
             echo "Unable to find the included integrity data in ks output"
             return 1
         fi
@@ -524,8 +519,18 @@ function test_w_with_rel_exec {
     return $ec
 }
 
+export START_DIR=`pwd`
+
 # make sure we start cleanly
 rm -f .pegasus-integrity-ks.xml
+rm -rf tempbin
+
+# we require a PEGASUS_BIN_DIR as we depend on other Pegasus CLIs
+if [ "x$PEGASUS_BIN_DIR" = "x" ]; then
+    echo "Please define PEGASUS_BIN_DIR before running these tests" >&2
+    exit 1
+fi
+export PATH=$PEGASUS_BIN_DIR:$PATH
 
 # RUN THE TESTS
 run_test lotsofprocs
@@ -546,7 +551,7 @@ run_test test_toolongarg_file
 run_test test_quiet
 run_test test_quiet_fail
 run_test test_missing_args
-run_test test_xmlquote
+run_test test_quoting
 run_test test_all_stdio
 run_test test_bad_stdio
 run_test test_timeout_ok
@@ -567,7 +572,7 @@ run_test test_wrapper
 run_test test_metadata
 run_test test_integrity
 run_test test_integrity_failure
-run_test test_integrity_xml_inc
+run_test test_integrity_yaml_inc
 run_test test_w_with_rel_exec
 
 

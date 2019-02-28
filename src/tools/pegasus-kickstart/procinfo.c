@@ -499,7 +499,8 @@ static int printXMLSockInfo(FILE *out, int indent, SockInfo *sockets) {
 }
 
 /* Write <proc> records to buffer */
-int printXMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
+int printYAMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
+    fprintf(out, "%*sprocs:\n", indent, "");
     ProcInfo *i;
     for (i = procs; i; i = i->next) {
         /* This means that the trace file was probably incomplete */
@@ -507,18 +508,48 @@ int printXMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
             printerr("Bad <proc> record: trace file may be incomplete");
         }
 
-        fprintf(out, "%*s<proc ppid=\"%d\" pid=\"%d\" exe=\"%s\" "
-                "start=\"%lf\" stop=\"%lf\" utime=\"%.3lf\" stime=\"%.3lf\" "
-                "iowait=\"%.3lf\" finthreads=\"%d\" maxthreads=\"%d\" totthreads=\"%d\" "
-                "vmpeak=\"%d\" rsspeak=\"%d\" rchar=\"%"PRIu64"\" wchar=\"%"PRIu64"\" "
-                "rbytes=\"%"PRIu64"\" wbytes=\"%"PRIu64"\" cwbytes=\"%"PRIu64"\" "
-                "syscr=\"%"PRIu64"\" syscw=\"%"PRIu64"\""
-                , indent, "", i->ppid, i->pid, i->exe,
-                i->start, i->stop, i->utime, i->stime, i->iowait,
-                i->fin_threads, i->max_threads, i->tot_threads,
-                i->vmpeak, i->rsspeak, i->rchar, i->wchar,
-                i->read_bytes, i->write_bytes, i->cancelled_write_bytes,
-                i->syscr, i->syscw
+        fprintf(out, "%*s  %d:\n"
+                     "%*s    ppid: %d\n"
+                     "%*s    pid: %d\n"
+                     "%*s    exe: %s\n"
+                     "%*s    start: %lf\n"
+                     "%*s    stop: %lf\n"
+                     "%*s    utime: %.3lf\n"
+                     "%*s    stime: %.3lf\n"
+                     "%*s    iowait: %.3lf\n"
+                     "%*s    finthreads: %d\n"
+                     "%*s    maxthreads: %d\n"
+                     "%*s    totthreads: %d\n"
+                     "%*s    vmpeak: %d\n"
+                     "%*s    rsspeak: %d\n"
+                     "%*s    rchar: %"PRIu64"\n"
+                     "%*s    wchar: %"PRIu64"\n"
+                     "%*s    rbytes: %"PRIu64"\n"
+                     "%*s    wbytes: %"PRIu64"\n"
+                     "%*s    cwbytes: %"PRIu64"\n"
+                     "%*s    syscr: %"PRIu64"\n"
+                     "%*s    syscw: %"PRIu64"\n",
+                     indent, "", i->pid,
+                     indent, "", i->ppid, 
+                     indent, "", i->pid, 
+                     indent, "", i->exe,
+                     indent, "", i->start,
+                     indent, "", i->stop,
+                     indent, "", i->utime,
+                     indent, "", i->stime,
+                     indent, "", i->iowait,
+                     indent, "", i->fin_threads, 
+                     indent, "", i->max_threads, 
+                     indent, "", i->tot_threads,
+                     indent, "", i->vmpeak, 
+                     indent, "", i->rsspeak,
+                     indent, "", i->rchar,
+                     indent, "", i->wchar,
+                     indent, "", i->read_bytes,
+                     indent, "", i->write_bytes,
+                     indent, "", i->cancelled_write_bytes,
+                     indent, "", i->syscr,
+                     indent, "", i->syscw
         );
 #ifdef HAS_PAPI
         if (i->PAPI_TOT_INS > 0) {
@@ -546,18 +577,15 @@ int printXMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
             fprintf(out, " l1misses=\"%lld\"", i->PAPI_L1_TCM);
         }
 #endif
-        if (i->cmd == NULL && i->files == NULL && i->sockets == NULL) {
-            fprintf(out, "/>\n");
-        } else {
+        if ( ! (i->cmd == NULL && i->files == NULL && i->sockets == NULL)) {
             fprintf(out, ">\n");
             if (i->cmd != NULL) {
                 fprintf(out, "%*s<cmd>", indent+2, "");
-                xmlquote(out, i->cmd, strlen(i->cmd));
+                yamlquote(out, i->cmd, strlen(i->cmd));
                 fprintf(out, "</cmd>\n");
             }
             printXMLFileInfo(out, indent+2, i->files);
             printXMLSockInfo(out, indent+2, i->sockets);
-            fprintf(out, "%*s</proc>\n", indent, "");
         }
     }
     return 0;

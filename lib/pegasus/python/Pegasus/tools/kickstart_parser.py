@@ -28,11 +28,17 @@ from __future__ import print_function
 
 from xml.parsers import expat
 from Pegasus.monitoring.metadata import FileMetadata
+from pprint import pprint
+from datetime import datetime
+
 import re
 import sys
 import logging
 import traceback
-import os
+import yaml
+import yaml.constructor
+yaml.constructor.SafeConstructor.yaml_constructors[u'tag:yaml.org,2002:timestamp'] = \
+    yaml.constructor.SafeConstructor.yaml_constructors[u'tag:yaml.org,2002:str']
 
 # Regular expressions used in the kickstart parser
 re_parse_props = re.compile(r'(\S+)\s*=\s*([^",]+)')
@@ -40,7 +46,8 @@ re_parse_quoted_props = re.compile(r'(\S+)\s*=\s*"([^"]+)"')
 
 logger = logging.getLogger(__name__)
 
-class Parser:
+
+class Parser(object):
     """
     This class is used to parse a kickstart output file, and return
     requested information.
@@ -52,25 +59,12 @@ class Parser:
         output file that should be parsed.
         """
         self._kickstart_output_file = filename
-        self._parsing_job_element = False
-        self._parsing_arguments = False
-        self._parsing_main_job = False
-        self._parsing_machine = False
-        self._parsing_stdout = False
-        self._parsing_stderr = False
-        self._parsing_data = False
-        self._parsing_cwd = False
-        self._parsing_final_statcall = False
-        self._record_number = 0
-        self._arguments = []
-        self._stdout = ""
-        self._stderr = ""
-        self._cwd = ""
-        self._lfn = "" # filename parsed from statcall record
-        self._keys = {}
         self._ks_elements = {}
+        self._keys = {}
         self._fh = None
         self._open_error = False
+        self._parser = None
+
 
     def open(self):
         """
@@ -98,6 +92,528 @@ class Parser:
             return False
 
         return True
+
+
+    def is_invocation_record(self, buffer=''):
+        """
+        Returns True if buffer contains an invocation record either xml or invocation
+        """
+        # first check for yaml
+        if buffer.find("- invocation:") == -1:
+            # no yaml check for xml
+            if buffer.find("<invocation") == -1:
+                return False
+        return True
+
+    def is_task_record(self, buffer=''):
+        """
+        Returns True if buffer contains a task record.
+        """
+        if ( buffer.find("[seqexec-task") != -1 or buffer.find( "[cluster-task" ) != -1 ):
+            return True
+        return False
+
+    def is_clustered_record(self, buffer=''):
+        """
+        Returns True if buffer contains a clustered record.
+        """
+        if ( buffer.find("[seqexec-summary") != -1 or buffer.find( "[cluster-summary" ) != -1):
+            return True
+        return False
+
+    def parse_clustered_record(self, buffer=''):
+        """
+        Parses the clustered record in buffer, returning all found keys
+        """
+        self._keys = {}
+
+        # Check if we have an invocation record
+        if self.is_clustered_record(buffer) == False:
+            return self._keys
+
+        # Add clustered key to our response
+        self._keys["clustered"] = True
+
+        # Parse all quoted properties
+        for my_key, my_val in re_parse_quoted_props.findall(buffer):
+            self._keys[my_key] = my_val
+
+        # And add unquoted properties as well
+        for my_key, my_val in re_parse_props.findall(buffer):
+            self._keys[my_key] = my_val
+
+        return self._keys
+
+    def parse_task_record(self, buffer=''):
+        """
+        Parses the task record in buffer, returning all found keys
+        """
+        self._keys = {}
+
+        # Check if we have an invocation record
+        if self.is_task_record(buffer) == False:
+            return self._keys
+
+        # Add task key to our response
+        self._keys["task"] = True
+
+        # Parse all quoted properties
+        for my_key, my_val in re_parse_quoted_props.findall(buffer):
+            self._keys[my_key] = my_val
+
+        # And add unquoted properties as well
+        for my_key, my_val in re_parse_props.findall(buffer):
+            self._keys[my_key] = my_val
+
+        return self._keys
+
+
+    def parse(self, keys_dict, tasks=True, clustered=True):
+        """
+        This function parses the kickstart output file, looking for
+        the keys specified in the keys_dict variable. It returns a
+        list of dictionaries containing the found keys. Look at the
+        parse_stampede function for details about how to pass keys
+        using the keys_dict structure. The function will return an
+        empty list if no records are found or if an error happens.
+        """
+
+        # Place keys_dict in the _ks_elements
+        self._ks_elements = keys_dict
+        my_reply = []
+
+        # Try to open the file
+        if self.open() == False:
+            return my_reply
+
+        logger.debug( "Started reading records from kickstart file %s" %(self._kickstart_output_file))
+
+        # load the appropriate parser by checking for first instance of xml header or invocation
+        yaml_parser = True
+        for line in self._fh:
+            if line.find("<?xml") != -1:
+                yaml_parser = False
+                break
+            elif line.find("- invocation:") != -1:
+                yaml_parser = True
+                break
+
+        self.close()
+        self._parser = YAMLParser(self._kickstart_output_file) if yaml_parser else  XMLParser(self._kickstart_output_file)
+
+        return self._parser.parse(keys_dict, tasks, clustered)
+
+
+    def parse_stampede(self):
+        """
+        This function works similarly to the parse function above,
+        but does not require a keys_dict parameter as it uses a
+        built-in list of keys speficically used in the Stampede
+        schema.
+        """
+
+        stampede_elements = {"invocation": ["hostname", "resource", "user", "hostaddr", "transformation", "derivation"],
+                             "mainjob": ["duration", "start"],
+                             "usage": ["utime", "stime"],
+                             "ram": ["total"],
+                             "uname": ["system", "release", "machine"],
+                             "file": ["name"],
+                             "status": ["raw"],
+                             "signalled": ["signal", "corefile", "action"], #action is the char data in signalled element
+                             "regular": ["exitcode"],
+                             "argument-vector": [],
+                             "cwd": [],
+                             "stdout": [],
+                             "stderr": [],
+                             "statinfo": ["lfn", "size", "ctime", "user" ],
+                             "checksum": ["type", "value", "timing"],
+                             "type": ["type", "value"]}
+
+        return self.parse(stampede_elements, tasks=True, clustered=True)
+
+    def parse_stdout_stderr(self):
+        """
+        This function extracts the stdout and stderr from a kickstart output file.
+        It returns an array containing the output for each task in a job.
+        """
+
+        stdout_stderr_elements = {"invocation": ["hostname", "resource", "derivation", "transformation"],
+                                  "file": ["name"],
+                                  "regular": ["exitcode"],
+                                  "failure": ["error"],
+                                  "argument-vector": [],
+                                  "cwd": [],
+                                  "stdout": [],
+                                  "stderr": []}
+
+        return self.parse(stdout_stderr_elements, tasks=False, clustered=False)
+
+
+class YAMLParser( Parser ):
+    """
+    Represents the parser that parses the kickstart xml records
+    """
+
+    def __init__(self, filename):
+        super(YAMLParser, self).__init__(filename)
+
+    def parse(self, keys_dict, tasks=True, clustered=True):
+        """
+        This function parses the kickstart output file, looking for
+        the keys specified in the keys_dict variable. It returns a
+        list of dictionaries containing the found keys. Look at the
+        parse_stampede function for details about how to pass keys
+        using the keys_dict structure. The function will return an
+        empty list if no records are found or if an error happens.
+        """
+
+        # Place keys_dict in the _ks_elements
+        self._ks_elements = keys_dict
+        my_reply = []
+
+        # Try to open the file
+        if self.open() == False:
+            return my_reply
+
+        logger.debug("Started reading records from kickstart file %s" % (self._kickstart_output_file))
+
+        # read the whole file
+        raw = self._fh.read()
+        self.close()
+
+        # if we get here, we have yaml
+        # but this could still be a mix of yaml, cluster info and schedulers pre/post info
+
+        data = []
+
+        buffer = ""
+        for line in raw.splitlines(True):
+            if (line.find("[cluster-task") == 0):
+                # parse the current kickstart record
+                payload = self.parse_invocation_record(buffer)
+                if payload:
+                    data.append(payload)
+                buffer = ""
+                # Check if we want task records too
+                if tasks:
+                    # We have a clustered record, parse it!
+                    data.append(self.parse_task_record(line))
+            elif (line.find("[cluster-summary") == 0):
+                # Check if we want clustered records too
+                if clustered:
+                    # Clustered records are seqexec summary records for clustered jobs
+                    # We have a clustered record, parse it!
+                    data.append(self.parse_clustered_record(line))
+            elif line[0] not in [" ", "-", "\n"]:
+                # we have a buffer we want to parse
+                if buffer.count("\n") < 10:
+                    # ignore "short" buffers
+                    continue
+
+                # parse the current kickstart record
+                payload = self.parse_invocation_record(buffer)
+                if payload:
+                    data.append(payload)
+                buffer = ""
+            else:
+                buffer += line
+
+        # is there still stuff in the buffer?
+        if buffer.count("\n") > 10:
+            # ignore "short" buffers
+            # parse the current kickstart record
+            payload = self.parse_invocation_record(buffer)
+            if payload:
+                data.append(payload)
+            buffer = ""
+
+        return data
+
+    def dicts_remap(self, src, src_keys, dst, dst_keys):
+        """
+        Pulls data from a provided location in a src dict, and inserts
+        the data at a provided location in the dst dic - this is used
+        to transition from the old xml format to the new yaml format
+        """
+        for key in src_keys:
+            if key in src:
+                src = src[key]
+            else:
+                src = None
+                break
+
+        if src is None:
+            return
+
+        for key in dst_keys[:-1]:
+            if key not in dst:
+                dst[key] = {}
+            dst = dst[key]
+
+        dst[dst_keys[-1]] = src
+
+    def map_yaml_to_ver2_format(self, data):
+        """
+        Maps from new yaml dict format to old v2 format we used with the xml records
+        """
+        # unmappable:
+        #  "file": ["name"]
+
+        # new format -> old format
+        my_map = [ [ ["hostname"],                               ["hostname"] ],
+                   [ ["resource"],                               ["resource"] ],
+                   [ ["user"],                                   ["user"] ],
+                   [ ["hostaddr"],                               ["hostaddr"] ],
+                   [ ["transformation"],                         ["transformation"] ],
+                   [ ["derivation"],                             ["derivation"] ],
+                   [ ["mainjob", "duration"],                    ["duration"] ] ,
+                   [ ["mainjob", "start"],                       ["start"] ] ,
+                   [ ["usage", "utime"],                         ["utime"] ] ,
+                   [ ["usage", "stime"],                         ["stime"] ] ,
+                   [ ["machine", "ram_total"],                   ["ram"] ] ,
+                   [ ["machine", "uname_system"],                ["system"] ] ,
+                   [ ["machine", "uname_release"],               ["release"] ] ,
+                   [ ["machine", "uname_machine"],               ["machine"] ] ,
+                   [ ["mainjob", "executable", "file_name"],     ["name"] ] ,
+                   [ ["mainjob", "status", "raw"],               ["raw"] ] ,
+                   [ ["mainjob", "status", "signalled_signal"],  ["signal"] ] ,
+                   [ ["mainjob", "status", "signalled_name"],    ["action"] ] ,
+                   [ ["mainjob", "status", "corefile"],          ["corefile"] ] ,
+                   [ ["mainjob", "status", "regular_exitcode"],  ["exitcode"] ] ,
+                   [ ["cwd"],                                    ["cwd"] ] ,
+                   [ ["files", "stdout", "data"],                ["stdout"] ] ,
+                   [ ["files", "stderr", "data"],                ["stderr"] ] ]
+
+
+        #        stampede_elements = {"invocation": ["hostname", "resource", "user", "hostaddr", "transformation", "derivation"],
+        #                             "mainjob": ["duration", "start"],
+        #                             "usage": ["utime", "stime"],
+        #                             "ram": ["total"],
+        #                             "uname": ["system", "release", "machine"],
+        #                             "file": ["name"],
+        #                             "status": ["raw"],
+        #                             "signalled": ["signal", "corefile", "action"], #action is the char data in signalled element
+        #                             "regular": ["exitcode"],
+        #                             "argument-vector": [],
+        #                             "cwd": [],
+        #                             "stdout": [],
+        #                             "stderr": [],
+        #                             "statinfo": ["lfn", "size", "ctime", "user" ],
+        #                             "checksum": ["type", "value", "timing"],
+        #                             "type": ["type", "value"]}
+
+        new_data = {}
+        new_data['invocation'] = True
+        new_data["checksum"] = {}
+        new_data["outputs"] = {}
+        for mapping in my_map:
+            self.dicts_remap(data, mapping[0], new_data, mapping[1])
+
+        # some mappings are based on lfns
+        if "files" in data:
+            for lfn in data["files"]:
+                file_data = data["files"][lfn]
+                output = file_data["output"] if "output" in file_data.keys() else False
+                if not output:
+                    continue
+                meta = FileMetadata()
+                meta._id = lfn
+
+                """
+                add whatever 4.9 attributes are
+                  {
+                    "_type": "file", 
+                    "_id": "f.b2", 
+                    "_attributes": {
+                      "ctime": "2019-02-19T16:42:52-08:00", 
+                      "checksum.timing": "0.144", 
+                      "user": "vahi", 
+                      "checksum.type": "sha256", 
+                      "checksum.value": "4a77bee20a28a446506ef7531ffc038053f52e5211d93a95fe5193746af8d23a", 
+                      "size": "123"
+                    }
+                  }, 
+                """
+                if "user" in data["files"][lfn]:
+                    meta.add_attribute("user",str(file_data["user"]))
+                if "size" in data["files"][lfn]:
+                    meta.add_attribute("size",str(file_data["size"]))
+                if "ctime" in data["files"][lfn]:
+                    meta.add_attribute("ctime", file_data["ctime"])
+                if "sha256" in data["files"][lfn]:
+                    meta.add_attribute("checksum.type", "sha256")
+                    meta.add_attribute("checksum.value", file_data["sha256"])
+                    if "checksum_timing" in data["files"][lfn]:
+                        meta.add_attribute("checksum_timing", str(file_data["checksum_timing"]))
+                # what else?
+
+                new_data["outputs"][lfn] = meta
+
+        return new_data
+
+    def parse_invocation_record(self, buffer=''):
+        """
+        Parses the YAML record in buffer returning an invocation record
+        :param buffer:
+        :return:
+        """
+        entry = {}
+
+        # Check if we have an invocation record
+        if self.is_invocation_record(buffer) == False:
+            return entry
+
+        try:
+            entry = yaml.safe_load(buffer)[0]
+        except Exception as e:
+            logger.warning("KICKSTART-PARSE-ERROR --> yaml error in %s : %s"
+                           % (self._kickstart_output_file, str(e)))
+
+        # translate from the yaml dict structure to what we want using the keys-dict
+        return self.map_yaml_to_ver2_format(entry)
+
+
+
+class XMLParser( Parser ):
+    """
+    Represents the parser that parses the kickstart xml records
+    """
+
+    def __init__(self, filename):
+        super(XMLParser, self).__init__(filename)
+        self._parsing_job_element = False
+        self._parsing_arguments = False
+        self._parsing_main_job = False
+        self._parsing_machine = False
+        self._parsing_stdout = False
+        self._parsing_stderr = False
+        self._parsing_data = False
+        self._parsing_cwd = False
+        self._parsing_final_statcall = False
+        self._record_number = 0
+        self._arguments = []
+        self._stdout = ""
+        self._stderr = ""
+        self._cwd = ""
+        self._lfn = ""  # filename parsed from statcall record
+
+
+    def parse(self, keys_dict, tasks=True, clustered=True):
+        """
+        This function parses the previous XML based ks records,
+        looking for
+        the keys specified in the keys_dict variable. It returns a
+        list of dictionaries containing the found keys. Look at the
+        parse_stampede function for details about how to pass keys
+        using the keys_dict structure. The function will return an
+        empty list if no records are found or if an error happens.
+        """
+        my_reply = []
+
+        # Place keys_dict in the _ks_elements
+        self._ks_elements = keys_dict
+
+        # Try to open the file
+        if self.open() == False:
+            return my_reply
+
+        logger.debug( "Started reading records from kickstart file %s" %(self._kickstart_output_file))
+
+        self._record_number = 0
+        # Read first record
+        my_buffer = self.read_record()
+
+        # Loop while we still have record to read
+        while my_buffer is not None:
+            if self.is_invocation_record(my_buffer) == True:
+                # We have an invocation record, parse it!
+                try:
+                    my_record = self.parse_invocation_record(my_buffer)
+                except:
+                    logger.warning("KICKSTART-PARSE-ERROR --> error parsing invocation record in file %s"
+                                   % (self._kickstart_output_file))
+                    logger.warning(traceback.format_exc())
+                    # Found error parsing this file, return empty reply
+                    my_reply = []
+                    # Finish the loop
+                    break
+                my_reply.append(my_record)
+            elif self.is_clustered_record(my_buffer) == True:
+                # Check if we want clustered records too
+                if clustered:
+                    # Clustered records are seqexec summary records for clustered jobs
+                    # We have a clustered record, parse it!
+                    my_reply.append(self.parse_clustered_record(my_buffer))
+            elif self.is_task_record(my_buffer) == True:
+                # Check if we want task records too
+                if tasks:
+                    # We have a clustered record, parse it!
+                    my_reply.append(self.parse_task_record(my_buffer))
+            else:
+                # We have something else, this shouldn't happen!
+                # Just skip it
+                pass
+
+            # Read next record
+            my_buffer = self.read_record()
+
+        # Lastly, close the file
+        self.close()
+
+        return my_reply
+
+    def parse_invocation_record(self, buffer=''):
+        """
+        Parses the xml record in buffer, returning the desired keys.
+        """
+        # Initialize variables
+        self._parsing_arguments = False
+        self._parsing_main_job = False
+        self._parsing_machine = False
+        self._parsing_stdout = False
+        self._parsing_stderr = False
+        self._parsing_data = False
+        self._parsing_cwd = False
+        self._parsing_signalled = False
+        self._arguments = []
+        self._stdout = ""
+        self._stderr = ""
+        self._cwd = ""
+        self._keys = {}
+
+        # Check if we have an invocation record
+        if self.is_invocation_record(buffer) == False:
+            return self._keys
+
+        # Add invocation key to our response
+        self._keys["invocation"] = True
+
+        # Prepend XML header
+        buffer = '<?xml version="1.0" encoding="ISO-8859-1"?>\n' + buffer
+
+        # Create parser
+        self._my_parser = expat.ParserCreate()
+        self._my_parser.StartElementHandler = self.start_element
+        self._my_parser.EndElementHandler = self.end_element
+        self._my_parser.CharacterDataHandler = self.char_data
+
+        # Parse everything!
+        output = self._my_parser.Parse(buffer)
+
+        # Add cwd, arguments, stdout, and stderr to keys
+        if "cwd" in self._ks_elements:
+            self._keys["cwd"] = self._cwd
+
+        if "argument-vector" in self._ks_elements:
+            self._keys["argument-vector"] = " ".join(self._arguments)
+
+        if "stdout" in self._ks_elements:
+            self._keys["stdout"] = self._stdout
+
+        if "stderr" in self._ks_elements:
+            self._keys["stderr"] = self._stderr
+
+        return self._keys
 
     def read_record(self):
         """
@@ -138,7 +654,7 @@ class Parser:
                 token = "[seqexec-summary"
                 break
 
-        # Found something!        
+        # Found something!
         #if line.find("<invocation") >= 0:
         if token == "<invocation" :
             # Found invocation record
@@ -206,30 +722,6 @@ class Parser:
         return invocation
         #return buffer[:end]
 
-
-    def is_invocation_record(self, buffer=''):
-        """
-        Returns True if buffer contains an invocation record.
-        """
-        if buffer.find("<invocation") == -1:
-            return False
-        return True
-
-    def is_task_record(self, buffer=''):
-        """
-        Returns True if buffer contains a task record.
-        """
-        if ( buffer.find("[seqexec-task") != -1 or buffer.find( "[cluster-task" ) != -1 ):
-            return True
-        return False
-
-    def is_clustered_record(self, buffer=''):
-        """
-        Returns True if buffer contains a clustered record.
-        """
-        if ( buffer.find("[seqexec-summary") != -1 or buffer.find( "[cluster-summary" ) != -1):
-            return True
-        return False
 
     def start_element(self, name, attrs):
         """
@@ -386,217 +878,17 @@ class Parser:
         elif self._parsing_signalled == True:
             self._keys["signalled"]["action"] += data
 
-    def parse_invocation_record(self, buffer=''):
-        """
-        Parses the xml record in buffer, returning the desired keys.
-        """
-        # Initialize variables
-        self._parsing_arguments = False
-        self._parsing_main_job = False
-        self._parsing_machine = False
-        self._parsing_stdout = False
-        self._parsing_stderr = False
-        self._parsing_data = False
-        self._parsing_cwd = False
-        self._parsing_signalled = False
-        self._arguments = []
-        self._stdout = ""
-        self._stderr = ""
-        self._cwd = ""
-        self._keys = {}
-
-        # Check if we have an invocation record
-        if self.is_invocation_record(buffer) == False:
-            return self._keys
-
-        # Add invocation key to our response
-        self._keys["invocation"] = True
-
-        # Prepend XML header
-        buffer = '<?xml version="1.0" encoding="ISO-8859-1"?>\n' + buffer
-
-        # Create parser
-        self._my_parser = expat.ParserCreate()
-        self._my_parser.StartElementHandler = self.start_element
-        self._my_parser.EndElementHandler = self.end_element
-        self._my_parser.CharacterDataHandler = self.char_data
-
-        # Parse everything!
-        output = self._my_parser.Parse(buffer)
-
-        # Add cwd, arguments, stdout, and stderr to keys
-        if "cwd" in self._ks_elements:
-            self._keys["cwd"] = self._cwd
-
-        if "argument-vector" in self._ks_elements:
-            self._keys["argument-vector"] = " ".join(self._arguments)
-
-        if "stdout" in self._ks_elements:
-            self._keys["stdout"] = self._stdout
-
-        if "stderr" in self._ks_elements:
-            self._keys["stderr"] = self._stderr
-
-        return self._keys
-
-    def parse_clustered_record(self, buffer=''):
-        """
-        Parses the clustered record in buffer, returning all found keys
-        """
-        self._keys = {}
-
-        # Check if we have an invocation record
-        if self.is_clustered_record(buffer) == False:
-            return self._keys
-
-        # Add clustered key to our response
-        self._keys["clustered"] = True
-
-        # Parse all quoted properties
-        for my_key, my_val in re_parse_quoted_props.findall(buffer):
-            self._keys[my_key] = my_val
-
-        # And add unquoted properties as well
-        for my_key, my_val in re_parse_props.findall(buffer):
-            self._keys[my_key] = my_val
-
-        return self._keys
-
-    def parse_task_record(self, buffer=''):
-        """
-        Parses the task record in buffer, returning all found keys
-        """
-        self._keys = {}
-
-        # Check if we have an invocation record
-        if self.is_task_record(buffer) == False:
-            return self._keys
-
-        # Add task key to our response
-        self._keys["task"] = True
-
-        # Parse all quoted properties
-        for my_key, my_val in re_parse_quoted_props.findall(buffer):
-            self._keys[my_key] = my_val
-
-        # And add unquoted properties as well
-        for my_key, my_val in re_parse_props.findall(buffer):
-            self._keys[my_key] = my_val
-
-        return self._keys
-
-    def parse(self, keys_dict, tasks=True, clustered=True):
-        """
-        This function parses the kickstart output file, looking for
-        the keys specified in the keys_dict variable. It returns a
-        list of dictionaries containing the found keys. Look at the
-        parse_stampede function for details about how to pass keys
-        using the keys_dict structure. The function will return an
-        empty list if no records are found or if an error happens.
-        """
-        my_reply = []
-
-        # Place keys_dict in the _ks_elements
-        self._ks_elements = keys_dict
-
-        # Try to open the file
-        if self.open() == False:
-            return my_reply
-
-        logger.debug( "Started reading records from kickstart file %s" %(self._kickstart_output_file))
-
-        self._record_number = 0
-        # Read first record
-        my_buffer = self.read_record()
-
-        # Loop while we still have record to read
-        while my_buffer is not None:
-            if self.is_invocation_record(my_buffer) == True:
-                # We have an invocation record, parse it!
-                try:
-                    my_record = self.parse_invocation_record(my_buffer)
-                except:
-                    logger.warning("KICKSTART-PARSE-ERROR --> error parsing invocation record in file %s"
-                                   % (self._kickstart_output_file))
-                    logger.warning(traceback.format_exc())
-                    # Found error parsing this file, return empty reply
-                    my_reply = []
-                    # Finish the loop
-                    break
-                my_reply.append(my_record)
-            elif self.is_clustered_record(my_buffer) == True:
-                # Check if we want clustered records too
-                if clustered:
-                    # Clustered records are seqexec summary records for clustered jobs
-                    # We have a clustered record, parse it!
-                    my_reply.append(self.parse_clustered_record(my_buffer))
-            elif self.is_task_record(my_buffer) == True:
-                # Check if we want task records too
-                if tasks:
-                    # We have a clustered record, parse it!
-                    my_reply.append(self.parse_task_record(my_buffer))
-            else:
-                # We have something else, this shouldn't happen!
-                # Just skip it
-                pass
-
-            # Read next record
-            my_buffer = self.read_record()
-
-        # Lastly, close the file
-        self.close()
-
-        return my_reply
-
-    def parse_stampede(self):
-        """
-        This function works similarly to the parse function above,
-        but does not require a keys_dict parameter as it uses a
-        built-in list of keys speficically used in the Stampede
-        schema.
-        """
-
-        stampede_elements = {"invocation": ["hostname", "resource", "user", "hostaddr", "transformation", "derivation"],
-                             "mainjob": ["duration", "start"],
-                             "usage": ["utime", "stime"],
-                             "ram": ["total"],
-                             "uname": ["system", "release", "machine"],
-                             "file": ["name"],
-                             "status": ["raw"],
-                             "signalled": ["signal", "corefile", "action"], #action is the char data in signalled element
-                             "regular": ["exitcode"],
-                             "argument-vector": [],
-                             "cwd": [],
-                             "stdout": [],
-                             "stderr": [],
-                             "statinfo": ["lfn", "size", "ctime", "user" ],
-                             "checksum": ["type", "value", "timing"],
-                             "type": ["type", "value"]}
-
-        return self.parse(stampede_elements, tasks=True, clustered=True)
-
-    def parse_stdout_stderr(self):
-        """
-        This function extracts the stdout and stderr from a kickstart output file.
-        It returns an array containing the output for each task in a job.
-        """
-
-        stdout_stderr_elements = {"invocation": ["hostname", "resource", "derivation", "transformation"],
-                                  "file": ["name"],
-                                  "regular": ["exitcode"],
-                                  "failure": ["error"],
-                                  "argument-vector": [],
-                                  "cwd": [],
-                                  "stdout": [],
-                                  "stderr": []}
-
-        return self.parse(stdout_stderr_elements, tasks=False, clustered=False)
-
 
 if __name__ == "__main__":
 
     # Let's run a test!
     print("Testing kickstart output file parsing...")
+
+    # log to the console
+    console = logging.StreamHandler()
+    console.setLevel(logging.DEBUG)
+    logger.addHandler(console)
+    logger.debug("Logger has been configured")
 
     # Make sure we have an argument
     if len(sys.argv) < 2:
@@ -611,4 +903,5 @@ if __name__ == "__main__":
 
     # Print output
     for record in output:
-        print(record)
+        pprint(record)
+

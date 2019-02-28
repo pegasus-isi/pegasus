@@ -396,56 +396,58 @@ int printLinuxInfo(FILE *out, int indent, const MachineLinuxInfo *ptr) {
     };
 
     /* <ram .../> tag */
-    fprintf(out, "%*s<ram total=\"%"PRIu64"\" free=\"%"PRIu64"\" shared=\"%"PRIu64"\" buffer=\"%"PRIu64"\"/>\n",
-            indent, "",
-            ptr->ram_total / 1024,
-            ptr->ram_free / 1024,
-            ptr->ram_shared / 1024,
-            ptr->ram_buffer / 1024);
+    fprintf(out, "%*sram_total: %"PRIu64"\n%*sram_free: %"PRIu64"\n%*sram_shared: %"PRIu64"\n%*sram_buffer: %"PRIu64"\n",
+            indent, "", ptr->ram_total / 1024,
+            indent, "", ptr->ram_free / 1024,
+            indent, "", ptr->ram_shared / 1024,
+            indent, "", ptr->ram_buffer / 1024);
 
     /* <swap .../> tag */
-    fprintf(out, "%*s<swap total=\"%"PRIu64"\" free=\"%"PRIu64"\"/>\n",
-            indent, "",
-            ptr->swap_total / 1024,
-            ptr->swap_free / 1024);
+    fprintf(out, "%*sswap_total: %"PRIu64"\n%*sswap_free: %"PRIu64"\n",
+            indent, "", ptr->swap_total / 1024,
+            indent, "", ptr->swap_free / 1024);
 
     /* <boot> element */
-    fprintf(out, "%*s<boot idle=\"%.3f\">%s</boot>\n", indent, "",
-            ptr->idletime,
-            fmtisodate(ptr->boottime.tv_sec, ptr->boottime.tv_usec));
+    //fprintf(out, "%*s<boot idle=\"%.3f\">%s</boot>\n", indent, "",
+    //        ptr->idletime,
+    //        fmtisodate(ptr->boottime.tv_sec, ptr->boottime.tv_usec));
 
     /* <cpu> element */
-    fprintf(out, "%*s<cpu count=\"%hu\" speed=\"%lu\" vendor=\"%s\">%s</cpu>\n",
-            indent, "", ptr->cpu_count, ptr->megahertz, ptr->vendor_id,
-            ptr->model_name);
+    fprintf(out, "%*scpu_count: %hu\n%*scpu_speed: %lu\n%*scpu_vendor: %s\n%*scpu_model: %s\n",
+            indent, "", ptr->cpu_count, 
+            indent, "", ptr->megahertz,
+            indent, "", ptr->vendor_id,
+            indent, "", ptr->model_name);
 
     /* <load> element */
-    fprintf(out, "%*s<load min1=\"%.2f\" min5=\"%.2f\" min15=\"%.2f\"/>\n",
-            indent, "", ptr->load[0], ptr->load[1], ptr->load[2]);
+    fprintf(out, "%*sload_min1: %.2f\n%*sload_min5: %.2f\n%*sload_min15: %.2f\n",
+            indent, "", ptr->load[0],
+            indent, "", ptr->load[1],
+            indent, "", ptr->load[2]);
 
     if (ptr->procs.total && ptr->tasks.total) {
         /* <procs> element */
-        fprintf(out, "%*s<procs total=\"%u\"", indent, "", ptr->procs.total);
+        fprintf(out, "%*sprocs_total: %u\n", indent, "", ptr->procs.total);
         for (LinuxState s=S_RUNNING; s<=S_OTHER; ++s) {
             if (ptr->procs.state[s]) {
-                fprintf(out, " %s=\"%hu\"", state_names[s], ptr->procs.state[s]);
+                fprintf(out, "%*sprocs_%s: %hu\n",
+                             indent, "", state_names[s], ptr->procs.state[s]);
             }
         }
-        fprintf(out, " vmsize=\"%"PRIu64"\" rss=\"%"PRIu64"\"/>\n",
-                ptr->procs.size / 1024,
-                ptr->procs.rss / 1024);
+        fprintf(out, "%*sprocs_vmsize: %"PRIu64"\n%*sprocs_rss: %"PRIu64"\n",
+                indent, "", ptr->procs.size / 1024,
+                indent, "", ptr->procs.rss / 1024);
 
         /* <task> element */
-        fprintf(out, "%*s<task total=\"%u\"", indent, "", ptr->tasks.total);
+        fprintf(out, "%*stask_total: %u\n", indent, "", ptr->tasks.total);
         for (LinuxState s=S_RUNNING; s<=S_OTHER; ++s) {
             if (ptr->tasks.state[s]) {
-                fprintf(out, " %s=\"%hu\"", state_names[s], ptr->tasks.state[s]);
+                fprintf(out, "%*stask_%s: %hu\n", 
+                             indent, "", state_names[s], ptr->tasks.state[s]);
             }
         }
 
         /* vmsize and rss do not make sense for threads b/c they share memory */
-
-        fprintf(out, "/>\n");
     }
 
     return 0;
@@ -466,7 +468,7 @@ int printMachine(FILE *out, int indent, const char* tag, const void* data) {
 
     const MachineLinuxInfo* ptr = (const MachineLinuxInfo*) data;
     startBasicMachine(out, indent, tag, ptr->basic);
-    printLinuxInfo(out, indent+2, ptr);
+    printLinuxInfo(out, indent, ptr);
     finalBasicMachine(out, indent, tag, ptr->basic);
 
     return 0;

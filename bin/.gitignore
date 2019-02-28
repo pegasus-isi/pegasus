@@ -3,3 +3,6 @@ pegasus-invoke
 pegasus-kickstart
 pegasus-mpi-cluster
 pegasus-keg
+pegasus-integrity
+pegasus-s3
+pegasus-transfer

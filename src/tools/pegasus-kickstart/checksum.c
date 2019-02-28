@@ -19,22 +19,34 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "checksum.h"
 
 #define BUFSIZE 4096
 
 
-int pegasus_integrity_xml(const char *fname, char *xml) {
+int pegasus_integrity_yaml(const char *fname, char *yaml) {
     /* purpose: calculate the checksum of a file
      * paramtr: fname: name of the file
-     *          xml: the buffer for the calculated checksum
+     *          yaml: the buffer for the calculated checksum
      * returns: 1 on success
      */
-    char buf[4096];
+    char buf[BUFSIZE];
     char cmd[4096];
 
-    strcpy(cmd, "pegasus-integrity --generate-xmls=");
+    /* in case of failure */
+    *yaml = '\0';
+
+    cmd[0] = '\0';
+
+    /* use PEGASUS_HOME if set */
+    if (getenv("PEGASUS_HOME") != NULL) {
+        strcat(cmd, getenv("PEGASUS_HOME"));
+        strcat(cmd, "/bin/");
+    }
+
+    strcat(cmd, "pegasus-integrity --generate-yaml=");
     strcat(cmd, fname);
     strcat(cmd, " 2>/dev/null");
 
@@ -42,27 +54,20 @@ int pegasus_integrity_xml(const char *fname, char *xml) {
     if (p == NULL) {
         return 0;
     }
-    if (fgets(buf, sizeof(buf), p) != NULL) {
-        /* make sure we got a full checksum */
-        if (strlen(buf) > 0) {
-            if(buf[strlen(buf) - 1] == '\n')
-            {
-                buf[strlen(buf) - 1] = '\0';
-            }
-        }
+    while (fgets(buf, BUFSIZE, p) != NULL) {
+        strcpy(yaml, buf);
+        yaml += strlen(buf);
     }
+
     if (pclose(p) != 0) {
         return 0;
     } 
 
-    /* all good, copy the buffer */
-    strcpy(xml, buf);
-
     return 1;
 }
 
-int print_pegasus_integrity_xml_blob(FILE *out, const char *fname) {
-    /* purpose: if exists, reads the integrity data and puts in the xml
+int print_pegasus_integrity_yaml_blob(FILE *out, const char *fname) {
+    /* purpose: if exists, reads the integrity data and puts in the yaml
      * paramtr: out: output stream to print to
      * returns: 1 on success
      */
@@ -74,7 +79,7 @@ int print_pegasus_integrity_xml_blob(FILE *out, const char *fname) {
         /* missing file is ok */
         return 1;
     }
-    while (len = read(fd, buf, BUFSIZE)) {
+    while ((len = read(fd, buf, BUFSIZE))) {
         fprintf(out, "%.*s", len, buf);
     }
     close(fd);

@@ -1,0 +1,20 @@
+bootstrap:docker
+From:ubuntu:bionic
+
+%post
+
+apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    wget \
+    && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# CA certs
+mkdir -p /etc/grid-security && \
+    cd /etc/grid-security && \
+    wget -nv --no-check-certificate https://download.pegasus.isi.edu/containers/certificates.tar.gz && \
+    tar xzf certificates.tar.gz && \
+    rm -f certificates.tar.gz
+
+

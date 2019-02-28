@@ -63,6 +63,10 @@ class ExitcodeTestCase(unittest.TestCase):
             path = os.path.join(dirname, "exitcode", filename)
             exitcode.exitcode(path, rename=False, **args)
 
+        # new yaml format
+        ec("yaml-ok.out")
+
+        # older xml format
         ec("ok.out")
         ec("zeromem.out")
         ec("cluster-none.out")

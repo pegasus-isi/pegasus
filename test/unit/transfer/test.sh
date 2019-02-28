@@ -33,7 +33,14 @@ function transfer_with_kickstart {
 }
 
 function test_integrity {
-    rm -f $KICKSTART_INTEGRITY_DATA
+    
+    # try to trick transfer to invoke the wrong integrity executable
+    rm -rf do-not-execute
+    mkdir do-not-execute
+    cp /bin/false do-not-execute/pegasus-integrity
+    export PATH=$PWD/do-not-execute:$PATH
+    
+    rm -f $KICKSTART_INTEGRITY_DATA 
     if ! (transfer --file web-to-local.in); then
         echo "ERROR: pegasus-transfer exited non-zero"
         return 1
@@ -44,7 +51,7 @@ function test_integrity {
         return 1
     fi
     # make sure it has a statinfo entry
-    if ! (grep statinfo $KICKSTART_INTEGRITY_DATA) >/dev/null 2>&1; then
+    if ! (grep "\"index.html\":" $KICKSTART_INTEGRITY_DATA) >/dev/null 2>&1; then
         echo "ERROR: $KICKSTART_INTEGRITY_DATA does not contain a statinfo entry"
         return 1
     fi
@@ -157,7 +164,7 @@ EOF
     cp ../test.out kickstart-record.txt
 
     # make sure we have a full record
-    if ! (tail -n 1 kickstart-record.txt | grep '</invocation>') >/dev/null 2>&1; then
+    if ! (tail -n 40 kickstart-record.txt | grep 'metadata:') >/dev/null 2>&1; then
         echo "Incomplete kickstart record"
         cd ..
         return 1
@@ -170,11 +177,14 @@ EOF
 
 export TEST_DIR=`pwd`
 
-export TRANSFER_LOCATION=`cd ../../.. && pwd`/bin/pegasus-transfer
-export KICKSTART_LOCATION=`cd ../../../src/tools/pegasus-kickstart && pwd`/pegasus-kickstart
+if [ "x$1" = "x" ]; then
+    echo "Please specify the Pegasus bin dir as the first argument" >&2
+    exit 1
+fi
+export PATH=$1:$PATH
 
-# we require kickstart
-(cd ../../../src/tools/pegasus-kickstart && make) >/dev/null 2>&1
+export TRANSFER_LOCATION=$1/pegasus-transfer
+export KICKSTART_LOCATION=$1/pegasus-kickstart
 
 export KICKSTART_INTEGRITY_DATA=ks.integrity.$$
 rm -f $KICKSTART_INTEGRITY_DATA
@@ -183,11 +193,11 @@ rm -f $KICKSTART_INTEGRITY_DATA
 run_test test_integrity
 run_test test_local_cp
 run_test test_integrity_local_cp
-if (docker image list && singularity --version) >/dev/null 2>&1; then
-    run_test test_containers
-else
+#if (docker image list && singularity --version) >/dev/null 2>&1; then
+#    run_test test_containers
+#else
     skip_test test_containers
-fi
+#fi
 run_test test_symlink
 run_test test_symlink_should_fail
 run_test test_pull_back_integrity

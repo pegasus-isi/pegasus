@@ -80,7 +80,13 @@ function test_verify_multiple_stdin {
 
 export TEST_DIR=`pwd`
 
-export INTEGRITY_LOCATION=`cd ../../.. && pwd`/bin/pegasus-integrity
+if [ "x$1" = "x" ]; then
+    echo "Please specify the Pegasus bin dir as the first argument" >&2
+    exit 1
+fi
+export PATH=$1:$PATH
+
+export INTEGRITY_LOCATION=$1/pegasus-integrity
 
 # RUN THE TESTS
 run_test test_generate_single
