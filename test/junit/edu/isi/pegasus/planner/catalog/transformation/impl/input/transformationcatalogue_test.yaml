@@ -56,7 +56,33 @@
         pfn: "/usr/bin/true"
         osversion: 4
         type: INSTALLED
-        container: "centos-pegasus"        
+        container: "centos-pegasus"
+        
+   - name: ${NAME} 
+     namespace: ${NAMESPACE}
+     version: ${VERSION}
+              
+     site:
+      - name: ${SITE}
+        profile: 
+         - env: 
+            "HELLo": "WORLD"
+            "JAVA_HOME": "/opt/java/1.6"
+         - condor: 
+            "FOO": "bar"
+        metadata: 
+           "key": "value"
+           "appmodel": "myxform.aspen"
+           "version": "2.0" 
+        arch: ${ARCH}
+        os: ${OS}
+        osrelease: fc
+        pfn: ${KEGPATH}
+        osversion: 4
+        type: STAGEABLE
+        container: "centos-pegasus" 
+        
+            
 
 - cont:
    - name: "centos-pegasus"

@@ -20,8 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -38,6 +40,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
+import edu.isi.pegasus.planner.test.EnvSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 
 /**
@@ -67,10 +70,28 @@ public class YAMLTest {
 	private YAML mCorrectCatalog;
 
 	private static final String PROPERTIES_BASENAME = "properties";
+	
+    
+    private static final String EXPANDED_SITE        = "bamboo";
+    private static final String EXPANDED_NAMESPACE   = "pegasus";
+    private static final String EXPANDED_NAME        = "keg";
+    private static final String EXPANDED_VERSION     = "1.0";
+    private static final String EXPANDED_ARCH        = "x86_64";
+    private static final String EXPANDED_OS          = "linux";
+    private static final String EXPANDED_KEG_PATH    = "file:///usr/bin/pegasus-keg";
 
-	@BeforeClass
-	public static void setUpClass() {
-	}
+    @BeforeClass
+    public static void setUpClass() {
+        Map<String,String> testEnvVariables = new HashMap();
+        testEnvVariables.put( "SITE", EXPANDED_SITE );
+        testEnvVariables.put( "NAMESPACE", EXPANDED_NAMESPACE );
+        testEnvVariables.put( "NAME", EXPANDED_NAME );
+        testEnvVariables.put( "VERSION", EXPANDED_VERSION );
+        testEnvVariables.put( "ARCH", EXPANDED_ARCH );
+        testEnvVariables.put( "OS",  EXPANDED_OS );
+        testEnvVariables.put(  "KEGPATH", EXPANDED_KEG_PATH );
+        EnvSetup.setEnvironmentVariables(testEnvVariables);
+    }
 
 	@AfterClass
 	public static void tearDownClass() {
@@ -111,7 +132,7 @@ public class YAMLTest {
 		mLogger.logEventStart("test.catalog.transformation.impl.YAML", "whole-count-test",
 				Integer.toString(mTestNumber++));
 		List<TransformationCatalogEntry> entries = mCorrectCatalog.getContents();
-		assertEquals("Expected total number of entries", 3, entries.size());
+		assertEquals("Expected total number of entries", 4, entries.size());
 		List<TransformationCatalogEntry> kegEntries = mCorrectCatalog.lookup("example", "keg", "1.0", (String) null,
 				null);
 		assertEquals("Expected total number of keg entries", 2, kegEntries.size());
@@ -212,6 +233,24 @@ public class YAMLTest {
 		assertTrue(true);
 	}
 	
+    @Test
+    public void testParameterExpansionContents() throws Exception {
+        mLogger.logEventStart( "test.catalog.transformation.impl.Text", "parameter-expansion-contents", Integer.toString(mTestNumber++) );
+        List<TransformationCatalogEntry> kegEntries = mCorrectCatalog.lookup( EXPANDED_NAMESPACE, EXPANDED_NAME, EXPANDED_VERSION, 
+        		EXPANDED_SITE, null );
+        TransformationCatalogEntry expanded = kegEntries.get( 0 );
+        SysInfo info = expanded.getSysInfo();
+        assertEquals( "Expected attribute ", EXPANDED_NAMESPACE , expanded.getLogicalNamespace() );
+        assertEquals( "Expected attribute ", EXPANDED_NAME ,      expanded.getLogicalName() );
+        assertEquals( "Expected attribute ", EXPANDED_VERSION ,   expanded.getLogicalVersion() );
+        assertEquals( "Expected attribute ", EXPANDED_SITE ,      expanded.getResourceId() );
+        assertEquals( "Expected attribute ", EXPANDED_ARCH ,      info.getArchitecture().name() );
+        assertEquals( "Expected attribute ", EXPANDED_OS ,        info.getOS().name() );
+        assertEquals( "Expected attribute ", EXPANDED_KEG_PATH ,  expanded.getPhysicalTransformation() );
+        
+        mLogger.logEventCompletion();
+        
+    }
 
 	@Test
 	public void testInvalidYAMLFile() {

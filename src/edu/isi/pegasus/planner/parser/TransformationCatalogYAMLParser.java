@@ -17,10 +17,10 @@
 package edu.isi.pegasus.planner.parser;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.Reader;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -43,6 +43,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.catalog.transformation.impl.Abstract;
 import edu.isi.pegasus.planner.classes.Profile;
+import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import edu.isi.pegasus.planner.parser.tokens.TransformationCatalogKeywords;
 
 /**
@@ -143,7 +144,7 @@ public class TransformationCatalogYAMLParser {
 	/**
 	 * This reader is used for reading the contents of the YAML file
 	 **/
-	private InputStream mStream;
+	private Reader mReader;
 
 	/**
 	 * Initializes the parser with an input stream to read from.
@@ -154,8 +155,8 @@ public class TransformationCatalogYAMLParser {
 	 * @throws IOException
 	 * @throws ScannerException
 	 */
-	public TransformationCatalogYAMLParser(InputStream stream, LogManager logger) throws IOException, ScannerException {
-		mStream = stream;
+	public TransformationCatalogYAMLParser(Reader stream, LogManager logger) throws IOException, ScannerException {
+		mReader = stream;
 		mLogger = logger;
 	}
 
@@ -182,9 +183,7 @@ public class TransformationCatalogYAMLParser {
 		 * Loads the yaml data
 		 * **/
 		try {
-			if(mStream.available() > 0) {
-				yamlData = mapper.readValue(mStream, Object.class);
-			}
+				yamlData = mapper.readValue(mReader, Object.class);
 		} catch (ParserException e) {
 			String errorMessage = parseError(e);
 			throw new ScannerException(e.getProblemMark().getLine() + 1, errorMessage);
@@ -256,7 +255,7 @@ public class TransformationCatalogYAMLParser {
 						String name = (String) singleTransformation
 								.get(TransformationCatalogKeywords.NAME.getReservedName());
 
-						Double version_obj = (Double) singleTransformation
+						Object version_obj = singleTransformation
 								.get(TransformationCatalogKeywords.VERSION.getReservedName());
 
 						String version = null;
@@ -558,8 +557,8 @@ public class TransformationCatalogYAMLParser {
 	 */
 	public static void main(String[] args) throws ScannerException {
 		try {
-			InputStream r = new FileInputStream(
-					new File("transformationcatalogue.yaml"));
+			Reader r = new VariableExpansionReader(
+					new FileReader(new File("transformationcatalogue.yaml")));
 
 			LogManager logger = LogManagerFactory.loadSingletonInstance();
 			logger.setLevel(LogManager.DEBUG_MESSAGE_LEVEL);

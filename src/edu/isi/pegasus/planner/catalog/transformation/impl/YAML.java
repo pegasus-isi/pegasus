@@ -17,11 +17,11 @@
 package edu.isi.pegasus.planner.catalog.transformation.impl;
 
 import java.io.BufferedWriter;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -45,6 +45,7 @@ import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import edu.isi.pegasus.planner.parser.ScannerException;
 import edu.isi.pegasus.planner.parser.TransformationCatalogYAMLParser;
 
@@ -208,9 +209,9 @@ public class YAML extends Abstract
         try{
             java.io.File f = new java.io.File(mTCFile);
                       
-            if( f.exists() ){
-                InputStream input = new FileInputStream(f);
-                yamlParser = new TransformationCatalogYAMLParser (input,
+            if( f.exists() && f.length() > 0){
+                Reader reader = new VariableExpansionReader( new FileReader( mTCFile ) );
+                yamlParser = new TransformationCatalogYAMLParser (reader,
                                                                     mLogger );
                 mTCStore = yamlParser.parse(modifyFileURL);
             }
