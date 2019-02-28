@@ -30,6 +30,7 @@ import java.util.logging.Logger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.parser.ParserException;
+import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
@@ -38,9 +39,9 @@ import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container.TYPE;
-import edu.isi.pegasus.planner.catalog.transformation.impl.Abstract;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
+import edu.isi.pegasus.planner.catalog.transformation.impl.Abstract;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.parser.tokens.TransformationCatalogKeywords;
 
@@ -181,116 +182,123 @@ public class TransformationCatalogYAMLParser {
 		 * Loads the yaml data
 		 * **/
 		try {
-
-			yamlData = mapper.readValue(mStream, Object.class);
+			if(mStream.available() > 0) {
+				yamlData = mapper.readValue(mStream, Object.class);
+			}
 		} catch (ParserException e) {
 			String errorMessage = parseError(e);
 			throw new ScannerException(e.getProblemMark().getLine() + 1, errorMessage);
 		} catch (Exception e) {
 			throw new ScannerException("Error in loading the yaml file", e);
 		}
-
-		YAMLSchemaValidationResult result = YAMLSchemaValidator.getInstance().validateYAMLSchema(yamlData, YAMLSCHEMA);
-
-		//schema validation is done here.. in case of any validation error we throw the result..
-		if (!result.isSuccess()) {
-			List<String> errors = result.getErrorMessage();
-			StringBuilder errorResult = new StringBuilder();
-			int i = 1;
-			for (String error : errors) {
-				if (i > 1) {
-					errorResult.append(",");
-				}
-				errorResult.append("Error ").append(i++).append(":{");
-				errorResult.append(error).append("}");
-			}
-			throw new ScannerException(errorResult.toString());
-		}
-
-		List<Object> transformationData = (List<Object>) yamlData;
-
-		for (Object transformation : transformationData) {
-
-			Map<String, Object> transformationAndContainers = (Map<String, Object>) transformation;
-
-			/**
-			 * Based on containers/transformations the corresponding data is loaded..
-			 **/
-			if (transformationAndContainers.containsKey(TransformationCatalogKeywords.CONTAINER.getReservedName())) {
-				List<Object> containerInformations = (List<Object>) transformationAndContainers
-						.get(TransformationCatalogKeywords.CONTAINER.getReservedName());
-				for (Object containerInformationObjects : containerInformations) {
-
-					Map<String, Object> containerInformation = (Map<String, Object>) containerInformationObjects;
-
-					Container container = new Container();
-
-					getContainerInfo(container, containerInformation);
-
-					// we have information about one transformation catalog container
-					mLogger.log("Container Entry parsed is - " + container, LogManager.DEBUG_MESSAGE_LEVEL);
-
-					store.addContainer(container);
-				}
-
-			} else {
-				List<Object> transformationInformations = (List<Object>) transformationAndContainers
-						.get(TransformationCatalogKeywords.TRANSFORMATION.getReservedName());
-
-				for (Object transformationInfo : transformationInformations) {
-
-					Map<String, Object> singleTransformation = (Map<String, Object>) transformationInfo;
-
-					/**
-					 * Get the basic properties for the transformation..
-					 * **/
-					String nameSpace = (String) singleTransformation
-							.get(TransformationCatalogKeywords.NAMESPACE.getReservedName());
-
-					String name = (String) singleTransformation
-							.get(TransformationCatalogKeywords.NAME.getReservedName());
-
-					Double version_obj = (Double) singleTransformation
-							.get(TransformationCatalogKeywords.VERSION.getReservedName());
-					
-					String version = null;
-					
-					if(version_obj != null) {
-						version = String.valueOf(version_obj);
+		if (yamlData != null) {
+			YAMLSchemaValidationResult result = YAMLSchemaValidator.getInstance().validateYAMLSchema(yamlData,
+					YAMLSCHEMA);
+			
+			List<Object> transformationData = (List<Object>) yamlData;
+			
+			// schema validation is done here.. in case of any validation error we throw the
+			// result..
+			if (!result.isSuccess()) {
+				List<String> errors = result.getErrorMessage();
+				StringBuilder errorResult = new StringBuilder();
+				int i = 1;
+				for (String error : errors) {
+					if (i > 1) {
+						errorResult.append(",");
 					}
+					errorResult.append("Error ").append(i++).append(":{");
+					errorResult.append(error).append("}");
+				}
+				throw new ScannerException(errorResult.toString());
+			}
 
-					Object profileObj = singleTransformation
-							.get(TransformationCatalogKeywords.PROFILE.getReservedName());
 
-					Object metaObj = singleTransformation.get(TransformationCatalogKeywords.METADATA.getReservedName());
+			for (Object transformation : transformationData) {
 
-					Profiles profiles = getProfilesForTransformation(profileObj, metaObj);
+				Map<String, Object> transformationAndContainers = (Map<String, Object>) transformation;
 
-					List<Object> sites = (List<Object>) singleTransformation
-							.get(TransformationCatalogKeywords.SITE.getReservedName());
+				/**
+				 * Based on containers/transformations the corresponding data is loaded..
+				 **/
+				if (transformationAndContainers
+						.containsKey(TransformationCatalogKeywords.CONTAINER.getReservedName())) {
+					List<Object> containerInformations = (List<Object>) transformationAndContainers
+							.get(TransformationCatalogKeywords.CONTAINER.getReservedName());
+					for (Object containerInformationObjects : containerInformations) {
 
-					for (Object siteObj : sites) {
+						Map<String, Object> containerInformation = (Map<String, Object>) containerInformationObjects;
 
-						Map<String, Object> siteData = (Map<String, Object>) siteObj;
+						Container container = new Container();
 
-						TransformationCatalogEntry entry = new TransformationCatalogEntry(nameSpace, name, version);
-
-						getTransformationCatalogEntry(entry, siteData, profiles);
-
-						if (modifyFileURL) {
-							store.addEntry(Abstract.modifyForFileURLS(entry));
-						} else {
-							store.addEntry(entry);
-						}
+						getContainerInfo(container, containerInformation);
 
 						// we have information about one transformation catalog container
-						mLogger.log("Transformation Catalog Entry parsed is - " + entry,
-								LogManager.DEBUG_MESSAGE_LEVEL);
+						mLogger.log("Container Entry parsed is - " + container, LogManager.DEBUG_MESSAGE_LEVEL);
+
+						store.addContainer(container);
+					}
+
+				} else {
+					List<Object> transformationInformations = (List<Object>) transformationAndContainers
+							.get(TransformationCatalogKeywords.TRANSFORMATION.getReservedName());
+
+					for (Object transformationInfo : transformationInformations) {
+
+						Map<String, Object> singleTransformation = (Map<String, Object>) transformationInfo;
+
+						/**
+						 * Get the basic properties for the transformation..
+						 **/
+						String nameSpace = (String) singleTransformation
+								.get(TransformationCatalogKeywords.NAMESPACE.getReservedName());
+
+						String name = (String) singleTransformation
+								.get(TransformationCatalogKeywords.NAME.getReservedName());
+
+						Double version_obj = (Double) singleTransformation
+								.get(TransformationCatalogKeywords.VERSION.getReservedName());
+
+						String version = null;
+
+						if (version_obj != null) {
+							version = String.valueOf(version_obj);
+						}
+
+						Object profileObj = singleTransformation
+								.get(TransformationCatalogKeywords.PROFILE.getReservedName());
+
+						Object metaObj = singleTransformation
+								.get(TransformationCatalogKeywords.METADATA.getReservedName());
+
+						Profiles profiles = getProfilesForTransformation(profileObj, metaObj);
+
+						List<Object> sites = (List<Object>) singleTransformation
+								.get(TransformationCatalogKeywords.SITE.getReservedName());
+
+						for (Object siteObj : sites) {
+
+							Map<String, Object> siteData = (Map<String, Object>) siteObj;
+
+							TransformationCatalogEntry entry = new TransformationCatalogEntry(nameSpace, name, version);
+
+							getTransformationCatalogEntry(entry, siteData, profiles);
+
+							if (modifyFileURL) {
+								store.addEntry(Abstract.modifyForFileURLS(entry));
+							} else {
+								store.addEntry(entry);
+							}
+
+							// we have information about one transformation catalog container
+							mLogger.log("Transformation Catalog Entry parsed is - " + entry,
+									LogManager.DEBUG_MESSAGE_LEVEL);
+						}
 					}
 				}
 			}
+			store.resolveContainerReferences();
 		}
-		store.resolveContainerReferences();
 		return store;
 	}
 
@@ -356,8 +364,11 @@ public class TransformationCatalogYAMLParser {
 				break;
 
 			case CONTAINER_MOUNT:
-				String mountPoint = (String) containerInformation.get(key);
-				container.addMountPoint(mountPoint);
+				@SuppressWarnings("unchecked") 
+				List<String> mountPoints = (List<String>) containerInformation.get(key);
+				for (String mountPoint : mountPoints) {
+					container.addMountPoint(mountPoint);
+				}
 				break;
 
 			case PROFILE:

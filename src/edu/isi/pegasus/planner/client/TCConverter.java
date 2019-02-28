@@ -559,7 +559,7 @@ public class TCConverter
      */
     private void convertTCEntryTo(TransformationStore output, String format, String filename) throws IOException {
         TransformationCatalog catalog = null;
-        if (format.equals(FILE_FORMAT) || format.equals(TEXT_FORMAT)) {
+        if (format.equals(FILE_FORMAT) || format.equals(TEXT_FORMAT) || format.equals(YAML_FORMAT)) {
 
             if (filename == null) {
                 throw new IOException("Please specify a file to write the output to using --output option ");

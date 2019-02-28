@@ -4,11 +4,8 @@
 	},
 	"$schema": "http://json-schema.org/draft-07/schema#",
 	"$id": "http://example.com/root.json",
-	"type": "array",
+	"type": ["array"],
 	"title": "The Root Schema",
-	"required": [
-			"transformations"
-	],
 	"items": {
 		"$id": "#/items",
 		"type": "object",
@@ -77,6 +74,89 @@
 													},
 													{
 														"type": "null"
+													}, {
+														"type" : "integer"
+													}
+												]
+											}
+										},
+										"additionalProperties": false
+									},
+									"pegasus": {
+										"$id": "#/profile/pegasus",
+										"type": "object",
+										"title": "The Environment Schema",
+										"patternProperties": {
+											"^.*$": {
+												"anyOf": [
+													{
+														"type": "string"
+													},
+													{
+														"type": "null"
+													},
+													{
+														"type" : "integer"
+													}
+												]
+											}
+										},
+										"additionalProperties": false
+									},
+									"stat": {
+										"$id": "#/profile/stat",
+										"type": "object",
+										"title": "The Environment Schema",
+										"patternProperties": {
+											"^.*$": {
+												"anyOf": [
+													{
+														"type": "string"
+													},
+													{
+														"type": "null"
+													},
+													{
+														"type" : "integer"
+													}
+												]
+											}
+										},
+										"additionalProperties": false
+									},
+									"selector": {
+										"$id": "#/profile/selector",
+										"type": "object",
+										"title": "The Environment Schema",
+										"patternProperties": {
+											"^.*$": {
+												"anyOf": [
+													{
+														"type": "string"
+													},
+													{
+														"type": "null"
+													},
+													{
+														"type" : "integer"
+													}
+												]
+											}
+										},
+										"additionalProperties": false
+									},
+									"hints": {
+										"$id": "#/profile/hints",
+										"type": "object",
+										"title": "The Environment Schema",
+										"patternProperties": {
+											"^.*$": {
+												"anyOf": [
+													{
+														"type": "string"
+													},
+													{
+														"type": "null"
 													}
 												]
 											}
@@ -95,6 +175,51 @@
 													},
 													{
 														"type": "null"
+													},
+													{
+														"type" : "integer"
+													}
+												]
+											}
+										},
+										"additionalProperties": false
+									},
+									"dagman": {
+										"$id": "#/profile/dagman",
+										"type": "object",
+										"title": "The Environment Schema",
+										"patternProperties": {
+											"^.*$": {
+												"anyOf": [
+													{
+														"type": "string"
+													},
+													{
+														"type": "null"
+													},
+													{
+														"type" : "integer"
+													}
+												]
+											}
+										},
+										"additionalProperties": false
+									},
+									"globus": {
+										"$id": "#/profile/globus",
+										"type": "object",
+										"title": "The Environment Schema",
+										"patternProperties": {
+											"^.*$": {
+												"anyOf": [
+													{
+														"type": "string"
+													},
+													{
+														"type": "null"
+													},
+													{
+														"type" : "integer"
 													}
 												]
 											}
@@ -136,8 +261,6 @@
 									"pfn",
 									"arch",
 									"os",
-									"osrelease",
-									"osversion",
 									"type"
 								],
 								"properties": {
@@ -161,41 +284,170 @@
 											"title": "The Items Schema",
 											"properties": {
 												"env": {
-													"$id": "#/transformations/site/env",
-													"type": "object",
-													"title": "The Environment Schema",
-													"patternProperties": {
-														"^.*$": {
-															"anyOf": [
-																{
-																	"type": "string"
-																},
-																{
-																	"type": "null"
-																}
-															]
-														}
+										"$id": "#/profile/env",
+										"type": "object",
+										"title": "The Environment Schema",
+										"patternProperties": {
+											"^.*$": {
+												"anyOf": [
+													{
+														"type": "string"
 													},
-													"additionalProperties": false
-												},
-												"condor": {
-													"$id": "#/profile/condor",
-													"type": "object",
-													"title": "The Environment Schema",
-													"patternProperties": {
-														"^.*$": {
-															"anyOf": [
-																{
-																	"type": "string"
-																},
-																{
-																	"type": "null"
-																}
-															]
-														}
+													{
+														"type": "null"
+													}
+												]
+											}
+										},
+										"additionalProperties": false
+									},
+									"pegasus": {
+										"$id": "#/profile/pegasus",
+										"type": "object",
+										"title": "The Environment Schema",
+										"patternProperties": {
+											"^.*$": {
+												"anyOf": [
+													{
+														"type": "string"
 													},
-													"additionalProperties": false
-												}
+													{
+														"type": "null"
+													},
+													{
+														"type" : "integer"
+													}
+												]
+											}
+										},
+										"additionalProperties": false
+									},
+									"stat": {
+										"$id": "#/profile/stat",
+										"type": "object",
+										"title": "The Environment Schema",
+										"patternProperties": {
+											"^.*$": {
+												"anyOf": [
+													{
+														"type": "string"
+													},
+													{
+														"type": "null"
+													},
+													{
+														"type" : "integer"
+													}
+												]
+											}
+										},
+										"additionalProperties": false
+									},
+									"selector": {
+										"$id": "#/profile/selector",
+										"type": "object",
+										"title": "The Environment Schema",
+										"patternProperties": {
+											"^.*$": {
+												"anyOf": [
+													{
+														"type": "string"
+													},
+													{
+														"type": "null"
+													},
+													{
+														"type" : "integer"
+													}
+												]
+											}
+										},
+										"additionalProperties": false
+									},
+									"hints": {
+										"$id": "#/profile/hints",
+										"type": "object",
+										"title": "The Environment Schema",
+										"patternProperties": {
+											"^.*$": {
+												"anyOf": [
+													{
+														"type": "string"
+													},
+													{
+														"type": "null"
+													},
+													{
+														"type" : "integer"
+													}
+												]
+											}
+										},
+										"additionalProperties": false
+									},
+									"condor": {
+										"$id": "#/profile/condor",
+										"type": "object",
+										"title": "The Environment Schema",
+										"patternProperties": {
+											"^.*$": {
+												"anyOf": [
+													{
+														"type": "string"
+													},
+													{
+														"type": "null"
+													},
+													{
+														"type" : "integer"
+													}
+												]
+											}
+										},
+										"additionalProperties": false
+									},
+									"dagman": {
+										"$id": "#/profile/dagman",
+										"type": "object",
+										"title": "The Environment Schema",
+										"patternProperties": {
+											"^.*$": {
+												"anyOf": [
+													{
+														"type": "string"
+													},
+													{
+														"type": "null"
+													},
+													{
+														"type" : "integer"
+													}
+												]
+											}
+										},
+										"additionalProperties": false
+									},
+									"globus": {
+										"$id": "#/profile/globus",
+										"type": "object",
+										"title": "The Environment Schema",
+										"patternProperties": {
+											"^.*$": {
+												"anyOf": [
+													{
+														"type": "string"
+													},
+													{
+														"type": "null"
+													}, 
+													{
+														"type": "integer"
+													}
+												]
+											}
+										},
+										"additionalProperties": false
+									}
 											},
 											"additionalProperties": false
 										}
@@ -364,7 +616,7 @@
 						},
 						"mount": {
 							"$id": "#/cont/mount",
-							"type": "string",
+							"type": "array",
 							"title": "The Mount Schema",
 							"default": "",
 							"examples": [

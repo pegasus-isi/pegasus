@@ -51,6 +51,8 @@ public class YAMLTest {
 	private static final String ERROR_FILE = "transformationcatalogue_test_error.yaml";
 	
 	private static final String INVALID_YAML_FILE = "transformationcatalogue_test_invalid.yaml";
+	
+	private static final String EMPTY_FILE = "transformationcatalogue_test_empty.yaml";
 
 	private PegasusBag mBag;
 
@@ -188,6 +190,26 @@ public class YAMLTest {
 			assertTrue(e.getCause().getMessage().contains("Unknown fields [\"unknown\"] present in transformations details"));
 			assertTrue(e.getCause().getMessage().contains("Missing required fields [\"arch\"] in transformations details"));
 		}
+	}
+	
+	@Test
+	public void testEmptyYAMLFile() {
+		PegasusBag mBag = new PegasusBag();
+		PegasusProperties mErrorProps = mTestSetup.loadPropertiesFromFile(PROPERTIES_BASENAME, new LinkedList());
+		mBag.add(PegasusBag.PEGASUS_PROPERTIES, mErrorProps);
+		mBag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+		mBag.add(PegasusBag.PEGASUS_PROPERTIES, mErrorProps);
+		mLogger.logEventStart("test.catalog.transformation.impl.YAML", "setup", "0");
+
+		YAML mCorrectCatalog = new YAML();
+		mErrorProps.setProperty(PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
+				new File(mTestSetup.getInputDirectory(), EMPTY_FILE).getAbsolutePath());
+		try {
+			mCorrectCatalog.initialize(mBag);
+		} catch (RuntimeException e) {
+			assertTrue(false);
+		}
+		assertTrue(true);
 	}
 	
 

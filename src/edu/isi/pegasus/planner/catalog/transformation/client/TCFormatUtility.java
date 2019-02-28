@@ -22,6 +22,7 @@ import edu.isi.pegasus.common.util.XMLWriter;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container.MountPoint;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.Profile;
@@ -231,6 +232,11 @@ public class TCFormatUtility {
 		
 	}
 
+	/**
+	 * This method is used to convert the incoming format to YAML format..
+	 * @param mTCStore - store which contains the populated result
+	 * @param out - Writer object to write the object to the file.
+	 */
 	@SuppressWarnings("unchecked")
 	public static void toYAMLFormat(TransformationStore mTCStore, Writer out) {
 		ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
@@ -239,12 +245,14 @@ public class TCFormatUtility {
 
 			List<TransformationCatalogEntry> entries = mTCStore.getAllEntries();
 
+			//this holds the transformations..
 			Map<String, Object> transformationMap = new LinkedHashMap<>();
 
 			List<Map<String, Object>> transformations = new LinkedList<Map<String, Object>>();
 
 			transformationMap.put("transformations", transformations);
 
+			//this holds the containers..
 			Map<String, Object> containerMap = new LinkedHashMap<>();
 
 			List<Map<String, Object>> containers = new LinkedList<Map<String, Object>>();
@@ -252,17 +260,31 @@ public class TCFormatUtility {
 			containerMap.put("cont", containers);
 
 			Set<Container> containerInfo = new HashSet<Container>();
-
+			
+			
+			/**
+			 * 
+			 * Transformation entries are granular at individual site level. So ensure, we don't populate basic transformation
+			 * information again and again..
+			 * 
+			 * **/
 			for (TransformationCatalogEntry entry : entries) {
-
+				
+				/**
+				 * Check if this transformation is already populated..
+				 * **/
 				Map<String, Object> entryMap = getEntryMap(transformations, entry.getLogicalName());
 
 				Container container = entry.getContainer();
 				
+				//if container exists add it..
 				if(container != null) {
 					containerInfo.add(container);
 				}
-
+				
+				/**
+				 * If this is the first time we are populating, create a basic info about the transformation..
+				 * **/
 				if (entryMap.isEmpty()) {
 					
 					String nameSpace = entry.getLogicalNamespace();
@@ -283,69 +305,85 @@ public class TCFormatUtility {
 						Double versionDobule = Double.valueOf(version);
 						entryMap.put(TransformationCatalogKeywords.VERSION.getReservedName(), versionDobule);
 					}
-
-					List<Profile> profiles = entry.getProfiles();
-
-					if (profiles != null) {
-						Object profileData = buildProfiles(profiles, false);
-						if (profileData != null) {
-							entryMap.put(TransformationCatalogKeywords.PROFILE.getReservedName(),
-									buildProfiles(profiles, false));
-						}
-						Object metaData = buildProfiles(profiles, true);
-						if (metaData != null) {
-							entryMap.put(TransformationCatalogKeywords.METADATA.getReservedName(), metaData);
-						}
-					}
 				}
+				List<Profile> profiles = entry.getProfiles();
+				
 				Object siteData = entryMap.get(TransformationCatalogKeywords.SITE.getReservedName());
+				
 				if (siteData == null) {
 					siteData = new LinkedList<Map<String, Object>>();
 					entryMap.put(TransformationCatalogKeywords.SITE.getReservedName(), siteData);
 				}
 				LinkedList<Map<String, Object>> siteList = (LinkedList<Map<String, Object>>) siteData;
+				//populate site information among with profile/meta information..
 				siteList.add(buildSite(entry.getResourceId(), entry.getPhysicalTransformation(), container,
-						entry.getSysInfo(), entry.getType()));
+						entry.getSysInfo(), entry.getType(),profiles ));
+				//add the site information..
 				entryMap.put(TransformationCatalogKeywords.SITE.getReservedName(), siteList);
 				transformations.add(entryMap);
 			}
+			/**
+			 * From all the entries, we get the container information. We need to populate this separately.
+			 * **/
 			for (Container container : containerInfo) {
 				HashMap<String, Object> containerData = new HashMap<>();
 				containerData.put(TransformationCatalogKeywords.NAME.getReservedName(), container.getName());
-				containerData.put(TransformationCatalogKeywords.CONTAINER_IMAGE_SITE.getReservedName(),
+				if(container.getImageSite() != null) {
+					containerData.put(TransformationCatalogKeywords.CONTAINER_IMAGE_SITE.getReservedName(),
 						container.getImageSite());
+				}
 				if (container.getImageDefinitionURL() != null) {
 					containerData.put(TransformationCatalogKeywords.CONTAINER_DOCKERFILE.getReservedName(),
 							container.getImageDefinitionURL());
 				}
-				containerData.put(TransformationCatalogKeywords.CONTAINER_IMAGE.getReservedName(),
+				if(container.getImageURL() != null) {
+					containerData.put(TransformationCatalogKeywords.CONTAINER_IMAGE.getReservedName(),
 						container.getImageURL().getURL());
-				containerData.put(TransformationCatalogKeywords.CONTAINER_MOUNT.getReservedName(),
-						container.getMountPoints());
+				}
+				if (container.getMountPoints() != null) {
+					List<String> mountPoints = new LinkedList<>();
+					for (MountPoint point : container.getMountPoints()) {
+						String mountPoint = point.getSourceDirectory() + ":" + point.getDestinationDirectory() + ":"
+								+ point.getMountOptions();
+						mountPoints.add(mountPoint);
+					}
+					containerData.put(TransformationCatalogKeywords.CONTAINER_MOUNT.getReservedName(), mountPoints);
+				}
 				containerData.put(TransformationCatalogKeywords.TYPE.getReservedName(), container.getType());
 				List<Profile> profiles = container.getProfiles();
 				if (profiles != null) {
-					Object profileData = buildProfiles(profiles, false);
-					if (profileData != null) {
+					List<Map<String, Map<String, Object>>> profileData = buildProfiles(profiles);
+					if (profileData != null && profileData.size() > 0) {
 						containerData.put(TransformationCatalogKeywords.PROFILE.getReservedName(),
-								buildProfiles(profiles, false));
+								profileData);
 					}
-					Object metaData = buildProfiles(profiles, true);
-					if (metaData != null) {
+					Map<String, Object> metaData = buildMeta(profiles);
+					if (metaData != null && metaData.size() > 0) {
 						containerData.put(TransformationCatalogKeywords.METADATA.getReservedName(), metaData);
 					}
 				}
 				containers.add(containerData);
 			}
-			transformationData.add(transformationMap);
-			transformationData.add(containerMap);
+			//if transformation exists add it..
+			if(transformations.size() > 0) {
+				transformationData.add(transformationMap);
+			}
+			//if the container exists add it..
+			if(containerInfo.size() > 0) {
+				transformationData.add(containerMap);
+			}
 			mapper.writeValue(out, transformationData);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-
+	
+	/**
+	 * 
+	 * This method is used to check if a logical name is already populated.. 
+	 * If already exists then return the already populated result..
+	 * 
+	 * **/
 	private static Map<String, Object> getEntryMap(List<Map<String, Object>> transformations, String logicalName) {
 		for (Map<String, Object> transformation : transformations) {
 			if (transformation.get(TransformationCatalogKeywords.NAME.getReservedName()).equals(logicalName)) {
@@ -356,47 +394,105 @@ public class TCFormatUtility {
 		return new LinkedHashMap<String, Object>();
 	}
 
+	/**
+	 * This is used to build the site related information
+	 * @param resourceId - The id of the site..
+	 * @param pfn - The PFN of the corresponding site..
+	 * @param container - Container info of the site..
+	 * @param sysInfo - System Info like Architecture, OS..
+	 * @param type - TCType of the site..
+	 * @param profiles - Profiles to be added to the site.
+	 * @return Map<String, Object> - Object representing the site information.
+	 */
 	private static Map<String, Object> buildSite(String resourceId, String pfn, Container container, SysInfo sysInfo,
-			TCType type) {
+			TCType type, List<Profile> profiles) {
 		Map<String, Object> siteInfo = new LinkedHashMap<>();
-		siteInfo.put(TransformationCatalogKeywords.NAME.getReservedName(), resourceId);
-		siteInfo.put(TransformationCatalogKeywords.SITE_ARCHITECTURE.getReservedName(), sysInfo.getArchitecture());
-		siteInfo.put(TransformationCatalogKeywords.SITE_OS.getReservedName(), sysInfo.getOS());
+		if (resourceId != null) {
+			siteInfo.put(TransformationCatalogKeywords.NAME.getReservedName(), resourceId);
+		}
+		if (sysInfo.getArchitecture() != null) {
+			siteInfo.put(TransformationCatalogKeywords.SITE_ARCHITECTURE.getReservedName(), sysInfo.getArchitecture());
+		}
+		if (sysInfo.getOS() != null) {
+			siteInfo.put(TransformationCatalogKeywords.SITE_OS.getReservedName(), sysInfo.getOS());
+		}
 		if(container != null) {
 			siteInfo.put(TransformationCatalogKeywords.SITE_CONTAINER_NAME.getReservedName(), container.getName());
 		}
-		siteInfo.put(TransformationCatalogKeywords.SITE_OS_RELEASE.getReservedName(), sysInfo.getOSRelease());
-		siteInfo.put(TransformationCatalogKeywords.SITE_OS_VERSION.getReservedName(), sysInfo.getOSVersion());
-		siteInfo.put(TransformationCatalogKeywords.SITE_PFN.getReservedName(), pfn);
-		siteInfo.put(TransformationCatalogKeywords.TYPE.getReservedName(), type);
+		if (sysInfo.getOSRelease() != null && !sysInfo.getOSRelease().equals("")) {
+			siteInfo.put(TransformationCatalogKeywords.SITE_OS_RELEASE.getReservedName(), sysInfo.getOSRelease());
+		}
+		if(sysInfo.getOSVersion() != null && !sysInfo.getOSVersion().equals("")) {
+			siteInfo.put(TransformationCatalogKeywords.SITE_OS_VERSION.getReservedName(), 
+					Integer.parseInt(sysInfo.getOSVersion()));
+		}
+		if(pfn != null) {
+			siteInfo.put(TransformationCatalogKeywords.SITE_PFN.getReservedName(), pfn);
+		}
+		if(type != null) {
+			siteInfo.put(TransformationCatalogKeywords.TYPE.getReservedName(), type);
+		}
+		if (profiles != null) {
+			List<Map<String, Map<String, Object>>> profileData = buildProfiles(profiles);
+			if (profileData != null && profileData.size() > 0) {
+				siteInfo.put(TransformationCatalogKeywords.PROFILE.getReservedName(),
+						profileData);
+			}
+			Map<String, Object> metaData = buildMeta(profiles);
+			if (metaData != null && metaData.size() > 0) {
+				siteInfo.put(TransformationCatalogKeywords.METADATA.getReservedName(), metaData);
+			}
+		}
 		return siteInfo;
 	}
 
-	private static Object buildProfiles(List<Profile> profiles, boolean isMeta) {
-		List<Map<String, Map<String, Object>>> profileList = null;
+	/**
+	 * This helper method is used to build the profiles from the existing profile.. 
+	 * Profiles will have meta also, omit this..
+	 * @param profiles - List of profiles..
+	 * @return List<Map<String, Map<String, Object>>> because of the following format:
+	 *  profile:
+      - env:
+          APP_HOME: "/tmp/mukund"
+          JAVA_HOME: "/bin/java.1.6"
+          me: "with"
+      - condor:
+          more: "test" 
+	 * 	
+	 */
+	private static List<Map<String, Map<String, Object>>> buildProfiles(List<Profile> profiles) {
+		List<Map<String, Map<String, Object>>> profileList = new LinkedList<Map<String, Map<String, Object>>>();
 		for (Profile profile : profiles) {
 			String nameSpace = profile.getProfileNamespace();
-			if (isMeta) {
-				if (nameSpace.contains("meta")) {
-					profileList = new LinkedList<Map<String, Map<String, Object>>>();
-					String key = profile.getProfileKey();
-					String value = profile.getProfileValue();
-					getMap(nameSpace, profileList).put(key, value);
-				}
-			} else {
-				if (!nameSpace.contains("meta")) {
-					profileList = new LinkedList<Map<String, Map<String, Object>>>();
-					String key = profile.getProfileKey();
-					String value = profile.getProfileValue();
-					getMap(nameSpace, profileList).put(key, value);
-				}
+			if (!nameSpace.contains("meta")) {
+				String key = profile.getProfileKey();
+				String value = profile.getProfileValue();
+				getMapForProfile(nameSpace, profileList).put(key, value);
 			}
 		}
 		return profileList;
-
+	}
+	
+	/**
+	 * This method extracts and builds the meta data information.
+	 * 
+	 * @param profiles - List of profiles..
+	 * @return Map<String, Object> - Simple key value inforamtion of meta.
+	 */
+	private static  Map<String, Object> buildMeta(List<Profile> profiles) {
+		Map<String, Object> metaMap = new HashMap<String, Object>();
+		for (Profile profile : profiles) {
+			String nameSpace = profile.getProfileNamespace();
+				if (nameSpace.contains("meta")) {
+					String key = profile.getProfileKey();
+					String value = profile.getProfileValue();
+					metaMap.put(key, value);
+				}
+		}
+		return metaMap;
 	}
 
-	private static Map<String, Object> getMap(String nameSpace, List<Map<String, Map<String, Object>>> profileList) {
+	private static Map<String, Object> getMapForProfile(String nameSpace, List<Map<String, Map<String, Object>>> profileList) {
 		if (profileList.isEmpty()) {
 			Map<String, Object> keyValueMap = new HashMap<>();
 			Map<String, Map<String, Object>> maps = new HashMap<>();
@@ -409,8 +505,9 @@ public class TCFormatUtility {
 					return maps.get(nameSpace);
 				} else {
 					Map<String, Object> keyValueMap = new HashMap<>();
-					maps.put(nameSpace, keyValueMap);
-					profileList.add(maps);
+					Map<String, Map<String, Object>> mapsTemp = new HashMap<>();
+					mapsTemp.put(nameSpace, keyValueMap);
+					profileList.add(mapsTemp);
 					return keyValueMap;
 				}
 			}

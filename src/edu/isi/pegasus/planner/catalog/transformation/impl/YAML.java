@@ -31,14 +31,13 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
-
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.catalog.transformation.client.TCFormatUtility;
@@ -208,10 +207,9 @@ public class YAML extends Abstract
 
         try{
             java.io.File f = new java.io.File(mTCFile);
-            
-            InputStream input = new FileInputStream(f);
-           
+                      
             if( f.exists() ){
+                InputStream input = new FileInputStream(f);
                 yamlParser = new TransformationCatalogYAMLParser (input,
                                                                     mLogger );
                 mTCStore = yamlParser.parse(modifyFileURL);
@@ -268,7 +266,7 @@ public class YAML extends Abstract
             try {
                 // open
                 Writer out = new BufferedWriter( new FileWriter( mTCFile ) );
-                out.write(TCFormatUtility.toTextFormat(mTCStore));
+                TCFormatUtility.toYAMLFormat(mTCStore, out);
                  // close
                 out.close();
                 this.mFlushOnClose = false;
@@ -619,7 +617,8 @@ public class YAML extends Abstract
                         entry.getLogicalName(), entry.getLogicalVersion(),
                         entry.getPhysicalTransformation(),
                         entry.getType(), entry.getResourceId(), null,
-                        entry.getProfiles(), entry.getSysInfo());
+                        entry.getProfiles(), entry.getSysInfo(),
+                        entry.getContainer());
         
     }
 
@@ -643,7 +642,8 @@ public class YAML extends Abstract
                         entry.getPhysicalTransformation(),
                         entry.getType(), entry.getResourceId(), null,
                         entry.getProfiles(), entry.getSysInfo(), 
-                        entry.getNotifications(),write)) {
+                        entry.getNotifications(),
+                        entry.getContainer(),write)) {
         	return 1;
         }else{
         	throw new RuntimeException("Failed to add TransformationCatalogEntry " + entry.getLogicalName());
@@ -681,7 +681,48 @@ public class YAML extends Abstract
                               SysInfo system) throws
         Exception {
         if(this.addTCEntry(namespace, name, version, physicalname, type,
-                               resourceid, lfnprofiles, pfnprofiles, system, null, true)){
+                               resourceid, lfnprofiles, pfnprofiles, system, null, null, true)){
+        	return 1;
+        }else{
+        	throw new RuntimeException("Failed to add TransformationCatalogEntry " + name);
+        }
+    }
+    
+    
+    /**
+     * Add an single entry into the transformation catalog.
+     *
+     * @param namespace    String The namespace of the transformation to be added (Can be null)
+     * @param name         String The name of the transformation to be added.
+     * @param version      String The version of the transformation to be added. (Can be null)
+     * @param physicalname String The physical name/location of the transformation to be added.
+     * @param type        TCType  The type of the physical transformation.
+     * @param resourceid   String The resource location id where the transformation is located.
+     * @param lfnprofiles     List   The List of Profile objects associated with a Logical Transformation. (can be null)
+     * @param pfnprofiles     List   The List of Profile objects associated with a Physical Transformation. (can be null)
+     * @param sysinfo     SysInfo  The System information associated with a physical transformation.
+     * @param containerInfo     SysInfo  The Container information associated with a physical transformation.
+
+     * @return number of insertions, should always be 1. On failure,
+     * throw an exception, don't use zero.
+     *
+     * 
+     * @throws Exception
+     *
+     * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
+     * @see edu.isi.pegasus.planner.catalog.classes.SysInfo
+     * @see org.griphyn.cPlanner.classes.Profile
+     */
+    public int insert(String namespace, String name,
+                              String version,
+                              String physicalname, TCType type,
+                              String resourceid,
+                              List pfnprofiles, List lfnprofiles,
+                              SysInfo system,
+                              Container containerInfo) throws
+        Exception {
+        if(this.addTCEntry(namespace, name, version, physicalname, type,
+                               resourceid, lfnprofiles, pfnprofiles, system, null, containerInfo, true)){
         	return 1;
         }else{
         	throw new RuntimeException("Failed to add TransformationCatalogEntry " + name);
@@ -722,6 +763,7 @@ public class YAML extends Abstract
                               List pfnprofiles, List lfnprofiles,
                               SysInfo system,
                               Notifications invokes,
+                              Container containterInfo,
                               boolean write) throws
         Exception {
 
@@ -737,6 +779,7 @@ public class YAML extends Abstract
         entry.setSysInfo( system );
         //entry.setVDSSysInfo( NMI2VDSSysInfo.nmiToVDSSysInfo(system) );
         entry.addNotifications(invokes);
+        entry.setContainer(containterInfo);
         
 
         List<TransformationCatalogEntry> existing = this.lookup( namespace, name, version, resourceid, type );
