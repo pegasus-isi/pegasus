@@ -97,7 +97,9 @@ class Tools(object):
             self._info[executable]['version_patch'] = None
         
             # figure out the full path to the executable
-            path_entries = os.environ['PATH'].split(':')
+            path_entries = ['/usr/bin']
+            if 'PATH' in os.environ:
+                path_entries = os.environ['PATH'].split(':')
             if '' in path_entries:
                 path_entries.remove('')
             if path_prepend is not None:
