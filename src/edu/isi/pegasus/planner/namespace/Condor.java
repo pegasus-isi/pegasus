@@ -21,6 +21,7 @@ import edu.isi.pegasus.planner.classes.Profile;
 
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
+import static edu.isi.pegasus.planner.code.generator.condor.style.Condor.WHEN_TO_TRANSFER_OUTPUT_KEY;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import java.util.Collection;
@@ -368,7 +369,7 @@ public class Condor extends Namespace{
     public void setExecutableForTransfer( ){
         this.construct( Condor.TRANSFER_EXECUTABLE_KEY, "true" );
         this.construct("should_transfer_files","YES");
-        this.construct("when_to_transfer_output","ON_EXIT");
+        this.constructWhenToTransferOutput();
     }
 
     /**
@@ -447,7 +448,7 @@ public class Condor extends Namespace{
         else{
             //set the additional keys only once
             this.construct("should_transfer_files","YES");
-            this.construct("when_to_transfer_output","ON_EXIT");
+            this.constructWhenToTransferOutput();
         }
         this.construct( key, addon.toString() );
     }
@@ -482,12 +483,26 @@ public class Condor extends Namespace{
             files = file;
             //set the additional keys only once
             this.construct("should_transfer_files","YES");
-            this.construct("when_to_transfer_output","ON_EXIT");
+            this.constructWhenToTransferOutput();
         }
         this.construct( key ,files);
     }
 
     
+    /**
+     * Construct when to transfer output key
+     */
+    private void constructWhenToTransferOutput(){
+        String wtto = (String) this.get( Condor.WHEN_TO_TRANSFER_OUTPUT_KEY );
+        if( wtto == null ){
+            //default value
+            this.construct( Condor.WHEN_TO_TRANSFER_OUTPUT_KEY, "ON_EXIT" );
+        }
+        else{
+            //PM-1350 prefer the value specified by the user
+            this.construct( WHEN_TO_TRANSFER_OUTPUT_KEY, wtto );
+        }
+    }
 
     
 

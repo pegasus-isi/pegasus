@@ -1189,10 +1189,10 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
 }
 
 cont centos-pegasus{
-     # can be either docker or singularity
+     # can be either docker or singularity or shifter
      type "docker"
 
-     # URL to image in a docker|singularity hub OR
+     # URL to image in a docker|singularity hub|shitfer repo url OR
      # URL to an existing docker image exported as a tar file or singularity image
      image "docker:///rynge/montage:latest" 
 
@@ -1220,10 +1220,14 @@ cont centos-pegasus{
 
           <listitem>
             <para><emphasis role="bold">image</emphasis> - URL to image in a
-            docker|singularity hub or URL to an existing docker image exported
-            as a tar file or singularity image. Example of a docker hub URL is
-            docker:///rynge/montage:latest, while for singularity
-            shub://singularity-hub.org/pegasus-isi/fedora-montage</para>
+            docker|singularity hub| shifter repo URL or URL to an existing
+            docker image exported as a tar file or singularity image. Example
+            of a docker hub URL is docker:///rynge/montage:latest, while for
+            singularity shub://singularity-hub.org/pegasus-isi/fedora-montage
+            . Shifter images can only be referred to by shifter URL scheme
+            that indicates that the image is available in the local shifter
+            repository on the compute site. For example
+            shifter:///papajim/namd_image:latest .</para>
           </listitem>
 
           <listitem>

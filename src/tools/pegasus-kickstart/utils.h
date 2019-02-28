@@ -20,7 +20,8 @@
 #include <sys/time.h>
 #include <time.h>
 
-extern void xmlquote(FILE *out, const char* msg, size_t msglen);
+extern void yamlquote(FILE *out, const char* msg, size_t msglen);
+extern void yamldump(FILE *out, const int indent, const char* msg, size_t msglen);
 extern char* fmtisodate(time_t seconds, long micros);
 extern double doubletime(const struct timeval t);
 extern void now(struct timeval* t);

@@ -1,4 +1,83 @@
 ===============================
+Release Notes for Pegasus 4.9.1
+===============================
+We are pleased to announce release of Pegasus 4.9.1
+
+We are happy to announce the release of Pegasus 4.9.1 . Pegasus 4.9.1
+is a minor bug fix release and includes a major change to how
+transfers are handled for containerized jobs. Pegasus 4.9.1 also
+includes support for Shifter.
+
+Until Pegasus 4.9.0 the transfers for the jobs were conducted on the
+host node in Pegasus Lite job before the application container was
+launched. However, this limited the ability for users to use transfer
+protocols that were not installed on the host OS.  Starting 4.9.1 the
+transfers happen within the application container. 
+
+More details at
+https://pegasus.isi.edu/docs/4.9.1dev/container-exec-model.php
+
+New Features and Improvements
+----------------------------
+
+1)  [PM-1339] – construct a default entry for local site if not
+    	        present in site catalog
+
+2)  [PM-1345] – Support for Shifter at Nersc
+
+3)  [PM-1352] – Build failure on Debian 10 due to mariadb/MySQL-Python
+   	        incompatibility 
+
+4)  [PM-1216] – pegasus-transfer should follow redirects to file urls
+
+5)  [PM-1321] – Move transfer staging into the container rather than
+   	        the host OS
+
+6)  [PM-1323] – pegasus transfer should not try and transfer a file
+        	that does not exist
+
+7)  [PM-1329] – pegasus integrity causes LIGO workflows to fail
+
+8)  [PM-1338] – Add support for TACC wrangler to pegasus-init
+
+9)  [PM-1328] – support sharedfs on the compute site as staging site
+
+10) [PM-1340] – make planner os releases consistent with builds
+
+Bugs Fixed
+--------------
+
+1)  [PM-1182] – registration jobs fail if a file based RC has variables
+   	        defined
+
+2)  [PM-1320] – pegasus-plan doesn’t plan with container in sharedfs
+               mode
+
+3)  [PM-1322] – DB Admin failing when run within planner
+
+4)  [PM-1325] – Debian build with incorrect dependencies
+
+5)  [PM-1326] – singularity suffix computed incorrectly
+
+6)  [PM-1327] – bypass input file staging broken for container
+               execution 
+
+7)  [PM-1330] – .meta files created even when integrity checking is
+   	       disabled. 
+
+8)  [PM-1332] – monitord is failing on a dagman.out file
+
+9)  [PM-1333] – amqp endpoint errors should not disable database
+    	        population for multiplexed sinks 
+
+10) [PM-1334] – pegasus dagman is not exiting cleanly
+
+11) [PM-1336] – pegasus-submitdir is broken
+
+12) [PM-1350] – pegasus is ignoring when_to_transfer_output
+
+
+===============================
 Release Notes for Pegasus 4.9.0
 ===============================
 We are pleased to announce release of Pegasus 4.9.0

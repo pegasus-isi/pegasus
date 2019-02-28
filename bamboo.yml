@@ -267,6 +267,7 @@ project:
                     scriptBody: "tar xzf pegasus-source.tar.gz"
                 - !script
                   description: Unit Tests
+                  environmentVariables: 'PATH="${PATH}:/usr/local/bin:/Library/TeX/texbin" LDFLAGS="-L/usr/local/opt/openssl/lib" CPPFLAGS="-I/usr/local/opt/openssl/include"'
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
@@ -461,7 +462,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTCUZ
-              name: Ubuntu Zesty Unit Tests
+              name: Ubuntu Xenial Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -473,7 +474,7 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_17}
+                      TAG=${bamboo_TAG_UBUNTU_16}
 
                       /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
 
@@ -490,7 +491,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTJUZ
-              name: Ubuntu Zesty Java Unit Tests
+              name: Ubuntu Xenial Java Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -502,7 +503,7 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_17}
+                      TAG=${bamboo_TAG_UBUNTU_16}
 
                       /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
 
@@ -520,7 +521,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTPUZ
-              name: Ubuntu Zesty Python Unit Tests
+              name: Ubuntu Xenial Python Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -532,7 +533,7 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_17}
+                      TAG=${bamboo_TAG_UBUNTU_16}
 
                       /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
 
@@ -963,7 +964,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXUX
-              name: Build x86_64 Ubuntu Xenial
+              name: Build x86_64 Ubuntu 16.04 LTS
               tasks:
                 - !script
                   description: Untar source
@@ -996,49 +997,6 @@ project:
                   isShared: true
                 - name: pegasus-worker-x86_64_ubuntu_16
                   copyPattern: 'pegasus-worker-*-x86_64_ubuntu_16.tar.gz'
-                  location: pegasus-source/dist
-                  isShared: true
-              artifactDependencies:
-                - name: pegasus-source
-              requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
-            - key: BXUZ
-              name: Build x86_64 Ubuntu Zesty
-              tasks:
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xzf pegasus-source.tar.gz"
-                - !script
-                  description: Binary Packages
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_17}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      --entrypoint ant \
-                      pegasus/pegasus:${TAG} \
-                      clean dist-deb dist-worker dist-release
-              artifactDefinitions:
-                - name: pegasus-binary-x86_64_ubuntu_17
-                  copyPattern: 'pegasus-binary-*-x86_64_ubuntu_17.tar.gz'
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-deb-x86_64_ubuntu_17
-                  copyPattern: '*.deb'
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-worker-x86_64_ubuntu_17
-                  copyPattern: 'pegasus-worker-*-x86_64_ubuntu_17.tar.gz'
                   location: pegasus-source/dist
                   isShared: true
               artifactDependencies:
@@ -1143,8 +1101,8 @@ project:
                       # ubuntu
                       mkdir -p $DOWNLOADS/ubuntu/dists/xenial/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*ubuntu16_amd64.deb $DOWNLOADS/ubuntu/dists/xenial/main/binary-amd64/
-                      mkdir -p $DOWNLOADS/ubuntu/dists/zesty/main/binary-amd64
-                      cp $DOWNLOADS/pegasus_*ubuntu17_amd64.deb $DOWNLOADS/ubuntu/dists/zesty/main/binary-amd64/
+                      #mkdir -p $DOWNLOADS/ubuntu/dists/zesty/main/binary-amd64
+                      #cp $DOWNLOADS/pegasus_*ubuntu17_amd64.deb $DOWNLOADS/ubuntu/dists/zesty/main/binary-amd64/
                       mkdir -p $DOWNLOADS/ubuntu/dists/bionic/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*ubuntu18_amd64.deb $DOWNLOADS/ubuntu/dists/bionic/main/binary-amd64/
 
@@ -1181,13 +1139,13 @@ project:
                 - name: pegasus-binary-x86_64_rhel_6
                 - name: pegasus-binary-x86_64_rhel_7
                 - name: pegasus-binary-x86_64_ubuntu_16
-                - name: pegasus-binary-x86_64_ubuntu_17
+                #- name: pegasus-binary-x86_64_ubuntu_17
                 - name: pegasus-binary-x86_64_ubuntu_18
                 #- name: pegasus-binary-x86_rhel_6
                 - name: pegasus-deb-x86_64_deb_9
                 - name: pegasus-deb-x86_64_deb_10
                 - name: pegasus-deb-x86_64_ubuntu_16
-                - name: pegasus-deb-x86_64_ubuntu_17
+                #- name: pegasus-deb-x86_64_ubuntu_17
                 - name: pegasus-deb-x86_64_ubuntu_18
                 - name: pegasus-dmg-x86_64_macos
                 - name: pegasus-doc
@@ -1208,7 +1166,7 @@ project:
                 - name: pegasus-worker-x86_64_rhel_6
                 - name: pegasus-worker-x86_64_rhel_7
                 - name: pegasus-worker-x86_64_ubuntu_16
-                - name: pegasus-worker-x86_64_ubuntu_17
+                #- name: pegasus-worker-x86_64_ubuntu_17
                 - name: pegasus-worker-x86_64_ubuntu_18
                 #- name: pegasus-worker-x86_rhel_6
               requirements:
@@ -3610,6 +3568,35 @@ project:
             - key: T044H
               name: 044-singularity-nonsharedfs-symlink-cvmfs
               description: Singularity in nonsharedfs with a shared filesystem and symlinking of container image from cvmfs
+              tasks:
+              - !script
+                description: Cleanup
+                enabled: true
+                inlineScript:
+                  interpreter: !scriptInterpreter LEGACY_SH_BAT
+                  scriptBody: "rm -rf pegasus/ test/"
+              - !script
+                description: Untar source
+                inlineScript:
+                  interpreter: !scriptInterpreter LEGACY_SH_BAT
+                  scriptBody: "tar xf tests.tar"
+              - !script
+                description: Run Test
+                inlineScript:
+                  interpreter: !scriptInterpreter LEGACY_SH_BAT
+                  scriptBody: |
+                    export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+                    test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+              requirements:
+              - capabilityKey: condor
+                matchType: !exists exists
+              artifactDependencies:
+              - name: tests
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: false
+            - key: T044I
+              name: 044-singularity-nonsharedfs-minimal
+              description: Singularity in nonsharedfs, with a minimal image
               tasks:
               - !script
                 description: Cleanup

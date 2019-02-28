@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -eo pipefail
 
 PYTHON=$($(dirname $0)/get-system-python)
 
@@ -18,5 +18,19 @@ for f in "$1"/*; do
         echo "Updating #! line of $f"
         perl -p -i -e "s|^#!/usr/bin/env python.*|#!$PYTHON|g" "$f"
     fi
+done
+
+# this is the newer style tools - using a bash wrapper to determine
+# python version at runtime
+cd $1
+for TOOL in \
+    pegasus-exitcode \
+    pegasus-integrity \
+    pegasus-s3 \
+    pegasus-transfer \
+; do
+    rm -f $TOOL
+    cat pegasus-python-wrapper | sed "s/%%BASE_NAME%%/$TOOL/" >$TOOL
+    chmod 755 $TOOL
 done
 

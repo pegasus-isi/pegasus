@@ -23,7 +23,6 @@ Usage: pegasus-transfer [options]
 ##
 
 import cmd
-import ConfigParser
 import errno
 import hashlib
 import json
@@ -31,13 +30,11 @@ import logging
 import math
 import optparse
 import os
-import Queue
 import random
 import re
 import signal
-import stat
-import string
 import socket
+import stat
 import subprocess
 import sys
 import tempfile
@@ -47,11 +44,38 @@ import traceback
 from subprocess import STDOUT
 
 try:
+    import configparser
+except:
+    import ConfigParser as configparser
+
+try:
+    import queue
+except:
+    import Queue as queue
+
+try:
     # Python 3.0 and later
     import urllib.parse as urllib
 except ImportError:
     # Fall back to Python 2's urllib
     import urllib as urllib
+
+# see https://www.python.org/dev/peps/pep-0469/
+try:
+    dict.iteritems
+except AttributeError:
+    # Python 3
+    def itervalues(d):
+        return iter(d.values())
+    def iteritems(d):
+        return iter(d.items())
+else:
+    # Python 2
+    def itervalues(d):
+        return d.itervalues()
+    def iteritems(d):
+        return d.iteritems()
+
 
 # Bad ulimits (for example -s 16000000) can prevent new threads from
 # being created. Let's try setting the stack size to something sane
@@ -96,7 +120,7 @@ class PegasusURL:
         self.url = urllib.unquote(url)
         self.file_type = file_type
         # make the site label to match site labels in the env
-        self.site_label = string.replace(site_label, "-", "_")
+        self.site_label = site_label.replace("-", "_")
         self.priority = priority
         # fill out the rest of the members
         self._parse_url()
@@ -108,13 +132,13 @@ class PegasusURL:
     def _parse_url(self):
                     
         # default protocol is file://
-        if string.find(self.url, ":") == -1:
+        if self.url.find(":") == -1:
             logger.debug("URL without protocol (" + self.url + ") - assuming file://")
             self.url = "file://" + self.url
 
         # file url is a special cases as it can contain relative paths and
         # env vars
-        if string.find(self.url, "file:") == 0:
+        if self.url.find("file:") == 0:
             self.proto = "file"
             # file urls can either start with file://[\w]*/ or file: (no //)
             self.path = re.sub("^file:(//(localhost)?)?", "", self.url)
@@ -123,7 +147,7 @@ class PegasusURL:
         
         # symlink url is a special cases as it can contain relative paths and
         # env vars
-        if string.find(self.url, "symlink:") == 0:
+        if self.url.find("symlink:") == 0:
             self.proto = "symlink"
             # symlink urls can either start with symlink://[\w]*/ or
             # symlink: (no //)
@@ -275,6 +299,30 @@ class Remove(TransferBase):
         if cmp(self._target_url.path, other._target_url.path) != 0:
             return cmp(self._target_url.path, other._target_url.path)
         return 0
+
+
+    def __eq__(self, other):
+        return self._target_url.proto == other._target_url.proto and \
+               self._target_url.host == other._target_url.host and \
+               self._target_url.path == other._target_url.path
+
+
+    def __lt__(self, other):
+        return self._target_url.proto < other._target_url.proto or \
+               self._target_url.host < other._target_url.host or \
+               self._target_url.path < other._target_url.path
+
+
+    def __le__(self, other):
+        return self.__lt__(other) or self.__eq__(other)
+
+
+    def __gt__(self, other):
+        return not (self.__lt__(other) or self.__eq__(other))
+
+
+    def __ge__(self, other):
+        return not (self.__lt__(other))
 
 
 class Transfer(TransferBase):
@@ -434,136 +482,172 @@ class Transfer(TransferBase):
             return cmp(self._dst_urls[0].path, other._dst_urls[0].path)
         return 0
 
-    
+
+    def __eq__(self, other):
+        return self._src_urls[0].proto == other._src_urls[0].proto and \
+               self._dst_urls[0].proto == other._dst_urls[0].proto and \
+               self._src_urls[0].host == other._src_urls[0].host and \
+               self._dst_urls[0].host == other._dst_urls[0].host and \
+               self._src_urls[0].path == other._src_urls[0].path and \
+               self._dst_urls[0].path == other._dst_urls[0].path
+
+
+    def __lt__(self, other):
+        return self._src_urls[0].proto < other._src_urls[0].proto or \
+               self._dst_urls[0].proto < other._dst_urls[0].proto or \
+               self._src_urls[0].host < other._src_urls[0].host or \
+               self._dst_urls[0].host < other._dst_urls[0].host or \
+               self._src_urls[0].path < other._src_urls[0].path or \
+               self._dst_urls[0].path < other._dst_urls[0].path
+
+
+    def __le__(self, other):
+        return self.__lt__(other) or self.__eq__(other)
+
+
+    def __gt__(self, other):
+        return not (self.__lt__(other) or self.__eq__(other))
+
+
+    def __ge__(self, other):
+        return not (self.__lt__(other))
+
+
     def _update_sub_transfer_count(self):
         self._sub_transfer_count = len(self._src_urls) * len(self._dst_urls)
 
 
-class Singleton(type):
-    """Implementation of the singleton pattern"""
-    _instances = {}
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = \
-                super(Singleton, cls).__call__(*args, **kwargs)
-            cls.lock = threading.Lock()
-        return cls._instances[cls]
-
-
 class Tools(object):
-    """Singleton for detecting and maintaining tools we depend on
     """
+    Singleton for detecting and maintaining tools we depend on
+    """
+   
+    # singleton
+    instance = None
+
+    def __init__(self):
+        if not Tools.instance:
+            Tools.instance = Tools.__Tools()
+
+    def __getattr__(self, name):
+        return getattr(self.instance, name)
     
-    __metaclass__ = Singleton
+    class __Tools():   	 
+
+        _info = {}
+
+        def __init__(self):
+            self.lock = threading.Lock()
     
-    _info = {}
-
-    def find(self, executable, version_arg=None, version_regex=None, path_prepend=None):
-
-        self.lock.acquire()
-        try:
-            if executable in self._info:
-                if self._info[executable] is None:
-                    return None
-                return self._info[executable]
+        def find(self, executable, version_arg=None, version_regex=None, path_prepend=None):
+    
+            self.lock.acquire()
+            try:
+                if executable in self._info:
+                    if self._info[executable] is None:
+                        return None
+                    return self._info[executable]
+                
+                logger.debug("Trying to detect availability/location of tool: %s"
+                             %(executable))
+    
+                # initialize the global tool info for this executable
+                self._info[executable] = {}
+                self._info[executable]['full_path'] = None
+                self._info[executable]['version'] = None
+                self._info[executable]['version_major'] = None
+                self._info[executable]['version_minor'] = None
+                self._info[executable]['version_patch'] = None
             
-            logger.debug("Trying to detect availability/location of tool: %s"
-                         %(executable))
-
-            # initialize the global tool info for this executable
-            self._info[executable] = {}
-            self._info[executable]['full_path'] = None
-            self._info[executable]['version'] = None
-            self._info[executable]['version_major'] = None
-            self._info[executable]['version_minor'] = None
-            self._info[executable]['version_patch'] = None
-        
-            # figure out the full path to the executable
-            path_entries = os.environ["PATH"].split(":")
-            if "" in path_entries:
-                path_entries.remove("")
-            if path_prepend is not None:
-                for entry in path_prepend:
-                    path_entries.insert(0, entry)
-            
-            # now walk the path
-            full_path = None
-            for entry in path_entries:
-                full_path = entry + "/" + executable
-                if os.path.isfile(full_path) and os.access(full_path, os.X_OK):
-                    break
+                # figure out the full path to the executable
+                path_entries = os.environ["PATH"].split(":")
+                if "" in path_entries:
+                    path_entries.remove("")
+                # if we have PEGASUS_HOME set, and try to invoke a Pegasus tool, prepend
+                if 'PEGASUS_HOME' in os.environ and executable.find("pegasus-") == 0:
+                    path_entries.insert(0, os.environ['PEGASUS_HOME'] + '/bin')
+                if path_prepend is not None:
+                    for entry in path_prepend:
+                        path_entries.insert(0, entry)
+                
+                # now walk the path
                 full_path = None
+                for entry in path_entries:
+                    full_path = entry + "/" + executable
+                    if os.path.isfile(full_path) and os.access(full_path, os.X_OK):
+                        break
+                    full_path = None
+                
+                if full_path == None:
+                    logger.info("Command '%s' not found in the current environment"
+                                %(executable))
+                    self._info[executable] = None
+                    return self._info[executable]
+                self._info[executable]['full_path'] = full_path
             
-            if full_path == None:
-                logger.info("Command '%s' not found in the current environment"
-                            %(executable))
-                self._info[executable] = None
-                return self._info[executable]
-            self._info[executable]['full_path'] = full_path
-        
-            # version
-            if version_regex is None:
-                version = "N/A"
-            else:
-                version = backticks(executable + " " + version_arg + " 2>&1")
-                version = version.replace('\n', "")
-                re_version = re.compile(version_regex)
+                # version
+                if version_regex is None:
+                    version = "N/A"
+                else:
+                    version = backticks(executable + " " + version_arg + " 2>&1")
+                    version = version.replace('\n', "")
+                    re_version = re.compile(version_regex)
+                    result = re_version.search(version)
+                    if result:
+                        version = result.group(1)
+                    self._info[executable]['version'] = version
+            
+                # if possible, break up version into major, minor, patch
+                re_version = re.compile("([0-9]+)\.([0-9]+)(\.([0-9]+)){0,1}")
                 result = re_version.search(version)
                 if result:
-                    version = result.group(1)
-                self._info[executable]['version'] = version
-        
-            # if possible, break up version into major, minor, patch
-            re_version = re.compile("([0-9]+)\.([0-9]+)(\.([0-9]+)){0,1}")
-            result = re_version.search(version)
-            if result:
-                self._info[executable]['version_major'] = int(result.group(1))
-                self._info[executable]['version_minor'] = int(result.group(2))
-                self._info[executable]['version_patch'] = result.group(4)
-            if self._info[executable]['version_patch'] is None or \
-               self._info[executable]['version_patch'] == "":
-                self._info[executable]['version_patch'] = None
-            else:
-                self._info[executable]['version_patch'] = \
-                    int(self._info[executable]['version_patch'])
-        
-            logger.info("Tool found: %s   Version: %s   Path: %s" 
-                        % (executable, version, full_path))
-            return self._info[executable]['full_path']
-        finally:
-            self.lock.release()
-
-
-    def full_path(self, executable):
-        """ Returns the full path to a given executable """
-        self.lock.acquire()
-        try:
-            if executable in self._info and self._info[executable] is not None:
+                    self._info[executable]['version_major'] = int(result.group(1))
+                    self._info[executable]['version_minor'] = int(result.group(2))
+                    self._info[executable]['version_patch'] = result.group(4)
+                if self._info[executable]['version_patch'] is None or \
+                   self._info[executable]['version_patch'] == "":
+                    self._info[executable]['version_patch'] = None
+                else:
+                    self._info[executable]['version_patch'] = \
+                        int(self._info[executable]['version_patch'])
+            
+                logger.info("Tool found: %s   Version: %s   Path: %s" 
+                            % (executable, version, full_path))
                 return self._info[executable]['full_path']
-            return None
-        finally:
-            self.lock.release()
-
-
-    def major_version(self, executable):
-        """ Returns the detected major version given executable """
-        self.lock.acquire()
-        try:
-            if executable in self._info and self._info[executable] is not None:
-                return self._info[executable]['version_major']
-            return None
-        finally:
-            self.lock.release()
+            finally:
+                self.lock.release()
     
-    def minor_version(self, executable):
-        """ Returns the detected minor version given executable """
-        self.lock.acquire()
-        try:
-            if executable in self._info and self._info[executable] is not None:
-                return self._info[executable]['version_minor']
-            return None
-        finally:
-            self.lock.release()
+    
+        def full_path(self, executable):
+            """ Returns the full path to a given executable """
+            self.lock.acquire()
+            try:
+                if executable in self._info and self._info[executable] is not None:
+                    return self._info[executable]['full_path']
+                return None
+            finally:
+                self.lock.release()
+    
+    
+        def major_version(self, executable):
+            """ Returns the detected major version given executable """
+            self.lock.acquire()
+            try:
+                if executable in self._info and self._info[executable] is not None:
+                    return self._info[executable]['version_major']
+                return None
+            finally:
+                self.lock.release()
+        
+        def minor_version(self, executable):
+            """ Returns the detected minor version given executable """
+            self.lock.acquire()
+            try:
+                if executable in self._info and self._info[executable] is not None:
+                    return self._info[executable]['version_minor']
+                return None
+            finally:
+                self.lock.release()
                 
 
 class TimedCommand(object):
@@ -588,7 +672,7 @@ class TimedCommand(object):
             
             # custom environment for the subshell
             sub_env = os.environ.copy()
-            for key, value in self._env_overrides.iteritems():
+            for key, value in iteritems(self._env_overrides):
                 logger.debug("ENV override: %s = %s" %(key, value))
                 sub_env[key] = value
             
@@ -802,7 +886,7 @@ class TransferHandlerBase(object):
             return
 
         self.lock.acquire()
-        cmd = "%s --generate-fullstat-xml=\"%s=%s\"" % (tools.full_path("pegasus-integrity"), lfn, fname)
+        cmd = "%s --generate-fullstat-yaml=\"%s=%s\"" % (tools.full_path("pegasus-integrity"), lfn, fname)
         try:
             tc = TimedCommand(cmd)
             tc.run()
@@ -2130,7 +2214,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
 
         logger.info("Parsing globus config file for OAuth credentials")
         
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         config.read(os.path.expanduser("~/.pegasus/globus.conf"))
 
         cred_details = { "client_id": None,
@@ -2141,23 +2225,23 @@ class GlobusOnlineHandler(TransferHandlerBase):
 
         try :
             cred_details["client_id"] = config.get("oauth", "client_id")
-        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+        except (configparser.NoSectionError, configparser.NoOptionError):
             logger.error("No client_id was supplied")
             raise RuntimeError("No client_id was supplied for Globus App")
 
         try:
             cred_details["transfer_at"]= config.get("oauth", "transfer_at")
-        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+        except (configparser.NoSectionError, configparser.NoOptionError):
             logger.info("No transfer_access_token was supplied")
 
         try:
             cred_details["transfer_at_exp"] = config.get("oauth", "transfer_at_exp")
-        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+        except (configparser.NoSectionError, configparser.NoOptionError):
             logger.info("No transfer_access_token_expiration was supplied, defaults to 0")
 
         try :
             cred_details["transfer_rt"] = config.get("oauth", "transfer_rt")
-        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+        except (configparser.NoSectionError, configparser.NoOptionError):
             logger.info("No transfer_refresh_token was supplied")
             if (cred_details["transfer_at"] is None) or (cred_details["transfer_at_exp"] < int(time.time()) - 3600):
                 logger.error("transfer_access_token is missing or expiring soon")
@@ -2344,7 +2428,7 @@ class GSHandler(TransferHandlerBase):
         except:
           raise RuntimeError("Unable to create tmp file for gs boto file")
         try:
-            conf = ConfigParser.SafeConfigParser()
+            conf = configparser.SafeConfigParser()
             conf.read(env["BOTO_CONFIG"])
             conf.set("Credentials", "gs_service_key_file", env["GOOGLE_PKCS12"])
             conf.write(tmp_file)
@@ -3434,7 +3518,7 @@ class Stats:
                    iso_prefix_formatted(self._total_bytes), total_secs, 
                    iso_prefix_formatted(Bps), iso_prefix_formatted(Bps*8)))
         
-        for key, value in self._site_pair_count.iteritems():
+        for key, value in iteritems(self._site_pair_count):
             Bps = self._site_pair_bytes[key] / total_secs
             logger.info("       Between sites %s : %d transfers, %sB transferred in %.0f seconds. Rate: %sB/s (%sb/s)" \
                         %( key,
@@ -3444,53 +3528,64 @@ class Stats:
             
 
 class Panorama:
-    """ Singleton for sending Panorama live stats
     """
-    
-    __metaclass__ = Singleton
+    Singleton for sending Panorama live stats
+    """
+   
+    # singleton
+    instance = None
 
-    def one_transfer(self, transfer, was_successful, t_start, t_end, filesize):
-        
-        if "KICKSTART_MON_ENDPOINT_URL" not in os.environ:
-            return
-        
-        # status follows UNIX exit code convention
-        status = 1
-        if was_successful:
-            status = 0
-        
-        payload = "ts=%.0f" %(time.time())
-        payload += " event=data_transfer"
-        payload += " level=INFO"
-        payload += " status=" + str(status) 
-        payload += " wf_uuid=" + os.environ["PEGASUS_WF_UUID"]
-        payload += " dag_job_id=" + os.environ["PEGASUS_DAG_JOB_ID"]
-        payload += " hostname=" + socket.getfqdn()
-        payload += " condor_job_id=" + os.environ["CONDOR_JOBID"]
-        payload += " src_url=" + transfer.src_url()
-        payload += " src_site_name=" + transfer.get_src_site_label()
-        payload += " dst_url=" + transfer.dst_url()
-        payload += " dst_site_name=" + transfer.get_dst_site_label()
-        payload += " transfer_start_ts=%.0f" %(t_start)
-        payload += " transfer_duration=%.0f" % (t_end - t_start)
-        if filesize is not None and filesize > 0:
-            payload += " bytes_transferred=%.0f" %(filesize)
-        payload += "  "
-        
-        logger.debug(payload)
-        data = "{\"properties\":{},\"routing_key\":\"%s\",\"payload\":\"%s\",\"payload_encoding\":\"base64\"}" \
-               %(os.environ["PEGASUS_WF_UUID"], base64.encodestring(payload))
-        logger.debug(data)
-        req = urllib2.Request(os.environ["KICKSTART_MON_ENDPOINT_URL"], data)
-        base64string = base64.encodestring(os.environ["KICKSTART_MON_ENDPOINT_CREDENTIALS"])[:-1]
-        authheader =  "Basic %s" % base64string
-        req.add_header("Authorization", authheader)
-        try:
-            u = urllib2.urlopen(req)
-        except IOError as e:
-             logger.error("Unable to publish to Panorama: " + str(e))
-             return
-        data = u.read()
+    def __init__(self):
+        if not Panorama.instance:
+            Panorama.instance = Panorama.__Panorama()
+
+    def __getattr__(self, name):
+        return getattr(self.instance, name)
+    
+    class __Panorama():   	 
+    
+        def one_transfer(self, transfer, was_successful, t_start, t_end, filesize):
+            
+            if "KICKSTART_MON_ENDPOINT_URL" not in os.environ:
+                return
+            
+            # status follows UNIX exit code convention
+            status = 1
+            if was_successful:
+                status = 0
+            
+            payload = "ts=%.0f" %(time.time())
+            payload += " event=data_transfer"
+            payload += " level=INFO"
+            payload += " status=" + str(status) 
+            payload += " wf_uuid=" + os.environ["PEGASUS_WF_UUID"]
+            payload += " dag_job_id=" + os.environ["PEGASUS_DAG_JOB_ID"]
+            payload += " hostname=" + socket.getfqdn()
+            payload += " condor_job_id=" + os.environ["CONDOR_JOBID"]
+            payload += " src_url=" + transfer.src_url()
+            payload += " src_site_name=" + transfer.get_src_site_label()
+            payload += " dst_url=" + transfer.dst_url()
+            payload += " dst_site_name=" + transfer.get_dst_site_label()
+            payload += " transfer_start_ts=%.0f" %(t_start)
+            payload += " transfer_duration=%.0f" % (t_end - t_start)
+            if filesize is not None and filesize > 0:
+                payload += " bytes_transferred=%.0f" %(filesize)
+            payload += "  "
+            
+            logger.debug(payload)
+            data = "{\"properties\":{},\"routing_key\":\"%s\",\"payload\":\"%s\",\"payload_encoding\":\"base64\"}" \
+                   %(os.environ["PEGASUS_WF_UUID"], base64.encodestring(payload))
+            logger.debug(data)
+            req = urllib2.Request(os.environ["KICKSTART_MON_ENDPOINT_URL"], data)
+            base64string = base64.encodestring(os.environ["KICKSTART_MON_ENDPOINT_CREDENTIALS"])[:-1]
+            authheader =  "Basic %s" % base64string
+            req.add_header("Authorization", authheader)
+            try:
+                u = urllib2.urlopen(req)
+            except IOError as e:
+                 logger.error("Unable to publish to Panorama: " + str(e))
+                 return
+            data = u.read()
 
 
 
@@ -3650,7 +3745,7 @@ class SimilarWorkSet:
             self._tmp_name = self.get_temp_file()
             # open the permission up to make sure files downstream
             # get sane permissions to inherit
-            os.chmod(self._tmp_name, 0644)
+            os.chmod(self._tmp_name, 0o0644)
             logger.debug("Using temporary file %s for transfers" 
                          %(self._tmp_name))
         
@@ -3687,7 +3782,7 @@ class SimilarWorkSet:
                 try:
                     [s, f] = self._primary_handler.do_transfers([t_one])
                     if len(s) == 1:
-                        os.chmod(self._tmp_name, 0644)
+                        os.chmod(self._tmp_name, 0o0644)
                         [s, f] = self._secondary_handler.do_transfers([t_two])
                 except Exception as e:
                     logger.exception("Exception while doing transfer:")
@@ -3856,7 +3951,7 @@ class WorkThread(threading.Thread):
                 logger.debug("Thread " + str(self.thread_id) +
                              " is executing transfer " + str(ts))
                 ts.do_transfers()
-        except Queue.Empty:
+        except queue.Empty:
             return
         except Exception as e:
             self.exception = e
@@ -4037,10 +4132,10 @@ def check_cred_fs_permissions(path):
     """
     if not os.path.exists(path):
         raise Exception("Credential file %s does not exist" %(path))
-    if oct(os.stat(path).st_mode & 0777) != '0600':
+    if oct(os.stat(path).st_mode & 0o0777) != '0600':
         logger.warning("%s found to have weak permissions. chmod to 0600."
                        %(path))
-        os.chmod(path, 0600)
+        os.chmod(path, 0o0600)
 
 
 
@@ -4070,7 +4165,7 @@ def prepare_local_dir(path):
     if not(os.path.exists(path)):
         logger.debug("Creating local directory " + path)
         try:
-            os.makedirs(path, 0755)
+            os.makedirs(path, 0o0755)
         except os.error as err:
             # if dir already exists, ignore the error
             if not(os.path.isdir(path)):
@@ -4353,9 +4448,9 @@ def main():
     
     # queues to track the work
     inputs_l = []
-    ready_q = Queue.Queue()
-    failed_q = Queue.Queue()
-    completed_q = Queue.Queue()
+    ready_q = queue.Queue()
+    failed_q = queue.Queue()
+    completed_q = queue.Queue()
     
     # determine format, and read the transfer specification
     if input_data[0:5] == "# src":
@@ -4392,7 +4487,7 @@ def main():
     approx_transfer_per_thread = total_transfers / (float)(options.threads)
     while not done:
     
-        tset_q = Queue.Queue()
+        tset_q = queue.Queue()
     
         attempt_current = attempt_current + 1
         logger.info('-' * 80)
@@ -4421,7 +4516,7 @@ def main():
                             # done, put the last transfer back
                             ready_q.put(t_next)
                             t_next = None
-                except Queue.Empty:
+                except queue.Empty:
                     pass
                 
                 # magic!
@@ -4451,7 +4546,7 @@ def main():
             
             # transfers might have multiple sources/destinations and
             # we should try them all in each round
-            failed_q_updated = Queue.Queue()
+            failed_q_updated = queue.Queue()
             while not failed_q.empty():
                 t = failed_q.get()
                 t.move_to_next_sub_transfer()

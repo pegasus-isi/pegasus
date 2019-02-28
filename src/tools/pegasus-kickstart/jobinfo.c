@@ -266,8 +266,8 @@ void initJobInfo(JobInfo* jobinfo, int argc, char* const* argv, const char *wrap
     __initJobInfo(jobinfo, args);
 }
 
-int printXMLJobInfo(FILE *out, int indent, const char* tag, const JobInfo* job) {
-    /* purpose: format the job information into the given stream as XML.
+int printYAMLJobInfo(FILE *out, int indent, const char* tag, const JobInfo* job) {
+    /* purpose: format the job information into the given stream as YAML.
      * paramtr: out (IO): the stream
      *          indent (IN): indentation level
      *          tag (IN): name to use for element tags.
@@ -281,76 +281,68 @@ int printXMLJobInfo(FILE *out, int indent, const char* tag, const JobInfo* job) 
     }
 
     /* start tag with indentation */
-    fprintf(out, "%*s<%s start=\"%s\"", indent, "", tag,
+    fprintf(out, "%*s%s:\n", indent, "", tag);
+    fprintf(out, "%*s  start: %s\n", indent, "", 
             fmtisodate(job->start.tv_sec, job->start.tv_usec));
-    fprintf(out, " duration=\"%.3f\"",
+    fprintf(out, "%*s  duration: %.3f\n", indent, "", 
             doubletime(job->finish) - doubletime(job->start));
 
     /* optional attribute: application process id */
     if (job->child != 0) {
-        fprintf(out, " pid=\"%d\"", job->child);
+        fprintf(out, "%*s  pid: %d\n", indent, "", job->child);
     }
 
-    /* finalize open tag of element */
-    fprintf(out, ">\n");
-
     /* <usage> */
-    printXMLUseInfo(out, indent+2, "usage", &job->use);
+    printYAMLUseInfo(out, indent+2, "usage", &job->use);
 
     int status = (int) job->status;
 
     /* <status>: open tag */
-    fprintf(out, "%*s<status raw=\"%d\">", indent+2, "", status);
+    fprintf(out, "%*sstatus:\n%*sraw: %d\n",
+                 indent+2, "", indent+4, "", status);
 
     /* <status>: cases of completion */
     if (status < 0) {
         /* <failure> */
-        fprintf(out, "<failure error=\"%d\">%s%s</failure>", job->saverr,
-                job->prefix && job->prefix[0] ? job->prefix : "",
-                strerror(job->saverr));
+        fprintf(out, "%*sfailure_error: %d   %s%s\n", indent+4, "",
+                     job->saverr,
+                     job->prefix && job->prefix[0] ? job->prefix : "",
+                     strerror(job->saverr));
     } else if (WIFEXITED(status)) {
-        fprintf(out, "<regular exitcode=\"%d\"/>", WEXITSTATUS(status));
+        fprintf(out, "%*sregular_exitcode: %d\n", indent+4, "",
+                     WEXITSTATUS(status));
     } else if (WIFSIGNALED(status)) {
         /* result = 128 + WTERMSIG(status); */
-        fprintf(out, "<signalled signal=\"%u\"", WTERMSIG(status));
+        fprintf(out, "%*ssignalled_signal: %u\n", indent+4, "",
+                     WTERMSIG(status));
+        fprintf(out, "%*ssingalled_name: %s\n", indent+4, "",
+                     sys_siglist[WTERMSIG(status)]);
 #ifdef WCOREDUMP
-        fprintf(out, " corefile=\"%s\"", WCOREDUMP(status) ? "true" : "false");
+        fprintf(out, "%*scorefile: %s\n", indent+4, "",
+                     WCOREDUMP(status) ? "true" : "false");
 #endif
-        fprintf(out, ">%s</signalled>", sys_siglist[WTERMSIG(status)]);
     } else if (WIFSTOPPED(status)) {
-        fprintf(out, "<suspended signal=\"%u\">%s</suspended>", WSTOPSIG(status),
+        fprintf(out, "%*ssuspended_signal: %u\n", indent+4, "",
+                     WSTOPSIG(status));
+        fprintf(out, "%*ssuspended_name: %s\n", indent+4, "",
                 sys_siglist[WSTOPSIG(status)]);
     } /* FIXME: else? */
-    fprintf(out, "</status>\n");
 
     /* <executable> */
-    printXMLStatInfo(out, indent+2, "statcall", NULL, &job->executable, 1, 0, 1);
+    printYAMLStatInfo(out, indent+2, "executable", &job->executable, 1, 0, 1);
 
     /* alternative 1: new-style <argument-vector> */
-    fprintf(out, "%*s<argument-vector", indent+2, "");
-    if (job->argc == 1) {
-        /* empty element */
-        fprintf(out, "/>\n");
-    } else {
+    fprintf(out, "%*sargument_vector:\n", indent+2, "");
+    if (job->argc > 1) {
         /* content are the CLI args */
         int i;
-
-        fprintf(out, ">\n");
         for (i=1; i<job->argc; ++i) {
-            fprintf(out, "%*s<arg nr=\"%d\">", indent+4, "", i);
-            xmlquote(out, job->argv[i], strlen(job->argv[i]));
-            fprintf(out, "</arg>\n");
+            fprintf(out, "%*s- %s\n", indent+4, "", job->argv[i]);
         }
-
-        /* end tag */
-        fprintf(out, "%*s</argument-vector>\n", indent+2, "");
     }
 
     /* <proc>s */
-    printXMLProcInfo(out, indent+2, job->children);
-
-    /* finalize close tag of outmost element */
-    fprintf(out, "%*s</%s>\n", indent, "", tag);
+    printYAMLProcInfo(out, indent+2, job->children);
 
     return 0;
 }

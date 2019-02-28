@@ -41,8 +41,7 @@
 #include "error.h"
 #include "checksum.h"
 
-#define XML_SCHEMA_URI "http://pegasus.isi.edu/schema/invocation"
-#define XML_SCHEMA_VERSION "2.3"
+#define YAML_SCHEMA_VERSION "3.0"
 
 extern char **environ;
 
@@ -60,16 +59,16 @@ static int any_failure(const AppInfo *run) {
 /* Extract all of the available job IDs out of the environment and put them in a <jobids> element */
 static void printJobIDs(FILE *out) {
 
-    fprintf(out, "  <jobids");
+    fprintf(out, "  jobids:\n");
 
     char *condor = getenv("CONDOR_JOBID");
     if (condor) {
-        fprintf(out, " condor=\"%s\"", condor);
+        fprintf(out, "    condor: %s\n", condor);
     }
 
     char *gram = getenv("GLOBUS_GRAM_JOB_CONTACT");
     if (gram) {
-        fprintf(out, " gram=\"%s\"", gram);
+        fprintf(out, "    gram: %s\n", gram);
     }
 
     /* We assume that there is only going to be one LRM job ID */
@@ -77,154 +76,149 @@ static void printJobIDs(FILE *out) {
 
     lrm = getenv("SLURM_JOBID");
     if (lrm) {
-        fprintf(out, " lrm=\"%s\" lrmtype=\"slurm\"", lrm);
+        fprintf(out, "    lrmtype: slurm\n");
+        fprintf(out, "    lrm: %s\n", lrm);
         goto end;
     }
 
     lrm = getenv("COBALT_JOBID");
     if (lrm) {
-        fprintf(out, " lrm=\"%s\" lrmtype=\"cobalt\"", lrm);
+        fprintf(out, "    lrmtype: cobalt\n");
+        fprintf(out, "    lrm: %s\n", lrm);
         goto end;
     }
 
     lrm = getenv("JOB_ID");
     if (lrm) {
-        fprintf(out, " lrm=\"%s\" lrmtype=\"sge\"", lrm);
+        fprintf(out, "    lrmtype: sge\n");
+        fprintf(out, "    lrm: %s\n", lrm);
         goto end;
     }
 
     lrm = getenv("LSB_JOBID");
     if (lrm) {
-        fprintf(out, " lrm=\"%s\" lrmtype=\"lsf\"", lrm);
+        fprintf(out, "    lrmtype: lsf\n");
+        fprintf(out, "    lrm: %s\n", lrm);
         goto end;
     }
 
     /* Do PBS last so that a more specific LRM is identified, if possible */
     lrm = getenv("PBS_JOBID");
     if (lrm) {
-        fprintf(out, " lrm=\"%s\" lrmtype=\"pbs\"", lrm);
+        fprintf(out, "    lrmtype: pbs\n");
+        fprintf(out, "    lrm: %s\n", lrm);
         goto end;
     }
 
 end:
-    fprintf(out, "/>\n");
+    return;
 }
 
-static size_t convert2XML(FILE *out, const AppInfo* run) {
+static size_t convert2YAML(FILE *out, const AppInfo* run) {
     size_t i;
     struct passwd* user = getpwuid(getuid());
     struct group* group = getgrgid(getgid());
 
-    /* default is to produce XML preamble */
-    if (!run->noHeader) {
-        fprintf(out, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-    }
-
-    /* generate the XML header and start of root element */
-    fprintf(out, "<invocation xmlns=\"" XML_SCHEMA_URI "\""
-            " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
-            " xsi:schemaLocation=\"" XML_SCHEMA_URI
-            " http://pegasus.isi.edu/schema/iv-" XML_SCHEMA_VERSION ".xsd\""
-            " version=\"" XML_SCHEMA_VERSION "\"");
+    fprintf(out, "- invocation: True\n"
+                 "  version: " YAML_SCHEMA_VERSION "\n");
 
     /* start */
-    fprintf(out, " start=\"%s\"", fmtisodate(run->start.tv_sec,
+    fprintf(out, "  start: %s\n", fmtisodate(run->start.tv_sec,
                                              run->start.tv_usec));
 
     /* duration */
-    fprintf(out, " duration=\"%.3f\"",
+    fprintf(out, "  duration: %.3f\n",
             doubletime(run->finish) - doubletime(run->start));
 
     /* optional attributes for root element: transformation fqdn */
     if (run->xformation && strlen(run->xformation)) {
-        fprintf(out, " transformation=\"");
-        xmlquote(out, run->xformation, strlen(run->xformation));
-        fprintf(out, "\"");
+        fprintf(out, "  transformation: \"");
+        yamlquote(out, run->xformation, strlen(run->xformation));
+        fprintf(out, "\"\n");
     }
 
     /* optional attributes for root element: derivation fqdn */
     if (run->derivation && strlen(run->derivation)) {
-        fprintf(out, " derivation=\"");
-        xmlquote(out, run->derivation, strlen(run->derivation));
-        fprintf(out, "\"");
+        fprintf(out, "  derivation: \"");
+        yamlquote(out, run->derivation, strlen(run->derivation));
+        fprintf(out, "\"\n");
     }
 
     /* optional attributes for root element: name of remote site */
     if (run->sitehandle && strlen(run->sitehandle)) {
-        fprintf(out, " resource=\"");
-        xmlquote(out, run->sitehandle, strlen(run->sitehandle));
-        fprintf(out, "\"");
+        fprintf(out, "  resource: \"");
+        yamlquote(out, run->sitehandle, strlen(run->sitehandle));
+        fprintf(out, "\"\n");
     }
 
     /* optional attribute for workflow label: name of workflow */
     if (run->wf_label && strlen(run->wf_label)) {
-        fprintf(out, " wf-label=\"");
-        xmlquote(out, run->wf_label, strlen(run->wf_label));
-        fprintf(out, "\"");
+        fprintf(out, "  wf-label: \"");
+        yamlquote(out, run->wf_label, strlen(run->wf_label));
+        fprintf(out, "\"\n");
     }
     if (run->wf_stamp && strlen(run->wf_stamp)) {
-        fprintf(out, " wf-stamp=\"");
-        xmlquote(out, run->wf_stamp, strlen(run->wf_stamp));
-        fprintf(out, "\"");
+        fprintf(out, "  wf-stamp: \"");
+        yamlquote(out, run->wf_stamp, strlen(run->wf_stamp));
+        fprintf(out, "\"\n");
     }
 
     /* optional attributes for root element: host address dotted quad */
     if (isdigit(run->ipv4[0])) {
         struct hostent* h;
         in_addr_t address = inet_addr(run->ipv4);
-        fprintf(out, " interface=\"%s\"", run->prif); 
-        fprintf(out, " hostaddr=\"%s\"", run->ipv4);
+        fprintf(out, "  interface: %s\n", run->prif); 
+        fprintf(out, "  hostaddr: %s\n", run->ipv4);
         if ((h = gethostbyaddr((const char*) &address, sizeof(in_addr_t), AF_INET))) {
-            fprintf(out, " hostname=\"%s\"", h->h_name);
+            fprintf(out, "  hostname: %s\n", h->h_name);
         }
     }
 
     /* optional attributes for root element: application process id */
     if (run->child != 0) {
-        fprintf(out, " pid=\"%d\"", run->child);
+        fprintf(out, "  pid: %d\n", run->child);
     }
 
     /* user info about who ran this thing */
-    fprintf(out, " uid=\"%d\"", getuid());
+    fprintf(out, "  uid: %d\n", getuid());
     if (user) {
-        fprintf(out, " user=\"%s\"", user->pw_name);
+        fprintf(out, "  user: %s\n", user->pw_name);
     }
 
     /* group info about who ran this thing */
-    fprintf(out, " gid=\"%d\"", getgid());
+    fprintf(out, "  gid: %d\n", getgid());
     if (group) {
-        fprintf(out, " group=\"%s\"", group->gr_name);
+        fprintf(out, "  group: %s\n", group->gr_name);
     }
 
     /* currently active umask settings */
-    fprintf(out, " umask=\"0%03o\"", run->umask);
-
-    /* finalize open tag of root element */
-    fprintf(out, ">\n");
+    fprintf(out, "  umask: 0o0%03o\n", run->umask);
 
     /* <setup>, <prejob>, <application>, <postjob>, <cleanup> */
-    printXMLJobInfo(out, 2, "setup", &run->setup);
-    printXMLJobInfo(out, 2, "prejob", &run->prejob);
-    printXMLJobInfo(out, 2, "mainjob", &run->application);
-    printXMLJobInfo(out, 2, "postjob", &run->postjob);
-    printXMLJobInfo(out, 2, "cleanup", &run->cleanup);
+    printYAMLJobInfo(out, 2, "setup", &run->setup);
+    printYAMLJobInfo(out, 2, "prejob", &run->prejob);
+    printYAMLJobInfo(out, 2, "mainjob", &run->application);
+    printYAMLJobInfo(out, 2, "postjob", &run->postjob);
+    printYAMLJobInfo(out, 2, "cleanup", &run->cleanup);
 
     /* <jobid> */
     printJobIDs(out);
 
     /* <cwd> */
+    fprintf(out, "  cwd: ");
     if (run->workdir != NULL) {
-        fprintf(out, "  <cwd>%s</cwd>\n", run->workdir);
-    } else {
-        fprintf(out, "  <cwd/>\n");
+        fprintf(out, "%s", run->workdir);
     }
+    fprintf(out, "\n");
 
     /* <usage> own resources */
-    printXMLUseInfo(out, 2, "usage", &run->usage);
+    printYAMLUseInfo(out, 2, "usage", &run->usage);
 
     if (!run->noHeader) {
-        printXMLMachineInfo(out, 2, "machine", &run->machine);
+        printYAMLMachineInfo(out, 2, "machine", &run->machine);
     }
+
+    fprintf(out, "  files:\n");
 
     /* We include <data> in the <statcall>s if any job failed, or if the user
      * did not specify -q */
@@ -234,58 +228,54 @@ static size_t convert2XML(FILE *out, const AppInfo* run) {
     /* User-specified initial and final arbitrary <statcall> records */
     if (run->icount && run->initial) {
         for (i=0; i<run->icount; ++i) {
-            printXMLStatInfo(out, 2, "statcall", "initial", &run->initial[i], includeData, useCDATA, 1);
+            printYAMLStatInfo(out, 4, "initial", &run->initial[i], includeData, useCDATA, 1);
         }
     }
     if (run->fcount && run->final) {
         for (i=0; i<run->fcount; ++i) {
-            printXMLStatInfo(out, 2, "statcall", "final", &run->final[i], includeData, useCDATA, 1);
+            printYAMLStatInfo(out, 4, "final", &run->final[i], includeData, useCDATA, 1);
         }
     }
 
-    /* If xml blob file exists (for example, created via pegasus-transfer), include it */
-    print_pegasus_integrity_xml_blob(out, run->integritydata.file.name);
+    /* If yaml blob file exists (for example, created via pegasus-transfer), include it */
+    print_pegasus_integrity_yaml_blob(out, run->integritydata.file.name);
 
     /* Default <statcall> records */
-    printXMLStatInfo(out, 2, "statcall", "stdin", &run->input, includeData, useCDATA, 1);
+    printYAMLStatInfo(out, 4, "stdin", &run->input, includeData, useCDATA, 1);
     updateStatInfo(&(((AppInfo*) run)->output));
-    printXMLStatInfo(out, 2, "statcall", "stdout", &run->output, includeData, useCDATA, 1);
+    printYAMLStatInfo(out, 4, "stdout", &run->output, includeData, useCDATA, 1);
     updateStatInfo(&(((AppInfo*) run)->error));
-    printXMLStatInfo(out, 2, "statcall", "stderr", &run->error, includeData, useCDATA, 1);
+    printYAMLStatInfo(out, 4, "stderr", &run->error, includeData, useCDATA, 1);
     updateStatInfo(&(((AppInfo*) run)->metadata));
-    printXMLStatInfo(out, 2, "statcall", "metadata", &run->metadata, 1, useCDATA, 0);
+    printYAMLStatInfo(out, 4, "metadata", &run->metadata, 1, useCDATA, 0);
 
     /* If the job failed, or if the user requested the full kickstart record */
     if (any_failure(run) || run->fullInfo) {
         /* Extra <statcall> records */
-        printXMLStatInfo(out, 2, "statcall", "kickstart", &run->kickstart, includeData, useCDATA, 1);
+        printYAMLStatInfo(out, 4, "kickstart", &run->kickstart, includeData, useCDATA, 1);
         updateStatInfo(&(((AppInfo*) run)->logfile));
-        printXMLStatInfo(out, 2, "statcall", "logfile", &run->logfile, includeData, useCDATA, 1);
+        printYAMLStatInfo(out, 4, "logfile", &run->logfile, includeData, useCDATA, 1);
 
         /* <environment> */
-        fprintf(out, "  <environment>\n");
+        fprintf(out, "  environment:\n");
         for (i=0; environ[i] != NULL; i++) {
             char *key = environ[i];
             char *s;
             if (key && (s = strchr(key, '='))) {
                 *s = '\0'; /* temporarily cut string here */
-                fprintf(out, "    <env key=\"");
-                xmlquote(out, key, strlen(key));
-                fprintf(out, "\">");
-                xmlquote(out, s+1, strlen(s+1));
-                fprintf(out, "</env>\n");
+                fprintf(out, "    \"");
+                yamlquote(out, key, strlen(key));
+                fprintf(out, "\": \"");
+                yamlquote(out, s+1, strlen(s+1));
+                fprintf(out, "\"\n");
                 *s = '='; /* reset string to original */
             }
         }
-        fprintf(out, "  </environment>\n");
 
         /* <resource>  limits */
-        printXMLLimitInfo(out, 2, &run->limits);
+        printYAMLLimitInfo(out, 2, &run->limits);
 
     } /* run->status || run->fullInfo */
-
-    /* finish root element */
-    fprintf(out, "</invocation>\n");
 
     return 0;
 }
@@ -426,7 +416,7 @@ int printAppInfo(AppInfo* run) {
     now(&run->finish);
 
     /* print the invocation record */
-    result = convert2XML(out, run);
+    result = convert2YAML(out, run);
 
     /* make sure the data is completely flushed */
     fflush(out);

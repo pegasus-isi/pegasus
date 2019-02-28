@@ -71,6 +71,12 @@ public class Condor extends Abstract {
                          edu.isi.pegasus.planner.namespace.Condor.X509USERPROXY_KEY;
 
     public static final String EMPTY_TRANSFER_OUTPUT_KEY = "+TransferOutput";
+    
+    /**
+     * The name of key that designates when to transfer output.
+     */
+    public static final String WHEN_TO_TRANSFER_OUTPUT_KEY =
+            edu.isi.pegasus.planner.namespace.Condor.WHEN_TO_TRANSFER_OUTPUT_KEY;
 
     /**
      * The name of the style being implemented.
@@ -244,8 +250,16 @@ public class Condor extends Abstract {
                 //that condor transfers the proxy to the remote end
                 //also the keys below are mutually exclusive to initialdir keys.
                 job.condorVariables.construct("should_transfer_files", "YES");
-                job.condorVariables.construct("when_to_transfer_output",
-                                              "ON_EXIT");
+                
+                String wtto = (String) job.condorVariables.get( WHEN_TO_TRANSFER_OUTPUT_KEY );
+                if( wtto == null ){
+                    //default value
+                    job.condorVariables.construct( Condor.WHEN_TO_TRANSFER_OUTPUT_KEY, "ON_EXIT" );
+                }
+                else{
+                    //PM-1350 prefer the value specified by the user
+                    job.condorVariables.construct( WHEN_TO_TRANSFER_OUTPUT_KEY, wtto );
+                }
             }
             
             applyCredentialsForRemoteExec(job);

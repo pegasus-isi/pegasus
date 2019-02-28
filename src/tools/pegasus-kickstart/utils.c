@@ -29,25 +29,25 @@
 #include "utils.h"
 
 static const char* asciilookup[128] = {
-  "&#xe000;", "&#xe001;", "&#xe002;", "&#xe003;", "&#xe004;", "&#xe005;", "&#xe006;", "&#xe007;",
-  "&#xe008;",       "\t",       "\n", "&#xe00b;", "&#xe00c;",       "\r", "&#xe00e;", "&#xe00f;",
-  "&#xe010;", "&#xe011;", "&#xe012;", "&#xe013;", "&#xe014;", "&#xe015;", "&#xe016;", "&#xe017;",
-  "&#xe018;", "&#xe019;", "&#xe01a;", "&#xe01b;", "&#xe01c;", "&#xe01d;", "&#xe01e;", "&#xe01f;",
-         " ",        "!",   "&quot;",        "#",        "$",        "%",    "&amp;",   "&apos;",
+          "",         "",         "",         "",         "",         "",         "",         "",
+          "",      "\\t",      "\\n",         "",         "",      "\\r",         "",         "",
+          "",         "",         "",         "",         "",         "",         "",         "",
+          "",         "",         "",         "",         "",         "",         "",         "",
+         " ",        "!",     "\\\"",        "#",        "$",        "%",        "&",        "'",
          "(",        ")",        "*",        "+",        ",",        "-",        ".",        "/",
          "0",        "1",        "2",        "3",        "4",        "5",        "6",        "7",
-         "8",        "9",        ":",        ";",     "&lt;",        "=",     "&gt;",        "?",
+         "8",        "9",        ":",        ";",        "<",        "=",        ">",        "?",
          "@",        "A",        "B",        "C",        "D",        "E",        "F",        "G",
          "H",        "I",        "J",        "K",        "L",        "M",        "N",        "O",
          "P",        "Q",        "R",        "S",        "T",        "U",        "V",        "W",
-         "X",        "Y",        "Z",        "[",       "\\",        "]",        "^",        "_",
+         "X",        "Y",        "Z",        "[",     "\\\\",        "]",        "^",        "_",
          "`",        "a",        "b",        "c",        "d",        "e",        "f",        "g",
          "h",        "i",        "j",        "k",        "l",        "m",        "n",        "o",
          "p",        "q",        "r",        "s",        "t",        "u",        "v",        "w",
-         "x",        "y",        "z",        "{",        "|",        "}",        "~", "&#xe07f;"
+         "x",        "y",        "z",        "{",        "|",        "}",        "~",        ""
 };
 
-void xmlquote(FILE *out, const char* msg, size_t msglen) {
+void yamlquote(FILE *out, const char* msg, size_t msglen) {
     /* purpose: write a possibly binary message to the stream while XML
      *          quoting
      * paramtr: out (IO): stream to write the quoted xml to
@@ -66,6 +66,23 @@ void xmlquote(FILE *out, const char* msg, size_t msglen) {
             fputs(asciilookup[j], out);
         } else {
             fputc(msg[i], out);
+        }
+    }
+}
+
+void yamldump(FILE *out, const int indent, const char* msg, size_t msglen) {
+    /* purpose: write a stream to yaml as a literal`
+     * paramtr: out (IO): stream to write the quoted xml to
+     *          indent: indentation of the lines
+     *          msg (IN): message to append to buffer
+     *          mlen (IN): length of message area to append
+     * returns: nada
+     */
+    size_t i;
+    for (i=0; i<msglen; ++i) {
+        fputc(msg[i], out);
+        if (msg[i] == '\n') {
+            fprintf(out, "%*s", indent, "");
         }
     }
 }
