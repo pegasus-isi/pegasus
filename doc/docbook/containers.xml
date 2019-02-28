@@ -123,38 +123,40 @@
       starts in the container.</para>
     </note>
 
-    <para>
-    In versions of Pegasus >= 4.9.1 the transfers are handled from within the container, and thus
-    container recipes require some extra attention. A Dockerfile example that prepares a container for
-    GridFTP transfers is provided below.
-    </para>
+    <para>In versions of Pegasus &gt;= 4.9.1 the transfers are handled from
+    within the container, and thus container recipes require some extra
+    attention. A Dockerfile example that prepares a container for GridFTP
+    transfers is provided below.</para>
 
-    <para>
-    In this example there are three sections. 
-    
-    <itemizedlist>
-      <listitem><para>Essential Packages</para></listitem>
-      <listitem><para>Install Globus Toolkit</para></listitem>
-      <listitem><para>Install CA Certs</para></listitem>
-    </itemizedlist>
-    
-    From the "Essential Packages", <emphasis role="bold">python</emphasis> and
-    either <emphasis role="bold">curl</emphasis> or <emphasis role="bold">wget</emphasis> have to be
-    present. "Install Globus Toolkit", sets up the enviroment for GridFTP transfers. And "Install CA Certs"
-    copies the grid certificates in the container.
-    </para>
-    
+    <para>In this example there are three sections. <itemizedlist>
+        <listitem>
+          <para>Essential Packages</para>
+        </listitem>
+
+        <listitem>
+          <para>Install Globus Toolkit</para>
+        </listitem>
+
+        <listitem>
+          <para>Install CA Certs</para>
+        </listitem>
+      </itemizedlist> From the "Essential Packages", <emphasis
+    role="bold">python</emphasis> and either <emphasis
+    role="bold">curl</emphasis> or <emphasis role="bold">wget</emphasis> have
+    to be present. "Install Globus Toolkit", sets up the enviroment for
+    GridFTP transfers. And "Install CA Certs" copies the grid certificates in
+    the container.</para>
+
     <note>
-      <para>
-      Globus Toolkit introduced some breaking changes in August 2018 to its authentication module,
-      and some sites haven't upgraded their installations (eg. NERSC). GridFTP in order
-      to authenticate successfully, requires the libglobus-gssapi-gsi4 package to be pinned to
-      the version 13.8-1. The code snipet below contains installation directives to handle this
-      but they are commented out.
-      </para>
-   </note>
+      <para>Globus Toolkit introduced some breaking changes in August 2018 to
+      its authentication module, and some sites haven't upgraded their
+      installations (eg. NERSC). GridFTP in order to authenticate
+      successfully, requires the libglobus-gssapi-gsi4 package to be pinned to
+      the version 13.8-1. The code snipet below contains installation
+      directives to handle this but they are commented out.</para>
+    </note>
 
-   <programlisting>
+    <programlisting>
 ##########################################
 #### This Container Supports GridFTP  ####
 ##########################################
@@ -265,6 +267,44 @@ rm -f certificates.tar.gz
     repository, pegasus-transfer will export the container as a tar file in
     case of Docker, and as .img file in case of Singularity</para>
 
+    <section id="shifter_containers_staging">
+      <title>Shifter Containers</title>
+
+      <para>Shifter containers are different from docker and singularity with
+      respect to the fact that the containers cannot be exported to a
+      container image file that can reside on a filesystem. Additionally, the
+      container are expected to be available locally on the compute sites in
+      the local Shifter registry. Because of this, Pegasus does not do any
+      transfer of Shifter containers. You can specify a shifter container
+      using the shifter url scheme. For example, below is a transformation
+      catalog for a namd transformation that is executed in a shifter
+      container. </para>
+
+      <programlisting>cont namd_image{
+     # can be either docker or singularity
+     type "shifter"
+
+     # image loaded in the local shifter repository at cori
+     image "shifter:///papajim/namd_image:latest" 
+
+     # optional site attribute to tell pegasus which site tar file
+     # exists. useful for handling file URL's correctly
+     image_site "cori"
+}
+
+tr namd2 {
+    site cori {
+        pfn "/opt/NAMD_2.12_Linux-x86_64-multicore/namd2"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+        container "namd_image"
+        profile globus "maxTime" "20"
+        profile pegasus "exitcode.successmsg" "End of program"
+    }
+}</programlisting>
+    </section>
+
     <section id="container-symlinking">
       <title>Symlinking and File Copy From Host OS</title>
 
@@ -279,7 +319,7 @@ rm -f certificates.tar.gz
 
       <para>The above is also true for the case, where you input datasets are
       on the shared filesystem on the compute site and you want a file copy to
-      happen, when PegasusLite job starts the container. </para>
+      happen, when PegasusLite job starts the container.</para>
 
       <para>For example in the example below, we have input datasets
       accessible on /lizard on the compute nodes, and mounting them as
