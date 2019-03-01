@@ -261,6 +261,8 @@ public class TCFormatUtility {
 
 			Set<Container> containerInfo = new HashSet<Container>();
 			
+			Set<String> containerNames = new HashSet<>();
+			
 			
 			/**
 			 * 
@@ -278,8 +280,9 @@ public class TCFormatUtility {
 				Container container = entry.getContainer();
 				
 				//if container exists add it..
-				if(container != null) {
+				if(container != null && !containerNames.contains(container.getName())) {
 					containerInfo.add(container);
+					containerNames.add(container.getName());
 				}
 				
 				/**
@@ -340,7 +343,7 @@ public class TCFormatUtility {
 					containerData.put(TransformationCatalogKeywords.CONTAINER_IMAGE.getReservedName(),
 						container.getImageURL().getURL());
 				}
-				if (container.getMountPoints() != null) {
+				if (container.getMountPoints() != null && !container.getMountPoints().isEmpty()) {
 					List<String> mountPoints = new LinkedList<>();
 					for (MountPoint point : container.getMountPoints()) {
 						String mountPoint = point.getSourceDirectory() + ":" + point.getDestinationDirectory() + ":"

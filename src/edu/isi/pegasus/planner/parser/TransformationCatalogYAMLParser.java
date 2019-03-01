@@ -193,9 +193,7 @@ public class TransformationCatalogYAMLParser {
 		if (yamlData != null) {
 			YAMLSchemaValidationResult result = YAMLSchemaValidator.getInstance().validateYAMLSchema(yamlData,
 					YAMLSCHEMA);
-			
-			List<Object> transformationData = (List<Object>) yamlData;
-			
+					
 			// schema validation is done here.. in case of any validation error we throw the
 			// result..
 			if (!result.isSuccess()) {
@@ -211,7 +209,8 @@ public class TransformationCatalogYAMLParser {
 				}
 				throw new ScannerException(errorResult.toString());
 			}
-
+			
+			List<Object> transformationData = (List<Object>) yamlData;
 
 			for (Object transformation : transformationData) {
 
@@ -558,7 +557,7 @@ public class TransformationCatalogYAMLParser {
 	public static void main(String[] args) throws ScannerException {
 		try {
 			Reader r = new VariableExpansionReader(
-					new FileReader(new File("transformationcatalogue.yaml")));
+					new FileReader(new File("/home/mukund/pegasus-5.0.0dev/bin/split_work/tc.yaml")));
 
 			LogManager logger = LogManagerFactory.loadSingletonInstance();
 			logger.setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
