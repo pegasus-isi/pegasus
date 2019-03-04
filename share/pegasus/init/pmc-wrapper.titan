@@ -1,0 +1,6 @@
+#!/bin/bash
+
+cd $PEGASUS_SCRATCH_DIR
+
+aprun -n $PEGASUS_TITAN_MPI_CORES ${PEGASUS_HOME}/bin/pegasus-mpi-cluster "$@"
+

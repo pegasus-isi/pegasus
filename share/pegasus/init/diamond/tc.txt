@@ -12,7 +12,7 @@ tr preprocess {
 	profile pegasus "cores" "1"
 	profile pegasus "ppn" "1"
 {% endif %}
-{% if tutorial_setup == "wrangler-glite" or tutorial_setup == "titan-glite" %}
+{% if tutorial_setup == "wrangler-glite" %}
         profile pegasus "cores" "1"
         profile pegasus "nodes" "1"
 {% endif %}
@@ -29,7 +29,7 @@ tr findrange {
         profile pegasus "cores" "1"
         profile pegasus "ppn" "1"
 {% endif %}
-{% if tutorial_setup == "wrangler-glite" or tutorial_setup == "titan-glite" %}
+{% if tutorial_setup == "wrangler-glite" %}
         profile pegasus "cores" "1"
         profile pegasus "nodes" "1"
 {% endif %}
@@ -46,7 +46,7 @@ tr analyze {
         profile pegasus "cores" "1"
         profile pegasus "ppn" "1"
 {% endif %}
-{% if tutorial_setup == "wrangler-glite" or tutorial_setup == "titan-glite" %}
+{% if tutorial_setup == "wrangler-glite" %}
         profile pegasus "cores" "1"
         profile pegasus "nodes" "1"
 {% endif %}
@@ -69,12 +69,13 @@ tr pegasus::mpiexec {
 {% if generate_tutorial == true and tutorial_setup == "titan-glite" %}
 tr pegasus::mpiexec {
   site {{sitename}} {
-    profile pegasus "cores" "16"
     profile pegasus "nodes" "1"
-    profile pegasus "runtime" "3600"
-    profile pegasus "change.dir" "true"
+    profile pegasus "runtime" "1800"
+    profile env "PEGASUS_TITAN_MPI_CORES" "16"
+#    profile pegasus "change.dir" "true"
     pfn "{{workflowdir}}/bin/pmc-wrapper"
     type "INSTALLED"
   }
 }
 {% endif %}
+
