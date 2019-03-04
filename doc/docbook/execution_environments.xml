@@ -1895,8 +1895,12 @@ pegasus.transfer.worker.package = true
     </para>
    
     <para>
-    In order to submit to Titan, <ulink url="https://pegasus.isi.edu/documentation/glite.php">
-    Pegasus Glite</ulink> must be used and an example site calatog entry looks like this:
+    In order to submit to Titan, a <emphasis> Titan login node</emphasis> or a system that has access
+    to the <emphasis>Lustre</emphasis> filesystem and the <emphasis>batch scheduler</emphasis>
+    (eg. <ulink url="https://www.olcf.ornl.gov/wp-content/uploads/2017/11/2018UM-Day3-Kincl.pdf">OLCF's Kubernetes Deployment</ulink>),
+    must be used as the submit node. Submission style must be
+    <ulink url="https://pegasus.isi.edu/documentation/glite.php">Pegasus Glite</ulink> and an example
+    site calatog entry looks like this:
 
     <programlisting>
 &lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
