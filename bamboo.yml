@@ -3451,7 +3451,7 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T044A
               name: 044-docker-nonsharedfs
               description: nonsharedfs test with docker containers and executable staging
