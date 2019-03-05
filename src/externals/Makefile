@@ -78,7 +78,7 @@ $(LIBDIR)/flask_sqlalchemy.py: Flask-SQLAlchemy-0.16.tar.gz
 $(LIBDIR)/jinja2: Jinja2-2.8.1.tar.gz
 $(LIBDIR)/markupsafe: MarkupSafe-1.0.tar.gz
 $(LIBDIR)/werkzeug: Werkzeug-0.14.1.tar.gz
-$(LIBDIR)/requests: requests-2.18.4.tar.gz
+$(LIBDIR)/requests: requests-2.21.0.tar.gz
 $(LIBDIR)/itsdangerous.py: itsdangerous-0.24.tar.gz
 $(LIBDIR)/boto: boto-2.48.0.tar.gz
 $(LIBDIR)/pam.py: pam-0.1.4.tar.gz
