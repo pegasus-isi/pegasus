@@ -79,7 +79,6 @@ rm -f %{buildroot}/%{_datadir}/%{name}/java/NOTICE.*
 * @DATE@ Pegasus Development Team <pegasus-support@isi.edu> @PEGASUS_VERSION@
 - @PEGASUS_VERSION@ automatic build
 
-%changelog
 * Mon Dec 02 2013 Pegasus Development Team <pegasus-support@isi.edu> 4.3.2cvs
 - Relaxed the "java" requirements in order for the package to work on plan
   CentOS machines
