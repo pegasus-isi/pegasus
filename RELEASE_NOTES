@@ -25,24 +25,26 @@ New Features and Improvements
 
 2)  [PM-1345] – Support for Shifter at Nersc
 
-3)  [PM-1352] – Build failure on Debian 10 due to mariadb/MySQL-Python
+3)  [PM-1354] - pegasus-init to support titan tutorial
+
+4)  [PM-1352] – Build failure on Debian 10 due to mariadb/MySQL-Python
    	        incompatibility 
 
-4)  [PM-1216] – pegasus-transfer should follow redirects to file urls
+5)  [PM-1216] – pegasus-transfer should follow redirects to file urls
 
-5)  [PM-1321] – Move transfer staging into the container rather than
+6)  [PM-1321] – Move transfer staging into the container rather than
    	        the host OS
 
-6)  [PM-1323] – pegasus transfer should not try and transfer a file
+7)  [PM-1323] – pegasus transfer should not try and transfer a file
         	that does not exist
 
-7)  [PM-1329] – pegasus integrity causes LIGO workflows to fail
+8)  [PM-1329] – pegasus integrity causes LIGO workflows to fail
 
-8)  [PM-1338] – Add support for TACC wrangler to pegasus-init
+9)  [PM-1338] – Add support for TACC wrangler to pegasus-init
 
-9)  [PM-1328] – support sharedfs on the compute site as staging site
+10)  [PM-1328] – support sharedfs on the compute site as staging site
 
-10) [PM-1340] – make planner os releases consistent with builds
+11) [PM-1340] – make planner os releases consistent with builds
 
 Bugs Fixed
 --------------

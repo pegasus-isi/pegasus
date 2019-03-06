@@ -1885,6 +1885,88 @@ pegasus.transfer.worker.package = true
     method for small jobs on these systems.</para>
   </section>
 
+  <section id="titan">
+    <title>Titan Using Glite</title>
+
+    <para>
+    <ulink url="https://www.olcf.ornl.gov/olcf-resources/compute-systems/titan/">Titan</ulink>
+    is part of Oak Ridge Leadership Computing Facilities (OLCF) and offers hybrid computing
+    resources (CPUs and GPUs) to scientists since 2012.
+    </para>
+   
+    <para>
+    In order to submit to Titan, a <emphasis> Titan login node</emphasis> or a system that has access
+    to the <emphasis>Lustre</emphasis> filesystem and the <emphasis>batch scheduler</emphasis>
+    (eg. <ulink url="https://www.olcf.ornl.gov/wp-content/uploads/2017/11/2018UM-Day3-Kincl.pdf">OLCF's Kubernetes Deployment</ulink>),
+    must be used as the submit node. Submission style must be
+    <ulink url="https://pegasus.isi.edu/documentation/glite.php">Pegasus Glite</ulink> and an example
+    site calatog entry looks like this:
+
+    <programlisting>
+&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.1.xsd"
+            version="4.1"&gt;
+
+    &lt;site handle="local" arch="x86_64" os="LINUX"&gt;
+        &lt;directory type="shared-scratch" path="/lustre/atlas/scratch/user/workflow-dir/scratch"/&gt;
+            &lt;file-server operation="all" url="file:///lustre/atlas/scratch/user/workflow-dir/scratch"/&gt;
+        &lt;/directory&gt;
+        &lt;directory type="shared-storage" path="/lustre/atlas/scratch/user/workflow-dir/output/"&gt;
+            &lt;file-server operation="all" url="file:///lustre/atlas/scratch/user/workflow-dir/output"/&gt;
+        &lt;/directory&gt;
+    &lt;/site&gt;
+
+    &lt;site handle="titan" arch="x86_64" os="LINUX"&gt;
+        &lt;directory type="shared-scratch" path="/lustre/atlas/scratch/user/titan/scratch">
+            &lt;file-server operation="all" url="file:///lustre/atlas/scratch/user/titan/scratch"/>
+        &lt;/directory>
+
+        &lt;profile namespace="pegasus" key="style"&gt;glite&lt;/profile&gt;
+        &lt;profile namespace="condor" key="grid_resource"&gt;batch pbs&lt;/profile&gt;
+
+        &lt;profile namespace="pegasus" key="queue"&gt;titan&lt;/profile&gt;
+        &lt;profile namespace="pegasus" key="auxillary.local"&gt;true&lt;/profile&gt;
+
+        &lt;profile namespace="env" key="PEGASUS_HOME"&gt;/lustre/atlas/world-shared/csc320/SOFTWARE/install/pegasus/default&lt;/profile&gt;
+        &lt;profile namespace="pegasus" key="runtime"&gt;1800&lt;/profile&gt;
+        &lt;profile namespace="pegasus" key="nodes"&gt;1&lt;/profile&gt;
+        &lt;profile namespace="pegasus" key="project"&gt;CSC320&lt;/profile&gt;
+    &lt;/site&gt;
+&lt;/sitecatalog&gt;
+    </programlisting>
+    </para>
+
+    <para>
+      <orderedlist>
+        <listitem>
+           <para><emphasis>pegasus</emphasis> profile style with value set to <emphasis>glite</emphasis></para>
+        </listitem>
+        <listitem>
+           <para><emphasis>condor</emphasis> profile <emphasis>grid_resource</emphasis> with value set to <emphasis>batch pbs</emphasis></para>
+        </listitem>
+        <listitem>
+           <para><emphasis>pegasus</emphasis> profile <emphasis>queue</emphasis> is mandatory and should be set to <emphasis>titan</emphasis></para>
+        </listitem>
+        <listitem>
+           <para><emphasis>pegasus</emphasis> profile <emphasis>runtime</emphasis> is mandatory and should be set in sites or transformation catalog</para>
+        </listitem>
+        <listitem>
+           <para><emphasis>pegasus</emphasis> profile <emphasis>nodes</emphasis> is mandatory and should be set in sites or transformation catalog</para>
+        </listitem>
+        <listitem>
+           <para><emphasis>pegasus</emphasis> profile <emphasis>project</emphasis> must be set to the project name your jobs run under</para>
+        </listitem>
+      </orderedlist>
+    </para>
+
+    <note>
+    <para>
+    <emphasis>pegasus</emphasis> profile <emphasis>cores</emphasis> is incompatible with Titan's PBS submissions.
+    </para>
+    </note>
+  </section>
+  
   <section id="open_science_grid">
     <title>Open Science Grid Using glideinWMS</title>
 

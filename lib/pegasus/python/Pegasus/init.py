@@ -13,6 +13,7 @@ class TutorialEnv:
     XSEDE_BOSCO = ("XSEDE, with Bosco", "xsede-bosco")
     BLUEWATERS_GLITE = ("Bluewaters, with Glite", "bw-glite")
     TACC_WRANGLER = ("TACC Wrangler with Glite", "wrangler-glite")
+    OLCF_TITAN = ("OLCF TITAN with Glite", "titan-glite")
 
 
 class TutorialExample:
@@ -144,7 +145,8 @@ class Workflow(object):
                 TutorialEnv.OSG_FROM_ISI,
                 TutorialEnv.XSEDE_BOSCO,
                 TutorialEnv.BLUEWATERS_GLITE,
-                TutorialEnv.TACC_WRANGLER
+                TutorialEnv.TACC_WRANGLER,
+                TutorialEnv.OLCF_TITAN
             ])
 
             # figure out what example options to provide
@@ -159,7 +161,7 @@ class Workflow(object):
             if self.tutorial_setup != "osg":
                 examples.append(TutorialExample.DIAMOND)
 
-            if self.tutorial_setup == "bw-glite" or self.tutorial_setup == "wrangler-glite":
+            if self.tutorial_setup in ["bw-glite", "wrangler-glite", "titan-glite"]:
                 examples.append(TutorialExample.MPI)
                 self.project = query("What project your jobs should run under. For example on TACC there are like : TG-DDM160003 ?")
 
@@ -217,6 +219,10 @@ class Workflow(object):
             self.sitename = "wrangler"
             self.config = "glite"
             self.compute_queue = "normal"
+        elif self.tutorial_setup == "titan-glite":
+            self.sitename = "titan"
+            self.config = "glite"
+            self.compute_queue = "titan"
         return
 
     def generate(self):
@@ -292,6 +298,8 @@ class Workflow(object):
 
         if self.tutorial_setup == "wrangler-glite":
             self.copy_template("pmc-wrapper.wrangler", "bin/pmc-wrapper", mode=0o755)
+        elif self.tutorial_setup == "titan-glite":
+            self.copy_template("pmc-wrapper.titan", "bin/pmc-wrapper", mode=0o755)
 
         if self.generate_tutorial:
             sys.stdout.write("Pegasus Tutorial setup for example workflow - %s for execution on %s in directory %s\n"

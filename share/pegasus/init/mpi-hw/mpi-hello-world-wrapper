@@ -7,6 +7,8 @@ cd $PEGASUS_SCRATCH_DIR
 
 {% if tutorial_setup == "bw-glite" %}
 aprun -n $PEGASUS_CORES {{workflowdir}}/bin/pegasus-mpi-hw "$@"
+{% elif tutorial_setup == "titan-glite" %}
+aprun {{workflowdir}}/bin/pegasus-mpi-hw "$@"
 {% elif tutorial_setup == "wrangler-glite" %}
 
 export TACC_MPI_GETMODE=mvapich2_ssh
