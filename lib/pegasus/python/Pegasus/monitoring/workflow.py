@@ -114,6 +114,9 @@ class Workflow:
         if self._database_disabled == True:
             return
 
+        # PM-1355 add on the fixed attributes
+        kwargs.update(self._fixed_addon_attrs)
+
         try:
             # Send event to corresponding sink
             logger.trace("Sending record to DB %s, %s", event, kwargs)
@@ -543,6 +546,7 @@ class Workflow:
         if self._root_workflow_id is not None:
             kwargs["root__xwf__id"] = self._root_workflow_id
 
+
         # Send workflow event to database
         self.output_to_db("wf.plan", kwargs)
 
@@ -573,8 +577,6 @@ class Workflow:
             kwargs["db__url"] = self._database_url
 
         self.output_to_dashboard_db("wf.plan",kwargs)
-
-
 
     def db_send_subwf_link(self, wf_uuid, parent_workflow_id, parent_jobid, parent_jobseq):
         """
@@ -836,7 +838,7 @@ class Workflow:
         self._current_state_reason = None       # the reason if any for the current known state of the workflow
         self._last_known_job = None             # last know job, used for tracking job held reason PM-749
         self._is_pmc_dag = False                # boolean to track whether monitord is parsing a PMC DAG i.e pmc-only mode of Pegasus
-
+        self._fixed_addon_attrs = {}             # sent with all events related to this workflow
         self.init_clean()
 
         # Parse the braindump file
@@ -850,6 +852,7 @@ class Workflow:
         if "wf_uuid" in wfparams:
             if wfparams["wf_uuid"] is not None:
                 self._wf_uuid = wfparams["wf_uuid"]
+                self._fixed_addon_attrs["xwf__id"] = self._wf_uuid
         else:
             logger.error("wf_uuid not specified in braindump, skipping this (sub-)workflow. %s %s " %(rundir, workflow_config_file) )
             self._monitord_exit_code = 1
@@ -857,6 +860,9 @@ class Workflow:
         # Now that we have the wf_uuid, set root_wf_uuid if not already set
         if self._root_workflow_id is None:
             self._root_workflow_id = self._wf_uuid
+
+        self._fixed_addon_attrs["root__xwf__id"] = self._root_workflow_id
+
         if "dax_label" in wfparams:
             self._dax_label = wfparams["dax_label"]
         else:
@@ -869,8 +875,10 @@ class Workflow:
             self._dax_version = wfparams["dax_version"]
         if "dax" in wfparams:
             self._dax_file = wfparams["dax"]
+            self._fixed_addon_attrs["dax"] = self._dax_file
         if "dag" in wfparams:
             self._dag_file_name = wfparams["dag"]
+            self._fixed_addon_attrs["dag"] = self._dag_file_name
         else:
             logger.error("dag not specified in braindump, skipping this (sub-)workflow...")
             self._monitord_exit_code = 1
@@ -893,6 +901,9 @@ class Workflow:
         else:
             # No timestamp information is available, just use current time
             self._timestamp = int(time.time())
+
+        self._fixed_addon_attrs["wf__ts"] = self._timestamp
+
         if "submit_dir" in wfparams:
             self._submit_dir = wfparams["submit_dir"]
             self._original_submit_dir = os.path.normpath(wfparams["submit_dir"])
@@ -903,18 +914,25 @@ class Workflow:
             # Use "jsd" if "submit_dir" is not found
             if "jsd" in wfparams:
                 self._original_submit_dir = os.path.dirname(os.path.normpath(wfparams["jsd"]))
+
+        self._fixed_addon_attrs["submit__dir"] = self._submit_dir
+
         if "planner_version" in wfparams:
             self._planner_version = wfparams["planner_version"]
         else:
             # Use "pegasus_version" if "planner_version" not found
             if "pegasus_version" in wfparams:
                 self._planner_version = wfparams["pegasus_version"]
+        self._fixed_addon_attrs["pegasus__version"] = self._planner_version
+
         if "planner_arguments" in wfparams:
             self._planner_arguments = wfparams["planner_arguments"]
         if "submit_hostname" in wfparams:
             self._submit_hostname = wfparams["submit_hostname"]
+            self._fixed_addon_attrs["submit__hostname"] = self._submit_hostname
         if "user" in wfparams:
             self._user = wfparams["user"]
+            self._fixed_addon_attrs["user"] = self._user
         if "grid_dn" in wfparams:
             self._grid_dn = wfparams["grid_dn"]
 
