@@ -6,6 +6,15 @@
    ],
    "dest_urls": [
      { "site_label": "computesite", "url": "file://$PWD/deep/index.html" }
+   ] },
+ { "type": "transfer",
+   "id": 1,
+   "verify_symlink_source": false,
+   "src_urls": [
+     { "site_label": "computesite", "url": "file://$PWD/does-not-exist.html", "priority": 100 }
+   ],
+   "dest_urls": [
+     { "site_label": "computesite", "url": "symlink://$PWD/deep/deeper/index.html" }
    ] }
 ]
 

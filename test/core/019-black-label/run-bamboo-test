@@ -49,13 +49,13 @@ cat >sites.xml <<EOF
        <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://colo-vm63.isi.edu" mount-point="/lizard/scratch-90-days/bamboo/scratch"/>
+                    <file-server protocol="gsiftp" url="gsiftp://bamboo.isi.edu" mount-point="/lizard/scratch-90-days/bamboo/scratch"/>
                     <internal-mount-point mount-point="/lizard/scratch-90-days/bamboo/scratch"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://colo-vm63.isi.edu" mount-point="/lizard/scratch-90-days/bamboo/outputs"/>
+                    <file-server protocol="gsiftp" url="gsiftp://bamboo.isi.edu" mount-point="/lizard/scratch-90-days/bamboo/outputs"/>
                     <internal-mount-point mount-point="/lizard/scratch-90-days/bamboo/outputs"/>
                 </shared>
             </storage>

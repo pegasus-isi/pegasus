@@ -143,7 +143,7 @@ function test_host_script {
 
 # Make sure a failing host script causes the job to fail
 function test_fail_script {
-    OUTPUT=$(mpiexec -np 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-cpus 4 --host-script /usr/bin/false 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-cpus 4 --host-script /bin/false 2>&1)
     RC=$?
     
     if [ $RC -eq 0 ]; then
@@ -660,7 +660,7 @@ function test_complex_args {
 }
 
 function test_PM848 {
-    OUTPUT=$(mpiexec -n 11 $PMC --host-cpus 22 test/PM848.dag 2>&1)
+    OUTPUT=$(mpiexec -n 4 $PMC --host-cpus 8 test/PM848.dag 2>&1)
     RC=$?
 
     if [ $RC -ne 0 ]; then

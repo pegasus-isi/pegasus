@@ -39,10 +39,11 @@ public class Submit
      *
      * @param tcentries the original list of TransformationCatalogEntry objects
      *                  on which the selector needs to run.
+     * @param preferredSite  the preferred site for selecting the TC entries
      *
      * @return List
      */
-    public List getTCEntry( List tcentries ) {
+    public List getTCEntry( List<TransformationCatalogEntry> tcentries, String preferredSite ) {
         List results = null;
         for ( Iterator i = tcentries.iterator(); i.hasNext(); ) {
             TransformationCatalogEntry tc = ( TransformationCatalogEntry ) i.

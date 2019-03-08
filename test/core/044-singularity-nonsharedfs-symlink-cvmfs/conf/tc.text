@@ -1,0 +1,94 @@
+tr diamond::preprocess:4.0 { 
+
+#specify profiles that apply for all the sites for the transformation 
+#in each site entry the profile can be overriden 
+
+  profile env "APP_HOME" "/tmp/myscratch"
+  profile env "JAVA_HOME" "/opt/java/1.6"
+
+  site local {
+    profile env "HELLo" "WORLD"
+    profile condor "FOO" "bar"
+    profile env "JAVA_HOME" "/bin/java.1.6"
+    pfn "${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg"
+    arch "x86_64"
+    os "linux"
+
+      
+    # installed means pfn refers to path in the container.
+    # stageable means the executable can be staged into the container
+    type "STAGEABLE" 
+
+    #optional attribute to specify the container to use
+    container "centos-pycbc"
+  }
+}
+
+tr diamond::findrange:4.0 { 
+
+#specify profiles that apply for all the sites for the transformation 
+#in each site entry the profile can be overriden 
+
+  profile env "APP_HOME" "/tmp/myscratch"
+  profile env "JAVA_HOME" "/opt/java/1.6"
+
+  site local {
+    profile env "HELLo" "WORLD"
+    profile condor "FOO" "bar"
+    profile env "JAVA_HOME" "/bin/java.1.6"
+    pfn "${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg"
+    arch "x86_64"
+    os "linux"
+
+      
+    # installed means pfn refers to path in the container.
+    # stageable means the executable can be staged into the container
+    type "STAGEABLE" 
+
+    #optional attribute to specify the container to use
+    container "centos-pycbc"
+  }
+}
+
+tr diamond::analyze:4.0 { 
+
+#specify profiles that apply for all the sites for the transformation 
+#in each site entry the profile can be overriden 
+
+  profile env "APP_HOME" "/tmp/myscratch"
+  profile env "JAVA_HOME" "/opt/java/1.6"
+
+  site local {
+    profile env "HELLo" "WORLD"
+    profile condor "FOO" "bar"
+    profile env "JAVA_HOME" "/bin/java.1.6"
+    pfn "${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg"
+    arch "x86_64"
+    os "linux"
+
+      
+    # installed means pfn refers to path in the container.
+    # stageable means the executable can be staged into the container
+    type "STAGEABLE" 
+
+    #optional attribute to specify the container to use
+    container "centos-pycbc"
+  }
+}
+
+cont centos-pycbc{ 
+    # can be either docker or singularity 
+    type "singularity" 
+
+    # URL to image in a docker|singularity hub OR 
+    # URL to an existing docker image exported as a tar file or
+    # singularity image 
+    image  "file:///cvmfs/singularity.opensciencegrid.org/pycbc/pycbc-el7:latest"
+
+    # we are symlinking from /lizard
+    mount "/lizard:/lizard"
+
+    # optional site attribute to tell pegasus which site tar file 
+    # exists. useful for handling file URL's correctly 
+    image_site "condorpool" 
+} 

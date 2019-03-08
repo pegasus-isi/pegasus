@@ -603,7 +603,7 @@ class OrderedSet(set):
 
     def __iter__(self):
         """ x.__iter__() <==> iter(x) """
-        for element in self.__data.iterkeys():
+        for element in self.__data:
             yield element
 
     def __len__(self):

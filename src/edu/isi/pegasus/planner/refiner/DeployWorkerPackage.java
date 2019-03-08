@@ -279,10 +279,12 @@ public class DeployWorkerPackage
             mSupportedOSReleaseVersions = new HashSet();
             mSupportedOSReleaseVersions.add( "rhel_6" );
             mSupportedOSReleaseVersions.add( "rhel_7" );
-            mSupportedOSReleaseVersions.add( "deb_7" );
             mSupportedOSReleaseVersions.add( "deb_8" );
-            mSupportedOSReleaseVersions.add( "ubuntu_14" );
+            mSupportedOSReleaseVersions.add( "deb_9" );
+            mSupportedOSReleaseVersions.add( "deb_10" );
             mSupportedOSReleaseVersions.add( "ubuntu_16" );
+            mSupportedOSReleaseVersions.add( "ubuntu_17" );
+            mSupportedOSReleaseVersions.add( "ubuntu_18" );
             mSupportedOSReleaseVersions.add( "macos_10" );
         }
         return mSupportedOSReleaseVersions;
@@ -538,7 +540,7 @@ public class DeployWorkerPackage
                                         site );
 
             //get selected entries
-            List selectedEntries = selector.getTCEntry( entries );
+            List selectedEntries = selector.getTCEntry( entries, site );
             if( selectedEntries == null || selectedEntries.size() == 0 ){
                 throw new RuntimeException( "Unable to find a valid location to stage " +
                                             Separator.combine( DeployWorkerPackage.TRANSFORMATION_NAMESPACE,
@@ -1423,7 +1425,7 @@ public class DeployWorkerPackage
                                    DeployWorkerPackage.TRANSFORMATION_VERSION,
                                    site );
 
-            selectedEntries = selector.getTCEntry( entries );
+            selectedEntries = selector.getTCEntry( entries , site);
         }catch( Exception e ){ /*ignore*/}
 
         if( selectedEntries != null && selectedEntries.size() > 0 ){

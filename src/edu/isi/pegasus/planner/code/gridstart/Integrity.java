@@ -46,6 +46,11 @@ public class Integrity {
     public static final String PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME = "pegasus-integrity";
     
     /**
+     * The stdin file descriptor keyword
+     */
+    public static final String STDIN_FILE_DESCRIPTOR = "stdin";
+    
+    /**
      * The LogManager object which is used to log all the messages.
      */
     protected LogManager mLogger;
@@ -60,8 +65,6 @@ public class Integrity {
      * the workflow.
      */
     protected String mSubmitDir;
-    
-     
     
     public Integrity(){
         
@@ -84,9 +87,12 @@ public class Integrity {
     /**
      * Adds the integrity check invocations for jobs input files
      * @param sb 
-     * @param files 
+     * @param files
+     * 
+     * @return a colon separated list of files to be passed via the stdin
      */
-    protected void addIntegrityCheckInvocation(StringBuffer sb,  Collection<PegasusFile> files ) {
+    public String addIntegrityCheckInvocation(StringBuilder sb,  Collection<PegasusFile> files ) {
+    	StringBuilder flist = new StringBuilder();
         for( PegasusFile file: files ){
             if( file.isDataFile() ){
                 boolean generate = ( file.isRawInputFile() )?
@@ -103,11 +109,18 @@ public class Integrity {
                 }
                 
                 if( generate ){
-                    sb.append( Integrity.PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME ).append( " --verify=" ).
-                       append( file.getLFN() ).append( " 1>&2" ).append( "\n" );
+                    if (flist.length() > 0) {
+                            flist.append(":");
+                    }
+                    flist.append(file.getLFN());
                 }
             }
         }
+        if (flist.length() > 0) {
+            sb.append( Integrity.PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME ).append( " --print-timings --verify=" ).
+            append( STDIN_FILE_DESCRIPTOR );        	
+        }
+        return flist.toString();
     }
 
     /**
@@ -119,7 +132,7 @@ public class Integrity {
      * 
      * @return 
      */
-    protected boolean modifyJobForIntegrityChecks(Job job, File file, String baseSubmitDir) {
+    public boolean modifyJobForIntegrityChecks(Job job, File file, String baseSubmitDir) {
         
         //sanity check
         //for jobs with no input files, we don't need to transfer 
@@ -188,7 +201,7 @@ public class Integrity {
      * 
      * @return A metafile with the suffix, else null
      */
-    protected File generateChecksumMetadataFile( String name, Collection<PegasusFile> files) {
+    public File generateChecksumMetadataFile( String name, Collection<PegasusFile> files) {
         
         
         //subset files that have any metadata associated with them

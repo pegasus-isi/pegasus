@@ -267,7 +267,7 @@ def transfer(request, amqp_url):
     # endpoint ls change
     try:
         status = wait_for_task(transfer_client, task_id, acceptable_faults)
-    except Exception, err:
+    except Exception as err:
         logger.error(err)
         cancel_task(transfer_client, task_id)
         
@@ -321,7 +321,7 @@ def remove(request):
     # endpoint ls change
     try:
         status = wait_for_task(transfer_client, task_id, acceptable_faults)
-    except Exception, err:
+    except Exception as err:
         logger.error(err)
         cancel_task(transfer_client, task_id)
         sys.exit(1)

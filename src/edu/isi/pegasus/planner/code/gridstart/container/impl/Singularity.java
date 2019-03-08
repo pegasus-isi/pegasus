@@ -18,6 +18,7 @@ package edu.isi.pegasus.planner.code.gridstart.container.impl;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
+import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -53,9 +54,10 @@ public class Singularity extends Abstract{
     /**
      * Initiailizes the Container  shell wrapper
      * @param bag 
+     * @param dag 
      */
-    public void initialize( PegasusBag bag ){
-        super.initialize(bag);
+    public void initialize( PegasusBag bag, ADag dag ){
+        super.initialize(bag, dag);
     }
     
     /**
@@ -99,6 +101,11 @@ public class Singularity extends Abstract{
         //exec --pwd /srv --scratch /var/tmp --scratch /tmp --home $PWD:/srv
         sb.append( "--pwd ").append( CONTAINER_WORKING_DIRECTORY ).append( " ");
         sb.append( "--home $PWD:" ).append( CONTAINER_WORKING_DIRECTORY ).append( " " );
+        
+        //PM-1298 mount any host directories if specified
+        for( Container.MountPoint  mp : c.getMountPoints() ){
+            sb.append( "-B ").append( mp ).append( " ");
+        }
         
         //we are running directly against image file. no loading
         sb.append( c.getLFN() ).append( " " );
@@ -161,6 +168,7 @@ public class Singularity extends Abstract{
         sb.append( "\n" );
         sb.append( "cat <<EOF > " ).append( scriptName ).append( "\n" );
         sb.append( "#!/bin/bash" ).append( "\n" );
+        appendStderrFragment( sb, Abstract.CONTAINER_MESSAGE_PREFIX, "Now in pegasus lite container script" );
         sb.append( "set -e" ).append( "\n" );
         
         //set the job environment variables explicitly in the -cont.sh file
@@ -186,12 +194,25 @@ public class Singularity extends Abstract{
             sb.append( '\n' );
         }
         
+        // update and include runtime environment variables such as credentials
+        sb.append( "EOF\n" );
+        sb.append( "container_env " ).append( Singularity.CONTAINER_WORKING_DIRECTORY ).append( " >> ").append( scriptName ).append( "\n" );
+        sb.append( "cat <<EOF2 >> " ).append( scriptName ).append( "\n" );
+        
         //PM-1214 worker package setup in container should happen after
         //the environment variables have been set.
         if( WORKER_PACKAGE_SETUP_SNIPPET == null ){
             WORKER_PACKAGE_SETUP_SNIPPET = Singularity.constructContainerWorkerPackagePreamble();
         }
         sb.append( WORKER_PACKAGE_SETUP_SNIPPET );
+        
+        sb.append( super.inputFilesToPegasusLite(job) );
+
+        //PM-1305 the integrity check should happen in the container
+        sb.append( super.enableForIntegrity(job) );
+        
+        sb.append( "set +e" ).append( '\n' );//PM-701
+        sb.append( "job_ec=0" ).append( "\n" );
         
         appendStderrFragment( sb, Abstract.CONTAINER_MESSAGE_PREFIX, "Launching user task");
         sb.append( "\n" );
@@ -218,7 +239,12 @@ public class Singularity extends Abstract{
                 sb.append( job.getRemoteExecutable()).append( " " ).
                    append( job.getArguments() ).append( "\n" );
         }
-        sb.append( "EOF").append( "\n" );
+
+        sb.append( "set -e" ).append( '\n' );//PM-701
+        sb.append( super.outputFilesToPegasusLite(job) );
+
+        appendStderrFragment( sb, Abstract.CONTAINER_MESSAGE_PREFIX, "Exiting pegasus lite container script" );
+        sb.append( "EOF2").append( "\n" );
         sb.append( "\n" );
         sb.append( "\n" );
         

@@ -390,7 +390,7 @@ class StampedeStatistics(object):
 
         return q.count()
 
-    def get_total_succeeded_failed_jobs_status(self):
+    def get_total_succeeded_failed_jobs_status(self, classify_error=False, tag=None):
         """
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totalsucceeded_failed_jobs
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totalsucceededfailedjobs
@@ -415,6 +415,15 @@ class StampedeStatistics(object):
             func.sum (case([(JobInstance.exitcode != 0, 1)], else_=0)).label ("failed"))
         q = q.filter(JobInstance.job_id == sq_1.c.jobid)
         q = q.filter(JobInstance.job_submit_seq == sq_1.c.jss)
+
+        if classify_error:
+            if tag is None:
+                self.log.error( "for error classification you need to specify tag")
+                return None
+
+            q = q.filter(JobInstance.job_instance_id == Tag.job_instance_id)
+            q = q.filter(Tag.name == tag)
+            q = q.filter(Tag.count > 0)
 
         return q.one()
 
@@ -777,6 +786,80 @@ class StampedeStatistics(object):
         q = q.filter(Invocation.transformation != 'condor::dagman')
 
         return q.first()
+
+    def get_summary_integrity_metrics(self):
+        """
+
+        :param type:    whether integrity type is check | compute
+        :param file_type: file type input or output
+        :return:
+        """
+        q = self.session.query(IntegrityMetrics.type,
+                                func.sum(IntegrityMetrics.duration).label("duration"),
+                                func.sum(IntegrityMetrics.count).label("count"))
+
+        q = q.group_by(IntegrityMetrics.type)
+
+        if self._expand:
+            q = q.filter(IntegrityMetrics.wf_id == Workflow.wf_id)
+            q = q.filter(Workflow.root_wf_id == self._root_wf_id)
+        else:
+            q = q.filter(IntegrityMetrics.wf_id.in_(self._wfs))
+
+        # at most two records grouped by type compute | check
+        return q.all()
+
+    def get_tag_metrics(self, name):
+        """
+
+        :param name:    what type of tag to aggregate on
+        :return:
+        """
+        q = self.session.query(Tag.name,
+                                func.sum(Tag.count).label("count"))
+
+        q = q.group_by(Tag.name)
+        q = q.filter(Tag.name == name )
+
+        if self._expand:
+            q = q.filter(Tag.wf_id == Workflow.wf_id)
+            q = q.filter(Workflow.root_wf_id == self._root_wf_id)
+        else:
+            q = q.filter(Tag.wf_id.in_(self._wfs))
+
+
+        return q.all()
+
+    def get_integrity_metrics(self):
+        """
+
+        :param type:    whether integrity type is check | compute
+        :param file_type: file type input or output
+        :return:
+        """
+        q = self.session.query( IntegrityMetrics.type,
+                                IntegrityMetrics.file_type,
+                                func.sum(IntegrityMetrics.duration).label("duration"),
+                                func.sum(IntegrityMetrics.count).label("count"))
+
+
+        q = q.group_by(IntegrityMetrics.type)
+        q = q.group_by(IntegrityMetrics.file_type)
+
+
+        if self._expand:
+            q = q.filter(IntegrityMetrics.wf_id == Workflow.wf_id)
+            q = q.filter(Workflow.root_wf_id == self._root_wf_id)
+        else:
+            q = q.filter(IntegrityMetrics.wf_id.in_(self._wfs))
+
+        """
+        for result in q.all():
+            print result
+            print result.type
+            print result.file_type
+        """
+        return q.all()
 
     def get_submit_side_job_wall_time(self):
         """

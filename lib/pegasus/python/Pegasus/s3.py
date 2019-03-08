@@ -565,7 +565,7 @@ def mkdir(args):
         conn = get_connection(config, uri)
         try:
             conn.create_bucket(uri.bucket, location=conn.location)
-        except Exception, e:
+        except Exception as e:
             if hasattr(e, "error_message") and \
                "bucket succeeded and you already own it" in e.error_message:
                 continue

@@ -437,7 +437,7 @@ public abstract class Namespace /*extends Data*/{
     *
     */
    public Object get(Object key){
-      return mProfileMap.get(key);
+      return   ( mProfileMap == null )? null: mProfileMap.get(key);
    }
 
    /**

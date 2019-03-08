@@ -712,13 +712,15 @@ class Container(ProfileMixin):
         mycontainer = Container("myapp", type="docker", image="docker:///rynge/montage:latest")
     """
 
-    def __init__(self, name, type, image, imagesite=None):
+    def __init__(self, name, type, image, imagesite=None, dockerfile=None, mount=None):
         """
         Arguments:
             name: Container name
             type: Container type (see ContainerType)
             image: URL to image in a container hub OR URL to an existing container image
             imagesite: optional site attribute to tell pegasus which site tar file exist
+            dockerfile: a url to an existing docker file to build container image from scratch
+            mount: list of volumes to be mounted
         """
         if not name:
             raise FormatError("Invalid name", name)
@@ -730,6 +732,8 @@ class Container(ProfileMixin):
         self.type = type
         self.image = image
         self.imagesite = imagesite
+        self.dockerfile = dockerfile
+        self.mount = mount if mount else []
         self.profiles = set()
 
     def __unicode__(self):
@@ -742,14 +746,16 @@ class Container(ProfileMixin):
         return hash((self.name,
                      self.type,
                      self.image,
-                     self.imagesite))
+                     self.imagesite,
+                     self.dockerfile))
 
     def __eq__(self, other):
         if isinstance(other, Container):
             return self.name == other.name and \
                    self.type == other.type and \
                    self.image == other.image and \
-                   self.imagesite == other.imagesite
+                   self.imagesite == other.imagesite and \
+                   self.dockerfile == other.dockerfile
         return False
 
 
@@ -1166,7 +1172,10 @@ class Transformation(UseMixin, InvokeMixin, MetadataMixin):
 
         # Uses
         def getlink(a):
-            return a.link
+            if a.link is not None:
+                return a.link
+            # Python 3 - make sure we return a string
+            return ""
 
         used = list(self.used)
         used.sort(key=getlink)
@@ -1291,7 +1300,10 @@ class AbstractJob(ProfileMixin, UseMixin, InvokeMixin, MetadataMixin):
 
         # Uses
         def getlink(a):
-            return a.link
+            if a.link is not None:
+                return a.link
+            # Python 3 - make sure we return a string
+            return ""
 
         used = list(self.used)
         used.sort(key=getlink)
@@ -1600,6 +1612,9 @@ class ADAG(InvokeMixin, MetadataMixin):
         self.invocations = set()
         self._metadata = set()
 
+        # PM-1311 always associate dax.api metadata
+        self.metadata("dax.api", "python")
+
     def __unicode__(self):
         return u"<ADAG %s>" % self.name
 
@@ -1805,7 +1820,7 @@ class ADAG(InvokeMixin, MetadataMixin):
         # Automatically determine dependencies
 
         # Traverse each job
-        for job_id, job in self.jobs.iteritems():
+        for job_id, job in self.jobs.items():
             file_used = job.used
 
             # If job produces to stdout, identify it as an output file
@@ -1829,7 +1844,7 @@ class ADAG(InvokeMixin, MetadataMixin):
                 else:
                     mapping[f.name][1].add(job)
 
-        for file_name, io in mapping.iteritems():
+        for file_name, io in mapping.items():
             # Go through the mapping and for each file add dependencies between the
             # job producing a file and the jobs consuming the file
             inputs = io[0]

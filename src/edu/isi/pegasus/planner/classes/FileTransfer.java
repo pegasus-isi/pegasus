@@ -79,6 +79,11 @@ public class FileTransfer extends PegasusFile {
      * A priority associated with the FileTransfer
      */
     private int mPriority;
+    
+    /**
+     * A boolean indicating to force symlinks even if source does not exist
+     */
+    private boolean mVerifySymlinkSource;
 
     /**
      * Default constructor.
@@ -91,6 +96,7 @@ public class FileTransfer extends PegasusFile {
         mDestMap     = new LinkedHashMap<String,List<ReplicaCatalogEntry>>();
         mPriority    = 0;
         mURLForRegistrationOnDestination = null;
+        mVerifySymlinkSource = true;
     }
 
     /**
@@ -109,6 +115,7 @@ public class FileTransfer extends PegasusFile {
         this.mSourceMap    = new LinkedHashMap<String,List<ReplicaCatalogEntry>>();
         this.mDestMap      = new LinkedHashMap<String,List<ReplicaCatalogEntry>>();
         this.mPriority     = 0;
+        this.mVerifySymlinkSource = true;
         this.mURLForRegistrationOnDestination = null;
         this.mMetadata     = pf.getAllMetadata();
     }
@@ -127,6 +134,7 @@ public class FileTransfer extends PegasusFile {
         mDestMap     = new LinkedHashMap<String,List<ReplicaCatalogEntry>>();
         this.mPriority     = 0;
         this.mURLForRegistrationOnDestination = null;
+        this.mVerifySymlinkSource = true;
     }
 
     /**
@@ -145,6 +153,7 @@ public class FileTransfer extends PegasusFile {
         mFlags       = (BitSet)flags.clone();
         this.mPriority     = 0;
         this.mURLForRegistrationOnDestination = null;
+        this.mVerifySymlinkSource = true;
     }
 
 
@@ -283,6 +292,25 @@ public class FileTransfer extends PegasusFile {
     public int getPriority( ){
         return this.mPriority;
     }
+    
+    /**
+     * Sets the transfer to not fail on non existent source
+     * 
+     * @param verify   the force associated with the FileTransfer
+     */
+    public void setVerifySymlinkSource( boolean verify ){
+        this.mVerifySymlinkSource = verify;
+    }
+
+
+    /**
+     * Returns boolean indicating whether to fail on non existent source or not
+     * 
+     * @return boolean
+     */
+    public boolean verifySymlinkSource( ){
+        return this.mVerifySymlinkSource;
+    }
 
     /**
      * Returns all the sites where the LFN exists
@@ -416,6 +444,17 @@ public class FileTransfer extends PegasusFile {
     public boolean isTransferringExecutableFile(){
         return this.isExecutable();
     }
+    
+    /**
+     * Returns a boolean indicating if a file that is being staged is a
+     * container or not.
+     * 
+     * @return boolean indicating whether a file is container or not.
+     */
+    public boolean isTransferringContainer() {
+        return this.isContainerFile();
+    }
+
 
     /**
      * Returns a single url from the map passed. If the random parameter is set,
@@ -502,7 +541,7 @@ public class FileTransfer extends PegasusFile {
         ft.mPriority    = this.mPriority;
         ft.mURLForRegistrationOnDestination = this.mURLForRegistrationOnDestination;
         ft.mMetadata    = (Metadata) this.mMetadata.clone();
-
+        ft.mVerifySymlinkSource = this.mVerifySymlinkSource;
         //the maps are not cloned underneath
 
         return ft;
@@ -573,4 +612,5 @@ public class FileTransfer extends PegasusFile {
         return sb.toString();
     }
 
+    
 }

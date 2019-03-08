@@ -337,8 +337,11 @@ class SubmitDir(object):
 
         # Confirm that they want to delete the workflow
         while True:
-            sys.stdout.write("Are you sure you want to delete this workflow? This operation cannot be undone. [y/n]: ")
-            answer = input().strip().lower()
+            try:
+                input = raw_input
+            except NameError:
+                pass
+            answer = input("Are you sure you want to delete this workflow? This operation cannot be undone. [y/n]: ").strip().lower()
             if answer == "y":
                 break
             if answer == "n":

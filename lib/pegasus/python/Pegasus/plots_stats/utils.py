@@ -195,8 +195,12 @@ def format_seconds(duration, max_comp = 2):
 			formatted_duration += str(mins) + ' mins, '
 
 	# seconds
-	if comp < max_comp and (sec >= 1 or comp > 0):
+	if comp < max_comp and (sec >= 0 or comp > 0):
 		comp += 1
+		if formatted_duration == '':
+			# we only have a value < 1 minute
+			# takes care of rounding down to 0
+			sec = duration
 		if sec == 1:
 			formatted_duration += str(sec) + " sec, "
 		else:

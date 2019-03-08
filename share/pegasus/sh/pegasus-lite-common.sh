@@ -225,7 +225,6 @@ function pegasus_lite_setup_work_dir()
     fi
 
     targets="$PEGASUS_WN_TMP $_CONDOR_SCRATCH_DIR $OSG_WN_TMP $TG_NODE_SCRATCH $TG_CLUSTER_SCRATCH $SCRATCH $TMPDIR $TMP /tmp"
-    unset TMPDIR
 
     if [ "x$PEGASUS_WN_TMP_MIN_SPACE" = "x" ]; then
         PEGASUS_WN_TMP_MIN_SPACE=1000000
@@ -243,11 +242,13 @@ function pegasus_lite_setup_work_dir()
 
         # make sure there is enough available diskspace
         cd $d
-        free=`df -kP . | awk '{if (NR==2) print $4}'`
-        free_human=`df --si . | awk '{if (NR==2) print $4}'`
-        if [ "x$free" == "x" -o $free -lt $PEGASUS_WN_TMP_MIN_SPACE ]; then
-            pegasus_lite_log "  Workdir: not enough disk space available in $d"
-            continue
+        free=`(df -kP . | awk '{if (NR==2) print $4}') 2>/dev/null`
+        free_human=`(df --si . | awk '{if (NR==2) print $4}') 2>/dev/null`
+        if [ "x$free" != "x" ]; then
+            if [ $free -lt $PEGASUS_WN_TMP_MIN_SPACE ]; then
+                pegasus_lite_log "  Workdir: not enough disk space available in $d"
+                continue
+            fi
         fi
 
         if touch $d/.dirtest.$$ >/dev/null 2>&1; then
@@ -260,7 +261,7 @@ function pegasus_lite_setup_work_dir()
             # PM-968 if provided, copy lof files from the HTCondor iwd to the PegasusLite work dir
             find $pegasus_lite_start_dir -name \*.lof -exec cp {} $pegasus_lite_work_dir/ \; >/dev/null 2>&1
 
-	    # PM-1190 if provided, copy meta files from the HTCondor iwd to the PegasusLite work dir
+            # PM-1190 if provided, copy meta files from the HTCondor iwd to the PegasusLite work dir
             find $pegasus_lite_start_dir -name \*.meta -exec cp {} $pegasus_lite_work_dir/ \; >/dev/null 2>&1
 
             pegasus_lite_log "Changing cwd to $pegasus_lite_work_dir"
@@ -282,6 +283,32 @@ function pegasus_lite_setup_work_dir()
     return 1
 }
 
+function container_env()
+{
+    # This function will grab environment variables and update them for use inside the container.
+    # Updated variables will be echoed to stdout, so the result can be redirected into the 
+    # container script.
+
+    inside_work_dir=$1
+
+    # copy credentials into the pwd as this will become the container directory
+    for base in X509_USER_PROXY S3CFG BOTO_CONFIG SSH_PRIVATE_KEY irodsEnvFile GOOGLE_PKCS12 _CONDOR_CREDS ; do
+        for key in `(env | grep -i ^$base | sed 's/=.*//') 2>/dev/null`; do
+            eval val="\$$key"
+            cred="`basename ${val}`"
+            dest="`pwd`/$cred"
+            dest_inside="$inside_work_dir/$cred"
+            if [ ! -e $dest ] ; then
+                cp -R $val $dest
+                chmod 600 $dest
+                pegasus_lite_log "Copied credential \$$key to $dest"
+                echo "export $key=\"$dest_inside\""
+                pegasus_lite_log "Set \$$key to $dest_inside (for inside the container)"
+            fi
+        done
+    done
+}
+
 function container_init()
 {
     # setup common variables
@@ -290,44 +317,43 @@ function container_init()
     cont_groupid=`id -g`
     cont_group=`id -g -n $cont_user` 
     cont_name=${PEGASUS_DAG_JOB_ID}-`date -u +%s`
-
 }
 
 function docker_init()
 {
     set -e
 
-    container_init
-    
     if [ $# -ne 1 ]; then 
-	pegasus_lite_log "docker_init should be passed a docker url or a file"
-	return 1
+        pegasus_lite_log "docker_init should be passed a docker url or a file"
+        return 1
     fi
+    
+    container_init
 
     # check if an image file was passed
     image_file=$1
     cont_image=""
 
     if [ "X${image_file}" != "X" ] ; then
-		
-	if [ -e ${image_file} ] ; then
-	    pegasus_lite_log "container file is ${image_file}"
-	    # try and load the image
-	    images=`docker load -i ${image_file} | sed -E "s/^Loaded image:(.*)$/\1/"`
+                
+        if [ -e ${image_file} ] ; then
+            pegasus_lite_log "container file is ${image_file}"
+            # try and load the image
+            images=`docker load -i ${image_file} | sed -E "s/^Loaded image:(.*)$/\1/"`
 
-	    #docker load can list multiple images, which might be aliases for same image
-	    for image in $images ; do
-		cont_image=$image
-	    done
-	fi
-	
+            #docker load can list multiple images, which might be aliases for same image
+            for image in $images ; do
+                cont_image=$image
+            done
+        fi
+        
     fi
     
     if [ "X${cont_image}" = "X" ]; then
-	pegasus_lite_log "Unable to load image from $image_file"
-	return 1
+        pegasus_lite_log "Unable to load image from $image_file"
+        return 1
     else
-	pegasus_lite_log "Loaded docker image $cont_image"
+        pegasus_lite_log "Loaded docker image $cont_image"
     fi
 
     set +e
@@ -337,17 +363,30 @@ function singularity_init()
 {
     set -e
 
-    # set the common variables used in the pegasus lite job.sh files
-    container_init
-    
     if [ $# -ne 1 ]; then 
-	pegasus_lite_log "singularity_init should be passed a docker url or a file"
+        pegasus_lite_log "singularity_init should be passed a docker url or a file"
+        return 1
+    fi
+    
+    container_init
+
+    # for singularity we don't need to load anything like in docker.    
+}
+
+function shifter_init()
+{
+    set -e
+
+    if [ $# -ne 1 ]; then
+        pegasus_lite_log "shifter_init should be passed a docker url or a file"
 	return 1
     fi
 
-    # for singularity we don't need to load anything like in docker.
-    
+    container_init
+
+    # for shifter we don't need to load anything like in docker.
 }
+
 
 function pegasus_lite_init()
 {
@@ -383,9 +422,18 @@ function pegasus_lite_init()
             eval val="\$$key"
             # expand the path
             if ! (echo $val | grep "^/") >/dev/null 2>&1; then
+                # the key is passed as a relative path so prepend the pwd
                 eval $key=`pwd`/"$val"
                 eval val="\$$key"
                 pegasus_lite_log "Expanded \$$key to $val"
+            else
+                # check that the key can be found at the absolute path
+                # otherwise look for it in the current directory
+                if [ ! -e "$val" ]; then
+                    eval $key=`pwd`/`basename $val`
+                    eval val="\$$key"
+                    pegasus_lite_log "Set \$$key to $val"
+                fi
             fi
             if [ -e "$val" ]; then
                 chmod 0600 "$val"
@@ -510,6 +558,10 @@ function pegasus_lite_get_system()
 
         if [ "X$osname" = "Xubuntu" ]; then
             osversion=`cat /etc/issue | head -n1 | awk '{print $2;}'` 
+            # 18 LTS
+            if (grep -i "bionic" /etc/issue) >/dev/null 2>&1; then
+                osversion="18"
+            fi
         elif [ -e /etc/debian_version ]; then
             osname="deb"
             osversion=`cat /etc/debian_version`
@@ -518,7 +570,7 @@ function pegasus_lite_get_system()
                 osversion="10"
             fi
         elif [ -e /etc/fedora-release ]; then
-            osname="fedora"
+            osname="fc"
             osversion=`cat /etc/fedora-release | grep -o -E '[0-9]+'`
         elif [ -e /etc/redhat-release ]; then
             osname="rhel"

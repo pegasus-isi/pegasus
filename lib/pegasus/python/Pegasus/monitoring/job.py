@@ -20,10 +20,12 @@ This file implements the Job class for pegasus-monitord.
 
 # Import Python modules
 import os
-import sys
+import collections
 import re
 import logging
-import cStringIO
+# PM-1332 cannot use cStringIO since job stdout can have unicode characters
+# cStringIO only supports ASCII
+from StringIO import StringIO
 import json
 
 from Pegasus.tools import utils
@@ -37,8 +39,8 @@ MAX_OUTPUT_LENGTH = 2**16-1  # Only keep stdout to 64K
 #some constants
 NOOP_JOB_PREFIX = "noop_"                  # prefix for noop jobs for which .out and err files are not created
 
-MONITORING_EVENT_START_MARKER = "@@@PEGASUS_MONITORING_PAYLOAD - START @@@"
-MONITORING_EVENT_END_MARKER = "@@@PEGASUS_MONITORING_PAYLOAD - END @@@"
+MONITORING_EVENT_START_MARKER = "@@@MONITORING_PAYLOAD - START@@@"
+MONITORING_EVENT_END_MARKER = "@@@MONITORING_PAYLOAD - END@@@"
 
 # Used in parse_sub_file
 re_rsl_string = re.compile(r"^\s*globusrsl\W", re.IGNORECASE)
@@ -55,6 +57,43 @@ re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
 re_parse_input = re.compile(r"^\s*intput\s*=\s*(\S+)")
 re_parse_output = re.compile(r"^\s*output\s*=\s*(\S+)")
 re_parse_error = re.compile(r"^\s*error\s*=\s*(\S+)")
+
+TaskOutput = collections.namedtuple('TaskOutput', ['user_data', 'events'])
+
+
+class IntegrityMetric:
+    """
+    Class for storing integrity metrics and combining them based solely on type and file type combination
+    """
+
+    def __init__(self, type, file_type, count = 0, succeeded = 0, failed = 0, duration = 0.0 ):
+        self.type = type
+        self.file_type = file_type
+        self.count = count
+        self.succeeded = succeeded
+        self.failed = failed
+        self.duration = duration
+
+    def __eq__(self, other):
+        return self.type == other.type and self.file_type == other.file_type
+
+    def __hash__(self):
+        return hash(self.key())
+
+    def __str__(self):
+        return "(%s,%s,%s, %s, %s , %s)" %(self.type, self.file_type, self.count, self.succeeded, self.failed, self.duration)
+
+    def key(self):
+        return self.type + ":" + self.file_type
+
+    def merge(self, other):
+        if self == other:
+            self.count += other.count
+            self.succeeded += other.succeeded
+            self.failed += other.failed
+            self.duration  += other.duration
+            return
+        raise KeyError( "Objects not compatible %s %s" %(self, other))
 
 class Job:
     """
@@ -108,7 +147,7 @@ class Job:
         self._error_file = None
         self._stdout_text = None
         self._stderr_text = None
-        self._additional_monitoring_events = None
+        self._additional_monitoring_events = []
         self._job_dagman_out = None    # _CONDOR_DAGMAN_LOG from environment
                                        # line for pegasus-plan and subdax_ jobs
         self._kickstart_parsed = False # Flag indicating if the kickstart
@@ -116,6 +155,50 @@ class Job:
         self._has_rotated_stdout_err_files = False #Flag indicating whether we detected that job stdout|stderr
                                                   #was rotated or not, as is the default case.
         self._deferred_job_end_kwargs = None
+        self._integrity_metrics = set()
+
+    def _add_additional_monitoring_events(self, events):
+        """
+        add monitoring events to the job, separating any integrity metrics,
+        since Integrity metrics are stored internally not as addditonal monitoring event
+        :param events:
+        :return:
+        """
+        for event in events:
+            if "monitoring_event" in event:
+                name = event["monitoring_event"]
+                if name == "int.metric":
+                    # split elements in payload to IntegrityMetric
+                    # add it internally for aggregation
+                    for m in event["payload"]:
+                        metric = IntegrityMetric(type=m.get("event"),
+                                                 file_type=m.get("file_type"),
+                                                 count=m["count"] if "count" in m else 0,
+                                                 succeeded=m["succeeded"] if "succeeded" in m else 0,
+                                                 failed=m["failed"] if "failed" in m else 0,
+                                                 duration=m["duration"] if "duration" in m else 0.0)
+                        self.add_integrity_metric(metric)
+                else:
+                    self._additional_monitoring_events.append(event)
+
+    def add_integrity_metric(self, metric):
+        """
+        adds an integrity metric, if a metric with the same key already exists we retrive
+        existing value and add the contents of metric passed
+        :param metric:
+        :return:
+        """
+        if metric is None:
+            return
+
+        for m in self._integrity_metrics:
+            if metric == m:
+                # add to existing metric
+                m.merge(metric)
+                break
+        else:
+            self._integrity_metrics.add(metric)
+
 
     def set_job_state(self, job_state, sched_id, timestamp, status):
         """
@@ -385,9 +468,10 @@ class Job:
 
             #PM-641 optimization Modified string concatenation to a list join 
             if "stdout" in my_record:
+                task_output = self.split_task_output( my_record["stdout"])
+                self._add_additional_monitoring_events(task_output.events)
                 # PM-1152 we always attempt to store upto MAX_OUTPUT_LENGTH
-                stdout = self.get_snippet_to_populate(my_record["stdout"], my_task_number, stdout_size, "stdout")
-                #self._additional_monitoring_events = self.get_additional_monitoring_events( my_record["stdout"], my_task_number, stdout_size, "stdout")
+                stdout = self.get_snippet_to_populate( task_output.user_data, my_task_number, stdout_size, "stdout")
                 if stdout is not None:
                     try:
                         stdout_text_list.append(utils.quote("#@ %d stdout\n" % (my_task_number)))
@@ -398,8 +482,11 @@ class Job:
                         logger.exception( "Unable to parse stdout section from kickstart record for task %s from file %s " %(my_task_number, self.get_rotated_out_filename() ))
 
             if "stderr" in my_record:
-                # Note: we are populating task stderr from kickstart record to job stdout only
-                stderr = self.get_snippet_to_populate( signal_message + my_record["stderr"], my_task_number, stdout_size, "stderr")
+                task_error = self.split_task_output(my_record["stderr"])
+                 # add the events to those retrieved from the application stderr
+                self._add_additional_monitoring_events(task_error.events)
+                 # Note: we are populating task stderr from kickstart record to job stdout only
+                stderr = self.get_snippet_to_populate( signal_message + task_error.user_data, my_task_number, stdout_size, "stderr")
                 if stderr is not None:
                     try:
                         stdout_text_list.append(utils.quote("#@ %d stderr\n" % (my_task_number)))
@@ -443,26 +530,6 @@ class Job:
         if not my_cluster_found:
             logger.debug("cannot find cluster record in output")
 
-        # Finally, read error file only 
-        #my_err_file = os.path.join(run_dir, self._error_file)
-        basename = self._exec_job_id + ".err"
-        my_err_file = os.path.join(run_dir, basename)
-
-        if my_invocation_found:
-            # in my job output there were some invocation records
-            # assume then that they are rotated also
-            my_err_file = my_err_file + ".%03d" % (self._job_output_counter)
-
-        try:
-            ERR = open(my_err_file, 'r')
-            self._stderr_text = utils.quote(ERR.read())
-        except IOError:
-            self._stderr_text = None
-            if not self.is_noop_job():
-                logger.warning("unable to read error file: %s, continuing..." % (my_err_file))
-        else:
-            ERR.close()
-
         # Done populating Job class with information from the output file
         return my_invocation_found
 
@@ -491,73 +558,88 @@ class Job:
         of the current counter
         """
 
-        basename = self._error_file
+        basename = self._exec_job_id + ".err"
         if self._has_rotated_stdout_err_files:
             basename += ".%03d" % ( self._job_output_counter)
 
         return basename
 
-    def read_stdout_stderr_files(self, run_dir=None):
+    def read_job_error_file(self, store_monitoring_events=True):
+        """
+
+        :param store_monitoring_events: whether to store any parsed monitoring events in the job
+        :return:
+        """
+        my_max_encoded_length = MAX_OUTPUT_LENGTH - 2000
+        if self._error_file is None:
+            # This is the case for SUBDAG jobs
+            self._stderr_text = None
+            return
+
+        # Finally, read error file only
+        run_dir = self._job_submit_dir
+        basename = self.get_rotated_err_filename()
+        my_err_file = os.path.join(run_dir, basename)
+
+        try:
+            ERR = open(my_err_file, 'r')
+            # PM-1274 parse any monitoring events such as integrity related
+            # from PegasusLite .err file
+            job_stderr = self.split_task_output(ERR.read())
+            buf = job_stderr.user_data
+            if len(buf) > my_max_encoded_length:
+                buf = buf[:my_max_encoded_length]
+            self._stderr_text = utils.quote(buf)
+
+            if store_monitoring_events:
+                self._add_additional_monitoring_events(job_stderr.events)
+        except IOError:
+            self._stderr_text = None
+            if not self.is_noop_job():
+                logger.warning("unable to read error file: %s, continuing..." % (my_err_file))
+        else:
+            ERR.close()
+
+
+    def read_job_out_file(self, out_file=None, store_monitoring_events=True):
         """
         This function reads both stdout and stderr files and populates
         these fields in the Job class.
         """
         my_max_encoded_length = MAX_OUTPUT_LENGTH - 2000
-
-        if run_dir is None:
-            # PM-1157 pick from the job submit directory associated with the job
-            run_dir = self._job_submit_dir
-
         if self._output_file is None:
             # This is the case for SUBDAG jobs
             self._stdout_text = None
-        else:
+
+        if out_file is None:
+            # PM-1297 only construct relative path if out_file is not explicitly specified
+            run_dir = self._job_submit_dir
+
             # PM-1157 output file has absolute path from submit file
             # interferes with replay mode on another directory
             # basename = self._output_file
 
             basename = self._exec_job_id + ".out"
             if self._has_rotated_stdout_err_files:
-                basename += ".%03d" % ( self._job_output_counter)
+                basename += ".%03d" % (self._job_output_counter)
+            out_file = os.path.join(run_dir, basename)
 
-            my_out_file = os.path.join(run_dir, basename)
+        try:
+            OUT = open(out_file, 'r')
+            job_stdout = self.split_task_output(OUT.read())
+            buf = job_stdout.user_data
+            if len(buf) > my_max_encoded_length:
+                buf = buf[:my_max_encoded_length]
+            self._stdout_text = utils.quote("#@ 1 stdout\n" + buf)
 
-            try:
-                OUT = open(my_out_file, 'r')
-                buffer = OUT.read()
-                if len( buffer ) > my_max_encoded_length :
-                    buffer = buffer[:my_max_encoded_length]
-                self._stdout_text = utils.quote("#@ 1 stdout\n" + buffer)
-            except IOError:
-                self._stdout_text = None
-                if not self.is_noop_job():
-                    logger.warning("unable to read output file: %s, continuing..." % (my_out_file))
-            else:
-                OUT.close()
-
-        if self._error_file is None:
-            # This is the case for SUBDAG jobs
-            self._stderr_text = None
+            if store_monitoring_events:
+                self._add_additional_monitoring_events(job_stdout.events)
+        except IOError:
+            self._stdout_text = None
+            if not self.is_noop_job():
+                logger.warning("unable to read output file: %s, continuing..." % (out_file))
         else:
-            #basename = self._error_file
-            basename = self._exec_job_id + ".err"
-            if self._has_rotated_stdout_err_files:
-                basename += ".%03d" % ( self._job_output_counter)
-
-            my_err_file = os.path.join(run_dir, basename)
-
-            try:
-                ERR = open(my_err_file, 'r')
-                buffer = ERR.read()
-                if len( buffer ) > my_max_encoded_length :
-                    buffer = buffer[:my_max_encoded_length]
-                self._stderr_text = utils.quote(buffer)
-            except IOError:
-                self._stderr_text = None
-                if not self.is_noop_job():
-                    logger.warning("unable to read error file: %s, continuing..." % (my_err_file))
-            else:
-                ERR.close()
+            OUT.close()
 
 
     def is_noop_job(self):
@@ -595,24 +677,43 @@ class Job:
 
         return stdout
 
-    def get_additional_monitoring_events(self, task_output ):
+    def split_task_output(self, task_output):
         """
-
+        Splits task output in to user app data and monitoring events for pegasus use
         :param task_output:
-        :param task number:          the task number
-        :param current_buffer_size:  the current size of the buffer that is storing job stdout for all tasks
         :param type:                 whether stdout or stderr for logging
         :return:
         """
+
         events = []
-
         start = 0
-        start = task_output.find(MONITORING_EVENT_START_MARKER, start)
-        while start != -1:
-            end = task_output.find( MONITORING_EVENT_END_MARKER, start )
-            payload = task_output[start + len(MONITORING_EVENT_START_MARKER):end ]
-            events.append(json.loads(payload) )
-            start = task_output.find(MONITORING_EVENT_START_MARKER, end)
+        end = 0
 
-        return events
+        #print task_output
+        start = task_output.find(MONITORING_EVENT_START_MARKER, start)
+
+        if start == -1 :
+            # no monitoring marker found
+            return TaskOutput(task_output, events)
+
+        task_data = StringIO()
+        try:
+            while start != -1:
+                task_data.write(task_output[end:start])
+                end = task_output.find( MONITORING_EVENT_END_MARKER, start )
+                payload = task_output[start + len(MONITORING_EVENT_START_MARKER):end ]
+                try:
+                    events.append(json.loads(payload) )
+                except:
+                    logger.error( "Unable to convert payload %s to JSON" %payload)
+                start = task_output.find(MONITORING_EVENT_START_MARKER, end)
+
+            task_data.write(task_output[end + len(MONITORING_EVENT_END_MARKER):])
+        except Exception as e:
+            logger.error( "Unable to parse monitoring events from job stdout for job %s" %self._exec_job_id)
+            logger.exception(e)
+            # return the whole task output as is
+            return TaskOutput(task_data.getvalue(), events)
+
+        return TaskOutput(task_data.getvalue(), events)
 

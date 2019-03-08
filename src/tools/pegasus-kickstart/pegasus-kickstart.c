@@ -698,17 +698,6 @@ int main(int argc, char* argv[]) {
         helpMe(&appinfo);
     }
 
-    /* initialize app info and register CLI parameters with it */
-    initJobInfo(&appinfo.application, argc-i, argv+i, getenv("KICKSTART_WRAPPER"));
-
-    /* is there really something to run? */
-    if (appinfo.application.isValid != 1) {
-        printerr("FATAL: Unable to execute the specified binary. It might not exist,"
-                 " have the correct permissions, or be of the right type for the"
-                 " current system.\n");
-        return 127;
-    }
-
     /* make/change into new workdir NOW */
 REDIR:
     if (workdir != NULL && chdir(workdir) != 0) {
@@ -722,27 +711,33 @@ REDIR:
                 goto REDIR;
             }
 
-            appinfo.application.saverr = errno;
             printerr("Unable to mkdir %s: %d: %s\n",
                      workdir, errno, strerror(errno));
-            appinfo.application.prefix = "Unable to mkdir: ";
-            appinfo.application.status = -1;
             return 127;
         }
 
         /* unable to use alternate workdir */
-        appinfo.application.saverr = errno;
         printerr("Unable to chdir %s: %d: %s\n",
                  workdir, errno, strerror(errno));
-        appinfo.application.prefix = "Unable to chdir: ";
-        appinfo.application.status = -1;
         return 127;
     }
+
+
+    /* initialize app info and register CLI parameters with it */
+    initJobInfo(&appinfo.application, argc-i, argv+i, getenv("KICKSTART_WRAPPER"));
 
     /* record the current working directory */
     appinfo.workdir = calloc(cwd_size, sizeof(char));
     if (appinfo.workdir == NULL) {
         printerr("calloc: %s\n", strerror(errno));
+        return 127;
+    }
+
+    /* is there really something to run? */
+    if (appinfo.application.isValid != 1) {
+        printerr("FATAL: Unable to execute the specified binary. It might not exist,"
+                 " have the correct permissions, or be of the right type for the"
+                 " current system.\n");
         return 127;
     }
 

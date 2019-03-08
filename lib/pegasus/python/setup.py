@@ -7,17 +7,17 @@ src_dir = os.path.dirname(__file__)
 home_dir = os.path.abspath(os.path.join(src_dir, "../../.."))
 
 install_requires = [
-    "Werkzeug==0.9.3",
-    "Flask==0.10",
-    "Jinja2==2.7",
+    "Werkzeug==0.14.1",
+    "Flask==0.12.4",
+    "Jinja2==2.8.1",
     "Flask-SQLAlchemy==0.16",
     "Flask-Cache==0.13.1",
     "requests==2.18.4",
-    "MarkupSafe==0.18",
-    "itsdangerous==0.21",
-    "boto==2.28.0",
+    "MarkupSafe==1.0",
+    "itsdangerous==0.24",
+    "boto==2.48.0",
     "pam==0.1.4",
-    "pyOpenSSL==16.2.0",
+    "pyOpenSSL==17.5.0",
     "plex==2.0.0dev"
 ]
 

@@ -86,6 +86,11 @@ public class PegasusExitCode implements POSTScript  {
      * on the command line in the java format.
      */
     protected String mPostScriptProperties;
+    
+    /**
+     * Whether to disable .meta file creation or not
+     */
+    protected boolean mDisablePerJobMetaFileCreation;
 
     /**
      * The submit directory where the submit files are being generated for
@@ -131,6 +136,7 @@ public class PegasusExitCode implements POSTScript  {
                             globalLog.substring(0, globalLog.indexOf( ".") ):
                             globalLog;
         mWFCacheMetadataLog  = basename + ".cache.meta";
+        mDisablePerJobMetaFileCreation = properties.getIntegrityDial() == PegasusProperties.INTEGRITY_DIAL.none ;
     }
 
     /**
@@ -188,6 +194,12 @@ public class PegasusExitCode implements POSTScript  {
         
         //PM-1257 set it to write to global log file per workflow
         defaultOptions.append( " -M " ).append( this.mWFCacheMetadataLog );
+        
+        //PM-1330 disable meta file creation for each condor job if integrity checking
+        //is turned off
+        if( this.mDisablePerJobMetaFileCreation ){
+            defaultOptions.append( " -N " );
+        }
         
         //put the extra options into the exitcode arguments
         //in the correct order.

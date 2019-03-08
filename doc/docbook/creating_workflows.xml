@@ -17,7 +17,7 @@
     Java, Perl, or Python format</para>
 
     <note>
-       We highly recommend using the DAX API. 
+       We highly recommend using the DAX API. The Perl DAX API is deprecated starting 4.9.0 Release and will be removed in the 5.0 Release. 
     </note>
 
     <para>Advanced users who can read XML schema definitions can generate a
@@ -1189,17 +1189,21 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
 }
 
 cont centos-pegasus{
-     # can be either docker or singularity
+     # can be either docker or singularity or shifter
      type "docker"
 
-     # URL to image in a docker|singularity hub OR
+     # URL to image in a docker|singularity hub|shitfer repo url OR
      # URL to an existing docker image exported as a tar file or singularity image
      image "docker:///rynge/montage:latest" 
 
      # optional site attribute to tell pegasus which site tar file
      # exists. useful for handling file URL's correctly
      image_site "optional site"
-  
+
+     # mount information to mount host directories into container 
+     # format src-dir:dest-dir[:options]
+     mount "/Volumes/Work/lfs1:/shared-data/:ro"
+
      # environment to be set when the job is run in the container
      # only env profiles are supported
      profile env "JAVA_HOME" "/opt/java/1.6"	    
@@ -1216,15 +1220,26 @@ cont centos-pegasus{
 
           <listitem>
             <para><emphasis role="bold">image</emphasis> - URL to image in a
-            docker|singularity hub or URL to an existing docker image exported
-            as a tar file or singularity image. Example of a docker hub URL is
-            docker:///rynge/montage:latest, while for singularity
-            shub://pegasus-isi/fedora-montage</para>
+            docker|singularity hub| shifter repo URL or URL to an existing
+            docker image exported as a tar file or singularity image. Example
+            of a docker hub URL is docker:///rynge/montage:latest, while for
+            singularity shub://singularity-hub.org/pegasus-isi/fedora-montage
+            . Shifter images can only be referred to by shifter URL scheme
+            that indicates that the image is available in the local shifter
+            repository on the compute site. For example
+            shifter:///papajim/namd_image:latest .</para>
           </listitem>
 
           <listitem>
             <para><emphasis role="bold">image_site</emphasis> - The site
             identifier for the site where the container is available</para>
+          </listitem>
+
+          <listitem>
+            <para>mount - mount information to mount host directories into
+            container of format src-dir:dest-dir[:options] . Consult Docker
+            and Singularity documentation for options supported for -v and -B
+            options respectively.</para>
           </listitem>
 
           <listitem>

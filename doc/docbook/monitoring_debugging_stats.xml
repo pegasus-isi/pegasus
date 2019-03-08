@@ -247,7 +247,6 @@ working dir : /lfs1/work/pegasus/run0004
 
       <programlisting>$ <emphasis><emphasis role="bold">pegasus-statistics /scratch/grid-setup/run0001/ -s all</emphasis> </emphasis>
 
-
 #
 # Pegasus Workflow Management System - http://pegasus.isi.edu
 #
@@ -273,7 +272,7 @@ working dir : /lfs1/work/pegasus/run0004
 #   The wall time from the start of the workflow execution to the end as
 #   reported by the DAGMAN.In case of rescue dag the value is the
 #   cumulative of all retries.
-# Workflow cumulative job wall time:
+# Cumulative job wall time:
 #   The sum of the wall time of all jobs as reported by kickstart.
 #   In case of job retries the value is the cumulative of all retries.
 #   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
@@ -285,14 +284,7 @@ working dir : /lfs1/work/pegasus/run0004
 #   is the cumulative of all retries. For workflows having sub workflow
 #   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
 #   from the sub workflows as well.
-# Cumulative job wall time as seen from submit side:
-#   The sum of the wall time of all jobs as reported by DAGMan.
-#   This is similar to the regular cumulative job wall time, but includes
-#   job management overhead and delays. In case of job retries the value
-#   is the cumulative of all retries. For workflows having sub workflow
-#   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
-#   from the sub workflows as well.
-# Workflow cumulative job badput wall time:
+# Cumulative job badput wall time:
 #   The sum of the wall time of all failed jobs as reported by kickstart.
 #   In case of job retries the value is the cumulative of all retries.
 #   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
@@ -304,19 +296,30 @@ working dir : /lfs1/work/pegasus/run0004
 #   is the cumulative of all retries. For workflows having sub workflow
 #   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
 #   from the sub workflows as well.
-
 ------------------------------------------------------------------------------
 Type           Succeeded Failed  Incomplete  Total     Retries   Total+Retries
-Tasks          4         0       0           4         0         4
-Jobs           17        0       0           17        0         17
-Sub-Workflows  0         0       0           0         0         0
+Tasks          4         0       0           4         0         4            
+Jobs           20        0       0           20        0         20           
+Sub-Workflows  0         0       0           0         0         0            
 ------------------------------------------------------------------------------
 
-Workflow wall time                                       : 5 mins, 18 secs
-Workflow cumulative job wall time                        : 4 mins, 2 secs
-Cumulative job wall time as seen from submit side        : 4 mins, 10 secs
-Workflow cumulative job badput wall time                 : 0
-Cumulative job badput wall time as seen from submit side : 0
+Workflow wall time                                       : 6 mins, 55 secs
+Cumulative job wall time                                 : 4 mins, 58 secs
+Cumulative job wall time as seen from submit side        : 5 mins, 11 secs
+Cumulative job badput wall time                          : 0.0 secs
+Cumulative job badput wall time as seen from submit side : 0.0 secs
+
+Integrity Metrics
+5 files checksums compared with total duration of 0.439 secs
+8 files checksums generated with total duration of 1.031 secs
+
+Summary                       : ./statistics/summary.txt
+Workflow execution statistics : ./statistics/workflow.txt
+Job instance statistics       : ./statistics/jobs.txt
+Transformation statistics     : ./statistics/breakdown.txt
+Integrity statistics          : ./statistics/integrity.txt
+Time statistics               : ./statistics/time.txt
+
 
 </programlisting>
 
@@ -442,1011 +445,1156 @@ pegasus-statistics -Dpegasus.monitord.output='&lt;DB_URL&gt;' -o &lt;OUTPUT_DIR&
 
 </programlisting>
 
-      <para>pegasus-statistics summary which is printed on the stdout contains
-      the following information.</para>
-
-      <itemizedlist>
-        <listitem>
-          <para><emphasis role="bold">Workflow summary</emphasis> - Summary of
-          the workflow execution. In case of hierarchical workflow the
-          calculation shows the statistics across all the sub workflows.It
-          shows the following statistics about tasks, jobs and sub
-          workflows.</para>
-
-          <itemizedlist>
-            <listitem>
-              <para><emphasis role="bold">Succeeded</emphasis> - total count
-              of succeeded tasks/jobs/sub workflows.</para>
-            </listitem>
-
-            <listitem>
-              <para><emphasis role="bold">Failed</emphasis> - total count of
-              failed tasks/jobs/sub workflows.</para>
-            </listitem>
-
-            <listitem>
-              <para><emphasis role="bold">Incomplete</emphasis> - total count
-              of tasks/jobs/sub workflows that are not in succeeded or failed
-              state. This includes all the jobs that are not submitted,
-              submitted but not completed etc. This is calculated as
-              difference between 'total' count and sum of 'succeeded' and
-              'failed' count.</para>
-            </listitem>
-
-            <listitem>
-              <para><emphasis role="bold">Total</emphasis> - total count of
-              tasks/jobs/sub workflows.</para>
-            </listitem>
-
-            <listitem>
-              <para><emphasis role="bold">Retries</emphasis> - total retry
-              count of tasks/jobs/sub workflows.</para>
-            </listitem>
-
-            <listitem>
-              <para><emphasis role="bold">Total Run</emphasis> - total count
-              of tasks/jobs/sub workflows executed during workflow run. This
-              is the cumulative of total retries, succeeded and failed
-              count.</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Workflow wall time</emphasis> - The wall
-          time from the start of the workflow execution to the end as reported
-          by the DAGMAN.In case of rescue dag the value is the cumulative of
-          all retries.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Workflow cummulate job wall
-          time</emphasis> - The sum of the wall time of all jobs as reported
-          by kickstart. In case of job retries the value is the cumulative of
-          all retries. For workflows having sub workflow jobs (i.e SUBDAG and
-          SUBDAX jobs), the wall time value includes jobs from the sub
-          workflows as well. This value is multiplied by the multiplier_factor
-          in the job instance table.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Cumulative job wall time as seen from
-          submit side</emphasis> - The sum of the wall time of all jobs as
-          reported by DAGMan. This is similar to the regular cumulative job
-          wall time, but includes job management overhead and delays. In case
-          of job retries the value is the cumulative of all retries. For
-          workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs), the
-          wall time value includes jobs from the sub workflows. This value is
-          multiplied by the multiplier_factor in the job instance
-          table.</para>
-        </listitem>
-      </itemizedlist>
-
       <para>pegasus-statistics generates the following statistics files based
       on the command line options set.</para>
 
-      <para><emphasis role="bold">Workflow statistics file per workflow
-      [workflow.txt]</emphasis></para>
+      <section id="peg_stats_summary">
+        <title id="peg_stats_jobs">Summary Statistics File
+        [summary.txt]</title>
+
+        <para>The summary statistics are listed on the stdout by default, and
+        can be written out to a file by providing the -s summary
+        option.</para>
+
+        <itemizedlist>
+          <listitem>
+            <para><emphasis role="bold">Workflow summary</emphasis> - Summary
+            of the workflow execution. In case of hierarchical workflow the
+            calculation shows the statistics across all the sub workflows.It
+            shows the following statistics about tasks, jobs and sub
+            workflows.</para>
+
+            <itemizedlist>
+              <listitem>
+                <para><emphasis role="bold">Succeeded</emphasis> - total count
+                of succeeded tasks/jobs/sub workflows.</para>
+              </listitem>
+
+              <listitem>
+                <para><emphasis role="bold">Failed</emphasis> - total count of
+                failed tasks/jobs/sub workflows.</para>
+              </listitem>
+
+              <listitem>
+                <para><emphasis role="bold">Incomplete</emphasis> - total
+                count of tasks/jobs/sub workflows that are not in succeeded or
+                failed state. This includes all the jobs that are not
+                submitted, submitted but not completed etc. This is calculated
+                as difference between 'total' count and sum of 'succeeded' and
+                'failed' count.</para>
+              </listitem>
+
+              <listitem>
+                <para><emphasis role="bold">Total</emphasis> - total count of
+                tasks/jobs/sub workflows.</para>
+              </listitem>
+
+              <listitem>
+                <para><emphasis role="bold">Retries</emphasis> - total retry
+                count of tasks/jobs/sub workflows.</para>
+              </listitem>
+
+              <listitem>
+                <para><emphasis role="bold">Total Run</emphasis> - total count
+                of tasks/jobs/sub workflows executed during workflow run. This
+                is the cumulative of total retries, succeeded and failed
+                count.</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Workflow wall time</emphasis> - The
+            wall time from the start of the workflow execution to the end as
+            reported by the DAGMAN.In case of rescue dag the value is the
+            cumulative of all retries.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Workflow cummulate job wall
+            time</emphasis> - The sum of the wall time of all jobs as reported
+            by kickstart. In case of job retries the value is the cumulative
+            of all retries. For workflows having sub workflow jobs (i.e SUBDAG
+            and SUBDAX jobs), the wall time value includes jobs from the sub
+            workflows as well. This value is multiplied by the
+            multiplier_factor in the job instance table.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Cumulative job wall time as seen from
+            submit side</emphasis> - The sum of the wall time of all jobs as
+            reported by DAGMan. This is similar to the regular cumulative job
+            wall time, but includes job management overhead and delays. In
+            case of job retries the value is the cumulative of all retries.
+            For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX
+            jobs), the wall time value includes jobs from the sub workflows.
+            This value is multiplied by the multiplier_factor in the job
+            instance table.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Integrity Metrics </emphasis></para>
+
+            <itemizedlist>
+              <listitem>
+                <para>Number of files for which the checksum was compared
+                against a previously computed or provided checksum and total
+                duration in seconds spent in doing it.</para>
+              </listitem>
+
+              <listitem>
+                <para>Number of files for which the checksum was generated
+                during workflow execution and total duration in seconds spent
+                in doing it.</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+        </itemizedlist>
+      </section>
 
-      <para>Workflow statistics file per workflow contains the following
-      information about each workflow run. In case of hierarchal workflows,
-      the file contains a table for each sub workflow. The file also contains
-      a 'Total' table at the bottom which is the cumulative of all the
-      individual statistics details.</para>
+      <section id="peg_stats_workflow">
+        <title>Workflow statistics file per workflow [workflow.txt]</title>
 
-      <para>A sample table is shown below. It shows the following statistics
-      about tasks, jobs and sub workflows.</para>
+        <para>Workflow statistics file per workflow contains the following
+        information about each workflow run. In case of hierarchal workflows,
+        the file contains a table for each sub workflow. The file also
+        contains a 'Total' table at the bottom which is the cumulative of all
+        the individual statistics details.</para>
 
-      <itemizedlist>
-        <listitem>
-          <para><emphasis role="bold">Workflow retries</emphasis> - number of
-          times a workflow was retried.</para>
-        </listitem>
+        <para>A sample table is shown below. It shows the following statistics
+        about tasks, jobs and sub workflows.</para>
 
-        <listitem>
-          <para><emphasis role="bold">Succeeded</emphasis> - total count of
-          succeeded tasks/jobs/sub workflows.</para>
-        </listitem>
+        <itemizedlist>
+          <listitem>
+            <para><emphasis role="bold">Workflow retries</emphasis> - number
+            of times a workflow was retried.</para>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">Failed</emphasis> - total count of
-          failed tasks/jobs/sub workflows.</para>
-        </listitem>
+          <listitem>
+            <para><emphasis role="bold">Succeeded</emphasis> - total count of
+            succeeded tasks/jobs/sub workflows.</para>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">Incomplete</emphasis> - total count of
-          tasks/jobs/sub workflows that are not in succeeded or failed state.
-          This includes all the jobs that are not submitted, submitted but not
-          completed etc. This is calculated as difference between 'total'
-          count and sum of 'succeeded' and 'failed' count.</para>
-        </listitem>
+          <listitem>
+            <para><emphasis role="bold">Failed</emphasis> - total count of
+            failed tasks/jobs/sub workflows.</para>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">Total</emphasis> - total count of
-          tasks/jobs/sub workflows.</para>
-        </listitem>
+          <listitem>
+            <para><emphasis role="bold">Incomplete</emphasis> - total count of
+            tasks/jobs/sub workflows that are not in succeeded or failed
+            state. This includes all the jobs that are not submitted,
+            submitted but not completed etc. This is calculated as difference
+            between 'total' count and sum of 'succeeded' and 'failed'
+            count.</para>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">Retries</emphasis> - total retry count
-          of tasks/jobs/sub workflows.</para>
-        </listitem>
+          <listitem>
+            <para><emphasis role="bold">Total</emphasis> - total count of
+            tasks/jobs/sub workflows.</para>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">Total Run</emphasis> - total count of
-          tasks/jobs/sub workflows executed during workflow run. This is the
-          cumulative of total retries, succeeded and failed count.</para>
-        </listitem>
-      </itemizedlist>
+          <listitem>
+            <para><emphasis role="bold">Retries</emphasis> - total retry count
+            of tasks/jobs/sub workflows.</para>
+          </listitem>
 
-      <table>
-        <title>Workflow Statistics</title>
+          <listitem>
+            <para><emphasis role="bold">Total Run</emphasis> - total count of
+            tasks/jobs/sub workflows executed during workflow run. This is the
+            cumulative of total retries, succeeded and failed count.</para>
+          </listitem>
+        </itemizedlist>
 
-        <tgroup align="center" cols="9">
-          <thead>
-            <row>
-              <entry align="center">#</entry>
+        <table>
+          <title>Workflow Statistics</title>
 
-              <entry align="center">Type</entry>
+          <tgroup align="center" cols="9">
+            <thead>
+              <row>
+                <entry align="center">#</entry>
 
-              <entry align="center">Succeeded</entry>
+                <entry align="center">Type</entry>
 
-              <entry align="center">Failed</entry>
+                <entry align="center">Succeeded</entry>
 
-              <entry align="center">Incomplete</entry>
+                <entry align="center">Failed</entry>
 
-              <entry align="center">Total</entry>
+                <entry align="center">Incomplete</entry>
 
-              <entry align="center">Retries</entry>
+                <entry align="center">Total</entry>
 
-              <entry align="center">Total Run</entry>
+                <entry align="center">Retries</entry>
 
-              <entry align="center">Workflow Retries</entry>
-            </row>
-          </thead>
+                <entry align="center">Total Run</entry>
 
-          <tbody>
-            <row>
-              <entry>2a6df11b-9972-4ba0-b4ba-4fd39c357af4</entry>
+                <entry align="center">Workflow Retries</entry>
+              </row>
+            </thead>
 
-              <entry/>
+            <tbody>
+              <row>
+                <entry>2a6df11b-9972-4ba0-b4ba-4fd39c357af4</entry>
 
-              <entry/>
+                <entry/>
 
-              <entry/>
+                <entry/>
 
-              <entry/>
+                <entry/>
 
-              <entry/>
+                <entry/>
 
-              <entry/>
+                <entry/>
 
-              <entry/>
+                <entry/>
 
-              <entry>0</entry>
-            </row>
+                <entry/>
 
-            <row>
-              <entry/>
+                <entry>0</entry>
+              </row>
 
-              <entry>Tasks</entry>
+              <row>
+                <entry/>
 
-              <entry>4</entry>
+                <entry>Tasks</entry>
 
-              <entry>0</entry>
+                <entry>4</entry>
 
-              <entry>0</entry>
+                <entry>0</entry>
 
-              <entry>4</entry>
+                <entry>0</entry>
 
-              <entry>0</entry>
+                <entry>4</entry>
 
-              <entry>4</entry>
+                <entry>0</entry>
 
-              <entry/>
-            </row>
+                <entry>4</entry>
 
-            <row>
-              <entry/>
+                <entry/>
+              </row>
 
-              <entry>Jobs</entry>
+              <row>
+                <entry/>
 
-              <entry>13</entry>
+                <entry>Jobs</entry>
 
-              <entry>0</entry>
+                <entry>13</entry>
 
-              <entry>0</entry>
+                <entry>0</entry>
 
-              <entry>13</entry>
+                <entry>0</entry>
 
-              <entry>0</entry>
+                <entry>13</entry>
 
-              <entry>13</entry>
+                <entry>0</entry>
 
-              <entry/>
-            </row>
+                <entry>13</entry>
 
-            <row>
-              <entry/>
+                <entry/>
+              </row>
 
-              <entry>Sub Workflows</entry>
+              <row>
+                <entry/>
 
-              <entry>0</entry>
+                <entry>Sub Workflows</entry>
 
-              <entry>0</entry>
+                <entry>0</entry>
 
-              <entry>0</entry>
+                <entry>0</entry>
 
-              <entry>0</entry>
+                <entry>0</entry>
 
-              <entry>0</entry>
+                <entry>0</entry>
 
-              <entry>0</entry>
+                <entry>0</entry>
 
-              <entry/>
-            </row>
-          </tbody>
-        </tgroup>
-      </table>
+                <entry>0</entry>
 
-      <para><emphasis role="bold">Job statistics file per workflow
-      [jobs.txt]</emphasis></para>
+                <entry/>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+      </section>
 
-      <para>Job statistics file per workflow contains the following details
-      about the job instances in each workflow. A sample file is shown
-      below.</para>
+      <section>
+        <title>Job statistics file per workflow [jobs.txt]</title>
 
-      <itemizedlist>
-        <listitem>
-          <para><emphasis role="bold">Job</emphasis> - the name of the job
-          instance</para>
-        </listitem>
+        <para>Job statistics file per workflow contains the following details
+        about the job instances in each workflow. A sample file is shown
+        below.</para>
 
-        <listitem>
-          <para><emphasis role="bold">Try</emphasis> - the number representing
-          the job instance run count.</para>
-        </listitem>
+        <itemizedlist>
+          <listitem>
+            <para><emphasis role="bold">Job</emphasis> - the name of the job
+            instance</para>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">Site</emphasis> - the site where the job
-          instance ran.</para>
-        </listitem>
+          <listitem>
+            <para><emphasis role="bold">Try</emphasis> - the number
+            representing the job instance run count.</para>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">Kickstart(sec.)</emphasis> - the actual
-          duration of the job instance in seconds on the remote compute
-          node.</para>
-        </listitem>
+          <listitem>
+            <para><emphasis role="bold">Site</emphasis> - the site where the
+            job instance ran.</para>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">Mult</emphasis> - multiplier factor from
-          the job instance table for the job.</para>
-        </listitem>
+          <listitem>
+            <para><emphasis role="bold">Kickstart(sec.)</emphasis> - the
+            actual duration of the job instance in seconds on the remote
+            compute node.</para>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">Kickstart_Mult</emphasis> - value of the
-          Kickstart column multiplied by Mult.</para>
-        </listitem>
+          <listitem>
+            <para><emphasis role="bold">Mult</emphasis> - multiplier factor
+            from the job instance table for the job.</para>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">CPU-Time</emphasis> - remote CPU time
-          computed as the stime + utime (when Kickstart is not used, this is
-          empty).</para>
-        </listitem>
+          <listitem>
+            <para><emphasis role="bold">Kickstart_Mult</emphasis> - value of
+            the Kickstart column multiplied by Mult.</para>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">Post(sec.)</emphasis> - the postscript
-          time as reported by DAGMan.</para>
-        </listitem>
+          <listitem>
+            <para><emphasis role="bold">CPU-Time</emphasis> - remote CPU time
+            computed as the stime + utime (when Kickstart is not used, this is
+            empty).</para>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">CondorQTime(sec.)</emphasis> - the time
-          between submission by DAGMan and the remote Grid submission. It is
-          an estimate of the time spent in the condor q on the submit node
-          .</para>
-        </listitem>
+          <listitem>
+            <para><emphasis role="bold">Post(sec.)</emphasis> - the postscript
+            time as reported by DAGMan.</para>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">Resource(sec.)</emphasis> - the time
-          between the remote Grid submission and start of remote execution .
-          It is an estimate of the time job instance spent in the remote queue
-          .</para>
-        </listitem>
+          <listitem>
+            <para><emphasis role="bold">CondorQTime(sec.)</emphasis> - the
+            time between submission by DAGMan and the remote Grid submission.
+            It is an estimate of the time spent in the condor q on the submit
+            node .</para>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">Runtime(sec.)</emphasis> - the time
-          spent on the resource as seen by Condor DAGMan . Is always
-          &gt;=kickstart .</para>
-        </listitem>
+          <listitem>
+            <para><emphasis role="bold">Resource(sec.)</emphasis> - the time
+            between the remote Grid submission and start of remote execution .
+            It is an estimate of the time job instance spent in the remote
+            queue .</para>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">Seqexec(sec.)</emphasis> - the time
-          taken for the completion of a clustered job instance .</para>
-        </listitem>
+          <listitem>
+            <para><emphasis role="bold">Runtime(sec.)</emphasis> - the time
+            spent on the resource as seen by Condor DAGMan . Is always
+            &gt;=kickstart .</para>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">Seqexec-Delay(sec.)</emphasis> - the
-          time difference between the time for the completion of a clustered
-          job instance and sum of all the individual tasks kickstart time
-          .</para>
-        </listitem>
-      </itemizedlist>
+          <listitem>
+            <para><emphasis role="bold">Seqexec(sec.)</emphasis> - the time
+            taken for the completion of a clustered job instance .</para>
+          </listitem>
 
-      <table>
-        <title>Job statistics</title>
+          <listitem>
+            <para><emphasis role="bold">Seqexec-Delay(sec.)</emphasis> - the
+            time difference between the time for the completion of a clustered
+            job instance and sum of all the individual tasks kickstart time
+            .</para>
+          </listitem>
+        </itemizedlist>
 
-        <tgroup align="center" cols="13">
-          <thead>
-            <row>
-              <entry align="center">Job</entry>
+        <table>
+          <title>Job statistics</title>
 
-              <entry align="center">Try</entry>
+          <tgroup align="center" cols="13">
+            <thead>
+              <row>
+                <entry align="center">Job</entry>
 
-              <entry align="center">Site</entry>
+                <entry align="center">Try</entry>
 
-              <entry align="center">Kickstart</entry>
+                <entry align="center">Site</entry>
 
-              <entry align="center">Mult</entry>
+                <entry align="center">Kickstart</entry>
 
-              <entry align="center">Kickstart_Mult</entry>
+                <entry align="center">Mult</entry>
 
-              <entry align="center">CPU-Time</entry>
+                <entry align="center">Kickstart_Mult</entry>
 
-              <entry align="center">Post</entry>
+                <entry align="center">CPU-Time</entry>
 
-              <entry align="center">CondorQTime</entry>
+                <entry align="center">Post</entry>
 
-              <entry align="center">Resource</entry>
+                <entry align="center">CondorQTime</entry>
 
-              <entry align="center">Runtime</entry>
+                <entry align="center">Resource</entry>
 
-              <entry align="center">Seqexec</entry>
+                <entry align="center">Runtime</entry>
 
-              <entry align="center">Seqexec-Delay</entry>
-            </row>
-          </thead>
+                <entry align="center">Seqexec</entry>
 
-          <tbody>
-            <row>
-              <entry>analyze_ID0000004</entry>
+                <entry align="center">Seqexec-Delay</entry>
+              </row>
+            </thead>
 
-              <entry>1</entry>
+            <tbody>
+              <row>
+                <entry>analyze_ID0000004</entry>
 
-              <entry>local</entry>
+                <entry>1</entry>
 
-              <entry>60.002</entry>
+                <entry>local</entry>
 
-              <entry>1</entry>
+                <entry>60.002</entry>
 
-              <entry>60.002</entry>
+                <entry>1</entry>
 
-              <entry>59.843</entry>
+                <entry>60.002</entry>
 
-              <entry>5.0</entry>
+                <entry>59.843</entry>
 
-              <entry>0.0</entry>
+                <entry>5.0</entry>
 
-              <entry>-</entry>
+                <entry>0.0</entry>
 
-              <entry>62.0</entry>
+                <entry>-</entry>
 
-              <entry>-</entry>
+                <entry>62.0</entry>
 
-              <entry>-</entry>
-            </row>
+                <entry>-</entry>
 
-            <row>
-              <entry>create_dir_diamond_0_local</entry>
+                <entry>-</entry>
+              </row>
 
-              <entry>1</entry>
+              <row>
+                <entry>create_dir_diamond_0_local</entry>
 
-              <entry>local</entry>
+                <entry>1</entry>
 
-              <entry>0.027</entry>
+                <entry>local</entry>
 
-              <entry>1</entry>
+                <entry>0.027</entry>
 
-              <entry>0.027</entry>
+                <entry>1</entry>
 
-              <entry>0.003</entry>
+                <entry>0.027</entry>
 
-              <entry>5.0</entry>
+                <entry>0.003</entry>
 
-              <entry>5.0</entry>
+                <entry>5.0</entry>
 
-              <entry>-</entry>
+                <entry>5.0</entry>
 
-              <entry>0.0</entry>
+                <entry>-</entry>
 
-              <entry>-</entry>
+                <entry>0.0</entry>
 
-              <entry>-</entry>
-            </row>
+                <entry>-</entry>
 
-            <row>
-              <entry>findrange_ID0000002</entry>
+                <entry>-</entry>
+              </row>
 
-              <entry>1</entry>
+              <row>
+                <entry>findrange_ID0000002</entry>
 
-              <entry>local</entry>
+                <entry>1</entry>
 
-              <entry>60.001</entry>
+                <entry>local</entry>
 
-              <entry>10</entry>
+                <entry>60.001</entry>
 
-              <entry>600.01</entry>
+                <entry>10</entry>
 
-              <entry>59.921</entry>
+                <entry>600.01</entry>
 
-              <entry>5.0</entry>
+                <entry>59.921</entry>
 
-              <entry>0.0</entry>
+                <entry>5.0</entry>
 
-              <entry>-</entry>
+                <entry>0.0</entry>
 
-              <entry>60.0</entry>
+                <entry>-</entry>
 
-              <entry>-</entry>
+                <entry>60.0</entry>
 
-              <entry>-</entry>
-            </row>
+                <entry>-</entry>
 
-            <row>
-              <entry>findrange_ID0000003</entry>
+                <entry>-</entry>
+              </row>
 
-              <entry>1</entry>
+              <row>
+                <entry>findrange_ID0000003</entry>
 
-              <entry>local</entry>
+                <entry>1</entry>
 
-              <entry>60.002</entry>
+                <entry>local</entry>
 
-              <entry>10</entry>
+                <entry>60.002</entry>
 
-              <entry>600.02</entry>
+                <entry>10</entry>
 
-              <entry>59.912</entry>
+                <entry>600.02</entry>
 
-              <entry>5.0</entry>
+                <entry>59.912</entry>
 
-              <entry>10.0</entry>
+                <entry>5.0</entry>
 
-              <entry>-</entry>
+                <entry>10.0</entry>
 
-              <entry>61.0</entry>
+                <entry>-</entry>
 
-              <entry>-</entry>
+                <entry>61.0</entry>
 
-              <entry>-</entry>
-            </row>
+                <entry>-</entry>
 
-            <row>
-              <entry>preprocess_ID0000001</entry>
+                <entry>-</entry>
+              </row>
 
-              <entry>1</entry>
+              <row>
+                <entry>preprocess_ID0000001</entry>
 
-              <entry>local</entry>
+                <entry>1</entry>
 
-              <entry>60.002</entry>
+                <entry>local</entry>
 
-              <entry>1</entry>
+                <entry>60.002</entry>
 
-              <entry>60.002</entry>
+                <entry>1</entry>
 
-              <entry>59.898</entry>
+                <entry>60.002</entry>
 
-              <entry>5.0</entry>
+                <entry>59.898</entry>
 
-              <entry>5.0</entry>
+                <entry>5.0</entry>
 
-              <entry>-</entry>
+                <entry>5.0</entry>
 
-              <entry>60.0</entry>
+                <entry>-</entry>
 
-              <entry>-</entry>
+                <entry>60.0</entry>
 
-              <entry>-</entry>
-            </row>
+                <entry>-</entry>
 
-            <row>
-              <entry>register_local_1_0</entry>
+                <entry>-</entry>
+              </row>
 
-              <entry>1</entry>
+              <row>
+                <entry>register_local_1_0</entry>
 
-              <entry>local</entry>
+                <entry>1</entry>
 
-              <entry>0.459</entry>
+                <entry>local</entry>
 
-              <entry>1</entry>
+                <entry>0.459</entry>
 
-              <entry>0.459</entry>
+                <entry>1</entry>
 
-              <entry>0.432</entry>
+                <entry>0.459</entry>
 
-              <entry>6.0</entry>
+                <entry>0.432</entry>
 
-              <entry>5.0</entry>
+                <entry>6.0</entry>
 
-              <entry>-</entry>
+                <entry>5.0</entry>
 
-              <entry>0.0</entry>
+                <entry>-</entry>
 
-              <entry>-</entry>
+                <entry>0.0</entry>
 
-              <entry>-</entry>
-            </row>
+                <entry>-</entry>
 
-            <row>
-              <entry>register_local_1_1</entry>
+                <entry>-</entry>
+              </row>
 
-              <entry>1</entry>
+              <row>
+                <entry>register_local_1_1</entry>
 
-              <entry>local</entry>
+                <entry>1</entry>
 
-              <entry>0.338</entry>
+                <entry>local</entry>
 
-              <entry>1</entry>
+                <entry>0.338</entry>
 
-              <entry>0.338</entry>
+                <entry>1</entry>
 
-              <entry>0.331</entry>
+                <entry>0.338</entry>
 
-              <entry>5.0</entry>
+                <entry>0.331</entry>
 
-              <entry>5.0</entry>
+                <entry>5.0</entry>
 
-              <entry>-</entry>
+                <entry>5.0</entry>
 
-              <entry>0.0</entry>
+                <entry>-</entry>
 
-              <entry>-</entry>
+                <entry>0.0</entry>
 
-              <entry>-</entry>
-            </row>
+                <entry>-</entry>
 
-            <row>
-              <entry>register_local_2_0</entry>
+                <entry>-</entry>
+              </row>
 
-              <entry>1</entry>
+              <row>
+                <entry>register_local_2_0</entry>
 
-              <entry>local</entry>
+                <entry>1</entry>
 
-              <entry>0.348</entry>
+                <entry>local</entry>
 
-              <entry>1</entry>
+                <entry>0.348</entry>
 
-              <entry>0.348</entry>
+                <entry>1</entry>
 
-              <entry>0.342</entry>
+                <entry>0.348</entry>
 
-              <entry>5.0</entry>
+                <entry>0.342</entry>
 
-              <entry>5.0</entry>
+                <entry>5.0</entry>
 
-              <entry>-</entry>
+                <entry>5.0</entry>
 
-              <entry>0.0</entry>
+                <entry>-</entry>
 
-              <entry>-</entry>
+                <entry>0.0</entry>
 
-              <entry>-</entry>
-            </row>
+                <entry>-</entry>
 
-            <row>
-              <entry>stage_in_local_local_0</entry>
+                <entry>-</entry>
+              </row>
 
-              <entry>1</entry>
+              <row>
+                <entry>stage_in_local_local_0</entry>
 
-              <entry>local</entry>
+                <entry>1</entry>
 
-              <entry>0.39</entry>
+                <entry>local</entry>
 
-              <entry>1</entry>
+                <entry>0.39</entry>
 
-              <entry>0.39</entry>
+                <entry>1</entry>
 
-              <entry>0.032</entry>
+                <entry>0.39</entry>
 
-              <entry>5.0</entry>
+                <entry>0.032</entry>
 
-              <entry>5.0</entry>
+                <entry>5.0</entry>
 
-              <entry>-</entry>
+                <entry>5.0</entry>
 
-              <entry>0.0</entry>
+                <entry>-</entry>
 
-              <entry>-</entry>
+                <entry>0.0</entry>
 
-              <entry>-</entry>
-            </row>
+                <entry>-</entry>
 
-            <row>
-              <entry>stage_out_local_local_0_0</entry>
+                <entry>-</entry>
+              </row>
 
-              <entry>1</entry>
+              <row>
+                <entry>stage_out_local_local_0_0</entry>
 
-              <entry>local</entry>
+                <entry>1</entry>
 
-              <entry>0.165</entry>
+                <entry>local</entry>
 
-              <entry>1</entry>
+                <entry>0.165</entry>
 
-              <entry>0.165</entry>
+                <entry>1</entry>
 
-              <entry>0.108</entry>
+                <entry>0.165</entry>
 
-              <entry>5.0</entry>
+                <entry>0.108</entry>
 
-              <entry>10.0</entry>
+                <entry>5.0</entry>
 
-              <entry>-</entry>
+                <entry>10.0</entry>
 
-              <entry>0.0</entry>
+                <entry>-</entry>
 
-              <entry>-</entry>
+                <entry>0.0</entry>
 
-              <entry>-</entry>
-            </row>
+                <entry>-</entry>
 
-            <row>
-              <entry>stage_out_local_local_1_0</entry>
+                <entry>-</entry>
+              </row>
 
-              <entry>1</entry>
+              <row>
+                <entry>stage_out_local_local_1_0</entry>
 
-              <entry>local</entry>
+                <entry>1</entry>
 
-              <entry>0.147</entry>
+                <entry>local</entry>
 
-              <entry>1</entry>
+                <entry>0.147</entry>
 
-              <entry>0.147</entry>
+                <entry>1</entry>
 
-              <entry>0.098</entry>
+                <entry>0.147</entry>
 
-              <entry>7.0</entry>
+                <entry>0.098</entry>
 
-              <entry>5.0</entry>
+                <entry>7.0</entry>
 
-              <entry>-</entry>
+                <entry>5.0</entry>
 
-              <entry>0.0</entry>
+                <entry>-</entry>
 
-              <entry>-</entry>
+                <entry>0.0</entry>
 
-              <entry>-</entry>
-            </row>
+                <entry>-</entry>
 
-            <row>
-              <entry>stage_out_local_local_1_1</entry>
+                <entry>-</entry>
+              </row>
 
-              <entry>1</entry>
+              <row>
+                <entry>stage_out_local_local_1_1</entry>
 
-              <entry>local</entry>
+                <entry>1</entry>
 
-              <entry>0.139</entry>
+                <entry>local</entry>
 
-              <entry>1</entry>
+                <entry>0.139</entry>
 
-              <entry>0.139</entry>
+                <entry>1</entry>
 
-              <entry>0.089</entry>
+                <entry>0.139</entry>
 
-              <entry>5.0</entry>
+                <entry>0.089</entry>
 
-              <entry>6.0</entry>
+                <entry>5.0</entry>
 
-              <entry>-</entry>
+                <entry>6.0</entry>
 
-              <entry>0.0</entry>
+                <entry>-</entry>
 
-              <entry>-</entry>
+                <entry>0.0</entry>
 
-              <entry>-</entry>
-            </row>
+                <entry>-</entry>
 
-            <row>
-              <entry>stage_out_local_local_2_0</entry>
+                <entry>-</entry>
+              </row>
 
-              <entry>1</entry>
+              <row>
+                <entry>stage_out_local_local_2_0</entry>
 
-              <entry>local</entry>
+                <entry>1</entry>
 
-              <entry>0.145</entry>
+                <entry>local</entry>
 
-              <entry>1</entry>
+                <entry>0.145</entry>
 
-              <entry>0.145</entry>
+                <entry>1</entry>
 
-              <entry>0.101</entry>
+                <entry>0.145</entry>
 
-              <entry>5.0</entry>
+                <entry>0.101</entry>
 
-              <entry>5.0</entry>
+                <entry>5.0</entry>
 
-              <entry>-</entry>
+                <entry>5.0</entry>
 
-              <entry>0.0</entry>
+                <entry>-</entry>
 
-              <entry>-</entry>
+                <entry>0.0</entry>
 
-              <entry>-</entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </table>
+                <entry>-</entry>
 
-      <para><emphasis role="bold">Transformation statistics file per workflow
-      [breakdown.txt]</emphasis></para>
+                <entry>-</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+      </section>
 
-      <para>Transformation statistics file per workflow contains information
-      about the invocations in each workflow grouped by transformation name. A
-      sample file is shown below.</para>
+      <section id="peg_stats_transformation">
+        <title>Transformation statistics file per workflow
+        [breakdown.txt]</title>
 
-      <itemizedlist>
-        <listitem>
-          <para><emphasis role="bold">Transformation</emphasis> - name of the
-          transformation.</para>
-        </listitem>
+        <para>Transformation statistics file per workflow contains information
+        about the invocations in each workflow grouped by transformation name.
+        A sample file is shown below.</para>
 
-        <listitem>
-          <para><emphasis role="bold">Count</emphasis> - the number of times
-          invocations with a given transformation name was executed.</para>
-        </listitem>
+        <itemizedlist>
+          <listitem>
+            <para><emphasis role="bold">Transformation</emphasis> - name of
+            the transformation.</para>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">Succeeded</emphasis> - the count of
-          succeeded invocations with a given logical transformation name
-          .</para>
-        </listitem>
+          <listitem>
+            <para><emphasis role="bold">Count</emphasis> - the number of times
+            invocations with a given transformation name was executed.</para>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">Failed</emphasis> - the count of failed
-          invocations with a given logical transformation name .</para>
-        </listitem>
+          <listitem>
+            <para><emphasis role="bold">Succeeded</emphasis> - the count of
+            succeeded invocations with a given logical transformation name
+            .</para>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">Min (sec.)</emphasis> - the minimum
-          runtime value of invocations with a given logical transformation
-          name times the multipler_factor.</para>
-        </listitem>
+          <listitem>
+            <para><emphasis role="bold">Failed</emphasis> - the count of
+            failed invocations with a given logical transformation name
+            .</para>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">Max (sec.)</emphasis> - the minimum
-          runtime value of invocations with a given logical transformation
-          name times the multiplier_factor.</para>
-        </listitem>
+          <listitem>
+            <para><emphasis role="bold">Min (sec.)</emphasis> - the minimum
+            runtime value of invocations with a given logical transformation
+            name times the multipler_factor.</para>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">Mean (sec.)</emphasis> - the mean of the
-          invocation runtimes with a given logical transformation name times
-          the multiplier_factor.</para>
-        </listitem>
+          <listitem>
+            <para><emphasis role="bold">Max (sec.)</emphasis> - the minimum
+            runtime value of invocations with a given logical transformation
+            name times the multiplier_factor.</para>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">Total (sec.)</emphasis> - the cumulative
-          of runtime value of invocations with a given logical transformation
-          name times the multiplier_factor.</para>
-        </listitem>
-      </itemizedlist>
+          <listitem>
+            <para><emphasis role="bold">Mean (sec.)</emphasis> - the mean of
+            the invocation runtimes with a given logical transformation name
+            times the multiplier_factor.</para>
+          </listitem>
 
-      <table>
-        <title>Transformation Statistics</title>
+          <listitem>
+            <para><emphasis role="bold">Total (sec.)</emphasis> - the
+            cumulative of runtime value of invocations with a given logical
+            transformation name times the multiplier_factor.</para>
+          </listitem>
+        </itemizedlist>
 
-        <tgroup align="center" cols="8">
-          <thead>
-            <row>
-              <entry align="center">Transformation</entry>
+        <table>
+          <title>Transformation Statistics</title>
 
-              <entry align="center">Count</entry>
+          <tgroup align="center" cols="8">
+            <thead>
+              <row>
+                <entry align="center">Transformation</entry>
 
-              <entry align="center">Succeeded</entry>
+                <entry align="center">Count</entry>
 
-              <entry align="center">Failed</entry>
+                <entry align="center">Succeeded</entry>
 
-              <entry align="center">Min</entry>
+                <entry align="center">Failed</entry>
 
-              <entry align="center">Max</entry>
+                <entry align="center">Min</entry>
 
-              <entry align="center">Mean</entry>
+                <entry align="center">Max</entry>
 
-              <entry align="center">Total</entry>
-            </row>
-          </thead>
+                <entry align="center">Mean</entry>
 
-          <tbody>
-            <row>
-              <entry>dagman::post</entry>
+                <entry align="center">Total</entry>
+              </row>
+            </thead>
 
-              <entry>13</entry>
+            <tbody>
+              <row>
+                <entry>dagman::post</entry>
 
-              <entry>13</entry>
+                <entry>13</entry>
 
-              <entry>0</entry>
+                <entry>13</entry>
 
-              <entry>5.0</entry>
+                <entry>0</entry>
 
-              <entry>7.0</entry>
+                <entry>5.0</entry>
 
-              <entry>5.231</entry>
+                <entry>7.0</entry>
 
-              <entry>68.0</entry>
-            </row>
+                <entry>5.231</entry>
 
-            <row>
-              <entry>diamond::analyze</entry>
+                <entry>68.0</entry>
+              </row>
 
-              <entry>1</entry>
+              <row>
+                <entry>diamond::analyze</entry>
 
-              <entry>1</entry>
+                <entry>1</entry>
 
-              <entry>0</entry>
+                <entry>1</entry>
 
-              <entry>60.002</entry>
+                <entry>0</entry>
 
-              <entry>60.002</entry>
+                <entry>60.002</entry>
 
-              <entry>60.002</entry>
+                <entry>60.002</entry>
 
-              <entry>60.002</entry>
-            </row>
+                <entry>60.002</entry>
 
-            <row>
-              <entry>diamond::findrange</entry>
+                <entry>60.002</entry>
+              </row>
 
-              <entry>2</entry>
+              <row>
+                <entry>diamond::findrange</entry>
 
-              <entry>2</entry>
+                <entry>2</entry>
 
-              <entry>0</entry>
+                <entry>2</entry>
 
-              <entry>600.01</entry>
+                <entry>0</entry>
 
-              <entry>600.02</entry>
+                <entry>600.01</entry>
 
-              <entry>600.02</entry>
+                <entry>600.02</entry>
 
-              <entry>1200.03</entry>
-            </row>
+                <entry>600.02</entry>
 
-            <row>
-              <entry>diamond::preprocess</entry>
+                <entry>1200.03</entry>
+              </row>
 
-              <entry>1</entry>
+              <row>
+                <entry>diamond::preprocess</entry>
 
-              <entry>1</entry>
+                <entry>1</entry>
 
-              <entry>0</entry>
+                <entry>1</entry>
 
-              <entry>60.002</entry>
+                <entry>0</entry>
 
-              <entry>60.002</entry>
+                <entry>60.002</entry>
 
-              <entry>60.002</entry>
+                <entry>60.002</entry>
 
-              <entry>60.002</entry>
-            </row>
+                <entry>60.002</entry>
 
-            <row>
-              <entry>pegasus::dirmanager</entry>
+                <entry>60.002</entry>
+              </row>
 
-              <entry>1</entry>
+              <row>
+                <entry>pegasus::dirmanager</entry>
 
-              <entry>1</entry>
+                <entry>1</entry>
 
-              <entry>0</entry>
+                <entry>1</entry>
 
-              <entry>0.027</entry>
+                <entry>0</entry>
 
-              <entry>0.027</entry>
+                <entry>0.027</entry>
 
-              <entry>0.027</entry>
+                <entry>0.027</entry>
 
-              <entry>0.027</entry>
-            </row>
+                <entry>0.027</entry>
 
-            <row>
-              <entry>pegasus::pegasus-transfer</entry>
+                <entry>0.027</entry>
+              </row>
 
-              <entry>5</entry>
+              <row>
+                <entry>pegasus::pegasus-transfer</entry>
 
-              <entry>5</entry>
+                <entry>5</entry>
 
-              <entry>0</entry>
+                <entry>5</entry>
 
-              <entry>0.139</entry>
+                <entry>0</entry>
 
-              <entry>0.39</entry>
+                <entry>0.139</entry>
 
-              <entry>0.197</entry>
+                <entry>0.39</entry>
 
-              <entry>0.986</entry>
-            </row>
+                <entry>0.197</entry>
 
-            <row>
-              <entry>pegasus::rc-client</entry>
+                <entry>0.986</entry>
+              </row>
 
-              <entry>3</entry>
+              <row>
+                <entry>pegasus::rc-client</entry>
 
-              <entry>3</entry>
+                <entry>3</entry>
 
-              <entry>0</entry>
+                <entry>3</entry>
 
-              <entry>0.338</entry>
+                <entry>0</entry>
 
-              <entry>0.459</entry>
+                <entry>0.338</entry>
 
-              <entry>0.382</entry>
+                <entry>0.459</entry>
 
-              <entry>1.145</entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </table>
+                <entry>0.382</entry>
 
-      <para><emphasis role="bold">Time statistics file
-      [time.txt]</emphasis></para>
+                <entry>1.145</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+      </section>
 
-      <para>Time statistics file contains job instance and invocation
-      statistics information grouped by time and host. The time grouping can
-      be on day/hour. The file contains the following tables Job instance
-      statistics per day/hour, Invocation statistics per day/hour, Job
-      instance statistics by host per day/hour and Invocation by host per
-      day/hour. A sample Invocation statistics by host per day table is shown
-      below.</para>
+      <section id="peg_stats_time">
+        <title>Time statistics file [time.txt]</title>
 
-      <itemizedlist>
-        <listitem>
-          <para><emphasis role="bold">Job instance statistics per
-          day/hour</emphasis> - the number of job instances run, total runtime
-          sorted by day/hour.</para>
-        </listitem>
+        <para>Time statistics file contains job instance and invocation
+        statistics information grouped by time and host. The time grouping can
+        be on day/hour. The file contains the following tables Job instance
+        statistics per day/hour, Invocation statistics per day/hour, Job
+        instance statistics by host per day/hour and Invocation by host per
+        day/hour. A sample Invocation statistics by host per day table is
+        shown below.</para>
 
-        <listitem>
-          <para><emphasis role="bold">Invocation statistics per
-          day/hour</emphasis> - the number of invocations , total runtime
-          sorted by day/hour.</para>
-        </listitem>
+        <itemizedlist>
+          <listitem>
+            <para><emphasis role="bold">Job instance statistics per
+            day/hour</emphasis> - the number of job instances run, total
+            runtime sorted by day/hour.</para>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">Job instance statistics by host per
-          day/hour</emphasis> - the number of job instances run, total runtime
-          on each host sorted by day/hour.</para>
-        </listitem>
+          <listitem>
+            <para><emphasis role="bold">Invocation statistics per
+            day/hour</emphasis> - the number of invocations , total runtime
+            sorted by day/hour.</para>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">Invocation statistics by host per
-          day/hour</emphasis> - the number of invocations , total runtime on
-          each host sorted by day/hour.</para>
-        </listitem>
-      </itemizedlist>
+          <listitem>
+            <para><emphasis role="bold">Job instance statistics by host per
+            day/hour</emphasis> - the number of job instances run, total
+            runtime on each host sorted by day/hour.</para>
+          </listitem>
 
-      <table>
-        <title>Invocation statistics by host per day</title>
+          <listitem>
+            <para><emphasis role="bold">Invocation statistics by host per
+            day/hour</emphasis> - the number of invocations , total runtime on
+            each host sorted by day/hour.</para>
+          </listitem>
+        </itemizedlist>
 
-        <tgroup align="center" cols="4">
-          <thead>
-            <row>
-              <entry align="center">Date [YYYY-MM-DD]</entry>
+        <table>
+          <title>Invocation statistics by host per day</title>
 
-              <entry align="center">Host</entry>
+          <tgroup align="center" cols="4">
+            <thead>
+              <row>
+                <entry align="center">Date [YYYY-MM-DD]</entry>
 
-              <entry align="center">Count</entry>
+                <entry align="center">Host</entry>
 
-              <entry align="center">Runtime (Sec.)</entry>
-            </row>
-          </thead>
+                <entry align="center">Count</entry>
 
-          <tbody>
-            <row>
-              <entry>2011-07-15</entry>
+                <entry align="center">Runtime (Sec.)</entry>
+              </row>
+            </thead>
 
-              <entry>butterfly.isi.edu</entry>
+            <tbody>
+              <row>
+                <entry>2011-07-15</entry>
 
-              <entry>54</entry>
+                <entry>butterfly.isi.edu</entry>
 
-              <entry>625.094</entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </table>
+                <entry>54</entry>
+
+                <entry>625.094</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+      </section>
+
+      <section>
+        <title id="peg_stats_integrity">Integrity statistics file per workflow
+        [integrity.txt]</title>
+
+        <para>Integrity statistics file contains integrity metrics grouped by
+        file type (input or output) and integrity type (check or compute). A
+        sample table is shown below. It shows the following statistics about
+        integrity checks.</para>
+
+        <para><itemizedlist>
+            <listitem>
+              <para><emphasis role="bold">Type</emphasis> - the type of
+              integrity metric. Check means checksum was compared for a file,
+              and compute means a checksum was generated for a file.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">File type</emphasis> - the type of
+              file: input or output from a job perspective.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">Count</emphasis> - the number of
+              times type, file type integrity check was performed.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">Total duration</emphasis> - sum of
+              duration in seconds for the 'count' number of records matching
+              the particular type, file-type combo.</para>
+            </listitem>
+          </itemizedlist><table>
+            <title>Integrity Statistics</title>
+
+            <tgroup align="center" cols="5">
+              <thead>
+                <row>
+                  <entry align="center">#</entry>
+
+                  <entry align="center">Type</entry>
+
+                  <entry align="center">File Type</entry>
+
+                  <entry align="center">Count</entry>
+
+                  <entry align="center">Total Duration</entry>
+                </row>
+              </thead>
+
+              <tbody>
+                <row>
+                  <entry>4555392d-1b37-407c-98d3-60fb86cb9d57</entry>
+
+                  <entry/>
+
+                  <entry/>
+
+                  <entry/>
+
+                  <entry/>
+                </row>
+
+                <row>
+                  <entry/>
+
+                  <entry>check</entry>
+
+                  <entry>input</entry>
+
+                  <entry>5</entry>
+
+                  <entry>0.164</entry>
+                </row>
+
+                <row>
+                  <entry/>
+
+                  <entry>check</entry>
+
+                  <entry>output</entry>
+
+                  <entry>5</entry>
+
+                  <entry>1.456</entry>
+                </row>
+
+                <row>
+                  <entry/>
+
+                  <entry>compute</entry>
+
+                  <entry>input</entry>
+
+                  <entry>5</entry>
+
+                  <entry>0.693</entry>
+                </row>
+
+                <row>
+                  <entry/>
+
+                  <entry>compute</entry>
+
+                  <entry>output</entry>
+
+                  <entry>5</entry>
+
+                  <entry>0.758</entry>
+                </row>
+              </tbody>
+            </tgroup>
+          </table></para>
+      </section>
     </section>
 
     <section>
@@ -1800,6 +1948,10 @@ Service not running as root: Will not be able to switch users
         <listitem>
           <para>Job specific statistics</para>
         </listitem>
+
+        <listitem>
+          <para>Integrity statistics</para>
+        </listitem>
       </orderedlist>
 
       <figure>
@@ -2080,8 +2232,8 @@ Service not running as root: Will not be able to switch users
             <listitem>
               <para>NOTIFICATION_CONDITION is the condition when the
               notification needs to be sent. The notification conditions are
-              enumerated in <link
-              linkend="notification_conditions_table">this table</link></para>
+              enumerated in <link linkend="notification_conditions_table">this
+              table</link></para>
             </listitem>
 
             <listitem>
@@ -2521,6 +2673,27 @@ job.invoke('at_end', pegasus_home + "/libexec/notifications/email --to me@somewh
             option.</para>
           </listitem>
         </itemizedlist>
+      </section>
+
+      <section>
+        <title>Multiple End points</title>
+
+        <para>pegasus-monitord can be used to publish <link
+        linkend="stampede_wf_events">events</link> to different backends at
+        the same time. The configuration of this is managed through properties
+        matching <emphasis
+        role="bold">pegasus.catalog.workflow.&lt;variable-name&gt;.url</emphasis>
+        .</para>
+
+        <para>For example, to enable populating to an AMQP end point and a
+        file format in addition to default sqlite you can configure as
+        follows</para>
+
+        <programlisting>pegasus.catalog.workflow.amqp.url amqp://vahi:XXXXX@amqp.isi.edu:5672/panorama/monitoring 
+pegasus.catalog.workflow.file.url file:///lfs1/work/monitord/amqp/nl.bp </programlisting>
+
+        <para>If you want to only override the default sqlite population ,
+        then you can specify pegasus.catalog.workflow.url property .</para>
       </section>
     </section>
 
@@ -3114,6 +3287,11 @@ E.g.<emphasis role="bold">
 
         <listitem>
           <para><link
+          linkend="stampede_int_metric">stampede.int.metric</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
           linkend="stampede_job_info_event">stampede.job.info</link></para>
         </listitem>
 
@@ -3199,6 +3377,11 @@ E.g.<emphasis role="bold">
 
         <listitem>
           <para><link
+          linkend="stampede_job_inst_tag_event">stampede.job_inst.tag</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
           linkend="stampede_inv_start_event">stampede.inv.start</link></para>
         </listitem>
 
@@ -3225,6 +3408,11 @@ E.g.<emphasis role="bold">
         <listitem>
           <para><link
           linkend="stampede_task_meta_event">stampede.task.meta</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_task_monitoring">stampede.task.monitoring</link></para>
         </listitem>
 
         <listitem>
@@ -3952,6 +4140,27 @@ E.g.<emphasis role="bold">
 }  // container stampede.job_inst.image.info</programlisting></para>
         </listitem>
 
+        <listitem id="stampede_job_inst_tag_event">
+          <para><emphasis
+          role="bold">stampede.job_inst.tag</emphasis><programlisting>container stampede.job_inst.tag {
+            description
+              "A tag event to tag errors at a job_instance level";
+            uses base-job-inst;
+
+            leaf name {
+              type string;
+              description "Name of tagged event such as int.error";
+            }
+
+            leaf count {
+              type int32;
+              mandatory true;
+              description
+                "count of occurences of the events of type name for the job_instance";
+            }
+}  // container stampede.job_inst.tag</programlisting></para>
+        </listitem>
+
         <listitem id="stampede_inv_start_event">
           <para><emphasis
           role="bold">stampede.inv.start</emphasis><programlisting>container stampede.inv.start {
@@ -4040,7 +4249,7 @@ E.g.<emphasis role="bold">
             leaf exitcode {
               type int32;
               description
-                "the exitcode with which the	            executable exited";
+                "the exitcode with which the executable exited";
             }
 
             leaf transformation {
@@ -4069,6 +4278,53 @@ E.g.<emphasis role="bold">
                 "Identifier for related task in the DAX";
             }
 }  // container stampede.inv.end</programlisting></para>
+        </listitem>
+
+        <listitem id="stampede_int_metric">
+          <para><emphasis
+          role="bold">stampede.int.metric</emphasis><programlisting>container stampede.int.metric {
+            description
+              "additional task events picked up from the job stdout";
+            uses base-event;
+
+            leaf job_inst.id {
+              type int32;
+              mandatory true;
+              description
+                 "Job instance identifier i.e the submit sequence generated by monitord";
+            }
+
+            leaf job.id {
+              type string;
+              mandatory true;
+              description
+                 "Identifier for corresponding job in the DAG";
+            }
+
+            leaf type{
+              type string;
+              description
+                "enumerated type of metrics check|compute";
+            }
+
+            leaf file_type{
+              type string;
+              description
+                "enumerated type of file types input|output";
+            }
+
+            leaf count{
+              type int32;
+              description
+                "number of integrity events grouped by type , file_type ";
+            }
+
+            leaf duration{
+              type float;
+              description
+                "duration in seconds it took to perform these events ";
+            }
+}  // container stampede.int.metric</programlisting></para>
         </listitem>
 
         <listitem id="stampede_static_meta_start_event">
@@ -4112,6 +4368,41 @@ E.g.<emphasis role="bold">
 }  // container stampede.task.meta</programlisting></para>
         </listitem>
 
+        <listitem id="stampede_task_monitoring">
+          <para><emphasis
+          role="bold">stampede.task.monitoring</emphasis><programlisting>container stampede.task.monitoring {
+            description
+              "additional task events picked up from the job stdout";
+            uses base-event;
+
+            leaf job_inst.id {
+              type int32;
+              mandatory true;
+              description
+                 "Job instance identifier i.e the submit sequence generated by monitord";
+            }
+
+            leaf job.id {
+              type string;
+              mandatory true;
+              description
+                 "Identifier for corresponding job in the DAG";
+            }
+
+            leaf monitoring_event{
+              type string;
+              description
+                "the name of the monitoring event parsed from the job stdout";
+            }
+
+            leaf key{
+              type string;
+              description
+                "user defined keys in their payload in the event defined in the job stdout";
+            }
+}  // container stampede.task.meta</programlisting></para>
+        </listitem>
+
         <listitem id="stampede_rc_meta_event">
           <para><emphasis
           role="bold">stampede.rc.meta</emphasis><programlisting>container stampede.rc.meta {
@@ -4149,6 +4440,135 @@ E.g.<emphasis role="bold">
 }  // container stampede.wf.map.file</programlisting>
         </listitem>
       </itemizedlist>
+    </section>
+  </section>
+
+  <section id="monitoring_amqp">
+    <title>Publishing to AMQP Message Servers</title>
+
+    <para>The workflow events generated by <emphasis>pegasus-monitord
+    </emphasis>can also be used to publish to an AMQP message server such as
+    RabbitMQ in addition to the stampede workflow database.</para>
+
+    <section>
+      <title id="monitoring_amqp_configuration">Configuration</title>
+
+      <para>In order to get <emphasis>pegasus-monitord</emphasis> to populate
+      to a message queue, you can set the following property</para>
+
+      <programlisting>pegasus.catalog.workflow.amqp.url amqp://[USERNAME:PASSWORD@]amqp.isi.edu[:port]/&lt;exchange_name&gt; </programlisting>
+
+      <para>The routing key set for the messages matches the name of the
+      stampede workflow event being sent. By default, if you enable AMQP
+      population only the following events are sent to the server</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>stampede.job_inst.tag</para>
+        </listitem>
+
+        <listitem>
+          <para>stampede.inv.end</para>
+        </listitem>
+
+        <listitem>
+          <para>stampede.wf.plan</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>To configure additional events, you can specify a comma separated
+      list of events that need to be sent using the property <emphasis
+      role="bold">pegasus.catalog.workflow.amqp.events </emphasis>. For
+      example</para>
+
+      <programlisting>pegasus.catalog.workflow.amqp.events = stampede.xwf.*,stampede.static.*</programlisting>
+
+      <note>
+        <para>To get all events you can just specify * as the value to the
+        property.</para>
+      </note>
+
+      <section id="amqp_rabbitmq_es">
+        <title>Monitord, RabbitMQ, ElasticSearch Example</title>
+
+        <para>The AMQP support in Monitord is still a work in progress, but
+        even the current functionality provides basic support for getting the
+        monitoring data into ElasticSearch. In our development environment, we
+        use a RabbitMQ instance with a simple exhange/queue. The configuration
+        required for Pegasus is:</para>
+
+        <programlisting># help Pegasus developers collect data on integrity failures                                        
+pegasus.monitord.encoding = json                                                                    
+pegasus.catalog.workflow.amqp.url = amqp://friend:donatedata@msgs.pegasus.isi.edu:5672/prod/workflows
+          </programlisting>
+
+        <para>On the other side of the queue, Logstash is configured to
+        receive the messages and forward them to ElasticSearch. The Logstash
+        pipeline looks something like:</para>
+
+        <programlisting>
+input {
+  rabbitmq {
+    type =&gt; "workflow-events"
+    host =&gt; "msg.pegasus.isi.edu"
+    vhost =&gt; "prod"
+    queue =&gt; "workflows-es"
+    heartbeat =&gt; 30
+    durable =&gt; true
+    password =&gt; "XXXXXX"
+    user =&gt; "prod-logstash"
+  }
+}
+
+filter {
+  if [type] == "workflow-events" {
+    mutate {
+      convert =&gt; {
+        "dur" =&gt; "float"
+        "remote_cpu_time" =&gt; "float"
+      }
+    }
+    date {
+      # set @timestamp from the ts of the actual event
+      match =&gt; [ "ts", "UNIX" ]
+    }
+    date {
+      match =&gt; [ "start_time", "UNIX" ]
+      target =&gt; "start_time_human"
+    }
+    fingerprint {
+      # create unique document ids
+      source =&gt; "ts"
+      concatenate_sources =&gt; true
+      method =&gt; "SHA1"
+      key =&gt; "Pegasus Event"
+      target =&gt; "[@metadata][fingerprint]"
+    }
+  }
+}
+  
+output {
+  if [type] == "workflow-events" {
+    elasticsearch {
+      "hosts" =&gt; ["es1.isi.edu:9200", "es2.isi.edu:9200"]
+      "sniffing" =&gt; false
+      "document_type" =&gt; "workflow-events"
+      "document_id" =&gt; "%{[@metadata][fingerprint]}"
+      "index" =&gt; "workflow-events-%{+YYYY.MM.dd}"
+      "template" =&gt; "/usr/share/logstash/templates/workflow-events.json"
+      "template_name" =&gt; "workflow-events-*"
+      "template_overwrite" =&gt; true
+    }
+  }
+
+}
+          </programlisting>
+
+        <para>Once the data is ElasticSearch, you can easily create for
+        example Grafana dashboard like:</para>
+
+        <imagedata fileref="images/grafana.png" width="100%"/>
+      </section>
     </section>
   </section>
 </chapter>

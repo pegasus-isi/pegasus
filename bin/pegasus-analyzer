@@ -6,6 +6,7 @@ Pegasus utility for pasing jobstate.log and reporting succesful and failed jobs
 Usage: pegasus-analyzer [options]
 
 """
+from __future__ import print_function
 
 ##
 #  Copyright 2007-2012 University Of Southern California
@@ -53,6 +54,8 @@ os.sys.path.insert(0, lib_dir)
 os.sys.path.insert(0, lib_ext_dir)
 
 # Import our modules
+from builtins import object
+
 from Pegasus.tools import utils
 from Pegasus.tools import kickstart_parser
 from Pegasus.db import connection
@@ -335,7 +338,7 @@ def generate_pegasus_lite_debug_wrapper(pegasus_lite_wrapper):
             WRAPPER.close()
 
     #set the x bit
-    os.chmod(debug_wrapper, 0755 )
+    os.chmod(debug_wrapper, 0o755 )
 
     return debug_wrapper
 
@@ -916,7 +919,7 @@ def print_top_summary():
     print_console( " # jobs unsubmitted : % 6d (%3.2f%%)" % (unsubmitted, 100 * (1.0 * unsubmitted/(total or 1))) )
     if unknown > 0:
         print_console( " # jobs unknown     : % 6d (%3.2f%%)" % (unknown, 100 * (1.0 * unknown/(total or 1)))  )
-    print
+    print()
 
 def print_summary():
     """
@@ -942,7 +945,7 @@ def print_console(stmt=""):
     """
     A utilty function to print to console with the correct indentation
     """
-    print indent + stmt
+    print(indent + stmt)
 
 
 def analyze_files():
@@ -1052,7 +1055,7 @@ def analyze_db(config_properties):
     try:
         output_db_url = connection.url_by_submitdir(input_dir, connection.DBType.WORKFLOW, config_properties, top_dir)
         wf_uuid = connection.get_wf_uuid(input_dir)
-    except connection.ConnectionError, e:
+    except connection.ConnectionError as e:
         logger.error(e)
         sys.exit(1)
 
@@ -1180,8 +1183,8 @@ def analyze_db(config_properties):
                         print_console( " Please run the command below for more information:")
                         print_console( sub_wf_cmd )
                         #print "%s -d %s --top-dir %s" % (user_cmd, my_wfdir, (top_dir or input_dir))
-                    print
-                print
+                    print()
+                print()
 
                 some_tasks_failed = False
                 for my_task in my_tasks:
@@ -1462,19 +1465,19 @@ exit $STATUS
 
     try:
         # Make our debug script executable
-        os.chmod(debug_script_name, 0755)
+        os.chmod(debug_script_name, 0o755)
     except:
         logger.error("cannot change permissions for the debug script %s" % (debug_script))
         sys.exit(1)
 
     # Print next step
-    print
-    print "%s: finished generating job debug script!" % (prog_base)
-    print
-    print "To run it, you need to type:"
-    print "   $ cd %s" % (debug_dir)
-    print "   $ ./%s" % (debug_script_basename)
-    print
+    print()
+    print("%s: finished generating job debug script!" % (prog_base))
+    print()
+    print("To run it, you need to type:")
+    print("   $ cd %s" % (debug_dir))
+    print("   $ ./%s" % (debug_script_basename))
+    print()
 
 def debug_workflow():
     """
@@ -1662,7 +1665,7 @@ else:
     analyze_db(options.config_properties)
 
 # Done!
-print "Done".center(80, '*')
-print
-print "%s: end of status report" % (prog_base)
-print
+print("Done".center(80, '*'))
+print()
+print("%s: end of status report" % (prog_base))
+print()

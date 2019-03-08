@@ -53,6 +53,14 @@ except ImportError:
     # Fall back to Python 2's urllib
     import urllib as urllib
 
+# Bad ulimits (for example -s 16000000) can prevent new threads from
+# being created. Let's try setting the stack size to something sane
+# but not worry if the attempt fails.
+try:
+    threading.stack_size(2 * 1024 ** 2)
+except:
+    pass
+
 # panorama real time monitoring
 if "KICKSTART_MON_ENDPOINT_URL" in os.environ:
     import urllib2
@@ -74,6 +82,7 @@ class PegasusURL:
     A representation of a URL, including site label and priority
     """
     url = None
+    file_type = None
     site_label = ""
     priority = 0
     # the url broken down, for convenience
@@ -82,9 +91,10 @@ class PegasusURL:
     path = ""
     
 
-    def __init__(self, url, site_label, priority=0):
+    def __init__(self, url, file_type, site_label, priority=0):
         # the url should be URL decoded to work with our shell callouts
         self.url = urllib.unquote(url)
+        self.file_type = file_type
         # make the site label to match site labels in the env
         self.site_label = string.replace(site_label, "-", "_")
         self.priority = priority
@@ -182,7 +192,7 @@ class Mkdir(TransferBase):
         self._target_url = None
     
     def set_url(self, site_label, url):
-        self._target_url = PegasusURL(url, site_label)
+        self._target_url = PegasusURL(url, None, site_label)
 
     
     def get_url(self):
@@ -226,7 +236,7 @@ class Remove(TransferBase):
 
     
     def set_url(self, site_label, url):
-        self._target_url = PegasusURL(url, site_label)
+        self._target_url = PegasusURL(url, None, site_label)
 
     
     def get_recursive(self):
@@ -280,6 +290,9 @@ class Transfer(TransferBase):
 
         self.lfn = ""
         
+        self.linkage = "unknown"
+        self.verify_symlink_source = True
+        
         self._src_urls = []
         self._dst_urls = []
        
@@ -296,21 +309,29 @@ class Transfer(TransferBase):
     def set_lfn(self, lfn):
         self.lfn = lfn
 
-        
-    def add_src(self, site_label, url, priority=None):
+
+    def set_linkage(self, linkage):
+        self.linkage = linkage
+
+
+    def set_verify_symlink_source(self, verify_symlink_source):
+        self.verify_symlink_source = verify_symlink_source
+
+
+    def add_src(self, site_label, url, file_type=None, priority=None):
         if priority is None:
             priority = random.randint(1,100)
-        u = PegasusURL(url, site_label, priority)
+        u = PegasusURL(url, file_type, site_label, priority)
         self._src_urls.append(u)
         # keep the list sorted
         self._src_urls = sorted(self._src_urls, key=lambda url: url.priority, reverse=True)
         self._update_sub_transfer_count()
 
     
-    def add_dst(self, site_label, url, priority=None):
+    def add_dst(self, site_label, url, file_type=None, priority=None):
         if priority is None:
             priority = random.randint(1,100)
-        u = PegasusURL(url, site_label, priority)
+        u = PegasusURL(url, file_type, site_label, priority)
         self._dst_urls.append(u)
         # keep the list sorted
         self._dst_urls = sorted(self._dst_urls, key=lambda url: url.priority, reverse=True)
@@ -351,6 +372,14 @@ class Transfer(TransferBase):
 
     def get_dst_proto(self):
         return self._dst_urls[0].proto
+
+
+    def get_src_type(self):
+        return self._src_urls[0].file_type
+
+
+    def get_dst_type(self):
+        return self._dst_urls[0].file_type
 
 
     def get_src_host(self):
@@ -549,6 +578,7 @@ class TimedCommand(object):
         self._process = None
         self._out_file = None
         self._outerr = ""
+        self._duration = 0.0
 
         # used in exceptions
         self._cmd_for_exc = cmd
@@ -577,6 +607,8 @@ class TimedCommand(object):
         # temp file for the stdout/stderr
         self._out_file = tempfile.TemporaryFile(prefix="pegasus-transfer-", suffix=".out")
         
+        ts_start = time.time()
+        
         thread = threading.Thread(target=target)
         thread.start()
 
@@ -600,6 +632,8 @@ class TimedCommand(object):
                 logger.info(stdout)
             self._out_file.close()
             raise RuntimeError("Command timed out after %d seconds: %s" %(self._timeout_secs, self._cmd_for_exc))
+        
+        self._duration = time.time() - ts_start
         
         # log the output
         self._out_file.seek(0)
@@ -625,6 +659,13 @@ class TimedCommand(object):
         returns the exit code from the process
         """
         return self._process.returncode
+    
+    def get_duration(self):
+        """
+        returns the timing of the command (seconds)
+        """
+        return self._duration
+        
     
 
 class TransferHandlerBase(object):
@@ -693,7 +734,7 @@ class TransferHandlerBase(object):
         # do we need to calculate integrity checksums?
         if transfer.generate_checksum and \
            transfer.get_src_proto() == "file":
-            self._generate_integrity_checksum(transfer.lfn, transfer.get_src_path()) 
+            self._generate_integrity_checksum(transfer.lfn, transfer.get_src_path(), transfer.linkage) 
 
 
     def _post_transfer_attempt(self, transfer, was_successful, t_start, t_end=None):
@@ -708,7 +749,7 @@ class TransferHandlerBase(object):
         if was_successful and \
            transfer.generate_checksum and \
            transfer.get_dst_proto() == "file":
-            self._generate_integrity_checksum(transfer.lfn, transfer.get_dst_path()) 
+            self._generate_integrity_checksum(transfer.lfn, transfer.get_dst_path(), transfer.linkage) 
         
         # keep track of transfer attempts
         transfer.attempts += 1
@@ -735,14 +776,14 @@ class TransferHandlerBase(object):
                     f = open(transfer.get_dst_path(), "a")
                     f.write("Here be dragons! Eh, I mean pegai!")
                     f.close()
-                except Exception, e:
+                except Exception as e:
                     logger.error(e)
    
 
-    def _generate_integrity_checksum(self, lfn, fname):
+    def _generate_integrity_checksum(self, lfn, fname, linkage):
         """
         Call out to pegasus-integrity to generate a checksum for the file.
-        The information goes to .pegasus-integrity-ks.xml so that kickstart
+        The information goes to $KICKSTART_INTEGRITY_DATA so that kickstart
         can pick it up at the end.
         """
         global integrity_checksummed
@@ -761,15 +802,17 @@ class TransferHandlerBase(object):
             return
 
         self.lock.acquire()
-        cmd = "%s --generate-xml=\"%s\" --full-statcall-lfn=\"%s\"" % (tools.full_path("pegasus-integrity"), fname, lfn)
+        cmd = "%s --generate-fullstat-xml=\"%s=%s\"" % (tools.full_path("pegasus-integrity"), lfn, fname)
         try:
             tc = TimedCommand(cmd)
             tc.run()
             # track what lfns we have checksummed so far
             integrity_checksummed.append(lfn)
-        except RuntimeError, err:
+        except RuntimeError as err:
             logger.error(err)
         finally:
+            # do not do any timing here - it is in the kickstart record
+            #stats.add_integrity_generate(linkage, tc.get_duration())
             self.lock.release()
 
     
@@ -885,7 +928,7 @@ class FileHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 failed_l.append(t)
                 continue
@@ -922,7 +965,8 @@ class FileHandler(TransferHandlerBase):
                     continue
 
             # first check that the src file exists, and that it can be opened
-            if not self._verify_read_access(t.get_src_path()):
+            if t.verify_symlink_source and \
+               not self._verify_read_access(t.get_src_path()):
                 logger.error("ln: src (%s) does not exist, or we do not have permission to read it" \
                              % t.get_src_path())
                 failed_l.append(t)
@@ -939,7 +983,7 @@ class FileHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 failed_l.append(t)
                 self._post_transfer_attempt(t, False, t_start)
@@ -961,7 +1005,7 @@ class FileHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 failed_l.append(t)
                 continue
@@ -1006,7 +1050,7 @@ class GridFtpHandler(TransferHandlerBase):
                 return [successful_l, failed_l]
 
             if tools.find("globus-url-copy") == None:
-                logger.error("Unable to do gsiftp mkdir because globus-url-copy could not be found")
+                logger.error("Unable to do gsiftp mkdir because gfal-mkdir/globus-url-copy could not be found")
                 return [[], mkdirs_l]
             
             for target in mkdirs_l:
@@ -1030,7 +1074,7 @@ class GridFtpHandler(TransferHandlerBase):
                     tc = TimedCommand(cmd, env_overrides=env)
                     tc.run()
                     success = True
-                except RuntimeError, err:
+                except RuntimeError as err:
                     logger.error(err)
 
             if success:
@@ -1066,7 +1110,7 @@ class GridFtpHandler(TransferHandlerBase):
             return [successful_l, failed_l]
         
         if tools.find("globus-url-copy", "-version", "([0-9]+\.[0-9]+)") is None:
-            logger.error("Unable to do gsiftp transfers because globus-url-copy could not be found")
+            logger.error("Unable to do gsiftp transfers because gfal-copy/globus-url-copy could not be found")
             return [[], transfers_l]
         
         # create lists with similar (same src host/path, same dst host/path)
@@ -1213,9 +1257,10 @@ class GridFtpHandler(TransferHandlerBase):
                                         t.dst_url_encoded()))
     
         tmp_file.close()
-       
-        logger.info("Grouped %d similar gsiftp transfers together in"
-                    " temporary file %s" %(num_pairs, tmp_name))
+      
+        if num_pairs > 1:
+            logger.info("Grouped %d similar gsiftp transfers together in"
+                        " temporary file %s" %(num_pairs, tmp_name))
     
         t_start = time.time()
         transfer_success = False
@@ -1245,7 +1290,7 @@ class GridFtpHandler(TransferHandlerBase):
             tc = TimedCommand(cmd, env_overrides=env)
             tc.run()
             transfer_success = True
-        except Exception, err:
+        except Exception as err:
             logger.error(err)
             gsiftp_failures += 1
     
@@ -1458,7 +1503,7 @@ class HTTPHandler(TransferHandlerBase):
                 cmd = tools.full_path('curl')
                 if not logger.isEnabledFor(logging.DEBUG):
                     cmd += " -s -S"
-                cmd += " --insecure" + \
+                cmd += " --insecure --location" + \
                        " -o '" + t.get_dst_path() + "'" + \
                        " '" + t.src_url() + "'"
 
@@ -1467,7 +1512,7 @@ class HTTPHandler(TransferHandlerBase):
                 tc = TimedCommand(cmd, env_overrides=env)
                 tc.run()
                 stats_add(t.get_dst_path())
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 # wget and curl might leave 0 sized files behind after failures
                 # make sure those get cleaned up
@@ -1503,7 +1548,7 @@ class IRodsHandler(TransferHandlerBase):
         
         try:
             env = self._irods_login(mkdir_list[0].get_site_label())
-        except Exception, loginErr:
+        except Exception as loginErr:
             logger.error(loginErr)
             logger.error("Unable to log into irods")
             return [[], mkdir_list]
@@ -1516,7 +1561,7 @@ class IRodsHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd, env_overrides = env)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 failed_l.append(t)
                 continue
@@ -1548,7 +1593,7 @@ class IRodsHandler(TransferHandlerBase):
                 sitename = t.get_dst_site_label()
             try:
                 env = self._irods_login(sitename)
-            except Exception, loginErr:
+            except Exception as loginErr:
                 logger.error(loginErr)
                 logger.error("Unable to log into irods")
                 return [[], transfer_list]
@@ -1556,7 +1601,7 @@ class IRodsHandler(TransferHandlerBase):
             if t.get_dst_proto() == "file":
                 # irods->file
                 prepare_local_dir(os.path.dirname(t.get_dst_path()))
-                cmd = "iget -v -f -r -T -K -N 4"
+                cmd = "iget -v -f -T -K -N 4"
                 if len(t.get_src_host()) > 0 and t.attempts <= 1:
                     cmd += " -R " + t.get_src_host()
                 cmd += " '" + t.get_src_path() + "'"
@@ -1575,7 +1620,7 @@ class IRodsHandler(TransferHandlerBase):
                 except:
                     # ignore errors from the mkdir command
                     pass
-                cmd = "iput -v -f -r -T -K -N 4"
+                cmd = "iput -v -f -T -K -N 4"
                 if len(t.get_dst_host()) > 0 and t.attempts <= 1:
                     cmd += " -R " + t.get_dst_host()
                 cmd += " '" + t.get_src_path() + "'"
@@ -1590,7 +1635,7 @@ class IRodsHandler(TransferHandlerBase):
                     stats_add(t.get_dst_path())
                 else:
                     stats_add(t.get_src_path())
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
@@ -1609,7 +1654,7 @@ class IRodsHandler(TransferHandlerBase):
 
         try:
             env = self._irods_login(removes_list[0].get_site_label())
-        except Exception, loginErr:
+        except Exception as loginErr:
             logger.error(loginErr)
             logger.error("Unable to log into irods")
             return [[], removes_list]
@@ -1625,7 +1670,7 @@ class IRodsHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd, env_overrides = env, log_outerr = False)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 if tc.get_exit_code() == 3:
                     # file does not exist, which is success
                     pass
@@ -1764,7 +1809,7 @@ class S3Handler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd, env_overrides=env)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 failed_l.append(t)
                 continue
@@ -1814,7 +1859,7 @@ class S3Handler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd, env_overrides=env)
                 tc.run()
-            except Exception, err:
+            except Exception as err:
                 logger.error(err)
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
@@ -1872,7 +1917,7 @@ class S3Handler(TransferHandlerBase):
             tc = TimedCommand(cmd, env_overrides=env)
             tc.run()
             success = True
-        except RuntimeError, err:
+        except RuntimeError as err:
             logger.error(err)
         
         # as we don't know which removes in the set succeeded/failed, we have
@@ -1959,7 +2004,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
             tc = TimedCommand(cmd)
             tc.run()
             successful_l = list(mkdir_l)
-        except RuntimeError, err:
+        except RuntimeError as err:
             logger.error(err)
             failed_l = list(mkdir_l)
         
@@ -2019,7 +2064,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
             tc = TimedCommand(cmd)
             tc.run()
             successful_l = list(transfers_l)
-        except RuntimeError, err:
+        except RuntimeError as err:
             logger.error(err)
             failed_l = list(transfers_l)
         
@@ -2070,7 +2115,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
             tc = TimedCommand(cmd)
             tc.run()
             successful_l = list(removes_l)
-        except RuntimeError, err:
+        except RuntimeError as err:
             logger.error(err)
             failed_l = list(removes_l)
         
@@ -2166,7 +2211,7 @@ class GSHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd, env_overrides=env)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 # if the bucket already exists, we call it a success
                 if "already exists" not in tc.get_outerr():
                     logger.error(err)
@@ -2220,7 +2265,7 @@ class GSHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd, env_overrides=env)
                 tc.run()
-            except Exception, err:
+            except Exception as err:
                 logger.error(err)
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
@@ -2254,7 +2299,7 @@ class GSHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd, env_overrides=env)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 # file not found is success
                 if "No URLs matched" not in tc.get_outerr():
                     logger.error(err)
@@ -2306,7 +2351,7 @@ class GSHandler(TransferHandlerBase):
             conf.set("Credentials", "gs_service_key_file", env["GOOGLE_PKCS12"])
             conf.write(tmp_file)
             tmp_file.close()
-        except Exception, err:
+        except Exception as err:
             logger.error(err)
             raise RuntimeError("Unable to convert boto config file")
         env["BOTO_CONFIG"] = self._tmp_name
@@ -2348,7 +2393,7 @@ class GFALHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd, env_overrides=self._gfal_creds(t))
                 tc.run()
-            except Exception, err:
+            except Exception as err:
                 logger.error(err)
                 failed_l.append(t)
                 continue
@@ -2384,7 +2429,7 @@ class GFALHandler(TransferHandlerBase):
                     self._post_transfer_attempt(t, False, t_start)
                     continue        
     
-            cmd = "gfal-copy -f -p"
+            cmd = "gfal-copy -f -p -K md5 -t 7200 -T 7200"
             if logger.isEnabledFor(logging.DEBUG):
                 cmd = cmd + " -v"
             cmd = cmd + " '%s' '%s'" % (t.src_url(), t.dst_url())
@@ -2392,7 +2437,7 @@ class GFALHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd, env_overrides=self._gfal_creds(t))
                 tc.run()
-            except Exception, err:
+            except Exception as err:
                 logger.error(err)
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
@@ -2425,7 +2470,7 @@ class GFALHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd, env_overrides=self._gfal_creds(t))
                 tc.run()
-            except Exception, err:
+            except Exception as err:
                 logger.error(err)
                 failed_l.append(t)
                 continue
@@ -2492,7 +2537,7 @@ class ScpHandler(TransferHandlerBase):
             tc = TimedCommand(cmd, log_outerr=False)
             try:
                 tc.run()
-            except Exception, err:
+            except Exception as err:
                 logger.error(err)
                 self._log_filter_ssh_output(tc.get_outerr())
                 failed_l.append(t)
@@ -2591,7 +2636,7 @@ class ScpHandler(TransferHandlerBase):
                 t_start = time.time()
                 tc = TimedCommand(cmd, log_outerr=False)
                 tc.run()    
-            except RuntimeError, err:
+            except RuntimeError as err:
                 self._log_filter_ssh_output(tc.get_outerr())
                 logger.error(err)
                 for t in t_group:
@@ -2641,7 +2686,7 @@ class ScpHandler(TransferHandlerBase):
             tc = TimedCommand(cmd, log_outerr=False)
             try:
                 tc.run()
-            except Exception, err:
+            except Exception as err:
                 logger.error(err)
                 self._log_filter_ssh_output(tc.get_outerr())
                 for t in t_group:
@@ -2741,7 +2786,7 @@ class GSIScpHandler(TransferHandlerBase):
             tc = TimedCommand(cmd, log_outerr=False, env_overrides=self._gsi_creds(t))
             try:
                 tc.run()
-            except Exception, err:
+            except Exception as err:
                 logger.error(err)
                 self._log_filter_ssh_output(tc.get_outerr())
                 failed_l.append(t)
@@ -2824,7 +2869,7 @@ class GSIScpHandler(TransferHandlerBase):
                 t_start = time.time()
                 tc = TimedCommand(cmd, log_outerr=False, env_overrides=self._gsi_creds(t_base))
                 tc.run()    
-            except RuntimeError, err:
+            except RuntimeError as err:
                 self._log_filter_ssh_output(tc.get_outerr())
                 logger.error(err)
                 for t in t_group:
@@ -2874,7 +2919,7 @@ class GSIScpHandler(TransferHandlerBase):
             tc = TimedCommand(cmd, log_outerr=False, env_overrides=self._gsi_creds(t_base))
             try:
                 tc.run()
-            except Exception, err:
+            except Exception as err:
                 logger.error(err)
                 self._log_filter_ssh_output(tc.get_outerr())
                 for t in t_group:
@@ -2987,7 +3032,7 @@ class StashHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 failed_l.append(t)
                 continue
@@ -3009,7 +3054,14 @@ class StashHandler(TransferHandlerBase):
             t_start = time.time()
 
             if t.get_dst_proto() == "stash":
-                # write
+                # write file:// to stash://
+            
+                # src has to exist and be readable
+                if not verify_local_file(t.get_src_path()):
+                    self._post_transfer_attempt(t, False, t_start)
+                    failed_l.append(t)
+                    continue
+
                 if os.path.exists("/stash"):
                     # hack for now - local cp
                     src_path = t.get_src_path()
@@ -3041,7 +3093,7 @@ class StashHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
@@ -3065,7 +3117,7 @@ class StashHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 failed_l.append(t)
                 continue
@@ -3093,7 +3145,8 @@ class SymlinkHandler(TransferHandlerBase):
             prepare_local_dir(os.path.dirname(t.get_dst_path()))
     
             # we do not allow dangling symlinks
-            if not os.path.exists(t.get_src_path()):
+            if t.verify_symlink_source and \
+               not os.path.exists(t.get_src_path()):
                 logger.warning("Symlink source (%s) does not exist" % (t.get_src_path()))
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
@@ -3115,7 +3168,7 @@ class SymlinkHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd, timeout_secs = 60)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
@@ -3136,7 +3189,7 @@ class SymlinkHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 failed_l.append(t)
                 continue
@@ -3150,7 +3203,7 @@ class DockerHandler(TransferHandlerBase):
     """
     
     _name = "DockerHandler"
-    _protocol_map = ["docker->file"]
+    _protocol_map = ["docker->file", "docker->file::docker"]
 
     def do_transfers(self, transfers_l):
         
@@ -3176,7 +3229,7 @@ class DockerHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
@@ -3194,7 +3247,7 @@ class SingularityHubHandler(TransferHandlerBase):
     """
     
     _name = "SingularityHubHandler"
-    _protocol_map = ["shub->file"]
+    _protocol_map = ["shub->file", "shub->file::singularity", "docker->file::singularity"]
 
     def do_transfers(self, transfers_l):
         
@@ -3227,7 +3280,7 @@ class SingularityHubHandler(TransferHandlerBase):
             try:
                 tc = TimedCommand(cmd)
                 tc.run()
-            except RuntimeError, err:
+            except RuntimeError as err:
                 logger.error(err)
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
@@ -3254,6 +3307,13 @@ class Stats:
         self._total_bytes = 0
         self._site_pair_count = {}
         self._site_pair_bytes = {}
+        
+        # integrity timings
+        self._integrity_verify_count_succeeded = {}
+        self._integrity_verify_count_failed = {}
+        self._integrity_verify_duration = {}
+        self._integrity_generate_count = {}
+        self._integrity_generate_duration = {}
     
 
     def add_stats(self, transfer, was_successful, t_start, t_end):
@@ -3282,7 +3342,7 @@ class Stats:
                 bytes = s[stat.ST_SIZE]
                 self._total_bytes += bytes
                 self._site_pair_bytes[key] += bytes
-            except Exception, err:
+            except Exception as err:
                 pass # ignore
             
         # call out to panorama if asked to do so, but make sure that failures
@@ -3290,15 +3350,73 @@ class Stats:
         try: 
             p = Panorama()
             p.one_transfer(transfer, was_successful, t_start, t_end, bytes)
-        except Exception, e:
+        except Exception as e:
             logger.warn("Panorama send failure: " + e)
 
 
     def all_transfers_done(self):
         self._t_end_global = time.time()
 
+    
+    def add_integrity_generate(self, linkage, duration):
+        # this is not currently used, and thus does not handle
+        # success/failed counts
+        if linkage is None or linkage == '':
+            linkage = 'unknown'
+        if linkage not in self._integrity_generate_count:
+            self._integrity_generate_count[linkage] = 0
+            self._integrity_generate_duration[linkage] = 0.0
+        self._integrity_generate_count[linkage] += 1
+        self._integrity_generate_duration[linkage] += duration
+
+
+    def add_integrity_verify(self, linkage, duration, success):
+        if linkage is None or linkage == '':
+            linkage = 'unknown'
+        if linkage not in self._integrity_verify_count_succeeded:
+            self._integrity_verify_count_succeeded[linkage] = 0
+            self._integrity_verify_count_failed[linkage] = 0
+            self._integrity_verify_duration[linkage] = 0.0
+        if success:
+            self._integrity_verify_count_succeeded[linkage] += 1
+        else:
+            self._integrity_verify_count_failed[linkage] += 1
+        self._integrity_verify_duration[linkage] += duration
+        
 
     def stats_summary(self):
+        
+        # integrity timings
+        for linkage in self._integrity_verify_count_succeeded.keys():
+            data = {
+                'ts': int(time.time()), 
+                'monitoring_event': 'int.metric', 
+                'payload': [ {
+                    'event': 'check',
+                    'file_type': linkage,
+                    'succeeded': self._integrity_verify_count_succeeded[linkage],
+                    'failed': self._integrity_verify_count_failed[linkage],
+                    'duration': '%.3f' % self._integrity_verify_duration[linkage]
+                    }
+                ]
+            }
+            logger.info('@@@MONITORING_PAYLOAD - START@@@' +json.dumps(data) + '@@@MONITORING_PAYLOAD - END@@@')
+        for linkage in self._integrity_generate_count.keys():
+            data = {
+                'ts': int(time.time()), 
+                'monitoring_event': 'int.metric', 
+                'payload': [ {
+                    'event': 'compute',
+                    'file_type': linkage,
+                    'succeeded': self._integrity_generate_count[linkage],
+                    'failed': 0,
+                    'duration': '%.3f' % self._integrity_generate_duration[linkage]
+                    }
+                ]
+            }
+            logger.info('@@@MONITORING_PAYLOAD - START@@@' +json.dumps(data) + '@@@MONITORING_PAYLOAD - END@@@')
+        
+        # standard stats
         if self._t_end_global is None or self._t_end_global is 0:
             self.all_transfers_done()
         
@@ -3325,7 +3443,7 @@ class Stats:
                         self._site_pair_count[key],
                         iso_prefix_formatted(self._site_pair_bytes[key]), total_secs, 
                         iso_prefix_formatted(Bps), iso_prefix_formatted(Bps*8)))
-
+            
 
 class Panorama:
     """ Singleton for sending Panorama live stats
@@ -3371,7 +3489,7 @@ class Panorama:
         req.add_header("Authorization", authheader)
         try:
             u = urllib2.urlopen(req)
-        except IOError, e:
+        except IOError as e:
              logger.error("Unable to publish to Panorama: " + str(e))
              return
         data = u.read()
@@ -3427,6 +3545,16 @@ class SimilarWorkSet:
         src_proto = transfers_l[0].get_src_proto()
         dst_proto = transfers_l[0].get_dst_proto()
 
+        # if file_type is set, it adds to the protocol in the handler mapping,
+        # but only for docker/singularity to file://
+        #if transfers_l[0].get_src_type() is not None and \
+        #   src_proto == 'file':
+        #    src_proto = src_proto + '::' + transfers_l[0].get_src_type()
+        if src_proto == 'docker' or src_proto == 'shub':
+            if transfers_l[0].get_dst_type() is not None and \
+               dst_proto == 'file':
+                dst_proto = dst_proto + '::' + transfers_l[0].get_dst_type()
+
         # can we find one handler which can handle both source
         # and destination protocols directly?
         # (sometimes we want to force split transfer to do things like
@@ -3441,8 +3569,22 @@ class SimilarWorkSet:
 
         # we need to split the transfer from src to local file,
         # and then transfer the local file to the dst
+
+        # carry the types so that for example docker->gsiftp::docker
+        # becomes docker->file::docker + file->gsiftp
+        # TODO: improve logic here - currently we have to limit this
+        # to docker and singularity transfers
+        middle_in_proto = 'file'
+        if (transfers_l[0].get_src_proto() == 'docker' or \
+            transfers_l[0].get_src_proto() == 'shub') and \
+           transfers_l[0].get_dst_type() is not None:
+            middle_in_proto = 'file::' + transfers_l[0].get_dst_type()
+        middle_out_proto = 'file'
+        #if transfers_l[0].get_src_type() is not None:
+        #    middle_out_proto = 'file::' + transfers_l[0].get_src_type()
+
         for h in self._available_handlers:
-            if h.protocol_check(src_proto, "file"):
+            if h.protocol_check(src_proto, middle_in_proto):
                 self._primary_handler = h
                 break
         for h in self._available_handlers:
@@ -3451,7 +3593,7 @@ class SimilarWorkSet:
             # the file to be copied
             if dst_proto == "symlink":
                 dst_proto = "file"
-            if h.protocol_check("file", dst_proto):
+            if h.protocol_check(middle_out_proto, dst_proto):
                 self._secondary_handler = h
                 break
         if self._primary_handler is None or self._secondary_handler is None:
@@ -3479,7 +3621,7 @@ class SimilarWorkSet:
         if isinstance(self._transfers[0], Mkdir):
             try:
                 (success_list, failed_list) = self._primary_handler.do_mkdirs(self._transfers)
-            except Exception, e:
+            except Exception as e:
                 logger.error("Exception while doing mkdirs")
                 raise
             # accounting
@@ -3493,7 +3635,7 @@ class SimilarWorkSet:
         if isinstance(self._transfers[0], Remove):
             try:
                 (success_list, failed_list) = self._primary_handler.do_removes(self._transfers)
-            except Exception, e:
+            except Exception as e:
                 logger.error("Exception while doing removes")
                 raise
             # accounting
@@ -3523,7 +3665,7 @@ class SimilarWorkSet:
             # one handler to rule them all!
             try:
                 (success_list, failed_list) = self._primary_handler.do_transfers(self._transfers)
-            except Exception, e:
+            except Exception as e:
                 logger.exception("Exception while doing transfer:")
                 raise
  
@@ -3549,7 +3691,7 @@ class SimilarWorkSet:
                     if len(s) == 1:
                         os.chmod(self._tmp_name, 0644)
                         [s, f] = self._secondary_handler.do_transfers([t_two])
-                except Exception, e:
+                except Exception as e:
                     logger.exception("Exception while doing transfer:")
                     raise
                 if len(s) == 1:
@@ -3594,7 +3736,7 @@ class SimilarWorkSet:
                     local_name = temp_name
                 
                 # verify checksum of the now locally accessible file
-                if self.verify_integrity_checksum(t.lfn, local_name):
+                if self.verify_integrity_checksum(t.lfn, local_name, t.linkage):
                     success_list.append(t)
                 else:
                     failed_list.append(t)
@@ -3635,17 +3777,15 @@ class SimilarWorkSet:
         if transfer.get_src_proto() == "gsiftp" and \
            transfer.get_dst_proto() == "gsiftp":
             return True
-
-        return False
     
 
-    def verify_integrity_checksum(self, lfn, fname):
+    def verify_integrity_checksum(self, lfn, fname, linkage):
         """
         Call out to pegasus-integrity to verify a checksum for the file.
         """
 
         tools = Tools()
-
+        
         if tools.find("pegasus-integrity", "help", None, [prog_dir]) is None:
             logger.error("Unable to do integrity checking because pegasus-integrity not found")
             return 
@@ -3654,12 +3794,14 @@ class SimilarWorkSet:
             logger.error("lfn is required when enabling checksumming")
             return
         
-        cmd = "%s --verify=\"%s\" --lfn=\"%s\"" % (tools.full_path("pegasus-integrity"), fname, lfn)
+        cmd = "%s --verify=\"%s=%s\"" % (tools.full_path("pegasus-integrity"), lfn, fname)
         try:
             tc = TimedCommand(cmd)
             tc.run()
-        except RuntimeError, err:
+            stats.add_integrity_verify(linkage, tc.get_duration(), True)
+        except RuntimeError as err:
             logger.error(err)
+            stats.add_integrity_verify(linkage, tc.get_duration(), False)
             return False
         return True
 
@@ -3718,7 +3860,7 @@ class WorkThread(threading.Thread):
                 ts.do_transfers()
         except Queue.Empty:
             return
-        except Exception, e:
+        except Exception as e:
             self.exception = e
             self.tb = traceback.format_exc()
 
@@ -3758,6 +3900,7 @@ stats = Stats()
 
 # singleton - but should we make it a global instead?
 tools = Tools()
+
 
 # --- functions ----------------------------------------------------------------
 
@@ -3930,7 +4073,7 @@ def prepare_local_dir(path):
         logger.debug("Creating local directory " + path)
         try:
             os.makedirs(path, 0755)
-        except os.error, err:
+        except os.error as err:
             # if dir already exists, ignore the error
             if not(os.path.isdir(path)):
                 raise RuntimeError(err)
@@ -3967,7 +4110,7 @@ def stats_add(filename):
     try:
         s = os.stat(filename)
         stats_total_bytes = stats_total_bytes + s[stat.ST_SIZE]
-    except Exception, err:
+    except Exception as err:
         pass # ignore
 
 
@@ -4011,21 +4154,31 @@ def json_object_decoder(obj):
         t = Transfer()
         if 'lfn' in obj:
             t.set_lfn(obj['lfn'])
+        if 'linkage' in obj:
+            t.set_linkage(obj['linkage'])
+        if 'verify_symlink_source' in obj:
+            t.set_verify_symlink_source(obj['verify_symlink_source'])
         if 'generate_checksum' in obj:
             t.generate_checksum = obj['generate_checksum']
         if 'verify_checksum_remote' in obj:
             t.verify_checksum_remote = obj['verify_checksum_remote']
         # src
         for surl in obj['src_urls']:
+            file_type = None
+            if 'type' in surl:
+                file_type = surl['type'] 
             priority = None
             if 'priority' in surl:
                 priority = int(surl['priority']) 
-            t.add_src(surl['site_label'], surl['url'], priority)
+            t.add_src(surl['site_label'], surl['url'], file_type, priority)
         for durl in obj['dest_urls']:
+            file_type = None
+            if 'type' in durl:
+                file_type = durl['type'] 
             priority = None
             if 'priority' in durl:
                 priority = int(durl['priority']) 
-            t.add_dst(durl['site_label'], durl['url'], priority)
+            t.add_dst(durl['site_label'], durl['url'], file_type, priority)
         return t
     elif 'type' in obj and obj['type'] == 'mkdir':
         m = Mkdir()
@@ -4092,7 +4245,7 @@ def read_v1_format(input, inputs_l):
                     inputs_l.append(url_pair)
                     url_pair = None
 
-    except Exception, err:
+    except Exception as err:
         logger.critical('Error reading url list: %s' % (err))
         myexit(1)
 
@@ -4103,7 +4256,7 @@ def read_json_format(input, inputs_l):
     """
     try:
         data = json.loads(input, object_hook=json_object_decoder)
-    except Exception, err:
+    except Exception as err:
         logger.critical('Error parsing the transfer specification JSON: ' + str(err))
         myexit(1)
 
@@ -4197,13 +4350,13 @@ def main():
         logger.info("Reading transfer specification from %s" % (options.file))
         try:
             input_file = open(options.file, 'r')
-        except Exception, err:
+        except Exception as err:
             logger.critical('Error opening input file: %s' % (err))
             myexit(1)
     try:
         input_data = input_file.read()
         input_file.close()
-    except Exception, err:
+    except Exception as err:
         logger.critical('Error reading transfer list: %s' % (err))
         myexit(1)
 
@@ -4234,7 +4387,7 @@ def main():
     # check environment
     try:
         env_setup()
-    except Exception, err:
+    except Exception as err:
         logger.critical(err)
         myexit(1)
     
@@ -4333,7 +4486,7 @@ def main():
         # retry failed transfers with a random delay - useful when
         # large workflows overwhelm data services
         if not failed_q.empty() and attempt_current < attempts_max:
-            d = min(5 ** (attempt_current + 1) + random.randint(1, 20), 300)
+            d = min(5 ** (attempt_current + 2) + random.randint(1, 20), 300)
             logger.debug("Sleeping for %d seconds before the next attempt" %(d))
             time.sleep(d)
         while not failed_q.empty():

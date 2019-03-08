@@ -39,6 +39,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.classes.Profile;
@@ -367,8 +368,8 @@ public class Transfer   implements SLS {
         String containerLFN = null;
         if( c != null ){
             containerLFN = c.getLFN();
-            if( this.mUseSymLinks ){
-                mLogger.log( "Symlink of data files will be disabled because job " + job.getID() + " is launched in a container " + containerLFN,
+            if( this.mUseSymLinks && c.getMountPoints().isEmpty()){
+                mLogger.log( "Symlink of data files will be disabled because job " + job.getID() + " is launched in a container and no host mounts specified " + containerLFN,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             }
         }
@@ -385,6 +386,7 @@ public class Transfer   implements SLS {
             }
 
             FileTransfer ft = new FileTransfer();
+            ft.setLFN( pf.getLFN() );
             //ensure that right type gets associated, especially
             //whether a file is a checkpoint file or not
             ft.setType( pf.getType() );
@@ -394,6 +396,7 @@ public class Transfer   implements SLS {
             StringBuffer url = new StringBuffer();
 
             Collection<ReplicaCatalogEntry> cacheLocations = null;
+            Collection<ReplicaCatalogEntry> sources = new LinkedList();
             boolean symlink = false;
             String computeSite = job.getSiteHandle();
             if( mBypassStagingForInputs ){
@@ -437,7 +440,9 @@ public class Transfer   implements SLS {
                 url.append( File.separator).append( mStagingMapper.getRelativeDirectory(stagingSite, lfn) );
                 
                 url.append( File.separator ).append( lfn );
-                ft.addSource( stagingSite, url.toString() );
+                
+                //ft.addSource( stagingSite, url.toString() );
+                sources.add( new ReplicaCatalogEntry( url.toString(), stagingSite) );
             }
             else{
                 //construct the URL wrt to the planner cache location
@@ -445,26 +450,45 @@ public class Transfer   implements SLS {
                 for( ReplicaCatalogEntry cacheLocation: cacheLocations ){
                     url = new StringBuffer();
                     url.append( cacheLocation.getPFN() );
-                    ft.addSource(cacheLocation);
+                    
+                    //ft.addSource(cacheLocation);
+                    sources.add((ReplicaCatalogEntry) cacheLocation.clone());
                     
                     symlink = ( mUseSymLinks && //specified in configuration
                                 !pf.isCheckpointFile() && //can only do symlinks for data files . not checkpoint files
                                 !pf.isExecutable() && //can only do symlinks for data files . not executables
-                                ft.getSourceURL().getKey().equals( job.getSiteHandle()) && //source URL logically on the same site where job is to be run
+                                cacheLocation.getResourceHandle().equals( job.getSiteHandle()) && //source URL logically on the same site where job is to be run
                                 url.toString().startsWith( PegasusURL.FILE_URL_SCHEME ) ); //source URL is a file URL
                 }
             }
             
             if( symlink && containerLFN != null ){
                 //PM-1197 special handling for the case where job is to be
-                //launched in a container
-                
+                //launched in a container.Normally, we can only symlink the 
+                //container image.
                 if( !pf.getLFN().equals( containerLFN ) ){
-                    //we can only symlink the container image.
-                    //data files can't be symlinked , as source directories are
-                    //not mounted in the container
                     symlink = false;
+                    //PM-1298 check if source file directory is mounted
+                    for( ReplicaCatalogEntry source : sources){
+                        String sourceURL = source.getPFN();
+                        String replacedURL = c.getPathInContainer( sourceURL);
+                        if( replacedURL != null ){
+                            symlink = true;
+                            source.setPFN( replacedURL );
+                            // we don't want pegasus-transfer to fail in PegasusLite
+                            // on the missing source path that is only visible in the container
+                            ft.setVerifySymlinkSource( false );
+                            mLogger.log( "Replaced source URL on host " + sourceURL + " with path in the container " + source.getPFN(),
+                                         LogManager.DEBUG_MESSAGE_LEVEL);
+                        }
+                         
+                    }
                 }
+            }
+            
+            //add all the sources
+            for ( ReplicaCatalogEntry source : sources){
+                ft.addSource( source );
             }
             
             //if the source URL is already present at the compute site

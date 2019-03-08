@@ -9,6 +9,7 @@ condor_submit_dag -dagman /path/to/pegasus-dagman my.dag
 
 Usage: pegasus-dagman [options] 
 """
+from __future__ import print_function
 
 ##
 #  Copyright 2007-2010 University Of Southern California
@@ -58,10 +59,10 @@ bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
 pegasus_config = find_prog("pegasus-config",[bin_dir])
 lib_dir = subprocess.Popen([pegasus_config,"--noeoln","--python"], stdout=subprocess.PIPE, shell=False).communicate()[0]
 lib_ext_dir = subprocess.Popen([pegasus_config,"--noeoln","--python-externals"], stdout=subprocess.PIPE, shell=False).communicate()[0]
-print "Pegasus LIB %s" % lib_dir
-print "Pegasus LIB %s" % lib_ext_dir
-print "Pegasus BIN_DIR %s" % bin_dir
-print "Pegasus DAGMAN is  %s" % sys.argv[0]
+print("Pegasus LIB %s" % lib_dir)
+print("Pegasus LIB %s" % lib_ext_dir)
+print("Pegasus BIN_DIR %s" % bin_dir)
+print("Pegasus DAGMAN is  %s" % sys.argv[0])
 
 # Insert this directory in our search path
 os.sys.path.insert(0, lib_dir)
@@ -95,7 +96,7 @@ def dagman_launch(dagman_bin,arguments=[]):
                                            stderr=sys.stderr,
                                            executable=dagman_bin) 
             logger.info("Launched Dagman with Pid %d" % dagman_proc.pid)
-        except OSError, err :
+        except OSError as err :
             logger.error("Could not launch Dagman.",  err)
             sys.exit(1)
     else :
@@ -121,7 +122,7 @@ def monitord_launch(monitord_bin,arguments=[]):
             log.close()
             logger.info("Launched Monitord with Pid %d" % monitord_proc.pid)
             return monitord_proc
-        except OSError, err :
+        except OSError as err :
             logger.error("Could not launch Monitord.", err)
     else :
         logger.error("pegausus-monitord not found")

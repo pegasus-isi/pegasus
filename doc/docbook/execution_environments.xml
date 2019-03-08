@@ -797,119 +797,124 @@ pegasus.aws.batch.job_queue=pegasus-awsbatch-example-job-queue
     HTCondor configured for <ulink
     url="http://research.cs.wisc.edu/htcondor/manual/current/3_8Security.html#SECTION00483400000000000000">PASSWORD</ulink>
     authentication. Make a copy of the HTCondor pool password file. You will
-    need it on the cluster, and it is a binary file, so make sure you cp
-    instead of a copy-and-paste of the file contents. To get the server
-    started:</para>
+    need it later in the configuration, and it is a binary file, so make sure you cp
+    instead of a copy-and-paste of the file contents.</para>
+
+    <para>Follow the installation instructions provided in the PyGlidein
+    <ulink url="https://github.com/WIPACrepo/pyglidein">repo</ulink>. Note that
+    you can use virtualenv if you do not want to do a system-wide install:
+    </para>
 
     <programlisting>
-./server.py --port 11001  
+$ module load python2   (might not be needed on your system) 
+$ virtualenv pyglidein
+New python executable in /home/user/pyglidein/bin/python
+Installing setuptools, pip, wheel...done.
+$ . pyglidein/bin/activate
+$ pip install pyglidein
+...
+    </programlisting>
+
+    <para>Then, to get the server started:</para>
+
+    <programlisting>
+pyglidein_server --port 22001  
     </programlisting>
 
     <para>By default, the pyglidein server will use all jobs in the system to
     determine if glideins are needed. If you want user jobs to explicitly let
     us know they want glideins, you can pass a constraint for the server to
-    use. For example, jobs could have the <emphasis>+WantStampede2 =
+    use. For example, jobs could have the <emphasis>+WantPSCBridges =
     True</emphasis> attribute, and then we could start the server with:</para>
 
     <programlisting>
-./server.py --port 11001 --constraint "'WantStampede2 == True'"  
+pyglidein_server --port 22001 --constraint "'WantPSCBridges == True'"  
     </programlisting>
 
     <para>One the server is running, you can check status by pointing a web
     browser to it.</para>
 
-    <para>Next step is to create a <emphasis>glidein.tar.gz</emphasis> file
+    <para>The client (running on the cluster you want glideins on), requires
+    a few configuration files and a <emphasis>glidein.tar.gz</emphasis> file
     containing the HTCondor binaries, our pool password file, and a modified
-    job wrapper script. This can be accomplished by building HTCondor with the
-    <emphasis>create_glidein_tarball.py</emphasis> script, but first we need
-    to modify <emphasis>glidein_template/</emphasis>. Start by copying your
-    pool password file over the existing <emphasis>passwdfile</emphasis>
-    file.</para>
-
-    <para>Edit <emphasis>user_job_wrapper.sh</emphasis>. We don't need most of
-    it, so edit it to read:</para>
+    job wrapper script. This <emphasis>glidein.tar.gz</emphasis> file can 
+    be created using the provided <emphasis>create_glidein_tarball.py</emphasis>
+    script, but an easier way is using the already prepared tarball from 
+    <ulink url=""></ulink> and injecting your pool password file. For example:
+    </para>
 
     <programlisting>
-#!/bin/bash
-
-# This script is started just before the user job
-# It is referenced by the USER_JOB_WRAPPER
-
-export HOME=$PWD
-
-# fix PATH and LD_LIBRARY_PATH
-export PATH=$PATH:/usr/bin:/bin
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib:/usr/lib/x86_64-linux-gnu:/lib64:/lib:/lib/x86_64-linux-gnu
-
-GLIDEIN_DIR=$GLIDEIN_LOCAL_TMP_DIR
-if [ ! -d $GLIDEIN_DIR ]; then
-    GLIDEIN_DIR=$PWD
-fi
-JOB_WRAPPER="${GLIDEIN_DIR}/job_wrapper.sh"
-
-# fall through to next/default job wrapper
-if [ ! -e $JOB_WRAPPER ]; then
-    exec "$@"
-else
-    exec ${JOB_WRAPPER} "$@"
-fi   
+$ wget https://download.pegasus.isi.edu/pyglidein/glidein.tar.gz
+$ mkdir glidein
+$ cd glidein
+$ tar xzf ../glidein.tar.gz
+$ cp /some/path/to/poolpasswd passwdfile
+$ tar czf ../glidein.tar.gz .
+$ cd ..
+$ rm -rf glidein
     </programlisting>
 
-    <para>Create the glidein.tar.gz by running:</para>
+    <para>You can serve this file over for example http, but as it now contains
+    your pool password, we recommend you copy the <emphasis>glidein.tar.gz</emphasis>
+    to the remote cluster via scp.</para>
 
-    <programlisting>
-python create_glidein_tarball.py
-    </programlisting>
-
-    <para>Once you have the glidein.tar.gz file, copy it to the Git checkout
-    you have on the remote cluster. Then move over there for the remaining
-    steps. Create a configuration file for your glidein under
-    <emphasis>configs/</emphasis>. Here is an example for TACC
-    Stampede2:</para>
+    <para>Create a configuration file for your glidein. Here is an example for PSC
+        Bridges (other config file examples available under configs/ in the PyGlidein
+        GitHub repo):</para>
 
     <programlisting>
 [Mode]
 debug = True
 
 [Glidein]
-address = http://workflow.isi.edu:11001/jsonrpc
-site = TACC-Stampede2
-tarball = /home1/00384/rynge/git/pyglidein/glidein.tar.gz
+address = http://workflow.isi.edu:22001/jsonrpc
+site = PSC-Bridges
+tarball = /home/rynge/pyglidein-config/glidein.tar.gz
 
 [Cluster]
 user = rynge
 os = RHEL7
 scheduler = slurm
-submit_command = sbatch
-walltime_hrs = 48
-max_total_jobs = 10
 max_idle_jobs = 1
-limit_per_submit = 1
+limit_per_submit = 2
+walltime_hrs = 48
+partitions = RM
 
+[RM]
 gpu_only = False
 whole_node = True
-whole_node_cpus = 1
-whole_node_memory = 96000
-whole_node_disk = 30000
+whole_node_memory = 120000
+whole_node_cpus = 28
+whole_node_disk = 8000000
 whole_node_gpus = 0
+partition = RM
 group_jobs = False
-partition = normal
-running_cmd = squeue -u $USER -t RUNNING -p normal -h | wc -l
-idle_cmd = squeue -u $USER -t PENDING -p normal -h | wc -l
+submit_command = sbatch
+running_cmd = squeue -u $USER -t RUNNING -h -p RM | wc -l
+idle_cmd = squeue -u $USER -t PENDING -h -p RM | wc -l
 
 [SubmitFile]
 filename = submit.slurm
-local_dir = /tmp/$SLURM_JOB_ID
-custom_header = #SBATCH -A TG-ABC00001
+local_dir = $LOCAL
+sbatch = #SBATCH
+custom_header = #SBATCH -C EGRESS
+    #SBATCH --account=ABC123
 cvmfs_job_wrapper = False
+
+[StartdLogging]
+send_startd_logs = False
+url = s3.amazonaws.com
+bucket = pyglidein-logging-bridges
+
+[StardChecks]
+enable_startd_checks = True
 
 [CustomEnv]
 CLUSTER = workflow.isi.edu
     </programlisting>
 
     <para>This configuration will obviously look different for different
-    clusters. <emphasis>configs/</emphasis> has a bunch of example configs,
-    but a few things to note:</para>
+    clusters. A few things to note:</para>
 
     <itemizedlist>
       <listitem>
@@ -929,12 +934,39 @@ CLUSTER = workflow.isi.edu
         variable, the glideins will try to register into the IceCube
         infrastructure.</para>
       </listitem>
+      
+      <listitem>
+          <para><emphasis role="bold">#SBATCH -C EGRESS</emphasis> is PSC Bridges
+              specific and enables outbound network connectivity from the compute
+              nodes.
+        </para>
+      </listitem>
+      
+      <listitem>
+          <para><emphasis role="bold">#SBATCH --account=ABC123</emphasis> specifies
+              which allocation to charge the job to. This is a required setting on 
+              many, but not all, HPC systems. On PSC Bridges, you can get a list of
+              your allocation by running the <emphasis>projects</emphasis> command,
+              and looking for the <emphasis>Charge ID</emphasis> field.
+        </para>
+      </listitem>
     </itemizedlist>
+
+    <para>We also need <emphasis>secrets</emphasis> file. We are not using any
+        remote logging in this example, but the file still has to exist with the
+        following content:
+    </para>
+
+    <programlisting>
+[StartdLogging]
+access_key = 
+secret_key =
+    </programlisting>
 
     <para>At this point we can try our first glidein:</para>
 
     <programlisting>
-./client.py --config=$HOME/git/pyglidein/configs/stampede2.config
+pyglidein_client --config=bridges.config --secrets=secrets
     </programlisting>
 
     <para>Once we have a seen a successful glidein, we can add the client to
@@ -942,7 +974,7 @@ CLUSTER = workflow.isi.edu
 
     <programlisting>
 # m  h  dom mon dow   command
-*/10 *   *   *   *    (cd ~/git/pyglidein/ &amp;&amp; ./client.py --config=$HOME/git/pyglidein/configs/stampede2.config) &gt;~/cron-pyglidein.log 2&gt;&amp;1
+*/10 *   *   *   *    (cd ~/pyglidein/ &amp;&amp; pyglidein_client --config=bridges.config --secrets=secrets) &gt;~/cron-pyglidein.log 2&gt;&amp;1
     </programlisting>
 
     <para>With this setup, glideins will now appear automatically based on the
@@ -1853,6 +1885,88 @@ pegasus.transfer.worker.package = true
     method for small jobs on these systems.</para>
   </section>
 
+  <section id="titan">
+    <title>Titan Using Glite</title>
+
+    <para>
+    <ulink url="https://www.olcf.ornl.gov/olcf-resources/compute-systems/titan/">Titan</ulink>
+    is part of Oak Ridge Leadership Computing Facilities (OLCF) and offers hybrid computing
+    resources (CPUs and GPUs) to scientists since 2012.
+    </para>
+   
+    <para>
+    In order to submit to Titan, a <emphasis> Titan login node</emphasis> or a system that has access
+    to the <emphasis>Lustre</emphasis> filesystem and the <emphasis>batch scheduler</emphasis>
+    (eg. <ulink url="https://www.olcf.ornl.gov/wp-content/uploads/2017/11/2018UM-Day3-Kincl.pdf">OLCF's Kubernetes Deployment</ulink>),
+    must be used as the submit node. Submission style must be
+    <ulink url="https://pegasus.isi.edu/documentation/glite.php">Pegasus Glite</ulink> and an example
+    site calatog entry looks like this:
+
+    <programlisting>
+&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.1.xsd"
+            version="4.1"&gt;
+
+    &lt;site handle="local" arch="x86_64" os="LINUX"&gt;
+        &lt;directory type="shared-scratch" path="/lustre/atlas/scratch/user/workflow-dir/scratch"/&gt;
+            &lt;file-server operation="all" url="file:///lustre/atlas/scratch/user/workflow-dir/scratch"/&gt;
+        &lt;/directory&gt;
+        &lt;directory type="shared-storage" path="/lustre/atlas/scratch/user/workflow-dir/output/"&gt;
+            &lt;file-server operation="all" url="file:///lustre/atlas/scratch/user/workflow-dir/output"/&gt;
+        &lt;/directory&gt;
+    &lt;/site&gt;
+
+    &lt;site handle="titan" arch="x86_64" os="LINUX"&gt;
+        &lt;directory type="shared-scratch" path="/lustre/atlas/scratch/user/titan/scratch">
+            &lt;file-server operation="all" url="file:///lustre/atlas/scratch/user/titan/scratch"/>
+        &lt;/directory>
+
+        &lt;profile namespace="pegasus" key="style"&gt;glite&lt;/profile&gt;
+        &lt;profile namespace="condor" key="grid_resource"&gt;batch pbs&lt;/profile&gt;
+
+        &lt;profile namespace="pegasus" key="queue"&gt;titan&lt;/profile&gt;
+        &lt;profile namespace="pegasus" key="auxillary.local"&gt;true&lt;/profile&gt;
+
+        &lt;profile namespace="env" key="PEGASUS_HOME"&gt;/lustre/atlas/world-shared/csc320/SOFTWARE/install/pegasus/default&lt;/profile&gt;
+        &lt;profile namespace="pegasus" key="runtime"&gt;1800&lt;/profile&gt;
+        &lt;profile namespace="pegasus" key="nodes"&gt;1&lt;/profile&gt;
+        &lt;profile namespace="pegasus" key="project"&gt;CSC320&lt;/profile&gt;
+    &lt;/site&gt;
+&lt;/sitecatalog&gt;
+    </programlisting>
+    </para>
+
+    <para>
+      <orderedlist>
+        <listitem>
+           <para><emphasis>pegasus</emphasis> profile style with value set to <emphasis>glite</emphasis></para>
+        </listitem>
+        <listitem>
+           <para><emphasis>condor</emphasis> profile <emphasis>grid_resource</emphasis> with value set to <emphasis>batch pbs</emphasis></para>
+        </listitem>
+        <listitem>
+           <para><emphasis>pegasus</emphasis> profile <emphasis>queue</emphasis> is mandatory and should be set to <emphasis>titan</emphasis></para>
+        </listitem>
+        <listitem>
+           <para><emphasis>pegasus</emphasis> profile <emphasis>runtime</emphasis> is mandatory and should be set in sites or transformation catalog</para>
+        </listitem>
+        <listitem>
+           <para><emphasis>pegasus</emphasis> profile <emphasis>nodes</emphasis> is mandatory and should be set in sites or transformation catalog</para>
+        </listitem>
+        <listitem>
+           <para><emphasis>pegasus</emphasis> profile <emphasis>project</emphasis> must be set to the project name your jobs run under</para>
+        </listitem>
+      </orderedlist>
+    </para>
+
+    <note>
+    <para>
+    <emphasis>pegasus</emphasis> profile <emphasis>cores</emphasis> is incompatible with Titan's PBS submissions.
+    </para>
+    </note>
+  </section>
+  
   <section id="open_science_grid">
     <title>Open Science Grid Using glideinWMS</title>
 

@@ -25,7 +25,8 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * This implementation of the Selector returns a list of  TransformationCatalogEntry objects of type INSTALLED y on the submit site.
+ * This implementation of the Selector returns a list of  TransformationCatalogEntry 
+ * objects of type INSTALLED.
  *
  * @author Gaurang Mehta
  *
@@ -39,10 +40,12 @@ public class Installed
      * Returns a list of TransformationCatalogEntry objects of type installed
      * from a List of valid TCEntries
      * @param tcentries List The original list containing TransformationCatalogEntries.
+     * @param preferredSite  the preferred site for selecting the TC entries
+     * 
      * @return List returns a List of TransformationCatalogEntry objects of type INSTALLED
      *
      */
-    public List getTCEntry( List tcentries ) {
+    public List getTCEntry( List<TransformationCatalogEntry> tcentries, String preferredSite ) {
         List results = null;
         for ( Iterator i = tcentries.iterator(); i.hasNext(); ) {
             TransformationCatalogEntry tc = ( TransformationCatalogEntry ) i.

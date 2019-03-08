@@ -155,6 +155,10 @@ if [ $STATUS -ne 0 ]; then
     echo "Created tarball $TARFILE"
 fi
 
+# clean up pegasus install and tarballs to save disk space
+cd $TOP_DIR
+rm -rf pegasus tests.tar
+
 if [ $STATUS != 0 ]; then
    echo "ERROR: Test failed" 1>&2
    exit $STATUS

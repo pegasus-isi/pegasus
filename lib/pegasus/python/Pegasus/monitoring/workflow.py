@@ -30,6 +30,7 @@ import traceback
 # Import other Pegasus modules
 from Pegasus.tools import utils
 from Pegasus.monitoring.job import Job
+from Pegasus.monitoring.job import IntegrityMetric
 from Pegasus.tools import kickstart_parser
 from Pegasus.monitoring.metadata import Metadata
 
@@ -156,7 +157,7 @@ class Workflow:
 
         # If we already have jobs in our _job_info dictionary, skip reading the dag file
         if len(self._job_info) > 0:
-            logger.debug("skipping parsing the dag file, already have job info loaded...")
+            logger.warning("skipping parsing the dag file, already have job info loaded...")
             return
 
         dag_file = os.path.join(self._run_dir, dag_file)
@@ -1069,6 +1070,9 @@ class Workflow:
             and parent_jobid is not None and parent_jobseq is not None):
             self.db_send_subwf_link(self._wf_uuid, self._parent_workflow_id, parent_jobid, parent_jobseq)
 
+        # PM-1334 parse the dag file always in the constructor
+        self.parse_dag_file(self._dag_file_name)
+
     def map_subwf(self, parent_jobid, parent_jobseq, wf_info):
         """
         This function creates a link between a subworkflow and its parent job
@@ -1759,11 +1763,77 @@ class Workflow:
             # Make sure we include the wf_uuid ,
             kwargs["xwf__id"] = my_job._wf_uuid
             kwargs["lfn__id"] = lfn
+
+            # PM-1307 Add timestamp
+            kwargs["ts"] = self._current_timestamp
             for key in metadata.get_attribute_keys():
                 #send an event per metadata key value pair
                 kwargs[ "key" ] = key
                 kwargs[ "value" ] = metadata.get_attribute_value(key)
                 self.output_to_db( "rc.meta", kwargs)
+
+
+    def compute_integrity_metric( self,  files ):
+        """
+        This function computes integrity metric from a single kickstart record
+        :param my_job:
+        :param my_task_id:
+        :param files: a dictionary indexed by lfn where value is a map of metadata attributes
+        :return:
+        """
+        if files is None:
+            return None
+
+        count = 0
+        duration = 0.0
+        timing_key = "checksum.timing"
+
+        for file in files:
+            if timing_key in file.get_attribute_keys():
+                count = count + 1
+                duration += float(file.get_attribute_value(timing_key))
+
+        return IntegrityMetric( "compute", "output", count=count, duration=duration) if count > 0 else None
+
+
+    def db_send_integrity_metrics(self, my_job, my_task_id):
+        """
+        This function sends aggregated integrity metadata if found.
+        :param my_job:
+        :param my_task_id:
+        :param files: a dictionary indexed by lfn where value is a map of metadata attributes
+        :return:
+        """
+        # Check if database is configured
+        if self._sink is None:
+            return
+
+        # Start empty
+        logger.debug("Generating output integrity metric events for job %s " % (my_job._exec_job_id))
+
+        for metric in my_job._integrity_metrics:
+            kwargs = {}
+            # Make sure we include the wf_uuid, name, and job_submit_seq
+            kwargs["xwf__id"] = my_job._wf_uuid
+            kwargs["job__id"] = my_job._exec_job_id
+            kwargs["job_inst__id"] = my_job._job_submit_seq
+            kwargs["type"] = metric.type
+            kwargs["file_type"] = metric.file_type
+            kwargs["count"] = metric.count if metric.count > 0 else metric.succeeded + metric.failed
+            kwargs["duration"] = metric.duration
+            # PM-1307 Add timestamp
+            kwargs["ts"] = self._current_timestamp
+            self.output_to_db( "int.metric", kwargs)
+
+            if metric.failed > 0:
+                # PM-1295 setup an event to populate the tags table
+                nkwargs = kwargs.copy()
+                del nkwargs["duration"]
+                del nkwargs["type"]
+                del nkwargs["file_type"]
+                nkwargs["name"] = "int.error"
+                nkwargs["count"] = metric.failed
+                self.output_to_db("job_inst.tag", nkwargs)
 
     def db_send_task_monitoring_events(self, my_job, task_id, events) :
         """
@@ -1793,6 +1863,9 @@ class Workflow:
             if my_job._sched_id is not None:
                 kwargs["sched__id"] = my_job._sched_id
             kwargs["monitoring_event"] = event["monitoring_event"] if "monitoring_event" in event else "monitoring.additional"
+
+            #PM-1307 check if ts is defined in the event
+            kwargs["ts"] = event["ts"] if "ts" in event else self._current_timestamp
 
             payload = event["payload"] if "payload" in event else None
             if payload is None:
@@ -1857,6 +1930,9 @@ class Workflow:
             my_job._main_job_exitcode = my_pegasuslite_ec
             logger.debug ("Pegasus Lite Exitcode for job %s is %s" %( my_job._exec_job_id, my_pegasuslite_ec) )
 
+        # PM-1295 attempt to read the job stderr file always
+        my_job.read_job_error_file()
+
         if len(my_output) > 0:
             # Parsing the output file resulted in some info... let's parse it
 
@@ -1888,17 +1964,18 @@ class Workflow:
                     self.db_send_task_start(my_job, "MAIN_JOB", my_task_id, record)
                     self.db_send_task_end(my_job, "MAIN_JOB", my_task_id, record)
 
-                    additional_monitoring_events = my_job.get_additional_monitoring_events(record["stdout"])
-                    if additional_monitoring_events:
-                        self.db_send_task_monitoring_events( my_job, my_task_id, additional_monitoring_events )
+                    # PM-1265 send additional monitoring events if any
+                    if my_job._additional_monitoring_events:
+                        self.db_send_task_monitoring_events( my_job, my_task_id, my_job._additional_monitoring_events )
 
                     # PM-992
                     # for outputs in xml record send information as file metadata
                     if "outputs" in record:
                         # Start empty
-                        files = []
+                        output_files = []
                         for lfn in record["outputs"].keys():
-                            files.append( record["outputs"][lfn] )
+                            output_files.append( record["outputs"][lfn] )
+                        my_job.add_integrity_metric( self.compute_integrity_metric(output_files))
                         self.db_send_files_metadata( my_job, my_task_id, record["outputs"] )
                         
                     # Increment task id counter
@@ -1969,7 +2046,7 @@ class Workflow:
 
             # Read stdout/stderr files, if not disabled by user
             if self._store_stdout_stderr:
-                my_job.read_stdout_stderr_files()
+                my_job.read_job_out_file()
 
             # parse_kickstart will be False for subdag jobs
             if my_job._exec_job_id.startswith("subdax_") or not parse_kickstart:
@@ -1983,6 +2060,9 @@ class Workflow:
                 record["resource"] = my_job._site_name
                 # Send event to the database
                 self.db_send_host_info(my_job, record)
+
+        # send any integrity related metrics computed for the jobinstance
+        self.db_send_integrity_metrics(my_job, my_task_id)
 
         # register any files associated with the job
         self.register_files( my_job )
@@ -2110,8 +2190,18 @@ class Workflow:
                 logger.warning("trying to add job twice: %s, %s" % (jobid, my_job_submit_seq))
                 return
 
-            #PM-833 determine the job submit directory based on the path to the submit file
-            job_submit_dir = self.determine_job_submit_directory(jobid, self._job_info[jobid][0])
+            # PM-1334 log extra errors if dag file is not populated
+            job_submit_dir=self._run_dir
+            if not self._job_info:
+                logger.error("_job_info not populated for dag . Check if dag file was parsed by monitord %s %s" %(self._dag_file_name, self._out_file))
+                logger.error("Using workflow submit directory %s as job submit dir for %s " %(self._run_dir, jobid))
+            else:
+                #PM-833 determine the job submit directory based on the path to the submit file
+                try:
+                    job_submit_dir = self.determine_job_submit_directory(jobid, self._job_info[jobid][0])
+                except KeyError:
+                    logger.error("Job %s not in _job_info for %s %s" %(jobid, self._out_file, self._dag_file_name))
+                    logger.error("Using workflow submit directory %s as job submit dir for %s " % (self._run_dir, jobid))
 
             # Create new job container
             my_job = Job(self._wf_uuid, jobid, job_submit_dir, my_job_submit_seq)
@@ -2309,7 +2399,7 @@ class Workflow:
             #the dagman output gets populated
             if self._job_info[my_job._exec_job_id][8] is not None:
                 my_job._output_file = self._job_info[my_job._exec_job_id][8] + ".%03d" % (my_job._job_output_counter)
-                my_job.read_stdout_stderr_files(self._run_dir)
+                my_job.read_job_out_file(my_job._output_file)
 
             # PM-704 and send the job end event to record failure
             # in addition to the brief

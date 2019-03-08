@@ -1,0 +1,17 @@
+pegasus.catalog.site.file=./conf/sites.xml
+
+pegasus.data.configuration = nonsharedfs
+
+pegasus.catalog.replica  File
+pegasus.catalog.replica.file ./conf/rc.data
+
+pegasus.catalog.transformation.file ./conf/tc.text
+
+pegasus.transfer.links=true
+pegasus.transfer.bypass.input.staging=true
+
+
+
+
+
+

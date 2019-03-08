@@ -46,6 +46,7 @@ import java.util.ArrayList;
 
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
@@ -454,6 +455,14 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
     	// format is a JSON list
     	writer.write("[\n");
     	
+        //PM-1272 figure out linkage based on job type
+        //both stage out and intersite are classified as output
+        int type = job.getJobType();
+        PegasusFile.LINKAGE linkage = PegasusFile.LINKAGE.output;
+        if( type == Job.STAGE_IN_JOB || type == Job.STAGE_IN_WORKER_PACKAGE_JOB ){
+            linkage = PegasusFile.LINKAGE.input;
+        }
+        
         int num = 1;
         for( Iterator it = files.iterator(); it.hasNext(); ){
             FileTransfer ft = (FileTransfer) it.next();
@@ -468,8 +477,14 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             	urlPair.append(" ,\n");
             }
             urlPair.append(" { \"type\": \"transfer\",\n");
+            urlPair.append("   \"linkage\": ").append("\"").append(linkage ).append("\"").append(",\n");
             urlPair.append("   \"lfn\": ").append("\"").append(ft.getLFN()).append("\"").append(",\n");
             urlPair.append("   \"id\": ").append(num).append(",\n");
+            
+            //PM-1298 
+            if( !ft.verifySymlinkSource() ){
+                urlPair.append("   \"verify_symlink_source\": false").append(",\n");
+            }
             
             //PM-1250
             if(jobClass == Job.STAGE_IN_JOB && ft.hasChecksumComputedInWF() ){
@@ -527,6 +542,13 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             urlPair.append("     {");
             urlPair.append(" \"site_label\": \"").append(dest.getKey()).append("\",");
             urlPair.append(" \"url\": \"").append(dest.getValue()).append("\"");
+            
+            //PM-1300 tag that we are transferring a container
+            if( ft.isTransferringContainer() ){
+                urlPair.append(",");
+                urlPair.append(" \"type\": \"").append( ft.typeToString()).append("\"");
+            }
+
             urlPair.append(" }\n");
             urlPair.append("   ]");
             urlPair.append(" }\n"); // end of this transfer

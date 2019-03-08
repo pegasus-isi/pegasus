@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#  Copyright 2017 University Of Southern California
+#  Copyright 2017-2018 University Of Southern California
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ log = logging.getLogger(__name__)
 # -------------------------------------------------------------------
 # DB Admin configuration
 # -------------------------------------------------------------------
-CURRENT_DB_VERSION = 8
+CURRENT_DB_VERSION = 11
 DB_MIN_VERSION = 4
 
 COMPATIBILITY = {
@@ -59,8 +59,13 @@ COMPATIBILITY = {
     '4.7.0': 8,
     '4.7.3': 8,
     '4.8.0': 8,
-    '4.9.0panorama': 8
+    '4.8.1': 8,
+    '4.8.2': 8,
+    '4.8.3': 8,
+    '4.9.0': 11,
+    '4.9.2panorama': 11
 }
+
 
 # -------------------------------------------------------------------
 
@@ -111,22 +116,42 @@ def get_compatible_version(version):
     :return: the equivalent Pegasus version
     """
     if version == CURRENT_DB_VERSION:
-        out, err = subprocess.Popen(
-            '%s/pegasus-version' % os.path.dirname(sys.argv[0]),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            shell=True,
-            cwd=os.getcwd()
-        ).communicate()
-        if err:
-            raise DBAdminError(err)
+        # find pegasus-version path
+        pegasus_version = None
+        if 'PATH' in os.environ:
+            paths = os.environ.get('PATH').split(os.pathsep)
+            for p in paths:
+                f = os.path.join(p, 'pegasus-version')
+                if os.path.isfile(f):
+                    pegasus_version = f
+                    break
 
-        return out.decode('utf8').strip()
+        if not pegasus_version and 'PEGASUS_HOME' in os.environ:
+            f = os.path.join(os.environ.get('PEGASUS_HOME'), 'bin/pegasus-version')
+            if os.path.isfile(f):
+                pegasus_version = f
+
+        if not pegasus_version:
+            f = os.path.join(os.path.dirname(sys.argv[0]), 'pegasus-version')
+            if os.path.isfile(f):
+                pegasus_version = f
+
+        if pegasus_version:
+            out, err = subprocess.Popen(
+                pegasus_version,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                shell=True,
+                cwd=os.getcwd()
+            ).communicate()
+            if err:
+                raise DBAdminError(err.decode('utf8').strip())
+            return out.decode('utf8').strip()
 
     print_version = None
     previous_version = None
 
-    if version > CURRENT_DB_VERSION:
+    if version >= CURRENT_DB_VERSION:
         pv = -1
         for ver in COMPATIBILITY:
             if COMPATIBILITY[ver] > pv and ver > previous_version:
@@ -149,9 +174,7 @@ def get_class(version, db):
 
 
 # -------------------------------------------------------------------
-def db_create(
-    dburi, engine, db, pegasus_version=None, force=False, verbose=True
-):
+def db_create(dburi, engine, db, pegasus_version=None, force=False, verbose=True):
     """
     Create/Update the Pegasus database from the schema.
     :param dburi: URL to the db
@@ -343,7 +366,7 @@ def parse_pegasus_version(pegasus_version=None):
 
 
 def all_workflows_db(
-    db, update=True, pegasus_version=None, schema_check=True, force=False
+        db, update=True, pegasus_version=None, schema_check=True, force=False
 ):
     """
     Update/Downgrade all completed workflow databases listed in master_workflow table.

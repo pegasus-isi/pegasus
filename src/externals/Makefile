@@ -17,6 +17,7 @@ ifneq ($(shell $(PYTHON) -V 2>&1 | grep -E 'ython 2\.[3-6]'),)
 endif
 
 PACKAGES+=argparse
+PACKAGES+=click
 PACKAGES+=flask
 PACKAGES+=flask_cache
 PACKAGES+=flask_sqlalchemy.py
@@ -86,15 +87,16 @@ $(LIBDIR)/%:
 	touch $@
 
 $(LIBDIR)/argparse: argparse-1.4.0.tar.gz
+$(LIBDIR)/click: click-6.7.tar.gz
 $(LIBDIR)/sqlalchemy: SQLAlchemy-0.8.0.tar.gz
-$(LIBDIR)/flask: Flask-0.10.tar.gz
+$(LIBDIR)/flask: Flask-0.12.4.tar.gz
 $(LIBDIR)/flask_cache: Flask-Cache-0.13.1.tar.gz
 $(LIBDIR)/flask_sqlalchemy.py: Flask-SQLAlchemy-0.16.tar.gz
-$(LIBDIR)/jinja2: Jinja2-2.7.tar.gz
-$(LIBDIR)/markupsafe: MarkupSafe-0.18.tar.gz
-$(LIBDIR)/werkzeug: Werkzeug-0.9.3.tar.gz
+$(LIBDIR)/jinja2: Jinja2-2.8.1.tar.gz
+$(LIBDIR)/markupsafe: MarkupSafe-1.0.tar.gz
+$(LIBDIR)/werkzeug: Werkzeug-0.14.1.tar.gz
 $(LIBDIR)/requests: requests-2.18.4.tar.gz
-$(LIBDIR)/itsdangerous.py: itsdangerous-0.21.tar.gz
+$(LIBDIR)/itsdangerous.py: itsdangerous-0.24.tar.gz
 $(LIBDIR)/boto: boto-2.48.0.tar.gz
 $(LIBDIR)/pam.py: pam-0.1.4.tar.gz
 $(LIBDIR)/OpenSSL: pyOpenSSL-16.2.0.tar.gz
@@ -102,7 +104,6 @@ $(LIBDIR)/enum34: enum34-1.1.6.tar.gz
 $(LIBDIR)/cffi: cffi-1.10.0.tar.gz
 $(LIBDIR)/cryptography: cryptography-2.0.3.tar.gz
 $(LIBDIR)/plex: plex-2.0.0dev.tar.gz
-$(LIBDIR)/MySQLdb: MySQL-python-1.2.5.tar.gz
 $(LIBDIR)/ordereddict.py: ordereddict-1.1.tar.gz
 $(LIBDIR)/future: future-0.16.0.tar.gz
 $(LIBDIR)/influxdb: influxdb-4.1.1.tar.gz

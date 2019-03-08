@@ -193,8 +193,8 @@ class DashboardLoader(BaseLoader):
         except exc.IntegrityError as e:
             self.log.error('Integrity error on batch flush: %s - batch will need to be committed per-event which will take longer', e)
             self.session.rollback()
+        except exc.OperationalError as e:
             self.hard_flush(batch_flush=False,retry=retry)
-        except exc.OperationalError, e:
             self.log.error('Connection problem during commit: %s - reattempting batch', e)
             self.session.rollback()
             self.hard_flush(retry=retry)

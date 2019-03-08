@@ -50,13 +50,13 @@ cat >sites.xml <<EOF
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://colo-vm63.isi.edu" mount-point="$TOP_DIR/scratch"/>
+                    <file-server protocol="gsiftp" url="gsiftp://bamboo.isi.edu" mount-point="$TOP_DIR/scratch"/>
                     <internal-mount-point mount-point="$TOP_DIR/scratch" />
                 </shared>
             </scratch>
             <storage>
                 <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://colo-vm63.isi.edu" mount-point="$TOP_DIR/outputs"/>
+                    <file-server protocol="gsiftp" url="gsiftp://bamboo.isi.edu" mount-point="$TOP_DIR/outputs"/>
                     <internal-mount-point mount-point="$TOP_DIR/outputs" />
                 </shared>
             </storage>

@@ -39,9 +39,11 @@ public class Staged
      * many TransformationCatalogEntry objects as a list  by selecting only Static stageable binary's
      *
      * @param tcentries List
+     * @param preferredSite  the preferred site for selecting the TC entries
+     * 
      * @return List
      */
-    public List getTCEntry( List tcentries ) {
+    public List getTCEntry( List<TransformationCatalogEntry> tcentries, String preferredSite ) {
         List results = null;
         for ( Iterator i = tcentries.iterator(); i.hasNext(); ) {
             TransformationCatalogEntry tc = ( TransformationCatalogEntry ) i.

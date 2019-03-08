@@ -31,7 +31,7 @@
 
 {% endif %}
 {% if config == "glite" or config == "bosco" %}
-{% if generate_tutorial == true and (tutorial_setup == "usc-hpcc" or tutorial_setup== "bw-glite") %}
+{% if generate_tutorial == true and (tutorial_setup == "usc-hpcc" or tutorial_setup== "bw-glite" or tutorial_setup== "wrangler-glite" or tutorial_setup == "titan-glite")%}
          <!-- Scratch directory on the cluster -->
         <directory type="shared-scratch" path="{{workflowdir}}/{{sitename}}/scratch">
             <file-server operation="all" url="file://{{workflowdir}}/{{sitename}}/scratch"/>
@@ -117,7 +117,28 @@
 
 	<!-- This profile tells Pegasus where the worker package is installed on the site -->
         <!-- Without this, Pegasus will automatically stage a worker package to the site -->
-        <profile namespace="env"  key="PEGASUS_HOME">/mnt/a/u/training/instr006/SOFTWARE/install/pegasus/default</profile> 
+        <profile namespace="env"  key="PEGASUS_HOME">/mnt/a/u/training/instr006/SOFTWARE/install/pegasus/default</profile>
+{% elif tutorial_setup == "wrangler-glite" %}
+	<!-- This tells glite what scheduler to use. It can be 'pbs' or 'sge' -->
+        <profile namespace="condor" key="grid_resource">batch slurm</profile>
+
+	<!-- This profile tells Pegasus where the worker package is installed on the site -->
+        <!-- Without this, Pegasus will automatically stage a worker package to the site -->
+        <profile namespace="env"  key="PEGASUS_HOME">/home/00340/vahik/SOFTWARE/install/pegasus/default</profile>
+        <profile namespace="pegasus" key="runtime">14400</profile>
+        <profile namespace="pegasus" key="project">{{project}}</profile>
+        <profile namespace="pegasus" key="job.aggregator">mpiexec</profile>
+{% elif tutorial_setup == "titan-glite" %}
+	<!-- This tells glite what scheduler to use. It can be 'pbs' or 'sge' -->
+        <profile namespace="condor" key="grid_resource">batch pbs</profile>
+
+	<!-- This profile tells Pegasus where the worker package is installed on the site -->
+        <!-- Without this, Pegasus will automatically stage a worker package to the site -->
+        <profile namespace="env"  key="PEGASUS_HOME">/lustre/atlas/world-shared/csc320/SOFTWARE/install/pegasus/default</profile>
+        <profile namespace="pegasus" key="runtime">1800</profile>
+        <profile namespace="pegasus" key="nodes">1</profile>
+        <profile namespace="pegasus" key="project">{{project}}</profile>
+        <profile namespace="pegasus" key="job.aggregator">mpiexec</profile>
 {% else %}
         <!-- This tells what account/project to use. It maps to the '-A' PBS argument. -->
         <profile namespace="pegasus" key="project">MYPROJ123</profile>

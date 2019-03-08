@@ -2694,11 +2694,11 @@ Default     :</emphasis> (no default)</literallayout></entry>
 
               <entry><para>The database driver class is dynamically loaded, as
               required by the schema. Currently, only MySQL 5.x, PostGreSQL
-              &gt;= 8.1 and SQlite are supported. Their respective JDBC3 driver is
-              provided as part and parcel of the PEGASUS.</para><para>The * in
-              the property name can be replaced by a catalog name to apply the
-              property only for that catalog. Valid catalog names
-              are</para><para><screen>replica
+              &gt;= 8.1 and SQlite are supported. Their respective JDBC3
+              driver is provided as part and parcel of the
+              PEGASUS.</para><para>The * in the property name can be replaced
+              by a catalog name to apply the property only for that catalog.
+              Valid catalog names are</para><para><screen>replica
 </screen></para></entry>
             </row>
 
@@ -2774,8 +2774,8 @@ Scope       :</emphasis> Properties
               "pegasus.catalog.[catalog-name].db." prefix from them. The
               catalog-name can be replaced by the following values provenance
               for Provenance Catalog (PTC), replica for Replica Catalog
-              (RC)</para><para>Postgres &gt;= 8.1 parses the following properties:
-              <screen>
+              (RC)</para><para>Postgres &gt;= 8.1 parses the following
+              properties: <screen>
 pegasus.catalog.*.db.user
 pegasus.catalog.*.db.password
 pegasus.catalog.*.db.PGHOST
@@ -4767,7 +4767,7 @@ Scope       :</emphasis> Properties
                     <term>AWSBatch</term>
 
                     <listitem>
-                       In this mode, the executable used to run the merged job is "pegasus-aws-batch"  that runs in local universe on the submit and runs the jobs making up the cluster on AWS Batch. 
+                       In this mode, the executable used to run the merged job is "pegasus-aws-batch" that runs in local universe on the submit and runs the jobs making up the cluster on AWS Batch. 
                     </listitem>
                   </varlistentry>
                 </variablelist></para></entry>
@@ -5344,11 +5344,11 @@ Scope       :</emphasis> Properties
 
                   <listitem>
                     <para>the ARN of existing job definition <emphasis
-                    role="bold">OR</emphasis> </para>
+                    role="bold">OR</emphasis></para>
                   </listitem>
 
                   <listitem>
-                    <para>basename of an existing job definition </para>
+                    <para>basename of an existing job definition</para>
                   </listitem>
                 </itemizedlist><para> </para></entry>
             </row>
@@ -5733,6 +5733,61 @@ Scope       :</emphasis> Properties
               generates an output file that is listed as input for JobB, then
               the planner will automatically add an edge between JobA and
               JobB.</entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.integrity.checking<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.9.0
+<emphasis role="bold">Type        : </emphasis>none|full
+<emphasis role="bold">Default     :</emphasis> full</literallayout></entry>
+
+              <entry>This property determines the dial for pegasus integrity
+              checking. Currently the following dials are
+              supported<variablelist>
+                  <varlistentry>
+                    <term>full</term>
+
+                    <listitem>
+                       In this mode, integrity checking happens at 3 levels
+
+                      <orderedlist>
+                        <listitem>
+                          <para>after the input data has been staged to
+                          staging server - pegasus-transfer verifies integrity
+                          of the staged files.</para>
+                        </listitem>
+
+                        <listitem>
+                          <para>before a compute task starts on a remote
+                          compute node - This ensures that checksums of the
+                          data staged in match the checksums specified in the
+                          input replica catalog or the ones computed when that
+                          piece of data was generated as part of previous task
+                          in the workflow.</para>
+                        </listitem>
+
+                        <listitem>
+                          <para>after the workflow output data has been
+                          transferred to user servers - This ensures that
+                          output data staged to the final location was not
+                          corrupted in transit.</para>
+                        </listitem>
+                      </orderedlist>
+                    </listitem>
+                  </varlistentry>
+
+                  <varlistentry>
+                    <term>none</term>
+
+                    <listitem>
+                       No integrity checking is performed. 
+                    </listitem>
+                  </varlistentry>
+                </variablelist></entry>
             </row>
           </tbody>
         </tgroup>

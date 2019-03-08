@@ -109,17 +109,17 @@ class TestISODate(unittest.TestCase):
 
     def testLocal(self):
         "Long local timestamp"
-        if time.timezone == 28800:
-            self.assertEquals("2012-04-17T18:55:32-0700", utils.isodate(now=self.now))
+        if time.timezone == 28800: 
+            self.assertEqual("2012-04-17T18:55:32-0700", utils.isodate(now=self.now))
 
     def testShortLocal(self):
         "Short local timestamp"
         if time.timezone == 28800:
-            self.assertEquals("20120417T185532-0700", utils.isodate(now=self.now, short=True))
+            self.assertEqual("20120417T185532-0700", utils.isodate(now=self.now, short=True))
 
     def testUTC(self):
         "Long UTC timestamp"
-        self.assertEquals("2012-04-18T01:55:32Z", utils.isodate(now=self.now, utc=True))
+        self.assertEqual("2012-04-18T01:55:32Z", utils.isodate(now=self.now, utc=True))
 
     def testShortUTC(self):
         "Short UTC timestamp"
@@ -131,15 +131,15 @@ class TestEpochDate(unittest.TestCase):
 
     def testLocal(self):
         "Should be able to get the epoch from a local isodate"
-        self.assertEquals(self.now, utils.epochdate(utils.isodate(now=self.now)))
+        self.assertEqual(self.now, utils.epochdate(utils.isodate(now=self.now)))
 
     def testShortLocal(self):
         "Should be able to get the epoch from a short local isodate"
-        self.assertEquals(self.now, utils.epochdate(utils.isodate(now=self.now, short=True)))
+        self.assertEqual(self.now, utils.epochdate(utils.isodate(now=self.now, short=True)))
 
     def testUTC(self):
         "Should be able to get the epoch from a UTC isodate"
-        self.assertEquals(self.now, utils.epochdate(utils.isodate(now=self.now, utc=True)))
+        self.assertEqual(self.now, utils.epochdate(utils.isodate(now=self.now, utc=True)))
 
     def testShortUTC(self):
         "Should eb able to get the epoch from a short UTC isodate"

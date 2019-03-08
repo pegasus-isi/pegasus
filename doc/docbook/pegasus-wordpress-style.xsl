@@ -56,7 +56,7 @@
         <xsl:call-template name="user.preroot"/>
         <xsl:variable name="doc" select="self::*"/>
         <xsl:processing-instruction name="php"> 
-            require('/srv/new-pegasus.isi.edu/includes/common.php'); 
+            require('/srv2/pegasus.isi.edu/includes/common.php'); 
             pegasus_header("<xsl:apply-templates select="$doc" mode="object.title.markup.textonly"/>");
         ?</xsl:processing-instruction>
         <xsl:call-template name="user.header.content"/>

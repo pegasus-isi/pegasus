@@ -81,12 +81,16 @@ cont centos-base{
 
      # URL to image in a docker hub or a url to an existing docker
      # file exported as a tar file
-     image "gsiftp://colo-vm63.isi.edu/lfs1/bamboo-tests/data/centos7.img"
+     image "gsiftp://bamboo.isi.edu/lfs1/bamboo-tests/data/centos7.img"
 
      # optional site attribute to tell pegasus which site tar file
      # exists. useful for handling file URL's correctly
      image_site "local"
-  
+
+     # we are using the	shared filesystem as the
+     # staging site.
+     mount "/lizard:/lizard"  
+
      # specify env profile via env option do docker run
      profile env "JAVA_HOME" "/opt/java/1.6"	    
 }

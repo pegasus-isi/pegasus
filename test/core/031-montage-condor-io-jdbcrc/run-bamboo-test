@@ -25,7 +25,9 @@ pegasus.stageout.clusters = 20
 #we don't want errors for registration to be masked because of retries
 dagman.retry 0
 EOF
-cat $HOME/.jdbcrc-test-48.conf >> ../pegasusrc
+
+cat $HOME/.jdbcrc-test.conf >> ../pegasusrc
+
 
 echo "Updating the database..."
 pegasus-db-admin update --conf ../pegasusrc -t jdbcrc

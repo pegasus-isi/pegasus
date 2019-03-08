@@ -1,7 +1,7 @@
 # image comes from Singularity Hub
 cont gis {
     type "singularity"
-    image "shub://pegasus-isi/darpa_population_modeling"
+    image "shub://singularity-hub.org/pegasus-isi/darpa_population_modeling"
 }
 
 tr county_population_raster {

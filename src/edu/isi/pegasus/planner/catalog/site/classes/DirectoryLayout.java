@@ -86,11 +86,17 @@ public abstract class DirectoryLayout extends AbstractSiteData{
     /**
      *  Initializes the object
      * 
-     * @param  fs  list of file servers indexed by operation type
+     * @param  mFS  list of file servers indexed by operation type
      * @param  imt the internal mount point.
      */
-    private void initialize(  Map<FileServer.OPERATION, List<FileServer>> fs, InternalMountPoint imt ){
-        this.mFileServers = fs;
+    private void initialize(  Map<FileServer.OPERATION, List<FileServer>> mFS, InternalMountPoint imt ){
+        this.initialize();
+        for( Map.Entry<FileServer.OPERATION, List<FileServer>> entry : mFS.entrySet() ){
+            List<FileServer> servers = entry.getValue();
+            for( FileServer server: servers ){
+               this.addFileServer(server);
+            }
+        }
         this.mInternalMount = imt ;
     }
     

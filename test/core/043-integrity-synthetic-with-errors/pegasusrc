@@ -6,7 +6,7 @@ pegasus.data.configuration = nonsharedfs
 
 pegasus.transfer.worker.package = true
 
-pegasus.integrity.checking = true
+pegasus.integrity.checking = full
 
 dagman.retry = 10
 

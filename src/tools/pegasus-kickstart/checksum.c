@@ -22,6 +22,9 @@
 
 #include "checksum.h"
 
+#define BUFSIZE 4096
+
+
 int pegasus_integrity_xml(const char *fname, char *xml) {
     /* purpose: calculate the checksum of a file
      * paramtr: fname: name of the file
@@ -31,7 +34,7 @@ int pegasus_integrity_xml(const char *fname, char *xml) {
     char buf[4096];
     char cmd[4096];
 
-    strcpy(cmd, "pegasus-integrity --generate-xml=");
+    strcpy(cmd, "pegasus-integrity --generate-xmls=");
     strcat(cmd, fname);
     strcat(cmd, " 2>/dev/null");
 
@@ -63,7 +66,7 @@ int print_pegasus_integrity_xml_blob(FILE *out, const char *fname) {
      * paramtr: out: output stream to print to
      * returns: 1 on success
      */
-    char buf[4096];
+    char buf[BUFSIZE];
     int fd;
     int len;
 
@@ -71,8 +74,7 @@ int print_pegasus_integrity_xml_blob(FILE *out, const char *fname) {
         /* missing file is ok */
         return 1;
     }
-    while ((len = read(fd, buf, 4096))) {
-        buf[len + 1] = '\0';
+    while (len = read(fd, buf, BUFSIZE)) {
         fprintf(out, "%.*s", len, buf);
     }
     close(fd);

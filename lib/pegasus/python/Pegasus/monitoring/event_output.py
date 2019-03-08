@@ -23,7 +23,7 @@ import logging
 import urlparse
 import traceback
 import json
-import ssl
+import re
 
 from Pegasus.tools import utils
 from Pegasus.tools import properties
@@ -31,6 +31,7 @@ from Pegasus.netlogger import nlapi
 from Pegasus.db.workflow_loader import WorkflowLoader
 from Pegasus.db.dashboard_loader import DashboardLoader
 from Pegasus.db import expunge
+from Pegasus.db import connection
 
 log = logging.getLogger(__name__)
 
@@ -50,6 +51,7 @@ except:
 # Event name-spaces
 STAMPEDE_NS = "stampede."
 DASHBOARD_NS = "dashboard."
+
 
 
 def purge_wf_uuid_from_database(rundir, output_db):
@@ -128,6 +130,52 @@ class EventSink(object):
     """
     def __init__(self):
         self._log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
+        # Set listing events handled to be kept consistent with dict in workflow loader
+        self._acceptedEvents = (
+            'stampede.wf.plan',
+            'stampede.wf.map.task_job',
+            'stampede.static.start',
+            'stampede.static.end',
+            'stampede.xwf.start',
+            'stampede.xwf.end',
+            'stampede.xwf.map.subwf_job',
+            'stampede.task.info',
+            'stampede.task.edge',
+            'stampede.job.info',
+            'stampede.job.edge',
+            'stampede.job_inst.pre.start',
+            'stampede.job_inst.pre.term',
+            'stampede.job_inst.pre.end',
+            'stampede.job_inst.submit.start',
+            'stampede.job_inst.submit.end',
+            'stampede.job_inst.held.start',
+            'stampede.job_inst.held.end',
+            'stampede.job_inst.main.start',
+            'stampede.job_inst.main.term',
+            'stampede.job_inst.main.end',
+            'stampede.job_inst.post.start',
+            'stampede.job_inst.post.term',
+            'stampede.job_inst.post.end',
+            'stampede.job_inst.host.info',
+            'stampede.job_inst.image.info',
+            'stampede.job_inst.abort.info',
+            'stampede.job_inst.grid.submit.start',
+            'stampede.job_inst.grid.submit.end',
+            'stampede.job_inst.globus.submit.start',
+            'stampede.job_inst.globus.submit.end',
+            'stampede.job_inst.tag',
+            'stampede.inv.start',
+            'stampede.inv.end',
+            'stampede.static.meta.start',
+            'stampede.xwf.meta',
+            'stampede.task.meta',
+            'stampede.rc.meta',
+            'stampede.int.metric',
+            'stampede.rc.pfn',
+            'stampede.wf.map.file',
+            'stampede.static.meta.end',
+            'stampede.task.monitoring'
+        )
 
     def send(self, event, kw):
         """
@@ -164,7 +212,7 @@ class DBEventSink(EventSink):
     def send(self, event, kw):
         self._log.trace("send.start event=%s", event)
         d = {'event' : self._namespace + event}
-        for k, v in kw.iteritems():
+        for k, v in kw.items():
             d[k.replace('__','.')] = v
         self._db.process(d)
         self._log.trace("send.end event=%s", event)
@@ -246,9 +294,16 @@ class AMQPEventSink(EventSink):
 
     def __init__(self, host, port, exch=None, encoder=None,
                  userid='guest', password='guest', virtual_host=DEFAULT_AMQP_VIRTUAL_HOST,
-                 ssl_enabled=False, connect_timeout=None, **kw):
+                 ssl_enabled=False, props=None, connect_timeout=None, **kw):
         super(AMQPEventSink, self).__init__()
+        self._log.info( "Properties received %s", props)
         self._encoder = encoder
+
+        if connect_timeout is None:
+            # pick timeout from properties
+            connect_timeout = props.property("timeout")
+            if connect_timeout:
+                connect_timeout = float(connect_timeout)
 
         self._log.info( "Connecting to host: %s:%s virtual host: %s exchange: %s with user: %s ssl: %s" %(host, port, virtual_host, exch, userid, ssl_enabled ))
         creds = amqp.PlainCredentials(userid, password)
@@ -258,18 +313,62 @@ class AMQPEventSink(EventSink):
                                                ssl_options={"certs_reqs": ssl.CERT_NONE},
                                                virtual_host=virtual_host,
                                                credentials=creds,
-                                               heartbeat=0)
+                                               blocked_connection_timeout=connect_timeout,
+                                               heartbeat=0, **kw)
         self._conn = amqp.BlockingConnection(parameters)
         self._channel = self._conn.channel()
         self._exch = exch
         self._channel.exchange_declare(exch, **self.EXCH_OPTS)
+        self._handled_events = set()
+        self._handle_all_events = False
+        self.configure_filters(props.property("events"))
+
+    def configure_filters(self, events):
+        event_regexes = set()
+
+        if events is None:
+            # add pre-configured specific events
+            event_regexes.add(re.compile(STAMPEDE_NS + "job_inst.tag"))
+            event_regexes.add(re.compile(STAMPEDE_NS + "inv.end"))
+            event_regexes.add(re.compile(STAMPEDE_NS + "wf.plan"))
+        else:
+            for exp in events.split(","):
+                if exp == "*":
+                    # short circuit
+                    self._handle_all_events = True
+                    self._log.debug("Events Handled: All")
+                    return
+                else:
+                    event_regexes.add(re.compile(exp))
+
+        # go through each regex and match against accepted events once
+        for regex in event_regexes:
+            # go through each list of accepted events to check match
+            for event in self._acceptedEvents:
+                if regex.search(event) is not None:
+                    self._handled_events.add(event)
+
+        self._log.debug( "Events Handled: %s", self._handled_events)
+
 
     def send(self, event, kw):
         full_event = STAMPEDE_NS + event
+        if self.ignore(full_event):
+            return
+
         self._log.trace("send.start event=%s", full_event)
         data = self._encoder(event=event, **kw)
         self._channel.basic_publish(body=data, exchange=self._exch, routing_key=full_event)
         self._log.trace("send.end event=%s", event)
+
+    def ignore(self, event):
+        if self._handle_all_events:
+            # we want all events
+             return False
+
+        return event not in self._handled_events
+
+
 
     def close(self):
         self._log.trace("close.start")
@@ -285,21 +384,19 @@ class MultiplexEventSink(EventSink):
     def __init__(self, dest, enc, prefix=STAMPEDE_NS,  props=None, **kw):
         super( MultiplexEventSink, self ).__init__()
         self._endpoints = {}
-        additional_sink_props = props.propertyset("pegasus.catalog.workflow" + ".", True)
-
-        # we delete from our copy pegasus.catalog.workflow.url as we want with default prefix
-        if "url" in additional_sink_props.keys():
-            del additional_sink_props["url"]
-
-        additional_sink_props["default.url"] = dest
-        for key in additional_sink_props:
+        self._log.info("Multiplexed Event Sink Connection Properties  %s", props)
+        for key in props.keyset():
             if key.endswith( ".url" ):
-                # remove from our copy pegasus.catalog.workflow.url if exists
-                endpoint_props = properties.Properties(props.propertyset("pegasus.catalog.workflow" + ".", False))
-                endpoint_props.remove("pegasus.catalog.workflow.url")
+                sink_name= key[0:key.rfind(".url")]
 
-                self._endpoints[ key[0:key.rfind(".url")] ] = create_wf_event_sink(additional_sink_props[key], enc=enc,
+                # remove from our copy sink_name properties if they exist
+                endpoint_props = properties.Properties( props.propertyset(sink_name + ".", remove=True ))
+                try:
+                    self._endpoints[ sink_name ] = create_wf_event_sink(props.property(key), db_type=connection.DBType.WORKFLOW, enc=enc,
                                                                                    prefix=prefix, props=endpoint_props, multiplexed = True, **kw)
+                except:
+                    self._log.error("[multiplex event sender] Unable to connect to endpoint %s with props %s . Disabling" % (sink_name,endpoint_props))
+                    self._log.error(traceback.format_exc())
 
     def send(self, event, kw):
         remove_endpoints=[]
@@ -348,7 +445,7 @@ def json_encode(event, **kw):
     kw['event'] = STAMPEDE_NS + event
     return json.dumps(kw)
 
-def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, multiplexed = False, **kw):
+def create_wf_event_sink(dest, db_type, enc=None, prefix=STAMPEDE_NS, props=None, multiplexed = False, **kw):
     """
     Create & return subclass of EventSink, chosen by value of 'dest'
     and parameterized by values (if any) in 'kw'.
@@ -357,10 +454,26 @@ def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, multipl
     if dest is None:
         return None
 
+    # we only subset the properties and strip off prefix once
+    if not multiplexed:
+        sink_props = get_workflow_connect_props(props, db_type)
+        # we delete from our copy pegasus.catalog.workflow.url as we want with default prefix
+        if "url" in sink_props.keyset():
+            del sink_props["url"]
+            sink_props.property( "default.url", dest )
+    else:
+        sink_props = props
+
     # PM-898 are additional URL's to populate specified
     if not multiplexed and multiplex( dest, prefix , props ):
-        return MultiplexEventSink(dest, enc, prefix, props, **kw)
+        sink_props.property("default.url", dest)
+        # any properties that don't have a . , remap to default.propname
+        for key in sink_props.keyset():
+            if key.find(".") == -1:
+                sink_props.property("default." + key, sink_props.property(key))
+                del sink_props[key]
 
+        return MultiplexEventSink(dest, enc, prefix, sink_props, **kw)
 
     url = OutputURL(dest)
 
@@ -415,11 +528,11 @@ def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, multipl
 
         sink = AMQPEventSink(url.host, url.port, virtual_host=virtual_host, exch=exchange,
                              userid = url.user, password=url.password, ssl_enabled=False,
-                             encoder=pick_encfn(enc,prefix), **kw)
+                             encoder=pick_encfn(enc,prefix),props=sink_props, **kw)
         _type, _name="AMQP", "%s:%s/%s" % (url.host, url.port, url.path)
     else:
         # load the appropriate DBEvent on basis of prefix passed
-        sink = DBEventSink(dest, namespace=prefix, props=props, **kw)
+        sink = DBEventSink(dest, namespace=prefix, props=sink_props, **kw)
         _type, _name = "DB", dest
 
     log.info("output type=%s namespace=%s name=%s" % (_type, prefix, _name))
@@ -450,3 +563,29 @@ def multiplex( dest, prefix, props=None):
             multiplex = True
             break
     return multiplex
+
+
+def get_workflow_connect_props( props, db_type ):
+    """
+    Returns connection properties for workflow database
+
+    :param props:
+    :return:
+    """
+
+    if props is None:
+        return None
+
+    # first get the default one's with the star notation
+    connect_props = properties.Properties(props.propertyset("pegasus.catalog.*.", True))
+
+    prefix = "pegasus.catalog.workflow"
+    if db_type == connection.DBType.MASTER:
+        prefix = "pegasus.catalog.dashboard"
+
+    # over ride these with workflow specific or dashboard specific props
+    addons = props.propertyset( prefix + ".", True)
+    for key in addons:
+        connect_props.property( key, addons[key])
+
+    return connect_props

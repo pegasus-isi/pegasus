@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import print_function
+
 import os
 import re
 import sys
@@ -21,6 +23,8 @@ lib_ext_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=Tru
 os.sys.path.insert(0, lib_dir)
 os.sys.path.insert(0, lib_ext_dir)
 
+from builtins import object
+
 from Pegasus.tools import utils
 from Pegasus.plots_stats import utils as stats_utils
 from Pegasus.db import connection
@@ -37,6 +41,7 @@ workflow_summary_time_file_name = "summary-time"
 workflow_statistics_file_name = "workflow"
 job_statistics_file_name = "jobs"
 logical_transformation_statistics_file_name = "breakdown"
+logical_integrity_statistics_file_name = "integrity"
 time_statistics_file_name = "time"
 time_statistics_per_host_file_name = "time-per-host"
 text_file_extension = ".txt"
@@ -46,6 +51,7 @@ calc_wf_summary = False
 calc_jb_stats = False
 calc_tf_stats = False
 calc_ti_stats = False
+calc_int_stats = False
 time_filter = None
 NEW_LINE_STR = "\n"
 DEFAULT_OUTPUT_DIR = "statistics"
@@ -57,6 +63,11 @@ uses_PMC=False
 transformation_stats_col_name_text = ["Transformation", "Count", "Succeeded", "Failed", "Min", "Max", "Mean", "Total"]
 transformation_stats_col_name_csv = ["Workflow_Id", "Dax_Label", "Transformation", "Count", "Succeeded", "Failed", "Min", "Max", "Mean", "Total"]
 transformation_stats_col_size = [25, 10, 10, 8, 10, 10, 10, 10]
+
+# Integrity file column names
+integrity_stats_col_name_text = ["Type", "File Type", "Count", "Total Duration" ]
+integrity_stats_col_name_csv = ["Workflow_Id", "Dax_Label", "Type", "File Type", "Count", "Total Duration"]
+integrity_stats_col_size = [10, 15, 10, 25]
 
 # Jobs file column names
 job_stats_col_name_text = ['Job', 'Try', 'Site', 'Kickstart', 'Mult', 'Kickstart-Mult', 'CPU-Time', 'Post', 'CondorQTime', 'Resource', 'Runtime', 'Seqexec', 'Seqexec-Delay', 'Exitcode', 'Hostname']
@@ -82,7 +93,8 @@ time_host_stats_col_name_csv = ["stat_type", "date", "host", "count", "runtime (
 time_host_stats_col_name_text = ["Date", "Host", "Count", "Runtime (sec)"]
 time_host_stats_col_size = [23, 25, 10, 20]
 
-class JobStatistics:
+
+class JobStatistics(object):
     def __init__(self):
         self.name = None
         self.site = None
@@ -94,7 +106,7 @@ class JobStatistics:
         self.condor_delay = None
         self.resource = None
         self.runtime = None
-        self.condorQlen =None
+        self.condorQlen = None
         self.seqexec = None
         self.seqexec_delay = None
         self.retry_count = 0
@@ -257,6 +269,20 @@ def formatted_transformation_stats_legends():
 # Total(sec)     - the cumulative of invocation runtime corresponding
 #                  to the transformation."""
 
+def formatted_integrity_stats_legends():
+    return """
+# Integrity Statistics Breakdown
+# Type           - the type of integrity metric.
+                   check - means checksum was compared for a file,
+                   compute - means a checksum was generated for a file
+# File Type      - the type of file: input or output from a job perspective
+# Count          - the number of times done
+# Total Duration - sum of duration in seconds for the 'count' number
+                   of records matching the particular type,
+                   file-type combo
+"""
+
+
 def formatted_time_stats_legends_text():
     return """
 # Job instance statistics per FILTER:
@@ -343,12 +369,12 @@ def print_row(row, sizes, fmt):
     sizes : list of column widths for text format
     fmt   : format of the row ('text' or 'csv')
     """
-    if fmt in ["text","txt"]:
+    if fmt in ["text", "txt"]:
         return "".join(value.ljust(sizes[i]) for i,value in enumerate(row))
     elif fmt == "csv":
         return ",".join(row)
     else:
-        print "Output format %s not recognized!" % fmt
+        print("Output format %s not recognized!" % fmt)
         sys.exit(1)
 
 def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False):
@@ -368,7 +394,7 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
         wf_found = expanded_workflow_stats.initialize(wf_uuid)
 
         if wf_found is False:
-            print 'Workflow %r not found in database %r' % (wf_uuid, output_db_url)
+            print('Workflow %r not found in database %r' % (wf_uuid, output_db_url))
             sys.exit(1)
     except Exception:
         logger.error("Failed to load the database." + output_db_url )
@@ -420,6 +446,16 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
             transformation_stats_file_csv = os.path.join(output_dir, logical_transformation_statistics_file_name + csv_file_extension)
             write_to_file(transformation_stats_file_csv, "w", formatted_transformation_stats_legends())
 
+    global calc_int_stats
+    if calc_int_stats:
+        if file_type == FILE_TYPE_TXT:
+            integrity_stats_file_txt = os.path.join(output_dir, logical_integrity_statistics_file_name + text_file_extension)
+            write_to_file(integrity_stats_file_txt, "w", formatted_integrity_stats_legends())
+
+        if file_type == FILE_TYPE_CSV:
+            integrity_stats_file_csv = os.path.join(output_dir, logical_integrity_statistics_file_name + csv_file_extension)
+            write_to_file(integrity_stats_file_csv, "w", formatted_integrity_stats_legends())
+
     global calc_ti_stats
     if calc_ti_stats:
         try:
@@ -452,14 +488,14 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
 
             errors += 1
 
-    if calc_jb_stats or calc_tf_stats or calc_wf_stats:
+    if calc_jb_stats or calc_tf_stats or calc_wf_stats or calc_int_stats:
         for sub_wf_uuid in wf_uuid_list:
             try:
                 individual_workflow_stats = StampedeStatistics(output_db_url, False)
                 wf_found = individual_workflow_stats.initialize(sub_wf_uuid)
 
                 if wf_found is False:
-                    print 'Workflow %r not found in database %r' % (sub_wf_uuid, output_db_url)
+                    print('Workflow %r not found in database %r' % (sub_wf_uuid, output_db_url))
                     sys.exit(1)
             except Exception:
                 logger.error("Failed to load the database." + output_db_url )
@@ -516,6 +552,30 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
                         remove_file(transformation_stats_file_txt)
                     if file_type == FILE_TYPE_CSV:
                         remove_file(transformation_stats_file_csv)
+
+                    errors += 1
+
+            if calc_int_stats:
+                try:
+                    logger.debug("Generating integrity statistics information for workflow " + workflow_id + " ... ")
+                    individual_workflow_stats.set_job_filter('all')
+                    if file_type == FILE_TYPE_TXT:
+                        content = print_wf_integrity_stats(individual_workflow_stats, workflow_id, dax_label, "text")
+                        write_to_file(integrity_stats_file_txt, "a", content)
+
+                    if file_type == FILE_TYPE_CSV:
+                        content = print_wf_integrity_stats(individual_workflow_stats, workflow_id, dax_label, "csv")
+                        write_to_file(integrity_stats_file_csv, "a", content)
+                except Exception:
+                    logger.error(traceback.format_exc())
+                    logger.warn('integrity statistics generation failed')
+                    logger.debug('integrity statistics generation failed', exc_info=1)
+
+                    calc_int_stats = False
+                    if file_type == FILE_TYPE_TXT:
+                        remove_file(integrity_stats_file_txt)
+                    if file_type == FILE_TYPE_CSV:
+                        remove_file(integrity_stats_file_csv)
 
                     errors += 1
 
@@ -657,6 +717,34 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
                 remove_file(transformation_stats_file_txt)
             if file_type == FILE_TYPE_CSV:
                 remove_file(transformation_stats_file_csv)
+            errors += 1
+
+    if calc_int_stats:
+        expanded_workflow_stats.set_job_filter('all')
+        pre_stats_output = stats_output
+
+        try:
+            stats_output += "%-30s: " % "Integrity statistics"
+
+            if file_type == FILE_TYPE_TXT:
+                content = print_wf_integrity_stats(expanded_workflow_stats , "All", "", "text")
+                write_to_file(integrity_stats_file_txt, "a", content)
+                stats_output += integrity_stats_file_txt + "\n"
+
+            if file_type == FILE_TYPE_CSV:
+                content = print_wf_integrity_stats(expanded_workflow_stats , "ALL", "", "csv")
+                write_to_file(integrity_stats_file_csv, "a", content)
+                stats_output += integrity_stats_file_csv + "\n"
+        except Exception:
+            logger.warn('integrity statistics generation failed')
+            logger.debug('integrity statistics generation failed', exc_info=1)
+            stats_output = pre_stats_output
+
+            calc_int_stats = False
+            if file_type == FILE_TYPE_TXT:
+                remove_file(integrity_stats_file_txt)
+            if file_type == FILE_TYPE_CSV:
+                remove_file(integrity_stats_file_csv)
 
             errors += 1
 
@@ -671,7 +759,7 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
 
     expanded_workflow_stats.close()
 
-    print stats_output
+    print(stats_output)
     return errors
 
 def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_summary=True, multiple_wf=False):
@@ -697,6 +785,7 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
         # Jobs
         total_jobs = workflow_stats.get_total_jobs_status()
         total_succeeded_failed_jobs = workflow_stats.get_total_succeeded_failed_jobs_status()
+        total_failed_jobs_integrity = workflow_stats.get_total_succeeded_failed_jobs_status(classify_error=True, tag="int.error")
         total_succeeded_jobs = total_succeeded_failed_jobs.succeeded
         total_failed_jobs = total_succeeded_failed_jobs.failed
         total_unsubmitted_jobs = total_jobs - (total_succeeded_jobs + total_failed_jobs)
@@ -750,7 +839,6 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
         wwt = stats_utils.get_workflow_wall_time(states)
         wcjwt, wcgpt, wcbpt = workflow_stats.get_workflow_cum_job_wall_time()
         ssjwt, ssgpt, ssbpt = workflow_stats.get_submit_side_job_wall_time()
-
         if output_format == "text":
             def myfmt(val):
                 if val is None: return "-"
@@ -771,6 +859,43 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
             summary_str += "cumulative_job_walltime_from_submit_side,%s\n" % myfmt(ssjwt)
             summary_str += "workflow_cumulative_badput_time,%s\n" % myfmt(wcbpt)
             summary_str += "cumulative_job_badput_walltime_from_submit_side,%s\n" % myfmt(ssbpt)
+
+        # PM-1260 integrity metrics summary
+        int_metrics_summary = workflow_stats.get_summary_integrity_metrics()
+        if int_metrics_summary and output_format == "text":
+            def myfmt(val):
+                if val is None:
+                    return "-"
+                else:
+                    return format_seconds(val)
+
+            summary_str += """
+# Integrity Metrics
+# Number of files for which checksums were compared/computed along with total time spent doing it. \n"""
+            for result in int_metrics_summary:
+                type = result.type
+                if result.type == "check":
+                    type = "compared"
+                if result.type == "compute":
+                    type = "generated"
+                summary_str += "%s files checksums %s with total duration of %s\n" % (result.count, type, myfmt(result.duration))
+
+            summary_str += """
+# Integrity Errors
+# Total:    
+#       Total number of integrity errors encountered across all job executions(including retries) of a workflow. 
+# Failures: 
+#       Number of failed jobs where the last job instance had integrity errors.
+"""
+            int_error_summary = workflow_stats.get_tag_metrics("int.error")
+            for result in int_error_summary:
+                type = result.name
+                if result.name == "int.error":
+                    type = "integrity"
+                summary_str += "Total:    A total of %s %s errors encountered in the workflow\n" %( result.count, type)
+
+            # PM-1295 jobs where last_job_instance failed and there were integrity errors in those last job instances
+            summary_str += "Failures: %s job failures had integrity errors\n" % (total_failed_jobs_integrity.failed or 0)
 
     return summary_str
 
@@ -923,7 +1048,7 @@ def print_individual_wf_job_stats(workflow_stats, workflow_id, dax_label, output
         job_stats.hostname = job.host_name
         if job_stats.seqexec is not None and job_stats.kickstart is not None:
             job_stats.seqexec_delay = (float(job_stats.seqexec) - float(job_stats.kickstart))
-        if job_retry_count_dict.has_key(job.job_name):
+        if job.job_name in job_retry_count_dict:
             job_retry_count_dict[job.job_name] += 1
         else:
             job_retry_count_dict[job.job_name] = 1
@@ -988,7 +1113,7 @@ def print_wf_transformation_stats(stats, workflow_id, dax_label, fmt):
     format      : Format of report ('text' or 'csv')
     """
     if fmt not in ['text','csv']:
-        print "Output format %s not recognized!" % fmt
+        print("Output format %s not recognized!" % fmt)
         sys.exit(1)
 
     report = ["\n"]
@@ -1038,6 +1163,64 @@ def print_wf_transformation_stats(stats, workflow_id, dax_label, fmt):
             report.append(print_row(columns, transformation_stats_col_size, fmt))
 
         report.append(print_row(content, transformation_stats_col_size, fmt))
+
+    return NEW_LINE_STR.join(report) + NEW_LINE_STR
+
+
+def print_wf_integrity_stats(stats, workflow_id, dax_label, fmt):
+    """
+    Prints the integrity statistics of workflow
+    stats       : workflow statistics object reference
+    workflow_id : UUID of workflow
+    dax_label   : Name of workflow
+    format      : Format of report ('text' or 'csv')
+    """
+    if fmt not in ['text','csv']:
+        print("Output format %s not recognized!" % fmt)
+        sys.exit(1)
+
+    report = ["\n"]
+
+    if fmt == "text":
+        # In text file, we need a line with the workflow id first
+        report.append("# %s (%s)" % (workflow_id, dax_label or "All"))
+
+    col_names = integrity_stats_col_name_text
+    if fmt == "csv": col_names = integrity_stats_col_name_csv
+
+    integrity_statistics = stats.get_integrity_metrics()
+
+    if fmt == "text":
+        max_length = [max(0, len(col_names[i])) for i in range(4)]
+        columns = ['' for i in range(4)]
+        # figure out max lengths?
+        for i in integrity_statistics:
+            max_length[0] = max(max_length[0], len(i.type))
+            max_length[1] = max(max_length[0], len(i.file_type))
+            max_length[2] = max(max_length[1], len(str(i.count)))
+            max_length[3] = max(max_length[2], len(str(i.duration)))
+
+        max_length = [i + 1 for i in max_length]
+
+    header_printed = False
+
+    for i in integrity_statistics:
+        content = [i.type, i.file_type, str(i.count), str(i.duration)]
+
+        if fmt == "text":
+            for i in range(0, 4):
+                columns[i] = col_names[i].ljust(max_length[i])
+                content[i] = content[i].ljust(max_length[i])
+
+        if fmt == "csv":
+            columns = integrity_stats_col_name_csv
+            content = [workflow_id, dax_label] + content
+
+        if not header_printed:
+            header_printed = True
+            report.append(print_row(columns, integrity_stats_col_size, fmt))
+
+        report.append(print_row(content, integrity_stats_col_size, fmt))
 
     return NEW_LINE_STR.join(report) + NEW_LINE_STR
 
@@ -1116,9 +1299,9 @@ def main():
     parser.add_option("-c","--conf", action = "store", type = "string", dest = "config_properties", default=None,
                       help = "Specifies the properties file to use. This option overrides all other property files.")
     parser.add_option("-s", "--statistics-level", action="store", dest="statistics_level",
-                      # choices=['all', 'summary', 'wf_stats', 'jb_stats', 'tf_stats', 'ti_stats'],
+                      # choices=['all', 'summary', 'wf_stats', 'jb_stats', 'tf_stats', 'ti_stats','int_stats'],
                       default='summary',
-                      help="Comma separated list. Valid levels are: all,summary,wf_stats,jb_stats,tf_stats,ti_stats; Default is '%default'.")
+                      help="Comma separated list. Valid levels are: all,summary,wf_stats,jb_stats,tf_stats,ti_stats,int_stats; Default is '%default'.")
     parser.add_option("-t", "--time-filter", action = "store", dest = "time_filter",
                       choices=['day', 'hour'], default='day',
                       help = "Valid levels are: day,hour; Default is '%default'.")
@@ -1144,7 +1327,7 @@ def main():
     if not options.statistics_level:
         options.statistics_level = set(['summary'])
 
-    sl = options.statistics_level - set(['all', 'summary', 'wf_stats', 'jb_stats', 'tf_stats', 'ti_stats'])
+    sl = options.statistics_level - set(['all', 'summary', 'wf_stats', 'jb_stats', 'tf_stats', 'ti_stats', 'int_stats'])
     if sl:
         sys.stderr.write("Invalid value(s) for statistics_level, ignoring %s\n" % ','.join(sl))
 
@@ -1221,12 +1404,14 @@ def main():
     global calc_jb_stats
     global calc_tf_stats
     global calc_ti_stats
+    global calc_int_stats
     sl = options.statistics_level
     logger.info("Statistics level is %s" % sl)
     if 'all' in sl:
         calc_wf_stats = True
         calc_wf_summary = True
         calc_tf_stats = True
+        calc_int_stats = True
         calc_ti_stats = True
         if not multiple_wf:
             calc_jb_stats = True
@@ -1245,6 +1430,9 @@ def main():
 
     if 'tf_stats' in sl:
         calc_tf_stats = True
+
+    if 'int_stats' in sl:
+        calc_int_stats = True
 
     global file_type
     file_type = options.filetype

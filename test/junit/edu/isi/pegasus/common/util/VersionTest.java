@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Assert;
 
 import edu.isi.pegasus.common.util.Version;
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 
 public class VersionTest {
     private Properties props = new Properties();
@@ -55,6 +56,24 @@ public class VersionTest {
     public void testPlatform() {
         String plat = ver.getPlatform();
         Assert.assertTrue(plat != null);
+    }
+    
+    @Test
+    public void testArchitceture() {
+        SysInfo.Architecture arch = ver.getArchitecture();
+        Assert.assertTrue(arch != null);
+    }
+    
+    @Test
+    public void testOS() {
+        SysInfo.OS  os = ver.getOS();
+        Assert.assertTrue(os != null);
+    }
+    
+    @Test
+    public void testOSReleaese() {
+        SysInfo.OS_RELEASE release = ver.getOSRelease();
+        Assert.assertTrue(release != null);
     }
 }
 

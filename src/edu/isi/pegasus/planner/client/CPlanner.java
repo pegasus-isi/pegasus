@@ -50,6 +50,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
 import edu.isi.pegasus.planner.common.Shiwa;
 import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.DAXParserFactory;
 import edu.isi.pegasus.planner.parser.Parser;
@@ -517,6 +518,7 @@ public class CPlanner extends Executable{
         mPMetrics.setRootWorkflowUUID( orgDag.getRootWorkflowUUID() );
         mPMetrics.setWorkflowUUID( orgDag.getWorkflowUUID() );
         mPMetrics.setWorkflowMetrics( orgDag.getWorkflowMetrics() );
+        mPMetrics.setDAXAPI( orgDag.getDAXAPI() );
        
         //write out a the relevant properties to submit directory
         int state = 0;
@@ -593,7 +595,7 @@ public class CPlanner extends Executable{
             //also log in the planner metrics where the properties are
             mPMetrics.setProperties( mProps.getPropertiesInSubmitDirectory() );
         } catch (IOException ioe) {
-            String error = (state == 0) ? "Unable to write  to directory" : "Unable to write out properties to directory";
+            String error = (state == 0) ? "Unable to write to directory " : "Unable to write out properties to directory ";
             throw new RuntimeException( error + mPOptions.getSubmitDirectory(), ioe );
 
         }

@@ -17,6 +17,7 @@
 
 package edu.isi.pegasus.planner.classes;
 
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import java.util.BitSet;
 
 import edu.isi.pegasus.planner.namespace.Metadata;
@@ -42,7 +43,7 @@ public class PegasusFile extends Data {
      * Enumeration for denoting type of linkage
      */
     public static enum LINKAGE {
-        INPUT, OUTPUT, INOUT, NONE
+        input, output, inout, none
     };
 
 
@@ -108,6 +109,25 @@ public class PegasusFile extends Data {
     public static final String CHECKPOINT_TYPE = "checkpoint";
     
     /**
+     * The string value of a file that is of type docker container
+     * @see DOCKER_CONTAINER#DOCKER_CONTAINER_FILE
+     */
+    public static final String DOCKER_TYPE = "docker";
+    
+    /**
+     * The string value of a file that is of type singularity container
+     * @see SINGULARITY_CONTAINER#SINGULARITY_CONTAINER_FILE
+     */
+    public static final String SINGULARITY_TYPE = "singularity";
+    
+        
+    /**
+     * The string value of a file that is of type shifter container
+     * @see SHIFTER_CONTAINER#SHIFTER_CONTAINER_FILE
+     */
+    public static final String SHIFTER_TYPE = "shifter";
+    
+    /**
      * The string value of a file that is of type other.
      * @see #OTHER_FILE
      */
@@ -129,9 +149,24 @@ public class PegasusFile extends Data {
     public static final int CHECKPOINT_FILE = 2;
     
     /**
+     * The type denoting that a logical file is a docker container file.
+     */
+    public static final int DOCKER_CONTAINER_FILE = 3;
+    
+    /**
+     * The type denoting that a logical file is a singularity container file.
+     */
+    public static final int SINGULARITY_CONTAINER_FILE = 4;
+    
+    /**
+     * The type denoting that a logical file is a shifter container file.
+     */
+    public static final int SHIFTER_CONTAINER_FILE = 5;
+    
+    /**
      * The type denoting that a logical file is an other file.
      */
-    public static final int OTHER_FILE = 3;
+    public static final int OTHER_FILE = 6;
     
     /**
      * The logical name of the file.
@@ -209,7 +244,7 @@ public class PegasusFile extends Data {
         mType        = DATA_FILE;
         mTransferFlag= this.TRANSFER_MANDATORY;
         mSize        = -1;
-        mLink        = LINKAGE.NONE;
+        mLink        = LINKAGE.none;
         mMetadata    = new Metadata();
         mIsRawInput  = false;
         mChecksumComputedInWF = false;
@@ -371,6 +406,15 @@ public class PegasusFile extends Data {
         else if( type.equals( PegasusFile.CHECKPOINT_TYPE )){
             setType( PegasusFile.CHECKPOINT_FILE );
         }
+        else if( type.equals( PegasusFile.DOCKER_TYPE )){
+            setType(PegasusFile.DOCKER_CONTAINER_FILE );
+        }
+        else if( type.equals( PegasusFile.SINGULARITY_TYPE )){
+            setType(PegasusFile.SINGULARITY_CONTAINER_FILE );
+        }
+        else if( type.equals( PegasusFile.SHIFTER_TYPE )){
+            setType(PegasusFile.SHIFTER_CONTAINER_FILE );
+        }
         else if( type.equals( PegasusFile.OTHER_TYPE )){
             setType( PegasusFile.OTHER_FILE );
         }
@@ -378,6 +422,39 @@ public class PegasusFile extends Data {
             throw new IllegalArgumentException( "Invalid Type passed " + type );
         }
     }
+    
+    /**
+     * Sets the type flag to value passed.
+     *
+     * @param type valid type of container file
+     * @exception IllegalArgumentException if the transfer mode is outside
+     * its legal range.
+     *
+     * @see #DOCKER_CONTAINER_FILE
+     * @see #SINGULARITY_CONTAINER_FILE
+     */
+    public void setType( Container.TYPE type) throws IllegalArgumentException{
+        
+        switch (type){
+            case docker:
+                setType( DOCKER_TYPE );
+                break;
+                
+            case singularity:
+                setType( SINGULARITY_TYPE );
+                break;
+                
+            case shifter:
+                setType( SHIFTER_TYPE );
+                break;
+                    
+            default:
+                throw new IllegalArgumentException( "Invalid Type passed " + type );
+        }
+                
+                 
+    }
+
     
     /**
      * Sets the flag denoting  that file is a raw input file that is fetched
@@ -726,6 +803,20 @@ public class PegasusFile extends Data {
         return (this.mType == PegasusFile.DATA_FILE);
      }
      
+     
+    /**
+      * Returns a boolean indicating if a file that is being staged is an
+      * is a container or not
+      *
+      * @return boolean indicating whether a file is a container file or not.
+      */
+    public boolean isContainerFile() {
+       return ( this.mType == PegasusFile.DOCKER_CONTAINER_FILE || 
+                this.mType == PegasusFile.SINGULARITY_CONTAINER_FILE ||
+                this.mType == PegasusFile.SHIFTER_CONTAINER_FILE
+               );
+    }
+     
      /**
       * Returns a boolean indicating if a file that is being staged is a RAW
       * input file
@@ -789,6 +880,22 @@ public class PegasusFile extends Data {
                 
             case EXECUTABLE_FILE:
                 result = EXECUTABLE_TYPE;
+                break;
+                
+            case CHECKPOINT_FILE:
+                result = CHECKPOINT_TYPE;
+                break;
+            
+            case DOCKER_CONTAINER_FILE:
+                result = DOCKER_TYPE;
+                break;
+                
+            case SINGULARITY_CONTAINER_FILE:
+                result = SINGULARITY_TYPE;
+                break;
+                
+            case SHIFTER_CONTAINER_FILE:
+                result = SHIFTER_TYPE;
                 break;
                 
             case OTHER_FILE:

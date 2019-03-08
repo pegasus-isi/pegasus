@@ -1026,12 +1026,14 @@ class TestADAG(unittest.TestCase):
         c = ADAG('adag',count=10,index=1)
 
         self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.6.xsd" version="3.6" name="adag" count="10" index="1">
+<metadata key="dax.api">python</metadata>
 </adag>""")
 
         # Metadata
         c.metadata("key","value")
         self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.6.xsd" version="3.6" name="adag" count="10" index="1">
 <metadata key="key">value</metadata>
+<metadata key="dax.api">python</metadata>
 </adag>""")
         c.clearMetadata()
 

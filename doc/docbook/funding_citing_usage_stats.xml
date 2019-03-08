@@ -4,10 +4,29 @@
 <chapter id="funding_citing_usage">
   <title>Funding, citing, and anonymous usage statistics</title>
 
+  <section id="funding">
+    <title>Pegasus Funding</title>
+
+    <para>Pegasus is funded by the National Science Foundation(NSF) under the
+    <emphasis>OAC SI2-SSI </emphasis>grant <emphasis
+    role="bold">#1664162</emphasis>. Previously, NSF has funded Pegasus under
+    <emphasis>OCI SDCI program</emphasis> grant <emphasis
+    role="bold">#0722019</emphasis> and <emphasis>OCI SI2-SSI</emphasis>
+    program grant <emphasis role="bold">#1148515</emphasis>.</para>
+  </section>
+
   <section id="citing">
     <title>Citing Pegasus in Academic Works</title>
 
     <para>The preferred generic way to cite Pegasus is:</para>
+
+    <para><emphasis>“Pegasus: a Workflow Management System for Science
+    Automation” E. Deelman, K. Vahi, G. Juve, M. Rynge, S. Callaghan, P. J.
+    Maechling, R. Mayani, W. Chen, R. Ferreira da Silva, M. Livny, and K.
+    Wenger, Future Generation Computer Systems, vol. 46, p. 17–35, 2015.
+    </emphasis></para>
+
+    <para>OR</para>
 
     <para><emphasis>Pegasus: a Framework for Mapping Complex Scientific
     Workflows onto Distributed Systems, Ewa Deelman, Gurmeet Singh, Mei-Hui

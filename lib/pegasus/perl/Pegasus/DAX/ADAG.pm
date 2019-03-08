@@ -451,6 +451,7 @@ sub toXML {
     #
     # <metadata>
     #
+    $self->metaData( 'dax.api', 'perl' );
     if ( exists $self->{metadata} ) {
         $f->print( "  $indent<!-- part 1.1: metadata -->\n" );
         foreach my $m ( values %{$self->{metadata}} ) {

@@ -570,7 +570,7 @@ class Parser:
                              "stdout": [],
                              "stderr": [],
                              "statinfo": ["lfn", "size", "ctime", "user" ],
-                             "checksum": ["type", "value"],
+                             "checksum": ["type", "value", "timing"],
                              "type": ["type", "value"]}
 
         return self.parse(stampede_elements, tasks=True, clustered=True)

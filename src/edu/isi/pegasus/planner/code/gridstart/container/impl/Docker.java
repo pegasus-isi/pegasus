@@ -18,6 +18,7 @@ package edu.isi.pegasus.planner.code.gridstart.container.impl;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
+import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -57,10 +58,10 @@ public class Docker extends Abstract{
     
     /**
      * Initiailizes the Container  shell wrapper
-     * @param bag 
+     * @param bag @param dag 
      */
-    public void initialize( PegasusBag bag ){
-        super.initialize(bag);
+    public void initialize( PegasusBag bag, ADag dag ){
+        super.initialize(bag, dag);
     }
     
     /**
@@ -91,7 +92,9 @@ public class Docker extends Abstract{
         sb.append( "fi" ).append( "\n" );
         sb.append( "\n" );
         
-        sb.append( "set +e" ).append( "\n" );
+        sb.append( "set +e" ).append( '\n' );//PM-701
+        sb.append( "job_ec=0" ).append( "\n" );
+        
         
         //sets up the variables used for docker run command
         //FIXME docker_init has to be passed the name of the tar file?
@@ -108,6 +111,12 @@ public class Docker extends Abstract{
         
         //directory where job is run is mounted as scratch
         sb.append( "-v $PWD:").append( CONTAINER_WORKING_DIRECTORY ).append( " ");
+        
+        //PM-1298 mount any host directories if specified
+        for( Container.MountPoint  mp : c.getMountPoints() ){
+            sb.append( "-v ").append( mp ).append( " ");
+        }
+        
         sb.append( "-w=").append( CONTAINER_WORKING_DIRECTORY ).append( " ");     
         
         sb.append( "--name $cont_name ");
@@ -216,11 +225,21 @@ public class Docker extends Abstract{
             }
             sb.append( '\n' );
         }
+
+        // update and include runtime environment variables such as credentials
+        sb.append( "EOF\n" );
+        sb.append( "container_env " ).append( Docker.CONTAINER_WORKING_DIRECTORY ).append( " >> ").append( scriptName ).append( "\n" );
+        sb.append( "cat <<EOF2 >> " ).append( scriptName ).append( "\n" );
         
         if( WORKER_PACKAGE_SETUP_SNIPPET == null ){
             WORKER_PACKAGE_SETUP_SNIPPET = Docker.constructContainerWorkerPackagePreamble();
         }
         sb.append( WORKER_PACKAGE_SETUP_SNIPPET );
+        
+        sb.append( super.inputFilesToPegasusLite(job) );
+
+        //PM-1305 the integrity check should happen in the container
+        sb.append( super.enableForIntegrity(job) );
         
         appendStderrFragment( sb, Abstract.CONTAINER_MESSAGE_PREFIX, "Launching user task");
         sb.append( "\n" );
@@ -247,7 +266,11 @@ public class Docker extends Abstract{
                 sb.append( job.getRemoteExecutable()).append( " " ).
                    append( job.getArguments() ).append( "\n" );
         }
-        sb.append( "EOF").append( "\n" );
+
+        sb.append( "set -e" ).append( '\n' );//PM-701
+        sb.append( super.outputFilesToPegasusLite(job) );
+
+        sb.append( "EOF2").append( "\n" );
         //appendStderrFragment( sb, "Writing out script to launch user TASK in docker container (END)" );
         sb.append( "\n" );
         sb.append( "\n" );
@@ -275,8 +298,8 @@ public class Docker extends Abstract{
         
         sb.append( "pegasus_lite_version_allow_wp_auto_download=$pegasus_lite_version_allow_wp_auto_download" ).append( "\n" );
         sb.append( "pegasus_lite_work_dir=" ).append( Docker.CONTAINER_WORKING_DIRECTORY ).append( "\n" );
-        sb.append( "echo \\$PWD" ).append( "  1>&2" ).append( "\n" );
-        
+       
+        sb.append( "\n" );  
         sb.append( ". pegasus-lite-common.sh" ).append( "\n" );
         sb.append( "pegasus_lite_init" ).append( "\n" ).append( "\n" );
 

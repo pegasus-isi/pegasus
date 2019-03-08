@@ -493,7 +493,7 @@ function test_integrity_xml_inc {
     # do this test multiple times
     for I in `seq 100`; do
     
-        kickstart ../../../../bin/pegasus-integrity --generate-xml=test.sh --full-statcall-lfn=test.sh
+        kickstart ../../../../bin/pegasus-integrity --generate-fullstat-xmls=testintegrity.data=testintegrity.data
         rc=$?
     
         if [ $rc -ne 0 ]; then
@@ -502,7 +502,7 @@ function test_integrity_xml_inc {
         fi
     
         # verify it has the right output
-        if ! (grep 'statcall error="0" id="final" lfn="test.sh"' test.out) >/dev/null 2>&1; then
+        if ! (grep 'statcall error="0" id="final" lfn="testintegrity.data"' test.out) >/dev/null 2>&1; then
             echo "Unable to find the included integrity data in ks output"
             return 1
         fi
@@ -513,6 +513,15 @@ function test_integrity_xml_inc {
     done
 
     return 0
+}
+
+function test_w_with_rel_exec {
+    mkdir -p subdir
+    cp /bin/date subdir/my_unique_exe
+    kickstart -w $PWD/subdir ./my_unique_exe
+    ec=$?
+    rm -rf subdir
+    return $ec
 }
 
 # make sure we start cleanly
@@ -559,5 +568,6 @@ run_test test_metadata
 run_test test_integrity
 run_test test_integrity_failure
 run_test test_integrity_xml_inc
+run_test test_w_with_rel_exec
 
 

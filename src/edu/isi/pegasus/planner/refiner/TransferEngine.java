@@ -631,9 +631,9 @@ public class TransferEngine extends Engine {
                 String sourceURL = selLoc.getPFN();
 
                 //check if the URL's match
-                if (sourceURL.trim().equalsIgnoreCase(putDestURL.trim())){
+                if ( new PegasusURL(sourceURL).equals( new PegasusURL(putDestURL)) ){
                     String msg = "The leaf file " + lfn +
-                        " is already at the output pool " + destSite;
+                        " is already at the output site " + destSite;
                     mLogger.log(msg,LogManager.INFO_MESSAGE_LEVEL);
                     flag = true;
                     break;
@@ -1277,7 +1277,6 @@ public class TransferEngine extends Engine {
         Collection<FileTransfer> localFileTransfers = new LinkedList();
         Collection<FileTransfer> remoteFileTransfers = new LinkedList();
 
-
         String jobName = job.logicalName;
         String stagingSiteHandle   = job.getStagingSiteHandle();
         String executionSiteHandle   = job.getSiteHandle();
@@ -1413,7 +1412,7 @@ public class TransferEngine extends Engine {
             
             //PM-1250 if no checksum exists then set pegasus-transfer
             //to generate checksum. Later on a dial might be required here
-            if( !pf.hasRCCheckSum() ){
+            if( this.mDoIntegrityChecking && !pf.hasRCCheckSum() ){
                 ft.setChecksumComputedInWF( true );
                 pf.setChecksumComputedInWF( true );
             }
@@ -1426,20 +1425,13 @@ public class TransferEngine extends Engine {
                                                                     executionSiteHandle,
                                                                     runTransferOnLocalSite );
             if( candidateLocations.getPFNCount() == 0 ){
-                StringBuilder error = new StringBuilder();
-                error.append( "Unable to select a Physical Filename (PFN) for file with logical filename (LFN) as ").
-                      append( rl.getLFN() ).append( " for preferred site " ).append( executionSiteHandle ).
-                      append( "with runTransferOnLocalSite - ").append( runTransferOnLocalSite ).
-                      append( " amongst ").append( rl.getPFNList() );
-                throw new RuntimeException( error.toString() );
+                complainForNoCandidateInput( rl, executionSiteHandle, runTransferOnLocalSite );
             }
             
             //check if we need to replace url prefix for 
             //symbolic linking
             boolean symLinkSelectedLocation = false;
-            //is set to false later, on basis of property value
-            boolean bypassFirstLevelStaging = true;
-
+            boolean bypassFirstLevelStagingPossible = false; //PM-1327 tracks whether one of candidate locations can trigger bypass for that file 
             int candidateNum = 0; 
             //PM-1082 we want to select only one destination put URL
             //with preference for symlinks
@@ -1447,7 +1439,7 @@ public class TransferEngine extends Engine {
             String preferredDestPutURL = destPutURL;
             for( ReplicaCatalogEntry selLoc : candidateLocations.getPFNList()){
                 candidateNum++;
-                
+                boolean bypassFirstLevelStagingForCandidateLocation = false;
                 if ( symLinkSelectedLocation = 
                         ( mUseSymLinks && 
                           selLoc.getResourceHandle().equals( job.getStagingSiteHandle() ) &&
@@ -1528,8 +1520,8 @@ public class TransferEngine extends Engine {
                 }
                 
                 //add locations of input data on the remote site to the transient RC
-                bypassFirstLevelStaging = this.bypassStagingForInputFile( selLoc , pf , job  );
-                if( bypassFirstLevelStaging ){
+                bypassFirstLevelStagingForCandidateLocation = this.bypassStagingForInputFile( selLoc , pf , job  );
+                if( bypassFirstLevelStagingForCandidateLocation ){
                     //PM-1250 if no checksum exists in RC
                     //then make sure checksum computation is set to false
                     //for bypassed inputs we have no way to compute
@@ -1554,6 +1546,7 @@ public class TransferEngine extends Engine {
                     //ensure the input file does not get cleaned up by the
                     //InPlace cleanup algorithm
                     pf.setForCleanup( false );
+                    bypassFirstLevelStagingPossible = true;
                     continue;
                 }
                 else{
@@ -1590,7 +1583,7 @@ public class TransferEngine extends Engine {
                 ft.addDestination(stagingSiteHandle,preferredDestPutURL);
             }
             
-            if ( !bypassFirstLevelStaging ) {
+            if ( !bypassFirstLevelStagingPossible ) {
                 //no bypass of input file staging. we need to add
                 //data stage in nodes for the lfn
                 if(  symLinkSelectedLocation || //symlinks can run only on staging site
@@ -2158,6 +2151,46 @@ public class TransferEngine extends Engine {
             throw new RuntimeException( "Error while determining relative submit dir for job " + job.getID() , ex);
         }
         return relative;
+        
+    }
+
+    /**
+     * Throws an exception with a detailed message as to why replica selection failed
+     * 
+     * @param rl
+     * @param destinationSite
+     * @param runTransferOnLocalSite 
+     * 
+     * @throws RuntimeException
+     */
+    private void complainForNoCandidateInput(ReplicaLocation rl, String destinationSite, boolean runTransferOnLocalSite) throws RuntimeException{
+        StringBuilder error = new StringBuilder();
+        error.append( "Unable to select a Physical Filename (PFN) for file with logical filename (LFN) as ").
+              append( rl.getLFN() ).append( " for transfer to destination site (" ).append(  destinationSite ).
+              append( "). runTransferOnLocalSite:").append( runTransferOnLocalSite ).
+              append( " amongst ").append( rl.getPFNList() );
+        
+        //PM-1248 traverse through to check if any file URL's available
+        Collection<ReplicaCatalogEntry> localSiteFileRCEs = new LinkedList();
+        for ( Iterator it = rl.pfnIterator(); it.hasNext(); ) {
+            ReplicaCatalogEntry rce = ( ReplicaCatalogEntry ) it.next();
+            String site = rce.getResourceHandle();
+            //check if equal to the execution pool
+            if ( site != null && site.equals( "local" ) ) {
+                if ( rce.getPFN().startsWith( PegasusURL.FILE_URL_SCHEME ) ) {
+                    localSiteFileRCEs.add(rce);
+                }
+            }
+        }
+        if( !localSiteFileRCEs.isEmpty() ){
+            error.append( "\n" ).
+                  append( "If any of the following file URLs are also accessible on the site (" ).
+                  append( destinationSite ).append( ") consider setting the pegasus profile ").append( "\"" ).
+                  append( Pegasus.LOCAL_VISIBLE_KEY ).append( "\"" ).append( " to true in the site catalog for site: " ).
+                  append( destinationSite ).append( "\n" ).
+                  append( localSiteFileRCEs );
+        }
+        throw new RuntimeException( error.toString() );
         
     }
 
