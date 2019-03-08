@@ -130,11 +130,11 @@ public class TransformationCatalogYAMLParser {
 	/**
 	 * Schema file name;
 	 **/
-	private static final String SCHEMA_FILENAME = "http://pegasus.isi.edu/schema/transformationcatalog.json";
+	private static final String SCHEMA_URI = "http://pegasus.isi.edu/schema/tc-5.0.json";
 	/**
 	 * Schema File Object;
 	 **/
-	private static final File YAMLSCHEMA = new File(SCHEMA_FILENAME);
+	private static File SCHEMA_FILENAME = null;
 
 	/**
 	 * The transformation to the logger used to log messages.
@@ -148,14 +148,16 @@ public class TransformationCatalogYAMLParser {
 
 	/**
 	 * Initializes the parser with an input stream to read from.
+	 * @param schemaDir 
 	 *
 	 * @param input  is the stream opened for reading.
 	 * @param logger the transformation to the logger.
 	 *
-	 * @throws IOException
+	 * @throws IOExceptionnew File( this.mProps.getSchemaDir(),new File(SCHEMA_URIL).getName())
 	 * @throws ScannerException
 	 */
-	public TransformationCatalogYAMLParser(Reader stream, LogManager logger) throws IOException, ScannerException {
+	public TransformationCatalogYAMLParser(Reader stream, File schemaDir, LogManager logger) throws IOException, ScannerException {
+		SCHEMA_FILENAME = new File(schemaDir, new File(SCHEMA_URI).getName());
 		mReader = stream;
 		mLogger = logger;
 	}
@@ -192,7 +194,7 @@ public class TransformationCatalogYAMLParser {
 		}
 		if (yamlData != null) {
 			YAMLSchemaValidationResult result = YAMLSchemaValidator.getInstance().validateYAMLSchema(yamlData,
-					YAMLSCHEMA);
+					SCHEMA_FILENAME);
 					
 			// schema validation is done here.. in case of any validation error we throw the
 			// result..
@@ -563,7 +565,7 @@ public class TransformationCatalogYAMLParser {
 			logger.setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
 			logger.logEventStart("event.pegasus.catalog.transformation.test", "planner.version", "2");
 
-			TransformationCatalogYAMLParser p = new TransformationCatalogYAMLParser(r, logger);
+			TransformationCatalogYAMLParser p = new TransformationCatalogYAMLParser(r, new File(""), logger);
 			p.parse(true);
 
 		} catch (FileNotFoundException ex) {

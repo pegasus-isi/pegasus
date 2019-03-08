@@ -29,6 +29,7 @@ import org.junit.runners.Suite.SuiteClasses;
     edu.isi.pegasus.planner.catalog.replica.impl.SimpleFileTest.class,
     edu.isi.pegasus.planner.catalog.site.impl.XMLTest.class,
     edu.isi.pegasus.planner.catalog.transformation.impl.TextTest.class,
+    edu.isi.pegasus.planner.catalog.transformation.impl.YAMLTest.class,
     edu.isi.pegasus.planner.cluster.RuntimeClusteringTest.class,
     edu.isi.pegasus.planner.code.generator.condor.CondorEnvironmentEscapeTest.class,
     edu.isi.pegasus.planner.code.generator.condor.style.GliteTest.class,

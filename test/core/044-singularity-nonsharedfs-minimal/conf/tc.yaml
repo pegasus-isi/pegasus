@@ -1,0 +1,50 @@
+---
+- transformations:
+  - namespace: "diamond"
+    name: "analyze"
+    version: 4.0
+    site:
+    - name: "local"
+      arch: "x86_64"
+      os: "linux"
+      container: "python3-minimal"
+      pfn: "${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg"
+      type: "STAGEABLE"
+      profile:
+      - condor:
+          foo: "bar"
+  - namespace: "diamond"
+    name: "findrange"
+    version: 4.0
+    site:
+    - name: "local"
+      arch: "x86_64"
+      os: "linux"
+      container: "python3-minimal"
+      pfn: "${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg"
+      type: "STAGEABLE"
+      profile:
+      - condor:
+          foo: "bar"
+  - namespace: "diamond"
+    name: "preprocess"
+    version: 4.0
+    site:
+    - name: "local"
+      arch: "x86_64"
+      os: "linux"
+      container: "python3-minimal"
+      pfn: "${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg"
+      type: "STAGEABLE"
+      profile:
+      - condor:
+          foo: "bar"
+- cont:
+  - image: "gsiftp://bamboo.isi.edu/lfs1/bamboo-tests/data/python3-minimal.img"
+    profile:
+    - env:
+        APP_HOME: "/tmp/myscratch"
+        HELLo: "WORLD"
+    name: "python3-minimal"
+    image_site: "local"
+    type: "singularity"

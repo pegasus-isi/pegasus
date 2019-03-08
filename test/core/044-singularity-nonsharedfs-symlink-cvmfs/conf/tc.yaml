@@ -1,0 +1,53 @@
+---
+- transformations:
+  - namespace: "diamond"
+    name: "analyze"
+    version: 4.0
+    site:
+    - name: "local"
+      arch: "x86_64"
+      os: "linux"
+      container: "centos-pycbc"
+      pfn: "${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg"
+      type: "STAGEABLE"
+      profile:
+      - condor:
+          foo: "bar"
+  - namespace: "diamond"
+    name: "findrange"
+    version: 4.0
+    site:
+    - name: "local"
+      arch: "x86_64"
+      os: "linux"
+      container: "centos-pycbc"
+      pfn: "${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg"
+      type: "STAGEABLE"
+      profile:
+      - condor:
+          foo: "bar"
+  - namespace: "diamond"
+    name: "preprocess"
+    version: 4.0
+    site:
+    - name: "local"
+      arch: "x86_64"
+      os: "linux"
+      container: "centos-pycbc"
+      pfn: "${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg"
+      type: "STAGEABLE"
+      profile:
+      - condor:
+          foo: "bar"
+- cont:
+  - image: "file:///cvmfs/singularity.opensciencegrid.org/pycbc/pycbc-el7:latest"
+    profile:
+    - env:
+        APP_HOME: "/tmp/myscratch"
+        HELLo: "WORLD"
+        JAVA_HOME: "/bin/java.1.6"
+    name: "centos-pycbc"
+    image_site: "condorpool"
+    type: "singularity"
+    mount:
+    - "/lizard:/lizard:null"

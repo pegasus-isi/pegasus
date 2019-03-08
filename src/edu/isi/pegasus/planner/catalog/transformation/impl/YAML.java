@@ -17,6 +17,7 @@
 package edu.isi.pegasus.planner.catalog.transformation.impl;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -211,7 +212,8 @@ public class YAML extends Abstract
                       
             if( f.exists() && f.length() > 0){
                 Reader reader = new VariableExpansionReader( new FileReader( mTCFile ) );
-                yamlParser = new TransformationCatalogYAMLParser (reader,
+                File schemaDir = this.mProps.getSchemaDir();
+                yamlParser = new TransformationCatalogYAMLParser (reader, schemaDir,
                                                                     mLogger );
                 mTCStore = yamlParser.parse(modifyFileURL);
             }

@@ -1,0 +1,44 @@
+---
+- transformations:
+  - namespace: "vahi"
+    name: "analyze"
+    version: 1.0
+    site:
+    - name: "cloud"
+      arch: "x86"
+      os: "linux"
+      pfn: "/opt/pegasus/default/bin/keg"
+      type: "INSTALLED"
+    - name: "local"
+      arch: "x86"
+      os: "linux"
+      pfn: "gsiftp://sukhna.isi.edu/nfs/asd2/vahi/montage/tutorial/pegasus/default/bin/keg"
+      type: "STAGEABLE"
+  - namespace: "vahi"
+    name: "findrange"
+    version: 1.0
+    site:
+    - name: "cloud"
+      arch: "x86"
+      os: "linux"
+      pfn: "/opt/pegasus/default/bin/keg"
+      type: "INSTALLED"
+    - name: "local"
+      arch: "x86"
+      os: "linux"
+      pfn: "gsiftp://sukhna.isi.edu/nfs/asd2/vahi/montage/tutorial/pegasus/default/bin/keg"
+      type: "STAGEABLE"
+  - namespace: "vahi"
+    name: "preprocess"
+    version: 1.0
+    site:
+    - name: "cloud"
+      arch: "x86"
+      os: "linux"
+      pfn: "/opt/pegasus/default/bin/keg"
+      type: "INSTALLED"
+    - name: "local"
+      arch: "x86"
+      os: "linux"
+      pfn: "gsiftp://sukhna.isi.edu/nfs/asd2/vahi/montage/tutorial/pegasus/default/bin/keg"
+      type: "STAGEABLE"

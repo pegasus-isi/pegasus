@@ -5,8 +5,8 @@ pegasus.data.configuration = nonsharedfs
 pegasus.catalog.replica  File
 pegasus.catalog.replica.file ./conf/rc.data
 
-pegasus.catalog.transformation.file ./conf/tc.text
-
+pegasus.catalog.transformation.file ./conf/tc.yaml
+pegasus.catalog.transformation YAML
 pegasus.transfer.links=true
 pegasus.transfer.bypass.input.staging=true
 

@@ -2,8 +2,8 @@
 pegasus.catalog.site = XML3
 pegasus.catalog.site.file = sites.xml3
 
-pegasus.catalog.transformation = File
-pegasus.catalog.transformation.file = tc.data
+pegasus.catalog.transformation = YAML
+pegasus.catalog.transformation.file = tc.yaml
 pegasus.catalog.transformation.mapper = Installed
 
 pegasus.catalog.replica = SimpleFile
