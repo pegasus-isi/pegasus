@@ -346,8 +346,10 @@ public class TCFormatUtility {
 				if (container.getMountPoints() != null && !container.getMountPoints().isEmpty()) {
 					List<String> mountPoints = new LinkedList<>();
 					for (MountPoint point : container.getMountPoints()) {
-						String mountPoint = point.getSourceDirectory() + ":" + point.getDestinationDirectory() + ":"
-								+ point.getMountOptions();
+						String mountPoint = point.getSourceDirectory() + ":" + point.getDestinationDirectory();
+						if(point.getMountOptions() != null) {
+							mountPoint +=  ":" + point.getMountOptions();
+						}
 						mountPoints.add(mountPoint);
 					}
 					containerData.put(TransformationCatalogKeywords.CONTAINER_MOUNT.getReservedName(), mountPoints);

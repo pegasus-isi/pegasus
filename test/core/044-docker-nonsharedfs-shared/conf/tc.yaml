@@ -50,4 +50,4 @@
     image_site: "local"
     type: "docker"
     mount:
-    - "/lizard:/lizard:null"
+    - "/lizard:/lizard"

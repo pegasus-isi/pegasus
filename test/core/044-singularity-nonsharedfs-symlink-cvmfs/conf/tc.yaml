@@ -50,4 +50,4 @@
     image_site: "condorpool"
     type: "singularity"
     mount:
-    - "/lizard:/lizard:null"
+    - "/lizard:/lizard"

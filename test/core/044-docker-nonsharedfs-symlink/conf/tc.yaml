@@ -50,4 +50,4 @@
     image_site: "local"
     type: "docker"
     mount:
-    - "/lizard/scratch-90-days/${TEST_NAME}:/existing/data:null"
+    - "/lizard/scratch-90-days/${TEST_NAME}:/existing/data"
