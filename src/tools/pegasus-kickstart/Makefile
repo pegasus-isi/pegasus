@@ -99,7 +99,7 @@ depends.mk: $(SRCS) version.h
 clean:
 	$(RM) *.o *.so machine/*.o core core.* version.h depends.mk
 
-distclean:
+distclean: clean
 	$(RM) $(TARGET)
 
 test: $(TARGET)
