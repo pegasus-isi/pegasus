@@ -1426,7 +1426,7 @@ project:
           address: pegasus-svn@isi.edu
           event: !event FAILED_BUILDS_AND_FIRST_SUCCESSFUL
 
-    - key: WTPanorama
+    - key: WTPANORAMA
       name: Workflow Tests (Panorama)
       scm:
         - !git
