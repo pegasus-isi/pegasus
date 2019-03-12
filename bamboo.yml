@@ -55,7 +55,7 @@ project:
                   copyPattern: 'pegasus-python-source-*.tar.gz'
                   isShared: true
                 - name: pegasus-source-versioned
-                  copyPattern: 'pegasus-source-*.tar.gz'
+                  copyPattern: 'pegasus-?.-*.tar.gz'
                   isShared: true
                 - name: pegasus-source-versioned-swamp-c
                   copyPattern: 'pegasus-swamp-c-?.*.tar.gz'
@@ -69,6 +69,10 @@ project:
                 - name: pegasus-source
                   copyPattern: 'pegasus-source.tar.gz'
                   isShared: true
+              requirements:
+                - capabilityKey: docbuild
+                  matchType: !equals
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
 
@@ -102,11 +106,52 @@ project:
               requirements:
                 - capabilityKey: system.docker.executable
                   matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: D9JUT
+              name: Debian 9 Java Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Java Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      TAG=${bamboo_TAG_DEBIAN_9}
+
+                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+
+                      /opt/docker/docker-bamboo-wrapper run \
+                      --rm \
+                      --entrypoint ant \
+                      --env "USER=bamboo" \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
+                      pegasus/pegasus:${TAG} test-java
+              artifactDependencies:
+                - name: pegasus-source
               requirements:
-                - capabilityKey: mpi
+                - capabilityKey: system.docker.executable
                   matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
+            - key: D9PUT
+              name: Debian 9 Python Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Python Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      TAG=${bamboo_TAG_DEBIAN_9}
 
                       /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
 
@@ -222,6 +267,7 @@ project:
                     scriptBody: "tar xzf pegasus-source.tar.gz"
                 - !script
                   description: Unit Tests
+                  environmentVariables: 'PATH="${PATH}:/usr/local/bin:/Library/TeX/texbin" LDFLAGS="-L/usr/local/opt/openssl/lib" CPPFLAGS="-I/usr/local/opt/openssl/include"'
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
@@ -416,7 +462,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTCUZ
-              name: Ubuntu Zesty Unit Tests
+              name: Ubuntu Xenial Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -428,7 +474,7 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_17}
+                      TAG=${bamboo_TAG_UBUNTU_16}
 
                       /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
 
@@ -445,7 +491,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTJUZ
-              name: Ubuntu Zesty Java Unit Tests
+              name: Ubuntu Xenial Java Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -457,7 +503,7 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_17}
+                      TAG=${bamboo_TAG_UBUNTU_16}
 
                       /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
 
@@ -475,7 +521,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTPUZ
-              name: Ubuntu Zesty Python Unit Tests
+              name: Ubuntu Xenial Python Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -487,7 +533,7 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_17}
+                      TAG=${bamboo_TAG_UBUNTU_16}
 
                       /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
 
@@ -616,6 +662,34 @@ project:
               artifactDefinitions:
                 - name: pegasus-doc
                   copyPattern: 'pegasus-doc-*.tar.gz'
+                  location: pegasus-source/dist
+                  isShared: true
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: docbuild
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: BR
+              name: Build R
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !customTask
+                  pluginKey: com.atlassian.bamboo.plugins.ant:task.builder.ant
+                  description: Build R DAX Package
+                  taskConfig:
+                    label: Ant
+                    target: dist-r
+                    buildJdk: JDK
+                    workingSubDirectory: pegasus-source
+              artifactDefinitions:
+                - name: pegasus-r-dax3
+                  copyPattern: 'pegasus-r-dax3*.tar.gz'
                   location: pegasus-source/dist
                   isShared: true
               artifactDependencies:
@@ -759,49 +833,6 @@ project:
                   matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
-            - key: BXDW
-              name: Build x86_64 Debian 7
-              tasks:
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xzf pegasus-source.tar.gz"
-                - !script
-                  description: Binary Packages
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      TAG=${bamboo_TAG_DEBIAN_7}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      --entrypoint ant \
-                      pegasus/pegasus:${TAG} \
-                      clean dist-deb dist-worker dist-release
-              artifactDefinitions:
-                - name: pegasus-binary-x86_64_deb_7
-                  copyPattern: 'pegasus-binary-*-x86_64_deb_7.tar.gz'
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-deb-x86_64_deb_7
-                  copyPattern: '*.deb'
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-worker-x86_64_deb_7
-                  copyPattern: 'pegasus-worker-*-x86_64_deb_7.tar.gz'
-                  location: pegasus-source/dist
-                  isShared: true
-              artifactDependencies:
-                - name: pegasus-source
-              requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
             - key: BXDJ
               name: Build x86_64 Debian 8
               tasks:
@@ -836,6 +867,49 @@ project:
                   isShared: true
                 - name: pegasus-worker-x86_64_deb_8
                   copyPattern: 'pegasus-worker-*-x86_64_deb_8.tar.gz'
+                  location: pegasus-source/dist
+                  isShared: true
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: BXDS
+              name: Build x86_64 Debian 9
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Binary Packages
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      TAG=${bamboo_TAG_DEBIAN_9}
+
+                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+
+                      /opt/docker/docker-bamboo-wrapper run \
+                      --rm \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
+                      --entrypoint ant \
+                      pegasus/pegasus:${TAG} \
+                      clean dist-deb dist-worker dist-release
+              artifactDefinitions:
+                - name: pegasus-binary-x86_64_deb_9
+                  copyPattern: 'pegasus-binary-*-x86_64_deb_9.tar.gz'
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-deb-x86_64_deb_9
+                  copyPattern: '*.deb'
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-worker-x86_64_deb_9
+                  copyPattern: 'pegasus-worker-*-x86_64_deb_9.tar.gz'
                   location: pegasus-source/dist
                   isShared: true
               artifactDependencies:
@@ -932,8 +1006,8 @@ project:
                     regex: 10.*
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
-            - key: BXUT
-              name: Build x86_64 Ubuntu Trusty
+            - key: BXUX
+              name: Build x86_64 Ubuntu Xenial
               tasks:
                 - !script
                   description: Untar source
@@ -945,7 +1019,7 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_14}
+                      TAG=${bamboo_TAG_UBUNTU_16}
 
                       /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
 
@@ -956,16 +1030,16 @@ project:
                       pegasus/pegasus:${TAG} \
                       clean dist-deb dist-worker dist-release
               artifactDefinitions:
-                - name: pegasus-binary-x86_64_ubuntu_14
-                  copyPattern: 'pegasus-binary-*-x86_64_ubuntu_14.tar.gz'
+                - name: pegasus-binary-x86_64_ubuntu_16
+                  copyPattern: 'pegasus-binary-*-x86_64_ubuntu_16.tar.gz'
                   location: pegasus-source/dist
                   isShared: true
-                - name: pegasus-deb-x86_64_ubuntu_14
+                - name: pegasus-deb-x86_64_ubuntu_16
                   copyPattern: '*.deb'
                   location: pegasus-source/dist
                   isShared: true
-                - name: pegasus-worker-x86_64_ubuntu_14
-                  copyPattern: 'pegasus-worker-*-x86_64_ubuntu_14.tar.gz'
+                - name: pegasus-worker-x86_64_ubuntu_16
+                  copyPattern: 'pegasus-worker-*-x86_64_ubuntu_16.tar.gz'
                   location: pegasus-source/dist
                   isShared: true
               artifactDependencies:
@@ -975,6 +1049,20 @@ project:
                   matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
+            - key: BXUZ
+              name: Build x86_64 Ubuntu Zesty
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Binary Packages
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      TAG=${bamboo_TAG_UBUNTU_17}
 
                       /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
 
@@ -1133,7 +1221,6 @@ project:
                       ssh pegasus.isi.edu "mkdir -p /srv/pegasus.isi.edu/public_html/docs/$VERSION"
                       scp -r docs/pegasus-*/share/doc/pegasus/wordpress/* pegasus.isi.edu:/srv/pegasus.isi.edu/public_html/docs/$VERSION/
               artifactDependencies:
-                - name: pegasus-binary-x86_64_deb_7
                 - name: pegasus-binary-x86_64_deb_8
                 - name: pegasus-binary-x86_64_deb_9
                 - name: pegasus-binary-x86_64_deb_10
@@ -1143,7 +1230,6 @@ project:
                 - name: pegasus-binary-x86_64_ubuntu_16
                 - name: pegasus-binary-x86_64_ubuntu_17
                 - name: pegasus-binary-x86_64_ubuntu_18
-                #- name: pegasus-binary-x86_rhel_6
                 - name: pegasus-deb-x86_64_deb_8
                 - name: pegasus-deb-x86_64_deb_9
                 - name: pegasus-deb-x86_64_deb_10
@@ -1153,16 +1239,15 @@ project:
                 - name: pegasus-dmg-x86_64_macos
                 - name: pegasus-doc
                 - name: pegasus-python-source-versioned
+                - name: pegasus-r-dax3
                 - name: pegasus-rpm-x86_64_rhel_6
                 - name: pegasus-rpm-x86_64_rhel_7
-                - name: pegasus-rpm-x86_rhel_6
                 - name: pegasus-source
                 - name: pegasus-source-versioned
                 - name: pegasus-source-versioned-swamp-c
                 - name: pegasus-source-versioned-swamp-java
                 - name: pegasus-source-versioned-swamp-python
                 - name: pegasus-srcrpm
-                - name: pegasus-worker-x86_64_deb_7
                 - name: pegasus-worker-x86_64_deb_8
                 - name: pegasus-worker-x86_64_deb_9
                 - name: pegasus-worker-x86_64_deb_10
@@ -1227,20 +1312,20 @@ project:
         - key: TAG_DEBIAN_7
           value: panorama-wheezy
         - key: TAG_DEBIAN_8
-          value: jessie
+          value: panorama-jessie
         - key: TAG_DEBIAN_9
-          value: stretch
+          value: panorama-stretch
         - key: TAG_DEBIAN_10
-          value: buster
+          value: panorama-buster
         - key: TAG_UBUNTU_16
-          value: xenial
+          value: panorama-xenial
         - key: TAG_UBUNTU_17
-          value: zesty
+          value: panorama-zesty
         - key: TAG_UBUNTU_18
-          value: bionic
+          value: panorama-bionic
 
-    - key: WTPANORAMA
-      name: Workflow Tests (panorama)
+    - key: TVMPANORAMA
+      name: Tutorial VM (panorama)
       scm:
         - !git
           name: Pegasus
@@ -1332,7 +1417,7 @@ project:
           cronExpression: "0 0 22 * * ?"
           onlyRunIfOtherPlansArePassing:
             planKeys:
-              - PEGASUS-BNT49
+              - PEGASUS-BNTPANORAMA
       notifications:
         - !email
           address: pegasus-svn@isi.edu
@@ -1341,13 +1426,13 @@ project:
           address: pegasus-svn@isi.edu
           event: !event FAILED_BUILDS_AND_FIRST_SUCCESSFUL
 
-    - key: WT49
-      name: Workflow Tests (4.9)
+    - key: WTPanorama
+      name: Workflow Tests (Panorama)
       scm:
         - !git
           name: Pegasus
           url: https://github.com/pegasus-isi/pegasus.git
-          branch: 4.9
+          branch: panorama
       stages:
         - name: Setup
           description: Setup
@@ -1449,7 +1534,7 @@ project:
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -1471,14 +1556,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T4N6
               name: 004-montage-condor-io
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -1500,14 +1585,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T4
               name: 004-montage-grid
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -1529,14 +1614,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T4M1
               name: 004-montage-shared-fs
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -1558,14 +1643,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: SC004MON
               name: 004-montage-shared-fs-sc
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -1587,14 +1672,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T4N12
               name: 004-montage-staging-site
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -1616,14 +1701,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T4M2
               name: 004-montage-universe-local
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -1645,7 +1730,7 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T005
               name: 005-galactic-plane
               description: TODO
@@ -1653,7 +1738,7 @@ project:
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -1675,14 +1760,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T6
               name: 006-black-diamond-shell-code-generator
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -1704,14 +1789,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T7
               name: 007-black-diamond-pegasuslite-local
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -1733,14 +1818,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T8
               name: 008-black-diamond-pegasuslite-condorio
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -1762,14 +1847,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T9
               name: 009-black-diamond-pegasuslite-pegasustransfer
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -1791,14 +1876,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T9A
               name: 009-black-diamond-pegasuslite-pegasustransfer-a
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -1820,14 +1905,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T10A
               name: 010-runtime-clustering - CondorIO
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -1849,14 +1934,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T10B
               name: 010-runtime-clustering - Non-SharedFS
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -1878,14 +1963,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T10C
               name: 010-runtime-clustering - SharedFS
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -1907,14 +1992,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T10D
               name: 010-runtime-clustering SharedFS Staging and No Kickstart
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -1936,14 +2021,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T11
               name: 011-rosetta-staging-site
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -1965,14 +2050,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T12
               name: 012-blackdiamond-invoke
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -1994,14 +2079,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: TESTMPIDAG
               name: 013-pegasus-mpi-cluster
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2024,14 +2109,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T15
               name: 015-shell-hierarchic-workflow
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2053,43 +2138,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T016
               name: 016-pegasus-transfer
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "rm -rf pegasus/ test/"
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xf tests.tar"
-                - !script
-                  description: Run Test
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
-                      test/scripts/launch-bamboo-test-no-jobs ${bamboo_shortJobName}
-              requirements:
-                - capabilityKey: condor
-                  matchType: !exists exists
-              artifactDependencies:
-                - name: tests
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
-            - key: PEGASUSGRIDFTP
-              name: 017-pegasus-gridftp
-              description: TODO
-              tasks:
-                - !script
-                  description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2115,11 +2171,10 @@ project:
             - key: T18A
               name: 018-black-condorc-condor-io
               description: TODO
-              enabled: false
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2141,15 +2196,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T18C
               name: 018-black-condorc-hybrid
               description: TODO
-              enabled: false
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2171,15 +2225,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T18B
               name: 018-black-condorc-staging-site
               description: TODO
-              enabled: false
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2201,14 +2254,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T19A
               name: 019-black-label
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2230,14 +2283,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: PMCONLY
               name: 020-pmc-only
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2260,14 +2313,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T21A
               name: 021-black-dir
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2289,14 +2342,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: BNT22A
               name: 022-data-reuse-full-a
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2318,14 +2371,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: BNT022B
               name: 022-data-reuse-full-b
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2347,14 +2400,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T22
               name: 022-data-reuse-regexrc
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2376,14 +2429,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T023
               name: 023-sc4-ssh-http
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2405,14 +2458,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T024
               name: 024-sc4-gridftp-http
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2434,14 +2487,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T025
               name: 025-sc4-file-http
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2463,14 +2516,15 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T26
               name: 026-cache-url-check
               description: TODO
+              enabled: true
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2492,14 +2546,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T27A
               name: 027-montage-bypass-staging-site
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2521,14 +2575,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T27B
               name: 027-montage-bypass-staging-site-condorio
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2550,14 +2604,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T28A
               name: 028-dynamic-hierarchy
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2579,14 +2633,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T028B
               name: 028-dynamic-hierarchy-b
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2608,14 +2662,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T29A
               name: 029-black-quiet
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2637,14 +2691,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: PEG030GS
               name: 030-pegasuslite-gs
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2666,7 +2720,7 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: PEG030
               name: 030-pegasuslite-irods
               description: TODO
@@ -2674,7 +2728,7 @@ project:
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2696,14 +2750,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: PEG030S3
               name: 030-pegasuslite-s3
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2725,14 +2779,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: SSHFTP030
               name: 030-pegasuslite-sshftp
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2754,14 +2808,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: RC031MON
               name: 031-montage-condor-io-jdbcrc
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2783,14 +2837,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T31A
               name: 031-montage-jdbcrc-sqlite
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2812,14 +2866,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T32A
               name: 032-black-chkpoint
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2841,14 +2895,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T33
               name: 033-pegasuslite-multi
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2870,14 +2924,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T33A
               name: 033-pegasuslite-multi-wp-a
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2899,14 +2953,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T33B
               name: 033-pegasuslite-multi-wp-b
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2928,14 +2982,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T33C
               name: 033-pegasuslite-multi-wp-c
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2957,14 +3011,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T34C
               name: 034-recursive-cluster-condorio
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -2986,14 +3040,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T34B
               name: 034-recursive-cluster-nonsharedfs
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -3015,14 +3069,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T34A
               name: 034-recursive-cluster-sharedfs
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -3044,14 +3098,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T35
               name: 035-black-transfer
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -3073,14 +3127,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T36
               name: 036-condorio-no-outputs
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -3102,14 +3156,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T37
               name: 037-black-hints
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -3131,14 +3185,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T038
               name: 038-halt-continue
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -3631,6 +3685,35 @@ project:
               - name: tests
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: false
+            - key: T044I
+              name: 044-singularity-nonsharedfs-minimal
+              description: Singularity in nonsharedfs, with a minimal image
+              tasks:
+              - !script
+                description: Cleanup
+                enabled: true
+                inlineScript:
+                  interpreter: !scriptInterpreter LEGACY_SH_BAT
+                  scriptBody: "rm -rf pegasus/ test/"
+              - !script
+                description: Untar source
+                inlineScript:
+                  interpreter: !scriptInterpreter LEGACY_SH_BAT
+                  scriptBody: "tar xf tests.tar"
+              - !script
+                description: Run Test
+                inlineScript:
+                  interpreter: !scriptInterpreter LEGACY_SH_BAT
+                  scriptBody: |
+                    export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+                    test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+              requirements:
+              - capabilityKey: condor
+                matchType: !exists exists
+              artifactDependencies:
+              - name: tests
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T045A
               name: 045-hierarchy-sharedfs
               description: Baseline hierarchal workflow
@@ -3724,7 +3807,7 @@ project:
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -3746,14 +3829,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T1B
               name: blackdiamond - pl-condorio-local
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -3775,14 +3858,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T1E
               name: blackdiamond - pl-pt
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -3804,14 +3887,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T1C
               name: blackdiamond - pl-pt-local
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -3833,14 +3916,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T1F
               name: blackdiamond - sharedfs-symlink-nogridstart
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -3862,14 +3945,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T1G
               name: blackdiamond - sharedfs-worker-staging-cleanup
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -3891,14 +3974,14 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T1A
               name: blackdiamond - vanilla-condor
               description: TODO
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -3920,7 +4003,7 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
+                cleanWorkingDirectoryAfterEachBuild: false
 
         - name: Performance Tests
           description: Performance Tests
@@ -3931,7 +4014,38 @@ project:
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "rm -rf pegasus/ test/"
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xf tests.tar"
+                - !script
+                  description: Run Test
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+                      test/scripts/launch-bamboo-test-planner-only ${bamboo_shortJobName}
+              requirements:
+                - capabilityKey: condor
+                  matchType: !exists exists
+                - capabilityKey: performance
+                  matchType: !exists exists
+              artifactDependencies:
+                - name: tests
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: false
+            - key: T014100K
+              name: 014-planner-performance-100k
+              description: Planner performance 100K
+              tasks:
+                - !script
+                  description: Cleanup
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -3962,7 +4076,7 @@ project:
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -3993,7 +4107,7 @@ project:
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: false
+                  enabled: true
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
@@ -4068,7 +4182,7 @@ project:
           cronExpression: "0 0 20 * * ?"
           onlyRunIfOtherPlansArePassing:
             planKeys:
-              - PEGASUS-BNT49
+              - PEGASUS-BNTPanorama
       notifications:
         - !email
           address: pegasus-svn@isi.edu
@@ -4076,16 +4190,3 @@ project:
         - !email
           address: pegasus-svn@isi.edu
           event: !event FAILED_BUILDS_AND_FIRST_SUCCESSFUL
-
-#      triggers:
-#        - !scheduled
-#          description: Nightly Build
-#          cronExpression: "0 0 20 * * ?"
-
-#      notifications:
-#        - !email
-#          address: pegasus-svn@isi.edu
-#          event: !event JOB_HUNG
-#        - !email
-#          address: pegasus-svn@isi.edu
-#          event: !event FAILED_BUILDS_AND_FIRST_SUCCESSFUL
