@@ -4182,7 +4182,7 @@ project:
           cronExpression: "0 0 20 * * ?"
           onlyRunIfOtherPlansArePassing:
             planKeys:
-              - PEGASUS-BNTPanorama
+              - PEGASUS-BNTPANORAMA
       notifications:
         - !email
           address: pegasus-svn@isi.edu
