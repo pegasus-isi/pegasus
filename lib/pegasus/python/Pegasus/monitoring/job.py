@@ -57,6 +57,7 @@ re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
 re_parse_input = re.compile(r"^\s*intput\s*=\s*(\S+)")
 re_parse_output = re.compile(r"^\s*output\s*=\s*(\S+)")
 re_parse_error = re.compile(r"^\s*error\s*=\s*(\S+)")
+re_parse_job_class = re.compile(r"^\s*\+pegasus_job_class\s*=\s*(\S+)")
 re_parse_pegasuslite_hostname = re.compile(r'^.*Executing on host\s*(\S+)$')
 
 
@@ -126,6 +127,7 @@ class Job:
         self._remote_working_dir = None
         self._cluster_start_time = None
         self._cluster_duration = None
+        self._job_type = None
         self._job_state = None
         self._job_state_seq = 0
         self._job_state_timestamp = None
@@ -361,7 +363,8 @@ class Job:
                 self._job_dagman_out = self.extract_dagman_out_from_condor_env( my_line )
                 if self._job_dagman_out is None:
                     logger.error("Unable to parse dagman out file from environment key %s in submit file for job %s" %(my_line, self._exec_job_id))
-
+            elif re_parse_job_class.search(my_line):
+                self._job_type = re_parse_job_class.search(my_line).group(1)
         SUB.close()
 
         # All done!
@@ -754,6 +757,9 @@ class Job:
 
         if self._host_id:
             kwargs["hostname"] = self._host_id
+
+        if self._job_type:
+            kwargs["jobtype"] = self._job_type
 
         #if error_count > 0:
         #  print kwargs
