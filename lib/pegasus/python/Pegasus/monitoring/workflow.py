@@ -932,7 +932,9 @@ class Workflow:
             self._fixed_addon_attrs["submit__hostname"] = self._submit_hostname
         if "user" in wfparams:
             self._user = wfparams["user"]
-            self._fixed_addon_attrs["user"] = self._user
+            # make it clear it is the workflow user.
+            # jobs can run under some other user
+            self._fixed_addon_attrs["wf_user"] = self._user
         if "grid_dn" in wfparams:
             self._grid_dn = wfparams["grid_dn"]
 
@@ -1408,6 +1410,10 @@ class Workflow:
         # Send job state event to database
         self.output_to_db("job_inst.main.end", kwargs)
 
+        # create a composite job event
+        composite_kwargs = my_job.create_composite_job_event(kwargs)
+        self.output_to_db("job_inst.composite", composite_kwargs)
+
         # Clean up stdout and stderr, to avoid memory issues...
         if my_job._deferred_job_end_kwargs is not None:
             my_job._deferred_job_end_kwargs = None
@@ -1852,6 +1858,7 @@ class Workflow:
                 nkwargs["name"] = "int.error"
                 nkwargs["count"] = metric.failed
                 self.output_to_db("job_inst.tag", nkwargs)
+
 
     def db_send_task_monitoring_events(self, my_job, task_id, events) :
         """

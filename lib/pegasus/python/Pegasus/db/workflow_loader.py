@@ -67,6 +67,7 @@ class WorkflowLoader(BaseLoader):
             'stampede.job_inst.globus.submit.start' : self.noop, # good
             'stampede.job_inst.globus.submit.end' : self.jobstate,
             'stampede.job_inst.tag' : self.tag,
+            'stampede.job_inst.composite': self.noop,
             'stampede.inv.start' : self.noop, # good
             'stampede.inv.end' : self.invocation,
             'stampede.static.meta.start': self.static_meta_start,
