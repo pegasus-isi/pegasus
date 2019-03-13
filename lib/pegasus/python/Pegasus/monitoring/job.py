@@ -717,3 +717,29 @@ class Job:
 
         return TaskOutput(task_data.getvalue(), events)
 
+
+    def create_composite_job_event(self, job_inst_kwargs):
+        """
+        this creates a composite job event that also includes all information included in a job_inst.end event
+
+        :param my_job:
+        :param job_inst_kwargs:
+        :return:
+        """
+
+        kwargs = {}
+
+        # add on events associated to populate the job_instance table
+        kwargs.update(job_inst_kwargs)
+
+        # count any integrity errors
+        error_count = 0
+        for metric in self._integrity_metrics:
+            error_count += metric.failed
+
+        kwargs["int.error.count"] = error_count
+
+        #if error_count > 0:
+        #   print kwargs
+
+        return kwargs
