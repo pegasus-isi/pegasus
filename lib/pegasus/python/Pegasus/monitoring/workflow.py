@@ -932,7 +932,9 @@ class Workflow:
             self._fixed_addon_attrs["submit__hostname"] = self._submit_hostname
         if "user" in wfparams:
             self._user = wfparams["user"]
-            self._fixed_addon_attrs["user"] = self._user
+            # make it clear it is the workflow user.
+            # jobs can run under some other user
+            self._fixed_addon_attrs["wf_user"] = self._user
         if "grid_dn" in wfparams:
             self._grid_dn = wfparams["grid_dn"]
 
