@@ -3,9 +3,10 @@ import unittest
 import json
 
 from Pegasus.db.admin.admin_loader import *
-from Pegasus.db.modules.stampede_loader import Analyzer
+from Pegasus.db.workflow_loader import WorkflowLoader
 from Pegasus.service.monitoring.anomaly_handler import AnomalyHandler
 from Pegasus.monitoring import event_output as eo
+from Pegasus.tools import properties
 
 import Pegasus.test.dax3
 
@@ -20,7 +21,7 @@ class TestAnomalyHandler(unittest.TestCase):
 
         dburi = "sqlite:///%s" % os.path.abspath(self.db_file)
         # print "DB URI: %s" % dburi
-        self.analyzer = Analyzer(dburi)
+        self.analyzer = WorkflowLoader(dburi, props=properties.Properties())
         self.db_session = self.analyzer.session
 
         self.wf_uuid = "143acf4d-8494-4c0f-baf0-2b0ff4464390"
@@ -28,11 +29,11 @@ class TestAnomalyHandler(unittest.TestCase):
 
         try:
             self.anomaly_handler = AnomalyHandler("test-anomalies", self.wf_uuid, dburi)
-        except eo.SchemaVersionError:
-            print "****************************************************"
-            print "Detected database schema version mismatch!"
-            print "cannot create events output... disabling event output!"
-            print "****************************************************"
+#        except eo.SchemaVersionError:
+#            print "****************************************************"
+#            print "Detected database schema version mismatch!"
+#            print "cannot create events output... disabling event output!"
+#            print "****************************************************"
         except:
             print "cannot create events output... disabling event output!"
 
