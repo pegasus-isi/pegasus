@@ -46,11 +46,11 @@ else
     $(warning WARNING: globus_sdk does not work with Python 2.6: skipping globus_sdk library)
 endif
 
-ifeq ($(shell which mysql_config),)
-    $(warning WARNING: mysql_config not found: skipping python mysql library)
-else
-    PACKAGES+=MySQLdb
-endif
+#ifeq ($(shell which mysql_config),)
+#    $(warning WARNING: mysql_config not found: skipping python mysql library)
+#else
+#    PACKAGES+=MySQLdb
+#endif
 PACKAGES+=influxdb
 PACKAGES+=pika
 PACKAGES+=dateutil
