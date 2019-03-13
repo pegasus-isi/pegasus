@@ -57,6 +57,8 @@ re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
 re_parse_input = re.compile(r"^\s*intput\s*=\s*(\S+)")
 re_parse_output = re.compile(r"^\s*output\s*=\s*(\S+)")
 re_parse_error = re.compile(r"^\s*error\s*=\s*(\S+)")
+re_parse_pegasuslite_hostname = re.compile(r'^.*Executing on host\s*(\S+)$')
+
 
 TaskOutput = collections.namedtuple('TaskOutput', ['user_data', 'events'])
 
@@ -566,6 +568,9 @@ class Job:
 
     def read_job_error_file(self, store_monitoring_events=True):
         """
+        Reads the job error file and updates job structures to store the
+        the stderr of the condor job and also attempts to parse the hostname
+        from the stderr of the job
 
         :param store_monitoring_events: whether to store any parsed monitoring events in the job
         :return:
@@ -587,12 +592,20 @@ class Job:
             # from PegasusLite .err file
             job_stderr = self.split_task_output(ERR.read())
             buf = job_stderr.user_data
+
             if len(buf) > my_max_encoded_length:
                 buf = buf[:my_max_encoded_length]
             self._stderr_text = utils.quote(buf)
 
             if store_monitoring_events:
                 self._add_additional_monitoring_events(job_stderr.events)
+
+            # PM-1355 attempt to determine the hostname from the pegasus lite job
+            hostname_match = re_parse_pegasuslite_hostname.search(job_stderr.user_data)
+            if hostname_match:
+                # a match yes it is a PegasusLite job . gleam the hostname
+                self._host_id = hostname_match.group(1)
+
         except IOError:
             self._stderr_text = None
             if not self.is_noop_job():
@@ -739,7 +752,10 @@ class Job:
 
         kwargs["int.error.count"] = error_count
 
+        if self._host_id:
+            kwargs["hostname"] = self._host_id
+
         #if error_count > 0:
-        #   print kwargs
+        #  print kwargs
 
         return kwargs
