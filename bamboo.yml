@@ -913,49 +913,6 @@ project:
                   matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
-            - key: BXUZ
-              name: Build x86_64 Ubuntu Zesty
-              tasks:
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xzf pegasus-source.tar.gz"
-                - !script
-                  description: Binary Packages
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_17}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      --entrypoint ant \
-                      pegasus/pegasus:${TAG} \
-                      clean dist-deb dist-worker dist-release
-              artifactDefinitions:
-                - name: pegasus-binary-x86_64_ubuntu_17
-                  copyPattern: 'pegasus-binary-*-x86_64_ubuntu_17.tar.gz'
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-deb-x86_64_ubuntu_17
-                  copyPattern: '*.deb'
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-worker-x86_64_ubuntu_17
-                  copyPattern: 'pegasus-worker-*-x86_64_ubuntu_17.tar.gz'
-                  location: pegasus-source/dist
-                  isShared: true
-              artifactDependencies:
-                - name: pegasus-source
-              requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
             - key: BXUB
               name: Build x86_64 Ubuntu 18.04 LTS
               tasks:
@@ -1053,8 +1010,6 @@ project:
                       # ubuntu
                       mkdir -p $DOWNLOADS/ubuntu/dists/xenial/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*ubuntu16_amd64.deb $DOWNLOADS/ubuntu/dists/xenial/main/binary-amd64/
-                      mkdir -p $DOWNLOADS/ubuntu/dists/zesty/main/binary-amd64
-                      cp $DOWNLOADS/pegasus_*ubuntu17_amd64.deb $DOWNLOADS/ubuntu/dists/zesty/main/binary-amd64/
                       mkdir -p $DOWNLOADS/ubuntu/dists/bionic/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*ubuntu18_amd64.deb $DOWNLOADS/ubuntu/dists/bionic/main/binary-amd64/
 
@@ -1173,8 +1128,6 @@ project:
           value: panorama-buster
         - key: TAG_UBUNTU_16
           value: panorama-xenial
-        - key: TAG_UBUNTU_17
-          value: panorama-zesty
         - key: TAG_UBUNTU_18
           value: panorama-bionic
 
