@@ -164,6 +164,7 @@ class EventSink(object):
             'stampede.job_inst.globus.submit.start',
             'stampede.job_inst.globus.submit.end',
             'stampede.job_inst.tag',
+            'stampede.job_inst.composite',
             'stampede.inv.start',
             'stampede.inv.end',
             'stampede.static.meta.start',
@@ -329,6 +330,7 @@ class AMQPEventSink(EventSink):
         if events is None:
             # add pre-configured specific events
             event_regexes.add(re.compile(STAMPEDE_NS + "job_inst.tag"))
+            event_regexes.add(re.compile(STAMPEDE_NS + "job_inst.composite"))
             event_regexes.add(re.compile(STAMPEDE_NS + "inv.end"))
             event_regexes.add(re.compile(STAMPEDE_NS + "wf.plan"))
         else:

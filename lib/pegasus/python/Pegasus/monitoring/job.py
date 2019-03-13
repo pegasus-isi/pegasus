@@ -57,6 +57,9 @@ re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
 re_parse_input = re.compile(r"^\s*intput\s*=\s*(\S+)")
 re_parse_output = re.compile(r"^\s*output\s*=\s*(\S+)")
 re_parse_error = re.compile(r"^\s*error\s*=\s*(\S+)")
+re_parse_job_class = re.compile(r"^\s*\+pegasus_job_class\s*=\s*(\S+)")
+re_parse_pegasuslite_hostname = re.compile(r'^.*Executing on host\s*(\S+)$')
+
 
 TaskOutput = collections.namedtuple('TaskOutput', ['user_data', 'events'])
 
@@ -124,6 +127,7 @@ class Job:
         self._remote_working_dir = None
         self._cluster_start_time = None
         self._cluster_duration = None
+        self._job_type = None
         self._job_state = None
         self._job_state_seq = 0
         self._job_state_timestamp = None
@@ -359,7 +363,8 @@ class Job:
                 self._job_dagman_out = self.extract_dagman_out_from_condor_env( my_line )
                 if self._job_dagman_out is None:
                     logger.error("Unable to parse dagman out file from environment key %s in submit file for job %s" %(my_line, self._exec_job_id))
-
+            elif re_parse_job_class.search(my_line):
+                self._job_type = re_parse_job_class.search(my_line).group(1)
         SUB.close()
 
         # All done!
@@ -566,6 +571,9 @@ class Job:
 
     def read_job_error_file(self, store_monitoring_events=True):
         """
+        Reads the job error file and updates job structures to store the
+        the stderr of the condor job and also attempts to parse the hostname
+        from the stderr of the job
 
         :param store_monitoring_events: whether to store any parsed monitoring events in the job
         :return:
@@ -587,12 +595,20 @@ class Job:
             # from PegasusLite .err file
             job_stderr = self.split_task_output(ERR.read())
             buf = job_stderr.user_data
+
             if len(buf) > my_max_encoded_length:
                 buf = buf[:my_max_encoded_length]
             self._stderr_text = utils.quote(buf)
 
             if store_monitoring_events:
                 self._add_additional_monitoring_events(job_stderr.events)
+
+            # PM-1355 attempt to determine the hostname from the pegasus lite job
+            hostname_match = re_parse_pegasuslite_hostname.search(job_stderr.user_data)
+            if hostname_match:
+                # a match yes it is a PegasusLite job . gleam the hostname
+                self._host_id = hostname_match.group(1)
+
         except IOError:
             self._stderr_text = None
             if not self.is_noop_job():
@@ -717,3 +733,35 @@ class Job:
 
         return TaskOutput(task_data.getvalue(), events)
 
+
+    def create_composite_job_event(self, job_inst_kwargs):
+        """
+        this creates a composite job event that also includes all information included in a job_inst.end event
+
+        :param my_job:
+        :param job_inst_kwargs:
+        :return:
+        """
+
+        kwargs = {}
+
+        # add on events associated to populate the job_instance table
+        kwargs.update(job_inst_kwargs)
+
+        # count any integrity errors
+        error_count = 0
+        for metric in self._integrity_metrics:
+            error_count += metric.failed
+
+        kwargs["int.error.count"] = error_count
+
+        if self._host_id:
+            kwargs["hostname"] = self._host_id
+
+        if self._job_type:
+            kwargs["jobtype"] = self._job_type
+
+        #if error_count > 0:
+        #  print kwargs
+
+        return kwargs
