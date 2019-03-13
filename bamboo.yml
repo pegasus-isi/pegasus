@@ -871,7 +871,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXUX
-              name: Build x86_64 Ubuntu Xenial
+              name: Build x86_64 Ubuntu 16.04 LTS
               tasks:
                 - !script
                   description: Untar source
