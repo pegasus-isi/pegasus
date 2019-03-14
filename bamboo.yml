@@ -969,21 +969,16 @@ project:
                       mkdir -p $DOWNLOADS/ubuntu/dists/bionic/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*ubuntu18_amd64.deb $DOWNLOADS/ubuntu/dists/bionic/main/binary-amd64/
 
-                      # rheh
-                      mkdir -p $DOWNLOADS/rhel/src
-                      cp $DOWNLOADS/pegasus-*.src.rpm $DOWNLOADS/rhel/src/
+                      # rhel
                       mkdir -p $DOWNLOADS/rhel/7/x86_64
                       cp $DOWNLOADS/pegasus-*el7.x86_64.rpm $DOWNLOADS/rhel/7/x86_64/
 
                       # standard filenames for RPMs - used by tutorial VM
-                      cd pegasus/$VERSION
-                      if [ ! -e pegasus-$VERSION-1.el6.x86_64.rpm ]; then
-                          cp pegasus-*el6.x86_64.rpm pegasus-$VERSION-1.el6.x86_64.rpm
-                      fi
-                      if [ ! -e pegasus-$VERSION-1.el7.x86_64.rpm ]; then
-                          cp pegasus-*el7.x86_64.rpm pegasus-$VERSION-1.el7.x86_64.rpm
-                      fi
-                      cd ../..
+                      #cd pegasus/$VERSION
+                      #if [ ! -e pegasus-$VERSION-1.el7.x86_64.rpm ]; then
+                      #    cp pegasus-*el7.x86_64.rpm pegasus-$VERSION-1.el7.x86_64.rpm
+                      #fi
+                      #cd ../..
 
                       # no files should be left behind
                       ls -l
