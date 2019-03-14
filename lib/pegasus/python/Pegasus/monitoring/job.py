@@ -753,7 +753,7 @@ class Job:
         for metric in self._integrity_metrics:
             error_count += metric.failed
 
-        kwargs["int.error.count"] = error_count
+        kwargs["int_error_count"] = error_count
 
         if self._host_id:
             kwargs["hostname"] = self._host_id
