@@ -1016,7 +1016,6 @@ project:
                 - name: pegasus-source-versioned-swamp-c
                 - name: pegasus-source-versioned-swamp-java
                 - name: pegasus-source-versioned-swamp-python
-                - name: pegasus-srcrpm
                 - name: pegasus-worker-x86_64_deb_8
                 - name: pegasus-worker-x86_64_deb_9
                 - name: pegasus-worker-x86_64_deb_10
