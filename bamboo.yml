@@ -1083,7 +1083,6 @@ project:
           value: panorama-xenial
         - key: TAG_UBUNTU_18
           value: panorama-bionic
-
     - key: WTPANORAMA
       name: Workflow Tests (Panorama)
       scm:
