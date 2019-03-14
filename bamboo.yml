@@ -1084,7 +1084,7 @@ project:
           value: panorama-bionic
 
     - key: WTPANORAMA
-      name: Workflow Tests (Panorama)
+      name: Workflow Tests (panorama)
       scm:
         - !git
           name: Pegasus
