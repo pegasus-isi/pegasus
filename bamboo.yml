@@ -610,50 +610,6 @@ project:
                   matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
-            - key: BXR632
-              name: Build x86 RHEL 6
-              enabled: false
-              tasks:
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xzf pegasus-source.tar.gz"
-                - !customTask
-                  pluginKey: com.atlassian.bamboo.plugins.ant:task.builder.ant
-                  description: Binary Packages
-                  taskConfig:
-                    label: Ant
-                    target: dist-rpm dist-worker dist-release
-                    buildJdk: JDK
-                    workingSubDirectory: pegasus-source
-              artifactDefinitions:
-                - name: pegasus-binary-x86_rhel_6
-                  copyPattern: 'pegasus-binary-*-x86_rhel_6.tar.gz'
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-rpm-x86_rhel_6
-                  copyPattern: 'pegasus-*i?86.rpm'
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-worker-x86_rhel_6
-                  copyPattern: 'pegasus-worker-*-x86_rhel_6.tar.gz'
-                  location: pegasus-source/dist
-                  isShared: true
-              artifactDependencies:
-                - name: pegasus-source
-              requirements:
-                - capabilityKey: arch
-                  matchType: !equals
-                    matchValue: x86
-                - capabilityKey: platform
-                  matchType: !equals
-                    matchValue: rhel
-                - capabilityKey: release
-                  matchType: !matches
-                    regex: 6.*
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
             - key: BXR7
               name: Build x86_64 RHEL 7
               tasks:
@@ -1044,13 +1000,11 @@ project:
                 - name: pegasus-binary-x86_64_macos
                 - name: pegasus-binary-x86_64_rhel_7
                 - name: pegasus-binary-x86_64_ubuntu_16
-                - name: pegasus-binary-x86_64_ubuntu_17
                 - name: pegasus-binary-x86_64_ubuntu_18
                 - name: pegasus-deb-x86_64_deb_8
                 - name: pegasus-deb-x86_64_deb_9
                 - name: pegasus-deb-x86_64_deb_10
                 - name: pegasus-deb-x86_64_ubuntu_16
-                - name: pegasus-deb-x86_64_ubuntu_17
                 - name: pegasus-deb-x86_64_ubuntu_18
                 - name: pegasus-dmg-x86_64_macos
                 - name: pegasus-doc
@@ -1069,7 +1023,6 @@ project:
                 - name: pegasus-worker-x86_64_macos
                 - name: pegasus-worker-x86_64_rhel_7
                 - name: pegasus-worker-x86_64_ubuntu_16
-                - name: pegasus-worker-x86_64_ubuntu_17
                 - name: pegasus-worker-x86_64_ubuntu_18
               requirements:
                 - capabilityKey: hostname
