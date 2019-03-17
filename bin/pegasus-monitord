@@ -1084,36 +1084,36 @@ if wf._monitord_exit_code == 0:
 #
 # --- online monitoring begin --------------------------------------------------------------------
 #
-from multiprocessing import Process, Pipe
-from Pegasus.service.monitoring.online_monitoring import OnlineMonitord
-from Pegasus.service.monitoring.anomaly_handler import AnomalyHandler
+#from multiprocessing import Process, Pipe
+#from Pegasus.service.monitoring.online_monitoring import OnlineMonitord
+#from Pegasus.service.monitoring.anomaly_handler import AnomalyHandler
 
-parent_conn, child_conn = Pipe()
+#parent_conn, child_conn = Pipe()
 
-def online_monitoring_proc(wf_label, wf_uuid, event_sink, child_conn):
-    utils.configureLogging()
-    online_monitord = OnlineMonitord(wf_label, wf_uuid, event_sink, child_conn)
-    online_monitord.start()
+#def online_monitoring_proc(wf_label, wf_uuid, event_sink, child_conn):
+#    utils.configureLogging()
+#    online_monitord = OnlineMonitord(wf_label, wf_uuid, event_sink, child_conn)
+#    online_monitord.start()
 
-def anomaly_handling_proc(wf_label, wf_uuid, event_sink):
-    utils.configureLogging()
-    anomaly_handler = AnomalyHandler(wf_label, wf_uuid, event_sink)
-    anomaly_handler.start()
+#def anomaly_handling_proc(wf_label, wf_uuid, event_sink):
+#    utils.configureLogging()
+#    anomaly_handler = AnomalyHandler(wf_label, wf_uuid, event_sink)
+#    anomaly_handler.start()
 
-def shadowq_proc(dag_file):
-    utils.configureLogging()
-    from Pegasus.shadowq import main
-    main.start(dag_file)
+#def shadowq_proc(dag_file):
+#    utils.configureLogging()
+#    from Pegasus.shadowq import main
+#    main.start(dag_file)
 
 # start an OS process for the online monitoring feature
-online_monitor_proc = Process(target=online_monitoring_proc, args=(wf._dax_label, wf._wf_uuid, event_dest, child_conn))
-online_monitor_proc.start()
+#online_monitor_proc = Process(target=online_monitoring_proc, args=(wf._dax_label, wf._wf_uuid, event_dest, child_conn))
+#online_monitor_proc.start()
 
-anomaly_handler_proc = Process(target=anomaly_handling_proc, args=(wf._dax_label, wf._wf_uuid, event_dest))
-anomaly_handler_proc.start()
+#anomaly_handler_proc = Process(target=anomaly_handling_proc, args=(wf._dax_label, wf._wf_uuid, event_dest))
+#anomaly_handler_proc.start()
 
-shadow_queue_proc = Process(target=shadowq_proc, args=(top_level_wf_params["dag"],))
-shadow_queue_proc.start()
+#shadow_queue_proc = Process(target=shadowq_proc, args=(top_level_wf_params["dag"],))
+#shadow_queue_proc.start()
 
 #
 # --- online monitoring end --------------------------------------------------------------------
@@ -1443,11 +1443,11 @@ while (len(wfs) > 0):
 # --- Panorama extras begin --------------------------------------------------------------------
 #
 
-if online_monitor_proc.is_alive():
-    online_monitor_proc.terminate()
+#if online_monitor_proc.is_alive():
+#    online_monitor_proc.terminate()
 
-if anomaly_handler_proc.is_alive():
-    anomaly_handler_proc.terminate()
+#if anomaly_handler_proc.is_alive():
+#    anomaly_handler_proc.terminate()
 
 #
 # --- Panorama extras end --------------------------------------------------------------------
