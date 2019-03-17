@@ -221,7 +221,7 @@ class DBEventSink(EventSink):
     def close(self):
         self._log.trace("close.start")
         self._db.finish()
-        self._log.debug("close.end")
+        self._log.trace("close.end")
 
     #
     # --- Panorama extras begin --------------------------------------------------------------------
@@ -315,7 +315,7 @@ class AMQPEventSink(EventSink):
                                                virtual_host=virtual_host,
                                                credentials=creds,
                                                blocked_connection_timeout=connect_timeout,
-                                               heartbeat=0, **kw)
+                                               heartbeat=0)
         self._conn = amqp.BlockingConnection(parameters)
         self._channel = self._conn.channel()
         self._exch = exch
