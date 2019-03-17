@@ -24,6 +24,7 @@ import urlparse
 import traceback
 import json
 import re
+import ssl
 
 from Pegasus.tools import utils
 from Pegasus.tools import properties
