@@ -738,7 +738,8 @@ public class Kickstart implements GridStart {
 
         // For panorama online monitoring we need to add this to get the
         // monitord ephemeral endpoint monitoring URL passed to Kickstart
-        job.envVariables.construct("KICKSTART_MON_URL", "$ENV(KICKSTART_MON_URL)");
+        if( !job.envVariables.containsKey( "KICKSTART_MON_URL" ) )
+            job.envVariables.construct("KICKSTART_MON_URL", "$ENV(KICKSTART_MON_URL)");
 
 
 
