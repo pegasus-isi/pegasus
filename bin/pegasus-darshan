@@ -181,6 +181,9 @@ def parse_perf(inputFile):
     return perf_obj
 
 def main():
+    MONITORING_EVENT_START_MARKER = "@@@MONITORING_PAYLOAD - START@@@"
+    MONITORING_EVENT_END_MARKER = "@@@MONITORING_PAYLOAD - END@@@"
+
     # Configure command line option parser
     prog_usage = "usage: %s [options]" % (prog_base)
     parser = optparse.OptionParser(usage=prog_usage)
@@ -217,9 +220,9 @@ def main():
     }
 
 
-    print "@@@PEGASUS_MONITORING_PAYLOAD - START @@@"
+    print MONITORING_EVENT_START_MARKER
     print json.dumps(darshan_event, sort_keys = True, indent=2)
-    print "@@@PEGASUS_MONITORING_PAYLOAD - END @@@"
+    print MONITORING_EVENT_END_MARKER
     
 
 
