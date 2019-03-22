@@ -261,7 +261,10 @@ public class Condor extends Abstract {
                     job.condorVariables.construct( WHEN_TO_TRANSFER_OUTPUT_KEY, wtto );
                 }
             }
-            
+           
+            // io proxy for chirping
+            job.condorVariables.construct("+WantIOProxy", "True"); 
+
             applyCredentialsForRemoteExec(job);
             
             //PM-820 inspect the job to check if it has 
