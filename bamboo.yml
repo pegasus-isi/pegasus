@@ -1041,6 +1041,12 @@ project:
         - !scheduled
           description: Nightly Build
           cronExpression: "0 0 21 * * ?"
+        - !polling
+          description: Repository Polling
+          repositories:
+            - Pegasus
+          periodicTrigger:
+            pollingFrequencyInSecs: 300
       notifications:
         - !email
           address: pegasus-svn@isi.edu
