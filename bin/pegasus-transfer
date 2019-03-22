@@ -2387,9 +2387,12 @@ class GFALHandler(TransferHandlerBase):
             if logger.isEnabledFor(logging.DEBUG):
                 cmd = cmd + " -v"
             cmd = cmd + " '%s'" %(t.get_url())
+
+            env_overrides = self._gfal_creds(t)
                 
             try:
-                tc = TimedCommand(cmd, env_overrides=self._gfal_creds(t))
+                self._gfal_validate_cred(env_overrides)
+                tc = TimedCommand(cmd, env_overrides=env_overrides)
                 tc.run()
             except Exception as err:
                 logger.error(err)
@@ -2477,6 +2480,16 @@ class GFALHandler(TransferHandlerBase):
          
         return [successful_l, failed_l]
 
+
+    def _gfal_validate_cred(self, env_overrides):
+        fname = env_overrides["X509_USER_PROXY"]
+
+        if not(os.path.exists(fname)):
+            raise RuntimeError("X509 proxy file " + fname + " does not exist." + 
+                               " Maybe you forgot to initialize the proxy, or the" +
+                               " submit host might be configured with" +
+                               " MOUNT_UNDER_SCRATCH which can hide directories for" +
+                               " local universe jobs.")
 
     def _gfal_creds(self, sample_transfer):
         
