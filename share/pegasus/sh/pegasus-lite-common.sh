@@ -622,3 +622,60 @@ function pegasus_lite_get_system()
     return 1
 }
 
+
+function pegasus_lite_section_start()
+{
+    # stage_in, task_execute, stage_out
+    section=$1
+    ts=`/bin/date +%s 2>/dev/null`
+
+    # for now, we only want to keep track of the start ts
+    eval "pegasus_${section}_start"=$ts
+}
+
+
+function pegasus_lite_section_end()
+{
+    # stage_in, task_execute, stage_out
+    section=$1
+    ts=`/bin/date +%s 2>/dev/null`
+
+    # calculate duration if we can
+    var_name=pegasus_${section}_start
+    start_ts=${!var_name}
+
+    if [ "X$start_ts" != "X" ]; then
+        duration=$(($ts - $start_ts))
+        pegasus_lite_chirp Chirp_pegasus_${section}_duration $duration
+    fi
+}
+
+
+function pegasus_lite_chirp()
+{
+    key=$1
+    value=$2
+
+    # find/test chirp once here
+    if [ "X$pegasus_lite_chirp_path" = "X" ]; then
+        condor_libexec=`condor_config_val LIBEXEC 2>/dev/null`
+        pegasus_lite_chirp_path=`(export PATH=$condor_libexec:$PATH ; which condor_chirp) 2>/dev/null`
+        if [ "X$pegasus_lite_chirp_path" = "X" ]; then
+            pegasus_lite_log "Unable to find condor_chirp - disabling chirping"
+            pegasus_lite_chirp_path="none"
+            return
+        fi
+    fi
+    if [ "X$pegasus_lite_chirp_path" = "Xnone" ]; then
+        # chirp fails - do nothing
+        return
+    fi
+
+    pegasus_lite_log "Chirping: $pegasus_lite_chirp_path set_job_attr_delayed $key $value"
+    if ! $pegasus_lite_chirp_path set_job_attr_delayed $key $value ; then
+        pegasus_lite_log "condor_chirp test failed - disabling chirping"
+        pegasus_lite_chirp_path="none"
+    fi
+}
+
+
