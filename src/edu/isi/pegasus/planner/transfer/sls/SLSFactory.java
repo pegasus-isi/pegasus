@@ -23,6 +23,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.transfer.SLS;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
@@ -64,11 +65,16 @@ public class SLSFactory {
                                                      "Transfer",
                                                      "Condor"
                                                     };
+
+    /**
+     * The handle to the logging manager.
+     */
+    protected LogManager mLogger;
+    
     private final HashMap mSLSImplementationTable;
     private boolean mInitialized;
     private PegasusBag mBag;
-    
-    
+
     /**
      * The default constructor.
      */
@@ -85,6 +91,7 @@ public class SLSFactory {
      */
     public void initialize( PegasusBag bag ){
         mBag       = bag;
+        mLogger    = bag.getLogger();
 
         //load all the known implementations and initialize them
         for( int i = 0; i < SLS_IMPLEMENTING_CLASSES.length; i++){
@@ -125,6 +132,7 @@ public class SLSFactory {
 
         //determine the short name of SLS implementation
         String shortName = this.getSLSShortName(job);
+        mLogger.log(job.getName() + " uses SLS " + shortName, LogManager.DEBUG_MESSAGE_LEVEL);
 
         //try loading on the basis of short name from the cache
         Object obj = this.mSLSImplementationTable.get( shortName );

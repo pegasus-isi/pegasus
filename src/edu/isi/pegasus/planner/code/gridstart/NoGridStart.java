@@ -17,6 +17,8 @@
 package edu.isi.pegasus.planner.code.gridstart;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
@@ -34,7 +36,7 @@ import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.planner.transfer.SLS;
-
+import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
@@ -113,7 +115,7 @@ public class NoGridStart implements GridStart {
     /**
      * The handle to the SLS implementor
      */
-    protected SLS mSLS;
+    protected SLSFactory mSLSFactory;
 
     /**
      * The options passed to the planner.
@@ -164,6 +166,10 @@ public class NoGridStart implements GridStart {
             mSLS = SLSFactory.loadInstance( bag );
         }
  */
+
+        mSLSFactory = new SLSFactory();
+        mSLSFactory.initialize(bag);
+
         mEnablingPartOfAggregatedJob = false;
     }
 
@@ -274,6 +280,39 @@ public class NoGridStart implements GridStart {
 
         //set the flag back to false
         //mEnablingPartOfAggregatedJob = false;
+
+        // modify the condor submit for for file transfers, if needed
+        boolean isCompute = job.getJobType() == Job.COMPUTE_JOB;
+        SiteCatalogEntry stagingSiteEntry = null;
+        FileServer stagingSiteServerForRetrieval = null;
+        String stagingSiteDirectory = null;
+        String workerNodeDir = null;
+        if( isCompute ){
+            stagingSiteEntry = mSiteStore.lookup( job.getStagingSiteHandle() );
+            if( stagingSiteEntry == null ){
+                this.complainForHeadNodeFileServer( job.getID(),  job.getStagingSiteHandle());
+            }
+            stagingSiteServerForRetrieval = stagingSiteEntry.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.get );
+            if( stagingSiteServerForRetrieval == null ){
+                this.complainForHeadNodeFileServer( job.getID(),  job.getStagingSiteHandle());
+            }
+
+            stagingSiteDirectory      = mSiteStore.getInternalWorkDirectory( job, true );
+            workerNodeDir             = getWorkerNodeDirectory( job );
+        }
+
+
+        SLS sls = mSLSFactory.loadInstance(job);
+        
+        //modify the constituentJob if required
+        if ( isCompute && !sls.modifyJobForWorkerNodeExecution( job,
+                                                    stagingSiteServerForRetrieval.getURLPrefix(),
+                                                    stagingSiteDirectory,
+                                                    workerNodeDir ) ){
+
+                throw new RuntimeException( "Unable to modify job " + job.getName() + " for worker node execution" );
+
+        }
 
         //the aggregated job itself needs to be enabled via NoGridStart
         this.enable( (Job)job, isGlobusJob);
@@ -412,6 +451,39 @@ public class NoGridStart implements GridStart {
 
             }
         }///end of mGenerateLOF
+
+        // modify the condor submit for for file transfers, if needed
+        boolean isCompute = job.getJobType() == Job.COMPUTE_JOB;
+        SiteCatalogEntry stagingSiteEntry = null;
+        FileServer stagingSiteServerForRetrieval = null;
+        String stagingSiteDirectory = null;
+        String workerNodeDir = null;
+        if( isCompute ){
+            stagingSiteEntry = mSiteStore.lookup( job.getStagingSiteHandle() );
+            if( stagingSiteEntry == null ){
+                this.complainForHeadNodeFileServer( job.getID(),  job.getStagingSiteHandle());
+            }
+            stagingSiteServerForRetrieval = stagingSiteEntry.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.get );
+            if( stagingSiteServerForRetrieval == null ){
+                this.complainForHeadNodeFileServer( job.getID(),  job.getStagingSiteHandle());
+            }
+
+            stagingSiteDirectory      = mSiteStore.getInternalWorkDirectory( job, true );
+            workerNodeDir             = getWorkerNodeDirectory( job );
+        }
+
+
+        SLS sls = mSLSFactory.loadInstance(job);
+        
+        //modify the constituentJob if required
+        if ( isCompute && !sls.modifyJobForWorkerNodeExecution( job,
+                                                    stagingSiteServerForRetrieval.getURLPrefix(),
+                                                    stagingSiteDirectory,
+                                                    workerNodeDir ) ){
+
+                throw new RuntimeException( "Unable to modify job " + job.getName() + " for worker node execution" );
+
+        }
 
         return true;
     }
@@ -689,6 +761,24 @@ public class NoGridStart implements GridStart {
 
     public void useFullPathToGridStarts(boolean fullPath) {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    /**
+     * Complains for a missing head node file server on a site for a job
+     * 
+     * @param jobname  the name of the job
+     * @param site     the site 
+     */
+     void complainForHeadNodeFileServer(String jobname, String site) {
+        StringBuffer error = new StringBuffer();
+        error.append( "[PegasusLite] " );
+        if( jobname != null ){
+            error.append( "For job (" ).append( jobname).append( ")." ); 
+        }
+        error.append( " File Server not specified for head node scratch shared filesystem for site: ").
+              append( site );
+        throw new RuntimeException( error.toString() );
+        
     }
 
 }
