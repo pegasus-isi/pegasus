@@ -39,6 +39,7 @@ import edu.isi.pegasus.planner.transfer.SLS;
 import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 
 import java.io.File;
 
@@ -588,9 +589,16 @@ public class NoGridStart implements GridStart {
      * @return
      */
     protected boolean requiresToSetDirectory( Job job ) {
-        //the cleanup jobs should never have directory set as full path
-        //is specified
-        return ( job.getJobType() != Job.CLEANUP_JOB );
+        String conf = job.getDataConfiguration();
+        if ( job.getJobType() == Job.CLEANUP_JOB ) {
+            //the cleanup jobs should never have directory set as full path
+            //is specified
+            return false;
+        } else if ( conf != null && conf.equalsIgnoreCase( PegasusConfiguration.CONDOR_CONFIGURATION_VALUE) ) {
+            // don't set remote_initialdir for condorio jobs
+            return false;
+        }
+        return true;
     }
     
     /**
