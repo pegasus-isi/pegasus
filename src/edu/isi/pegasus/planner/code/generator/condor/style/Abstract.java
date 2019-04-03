@@ -247,8 +247,8 @@ public abstract class Abstract implements CondorStyle {
         }
        
         //associate any credentials if reqd for job submission.
-        this.applyCredentialsForJobSubmission(job);
-        
+        this.applyCredentialsForJobSubmission(job, true);
+ 
         // jobs can have multiple credential requirements
         //and may need credentials associated with different sites PM-731
         for( Map.Entry<String,Set<CredentialHandler.TYPE>> entry : job.getCredentialTypes().entrySet()  ){
@@ -276,9 +276,7 @@ public abstract class Abstract implements CondorStyle {
                         }
                         else{
                             //flag an error 
-                            throw new RuntimeException( "Local path to credential " + path + " for job " + 
-                                                job.getID() + " is specified under MOUNT_UNDER_SCRATCH variable in condor configuration on the submit host" + 
-                                                this.mMountUnderScratchDirs );
+                            this.complainForMountUnderScratch(job, path);
                         }
                         break;
 
@@ -292,14 +290,25 @@ public abstract class Abstract implements CondorStyle {
         
     }
 
+    /**
+     * Associates credentials required for job submission.
+     * 
+     * @param job
+     * 
+     * @throws CondorStyleException 
+     */
+    protected void applyCredentialsForJobSubmission(Job job) throws CondorStyleException {
+        this.applyCredentialsForJobSubmission(job, false);
+    }
     
     /**
      * Associates credentials required for job submission.
      * 
      * @param job
+     * @param isLocal boolean indicating whether it is a local job or not
      * @throws CondorStyleException 
      */
-    protected void applyCredentialsForJobSubmission(Job job) throws CondorStyleException {
+    protected void applyCredentialsForJobSubmission(Job job, boolean isLocal) throws CondorStyleException {
         //handle credential for job submission if set
         if( job.getSubmissionCredential() == null ){
             return;
@@ -313,6 +322,14 @@ public abstract class Abstract implements CondorStyle {
         }
         switch( cred ) {
             case x509:
+                if(isLocal){
+                    //PM-1358 for validity
+                    if (!this.localCredentialPathValid(path)){
+                        //flag an error 
+                        this.complainForMountUnderScratch(job, path);
+                        
+                    }
+                }
                 job.condorVariables.construct( Condor.X509USERPROXY_KEY, path );
                 break;
             default:
@@ -338,6 +355,25 @@ public abstract class Abstract implements CondorStyle {
               append( job.getName() ).append(  " . Please make sure that the key " ).append( key ).
               append(  " is set as a Pegasus profile in the site catalog for site ").append( site ).
               append( " or in your environment.");
+        throw new CondorStyleException( error.toString() );
+    }
+    
+    /**
+     * Complain if a particular credential is mounted under scratch in condor
+     * configuration
+     * 
+     * @param job
+     * @param credential
+     * 
+     * @throws CondorStyleException 
+     */
+    protected void complainForMountUnderScratch( Job job, String credential ) throws CondorStyleException{
+        StringBuilder error = new StringBuilder();
+        
+        error.append("Local path to credential ").append(credential).append(" for job ").
+                append(job.getID()).append(" is specified under MOUNT_UNDER_SCRATCH variable in condor configuration on the submit host").
+                append(this.mMountUnderScratchDirs);
+        
         throw new CondorStyleException( error.toString() );
     }
     
