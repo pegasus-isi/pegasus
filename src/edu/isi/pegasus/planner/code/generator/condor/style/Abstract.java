@@ -102,6 +102,8 @@ public abstract class Abstract implements CondorStyle {
         ShellCommand c = ShellCommand.getInstance( mLogger );
         if (c.execute("condor_config_val", "MOUNT_UNDER_SCRATCH") == 0) {
             String stdout = c.getSTDOut();
+            //remove enclosing quotes if any                                                                                                                                                                                                                                                                      
+            stdout = stdout.replaceAll("^\"|\"$", "");
             String[] dirs = stdout.split( "," );
             for( int i = 0; i < dirs.length; i++ ){
                 try{
