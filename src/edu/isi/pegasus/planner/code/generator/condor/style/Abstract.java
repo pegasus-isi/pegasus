@@ -20,6 +20,7 @@ package edu.isi.pegasus.planner.code.generator.condor.style;
 import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.ShellCommand;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
@@ -29,9 +30,12 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactoryException;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import java.io.File;
 
 
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import java.util.Map;
@@ -62,12 +66,14 @@ public abstract class Abstract implements CondorStyle {
      */
     protected LogManager mLogger;
 
-
-     /**
+    /**
      * Handle to the Credential Handler Factory
      */
     protected CredentialHandlerFactory mCredentialFactory ;
 
+    protected List<String> mMountUnderScratchDirs;
+    
+   
     /**
      * The default constructor.
      */
@@ -92,6 +98,21 @@ public abstract class Abstract implements CondorStyle {
         mSiteStore = bag.getHandleToSiteStore();
         mLogger    = bag.getLogger();
         mCredentialFactory = credentialFactory;
+        mMountUnderScratchDirs = new LinkedList();
+        ShellCommand c = ShellCommand.getInstance( mLogger );
+        if (c.execute("condor_config_val", "MOUNT_UNDER_SCRATCH") == 0) {
+            String stdout = c.getSTDOut();
+            String[] dirs = stdout.split( "," );
+            for( int i = 0; i < dirs.length; i++ ){
+                try{
+                    //make sure it is a file path
+                    mMountUnderScratchDirs.add(new File(dirs[i]).getAbsolutePath());
+                } catch (Exception e){
+                    /* ignore */
+                }
+            }
+        }
+        mLogger.log( "Mount Under Scratch Directories " + mMountUnderScratchDirs, LogManager.DEBUG_MESSAGE_LEVEL);
     }
 
 
@@ -249,7 +270,16 @@ public abstract class Abstract implements CondorStyle {
                         if ( path == null) {
                             this.complainForCredential( job, handler.getProfileKey(), siteHandle );
                         }
-                        job.envVariables.construct(handler.getEnvironmentVariable( siteHandle ), path );
+                        //PM-1358 check if local credential path is valid or not
+                        if (this.localCredentialPathValid(path)){
+                            job.envVariables.construct(handler.getEnvironmentVariable( siteHandle ), path );
+                        }
+                        else{
+                            //flag an error 
+                            throw new RuntimeException( "Local path to credential " + path + " for job " + 
+                                                job.getID() + " is specified under MOUNT_UNDER_SCRATCH variable in condor configuration on the submit host" + 
+                                                this.mMountUnderScratchDirs );
+                        }
                         break;
 
                     default:
@@ -328,5 +358,31 @@ public abstract class Abstract implements CondorStyle {
              append( " mismatch for job " ).append( job.getName() );
 
          return sb.toString();
+    }
+    
+    /**
+     * Returns whether local credential being used is valid w.r.t
+     * Condor MOUNT_UNDER_SCRATCH settings
+     * 
+     * @param credential
+     * 
+     * @return 
+     */
+    protected boolean localCredentialPathValid( String credential ){
+        boolean valid = true;
+        if( this.mMountUnderScratchDirs.isEmpty() ){
+            //no directories mentioned for mounting under scratch
+            return valid;
+        }
+        
+        for( String dir: this.mMountUnderScratchDirs ){
+            if( new File(credential).getAbsolutePath().startsWith(dir) ){
+                //local proxy path points to a value that is mounted under scratch
+                valid = false;
+                break;
+            }
+        }
+        return valid;
+        
     }
 }
