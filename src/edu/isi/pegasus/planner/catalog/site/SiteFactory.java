@@ -71,6 +71,9 @@ public class SiteFactory {
      */
     private static final String  XML_IMPLEMENTING_CLASS_BASENAME = "XML";
 
+
+	private static final String YAML_IMPLEMENTING_CLASS_BASENAME = "YAML";
+
     /**
      * 
      * @param sites
@@ -169,6 +172,8 @@ public class SiteFactory {
         if( catalogImplementor.equals( SiteFactory.OLD_XML3_IMPLEMENTING_CLASS_BASENAME ) ||
             catalogImplementor.equals( SiteFactory.XML4_IMPLEMENTING_CLASS_BASENAME) ){
             catalogImplementor = SiteFactory.XML_IMPLEMENTING_CLASS_BASENAME;
+        } else if( catalogImplementor.equals( SiteFactory.YAML_IMPLEMENTING_CLASS_BASENAME ) ) {
+            catalogImplementor = SiteFactory.YAML_IMPLEMENTING_CLASS_BASENAME;
         }
 
         /* prepend the package name if required */

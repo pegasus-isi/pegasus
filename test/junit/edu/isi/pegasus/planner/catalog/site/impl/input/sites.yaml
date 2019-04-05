@@ -1,0 +1,156 @@
+---
+site:
+- arch: "x86"
+  os: "linux"
+  handle: "s3"
+  osrelease: ""
+  osversion: ""
+  glibc: ""
+  directory:
+  - type: "shared_scratch"
+    path: "dartwfforobjectstore"
+    file-server:
+    - protocol: "s3"
+      url: "s3://user@amazon/dartwfforobjectstore"
+      mount-point: "/dartwfforobjectstore"
+      operation: "all"
+- arch: "x86_64"
+  os: "linux"
+  handle: "bamboo"
+  osrelease: ""
+  osversion: ""
+  glibc: ""
+  directory:
+  - type: "shared_scratch"
+    path: "/bamboo/scratch"
+    file-server:
+    - protocol: "gsiftp"
+      url: "gsiftp://cartman.isi.edu/bamboo/scratch"
+      mount-point: "/bamboo/scratch"
+      operation: "all"
+  profile:
+  - env:
+      PEGASUS_HOME: "/usr/bin"
+- arch: "x86"
+  os: "linux"
+  handle: "osg"
+  osrelease: ""
+  osversion: ""
+  glibc: ""
+  directory:
+  - type: "local_scratch"
+    path: "/tmp"
+    file-server:
+    - protocol: "file"
+      url: "file:///tmp"
+      mount-point: "/tmp"
+      operation: "all"
+  profile:
+  - condor:
+      universe: "vanilla"
+  - pegasus:
+      style: "condor"
+- arch: "x86"
+  os: "linux"
+  handle: "unl"
+  osrelease: ""
+  osversion: ""
+  glibc: ""
+  directory:
+  - type: "shared_scratch"
+    path: "/internal-mnt/panfs/CMS/data/engage/scratch"
+    file-server:
+    - protocol: "http"
+      url: "http://ff-se.unl.edu:8443/panfs/panasas/CMS/data/engage/scratch"
+      mount-point: "/panfs/panasas/CMS/data/engage/scratch"
+      operation: "get"
+    - protocol: "srm"
+      url: "srm://ff-se.unl.edu:8443/panfs/panasas/CMS/data/engage/scratch"
+      mount-point: "/panfs/panasas/CMS/data/engage/scratch"
+      operation: "put"
+- arch: "x86"
+  os: "linux"
+  handle: "ec2"
+  osrelease: ""
+  osversion: ""
+  glibc: ""
+  directory:
+  - type: "local_scratch"
+    path: "/tmp"
+    file-server:
+    - protocol: "file"
+      url: "file:///tmp"
+      mount-point: "/tmp"
+      operation: "all"
+  profile:
+  - condor:
+      universe: "vanilla"
+  - pegasus:
+      style: "condor"
+  metadata:
+    resource-type: "cloud"
+- arch: "x86"
+  os: "linux"
+  handle: "local"
+  osrelease: ""
+  osversion: ""
+  glibc: ""
+  directory:
+  - type: "shared_scratch"
+    path: "/data/local-scratch/user"
+    file-server:
+    - protocol: "file"
+      url: "file:///data/local-scratch/user"
+      mount-point: "/data/local-scratch/user"
+      operation: "all"
+  - type: "local_storage"
+    path: "/data/local-storage/user"
+    file-server:
+    - protocol: "file"
+      url: "file:///data/local-storage/user"
+      mount-point: "/data/local-storage/user"
+      operation: "all"
+- arch: "x86_64"
+  os: "linux"
+  handle: "isi"
+  osrelease: ""
+  osversion: ""
+  glibc: ""
+  directory:
+  - type: "shared_scratch"
+    path: "/nfs/scratch01"
+    file-server:
+    - protocol: "http"
+      url: "http://skynet-data.isi.edu/nfs/scratch01"
+      mount-point: "/nfs/scratch01"
+      operation: "get"
+      profile:
+      - pegasus:
+          transfer.arguments: "-s -e"
+    - protocol: "gsiftp"
+      url: "gsiftp://skynet-data.isi.edu/scratch01"
+      mount-point: "/scratch01"
+      operation: "put"
+  - type: "shared_storage"
+    path: "/internal/shared-storage"
+    file-server:
+    - protocol: "gsiftp"
+      url: "gsiftp://skynet-data.isi.edu/exports/shared-storage"
+      mount-point: "/exports/shared-storage"
+      operation: "all"
+  grid:
+  - arch: "x86_64"
+    type: "gt2"
+    contact: "smarty.isi.edu/jobmanager-pbs"
+    scheduler: "pbs"
+    jobtype: "compute"
+    os: "linux"
+  - arch: "x86_64"
+    type: "gt2"
+    contact: "smarty.isi.edu/jobmanager-fork"
+    scheduler: "pbs"
+    jobtype: "auxillary"
+    os: "linux"
+  replica-catalog:
+  - type: "LRC"
+    url: "rlsn://smarty.isi.edu"

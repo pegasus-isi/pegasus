@@ -194,7 +194,7 @@ public class TransformationCatalogYAMLParser {
 		}
 		if (yamlData != null) {
 			YAMLSchemaValidationResult result = YAMLSchemaValidator.getInstance().validateYAMLSchema(yamlData,
-					SCHEMA_FILENAME);
+					SCHEMA_FILENAME, "transformation");
 					
 			// schema validation is done here.. in case of any validation error we throw the
 			// result..

@@ -19,7 +19,6 @@ package edu.isi.pegasus.planner.client;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -38,7 +37,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteDataVisitor;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.site.classes.XML3PrintVisitor;
 import edu.isi.pegasus.planner.catalog.site.classes.XML4PrintVisitor;
-
+import edu.isi.pegasus.planner.parser.SiteCatalogYAMLParser;
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
 
@@ -222,8 +221,10 @@ public class SCClient
             System.exit(1);
         }
         String result = this.parseInputFiles( mInputFiles, mInputFormat, mOutputFormat );
-        //write out the result to the output file
-        this.toFile( mOutputFile, result );
+		if (result != null) {
+			// write out the result to the output file
+			this.toFile(mOutputFile, result);
+		}
 	
     }
     
@@ -294,20 +295,27 @@ public class SCClient
                     for( String site : catalog.list() ){
                         result.addEntry( catalog.lookup( site ) );
                     }
-                    
-                    SiteDataVisitor xml = null;
-                    StringWriter writer = new StringWriter();
-                    
-                    if ( outputFormat.equals ( "XML3" ) ) {
-                    	xml = new XML3PrintVisitor ( );
-                    } else {
-                    	xml = new XML4PrintVisitor ( );
-                    }
-                    
-                    xml.initialize ( writer );
-                    result.accept ( xml );
-                    
-                    return writer.toString();
+					if (outputFormat.contains("XML")) {
+						SiteDataVisitor xml = null;
+						StringWriter writer = new StringWriter();
+
+						if ( outputFormat.equals ( "XML3" ) ) {
+							xml = new XML3PrintVisitor();
+						} else {
+							xml = new XML4PrintVisitor();
+						}
+
+						xml.initialize ( writer );
+						result.accept ( xml );
+
+						return writer.toString();
+					} else {
+						if(outputFormat.equals("YAML")) {
+							//in case of yaml we write it directly to the output file so we are returning null..
+							SiteCatalogYAMLParser.parseToYAML(result, mOutputFile);
+							return null;
+						}
+					}
                 }
                 finally{
                     /* close the connection */

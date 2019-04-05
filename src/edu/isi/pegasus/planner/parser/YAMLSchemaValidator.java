@@ -62,7 +62,7 @@ public class YAMLSchemaValidator {
 	 *         success/failure along with the errors if any.
 	 * @throws ProcessingException
 	 */
-	public YAMLSchemaValidationResult validateYAMLSchema(Object yamlData, File schemaFile) {
+	public YAMLSchemaValidationResult validateYAMLSchema(Object yamlData, File schemaFile, String catalogType) {
 
 		JsonNode schemaNode;
 
@@ -110,7 +110,7 @@ public class YAMLSchemaValidator {
 		TreeNode node = dataJSON;
 
 		// process the report and return the validation result
-		return processReport(node, report);
+		return processReport(node, report, catalogType);
 	}
 
 	/**
@@ -120,7 +120,7 @@ public class YAMLSchemaValidator {
 	 * @param report - report generated from the json schema validation
 	 * @return YAMLSchemaValidationResult
 	 */
-	private YAMLSchemaValidationResult processReport(TreeNode node, ProcessingReport report) {
+	private YAMLSchemaValidationResult processReport(TreeNode node, ProcessingReport report, String catalogType) {
 		YAMLSchemaValidationResult result = new YAMLSchemaValidationResult();
 
 		result.setSuccess(report.isSuccess());
@@ -147,7 +147,12 @@ public class YAMLSchemaValidator {
 					errorMessage.append(processingMessage.getMessage()).append(" in ");
 
 				}
-				populateErrorMessage(node, errorMessage, jsonNode);
+				if (catalogType.equals("transformation")) {
+					populateTransformationErrorMessage(node, errorMessage, jsonNode);
+				}
+				if (catalogType.equals("site")) {
+					populateSiteErrorMessage(node, errorMessage, jsonNode);
+				}
 				errorMessages.add(errorMessage.toString());
 			}
 		}
@@ -159,7 +164,7 @@ public class YAMLSchemaValidator {
 	 * This is used to populate the error location or the node which causes the
 	 * error..
 	 **/
-	private void populateErrorMessage(TreeNode node, StringBuilder errorMessage, JsonNode jsonNode) {
+	private void populateTransformationErrorMessage(TreeNode node, StringBuilder errorMessage, JsonNode jsonNode) {
 		/**
 		 * "instance":{"pointer":"/0/transformations/0/site/0"} this filed is parsed to
 		 * get the name of the transformation causing the issue..
@@ -205,6 +210,31 @@ public class YAMLSchemaValidator {
 					}
 				}
 			}
+		} else {
+			errorMessage.append("top level error");
+		}
+	}
+	
+	/**
+	 * This is used to populate the error location or the node which causes the
+	 * error..
+	 **/
+	private void populateSiteErrorMessage(TreeNode node, StringBuilder errorMessage, JsonNode jsonNode) {
+		String path = jsonNode.get("instance").get("pointer").asText();
+		String[] splitPaths = path.split("/");
+		
+		// this means some node inside the top level has a problem..
+		if (splitPaths.length > 1) {
+			try {
+			// this represents the location of error..
+			int location = Integer.parseInt(splitPaths[2]);
+
+			TreeNode nodeDetails = node.get("site").get(location);
+			errorMessage.append(nodeDetails);
+			} catch (Exception e) {
+				errorMessage.append(path);
+			}
+
 		} else {
 			errorMessage.append("top level error");
 		}
