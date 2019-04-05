@@ -22,7 +22,7 @@
       "vm_name": "{{ user `vm_name` }}-{{ user `vm_version` }}",
       "vboxmanage": [
         [ "modifyvm", "{{ .Name }}", "--cpus", "1" ],
-        [ "modifyvm", "{{ .Name }}", "--memory", "1024" ]
+        [ "modifyvm", "{{ .Name }}", "--memory", "2048" ]
       ]
     },
     {
@@ -43,7 +43,8 @@
       "vm_name": "{{ user `vm_name` }}-{{ user `vm_version` }}",
       "vboxmanage": [
         [ "modifyvm", "{{ .Name }}", "--cpus", "1" ],
-        [ "modifyvm", "{{ .Name }}", "--memory", "1024" ],
+        [ "modifyvm", "{{ .Name }}", "--memory", "2048" ],
+        [ "modifyvm", "{{ .Name }}", "--vram", "256" ],
         [ "modifyvm", "{{ .Name }}", "--clipboard", "bidirectional" ]
       ]
     }
