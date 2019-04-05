@@ -31,7 +31,7 @@
       "vm_name": "{{ user `out_file` }}",
       "vboxmanage": [
         [ "modifyvm", "{{ .Name }}", "--cpus", "1" ],
-        [ "modifyvm", "{{ .Name }}", "--memory", "1024" ],
+        [ "modifyvm", "{{ .Name }}", "--memory", "2048" ],
         [ "modifyvm", "{{ .Name }}", "--clipboard", "bidirectional" ]
       ]
     }
