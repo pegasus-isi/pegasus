@@ -54,17 +54,23 @@ public class None extends Abstract {
     public String wrap( Job job ){
         StringBuilder sb = new StringBuilder();
         
+        sb.append( "pegasus_lite_section_start stage_in" ).append( '\n' );
         sb.append( super.inputFilesToPegasusLite(job) );
         sb.append( super.enableForIntegrity(job) );
+        sb.append( "pegasus_lite_section_end stage_in" ).append( '\n' );
         sb.append( "set +e" ).append( '\n' );//PM-701
         sb.append( "job_ec=0" ).append( "\n" );
         
+        sb.append( "pegasus_lite_section_start task_execute" ).append( '\n' );
         appendStderrFragment( sb, Abstract.PEGASUS_LITE_MESSAGE_PREFIX, "Executing the user task" );
         sb.append( job.getRemoteExecutable() ).append( job.getArguments() ).append( '\n' );
         //capture exitcode of the job
         sb.append( "job_ec=$?" ).append( "\n" );
+        sb.append( "pegasus_lite_section_end task_execute" ).append( '\n' );
         sb.append( "set -e" ).append( '\n' );//PM-701
+        sb.append( "pegasus_lite_section_start stage_out" ).append( '\n' );
         sb.append( super.outputFilesToPegasusLite(job) );
+        sb.append( "pegasus_lite_section_end stage_out" ).append( '\n' );
         return sb.toString();
     }
     
@@ -78,12 +84,15 @@ public class None extends Abstract {
     public String wrap( AggregatedJob job ){
         StringBuilder sb = new StringBuilder();
         
+        sb.append( "pegasus_lite_section_start stage_in" ).append( '\n' );
         sb.append( super.inputFilesToPegasusLite(job) );
         sb.append( super.enableForIntegrity(job) );
+        sb.append( "pegasus_lite_section_end stage_in" ).append( '\n' );
         sb.append( "set +e" ).append( '\n' );//PM-701
         sb.append( "job_ec=0" ).append( "\n" );
         
         try{
+            sb.append( "pegasus_lite_section_start task_execute" ).append( '\n' );
             appendStderrFragment( sb, Abstract.PEGASUS_LITE_MESSAGE_PREFIX, "Executing the user's clustered task" );
             //for clustered jobs we embed the contents of the input
             //file in the shell wrapper itself
@@ -98,7 +107,7 @@ public class None extends Abstract {
 
             //capture exitcode of the job
             sb.append( "job_ec=$?" ).append( "\n" );
-        
+            sb.append( "pegasus_lite_section_end task_execute" ).append( '\n' );
             
             //rest the jobs stdin
             job.setStdIn( "" );
@@ -109,7 +118,9 @@ public class None extends Abstract {
         }
 
         sb.append( "set -e" ).append( '\n' );//PM-701
+        sb.append( "pegasus_lite_section_start stage_out" ).append( '\n' );
         sb.append( super.outputFilesToPegasusLite(job) );
+        sb.append( "pegasus_lite_section_end stage_out" ).append( '\n' );
         return sb.toString();
     }
     

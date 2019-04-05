@@ -20,6 +20,7 @@ package edu.isi.pegasus.planner.code.generator.condor.style;
 import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.ShellCommand;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
@@ -29,9 +30,12 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactoryException;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import java.io.File;
 
 
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import java.util.Map;
@@ -62,12 +66,14 @@ public abstract class Abstract implements CondorStyle {
      */
     protected LogManager mLogger;
 
-
-     /**
+    /**
      * Handle to the Credential Handler Factory
      */
     protected CredentialHandlerFactory mCredentialFactory ;
 
+    protected List<String> mMountUnderScratchDirs;
+    
+   
     /**
      * The default constructor.
      */
@@ -92,6 +98,23 @@ public abstract class Abstract implements CondorStyle {
         mSiteStore = bag.getHandleToSiteStore();
         mLogger    = bag.getLogger();
         mCredentialFactory = credentialFactory;
+        mMountUnderScratchDirs = new LinkedList();
+        ShellCommand c = ShellCommand.getInstance( mLogger );
+        if (c.execute("condor_config_val", "MOUNT_UNDER_SCRATCH") == 0) {
+            String stdout = c.getSTDOut();
+            //remove enclosing quotes if any                                                                                                                                                                                                                                                                      
+            stdout = stdout.replaceAll("^\"|\"$", "");
+            String[] dirs = stdout.split( "," );
+            for( int i = 0; i < dirs.length; i++ ){
+                try{
+                    //make sure it is a file path
+                    mMountUnderScratchDirs.add(new File(dirs[i]).getAbsolutePath());
+                } catch (Exception e){
+                    /* ignore */
+                }
+            }
+        }
+        mLogger.log( "Mount Under Scratch Directories " + mMountUnderScratchDirs, LogManager.DEBUG_MESSAGE_LEVEL);
     }
 
 
@@ -226,8 +249,8 @@ public abstract class Abstract implements CondorStyle {
         }
        
         //associate any credentials if reqd for job submission.
-        this.applyCredentialsForJobSubmission(job);
-        
+        this.applyCredentialsForJobSubmission(job, true);
+ 
         // jobs can have multiple credential requirements
         //and may need credentials associated with different sites PM-731
         for( Map.Entry<String,Set<CredentialHandler.TYPE>> entry : job.getCredentialTypes().entrySet()  ){
@@ -249,7 +272,14 @@ public abstract class Abstract implements CondorStyle {
                         if ( path == null) {
                             this.complainForCredential( job, handler.getProfileKey(), siteHandle );
                         }
-                        job.envVariables.construct(handler.getEnvironmentVariable( siteHandle ), path );
+                        //PM-1358 check if local credential path is valid or not
+                        if (this.localCredentialPathValid(path)){
+                            job.envVariables.construct(handler.getEnvironmentVariable( siteHandle ), path );
+                        }
+                        else{
+                            //flag an error 
+                            this.complainForMountUnderScratch(job, path);
+                        }
                         break;
 
                     default:
@@ -262,14 +292,25 @@ public abstract class Abstract implements CondorStyle {
         
     }
 
+    /**
+     * Associates credentials required for job submission.
+     * 
+     * @param job
+     * 
+     * @throws CondorStyleException 
+     */
+    protected void applyCredentialsForJobSubmission(Job job) throws CondorStyleException {
+        this.applyCredentialsForJobSubmission(job, false);
+    }
     
     /**
      * Associates credentials required for job submission.
      * 
      * @param job
+     * @param isLocal boolean indicating whether it is a local job or not
      * @throws CondorStyleException 
      */
-    protected void applyCredentialsForJobSubmission(Job job) throws CondorStyleException {
+    protected void applyCredentialsForJobSubmission(Job job, boolean isLocal) throws CondorStyleException {
         //handle credential for job submission if set
         if( job.getSubmissionCredential() == null ){
             return;
@@ -283,6 +324,14 @@ public abstract class Abstract implements CondorStyle {
         }
         switch( cred ) {
             case x509:
+                if(isLocal){
+                    //PM-1358 for validity
+                    if (!this.localCredentialPathValid(path)){
+                        //flag an error 
+                        this.complainForMountUnderScratch(job, path);
+                        
+                    }
+                }
                 job.condorVariables.construct( Condor.X509USERPROXY_KEY, path );
                 break;
             default:
@@ -312,6 +361,25 @@ public abstract class Abstract implements CondorStyle {
     }
     
     /**
+     * Complain if a particular credential is mounted under scratch in condor
+     * configuration
+     * 
+     * @param job
+     * @param credential
+     * 
+     * @throws CondorStyleException 
+     */
+    protected void complainForMountUnderScratch( Job job, String credential ) throws CondorStyleException{
+        StringBuilder error = new StringBuilder();
+        
+        error.append("Local path to credential ").append(credential).append(" for job ").
+                append(job.getID()).append(" is specified under MOUNT_UNDER_SCRATCH variable in condor configuration on the submit host").
+                append(this.mMountUnderScratchDirs);
+        
+        throw new CondorStyleException( error.toString() );
+    }
+    
+    /**
      * Constructs an error message in case of style mismatch.
      *
      * @param job      the job object.
@@ -328,5 +396,31 @@ public abstract class Abstract implements CondorStyle {
              append( " mismatch for job " ).append( job.getName() );
 
          return sb.toString();
+    }
+    
+    /**
+     * Returns whether local credential being used is valid w.r.t
+     * Condor MOUNT_UNDER_SCRATCH settings
+     * 
+     * @param credential
+     * 
+     * @return 
+     */
+    protected boolean localCredentialPathValid( String credential ){
+        boolean valid = true;
+        if( this.mMountUnderScratchDirs.isEmpty() ){
+            //no directories mentioned for mounting under scratch
+            return valid;
+        }
+        
+        for( String dir: this.mMountUnderScratchDirs ){
+            if( new File(credential).getAbsolutePath().startsWith(dir) ){
+                //local proxy path points to a value that is mounted under scratch
+                valid = false;
+                break;
+            }
+        }
+        return valid;
+        
     }
 }

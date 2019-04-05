@@ -18,9 +18,6 @@ package edu.isi.pegasus.planner.code.generator.condor;
 
 
 import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-
-import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
 
 import edu.isi.pegasus.planner.classes.Job;
 
@@ -37,9 +34,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.Iterator;
 
-import java.io.IOException;
 
 /**
  * A factory class to load the appropriate type of Condor Style impelementations.
@@ -109,9 +104,9 @@ public class CondorStyleFactory {
      * @return a Map indexed by Pegasus styles, and values as names of implementing
      *         classes.
      */
-    private static Map implementingClassNameTable(){
+    private static Map<String,String> implementingClassNameTable(){
         if( mImplementingClassNameTable == null ){
-            mImplementingClassNameTable = new HashMap(3);
+            mImplementingClassNameTable = new HashMap<String,String>(8);
             mImplementingClassNameTable.put( Pegasus.CONDOR_STYLE, CONDOR_STYLE_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put( Pegasus.GLIDEIN_STYLE, GLIDEIN_STYLE_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put( Pegasus.GLIDEINWMS_STYLE, GLIDEINWMS_STYLE_IMPLEMENTING_CLASS);
@@ -128,14 +123,14 @@ public class CondorStyleFactory {
      * A table that maps, Pegasus style keys to the names of the corresponding classes
      * implementing the CondorStyle interface.
      */
-    private static Map mImplementingClassNameTable;
+    private static Map<String,String> mImplementingClassNameTable;
 
 
     /**
      * A table that maps, Pegasus style keys to appropriate classes implementing the
      * CondorStyle interface
      */
-    private  Map mImplementingClassTable ;
+    private  Map<String,CondorStyle> mImplementingClassTable ;
 
     /**
      * A boolean indicating that the factory has been initialized.
@@ -146,6 +141,11 @@ public class CondorStyleFactory {
      * Handler to the Credential Handler factory.
      */
     private CredentialHandlerFactory mCredentialFactory;
+    
+    /**
+     * Bag of initialization objects
+     */
+    private PegasusBag mBAG;
 
     /**
      * The default constructor.
@@ -169,17 +169,8 @@ public class CondorStyleFactory {
         //load and intialize the CredentialHandler Factory
         mCredentialFactory = new CredentialHandlerFactory();
         mCredentialFactory.initialize( bag );
-        
-        //load all the implementations that correspond to the Pegasus style keys
-        for( Iterator it = this.implementingClassNameTable().entrySet().iterator(); it.hasNext(); ){
-            Map.Entry entry = (Map.Entry) it.next();
-            String style    = (String)entry.getKey();
-            String className= (String)entry.getValue();
-
-            //load via reflection. not required in this case though
-            put( style, this.loadInstance( bag, className ));
-        }
-
+        mBAG = bag;
+       
         //we have successfully loaded all implementations
         mInitialized = true;
     }
@@ -326,7 +317,22 @@ public class CondorStyleFactory {
      * @return implementation  the class implementing that style, else null
      */
     private Object get( String style ){
-        return mImplementingClassTable.get( style);
+        //return mImplementingClassTable.get( style);
+    
+        //discover the implementing class
+        String className = (String)CondorStyleFactory.implementingClassNameTable().get(style);
+        if( className == null ){
+            throw new CondorStyleFactoryException( "No class found corresponding to style ",
+                                                   style);
+        }
+        CondorStyle cs =  (CondorStyle) mImplementingClassTable.get( style );
+        if( cs == null ){
+            //load on demand
+            cs = this.loadInstance( mBAG, className );
+            mImplementingClassTable.put( style, cs );
+        }
+        return cs;
+        
     }
 
 
@@ -336,7 +342,7 @@ public class CondorStyleFactory {
      * @param style           the Pegasus style
      * @param implementation  the class implementing that style.
      */
-    private void put( String style, Object implementation){
+    private void put( String style, CondorStyle implementation){
         mImplementingClassTable.put( style, implementation );
     }
 
