@@ -315,8 +315,8 @@ function container_init()
     cont_userid=`id -u`
     cont_user=`whoami`
     cont_groupid=`id -g`
-    cont_group=`id -g -n $cont_user` 
-    cont_name=${PEGASUS_DAG_JOB_ID}-`date -u +%s`
+    cont_group=`id -g -n $cont_user`
+    cont_name="${PEGASUS_DAG_JOB_ID}-${PEGASUS_WF_UUID}"
 }
 
 function docker_init()
