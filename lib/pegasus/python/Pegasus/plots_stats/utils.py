@@ -20,18 +20,11 @@ This file implements several utility functions pegasus-statistics and pegasus-pl
 
 # Import Python modules
 import os
-import re
 import sys
 import logging
-import optparse
 import math
-import tempfile
-import commands
 import shutil
 from datetime import datetime
-
-from Pegasus.tools import properties
-from Pegasus.tools import utils
 
 logger = logging.getLogger(__name__)
 
