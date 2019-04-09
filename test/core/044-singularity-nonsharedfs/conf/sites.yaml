@@ -1,0 +1,63 @@
+---
+site:
+- arch: "x86_64"
+  os: "linux"
+  handle: "cartman-data"
+  osrelease: ""
+  osversion: ""
+  glibc: ""
+  directory:
+  - type: "shared_scratch"
+    path: "/home/mukund//staging-site/scratch/mukund"
+    file-server:
+    - protocol: "gsiftp"
+      url: "gsiftp://bamboo.isi.edu//home/mukund//staging-site/scratch/mukund"
+      mount-point: "//home/mukund//staging-site/scratch/mukund"
+      operation: "all"
+- arch: "x86_64"
+  os: "linux"
+  handle: "condorpool"
+  osrelease: ""
+  osversion: ""
+  glibc: ""
+  directory:
+  - type: "shared_scratch"
+    path: "/lizard/scratch-90-days/mukund"
+    file-server:
+    - protocol: "gsiftp"
+      url: "gsiftp://bamboo.isi.edu/lizard/scratch-90-days/mukund"
+      mount-point: "/lizard/scratch-90-days/mukund"
+      operation: "all"
+  profile:
+  - condor:
+      universe: "vanilla"
+  - pegasus:
+      clusters.num: "1"
+  - pegasus:
+      style: "condor"
+- arch: "x86_64"
+  os: "linux"
+  handle: "local"
+  osrelease: ""
+  osversion: ""
+  glibc: ""
+  directory:
+  - type: "shared_scratch"
+    path: "/home/mukund//LOCAL/shared-scratch"
+    file-server:
+    - protocol: "file"
+      url: "file:////home/mukund//LOCAL/shared-scratch"
+      mount-point: "//home/mukund//LOCAL/shared-scratch"
+      operation: "all"
+  - type: "shared_storage"
+    path: "/home/mukund//LOCAL/shared-storage"
+    file-server:
+    - protocol: "file"
+      url: "file:////home/mukund//LOCAL/shared-storage"
+      mount-point: "//home/mukund//LOCAL/shared-storage"
+      operation: "all"
+  profile:
+  - env:
+      PEGASUS_HOME: "${PEGASUS_BIN_DIR}/.."
+  - pegasus:
+      clusters.num: "1"

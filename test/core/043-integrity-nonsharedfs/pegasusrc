@@ -1,5 +1,5 @@
-pegasus.catalog.site.file=./conf/sites.xml
-
+pegasus.catalog.site.file=./conf/sites.yaml
+pegasus.catalog.site YAML
 pegasus.data.configuration = nonsharedfs
 
 pegasus.catalog.replica  File

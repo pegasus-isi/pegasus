@@ -1,0 +1,54 @@
+---
+site:
+- arch: "x86_64"
+  os: "linux"
+  handle: "condorpool"
+  osrelease: ""
+  osversion: ""
+  glibc: ""
+  profile:
+  - condor:
+      universe: "vanilla"
+  - pegasus:
+      style: "condor"
+- arch: "x86_64"
+  os: "linux"
+  handle: "staging_site"
+  osrelease: ""
+  osversion: ""
+  glibc: ""
+  directory:
+  - type: "local_storage"
+    path: "/044-singularity-nonsharedfs-minimal/outputs"
+    file-server:
+    - protocol: "s3"
+      url: "s3://test@amazon/044-singularity-nonsharedfs-minimal/outputs"
+      operation: "all"
+  - type: "shared_scratch"
+    path: "/044-singularity-nonsharedfs-minimal/scratch"
+    file-server:
+    - protocol: "s3s"
+      url: "s3s://test@amazon/044-singularity-nonsharedfs-minimal/scratch"
+      operation: "all"
+- arch: "x86_64"
+  os: "linux"
+  handle: "local"
+  osrelease: ""
+  osversion: ""
+  glibc: ""
+  directory:
+  - type: "shared_scratch"
+    path: "${TOPDIR}/LOCAL/shared-scratch"
+    file-server:
+    - protocol: "file"
+      url: "file:///${TOPDIR}/LOCAL/shared-scratch"
+      operation: "all"
+  - type: "shared_storage"
+    path: "${TOPDIR}/LOCAL/shared-storage"
+    file-server:
+    - protocol: "file"
+      url: "file:///${TOPDIR}/LOCAL/shared-storage"
+      operation: "all"
+  profile:
+  - pegasus:
+      s3cfg: "/localhome/bamboo/.s3cfg"
