@@ -52,6 +52,6 @@ site:
       operation: "all"
   profile:
   - env:
-      PEGASUS_HOME: "${TOPDIR}pegasus-5.0.0dev/bin/.."
+      PEGASUS_HOME: "${TOPDIR}/.."
   - pegasus:
       clusters.num: "1"
