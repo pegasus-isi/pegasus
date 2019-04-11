@@ -115,6 +115,10 @@ class Workflow:
             return
 
         # PM-1355 add on the fixed attributes
+        if "xwf.id" in kwargs:
+            # PM-1355 first check for xwf.id which is in the events from static.bp files
+            kwargs["xwf__id"]=kwargs.pop("xwf.id")
+
         kwargs.update(self._fixed_addon_attrs)
 
         try:
