@@ -118,8 +118,14 @@ class Workflow:
         if "xwf.id" in kwargs:
             # PM-1355 first check for xwf.id which is in the events from static.bp files
             kwargs["xwf__id"]=kwargs.pop("xwf.id")
-
-        kwargs.update(self._fixed_addon_attrs)
+            
+        if event != "xwf.map.subwf_job":
+            # we can add fixed attributes for all events other than
+            # subworklow mapping event, as for that event the xwf__id
+            # in the event is from the root/parent workflow and does not match
+            # the one in the fixed addon attributes which has the
+            # sub workflow xwf__id
+            kwargs.update(self._fixed_addon_attrs)
 
         try:
             # Send event to corresponding sink
