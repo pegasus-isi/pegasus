@@ -516,21 +516,21 @@ class Workflow:
         kwargs["xwf__id"] = self._wf_uuid
         # Now include others, if they are defined
         if self._dax_label is not None:
-            kwargs["dax__label"] = self._dax_label
+            kwargs["dax_label"] = self._dax_label
         if self._dax_version is not None:
-            kwargs["dax__version"] = self._dax_version
+            kwargs["dax_version"] = self._dax_version
         if self._dax_index is not None:
-            kwargs["dax__index"] = self._dax_index
+            kwargs["dax_index"] = self._dax_index
         if self._dax_file is not None:
-            kwargs["dax__file"] = self._dax_file
+            kwargs["dax_file"] = self._dax_file
         if self._dag_file_name is not None:
-            kwargs["dag__file__name"] = self._dag_file_name
+            kwargs["dag_file_name"] = self._dag_file_name
         if self._timestamp is not None:
             kwargs["ts"] = self._timestamp
         if self._submit_hostname is not None:
-            kwargs["submit__hostname"] = self._submit_hostname
+            kwargs["submit_hostname"] = self._submit_hostname
         if self._submit_dir is not None:
-            kwargs["submit__dir"] = self._submit_dir
+            kwargs["submit_dir"] = self._submit_dir
         if self._planner_arguments is not None:
             kwargs["argv"] = self._planner_arguments.strip('" \t\n\r')
         if self._user is not None:
@@ -540,11 +540,11 @@ class Workflow:
                 # Only add it if it is not "null"
                 kwargs["grid_dn"] = self._grid_dn
         if self._planner_version is not None:
-            kwargs["planner__version"] = self._planner_version
+            kwargs["planner_version"] = self._planner_version
         if self._parent_workflow_id is not None:
-            kwargs["parent__xwf__id"] = self._parent_workflow_id
+            kwargs["parent_xwf__id"] = self._parent_workflow_id
         if self._root_workflow_id is not None:
-            kwargs["root__xwf__id"] = self._root_workflow_id
+            kwargs["root_xwf__id"] = self._root_workflow_id
 
 
         # Send workflow event to database
@@ -574,7 +574,7 @@ class Workflow:
         # to the dashboard db we had the connection details
         # rest remains the same
         if self._database_url is not None:
-            kwargs["db__url"] = self._database_url
+            kwargs["db_url"] = self._database_url
 
         self.output_to_dashboard_db("wf.plan",kwargs)
 
@@ -861,7 +861,7 @@ class Workflow:
         if self._root_workflow_id is None:
             self._root_workflow_id = self._wf_uuid
 
-        self._fixed_addon_attrs["root__xwf__id"] = self._root_workflow_id
+        self._fixed_addon_attrs["root_xwf__id"] = self._root_workflow_id
 
         if "dax_label" in wfparams:
             self._dax_label = wfparams["dax_label"]
@@ -902,7 +902,7 @@ class Workflow:
             # No timestamp information is available, just use current time
             self._timestamp = int(time.time())
 
-        self._fixed_addon_attrs["wf__ts"] = self._timestamp
+        self._fixed_addon_attrs["wf_ts"] = self._timestamp
 
         if "submit_dir" in wfparams:
             self._submit_dir = wfparams["submit_dir"]
@@ -915,7 +915,7 @@ class Workflow:
             if "jsd" in wfparams:
                 self._original_submit_dir = os.path.dirname(os.path.normpath(wfparams["jsd"]))
 
-        self._fixed_addon_attrs["submit__dir"] = self._submit_dir
+        self._fixed_addon_attrs["submit_dir"] = self._submit_dir
 
         if "planner_version" in wfparams:
             self._planner_version = wfparams["planner_version"]
@@ -923,13 +923,13 @@ class Workflow:
             # Use "pegasus_version" if "planner_version" not found
             if "pegasus_version" in wfparams:
                 self._planner_version = wfparams["pegasus_version"]
-        self._fixed_addon_attrs["pegasus__version"] = self._planner_version
+        self._fixed_addon_attrs["pegasus_version"] = self._planner_version
 
         if "planner_arguments" in wfparams:
             self._planner_arguments = wfparams["planner_arguments"]
         if "submit_hostname" in wfparams:
             self._submit_hostname = wfparams["submit_hostname"]
-            self._fixed_addon_attrs["submit__hostname"] = self._submit_hostname
+            self._fixed_addon_attrs["submit_hostname"] = self._submit_hostname
         if "user" in wfparams:
             self._user = wfparams["user"]
             # make it clear it is the workflow user.
@@ -1346,12 +1346,12 @@ class Workflow:
             # If we have both timestamps, let's try to compute the local duration
             try:
                 my_duration = int(my_job._main_job_done) - int(my_job._main_job_start)
-                kwargs["local__dur"] = my_duration
+                kwargs["local_dur"] = my_duration
             except:
                 # Nothing to do, this is not mandatory
                 pass
         if my_job._input_file is not None:
-            kwargs["stdin__file"] = my_job._input_file
+            kwargs["stdin_file"] = my_job._input_file
         else:
             # This is not mandatory, according to the schema
             pass
@@ -1400,9 +1400,9 @@ class Workflow:
             if self._original_submit_dir is not None:
                 kwargs["work_dir"] = self._original_submit_dir
         if my_job._cluster_start_time is not None:
-            kwargs["cluster__start"] = my_job._cluster_start_time
+            kwargs["cluster_start"] = my_job._cluster_start_time
         if my_job._cluster_duration is not None:
-            kwargs["cluster__dur"] = my_job._cluster_duration
+            kwargs["cluster_dur"] = my_job._cluster_duration
 
 
 
@@ -1436,17 +1436,17 @@ class Workflow:
         if my_job._output_file is not None:
             if my_job._kickstart_parsed or my_job._has_rotated_stdout_err_files:
                 # Only use rotated filename for job with kickstart output
-                kwargs["stdout__file"] = my_job._output_file + ".%03d" % (my_job._job_output_counter)
+                kwargs["stdout_file"] = my_job._output_file + ".%03d" % (my_job._job_output_counter)
             else:
-                kwargs["stdout__file"] = my_job._output_file
+                kwargs["stdout_file"] = my_job._output_file
         else:
-            kwargs["stdout__file"] = ""
+            kwargs["stdout_file"] = ""
         if my_job._error_file is not None:
             if my_job._kickstart_parsed or my_job._has_rotated_stdout_err_files:
                 # Only use rotated filename for job with kickstart output
-                kwargs["stderr__file"] = my_job._error_file + ".%03d" % (my_job._job_output_counter)
+                kwargs["stderr_file"] = my_job._error_file + ".%03d" % (my_job._job_output_counter)
             else:
-                kwargs["stderr__file"] = my_job._error_file
+                kwargs["stderr_file"] = my_job._error_file
         else:
             kwargs["stderr__file"] = ""
         if self._store_stdout_stderr:
@@ -1454,19 +1454,19 @@ class Workflow:
             if my_job._stdout_text is not None:
                 if len(my_job._stdout_text) > MAX_OUTPUT_LENGTH:
                     # Need to truncate to avoid database problems...
-                    kwargs["stdout__text"] = my_job._stdout_text[:MAX_OUTPUT_LENGTH]
+                    kwargs["stdout_text"] = my_job._stdout_text[:MAX_OUTPUT_LENGTH]
                     logger.warning("truncating stdout for job %s" % (my_job._exec_job_id))
                 else:
                     # Put everything in
-                    kwargs["stdout__text"] = my_job._stdout_text
+                    kwargs["stdout_text"] = my_job._stdout_text
             if my_job._stderr_text is not None:
                 if len(my_job._stderr_text) > MAX_OUTPUT_LENGTH:
                     # Need to truncate to avoid database problems...
-                    kwargs["stderr__text"] = my_job._stderr_text[:MAX_OUTPUT_LENGTH]
+                    kwargs["stderr_text"] = my_job._stderr_text[:MAX_OUTPUT_LENGTH]
                     logger.warning("truncating stderr for job %s" % (my_job._exec_job_id))
                 else:
                     # Put everything in
-                    kwargs["stderr__text"] = my_job._stderr_text
+                    kwargs["stderr_text"] = my_job._stderr_text
 
 
 
