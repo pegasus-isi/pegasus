@@ -994,6 +994,7 @@ class WorkflowLoader(BaseLoader):
                 return None
             except orm.exc.NoResultFound as e:
                 self.log.error('No results found for wf_uuid/exec_job_id: %s/%s', wf_id, exec_id)
+                self.log.error(query)
                 return None
 
         return self.job_id_cache[((wf_id, exec_id))]
