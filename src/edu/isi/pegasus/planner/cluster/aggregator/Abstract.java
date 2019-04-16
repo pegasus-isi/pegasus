@@ -294,7 +294,7 @@ public abstract class Abstract implements JobAggregator {
         Set ipFiles = new HashSet();
         Set opFiles = new HashSet();
         boolean userExecutablesStaged = false;
-        Container firstC = firstJob.getContainer();
+        Container mergedJobContainer = firstJob.getContainer();
         for( Iterator it = jobs.iterator(); it.hasNext(); ) {
                 job = (Job) it.next();
                 ipFiles.addAll( job.getInputFiles() );
@@ -312,8 +312,8 @@ public abstract class Abstract implements JobAggregator {
                 
                 //PM-1194 we want to merge only those jobs whose containers match
                 Container c = job.getContainer();
-                boolean match = ( firstC == null && c == null ) ||
-                                  firstC != null && c != null && firstC.getName().equalsIgnoreCase( c.getName() ); 
+                boolean match = ( mergedJobContainer == null && c == null ) ||
+                                  mergedJobContainer != null && c != null && mergedJobContainer.getName().equalsIgnoreCase( c.getName() ); 
                 if( !match ){
                     StringBuilder error = new StringBuilder();
                     error.append( "Cannot cluster jobs with different types of containers associated. " ).
@@ -325,7 +325,7 @@ public abstract class Abstract implements JobAggregator {
                 if( c!= null ){
                     //PM-1366 merge the profiles that might be associated 
                     //with Container for the job
-                    ENV containerENVProfiles = (ENV) firstC.getProfilesObject().get(Profiles.NAMESPACES.env);
+                    ENV containerENVProfiles = (ENV) mergedJobContainer.getProfilesObject().get(Profiles.NAMESPACES.env);
                     if( containerENVProfiles != null ){
                         containerENVProfiles.merge( (ENV) c.getProfilesObject().get(Profiles.NAMESPACES.env));
                     }
@@ -333,7 +333,7 @@ public abstract class Abstract implements JobAggregator {
         }
 
         //PM-1194 set the container for clustered job
-        mergedJob.setContainer( firstC );
+        mergedJob.setContainer(mergedJobContainer );
         
         mergedJob.setExecutableStagingForJob(userExecutablesStaged);
         
