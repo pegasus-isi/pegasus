@@ -296,40 +296,40 @@ public abstract class Abstract implements JobAggregator {
         boolean userExecutablesStaged = false;
         Container mergedJobContainer = firstJob.getContainer();
         for( Iterator it = jobs.iterator(); it.hasNext(); ) {
-                job = (Job) it.next();
-                ipFiles.addAll( job.getInputFiles() );
-                opFiles.addAll( job.getOutputFiles() );
-                mergedJob.add(job);
-                
-                //update user executable staging.
-                userExecutablesStaged = userExecutablesStaged || job.userExecutablesStagedForJob();
+            job = (Job) it.next();
+            ipFiles.addAll( job.getInputFiles() );
+            opFiles.addAll( job.getOutputFiles() );
+            mergedJob.add(job);
 
-                //we need to merge the profiles from the constituent
-                //jobs now, rather in function makeAbstractAggreagatedJobConcrete
-                //JIRA PM-368
-                //merge profiles for all jobs
-                mergedJob.mergeProfiles( job );
-                
-                //PM-1194 we want to merge only those jobs whose containers match
-                Container c = job.getContainer();
-                boolean match = ( mergedJobContainer == null && c == null ) ||
-                                  mergedJobContainer != null && c != null && mergedJobContainer.getName().equalsIgnoreCase( c.getName() ); 
-                if( !match ){
-                    StringBuilder error = new StringBuilder();
-                    error.append( "Cannot cluster jobs with different types of containers associated. " ).
-                          append( "Container for job " ).append( job.getID() ).append( " - " ).append( job.getContainer()).
-                          append( "does not match with job ").append( firstJob.getID() ).append( " - " ).append( firstJob.getContainer());
-                    throw new RuntimeException( error.toString() );
+            //update user executable staging.
+            userExecutablesStaged = userExecutablesStaged || job.userExecutablesStagedForJob();
+
+            //we need to merge the profiles from the constituent
+            //jobs now, rather in function makeAbstractAggreagatedJobConcrete
+            //JIRA PM-368
+            //merge profiles for all jobs
+            mergedJob.mergeProfiles( job );
+
+            //PM-1194 we want to merge only those jobs whose containers match
+            Container c = job.getContainer();
+            boolean match = ( mergedJobContainer == null && c == null ) ||
+                              mergedJobContainer != null && c != null && mergedJobContainer.getName().equalsIgnoreCase( c.getName() ); 
+            if( !match ){
+                StringBuilder error = new StringBuilder();
+                error.append( "Cannot cluster jobs with different types of containers associated. " ).
+                      append( "Container for job " ).append( job.getID() ).append( " - " ).append( job.getContainer()).
+                      append( "does not match with job ").append( firstJob.getID() ).append( " - " ).append( firstJob.getContainer());
+                throw new RuntimeException( error.toString() );
+            }
+
+            if( c!= null ){
+                //PM-1366 merge the profiles that might be associated 
+                //with Container for the job
+                ENV containerENVProfiles = (ENV) mergedJobContainer.getProfilesObject().get(Profiles.NAMESPACES.env);
+                if( containerENVProfiles != null ){
+                    containerENVProfiles.merge( (ENV) c.getProfilesObject().get(Profiles.NAMESPACES.env));
                 }
-                
-                if( c!= null ){
-                    //PM-1366 merge the profiles that might be associated 
-                    //with Container for the job
-                    ENV containerENVProfiles = (ENV) mergedJobContainer.getProfilesObject().get(Profiles.NAMESPACES.env);
-                    if( containerENVProfiles != null ){
-                        containerENVProfiles.merge( (ENV) c.getProfilesObject().get(Profiles.NAMESPACES.env));
-                    }
-                }
+            }
         }
 
         //PM-1194 set the container for clustered job
