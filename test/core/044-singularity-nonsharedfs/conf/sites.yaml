@@ -8,11 +8,11 @@ site:
   glibc: ""
   directory:
   - type: "shared_scratch"
-    path: "/home/mukund//staging-site/scratch/mukund"
+    path: "${TOPDIR}/staging-site/scratch/${TEST_NAME}"
     file-server:
     - protocol: "gsiftp"
-      url: "gsiftp://bamboo.isi.edu//home/mukund//staging-site/scratch/mukund"
-      mount-point: "//home/mukund//staging-site/scratch/mukund"
+      url: "gsiftp://bamboo.isi.edu/${TOPDIR}/staging-site/scratch/${TEST_NAME}"
+      mount-point: "/${TOPDIR}/staging-site/scratch/${TEST_NAME}"
       operation: "all"
 - arch: "x86_64"
   os: "linux"
@@ -22,11 +22,11 @@ site:
   glibc: ""
   directory:
   - type: "shared_scratch"
-    path: "/lizard/scratch-90-days/mukund"
+    path: "/lizard/scratch-90-days/${TEST_NAME}"
     file-server:
     - protocol: "gsiftp"
-      url: "gsiftp://bamboo.isi.edu/lizard/scratch-90-days/mukund"
-      mount-point: "/lizard/scratch-90-days/mukund"
+      url: "gsiftp://bamboo.isi.edu/lizard/scratch-90-days/${TEST_NAME}"
+      mount-point: "/lizard/scratch-90-days/${TEST_NAME}"
       operation: "all"
   profile:
   - condor:
@@ -43,18 +43,18 @@ site:
   glibc: ""
   directory:
   - type: "shared_scratch"
-    path: "/home/mukund//LOCAL/shared-scratch"
+    path: "${TOPDIR}/LOCAL/shared-scratch"
     file-server:
     - protocol: "file"
-      url: "file:////home/mukund//LOCAL/shared-scratch"
-      mount-point: "//home/mukund//LOCAL/shared-scratch"
+      url: "file:///${TOPDIR}/LOCAL/shared-scratch"
+      mount-point: "/${TOPDIR}/LOCAL/shared-scratch"
       operation: "all"
   - type: "shared_storage"
-    path: "/home/mukund//LOCAL/shared-storage"
+    path: "${TOPDIR}/LOCAL/shared-storage"
     file-server:
     - protocol: "file"
-      url: "file:////home/mukund//LOCAL/shared-storage"
-      mount-point: "//home/mukund//LOCAL/shared-storage"
+      url: "file:///${TOPDIR}/LOCAL/shared-storage"
+      mount-point: "/${TOPDIR}/LOCAL/shared-storage"
       operation: "all"
   profile:
   - env:
