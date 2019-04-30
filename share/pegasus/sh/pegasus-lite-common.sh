@@ -658,8 +658,8 @@ function pegasus_lite_chirp()
 
     # find/test chirp once here
     if [ "X$pegasus_lite_chirp_path" = "X" ]; then
-        condor_libexec=`condor_config_val LIBEXEC 2>/dev/null`
-        pegasus_lite_chirp_path=`(export PATH=$condor_libexec:$PATH ; which condor_chirp) 2>/dev/null`
+        condor_libexec=`condor_config_val LIBEXEC 2>/dev/null || true`
+        pegasus_lite_chirp_path=`(export PATH=$condor_libexec:$PATH ; which condor_chirp) 2>/dev/null || true`
         if [ "X$pegasus_lite_chirp_path" = "X" ]; then
             pegasus_lite_log "Unable to find condor_chirp - disabling chirping"
             pegasus_lite_chirp_path="none"
