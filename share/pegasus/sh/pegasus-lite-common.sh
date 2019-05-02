@@ -646,6 +646,7 @@ function pegasus_lite_section_end()
 
     if [ "X$start_ts" != "X" ]; then
         duration=$(($ts - $start_ts))
+        pegasus_lite_chirp Chirp_pegasus_${section}_start $start_ts
         pegasus_lite_chirp Chirp_pegasus_${section}_duration $duration
     fi
 }
