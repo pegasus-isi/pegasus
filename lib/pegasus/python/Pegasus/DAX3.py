@@ -1502,7 +1502,7 @@ class DAX(AbstractJob):
         """
         if isinstance(file, File):
             self.file = file
-        elif isinstance(file, str) or isinstance(file, unicode):
+        elif isinstance(file, six.string_types):
             self.file = File(name=file)
         else:
             raise FormatError("invalid file", file)
@@ -1555,7 +1555,7 @@ class DAG(AbstractJob):
         """
         if isinstance(file, File):
             self.file = file
-        elif isinstance(file, str) or isinstance(file, unicode):
+        elif isinstance(file, six.string_types):
             self.file = File(name=file)
         else:
             raise FormatError("Invalid file", file)
