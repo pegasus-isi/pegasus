@@ -152,12 +152,8 @@ import os
 import sys
 import warnings
 
+import six
 from six import StringIO
-
-if sys.version_info >= (3, 0):
-    # compatibility with Python 3
-    from past.builtins import basestring
-
 
 SCHEMA_NAMESPACE = "http://pegasus.isi.edu/schema/DAX"
 SCHEMA_LOCATION = "http://pegasus.isi.edu/schema/dax-3.6.xsd"
@@ -194,7 +190,7 @@ class Element:
             if value is not None:
                 if isinstance(value, bool):
                     value = str(value).lower()
-                elif not isinstance(value, basestring):
+                elif not isinstance(value, six.string_types):
                     value = repr(value)
                 attr = attr.replace("__", ":")
                 self.attrs.append((attr, value))
@@ -224,7 +220,7 @@ class Element:
         return element
 
     def text(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, six.string_types):
             value = str(value)
         self.children.append(self._escape(value))
         return self
@@ -264,7 +260,7 @@ class Element:
             for child in self.children:
                 if not flat:
                     stream.write("\t" * (level + 1))
-                if isinstance(child, basestring):
+                if isinstance(child, six.string_types):
                     stream.write(child)
                 else:
                     child.write(stream, level + 1, flat)
@@ -1273,7 +1269,7 @@ class AbstractJob(ProfileMixin, UseMixin, InvokeMixin, MetadataMixin):
     def addArguments(self, *arguments):
         """Add one or more arguments to the job (this will add whitespace)"""
         for arg in arguments:
-            if not isinstance(arg, (File, basestring)):
+            if not isinstance(arg, (File, six.string_types)):
                 raise FormatError("Invalid argument", arg)
         for arg in arguments:
             if len(self.arguments) > 0:
@@ -1283,7 +1279,7 @@ class AbstractJob(ProfileMixin, UseMixin, InvokeMixin, MetadataMixin):
     def addRawArguments(self, *arguments):
         """Add one or more arguments to the job (whitespace will NOT be added)"""
         for arg in arguments:
-            if not isinstance(arg, (File, basestring)):
+            if not isinstance(arg, (File, six.string_types)):
                 raise FormatError("Invalid argument", arg)
         self.arguments.extend(arguments)
 
@@ -1440,7 +1436,7 @@ class Job(AbstractJob):
             self.name = name.name
             self.namespace = name.namespace
             self.version = name.version
-        elif isinstance(name, basestring):
+        elif isinstance(name, six.string_types):
             self.name = name
         else:
             raise FormatError("Name must be a string, Transformation or Executable")
@@ -2187,7 +2183,7 @@ def parse(infile):
         args = e.find(QN("argument"))
         if args is not None:
             for i in iterelem(args):
-                if isinstance(i, basestring):
+                if isinstance(i, six.string_types):
                     j.addRawArguments(i)
                 else:
                     j.addRawArguments(File(i.attrib["name"]))
