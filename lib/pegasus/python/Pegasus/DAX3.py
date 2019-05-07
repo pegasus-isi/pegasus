@@ -586,7 +586,7 @@ class File(CatalogType):
 
     def toStdioXML(self, tag):
         """Returns an XML representation of this file as a stdin/out/err tag"""
-        if tag is "stdin":
+        if tag == "stdin":
             link = "input"  # stdin is always input
         elif tag in ["stdout", "stderr"]:
             link = "output"  # stdout/stderr are always output
@@ -1679,7 +1679,7 @@ class ADAG(InvokeMixin, MetadataMixin):
 
     def getJob(self, jobid):
         """Get a Job/DAG/DAX"""
-        if not jobid in self.jobs:
+        if jobid not in self.jobs:
             raise NotFoundError("Job not found", jobid)
         return self.jobs[jobid]
 
