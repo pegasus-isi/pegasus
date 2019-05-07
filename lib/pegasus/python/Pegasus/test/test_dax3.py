@@ -5,6 +5,8 @@ This runs the unit test suite for the DAX3 module
 import os
 import unittest
 
+import six
+
 from Pegasus.DAX3 import *
 from Pegasus.DAX3 import CatalogType, Element
 
@@ -33,21 +35,21 @@ class TestElement(unittest.TestCase):
         x = Element("x")
         x.comment(u"\u03a3")
         x.flatten()
-        self.assertEqual(unicode(x), u"<x><!-- \u03a3 --></x>")
+        self.assertEqual(six.text_type(x), u"<x><!-- \u03a3 --></x>")
 
         x = Element(u"\u03a3")
-        self.assertEqual(unicode(x), u"<\u03a3/>")
+        self.assertEqual(six.text_type(x), u"<\u03a3/>")
 
         x = Element("x", [(u"\u03a3", "foo")])
-        self.assertEqual(unicode(x), u'<x \u03a3="foo"/>')
+        self.assertEqual(six.text_type(x), u'<x \u03a3="foo"/>')
 
         x = Element("x", [("foo", u"\u03a3")])
-        self.assertEqual(unicode(x), u'<x foo="\u03a3"/>')
+        self.assertEqual(six.text_type(x), u'<x foo="\u03a3"/>')
 
         x = Element("x")
         x.text(u"\u03a3")
         x.flatten()
-        self.assertEqual(unicode(x), u"<x>\u03a3</x>")
+        self.assertEqual(six.text_type(x), u"<x>\u03a3</x>")
 
     def testFlatten(self):
         x = Element("x")
@@ -124,7 +126,7 @@ class TestPFN(unittest.TestCase):
     def testXML(self):
         """toXML should output properly formatted XML"""
         a = PFN("http://abc", "a")
-        self.assertEqual(unicode(a.toXML()), '<pfn url="http://abc" site="a"/>')
+        self.assertEqual(six.text_type(a.toXML()), '<pfn url="http://abc" site="a"/>')
 
         a.addProfile(Profile("ns", "name", "value"))
         self.assertEqual(

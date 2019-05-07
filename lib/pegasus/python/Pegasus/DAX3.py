@@ -238,7 +238,7 @@ class Element:
         self.write(s)
         x = s.getvalue()
         s.close()
-        return unicode(x)
+        return six.text_type(x)
 
     def write(self, stream=sys.stdout, level=0, flatten=False):
         flat = self.flat or flatten
@@ -1272,7 +1272,7 @@ class AbstractJob(ProfileMixin, UseMixin, InvokeMixin, MetadataMixin):
         args = []
         for a in self.arguments:
             if isinstance(a, File):
-                args.append(unicode(a.toArgumentXML()))
+                args.append(six.text_type(a.toArgumentXML()))
             else:
                 args.append(a)
         return "".join(args)
