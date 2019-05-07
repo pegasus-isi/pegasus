@@ -569,7 +569,7 @@ class Tools(object):
 class TimedCommand(object):
     """ Provides a shell callout with a timeout """
         
-    def __init__(self, cmd, env_overrides = {}, timeout_secs = 6*60*60, log_cmd = True, log_outerr = True):
+    def __init__(self, cmd, env_overrides = {}, timeout_secs = 6*60*60, log_cmd = True, log_outerr = True, cwd=None):
         self._cmd = cmd
         self._env_overrides = env_overrides.copy()
         self._timeout_secs = timeout_secs
@@ -579,6 +579,7 @@ class TimedCommand(object):
         self._out_file = None
         self._outerr = ""
         self._duration = 0.0
+        self._cwd = cwd
 
         # used in exceptions
         self._cmd_for_exc = cmd
@@ -594,7 +595,7 @@ class TimedCommand(object):
             
             self._process = subprocess.Popen(self._cmd, shell=True, env=sub_env,
                                              stdout=self._out_file, stderr=STDOUT, 
-                                             preexec_fn=os.setpgrp)
+                                             preexec_fn=os.setpgrp, cwd=self._cwd)
             self._process.communicate()
 
         if self._log_cmd or logger.isEnabledFor(logging.DEBUG):
@@ -1639,7 +1640,7 @@ class HPSSHandler(TransferHandlerBase):
 
         try:
             logger.debug("Executing command " + cmd)
-            tc = TimedCommand(cmd )
+            tc = TimedCommand(cmd, cwd=destination_dir)
             tc.run()
             transfer_success = True
         except Exception as err:
