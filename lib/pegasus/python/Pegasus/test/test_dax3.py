@@ -1295,6 +1295,7 @@ class TestADAG(unittest.TestCase):
 <metadata key="key">value</metadata>
 <metadata key="dax.api">python</metadata>
 </adag>""",
+            True,
         )
         c.clearMetadata()
 
