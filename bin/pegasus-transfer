@@ -1590,7 +1590,7 @@ class HPSSHandler(TransferHandlerBase):
                 else:
                     for i, t in enumerate(l):
                         failed_l.append(t)
-             
+
         return [successful_l, failed_l]
 
     def _exec_transfers(self, transfers):
@@ -1606,9 +1606,16 @@ class HPSSHandler(TransferHandlerBase):
                                + " hpss transfers")
 
         tar = self._get_tar_file( transfers[0].get_src_path() )
+
+        # guess the destination directory based on the first LFN
+        destination_dir = self._compute_destination_directory(transfers[0])
+
         for i, t in enumerate(transfers):
             num_pairs += 1
             src_file = self._get_file_in_tar(t.get_src_path())
+            dir = self._compute_destination_directory(t)
+            if dir is None or dir != destination_dir:
+                logger.error("Destination directory %s for transfer %s does not match directory %s" %(dir,t.lfn,destination_dir))
             logger.debug("   adding %s " % src_file)
             tmp_file.write("%s \n" % (src_file))
 
@@ -1649,6 +1656,24 @@ class HPSSHandler(TransferHandlerBase):
 
         return transfer_success
 
+
+    def _compute_destination_directory(self, t):
+        """
+        Compute a directory from the path based on the LFN of the file transfer
+        and the destination directory path
+        :param t:
+
+        :return:
+        """
+
+        lfn = t.lfn
+        if lfn is None:
+            return None
+        path = t.get_dst_path()
+        if path is None:
+            return None
+
+        return path[:path.find(lfn)]
 
     def _get_tar_file(self,url):
         """
