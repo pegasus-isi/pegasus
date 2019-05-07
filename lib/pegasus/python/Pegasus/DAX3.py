@@ -180,6 +180,7 @@ class ParseError(DAX3Error):
     pass
 
 
+@six.python_2_unicode_compatible
 class Element:
     """Representation of an XML element for formatting output"""
 
@@ -232,15 +233,12 @@ class Element:
         self.flat = True
         return self
 
-    def __unicode__(self):
+    def __str__(self):
         s = StringIO()
         self.write(s)
         x = s.getvalue()
         s.close()
         return unicode(x)
-
-    def __str__(self):
-        return unicode(self).encode("utf-8")
 
     def write(self, stream=sys.stdout, level=0, flatten=False):
         flat = self.flat or flatten
@@ -358,6 +356,7 @@ class ContainerType:
     SINGULARITY = "singularity"
 
 
+@six.python_2_unicode_compatible
 class Invoke:
     def __init__(self, when, what):
         if not when:
@@ -367,11 +366,8 @@ class Invoke:
         self.when = when
         self.what = what
 
-    def __unicode__(self):
-        return u"<Invoke %s %s>" % (self.when, self.what)
-
     def __str__(self):
-        return unicode(self).encode("utf-8")
+        return u"<Invoke %s %s>" % (self.when, self.what)
 
     def __hash__(self):
         return hash((self.when, self.what))
@@ -542,6 +538,7 @@ class CatalogType(ProfileMixin, MetadataMixin, PFNMixin):
             parent.element(p.toXML())
 
 
+@six.python_2_unicode_compatible
 class File(CatalogType):
     """File(name)
 
@@ -574,11 +571,8 @@ class File(CatalogType):
         """
         CatalogType.__init__(self, name)
 
-    def __unicode__(self):
-        return u"<File %s>" % self.name
-
     def __str__(self):
-        return unicode(self).encode("utf-8")
+        return u"<File %s>" % self.name
 
     def __hash__(self):
         return hash(self.name)
@@ -610,6 +604,7 @@ class File(CatalogType):
         return e
 
 
+@six.python_2_unicode_compatible
 class Executable(CatalogType, InvokeMixin):
     """Executable(name[,namespace][,version][,arch][,os][,osrelease][,osversion][,glibc][,installed])
 
@@ -660,11 +655,8 @@ class Executable(CatalogType, InvokeMixin):
         self.container = container
         self.invocations = set()
 
-    def __unicode__(self):
-        return u"<Executable %s::%s:%s>" % (self.namespace, self.name, self.version)
-
     def __str__(self):
-        return unicode(self).encode("utf-8")
+        return u"<Executable %s::%s:%s>" % (self.namespace, self.name, self.version)
 
     def __hash__(self):
         return hash(
@@ -729,6 +721,7 @@ class Executable(CatalogType, InvokeMixin):
         return e
 
 
+@six.python_2_unicode_compatible
 class Container(ProfileMixin):
     """Container(name,type,image[,image_site])
 
@@ -762,11 +755,8 @@ class Container(ProfileMixin):
         self.mount = mount if mount else []
         self.profiles = set()
 
-    def __unicode__(self):
-        return u"<Container %s:%s>" % (self.name, self.type)
-
     def __str__(self):
-        return unicode(self).encode("utf-8")
+        return u"<Container %s:%s>" % (self.name, self.type)
 
     def __hash__(self):
         return hash((self.name, self.type, self.image, self.imagesite, self.dockerfile))
@@ -783,6 +773,7 @@ class Container(ProfileMixin):
         return False
 
 
+@six.python_2_unicode_compatible
 class Metadata:
     """Metadata(key,value)
 
@@ -810,11 +801,8 @@ class Metadata:
         self.key = key
         self.value = value
 
-    def __unicode__(self):
-        return u"<Metadata %s = %s>" % (self.key, self.value)
-
     def __str__(self):
-        return unicode(self).encode("utf-8")
+        return u"<Metadata %s = %s>" % (self.key, self.value)
 
     def __hash__(self):
         return hash(self.key)
@@ -828,6 +816,7 @@ class Metadata:
         return m
 
 
+@six.python_2_unicode_compatible
 class PFN(ProfileMixin):
     """PFN(url[,site])
 
@@ -856,11 +845,8 @@ class PFN(ProfileMixin):
         self.site = site
         self.profiles = set()
 
-    def __unicode__(self):
-        return u"<PFN %s %s>" % (self.site, self.url)
-
     def __str__(self):
-        return unicode(self).encode("utf-8")
+        return u"<PFN %s %s>" % (self.site, self.url)
 
     def __hash__(self):
         return hash((self.url, self.site))
@@ -877,6 +863,7 @@ class PFN(ProfileMixin):
         return pfn
 
 
+@six.python_2_unicode_compatible
 class Profile:
     """Profile(namespace,key,value)
 
@@ -904,11 +891,8 @@ class Profile:
         self.key = key
         self.value = value
 
-    def __unicode__(self):
-        return u"<Profile %s::%s = %s>" % (self.namespace, self.key, self.value)
-
     def __str__(self):
-        return unicode(self).encode("utf-8")
+        return u"<Profile %s::%s = %s>" % (self.namespace, self.key, self.value)
 
     def __hash__(self):
         return hash((self.namespace, self.key))
@@ -927,6 +911,7 @@ class Profile:
         return p
 
 
+@six.python_2_unicode_compatible
 class Use(MetadataMixin):
     """Use(file[,link][,register][,transfer][,optional]
            [,namespace][,version][,executable][,size])
@@ -979,11 +964,8 @@ class Use(MetadataMixin):
 
         self._metadata = set()
 
-    def __unicode__(self):
-        return u"<Use %s::%s:%s>" % (self.namespace, self.name, self.version)
-
     def __str__(self):
-        return unicode(self).encode("utf-8")
+        return u"<Use %s::%s:%s>" % (self.namespace, self.name, self.version)
 
     def __hash__(self):
         return hash((self.namespace, self.name, self.version))
@@ -1119,6 +1101,7 @@ class UseMixin:
         self.addUse(use)
 
 
+@six.python_2_unicode_compatible
 class Transformation(UseMixin, InvokeMixin, MetadataMixin):
     """Transformation((name|executable)[,namespace][,version])
 
@@ -1198,11 +1181,8 @@ class Transformation(UseMixin, InvokeMixin, MetadataMixin):
         if version:
             self.version = version
 
-    def __unicode__(self):
-        return u"<Transformation %s::%s:%s>" % (self.namespace, self.name, self.version)
-
     def __str__(self):
-        return unicode(self).encode("utf-8")
+        return u"<Transformation %s::%s:%s>" % (self.namespace, self.name, self.version)
 
     def __hash__(self):
         return hash((self.namespace, self.name, self.version))
@@ -1375,6 +1355,7 @@ class AbstractJob(ProfileMixin, UseMixin, InvokeMixin, MetadataMixin):
             element.element(inv.toXML())
 
 
+@six.python_2_unicode_compatible
 class Job(AbstractJob):
     """Job((name|Executable|Transformation)[,id][,namespace][,version][,node_label])
 
@@ -1448,16 +1429,13 @@ class Job(AbstractJob):
         if version:
             self.version = version
 
-    def __unicode__(self):
+    def __str__(self):
         return u"<Job %s %s::%s:%s>" % (
             self.id,
             self.namespace,
             self.name,
             self.version,
         )
-
-    def __str__(self):
-        return unicode(self).encode("utf-8")
 
     def toXML(self):
         e = Element(
@@ -1474,6 +1452,7 @@ class Job(AbstractJob):
         return e
 
 
+@six.python_2_unicode_compatible
 class DAX(AbstractJob):
     """DAX(file[,id][,node_label])
 
@@ -1508,11 +1487,8 @@ class DAX(AbstractJob):
             raise FormatError("invalid file", file)
         AbstractJob.__init__(self, id=id, node_label=node_label)
 
-    def __unicode__(self):
-        return u"<DAX %s %s>" % (self.id, self.file.name)
-
     def __str__(self):
-        return unicode(self).encode("utf-8")
+        return u"<DAX %s %s>" % (self.id, self.file.name)
 
     def toXML(self):
         """Return an XML representation of this job"""
@@ -1528,6 +1504,7 @@ class DAX(AbstractJob):
         return e
 
 
+@six.python_2_unicode_compatible
 class DAG(AbstractJob):
     """DAG(file[,id][,node_label])
 
@@ -1561,11 +1538,8 @@ class DAG(AbstractJob):
             raise FormatError("Invalid file", file)
         AbstractJob.__init__(self, id=id, node_label=node_label)
 
-    def __unicode__(self):
-        return u"<DAG %s %s>" % (self.id, self.file.name)
-
     def __str__(self):
-        return unicode(self).encode("utf-8")
+        return u"<DAG %s %s>" % (self.id, self.file.name)
 
     def toXML(self):
         """Return an XML representation of this DAG"""
@@ -1581,6 +1555,7 @@ class DAG(AbstractJob):
         return e
 
 
+@six.python_2_unicode_compatible
 class Dependency:
     """A dependency between two nodes in the ADAG"""
 
@@ -1605,11 +1580,8 @@ class Dependency:
             raise FormatError("No self edges allowed", (self.parent, self.child))
         self.edge_label = edge_label
 
-    def __unicode__(self):
-        return "<Dependency %s -> %s>" % (self.parent, self.child)
-
     def __str__(self):
-        return unicode(self).encode("utf-8")
+        return "<Dependency %s -> %s>" % (self.parent, self.child)
 
     def __hash__(self):
         return hash((self.parent, self.child))
@@ -1621,6 +1593,7 @@ class Dependency:
         return False
 
 
+@six.python_2_unicode_compatible
 class ADAG(InvokeMixin, MetadataMixin):
     """ADAG(name[,count][,index])
 
@@ -1693,11 +1666,8 @@ class ADAG(InvokeMixin, MetadataMixin):
         # PM-1311 always associate dax.api metadata
         self.metadata("dax.api", "python")
 
-    def __unicode__(self):
-        return u"<ADAG %s>" % self.name
-
     def __str__(self):
-        return unicode(self).encode("utf-8")
+        return u"<ADAG %s>" % self.name
 
     def nextJobID(self):
         """Get an autogenerated ID for the next job"""
