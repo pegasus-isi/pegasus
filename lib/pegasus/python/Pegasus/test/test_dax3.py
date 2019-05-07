@@ -1529,41 +1529,5 @@ class TestParse(unittest.TestCase):
         adag = parseString(txt)
 
 
-# Disabled so that it won't keep breaking the nightly builds
-# class TestScale(unittest.TestCase):
-#    TESTFILE = "/tmp/test_pegasus_dax3.xml"
-#
-#    def testLargeWorkflow(self):
-#        """It shouldn't take >10s to build or parse a 20k job workflow"""
-#        import time
-#        from cStringIO import StringIO
-#        start = time.time()
-#        a = ADAG("bigun")
-#        x = Job("xform")
-#        a.addJob(x)
-#        for i in range(1,20000):
-#            j = Job("xform")
-#            a.addJob(j)
-#            a.depends(j,x)
-#            x = j
-#        f = open(self.TESTFILE, "w")
-#        a.writeXML(f)
-#        f.close()
-#        end = time.time()
-#        elapsed = end - start
-#        self.assertTrue(elapsed < 10)
-#
-#        a = None
-#
-#        # Parse
-#        start = time.time()
-#        a = parse(self.TESTFILE)
-#        end = time.time()
-#        elapsed = end - start
-#        self.assertTrue(elapsed < 10)
-#
-#    def tearDown(self):
-#        os.remove(self.TESTFILE)
-
 if __name__ == "__main__":
     unittest.main()
