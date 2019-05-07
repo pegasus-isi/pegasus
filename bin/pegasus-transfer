@@ -1529,6 +1529,197 @@ class HTTPHandler(TransferHandlerBase):
         return [successful_l, failed_l]
 
 
+class HPSSHandler(TransferHandlerBase):
+    """
+    pulls from hpss using htar
+    """
+
+    _name = "HPSSHandler"
+    _mkdir_cleanup_protocols = []
+    _protocol_map = ["hpss->file", "hpps->file"]
+
+    def do_transfers(self, transfers):
+
+        tools = Tools()
+        env = {}
+
+        if tools.find("htar") is None:
+            logger.error("Unable to do hpss transfers because htar could not be found")
+            return [[], transfers]
+
+        successful_l = []
+        failed_l = []
+
+        # create lists with similar tar file names
+        # url pairs
+        while len(transfers) > 0:
+
+            similar_list = []
+
+            curr = transfers.pop()
+            prev = curr
+
+            while self._check_similar(curr, prev):
+
+                similar_list.append(curr)
+
+                if len(transfers) == 0:
+                    break
+                else:
+                    prev = curr
+                    curr = transfers.pop()
+
+            if not self._check_similar(curr, prev):
+                # the last pair is not part of the set and needs to be added
+                # back to the beginning of the list
+                transfers.insert(0, curr)
+
+            if len(similar_list) == 0:
+                break
+
+            logger.debug("%d similar hpss transfers grouped together" % (len(similar_list)))
+
+            # we now have a list of similar transfers
+            # break in chunks
+            chunks = self._split_similar(similar_list)
+
+            for l in chunks:
+                if self._exec_transfers(l):
+                    for i, t in enumerate(l):
+                        successful_l.append(t)
+                else:
+                    for i, t in enumerate(l):
+                        failed_l.append(t)
+             
+        return [successful_l, failed_l]
+
+    def _exec_transfers(self, transfers):
+
+        # create tmp file with transfer src/dst pairs
+        num_pairs = 0
+        try:
+            tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-",
+                                                suffix=".lst")
+            tmp_file = os.fdopen(tmp_fd, "w+b")
+        except:
+            raise RuntimeError("Unable to create tmp file for"
+                               + " hpss transfers")
+
+        tar = self._get_tar_file( transfers[0].get_src_path() )
+        for i, t in enumerate(transfers):
+            num_pairs += 1
+            src_file = self._get_file_in_tar(t.get_src_path())
+            logger.debug("   adding %s " % src_file)
+            tmp_file.write("%s \n" % (src_file))
+
+        tmp_file.close()
+
+        if num_pairs > 1:
+            logger.info("Grouped %d similar gsiftp transfers together in"
+                        " temporary file %s for extracting from tar %s" % (num_pairs, tmp_name, tar))
+
+        # build command line for globus-url-copy
+        transfer_success = False
+        tools = Tools()
+        cmd = tools.full_path('htar')
+
+        # no credential handling for time being
+
+        # options
+        cmd += " -xvf " + tar + " -L " + tmp_name
+
+        # todo enable checksum verification -Hverify=crc
+
+        try:
+            logger.debug("Executing command " + cmd)
+            tc = TimedCommand(cmd )
+            tc.run()
+            transfer_success = True
+        except Exception as err:
+            logger.error(err)
+
+
+        # as we don't know which transfers in the set succeeded/failed, we have
+        # to mark them all the same (for example, one failure means all transfers
+        # gets marked as failed)
+        #for t in transfers:
+        #   self._post_transfer_attempt(t, transfer_success, t_start)
+
+        os.unlink(tmp_name)
+
+        return transfer_success
+
+
+    def _get_tar_file(self,url):
+        """
+        Returns the hpss tar file embedded in the URL
+        :param url:
+        :return:
+        """
+
+        # tar file should be the first component of the path
+        tar = url
+        parent = os.path.dirname(tar)
+        while parent:
+            if parent == "/":
+                break
+            tar = parent
+            parent = os.path.dirname(tar)
+
+        # remove leading / if any
+        tar = os.path.basename(tar)
+
+        if not tar.endswith(".tar"):
+            logger.error("Unable to determine HPSS tar from URL %s", url)
+            return None
+
+        return tar
+
+    def _get_file_in_tar(self, path):
+        """
+        Extracts the filename of the file from the URL
+        :param path:
+        :return: name of the file else None
+        """
+
+        # return None if unable to determine tar file
+        tar = self._get_tar_file(path)
+        if tar is None:
+            return None
+
+        file = path[path.find(tar) + len(tar):]
+
+        # remove leading slash
+        if file[0] == "/":
+            return file[1:]
+
+
+    def _check_similar(self, a, b):
+        """
+        compares two url_pairs, and determines if they are similar enough to be
+        grouped together in one transfer input file
+        For HPSS we group them on the same tar name
+        """
+
+        if self._get_tar_file(a.get_src_path()) == self._get_tar_file(b.get_src_path()):
+            return True
+
+        return False
+
+    def _split_similar(self, full_list):
+        """
+        splits up a long list of similar transfers into smaller
+        pieces which can easily be handled by g-u-c
+        """
+        chunks = []
+        size = 10
+        num_chunks = int(math.ceil(len(full_list) / float(size)))
+        for i in range(num_chunks):
+            start = i * size
+            end  = min((i + 1) * size, len(full_list))
+            chunks.append(full_list[start:end])
+        return chunks
+
 class IRodsHandler(TransferHandlerBase):
     """
     Handler for iRods - http://www.irods.org/
@@ -3540,6 +3731,7 @@ class SimilarWorkSet:
         self._available_handlers.append( SymlinkHandler() )
         self._available_handlers.append( DockerHandler() )
         self._available_handlers.append( SingularityHubHandler() )
+        self._available_handlers.append( HPSSHandler() )
 
         # mkdirs and removes
         if isinstance(transfers_l[0], Mkdir) or isinstance(transfers_l[0], Remove):
