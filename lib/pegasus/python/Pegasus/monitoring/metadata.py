@@ -1,8 +1,3 @@
-"""
-This file implements the metadata related classes for pegasus-monitord.
-"""
-from __future__ import print_function
-
 ##
 #  Copyright 2007-2012 University Of Southern California
 #
@@ -18,21 +13,26 @@ from __future__ import print_function
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 ##
+"""
+This file implements the metadata related classes for pegasus-monitord.
+"""
+
+from __future__ import print_function
 
 # Import Python modules
 import json
 import logging
+import os
 import tempfile
 
-import os
-from StringIO import StringIO
+from six import StringIO
 
 __author__ = "Karan Vahi <vahi@isi.edu>"
 
 logger = logging.getLogger(__name__)
 
 
-class Metadata( object ):
+class Metadata(object):
     """
     Base class for for different types of metadata
     """
@@ -40,16 +40,13 @@ class Metadata( object ):
     def __init__(self):
         self._id = None
         self._type = None
-        self._attributes = {} #dictionary indexed by attribute name and values
-
-
+        self._attributes = {}  # dictionary indexed by attribute name and values
 
     def get_id(self):
         return self._id
 
     def set_id(self, id):
         self._id = id
-
 
     def add_attribute(self, key, value):
         self._attributes[key] = value
@@ -64,25 +61,31 @@ class Metadata( object ):
         return self._attributes.keys()
 
     @staticmethod
-    def write_to_jsonfile( metadata_list, directory  , name, prefix="pegasus-monitord"):
+    def write_to_jsonfile(metadata_list, directory, name, prefix="pegasus-monitord"):
         try:
-            temp_file = tempfile.NamedTemporaryFile( dir=directory, prefix=prefix , suffix=".meta", delete=False)
+            temp_file = tempfile.NamedTemporaryFile(
+                dir=directory, prefix=prefix, suffix=".meta", delete=False
+            )
             jsonify(metadata_list, temp_file)
-            logger.debug( "Written out metadata to %s", temp_file.name )
+            logger.debug("Written out metadata to %s", temp_file.name)
             os.chmod(temp_file.name, 0o644)
             # rename the file to the name to assure atomicity
-            os.rename( temp_file.name, os.path.join(directory,name))
+            os.rename(temp_file.name, os.path.join(directory, name))
 
         except Exception as e:
             # Error sending this event... disable the sink from now on...
-            logger.warning(" unable to write out  metadata to directory %s with name %s ", directory, name)
+            logger.warning(
+                " unable to write out  metadata to directory %s with name %s ",
+                directory,
+                name,
+            )
             logger.exception(e)
             return False
 
         return True
 
 
-class FileMetadata( Metadata ):
+class FileMetadata(Metadata):
     """
     Represents a single mkdir request
     """
@@ -98,11 +101,11 @@ class FileMetadata( Metadata ):
         """
 
         rce = StringIO()
-        rce.write(  self.get_id() )
-        pfn = self.get_attribute_value( "pfn")
+        rce.write(self.get_id())
+        pfn = self.get_attribute_value("pfn")
         if pfn is None:
             pfn = "@@PFN@@"
-        if( pfn ):
+        if pfn:
             rce.write(" ")
             rce.write(pfn)
 
@@ -110,45 +113,45 @@ class FileMetadata( Metadata ):
             rce.write(" ")
             rce.write(key)
             rce.write("=")
-            rce.write("\"")
+            rce.write('"')
             rce.write(self.get_attribute_value(key))
-            rce.write("\"")
+            rce.write('"')
         return rce.getvalue()
 
 
-
 class MetadataCustomEncoder(json.JSONEncoder):
-
-    def default( self, o ):
+    def default(self, o):
         if isinstance(o, Metadata):
             return o.__dict__
         return json.JSONEncoder.default(self, o)
 
 
-def jsonify( *args , **kwargs):
-    json.dump( *args, cls=MetadataCustomEncoder, indent=2, **kwargs )
+def jsonify(*args, **kwargs):
+    json.dump(*args, cls=MetadataCustomEncoder, indent=2, **kwargs)
+
 
 def main():
     a = FileMetadata()
     a._id = "f.a"
-    a.add_attribute( "size", "100")
-    a.add_attribute( "checksum", "XXXXXX")
+    a.add_attribute("size", "100")
+    a.add_attribute("checksum", "XXXXXX")
 
     b = FileMetadata()
     b._id = "f.b"
-    b.add_attribute( "size", "10")
-    b.add_attribute( "checksum", "XXXXXX")
+    b.add_attribute("size", "10")
+    b.add_attribute("checksum", "XXXXXX")
 
     print(json.dumps(a.__dict__))
 
     l = []
-    l.append( a )
-    l.append( b )
-    l.append( 1 )
+    l.append(a)
+    l.append(b)
+    l.append(1)
 
     print(json.dumps(l, cls=MetadataCustomEncoder, indent=2))
 
     Metadata.write_to_jsonfile(l, "/tmp", "test")
+
 
 if __name__ == "__main__":
     main()
