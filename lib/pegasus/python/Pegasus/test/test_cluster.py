@@ -1,9 +1,9 @@
-from __future__ import print_function
-import sys
-import imp
+from __future__ import print_function, unicode_literals
+
 import unittest
 
-from Pegasus.cluster import RecordParser, RecordParseException
+from Pegasus.cluster import RecordParseException, RecordParser
+
 
 class TestRecordParser(unittest.TestCase):
     def parse(self, string):
@@ -56,12 +56,13 @@ class TestRecordParser(unittest.TestCase):
 
     def _testSpeed(self):
         import time
+
         start = time.time()
         for i in range(0, 10000):
             self.parse('[cluster-summary foo="bar", baz="bar", boo="bar"]')
         end = time.time()
-        print("Elapsed:", (end-start))
+        print("Elapsed:", (end - start))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()
-
