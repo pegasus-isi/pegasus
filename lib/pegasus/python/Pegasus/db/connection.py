@@ -23,7 +23,8 @@ import os
 import subprocess
 from sqlite3 import Connection as SQLite3Connection
 from stat import ST_MODE
-from urlparse import urlparse
+
+from six.moves.urllib.parse import urlparse
 
 from Pegasus import user as users
 from Pegasus.tools import properties, utils
@@ -140,21 +141,16 @@ def connect(
     except exc.OperationalError as e:
         if "mysql" in dburi and "unknown database" in str(e).lower():
             raise ConnectionError(
-                "MySQL database should be previously created: %s (%s)"
-                % (e.message, dburi),
+                "MySQL database should be previously created: %s (%s)" % (e, dburi),
                 given_version=pegasus_version,
                 db_type=db_type,
             )
         raise ConnectionError(
-            "%s (%s)" % (e.message, dburi),
-            given_version=pegasus_version,
-            db_type=db_type,
+            "%s (%s)" % (e, dburi), given_version=pegasus_version, db_type=db_type
         )
     except Exception as e:
         raise ConnectionError(
-            "%s (%s)" % (e.message, dburi),
-            given_version=pegasus_version,
-            db_type=db_type,
+            "%s (%s)" % (e, dburi), given_version=pegasus_version, db_type=db_type
         )
 
     Session = orm.sessionmaker(
@@ -213,7 +209,7 @@ def connect(
                 )
             else:
                 raise ConnectionError(
-                    "%s (%s)" % (e.message, dburi),
+                    "%s (%s)" % (e, dburi),
                     given_version=pegasus_version,
                     db_type=db_type,
                 )
@@ -496,7 +492,7 @@ def _get_master_uri(props=None):
             return dburi
 
     homedir = os.getenv("HOME", None)
-    if homedir == None:
+    if homedir is None:
         raise ConnectionError(
             "Environment variable HOME not defined, set %s property to point to the Dashboard database."
             % PROP_DASHBOARD_OUTPUT
@@ -593,7 +589,7 @@ def _validate(dburi):
                 imp.find_module("MySQLdb")
 
     except ImportError as e:
-        raise ConnectionError("Missing Python module: %s (%s)" % (e.message, dburi))
+        raise ConnectionError("Missing Python module: %s (%s)" % (e, dburi))
 
 
 def _check_db_permissions(dburi, db_type, mask=None):
@@ -621,7 +617,7 @@ def _parse_props(dburi, props, db_type=None, connect_args=None):
         connect_args = {}
 
     if props and dburi.lower().startswith("sqlite") and db_type:
-        if not DBKey.TIMEOUT in connect_args:
+        if DBKey.TIMEOUT not in connect_args:
             try:
                 timeout = None
                 if db_type == DBType.MASTER:
@@ -652,8 +648,7 @@ def _parse_props(dburi, props, db_type=None, connect_args=None):
 
             except ValueError as e:
                 raise ConnectionError(
-                    "Timeout properties should be set in seconds: %s (%s)"
-                    % (e.message, dburi),
+                    "Timeout properties should be set in seconds: %s (%s)" % (e, dburi),
                     db_type=db_type,
                 )
 
