@@ -412,15 +412,6 @@ def slurp_braindb(run, brain_alternate=None):
     return my_config
 
 
-def version():
-    """
-    Obtains Pegasus version
-    """
-    my_output = commands.getstatusoutput("pegasus-version")
-
-    return my_output[1]
-
-
 def raw_to_regular(exitcode):
     """
     This function decodes the raw exitcode into a plain format:
