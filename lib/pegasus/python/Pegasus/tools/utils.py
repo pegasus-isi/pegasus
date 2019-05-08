@@ -1,8 +1,4 @@
-"""
-utils.py: Provides common functions used by all workflow programs
-"""
-from __future__ import print_function
-
+# -*- coding: utf-8 -*-
 ##
 #  Copyright 2007-2011 University Of Southern California
 #
@@ -19,40 +15,44 @@ from __future__ import print_function
 #  limitations under the License.
 ##
 
-# Revision : $Revision: 2012 $
+"""Provides common functions used by all workflow programs."""
 
-import re
+
+from __future__ import print_function
+
+import calendar
+import datetime
+import errno
+import logging
 import os
+import re
+import shutil
+import subprocess
 import sys
 import time
-import errno
-import shutil
-import logging
-import calendar
-import commands
-import datetime
 import traceback
-import subprocess
 import urllib
-
 from builtins import int
 
-__all__ = ['quote', 'unquote']
+__all__ = ["quote", "unquote"]
 
 # Compile our regular expressions
 
 # Used in epochdate
-parse_iso8601 = re.compile(r'(\d{4})-?(\d{2})-?(\d{2})[ tT]?(\d{2}):?(\d{2}):?(\d{2})([.,]\d+)?([zZ]|[-+](\d{2}):?(\d{2}))')
+parse_iso8601 = re.compile(
+    r"(\d{4})-?(\d{2})-?(\d{2})[ tT]?(\d{2}):?(\d{2}):?(\d{2})([.,]\d+)?([zZ]|[-+](\d{2}):?(\d{2}))"
+)
 
 # Used in out2log
 re_remove_extensions = re.compile(r"(?:\.(?:rescue|dag))+$")
 
 # Module variables
-MAXLOGFILE = 1000                # For log rotation, check files from .000 to .999
-jobbase = "jobstate.log"        # Default name for jobstate.log file
-brainbase = "braindump.txt"        # Default name for workflow information file
+MAXLOGFILE = 1000  # For log rotation, check files from .000 to .999
+jobbase = "jobstate.log"  # Default name for jobstate.log file
+brainbase = "braindump.txt"  # Default name for workflow information file
 
 logger = logging.getLogger(__name__)
+
 
 class ConsoleHandler(logging.StreamHandler):
     """A handler that logs to console in the sensible way.
@@ -66,7 +66,7 @@ class ConsoleHandler(logging.StreamHandler):
 
     def __init__(self):
         logging.StreamHandler.__init__(self)
-        self.stream = None # reset it; we are not going to use it anyway
+        self.stream = None  # reset it; we are not going to use it anyway
 
     def emit(self, record):
         if record.levelno >= logging.ERROR:
@@ -82,16 +82,20 @@ class ConsoleHandler(logging.StreamHandler):
         # Workaround a bug in logging module
         # See:
         #   http://bugs.python.org/issue6333
-        if self.stream and hasattr(self.stream, 'flush') and not self.stream.closed:
+        if self.stream and hasattr(self.stream, "flush") and not self.stream.closed:
             logging.StreamHandler.flush(self)
+
 
 def configureLogging(level=logging.INFO):
     root = logging.getLogger()
     root.setLevel(level)
     cl = ConsoleHandler()
-    formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(name)s(%(lineno)d): %(message)s")
+    formatter = logging.Formatter(
+        "%(asctime)s:%(levelname)s:%(name)s(%(lineno)d): %(message)s"
+    )
     cl.setFormatter(formatter)
     root.addHandler(cl)
+
 
 def quote(s):
     """
@@ -110,7 +114,7 @@ def quote(s):
 
     if isinstance(s, unicode):
         # We need to utf-8 encode unicode strings
-        s = s.encode('utf-8')
+        s = s.encode("utf-8")
 
     buf = []
     for c in s:
@@ -120,17 +124,18 @@ def quote(s):
             # any byte >= 0x7F is either a control character
             # or a multibyte unicode character
             buf.append("%%%02X" % i)
-        elif c == '%':
-            buf.append('%25')
+        elif c == "%":
+            buf.append("%25")
         elif c == "'":
-            buf.append('%27')
+            buf.append("%27")
         elif c == '"':
-            buf.append('%22')
+            buf.append("%22")
         else:
             # These are regular bytes
             buf.append(c)
 
-    return ''.join(buf)
+    return "".join(buf)
+
 
 def unquote(s):
     """
@@ -156,9 +161,10 @@ def unquote(s):
         # unicode code point <= 0xFF has the same value in latin-1
         # We ignore anything else (i.e. >0xFF) because, tecnically, it
         # should have been removed by quote()
-        s = s.encode('latin-1', 'ignore')
+        s = s.encode("latin-1", "ignore")
 
     return urllib.unquote(s)
+
 
 def isodate(now=int(time.time()), utc=False, short=False):
     """
@@ -172,8 +178,8 @@ def isodate(now=int(time.time()), utc=False, short=False):
             return time.strftime("%Y-%m-%dT%H:%M:%SZ", my_time_u)
     else:
         my_time_l = time.localtime(now)
-        my_offset = int( calendar.timegm(my_time_l) - time.mktime(my_time_l) )
-        offset = "%+03d%02d" % ( my_offset / 3600, (abs(my_offset) % 3600) / 60)
+        my_offset = int(calendar.timegm(my_time_l) - time.mktime(my_time_l))
+        offset = "%+03d%02d" % (my_offset / 3600, (abs(my_offset) % 3600) / 60)
         if short:
             return time.strftime("%Y%m%dT%H%M%S", my_time_l) + offset
         else:
@@ -185,40 +191,45 @@ def epochdate(timestamp):
     This function converts an ISO timestamp into seconds since epoch
     """
 
-    try: 
+    try:
         # Split date/time and timezone information
         m = parse_iso8601.search(timestamp)
         if m is None:
-            logger.warn("unable to match \"%s\" to ISO 8601" % timestamp)
+            logger.warn('unable to match "%s" to ISO 8601' % timestamp)
             return None
         else:
-            dt = "%04d-%02d-%02d %02d:%02d:%02d" % (int(m.group(1)),
-                                                    int(m.group(2)),
-                                                    int(m.group(3)),
-                                                    int(m.group(4)),
-                                                    int(m.group(5)),
-                                                    int(m.group(6)))
+            dt = "%04d-%02d-%02d %02d:%02d:%02d" % (
+                int(m.group(1)),
+                int(m.group(2)),
+                int(m.group(3)),
+                int(m.group(4)),
+                int(m.group(5)),
+                int(m.group(6)),
+            )
             tz = m.group(8)
 
         # my_time = datetime.datetime.strptime(dt, "%Y-%m-%d %H:%M:%S")
         my_time = datetime.datetime(*(time.strptime(dt, "%Y-%m-%d %H:%M:%S")[0:6]))
 
-        if tz.upper() != 'Z':
+        if tz.upper() != "Z":
             # no zulu time, has zone offset
-            my_offset = datetime.timedelta(hours=int(m.group(9)), minutes=int(m.group(10)))
+            my_offset = datetime.timedelta(
+                hours=int(m.group(9)), minutes=int(m.group(10))
+            )
 
             # adjust for time zone offset
-            if tz[0] == '-':
+            if tz[0] == "-":
                 my_time = my_time + my_offset
             else:
                 my_time = my_time - my_offset
-        
+
         # Turn my_time into Epoch format
         return int(calendar.timegm(my_time.timetuple()))
 
     except:
-        logger.warn("unable to parse timestamp \"%s\"" % timestamp)
+        logger.warn('unable to parse timestamp "%s"' % timestamp)
         return None
+
 
 def create_directory(dir_name, delete_if_exists=False):
     """
@@ -242,6 +253,7 @@ def create_directory(dir_name, delete_if_exists=False):
             logger.error("Unable to create directory." + dir_name)
             sys.exit(1)
 
+
 def find_exec(program, curdir=False, otherdirs=[]):
     """
     Determine logical location of a given binary in PATH
@@ -249,15 +261,15 @@ def find_exec(program, curdir=False, otherdirs=[]):
     # program is the executable basename to look for
     # When curdir is True we also check the current directory
     # Returns fully qualified path to binary, None if not found
-    my_path = os.getenv("PATH","/bin:/usr/bin")
+    my_path = os.getenv("PATH", "/bin:/usr/bin")
 
-    for my_dir in my_path.split(':')+otherdirs:
+    for my_dir in my_path.split(":") + otherdirs:
         my_file = os.path.join(os.path.expanduser(my_dir), program)
         # Test if file is 'executable'
         if os.access(my_file, os.X_OK):
             # Found it!
             return my_file
-        
+
     if curdir:
         my_file = os.path.join(os.getcwd(), program)
         # Test if file is 'executable'
@@ -267,6 +279,7 @@ def find_exec(program, curdir=False, otherdirs=[]):
 
     # File not found
     return None
+
 
 def pipe_out_cmd(cmd_string):
     """
@@ -279,10 +292,13 @@ def pipe_out_cmd(cmd_string):
 
     # Launch process using the subprocess module interface
     try:
-        proc = subprocess.Popen(cmd_string.split(), shell=False,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                bufsize=1)
+        proc = subprocess.Popen(
+            cmd_string.split(),
+            shell=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            bufsize=1,
+        )
     except:
         # Error running command
         return None
@@ -291,16 +307,17 @@ def pipe_out_cmd(cmd_string):
     resp = proc.communicate()
 
     # Capture stdout
-    for line in resp[0].split('\n'):
+    for line in resp[0].split("\n"):
         if len(line):
             my_result.append(line)
-        
+
     # Capture stderr
-    for line in resp[1].split('\n'):
+    for line in resp[1].split("\n"):
         if len(line):
             my_result.append(line)
 
     return my_result
+
 
 def add_to_braindb(run, missing_keys, brain_alternate=None):
     """
@@ -315,7 +332,7 @@ def add_to_braindb(run, missing_keys, brain_alternate=None):
         my_braindb = os.path.join(run, brain_alternate)
 
     try:
-        my_file = open(my_braindb, 'a')
+        my_file = open(my_braindb, "a")
     except IOError:
         return
 
@@ -331,24 +348,27 @@ def add_to_braindb(run, missing_keys, brain_alternate=None):
     except IOError:
         pass
 
+
 def write_braindump(filename, items):
     "This simply writes a dict to the file specified in braindump format"
     f = open(filename, "w")
     for k in items:
-        f.write("%s %s\n" % (k,items[k]))
+        f.write("%s %s\n" % (k, items[k]))
     f.close()
+
 
 def read_braindump(filename):
     "This simply reads a braindump dict from the file specified"
     items = {}
     f = open(filename, "r")
     for l in f:
-        k,v = l.strip().split(" ", 1)
+        k, v = l.strip().split(" ", 1)
         k = k.strip()
         v = v.strip()
         items[k] = v
     f.close()
     return items
+
 
 def slurp_braindb(run, brain_alternate=None):
     """
@@ -364,7 +384,7 @@ def slurp_braindb(run, brain_alternate=None):
         my_braindb = os.path.join(run, brain_alternate)
 
     try:
-        my_file = open(my_braindb, 'r')
+        my_file = open(my_braindb, "r")
     except IOError:
         # Error opening file
         return my_config
@@ -374,8 +394,8 @@ def slurp_braindb(run, brain_alternate=None):
         line = line.rstrip("\r\n")
         # Split the line into a key and a value
         k, v = line.split(" ", 1)
-        
-        if k == "run" and v != run and run != '.':
+
+        if k == "run" and v != run and run != ".":
             logger.warn("run directory mismatch, using %s" % (run))
             my_config[k] = run
         else:
@@ -385,10 +405,11 @@ def slurp_braindb(run, brain_alternate=None):
 
     # Close file
     my_file.close()
-    
+
     # Done!
     logger.debug("# slurped %s" % (my_braindb))
     return my_config
+
 
 def version():
     """
@@ -397,6 +418,7 @@ def version():
     my_output = commands.getstatusoutput("pegasus-version")
 
     return my_output[1]
+
 
 def raw_to_regular(exitcode):
     """
@@ -412,7 +434,8 @@ def raw_to_regular(exitcode):
     if (exitcode & 127) > 0:
         # Signal
         return -(exitcode & 127)
-    return (exitcode >> 8)
+    return exitcode >> 8
+
 
 def regular_to_raw(exitcode):
     """
@@ -423,7 +446,8 @@ def regular_to_raw(exitcode):
         return exitcode
     if exitcode == -128:
         return -1
-    return (exitcode << 8)
+    return exitcode << 8
+
 
 def parse_exit(ec):
     """
@@ -432,7 +456,7 @@ def parse_exit(ec):
     """
     if (ec & 127) > 0:
         my_signo = ec & 127
-        my_core = ''
+        my_core = ""
         if (ec & 128) == 128:
             my_core = " (core)"
         my_result = "died on signal %s%s" % (my_signo, my_core)
@@ -442,6 +466,7 @@ def parse_exit(ec):
         my_result = "OK"
 
     return my_result
+
 
 def check_rescue(directory, dag):
     """
@@ -468,6 +493,7 @@ def check_rescue(directory, dag):
 
     return my_result
 
+
 def out2log(rundir, outfile):
     """
     purpose: infer output symlink for Condor common user log
@@ -479,14 +505,15 @@ def out2log(rundir, outfile):
     # Get the basename
     my_base = os.path.basename(outfile)
     # NEW: Account for rescue DAGs
-    my_base = my_base[:my_base.find(".dagman.out")]
-    my_base = re_remove_extensions.sub('', my_base)
+    my_base = my_base[: my_base.find(".dagman.out")]
+    my_base = re_remove_extensions.sub("", my_base)
     # Add .log extension
     my_base = my_base + ".log"
     # Create path
     my_log = os.path.join(rundir, my_base)
 
     return my_log, my_base
+
 
 def write_pid_file(pid_filename, ts=int(time.time())):
     """
@@ -502,6 +529,7 @@ def write_pid_file(pid_filename, ts=int(time.time())):
     else:
         PIDFILE.close()
 
+
 def pid_running(filename):
     """
     This function takes a file containing a single line in the format
@@ -513,7 +541,7 @@ def pid_running(filename):
     if os.access(filename, os.F_OK):
         try:
             # Open pid file
-            PIDFILE = open(filename, 'r')
+            PIDFILE = open(filename, "r")
 
             # Look for pid line
             for line in PIDFILE:
@@ -533,21 +561,30 @@ def pid_running(filename):
                             return False
                         elif err.errno == errno.EPERM:
                             # pid cannot be killed because we don't have permission
-                            logger.debug("no permission to talk to pid %d..." % (my_pid))
+                            logger.debug(
+                                "no permission to talk to pid %d..." % (my_pid)
+                            )
                             return True
                         else:
-                            logger.warning("unknown error while sending signal to pid %d" % (my_pid))
+                            logger.warning(
+                                "unknown error while sending signal to pid %d"
+                                % (my_pid)
+                            )
                             logger.warning(traceback.format_exc())
                             return True
                     except:
-                        logger.warning("unknown error while sending signal to pid %d" % (my_pid))
+                        logger.warning(
+                            "unknown error while sending signal to pid %d" % (my_pid)
+                        )
                         logger.warning(traceback.format_exc())
                         return True
                     else:
                         logger.debug("pid %d still running..." % (my_pid))
                         return True
 
-            logger.warning("could not find pid line in file %s. continuing..." % (filename))
+            logger.warning(
+                "could not find pid line in file %s. continuing..." % (filename)
+            )
 
             # Don't forget to close file
             PIDFILE.close()
@@ -559,6 +596,7 @@ def pid_running(filename):
 
     # PID file doesn't exist
     return False
+
 
 def monitoring_running(run_dir):
     """
@@ -577,9 +615,10 @@ def monitoring_running(run_dir):
     if os.access(start_file, os.F_OK):
         # Let's check
         return pid_running(start_file)
-    
+
     # Otherwise, monitord was never executed (so it is not running right now...)
     return False
+
 
 def loading_completed(run_dir):
     """
@@ -611,7 +650,10 @@ def loading_completed(run_dir):
                     # Found kickstart parsing error... data not fully loaded
                     LOG.close()
                     return False
-                if line.find("cannot create events output... disabling event output") > 0:
+                if (
+                    line.find("cannot create events output... disabling event output")
+                    > 0
+                ):
                     # Found loader initialization error... data not loaded
                     LOG.close()
                     return False
@@ -621,6 +663,7 @@ def loading_completed(run_dir):
 
     # Otherwise, return true
     return True
+
 
 def rotate_log_file(source_file):
     """
@@ -637,7 +680,7 @@ def rotate_log_file(source_file):
     # We start from .000
     sf = 0
 
-    while (sf < MAXLOGFILE):
+    while sf < MAXLOGFILE:
         dest_file = source_file + ".%03d" % (sf)
         if os.access(dest_file, os.F_OK):
             # Continue to the next one
@@ -660,6 +703,7 @@ def rotate_log_file(source_file):
     # Done!
     return
 
+
 def log10(val):
     """
     Equivalent to ceil(log(val) / log(10))
@@ -674,15 +718,19 @@ def log10(val):
 
     return 1
 
+
 def make_boolean(value):
     # purpose: convert an input string into something boolean
     # paramtr: $x (IN): a property value
     # returns: 0 (false) or 1 (true)
     my_val = str(value)
-    if (my_val.lower() == 'true' or
-        my_val.lower() == 'on' or
-        my_val.lower() == 'yes' or
-        my_val.isdigit() and int(value) > 0):
+    if (
+        my_val.lower() == "true"
+        or my_val.lower() == "on"
+        or my_val.lower() == "yes"
+        or my_val.isdigit()
+        and int(value) > 0
+    ):
         return 1
 
     return 0
@@ -700,13 +748,22 @@ if __name__ == "__main__":
     print(" long local epochdate:", epochdate(isodate(now=current_time)))
     print("   long utc epochdate:", epochdate(isodate(now=current_time, utc=True)))
     print("short local timestamp:", epochdate(isodate(now=current_time, short=True)))
-    print("  short utc timestamp:", epochdate(isodate(now=current_time, utc=True, short=True)))
+    print(
+        "  short utc timestamp:",
+        epochdate(isodate(now=current_time, utc=True, short=True)),
+    )
     print()
     print("Testing find exec")
-    print("Looking for ls...", find_exec('ls'))
-    print("Looking for test.pl...", find_exec('test.pl', True))
+    print("Looking for ls...", find_exec("ls"))
+    print("Looking for test.pl...", find_exec("test.pl", True))
     print("Monitord 1", find_exec("pegasus-mointord"))
-    print("Monitord 2", find_exec(program="pegasus-monitord",otherdirs=["/usr/local/pegasus/src/4.0-branch/bin","/usr/local/pegasus"]))
+    print(
+        "Monitord 2",
+        find_exec(
+            program="pegasus-monitord",
+            otherdirs=["/usr/local/pegasus/src/4.0-branch/bin", "/usr/local/pegasus"],
+        ),
+    )
     print()
     print("Testing parse_exit() function")
     print("ec = 5   ==> ", parse_exit(5))
@@ -717,7 +774,7 @@ if __name__ == "__main__":
     print("log10(100.2):", log10(100.2))
     print(version())
     print(slurp_braindb("."))
-    print(pipe_out_cmd('ls -lR'))
+    print(pipe_out_cmd("ls -lR"))
     print()
     print("Testing quote/unquote functions...")
     print(repr(str(bytearray(xrange(256)))))
@@ -725,4 +782,3 @@ if __name__ == "__main__":
     print(unquote("carriage return: %0Apercent: %25%0Aquote: %27%0Adouble quote: %22"))
     print()
     print()
-
