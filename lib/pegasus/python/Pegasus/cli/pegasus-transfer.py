@@ -1665,9 +1665,9 @@ class HPSSHandler(TransferHandlerBase):
             logger.debug("%d similar hpss transfers grouped together" % (len(similar_list)))
 
             # we now have a list of similar transfers
-            # break in chunks
+            # break in chunks based on destination directory
             chunks = self._split_similar(similar_list)
-
+            logger.debug("similar hpss transfers broken into %d chunks based on destination directory" % (len(chunks)))
             for l in chunks:
                 if self._exec_transfers(l):
                     for i, t in enumerate(l):
@@ -1710,7 +1710,7 @@ class HPSSHandler(TransferHandlerBase):
             logger.info("Grouped %d similar gsiftp transfers together in"
                         " temporary file %s for extracting from tar %s" % (num_pairs, tmp_name, tar))
 
-        # build command line for globus-url-copy
+        # build command line for htar
         transfer_success = False
         tools = Tools()
         cmd = tools.full_path('htar')
@@ -1723,6 +1723,7 @@ class HPSSHandler(TransferHandlerBase):
         # todo enable checksum verification -Hverify=crc
 
         try:
+            prepare_local_dir(os.path.dirname(destination_dir))
             logger.debug("Executing command " + cmd)
             tc = TimedCommand(cmd, cwd=destination_dir)
             tc.run()
@@ -1816,19 +1817,55 @@ class HPSSHandler(TransferHandlerBase):
 
         return False
 
+
+    def _compare_urls(self, url1, url2):
+        """
+        Compares two HPSS URLs based on destination directory
+        :param item2:
+        :return:
+        """
+
+
+        dir1 = self._compute_destination_directory(url1)
+        dir2 = self._compute_destination_directory(url2)
+
+        if dir1 < dir2:
+            return -1
+        elif dir1 > dir2:
+            return 1
+        else:
+            return 0
+
     def _split_similar(self, full_list):
         """
-        splits up a long list of similar transfers into smaller
-        pieces which can easily be handled by g-u-c
+        splits up a long list of similar transfers and group them by
+        destination directory
         """
+
+        # first sort on destination directories
+        sorted_list = sorted( full_list, cmp=self._compare_urls)
+
+        # chunks are created based on destination directory
+        start = 0
+        end = 0
         chunks = []
-        size = 10
-        num_chunks = int(math.ceil(len(full_list) / float(size)))
-        for i in range(num_chunks):
-            start = i * size
-            end  = min((i + 1) * size, len(full_list))
-            chunks.append(full_list[start:end])
+        prev = self._compute_destination_directory( sorted_list[0] )
+        for t in sorted_list:
+            curr = self._compute_destination_directory(t)
+            if prev != curr:
+                chunks.append(sorted_list[start:end])
+                start = end
+
+            end += 1
+            prev = curr
+
+        if start != end:
+            # grab the last chunk
+            chunks.append(sorted_list[start:end])
+
         return chunks
+
+
 
 class IRodsHandler(TransferHandlerBase):
     """
