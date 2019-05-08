@@ -1626,7 +1626,7 @@ class HPSSHandler(TransferHandlerBase):
             logger.info("Grouped %d similar gsiftp transfers together in"
                         " temporary file %s for extracting from tar %s" % (num_pairs, tmp_name, tar))
 
-        # build command line for globus-url-copy
+        # build command line for htar
         transfer_success = False
         tools = Tools()
         cmd = tools.full_path('htar')
@@ -1639,6 +1639,7 @@ class HPSSHandler(TransferHandlerBase):
         # todo enable checksum verification -Hverify=crc
 
         try:
+            prepare_local_dir(os.path.dirname(destination_dir))
             logger.debug("Executing command " + cmd)
             tc = TimedCommand(cmd, cwd=destination_dir)
             tc.run()
