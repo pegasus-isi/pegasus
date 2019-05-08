@@ -32,7 +32,8 @@ import sys
 import time
 import traceback
 import urllib
-from builtins import int
+
+from six.moves.builtins import int
 
 __all__ = ["quote", "unquote"]
 
