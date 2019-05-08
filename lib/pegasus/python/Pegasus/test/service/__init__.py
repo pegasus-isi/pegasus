@@ -1,15 +1,17 @@
-import sys
-import os
-import unittest
-import tempfile
-import shutil
 import base64
 import logging
-from StringIO import StringIO
+import os
+import shutil
+import sys
+import tempfile
+import threading
+import unittest
+
+from six import StringIO
 
 from flask import json
-
 from Pegasus.service import app
+from werkzeug.serving import BaseWSGIServer, make_server
 
 
 class TestCase(unittest.TestCase):
@@ -92,10 +94,6 @@ class APITestCase(UserTestCase):
         self.post = self.app.post
         self.delete = self.app.delete
         self.put = self.app.put
-
-
-from werkzeug.serving import make_server, BaseWSGIServer
-import threading
 
 
 class TestWSGIServer(threading.Thread):
