@@ -1583,7 +1583,7 @@ class HPSSHandler(TransferHandlerBase):
             # we now have a list of similar transfers
             # break in chunks based on destination directory
             chunks = self._split_similar(similar_list)
-
+            logger.debug("similar hpss transfers broken into %d chunks based on destination directory" % (len(chunks)))
             for l in chunks:
                 if self._exec_transfers(l):
                     for i, t in enumerate(l):
