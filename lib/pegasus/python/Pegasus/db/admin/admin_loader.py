@@ -42,27 +42,27 @@ CURRENT_DB_VERSION = 11
 DB_MIN_VERSION = 4
 
 COMPATIBILITY = {
-    '4.3.0': 1,
-    '4.3.1': 1,
-    '4.3.2': 1,
-    '4.4.0': 2,
-    '4.4.1': 2,
-    '4.4.2': 2,
-    '4.5.0': 4,
-    '4.5.1': 4,
-    '4.5.2': 4,
-    '4.5.3': 4,
-    '4.5.4': 5,
-    '4.6.0': 6,
-    '4.6.1': 6,
-    '4.6.2': 6,
-    '4.7.0': 8,
-    '4.7.3': 8,
-    '4.8.0': 8,
-    '4.8.1': 8,
-    '4.8.2': 8,
-    '4.8.3': 8,
-    '4.9.0': 11
+    "4.3.0": 1,
+    "4.3.1": 1,
+    "4.3.2": 1,
+    "4.4.0": 2,
+    "4.4.1": 2,
+    "4.4.2": 2,
+    "4.5.0": 4,
+    "4.5.1": 4,
+    "4.5.2": 4,
+    "4.5.3": 4,
+    "4.5.4": 5,
+    "4.6.0": 6,
+    "4.6.1": 6,
+    "4.6.2": 6,
+    "4.7.0": 8,
+    "4.7.3": 8,
+    "4.8.0": 8,
+    "4.8.1": 8,
+    "4.8.2": 8,
+    "4.8.3": 8,
+    "4.9.0": 11,
 }
 
 
@@ -94,9 +94,7 @@ class DBAdminError(Exception):
                     self.db_version = _get_version(db)
                 except NoResultFound:
                     pass
-            self.db_compatible_version = get_compatible_version(
-                self.db_version
-            )
+            self.db_compatible_version = get_compatible_version(self.db_version)
 
             if given_version:
                 self.pegasus_version = COMPATIBILITY[given_version]
@@ -117,21 +115,21 @@ def get_compatible_version(version):
     if version == CURRENT_DB_VERSION:
         # find pegasus-version path
         pegasus_version = None
-        if 'PATH' in os.environ:
-            paths = os.environ.get('PATH').split(os.pathsep)
+        if "PATH" in os.environ:
+            paths = os.environ.get("PATH").split(os.pathsep)
             for p in paths:
-                f = os.path.join(p, 'pegasus-version')
+                f = os.path.join(p, "pegasus-version")
                 if os.path.isfile(f):
                     pegasus_version = f
                     break
 
-        if not pegasus_version and 'PEGASUS_HOME' in os.environ:
-            f = os.path.join(os.environ.get('PEGASUS_HOME'), 'bin/pegasus-version')
+        if not pegasus_version and "PEGASUS_HOME" in os.environ:
+            f = os.path.join(os.environ.get("PEGASUS_HOME"), "bin/pegasus-version")
             if os.path.isfile(f):
                 pegasus_version = f
 
         if not pegasus_version:
-            f = os.path.join(os.path.dirname(sys.argv[0]), 'pegasus-version')
+            f = os.path.join(os.path.dirname(sys.argv[0]), "pegasus-version")
             if os.path.isfile(f):
                 pegasus_version = f
 
@@ -141,25 +139,29 @@ def get_compatible_version(version):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 shell=True,
-                cwd=os.getcwd()
+                cwd=os.getcwd(),
             ).communicate()
             if err:
-                raise DBAdminError(err.decode('utf8').strip())
-            return out.decode('utf8').strip()
+                raise DBAdminError(err.decode("utf8").strip())
+            return out.decode("utf8").strip()
 
     print_version = None
     previous_version = None
 
-    if version >= CURRENT_DB_VERSION:
+    if version is not None and int(version) >= CURRENT_DB_VERSION:
         pv = -1
         for ver in COMPATIBILITY:
-            if COMPATIBILITY[ver] > pv and ver > previous_version:
+            if COMPATIBILITY[ver] > pv and (
+                previous_version is None or ver > previous_version
+            ):
                 pv = COMPATIBILITY[ver]
                 print_version = ver
                 previous_version = ver
 
     for ver in COMPATIBILITY:
-        if COMPATIBILITY[ver] == version and ver > previous_version:
+        if COMPATIBILITY[ver] == version and (
+            previous_version is None or ver > previous_version
+        ):
             print_version = ver
             previous_version = ver
     return print_version
@@ -192,7 +194,7 @@ def db_create(dburi, engine, db, pegasus_version=None, force=False, verbose=True
             db_version.insert(),
             version=CURRENT_DB_VERSION,
             version_number=int(CURRENT_DB_VERSION),
-            version_timestamp=datetime.datetime.now().strftime("%s")
+            version_timestamp=datetime.datetime.now().strftime("%s"),
         )
         if verbose:
             print("Created Pegasus database in: %s" % dburi)
@@ -227,8 +229,7 @@ def db_current_version(db, parse=False, force=False):
         if not current_version:
             raise DBAdminError(
                 "Your database is not compatible with any Pegasus version.\nRun 'pegasus-db-admin "
-                "update %s' to update it to the latest version." %
-                db.get_bind().url
+                "update %s' to update it to the latest version." % db.get_bind().url
             )
 
     return current_version
@@ -248,16 +249,14 @@ def db_verify(db, pegasus_version=None, force=False):
         db_version = _get_version(db)
 
     except NoResultFound:
-        db_version = _discover_version(
-            db, pegasus_version=pegasus_version, force=force
-        )
+        db_version = _discover_version(db, pegasus_version=pegasus_version, force=force)
 
     if db_version and db_version <= CURRENT_DB_VERSION and not version == db_version:
         raise DBAdminError(
-            "Your database is NOT compatible with version %s" %
-            get_compatible_version(version),
+            "Your database is NOT compatible with version %s"
+            % get_compatible_version(version),
             db=db,
-            given_version=pegasus_version
+            given_version=pegasus_version,
         )
 
 
@@ -273,7 +272,7 @@ def db_downgrade(db, pegasus_version=None, force=False, verbose=True):
         raise DBAdminError(
             "Unable to determine database version.",
             db=db,
-            given_version=pegasus_version
+            given_version=pegasus_version,
         )
 
     try:
@@ -282,13 +281,13 @@ def db_downgrade(db, pegasus_version=None, force=False, verbose=True):
         raise DBAdminError(
             "Unable to determine database version.",
             db=db,
-            given_version=pegasus_version
+            given_version=pegasus_version,
         )
 
     if pegasus_version:
         version = parse_pegasus_version(pegasus_version)
     else:
-        previous_version = ''
+        previous_version = ""
         for ver in COMPATIBILITY:
             if COMPATIBILITY[ver] < current_version and ver > previous_version:
                 version = COMPATIBILITY[ver]
@@ -301,7 +300,7 @@ def db_downgrade(db, pegasus_version=None, force=False, verbose=True):
         raise DBAdminError(
             "Cannot downgrade to a higher version.",
             db=db,
-            given_version=pegasus_version
+            given_version=pegasus_version,
         )
         return
 
@@ -309,7 +308,7 @@ def db_downgrade(db, pegasus_version=None, force=False, verbose=True):
         raise DBAdminError(
             "Your database is already downgraded to the minimum version.",
             db=db,
-            given_version=pegasus_version
+            given_version=pegasus_version,
         )
 
     # backup the database before making changes
@@ -328,12 +327,10 @@ def db_downgrade(db, pegasus_version=None, force=False, verbose=True):
             actual_version = float("%s.%s" % (i, j - 1))
             _update_version(db, actual_version)
 
-        if (i > version):
+        if i > version:
             k = get_class(i, db)
             k.downgrade(force)
-            actual_version = float(
-                "%s.%s" % (i - 1, _get_max_minor_version(i - 1))
-            )
+            actual_version = float("%s.%s" % (i - 1, _get_max_minor_version(i - 1)))
             _update_version(db, actual_version)
 
         if actual_version == version:
@@ -357,7 +354,7 @@ def parse_pegasus_version(pegasus_version=None):
         if not version:
             raise DBAdminError(
                 "Version does not exist: %s." % pegasus_version,
-                given_version=pegasus_version
+                given_version=pegasus_version,
             )
 
     if not version:
@@ -365,7 +362,7 @@ def parse_pegasus_version(pegasus_version=None):
 
 
 def all_workflows_db(
-        db, update=True, pegasus_version=None, schema_check=True, force=False
+    db, update=True, pegasus_version=None, schema_check=True, force=False
 ):
     """
     Update/Downgrade all completed workflow databases listed in master_workflow table.
@@ -376,13 +373,19 @@ def all_workflows_db(
     """
     # log files
     file_prefix = "%s-dbadmin" % time.strftime("%Y%m%dT%H%M%S")
-    f_out = open("%s.out" % file_prefix, 'w')
-    f_err = open("%s.err" % file_prefix, 'w')
+    f_out = open("%s.out" % file_prefix, "w")
+    f_err = open("%s.err" % file_prefix, "w")
 
-    data = db.query(
-        DashboardWorkflow.db_url, DashboardWorkflowstate.state,
-        func.max(DashboardWorkflowstate.timestamp)
-    ).join(DashboardWorkflowstate).group_by(DashboardWorkflow.wf_id).all()
+    data = (
+        db.query(
+            DashboardWorkflow.db_url,
+            DashboardWorkflowstate.state,
+            func.max(DashboardWorkflowstate.timestamp),
+        )
+        .join(DashboardWorkflowstate)
+        .group_by(DashboardWorkflow.wf_id)
+        .all()
+    )
 
     db_urls = []
     for d in data:
@@ -391,24 +394,24 @@ def all_workflows_db(
             f_err.write("[ACTIVE] %s\n" % d[0])
 
     counts = {
-        'total': len(data),
-        'running': len(data) - len(db_urls),
-        'success': 0,
-        'failed': 0,
-        'unable_to_connect': 0,
+        "total": len(data),
+        "running": len(data) - len(db_urls),
+        "success": 0,
+        "failed": 0,
+        "unable_to_connect": 0,
     }
     if update:
-        msg = ['updating', 'Updated']
+        msg = ["updating", "Updated"]
     else:
-        msg = ['downgrading', 'Downgraded']
+        msg = ["downgrading", "Downgraded"]
 
     print("")
     print("Verifying and %s workflow databases:" % msg[0])
-    i = counts['running']
+    i = counts["running"]
     for dburi in db_urls:
         log.debug("%s '%s'..." % (msg[0], dburi))
         i += 1
-        sys.stdout.write("\r%d/%d" % (i, counts['total']))
+        sys.stdout.write("\r%d/%d" % (i, counts["total"]))
         sys.stdout.flush()
         try:
             if update:
@@ -418,56 +421,45 @@ def all_workflows_db(
                     schema_check=schema_check,
                     create=True,
                     force=force,
-                    verbose=False
+                    verbose=False,
                 )
             else:
                 con = connection.connect(
-                    dburi,
-                    schema_check=schema_check,
-                    create=False,
-                    verbose=False
+                    dburi, schema_check=schema_check, create=False, verbose=False
                 )
                 metadata.clear()
                 warnings.simplefilter("ignore")
                 metadata.reflect(bind=con.get_bind())
                 db_downgrade(
-                    con,
-                    pegasus_version=pegasus_version,
-                    force=force,
-                    verbose=False
+                    con, pegasus_version=pegasus_version, force=force, verbose=False
                 )
             con.close()
             f_out.write("[SUCCESS] %s\n" % dburi)
-            counts['success'] += 1
+            counts["success"] += 1
         except connection.ConnectionError as e:
             if "unable to open database file" in str(e):
                 f_err.write("[UNABLE TO CONNECT] %s\n" % dburi)
-                counts['unable_to_connect'] += 1
+                counts["unable_to_connect"] += 1
                 log.debug(e)
             else:
                 f_err.write("[ERROR] %s\n" % dburi)
-                counts['failed'] += 1
+                counts["failed"] += 1
                 log.debug(e)
         except Exception as e:
             f_err.write("[ERROR] %s\n" % dburi)
-            counts['failed'] += 1
+            counts["failed"] += 1
             log.debug(e)
 
     f_out.close()
     f_err.close()
 
     print("\n\nSummary:")
+    print("  Verified/%s: %s/%s" % (msg[1], counts["success"], counts["total"]))
+    print("  Failed: %s/%s" % (counts["failed"], counts["total"]))
+    print("  Unable to connect: %s/%s" % (counts["unable_to_connect"], counts["total"]))
     print(
-        "  Verified/%s: %s/%s" % (msg[1], counts['success'], counts['total'])
-    )
-    print("  Failed: %s/%s" % (counts['failed'], counts['total']))
-    print(
-        "  Unable to connect: %s/%s" %
-        (counts['unable_to_connect'], counts['total'])
-    )
-    print(
-        "  Unable to update (active workflows): %s/%s" %
-        (counts['running'], counts['total'])
+        "  Unable to update (active workflows): %s/%s"
+        % (counts["running"], counts["total"])
     )
     print("\nLog files:")
     print("  %s.out (Succeeded operations)" % file_prefix)
@@ -479,9 +471,9 @@ def _get_version(db):
     current_version = None
 
     try:
-        current_version = db.query(DBVersion.version).order_by(
-            DBVersion.id.desc()
-        ).first()
+        current_version = (
+            db.query(DBVersion.version).order_by(DBVersion.id.desc()).first()
+        )
 
     except OperationalError as e:
         # update dbversion table
@@ -499,9 +491,9 @@ def _get_version(db):
             )
             db.execute("DROP TABLE dbversion_v4")
             db.commit()
-            current_version = db.query(DBVersion.version).order_by(
-                DBVersion.id.desc()
-            ).first()
+            current_version = (
+                db.query(DBVersion.version).order_by(DBVersion.id.desc()).first()
+            )
 
         except (OperationalError, ProgrammingError) as e:
             pass
@@ -543,7 +535,7 @@ def _discover_version(db, pegasus_version=None, force=False, verbose=True):
             "Unable to run update. Current database version is newer than specified version '%s'."
             % (pegasus_version),
             db=db,
-            given_version=pegasus_version
+            given_version=pegasus_version,
         )
 
     _backup_db(db)
@@ -607,9 +599,7 @@ def _backup_db(db):
     # Backup MySQL databases
     elif url.drivername == "mysql":
         log.info("Backing up MySQL database. This operation may take a while.")
-        dest_file = "%s-%s.sql" % (
-            url.database, time.strftime('%Y%m%d-%H%M%S')
-        )
+        dest_file = "%s-%s.sql" % (url.database, time.strftime("%Y%m%d-%H%M%S"))
         # mysqldump command preparation
         command = "mysqldump"
         if url.username:
@@ -620,14 +610,11 @@ def _backup_db(db):
             command += " --password=%s" % url.password
         command += " %s > %s" % (url.database, dest_file)
         out, err = subprocess.Popen(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            shell=True
+            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
         ).communicate()
         if err:
-            if 'Error 2013' in err:
-                err += '\nPlease, refer to the pegasus-db-admin troubleshooting for possible ways to fix this error.'
+            if "Error 2013" in err:
+                err += "\nPlease, refer to the pegasus-db-admin troubleshooting for possible ways to fix this error."
             raise DBAdminError(err, db=db)
         log.debug("Created backup database file at: %s" % dest_file)
 
@@ -640,7 +627,7 @@ def _verify_tables(db):
                 "Missing database tables or tables are not updated:\n    %s\n"
                 "Run 'pegasus-db-admin update %s' to create/update your database."
                 % (" \n    ".join(missing_tables), db.get_bind().url),
-                db=db
+                db=db,
             )
     except Exception as e:
         raise DBAdminError(e, db=db)
@@ -671,5 +658,5 @@ def _version_sanity_check(db, version):
             "\nPlease, run 'pegasus-db-admin downgrade' with the latest Pegasus to downgrade your "
             "database.",
             db=db,
-            db_version=version
+            db_version=version,
         )
