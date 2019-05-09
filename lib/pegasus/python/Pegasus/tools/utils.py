@@ -765,7 +765,6 @@ if __name__ == "__main__":
     print("Testing log10() function")
     print("log10(10):", log10(10))
     print("log10(100.2):", log10(100.2))
-    print(version())
     print(slurp_braindb("."))
     print(pipe_out_cmd("ls -lR"))
     print()
