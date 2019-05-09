@@ -1658,7 +1658,7 @@ class HPSSHandler(TransferHandlerBase):
             # htar always returns success even if a file does not exist in the archive
             # check for destination files to make sure and mark accordingly
             for t in transfers:
-                if verify_local_file(t.get_dst_path):
+                if verify_local_file(t.get_dst_path()):
                     self._post_transfer_attempt(t, True, t_start)
                     successful_l.append(t)
                 else:
