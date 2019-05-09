@@ -20,9 +20,11 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.report.LogLevel;
@@ -185,19 +187,28 @@ public class YAMLSchemaValidator {
 			errorMessage.append(name);
 
 			for (int i = 3; i < splitPaths.length; i++) {
+				ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 				if (i % 2 == 1) {
 					location = Integer.parseInt(splitPaths[i]);
 					TransformationCatalogKeywords reservedKey = TransformationCatalogKeywords.getReservedKey(name);
 					nodeDetails = nodeDetails.get(location);
 					switch (reservedKey) {
 					case TRANSFORMATION:
-						errorMessage.append(" details - " + nodeDetails.get("namespace"));
+						try {
+							errorMessage.append(" details - " + mapper.writeValueAsString(nodeDetails.get("namespace")));							
+						} catch (JsonProcessingException e) {
+							errorMessage.append(" details - " + nodeDetails.get("namespace"));
+						}
 						break;
 					case SITE:
 						errorMessage.append(",Site - " + nodeDetails);
 						break;
 					case CONTAINER:
-						errorMessage.append(", details - " + nodeDetails.get("name"));
+						try {
+							errorMessage.append(" details - " + mapper.writeValueAsString(nodeDetails.get("name")));							
+						} catch (JsonProcessingException e) {
+							errorMessage.append(", details - " + nodeDetails.get("name"));
+						}
 						break;
 					default:
 						errorMessage.append(",property name -").append(reservedKey.getReservedName());

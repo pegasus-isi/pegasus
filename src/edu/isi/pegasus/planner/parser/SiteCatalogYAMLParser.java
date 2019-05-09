@@ -589,6 +589,12 @@ public class SiteCatalogYAMLParser {
 
 				Architecture architecture = entry.getArchitecture();
 
+
+				String handle = entry.getSiteHandle();
+				if (handle != null) {
+					siteCatalogInfo.put("handle", handle);
+				}
+				
 				if (architecture != null) {
 					siteCatalogInfo.put("arch", architecture.name());
 				}
@@ -596,12 +602,7 @@ public class SiteCatalogYAMLParser {
 				OS os = entry.getOS();
 				if (os != null) {
 					siteCatalogInfo.put("os", os.name());
-				}
-
-				String handle = entry.getSiteHandle();
-				if (handle != null) {
-					siteCatalogInfo.put("handle", handle);
-				}
+				}	
 
 				String osrelease = entry.getOSRelease();
 				if (osrelease != null) {
