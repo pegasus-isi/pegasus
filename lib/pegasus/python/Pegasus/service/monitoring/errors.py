@@ -17,12 +17,8 @@ __author__ = "Rajiv Mayani"
 import logging
 
 from flask import make_response
-from Pegasus.service.base import (
-    ErrorResponse,
-    InvalidJSONError,
-    InvalidOrderError,
-    InvalidQueryError,
-)
+from Pegasus.service._sort import InvalidSortError
+from Pegasus.service.base import ErrorResponse, InvalidJSONError, InvalidQueryError
 from Pegasus.service.monitoring import monitoring_routes
 from Pegasus.service.monitoring.utils import jsonify
 from sqlalchemy.orm.exc import NoResultFound
@@ -66,7 +62,7 @@ def invalid_query_error(error):
     return make_response(response_json, 400, JSON_HEADER)
 
 
-@monitoring_routes.errorhandler(InvalidOrderError)
+@monitoring_routes.errorhandler(InvalidSortError)
 def invalid_order_error(error):
     e = ErrorResponse("INVALID_ORDER", str(error))
     response_json = jsonify(e)

@@ -161,7 +161,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_query_without_prefix(self):
         rv = self.get_context(
-            "/api/v1/user/%s/root?query=submit_hostname like '%%.edu'&order=wf_id ASC"
+            "/api/v1/user/%s/root?query=submit_hostname like '%%.edu'&order=wf_id"
             % self.user,
             pre_callable=self.pre_callable,
         )
@@ -171,7 +171,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_complex_query(self):
         rv = self.get_context(
-            "/api/v1/user/%s/root?query=r.wf_id = 1 OR (r.wf_id = 2 AND r.grid_dn = NULL)&order=wf_id asc"
+            "/api/v1/user/%s/root?query=r.wf_id = 1 OR (r.wf_id = 2 AND r.grid_dn = NULL)&order=%%2br.wf_id"
             % self.user,
             pre_callable=self.pre_callable,
         )
@@ -187,7 +187,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_complex_query_2(self):
         rv = self.get_context(
-            "/api/v1/user/%s/root?query=r.wf_id < r.timestamp&order=wf_id asc"
+            "/api/v1/user/%s/root?query=r.wf_id < r.timestamp&order=r.wf_id"
             % self.user,
             pre_callable=self.pre_callable,
         )
@@ -203,7 +203,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_ambiguous_query(self):
         rv = self.get_context(
-            "/api/v1/user/%s/root?query=timestamp > 1000.0&order=wf_id asc" % self.user,
+            "/api/v1/user/%s/root?query=timestamp > 1000.0&order=wf_id" % self.user,
             pre_callable=self.pre_callable,
         )
 
@@ -211,7 +211,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_order(self):
         rv = self.get_context(
-            "/api/v1/user/%s/root?order=r.wf_id desc" % self.user,
+            "/api/v1/user/%s/root?order=-r.wf_id" % self.user,
             pre_callable=self.pre_callable,
         )
 
@@ -224,7 +224,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_bad_order(self):
         rv = self.get_context(
-            "/api/v1/user/%s/root?order=r.wf_id des" % self.user,
+            "/api/v1/user/%s/root?order=r.wf_i" % self.user,
             pre_callable=self.pre_callable,
         )
 

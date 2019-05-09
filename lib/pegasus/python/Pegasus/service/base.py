@@ -19,7 +19,17 @@ import re
 from six import StringIO
 
 from plex import (
-    IGNORE, Any, AnyBut, Lexicon, NoCase, Opt, Range, Rep, Rep1, Scanner, Str
+    IGNORE,
+    Any,
+    AnyBut,
+    Lexicon,
+    NoCase,
+    Opt,
+    Range,
+    Rep,
+    Rep1,
+    Scanner,
+    Str,
 )
 from plex.errors import UnrecognizedInput
 from werkzeug.routing import BaseConverter
@@ -89,10 +99,6 @@ class InvalidJSONError(Exception):
 
 
 class InvalidQueryError(ServiceError):
-    pass
-
-
-class InvalidOrderError(ServiceError):
     pass
 
 
@@ -396,90 +402,6 @@ class BaseQueryParser(object):
                     )
 
         return operands.pop()
-
-
-class BaseOrderParser(object):
-    """
-    Base Order Parser class provides a basic implementation to parse the `order` argument
-    i.e. ORDER clause as used in SQL.
-    """
-
-    #
-    # Order Clause Identifier Rules:
-    #   Prefix + Identifier
-    #
-    # Prefix Rules:
-    #   Is optional
-    #   Must start with a-z OR A-Z
-    #   Can contain a-z OR A-Z OR 0-9 OR _
-    #   Must end with .
-    #
-    # Identifier Rules:
-    #   Is mandatory
-    #   Must start with a-z OR A-Z
-    #   Can contain a-z OR A-Z OR 0-9 OR _
-    #
-    IDENTIFIER_PATTERN = re.compile(
-        "^([a-zA-Z][a-zA-Z0-9_]*\.)?([a-zA-Z][a-zA-Z0-9_]*)$"
-    )
-
-    def __init__(self, expression):
-        self.expression = expression
-        self._sort_order = []
-
-        try:
-            self._parse_expression()
-        except UnrecognizedInput as e:
-            raise InvalidOrderError(str(e))
-
-    def _parse_expression(self):
-        tokens = self.expression.replace("\n\t", " ").split(",")
-        tokens = [token.split() for token in tokens if len(token) > 0]
-        tokens = [token for token in tokens if len(token) > 0]
-
-        for token in tokens:
-            length = len(token)
-
-            if length == 0 or length > 2:
-                raise InvalidOrderError("Invalid ORDER clause %r" % " ".join(token))
-
-            self.identifier_handler(token[0])
-
-            if length == 2:
-                self.order_handler(token[1])
-
-        self._sort_order = [tuple(order_clause) for order_clause in self._sort_order]
-
-    def identifier_handler(self, identifier):
-        match = BaseOrderParser.IDENTIFIER_PATTERN.match(identifier)
-
-        if match:
-            self._sort_order.append([identifier, "ASC"])
-        else:
-            raise InvalidOrderError("Invalid identifier %r" % identifier)
-
-    def order_handler(self, order):
-        _order = order.upper()
-
-        if _order in set(("ASC", "DESC")):
-            self._sort_order[len(self._sort_order) - 1][1] = order.upper()
-        else:
-            raise InvalidOrderError("Invalid sorting order %r" % order)
-
-    def get_sort_order(self):
-        return self._sort_order
-
-    def __str__(self):
-        s = StringIO()
-
-        for i in self._sort_order:
-            s.write(str(i))
-            s.write(" ")
-
-        out = s.getvalue()
-        s.close()
-
-        return out
 
 
 class BaseResource(object):
