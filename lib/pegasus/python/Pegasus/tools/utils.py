@@ -33,6 +33,7 @@ import time
 import traceback
 import urllib
 
+import six
 from six.moves.builtins import int
 
 __all__ = ["quote", "unquote"]
@@ -110,10 +111,10 @@ def quote(s):
     This will always return a byte string. If the argument is a unicode string
     then it will be utf-8 encoded before being quoted.
     """
-    if not isinstance(s, basestring):
+    if not isinstance(s, six.string_types):
         raise TypeError("Not a string: %s" % str(s))
 
-    if isinstance(s, unicode):
+    if isinstance(s, six.text_type):
         # We need to utf-8 encode unicode strings
         s = s.encode("utf-8")
 
@@ -151,10 +152,10 @@ def unquote(s):
     way of knowing what encoding was used for the original string that was
     passed to quote().
     """
-    if not isinstance(s, basestring):
+    if not isinstance(s, six.string_types):
         raise TypeError("Not a string: %s" % str(s))
 
-    if isinstance(s, unicode):
+    if isinstance(s, six.text_type):
         # Technically, this should not happen because
         # quote always returns a byte string, but if it was
         # passed through a database or something then it might happen
