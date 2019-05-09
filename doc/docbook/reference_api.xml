@@ -4069,8 +4069,8 @@ Where QUERY can be( r.wf_id &gt;= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.w
       collections.</para>
 
       <para>Order clause can only contain fields which are part of the
-      resource being returned. Fields may or may not be prefixed by the
-      Resource Query Prefix</para>
+      resource being returned. Fields must be prefixed by the Resource Query
+      Prefix</para>
 
       <para><emphasis role="bold">Example:</emphasis> Order clause for an
       endpoint returning a <link linkend="resource-workflow">Workflow</link>
@@ -4081,9 +4081,10 @@ Where QUERY can be( r.wf_id &gt;= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.w
         <title>Syntax</title>
 
         <para>Order clause consists of one or more field names optionally
-        followed by order direction (ASC or DESC), separated by commas.</para>
+        prefixed by a "+" to denote ascending or "-" to denote sorting
+        direction, separated by commas.</para>
 
-        <para><programlisting><emphasis role="bold"><emphasis role="bold">https://www.domain.com/api/v1/user/user-a/root?order=r.submit_hostname ASC, wf_id DESC
+        <para><programlisting><emphasis role="bold"><emphasis role="bold">https://www.domain.com/api/v1/user/user-a/root?order=r.submit_hostname, -r.wf_id
 </emphasis></emphasis></programlisting></para>
       </section>
     </section>
@@ -4271,7 +4272,7 @@ HTTP/1.1 200 OK
 
         <para><programlisting><emphasis role="bold">$ curl --request GET \
        --user user-a:user-a-password \
-       https://www.domain.com/api/v1/user/user-a/root/1/workflow?pretty-print=true&amp;order=wf_id desc
+       https://www.domain.com/api/v1/user/user-a/root/1/workflow?pretty-print=true&amp;order=-w.wf_id
                     </emphasis>
 HTTP/1.1 200 OK
 
