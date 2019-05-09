@@ -1628,6 +1628,7 @@ class HPSSHandler(TransferHandlerBase):
 
         # build command line for htar
         transfer_success = False
+        t_start = time.time()
         tools = Tools()
         cmd = tools.full_path('htar')
 
@@ -1647,12 +1648,18 @@ class HPSSHandler(TransferHandlerBase):
         except Exception as err:
             logger.error(err)
 
-
-        # as we don't know which transfers in the set succeeded/failed, we have
-        # to mark them all the same (for example, one failure means all transfers
-        # gets marked as failed)
-        #for t in transfers:
-        #   self._post_transfer_attempt(t, transfer_success, t_start)
+        if transfer_success:
+            # htar always returns success even if a file does not exist in the archive
+            # check for destination files to make sure and mark accordingly
+            for t in transfers:
+                if verify_local_file(t.get_dst_path):
+                    self._post_transfer_attempt(t, True, t_start)
+                else:
+                    self._post_transfer_attempt(t, False, t_start)
+        else:
+            # htar command failed. mark all as failed
+            for t in transfers:
+                self._post_transfer_attempt(t, False, t_start)
 
         os.unlink(tmp_name)
 
