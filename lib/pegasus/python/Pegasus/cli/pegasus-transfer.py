@@ -1669,16 +1669,22 @@ class HPSSHandler(TransferHandlerBase):
             chunks = self._split_similar(similar_list)
             logger.debug("similar hpss transfers broken into %d chunks based on destination directory" % (len(chunks)))
             for l in chunks:
-                if self._exec_transfers(l):
-                    for i, t in enumerate(l):
-                        successful_l.append(t)
-                else:
-                    for i, t in enumerate(l):
-                        failed_l.append(t)
+                successful, failed =  self._exec_transfers(l)
+                for t in successful:
+                    successful_l.append(t)
+                for t in failed:
+                    failed_l.append(t)
 
         return [successful_l, failed_l]
 
     def _exec_transfers(self, transfers):
+        """
+        Actually execute the transfers using htar command
+        :param transfers:
+        :return:
+        """
+        successful_l = []
+        failed_l = []
 
         # create tmp file with transfer src/dst pairs
         num_pairs = 0
@@ -1712,6 +1718,7 @@ class HPSSHandler(TransferHandlerBase):
 
         # build command line for htar
         transfer_success = False
+        t_start = time.time()
         tools = Tools()
         cmd = tools.full_path('htar')
 
@@ -1731,16 +1738,25 @@ class HPSSHandler(TransferHandlerBase):
         except Exception as err:
             logger.error(err)
 
-
-        # as we don't know which transfers in the set succeeded/failed, we have
-        # to mark them all the same (for example, one failure means all transfers
-        # gets marked as failed)
-        #for t in transfers:
-        #   self._post_transfer_attempt(t, transfer_success, t_start)
+        if transfer_success:
+            # htar always returns success even if a file does not exist in the archive
+            # check for destination files to make sure and mark accordingly
+            for t in transfers:
+                if verify_local_file(t.get_dst_path()):
+                    self._post_transfer_attempt(t, True, t_start)
+                    successful_l.append(t)
+                else:
+                    self._post_transfer_attempt(t, False, t_start)
+                    failed_l.append(t)
+        else:
+            # htar command failed. mark all as failed
+            for t in transfers:
+                self._post_transfer_attempt(t, False, t_start)
+                failed_l.append(t)
 
         os.unlink(tmp_name)
 
-        return transfer_success
+        return successful_l,failed_l;
 
 
     def _compute_destination_directory(self, t):
