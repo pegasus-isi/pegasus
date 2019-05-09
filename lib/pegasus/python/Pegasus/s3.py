@@ -19,13 +19,13 @@ import math
 import stat
 import traceback
 import threading
-import Queue
+from six.moves import queue
 import fnmatch
 import re
 import time
 from optparse import OptionParser
-from urlparse import urlsplit
-from ConfigParser import ConfigParser
+from six.moves.urllib.parse import urlsplit
+from six.moves.configparser import ConfigParser
 
 try:
     import boto
