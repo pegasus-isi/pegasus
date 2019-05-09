@@ -1,7 +1,7 @@
 __author__ = "Rafael Ferreira da Silva"
 
 import abc
-from future.utils import with_metaclass
+from six import with_metaclass
 
 
 class BaseVersion(with_metaclass(abc.ABCMeta, object)):
