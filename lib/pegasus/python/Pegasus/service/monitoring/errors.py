@@ -12,13 +12,16 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-__author__ = 'Rajiv Mayani'
+__author__ = "Rajiv Mayani"
 
 import logging
 
 from flask import make_response
 from Pegasus.service.base import (
-    ErrorResponse, InvalidJSONError, InvalidOrderError, InvalidQueryError
+    ErrorResponse,
+    InvalidJSONError,
+    InvalidOrderError,
+    InvalidQueryError,
 )
 from Pegasus.service.monitoring import monitoring_routes
 from Pegasus.service.monitoring.utils import jsonify
@@ -26,7 +29,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 log = logging.getLogger(__name__)
 
-JSON_HEADER = {'Content-Type': 'application/json'}
+JSON_HEADER = {"Content-Type": "application/json"}
 """
 Error
 
@@ -49,7 +52,7 @@ Error
 
 @monitoring_routes.errorhandler(NoResultFound)
 def no_result_found(error):
-    e = ErrorResponse('NOT_FOUND', error.message)
+    e = ErrorResponse("NOT_FOUND", str(error))
     response_json = jsonify(e)
 
     return make_response(response_json, 404, JSON_HEADER)
@@ -57,7 +60,7 @@ def no_result_found(error):
 
 @monitoring_routes.errorhandler(InvalidQueryError)
 def invalid_query_error(error):
-    e = ErrorResponse('INVALID_QUERY', error.message)
+    e = ErrorResponse("INVALID_QUERY", str(error))
     response_json = jsonify(e)
 
     return make_response(response_json, 400, JSON_HEADER)
@@ -65,7 +68,7 @@ def invalid_query_error(error):
 
 @monitoring_routes.errorhandler(InvalidOrderError)
 def invalid_order_error(error):
-    e = ErrorResponse('INVALID_ORDER', error.message)
+    e = ErrorResponse("INVALID_ORDER", str(error))
     response_json = jsonify(e)
 
     return make_response(response_json, 400, JSON_HEADER)
@@ -73,7 +76,7 @@ def invalid_order_error(error):
 
 @monitoring_routes.errorhandler(InvalidJSONError)
 def invalid_json_error(error):
-    e = ErrorResponse('INVALID_JSON', error.message)
+    e = ErrorResponse("INVALID_JSON", str(error))
     response_json = jsonify(e)
 
     return make_response(response_json, 400, JSON_HEADER)
@@ -83,10 +86,9 @@ def invalid_json_error(error):
 def catch_all(error):
     log.exception(error)
 
-    app_code, http_code = error.codes if hasattr(error, 'codes'
-                                                 ) else ('UNKNOWN', 500)
+    app_code, http_code = error.codes if hasattr(error, "codes") else ("UNKNOWN", 500)
 
-    e = ErrorResponse(app_code, error.message)
+    e = ErrorResponse(app_code, str(error))
     response_json = jsonify(e)
 
     return make_response(response_json, http_code, JSON_HEADER)
