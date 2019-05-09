@@ -27,7 +27,7 @@ PACKAGES+=werkzeug
 PACKAGES+=requests
 PACKAGES+=itsdangerous.py
 PACKAGES+=boto
-PACKAGES+=pam.py
+PACKAGES+=pamela
 #PACKAGES+=OpenSSL
 PACKAGES+=six
 #PACKAGES+=enum34
@@ -81,7 +81,7 @@ $(LIBDIR)/werkzeug: Werkzeug-0.14.1.tar.gz
 $(LIBDIR)/requests: requests-2.18.4.tar.gz
 $(LIBDIR)/itsdangerous.py: itsdangerous-0.24.tar.gz
 $(LIBDIR)/boto: boto-2.48.0.tar.gz
-$(LIBDIR)/pam.py: pam-0.1.4.tar.gz
+$(LIBDIR)/pamela: pamela-1.0.0.tar.gz
 $(LIBDIR)/OpenSSL: pyOpenSSL-16.2.0.tar.gz
 $(LIBDIR)/six: six-1.10.0.tar.gz
 $(LIBDIR)/enum34: enum34-1.1.6.tar.gz
