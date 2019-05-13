@@ -878,6 +878,7 @@ project:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BDEB10
               name: Build x86_64 Debian 10
+              enabled: false
               tasks:
                 - !script
                   description: Untar source
@@ -1134,7 +1135,7 @@ project:
                       scp -r docs/pegasus-*/share/doc/pegasus/wordpress/* pegasus.isi.edu:/srv/pegasus.isi.edu/public_html/docs/$VERSION/
               artifactDependencies:
                 - name: pegasus-binary-x86_64_deb_9
-                - name: pegasus-binary-x86_64_deb_10
+                ##- name: pegasus-binary-x86_64_deb_10
                 - name: pegasus-binary-x86_64_macos
                 - name: pegasus-binary-x86_64_rhel_6
                 - name: pegasus-binary-x86_64_rhel_7
@@ -1143,7 +1144,7 @@ project:
                 - name: pegasus-binary-x86_64_ubuntu_18
                 #- name: pegasus-binary-x86_rhel_6
                 - name: pegasus-deb-x86_64_deb_9
-                - name: pegasus-deb-x86_64_deb_10
+                ##- name: pegasus-deb-x86_64_deb_10
                 - name: pegasus-deb-x86_64_ubuntu_16
                 #- name: pegasus-deb-x86_64_ubuntu_17
                 - name: pegasus-deb-x86_64_ubuntu_18
@@ -1161,7 +1162,7 @@ project:
                 - name: pegasus-source-versioned-swamp-python
                 - name: pegasus-srcrpm
                 - name: pegasus-worker-x86_64_deb_9
-                - name: pegasus-worker-x86_64_deb_10
+                ##- name: pegasus-worker-x86_64_deb_10
                 - name: pegasus-worker-x86_64_macos
                 - name: pegasus-worker-x86_64_rhel_6
                 - name: pegasus-worker-x86_64_rhel_7
