@@ -18,7 +18,8 @@ import logging
 
 from flask import make_response
 from Pegasus.service._sort import InvalidSortError
-from Pegasus.service.base import ErrorResponse, InvalidJSONError, InvalidQueryError
+from Pegasus.service._query import InvalidQueryError
+from Pegasus.service.base import ErrorResponse, InvalidJSONError
 from Pegasus.service.monitoring import monitoring_routes
 from Pegasus.service.monitoring.utils import jsonify
 from sqlalchemy.orm.exc import NoResultFound

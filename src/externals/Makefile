@@ -33,7 +33,6 @@ PACKAGES+=six
 #PACKAGES+=enum34
 #PACKAGES+=cffi
 #PACKAGES+=cryptography
-PACKAGES+=plex
 PACKAGES+=future
 PACKAGES+=chardet
 PACKAGES+=idna
@@ -87,7 +86,6 @@ $(LIBDIR)/six: six-1.10.0.tar.gz
 $(LIBDIR)/enum34: enum34-1.1.6.tar.gz
 $(LIBDIR)/cffi: cffi-1.10.0.tar.gz
 $(LIBDIR)/cryptography: cryptography-2.0.3.tar.gz
-$(LIBDIR)/plex: plex-2.0.0dev.tar.gz
 $(LIBDIR)/ordereddict.py: ordereddict-1.1.tar.gz
 $(LIBDIR)/future: future-0.16.0.tar.gz
 $(LIBDIR)/chardet: chardet-3.0.4.tar.gz

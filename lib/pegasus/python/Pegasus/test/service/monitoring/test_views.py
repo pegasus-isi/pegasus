@@ -148,7 +148,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_query_with_prefix(self):
         rv = self.get_context(
-            "/api/v1/user/%s/root?query=r.wf_id = 1" % self.user,
+            "/api/v1/user/%s/root?query=r.wf_id == 1" % self.user,
             pre_callable=self.pre_callable,
         )
 
@@ -171,7 +171,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_complex_query(self):
         rv = self.get_context(
-            "/api/v1/user/%s/root?query=r.wf_id = 1 OR (r.wf_id = 2 AND r.grid_dn = NULL)&order=%%2br.wf_id"
+            "/api/v1/user/%s/root?query=r.wf_id == 1 or (r.wf_id == 2 and r.grid_dn is None)&order=%%2br.wf_id"
             % self.user,
             pre_callable=self.pre_callable,
         )
@@ -400,7 +400,7 @@ class TestStampedeWorkflowMetaQueries(NoAuthFlaskTestCase):
 
     def test_get_workflow_meta_query(self):
         rv = self.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/meta?query=wm.key = 'author'"
+            "/api/v1/user/%s/root/1/workflow/1/meta?query=wm.key == 'author'"
             % self.user,
             pre_callable=self.pre_callable,
         )
@@ -437,7 +437,7 @@ class TestStampedeWorkflowFilesQueries(NoAuthFlaskTestCase):
 
     def test_get_workflow_files_query(self):
         rv = self.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/files?query=rm.key = 'sizeeee'"
+            "/api/v1/user/%s/root/1/workflow/1/files?query=rm.key == 'sizeeee'"
             % self.user,
             pre_callable=self.pre_callable,
         )
@@ -695,7 +695,7 @@ class TestStampedeTaskMetaQueries(NoAuthFlaskTestCase):
 
     def test_get_workflow_meta_query(self):
         rv = self.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/task/1/meta?query=tm.key = 'time'"
+            "/api/v1/user/%s/root/1/workflow/1/task/1/meta?query=tm.key == 'time'"
             % self.user,
             pre_callable=self.pre_callable,
         )

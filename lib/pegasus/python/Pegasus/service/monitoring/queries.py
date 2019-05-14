@@ -22,32 +22,9 @@ from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.db.errors import StampedeDBNotFoundError
 from Pegasus.db.schema import *
 from Pegasus.service import cache
+from Pegasus.service._query import InvalidQueryError, query_parse
 from Pegasus.service._sort import InvalidSortError, sort_parse
-from Pegasus.service.base import (
-    BaseQueryParser,
-    InvalidQueryError,
-    OrderedDict,
-    OrderedSet,
-    PagedResponse,
-)
-from Pegasus.service.monitoring.resources import (
-    CombinationResource,
-    HostResource,
-    InvocationResource,
-    JobInstanceResource,
-    JobResource,
-    JobstateResource,
-    RCLFNResource,
-    RCMetaResource,
-    RCPFNResource,
-    RootWorkflowResource,
-    RootWorkflowstateResource,
-    TaskMetaResource,
-    TaskResource,
-    WorkflowMetaResource,
-    WorkflowResource,
-    WorkflowstateResource,
-)
+from Pegasus.service.base import OrderedDict, OrderedSet, PagedResponse
 from Pegasus.service.monitoring.utils import csv_to_json
 from sqlalchemy.orm import aliased, defer
 from sqlalchemy.orm.exc import NoResultFound
@@ -139,61 +116,22 @@ class WorkflowQueries(object):
         return record
 
     @staticmethod
-    def _evaluate_query(q, query, resource):
+    def _evaluate_query(q, query, **resource):
         if not query:
             return q
 
-        comparator = {
-            "=": "__eq__",
-            "!=": "__ne__",
-            "<": "__lt__",
-            "<=": "__le__",
-            ">": "__gt__",
-            ">=": "__ge__",
-            "LIKE": "like",
-            "IN": "in_",
-        }
-
-        operators = {"AND": and_, "OR": or_}
-
-        operands = []
-
-        def condition_expansion(expr, field):
-            operands.append(getattr(field, comparator[expr[1]])(expr[2]))
-
         try:
-            expression = BaseQueryParser(query).evaluate()
-
-            for token in expression:
-                if isinstance(token, tuple):
-                    if isinstance(token[2], tuple):
-                        identifier = token[2][1]
-                        token = (
-                            token[0],
-                            token[1],
-                            resource.get_mapped_field(token[2][1]),
-                        )
-
-                    identifier = token[0]
-                    condition_expansion(token, resource.get_mapped_field(identifier))
-
-                elif isinstance(token, str) or isinstance(token, unicode):
-
-                    operand_2 = operands.pop()
-                    operand_1 = operands.pop()
-
-                    if token in operators:
-                        operands.append(operators[token](operand_1, operand_2))
-
-            q = q.filter(operands.pop())
-
+            x = query_parse(query, **resource)
+            q = q.filter(x[0])
         except (KeyError, AttributeError):
-            log.exception("Invalid field %s" % identifier)
-            raise InvalidQueryError("Invalid field %s" % identifier)
-
-        except IndexError:
-            log.exception("Invalid expression %s" % query)
-            raise InvalidQueryError("Invalid expression %s" % query)
+            log.exception("Invalid query %s" % query)
+            raise InvalidQueryError("Invalid query %s" % query)
+        except NameError as e:
+            log.exception("Invalid field %s" % e)
+            raise InvalidQueryError("Invalid field %s" % e)
+        except Exception as e:
+            log.exception("Invalid query %s" % query)
+            raise InvalidQueryError("Invalid query %s" % query)
 
         return q
 
@@ -294,11 +232,9 @@ class MasterWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
-            resource = CombinationResource(
-                RootWorkflowResource(), RootWorkflowstateResource(alias)
+            q = self._evaluate_query(
+                q, query, r=DashboardWorkflow, ws=alias
             )
-
-            q = self._evaluate_query(q, query, resource)
             total_filtered = self._get_count(q, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
@@ -448,7 +384,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
-            q = self._evaluate_query(q, query, WorkflowResource())
+            q = self._evaluate_query(q, query, w=Workflow)
             total_filtered = self._get_count(q, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
@@ -528,7 +464,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
-            q = self._evaluate_query(q, query, WorkflowMetaResource())
+            q = self._evaluate_query(q, query, wm=WorkflowMeta)
             total_filtered = self._get_count(q, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
@@ -595,11 +531,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
-            q_in = self._evaluate_query(
-                q_in,
-                query,
-                CombinationResource(RCLFNResource(), RCPFNResource(), RCMetaResource()),
-            )
+            q_in = self._evaluate_query(q_in, query, l=RCLFN, p=RCPFN, rm=RCMeta)
             total_filtered = self._get_count(q_in, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
@@ -703,7 +635,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to filter.
         #
         if query or recent:
-            q = self._evaluate_query(q, query, WorkflowstateResource())
+            q = self._evaluate_query(q, query, ws=Workflowstate)
             total_filtered = self._get_count(q, use_cache, timeout=timeout)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
@@ -789,7 +721,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
-            q = self._evaluate_query(q, query, JobResource())
+            q = self._evaluate_query(q, query, j=Job)
             total_filtered = self._get_count(q, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
@@ -872,7 +804,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
-            q = self._evaluate_query(q, query, HostResource())
+            q = self._evaluate_query(q, query, h=Host)
             total_filtered = self._get_count(q, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
@@ -976,7 +908,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to filter.
         #
         if query or recent:
-            q = self._evaluate_query(q, query, JobstateResource())
+            q = self._evaluate_query(q, query, js=Jobstate)
             total_filtered = self._get_count(q, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
@@ -1051,7 +983,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
-            q = self._evaluate_query(q, query, TaskResource())
+            q = self._evaluate_query(q, query, t=Task)
             total_filtered = self._get_count(q, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
@@ -1112,7 +1044,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
-            q = self._evaluate_query(q, query, TaskResource())
+            q = self._evaluate_query(q, query, t=Task)
             total_filtered = self._get_count(q, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
@@ -1193,7 +1125,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
-            q = self._evaluate_query(q, query, TaskMetaResource())
+            q = self._evaluate_query(q, query, tm=TaskMeta)
             total_filtered = self._get_count(q, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
@@ -1272,7 +1204,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to filter.
         #
         if query or recent:
-            q = self._evaluate_query(q, query, JobInstanceResource())
+            q = self._evaluate_query(q, query, ji=JobInstance)
             total_filtered = self._get_count(q, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
@@ -1372,7 +1304,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
-            q = self._evaluate_query(q, query, InvocationResource())
+            q = self._evaluate_query(q, query, i=Invocation)
             total_filtered = self._get_count(q, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
@@ -1438,7 +1370,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
-            q = self._evaluate_query(q, query, InvocationResource())
+            q = self._evaluate_query(q, query, i=Invocation)
             total_filtered = self._get_count(q, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
@@ -1539,9 +1471,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
-            q = self._evaluate_query(
-                q, query, CombinationResource(JobResource(), JobInstanceResource())
-            )
+            q = self._evaluate_query(q, query, j=Job, ji=JobInstance)
             total_filtered = self._get_count(q, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
@@ -1623,9 +1553,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
-            q = self._evaluate_query(
-                q, query, CombinationResource(JobResource(), JobInstanceResource())
-            )
+            q = self._evaluate_query(q, query, j=Job, ji=JobInstance)
             total_filtered = self._get_count(q, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
@@ -1707,9 +1635,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
-            q = self._evaluate_query(
-                q, query, CombinationResource(JobResource(), JobInstanceResource())
-            )
+            q = self._evaluate_query(q, query, j=Job, ji=JobInstance)
             total_filtered = self._get_count(q, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
@@ -1808,9 +1734,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
-            q = self._evaluate_query(
-                q, query, CombinationResource(JobResource(), JobInstanceResource())
-            )
+            q = self._evaluate_query(q, query, j=Job, ji=JobInstance)
             total_filtered = self._get_count(q, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
