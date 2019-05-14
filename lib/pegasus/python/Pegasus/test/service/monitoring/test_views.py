@@ -170,7 +170,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_complex_query(self):
         rv = self.get_context(
-            "/api/v1/user/%s/root?query=r.wf_id == 1 or (r.wf_id == 2 and r.grid_dn is None)&order=%%2br.wf_id"
+            "/api/v1/user/%s/root?query=r.wf_id == 1 or (r.wf_id.like(2) and r.grid_dn is None)&order=%%2br.wf_id"
             % self.user,
             pre_callable=self.pre_callable,
         )
