@@ -14,6 +14,7 @@
 
 __author__ = "Rajiv Mayani"
 
+import json
 import logging
 import os
 import unittest
@@ -32,7 +33,7 @@ class JSONResponseMixin(object):
 
         try:
             for line in response.response:
-                output.write(line)
+                output.write(line.decode("utf-8"))
 
             return output.getvalue()
         finally:
@@ -40,7 +41,7 @@ class JSONResponseMixin(object):
 
     @staticmethod
     def read_json_response(response):
-        return response.get_json(force=True)
+        return json.loads(JSONResponseMixin.read_response(response))
 
 
 class FlaskTestCase(unittest.TestCase, JSONResponseMixin):
