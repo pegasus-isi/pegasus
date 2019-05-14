@@ -2,7 +2,7 @@
 
 import ast
 import logging
-from six.moves import builtins
+
 from sqlalchemy import and_, not_, or_
 from sqlalchemy.sql.operators import ColumnOperators as operator
 
@@ -33,9 +33,8 @@ UNARY_OPERATORS = {
     # ast.UAdd: operator.pos,
     # ast.USub: operator.neg
 }
-BUILTINS = {
-    "None": builtins.None,
-}
+
+BUILTINS = {"None": None}
 
 
 class InvalidQueryError(Exception):
