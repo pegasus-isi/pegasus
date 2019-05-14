@@ -96,7 +96,7 @@ def compute_stampede_db_url():
         return
 
     md5sum = hashlib.md5()
-    md5sum.update(g.master_db_url)
+    md5sum.update(g.master_db_url.encode("utf-8"))
     m_wf_id = g.m_wf_id
 
     def _get_cache_key(key_suffix):

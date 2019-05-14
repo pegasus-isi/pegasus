@@ -37,7 +37,7 @@ class WorkflowQueries(object):
         if connection_string is None:
             raise ValueError("Connection string is required")
 
-        self._conn_string_csum = hashlib.md5(connection_string).hexdigest()
+        self._conn_string_csum = hashlib.md5(connection_string.encode("utf-8")).hexdigest()
 
         try:
             self.session = connection.connect(connection_string)
@@ -71,7 +71,7 @@ class WorkflowQueries(object):
             [self._conn_string_csum, str(compiled)]
             + [str(params[k]) for k in sorted(params)]
         )
-        return hashlib.md5(cache_key).hexdigest()
+        return hashlib.md5(cache_key.encode("utf-8")).hexdigest()
 
     def _get_count(self, q, use_cache=True, timeout=60):
         cache_key = "%s.count" % self._cache_key_from_query(q)
