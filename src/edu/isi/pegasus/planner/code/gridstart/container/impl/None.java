@@ -56,7 +56,7 @@ public class None extends Abstract {
         
         sb.append( "pegasus_lite_section_start stage_in" ).append( '\n' );
         sb.append( super.inputFilesToPegasusLite(job) );
-        sb.append( super.enableForIntegrity(job) );
+        sb.append( super.enableForIntegrity(job, "") );
         sb.append( "pegasus_lite_section_end stage_in" ).append( '\n' );
         sb.append( "set +e" ).append( '\n' );//PM-701
         sb.append( "job_ec=0" ).append( "\n" );
@@ -86,7 +86,7 @@ public class None extends Abstract {
         
         sb.append( "pegasus_lite_section_start stage_in" ).append( '\n' );
         sb.append( super.inputFilesToPegasusLite(job) );
-        sb.append( super.enableForIntegrity(job) );
+        sb.append( super.enableForIntegrity(job, "") );
         sb.append( "pegasus_lite_section_end stage_in" ).append( '\n' );
         sb.append( "set +e" ).append( '\n' );//PM-701
         sb.append( "job_ec=0" ).append( "\n" );
