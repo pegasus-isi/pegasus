@@ -54,6 +54,7 @@ public class Docker extends Abstract{
      * time in seconds that we wait for before launching docker run command.
      */
     private static final String SLEEP_TIME_FOR_DOCKER_BOOTUP = "30";
+    
      
     
     /**
@@ -239,7 +240,7 @@ public class Docker extends Abstract{
         sb.append( super.inputFilesToPegasusLite(job) );
 
         //PM-1305 the integrity check should happen in the container
-        sb.append( super.enableForIntegrity(job) );
+        sb.append( super.enableForIntegrity(job, Abstract.CONTAINER_MESSAGE_PREFIX) );
         
         appendStderrFragment( sb, Abstract.CONTAINER_MESSAGE_PREFIX, "Launching user task");
         sb.append( "\n" );

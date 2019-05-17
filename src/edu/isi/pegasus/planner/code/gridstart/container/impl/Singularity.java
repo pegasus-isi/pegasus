@@ -209,7 +209,7 @@ public class Singularity extends Abstract{
         sb.append( super.inputFilesToPegasusLite(job) );
 
         //PM-1305 the integrity check should happen in the container
-        sb.append( super.enableForIntegrity(job) );
+        sb.append( super.enableForIntegrity(job, Abstract.CONTAINER_MESSAGE_PREFIX) );
         
         sb.append( "set +e" ).append( '\n' );//PM-701
         sb.append( "job_ec=0" ).append( "\n" );
