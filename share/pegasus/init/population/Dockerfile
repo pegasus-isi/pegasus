@@ -39,7 +39,7 @@ RUN pip3 install numpy
 RUN export CFLAGS=$(gdal-config --cflags) && pip3 install GDAL==$(gdal-config --version | awk -F'[.]' '{print $1"."$2}')
 RUN pip3 install pandas
 RUN pip3 install geopandas
-RUN pip3 install rasterio
+RUN pip3 install rasterio=0.36.0
 RUN pip3 install luigi
 
 # add user
