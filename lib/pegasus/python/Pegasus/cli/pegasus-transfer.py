@@ -681,6 +681,7 @@ class TimedCommand(object):
                                              stdout=self._out_file, stderr=STDOUT, 
                                              preexec_fn=os.setpgrp, cwd=self._cwd)
             self._process.communicate()
+            self._process.communicate()
 
         if self._log_cmd or logger.isEnabledFor(logging.DEBUG):
             logger.info(self._cmd)
@@ -1701,9 +1702,16 @@ class HPSSHandler(TransferHandlerBase):
         # guess the destination directory based on the first LFN
         destination_dir = self._compute_destination_directory(transfers[0])
 
+        files_to_move = {} # dict indexed by LFN and value as src file in hpss tar
         for i, t in enumerate(transfers):
             num_pairs += 1
             src_file = self._get_file_in_tar(t.get_src_path())
+            if src_file != t.lfn:
+                # we need post transfer move as directory needs to be flattened
+                # for example hpss/set2/f.c from tar has to be moved to f.c
+                logger.debug("file %s from tar has to be moved to %s" %(src_file, t.lfn))
+                files_to_move[t.lfn] = src_file
+
             dir = self._compute_destination_directory(t)
             if dir is None or dir != destination_dir:
                 logger.error("Destination directory %s for transfer %s does not match directory %s" %(dir,t.lfn,destination_dir))
@@ -1742,6 +1750,20 @@ class HPSSHandler(TransferHandlerBase):
             # htar always returns success even if a file does not exist in the archive
             # check for destination files to make sure and mark accordingly
             for t in transfers:
+
+                # check if file has to be moved after untarring
+                if t.lfn in files_to_move:
+                    # mv src_file to t.lfn
+                    src_file = os.path.join(destination_dir, files_to_move[t.lfn])
+                    dst_file =  os.path.join(destination_dir, t.lfn)
+                    # account for deep LFN
+                    prepare_local_dir(os.path.dirname(dst_file))
+                    try:
+                        os.rename(src_file, dst_file)
+                    except Exception as err:
+                        # only log. we will catch subsequently in verify_local_file
+                        logger.error("Error renaming %s to %s :%s" %(src_file, dst_file, err))
+
                 if verify_local_file(t.get_dst_path()):
                     self._post_transfer_attempt(t, True, t_start)
                     successful_l.append(t)
