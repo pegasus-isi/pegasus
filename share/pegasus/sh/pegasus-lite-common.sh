@@ -126,6 +126,11 @@ function pegasus_lite_internal_wp_in_env()
         else
             pegasus_lite_log "Warning: Pegasus binaries in $detected_pegasus_bin do not match Pegasus version used for current workflow"
         fi
+    else
+        # catch the case where a user has specified a faulty PEGASUS_HOME
+        if [ "x$PEGASUS_HOME" != "x" ]; then
+            pegasus_lite_log "Warning: PEGASUS_HOME was specified, but did not contain a Pegasus install. Unsetting PEGASUS_HOME."
+        fi
     fi
 
     # back out env changes
