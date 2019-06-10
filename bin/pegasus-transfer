@@ -1549,7 +1549,6 @@ class HPSSHandler(TransferHandlerBase):
         """
 
         user_defined_cred = os.environ["HPSS_CREDENTIAL"] if "HPSS_CREDENTIAL" in os.environ else None
-        user_defined_cred = "/tmp/test"
         default_cred = os.path.join( os.environ["HOME"], ".netrc")
 
         if user_defined_cred:
