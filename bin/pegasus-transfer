@@ -1533,12 +1533,61 @@ class HTTPHandler(TransferHandlerBase):
 
 class HPSSHandler(TransferHandlerBase):
     """
-    pulls from hpss using htar
+    Pulls from HPSS using htar
+    Sets up credential for transfer based on environment variable HPSS_CREDENTIAL.
     """
 
     _name = "HPSSHandler"
     _mkdir_cleanup_protocols = []
     _protocol_map = ["hpss->file", "hpps->file"]
+
+    def _setup_creds(self):
+        """
+        Set up credentials for transfer based on an environment variable HPSS_CREDENTIAL
+        If set copies credential to the default credential location  $HOME/.netrc
+        If  not specified, makes sure the default credential $HOME/.netrc is available
+        """
+
+        user_defined_cred = os.environ["HPSS_CREDENTIAL"] if "HPSS_CREDENTIAL" in os.environ else None
+        user_defined_cred = "/tmp/test"
+        default_cred = os.path.join( os.environ["HOME"], ".netrc")
+
+        if user_defined_cred:
+            # user defined credential exists and is a file
+            check_cred_fs_permissions(user_defined_cred)
+
+            if os.path.exists(default_cred):
+                # first check if they are not the same file
+                src_inode = os.stat(user_defined_cred)[stat.ST_INO]
+                dst_inode = os.stat(default_cred)[stat.ST_INO]
+                if src_inode == dst_inode:
+                    logger.warning( "user supplied credential %s in environment points to the default credential path %s"  % (user_defined_cred,default_cred))
+                    return
+
+            # copy user defined credential to default credential path
+            cmd = "/bin/cp -f '%s' '%s'" \
+                  % (user_defined_cred, default_cred)
+            try:
+                tc = TimedCommand(cmd)
+                tc.run()
+            except RuntimeError as err:
+                raise Exception(err)
+        else:
+            check_cred_fs_permissions(default_cred)
+
+        return
+
+    def check_cred_fs_permissions(path):
+        """
+        Checks to make sure a given credential exists and is protected
+        by the file system permissions.
+        """
+        if not os.path.exists(path):
+            raise Exception("HPSS Credential file %s does not exist" % (path))
+        if oct(os.stat(path).st_mode & 0777) != '0600':
+            logger.warning("%s found to have weak permissions. chmod to 0600."
+                           % (path))
+            os.chmod(path, 0600)
 
     def do_transfers(self, transfers):
 
@@ -1551,6 +1600,9 @@ class HPSSHandler(TransferHandlerBase):
 
         successful_l = []
         failed_l = []
+
+        # PM-1378 make sure credentials are setup
+        self._setup_creds()
 
         # create lists with similar tar file names
         # url pairs
