@@ -856,10 +856,15 @@ public class TransferEngine extends Engine {
         //would be on the output pool
         else {
             //construct the source url depending on whether third party tx
-           String sourceURL = localTransfer ?
-                                sharedScratchGetURL :
-                                "file://" + mSiteStore.getInternalWorkDirectory(stagingSiteHandle,path) +
-                                File.separator + lfn;
+            String sourceURL = sharedScratchGetURL;
+            if( !localTransfer ){
+                // job will be run remotely. So pick file URL path
+                StringBuilder sb = new StringBuilder();
+                sb.append( "file://" ).append( mSiteStore.getInternalWorkDirectory(stagingSiteHandle,path)).
+                   append( File.separator ).append( addOn ).append( File.separator ).append( lfn);
+                sourceURL = sb.toString();
+            }
+                                
 
             ft = new FileTransfer(lfn, job.getID(), pf.getFlags());
             ft.setSize( pf.getSize() );
