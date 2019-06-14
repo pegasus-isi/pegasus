@@ -98,9 +98,8 @@ public class Singularity extends Abstract{
         //assume singularity is available in path
         sb.append( "singularity exec ");
         
-        //exec --pwd /srv --scratch /var/tmp --scratch /tmp --home $PWD:/srv
-        sb.append( "--pwd ").append( CONTAINER_WORKING_DIRECTORY ).append( " ");
-        sb.append( "--home $PWD:" ).append( CONTAINER_WORKING_DIRECTORY ).append( " " );
+        //exec --bind $PWD:/srv
+        sb.append( "--bind $PWD:" ).append( CONTAINER_WORKING_DIRECTORY ).append( " " );
         
         //PM-1298 mount any host directories if specified
         for( Container.MountPoint  mp : c.getMountPoints() ){
@@ -112,7 +111,7 @@ public class Singularity extends Abstract{
         
         //the script that sets up pegasus worker package and execute
         //user application
-        sb.append( "./" ).append( scriptName ).append( " " );
+        sb.append( "/srv/" ).append( scriptName ).append( " " );
         
         sb.append( "\n" );
         
@@ -271,6 +270,7 @@ public class Singularity extends Abstract{
         
         sb.append( "pegasus_lite_version_allow_wp_auto_download=$pegasus_lite_version_allow_wp_auto_download" ).append( "\n" );
         sb.append( "pegasus_lite_work_dir=" ).append( Singularity.CONTAINER_WORKING_DIRECTORY ).append( "\n" );
+        sb.append( "cd /srv" ).append( "  1>&2" ).append( "\n" );
         sb.append( "echo \\$PWD" ).append( "  1>&2" ).append( "\n" );
         
         sb.append( ". pegasus-lite-common.sh" ).append( "\n" );
