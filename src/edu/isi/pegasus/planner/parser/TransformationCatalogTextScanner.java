@@ -151,7 +151,9 @@ public class TransformationCatalogTextScanner {
                 //allow : - / \ and . for transformation names
                 while ( mLookAhead != -1 &&
                         ( Character.isJavaIdentifierPart((char) mLookAhead) || 
-                          mLookAhead == ':'  || mLookAhead == '.' || mLookAhead == '-' ||  mLookAhead == '/' || mLookAhead == '\\') ) {
+                          mLookAhead == ':'  || mLookAhead == '.' || mLookAhead == '-' ||  mLookAhead == '/' || mLookAhead == '\\' ||
+                          mLookAhead == '+') //PM-1377 allow + in tr names
+                         ) {
                     identifier.append( (char) mLookAhead );
                     mLookAhead = mInputReader.read();
                 }
