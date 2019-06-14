@@ -144,6 +144,23 @@ public class Job extends Data implements GraphNodeContent{
      * Denotes a chmod job that sets the xbit on the remote end.
      */
     public static final int DAG_JOB = 11;
+    
+    /**
+     * Generate a dagman compliant value.
+     * Currently dagman disallows . and + in the names
+     * 
+     * @param name
+     * 
+     * @return updated name 
+     */
+    public static String makeDAGManCompliant(String name ){
+        //PM-1262 and PM-1222
+        if( name != null ){
+            name = name.replaceAll( "[\\.\\+]", "_" );
+        }
+        
+        return name;
+    }
 
     /**
      * Returns an appropriate grid gateway job type corresponding to a job type
@@ -1586,11 +1603,10 @@ public class Job extends Data implements GraphNodeContent{
      * @return the staged executable basename
      */
     public static String getStagedExecutableBaseName( String txNamespace, String txName, String txVersion ){
-        //PM-1222
-        if( txVersion != null && txVersion.indexOf( ".") != -1 ){
-            txVersion = txVersion.replaceAll( "\\.", "_" );
-        }
-        return combine( txNamespace, txName, txVersion);
+        //PM-1222 and PM-1377 
+        //used for creating clustered job names
+        return Job.makeDAGManCompliant( 
+                            combine( txNamespace, txName, txVersion) );
     }
 
 
