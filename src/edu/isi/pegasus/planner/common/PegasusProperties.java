@@ -189,7 +189,7 @@ public class PegasusProperties implements Cloneable {
     /**
      * An enum defining the dial for integrity checking
      */
-    public enum INTEGRITY_DIAL{ none, full };
+    public enum INTEGRITY_DIAL{ none, nosymlink, full };
 
     /**
      * The default DAXCallback that is loaded, if none is specified by the user.
@@ -2424,11 +2424,11 @@ public class PegasusProperties implements Cloneable {
      * Returns a boolean indicating whether to enable integrity checking or not.
      *
      *
-     * @return true if integrity dial is set as full or not specified, else false
+     * @return false if set explicitly to none, else true
      *
      */
     public boolean doIntegrityChecking() {
-        return this.getIntegrityDial() == INTEGRITY_DIAL.full;
+        return this.getIntegrityDial() != INTEGRITY_DIAL.none;
     }
     
     /**
