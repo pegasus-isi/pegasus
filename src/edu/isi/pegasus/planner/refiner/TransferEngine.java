@@ -232,9 +232,16 @@ public class TransferEngine extends Engine {
     private final String mOutputSite;
     
     /**
-     * Whether to do integrity checking or not.
+     * The dial for integrity checking
+     */
+    protected PegasusProperties.INTEGRITY_DIAL mIntegrityDial;
+    
+    /**
+     * Whether to do any integrity checking or not.
      */
     protected boolean mDoIntegrityChecking ;
+    
+    
     
     /**
      * Overloaded constructor.
@@ -259,6 +266,8 @@ public class TransferEngine extends Engine {
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mSRMServiceURLToMountPointMap = constructSiteToSRMServerMap( mProps );
         
+        //PM-1375 we check if we need to do any integriy checking or not
+        mIntegrityDial                  = mProps.getIntegrityDial();
         mDoIntegrityChecking            = mProps.doIntegrityChecking();
         
         mDag = reducedDag;
@@ -1463,7 +1472,19 @@ public class TransferEngine extends Engine {
                         symLinkSelectedLocation = false;
                     }
                 }
-                                        
+                    
+                if( symLinkSelectedLocation ){
+                    //PM-1375 for symlink files check if integrity checking should 
+                    //be turned off. So make sure we don't trigger computing of checksums
+                    //for this file
+                    if( mIntegrityDial == PegasusProperties.INTEGRITY_DIAL.nosymlink ){
+                        ft.setForIntegrityChecking( false );
+                        pf.setForIntegrityChecking( false );
+                        ft.setChecksumComputedInWF( false );
+                        pf.setChecksumComputedInWF( false );
+                    }
+                }
+                
                 //get the file to the job's execution pool
                 //this is assuming that there are no directory paths
                 //in the pfn!!!

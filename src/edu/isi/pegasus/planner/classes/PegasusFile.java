@@ -65,6 +65,11 @@ public class PegasusFile extends Data {
     public static final int CLEANUP_BIT_FLAG = 2;
     
     /**
+     * If set, means can be considered for integrity checking  
+     */
+    public static final int INTEGRITY_BIT_FLAG = 3;
+    
+    /**
      * The number of transient flags. This is the length of the BitSet in the
      * flags fields.
      */
@@ -237,6 +242,9 @@ public class PegasusFile extends Data {
         mFlags       = new BitSet(NO_OF_TRANSIENT_FLAGS);
         //by default files are eligible for cleanup
         mFlags.set( PegasusFile.CLEANUP_BIT_FLAG );
+        //PM-1375 all files are eligible for integrity checking
+        //unless dial value results it being turned off
+        mFlags.set( PegasusFile.INTEGRITY_BIT_FLAG );
         
         mLogicalFile = "";
         //by default the type is DATA
@@ -631,6 +639,30 @@ public class PegasusFile extends Data {
         return mFlags.get(CLEANUP_BIT_FLAG);
     }
     
+    /**
+     * Sets the integrity flag denoting the file should be integrity checked
+     */
+    public void setForIntegrityChecking(){
+        mFlags.set( INTEGRITY_BIT_FLAG );
+    }
+    
+    /**
+     * Sets the integrity flag to to the value passed
+     * 
+     * @param value the boolean value to which the flag should be set to.
+     */
+    public void setForIntegrityChecking( boolean value ){
+        mFlags.set( INTEGRITY_BIT_FLAG, value );
+    }
+
+    /**
+     * Returns whether file should be integrity checked or not
+     *
+     * @return true  denoting the file can be cleaned up.
+     */
+    public boolean doIntegrityChecking(){
+        return mFlags.get( INTEGRITY_BIT_FLAG );
+    }
 
     /**
      * Returns the tristate transfer mode that is associated with the file.

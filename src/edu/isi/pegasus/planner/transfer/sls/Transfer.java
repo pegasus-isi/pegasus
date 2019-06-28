@@ -39,7 +39,6 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.classes.Profile;
@@ -166,6 +165,10 @@ public class Transfer   implements SLS {
      */
     protected StagingMapper mStagingMapper;
     
+    /**
+     * The dial for integrity checking
+     */
+    protected PegasusProperties.INTEGRITY_DIAL mIntegrityDial;
 
     /**
      * The default constructor.
@@ -190,6 +193,7 @@ public class Transfer   implements SLS {
         mBypassStagingForInputs = mProps.bypassFirstLevelStagingForInputs();
         mPlannerCache = bag.getHandleToPlannerCache();
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
+        mIntegrityDial = mProps.getIntegrityDial();
     }
 
     /**
@@ -497,6 +501,12 @@ public class Transfer   implements SLS {
                                    PegasusURL.SYMLINK_URL_SCHEME:
                                    PegasusURL.FILE_URL_SCHEME;//default is file URL
 
+            //PM-1375 check the dial to see if we need to check checksum for this
+            //or not, and turn off if nosymlink
+            if( symlink && mIntegrityDial == PegasusProperties.INTEGRITY_DIAL.nosymlink ){
+                pf.setForIntegrityChecking( false );
+            }
+            
             //destination
             url = new StringBuffer();
             url.append( destURLScheme ).append( "//" ).append( destDir ).append( File.separator ).
