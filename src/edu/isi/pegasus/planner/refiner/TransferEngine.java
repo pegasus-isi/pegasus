@@ -1478,6 +1478,8 @@ public class TransferEngine extends Engine {
                     //be turned off. So make sure we don't trigger computing of checksums
                     //for this file
                     if( mIntegrityDial == PegasusProperties.INTEGRITY_DIAL.nosymlink ){
+                        ft.setForIntegrityChecking( false );
+                        pf.setForIntegrityChecking( false );
                         ft.setChecksumComputedInWF( false );
                         pf.setChecksumComputedInWF( false );
                     }
