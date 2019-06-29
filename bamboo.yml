@@ -3341,7 +3341,36 @@ project:
                 - name: tests
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: false
-            - key: T043SYN
+            - key: T043C
+                name: 043-integrity-nonsharedfs-nosymlink
+                description: Integrity checking with nonsharedfs with nosymlink dial
+                tasks:
+                  - !script
+                    description: Cleanup
+                    enabled: true
+                    inlineScript:
+                      interpreter: !scriptInterpreter LEGACY_SH_BAT
+                      scriptBody: "rm -rf pegasus/ test/"
+                  - !script
+                    description: Untar source
+                    inlineScript:
+                      interpreter: !scriptInterpreter LEGACY_SH_BAT
+                      scriptBody: "tar xf tests.tar"
+                  - !script
+                    description: Run Test
+                    inlineScript:
+                      interpreter: !scriptInterpreter LEGACY_SH_BAT
+                      scriptBody: |
+                        export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+                        test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+                requirements:
+                  - capabilityKey: condor
+                    matchType: !exists exists
+                artifactDependencies:
+                  - name: tests
+                miscellaneous:
+                  cleanWorkingDirectoryAfterEachBuild: false
+    - key: T043SYN
               name: 043-integrity-synthetic-with-errors
               tasks:
                 - !script
