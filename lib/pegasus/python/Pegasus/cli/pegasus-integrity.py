@@ -287,6 +287,8 @@ prog_base = os.path.split(sys.argv[0])[1]   # Name of this program
 
 logger = logging.getLogger('my_logger')
 
+multipart_fh = None
+
 count_succeeded = 0
 count_failed = 0
 total_timing = 0.0
@@ -495,7 +497,7 @@ def generate_fullstat_yaml(lfn, pfn):
     return yaml
 
 
-def check_integrity(fname, lfn, meta_data):
+def check_integrity(fname, lfn, meta_data, print_timings):
     '''
     Checks the integrity of a file given a set of metadata
     '''
@@ -524,6 +526,9 @@ def check_integrity(fname, lfn, meta_data):
     ts_end = time.time()
 
     total_timing += ts_end - ts_start
+        
+    if print_timings:
+        check_info_yaml(lfn, fname, current_sha256, expected_sha256, current_sha256 == expected_sha256)
     
     # now compare them
     if current_sha256 != expected_sha256:
@@ -536,23 +541,56 @@ def check_integrity(fname, lfn, meta_data):
     return True
 
 
-def dump_timing_json():
+def multipart_out(s):
+    '''
+    returns a multipart fh if required
+    '''
+    global multipart_fh
+
+    if 'PEGASUS_MULTIPART_DIR' not in os.environ:
+        return 
+
+    if multipart_fh is -1:
+        # previous error
+        return 
+    elif multipart_fh is None:
+        try:
+            multipart_fh = open('%s/%d-integrity' %(os.environ['PEGASUS_MULTIPART_DIR'], int(time.time())), 'w')
+        except Exception as e:
+            logger.error('Unable to write stats to $PEGASUS_MULTIPART_DIR: ' + str(e))
+            multipart_fh = -1
+
+    # ready to write
+    try:
+        multipart_fh.write(s)
+    except:
+        pass
+
+
+
+def check_info_yaml(lfn, pfn, sha256, expected_sha256, success):
+    '''
+    prints stats for monitord
+    '''
+    multipart_out(('  - lfn: "%s"\n'
+                   '    pfn: "%s"\n'
+                   '    sha256: %s\n'
+                   '    success: %s\n') \
+                  %(lfn, pfn, sha256, str(success)))
+    if not success:
+        multipart_out('    sha256_expected: %s\n' %expected_sha256)
+
+
+def dump_summary_yaml():
     '''
     outputs a timing block for Pegasus monitoring
     '''
-    data = {
-        'ts': int(time.time()), 
-        'monitoring_event': 'int.metric', 
-        'payload': [ {
-                'event': 'check',
-                'file_type': 'input',
-                'succeeded': count_succeeded,
-                'failed': count_failed,
-                'duration': '%.3f' % total_timing
-            }
-        ]
-    }
-    print('@@@MONITORING_PAYLOAD - START@@@' +json.dumps(data) + '@@@MONITORING_PAYLOAD - END@@@')
+    multipart_out(('- integrity_summary:\n'
+                   '    succeeded: %d\n'
+                   '    failed: %d\n'
+                   '    duration: %.3f\n') \
+                  %(count_succeeded, count_failed, total_timing))
+
 
 # --- main ----------------------------------------------------------------------------
 
@@ -561,10 +599,10 @@ def main():
     global stats_start
     global stats_end
     global symlink_file_transfer
-    
+
     # dup stderr onto stdout
     sys.stderr = sys.stdout
-    
+
     # Configure command line option parser
     prog_usage = 'usage: %s [options]' % (prog_base)
     parser = optparse.OptionParser(usage=prog_usage)
@@ -639,6 +677,10 @@ def main():
                 print(results)
 
     elif options.verify_files:
+
+        if options.print_timings:
+            multipart_out('- integrity_verification_attempts:\n')
+
         # read all the .meta files in the current working dir
         meta_data = []
         for meta_file in glob.glob('*.meta'):
@@ -656,7 +698,7 @@ def main():
             files = sys.stdin.read().strip()
         else:
             files = options.verify_files
-
+    
         # now check the files    
         for f in str.split(files, ':'):
             # lfn can be encoded in the file name in the format lfn=pfn
@@ -664,13 +706,14 @@ def main():
             pfn = f
             if '=' in f:
                 (lfn, pfn) = str.split(f, '=', 1)
-            results = check_integrity(pfn, lfn, meta_data)
+            results = check_integrity(pfn, lfn, meta_data, options.print_timings)
             if not results:
                 if options.print_timings:
-                    dump_timing_json()
+                    dump_summary_yaml()
                 myexit(1)
+               
         if options.print_timings:
-            dump_timing_json()
+            dump_summary_yaml()
         
     myexit(0)
 

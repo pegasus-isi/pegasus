@@ -280,7 +280,6 @@ function pegasus_lite_setup_work_dir()
                     cp $pegasus_lite_start_dir/*lof $pegasus_lite_work_dir
                 fi
             fi
-
             return 0
         fi
         pegasus_lite_log "  Workdir: not allowed to write to $d"
@@ -316,6 +315,8 @@ function container_env()
             fi
         done
     done
+        
+    export PEGASUS_MULTIPART_DIR=$inside_work_dir/.pegasus.mulitpart.d
 }
 
 function container_init()
@@ -450,6 +451,9 @@ function pegasus_lite_init()
         done
     done
 
+    export PEGASUS_MULTIPART_DIR=`pwd`/.pegasus.mulitpart.d
+    mkdir -p $PEGASUS_MULTIPART_DIR
+
 }
 
 
@@ -477,6 +481,9 @@ function pegasus_lite_unexpected_exit()
     # can be called anytime if the script exists as a result 
     # of for example signals
     rc=$?
+
+    pegasus_include_multipart || true
+
     if [ "x$caught_signal_name" != "x" ]; then
         # if we got a signal, always fail the job
         pegasus_lite_log "Caught $caught_signal_name signal! Aborting..."
@@ -516,6 +523,8 @@ function pegasus_lite_final_exit()
     # can be called anytime if the script exists as a result 
     # of for example signals
     rc=1
+
+    pegasus_include_multipart || true
     
     # the exit code of the lite script should reflect the exit code
     # from the user task    
@@ -537,6 +546,18 @@ function pegasus_lite_final_exit()
     echo "PegasusLite: exitcode $rc" 1>&2
 
     exit $rc
+}
+
+
+function pegasus_include_multipart()
+{
+    if [ "x$PEGASUS_MULTIPART_DIR" != "x" -a -d $PEGASUS_MULTIPART_DIR ]; then
+        for entry in `ls $PEGASUS_MULTIPART_DIR/ | sort`; do
+            echo
+            echo "---------------pegasus-multipart"
+            cat $PEGASUS_MULTIPART_DIR/$entry
+        done
+    fi
 }
 
 
@@ -681,7 +702,7 @@ function pegasus_lite_chirp()
         return
     fi
 
-    pegasus_lite_log "Chirping: $pegasus_lite_chirp_path set_job_attr_delayed $key $value"
+    #pegasus_lite_log "Chirping: $pegasus_lite_chirp_path set_job_attr_delayed $key $value"
     if ! $pegasus_lite_chirp_path set_job_attr_delayed $key $value ; then
         pegasus_lite_log "condor_chirp test failed - disabling chirping"
         pegasus_lite_chirp_path="none"

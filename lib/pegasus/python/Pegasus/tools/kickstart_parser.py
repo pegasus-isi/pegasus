@@ -304,10 +304,17 @@ class YAMLParser( Parser ):
                     # Clustered records are seqexec summary records for clustered jobs
                     # We have a clustered record, parse it!
                     data.append(self.parse_clustered_record(line))
-            elif line[0] not in [" ", "-", "\n"]:
+            elif line.find("---------------pegasus-multipart") == 0 or line[0] not in [" ", "-", "\n"]:
                 # we have a buffer we want to parse
-                if buffer.count("\n") < 10:
+                if buffer.count("\n") < 3:
                     # ignore "short" buffers
+                    buffer = ""
+                    continue
+
+                # FIXME
+                if buffer.find("- invocation:") != 0:
+                    logger.error("I don't know how to handle the following in file %s:\n%s" %(self._kickstart_output_file, buffer))
+                    buffer = ""
                     continue
 
                 # parse the current kickstart record
@@ -319,13 +326,19 @@ class YAMLParser( Parser ):
                 buffer += line
 
         # is there still stuff in the buffer?
-        if buffer.count("\n") > 10:
+        if buffer.count("\n") > 3:
             # ignore "short" buffers
             # parse the current kickstart record
-            payload = self.parse_invocation_record(buffer)
-            if payload:
-                data.append(payload)
-            buffer = ""
+               
+            # FIXME
+            if buffer.find("- invocation:") != 0:
+                logger.error("I don't know how to handle the following in file %s:\n%s" %(self._kickstart_output_file, buffer))
+                buffer = ""
+            else:
+                payload = self.parse_invocation_record(buffer)
+                if payload:
+                    data.append(payload)
+                buffer = ""
 
         return data
 

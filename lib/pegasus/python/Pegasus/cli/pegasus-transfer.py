@@ -3745,6 +3745,9 @@ class Stats:
         self._total_bytes = 0
         self._site_pair_count = {}
         self._site_pair_bytes = {}
+
+        # holder for transfers - this will be printed at the end
+        self._yaml = ""
         
         # integrity timings
         self._integrity_verify_count_succeeded = {}
@@ -3773,7 +3776,6 @@ class Stats:
 
         if local_filename is None:
             self._detected_3rd_party = True
-            return
         else:
             try:
                 s = os.stat(local_filename)
@@ -3782,14 +3784,32 @@ class Stats:
                 self._site_pair_bytes[key] += bytes
             except Exception as err:
                 pass # ignore
-            
+     
+        # add data - we chose to not use PyYAML here as we don't want it as dep
+        data = ('  - src_url: "%s"\n'
+                '    src_label: "%s"\n'
+                '    dst_url: "%s"\n'
+                '    dst_label: "%s"\n'
+                '    success: %s\n'
+                '    start: %.0f\n'
+                '    duration: %.1f\n') \
+               %(transfer.src_url(), transfer.get_src_site_label(),
+                 transfer.dst_url(), transfer.get_dst_site_label(),
+                 str(was_successful), t_start, t_end - t_start)
+        if transfer.lfn:
+            data += '    lfn: "%s"\n' %(transfer.lfn)
+        if bytes > 0:
+            data += '    bytes: %d\n' %(bytes)
+        self._yaml += data
+
         # call out to panorama if asked to do so, but make sure that failures
         # do not stop us
-        try: 
-            p = Panorama()
-            p.one_transfer(transfer, was_successful, t_start, t_end, bytes)
-        except Exception as e:
-            logger.warn("Panorama send failure: " + e)
+        if "KICKSTART_MON_ENDPOINT_URL" in os.environ:
+            try: 
+                p = Panorama()
+                p.one_transfer(transfer, was_successful, t_start, t_end, bytes)
+            except Exception as e:
+                logger.warn("Panorama send failure: " + e)
 
 
     def all_transfers_done(self):
@@ -3823,6 +3843,16 @@ class Stats:
         
 
     def stats_summary(self):
+
+        # stats go to the multipart dir
+        if 'PEGASUS_MULTIPART_DIR' in os.environ:
+            try:
+                fh = open('%s/%d-transfer' %(os.environ['PEGASUS_MULTIPART_DIR'], int(time.time())), 'w')
+                fh.write('- transfer_attempts:\n')
+                fh.write(self._yaml)
+                fh.close()
+            except Exception as e:
+                logger.error('Unable to write stats to $PEGASUS_MULTIPART_DIR: ' + str(e))
         
         # integrity timings
         for linkage in self._integrity_verify_count_succeeded.keys():
@@ -4735,10 +4765,10 @@ def main():
     global stats_start
     global stats_end
     global symlink_file_transfer
-    
+
     # dup stderr onto stdout
     sys.stderr = sys.stdout
-    
+
     # Configure command line option parser
     prog_usage = "usage: %s [options]" % (prog_base)
     parser = optparse.OptionParser(usage=prog_usage)
