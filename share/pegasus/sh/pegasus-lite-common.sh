@@ -317,6 +317,11 @@ function container_env()
     done
         
     export PEGASUS_MULTIPART_DIR=$inside_work_dir/.pegasus.mulitpart.d
+
+    # tmp is provided by Singularity/Docker
+    unset TEMP
+    unset TMP
+    unset TMPDIR
 }
 
 function container_init()
