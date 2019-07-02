@@ -316,6 +316,11 @@ function container_env()
             fi
         done
     done
+
+    # tmp is provided by Singularity/Docker
+    unset TEMP
+    unset TMP
+    unset TMPDIR
 }
 
 function container_init()
