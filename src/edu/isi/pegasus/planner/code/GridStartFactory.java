@@ -360,7 +360,7 @@ public class GridStartFactory {
                 Object profileValue = job.dagmanVariables.get( Dagman.POST_SCRIPT_KEY );
                 postScriptType = ( profileValue == null )?
                                 //get the default associated with gridstart
-                                gridStart.defaultPOSTScript():
+                                gridStart.defaultPOSTScript( job ):
                                 //use the one specified in profiles/properties
                                 ( String ) profileValue;
 

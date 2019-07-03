@@ -556,6 +556,19 @@ public class Distribute implements GridStart {
     public String shortDescribe(){
         return Distribute.SHORT_NAME;
     }
+    
+    /**
+     * Returns the SHORT_NAME for the POSTScript implementation that is used
+     * to be as default with this GridStart implementation.
+     *
+     * @param job
+     * @return the id for the POSTScript.
+     *
+     * @see POSTScript#shortDescribe()
+     */
+    public String defaultPOSTScript(Job job){
+        return this.defaultPOSTScript();
+    }
 
     /**
      * Returns the SHORT_NAME for the POSTScript implementation that is used

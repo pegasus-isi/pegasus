@@ -56,6 +56,7 @@ import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
@@ -628,6 +629,28 @@ public class PegasusLite implements GridStart {
      */
     public String shortDescribe(){
         return PegasusLite.SHORT_NAME;
+    }
+
+    /**
+     * Returns the SHORT_NAME for the POSTScript implementation that is used
+     * to be as default with this GridStart implementation.
+     *
+     * @param job
+     * @return the id for the POSTScript.
+     *
+     * @see POSTScript#shortDescribe()
+     */
+    public String defaultPOSTScript(Job job){
+        String propValue = ( String ) job.vdsNS.get( Pegasus.GRIDSTART_KEY );
+        if( propValue != null && propValue.equals( "PegasusLite.None") ){
+            //PM-1360
+            //no empty postscript but arguments to exitcode to add -r $RETURN
+            job.dagmanVariables.construct( Dagman.POST_SCRIPT_KEY,
+                                                  PegasusExitCode.SHORT_NAME );
+            job.dagmanVariables.construct( Dagman.POST_SCRIPT_ARGUMENTS_KEY,
+                                                  PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE );
+        }
+        return this.defaultPOSTScript();
     }
 
     /**
@@ -1371,7 +1394,7 @@ public class PegasusLite implements GridStart {
      */
     private GridStart getJobGridStart(Job job) {
         GridStart gs = this.mDefaultGridStartImplementation;
-        //PM-1365 see if we want to launch job by another Gridstart instead of Kickstart
+        //PM-1360 see if we want to launch job by another Gridstart instead of Kickstart
         String propValue = ( String ) job.vdsNS.get( Pegasus.GRIDSTART_KEY );
         if( propValue != null && propValue.equals( "PegasusLite.None") ){
             gs = new NoGridStart();

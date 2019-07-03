@@ -172,6 +172,17 @@ public interface  GridStart {
      * @see POSTScript#shortDescribe()
      */
     public String defaultPOSTScript();
+    
+    /**
+     * Returns the SHORT_NAME for the POSTScript implementation that is used
+     * to be as default with this GridStart implementation.
+     *
+     * @param job
+     * @return the id for the POSTScript.
+     *
+     * @see POSTScript#shortDescribe()
+     */
+    public String defaultPOSTScript(Job job);
 
     /**
     * Returns the full path to the submit directory, for the job.
