@@ -3460,7 +3460,7 @@ project:
                 - name: tests
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: false
-    - key: T043SYN
+            - key: T043SYN
               name: 043-integrity-synthetic-with-errors
               tasks:
                 - !script
