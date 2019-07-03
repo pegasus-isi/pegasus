@@ -38,7 +38,7 @@ export PYTHONPATH=`pegasus-config --python`
 pegasus-plan \
     --conf ./pegasusrc \
     --sites condorpool \
-    --staging-site cartman-data \
+    --staging-site condorpool \
     --output-site local \
     --dir dags \
     --dax blackdiamond.dax \
@@ -52,7 +52,6 @@ WORK_DIR=`cat plan.out | grep pegasus-run | sed -E 's/.*pegasus-run[ ]+//'`
 # check if planner did the right things
 #  find . -name "*sh" -exec grep  -A 1 pegasus-integrity {} \; | grep f.a
 for SH in `find $WORK_DIR -name \*.sh`; do
-    echo $SH
     if grep -A 1 pegasus-integrity $SH | grep f.a >/dev/null 2>&1; then
 	echo "Error: $SH has file f.a that is integrity checked"
         exit 1
