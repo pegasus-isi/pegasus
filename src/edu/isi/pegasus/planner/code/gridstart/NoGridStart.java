@@ -688,7 +688,7 @@ public class NoGridStart implements GridStart {
     }
 
     public void useFullPathToGridStarts(boolean fullPath) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        //do nothing
     }
 
 }

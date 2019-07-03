@@ -270,7 +270,7 @@ public class PegasusLite implements GridStart {
     /**
      * Handle to kickstart GridStart implementation.
      */
-    private Kickstart mKickstartGridStartImpl;
+    private GridStart mDefaultGridStartImplementation;
 
    
      /**
@@ -380,11 +380,11 @@ public class PegasusLite implements GridStart {
         mProps.setProperty( PegasusProperties.DISABLE_INVOKE_PROPERTY, "true" );
 
         mEnablingPartOfAggregatedJob = false;
-        mKickstartGridStartImpl = new Kickstart();
-        mKickstartGridStartImpl.initialize( bag, dag );
+        mDefaultGridStartImplementation = new Kickstart();
+        mDefaultGridStartImplementation.initialize( bag, dag );
         //for pegasus lite we dont want ot use the full path, unless
         //a user has specifically catalogued in the transformation catalog
-        mKickstartGridStartImpl.useFullPathToGridStarts( false );
+        mDefaultGridStartImplementation.useFullPathToGridStarts( false );
 
         //for pegasus-lite work, worker node execution is no
         //longer handled in kickstart/no kickstart cases
@@ -573,7 +573,7 @@ public class PegasusLite implements GridStart {
         }
         //for all auxillary jobs let kickstart figure what to do
         else{
-            mKickstartGridStartImpl.enable( job, isGlobusJob );
+            mDefaultGridStartImplementation.enable( job, isGlobusJob );
         }
 
         
@@ -640,7 +640,7 @@ public class PegasusLite implements GridStart {
      * @see Kickstart#defaultPOSTScript() 
      */
     public String defaultPOSTScript(){
-        return this.mKickstartGridStartImpl.defaultPOSTScript();
+        return this.mDefaultGridStartImplementation.defaultPOSTScript();
     }
 
     /**
@@ -810,7 +810,8 @@ public class PegasusLite implements GridStart {
 
         //PM-810 load SLS factory per job
         SLS sls = mSLSFactory.loadInstance(job);
-            
+
+        GridStart jobGridStartImplementation = getJobGridStart( job );
 
         try{
             OutputStream ostream = new FileOutputStream( shellWrapper , true );
@@ -963,11 +964,11 @@ public class PegasusLite implements GridStart {
             mLogger.log( "Setting job " + job.getID() + 
                          " to run via " + containerWrapper.describe() , LogManager.DEBUG_MESSAGE_LEVEL );
             if( job instanceof AggregatedJob ){
-                this.mKickstartGridStartImpl.enable( (AggregatedJob)job, isGlobusJob );
+                jobGridStartImplementation.enable( (AggregatedJob)job, isGlobusJob );
                 sb.append( containerWrapper.wrap( (AggregatedJob)job));
             }
             else{
-                this.mKickstartGridStartImpl.enable( job, isGlobusJob );
+                jobGridStartImplementation.enable( job, isGlobusJob );
                 //sb.append( job.getRemoteExecutable() ).append( job.getArguments() ).append( '\n' );
                 
                 sb.append( containerWrapper.wrap(job));
@@ -1250,7 +1251,7 @@ public class PegasusLite implements GridStart {
     }
 
     public void useFullPathToGridStarts(boolean fullPath) {
-        mKickstartGridStartImpl.useFullPathToGridStarts(fullPath);
+        mDefaultGridStartImplementation.useFullPathToGridStarts(fullPath);
     }
 
     /**
@@ -1359,6 +1360,27 @@ public class PegasusLite implements GridStart {
         
         return;
         
+    }
+
+    /**
+     * Returns the GridStart Implementation to use to launch a job in 
+     * PegasusLite
+     * 
+     * @param job
+     * @return 
+     */
+    private GridStart getJobGridStart(Job job) {
+        GridStart gs = this.mDefaultGridStartImplementation;
+        //PM-1365 see if we want to launch job by another Gridstart instead of Kickstart
+        String propValue = ( String ) job.vdsNS.get( Pegasus.GRIDSTART_KEY );
+        if( propValue != null && propValue.equals( "PegasusLite.None") ){
+            gs = new NoGridStart();
+            gs.initialize( mBag, mDAG );
+            //for pegasus lite we dont want ot use the full path, unless
+            //a user has specifically catalogued in the transformation catalog
+            gs.useFullPathToGridStarts( false );
+        }
+        return gs;
     }
 
 }
