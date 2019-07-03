@@ -2,16 +2,16 @@
 site:
 - arch: "x86_64"
   os: "linux"
-  handle: "cartman-data"
+  handle: "obelix"
   osrelease: ""
   osversion: ""
   glibc: ""
   directory:
   - type: "shared_scratch"
-    path: "${TOPDIR}/staging-site/scratch/${TEST_NAME}"
+    path: "/data/scratch/http/${TEST_NAME}"
     file-server:
-    - protocol: "gsiftp"
-      url: "gsiftp://bamboo.isi.edu/${TOPDIR}/staging-site/scratch/${TEST_NAME}"
+    - protocol: "scp"
+      url: "scp://ptesting@obelix.isi.edu/data/scratch/http/${TEST_NAME}"
       operation: "all"
 - arch: "x86_64"
   os: "linux"
@@ -57,3 +57,5 @@ site:
       PEGASUS_HOME: "${PEGASUS_BIN_DIR}/.."
   - pegasus:
       clusters.num: "1"
+      SSH_PRIVATE_KEY: "/localhome/bamboo/.ssh/workflow_id_rsa"
+
