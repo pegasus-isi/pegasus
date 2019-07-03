@@ -297,7 +297,7 @@ function container_env()
 
     # copy credentials into the pwd as this will become the container directory
     for base in X509_USER_PROXY S3CFG BOTO_CONFIG SSH_PRIVATE_KEY irodsEnvFile GOOGLE_PKCS12 _CONDOR_CREDS ; do
-        for key in `(env | grep -i ^${base}= | sed 's/=.*//') 2>/dev/null`; do
+        for key in `(env | grep -i ^${base} | sed 's/=.*//') 2>/dev/null`; do
             eval val="\$$key"
             if [ "X${val}" = "X" ]; then
                 pegasus_lite_log "Credential $key evaluated to empty"
@@ -316,12 +316,7 @@ function container_env()
         done
     done
         
-    export PEGASUS_MULTIPART_DIR=$inside_work_dir/.pegasus.mulitpart.d
-
-    # tmp is provided by Singularity/Docker
-    unset TEMP
-    unset TMP
-    unset TMPDIR
+    echo "export PEGASUS_MULTIPART_DIR=$inside_work_dir/.pegasus.mulitpart.d"
 }
 
 function container_init()
