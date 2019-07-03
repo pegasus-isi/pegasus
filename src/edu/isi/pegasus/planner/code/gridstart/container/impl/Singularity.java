@@ -103,7 +103,7 @@ public class Singularity extends Abstract{
         
         //PM-1298 mount any host directories if specified
         for( Container.MountPoint  mp : c.getMountPoints() ){
-            sb.append( "-B ").append( mp ).append( " ");
+            sb.append( "--bind ").append( mp ).append( " ");
         }
         
         //we are running directly against image file. no loading
@@ -169,6 +169,13 @@ public class Singularity extends Abstract{
         sb.append( "#!/bin/bash" ).append( "\n" );
         appendStderrFragment( sb, Abstract.CONTAINER_MESSAGE_PREFIX, "Now in pegasus lite container script" );
         sb.append( "set -e" ).append( "\n" );
+        
+        sb.append( "\n" );
+        sb.append( "# tmp dirs are handled by Singularity - don't use the ones from the host\n" );
+        sb.append( "unset TEMP\n" );
+        sb.append( "unset TMP\n" );
+        sb.append( "unset TMPDIR\n" );
+        sb.append( "\n" );
         
         //set the job environment variables explicitly in the -cont.sh file
         sb.append("# setting environment variables for job").append( '\n' );
