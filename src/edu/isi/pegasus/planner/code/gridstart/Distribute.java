@@ -583,6 +583,16 @@ public class Distribute implements GridStart {
         return this.mKickstartGridStartImpl.defaultPOSTScript();
     }
 
+    /**
+     * Indicates whether the GridStart implementation can generate 
+     * checksums of generated output files or not
+     *
+     * @return boolean indicating whether can generate checksums or not
+     */
+    public boolean canGenerateChecksumsOfOutputs(){
+        return this.mKickstartGridStartImpl.canGenerateChecksumsOfOutputs();
+    }
+    
     public void useFullPathToGridStarts(boolean fullPath) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }

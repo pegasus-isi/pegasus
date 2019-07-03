@@ -344,6 +344,16 @@ public class PegasusAWSBatchGS implements GridStart {
     public String defaultPOSTScript(){
         return mPegasusLite.defaultPOSTScript();
     }
+    
+    /**
+     * Indicates whether the GridStart implementation can generate 
+     * checksums of generated output files or not
+     *
+     * @return boolean indicating whether can generate checksums or not
+     */
+    public boolean canGenerateChecksumsOfOutputs(){
+        return this.mPegasusLite.canGenerateChecksumsOfOutputs();
+    }
  
     /**
      * Constructs a condor variable in the condor profile namespace

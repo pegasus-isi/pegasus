@@ -1058,6 +1058,15 @@ public class Kickstart implements GridStart {
     }
 
     /**
+     * Indicates whether the GridStart implementation can generate 
+     * checksums of generated output files or not
+     *
+     * @return boolean indicating whether can generate checksums or not
+     */
+    public boolean canGenerateChecksumsOfOutputs(){
+        return true;
+    }
+    /**
      * Returns a boolean indicating whether we need to set the directory for
      * the job or not.
      *

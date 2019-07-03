@@ -533,6 +533,16 @@ public class NoGridStart implements GridStart {
     public String defaultPOSTScript(){
         return NoPOSTScript.SHORT_NAME;
     }
+    
+    /**
+     * Indicates whether the GridStart implementation can generate 
+     * checksums of generated output files or not
+     *
+     * @return boolean indicating whether can generate checksums or not
+     */
+    public boolean canGenerateChecksumsOfOutputs(){
+        return false;
+    }
 
     /**
      * Returns a boolean indicating whether we need to set the directory for
