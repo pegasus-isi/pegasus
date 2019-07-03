@@ -138,6 +138,10 @@ public class NoGridStart implements GridStart {
      */
     protected boolean mWorkerPackageStagingEnabled;
 
+    /**
+     * Boolean indicating whether to use full path or not
+     */
+    private boolean mUseFullPathToGridStart;
 
     /**
      * Initializes the GridStart implementation.
@@ -165,6 +169,7 @@ public class NoGridStart implements GridStart {
         }
  */
         mEnablingPartOfAggregatedJob = false;
+        mUseFullPathToGridStart = true;
     }
 
     /**
@@ -455,6 +460,14 @@ public class NoGridStart implements GridStart {
         else{
             //the executable paths are correct and
             //point to the executable on the remote pool
+            //PM-1360 if this is being used in PegasusLite, then update the path
+            //figure out job executable
+            path = ( !this.mUseFullPathToGridStart && job.userExecutablesStagedForJob() )?
+                                //the basename of the executable used for pegasus lite
+                                //and staging of executables
+                                "." + File.separator  + job.getStagedExecutableBaseName( ):
+                                //use whatever is set in the executable field
+                                job.executable;
         }
         return path;
     }
@@ -688,7 +701,7 @@ public class NoGridStart implements GridStart {
     }
 
     public void useFullPathToGridStarts(boolean fullPath) {
-        //do nothing
+        mUseFullPathToGridStart = fullPath;
     }
 
 }
