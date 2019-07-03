@@ -2789,6 +2789,7 @@ project:
             - key: SSHFTP030
               name: 030-pegasuslite-sshftp
               description: TODO
+              enabled: false
               tasks:
                 - !script
                   description: Cleanup
