@@ -411,13 +411,26 @@ public class GridStartFactory {
      * @return 
      */
     protected String getGridStartShortName( Job job ){
+        String propValue = ( String ) job.vdsNS.get( Pegasus.GRIDSTART_KEY );
         
+        if( propValue != null ){
+            //PM-1360 extra check to see if PegasusLite . involved
+            if ( propValue.startsWith( "PegasusLite.") ){
+                return "PegasusLite";
+            }
+        }
+        else{
+            propValue = mProps.getGridStart();
+        }
+               
+        
+        /*
         if ( job.vdsNS.containsKey( Pegasus.GRIDSTART_KEY) ){
             //pick the one associated in profiles
             return ( String ) job.vdsNS.get( Pegasus.GRIDSTART_KEY );
         }
-        
         String propValue = mProps.getGridStart();
+        */
         String conf = job.getDataConfiguration();
         if ( conf != null ){
             //pick up on the basis of the data configuration key value
@@ -436,6 +449,7 @@ public class GridStartFactory {
                 return "PegasusLite";
             }
         }
+        
         
         return ( propValue == null ) ? 
                 GridStartFactory.DEFAULT_GRIDSTART_MODE:
