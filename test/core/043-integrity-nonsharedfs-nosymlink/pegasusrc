@@ -5,9 +5,6 @@ pegasus.data.configuration = nonsharedfs
 pegasus.catalog.replica  File
 pegasus.catalog.replica.file ./conf/rc.data
 
-# to trigger symlinking: bypass cartman-data
-pegasus.transfer.bypass.input.staging true
-
 # turn on symlinking of data
 pegasus.transfer.links = true
 
