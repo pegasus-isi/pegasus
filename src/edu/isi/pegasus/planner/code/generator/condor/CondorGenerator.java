@@ -1581,11 +1581,13 @@ public class CondorGenerator extends Abstract {
         key = "copy_to_spool";
         if (cvar.containsKey(key)) {
             //we do not put in the default value
-        } else
+        } else{
             // no sense copying files to spool for globus jobs
             // and is mandatory for the archstart stuff to work
             // for local jobs
-            cvar.construct(key, "false");
+            // disabled because of https://htcondor-wiki.cs.wisc.edu/index.cgi/tktview?tn=6315
+            //cvar.construct(key, "false");
+        }
 
         //construct the log file for the submit job
         key = "log";
