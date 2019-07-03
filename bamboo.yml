@@ -2786,35 +2786,6 @@ project:
                 - name: tests
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: false
-            - key: SSHFTP030
-              name: 030-pegasuslite-sshftp
-              description: TODO
-              tasks:
-                - !script
-                  description: Cleanup
-                  enabled: true
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "rm -rf pegasus/ test/"
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xf tests.tar"
-                - !script
-                  description: Run Test
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
-                      test/scripts/launch-bamboo-test ${bamboo_shortJobName}
-              requirements:
-                - capabilityKey: condor
-                  matchType: !exists exists
-              artifactDependencies:
-                - name: tests
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: false
             - key: RC031MON
               name: 031-montage-condor-io-jdbcrc
               description: TODO
