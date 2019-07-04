@@ -58,6 +58,7 @@ import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
 
 import edu.isi.pegasus.planner.refiner.DeployWorkerPackage;
@@ -337,6 +338,10 @@ public class PegasusLite implements GridStart {
      */
     protected ContainerShellWrapperFactory mContainerWrapperFactory;
 
+    /**
+     * Whether to do any integrity checking or not.
+     */
+    protected boolean mDoIntegrityChecking ;
     
     /**
      * Initializes the GridStart implementation.
@@ -396,6 +401,8 @@ public class PegasusLite implements GridStart {
         mLocalPathToPegasusLiteCommon = getSubmitHostPathToPegasusLiteCommon( );
         mContainerWrapperFactory = new ContainerShellWrapperFactory();
         mContainerWrapperFactory.initialize(bag, dag);
+        
+        mDoIntegrityChecking = mProps.doIntegrityChecking();
         
     }
     
@@ -842,6 +849,11 @@ public class PegasusLite implements GridStart {
         SLS sls = mSLSFactory.loadInstance(job);
 
         GridStart jobGridStartImplementation = getJobGridStart( job );
+        
+        //PM-1360 see if any downstream jobs integrity checking 
+        //should be disabled
+        updateChildrenForIntegrityChecking( job, jobGridStartImplementation );
+        
 
         try{
             OutputStream ostream = new FileOutputStream( shellWrapper , true );
@@ -1411,6 +1423,42 @@ public class PegasusLite implements GridStart {
             gs.useFullPathToGridStarts( false );
         }
         return gs;
+    }
+
+    /**
+     * Updates any child jobs, and turns off integrity checking for the files
+     * 
+     * @param job
+     * @param gridStart 
+     */
+    private void updateChildrenForIntegrityChecking(Job job, GridStart gridStart) {
+        
+        
+        if( !mDoIntegrityChecking  || gridStart.canGenerateChecksumsOfOutputs() ){
+            //if integrity checking is turn off or the job is launched by gridstart
+            //that can generate checksums; then nothing to update
+            return;
+        }
+        
+        mLogger.log( "Disabling integrity checking for children of job " + job.getID(),
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+        //no checksums will be generated for the generated outputs
+        //lets disable integrity checking in the descendant jobs
+        //for those files
+        GraphNode node = job.getGraphNodeReference();
+        Set<PegasusFile>outputs = job.getOutputFiles();
+        for( GraphNode n : node.getChildren() ){
+            Job childJob = (Job) n.getContent();
+            mLogger.log( "\t - Disabling integrity checking for child job " + childJob.getID(),
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+            for( PegasusFile inputFile: childJob.getInputFiles() ){
+                if( outputs.contains( inputFile ) ){
+                    inputFile.setForIntegrityChecking( false );
+                }
+            }
+        
+        }
+     
     }
 
 }
