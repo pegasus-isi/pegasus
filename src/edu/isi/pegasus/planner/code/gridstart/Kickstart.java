@@ -1035,6 +1035,20 @@ public class Kickstart implements GridStart {
      * Returns the SHORT_NAME for the POSTScript implementation that is used
      * to be as default with this GridStart implementation.
      *
+     * @param job
+     * @return the id for the POSTScript.
+     *
+     * @see POSTScript#shortDescribe()
+     */
+    public String defaultPOSTScript(Job job){
+        return this.defaultPOSTScript();
+    }
+
+    
+    /**
+     * Returns the SHORT_NAME for the POSTScript implementation that is used
+     * to be as default with this GridStart implementation.
+     *
      * @return  the identifier for the PegasusExitCode POSTScript implementation.
      *
      *
@@ -1043,6 +1057,15 @@ public class Kickstart implements GridStart {
         return PegasusExitCode.SHORT_NAME;
     }
 
+    /**
+     * Indicates whether the GridStart implementation can generate 
+     * checksums of generated output files or not
+     *
+     * @return boolean indicating whether can generate checksums or not
+     */
+    public boolean canGenerateChecksumsOfOutputs(){
+        return true;
+    }
     /**
      * Returns a boolean indicating whether we need to set the directory for
      * the job or not.
