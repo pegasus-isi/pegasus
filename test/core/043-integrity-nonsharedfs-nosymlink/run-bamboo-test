@@ -13,11 +13,25 @@ PEGASUS_LOCAL_BIN_DIR=$BIN_DIR
 export PEGASUS_LOCAL_BIN_DIR
 
 # determine TEST_NAME to setup site catalog
+if [ X${testdir} = "X" ]; then
+    testdir=`dirname  $0`
+fi
 TESTDIR=$(cd $testdir && pwd)
 TEST_NAME=`basename $TESTDIR`
 export TEST_NAME
 
 
+
+# generate the input file
+fa="file:///lizard/scratch-90-days/${TEST_NAME}/f.a"
+echo "This is sample input to KEG" >$fa
+shacmd=`sha256sum $fa`
+
+sha=`echo $shacmd | sed -E 's/([a-z0-9]*).*/\1/'`
+cat >./conf/rc.data<<EOF
+$fa site="condorpool" checksum.type="sha256" checksum.value="$sha"
+
+EOF
 
 # generate the input file
 echo "This is sample input to KEG" >f.a
