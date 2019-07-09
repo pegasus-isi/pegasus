@@ -23,7 +23,9 @@ export TEST_NAME
 
 
 # generate the input file
-fa="file:///lizard/scratch-90-days/${TEST_NAME}/f.a"
+input_dir=/lizard/scratch-90-days/${TEST_NAME}
+mkdir -p input_dir
+fa="file:///${input_dir}/f.a"
 echo "This is sample input to KEG" >$fa
 shacmd=`sha256sum $fa`
 
