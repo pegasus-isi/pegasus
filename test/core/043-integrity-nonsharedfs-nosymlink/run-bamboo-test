@@ -24,24 +24,14 @@ export TEST_NAME
 
 # generate the input file
 input_dir=/lizard/scratch-90-days/${TEST_NAME}
-mkdir -p input_dir
-fa="file:///${input_dir}/f.a"
+mkdir -p $input_dir
+fa="${input_dir}/f.a"
 echo "This is sample input to KEG" >$fa
 shacmd=`sha256sum $fa`
 
 sha=`echo $shacmd | sed -E 's/([a-z0-9]*).*/\1/'`
 cat >./conf/rc.data<<EOF
-$fa site="condorpool" checksum.type="sha256" checksum.value="$sha"
-
-EOF
-
-# generate the input file
-echo "This is sample input to KEG" >f.a
-shacmd=`sha256sum f.a`
-
-sha=`echo $shacmd | sed -E 's/([a-z0-9]*).*/\1/'`
-cat >./conf/rc.data<<EOF
-f.a file://$TOPDIR/f.a site="condorpool" checksum.type="sha256" checksum.value="$sha"
+f.a file://$fa site="condorpool" checksum.type="sha256" checksum.value="$sha"
 
 EOF
 
