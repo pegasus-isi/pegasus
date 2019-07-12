@@ -57,7 +57,7 @@ c1 = File("f.c1")
 frl.addArguments("-a findrange","-T60","-i",b1,"-o",c1)
 frl.uses(b1, link=Link.INPUT)
 frl.uses(c1, link=Link.OUTPUT, transfer=True, register=True)
-frl.addProfile( Profile("pegasusn", "GridStart", "PegasusLite.None" ))
+frl.addProfile( Profile("pegasus", "GridStart", "PegasusLite.None" ))
 diamond.addJob(frl)
  
 # Add right Findrange job
@@ -67,7 +67,7 @@ c2 = File("f.c2")
 frr.addArguments("-a findrange","-T60","-i",b2,"-o",c2)
 frr.uses(b2, link=Link.INPUT)
 frr.uses(c2, link=Link.OUTPUT, transfer=True, register=True)
-frr.addProfile( Profile("pegasusn", "GridStart", "PegasusLite.None" ))
+frr.addProfile( Profile("pegasus", "GridStart", "PegasusLite.None" ))
 diamond.addJob(frr)
  
 # Add Analyze job
