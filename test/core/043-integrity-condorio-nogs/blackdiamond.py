@@ -56,7 +56,7 @@ frl.metadata("time", "60")
 c1 = File("f.c1")
 frl.addArguments("-a findrange","-T60","-i",b1,"-o",c1)
 frl.uses(b1, link=Link.INPUT)
-frl.uses(c1, link=Link.OUTPUT, transfer=True, register=True)
+frl.uses(c1, link=Link.OUTPUT, transfer=False, register=True)
 frl.addProfile( Profile("pegasus", "GridStart", "PegasusLite.None" ))
 diamond.addJob(frl)
  
