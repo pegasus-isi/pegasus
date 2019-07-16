@@ -3640,7 +3640,7 @@ project:
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: true
+                  enabled: false
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"
