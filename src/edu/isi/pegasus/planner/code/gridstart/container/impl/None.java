@@ -63,7 +63,7 @@ public class None extends Abstract {
         
         sb.append( "pegasus_lite_section_start task_execute" ).append( '\n' );
         appendStderrFragment( sb, Abstract.PEGASUS_LITE_MESSAGE_PREFIX, "Executing the user task" );
-        sb.append( job.getRemoteExecutable() ).append( job.getArguments() ).append( '\n' );
+        sb.append( job.getRemoteExecutable() ).append( " " ).append( job.getArguments() ).append( '\n' );
         //capture exitcode of the job
         sb.append( "job_ec=$?" ).append( "\n" );
         sb.append( "pegasus_lite_section_end task_execute" ).append( '\n' );

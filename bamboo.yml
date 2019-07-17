@@ -3372,7 +3372,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: false
             - key: T043D
-              name: 043-integrity-nonsharedfs-nosymlink
+              name: 043-integrity-condorio-nogs
               description: Integrity checking with PegasusLite and Condorio but some jobs launched without kickstart
               tasks:
                 - !script
@@ -3550,7 +3550,7 @@ project:
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: true
+                  enabled: false
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"

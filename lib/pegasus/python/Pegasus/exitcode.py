@@ -294,7 +294,9 @@ def exitcode(outfile, status=None, rename=True,
     stderr = readfile(errfile)
 
     # Next, check the size of the output file
-    if len(stdout) == 0:
+    # when a job is launched without kickstart stdout can be empty.
+    # signified by non None status
+    if status is None and len(stdout) == 0:
         raise JobFailed("Empty stdout")
 
     # Next, if we have failure messages, then fail if we find one in the

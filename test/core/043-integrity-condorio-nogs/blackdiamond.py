@@ -56,8 +56,8 @@ frl.metadata("time", "60")
 c1 = File("f.c1")
 frl.addArguments("-a findrange","-T60","-i",b1,"-o",c1)
 frl.uses(b1, link=Link.INPUT)
-frl.uses(c1, link=Link.OUTPUT, transfer=True, register=True)
-frl.addProfile( Profile("pegasusn", "GridStart", "PegasusLite.None" ))
+frl.uses(c1, link=Link.OUTPUT, transfer=False, register=True)
+frl.addProfile( Profile("pegasus", "GridStart", "PegasusLite.None" ))
 diamond.addJob(frl)
  
 # Add right Findrange job
@@ -66,8 +66,8 @@ frr.metadata("time", "60")
 c2 = File("f.c2")
 frr.addArguments("-a findrange","-T60","-i",b2,"-o",c2)
 frr.uses(b2, link=Link.INPUT)
-frr.uses(c2, link=Link.OUTPUT, transfer=True, register=True)
-frr.addProfile( Profile("pegasusn", "GridStart", "PegasusLite.None" ))
+frr.uses(c2, link=Link.OUTPUT, transfer=False, register=True)
+frr.addProfile( Profile("pegasus", "GridStart", "PegasusLite.None" ))
 diamond.addJob(frr)
  
 # Add Analyze job
@@ -78,7 +78,7 @@ d.metadata("final_output", "true")
 analyze.addArguments("-a analyze","-T60","-i",c1,c2,"-o",d)
 analyze.uses(c1, link=Link.INPUT)
 analyze.uses(c2, link=Link.INPUT)
-analyze.uses(d, link=Link.OUTPUT, transfer=True, register=True)
+analyze.uses(d, link=Link.OUTPUT, transfer=False, register=True)
 diamond.addJob(analyze)
  
 # Add dependencies
