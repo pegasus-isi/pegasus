@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 strip_quotes() {
     # purpose: strip quotes from a variable value
@@ -32,7 +32,7 @@ fi
 # -R "select[selection_string] order[order_string] rusage[usage_string [, usage_string][|| usage_string] ...] span[span_string] same[same_string] cu[cu_string]] affinity[affinity_string]"
 # eg. -R "select[hname!='host01'] rusage[mem=1024]"
 expert=""
-if [ -n "$REQUEST" ] ; then
+if [ -n "$REQUEST" ]; then
     #### This is required to enter Expert Mode on Summit ####
     expert="expert"
     echo "#BSUB -csm y"
@@ -57,6 +57,10 @@ if [[ -n "$TOTAL_MEMORY" && !(-n "$expert") ]]; then
 fi
 
 if [ -n "$EXTRA_ARGUMENTS" ]; then
-    echo "#BSUB $(strip_quotes $EXTRA_ARGUMENTS)"
+    value=$(strip_quotes "$EXTRA_ARGUMENTS")
+    #Split into pairs
+    value_arr=${value}
+    for i in `seq 0 2 $((${#value_arr[@]}-1))`; do
+        echo "#BSUB ${value_arr[$i]} ${value_arr[$(($i+1))]}"
+    done
 fi
-
