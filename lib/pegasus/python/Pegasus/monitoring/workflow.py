@@ -1312,11 +1312,11 @@ class Workflow:
         kwargs["js__id"] = my_job._job_state_seq
 
         if my_job._input_file is not None:
-            kwargs["stdin.file"] = my_job._input_file
+            kwargs["stdin_file"] = my_job._input_file
         if my_job._output_file is not None:
-            kwargs["stdout.file"] = my_job._output_file
+            kwargs["stdout_file"] = my_job._output_file
         if my_job._error_file is not None:
-            kwargs["stderr.file"] = my_job._error_file
+            kwargs["stderr_file"] = my_job._error_file
         if my_job._sched_id is not None:
             kwargs["sched__id"] = my_job._sched_id
 
