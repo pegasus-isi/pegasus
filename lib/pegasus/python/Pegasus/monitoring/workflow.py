@@ -114,11 +114,7 @@ class Workflow:
         if self._database_disabled == True:
             return
 
-        # PM-1355 add on the fixed attributes
-        if "xwf.id" in kwargs:
-            # PM-1355 first check for xwf.id which is in the events from static.bp files
-            kwargs["xwf__id"]=kwargs.pop("xwf.id")
-            
+#        # PM-1355 add on the fixed attributes
         if event != "xwf.map.subwf_job":
             # we can add fixed attributes for all events other than
             # subworklow mapping event, as for that event the xwf__id
@@ -1078,6 +1074,12 @@ class Workflow:
                         my_new_ts = utils.epochdate(my_keys["ts"])
                         if my_new_ts is not None:
                             my_keys["ts"] = my_new_ts
+
+                    # PM-1355 the static.bp file is netlogger formatted.
+                    # so the id keys have a . before them. Replace them with __
+                    for k, v in my_keys.items():
+                        my_keys[k.replace('.id', '__id')] = my_keys.pop(k)
+
                     # Send event to database
                     self.output_to_db(my_event, my_keys)
             except:
