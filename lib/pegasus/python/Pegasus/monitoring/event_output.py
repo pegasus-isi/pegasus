@@ -424,6 +424,13 @@ def json_encode(event, **kw):
     Adapt bson.dumps() to NetLogger's Log.write() signature.
     """
     kw['event'] = STAMPEDE_NS + event
+
+    # PM-1355 , PM-1365 replace all __ and . with _
+    for k, v in kw.items():
+        new_key = k.replace('.', '_')
+        new_key = new_key.replace("__","_")
+        kw[new_key] = kw.pop(k)
+
     return json.dumps(kw)
 
 def create_wf_event_sink(dest, db_type, enc=None, prefix=STAMPEDE_NS, props=None, multiplexed = False, **kw):
