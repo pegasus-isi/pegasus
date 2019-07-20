@@ -385,7 +385,7 @@ public class GLite extends Abstract {
 
         //add the jobname so that it appears when we do qstat
         addSubExpression( value, "JOBNAME" , id   );
-	    value.append( " && ");
+        value.append( " && ");
 
         /* always have PASSENV to true */
         //value.append( " && ");
@@ -421,7 +421,12 @@ public class GLite extends Abstract {
         /* the globus key maxwalltime is WALLTIME */
         if( job.globusRSL.containsKey( "maxwalltime" ) ){
             value.append( " && " );
-            addSubExpression( value,"WALLTIME" , pbsFormattedTimestamp(   (String)job.globusRSL.get( "maxwalltime" ) ) );
+            if ( batchSystem.equals( "lsf" ) ){
+                addSubExpression( value,"WALLTIME" , lsfFormattedTimestamp( (String)job.globusRSL.get( "maxwalltime" ) ) );
+            }
+            else{
+                addSubExpression( value,"WALLTIME" , pbsFormattedTimestamp( (String)job.globusRSL.get( "maxwalltime" ) ) );
+            }
         }
 
         /* the globus key maxmemory is PER_PROCESS_MEMORY */
@@ -600,7 +605,44 @@ public class GLite extends Abstract {
         return result.toString();
         
     }
+    
+    /**
+     * Converts minutes into hh:dd for LSF formatting purposes
+     * 
+     * @param minutes
+     * 
+     * @return 
+     */
+    public String lsfFormattedTimestamp(String minutes ) {
+        int minutesValue = Integer.parseInt(minutes);
+        
+        if( minutesValue < 0 ){
+            throw new IllegalArgumentException( "Invalid value for minutes provided for conversion " + minutes );
+        }
+        
+        int hours = minutesValue/60;
+        int mins   = minutesValue%60;
+        
+        StringBuffer result = new StringBuffer();
+        if( hours > 0 && hours < 10 ){
+            result.append( "0" ).append( hours );
+            result.append(":");
+        }
+        else if (hours >= 10) {
+            result.append( hours );
+            result.append(":");
+        }
 
+        if( mins < 10 ){
+            result.append( "0" ).append( mins );
+        }
+        else{
+            result.append( mins );
+        }
+        
+        return result.toString();
+        
+    }
 
     /**
      * This translates the Pegasus resource profiles to corresponding globus 
@@ -737,6 +779,32 @@ public class GLite extends Abstract {
             }
 
         }
+        else if ( batchSystem.equals( "lsf" )){
+            //For LSF case on Summit.
+            //IMPORTANT: Not tested anywhere else
+            boolean coresSet = job.globusRSL.containsKey( Globus.COUNT_KEY );
+            boolean nodesSet = job.globusRSL.containsKey( Globus.HOST_COUNT_KEY );
+            boolean ppnSet   = job.globusRSL.containsKey( Globus.XCOUNT_KEY );
+            
+            if( nodesSet ){
+                //then that is what LSF really needs on Summit
+                //ignore other values.
+            }
+            else{
+                //we need to attempt to arrive at a value or specify a default value
+                if( coresSet && ppnSet ){
+                    //set nodes to div, we don't handle the case where cores/ppn is not divisable
+                    int cores = Integer.parseInt((String) job.globusRSL.get( Globus.COUNT_KEY));
+                    int ppn   = Integer.parseInt((String) job.globusRSL.get( Globus.XCOUNT_KEY));
+                    job.globusRSL.construct( Globus.HOST_COUNT_KEY, Integer.toString( cores/ppn ) );
+                }
+                else if( coresSet || ppnSet ){ 
+                    throw new CondorStyleException( "Either cores or ( nodes and ppn) need to be set for LSF submission for job " + job.getID() );
+                    
+                }
+                //default case nothing specified 
+            }
+        }
         else{
             //unreachable code
             throw new CondorStyleException( "Invalid grid resource associated for job " + job.getID() + " " + batchSystem );
@@ -756,6 +824,7 @@ public class GLite extends Abstract {
                 batchSystem.equals( "sge" ) ||
                 batchSystem.equals( "slurm" ) ||
                 batchSystem.equals( "moab" ) ||
+                batchSystem.equals( "lsf" ) ||
                 batchSystem.equals( "cobalt" ) ;
     }
     
