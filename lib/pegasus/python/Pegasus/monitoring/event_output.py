@@ -514,6 +514,8 @@ def create_wf_event_sink(dest, db_type, enc=None, prefix=STAMPEDE_NS, props=None
             if len(virtual_host) == 0:
                 virtual_host = None
 
+        # PM-1355 set encoder to json always for AMQP endpoints
+        enc = "json"
         sink = AMQPEventSink(url.host, url.port, virtual_host=virtual_host, exch=exchange,
                              userid = url.user, password=url.password, ssl=False,
                              encoder=pick_encfn(enc,prefix),props=sink_props, **kw)
