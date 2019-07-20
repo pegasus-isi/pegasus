@@ -281,7 +281,7 @@ class AMQPEventSink(EventSink):
                  userid='guest', password='guest', virtual_host=DEFAULT_AMQP_VIRTUAL_HOST,
                  ssl=False, props=None, connect_timeout=None, **kw):
         super(AMQPEventSink, self).__init__()
-        self._log.info( "Properties received %s", props)
+        self._log.info( "Encoder used %s Properties received %s" %(encoder,props))
         self._encoder = encoder
 
         if connect_timeout is None:
