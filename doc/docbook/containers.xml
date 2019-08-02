@@ -251,6 +251,10 @@ rm -f certificates.tar.gz
               <listitem>
                 <para>.cpio.gz</para>
               </listitem>
+
+              <listitem>
+                <para>.sif</para>
+              </listitem>
             </itemizedlist>
 
             <para>Singularity will fail to run the container if you don't
@@ -278,7 +282,7 @@ rm -f certificates.tar.gz
       transfer of Shifter containers. You can specify a shifter container
       using the shifter url scheme. For example, below is a transformation
       catalog for a namd transformation that is executed in a shifter
-      container. </para>
+      container.</para>
 
       <programlisting>cont namd_image{
      # can be either docker or singularity

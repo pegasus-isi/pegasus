@@ -74,6 +74,11 @@ public class ContainerTest {
     }
     
     @Test
+    public void testSingulartiyHTTPSSif() {
+        this.testSingulartiy( "test", "salmonella_ice", "https://workflow.isi.edu/scratch/rynge/ffh-workflow_latest.sif" );
+    }
+    
+    @Test
     public void testSingulartiyHTTPSPostImg() {
         this.testSingulartiy( "test", "test.simg", "http://pegasus.isi.edu/container.php?rid=/centos-7.simg" );
     }
