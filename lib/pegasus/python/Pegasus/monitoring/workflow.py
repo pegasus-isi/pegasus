@@ -1358,7 +1358,7 @@ class Workflow:
             # If we have both timestamps, let's try to compute the local duration
             try:
                 my_duration = int(my_job._main_job_done) - int(my_job._main_job_start)
-                kwargs["local_dur"] = my_duration
+                kwargs["local__dur"] = my_duration
             except:
                 # Nothing to do, this is not mandatory
                 pass
@@ -1412,9 +1412,9 @@ class Workflow:
             if self._original_submit_dir is not None:
                 kwargs["work_dir"] = self._original_submit_dir
         if my_job._cluster_start_time is not None:
-            kwargs["cluster_start"] = my_job._cluster_start_time
+            kwargs["cluster__start"] = my_job._cluster_start_time
         if my_job._cluster_duration is not None:
-            kwargs["cluster_dur"] = my_job._cluster_duration
+            kwargs["cluster__dur"] = my_job._cluster_duration
 
 
 
