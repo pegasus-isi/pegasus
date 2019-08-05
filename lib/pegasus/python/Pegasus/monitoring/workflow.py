@@ -1448,17 +1448,17 @@ class Workflow:
         if my_job._output_file is not None:
             if my_job._kickstart_parsed or my_job._has_rotated_stdout_err_files:
                 # Only use rotated filename for job with kickstart output
-                kwargs["stdout_file"] = my_job._output_file + ".%03d" % (my_job._job_output_counter)
+                kwargs["stdout__file"] = my_job._output_file + ".%03d" % (my_job._job_output_counter)
             else:
-                kwargs["stdout_file"] = my_job._output_file
+                kwargs["stdout__file"] = my_job._output_file
         else:
-            kwargs["stdout_file"] = ""
+            kwargs["stdout__file"] = ""
         if my_job._error_file is not None:
             if my_job._kickstart_parsed or my_job._has_rotated_stdout_err_files:
                 # Only use rotated filename for job with kickstart output
-                kwargs["stderr_file"] = my_job._error_file + ".%03d" % (my_job._job_output_counter)
+                kwargs["stderr__file"] = my_job._error_file + ".%03d" % (my_job._job_output_counter)
             else:
-                kwargs["stderr_file"] = my_job._error_file
+                kwargs["stderr__file"] = my_job._error_file
         else:
             kwargs["stderr__file"] = ""
         if self._store_stdout_stderr:
@@ -1466,19 +1466,19 @@ class Workflow:
             if my_job._stdout_text is not None:
                 if len(my_job._stdout_text) > MAX_OUTPUT_LENGTH:
                     # Need to truncate to avoid database problems...
-                    kwargs["stdout_text"] = my_job._stdout_text[:MAX_OUTPUT_LENGTH]
+                    kwargs["stdout__text"] = my_job._stdout_text[:MAX_OUTPUT_LENGTH]
                     logger.warning("truncating stdout for job %s" % (my_job._exec_job_id))
                 else:
                     # Put everything in
-                    kwargs["stdout_text"] = my_job._stdout_text
+                    kwargs["stdout__text"] = my_job._stdout_text
             if my_job._stderr_text is not None:
                 if len(my_job._stderr_text) > MAX_OUTPUT_LENGTH:
                     # Need to truncate to avoid database problems...
-                    kwargs["stderr_text"] = my_job._stderr_text[:MAX_OUTPUT_LENGTH]
+                    kwargs["stderr__text"] = my_job._stderr_text[:MAX_OUTPUT_LENGTH]
                     logger.warning("truncating stderr for job %s" % (my_job._exec_job_id))
                 else:
                     # Put everything in
-                    kwargs["stderr_text"] = my_job._stderr_text
+                    kwargs["stderr__text"] = my_job._stderr_text
 
 
 
