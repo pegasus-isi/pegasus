@@ -522,21 +522,21 @@ class Workflow:
         kwargs["xwf__id"] = self._wf_uuid
         # Now include others, if they are defined
         if self._dax_label is not None:
-            kwargs["dax_label"] = self._dax_label
+            kwargs["dax__label"] = self._dax_label
         if self._dax_version is not None:
-            kwargs["dax_version"] = self._dax_version
+            kwargs["dax__version"] = self._dax_version
         if self._dax_index is not None:
-            kwargs["dax_index"] = self._dax_index
+            kwargs["dax__index"] = self._dax_index
         if self._dax_file is not None:
-            kwargs["dax_file"] = self._dax_file
+            kwargs["dax__file"] = self._dax_file
         if self._dag_file_name is not None:
-            kwargs["dag_file_name"] = self._dag_file_name
+            kwargs["dag__file__name"] = self._dag_file_name
         if self._timestamp is not None:
             kwargs["ts"] = self._timestamp
         if self._submit_hostname is not None:
-            kwargs["submit_hostname"] = self._submit_hostname
+            kwargs["submit__hostname"] = self._submit_hostname
         if self._submit_dir is not None:
-            kwargs["submit_dir"] = self._submit_dir
+            kwargs["submit__dir"] = self._submit_dir
         if self._planner_arguments is not None:
             kwargs["argv"] = self._planner_arguments.strip('" \t\n\r')
         if self._user is not None:
@@ -546,11 +546,11 @@ class Workflow:
                 # Only add it if it is not "null"
                 kwargs["grid_dn"] = self._grid_dn
         if self._planner_version is not None:
-            kwargs["planner_version"] = self._planner_version
+            kwargs["planner__version"] = self._planner_version
         if self._parent_workflow_id is not None:
-            kwargs["parent_xwf__id"] = self._parent_workflow_id
+            kwargs["parent__xwf__id"] = self._parent_workflow_id
         if self._root_workflow_id is not None:
-            kwargs["root_xwf__id"] = self._root_workflow_id
+            kwargs["root__xwf__id"] = self._root_workflow_id
 
 
         # Send workflow event to database
@@ -867,7 +867,7 @@ class Workflow:
         if self._root_workflow_id is None:
             self._root_workflow_id = self._wf_uuid
 
-        self._fixed_addon_attrs["root_xwf__id"] = self._root_workflow_id
+        self._fixed_addon_attrs["root__xwf__id"] = self._root_workflow_id
 
         if "dax_label" in wfparams:
             self._dax_label = wfparams["dax_label"]
@@ -908,7 +908,7 @@ class Workflow:
             # No timestamp information is available, just use current time
             self._timestamp = int(time.time())
 
-        self._fixed_addon_attrs["wf_ts"] = self._timestamp
+        self._fixed_addon_attrs["wf__ts"] = self._timestamp
 
         if "submit_dir" in wfparams:
             self._submit_dir = wfparams["submit_dir"]
@@ -921,7 +921,7 @@ class Workflow:
             if "jsd" in wfparams:
                 self._original_submit_dir = os.path.dirname(os.path.normpath(wfparams["jsd"]))
 
-        self._fixed_addon_attrs["submit_dir"] = self._submit_dir
+        self._fixed_addon_attrs["submit__dir"] = self._submit_dir
 
         if "planner_version" in wfparams:
             self._planner_version = wfparams["planner_version"]
@@ -929,18 +929,18 @@ class Workflow:
             # Use "pegasus_version" if "planner_version" not found
             if "pegasus_version" in wfparams:
                 self._planner_version = wfparams["pegasus_version"]
-        self._fixed_addon_attrs["pegasus_version"] = self._planner_version
+        self._fixed_addon_attrs["pegasus__version"] = self._planner_version
 
         if "planner_arguments" in wfparams:
             self._planner_arguments = wfparams["planner_arguments"]
         if "submit_hostname" in wfparams:
             self._submit_hostname = wfparams["submit_hostname"]
-            self._fixed_addon_attrs["submit_hostname"] = self._submit_hostname
+            self._fixed_addon_attrs["submit__hostname"] = self._submit_hostname
         if "user" in wfparams:
             self._user = wfparams["user"]
             # make it clear it is the workflow user.
             # jobs can run under some other user
-            self._fixed_addon_attrs["wf_user"] = self._user
+            self._fixed_addon_attrs["wf__user"] = self._user
         if "grid_dn" in wfparams:
             self._grid_dn = wfparams["grid_dn"]
 
