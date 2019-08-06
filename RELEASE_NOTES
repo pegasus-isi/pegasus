@@ -1,4 +1,83 @@
 ===============================
+Release Notes for Pegasus 4.9.2
+===============================
+
+We are happy to announce the release of Pegasus 4.9.2 . Pegasus 4.9.2
+is a minor bug fix release after Pegasus 4.9.1. This release has
+support for retrieval of datasets from HPSS, and improved events that
+can be sent to AMQP endpoints for users to build custom
+dashboards. Additionally, all PegasusLite jobs will now chirp
+durations of the major steps such as data staging, task execution and
+data stage-out. 
+
+Also there is a new integrity dial (nosymlink) that allows 
+you to disable integrity checking on symlinked files.
+
+New Features and Improvements
+----------------------------
+1)  [PM-1355] – composite records when sending events to AMQP 
+
+2)  [PM-1357] – In lite jobs, chirp durations for stage in, stage out
+    	         of data
+
+3)  [PM-1367] – Support for retrieval from HPSS tape store using
+   	       commands htar and his
+
+4)  [PM-1376] – Add LSF local attributes
+
+5)  [PM-1378] – Handle (copy) HPSS credentials when an environment
+   	       variable is set 
+
+6)  [PM-1337] – pegasus should run monitord-replay at the end of a
+   	      workflow 
+
+7)  [PM-1356] – Replace Google CDN with a different CDN as China block
+    	      	it
+
+8)  [PM-1363] – Condor Configuration MOUNT_UNDER_SCRATCH causes
+    	      	pegasus auxiliary jobs to fail
+
+9)  [PM-1373] – Debian Buster no longer provides openjdk-8-jdk
+
+10) [PM-1374] – make monitord resilient to dagman logging the debug
+    	      	level in dagman.out
+
+
+11) [PM-1375] – Do not run integrity checks on symlinked files 
+
+12) [PM-1365] – remove __ from event keys wherever possible
+
+13) [PM-1381] – Associated planner changes to handle LSF sites
+
+14) [PM-1387] – make the netlogger events consistent with the
+    	        documentation 
+
+
+Bugs Fixed
+----------------------------
+1) [PM-1358] – HTCondor 8.8.0/8.8.1 remaps /tmp, and can break access
+   	       to x509 credentials
+
+2) [PM-1360] – planner drops transfer_(in|out)put_files if NoGridStart
+   	       is used
+
+3) [PM-1364] – Container Name Collision
+
+4) [PM-1366] – Pegasus Cluster Label – Job Env Not Picked Up in
+   	       Containers 
+
+5) [PM-1369] – Chirp related changes causing jobs to get held.
+
+6) [PM-1370] – submit error
+
+7) [PM-1377] – A + in a tc name breaks pegasus-plan
+
+8) [PM-1379] – Stage out job fails – wrong src location
+
+9) [PM-1384] – .sig Singularity images (naming issue?)
+
+
+===============================
 Release Notes for Pegasus 4.9.1
 ===============================
 

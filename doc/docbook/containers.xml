@@ -48,6 +48,67 @@
                 xmlns:xi="http://www.w3.org/2001/XInclude"/>
   </section>
 
+  <section id="containers_osg">
+    <title>Containers on OSG</title>
+
+    <para>OSG has it's own way of handling container deployments for jobs that
+    is hidden from the user and hence Pegasus. They don't allow a user to run
+    an image directly by invoking docker run or singluarity exec. Instead the
+    condor job wrappers deployed on OSG do it for you based on the classads
+    associated with the job. As a result, for a workflow to run on OSG, one
+    cannot specify or describe the container in the transformation catalog.
+    Instead you catalog the executables without a container reference, and the
+    path to the executable is the path in the container you want to use. To
+    specify the container, that needs to be setup you instead specify the
+    following Condor profiles</para>
+
+    <table id="osg_singluarity_condor_profiles">
+      <title>Condor Profiles For Specifying Singularity Container for
+      Jobs</title>
+
+      <tgroup cols="2">
+        <colspec align="center"/>
+
+        <thead>
+          <row>
+            <entry align="center">Key</entry>
+
+            <entry align="center">Value</entry>
+          </row>
+        </thead>
+
+        <tbody>
+          <row>
+            <entry>requirements</entry>
+
+            <entry>HAS_SINGULARITY == True</entry>
+          </row>
+
+          <row>
+            <entry>+SingularityImage</entry>
+
+            <entry>path to singluarity image on CVMFS</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+
+    <para>For example you can specify the following in the site catalog for
+    OSG site</para>
+
+    <programlisting>&lt;!-- this is our execution site --&gt;
+    &lt;site  handle="OSG" arch="x86_64" os="LINUX"&gt;
+        &lt;profile namespace="pegasus" key="style" &gt;condor&lt;/profile&gt;
+        &lt;profile namespace="condor" key="universe" &gt;vanilla&lt;/profile&gt;<emphasis
+        role="bold">
+        &lt;profile namespace="condor" key="requirements" &gt;HAS_SINGULARITY == True&lt;/profile&gt;</emphasis>
+        <emphasis role="bold">&lt;profile namespace="condor" key="+SingularityImage" &gt;"/cvmfs/singularity.opensciencegrid.org/pegasus/osg-el7:latest"&lt;/profile&gt;</emphasis>
+        &lt;profile namespace="condor" key="request_cpus" &gt;1&lt;/profile&gt;
+        &lt;profile namespace="condor" key="request_memory" &gt;1 GB&lt;/profile&gt;
+        &lt;profile namespace="condor" key="request_disk" &gt;1 GB&lt;/profile&gt;
+    &lt;/site&gt;</programlisting>
+  </section>
+
   <section id="container-exec-model">
     <title>Container Execution Model</title>
 

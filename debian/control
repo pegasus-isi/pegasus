@@ -12,7 +12,7 @@ Build-Depends: debhelper (>= 9),
        fop,
        libpq-dev,
        libssl1.0-dev | libssl-dev,
-       openjdk-11-jdk | openjdk-8-jdk,
+       default-jdk,
        perl,
        python,
        python-dev,
@@ -29,7 +29,7 @@ Homepage: https://pegasus.isi.edu
 
 Package: pegasus
 Architecture: any
-Depends: openjdk-11-jre | openjdk-11-jre-headless |openjdk-8-jre | openjdk-8-jre-headless,
+Depends: default-jre | default-jre-headless,
   perl, python, python-openssl, python-yaml, ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
 Recommends: condor
 Description: Workflow management system for HTCondor, Grid, and Clouds
