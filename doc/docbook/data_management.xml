@@ -1506,19 +1506,77 @@ site corbusier {
     <section id="transfer_docker">
       <title>Docker (docker://)</title>
 
-      <para/>
+      <para>Container images can be pulled directly from Docker Hub using Docker URLs.
+          Example: docker://pegasus/osg-el7
+      </para>
+      <para>Only public images are supported at this time.
+      </para>
     </section>
 
     <section id="transfer_file">
       <title>File / Symlink (file:// , symlink://)</title>
+      <para>An endpoint on a local filesystem. Example: file:///etc/hosts
+      </para>
+    </section>
 
-      <para/>
+    <section id="transfer_globus_online">
+      <title>Globus Online (go://)</title>
+
+      <para><ulink url="http://globus.org">Globus Online</ulink> is a transfer
+      service with features such as policy based connection management and
+      automatic failure detection and recovery. Pegasus has limited the
+      support for Globus Online transfers.</para>
+
+      <para>If you want to use Globus Online in your workflow, all data has to
+      be accessible via a Globus Online endpoint. You can not mix Globus
+      Online endpoints with other protocols. For most users, this means they
+      will have to create an endpoint for their submit host and probably
+      modify both the replica catalog and DAX generator so that all URLs in
+      the workflow are for Globus Online endpoints.</para>
+
+      <para>There are two levels of credentials required. One is for the
+      workflow to use the Globus Online API, which is handled by OAuth tokens,
+      provided by Globus Auth service. The second level is for the endpoints,
+      which the user will have to manage via the Globus Online web interface.
+      The required steps are:</para>
+
+      <orderedlist>
+        <listitem>
+          <para>Using <emphasis>pegasus-globus-online-init</emphasis>, provide
+          authorization to Pegasus and retrieve your transfer access tokens.
+          By default Pegasus acquires temporary tokens that expire within a
+          few days. Using --permanent option you can request refreshable
+          tokens that last indefinetely (or until access is revoked).</para>
+        </listitem>
+
+        <listitem>
+          <para>In the Globus Online web interface, under Endpoints, find the
+          endpoints you need for the workflow, and activate them. Note that
+          you should activate them for the whole duration of the workflow or
+          you will have to regularly log in and re-activate the endpoints
+          during workflow execution.</para>
+        </listitem>
+      </orderedlist>
+
+      <para>URLs for Globus Online endpoint data follows the following scheme:
+      <emphasis>go://[endpoint]/[path]</emphasis>. For example, for a user
+      with the Globus Online private endpoint
+      <emphasis>bob#researchdata</emphasis> and a file
+      <emphasis>/home/bsmith/experiment/1.dat</emphasis>, the URL would be:
+      <emphasis>go://bob#researchdata/home/bsmith/experiment/1.dat</emphasis></para>
+
     </section>
 
     <section id="transfer_gridftp">
       <title>GridFTP (gsiftp://)</title>
 
-      <para/>
+      <para>GridFTP transfers are well suppored in Pegasus, using the standard GridFTP
+          URLs. Example: gsiftp://workflow.isi.edu/data/foo.txt
+      </para>
+      
+      <para>Please see the <link linkend="x509_cred">X.509 section</link>
+          for information about credential handling.
+      </para>
 
       <section>
         <title>Preference of GFAL over GUC</title>
@@ -1607,13 +1665,9 @@ exec /usr/bin/ssh $extra_opts $port_str $remote_host $remote_program
     <section id="transfer_google_storage">
       <title>Google Storage (gs://)</title>
 
-      <para/>
-    </section>
-
-    <section id="transfer_http">
-      <title>HTTP (http:// , https://)</title>
-
-      <para/>
+      <para>Please see the <link linkend="gs_cred">Google credential section</link>
+          for information about credential handling.
+      </para>
     </section>
 
     <section id="transfer_hpss">
@@ -1650,6 +1704,16 @@ exec /usr/bin/ssh $extra_opts $port_str $remote_host $remote_program
       linkend="hpss_cred">here</link>.</para>
     </section>
 
+    <section id="transfer_http">
+      <title>HTTP (http:// , https://)</title>
+
+      <para>Data can be pulled over HTTP and HTTPS. Internally, curl and wget are used,
+          and the http_proxy environment variable is honored for the first transfer
+          attempt. Subsequent attempts will be run without http_proxy defined in order
+          to work around faulty cache setups.
+      </para>
+    </section>
+
     <section id="transfer_irods">
       <title>iRODS (irods://)</title>
 
@@ -1670,12 +1734,6 @@ exec /usr/bin/ssh $extra_opts $port_str $remote_host $remote_program
       used by Pegasus.</para>
     </section>
 
-    <section id="transfer_scp">
-      <title>SCP (scp://)</title>
-
-      <para/>
-    </section>
-
     <section id="transfer_stashcp">
       <title>OSG Stash / stashcp (stash://)</title>
 
@@ -1687,52 +1745,14 @@ exec /usr/bin/ssh $extra_opts $port_str $remote_host $remote_program
       User Support Pegasus tutorial</ulink></para>
     </section>
 
-    <section id="transfer_globus_online">
-      <title>Globus Online (go://)</title>
+    <section id="transfer_scp">
+      <title>SCP (scp://)</title>
 
-      <para><ulink url="http://globus.org">Globus Online</ulink> is a transfer
-      service with features such as policy based connection management and
-      automatic failure detection and recovery. Pegasus has limited the
-      support for Globus Online transfers.</para>
-
-      <para>If you want to use Globus Online in your workflow, all data has to
-      be accessible via a Globus Online endpoint. You can not mix Globus
-      Online endpoints with other protocols. For most users, this means they
-      will have to create an endpoint for their submit host and probably
-      modify both the replica catalog and DAX generator so that all URLs in
-      the workflow are for Globus Online endpoints.</para>
-
-      <para>There are two levels of credentials required. One is for the
-      workflow to use the Globus Online API, which is handled by OAuth tokens,
-      provided by Globus Auth service. The second level is for the endpoints,
-      which the user will have to manage via the Globus Online web interface.
-      The required steps are:</para>
-
-      <orderedlist>
-        <listitem>
-          <para>Using <emphasis>pegasus-globus-online-init</emphasis>, provide
-          authorization to Pegasus and retrieve your transfer access tokens.
-          By default Pegasus acquires temporary tokens that expire within a
-          few days. Using --permanent option you can request refreshable
-          tokens that last indefinetely (or until access is revoked).</para>
-        </listitem>
-
-        <listitem>
-          <para>In the Globus Online web interface, under Endpoints, find the
-          endpoints you need for the workflow, and activate them. Note that
-          you should activate them for the whole duration of the workflow or
-          you will have to regularly log in and re-activate the endpoints
-          during workflow execution.</para>
-        </listitem>
-      </orderedlist>
-
-      <para>URLs for Globus Online endpoint data follows the following scheme:
-      <emphasis>go://[endpoint]/[path]</emphasis>. For example, for a user
-      with the Globus Online private endpoint
-      <emphasis>bob#researchdata</emphasis> and a file
-      <emphasis>/home/bsmith/experiment/1.dat</emphasis>, the URL would be:
-      <emphasis>go://bob#researchdata/home/bsmith/experiment/1.dat</emphasis></para>
+      <para>Please see the <link linkend="ssh_cred">SSH credential section</link>
+          for information about credential handling.
+      </para>
     </section>
+
   </section>
 
   <section id="cred_staging">
