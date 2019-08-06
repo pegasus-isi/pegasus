@@ -253,6 +253,25 @@ pegasus.replica.uwm.prefer.stagein.sites                   isi,cit
     before hand. This chapter gives an overview of how transfers of data and
     executable is managed in Pegasus.</para>
 
+    <para>Pegasus picks up files for data transfers based on the transfer
+    attribute associated with the input and output files for the job. These
+    are designated in the DAX as uses elements in the job element. If not
+    specified, the transfer flag defaults to true. So if you don't want all
+    the generated files to be transferred to the output site, you need to
+    explicitly set the transfer flag to false for the file.</para>
+
+    <programlisting>
+  &lt;!-- snippet of job description --&gt;
+  &lt;job id="ID000001" namespace="example" name="mDiffFit" version="1.0"
+       node-label="preprocess" &gt;
+    &lt;argument&gt;-a top -T 6  -i &lt;file name="f.a"/&gt;  -o &lt;file name="f.b1"/&gt;&lt;/argument&gt;
+
+     &lt;uses name="f.a" link="input" transfer="true" register="true"/&gt;
+     &lt;!-- tells Pegasus to not transfer the output file f.b to the output site --&gt;
+     &lt;uses name="f.b" link="output" transfer="false" register="false"  /&gt;
+     ...
+  &lt;/job&gt;</programlisting>
+
     <section id="ref_data_staging_configuration">
       <title>Data Staging Configuration</title>
 
