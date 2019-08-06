@@ -1022,133 +1022,6 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       </section>
     </section>
 
-    <section id="transfer_client">
-      <title>Executable Used for Transfer and Cleanup Jobs</title>
-
-      <para>Pegasus refers to a python script called <emphasis role="bold">
-      pegasus-transfer</emphasis> as the executable in the transfer jobs to
-      transfer the data. pegasus-transfer looks at source and destination url
-      and figures out automatically which underlying client to use.
-      pegasus-transfer is distributed with the PEGASUS and can be found at
-      $PEGASUS_HOME/bin/pegasus-transfer.</para>
-
-      <para>Currently, pegasus-transfer interfaces with the following transfer
-      clients</para>
-
-      <table>
-        <title>Transfer Clients interfaced to by pegasus-transfer</title>
-
-        <tgroup cols="2">
-          <thead>
-            <row>
-              <entry>Transfer Client</entry>
-
-              <entry>Used For</entry>
-            </row>
-          </thead>
-
-          <tbody>
-            <row>
-              <entry>gfal-copy</entry>
-
-              <entry>staging file to and from GridFTP servers</entry>
-            </row>
-
-            <row>
-              <entry>globus-url-copy</entry>
-
-              <entry>staging files to and from GridFTP servers, only if gfal
-              is not detected in the path.</entry>
-            </row>
-
-            <row>
-              <entry>gfal-copy</entry>
-
-              <entry>staging files to and from SRM or XRootD servers</entry>
-            </row>
-
-            <row>
-              <entry>wget</entry>
-
-              <entry>staging files from a HTTP server</entry>
-            </row>
-
-            <row>
-              <entry>cp</entry>
-
-              <entry>copying files from a POSIX filesystem</entry>
-            </row>
-
-            <row>
-              <entry>ln</entry>
-
-              <entry>symlinking against input files</entry>
-            </row>
-
-            <row>
-              <entry>pegasus-s3</entry>
-
-              <entry>staging files to and from S3 buckets in Amazon Web
-              Services</entry>
-            </row>
-
-            <row>
-              <entry>gsutil</entry>
-
-              <entry>staging files to and from Google Storage buckets</entry>
-            </row>
-
-            <row>
-              <entry>scp</entry>
-
-              <entry>staging files using scp</entry>
-            </row>
-
-            <row>
-              <entry>gsiscp</entry>
-
-              <entry>staging files using gsiscp and X509</entry>
-            </row>
-
-            <row>
-              <entry>iget</entry>
-
-              <entry>staging files to and from iRODS servers</entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </table>
-
-      <para>For remote sites, Pegasus constructs the default path to
-      pegasus-transfer on the basis of PEGASUS_HOME env profile specified in
-      the site catalog. To specify a different path to the pegasus-transfer
-      client , users can add an entry into the transformation catalog with
-      fully qualified logical name as <emphasis
-      role="bold">pegasus::pegasus-transfer</emphasis></para>
-
-      <section>
-        <title>Preference of GFAL over GUC</title>
-
-        <para>JGlobus is no longer actively supported and is not in compliance
-        with <ulink
-        url="https://docs.globus.org/security-bulletins/2015-12-strict-mode">RFC
-        2818</ulink> . As a result cleanup jobs using pegasus-gridftp client
-        would fail against the servers supporting the strict mode. We have
-        removed the pegasus-gridftp client and now use gfal clients as
-        globus-url-copy does not support removes. If gfal is not available,
-        globus-url-copy is used for cleanup by writing out zero bytes files
-        instead of removing them.</para>
-
-        <para>If you want to force globus-url-copy to be preferred over GFAL,
-        set the <emphasis role="bold">PEGASUS_FORCE_GUC=1</emphasis>
-        environment variable in the site catalog for the sites you want the
-        preference to be enforced. Please note that we expect globus-url-copy
-        support to be completely removed in future releases of Pegasus due to
-        the end of life of Globus Toolkit (see <ulink
-        url="https://www.globus.org/blog/support-open-source-globus-toolkit-ends-january-2018">announcement</ulink>).</para>
-      </section>
-    </section>
-
     <section>
       <title>Staging of Executables</title>
 
@@ -1429,9 +1302,114 @@ site corbusier {
       checkpoint file before the job is killed by the underlying
       scheduler.</para>
     </section>
+  </section>
+  
+  <section id="transfer_protocols">
+    <title>Supported Transfer Protocols</title>
 
-    <section>
-      <title>Using Amazon S3 as a Staging Site</title>
+    <para>Pegasus refers to a python script called <emphasis role="bold">
+    pegasus-transfer</emphasis> as the executable in the transfer jobs to
+    transfer the data. pegasus-transfer looks at source and destination url
+    and figures out automatically which underlying client to use.
+    pegasus-transfer is distributed with the PEGASUS and can be found at
+    $PEGASUS_HOME/bin/pegasus-transfer.</para>
+
+    <para>Currently, pegasus-transfer interfaces with the following transfer
+    clients</para>
+
+    <table>
+      <title>Transfer Clients interfaced to by pegasus-transfer</title>
+
+      <tgroup cols="2">
+        <thead>
+          <row>
+            <entry>Transfer Client</entry>
+
+            <entry>Used For</entry>
+          </row>
+        </thead>
+
+        <tbody>
+          <row>
+            <entry>gfal-copy</entry>
+
+            <entry>staging file to and from GridFTP servers</entry>
+          </row>
+
+          <row>
+            <entry>globus-url-copy</entry>
+
+            <entry>staging files to and from GridFTP servers, only if gfal
+            is not detected in the path.</entry>
+          </row>
+
+          <row>
+            <entry>gfal-copy</entry>
+
+            <entry>staging files to and from SRM or XRootD servers</entry>
+          </row>
+
+          <row>
+            <entry>wget</entry>
+
+            <entry>staging files from a HTTP server</entry>
+          </row>
+
+          <row>
+            <entry>cp</entry>
+
+            <entry>copying files from a POSIX filesystem</entry>
+          </row>
+
+          <row>
+            <entry>ln</entry>
+
+            <entry>symlinking against input files</entry>
+          </row>
+
+          <row>
+            <entry>pegasus-s3</entry>
+
+            <entry>staging files to and from S3 buckets in Amazon Web
+            Services</entry>
+          </row>
+
+          <row>
+            <entry>gsutil</entry>
+
+            <entry>staging files to and from Google Storage buckets</entry>
+          </row>
+
+          <row>
+            <entry>scp</entry>
+
+            <entry>staging files using scp</entry>
+          </row>
+
+          <row>
+            <entry>gsiscp</entry>
+
+            <entry>staging files using gsiscp and X509</entry>
+          </row>
+
+          <row>
+            <entry>iget</entry>
+
+            <entry>staging files to and from iRODS servers</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+
+    <para>For remote sites, Pegasus constructs the default path to
+    pegasus-transfer on the basis of PEGASUS_HOME env profile specified in
+    the site catalog. To specify a different path to the pegasus-transfer
+    client , users can add an entry into the transformation catalog with
+    fully qualified logical name as <emphasis
+    role="bold">pegasus::pegasus-transfer</emphasis></para>
+
+    <section id="transfer_s3">
+      <title>Amazon S3 (s3://)</title>
 
       <para>Pegasus can be configured to use Amazon S3 as a staging site. In
       this mode, Pegasus transfers workflow inputs from the input site to S3.
@@ -1500,40 +1478,47 @@ site corbusier {
 </programlisting>
     </section>
     
-    <section id="transfer_stashcp">
-      <title>OSG Stash / stashcp data access</title>
-
+    <section id="transfer_docker">
+      <title>Docker (docker://)</title>
       <para>
-        Open Science Grid provides a data service called Stash, and the command
-        line tool <emphasis>stashcp</emphasis> for interacting with the Stash
-        data. An example on how to set up the site catalog and URLs can be
-        found in the <ulink url="https://support.opensciencegrid.org/support/solutions/articles/5000639789-pegasus">OSG User Support Pegasus tutorial</ulink>
       </para>
-
     </section>
 
-    <section id="transfer_irods">
-      <title>iRODS data access</title>
-
-      <para>iRODS can be used as a input data location, a storage site for
-      intermediate data during workflow execution, or a location for final
-      output data. Pegasus uses a URL notation to identify iRODS files.
-      Example:</para>
-
-      <programlisting>irods://some-host.org/path/to/file.txt</programlisting>
-
-      <para>The path to the file is <emphasis role="bold"> relative</emphasis>
-      to the internal iRODS location. In the example above, the path used to
-      refer to the file in iRODS is <emphasis> path/to/file.txt</emphasis> (no
-      leading /).</para>
-
-      <para>See <link linkend="cred_staging">the section on credential
-      staging</link> for information on how to set up an irodsEnv file to be
-      used by Pegasus.</para>
+    <section id="transfer_file">
+      <title>File / Symlink (file:// , symlink://)</title>
+      <para>
+      </para>
     </section>
+    
+    <section id="transfer_gridftp">
+      <title>GridFTP (gsiftp://)</title>
+      <para>
+      </para>
+      <section>
+        <title>Preference of GFAL over GUC</title>
+
+        <para>JGlobus is no longer actively supported and is not in compliance
+        with <ulink
+        url="https://docs.globus.org/security-bulletins/2015-12-strict-mode">RFC
+        2818</ulink> . As a result cleanup jobs using pegasus-gridftp client
+        would fail against the servers supporting the strict mode. We have
+        removed the pegasus-gridftp client and now use gfal clients as
+        globus-url-copy does not support removes. If gfal is not available,
+        globus-url-copy is used for cleanup by writing out zero bytes files
+        instead of removing them.</para>
+
+        <para>If you want to force globus-url-copy to be preferred over GFAL,
+        set the <emphasis role="bold">PEGASUS_FORCE_GUC=1</emphasis>
+        environment variable in the site catalog for the sites you want the
+        preference to be enforced. Please note that we expect globus-url-copy
+        support to be completely removed in future releases of Pegasus due to
+        the end of life of Globus Toolkit (see <ulink
+        url="https://www.globus.org/blog/support-open-source-globus-toolkit-ends-january-2018">announcement</ulink>).</para>
+      </section>
+    </section> 
 
     <section id="transfer_gridftp_ssh">
-      <title>GridFTP over SSH (sshftp)</title>
+      <title>GridFTP over SSH (sshftp://)</title>
 
       <para>Instead of using X.509 based security, newer version of Globus
       GridFTP can be configured to set up transfers over SSH. See the <ulink
@@ -1592,9 +1577,66 @@ exec /usr/bin/ssh $extra_opts $port_str $remote_host $remote_program
       <emphasis>sshftp://username@host/foo/bar.txt</emphasis> in your
       workflows.</para>
     </section>
+    
+    <section id="transfer_google_storage">
+      <title>Google Storage (gs://)</title>
+      <para>
+      </para>
+    </section>
+    
+    <section id="transfer_http">
+      <title>HTTP (http:// , https://)</title>
+      <para>
+      </para>
+    </section>
+    
+    <section id="transfer_hpss">
+      <title>HPSS (hpss://)</title>
+      <para>
+      </para>
+    </section>
+    
+    <section id="transfer_irods">
+      <title>iRODS (irods://)</title>
+
+      <para>iRODS can be used as a input data location, a storage site for
+      intermediate data during workflow execution, or a location for final
+      output data. Pegasus uses a URL notation to identify iRODS files.
+      Example:</para>
+
+      <programlisting>irods://some-host.org/path/to/file.txt</programlisting>
+
+      <para>The path to the file is <emphasis role="bold"> relative</emphasis>
+      to the internal iRODS location. In the example above, the path used to
+      refer to the file in iRODS is <emphasis> path/to/file.txt</emphasis> (no
+      leading /).</para>
+
+      <para>See <link linkend="cred_staging">the section on credential
+      staging</link> for information on how to set up an irodsEnv file to be
+      used by Pegasus.</para>
+    </section>
+
+    <section id="transfer_scp">
+      <title>SCP (scp://)</title>
+      <para>
+      </para>
+    </section>
+    
+    <section id="transfer_stashcp">
+      <title>OSG Stash / stashcp (stash://)</title>
+
+      <para>
+        Open Science Grid provides a data service called Stash, and the command
+        line tool <emphasis>stashcp</emphasis> for interacting with the Stash
+        data. An example on how to set up the site catalog and URLs can be
+        found in the <ulink url="https://support.opensciencegrid.org/support/solutions/articles/5000639789-pegasus">OSG User Support Pegasus tutorial</ulink>
+      </para>
+
+    </section>
+
 
     <section id="transfer_globus_online">
-      <title>Globus Online</title>
+      <title>Globus Online (go://)</title>
 
       <para><ulink url="http://globus.org">Globus Online</ulink> is a transfer
       service with features such as policy based connection management and
@@ -1639,6 +1681,9 @@ exec /usr/bin/ssh $extra_opts $port_str $remote_host $remote_program
       <emphasis>/home/bsmith/experiment/1.dat</emphasis>, the URL would be:
       <emphasis>go://bob#researchdata/home/bsmith/experiment/1.dat</emphasis></para>
     </section>
+    
+    
+  
   </section>
 
   <section id="cred_staging">

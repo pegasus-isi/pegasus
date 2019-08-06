@@ -157,7 +157,7 @@ A JSON formatted file that contains the job description of the jobs
 that need to be executed. A sample job description file is listed in
 the configuration section.
 
-[[CONFIGURATION]]
+[[AWS_CONFIGURATION]]
 Configuration
 -------------
 Each user should specify a configuration file that *pegasus-aws-batch*
