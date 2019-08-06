@@ -3352,6 +3352,11 @@ E.g.<emphasis role="bold">
 
         <listitem>
           <para><link
+          linkend="stampede_job_inst_composite_event">stampede.job_inst.composite</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
           linkend="stampede_job_inst_post_start_event">stampede.job_inst.post.start</link></para>
         </listitem>
 
@@ -4159,6 +4164,130 @@ E.g.<emphasis role="bold">
                 "count of occurences of the events of type name for the job_instance";
             }
 }  // container stampede.job_inst.tag</programlisting></para>
+        </listitem>
+
+        <listitem id="stampede_job_inst_composite_event">
+          <para><emphasis
+          role="bold">stampede.job_inst.composite</emphasis><programlisting>container stampede.job_inst.composite{
+            description
+              "A de-normalized composite event at the job_instance level that captures all the job information. Useful when populating AMQP";
+            uses base-job-inst;
+
+           leaf jobtype {
+              type string;
+              description
+                "Type of job as classified by the planner.";
+            }
+
+           leaf stdin.file {
+              type string;
+              description
+                "Path to file containing standard input of job";
+            }
+
+            leaf stdout.file {
+              type string;
+              mandatory true;
+              description
+                "Path to file containing standard output of job";
+            }
+
+            leaf stdout.text {
+              type string;
+              description
+                "Text containing output of job";
+            }
+
+            leaf stderr.file {
+              type string;
+              mandatory true;
+              description
+                "Path to file containing standard error of job";
+            }
+
+            leaf stderr.text {
+              type string;
+              description
+                "Text containing standard error of job";
+            }
+
+            leaf user {
+              type string;
+              description
+                "Scheduler's name for user";
+            }
+
+            leaf site {
+              type string;
+              mandatory true;
+              description
+                "DAX name for the site at which the job ran";
+            }
+
+            leaf hostname {
+              type inet:host;
+              mandatory true;
+              description "Host name";
+            }
+
+            leaf  {
+              type string;
+              description
+                "Path to working directory";
+            }
+
+            leaf local.dur {
+              type decimal64 {
+                fraction-digits 6;
+              }
+              units "seconds";
+              description
+                "Duration as seen at the local node";
+            }
+
+            leaf status {
+              type int32;
+              mandatory true;
+              description
+                "Execution status. 0=success, -1=failure";
+            }
+
+            leaf exitcode {
+              type int32;
+              mandatory true;
+              description
+                "the exitcode with which the executable exited";
+            }
+
+            leaf multiplier_factor {
+              type int32;
+              mandatory true;
+              description
+                "the multiplier factor for use in statistics";
+            }
+
+            leaf cluster.start {
+              type nl_ts;
+              description
+                "When the enclosing cluster started";
+            }
+
+            leaf cluster.dur {
+              type decimal64 {
+                fraction-digits 6;
+              }
+              units "seconds";
+              description
+                "Duration of enclosing cluster";
+            }
+
+            leaf int_error_count {
+              type int32;
+              mandatory true;
+              description
+                "number of integrity errors encountered";
+            }
+}  // container stampede.job_inst.composite</programlisting></para>
         </listitem>
 
         <listitem id="stampede_inv_start_event">

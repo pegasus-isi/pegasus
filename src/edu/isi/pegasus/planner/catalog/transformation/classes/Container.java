@@ -60,6 +60,7 @@ public class Container implements Cloneable {
             mSupportedSingularityExtensions.add( ".tar.bz2" );
             mSupportedSingularityExtensions.add( ".cpio" );
             mSupportedSingularityExtensions.add( ".cpio.gz" );
+            mSupportedSingularityExtensions.add( ".sif" );
         }
         return mSupportedSingularityExtensions;
     }

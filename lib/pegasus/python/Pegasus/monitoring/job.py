@@ -103,6 +103,21 @@ class Job:
     Class used to keep information needed to track a particular job
     """
 
+    JOBTYPE_TO_DESC = {
+        "0": "unassigned",
+        "1":"compute",
+        "2":"stage-in-tx",
+        "3":"stage-out-tx",
+        "4":"registration",
+        "5":"inter-site-tx",
+        "6":"create-dir",
+        "7":"stage_worker_tx",
+        "8":"cleanup",
+        "9":"chmod",
+        "10":"dax",
+        "11":"dag"
+    }
+
     # Variables that describe a job, as per the Stampede schema
     # Some will be initialized in the init method, others will
     # get their values from the kickstart output file when a job
@@ -160,6 +175,21 @@ class Job:
                                                   #was rotated or not, as is the default case.
         self._deferred_job_end_kwargs = None
         self._integrity_metrics = set()
+
+    def _get_jobtype_desc(self):
+        """
+        Returns a textual description of the job type
+        :return:
+        """
+        desc = "unknown"
+
+        if self._job_type is None:
+            return desc
+
+        if self._job_type in Job.JOBTYPE_TO_DESC:
+            desc = Job.JOBTYPE_TO_DESC[self._job_type]
+
+        return desc
 
     def _add_additional_monitoring_events(self, events):
         """
@@ -758,8 +788,12 @@ class Job:
         if self._host_id:
             kwargs["hostname"] = self._host_id
 
-        if self._job_type:
-            kwargs["jobtype"] = self._job_type
+        job_type = self._get_jobtype_desc()
+        kwargs["jobtype"] = job_type
+
+        # sanity check
+        if job_type == "unknown" or job_type == "unassigned":
+            logger.warning("Job %s has unknown type %s" %(self._exec_job_id,job_type))
 
         #if error_count > 0:
         #  print kwargs
