@@ -81,7 +81,7 @@ Set the chunk size for multipart uploads to X MB. A value of 0
 disables multipart uploads. The default is 10MB, the min is 5MB 
 and the max is 1024MB. This parameter only applies for sites that 
 support multipart uploads (see multipart_uploads configuration
-parameter in the <<CONFIGURATION,*CONFIGURATION*>> section). The 
+parameter in the <<S3_CONFIGURATION,*S3_CONFIGURATION*>> section). The 
 maximum number of chunks is 10,000, so if you are 
 uploading a large file, then the chunk size is automatically 
 increased to enable the upload. Choose smaller values to reduce 
@@ -187,7 +187,7 @@ The same is true of directories when used with the *-r*/*--recursive* option.
 +
 The *put* subcommand can do both chunked and parallel uploads if the service 
 supports multipart uploads (see *multipart_uploads* in the 
-<<CONFIGURATION,*CONFIGURATION*>> section). Currently only Amazon S3 supports 
+<<S3_CONFIGURATION,*S3_CONFIGURATION*>> section). Currently only Amazon S3 supports 
 multipart uploads.
 +
 This subcommand will check the size of the file to make sure it can 
@@ -241,7 +241,7 @@ is true of folders/directories with the *-r*/*--recursive* option.
 +
 The *get* subcommand can do both chunked and parallel downloads if the 
 service supports ranged downloads (see *ranged_downloads* in the
-<<CONFIGURATION,*CONFIGURATION*>> section). Currently only Amazon 
+<<S3_CONFIGURATION,*S3_CONFIGURATION*>> section). Currently only Amazon 
 S3 has good support for ranged downloads. Eucalyptus Walrus supports 
 ranged downloads, but version 1.6 is inconsistent with 
 the Amazon interface and has a bug that causes ranged downloads to hang 
@@ -314,7 +314,7 @@ depending on the context.
 
 The 'USER@SITE' portion is referred to as the ``identity'', and the 'SITE' portion 
 is referred to as the ``site''. Both the identity and the site are looked up in 
-the configuration file (see <<CONFIGURATION,*CONFIGURATION*>>) to determine 
+the configuration file (see <<S3_CONFIGURATION,*S3_CONFIGURATION*>>) to determine 
 the parameters to use when establishing a connection to the service. The site 
 portion is used to find the host and port, whether to use SSL, and other 
 things. The identity portion is used to determine which authentication 
@@ -345,7 +345,7 @@ s3s://ewa@amazon/pegasus-images/data.tar.gz
 -------------------
 
 
-[[CONFIGURATION]]
+[[S3_CONFIGURATION]]
 Configuration
 -------------
 Each user should specify a configuration file that *pegasus-s3* will use to 
