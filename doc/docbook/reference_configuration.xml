@@ -5752,7 +5752,7 @@ Scope       :</emphasis> Properties
                     <term>full</term>
 
                     <listitem>
-                       In this mode, integrity checking happens at 3 levels
+                       In this mode, integrity checking happens at 3 levels 
 
                       <orderedlist>
                         <listitem>
@@ -5777,6 +5777,16 @@ Scope       :</emphasis> Properties
                           corrupted in transit.</para>
                         </listitem>
                       </orderedlist>
+
+                       
+                    </listitem>
+                  </varlistentry>
+
+                  <varlistentry>
+                    <term>nosymlink</term>
+
+                    <listitem>
+                       No integrity checking is performed on input files that are symlinked.  You should consider turning this on, if you think that your input files at rest are at a low risk of data corruption, and want to save on the checksum computation overheads against the shared filesystem. 
                     </listitem>
                   </varlistentry>
 

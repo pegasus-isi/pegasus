@@ -253,6 +253,25 @@ pegasus.replica.uwm.prefer.stagein.sites                   isi,cit
     before hand. This chapter gives an overview of how transfers of data and
     executable is managed in Pegasus.</para>
 
+    <para>Pegasus picks up files for data transfers based on the transfer
+    attribute associated with the input and output files for the job. These
+    are designated in the DAX as uses elements in the job element. If not
+    specified, the transfer flag defaults to true. So if you don't want all
+    the generated files to be transferred to the output site, you need to
+    explicitly set the transfer flag to false for the file.</para>
+
+    <programlisting>
+  &lt;!-- snippet of job description --&gt;
+  &lt;job id="ID000001" namespace="example" name="mDiffFit" version="1.0"
+       node-label="preprocess" &gt;
+    &lt;argument&gt;-a top -T 6  -i &lt;file name="f.a"/&gt;  -o &lt;file name="f.b1"/&gt;&lt;/argument&gt;
+
+     &lt;uses name="f.a" link="input" transfer="true" register="true"/&gt;
+     &lt;!-- tells Pegasus to not transfer the output file f.b to the output site --&gt;
+     &lt;uses name="f.b" link="output" transfer="false" register="false"  /&gt;
+     ...
+  &lt;/job&gt;</programlisting>
+
     <section id="ref_data_staging_configuration">
       <title>Data Staging Configuration</title>
 
@@ -1303,7 +1322,7 @@ site corbusier {
       scheduler.</para>
     </section>
   </section>
-  
+
   <section id="transfer_protocols">
     <title>Supported Transfer Protocols</title>
 
@@ -1339,8 +1358,8 @@ site corbusier {
           <row>
             <entry>globus-url-copy</entry>
 
-            <entry>staging files to and from GridFTP servers, only if gfal
-            is not detected in the path.</entry>
+            <entry>staging files to and from GridFTP servers, only if gfal is
+            not detected in the path.</entry>
           </row>
 
           <row>
@@ -1397,15 +1416,21 @@ site corbusier {
 
             <entry>staging files to and from iRODS servers</entry>
           </row>
+
+          <row>
+            <entry>htar</entry>
+
+            <entry>to retrieve input files from HPSS tape storage.</entry>
+          </row>
         </tbody>
       </tgroup>
     </table>
 
     <para>For remote sites, Pegasus constructs the default path to
-    pegasus-transfer on the basis of PEGASUS_HOME env profile specified in
-    the site catalog. To specify a different path to the pegasus-transfer
-    client , users can add an entry into the transformation catalog with
-    fully qualified logical name as <emphasis
+    pegasus-transfer on the basis of PEGASUS_HOME env profile specified in the
+    site catalog. To specify a different path to the pegasus-transfer client ,
+    users can add an entry into the transformation catalog with fully
+    qualified logical name as <emphasis
     role="bold">pegasus::pegasus-transfer</emphasis></para>
 
     <section id="transfer_s3">
@@ -1477,23 +1502,82 @@ site corbusier {
 &lt;/sitecatalog&gt;
 </programlisting>
     </section>
-    
+
     <section id="transfer_docker">
       <title>Docker (docker://)</title>
-      <para>
+
+      <para>Container images can be pulled directly from Docker Hub using Docker URLs.
+          Example: docker://pegasus/osg-el7
+      </para>
+      <para>Only public images are supported at this time.
       </para>
     </section>
 
     <section id="transfer_file">
       <title>File / Symlink (file:// , symlink://)</title>
-      <para>
+      <para>An endpoint on a local filesystem. Example: file:///etc/hosts
       </para>
     </section>
-    
+
+    <section id="transfer_globus_online">
+      <title>Globus Online (go://)</title>
+
+      <para><ulink url="http://globus.org">Globus Online</ulink> is a transfer
+      service with features such as policy based connection management and
+      automatic failure detection and recovery. Pegasus has limited the
+      support for Globus Online transfers.</para>
+
+      <para>If you want to use Globus Online in your workflow, all data has to
+      be accessible via a Globus Online endpoint. You can not mix Globus
+      Online endpoints with other protocols. For most users, this means they
+      will have to create an endpoint for their submit host and probably
+      modify both the replica catalog and DAX generator so that all URLs in
+      the workflow are for Globus Online endpoints.</para>
+
+      <para>There are two levels of credentials required. One is for the
+      workflow to use the Globus Online API, which is handled by OAuth tokens,
+      provided by Globus Auth service. The second level is for the endpoints,
+      which the user will have to manage via the Globus Online web interface.
+      The required steps are:</para>
+
+      <orderedlist>
+        <listitem>
+          <para>Using <emphasis>pegasus-globus-online-init</emphasis>, provide
+          authorization to Pegasus and retrieve your transfer access tokens.
+          By default Pegasus acquires temporary tokens that expire within a
+          few days. Using --permanent option you can request refreshable
+          tokens that last indefinetely (or until access is revoked).</para>
+        </listitem>
+
+        <listitem>
+          <para>In the Globus Online web interface, under Endpoints, find the
+          endpoints you need for the workflow, and activate them. Note that
+          you should activate them for the whole duration of the workflow or
+          you will have to regularly log in and re-activate the endpoints
+          during workflow execution.</para>
+        </listitem>
+      </orderedlist>
+
+      <para>URLs for Globus Online endpoint data follows the following scheme:
+      <emphasis>go://[endpoint]/[path]</emphasis>. For example, for a user
+      with the Globus Online private endpoint
+      <emphasis>bob#researchdata</emphasis> and a file
+      <emphasis>/home/bsmith/experiment/1.dat</emphasis>, the URL would be:
+      <emphasis>go://bob#researchdata/home/bsmith/experiment/1.dat</emphasis></para>
+
+    </section>
+
     <section id="transfer_gridftp">
       <title>GridFTP (gsiftp://)</title>
-      <para>
+
+      <para>GridFTP transfers are well suppored in Pegasus, using the standard GridFTP
+          URLs. Example: gsiftp://workflow.isi.edu/data/foo.txt
       </para>
+      
+      <para>Please see the <link linkend="x509_cred">X.509 section</link>
+          for information about credential handling.
+      </para>
+
       <section>
         <title>Preference of GFAL over GUC</title>
 
@@ -1515,7 +1599,7 @@ site corbusier {
         the end of life of Globus Toolkit (see <ulink
         url="https://www.globus.org/blog/support-open-source-globus-toolkit-ends-january-2018">announcement</ulink>).</para>
       </section>
-    </section> 
+    </section>
 
     <section id="transfer_gridftp_ssh">
       <title>GridFTP over SSH (sshftp://)</title>
@@ -1577,25 +1661,59 @@ exec /usr/bin/ssh $extra_opts $port_str $remote_host $remote_program
       <emphasis>sshftp://username@host/foo/bar.txt</emphasis> in your
       workflows.</para>
     </section>
-    
+
     <section id="transfer_google_storage">
       <title>Google Storage (gs://)</title>
-      <para>
+
+      <para>Please see the <link linkend="gs_cred">Google credential section</link>
+          for information about credential handling.
       </para>
     </section>
-    
-    <section id="transfer_http">
-      <title>HTTP (http:// , https://)</title>
-      <para>
-      </para>
-    </section>
-    
+
     <section id="transfer_hpss">
       <title>HPSS (hpss://)</title>
-      <para>
+
+      <para>We support retrieval of input files from a tar file in HPSS
+      storage using the htar command. The naming convention to describe the
+      tar file and the file to retrieve fro the tar file is as follows</para>
+
+      <programlisting>hpss:///some-name.tar/path/in-tar-to/file.txt</programlisting>
+
+      <para>For example: for e.g hpss:///test.tar/set1/f.a </para>
+
+      <para>For efficient retrieval pegasus-transfer bin's all the hpss
+      transfers in the .in file </para>
+
+      <itemizedlist>
+        <listitem>
+          <para>fiirst by the tar file and then</para>
+        </listitem>
+
+        <listitem>
+          <para>the destination directory.</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>Binning by destination directory is done to support deep LFN's.
+      Also thing to note is that htar command returns success even if a file
+      does not exist in the archive. pegasus-transfer tries to make sure after
+      the transfer that the destination file exists and is readable.</para>
+
+      <para>HPSS requires a token to generated for retrieval. Information on
+      how to specify the token location can be found <link
+      linkend="hpss_cred">here</link>.</para>
+    </section>
+
+    <section id="transfer_http">
+      <title>HTTP (http:// , https://)</title>
+
+      <para>Data can be pulled over HTTP and HTTPS. Internally, curl and wget are used,
+          and the http_proxy environment variable is honored for the first transfer
+          attempt. Subsequent attempts will be run without http_proxy defined in order
+          to work around faulty cache setups.
       </para>
     </section>
-    
+
     <section id="transfer_irods">
       <title>iRODS (irods://)</title>
 
@@ -1616,74 +1734,25 @@ exec /usr/bin/ssh $extra_opts $port_str $remote_host $remote_program
       used by Pegasus.</para>
     </section>
 
-    <section id="transfer_scp">
-      <title>SCP (scp://)</title>
-      <para>
-      </para>
-    </section>
-    
     <section id="transfer_stashcp">
       <title>OSG Stash / stashcp (stash://)</title>
 
-      <para>
-        Open Science Grid provides a data service called Stash, and the command
-        line tool <emphasis>stashcp</emphasis> for interacting with the Stash
-        data. An example on how to set up the site catalog and URLs can be
-        found in the <ulink url="https://support.opensciencegrid.org/support/solutions/articles/5000639789-pegasus">OSG User Support Pegasus tutorial</ulink>
+      <para>Open Science Grid provides a data service called Stash, and the
+      command line tool <emphasis>stashcp</emphasis> for interacting with the
+      Stash data. An example on how to set up the site catalog and URLs can be
+      found in the <ulink
+      url="https://support.opensciencegrid.org/support/solutions/articles/5000639789-pegasus">OSG
+      User Support Pegasus tutorial</ulink></para>
+    </section>
+
+    <section id="transfer_scp">
+      <title>SCP (scp://)</title>
+
+      <para>Please see the <link linkend="ssh_cred">SSH credential section</link>
+          for information about credential handling.
       </para>
-
     </section>
 
-
-    <section id="transfer_globus_online">
-      <title>Globus Online (go://)</title>
-
-      <para><ulink url="http://globus.org">Globus Online</ulink> is a transfer
-      service with features such as policy based connection management and
-      automatic failure detection and recovery. Pegasus has limited the
-      support for Globus Online transfers.</para>
-
-      <para>If you want to use Globus Online in your workflow, all data has to
-      be accessible via a Globus Online endpoint. You can not mix Globus
-      Online endpoints with other protocols. For most users, this means they
-      will have to create an endpoint for their submit host and probably
-      modify both the replica catalog and DAX generator so that all URLs in
-      the workflow are for Globus Online endpoints.</para>
-
-      <para>There are two levels of credentials required. One is for the
-      workflow to use the Globus Online API, which is handled by OAuth tokens,
-      provided by Globus Auth service. The second level is for the endpoints,
-      which the user will have to manage via the Globus Online web interface.
-      The required steps are:</para>
-
-      <orderedlist>
-        <listitem>
-          <para>Using <emphasis>pegasus-globus-online-init</emphasis>, provide
-          authorization to Pegasus and retrieve your transfer access tokens.
-          By default Pegasus acquires temporary tokens that expire within a
-          few days. Using --permanent option you can request refreshable
-          tokens that last indefinetely (or until access is revoked).</para>
-        </listitem>
-
-        <listitem>
-          <para>In the Globus Online web interface, under Endpoints, find the
-          endpoints you need for the workflow, and activate them. Note that
-          you should activate them for the whole duration of the workflow or
-          you will have to regularly log in and re-activate the endpoints
-          during workflow execution.</para>
-        </listitem>
-      </orderedlist>
-
-      <para>URLs for Globus Online endpoint data follows the following scheme:
-      <emphasis>go://[endpoint]/[path]</emphasis>. For example, for a user
-      with the Globus Online private endpoint
-      <emphasis>bob#researchdata</emphasis> and a file
-      <emphasis>/home/bsmith/experiment/1.dat</emphasis>, the URL would be:
-      <emphasis>go://bob#researchdata/home/bsmith/experiment/1.dat</emphasis></para>
-    </section>
-    
-    
-  
   </section>
 
   <section id="cred_staging">
@@ -1867,6 +1936,19 @@ irodsPassword 'somesecretpassword'</programlisting>
       example:</para>
 
       <programlisting>&lt;profile namespace="pegasus" key="SSH_PRIVATE_KEY" &gt;/home/user/wf/wfsshkey&lt;/profile&gt;</programlisting>
+    </section>
+
+    <section id="hpss_cred">
+      <title>HPSS Tokens</title>
+
+      <para>You need to logon to the remote system and generate a token that
+      is required by htar for retrieving files from HPSS.</para>
+
+      <para>To pass the location of the credential you can associate an
+      environment variable called HPSS_CREDENTIAL with your job. If it is
+      specified, pegasus-transfer copies credential to the default credential
+      location $HOME/.netrc. If not specified, makes sure the default
+      credential $HOME/.netrc is available</para>
     </section>
   </section>
 
@@ -2487,22 +2569,21 @@ File f.d
   <section id="integrity_checking">
     <title>Integrity Checking</title>
 
-    <para>Pegasus adds checksum computation and integrity checking steps
-    for non shared filesystem deployments (nonsharedfs and condorio). The main
+    <para>Pegasus adds checksum computation and integrity checking steps for
+    non shared filesystem deployments (nonsharedfs and condorio). The main
     motivation to do this is to ensure that any data transferred for a
     workflow does not get inadvertently corrupted during data transfers
-    performed during workflow execution, or at rest at a staging site.
-    Users now have options to specify
-    <emphasis role="bold">sha256</emphasis> checksums for the input files in
-    the replica catalog. If checksums are not provided, then Pegasus will
-    compute the checksums for the files during data transfers, and enforce
-    these checksums whenever a PegasusLite job starts on a remote node. The
-    checksums for outputs created by user executable are generated and
-    published by <emphasis>pegasus-kickstart </emphasis>in it's provenance
-    record. The kickstart output is brought back to the submit host as part of
-    the job standard output using in-built HTCondor file transfer mechanisms.
-    The generated checksums are then populated in the Stampede workflow
-    database. </para>
+    performed during workflow execution, or at rest at a staging site. Users
+    now have options to specify <emphasis role="bold">sha256</emphasis>
+    checksums for the input files in the replica catalog. If checksums are not
+    provided, then Pegasus will compute the checksums for the files during
+    data transfers, and enforce these checksums whenever a PegasusLite job
+    starts on a remote node. The checksums for outputs created by user
+    executable are generated and published by <emphasis>pegasus-kickstart
+    </emphasis>in it's provenance record. The kickstart output is brought back
+    to the submit host as part of the job standard output using in-built
+    HTCondor file transfer mechanisms. The generated checksums are then
+    populated in the Stampede workflow database.</para>
 
     <para>PegasusLite wrapped jobs invoke
     <emphasis>pegasus-integrity-check</emphasis> before launching any
@@ -2510,28 +2591,28 @@ File f.d
     checksums on files and compares them against existing checksum values
     passed to it in its input. We also have extended our transfer tool
     pegasus-transfer to invoke pegasus-integrity check after completing the
-    transfer of files. </para>
+    transfer of files.</para>
 
     <para>Integrity checks in the workflows are implemented at 3 levels</para>
 
     <orderedlist>
       <listitem>
         <para>after the input data has been staged to staging server -
-        pegasus-transfer verifies integrity of the staged files. </para>
+        pegasus-transfer verifies integrity of the staged files.</para>
       </listitem>
 
       <listitem>
         <para>before a compute task starts on a remote compute node - This
         ensures that checksums of the data staged in match the checksums
         specified in the input replica catalog or the ones computed when that
-        piece of data was generated as part of previous task in the workflow.
-        </para>
+        piece of data was generated as part of previous task in the
+        workflow.</para>
       </listitem>
 
       <listitem>
         <para>after the workflow output data has been transferred to storage
         servers - This ensures that output data staged to the final location
-        was not corrupted in transit. </para>
+        was not corrupted in transit.</para>
       </listitem>
     </orderedlist>
 
@@ -2568,16 +2649,14 @@ File f.d
         and have not specified the checksums in the replica catalog.</para>
       </listitem>
     </itemizedlist>
-    
+
     <section id="integrity_checking_stats">
-        <title>Integrity Checking Statistics</title>
+      <title>Integrity Checking Statistics</title>
 
-        <para>
-            <link linkend="cli-pegasus-statistics">pegasus-statistics</link> now includes a section containing
-            integrity statistics:
-        </para>
+      <para><link linkend="cli-pegasus-statistics">pegasus-statistics</link>
+      now includes a section containing integrity statistics:</para>
 
-<programlisting>
+      <programlisting>
 	# Integrity Metrics
 	# Number of files for which checksums were compared/computed along with total time spent doing it. 
 	171 files checksums generated with total duration of 8.705 secs
@@ -2589,7 +2668,6 @@ File f.d
 	#       Number of failed jobs where the last job instance had integrity errors.
 	Failures: 0 job failures had integrity errors
 </programlisting>
- 
     </section>
 
     <section id="integrity_checking_dials">
@@ -2600,7 +2678,8 @@ File f.d
 
       <itemizedlist>
         <listitem>
-          <para><emphasis role="bold">none</emphasis> - no integrity checking</para>
+          <para><emphasis role="bold">none</emphasis> - no integrity
+          checking</para>
         </listitem>
 
         <listitem>
@@ -2623,10 +2702,10 @@ File f.d
       checksums along with file locations in the Replica Catalog. Pegasus will
       check against these checksums when a PegasusLite job starts up on a
       remote node. If checksums are not specified, then Pegasus will compute
-      them during the data transfer to the staging site, and use them. </para>
+      them during the data transfer to the staging site, and use them.</para>
 
       <para>To specify checksums in replica catalog, you need to specify two
-      additonal attributes with your LFN -&gt; PFN mapping. </para>
+      additonal attributes with your LFN -&gt; PFN mapping.</para>
 
       <orderedlist>
         <listitem>
