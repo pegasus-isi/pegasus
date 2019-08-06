@@ -6,7 +6,11 @@ We are happy to announce the release of Pegasus 4.9.2 . Pegasus 4.9.2
 is a minor bug fix release after Pegasus 4.9.1. This release has
 support for retrieval of datasets from HPSS, and improved events that
 can be sent to AMQP endpoints for users to build custom
-dashboards. Also there is a new integrity dial (nosymlink) that allows 
+dashboards. Additionally, all PegasusLite jobs will now chirp
+durations of the major steps such as data staging, task execution and
+data stage-out. 
+
+Also there is a new integrity dial (nosymlink) that allows 
 you to disable integrity checking on symlinked files.
 
 New Features and Improvements
