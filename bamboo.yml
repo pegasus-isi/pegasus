@@ -834,6 +834,7 @@ project:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXDJ
               name: Build x86_64 Debian 8
+              enabled: false
               tasks:
                 - !script
                   description: Untar source
@@ -920,7 +921,7 @@ project:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BDEB10
               name: Build x86_64 Debian 10
-              enabled: false
+              enabled: true
               tasks:
                 - !script
                   description: Untar source
