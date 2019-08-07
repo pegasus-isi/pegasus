@@ -60,16 +60,16 @@ public class BlackDiamondDAX {
         fd.setRegister(true);
 
         Executable preprocess = new Executable("pegasus", "preprocess", "4.0");
-        preprocess.setArchitecture(Executable.ARCH.X86_64).setOS(Executable.OS.LINUX).setOSRelease("deb").setOSVersion("8");
+        preprocess.setArchitecture(Executable.ARCH.X86_64).setOS(Executable.OS.LINUX).setOSRelease("rhel").setOSVersion("7");
         preprocess.setInstalled(true);
         preprocess.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "local");
 
         Executable findrange = new Executable("pegasus", "findrange", "4.0");
-        findrange.setArchitecture(Executable.ARCH.X86_64).setOS(Executable.OS.LINUX).setOSRelease("deb").setOSVersion("8");
+        findrange.setArchitecture(Executable.ARCH.X86_64).setOS(Executable.OS.LINUX).setOSRelease("rhel").setOSVersion("7");
         findrange.setInstalled(true);
         findrange.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "local");
 
-        Executable analyze = new Executable("pegasus", "analyze", "4.0").setOSRelease("deb").setOSVersion("8");
+        Executable analyze = new Executable("pegasus", "analyze", "4.0").setOSRelease("rhel").setOSVersion("7");
         analyze.setArchitecture(Executable.ARCH.X86_64).setOS(Executable.OS.LINUX);
         analyze.setInstalled(true);
         analyze.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "local");

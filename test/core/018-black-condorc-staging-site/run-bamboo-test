@@ -24,7 +24,7 @@ $testdir/blackdiamond.py /usr > blackdiamond.dax
 cat > sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site handle="local" arch="x86_64" os="LINUX" osrelease="deb" osversion="8">
+    <site handle="local" arch="x86_64" os="LINUX" osrelease="rhel" osversion="7">
         <head-fs>
             <scratch>
                 <shared>

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" version="3.3" name="inner">
-	<executable name="level1" namespace="cluster" version="1.0"  arch="x86_64" os="linux" osrelease="deb"	osversion="8" >
+	<executable name="level1" namespace="cluster" version="1.0"  arch="x86_64" os="linux" osrelease="rhel"	osversion="7" >
 		<pfn url="file:///bin/sleep" site="local"/>
 	</executable>
-	<executable name="level2" namespace="cluster" version="1.0"  arch="x86_64" os="linux"  osrelease="deb"	osversion="8" >
+	<executable name="level2" namespace="cluster" version="1.0"  arch="x86_64" os="linux"  osrelease="rhel"	osversion="7" >
 		<pfn url="file:///bin/sleep" site="local"/>
 	</executable>
 	<job id="ID0000001" namespace="cluster" name="level1" version="1.0">
