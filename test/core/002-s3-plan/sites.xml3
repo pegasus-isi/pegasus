@@ -33,7 +33,7 @@
 		<profile namespace="condor" key="universe" >vanilla</profile>
 		<profile namespace="condor" key="when_to_transfer_output" >ON_EXIT</profile>
 	</site>
-	<site handle="local" arch="x86_64" os="LINUX" osrelease="deb" osversion="8">
+	<site handle="local" arch="x86_64" os="LINUX" osrelease="rhel" osversion="7">
 		<grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
 		<grid  type="gt2" contact="localhost/jobmanager-condor" scheduler="Condor" jobtype="compute"/>
 		<head-fs>
