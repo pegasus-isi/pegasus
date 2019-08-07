@@ -462,6 +462,7 @@ project:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTCUZ
               name: Ubuntu Zesty Unit Tests
+              enabled: false
               tasks:
                 - !script
                   description: Untar source
@@ -491,6 +492,7 @@ project:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTJUZ
               name: Ubuntu Zesty Java Unit Tests
+              enabled: false
               tasks:
                 - !script
                   description: Untar source
@@ -521,6 +523,7 @@ project:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTPUZ
               name: Ubuntu Zesty Python Unit Tests
+              enabled: false
               tasks:
                 - !script
                   description: Untar source
@@ -1052,6 +1055,7 @@ project:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXUZ
               name: Build x86_64 Ubuntu Zesty
+              enabled: false
               tasks:
                 - !script
                   description: Untar source
@@ -1180,18 +1184,18 @@ project:
                       mv pegasus-r-dax3*.tar.gz $DOWNLOADS/
 
                       # debian
-                      mkdir -p $DOWNLOADS/debian/dists/jessie/main/binary-amd64
-                      cp $DOWNLOADS/pegasus_*deb8_amd64.deb $DOWNLOADS/debian/dists/jessie/main/binary-amd64/
+                      #mkdir -p $DOWNLOADS/debian/dists/jessie/main/binary-amd64
+                      #cp $DOWNLOADS/pegasus_*deb8_amd64.deb $DOWNLOADS/debian/dists/jessie/main/binary-amd64/
                       mkdir -p $DOWNLOADS/debian/dists/stretch/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*deb9_amd64.deb $DOWNLOADS/debian/dists/stretch/main/binary-amd64/
                       mkdir -p $DOWNLOADS/debian/dists/buster/main/binary-amd64
-                      ## cp $DOWNLOADS/pegasus_*deb10_amd64.deb $DOWNLOADS/debian/dists/buster/main/binary-amd64/
+                      cp $DOWNLOADS/pegasus_*deb10_amd64.deb $DOWNLOADS/debian/dists/buster/main/binary-amd64/
 
                       # ubuntu
                       mkdir -p $DOWNLOADS/ubuntu/dists/xenial/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*ubuntu16_amd64.deb $DOWNLOADS/ubuntu/dists/xenial/main/binary-amd64/
-                      mkdir -p $DOWNLOADS/ubuntu/dists/zesty/main/binary-amd64
-                      cp $DOWNLOADS/pegasus_*ubuntu17_amd64.deb $DOWNLOADS/ubuntu/dists/zesty/main/binary-amd64/
+                      #mkdir -p $DOWNLOADS/ubuntu/dists/zesty/main/binary-amd64
+                      #cp $DOWNLOADS/pegasus_*ubuntu17_amd64.deb $DOWNLOADS/ubuntu/dists/zesty/main/binary-amd64/
                       mkdir -p $DOWNLOADS/ubuntu/dists/bionic/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*ubuntu18_amd64.deb $DOWNLOADS/ubuntu/dists/bionic/main/binary-amd64/
 
@@ -1222,21 +1226,21 @@ project:
                       ssh pegasus.isi.edu "mkdir -p /srv/pegasus.isi.edu/public_html/docs/$VERSION"
                       scp -r docs/pegasus-*/share/doc/pegasus/wordpress/* pegasus.isi.edu:/srv/pegasus.isi.edu/public_html/docs/$VERSION/
               artifactDependencies:
-                - name: pegasus-binary-x86_64_deb_8
+                #- name: pegasus-binary-x86_64_deb_8
                 - name: pegasus-binary-x86_64_deb_9
-                ##- name: pegasus-binary-x86_64_deb_10
+                - name: pegasus-binary-x86_64_deb_10
                 - name: pegasus-binary-x86_64_macos
                 - name: pegasus-binary-x86_64_rhel_6
                 - name: pegasus-binary-x86_64_rhel_7
                 - name: pegasus-binary-x86_64_ubuntu_16
-                - name: pegasus-binary-x86_64_ubuntu_17
+                #- name: pegasus-binary-x86_64_ubuntu_17
                 - name: pegasus-binary-x86_64_ubuntu_18
                 #- name: pegasus-binary-x86_rhel_6
-                - name: pegasus-deb-x86_64_deb_8
+                #- name: pegasus-deb-x86_64_deb_8
                 - name: pegasus-deb-x86_64_deb_9
-                ##- name: pegasus-deb-x86_64_deb_10
+                - name: pegasus-deb-x86_64_deb_10
                 - name: pegasus-deb-x86_64_ubuntu_16
-                - name: pegasus-deb-x86_64_ubuntu_17
+                #- name: pegasus-deb-x86_64_ubuntu_17
                 - name: pegasus-deb-x86_64_ubuntu_18
                 - name: pegasus-dmg-x86_64_macos
                 - name: pegasus-doc
@@ -1251,14 +1255,14 @@ project:
                 - name: pegasus-source-versioned-swamp-java
                 - name: pegasus-source-versioned-swamp-python
                 - name: pegasus-srcrpm
-                - name: pegasus-worker-x86_64_deb_8
+                #- name: pegasus-worker-x86_64_deb_8
                 - name: pegasus-worker-x86_64_deb_9
-                ##- name: pegasus-worker-x86_64_deb_10
+                - name: pegasus-worker-x86_64_deb_10
                 - name: pegasus-worker-x86_64_macos
                 - name: pegasus-worker-x86_64_rhel_6
                 - name: pegasus-worker-x86_64_rhel_7
                 - name: pegasus-worker-x86_64_ubuntu_16
-                - name: pegasus-worker-x86_64_ubuntu_17
+                #- name: pegasus-worker-x86_64_ubuntu_17
                 - name: pegasus-worker-x86_64_ubuntu_18
                 #- name: pegasus-worker-x86_rhel_6
               requirements:
