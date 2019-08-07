@@ -13,6 +13,9 @@ data stage-out.
 Also there is a new integrity dial (nosymlink) that allows 
 you to disable integrity checking on symlinked files.
 
+Binary packages for Ubuntu 17 Zesty and Debian 8 Jessie have been
+discontinued. Packages for Debian 10 Buster have been added.
+
 New Features and Improvements
 ----------------------------
 1)  [PM-1355] – composite records when sending events to AMQP 
