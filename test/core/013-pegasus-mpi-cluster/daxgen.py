@@ -20,7 +20,7 @@ def create_job(cluster):
 
 dax = ADAG("mpi-cluster")
 
-sleep = Executable(name="sleep", os="linux", arch="x86_64", osrelease="deb", osversion="8", installed=True)
+sleep = Executable(name="sleep", os="linux", arch="x86_64", osrelease="rhel", osversion="7", installed=True)
 sleep.PFN("file:///bin/sleep", "local")
 dax.addExecutable(sleep)
 

@@ -45,7 +45,7 @@ public interface  GridStart {
     /**
      * The version number associated with this API of GridStart.
      */
-    public static final String VERSION = "1.5";
+    public static final String VERSION = "1.6";
 
     /**
      * The File separator to be used on the submit host.
@@ -133,6 +133,14 @@ public interface  GridStart {
      * @return boolean indicating whether can set the X bit or not.
      */
     public boolean canSetXBit();
+    
+    /**
+     * Indicates whether the GridStart implementation can generate 
+     * checksums of generated output files or not
+     *
+     * @return boolean indicating whether can generate checksums or not
+     */
+    public boolean canGenerateChecksumsOfOutputs();
 
     /**
      * Returns the directory in which the job executes on the worker node.
@@ -172,6 +180,17 @@ public interface  GridStart {
      * @see POSTScript#shortDescribe()
      */
     public String defaultPOSTScript();
+    
+    /**
+     * Returns the SHORT_NAME for the POSTScript implementation that is used
+     * to be as default with this GridStart implementation.
+     *
+     * @param job
+     * @return the id for the POSTScript.
+     *
+     * @see POSTScript#shortDescribe()
+     */
+    public String defaultPOSTScript(Job job);
 
     /**
     * Returns the full path to the submit directory, for the job.

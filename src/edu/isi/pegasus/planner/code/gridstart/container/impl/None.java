@@ -56,14 +56,14 @@ public class None extends Abstract {
         
         sb.append( "pegasus_lite_section_start stage_in" ).append( '\n' );
         sb.append( super.inputFilesToPegasusLite(job) );
-        sb.append( super.enableForIntegrity(job) );
+        sb.append( super.enableForIntegrity(job, "") );
         sb.append( "pegasus_lite_section_end stage_in" ).append( '\n' );
         sb.append( "set +e" ).append( '\n' );//PM-701
         sb.append( "job_ec=0" ).append( "\n" );
         
         sb.append( "pegasus_lite_section_start task_execute" ).append( '\n' );
         appendStderrFragment( sb, Abstract.PEGASUS_LITE_MESSAGE_PREFIX, "Executing the user task" );
-        sb.append( job.getRemoteExecutable() ).append( job.getArguments() ).append( '\n' );
+        sb.append( job.getRemoteExecutable() ).append( " " ).append( job.getArguments() ).append( '\n' );
         //capture exitcode of the job
         sb.append( "job_ec=$?" ).append( "\n" );
         sb.append( "pegasus_lite_section_end task_execute" ).append( '\n' );
@@ -86,7 +86,7 @@ public class None extends Abstract {
         
         sb.append( "pegasus_lite_section_start stage_in" ).append( '\n' );
         sb.append( super.inputFilesToPegasusLite(job) );
-        sb.append( super.enableForIntegrity(job) );
+        sb.append( super.enableForIntegrity(job, "") );
         sb.append( "pegasus_lite_section_end stage_in" ).append( '\n' );
         sb.append( "set +e" ).append( '\n' );//PM-701
         sb.append( "job_ec=0" ).append( "\n" );

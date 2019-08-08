@@ -232,9 +232,16 @@ public class TransferEngine extends Engine {
     private final String mOutputSite;
     
     /**
-     * Whether to do integrity checking or not.
+     * The dial for integrity checking
+     */
+    protected PegasusProperties.INTEGRITY_DIAL mIntegrityDial;
+    
+    /**
+     * Whether to do any integrity checking or not.
      */
     protected boolean mDoIntegrityChecking ;
+    
+    
     
     /**
      * Overloaded constructor.
@@ -259,6 +266,8 @@ public class TransferEngine extends Engine {
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mSRMServiceURLToMountPointMap = constructSiteToSRMServerMap( mProps );
         
+        //PM-1375 we check if we need to do any integriy checking or not
+        mIntegrityDial                  = mProps.getIntegrityDial();
         mDoIntegrityChecking            = mProps.doIntegrityChecking();
         
         mDag = reducedDag;
@@ -856,10 +865,15 @@ public class TransferEngine extends Engine {
         //would be on the output pool
         else {
             //construct the source url depending on whether third party tx
-           String sourceURL = localTransfer ?
-                                sharedScratchGetURL :
-                                "file://" + mSiteStore.getInternalWorkDirectory(stagingSiteHandle,path) +
-                                File.separator + lfn;
+            String sourceURL = sharedScratchGetURL;
+            if( !localTransfer ){
+                // job will be run remotely. So pick file URL path
+                StringBuilder sb = new StringBuilder();
+                sb.append( "file://" ).append( mSiteStore.getInternalWorkDirectory(stagingSiteHandle,path)).
+                   append( File.separator ).append( addOn ).append( File.separator ).append( lfn);
+                sourceURL = sb.toString();
+            }
+                                
 
             ft = new FileTransfer(lfn, job.getID(), pf.getFlags());
             ft.setSize( pf.getSize() );
@@ -1458,7 +1472,19 @@ public class TransferEngine extends Engine {
                         symLinkSelectedLocation = false;
                     }
                 }
-                                        
+                    
+                if( symLinkSelectedLocation ){
+                    //PM-1375 for symlink files check if integrity checking should 
+                    //be turned off. So make sure we don't trigger computing of checksums
+                    //for this file
+                    if( mIntegrityDial == PegasusProperties.INTEGRITY_DIAL.nosymlink ){
+                        ft.setForIntegrityChecking( false );
+                        pf.setForIntegrityChecking( false );
+                        ft.setChecksumComputedInWF( false );
+                        pf.setChecksumComputedInWF( false );
+                    }
+                }
+                
                 //get the file to the job's execution pool
                 //this is assuming that there are no directory paths
                 //in the pfn!!!

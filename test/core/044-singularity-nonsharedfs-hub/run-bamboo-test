@@ -15,9 +15,10 @@ cd montage-workflow-v2
 # Create the workflow inside a Singularity container, but note
 # that this image has Pegasus installed as we need the DAX API.
 singularity exec \
-    --bind $PWD:/srv --pwd /srv \
+    --bind $PWD:/srv \
     shub://pegasus-isi/montage-workflow-v2 \
-    /srv/montage-workflow.py --tc-target container \
+    /srv/montage-workflow.py --work-dir /srv \
+                             --tc-target container \
                              --center "56.7 24.00" \
                              --degrees 1.0 \
                              --band dss:DSS2B:blue \

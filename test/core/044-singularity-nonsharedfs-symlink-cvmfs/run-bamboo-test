@@ -41,7 +41,7 @@ export PYTHONPATH=`pegasus-config --python`
 pegasus-plan \
     --conf ./pegasusrc \
     --sites condorpool \
-    --staging-site cartman-data \
+    --staging-site obelix \
     --output-site local \
     --dir dags \
     --dax blackdiamond.dax \

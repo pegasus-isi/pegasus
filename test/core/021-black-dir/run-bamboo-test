@@ -50,7 +50,7 @@ cat >sites.xml <<EOF
 	<profile namespace="condor" key="universe" >vanilla</profile>
 	<profile namespace="pegasus" key="style" >condor</profile>
 </site>
-<site  handle="local" arch="x86_64" os="LINUX" osrelease="deb" osversion="8" glibc="">
+<site  handle="local" arch="x86_64" os="LINUX" osrelease="rhel" osversion="7" glibc="">
 	<directory  path="$TOPDIR/work" type="shared-scratch" free-size="" total-size="">
 		<file-server  operation="all" url="file://$TOPDIR/work">
 		</file-server>

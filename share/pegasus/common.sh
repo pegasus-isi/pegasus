@@ -9,6 +9,7 @@
 # RPMs and DEBs which have explicit Java dependencies
 if [ "X${JAVA_HOME}" = "X" ]; then
     for TARGET in \
+        /usr/lib/jvm/default-java \
         /usr/lib/jvm/java-openjdk \
         /usr/lib/jvm/jre-openjdk \
         /usr/lib/jvm/java-sun \

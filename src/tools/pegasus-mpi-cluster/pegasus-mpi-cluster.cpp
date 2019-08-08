@@ -353,9 +353,8 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
             return 1;
         }
         if (clear_memory_affinity() < 0) {
-            log_error("Rank %d: Error clearing memory affinity: %s",
+            log_debug("Rank %d: Error clearing memory affinity: %s",
                       rank, strerror(errno));
-            return 1;
         }
     }
 

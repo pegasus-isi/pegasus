@@ -298,7 +298,7 @@ class AMQPEventSink(EventSink):
                  userid='guest', password='guest', virtual_host=DEFAULT_AMQP_VIRTUAL_HOST,
                  ssl_enabled=False, props=None, connect_timeout=None, **kw):
         super(AMQPEventSink, self).__init__()
-        self._log.info( "Properties received %s", props)
+        self._log.info( "Encoder used %s Properties received %s" %(encoder,props))
         self._encoder = encoder
 
         if connect_timeout is None:
@@ -446,6 +446,13 @@ def json_encode(event, **kw):
     Adapt bson.dumps() to NetLogger's Log.write() signature.
     """
     kw['event'] = STAMPEDE_NS + event
+
+    # PM-1355 , PM-1365 replace all __ and . with _
+    for k, v in kw.items():
+        new_key = k.replace('.', '_')
+        new_key = new_key.replace("__","_")
+        kw[new_key] = kw.pop(k)
+
     return json.dumps(kw)
 
 def create_wf_event_sink(dest, db_type, enc=None, prefix=STAMPEDE_NS, props=None, multiplexed = False, **kw):
@@ -529,6 +536,8 @@ def create_wf_event_sink(dest, db_type, enc=None, prefix=STAMPEDE_NS, props=None
             if len(virtual_host) == 0:
                 virtual_host = None
 
+        # PM-1355 set encoder to json always for AMQP endpoints
+        enc = "json"
         sink = AMQPEventSink(url.host, url.port, virtual_host=virtual_host, exch=exchange,
                              userid = url.user, password=url.password, ssl_enabled=False,
                              encoder=pick_encfn(enc,prefix),props=sink_props, **kw)

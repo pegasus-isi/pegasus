@@ -1,0 +1,18 @@
+pegasus.catalog.site.file=./conf/sites.xml
+
+pegasus.data.configuration = nonsharedfs
+
+pegasus.catalog.replica  File
+pegasus.catalog.replica.file ./conf/rc.data
+
+# turn on symlinking of data
+pegasus.transfer.links = true
+
+# symlinked files should not be integrity checked
+pegasus.integrity.checking = nosymlink
+
+
+
+
+
+

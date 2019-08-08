@@ -33,7 +33,6 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
@@ -56,8 +55,10 @@ import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
 
 import edu.isi.pegasus.planner.refiner.DeployWorkerPackage;
@@ -270,7 +271,7 @@ public class PegasusLite implements GridStart {
     /**
      * Handle to kickstart GridStart implementation.
      */
-    private Kickstart mKickstartGridStartImpl;
+    private GridStart mDefaultGridStartImplementation;
 
    
      /**
@@ -337,6 +338,10 @@ public class PegasusLite implements GridStart {
      */
     protected ContainerShellWrapperFactory mContainerWrapperFactory;
 
+    /**
+     * Whether to do any integrity checking or not.
+     */
+    protected boolean mDoIntegrityChecking ;
     
     /**
      * Initializes the GridStart implementation.
@@ -380,11 +385,11 @@ public class PegasusLite implements GridStart {
         mProps.setProperty( PegasusProperties.DISABLE_INVOKE_PROPERTY, "true" );
 
         mEnablingPartOfAggregatedJob = false;
-        mKickstartGridStartImpl = new Kickstart();
-        mKickstartGridStartImpl.initialize( bag, dag );
+        mDefaultGridStartImplementation = new Kickstart();
+        mDefaultGridStartImplementation.initialize( bag, dag );
         //for pegasus lite we dont want ot use the full path, unless
         //a user has specifically catalogued in the transformation catalog
-        mKickstartGridStartImpl.useFullPathToGridStarts( false );
+        mDefaultGridStartImplementation.useFullPathToGridStarts( false );
 
         //for pegasus-lite work, worker node execution is no
         //longer handled in kickstart/no kickstart cases
@@ -396,6 +401,8 @@ public class PegasusLite implements GridStart {
         mLocalPathToPegasusLiteCommon = getSubmitHostPathToPegasusLiteCommon( );
         mContainerWrapperFactory = new ContainerShellWrapperFactory();
         mContainerWrapperFactory.initialize(bag, dag);
+        
+        mDoIntegrityChecking = mProps.doIntegrityChecking();
         
     }
     
@@ -573,7 +580,7 @@ public class PegasusLite implements GridStart {
         }
         //for all auxillary jobs let kickstart figure what to do
         else{
-            mKickstartGridStartImpl.enable( job, isGlobusJob );
+            mDefaultGridStartImplementation.enable( job, isGlobusJob );
         }
 
         
@@ -593,7 +600,15 @@ public class PegasusLite implements GridStart {
     }
 
    
-
+    /**
+     * Indicates whether the GridStart implementation can generate 
+     * checksums of generated output files or not
+     *
+     * @return boolean indicating whether can generate checksums or not
+     */
+    public boolean canGenerateChecksumsOfOutputs(){
+        return this.mDefaultGridStartImplementation.canGenerateChecksumsOfOutputs();
+    }
 
     
     /**
@@ -634,13 +649,35 @@ public class PegasusLite implements GridStart {
      * Returns the SHORT_NAME for the POSTScript implementation that is used
      * to be as default with this GridStart implementation.
      *
+     * @param job
+     * @return the id for the POSTScript.
+     *
+     * @see POSTScript#shortDescribe()
+     */
+    public String defaultPOSTScript(Job job){
+        String propValue = ( String ) job.vdsNS.get( Pegasus.GRIDSTART_KEY );
+        if( propValue != null && propValue.equals( "PegasusLite.None") ){
+            //PM-1360
+            //no empty postscript but arguments to exitcode to add -r $RETURN
+            job.dagmanVariables.construct( Dagman.POST_SCRIPT_KEY,
+                                                  PegasusExitCode.SHORT_NAME );
+            job.dagmanVariables.construct( Dagman.POST_SCRIPT_ARGUMENTS_KEY,
+                                                  PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE );
+        }
+        return this.defaultPOSTScript();
+    }
+
+    /**
+     * Returns the SHORT_NAME for the POSTScript implementation that is used
+     * to be as default with this GridStart implementation.
+     *
      * @return  the identifier for the default POSTScript implementation for
      *          kickstart gridstart module.
      *
      * @see Kickstart#defaultPOSTScript() 
      */
     public String defaultPOSTScript(){
-        return this.mKickstartGridStartImpl.defaultPOSTScript();
+        return this.mDefaultGridStartImplementation.defaultPOSTScript();
     }
 
     /**
@@ -810,7 +847,13 @@ public class PegasusLite implements GridStart {
 
         //PM-810 load SLS factory per job
         SLS sls = mSLSFactory.loadInstance(job);
-            
+
+        GridStart jobGridStartImplementation = getJobGridStart( job );
+        
+        //PM-1360 see if any downstream jobs integrity checking 
+        //should be disabled
+        updateChildrenForIntegrityChecking( job, jobGridStartImplementation );
+        
 
         try{
             OutputStream ostream = new FileOutputStream( shellWrapper , true );
@@ -963,11 +1006,11 @@ public class PegasusLite implements GridStart {
             mLogger.log( "Setting job " + job.getID() + 
                          " to run via " + containerWrapper.describe() , LogManager.DEBUG_MESSAGE_LEVEL );
             if( job instanceof AggregatedJob ){
-                this.mKickstartGridStartImpl.enable( (AggregatedJob)job, isGlobusJob );
+                jobGridStartImplementation.enable( (AggregatedJob)job, isGlobusJob );
                 sb.append( containerWrapper.wrap( (AggregatedJob)job));
             }
             else{
-                this.mKickstartGridStartImpl.enable( job, isGlobusJob );
+                jobGridStartImplementation.enable( job, isGlobusJob );
                 //sb.append( job.getRemoteExecutable() ).append( job.getArguments() ).append( '\n' );
                 
                 sb.append( containerWrapper.wrap(job));
@@ -1250,7 +1293,7 @@ public class PegasusLite implements GridStart {
     }
 
     public void useFullPathToGridStarts(boolean fullPath) {
-        mKickstartGridStartImpl.useFullPathToGridStarts(fullPath);
+        mDefaultGridStartImplementation.useFullPathToGridStarts(fullPath);
     }
 
     /**
@@ -1359,6 +1402,63 @@ public class PegasusLite implements GridStart {
         
         return;
         
+    }
+
+    /**
+     * Returns the GridStart Implementation to use to launch a job in 
+     * PegasusLite
+     * 
+     * @param job
+     * @return 
+     */
+    private GridStart getJobGridStart(Job job) {
+        GridStart gs = this.mDefaultGridStartImplementation;
+        //PM-1360 see if we want to launch job by another Gridstart instead of Kickstart
+        String propValue = ( String ) job.vdsNS.get( Pegasus.GRIDSTART_KEY );
+        if( propValue != null && propValue.equals( "PegasusLite.None") ){
+            gs = new NoGridStart();
+            gs.initialize( mBag, mDAG );
+            //for pegasus lite we dont want ot use the full path, unless
+            //a user has specifically catalogued in the transformation catalog
+            gs.useFullPathToGridStarts( false );
+        }
+        return gs;
+    }
+
+    /**
+     * Updates any child jobs, and turns off integrity checking for the files
+     * 
+     * @param job
+     * @param gridStart 
+     */
+    private void updateChildrenForIntegrityChecking(Job job, GridStart gridStart) {
+        
+        
+        if( !mDoIntegrityChecking  || gridStart.canGenerateChecksumsOfOutputs() ){
+            //if integrity checking is turn off or the job is launched by gridstart
+            //that can generate checksums; then nothing to update
+            return;
+        }
+        
+        mLogger.log( "Disabling integrity checking for children of job " + job.getID(),
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+        //no checksums will be generated for the generated outputs
+        //lets disable integrity checking in the descendant jobs
+        //for those files
+        GraphNode node = job.getGraphNodeReference();
+        Set<PegasusFile>outputs = job.getOutputFiles();
+        for( GraphNode n : node.getChildren() ){
+            Job childJob = (Job) n.getContent();
+            mLogger.log( "\t - Disabling integrity checking for child job " + childJob.getID(),
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+            for( PegasusFile inputFile: childJob.getInputFiles() ){
+                if( outputs.contains( inputFile ) ){
+                    inputFile.setForIntegrityChecking( false );
+                }
+            }
+        
+        }
+     
     }
 
 }

@@ -1,0 +1,16 @@
+pegasus.catalog.site.file=./conf/sites.xml
+
+pegasus.data.configuration = condorio
+
+pegasus.catalog.replica  File
+pegasus.catalog.replica.file ./conf/rc.data
+
+# we want it to be turned on and then be off
+# automatically for findrange jobs
+pegasus.integrity.checking = full
+
+
+
+
+
+

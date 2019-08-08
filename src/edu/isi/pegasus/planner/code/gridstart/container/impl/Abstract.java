@@ -489,9 +489,10 @@ public abstract class Abstract implements ContainerShellWrapper{
      * Enables a job for integrity checking 
      * 
      * @param job
+     * @param prefix
      * @return 
      */
-    protected StringBuilder enableForIntegrity( Job job ){
+    protected StringBuilder enableForIntegrity( Job job, String prefix ){
         StringBuilder sb = new StringBuilder();
         boolean isCompute = job.getJobType() == Job.COMPUTE_JOB;
         //PM-1190 we do integrity checks only for compute jobs
@@ -499,7 +500,7 @@ public abstract class Abstract implements ContainerShellWrapper{
             //we cannot enable integrity checking for DAX or dag jobs
             //as the prescript is not run as a full condor job
             if( !(job instanceof DAXJob || job instanceof DAGJob) ){
-                appendStderrFragment( sb, "", "Checking file integrity for input files" );
+                appendStderrFragment( sb, prefix, "Checking file integrity for input files" );
                 sb.append( "# do file integrity checks" ).append( '\n' );
                 String filesToVerify = mIntegrityHandler.addIntegrityCheckInvocation( sb,  job.getInputFiles() );
                 if (filesToVerify.length() > 0) {

@@ -98,13 +98,12 @@ public class Singularity extends Abstract{
         //assume singularity is available in path
         sb.append( "singularity exec ");
         
-        //exec --pwd /srv --scratch /var/tmp --scratch /tmp --home $PWD:/srv
-        sb.append( "--pwd ").append( CONTAINER_WORKING_DIRECTORY ).append( " ");
-        sb.append( "--home $PWD:" ).append( CONTAINER_WORKING_DIRECTORY ).append( " " );
+        //exec --bind $PWD:/srv
+        sb.append( "--bind $PWD:" ).append( CONTAINER_WORKING_DIRECTORY ).append( " " );
         
         //PM-1298 mount any host directories if specified
         for( Container.MountPoint  mp : c.getMountPoints() ){
-            sb.append( "-B ").append( mp ).append( " ");
+            sb.append( "--bind ").append( mp ).append( " ");
         }
         
         //we are running directly against image file. no loading
@@ -112,7 +111,7 @@ public class Singularity extends Abstract{
         
         //the script that sets up pegasus worker package and execute
         //user application
-        sb.append( "./" ).append( scriptName ).append( " " );
+        sb.append( "/srv/" ).append( scriptName ).append( " " );
         
         sb.append( "\n" );
         
@@ -171,6 +170,13 @@ public class Singularity extends Abstract{
         appendStderrFragment( sb, Abstract.CONTAINER_MESSAGE_PREFIX, "Now in pegasus lite container script" );
         sb.append( "set -e" ).append( "\n" );
         
+        sb.append( "\n" );
+        sb.append( "# tmp dirs are handled by Singularity - don't use the ones from the host\n" );
+        sb.append( "unset TEMP\n" );
+        sb.append( "unset TMP\n" );
+        sb.append( "unset TMPDIR\n" );
+        sb.append( "\n" );
+        
         //set the job environment variables explicitly in the -cont.sh file
         sb.append("# setting environment variables for job").append( '\n' );
         ENV containerENVProfiles = (ENV) c.getProfilesObject().get(Profiles.NAMESPACES.env);
@@ -209,7 +215,7 @@ public class Singularity extends Abstract{
         sb.append( super.inputFilesToPegasusLite(job) );
 
         //PM-1305 the integrity check should happen in the container
-        sb.append( super.enableForIntegrity(job) );
+        sb.append( super.enableForIntegrity(job, Abstract.CONTAINER_MESSAGE_PREFIX) );
         
         sb.append( "set +e" ).append( '\n' );//PM-701
         sb.append( "job_ec=0" ).append( "\n" );
@@ -271,6 +277,7 @@ public class Singularity extends Abstract{
         
         sb.append( "pegasus_lite_version_allow_wp_auto_download=$pegasus_lite_version_allow_wp_auto_download" ).append( "\n" );
         sb.append( "pegasus_lite_work_dir=" ).append( Singularity.CONTAINER_WORKING_DIRECTORY ).append( "\n" );
+        sb.append( "cd /srv" ).append( "  1>&2" ).append( "\n" );
         sb.append( "echo \\$PWD" ).append( "  1>&2" ).append( "\n" );
         
         sb.append( ". pegasus-lite-common.sh" ).append( "\n" );

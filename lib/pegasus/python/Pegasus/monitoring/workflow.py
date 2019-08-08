@@ -114,8 +114,14 @@ class Workflow:
         if self._database_disabled == True:
             return
 
-        # PM-1355 add on the fixed attributes
-        kwargs.update(self._fixed_addon_attrs)
+#        # PM-1355 add on the fixed attributes
+        if event != "xwf.map.subwf_job":
+            # we can add fixed attributes for all events other than
+            # subworklow mapping event, as for that event the xwf__id
+            # in the event is from the root/parent workflow and does not match
+            # the one in the fixed addon attributes which has the
+            # sub workflow xwf__id
+            kwargs.update(self._fixed_addon_attrs)
 
         try:
             # Send event to corresponding sink
@@ -574,7 +580,7 @@ class Workflow:
         # to the dashboard db we had the connection details
         # rest remains the same
         if self._database_url is not None:
-            kwargs["db__url"] = self._database_url
+            kwargs["db_url"] = self._database_url
 
         self.output_to_dashboard_db("wf.plan",kwargs)
 
@@ -934,7 +940,7 @@ class Workflow:
             self._user = wfparams["user"]
             # make it clear it is the workflow user.
             # jobs can run under some other user
-            self._fixed_addon_attrs["wf_user"] = self._user
+            self._fixed_addon_attrs["wf__user"] = self._user
         if "grid_dn" in wfparams:
             self._grid_dn = wfparams["grid_dn"]
 
@@ -1068,6 +1074,12 @@ class Workflow:
                         my_new_ts = utils.epochdate(my_keys["ts"])
                         if my_new_ts is not None:
                             my_keys["ts"] = my_new_ts
+
+                    # PM-1355 the static.bp file is netlogger formatted.
+                    # so the id keys have a . before them. Replace them with __
+                    for k, v in my_keys.items():
+                        my_keys[k.replace('.id', '__id')] = my_keys.pop(k)
+
                     # Send event to database
                     self.output_to_db(my_event, my_keys)
             except:
@@ -1302,11 +1314,11 @@ class Workflow:
         kwargs["js__id"] = my_job._job_state_seq
 
         if my_job._input_file is not None:
-            kwargs["stdin.file"] = my_job._input_file
+            kwargs["stdin__file"] = my_job._input_file
         if my_job._output_file is not None:
-            kwargs["stdout.file"] = my_job._output_file
+            kwargs["stdout__file"] = my_job._output_file
         if my_job._error_file is not None:
-            kwargs["stderr.file"] = my_job._error_file
+            kwargs["stderr__file"] = my_job._error_file
         if my_job._sched_id is not None:
             kwargs["sched__id"] = my_job._sched_id
 
@@ -1351,7 +1363,7 @@ class Workflow:
                 # Nothing to do, this is not mandatory
                 pass
         if my_job._input_file is not None:
-            kwargs["stdin__file"] = my_job._input_file
+            kwargs["stdin_file"] = my_job._input_file
         else:
             # This is not mandatory, according to the schema
             pass

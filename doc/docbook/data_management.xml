@@ -253,6 +253,25 @@ pegasus.replica.uwm.prefer.stagein.sites                   isi,cit
     before hand. This chapter gives an overview of how transfers of data and
     executable is managed in Pegasus.</para>
 
+    <para>Pegasus picks up files for data transfers based on the transfer
+    attribute associated with the input and output files for the job. These
+    are designated in the DAX as uses elements in the job element. If not
+    specified, the transfer flag defaults to true. So if you don't want all
+    the generated files to be transferred to the output site, you need to
+    explicitly set the transfer flag to false for the file.</para>
+
+    <programlisting>
+  &lt;!-- snippet of job description --&gt;
+  &lt;job id="ID000001" namespace="example" name="mDiffFit" version="1.0"
+       node-label="preprocess" &gt;
+    &lt;argument&gt;-a top -T 6  -i &lt;file name="f.a"/&gt;  -o &lt;file name="f.b1"/&gt;&lt;/argument&gt;
+
+     &lt;uses name="f.a" link="input" transfer="true" register="true"/&gt;
+     &lt;!-- tells Pegasus to not transfer the output file f.b to the output site --&gt;
+     &lt;uses name="f.b" link="output" transfer="false" register="false"  /&gt;
+     ...
+  &lt;/job&gt;</programlisting>
+
     <section id="ref_data_staging_configuration">
       <title>Data Staging Configuration</title>
 
@@ -1022,133 +1041,6 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       </section>
     </section>
 
-    <section id="transfer_client">
-      <title>Executable Used for Transfer and Cleanup Jobs</title>
-
-      <para>Pegasus refers to a python script called <emphasis role="bold">
-      pegasus-transfer</emphasis> as the executable in the transfer jobs to
-      transfer the data. pegasus-transfer looks at source and destination url
-      and figures out automatically which underlying client to use.
-      pegasus-transfer is distributed with the PEGASUS and can be found at
-      $PEGASUS_HOME/bin/pegasus-transfer.</para>
-
-      <para>Currently, pegasus-transfer interfaces with the following transfer
-      clients</para>
-
-      <table>
-        <title>Transfer Clients interfaced to by pegasus-transfer</title>
-
-        <tgroup cols="2">
-          <thead>
-            <row>
-              <entry>Transfer Client</entry>
-
-              <entry>Used For</entry>
-            </row>
-          </thead>
-
-          <tbody>
-            <row>
-              <entry>gfal-copy</entry>
-
-              <entry>staging file to and from GridFTP servers</entry>
-            </row>
-
-            <row>
-              <entry>globus-url-copy</entry>
-
-              <entry>staging files to and from GridFTP servers, only if gfal
-              is not detected in the path.</entry>
-            </row>
-
-            <row>
-              <entry>gfal-copy</entry>
-
-              <entry>staging files to and from SRM or XRootD servers</entry>
-            </row>
-
-            <row>
-              <entry>wget</entry>
-
-              <entry>staging files from a HTTP server</entry>
-            </row>
-
-            <row>
-              <entry>cp</entry>
-
-              <entry>copying files from a POSIX filesystem</entry>
-            </row>
-
-            <row>
-              <entry>ln</entry>
-
-              <entry>symlinking against input files</entry>
-            </row>
-
-            <row>
-              <entry>pegasus-s3</entry>
-
-              <entry>staging files to and from S3 buckets in Amazon Web
-              Services</entry>
-            </row>
-
-            <row>
-              <entry>gsutil</entry>
-
-              <entry>staging files to and from Google Storage buckets</entry>
-            </row>
-
-            <row>
-              <entry>scp</entry>
-
-              <entry>staging files using scp</entry>
-            </row>
-
-            <row>
-              <entry>gsiscp</entry>
-
-              <entry>staging files using gsiscp and X509</entry>
-            </row>
-
-            <row>
-              <entry>iget</entry>
-
-              <entry>staging files to and from iRODS servers</entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </table>
-
-      <para>For remote sites, Pegasus constructs the default path to
-      pegasus-transfer on the basis of PEGASUS_HOME env profile specified in
-      the site catalog. To specify a different path to the pegasus-transfer
-      client , users can add an entry into the transformation catalog with
-      fully qualified logical name as <emphasis
-      role="bold">pegasus::pegasus-transfer</emphasis></para>
-
-      <section>
-        <title>Preference of GFAL over GUC</title>
-
-        <para>JGlobus is no longer actively supported and is not in compliance
-        with <ulink
-        url="https://docs.globus.org/security-bulletins/2015-12-strict-mode">RFC
-        2818</ulink> . As a result cleanup jobs using pegasus-gridftp client
-        would fail against the servers supporting the strict mode. We have
-        removed the pegasus-gridftp client and now use gfal clients as
-        globus-url-copy does not support removes. If gfal is not available,
-        globus-url-copy is used for cleanup by writing out zero bytes files
-        instead of removing them.</para>
-
-        <para>If you want to force globus-url-copy to be preferred over GFAL,
-        set the <emphasis role="bold">PEGASUS_FORCE_GUC=1</emphasis>
-        environment variable in the site catalog for the sites you want the
-        preference to be enforced. Please note that we expect globus-url-copy
-        support to be completely removed in future releases of Pegasus due to
-        the end of life of Globus Toolkit (see <ulink
-        url="https://www.globus.org/blog/support-open-source-globus-toolkit-ends-january-2018">announcement</ulink>).</para>
-      </section>
-    </section>
-
     <section>
       <title>Staging of Executables</title>
 
@@ -1429,9 +1321,120 @@ site corbusier {
       checkpoint file before the job is killed by the underlying
       scheduler.</para>
     </section>
+  </section>
 
-    <section>
-      <title>Using Amazon S3 as a Staging Site</title>
+  <section id="transfer_protocols">
+    <title>Supported Transfer Protocols</title>
+
+    <para>Pegasus refers to a python script called <emphasis role="bold">
+    pegasus-transfer</emphasis> as the executable in the transfer jobs to
+    transfer the data. pegasus-transfer looks at source and destination url
+    and figures out automatically which underlying client to use.
+    pegasus-transfer is distributed with the PEGASUS and can be found at
+    $PEGASUS_HOME/bin/pegasus-transfer.</para>
+
+    <para>Currently, pegasus-transfer interfaces with the following transfer
+    clients</para>
+
+    <table>
+      <title>Transfer Clients interfaced to by pegasus-transfer</title>
+
+      <tgroup cols="2">
+        <thead>
+          <row>
+            <entry>Transfer Client</entry>
+
+            <entry>Used For</entry>
+          </row>
+        </thead>
+
+        <tbody>
+          <row>
+            <entry>gfal-copy</entry>
+
+            <entry>staging file to and from GridFTP servers</entry>
+          </row>
+
+          <row>
+            <entry>globus-url-copy</entry>
+
+            <entry>staging files to and from GridFTP servers, only if gfal is
+            not detected in the path.</entry>
+          </row>
+
+          <row>
+            <entry>gfal-copy</entry>
+
+            <entry>staging files to and from SRM or XRootD servers</entry>
+          </row>
+
+          <row>
+            <entry>wget</entry>
+
+            <entry>staging files from a HTTP server</entry>
+          </row>
+
+          <row>
+            <entry>cp</entry>
+
+            <entry>copying files from a POSIX filesystem</entry>
+          </row>
+
+          <row>
+            <entry>ln</entry>
+
+            <entry>symlinking against input files</entry>
+          </row>
+
+          <row>
+            <entry>pegasus-s3</entry>
+
+            <entry>staging files to and from S3 buckets in Amazon Web
+            Services</entry>
+          </row>
+
+          <row>
+            <entry>gsutil</entry>
+
+            <entry>staging files to and from Google Storage buckets</entry>
+          </row>
+
+          <row>
+            <entry>scp</entry>
+
+            <entry>staging files using scp</entry>
+          </row>
+
+          <row>
+            <entry>gsiscp</entry>
+
+            <entry>staging files using gsiscp and X509</entry>
+          </row>
+
+          <row>
+            <entry>iget</entry>
+
+            <entry>staging files to and from iRODS servers</entry>
+          </row>
+
+          <row>
+            <entry>htar</entry>
+
+            <entry>to retrieve input files from HPSS tape storage.</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+
+    <para>For remote sites, Pegasus constructs the default path to
+    pegasus-transfer on the basis of PEGASUS_HOME env profile specified in the
+    site catalog. To specify a different path to the pegasus-transfer client ,
+    users can add an entry into the transformation catalog with fully
+    qualified logical name as <emphasis
+    role="bold">pegasus::pegasus-transfer</emphasis></para>
+
+    <section id="transfer_s3">
+      <title>Amazon S3 (s3://)</title>
 
       <para>Pegasus can be configured to use Amazon S3 as a staging site. In
       this mode, Pegasus transfers workflow inputs from the input site to S3.
@@ -1499,41 +1502,49 @@ site corbusier {
 &lt;/sitecatalog&gt;
 </programlisting>
     </section>
-    
-    <section id="transfer_stashcp">
-      <title>OSG Stash / stashcp data access</title>
 
-      <para>
-        Open Science Grid provides a data service called Stash, and the command
-        line tool <emphasis>stashcp</emphasis> for interacting with the Stash
-        data. An example on how to set up the site catalog and URLs can be
-        found in the <ulink url="https://support.opensciencegrid.org/support/solutions/articles/5000639789-pegasus">OSG User Support Pegasus tutorial</ulink>
-      </para>
+    <section id="transfer_docker">
+      <title>Docker (docker://)</title>
 
+      <para/>
     </section>
 
-    <section id="transfer_irods">
-      <title>iRODS data access</title>
+    <section id="transfer_file">
+      <title>File / Symlink (file:// , symlink://)</title>
 
-      <para>iRODS can be used as a input data location, a storage site for
-      intermediate data during workflow execution, or a location for final
-      output data. Pegasus uses a URL notation to identify iRODS files.
-      Example:</para>
+      <para/>
+    </section>
 
-      <programlisting>irods://some-host.org/path/to/file.txt</programlisting>
+    <section id="transfer_gridftp">
+      <title>GridFTP (gsiftp://)</title>
 
-      <para>The path to the file is <emphasis role="bold"> relative</emphasis>
-      to the internal iRODS location. In the example above, the path used to
-      refer to the file in iRODS is <emphasis> path/to/file.txt</emphasis> (no
-      leading /).</para>
+      <para/>
 
-      <para>See <link linkend="cred_staging">the section on credential
-      staging</link> for information on how to set up an irodsEnv file to be
-      used by Pegasus.</para>
+      <section>
+        <title>Preference of GFAL over GUC</title>
+
+        <para>JGlobus is no longer actively supported and is not in compliance
+        with <ulink
+        url="https://docs.globus.org/security-bulletins/2015-12-strict-mode">RFC
+        2818</ulink> . As a result cleanup jobs using pegasus-gridftp client
+        would fail against the servers supporting the strict mode. We have
+        removed the pegasus-gridftp client and now use gfal clients as
+        globus-url-copy does not support removes. If gfal is not available,
+        globus-url-copy is used for cleanup by writing out zero bytes files
+        instead of removing them.</para>
+
+        <para>If you want to force globus-url-copy to be preferred over GFAL,
+        set the <emphasis role="bold">PEGASUS_FORCE_GUC=1</emphasis>
+        environment variable in the site catalog for the sites you want the
+        preference to be enforced. Please note that we expect globus-url-copy
+        support to be completely removed in future releases of Pegasus due to
+        the end of life of Globus Toolkit (see <ulink
+        url="https://www.globus.org/blog/support-open-source-globus-toolkit-ends-january-2018">announcement</ulink>).</para>
+      </section>
     </section>
 
     <section id="transfer_gridftp_ssh">
-      <title>GridFTP over SSH (sshftp)</title>
+      <title>GridFTP over SSH (sshftp://)</title>
 
       <para>Instead of using X.509 based security, newer version of Globus
       GridFTP can be configured to set up transfers over SSH. See the <ulink
@@ -1593,8 +1604,91 @@ exec /usr/bin/ssh $extra_opts $port_str $remote_host $remote_program
       workflows.</para>
     </section>
 
+    <section id="transfer_google_storage">
+      <title>Google Storage (gs://)</title>
+
+      <para/>
+    </section>
+
+    <section id="transfer_http">
+      <title>HTTP (http:// , https://)</title>
+
+      <para/>
+    </section>
+
+    <section id="transfer_hpss">
+      <title>HPSS (hpss://)</title>
+
+      <para>We support retrieval of input files from a tar file in HPSS
+      storage using the htar command. The naming convention to describe the
+      tar file and the file to retrieve fro the tar file is as follows</para>
+
+      <programlisting>hpss:///some-name.tar/path/in-tar-to/file.txt</programlisting>
+
+      <para>For example: for e.g hpss:///test.tar/set1/f.a </para>
+
+      <para>For efficient retrieval pegasus-transfer bin's all the hpss
+      transfers in the .in file </para>
+
+      <itemizedlist>
+        <listitem>
+          <para>fiirst by the tar file and then</para>
+        </listitem>
+
+        <listitem>
+          <para>the destination directory.</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>Binning by destination directory is done to support deep LFN's.
+      Also thing to note is that htar command returns success even if a file
+      does not exist in the archive. pegasus-transfer tries to make sure after
+      the transfer that the destination file exists and is readable.</para>
+
+      <para>HPSS requires a token to generated for retrieval. Information on
+      how to specify the token location can be found <link
+      linkend="hpss_cred">here</link>.</para>
+    </section>
+
+    <section id="transfer_irods">
+      <title>iRODS (irods://)</title>
+
+      <para>iRODS can be used as a input data location, a storage site for
+      intermediate data during workflow execution, or a location for final
+      output data. Pegasus uses a URL notation to identify iRODS files.
+      Example:</para>
+
+      <programlisting>irods://some-host.org/path/to/file.txt</programlisting>
+
+      <para>The path to the file is <emphasis role="bold"> relative</emphasis>
+      to the internal iRODS location. In the example above, the path used to
+      refer to the file in iRODS is <emphasis> path/to/file.txt</emphasis> (no
+      leading /).</para>
+
+      <para>See <link linkend="cred_staging">the section on credential
+      staging</link> for information on how to set up an irodsEnv file to be
+      used by Pegasus.</para>
+    </section>
+
+    <section id="transfer_scp">
+      <title>SCP (scp://)</title>
+
+      <para/>
+    </section>
+
+    <section id="transfer_stashcp">
+      <title>OSG Stash / stashcp (stash://)</title>
+
+      <para>Open Science Grid provides a data service called Stash, and the
+      command line tool <emphasis>stashcp</emphasis> for interacting with the
+      Stash data. An example on how to set up the site catalog and URLs can be
+      found in the <ulink
+      url="https://support.opensciencegrid.org/support/solutions/articles/5000639789-pegasus">OSG
+      User Support Pegasus tutorial</ulink></para>
+    </section>
+
     <section id="transfer_globus_online">
-      <title>Globus Online</title>
+      <title>Globus Online (go://)</title>
 
       <para><ulink url="http://globus.org">Globus Online</ulink> is a transfer
       service with features such as policy based connection management and
@@ -1822,6 +1916,25 @@ irodsPassword 'somesecretpassword'</programlisting>
       example:</para>
 
       <programlisting>&lt;profile namespace="pegasus" key="SSH_PRIVATE_KEY" &gt;/home/user/wf/wfsshkey&lt;/profile&gt;</programlisting>
+    </section>
+
+    <section id="hpss_cred">
+      <title>HPSS Tokens</title>
+
+      <para>You need to logon to the remote system and generate a token that
+      is required by htar for retrieving files from HPSS.</para>
+
+      <para>To pass the location of the credential you can associate an
+      environment variable called HPSS_CREDENTIAL with your job. Site Catalog
+      Example: </para>
+
+      <programlisting>&lt;profile namespace="pegasus" key="HPSS_CREDENTIAL" &gt;/path/to/.netrc&lt;/profile&gt;</programlisting>
+
+      <para>If it is specified, pegasus-transfer copies credential to the
+      default credential location $HOME/.netrc. </para>
+
+      <para>If not specified, it makes sure the default credential
+      $HOME/.netrc is available</para>
     </section>
   </section>
 
@@ -2442,22 +2555,21 @@ File f.d
   <section id="integrity_checking">
     <title>Integrity Checking</title>
 
-    <para>Pegasus adds checksum computation and integrity checking steps
-    for non shared filesystem deployments (nonsharedfs and condorio). The main
+    <para>Pegasus adds checksum computation and integrity checking steps for
+    non shared filesystem deployments (nonsharedfs and condorio). The main
     motivation to do this is to ensure that any data transferred for a
     workflow does not get inadvertently corrupted during data transfers
-    performed during workflow execution, or at rest at a staging site.
-    Users now have options to specify
-    <emphasis role="bold">sha256</emphasis> checksums for the input files in
-    the replica catalog. If checksums are not provided, then Pegasus will
-    compute the checksums for the files during data transfers, and enforce
-    these checksums whenever a PegasusLite job starts on a remote node. The
-    checksums for outputs created by user executable are generated and
-    published by <emphasis>pegasus-kickstart </emphasis>in it's provenance
-    record. The kickstart output is brought back to the submit host as part of
-    the job standard output using in-built HTCondor file transfer mechanisms.
-    The generated checksums are then populated in the Stampede workflow
-    database. </para>
+    performed during workflow execution, or at rest at a staging site. Users
+    now have options to specify <emphasis role="bold">sha256</emphasis>
+    checksums for the input files in the replica catalog. If checksums are not
+    provided, then Pegasus will compute the checksums for the files during
+    data transfers, and enforce these checksums whenever a PegasusLite job
+    starts on a remote node. The checksums for outputs created by user
+    executable are generated and published by <emphasis>pegasus-kickstart
+    </emphasis>in it's provenance record. The kickstart output is brought back
+    to the submit host as part of the job standard output using in-built
+    HTCondor file transfer mechanisms. The generated checksums are then
+    populated in the Stampede workflow database.</para>
 
     <para>PegasusLite wrapped jobs invoke
     <emphasis>pegasus-integrity-check</emphasis> before launching any
@@ -2465,28 +2577,28 @@ File f.d
     checksums on files and compares them against existing checksum values
     passed to it in its input. We also have extended our transfer tool
     pegasus-transfer to invoke pegasus-integrity check after completing the
-    transfer of files. </para>
+    transfer of files.</para>
 
     <para>Integrity checks in the workflows are implemented at 3 levels</para>
 
     <orderedlist>
       <listitem>
         <para>after the input data has been staged to staging server -
-        pegasus-transfer verifies integrity of the staged files. </para>
+        pegasus-transfer verifies integrity of the staged files.</para>
       </listitem>
 
       <listitem>
         <para>before a compute task starts on a remote compute node - This
         ensures that checksums of the data staged in match the checksums
         specified in the input replica catalog or the ones computed when that
-        piece of data was generated as part of previous task in the workflow.
-        </para>
+        piece of data was generated as part of previous task in the
+        workflow.</para>
       </listitem>
 
       <listitem>
         <para>after the workflow output data has been transferred to storage
         servers - This ensures that output data staged to the final location
-        was not corrupted in transit. </para>
+        was not corrupted in transit.</para>
       </listitem>
     </orderedlist>
 
@@ -2523,16 +2635,14 @@ File f.d
         and have not specified the checksums in the replica catalog.</para>
       </listitem>
     </itemizedlist>
-    
+
     <section id="integrity_checking_stats">
-        <title>Integrity Checking Statistics</title>
+      <title>Integrity Checking Statistics</title>
 
-        <para>
-            <link linkend="cli-pegasus-statistics">pegasus-statistics</link> now includes a section containing
-            integrity statistics:
-        </para>
+      <para><link linkend="cli-pegasus-statistics">pegasus-statistics</link>
+      now includes a section containing integrity statistics:</para>
 
-<programlisting>
+      <programlisting>
 	# Integrity Metrics
 	# Number of files for which checksums were compared/computed along with total time spent doing it. 
 	171 files checksums generated with total duration of 8.705 secs
@@ -2544,7 +2654,6 @@ File f.d
 	#       Number of failed jobs where the last job instance had integrity errors.
 	Failures: 0 job failures had integrity errors
 </programlisting>
- 
     </section>
 
     <section id="integrity_checking_dials">
@@ -2555,7 +2664,8 @@ File f.d
 
       <itemizedlist>
         <listitem>
-          <para><emphasis role="bold">none</emphasis> - no integrity checking</para>
+          <para><emphasis role="bold">none</emphasis> - no integrity
+          checking</para>
         </listitem>
 
         <listitem>
@@ -2578,10 +2688,10 @@ File f.d
       checksums along with file locations in the Replica Catalog. Pegasus will
       check against these checksums when a PegasusLite job starts up on a
       remote node. If checksums are not specified, then Pegasus will compute
-      them during the data transfer to the staging site, and use them. </para>
+      them during the data transfer to the staging site, and use them.</para>
 
       <para>To specify checksums in replica catalog, you need to specify two
-      additonal attributes with your LFN -&gt; PFN mapping. </para>
+      additonal attributes with your LFN -&gt; PFN mapping.</para>
 
       <orderedlist>
         <listitem>

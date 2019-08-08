@@ -126,6 +126,11 @@ function pegasus_lite_internal_wp_in_env()
         else
             pegasus_lite_log "Pegasus binaries in $detected_pegasus_bin do not match Pegasus version used for current workflow"
         fi
+    else
+        # catch the case where a user has specified a faulty PEGASUS_HOME
+        if [ "x$PEGASUS_HOME" != "x" ]; then
+            pegasus_lite_log "Warning: PEGASUS_HOME was specified, but did not contain a Pegasus install. Unsetting PEGASUS_HOME."
+        fi
     fi
 
     # back out env changes
@@ -293,8 +298,12 @@ function container_env()
 
     # copy credentials into the pwd as this will become the container directory
     for base in X509_USER_PROXY S3CFG BOTO_CONFIG SSH_PRIVATE_KEY irodsEnvFile GOOGLE_PKCS12 _CONDOR_CREDS ; do
-        for key in `(env | grep -i ^$base | sed 's/=.*//') 2>/dev/null`; do
+        for key in `(env | grep -i ^${base} | sed 's/=.*//') 2>/dev/null`; do
             eval val="\$$key"
+            if [ "X${val}" = "X" ]; then
+                pegasus_lite_log "Credential $key evaluated to empty"
+                continue
+            fi
             cred="`basename ${val}`"
             dest="`pwd`/$cred"
             dest_inside="$inside_work_dir/$cred"
@@ -646,6 +655,7 @@ function pegasus_lite_section_end()
 
     if [ "X$start_ts" != "X" ]; then
         duration=$(($ts - $start_ts))
+        pegasus_lite_chirp Chirp_pegasus_${section}_start $start_ts
         pegasus_lite_chirp Chirp_pegasus_${section}_duration $duration
     fi
 }
@@ -658,8 +668,8 @@ function pegasus_lite_chirp()
 
     # find/test chirp once here
     if [ "X$pegasus_lite_chirp_path" = "X" ]; then
-        condor_libexec=`condor_config_val LIBEXEC 2>/dev/null`
-        pegasus_lite_chirp_path=`(export PATH=$condor_libexec:$PATH ; which condor_chirp) 2>/dev/null`
+        condor_libexec=`condor_config_val LIBEXEC 2>/dev/null || true`
+        pegasus_lite_chirp_path=`(export PATH=$condor_libexec:$PATH ; which condor_chirp) 2>/dev/null || true`
         if [ "X$pegasus_lite_chirp_path" = "X" ]; then
             pegasus_lite_log "Unable to find condor_chirp - disabling chirping"
             pegasus_lite_chirp_path="none"

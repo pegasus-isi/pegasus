@@ -655,6 +655,7 @@ project:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXDJ
               name: Build x86_64 Debian 8
+              enabled: false
               tasks:
                 - !script
                   description: Untar source
@@ -741,6 +742,7 @@ project:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BDEB10
               name: Build x86_64 Debian 10
+              enabled: true
               tasks:
                 - !script
                   description: Untar source
@@ -956,8 +958,8 @@ project:
                       mv pegasus-r-dax3*.tar.gz $DOWNLOADS/
 
                       # debian
-                      mkdir -p $DOWNLOADS/debian/dists/jessie/main/binary-amd64
-                      cp $DOWNLOADS/pegasus_*deb8_amd64.deb $DOWNLOADS/debian/dists/jessie/main/binary-amd64/
+                      #mkdir -p $DOWNLOADS/debian/dists/jessie/main/binary-amd64
+                      #cp $DOWNLOADS/pegasus_*deb8_amd64.deb $DOWNLOADS/debian/dists/jessie/main/binary-amd64/
                       mkdir -p $DOWNLOADS/debian/dists/stretch/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*deb9_amd64.deb $DOWNLOADS/debian/dists/stretch/main/binary-amd64/
                       mkdir -p $DOWNLOADS/debian/dists/buster/main/binary-amd64
@@ -989,7 +991,7 @@ project:
                       ssh pegasus.isi.edu "mkdir -p /srv/pegasus.isi.edu/public_html/docs/$VERSION"
                       scp -r docs/pegasus-*/share/doc/pegasus/wordpress/* pegasus.isi.edu:/srv/pegasus.isi.edu/public_html/docs/$VERSION/
               artifactDependencies:
-                - name: pegasus-binary-x86_64_deb_8
+                #- name: pegasus-binary-x86_64_deb_8
                 - name: pegasus-binary-x86_64_deb_9
                 - name: pegasus-binary-x86_64_deb_10
                 - name: pegasus-binary-x86_64_macos
@@ -1055,7 +1057,7 @@ project:
           event: !event JOB_HUNG
           notificationRecipientType: 'com.atlassian.bamboo.plugins.bamboo-slack:recipient.slack'
           config:
-            webhookUrl: ['https://hooks.slack.com/services/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']
+            webhookUrl: ['${bamboo.PEGASUS_SLACK_WEBHOOK}']
             channel: ['#github-notifications']
             botName: null
             botName: [Bamboo]
@@ -1066,7 +1068,7 @@ project:
           event: !event FAILED_BUILDS_AND_FIRST_SUCCESSFUL
           notificationRecipientType: 'com.atlassian.bamboo.plugins.bamboo-slack:recipient.slack'
           config:
-            webhookUrl: ['https://hooks.slack.com/services/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']
+            webhookUrl: ['${bamboo.PEGASUS_SLACK_WEBHOOK}']
             channel: ['#github-notifications']
             botName: null
             botName: [Bamboo]
@@ -2441,6 +2443,7 @@ project:
             - key: SSHFTP030
               name: 030-pegasuslite-sshftp
               description: TODO
+              enabled: false
               tasks:
                 - !script
                   description: Cleanup
@@ -3083,6 +3086,64 @@ project:
                 - name: tests
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: false
+            - key: T043C
+              name: 043-integrity-nonsharedfs-nosymlink
+              description: Integrity checking with nonsharedfs with nosymlink dial
+              tasks:
+                - !script
+                  description: Cleanup
+                  enabled: true
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "rm -rf pegasus/ test/"
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xf tests.tar"
+                - !script
+                  description: Run Test
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+                      test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+              requirements:
+                - capabilityKey: condor
+                  matchType: !exists exists
+              artifactDependencies:
+                - name: tests
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: false
+            - key: T043D
+              name: 043-integrity-condorio-nogs
+              description: Integrity checking with PegasusLite and Condorio but some jobs launched without kickstart
+              tasks:
+                - !script
+                  description: Cleanup
+                  enabled: true
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "rm -rf pegasus/ test/"
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xf tests.tar"
+                - !script
+                  description: Run Test
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+                      test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+              requirements:
+                - capabilityKey: condor
+                  matchType: !exists exists
+              artifactDependencies:
+                - name: tests
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T043SYN
               name: 043-integrity-synthetic-with-errors
               tasks:
@@ -3233,7 +3294,7 @@ project:
               tasks:
                 - !script
                   description: Cleanup
-                  enabled: true
+                  enabled: false
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "rm -rf pegasus/ test/"

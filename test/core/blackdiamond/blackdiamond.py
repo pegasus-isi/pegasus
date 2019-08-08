@@ -33,17 +33,17 @@ diamond.addFile(a)
 # In this case the binary is pegasus-keg, which is shipped with Pegasus, so we use
 # the remote PEGASUS_HOME to build the path.
 e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64",
-						  osrelease="deb", osversion="8", installed=config.getboolean('all', 'executable_installed'))
+						  osrelease="rhel", osversion="7", installed=config.getboolean('all', 'executable_installed'))
 e_preprocess.addPFN(PFN(config.get('all', 'executable_url') + sys.argv[1] + "/bin/pegasus-keg", config.get('all', 'executable_site')))
 diamond.addExecutable(e_preprocess)
 
 e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64",
-						 osrelease="deb", osversion="8", installed=config.getboolean('all', 'executable_installed'))
+						 osrelease="rhel", osversion="7", installed=config.getboolean('all', 'executable_installed'))
 e_findrange.addPFN(PFN(config.get('all', 'executable_url') + sys.argv[1] + "/bin/pegasus-keg", config.get('all', 'executable_site')))
 diamond.addExecutable(e_findrange)
 
-e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64", osrelease="deb",
-					   osversion="8", installed=config.getboolean('all', 'executable_installed'))
+e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64", osrelease="rhel",
+					   osversion="7", installed=config.getboolean('all', 'executable_installed'))
 e_analyze.addPFN(PFN(config.get('all', 'executable_url') + sys.argv[1] + "/bin/pegasus-keg", config.get('all', 'executable_site')))
 diamond.addExecutable(e_analyze)
 

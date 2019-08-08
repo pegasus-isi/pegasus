@@ -556,6 +556,19 @@ public class Distribute implements GridStart {
     public String shortDescribe(){
         return Distribute.SHORT_NAME;
     }
+    
+    /**
+     * Returns the SHORT_NAME for the POSTScript implementation that is used
+     * to be as default with this GridStart implementation.
+     *
+     * @param job
+     * @return the id for the POSTScript.
+     *
+     * @see POSTScript#shortDescribe()
+     */
+    public String defaultPOSTScript(Job job){
+        return this.defaultPOSTScript();
+    }
 
     /**
      * Returns the SHORT_NAME for the POSTScript implementation that is used
@@ -570,6 +583,16 @@ public class Distribute implements GridStart {
         return this.mKickstartGridStartImpl.defaultPOSTScript();
     }
 
+    /**
+     * Indicates whether the GridStart implementation can generate 
+     * checksums of generated output files or not
+     *
+     * @return boolean indicating whether can generate checksums or not
+     */
+    public boolean canGenerateChecksumsOfOutputs(){
+        return this.mKickstartGridStartImpl.canGenerateChecksumsOfOutputs();
+    }
+    
     public void useFullPathToGridStarts(boolean fullPath) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
