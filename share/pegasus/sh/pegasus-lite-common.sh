@@ -568,36 +568,33 @@ function pegasus_lite_get_system()
            osversion=`grep -w VERSION_ID /etc/os-release | head -n 1 | tr -d '"' | cut -d '=' -f 2`
         elif [ -e /etc/issue ]; then
             osname=`cat /etc/issue | head -n1 | awk '{print $1;}' | tr '[:upper:]' '[:lower:]'`
+        fi
 
-            if [ "X$osname" = "Xubuntu" ]; then
-                osversion=`cat /etc/issue | head -n1 | awk '{print $2;}'` 
-                # 18 LTS
-                if (grep -i "bionic" /etc/issue) >/dev/null 2>&1; then
-                    osversion="18"
-                fi
-            elif [ -e /etc/debian_version ]; then
-                osname="deb"
-                osversion=`cat /etc/debian_version`
-                # yet to be released Debian 10
-                if (echo "$osversion" | grep "buster") >/dev/null 2>&1; then
-                    osversion="10"
-                fi
-            elif [ -e /etc/fedora-release ]; then
-                osname="fc"
-                osversion=`cat /etc/fedora-release | grep -o -E '[0-9]+'`
-            elif [ -e /etc/redhat-release ]; then
-                osname="rhel"
-                osversion=`cat /etc/redhat-release | grep -o -E ' [0-9]+.[0-9]+'`
-            elif [ -e /etc/rocks-release ]; then
-                osname="rhel"
-                osversion=`cat /etc/rocks-release | grep -o -E ' [0-9]+.[0-9]+'`
-            elif [ -e /etc/SuSE-release ]; then
-                osname="suse"
-                osversion=`cat /etc/SuSE-release | grep VERSION | grep -o -E ' [0-9]+'`
+        if [ "X$osname" = "Xubuntu" ]; then
+            osversion=`cat /etc/issue | head -n1 | awk '{print $2;}'` 
+            # 18 LTS
+            if (grep -i "bionic" /etc/issue) >/dev/null 2>&1; then
+                osversion="18"
             fi
-        else
-            echo "PegasusLite: 1 failed to get system info"
-            exit 1
+        elif [ -e /etc/debian_version ]; then
+            osname="deb"
+            osversion=`cat /etc/debian_version`
+            # yet to be released Debian 10
+            if (echo "$osversion" | grep "buster") >/dev/null 2>&1; then
+                osversion="10"
+            fi
+        elif [ -e /etc/fedora-release ]; then
+            osname="fc"
+            osversion=`cat /etc/fedora-release | grep -o -E '[0-9]+'`
+        elif [ -e /etc/redhat-release ]; then
+            osname="rhel"
+            osversion=`cat /etc/redhat-release | grep -o -E ' [0-9]+.[0-9]+'`
+        elif [ -e /etc/rocks-release ]; then
+            osname="rhel"
+            osversion=`cat /etc/rocks-release | grep -o -E ' [0-9]+.[0-9]+'`
+        elif [ -e /etc/SuSE-release ]; then
+            osname="suse"
+            osversion=`cat /etc/SuSE-release | grep VERSION | grep -o -E ' [0-9]+'`
         fi
 
         # remove spaces/tabs in the version
@@ -608,6 +605,11 @@ function pegasus_lite_get_system()
 
         # we only want major version numbers
         osversion=`echo $osversion | sed 's/[\.-].*//'`
+        
+        if [ "X$osname" = "X" -o "X$osversion" = "X" ]; then
+            echo "PegasusLite: 1 failed to get system info"
+            exit 1
+        fi
 
         echo "${arch}_${osname}_${osversion}"
         return 0
