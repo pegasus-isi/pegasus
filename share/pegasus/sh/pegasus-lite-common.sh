@@ -564,8 +564,8 @@ function pegasus_lite_get_system()
 
         # /etc/issue and /etc/os-release works most of the time, but there are exceptions
         if [ -e /etc/os-release ]; then
-           osname=`grep -w NAME /etc/os-release | head -n 1 | tr -d '"' | cut -d '=' -f 2 | tr '[:upper:]' '[:lower:]'`
-           osversion=`grep -w VERSION_ID /etc/os-release | head -n 1 | tr -d '"' | cut -d '=' -f 2 | cut -d '.' -f 1`
+           osname=`grep -w ID /etc/os-release | head -n 1 | tr -d '"' | cut -d '=' -f 2`
+           osversion=`grep -w VERSION_ID /etc/os-release | head -n 1 | tr -d '"' | cut -d '=' -f 2`
         elif [ -e /etc/issue ]; then
             osname=`cat /etc/issue | head -n1 | awk '{print $1;}' | tr '[:upper:]' '[:lower:]'`
 
