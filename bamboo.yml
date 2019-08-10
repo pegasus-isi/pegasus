@@ -653,50 +653,6 @@ project:
                   matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
-            - key: BXDJ
-              name: Build x86_64 Debian 8
-              enabled: false
-              tasks:
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xzf pegasus-source.tar.gz"
-                - !script
-                  description: Binary Packages
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      TAG=${bamboo_TAG_DEBIAN_8}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      --entrypoint ant \
-                      pegasus/pegasus:${TAG} \
-                      clean dist-deb dist-worker dist-release
-              artifactDefinitions:
-                - name: pegasus-binary-x86_64_deb_8
-                  copyPattern: 'pegasus-binary-*-x86_64_deb_8.tar.gz'
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-deb-x86_64_deb_8
-                  copyPattern: '*.deb'
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-worker-x86_64_deb_8
-                  copyPattern: 'pegasus-worker-*-x86_64_deb_8.tar.gz'
-                  location: pegasus-source/dist
-                  isShared: true
-              artifactDependencies:
-                - name: pegasus-source
-              requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
             - key: BXDS
               name: Build x86_64 Debian 9
               tasks:
@@ -958,8 +914,6 @@ project:
                       mv pegasus-r-dax3*.tar.gz $DOWNLOADS/
 
                       # debian
-                      #mkdir -p $DOWNLOADS/debian/dists/jessie/main/binary-amd64
-                      #cp $DOWNLOADS/pegasus_*deb8_amd64.deb $DOWNLOADS/debian/dists/jessie/main/binary-amd64/
                       mkdir -p $DOWNLOADS/debian/dists/stretch/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*deb9_amd64.deb $DOWNLOADS/debian/dists/stretch/main/binary-amd64/
                       mkdir -p $DOWNLOADS/debian/dists/buster/main/binary-amd64
@@ -991,14 +945,12 @@ project:
                       ssh pegasus.isi.edu "mkdir -p /srv/pegasus.isi.edu/public_html/docs/$VERSION"
                       scp -r docs/pegasus-*/share/doc/pegasus/wordpress/* pegasus.isi.edu:/srv/pegasus.isi.edu/public_html/docs/$VERSION/
               artifactDependencies:
-                #- name: pegasus-binary-x86_64_deb_8
                 - name: pegasus-binary-x86_64_deb_9
                 - name: pegasus-binary-x86_64_deb_10
                 - name: pegasus-binary-x86_64_macos
                 - name: pegasus-binary-x86_64_rhel_7
                 - name: pegasus-binary-x86_64_ubuntu_16
                 - name: pegasus-binary-x86_64_ubuntu_18
-                - name: pegasus-deb-x86_64_deb_8
                 - name: pegasus-deb-x86_64_deb_9
                 - name: pegasus-deb-x86_64_deb_10
                 - name: pegasus-deb-x86_64_ubuntu_16
@@ -1013,7 +965,6 @@ project:
                 - name: pegasus-source-versioned-swamp-c
                 - name: pegasus-source-versioned-swamp-java
                 - name: pegasus-source-versioned-swamp-python
-                - name: pegasus-worker-x86_64_deb_8
                 - name: pegasus-worker-x86_64_deb_9
                 - name: pegasus-worker-x86_64_deb_10
                 - name: pegasus-worker-x86_64_macos
@@ -1075,8 +1026,6 @@ project:
       variables:
         - key: TAG_CENTOS_7
           value: panorama-centos7
-        - key: TAG_DEBIAN_8
-          value: panorama-jessie
         - key: TAG_DEBIAN_9
           value: panorama-stretch
         - key: TAG_DEBIAN_10
