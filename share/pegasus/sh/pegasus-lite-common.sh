@@ -564,8 +564,16 @@ function pegasus_lite_get_system()
 
         # /etc/issue and /etc/os-release works most of the time, but there are exceptions
         if [ -e /etc/os-release ]; then
-           osname=`grep -w ID /etc/os-release | head -n 1 | tr -d '"' | cut -d '=' -f 2`
-           osversion=`grep -w VERSION_ID /etc/os-release | head -n 1 | tr -d '"' | cut -d '=' -f 2`
+            osname=`grep -w ID /etc/os-release | head -n 1 | tr -d '"' | cut -d '=' -f 2`
+            osversion=`grep -w VERSION_ID /etc/os-release | head -n 1 | tr -d '"' | cut -d '=' -f 2`
+            
+            case $osname in
+                "debian") osname="deb" ;;
+                "centos"|"scientific") osname="rhel" ;;
+                "fedora") osname="fc" ;;
+                "sles") osname="suse" ;;
+                *) osname="$osname" ;;
+            esac
         elif [ -e /etc/issue ]; then
             osname=`cat /etc/issue | head -n1 | awk '{print $1;}' | tr '[:upper:]' '[:lower:]'`
 
@@ -595,9 +603,6 @@ function pegasus_lite_get_system()
                 osname="suse"
                 osversion=`cat /etc/SuSE-release | grep VERSION | grep -o -E ' [0-9]+'`
             fi
-        else
-            echo "PegasusLite: 1 failed to get system info"
-            exit 1
         fi
 
         # remove spaces/tabs in the version
@@ -608,6 +613,11 @@ function pegasus_lite_get_system()
 
         # we only want major version numbers
         osversion=`echo $osversion | sed 's/[\.-].*//'`
+        
+        if [ "X$osname" = "X" -o "X$osversion" = "X" ]; then
+            echo "PegasusLite: 1 failed to get system info"
+            exit 1
+        fi
 
         echo "${arch}_${osname}_${osversion}"
         return 0
