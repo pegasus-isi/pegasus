@@ -114,6 +114,11 @@ end:
     return;
 }
 
+/* callback for qsort(3) on array of strings */
+static int comparator(const void* a, const void* b) {
+  return strcmp(*((const char**) a), *((const char**)b));
+}
+
 static size_t convert2YAML(FILE *out, const AppInfo* run) {
     size_t i;
     struct passwd* user = getpwuid(getuid());
@@ -167,7 +172,7 @@ static size_t convert2YAML(FILE *out, const AppInfo* run) {
     if (isdigit(run->ipv4[0])) {
         struct hostent* h;
         in_addr_t address = inet_addr(run->ipv4);
-        fprintf(out, "  interface: %s\n", run->prif); 
+        fprintf(out, "  interface: %s\n", run->prif);
         fprintf(out, "  hostaddr: %s\n", run->ipv4);
         if ((h = gethostbyaddr((const char*) &address, sizeof(in_addr_t), AF_INET))) {
             fprintf(out, "  hostname: %s\n", h->h_name);
@@ -251,6 +256,9 @@ static size_t convert2YAML(FILE *out, const AppInfo* run) {
 
     /* If the job failed, or if the user requested the full kickstart record */
     if (any_failure(run) || run->fullInfo) {
+        char** tmp;
+        int N;
+
         /* Extra <statcall> records */
         printYAMLStatInfo(out, 4, "kickstart", &run->kickstart, includeData, useCDATA, 1);
         updateStatInfo(&(((AppInfo*) run)->logfile));
@@ -258,8 +266,16 @@ static size_t convert2YAML(FILE *out, const AppInfo* run) {
 
         /* <environment> */
         fprintf(out, "  environment:\n");
-        for (i=0; environ[i] != NULL; i++) {
-            char *key = environ[i];
+        for (N=0; environ[N] != NULL; N++) ;
+
+        /* tmp has pointers to strings, not strings themselves */
+        tmp = (char**) malloc((N+1) * sizeof(char*));
+        memcpy(tmp, environ, (N+1) * sizeof(char*));
+        qsort(tmp, N, sizeof(char*), comparator);
+
+        /* show environment variables sorted */
+        for (i=0; tmp[i] != NULL; i++) {
+            char *key = tmp[i];
             char *s;
             if (key && (s = strchr(key, '='))) {
                 *s = '\0'; /* temporarily cut string here */
@@ -271,6 +287,7 @@ static size_t convert2YAML(FILE *out, const AppInfo* run) {
                 *s = '='; /* reset string to original */
             }
         }
+        free((void*) tmp);
 
         /* <resource>  limits */
         printYAMLLimitInfo(out, 2, &run->limits);
@@ -314,7 +331,7 @@ int initAppInfo(AppInfo* appinfo, int argc, char* const* argv) {
     umask(appinfo->umask);
 
     /* obtain system information */
-    initMachineInfo(&appinfo->machine); 
+    initMachineInfo(&appinfo->machine);
 
     /* initialize some data for myself */
     initStatInfoFromName(&appinfo->kickstart, argv[0], O_RDONLY, 0);
@@ -336,7 +353,7 @@ int initAppInfo(AppInfo* appinfo, int argc, char* const* argv) {
     /* metadata */
     pattern(tempname, tempsize, tempdir, "/", "ks.meta.XXXXXX");
     initStatInfoAsTemp(&appinfo->metadata, tempname);
-    
+
     /* integrity data */
     pattern(tempname, tempsize, tempdir, "/", "ks.integrity.XXXXXX");
     initStatInfoAsTemp(&appinfo->integritydata, tempname);
@@ -466,8 +483,7 @@ void deleteAppInfo(AppInfo* runinfo) {
     deleteJobInfo(&runinfo->cleanup);
 
     /* release system information */
-    deleteMachineInfo(&runinfo->machine); 
+    deleteMachineInfo(&runinfo->machine);
 
     memset(runinfo, 0, sizeof(AppInfo));
 }
-
