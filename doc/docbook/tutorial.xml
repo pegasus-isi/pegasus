@@ -257,20 +257,32 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
     tutorial we will be using the split workflow, which can be created like
     this:</para>
 
-    <programlisting>$ <emphasis role="bold">cd /home/tutorial</emphasis>
+  <programlisting>
+$ <emphasis role="bold">cd /home/tutorial</emphasis>
 $ <emphasis role="bold">pegasus-init split</emphasis>
 Do you want to generate a tutorial workflow? (y/n) [n]: <emphasis role="bold">y</emphasis>
+1: Local Machine Condor Pool
+2: USC HPCC Cluster
+3: OSG from ISI submit node
+4: XSEDE, with Bosco
+5: Bluewaters, with Glite
+6: TACC Wrangler with Glite
+7: OLCF TITAN with Glite
+What environment is tutorial to be setup for? (1-7) [1]: <emphasis role="bold">1</emphasis>
 1: Process
 2: Pipeline
 3: Split
 4: Merge
-5: Diamond
-What tutorial workflow do you want? (1-5) [1]: <emphasis role="bold">3</emphasis>
+5: EPA (requires R)
+6: Population Modeling using Containers
+7: Diamond
+What tutorial workflow do you want? (1-7) [1]: <emphasis role="bold">3</emphasis>
+Pegasus Tutorial setup for example workflow - split for execution on submit-host in directory /home/tutorial/split
 $ <emphasis role="bold">cd split</emphasis>
 $ <emphasis role="bold">ls</emphasis>
-README.md          input              plan_dax.sh        tc.txt
-daxgen.py          output             rc.txt
-generate_dax.sh    pegasus.properties sites.xml
+README.md        sites.xml  tc.txt  bin                 daxgen.py  
+generate_dax.sh  input      output  pegasus.properties  plan_cluster_dax.sh  
+plan_dax.sh      rc.txt  
 </programlisting>
 
     <tip>
@@ -348,34 +360,38 @@ Generated dax split.dax
     <para>To plan the split workflow invoke the pegasus-plan command using the
     <filename>plan_dax.sh</filename> wrapper script as follows:</para>
 
-    <programlisting>$ <emphasis role="bold">./plan_dax.sh split.dax</emphasis>
-2015.10.22 19:12:10.402 PDT:
-2015.10.22 19:12:10.409 PDT:   -----------------------------------------------------------------------
-2015.10.22 19:12:10.414 PDT:   File for submitting this DAG to Condor           : split-0.dag.condor.sub
-2015.10.22 19:12:10.420 PDT:   Log of DAGMan debugging messages                 : split-0.dag.dagman.out
-2015.10.22 19:12:10.426 PDT:   Log of Condor library output                     : split-0.dag.lib.out
-2015.10.22 19:12:10.431 PDT:   Log of Condor library error messages             : split-0.dag.lib.err
-2015.10.22 19:12:10.436 PDT:   Log of the life of condor_dagman itself          : split-0.dag.dagman.log
-2015.10.22 19:12:10.442 PDT:
-2015.10.22 19:12:10.458 PDT:   -----------------------------------------------------------------------
-2015.10.22 19:12:14.292 PDT:   Your database is compatible with Pegasus version: 4.5.3
-2015.10.22 19:12:15.198 PDT:   Submitting to condor split-0.dag.condor.sub
-2015.10.22 19:12:15.997 PDT:   Submitting job(s).
-2015.10.22 19:12:16.003 PDT:   1 job(s) submitted to cluster 111.
-2015.10.22 19:12:16.035 PDT:
-2015.10.22 19:12:16.055 PDT:   Your workflow has been started and is running in the base directory:
-2015.10.22 19:12:16.061 PDT:
-2015.10.22 19:12:16.071 PDT:     /home/tutorial/split/submit/tutorial/pegasus/split/run0001
-2015.10.22 19:12:16.078 PDT:
-2015.10.22 19:12:16.084 PDT:   *** To monitor the workflow you can run ***
-2015.10.22 19:12:16.090 PDT:
-2015.10.22 19:12:16.098 PDT:     pegasus-status -l /home/tutorial/split/submit/tutorial/pegasus/split/run0001
-2015.10.22 19:12:16.114 PDT:
-2015.10.22 19:12:16.119 PDT:   *** To remove your workflow run ***
-2015.10.22 19:12:16.125 PDT:
-2015.10.22 19:12:16.131 PDT:     pegasus-remove /home/tutorial/split/submit/tutorial/pegasus/split/run0001
-2015.10.22 19:12:16.137 PDT:
-2015.10.22 19:12:17.630 PDT:   Time taken to execute is 1.918 seconds</programlisting>
+    <programlisting>
+$ <emphasis role="bold">./plan_dax.sh split.dax</emphasis>
+2019.08.22 18:51:29.289 UTC:    
+2019.08.22 18:51:29.295 UTC:   ----------------------------------------------------------------------- 
+2019.08.22 18:51:29.300 UTC:   File for submitting this DAG to HTCondor           : split-0.dag.condor.sub 
+2019.08.22 18:51:29.305 UTC:   Log of DAGMan debugging messages                 : split-0.dag.dagman.out 
+2019.08.22 18:51:29.310 UTC:   Log of HTCondor library output                     : split-0.dag.lib.out 
+2019.08.22 18:51:29.315 UTC:   Log of HTCondor library error messages             : split-0.dag.lib.err 
+2019.08.22 18:51:29.321 UTC:   Log of the life of condor_dagman itself          : split-0.dag.dagman.log 
+2019.08.22 18:51:29.326 UTC:    
+2019.08.22 18:51:29.331 UTC:   -no_submit given, not submitting DAG to HTCondor.  You can do this with: 
+2019.08.22 18:51:29.341 UTC:   ----------------------------------------------------------------------- 
+2019.08.22 18:51:29.932 UTC:   Created Pegasus database in: sqlite:////home/tutorial/.pegasus/workflow.db 
+2019.08.22 18:51:29.937 UTC:   Your database is compatible with Pegasus version: 4.9.2 
+2019.08.22 18:51:29.997 UTC:   Submitting to condor split-0.dag.condor.sub 
+2019.08.22 18:51:30.021 UTC:   Submitting job(s). 
+2019.08.22 18:51:30.026 UTC:   1 job(s) submitted to cluster 1. 
+2019.08.22 18:51:30.032 UTC:    
+2019.08.22 18:51:30.037 UTC:   Your workflow has been started and is running in the base directory: 
+2019.08.22 18:51:30.042 UTC:    
+2019.08.22 18:51:30.047 UTC:     /home/tutorial/split/submit/tutorial/pegasus/split/run0001 
+2019.08.22 18:51:30.052 UTC:    
+2019.08.22 18:51:30.058 UTC:   *** To monitor the workflow you can run *** 
+2019.08.22 18:51:30.063 UTC:    
+2019.08.22 18:51:30.068 UTC:     pegasus-status -l /home/tutorial/split/submit/tutorial/pegasus/split/run0001 
+2019.08.22 18:51:30.074 UTC:    
+2019.08.22 18:51:30.079 UTC:   *** To remove your workflow run *** 
+2019.08.22 18:51:30.084 UTC:    
+2019.08.22 18:51:30.089 UTC:     pegasus-remove /home/tutorial/split/submit/tutorial/pegasus/split/run0001 
+2019.08.22 18:51:30.095 UTC:    
+2019.08.22 18:51:30.658 UTC:   Time taken to execute is 1.495 seconds 
+</programlisting>
 
     <note>
       <para>The line in the output that starts with
