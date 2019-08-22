@@ -658,16 +658,17 @@ count.txt.a  count.txt.b  count.txt.c  count.txt.d
       succeeded, <literal>pegasus-analyzer</literal> will only show some basic
       statistics about the number of successful jobs:</para>
 
-      <programlisting>$ <emphasis role="bold">pegasus-analyzer submit/tutorial/pegasus/split/run0001</emphasis>
-pegasus-analyzer: initializing...
+    <programlisting>
+$ <emphasis role="bold">pegasus-analyzer submit/tutorial/pegasus/split/run0001/</emphasis>
+************************************Summary*************************************
 
-****************************Summary***************************
-
- Total jobs         :      11 (100.00%)
- # jobs succeeded   :      11 (100.00%)
- # jobs failed      :      0 (0.00%)
- # jobs unsubmitted :      0 (0.00%)
-</programlisting>
+Submit Directory   : submit/tutorial/pegasus/split/run0001/
+Total jobs         :     10 (100.00%)
+# jobs succeeded   :     10 (100.00%)
+# jobs failed      :      0 (0.00%)
+# jobs held        :      0 (0.00%)
+# jobs unsubmitted :      0 (0.00%)
+    </programlisting>
 
       <para>If the workflow had failed you would see something like
       this:</para>
@@ -750,19 +751,18 @@ Warning: Permanently added '127.0.0.1' (RSA) to the list of known hosts.<emphasi
       statistics it knows how to calculate:</para>
 
       <programlisting>$ <emphasis role="bold">pegasus-statistics –s all submit/tutorial/pegasus/split/run0001</emphasis>
-
 #
 # Pegasus Workflow Management System - http://pegasus.isi.edu
 #
 # Workflow summary:
 #   Summary of the workflow execution. It shows total
 #   tasks/jobs/sub workflows run, how many succeeded/failed etc.
-#   In case of hierarchical workflow the calculation shows the
+#   In case of hierarchical workflow the calculation shows the 
 #   statistics across all the sub workflows.It shows the following
 #   statistics about tasks, jobs and sub workflows.
 #     * Succeeded - total count of succeeded tasks/jobs/sub workflows.
 #     * Failed - total count of failed tasks/jobs/sub workflows.
-#     * Incomplete - total count of tasks/jobs/sub workflows that are
+#     * Incomplete - total count of tasks/jobs/sub workflows that are 
 #       not in succeeded or failed state. This includes all the jobs
 #       that are not submitted, submitted but not completed etc. This
 #       is calculated as  difference between 'total' count and sum of
@@ -774,9 +774,9 @@ Warning: Permanently added '127.0.0.1' (RSA) to the list of known hosts.<emphasi
 #       succeeded and failed count.
 # Workflow wall time:
 #   The wall time from the start of the workflow execution to the end as
-#   reported by the DAGMAN.In case of rescue dag the value is the
+#   reported by the DAGMAN.In case of rescue dag the value is the 
 #   cumulative of all retries.
-# Workflow cumulative job wall time:
+# Cumulative job wall time:
 #   The sum of the wall time of all jobs as reported by kickstart.
 #   In case of job retries the value is the cumulative of all retries.
 #   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
@@ -788,14 +788,7 @@ Warning: Permanently added '127.0.0.1' (RSA) to the list of known hosts.<emphasi
 #   is the cumulative of all retries. For workflows having sub workflow
 #   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
 #   from the sub workflows as well.
-# Cumulative job wall time as seen from submit side:
-#   The sum of the wall time of all jobs as reported by DAGMan.
-#   This is similar to the regular cumulative job wall time, but includes
-#   job management overhead and delays. In case of job retries the value
-#   is the cumulative of all retries. For workflows having sub workflow
-#   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
-#   from the sub workflows as well.
-# Workflow cumulative job badput wall time:
+# Cumulative job badput wall time:
 #   The sum of the wall time of all failed jobs as reported by kickstart.
 #   In case of job retries the value is the cumulative of all retries.
 #   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
@@ -807,26 +800,37 @@ Warning: Permanently added '127.0.0.1' (RSA) to the list of known hosts.<emphasi
 #   is the cumulative of all retries. For workflows having sub workflow
 #   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
 #   from the sub workflows as well.
-
 ------------------------------------------------------------------------------
 Type           Succeeded Failed  Incomplete  Total     Retries   Total+Retries
-Tasks          5         0       0           5         0         5
-Jobs           15        0       0           15        0         15
-Sub-Workflows  0         0       0           0         0         0
+Tasks          5         0       0           5         0         5                
+Jobs           10        0       0           10        0         10               
+Sub-Workflows  0         0       0           0         0         0                
 ------------------------------------------------------------------------------
 
-Workflow wall time                                       : 2 mins, 6 secs
-Workflow cumulative job wall time                        : 38 secs
-Cumulative job wall time as seen from submit side        : 42 secs
-Workflow cumulative job badput wall time                 :
-Cumulative job badput wall time as seen from submit side :
+Workflow wall time                                       : 1 min, 39 secs
+Cumulative job wall time                                 : 10.522 secs
+Cumulative job wall time as seen from submit side        : 14.0 secs
+Cumulative job badput wall time                          : 0.0 secs
+Cumulative job badput wall time as seen from submit side : 0.0 secs
+
+# Integrity Metrics
+# Number of files for which checksums were compared/computed along with total time spent doing it. 
+9 files checksums compared with total duration of 0.358 secs
+9 files checksums generated with total duration of 0.192 secs
+
+# Integrity Errors
+# Total:        
+#       Total number of integrity errors encountered across all job executions(including retries) of a workflow. 
+# Failures: 
+#       Number of failed jobs where the last job instance had integrity errors.
+Failures: 0 job failures had integrity errors
 
 Summary                       : submit/tutorial/pegasus/split/run0001/statistics/summary.txt
 Workflow execution statistics : submit/tutorial/pegasus/split/run0001/statistics/workflow.txt
 Job instance statistics       : submit/tutorial/pegasus/split/run0001/statistics/jobs.txt
 Transformation statistics     : submit/tutorial/pegasus/split/run0001/statistics/breakdown.txt
+Integrity statistics          : submit/tutorial/pegasus/split/run0001/statistics/integrity.txt
 Time statistics               : submit/tutorial/pegasus/split/run0001/statistics/time.txt
-
 
 </programlisting>
 
