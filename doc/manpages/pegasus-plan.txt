@@ -353,17 +353,17 @@ as an environment profile.
 
 *--relative-dir* 'dir'::
 The directory relative to the base directory where the executable
-workflow it to be generated and executed. This overrides the default directory
+workflow is to be generated and executed. This overrides the default directory
 structure that Pegasus creates based on username, VO Group and the DAX
 label.
 
 *--relative-submit-dir* 'dir'::
 The directory relative to the base directory where the executable
-workflow it to be generated. This overrides the default directory
+workflow is to be generated. This overrides the default directory
 structure that Pegasus creates based on username, VO Group and the DAX
 label. By specifying *--relative-dir* and *--relative-submit-dir* you
-can have different relative execution directory on the remote site and
-different relative submit directory on the submit host.
+can have a different relative execution directory on the remote site and
+a different relative submit directory on the submit host.
 
 *-s* 'site'[,'site',...]::
 *--sites* 'site'[,'site',...]::
