@@ -248,10 +248,10 @@ pegasus.replica.uwm.prefer.stagein.sites                   isi,cit
     node. Pegasus adds a directory creation job in the executable workflow
     that creates the workflow specific directory on the staging server.</para>
 
-    <para>In addition to data, Pegasus does transfer user executable to the
-    compute sites if the executable are not installed on the remote sites
-    before hand. This chapter gives an overview of how transfers of data and
-    executable is managed in Pegasus.</para>
+    <para>In addition to data, Pegasus will transfer user executables to the
+    compute sites if the executables are not installed on the remote sites
+    before hand. This chapter gives an overview of how the transfers of data and
+    executables are managed in Pegasus.</para>
 
     <para>Pegasus picks up files for data transfers based on the transfer
     attribute associated with the input and output files for the job. These
@@ -603,7 +603,7 @@ pegasus.replica.uwm.prefer.stagein.sites                   isi,cit
 
         <orderedlist>
           <listitem>
-            <para>Stagein Job executeson the submit host to stage in input
+            <para>Stagein Job executes on the submit host to stage in input
             data from Input Sites ( 1---n) to a workflow specific execution
             directory on the submit host</para>
           </listitem>
