@@ -3595,12 +3595,12 @@ class DockerHandler(TransferHandlerBase):
         return [successful_l, failed_l]  
 
 
-class SingularityHubHandler(TransferHandlerBase):
+class SingularityHandler(TransferHandlerBase):
     """
     Use "singularity pull" to import images from Singularity Hub
     """
     
-    _name = "SingularityHubHandler"
+    _name = "SingularityHandler"
     _protocol_map = ["shub->file", "shub->file::singularity", "docker->file::singularity"]
 
     def do_transfers(self, transfers_l):
@@ -3882,7 +3882,7 @@ class SimilarWorkSet:
         self._available_handlers.append( StashHandler() )
         self._available_handlers.append( SymlinkHandler() )
         self._available_handlers.append( DockerHandler() )
-        self._available_handlers.append( SingularityHubHandler() )
+        self._available_handlers.append( SingularityHandler() )
         self._available_handlers.append( HPSSHandler() )
 
         # mkdirs and removes
