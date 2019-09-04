@@ -105,6 +105,15 @@ class Parser(object):
                 return False
         return True
 
+    def is_multipart_record(self, buffer=''):
+        """
+        Returns True if buffer contains an invocation record either xml or invocation
+        """
+        if self.is_invocation_record(buffer):
+            return False
+        else:
+            return buffer.find( "- " ) == 0
+
     def is_task_record(self, buffer=''):
         """
         Returns True if buffer contains a task record.
@@ -267,6 +276,72 @@ class YAMLParser( Parser ):
         empty list if no records are found or if an error happens.
         """
 
+        my_reply = []
+
+        # Place keys_dict in the _ks_elements
+        self._ks_elements = keys_dict
+
+        # Try to open the file
+        if self.open() == False:
+            return my_reply
+
+        logger.debug("Started reading records from kickstart file %s" % (self._kickstart_output_file))
+
+        self._record_number = 0
+        # Read first record
+        record = self.read_record()
+
+        # Loop while we still have record to read
+        while record is not None:
+            if self.is_invocation_record(record) == True:
+                # We have an invocation record, parse it!
+                try:
+                    my_record = self.parse_invocation_record(record)
+                except:
+                    logger.warning("KICKSTART-PARSE-ERROR --> error parsing YAML invocation record in file %s"
+                                   % (self._kickstart_output_file))
+                    logger.warning(traceback.format_exc())
+                    # Found error parsing this file, return empty reply
+                    my_reply = []
+                    # Finish the loop
+                    break
+                my_reply.append(my_record)
+            elif self.is_clustered_record(record) == True:
+                # Check if we want clustered records too
+                if clustered:
+                    # Clustered records are seqexec summary records for clustered jobs
+                    # We have a clustered record, parse it!
+                    my_reply.append(self.parse_clustered_record(record))
+            elif self.is_task_record(record) == True:
+                # Check if we want task records too
+                if tasks:
+                    # We have a clustered record, parse it!
+                    my_reply.append(self.parse_task_record(record))
+            elif self.is_multipart_record(record) == True:
+                 logger.error("Multipart Record in file %s %s " %( self._kickstart_output_file, record))
+            else:
+                # We have something else, this shouldn't happen!
+                # Just skip it
+                pass
+
+            # Read next record
+            record = self.read_record()
+
+        # Lastly, close the file
+        self.close()
+
+        return my_reply
+
+    def parse_old(self, keys_dict, tasks=True, clustered=True):
+        """
+        This function parses the kickstart output file, looking for
+        the keys specified in the keys_dict variable. It returns a
+        list of dictionaries containing the found keys. Look at the
+        parse_stampede function for details about how to pass keys
+        using the keys_dict structure. The function will return an
+        empty list if no records are found or if an error happens.
+        """
+
         # Place keys_dict in the _ks_elements
         self._ks_elements = keys_dict
         my_reply = []
@@ -304,7 +379,7 @@ class YAMLParser( Parser ):
                     # Clustered records are seqexec summary records for clustered jobs
                     # We have a clustered record, parse it!
                     data.append(self.parse_clustered_record(line))
-            elif line.find("---------------pegasus-multipart") == 0 or line[0] not in [" ", "-", "\n"]:
+            elif line.find("---------------pegasus-multipart") == 0 : #or line[0] not in [" ", "-", "\n"]:
                 # we have a buffer we want to parse
                 if buffer.count("\n") < 3:
                     # ignore "short" buffers
@@ -341,6 +416,110 @@ class YAMLParser( Parser ):
                 buffer = ""
 
         return data
+
+    def read_record(self):
+        """
+        This function reads an invocation record from the kickstart
+        output file. We also look for the struct at the end of a file
+        containing multiple records. It returns a string containing
+        the record, or None if it is not found.
+        """
+        buffer = ""
+
+        #valid token that is parsed
+        token = ""
+
+        self._record_number += 1
+        logger.trace("Started reading record number %d from kickstart file %s" %( self._record_number, self._kickstart_output_file))
+
+        # First, we find the beginning <invocation xmlns....
+        while True:
+            line = self._fh.readline()
+            if line == '':
+                # End of file, record not found
+                return None
+            if line.find("- invocation:") != -1:
+                token = "- invocation:"
+                break
+            if ( line.find("[cluster-task") != -1 ):
+                token = "[cluster-task"
+                break
+            if ( line.find("[cluster-summary") != -1 ):
+                token = "[cluster-summary"
+                break
+            if ( line.find("[seqexec-task") != -1 ):
+                #deprecated token
+                token = "[seqexec-task"
+                break
+            if ( line.find("[seqexec-summary") != -1 ):
+                #deprecated token
+                token = "[seqexec-summary"
+                break
+            if line.find("---------------pegasus-multipart") == 0 :
+                # token
+                token = "pegasus-multipart"
+                break;
+
+        # Found something!
+        if token == "- invocation:" :
+            # Found invocation record
+            start = line.find("- invocation:")
+            buffer = line[start:]
+            # Check if we have everything in a single line
+            # Not clear what to do for that for YAML records
+        elif token == "pegasus-multipart":
+            buffer = ""
+        elif token == "[cluster-summary" or token == "[seqexec-summary":
+            # Found line with cluster jobs summary
+            start = line.find(token)
+            buffer = line[start:]
+            end = buffer.find("]")
+
+            if end >= 0:
+                end = end + len("]")
+                return buffer[:end]
+
+            # clustered record should be in a single line!
+            logger.warning("%s: %s line is malformed... ignoring it..." % (self._kickstart_output_file, token ))
+            return ""
+        elif token == "[cluster-task" or token == "[seqexec-task":
+            # Found line with task information
+            start = line.find( token )
+            buffer = line[start:]
+            end = buffer.find("]")
+
+            if end >= 0:
+                end = end + len("]")
+                return buffer[:end]
+
+            # task record should be in a single line!
+            logger.warning("%s: %s line is malformed... ignoring it..." % (self._kickstart_output_file, token))
+            return ""
+        else:
+            return ""
+
+        # Ok, now continue reading the file until we get a full record
+        buffer = [buffer]
+
+        while True:
+            file_ptr = self._fh.tell()
+            line = self._fh.readline()
+            if line == '':
+                # End of file
+                break
+
+            if line.find("---------------pegasus-multipart") == 0:
+                # this is to trigger end of parsing of kickstart record
+                logger.error( "Hit multipart in file %s: " %self._kickstart_output_file)
+                # back track file pointer
+                self._fh.seek(file_ptr)
+                break
+            elif line[0] in [" ", "-", "\n"]:
+                buffer.append( line )
+
+        record = "".join(buffer)
+        logger.trace("Finished reading record number %d from kickstart file %s" %( self._record_number, self._kickstart_output_file))
+        return record
 
     def dicts_remap(self, src, src_keys, dst, dst_keys):
         """
