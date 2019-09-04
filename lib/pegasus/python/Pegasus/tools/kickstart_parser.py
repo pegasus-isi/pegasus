@@ -293,6 +293,7 @@ class YAMLParser( Parser ):
 
         # Loop while we still have record to read
         while record is not None:
+            logger.error( "Record is \n%s" %record)
             if self.is_invocation_record(record) == True:
                 # We have an invocation record, parse it!
                 try:
@@ -318,7 +319,7 @@ class YAMLParser( Parser ):
                     # We have a clustered record, parse it!
                     my_reply.append(self.parse_task_record(record))
             elif self.is_multipart_record(record) == True:
-                 logger.error("Multipart Record in file %s %s " %( self._kickstart_output_file, record))
+                 logger.error("Multipart Record in file %s \n %s " %( self._kickstart_output_file, record))
             else:
                 # We have something else, this shouldn't happen!
                 # Just skip it
@@ -508,9 +509,9 @@ class YAMLParser( Parser ):
                 # End of file
                 break
 
-            if line.find("---------------pegasus-multipart") == 0:
-                # this is to trigger end of parsing of kickstart record
-                logger.error( "Hit multipart in file %s: " %self._kickstart_output_file)
+            if line.find("[cluster-") == 0 or line.find("---------------pegasus-multipart") == 0:
+                # this is to trigger end of parsing of a single kickstart record
+                logger.error( "Hit end of invocation record in file %s: " %self._kickstart_output_file)
                 # back track file pointer
                 self._fh.seek(file_ptr)
                 break
