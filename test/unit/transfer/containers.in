@@ -12,14 +12,23 @@
    "lfn": "singularity-image.tar.gz",
    "id": 2,
    "src_urls": [
-     { "site_label": "computesite", "url": "shub://vsoch/hello-world", "priority": 100 }
+     { "site_label": "computesite", "url": "shub://vsoch/singularity-images", "priority": 100 }
    ],
    "dest_urls": [
      { "site_label": "computesite", "url": "file://$PWD/singularity-image.tar.gz" }
    ] },
  { "type": "transfer",
-   "lfn": "singularity-docker-image.tar.gz",
+   "lfn": "singularity2.sif",
    "id": 3,
+   "src_urls": [
+     { "site_label": "computesite", "url": "library://sylabsed/examples/lolcow", "priority": 100 }
+   ],
+   "dest_urls": [
+     { "site_label": "computesite", "url": "file://$PWD/singularity2.sif" }
+   ] },
+ { "type": "transfer",
+   "lfn": "singularity-docker-image.tar.gz",
+   "id": 4,
    "src_urls": [
      { "site_label": "computesite", "url": "docker://hello-world", "priority": 100 }
    ],

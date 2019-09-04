@@ -729,6 +729,7 @@ class TimedCommand(object):
         self._out_file.close()
         
         if self._process.returncode != 0:
+            print(self.get_outerr())
             raise RuntimeError("Command exited with non-zero exit code (%d): %s" \
                                %(self._process.returncode, self._cmd_for_exc))
 
@@ -3679,13 +3680,22 @@ class DockerHandler(TransferHandlerBase):
         return [successful_l, failed_l]  
 
 
-class SingularityHubHandler(TransferHandlerBase):
+class SingularityHandler(TransferHandlerBase):
     """
-    Use "singularity pull" to import images from Singularity Hub
+    Use "singularity pull" to import images from Singularity Hub, Singularity Library, and Docker.
+
+    Singularity Hub and Docker compatability requires Singularity version 2.3 or greater.
+    Singularity Library compatability requires Singularity version 3.0 or greater.
     """
     
-    _name = "SingularityHubHandler"
-    _protocol_map = ["shub->file", "shub->file::singularity", "docker->file::singularity"]
+    _name = "SingularityHandler"
+    _protocol_map = [
+                        "shub->file", 
+                        "shub->file::singularity", 
+                        "library->file",
+                        "library->file::singularity",
+                        "docker->file::singularity"
+                    ]
 
     def do_transfers(self, transfers_l):
         
@@ -3694,11 +3704,27 @@ class SingularityHubHandler(TransferHandlerBase):
             logger.error("Unable to do pull Singularity images as singularity command could not be found")
             return [[], transfers_l]
 
-        # the "pull" command was introduced in 2.3
-        if tools.major_version("singularity") < 2 or \
-           (tools.major_version("singularity") == 2 and tools.minor_version("singularity") < 3):
-            logger.error("Singularity 2.3 or above is required for pulling images from the hub")
-            return [[], transfers_l]
+        # singularity library requires version 3.0 or greater, therefore we check
+        # if library is used as a source protocol in any of the transfers and 
+        # verify that the minimum required version of singularity is installed
+        is_library_used = False
+
+        for transfer in transfers_l:
+            if transfer.get_src_proto() == "library":
+                is_library_used = True
+                logger.debug("Singularity library is used as a source protocol")
+                break
+
+        if is_library_used:
+            if tools.major_version("singularity") < 3:
+                logger.error("Singularity 3.0 or above is required for pulling images from the library")
+                return [[], transfers_l]
+        else:
+            # the "pull" command was introduced in 2.3 to support pulls from the hub and Docker
+            if tools.major_version("singularity") < 2 or \
+               (tools.major_version("singularity") == 2 and tools.minor_version("singularity") < 3):
+                logger.error("Singularity 2.3 or above is required for pulling images from the hub or docker")
+                return [[], transfers_l]
 
         successful_l = []
         failed_l = []
@@ -3712,9 +3738,22 @@ class SingularityHubHandler(TransferHandlerBase):
             target_name = hashlib.sha224(t.get_dst_path()).hexdigest()
 
             prepare_local_dir(os.path.dirname(t.get_dst_path()))
+
             cmd = "%s pull --name '%s' '%s' && mv %s* '%s'" \
                 % (tools.full_path("singularity"), target_name, t.src_url(), \
                    target_name, t.get_dst_path())
+
+            if tools.major_version("singularity") >= 3:
+                # --name is no longer needed to specify an output file
+                # --allow-unauthenticated means that the container we are pulling does not
+                # need to be authenticated, else singularity will give a prompt asking
+                # for permission to continue download if the image is unsigned 
+                cmd = "%s pull --allow-unauthenticated '%s' '%s' && mv %s* '%s'" \
+                    % (tools.full_path("singularity"), target_name, t.src_url(), \
+                       target_name, t.get_dst_path())
+
+            logger.debug("Using Singularity command: '%s'" % (cmd))
+
             try:
                 tc = TimedCommand(cmd)
                 tc.run()
@@ -4007,7 +4046,7 @@ class SimilarWorkSet:
         self._available_handlers.append( StashHandler() )
         self._available_handlers.append( SymlinkHandler() )
         self._available_handlers.append( DockerHandler() )
-        self._available_handlers.append( SingularityHubHandler() )
+        self._available_handlers.append( SingularityHandler() )
         self._available_handlers.append( HPSSHandler() )
 
         # mkdirs and removes
@@ -4021,19 +4060,23 @@ class SimilarWorkSet:
             raise RuntimeError("Unable to find handlers for target '%s'" %(proto))
 
         ## normal transfer below this
+        # supported container protocols
+        container_protos = ('docker', 'shub', 'library')
 
         src_proto = transfers_l[0].get_src_proto()
+        src_type = transfers_l[0].get_src_type()
+
         dst_proto = transfers_l[0].get_dst_proto()
+        dst_type = transfers_l[0].get_dst_type()
 
         # if file_type is set, it adds to the protocol in the handler mapping,
         # but only for docker/singularity to file://
         #if transfers_l[0].get_src_type() is not None and \
         #   src_proto == 'file':
         #    src_proto = src_proto + '::' + transfers_l[0].get_src_type()
-        if src_proto == 'docker' or src_proto == 'shub':
-            if transfers_l[0].get_dst_type() is not None and \
-               dst_proto == 'file':
-                dst_proto = dst_proto + '::' + transfers_l[0].get_dst_type()
+        if src_proto in container_protos:
+            if dst_type is not None and dst_proto == 'file':
+                dst_proto = dst_proto + '::' + dst_type 
 
         # can we find one handler which can handle both source
         # and destination protocols directly?
@@ -4055,10 +4098,8 @@ class SimilarWorkSet:
         # TODO: improve logic here - currently we have to limit this
         # to docker and singularity transfers
         middle_in_proto = 'file'
-        if (transfers_l[0].get_src_proto() == 'docker' or \
-            transfers_l[0].get_src_proto() == 'shub') and \
-           transfers_l[0].get_dst_type() is not None:
-            middle_in_proto = 'file::' + transfers_l[0].get_dst_type()
+        if src_proto in container_protos and dst_type is not None:
+            middle_in_proto = 'file::' + dst_type
         middle_out_proto = 'file'
         #if transfers_l[0].get_src_type() is not None:
         #    middle_out_proto = 'file::' + transfers_l[0].get_src_type()
@@ -4561,7 +4602,7 @@ def prepare_local_dir(path):
 
 def transfers_groupable(a, b):
     """
-    compares two url_pairs, and determins if they are similar enough to be
+    compares two url_pairs, and determines if they are similar enough to be
     grouped together for one tool
     """
     if type(a) is not type(b):
@@ -4698,7 +4739,7 @@ def read_v1_format(input, inputs_l):
                         src_sitename = r.group(1)
                     else:
                         logger.critical('Unable to parse comment on line %d' %(line_nr))
-                        myexit(1)
+                        (1)
                 
                 # src url
                 elif line_state == 0 or line_state == 3:
@@ -4753,8 +4794,10 @@ def myexit(rc):
     system exit without a stack trace
     """
     try:
+        print("didn't catch exception and returning with: %s" %(rc))
         sys.exit(rc)
     except SystemExit:
+        print("caught exception and return code is %s" %(rc))
         sys.exit(rc)
 
 
@@ -4975,6 +5018,9 @@ def main():
     if not failed_q.empty():
         logger.critical("Some transfers failed! See above," +
                         " and possibly stderr.")
+        while not failed_q.empty():
+            logger.critical(str(failed_q.get()))
+
         myexit(1)
     
     logger.info("All transfers completed successfully.")
