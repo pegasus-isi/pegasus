@@ -637,7 +637,7 @@ class YAMLParser( Parser ):
                     meta.add_attribute("checksum.type", "sha256")
                     meta.add_attribute("checksum.value", file_data["sha256"])
                     if "checksum_timing" in data["files"][lfn]:
-                        meta.add_attribute("checksum_timing", str(file_data["checksum_timing"]))
+                        meta.add_attribute("checksum.timing", str(file_data["checksum_timing"]))
                 # what else?
 
                 new_data["outputs"][lfn] = meta
