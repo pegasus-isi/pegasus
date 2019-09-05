@@ -466,8 +466,12 @@ class Job:
         stdout_text_list = []
         stdout_size=0
         for my_record in kickstart_output:
-            if not "invocation" in my_record:
+            if "multipart" in my_record:
+                #PM-1390 convert to integrity metrics
+                logger.error("Multipart record %s", my_record)
+            elif not "invocation" in my_record:
                 # Not this one... skip to the next
+                logger.error( "Skipping %s", my_record)
                 continue
             # Ok, we have an invocation record, extract the information we
             # need. Note that this may overwrite information obtained from

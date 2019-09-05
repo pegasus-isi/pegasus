@@ -293,7 +293,7 @@ class YAMLParser( Parser ):
 
         # Loop while we still have record to read
         while record is not None:
-            logger.error( "Record is \n%s" %record)
+            logger.trace( "Record is \n%s" %record)
             if self.is_invocation_record(record) == True:
                 # We have an invocation record, parse it!
                 try:
@@ -319,7 +319,11 @@ class YAMLParser( Parser ):
                     # We have a clustered record, parse it!
                     my_reply.append(self.parse_task_record(record))
             elif self.is_multipart_record(record) == True:
-                 logger.error("Multipart Record in file %s \n %s " %( self._kickstart_output_file, record))
+                logger.debug("Multipart Record in file %s" %( self._kickstart_output_file))
+                # can return multiple yaml snippets
+                my_records = self.parse_multipart_record(record)
+                for record in my_records:
+                    my_reply.append(record)
             else:
                 # We have something else, this shouldn't happen!
                 # Just skip it
@@ -511,7 +515,7 @@ class YAMLParser( Parser ):
 
             if line.find("[cluster-") == 0 or line.find("---------------pegasus-multipart") == 0:
                 # this is to trigger end of parsing of a single kickstart record
-                logger.error( "Hit end of invocation record in file %s: " %self._kickstart_output_file)
+                logger.debug( "Hit end of invocation record in file %s: " %self._kickstart_output_file)
                 # back track file pointer
                 self._fh.seek(file_ptr)
                 break
@@ -664,6 +668,36 @@ class YAMLParser( Parser ):
 
         # translate from the yaml dict structure to what we want using the keys-dict
         return self.map_yaml_to_ver2_format(entry)
+
+    def parse_multipart_record(self, buffer=''):
+        """
+        Parses the YAML record in buffer returning a multipart record in the job.out file
+        Sample buffer
+            ---------------pegasus-multipart
+            - integrity_verification_attempts:
+              - lfn: "f.a"
+                pfn: "f.a"
+                sha256: 8e8ecb610e893781b6c0a38e443a257cb8c0aa548b04946930bea987e5e090d6
+                success: True
+            - integrity_summary:
+                succeeded: 1
+                failed: 0
+                duration: 0.182
+
+        :param buffer:
+        :return: a list of yaml objects
+        """
+        entries = {}
+        try:
+            entries = yaml.safe_load(buffer)
+        except Exception as e:
+            logger.warning("KICKSTART-PARSE-ERROR --> yaml error in multipart record %s : %s"
+                           % (self._kickstart_output_file, str(e)))
+
+        for index, entry in enumerate(entries):
+            entries[index]["multipart"] = True
+        return entries
+
 
 
 
