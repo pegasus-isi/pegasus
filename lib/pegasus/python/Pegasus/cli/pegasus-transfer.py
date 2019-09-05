@@ -4739,7 +4739,7 @@ def read_v1_format(input, inputs_l):
                         src_sitename = r.group(1)
                     else:
                         logger.critical('Unable to parse comment on line %d' %(line_nr))
-                        (1)
+                        myexit(1)
                 
                 # src url
                 elif line_state == 0 or line_state == 3:
@@ -4794,10 +4794,8 @@ def myexit(rc):
     system exit without a stack trace
     """
     try:
-        print("didn't catch exception and returning with: %s" %(rc))
         sys.exit(rc)
     except SystemExit:
-        print("caught exception and return code is %s" %(rc))
         sys.exit(rc)
 
 
@@ -5018,8 +5016,6 @@ def main():
     if not failed_q.empty():
         logger.critical("Some transfers failed! See above," +
                         " and possibly stderr.")
-        while not failed_q.empty():
-            logger.critical(str(failed_q.get()))
 
         myexit(1)
     
