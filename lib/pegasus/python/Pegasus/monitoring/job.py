@@ -199,7 +199,17 @@ class Job:
         :return:
         """
         for event in events:
-            if "monitoring_event" in event:
+            if "integrity_summary" in event:
+                # PM-1390 multipart events
+                m = event["integrity_summary"]
+                metric = IntegrityMetric(type="check", # For time being they always refer to verification
+                                         file_type="input", # should be specified in multipart
+                                         succeeded=m["succeeded"] if "succeeded" in m else 0,
+                                         failed=m["failed"] if "failed" in m else 0,
+                                         duration=m["duration"] if "duration" in m else 0.0)
+                self.add_integrity_metric(metric)
+            elif "monitoring_event" in event:
+                # this is how integrity metrics were reported in 4.9.x series
                 name = event["monitoring_event"]
                 if name == "int.metric":
                     # split elements in payload to IntegrityMetric
@@ -469,6 +479,7 @@ class Job:
             if "multipart" in my_record:
                 #PM-1390 convert to integrity metrics
                 logger.error("Multipart record %s", my_record)
+                self._add_additional_monitoring_events([my_record])
             elif not "invocation" in my_record:
                 # Not this one... skip to the next
                 logger.error( "Skipping %s", my_record)
