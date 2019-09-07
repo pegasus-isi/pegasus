@@ -167,6 +167,7 @@ class Job:
         self._stdout_text = None
         self._stderr_text = None
         self._additional_monitoring_events = []
+        self._multipart_events = []
         self._job_dagman_out = None    # _CONDOR_DAGMAN_LOG from environment
                                        # line for pegasus-plan and subdax_ jobs
         self._kickstart_parsed = False # Flag indicating if the kickstart
@@ -191,14 +192,18 @@ class Job:
 
         return desc
 
-    def _add_additional_monitoring_events(self, events):
+    def _add_multipart_events(self, events):
         """
-        add monitoring events to the job, separating any integrity metrics,
+        add multipart events to the job, separating any integrity metrics,
         since Integrity metrics are stored internally not as addditonal monitoring event
         :param events:
         :return:
         """
         for event in events:
+            if not "multipart" in event:
+                # Not this one... skip to the next
+                logger.error(" Mismatched multipart record %s in job %s" %(event,self._exec_job_id))
+                continue
             if "integrity_summary" in event:
                 # PM-1390 multipart events
                 m = event["integrity_summary"]
@@ -208,8 +213,20 @@ class Job:
                                          failed=m["failed"] if "failed" in m else 0,
                                          duration=m["duration"] if "duration" in m else 0.0)
                 self.add_integrity_metric(metric)
-            elif "monitoring_event" in event:
+            else: # catch all
+                self._multipart_events.append(event)
+
+    def _add_additional_monitoring_events(self, events):
+        """
+        add monitoring events to the job, separating any integrity metrics,
+        since Integrity metrics are stored internally not as addditonal monitoring event
+        :param events:
+        :return:
+        """
+        for event in events:
+            if "monitoring_event" in event:
                 # this is how integrity metrics were reported in 4.9.x series
+                # as monitoring events; NOT multipart records in the job.out files
                 name = event["monitoring_event"]
                 if name == "int.metric":
                     # split elements in payload to IntegrityMetric
@@ -224,6 +241,8 @@ class Job:
                         self.add_integrity_metric(metric)
                 else:
                     self._additional_monitoring_events.append(event)
+            else: # catch all
+                self._additional_monitoring_events.append(event)
 
     def add_integrity_metric(self, metric):
         """
@@ -479,7 +498,7 @@ class Job:
             if "multipart" in my_record:
                 #PM-1390 convert to integrity metrics
                 logger.error("Multipart record %s", my_record)
-                self._add_additional_monitoring_events([my_record])
+                self._add_multipart_events([my_record])
             elif not "invocation" in my_record:
                 # Not this one... skip to the next
                 logger.error( "Skipping %s", my_record)
