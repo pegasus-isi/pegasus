@@ -832,4 +832,14 @@ class Job:
         #if error_count > 0:
         #  print kwargs
 
+        for event in self._multipart_events:
+            #if len(event) != 1:
+            #    # should be a dictionary with exactly one key and value
+            #    logger.error("Malformed multipart event %s for job %s" %(event,self._exec_job_id))
+            #    continue
+            for key in event.keys():
+                if key == "multipart":
+                    continue
+                kwargs[key] = event[key]
+
         return kwargs
