@@ -78,17 +78,31 @@ function test_integrity_local_cp {
     return 0
 }
 
-function test_containers {
+function test_docker_containers {
     rm -f *-image.tar.gz
-    if ! (transfer --file containers.in); then
+    if ! (transfer --file docker-containers.in); then
         echo "ERROR: pegasus-transfer exited non-zero"
         return 1
     fi
-    # check docker->singularity file
-    if ! (file singularity-docker-image.tar.gz | grep "/usr/bin/env run-singularity") >/dev/null 2>&1; then
+
+    rm -f *-image.tar.gz
+    return 0
+}
+
+function test_singularity_containers {
+    rm -f *-image.tar.gz
+    if ! (transfer --file singularity-containers.in); then
+        echo "ERROR: pegasus-transfer exited non-zero"
+        return 1
+    fi
+
+    # check docker->singularity file (we should be able to run the 
+    # docker image using singularity
+    if ! (singularity run singularity-docker-image.tar.gz) >/dev/null 2>&1; then
         echo "singularity-docker-image.tar.gz is not in Singularity format"
         return 1
     fi
+
     rm -f *-image.tar.gz
     return 0
 }
@@ -183,10 +197,18 @@ rm -f $KICKSTART_INTEGRITY_DATA
 run_test test_integrity
 run_test test_local_cp
 run_test test_integrity_local_cp
-if (docker image list && singularity --version) >/dev/null 2>&1; then
-    run_test test_containers
+
+# requires singularity v3.0 or greater for all transfers to work
+if (singularity --version) >/dev/null 2>&1; then
+    run_test test_singularity_containers
 else
-    skip_test test_containers
+    skip_test test_singularity_containers
+fi
+
+if (docker image list) >/dev/null 2>&1; then
+    run_test test_docker_containers
+else
+    skip_test test_docker_containers
 fi
 run_test test_symlink
 run_test test_symlink_should_fail

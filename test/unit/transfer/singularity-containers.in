@@ -1,14 +1,5 @@
 [
  { "type": "transfer",
-   "lfn": "docker-image.tar.gz",
-   "id": 1,
-   "src_urls": [
-     { "site_label": "computesite", "url": "docker://hello-world", "priority": 100 }
-   ],
-   "dest_urls": [
-     { "site_label": "computesite", "url": "file://$PWD/docker-image.tar.gz" }
-   ] },
- { "type": "transfer",
    "lfn": "singularity-image.tar.gz",
    "id": 2,
    "src_urls": [
@@ -30,10 +21,9 @@
    "lfn": "singularity-docker-image.tar.gz",
    "id": 4,
    "src_urls": [
-     { "site_label": "computesite", "url": "docker://hello-world", "priority": 100 }
+     { "site_label": "computesite", "url": "docker://godlovedc/lolcow", "priority": 100 }
    ],
    "dest_urls": [
      { "site_label": "computesite", "url": "file://$PWD/singularity-docker-image.tar.gz", "type": "singularity" }
    ] }
 ]
-
