@@ -3654,19 +3654,26 @@ class SingularityHandler(TransferHandlerBase):
             target_name = hashlib.sha224(t.get_dst_path()).hexdigest()
 
             prepare_local_dir(os.path.dirname(t.get_dst_path()))
+           
+            if tools.major_version("singularity") < 3:
+                cmd = "%s pull --name '%s' '%s' && mv %s* '%s'" \
+                    % (tools.full_path("singularity"), target_name, t.src_url(), \
+                       target_name, t.get_dst_path())
 
-            cmd = "%s pull --name '%s' '%s' && mv %s* '%s'" \
+            # --name is no longer needed to specify an output file after v2
+            elif tools.major_version("singularity") >= 3 and \
+                tools.minor_version("singularity") < 2:
+
+                cmd = "%s pull '%s' '%s' && mv %s* '%s'" \
                 % (tools.full_path("singularity"), target_name, t.src_url(), \
                    target_name, t.get_dst_path())
 
-            if tools.major_version("singularity") >= 3:
-                # --name is no longer needed to specify an output file
-                # --allow-unauthenticated means that the container we are pulling does not
-                # need to be authenticated, else singularity will give a prompt asking
-                # for permission to continue download if the image is unsigned 
+            # --allow-unauthenticated is required after v3.2 to avoid a prompt
+            # checking to see if we would like to download an unsigned image 
+            else:
                 cmd = "%s pull --allow-unauthenticated '%s' '%s' && mv %s* '%s'" \
-                    % (tools.full_path("singularity"), target_name, t.src_url(), \
-                       target_name, t.get_dst_path())
+                % (tools.full_path("singularity"), target_name, t.src_url(), \
+                   target_name, t.get_dst_path())
 
             logger.debug("Using Singularity command: '%s'" % (cmd))
 
