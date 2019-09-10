@@ -96,9 +96,8 @@ function test_singularity_containers {
         return 1
     fi
 
-    # check docker->singularity file (we should be able to run the 
-    # docker image using singularity
-    if ! (singularity run singularity-docker-image.tar.gz) >/dev/null 2>&1; then
+    # check docker->singularity file
+    if ! (file singularity-docker-image.tar.gz | grep "run-singularity") >/dev/null 2>&1; then
         echo "singularity-docker-image.tar.gz is not in Singularity format"
         return 1
     fi
