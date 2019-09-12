@@ -216,6 +216,7 @@ def bjobs(jobid=""):
     command = (bjobs, '-V')
     bjobs_process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     bjobs_version, _ = bjobs_process.communicate()
+    log(bjobs_version)
 
     starttime = time.time()
     
@@ -223,21 +224,24 @@ def bjobs(jobid=""):
     if jobid is not "":
         child_stdout = os.popen("%s -UF %s" % (bjobs, jobid))
     else:
-        child_stdout = os.popen("%s -UF -u all -a" % bjobs)
+        child_stdout = os.popen("%s -UF -a" % bjobs)
     
-    result = parse_bjobs_fd(child_stdout)
+    if len(child_stdout) > 1:
+        result = parse_bjobs_fd(child_stdout)
+    elif jobid is not "":
+        result = {jobid: {'BatchJobId': '"%s"' % jobid, 'JobStatus': '3', 'ExitCode': ' 0'}}
+    else:
+        result = {}
+    
     exit_status = child_stdout.close()
     log("Finished bjobs (time=%f)." % (time.time()-starttime))
+    
     if exit_status:
         exit_code = 0
         if os.WIFEXITED(exit_status):
             exit_code = os.WEXITSTATUS(exit_status)
-        if exit_code == 153 or exit_code == 35: # Completed
-            result = {jobid: {'BatchJobId': '"%s"' % jobid, "JobStatus": "4", "ExitCode": ' 0'}}
-        elif exit_code == 271: # Removed
-            result = {jobid: {'BatchJobId': '"%s"' % jobid, 'JobStatus': '3', 'ExitCode': ' 0'}}
-        else:
-            raise Exception("bjobs failed with exit code %s" % str(exit_status))
+            if exit_code:
+                raise Exception("bjobs failed with exit code %s" % str(exit_status))
     
     # If the job has completed...
     if jobid is not "" and "JobStatus" in result[jobid] and (result[jobid]["JobStatus"] == '4' or result[jobid]["JobStatus"] == '3'):
@@ -270,11 +274,14 @@ def which(program):
 
     return None
 
-def convert_cpu_to_seconds(cpu_string):
-    import re
-    h,m,s = re.split(':',cpu_string)
-    return int(h) * 3600 + int(m) * 60 + int(s)
+#def convert_cpu_to_seconds(cpu_string):
+#    import re
+#    h,m,s = re.split(':',cpu_string)
+#    return int(h) * 3600 + int(m) * 60 + int(s)
 
+cpu_time_re = re.compile("CPU time used is ([0-9.]+) seconds")
+max_mem_re = re.compile("MAX MEM: ([0-9.]+) (\w+);")
+exit_status_re = re.compile("Exited [\w ]+ (-?[0-9]+). The CPU")
 _cluster_type_cache = None
 def get_finished_job_stats(jobid):
     """
@@ -283,7 +290,7 @@ def get_finished_job_stats(jobid):
     
     # List the attributes that we want
     return_dict = { "ImageSize": 0, "ExitCode": 0, "RemoteUserCpu": 0 }
-    # First, determine if this is a pbs or slurm machine.
+    # First, determine if this is an lsf machine.
     uid = os.geteuid()
     username = pwd.getpwuid(uid).pw_name
     cache_dir = os.path.join("/var/tmp", "bjobs_cache_%s" % username)
@@ -300,15 +307,39 @@ def get_finished_job_stats(jobid):
     
     # LSF completion 
     if _cluster_type_cache == "lsf":
-    
-        # Next, query the appropriate interfaces for the completed job information
         log("Querying bjobs for completed job for jobid: %s" % (str(jobid)))
-        child_stdout = os.popen("bjobs -UF %s" % (str(jobid)))
+        child_stdout = os.popen("bhist -UF %s" % (str(jobid)))
         bjobs_data = child_stdout.readlines()
         child_stdout.close()
 
-    # TODO: Finish this function to read the resource usage from bjobs output
+        for line in bjobs_data:
+            line = line.strip()
+            m = exit_status_re.search(line)
+            if m:
+                return_dict["ExitCode"] = int(m.group(1))
+                continue
+    
+            m = cpu_time_re.search(line)
+            if m:
+                return_dict['RemoteUserCpu'] = m.group(1)
+                continue
 
+            m = max_mem_re.search(line)
+            if m:
+                mem_unit = m.group(2)
+                factor = 1
+                if mem_unit[0] == 'M':
+                    factor = 1024
+                elif mem_unit[0] == 'G':
+                    factor = 1024**2
+                elif mem_unit[0] == 'T':
+                    factor = 1024**3
+                elif mem_unit[0] == 'P':
+                    factor = 1024**4
+                elif mem_unit[0] == 'E':
+                    factor = 1024**5    
+                return_dict["ImageSize"] = int(m.group(1)) * factor
+        
     return return_dict
 
 _bjobs_location_cache = None
@@ -332,11 +363,11 @@ def get_bjobs_location():
     _bjobs_location_cache = location
     return location
 
-job_id_re = re.compile("\s*Job Id:\s([0-9]+)([\w\-\/.]*)")
-exec_host_re = re.compile("\s*exec_host = ([\w\-\/.]+)")
-status_re = re.compile("\s*job_state = ([QREFCH])")
-exit_status_re = re.compile("\s*[Ee]xit_status = (-?[0-9]+)")
-status_mapping = {"Q": 1, "R": 2, "E": 2, "F": 4, "C": 4, "H": 5}
+job_id_re = re.compile("Job <([0-9]+)>")
+exec_host_re = re.compile("Started [0-9]+ Task\(s\) on Host\(s\) ([\w< >]+),")
+status_re = re.compile("Status <(\w+)>")
+exit_status_re = re.compile("Exited [\w ]+ (-?[0-9]+). The CPU")
+status_mapping = {"PEND": 1, "RUN": 2, "EXIT": 4, "DONE": 4, "PSUSP": 5, "USUSP": 5, "SSUSP": 5}
 
 def parse_bjobs_fd(fd):
     """
@@ -348,30 +379,38 @@ def parse_bjobs_fd(fd):
     cur_job_info = {}
     for line in fd:
         line = line.strip()
-        m = job_id_re.match(line)
+        m = job_id_re.search(line)
         if m:
             if cur_job_id:
                 job_info[cur_job_id] = cur_job_info
             cur_job_id = m.group(1)
             #print cur_job_id, line
             cur_job_info = {"BatchJobId": '"%s"' % cur_job_id.split(".")[0]}
-            continue
         if cur_job_id == None:
             continue
-        m = exec_host_re.match(line)
-        if m:
-            cur_job_info["WorkerNode"] = '"' + m.group(1).split("/")[0] + '"'
-            continue
-        m = status_re.match(line)
+
+        m = status_re.search(line)
         if m:
             status = status_mapping.get(m.group(1), 0)
             if status != 0:
                 cur_job_info["JobStatus"] = str(status)
+                cur_job_info["JobStatusInfo"] = m.group(1)
             continue
-        m = exit_status_re.match(line)
+
+        m = exec_host_re.search(line)
         if m:
-            cur_job_info["ExitCode"] = ' %s' % m.group(1)
+            worker_set = set(m.group(1).translate(None, "<>").split(" "))
+            cur_job_info["WorkerNode"] = ' '.join(worker_set)
             continue
+
+        if cur_job_info["JobStatusInfo"] == "RUN":
+            cur_job_info["ExitCode"] = ' 0'
+        elif cur_job_info["JobStatusInfo"] == "EXIT":
+            m = exit_status_re.search(line)
+            if m:
+                cur_job_info["ExitCode"] = ' %s' % m.group(1)
+                continue
+    
     if cur_job_id:
         job_info[cur_job_id] = cur_job_info
     return job_info
@@ -380,4 +419,146 @@ def job_dict_to_string(info):
     result = ["%s=%s;" % (i[0], i[1]) for i in info.items()]
     return "[" + " ".join(result) + " ]"
 
+def fill_cache(cache_location):
+    log("Starting query to fill cache.")
+    results = bjobs()
+    log("Finished query to fill cache.")
+    (fd, filename) = tempfile.mkstemp(dir = "/var/tmp")
+    # Open the file with a proper python file object
+    f = os.fdopen(fd, "w")
+    writer = csv.writer(f, delimiter='\t')
+    try:
+        try:
+            for key, val in results.items():
+                key = key.split(".")[0]
+                writer.writerow([key, pickle.dumps(val)])
+            os.fsync(fd)
+        except:
+            os.unlink(filename)
+            raise
+    finally:
+        f.close()
+    os.rename(filename, cache_location)
+    
+    # Create the cluster_type file
+    uid = os.geteuid()
+    username = pwd.getpwuid(uid).pw_name
+    cache_dir = os.path.join("/var/tmp", "bjobs_cache_%s" % username)
+    cluster_type_file = os.path.join(cache_dir, "cluster_type")
+    (fd, filename) = tempfile.mkstemp(dir = "/var/tmp")
+    global _cluster_type_cache
+    if which("bhist"):
+        os.write(fd, "lsf")
+        _cluster_type_cache = "lsf"
+    else:
+        log("Unable to find cluster type")
+    os.close(fd)
+    os.rename(filename, cluster_type_file)
+    
+    global launchtime
+    launchtime = time.time()
 
+cache_line_re = re.compile("([0-9]+[\.\w\-]+):\s+(.+)")
+def cache_to_status(jobid, fd):
+    reader = csv.reader(fd, delimiter='\t')
+    for row in reader:
+        if row[0] == jobid:
+            return pickle.loads(row[1])
+
+def check_cache(jobid, recurse=True):
+    uid = os.geteuid()
+    username = pwd.getpwuid(uid).pw_name
+    cache_dir = os.path.join("/var/tmp", "bjobs_cache_%s" % username)
+    if recurse:
+        try:
+            s = os.stat(cache_dir)
+        except OSError, oe:
+            if oe.errno != 2:
+                raise
+            os.mkdir(cache_dir, 0755)
+            s = os.stat(cache_dir)
+        if s.st_uid != uid:
+            raise Exception("Unable to check cache because it is owned by UID %d" % s.st_uid)
+    cache_location = os.path.join(cache_dir, "blahp_results_cache")
+    try:
+        fd = open(cache_location, "a+")
+    except IOError, ie:
+        if ie.errno != 2:
+            raise
+        # Create an empty file so we can hold the file lock
+        fd = open(cache_location, "w+")
+        ExclusiveLock(fd)
+        # If someone grabbed the lock between when we opened and tried to
+        # acquire, they may have filled the cache
+        if os.stat(cache_location).st_size == 0:
+            fill_cache(cache_location)
+        fd.close()
+        if recurse:
+            return check_cache(jobid, recurse=False)
+        else:
+            return None
+    ExclusiveLock(fd)
+    s = os.fstat(fd.fileno())
+    if s.st_uid != uid:
+        raise Exception("Unable to check cache file because it is owned by UID %d" % s.st_uid)
+    if (s.st_size == 0) or (launchtime - s.st_mtime > cache_timeout):
+        # If someone filled the cache between when we opened the file and
+        # grabbed the lock, we may not need to fill the cache.
+        s2 = os.stat(cache_location)
+        if (s2.st_size == 0) or (launchtime - s2.st_mtime > cache_timeout):
+            fill_cache(cache_location)
+        if recurse:
+            return check_cache(jobid, recurse=False)
+        else:
+            return None
+    return cache_to_status(jobid, fd)
+
+def main():
+    initLog()
+
+    # Accept the optional -w argument, but ignore it
+    if len(sys.argv) == 2:
+        jobid_arg = sys.argv[1]
+    elif len(sys.argv) == 3 and sys.argv[1] == "-w":
+        jobid_arg = sys.argv[2]
+    else:
+        print "1Usage: lsf_status.sh lsf/<date>/<jobid>"
+        return 1
+    jobid = jobid_arg.split("/")[-1].split(".")[0]
+    log("Checking cache for jobid %s" % jobid)
+    cache_contents = None
+    try:
+        cache_contents = check_cache(jobid)
+    except Exception, e:
+        msg = "1ERROR: Internal exception, %s" % str(e)
+        log(msg)
+        #print msg
+    if not cache_contents:
+        log("Jobid %s not in cache; querying LSF" % jobid)
+        results = bjobs(jobid)
+        log("Finished querying LSF for jobid %s" % jobid)
+        if not results or jobid not in results:
+            log("1ERROR: Unable to find job %s" % jobid)
+            print "1ERROR: Unable to find job %s" % jobid
+        else:
+            log("0%s" % job_dict_to_string(results[jobid]))
+            print "0%s" % job_dict_to_string(results[jobid])
+    else:
+        log("Jobid %s in cache." % jobid)
+        log("0%s" % job_dict_to_string(cache_contents))
+        
+        if cache_contents["JobStatus"] == '4' or cache_contents["JobStatus"] == '3':
+            finished_job_stats = get_finished_job_stats(jobid)
+            cache_contents.update(finished_job_stats)
+            
+        print "0%s" % job_dict_to_string(cache_contents)
+    return 0
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except SystemExit:
+        raise
+    except Exception, e:
+        print "1ERROR: %s" % str(e).replace("\n", "\\n")
+        sys.exit(0)
