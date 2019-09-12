@@ -1,14 +1,5 @@
 [
- { "type": "transfer",
-   "lfn": "singularity-hub-image.tar.gz",
-   "id": 2,
-   "src_urls": [
-     { "site_label": "computesite", "url": "shub://vsoch/singularity-images", "priority": 100 }
-   ],
-   "dest_urls": [
-     { "site_label": "computesite", "url": "file://$PWD/singularity-hub-image.tar.gz" }
-   ] },
- { "type": "transfer",
+  { "type": "transfer",
    "lfn": "singularity-library-image.tar.gz.sif",
    "id": 3,
    "src_urls": [
