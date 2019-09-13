@@ -497,7 +497,7 @@ class Job:
         for my_record in kickstart_output:
             if "multipart" in my_record:
                 #PM-1390 convert to integrity metrics
-                logger.error("Multipart record %s", my_record)
+                logger.trace("Multipart record %s", my_record)
                 self._add_multipart_events([my_record])
             elif not "invocation" in my_record:
                 # Not this one... skip to the next
