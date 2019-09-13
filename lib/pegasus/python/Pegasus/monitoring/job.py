@@ -501,7 +501,7 @@ class Job:
                 self._add_multipart_events([my_record])
             elif not "invocation" in my_record:
                 # Not this one... skip to the next
-                logger.error( "Skipping %s", my_record)
+                logger.trace("Skipping %s", my_record)
                 continue
             # Ok, we have an invocation record, extract the information we
             # need. Note that this may overwrite information obtained from
