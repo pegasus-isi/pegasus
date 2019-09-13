@@ -222,26 +222,24 @@ def bjobs(jobid=""):
     
     log("Starting bjobs.")
     if jobid is not "":
-        child_stdout = os.popen("%s -UF %s" % (bjobs, jobid))
+        bjobs_process = subprocess.Popen(("%s -UF %s" % (bjobs, jobid)), stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True, shell=True)
     else:
-        child_stdout = os.popen("%s -UF -a" % bjobs)
+        bjobs_process = subprocess.Popen(("%s -UF -a" % bjobs), stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True, shell=True)
     
-    if len(child_stdout) > 1:
-        result = parse_bjobs_fd(child_stdout)
+    bjobs_process_stdout, bjobs_process_stderr = bjobs_process.communicate()
+    
+    if bjobs_process_stderr is "":
+        result = parse_bjobs_fd(bjobs_process_stdout.splitlines())
     elif jobid is not "":
         result = {jobid: {'BatchJobId': '"%s"' % jobid, 'JobStatus': '3', 'ExitCode': ' 0'}}
     else:
         result = {}
     
-    exit_status = child_stdout.close()
+    exit_code = bjobs_process.returncode
     log("Finished bjobs (time=%f)." % (time.time()-starttime))
     
-    if exit_status:
-        exit_code = 0
-        if os.WIFEXITED(exit_status):
-            exit_code = os.WEXITSTATUS(exit_status)
-            if exit_code:
-                raise Exception("bjobs failed with exit code %s" % str(exit_status))
+    if exit_code:
+        raise Exception("bjobs failed with exit code %s" % str(exit_code))
     
     # If the job has completed...
     if jobid is not "" and "JobStatus" in result[jobid] and (result[jobid]["JobStatus"] == '4' or result[jobid]["JobStatus"] == '3'):
@@ -308,11 +306,10 @@ def get_finished_job_stats(jobid):
     # LSF completion 
     if _cluster_type_cache == "lsf":
         log("Querying bjobs for completed job for jobid: %s" % (str(jobid)))
-        child_stdout = os.popen("bhist -UF %s" % (str(jobid)))
-        bjobs_data = child_stdout.readlines()
-        child_stdout.close()
+        bhist_process = subprocess.Popen(("bhist -UF %s" % str(jobid)), stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True, shell=True)
+        bhist_process_stdout, _ = bhist_process.communicate()
 
-        for line in bjobs_data:
+        for line in bhist_process_stdout.splitlines():
             line = line.strip()
             m = exit_status_re.search(line)
             if m:
@@ -350,11 +347,12 @@ def get_bjobs_location():
     global _bjobs_location_cache
     if _bjobs_location_cache != None:
         return _bjobs_location_cache
-    load_config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'blah_load_config.sh')
-    if os.path.exists(load_config_path) and os.access(load_config_path, os.R_OK):
-        cmd = "/bin/bash -c 'source %s && echo $lsf_binpath/bjobs'" % load_config_path
-    else:
-        cmd = 'which bjobs'
+    #load_config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'blah_load_config.sh')
+    #if os.path.exists(load_config_path) and os.access(load_config_path, os.R_OK):
+    #    cmd = "/bin/bash -c 'source %s && echo $lsf_binpath/bjobs'" % load_config_path
+    #else:
+    #    cmd = 'which bjobs'
+    cmd = 'which bjobs'
     child_stdout = os.popen(cmd)
     output = child_stdout.read()
     location = output.split("\n")[0].strip()
@@ -400,7 +398,7 @@ def parse_bjobs_fd(fd):
         m = exec_host_re.search(line)
         if m:
             worker_set = set(m.group(1).translate(None, "<>").split(" "))
-            cur_job_info["WorkerNode"] = ' '.join(worker_set)
+            cur_job_info["WorkerNode"] = '"%s"' % ' '.join(worker_set)
             continue
 
         if cur_job_info["JobStatusInfo"] == "RUN":
@@ -413,6 +411,7 @@ def parse_bjobs_fd(fd):
     
     if cur_job_id:
         job_info[cur_job_id] = cur_job_info
+
     return job_info
 
 def job_dict_to_string(info):
@@ -532,7 +531,7 @@ def main():
     except Exception, e:
         msg = "1ERROR: Internal exception, %s" % str(e)
         log(msg)
-        #print msg
+        print msg
     if not cache_contents:
         log("Jobid %s not in cache; querying LSF" % jobid)
         results = bjobs(jobid)
