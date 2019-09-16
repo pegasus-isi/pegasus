@@ -1604,8 +1604,8 @@ class ADAG(InvokeMixin, MetadataMixin):
         # This is used to generate unique ID numbers
         self.sequence = 1
 
-        self.jobs = {}
-        self.files = set()
+        self.jobs = dict()
+        self.files = dict()
         self.executables = set()
         self.dependencies = set()
         self.transformations = set()
@@ -1682,19 +1682,19 @@ class ADAG(InvokeMixin, MetadataMixin):
         """Add a file to the DAX"""
         if not isinstance(file, File):
             raise FormatError("Invalid File", file)
-        if self.hasFile(file):
+        if self.hasFile(file.name):
             raise DuplicateError("Duplicate file %s" % file)
-        self.files.add(file)
+        self.files[file.name] = file
 
-    def hasFile(self, file):
+    def hasFile(self, filename):
         """Check to see if file is in this ADAG"""
-        return file in self.files
+        return filename in self.files
 
-    def removeFile(self, file):
+    def removeFile(self, filename):
         """Remove file from this ADAG"""
-        if not self.hasFile(file):
-            raise NotFoundError("File not found", file)
-        self.files.remove(file)
+        if not self.hasFile(filename):
+            raise NotFoundError("File not found", filename)
+        del self.files[filename]
 
     def clearFiles(self):
         """Remove all files"""
@@ -1899,7 +1899,7 @@ class ADAG(InvokeMixin, MetadataMixin):
             out.write('\n')
 
         # Files
-        for f in self.files:
+        for fname, f in self.files.items():
             out.write('\t')
             f.toXML().write(stream=out, level=1)
             out.write('\n')
