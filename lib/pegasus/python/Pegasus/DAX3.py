@@ -1237,6 +1237,10 @@ class AbstractJob(ProfileMixin, UseMixin, InvokeMixin, MetadataMixin):
                 args.append(a)
         return ''.join(args)
 
+    def getOutputFiles(self):
+        """Get the set of output files produced by this job""" 
+        pass
+
     def setStdout(self, filename):
         """Redirect stdout to a file"""
         if isinstance(filename, File):
@@ -1666,6 +1670,32 @@ class ADAG(InvokeMixin, MetadataMixin):
         """Remove all jobs"""
         self.jobs = {}
 
+    def getJobInputFiles(self, jobid):
+        """Get the set of input files used by a job"""
+        job = self.getJob(jobid) 
+        input_files = set()
+
+        for use in job.used:
+            # this use refers to a file 
+            if not use.executable:
+                if use.link == Link.INPUT:
+                    input_files.add(self.getFile(use.name))
+
+        return input_files
+
+    def getJobOutputFiles(self, jobid):
+        """Get the set of input files used by a job"""
+        job = self.getJob(jobid) 
+        output_files= set()
+
+        for use in job.used:
+            # this use refers to a file 
+            if not use.executable:
+                if use.link == Link.OUTPUT:
+                    output_files.add(self.getFile(use.name))
+
+        return output_files 
+
     def addDAX(self, dax):
         """Add a sub-DAX (synonym for addJob)"""
         if not isinstance(dax, DAX):
@@ -1685,6 +1715,12 @@ class ADAG(InvokeMixin, MetadataMixin):
         if self.hasFile(file.name):
             raise DuplicateError("Duplicate file %s" % file)
         self.files[file.name] = file
+
+    def getFile(self, filename):
+        """Returns a File which was added to this ADAG"""
+        if not self.hasFile(filename):
+            raise NotFoundError("File not found", filename)
+        return self.files[filename]
 
     def hasFile(self, filename):
         """Check to see if file is in this ADAG"""
