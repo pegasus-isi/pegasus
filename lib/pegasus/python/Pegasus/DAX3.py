@@ -1237,10 +1237,6 @@ class AbstractJob(ProfileMixin, UseMixin, InvokeMixin, MetadataMixin):
                 args.append(a)
         return ''.join(args)
 
-    def getOutputFiles(self):
-        """Get the set of output files produced by this job""" 
-        pass
-
     def setStdout(self, filename):
         """Redirect stdout to a file"""
         if isinstance(filename, File):
