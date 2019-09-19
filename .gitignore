@@ -89,7 +89,6 @@ dkms.conf
 
 ### Eclipse ###
 .metadata
-bin/
 tmp/
 *.tmp
 *.bak
@@ -767,3 +766,6 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.gitignore.io/api/linux,macos,windows,code,eclipse,emacs,intellij+all,vim,cvs,git,svn,c,c++,java,node,perl,perl6,python,r,packer,terraform,vagrant
+
+test/unit/transfer/do-not-execute/
+test/unit/transfer/index.html

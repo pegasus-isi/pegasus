@@ -60,6 +60,8 @@ except ImportError:
     # Fall back to Python 2's urllib
     import urllib as urllib
 
+from Pegasus.tools import utils
+
 # see https://www.python.org/dev/peps/pep-0469/
 try:
     dict.iteritems
@@ -517,244 +519,6 @@ class Transfer(TransferBase):
         self._sub_transfer_count = len(self._src_urls) * len(self._dst_urls)
 
 
-class Tools(object):
-    """
-    Singleton for detecting and maintaining tools we depend on
-    """
-   
-    # singleton
-    instance = None
-
-    def __init__(self):
-        if not Tools.instance:
-            Tools.instance = Tools.__Tools()
-
-    def __getattr__(self, name):
-        return getattr(self.instance, name)
-    
-    class __Tools():   	 
-
-        _info = {}
-
-        def __init__(self):
-            self.lock = threading.Lock()
-    
-        def find(self, executable, version_arg=None, version_regex=None, path_prepend=None):
-    
-            self.lock.acquire()
-            try:
-                if executable in self._info:
-                    if self._info[executable] is None:
-                        return None
-                    return self._info[executable]
-                
-                logger.debug("Trying to detect availability/location of tool: %s"
-                             %(executable))
-    
-                # initialize the global tool info for this executable
-                self._info[executable] = {}
-                self._info[executable]['full_path'] = None
-                self._info[executable]['version'] = None
-                self._info[executable]['version_major'] = None
-                self._info[executable]['version_minor'] = None
-                self._info[executable]['version_patch'] = None
-            
-                # figure out the full path to the executable
-                path_entries = os.environ["PATH"].split(":")
-                if "" in path_entries:
-                    path_entries.remove("")
-                # if we have PEGASUS_HOME set, and try to invoke a Pegasus tool, prepend
-                if 'PEGASUS_HOME' in os.environ and executable.find("pegasus-") == 0:
-                    path_entries.insert(0, os.environ['PEGASUS_HOME'] + '/bin')
-                if path_prepend is not None:
-                    for entry in path_prepend:
-                        path_entries.insert(0, entry)
-                
-                # now walk the path
-                full_path = None
-                for entry in path_entries:
-                    full_path = entry + "/" + executable
-                    if os.path.isfile(full_path) and os.access(full_path, os.X_OK):
-                        break
-                    full_path = None
-                
-                if full_path == None:
-                    logger.info("Command '%s' not found in the current environment"
-                                %(executable))
-                    self._info[executable] = None
-                    return self._info[executable]
-                self._info[executable]['full_path'] = full_path
-            
-                # version
-                if version_regex is None:
-                    version = "N/A"
-                else:
-                    version = backticks(executable + " " + version_arg + " 2>&1")
-                    version = version.replace('\n', "")
-                    re_version = re.compile(version_regex)
-                    result = re_version.search(version)
-                    if result:
-                        version = result.group(1)
-                    self._info[executable]['version'] = version
-            
-                # if possible, break up version into major, minor, patch
-                re_version = re.compile("([0-9]+)\.([0-9]+)(\.([0-9]+)){0,1}")
-                result = re_version.search(version)
-                if result:
-                    self._info[executable]['version_major'] = int(result.group(1))
-                    self._info[executable]['version_minor'] = int(result.group(2))
-                    self._info[executable]['version_patch'] = result.group(4)
-                if self._info[executable]['version_patch'] is None or \
-                   self._info[executable]['version_patch'] == "":
-                    self._info[executable]['version_patch'] = None
-                else:
-                    self._info[executable]['version_patch'] = \
-                        int(self._info[executable]['version_patch'])
-            
-                logger.info("Tool found: %s   Version: %s   Path: %s" 
-                            % (executable, version, full_path))
-                return self._info[executable]['full_path']
-            finally:
-                self.lock.release()
-    
-    
-        def full_path(self, executable):
-            """ Returns the full path to a given executable """
-            self.lock.acquire()
-            try:
-                if executable in self._info and self._info[executable] is not None:
-                    return self._info[executable]['full_path']
-                return None
-            finally:
-                self.lock.release()
-    
-    
-        def major_version(self, executable):
-            """ Returns the detected major version given executable """
-            self.lock.acquire()
-            try:
-                if executable in self._info and self._info[executable] is not None:
-                    return self._info[executable]['version_major']
-                return None
-            finally:
-                self.lock.release()
-        
-        def minor_version(self, executable):
-            """ Returns the detected minor version given executable """
-            self.lock.acquire()
-            try:
-                if executable in self._info and self._info[executable] is not None:
-                    return self._info[executable]['version_minor']
-                return None
-            finally:
-                self.lock.release()
-                
-
-class TimedCommand(object):
-    """ Provides a shell callout with a timeout """
-        
-    def __init__(self, cmd, env_overrides = {}, timeout_secs = 6*60*60, log_cmd = True, log_outerr = True, cwd=None):
-        self._cmd = cmd
-        self._env_overrides = env_overrides.copy()
-        self._timeout_secs = timeout_secs
-        self._log_cmd = log_cmd
-        self._log_outerr = log_outerr
-        self._process = None
-        self._out_file = None
-        self._outerr = ""
-        self._duration = 0.0
-        self._cwd = cwd
-
-        # used in exceptions
-        self._cmd_for_exc = cmd
-
-    def run(self):
-        def target():
-            
-            # custom environment for the subshell
-            sub_env = os.environ.copy()
-            for key, value in iteritems(self._env_overrides):
-                logger.debug("ENV override: %s = %s" %(key, value))
-                sub_env[key] = value
-            
-            self._process = subprocess.Popen(self._cmd, shell=True, env=sub_env,
-                                             stdout=self._out_file, stderr=STDOUT, 
-                                             preexec_fn=os.setpgrp, cwd=self._cwd)
-            self._process.communicate()
-            self._process.communicate()
-
-        if self._log_cmd or logger.isEnabledFor(logging.DEBUG):
-            logger.info(self._cmd)
-            # provide a short version in exceptions
-            self._cmd_for_exc = re.sub(' .*', ' ...', self._cmd)
-            
-        sys.stdout.flush()
-        
-        # temp file for the stdout/stderr
-        self._out_file = tempfile.TemporaryFile(prefix="pegasus-transfer-", suffix=".out")
-        
-        ts_start = time.time()
-        
-        thread = threading.Thread(target=target)
-        thread.start()
-
-        thread.join(self._timeout_secs)
-        if thread.isAlive():
-            # do our best to kill the whole process group
-            try:
-                # os.killpg did not work in all environments
-                #os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
-                kill_cmd = "kill -TERM -%d" %(os.getpgid(self._process.pid))
-                kp = subprocess.Popen(kill_cmd, shell=True)
-                kp.communicate()
-                self._process.terminate()
-            except:
-                pass
-            thread.join()
-            # log the output
-            self._out_file.seek(0)
-            stdout = str.strip(self._out_file.read())
-            if len(stdout) > 0:
-                logger.info(stdout)
-            self._out_file.close()
-            raise RuntimeError("Command timed out after %d seconds: %s" %(self._timeout_secs, self._cmd_for_exc))
-        
-        self._duration = time.time() - ts_start
-        
-        # log the output
-        self._out_file.seek(0)
-        self._outerr = str.strip(self._out_file.read())
-        if self._log_outerr and len(self._outerr) > 0:
-            logger.info(self._outerr)
-        self._out_file.close()
-        
-        if self._process.returncode != 0:
-            print(self.get_outerr())
-            raise RuntimeError("Command exited with non-zero exit code (%d): %s" \
-                               %(self._process.returncode, self._cmd_for_exc))
-
-
-    def get_outerr(self):
-        """
-        returns the combined stdout and stderr from the command
-        """
-        return self._outerr
-    
-    
-    def get_exit_code(self):
-        """
-        returns the exit code from the process
-        """
-        return self._process.returncode
-    
-    def get_duration(self):
-        """
-        returns the timing of the command (seconds)
-        """
-        return self._duration
-        
-    
-
 class TransferHandlerBase(object):
     """
     Base class for all transfer handlers. Derived classes should set the 
@@ -875,7 +639,7 @@ class TransferHandlerBase(object):
         """
         global integrity_checksummed
 
-        tools = Tools()
+        tools = utils.Tools()
 
         if tools.find("pegasus-integrity", "help", None, [prog_dir]) is None:
             logger.error("Unable to do integrity checking because pegasus-integrity not found")
@@ -891,7 +655,7 @@ class TransferHandlerBase(object):
         self.lock.acquire()
         cmd = "%s --generate-fullstat-yaml=\"%s=%s\"" % (tools.full_path("pegasus-integrity"), lfn, fname)
         try:
-            tc = TimedCommand(cmd)
+            tc = utils.TimedCommand(cmd)
             tc.run()
             # track what lfns we have checksummed so far
             integrity_checksummed.append(lfn)
@@ -1013,7 +777,7 @@ class FileHandler(TransferHandlerBase):
         for t in transfers:
             cmd = "/bin/mkdir -p '%s' " % (t.get_path())
             try:
-                tc = TimedCommand(cmd)
+                tc = utils.TimedCommand(cmd)
                 tc.run()
             except RuntimeError as err:
                 logger.error(err)
@@ -1068,7 +832,7 @@ class FileHandler(TransferHandlerBase):
                 cmd = "/bin/cp -f -R -L '%s' '%s'" \
                     % (t.get_src_path(), t.get_dst_path())
             try:
-                tc = TimedCommand(cmd)
+                tc = utils.TimedCommand(cmd)
                 tc.run()
             except RuntimeError as err:
                 logger.error(err)
@@ -1090,7 +854,7 @@ class FileHandler(TransferHandlerBase):
                 cmd += " -r "
             cmd += " '%s' " % (t.get_path())
             try:
-                tc = TimedCommand(cmd)
+                tc = utils.TimedCommand(cmd)
                 tc.run()
             except RuntimeError as err:
                 logger.error(err)
@@ -1127,7 +891,7 @@ class GridFtpHandler(TransferHandlerBase):
         # different tools depending on if this a sshftp or gsiftp request
         if mkdirs_l[0].get_proto() == "gsiftp":
                 
-            tools = Tools()
+            tools = utils.Tools()
 
             # prefer gfal if installed
             if "PEGASUS_FORCE_GUC" not in os.environ \
@@ -1158,7 +922,7 @@ class GridFtpHandler(TransferHandlerBase):
                 cmd += " file:///dev/null"
                 cmd += " " + target.get_url() + "/.create-dir"
                 try:
-                    tc = TimedCommand(cmd, env_overrides=env)
+                    tc = utils.TimedCommand(cmd, env_overrides=env)
                     tc.run()
                     success = True
                 except RuntimeError as err:
@@ -1185,7 +949,7 @@ class GridFtpHandler(TransferHandlerBase):
         if len(transfers_l) == 0:
             return
         
-        tools = Tools()
+        tools = utils.Tools()
         
         # prefer gfal if installed
         if "PEGASUS_FORCE_GUC" not in os.environ \
@@ -1360,7 +1124,7 @@ class GridFtpHandler(TransferHandlerBase):
             create_dest = False
 
         # build command line for globus-url-copy
-        tools = Tools()
+        tools = utils.Tools()
         cmd = tools.full_path('globus-url-copy')
         
         # credential handling
@@ -1374,7 +1138,7 @@ class GridFtpHandler(TransferHandlerBase):
         
         cmd += " -f " + tmp_name
         try:
-            tc = TimedCommand(cmd, env_overrides=env)
+            tc = utils.TimedCommand(cmd, env_overrides=env)
             tc.run()
             transfer_success = True
         except Exception as err:
@@ -1465,7 +1229,7 @@ class GridFtpHandler(TransferHandlerBase):
         """
         global gsiftp_failures
     
-        tools = Tools()
+        tools = utils.Tools()
         options = " -r"
     
         # make output from guc match our current log level
@@ -1546,7 +1310,7 @@ class HTTPHandler(TransferHandlerBase):
 
     def do_transfers(self, transfers):
         
-        tools = Tools()
+        tools = utils.Tools()
         env = {}
                                
         # Open Science Grid sites can inform us about local Squid proxies
@@ -1596,7 +1360,7 @@ class HTTPHandler(TransferHandlerBase):
 
             t_start = time.time()
             try:
-                tc = TimedCommand(cmd, env_overrides=env)
+                tc = utils.TimedCommand(cmd, env_overrides=env)
                 tc.run()
                 stats_add(t.get_dst_path())
             except RuntimeError as err:
@@ -1652,7 +1416,7 @@ class HPSSHandler(TransferHandlerBase):
             cmd = "/bin/cp -f '%s' '%s'" \
                   % (user_defined_cred, default_cred)
             try:
-                tc = TimedCommand(cmd)
+                tc = utils.TimedCommand(cmd)
                 tc.run()
             except RuntimeError as err:
                 raise Exception(err)
@@ -1668,14 +1432,14 @@ class HPSSHandler(TransferHandlerBase):
         """
         if not os.path.exists(path):
             raise Exception("HPSS Credential file %s does not exist" % (path))
-        if oct(os.stat(path).st_mode & 0777) != '0600':
-            logger.warning("%s found to have weak permissions. chmod to 0600."
+        if oct(os.stat(path).st_mode & 0o0777) != '0600':
+            logger.warning("%s found to have weak permissions. chmod to 0x600."
                            % (path))
-            os.chmod(path, 0600)
+            os.chmod(path, 0o0600)
 
     def do_transfers(self, transfers):
 
-        tools = Tools()
+        tools = utils.Tools()
         env = {}
 
         if tools.find("htar") is None:
@@ -1779,7 +1543,7 @@ class HPSSHandler(TransferHandlerBase):
         # build command line for htar
         transfer_success = False
         t_start = time.time()
-        tools = Tools()
+        tools = utils.Tools()
         cmd = tools.full_path('htar')
 
         # no credential handling for time being
@@ -1792,7 +1556,7 @@ class HPSSHandler(TransferHandlerBase):
         try:
             prepare_local_dir(os.path.dirname(destination_dir))
             logger.debug("Executing command " + cmd)
-            tc = TimedCommand(cmd, cwd=destination_dir)
+            tc = utils.TimedCommand(cmd, cwd=destination_dir)
             tc.run()
             transfer_success = True
         except Exception as err:
@@ -1969,7 +1733,7 @@ class IRodsHandler(TransferHandlerBase):
     
     def do_mkdirs(self, mkdir_list):
 
-        tools = Tools()
+        tools = utils.Tools()
         if tools.find("iget", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)") is None:
             logger.error("Unable to do irods transfers becuase iget could not be found in the current path")
             return [[], mkdir_list]
@@ -1987,7 +1751,7 @@ class IRodsHandler(TransferHandlerBase):
 
             cmd = "imkdir -p '" + t.get_path() + "'"
             try:
-                tc = TimedCommand(cmd, env_overrides = env)
+                tc = utils.TimedCommand(cmd, env_overrides = env)
                 tc.run()
             except RuntimeError as err:
                 logger.error(err)
@@ -2003,7 +1767,7 @@ class IRodsHandler(TransferHandlerBase):
         irods - use the icommands to interact with irods
         """
     
-        tools = Tools()
+        tools = utils.Tools()
         if tools.find("iget", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)") is None:
             logger.error("Unable to do irods transfers becuase iget could not be found in the current path")
             return [[], transfer_list]
@@ -2043,7 +1807,7 @@ class IRodsHandler(TransferHandlerBase):
                     continue
                 cmd = "imkdir -p '" + os.path.dirname(t.get_dst_path()) + "'"
                 try:
-                    tc = TimedCommand(cmd, env_overrides = env, timeout_secs = 10*60)
+                    tc = utils.TimedCommand(cmd, env_overrides = env, timeout_secs = 10*60)
                     tc.run()
                 except:
                     # ignore errors from the mkdir command
@@ -2056,7 +1820,7 @@ class IRodsHandler(TransferHandlerBase):
             
             t_start = time.time()
             try:
-                tc = TimedCommand(cmd, env_overrides = env)
+                tc = utils.TimedCommand(cmd, env_overrides = env)
                 tc.run()
                 # stats      
                 if t.get_dst_proto() == "file":
@@ -2075,7 +1839,7 @@ class IRodsHandler(TransferHandlerBase):
 
 
     def do_removes(self, removes_list):
-        tools = Tools()
+        tools = utils.Tools()
         if tools.find("iget", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)") is None:
             logger.error("Unable to do irods transfers becuase iget could not be found in the current path")
             return [[], removes_list]
@@ -2096,7 +1860,7 @@ class IRodsHandler(TransferHandlerBase):
                 cmd += " -r"
             cmd += " '" + t.get_path() + "'"
             try:
-                tc = TimedCommand(cmd, env_overrides = env, log_outerr = False)
+                tc = utils.TimedCommand(cmd, env_overrides = env, log_outerr = False)
                 tc.run()
             except RuntimeError as err:
                 if tc.get_exit_code() == 3:
@@ -2169,7 +1933,7 @@ class IRodsHandler(TransferHandlerBase):
                 h.write(password + "\n")
                 h.close()
                 cmd = "cat .irodsAc | iinit"
-                tc = TimedCommand(cmd, env_overrides = env, timeout_secs = 5*60)
+                tc = utils.TimedCommand(cmd, env_overrides = env, timeout_secs = 5*60)
                 tc.run()
                 os.unlink(".irodsAc")
                 check_cred_fs_permissions(env['irodsAuthFileName'])
@@ -2210,7 +1974,7 @@ class S3Handler(TransferHandlerBase):
                     ]
 
     def do_mkdirs(self, mkdir_l):
-        tools = Tools()
+        tools = utils.Tools()
         if tools.find("pegasus-s3", "help", None, [prog_dir]) is None:
             logger.error("Unable to do S3 transfers because pegasus-s3 not found")
             return [[], mkdir_l]
@@ -2235,7 +1999,7 @@ class S3Handler(TransferHandlerBase):
                 cmd += " -v"
             cmd += " " + bucket
             try:
-                tc = TimedCommand(cmd, env_overrides=env)
+                tc = utils.TimedCommand(cmd, env_overrides=env)
                 tc.run()
             except RuntimeError as err:
                 logger.error(err)
@@ -2248,7 +2012,7 @@ class S3Handler(TransferHandlerBase):
 
     def do_transfers(self, transfers):
     
-        tools = Tools()
+        tools = utils.Tools()
         if tools.find("pegasus-s3", "help", None, [prog_dir]) is None:
             logger.error("Unable to do S3 transfers because pegasus-s3 could not be found")
             return [[], transfers]
@@ -2285,7 +2049,7 @@ class S3Handler(TransferHandlerBase):
                 cmd = tools.full_path("pegasus-s3") + " put -f -b '%s' '%s'" % (t.get_src_path(), t.dst_url())
 
             try:
-                tc = TimedCommand(cmd, env_overrides=env)
+                tc = utils.TimedCommand(cmd, env_overrides=env)
                 tc.run()
             except Exception as err:
                 logger.error(err)
@@ -2300,7 +2064,7 @@ class S3Handler(TransferHandlerBase):
 
 
     def do_removes(self, removes_list):
-        tools = Tools()
+        tools = utils.Tools()
         if tools.find("pegasus-s3", "help", None, [prog_dir]) is None:
             logger.error("Unable to do S3 transfers because pegasus-s3 could not be found")
             return [[], removes_list]
@@ -2342,7 +2106,7 @@ class S3Handler(TransferHandlerBase):
 
         success = False
         try:
-            tc = TimedCommand(cmd, env_overrides=env)
+            tc = utils.TimedCommand(cmd, env_overrides=env)
             tc.run()
             success = True
         except RuntimeError as err:
@@ -2392,7 +2156,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
                     ]
 
     def do_mkdirs(self, mkdir_l):
-        tools = Tools()
+        tools = utils.Tools()
         if tools.find("pegasus-globus-online", "help", None, [prog_dir]) is None:
             logger.error("Unable to locate pegasus-globus-online in the $PATH")
             return [[], mkdir_l]
@@ -2429,7 +2193,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
         if logger.isEnabledFor(logging.DEBUG):
             cmd += " --debug"
         try:
-            tc = TimedCommand(cmd)
+            tc = utils.TimedCommand(cmd)
             tc.run()
             successful_l = list(mkdir_l)
         except RuntimeError as err:
@@ -2442,7 +2206,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
 
 
     def do_transfers(self, transfers_l):
-        tools = Tools()
+        tools = utils.Tools()
         if tools.find("pegasus-globus-online", "help", None, [prog_dir]) is None:
             logger.error("Unable to locate pegasus-globus-online in the $PATH")
             return [[], transfers_l]
@@ -2487,7 +2251,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
         if logger.isEnabledFor(logging.DEBUG):
             cmd += " --debug"
         try:
-            tc = TimedCommand(cmd)
+            tc = utils.TimedCommand(cmd)
             tc.run()
             successful_l = list(transfers_l)
         except RuntimeError as err:
@@ -2500,7 +2264,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
 
 
     def do_removes(self, removes_l):
-        tools = Tools()
+        tools = utils.Tools()
         if tools.find("pegasus-globus-online", "help", None, [prog_dir]) is None:
             logger.error("Unable to locate pegasus-globus-online in the $PATH")
             return [[], removes_l]
@@ -2538,7 +2302,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
         if logger.isEnabledFor(logging.DEBUG):
             cmd += " --debug"
         try:
-            tc = TimedCommand(cmd)
+            tc = utils.TimedCommand(cmd)
             tc.run()
             successful_l = list(removes_l)
         except RuntimeError as err:
@@ -2611,7 +2375,7 @@ class GSHandler(TransferHandlerBase):
 
 
     def do_mkdirs(self, mkdir_l):
-        tools = Tools()
+        tools = utils.Tools()
         if tools.find("gsutil", "version", "gsutil version: ([\.0-9a-zA-Z]+)") is None:
             logger.error("Unable to do Google Storage transfers because the gsutil tool could not be found")
             return [[], mkdir_l]
@@ -2635,7 +2399,7 @@ class GSHandler(TransferHandlerBase):
             # first ensure that the bucket exists
             cmd = "gsutil mb %s" %(bucket)
             try:
-                tc = TimedCommand(cmd, env_overrides=env)
+                tc = utils.TimedCommand(cmd, env_overrides=env)
                 tc.run()
             except RuntimeError as err:
                 # if the bucket already exists, we call it a success
@@ -2651,7 +2415,7 @@ class GSHandler(TransferHandlerBase):
 
     def do_transfers(self, transfers_l):
     
-        tools = Tools()
+        tools = utils.Tools()
         if tools.find("gsutil", "version", "gsutil version: ([\.0-9a-zA-Z]+)") is None:
             logger.error("Unable to do Google Storage transfers because the gsutil tool could not be found")
             return [[], transfers_l]
@@ -2689,7 +2453,7 @@ class GSHandler(TransferHandlerBase):
                 cmd = "gsutil -q cp '%s' '%s'" % (t.get_src_path(), t.dst_url())            
 
             try:
-                tc = TimedCommand(cmd, env_overrides=env)
+                tc = utils.TimedCommand(cmd, env_overrides=env)
                 tc.run()
             except Exception as err:
                 logger.error(err)
@@ -2704,7 +2468,7 @@ class GSHandler(TransferHandlerBase):
 
 
     def do_removes(self, removes_l):
-        tools = Tools()
+        tools = utils.Tools()
         if tools.find("gsutil", "version", "gsutil version: ([\.0-9a-zA-Z]+)") is None:
             logger.error("Unable to do Google Storage transfers because the gsutil tool could not be found")
             return [[], removes_l]
@@ -2723,7 +2487,7 @@ class GSHandler(TransferHandlerBase):
             cmd += " " + t.get_url()
         
             try:
-                tc = TimedCommand(cmd, env_overrides=env)
+                tc = utils.TimedCommand(cmd, env_overrides=env)
                 tc.run()
             except RuntimeError as err:
                 # file not found is success
@@ -2802,7 +2566,7 @@ class GFALHandler(TransferHandlerBase):
 
     def do_mkdirs(self, mkdir_list):
         
-        tools = Tools()
+        tools = utils.Tools()
         if tools.find("gfal-mkdir", "--version", "\(gfal2 ([\.0-9]+)\)") is None:
             logger.error("Unable to do xrood/srm mkdir because gfal-mkdir could not be found")
             return [[], mkdir_list]
@@ -2820,7 +2584,7 @@ class GFALHandler(TransferHandlerBase):
                 
             try:
                 self._gfal_validate_cred(env_overrides)
-                tc = TimedCommand(cmd, env_overrides=env_overrides)
+                tc = utils.TimedCommand(cmd, env_overrides=env_overrides)
                 tc.run()
             except Exception as err:
                 logger.error(err)
@@ -2834,7 +2598,7 @@ class GFALHandler(TransferHandlerBase):
             
     def do_transfers(self, transfers_l):
     
-        tools = Tools()
+        tools = utils.Tools()
         if tools.find("gfal-copy", "--version", "\(gfal2 ([\.0-9]+)\)") is None:
             logger.error("Unable to do xrootr/srm transfers because gfal-copy could not be found")
             return [[], transfers_l]
@@ -2864,7 +2628,7 @@ class GFALHandler(TransferHandlerBase):
             cmd = cmd + " '%s' '%s'" % (t.src_url(), t.dst_url())
                 
             try:
-                tc = TimedCommand(cmd, env_overrides=self._gfal_creds(t))
+                tc = utils.TimedCommand(cmd, env_overrides=self._gfal_creds(t))
                 tc.run()
             except Exception as err:
                 logger.error(err)
@@ -2880,7 +2644,7 @@ class GFALHandler(TransferHandlerBase):
             
     def do_removes(self, mkdir_list):
         
-        tools = Tools()
+        tools = utils.Tools()
         if tools.find("gfal-rm", "--version", "\(gfal2 ([\.0-9]+)\)") is None:
             logger.error("Unable to do xrood/srm removes because gfal-rm could not be found")
             return [[], mkdir_list]
@@ -2897,7 +2661,7 @@ class GFALHandler(TransferHandlerBase):
             cmd = cmd + " '%s'" %(t.get_url())
                 
             try:
-                tc = TimedCommand(cmd, env_overrides=self._gfal_creds(t))
+                tc = utils.TimedCommand(cmd, env_overrides=self._gfal_creds(t))
                 tc.run()
             except Exception as err:
                 logger.error(err)
@@ -2973,7 +2737,7 @@ class ScpHandler(TransferHandlerBase):
             cmd += " -p " + str(port)
             cmd += " " + host
             cmd += " '/bin/mkdir -p " + t.get_path() + "'"
-            tc = TimedCommand(cmd, log_outerr=False)
+            tc = utils.TimedCommand(cmd, log_outerr=False)
             try:
                 tc.run()
             except Exception as err:
@@ -3073,7 +2837,7 @@ class ScpHandler(TransferHandlerBase):
                     stats_add(t.get_src_path())
                     
                 t_start = time.time()
-                tc = TimedCommand(cmd, log_outerr=False)
+                tc = utils.TimedCommand(cmd, log_outerr=False)
                 tc.run()    
             except RuntimeError as err:
                 self._log_filter_ssh_output(tc.get_outerr())
@@ -3122,7 +2886,7 @@ class ScpHandler(TransferHandlerBase):
             for t in t_group:
                 cmd += " \"" + t.get_path() + "\""
             cmd += "'"
-            tc = TimedCommand(cmd, log_outerr=False)
+            tc = utils.TimedCommand(cmd, log_outerr=False)
             try:
                 tc.run()
             except Exception as err:
@@ -3153,7 +2917,7 @@ class ScpHandler(TransferHandlerBase):
             cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
         cmd += " -p " + self._extract_port(rhost)
         cmd += " " + self._extract_hostname(rhost) + " '/bin/mkdir -p " + rdir + "'"
-        tc = TimedCommand(cmd, log_outerr=False)
+        tc = utils.TimedCommand(cmd, log_outerr=False)
         try:
             tc.run()
         except:
@@ -3204,7 +2968,7 @@ class GSIScpHandler(TransferHandlerBase):
     
     def do_mkdirs(self, mkdir_list):    
         
-        tools = Tools()
+        tools = utils.Tools()
         if tools.find("gsissh", "-V", "(.*)") is None:
             logger.error("Unable to do gsiscp mkdir because gsissh could not be found")
             return [[], mkdir_list]
@@ -3222,7 +2986,7 @@ class GSIScpHandler(TransferHandlerBase):
             cmd += " -p " + str(port)
             cmd += " " + host
             cmd += " '/bin/mkdir -p " + t.get_path() + "'"
-            tc = TimedCommand(cmd, log_outerr=False, env_overrides=self._gsi_creds(t))
+            tc = utils.TimedCommand(cmd, log_outerr=False, env_overrides=self._gsi_creds(t))
             try:
                 tc.run()
             except Exception as err:
@@ -3241,7 +3005,7 @@ class GSIScpHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
         
-        tools = Tools()
+        tools = utils.Tools()
         if tools.find("gsiscp", "-V", "(.*)") is None:
             logger.error("Unable to do gsiscp mkdir because gsiscp could not be found")
             return [[], mkdir_list]
@@ -3306,7 +3070,7 @@ class GSIScpHandler(TransferHandlerBase):
                     stats_add(t.get_src_path())
                     
                 t_start = time.time()
-                tc = TimedCommand(cmd, log_outerr=False, env_overrides=self._gsi_creds(t_base))
+                tc = utils.TimedCommand(cmd, log_outerr=False, env_overrides=self._gsi_creds(t_base))
                 tc.run()    
             except RuntimeError as err:
                 self._log_filter_ssh_output(tc.get_outerr())
@@ -3327,7 +3091,7 @@ class GSIScpHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
 
-        tools = Tools()
+        tools = utils.Tools()
         if tools.find("gsissh", "-V", "(.*)") is None:
             logger.error("Unable to do gsiscp mkdir because gsissh could not be found")
             return [[], mkdir_list]
@@ -3355,7 +3119,7 @@ class GSIScpHandler(TransferHandlerBase):
             for t in t_group:
                 cmd += " \"" + t.get_path() + "\""
             cmd += "'"
-            tc = TimedCommand(cmd, log_outerr=False, env_overrides=self._gsi_creds(t_base))
+            tc = utils.TimedCommand(cmd, log_outerr=False, env_overrides=self._gsi_creds(t_base))
             try:
                 tc.run()
             except Exception as err:
@@ -3379,7 +3143,7 @@ class GSIScpHandler(TransferHandlerBase):
         cmd += self._base_args
         cmd += " -p " + self._extract_port(rhost)
         cmd += " " + self._extract_hostname(rhost) + " '/bin/mkdir -p " + rdir + "'"
-        tc = TimedCommand(cmd, log_outerr=False)
+        tc = utils.TimedCommand(cmd, log_outerr=False)
         try:
             tc.run()
         except:
@@ -3456,7 +3220,7 @@ class StashHandler(TransferHandlerBase):
         # noop for now
         return [transfers, []]
         
-        tools = Tools()
+        tools = utils.Tools()
         if tools.find("stashcp") is None:
             logger.error("Unable to do Stash mkdir because stashcp could not be found")
             return [[], transfers_l]
@@ -3469,7 +3233,7 @@ class StashHandler(TransferHandlerBase):
             cmd = "%s /dev/null '%s/.create'" \
                    %(tools.full_path("stashcp"), t.get_url())
             try:
-                tc = TimedCommand(cmd)
+                tc = utils.TimedCommand(cmd)
                 tc.run()
             except RuntimeError as err:
                 logger.error(err)
@@ -3481,7 +3245,7 @@ class StashHandler(TransferHandlerBase):
 
     def do_transfers(self, transfers_l):
         
-        tools = Tools()
+        tools = utils.Tools()
         if tools.find("stashcp") is None:
             logger.error("Unable to do Stash transfers because stashcp could not be found")
             return [[], transfers_l]
@@ -3530,7 +3294,7 @@ class StashHandler(TransferHandlerBase):
                    cmd += " && mv '%s' '%s'" %(remote_fname, local_fname)
 
             try:
-                tc = TimedCommand(cmd)
+                tc = utils.TimedCommand(cmd)
                 tc.run()
             except RuntimeError as err:
                 logger.error(err)
@@ -3554,7 +3318,7 @@ class StashHandler(TransferHandlerBase):
                 cmd += " -r "
             cmd += " '/stash%s' " % (t.get_path())
             try:
-                tc = TimedCommand(cmd)
+                tc = utils.TimedCommand(cmd)
                 tc.run()
             except RuntimeError as err:
                 logger.error(err)
@@ -3605,7 +3369,7 @@ class SymlinkHandler(TransferHandlerBase):
     
             cmd = "ln -f -s '%s' '%s'" % (t.get_src_path(), t.get_dst_path())
             try:
-                tc = TimedCommand(cmd, timeout_secs = 60)
+                tc = utils.TimedCommand(cmd, timeout_secs = 60)
                 tc.run()
             except RuntimeError as err:
                 logger.error(err)
@@ -3626,7 +3390,7 @@ class SymlinkHandler(TransferHandlerBase):
             cmd = "/bin/rm -f"
             cmd += " '%s' " % (t.get_path())
             try:
-                tc = TimedCommand(cmd)
+                tc = utils.TimedCommand(cmd)
                 tc.run()
             except RuntimeError as err:
                 logger.error(err)
@@ -3646,7 +3410,7 @@ class DockerHandler(TransferHandlerBase):
 
     def do_transfers(self, transfers_l):
         
-        tools = Tools()
+        tools = utils.Tools()
         if tools.find("docker", "--version", "([0-9]+\.[0-9]+\.[0-9]+)") is None:
             logger.error("Unable to do pull Docker images as docker command could not be found")
             return [[], transfers_l]
@@ -3666,7 +3430,7 @@ class DockerHandler(TransferHandlerBase):
                 % (tools.full_path("docker"), src_path, \
                    tools.full_path("docker"), t.get_dst_path(), src_path)
             try:
-                tc = TimedCommand(cmd)
+                tc = utils.TimedCommand(cmd)
                 tc.run()
             except RuntimeError as err:
                 logger.error(err)
@@ -3699,7 +3463,7 @@ class SingularityHandler(TransferHandlerBase):
 
     def do_transfers(self, transfers_l):
         
-        tools = Tools()
+        tools = utils.Tools()
         if tools.find("singularity", "--version", "^([0-9]+\.[0-9]+)") is None:
             logger.error("Unable to do pull Singularity images as singularity command could not be found")
             return [[], transfers_l]
@@ -3735,7 +3499,7 @@ class SingularityHandler(TransferHandlerBase):
             # singularity pull --name only accepts a filename, not a full path, so
             # download and then move to the correct location
 
-            target_name = hashlib.sha224(t.get_dst_path()).hexdigest()
+            target_name = hashlib.sha224(t.get_dst_path().encode('utf-8')).hexdigest()
 
             prepare_local_dir(os.path.dirname(t.get_dst_path()))
            
@@ -3762,7 +3526,7 @@ class SingularityHandler(TransferHandlerBase):
             logger.debug("Using Singularity command: '%s'" % (cmd))
 
             try:
-                tc = TimedCommand(cmd)
+                tc = utils.TimedCommand(cmd)
                 tc.run()
             except RuntimeError as err:
                 logger.error(err)
@@ -4312,7 +4076,7 @@ class SimilarWorkSet:
         Call out to pegasus-integrity to verify a checksum for the file.
         """
 
-        tools = Tools()
+        tools = utils.Tools()
         
         if tools.find("pegasus-integrity", "help", None, [prog_dir]) is None:
             logger.error("Unable to do integrity checking because pegasus-integrity not found")
@@ -4324,7 +4088,7 @@ class SimilarWorkSet:
         
         cmd = "%s --verify=\"%s=%s\"" % (tools.full_path("pegasus-integrity"), lfn, fname)
         try:
-            tc = TimedCommand(cmd)
+            tc = utils.TimedCommand(cmd)
             tc.run()
             stats.add_integrity_verify(linkage, tc.get_duration(), True)
         except RuntimeError as err:
@@ -4427,7 +4191,7 @@ gsiftp_failures = 0
 stats = Stats()
 
 # singleton - but should we make it a global instead?
-tools = Tools()
+tools = utils.Tools()
 
 
 # --- functions ----------------------------------------------------------------
@@ -4483,7 +4247,7 @@ def backticks(cmd_line):
     what would a python program be without some perl love?
     """
     return subprocess.Popen(cmd_line, shell=True,
-                            stdout=subprocess.PIPE).communicate()[0]
+                            stdout=subprocess.PIPE).communicate()[0].decode()
 
 
 def max_cmd_length():

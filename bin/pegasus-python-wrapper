@@ -3,18 +3,25 @@
 # Wrapper for CLI Python tools - main purpose is to select a good
 # Python version to use, then execute the real tool 
 
-# Determine PEGASUS_HOME base on the path of where this tool was run from
-PEGASUS_HOME=`dirname $0`"/.."
-PEGASUS_HOME=`cd $PEGASUS_HOME && pwd`
-
-# some tools will need to know where PEGASUS_HOME is
-export PEGASUS_HOME
+# If not already set, determine PEGASUS_HOME base on the path of where
+# this tool was run from
+if [ "x$PEGASUS_HOME" = "x" ]; then
+    PEGASUS_HOME=`dirname $0`"/.."
+    PEGASUS_HOME=`cd $PEGASUS_HOME && pwd`
+    export PEGASUS_HOME
+fi
 
 # The base name is used to decide what Python tool to invoke
 BASE_NAME=%%BASE_NAME%%
 
-# Look for a python in a pre-determined order
-for PEXE in $PEGASUS_PYTHON /usr/bin/python /usr/bin/python3 `which python3 2>/dev/null` `which python 2>/dev/null`; do
+# Look for a python in a pre-determined order, prefer Python3
+for PEXE in $PEGASUS_PYTHON \
+            /usr/bin/python3.7 \
+            /usr/bin/python3.6 \
+            /usr/bin/python \
+            `which python3 2>/dev/null` \
+            `which python 2>/dev/null` \
+    ; do
     if [ -e "$PEXE" ]; then
         break
     fi
