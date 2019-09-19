@@ -189,6 +189,8 @@ class Job:
 
         if self._job_type in Job.JOBTYPE_TO_DESC:
             desc = Job.JOBTYPE_TO_DESC[self._job_type]
+        else:
+            logger.error("Unknown job type %s encountered for job %s" %(self._job_type,self._exec_job_id))
 
         return desc
 

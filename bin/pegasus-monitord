@@ -496,6 +496,22 @@ def add(wf, jobid, event, sched_id=None, status=None, reason=None):
     if event == "PRE_SCRIPT_STARTED":
         # This is a new job, we need to add it to the workflow
         my_job_submit_seq = wf.add_job(jobid, event)
+        # PM-1390 ensure you parse the condor submit file when
+        # prescript starts. as we still need to send composite event
+        # when prescript fails for a job
+
+        # Obtain planning information from the submit file when entering Condor,
+        # Figure out how long the job _intends_ to run maximum
+        my_time, my_site = wf.parse_job_sub_file(jobid, my_job_submit_seq)
+        if my_site == "!!SITE!!":
+            my_site = None
+
+        # Remember the run-site
+        if my_site is not None:
+            logger.debug("job %s is planned for site %s" % (jobid, my_site))
+            wf._job_site[jobid] = my_site
+        else:
+            logger.debug("job %s does not have a site information!" % (jobid))
 
     # A DAGMAN_SUBMIT event requires a new job (unless this was
     # already done by a PRE_SCRIPT_STARTED event, but we let the
