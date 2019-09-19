@@ -1,12 +1,7 @@
-from __future__ import print_function
 
 import os
 import sys
 from unittest import TestLoader, TestSuite, TextTestRunner
-
-from future import standard_library
-
-standard_library.install_aliases()
 
 # The service only works on python >= 2.5
 if sys.version_info >= (2, 5):
