@@ -6,18 +6,19 @@ set -e
 # like the system python
 
 # Look for a python in a pre-determined order, prefer Python3
-for PEXE in $PEGASUS_PYTHON \
+for CANDIDATE in $PEGASUS_PYTHON \
             /usr/bin/python3.7 \
             /usr/bin/python3.6 \
             `which python3 2>/dev/null` \
     ; do
-    if [ -e "$PEXE" ]; then
+    if [ -e "$CANDIDATE" ]; then
+        PEXE=$CANDIDATE
         break
     fi
 done
 
 if [ "x$PEXE" = "x" ]; then
-    echo "ERROR: Unable to find Python!" >&2
+    echo "ERROR: Unable to find python3!" >&2
     exit 1
 fi
 

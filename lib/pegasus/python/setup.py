@@ -50,9 +50,6 @@ def create_manifest_file():
 def setup_installer_dependencies():
     global install_requires
 
-    if sys.version_info >= (3, 0):
-        install_requires.append('future==0.16.0')
-
     if sys.version_info[1] < 7:
         install_requires.append('ordereddict==1.1')
         install_requires.append('argparse==1.4.0')
@@ -76,7 +73,7 @@ def setup_installer_dependencies():
 #
 def read_version():
     return subprocess.Popen("%s/release-tools/getversion" % home_dir,
-                            stdout=subprocess.PIPE, shell=True).communicate()[0].strip()
+                            stdout=subprocess.PIPE, shell=True).communicate()[0].decode().strip()
 
 
 #
