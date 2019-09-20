@@ -285,6 +285,7 @@ project:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key:  R6CUT
               name: RHEL 6 Unit Tests
+              enabled: false
               tasks:
                 - !script
                   description: Untar source
@@ -314,6 +315,7 @@ project:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: R6JUT
               name: RHEL 6 Java Unit Tests
+              enabled: false
               tasks:
                 - !script
                   description: Untar source
@@ -344,6 +346,7 @@ project:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: R6PUT
               name: RHEL 6 Python Unit Tests
+              enabled: false
               tasks:
                 - !script
                   description: Untar source
@@ -745,6 +748,7 @@ project:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXR6
               name: Build x86_64 RHEL 6
+              enabled: false
               tasks:
                 - !script
                   description: Untar source
@@ -1107,11 +1111,11 @@ project:
                       mkdir -p $DOWNLOADS/ubuntu/dists/bionic/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*ubuntu18_amd64.deb $DOWNLOADS/ubuntu/dists/bionic/main/binary-amd64/
 
-                      # rheh
+                      # rhel
                       mkdir -p $DOWNLOADS/rhel/src
                       cp $DOWNLOADS/pegasus-*.src.rpm $DOWNLOADS/rhel/src/
-                      mkdir -p $DOWNLOADS/rhel/6/x86_64
-                      cp $DOWNLOADS/pegasus-*el6.x86_64.rpm $DOWNLOADS/rhel/6/x86_64/
+                      #mkdir -p $DOWNLOADS/rhel/6/x86_64
+                      #cp $DOWNLOADS/pegasus-*el6.x86_64.rpm $DOWNLOADS/rhel/6/x86_64/
                       mkdir -p $DOWNLOADS/rhel/7/x86_64
                       cp $DOWNLOADS/pegasus-*el7.x86_64.rpm $DOWNLOADS/rhel/7/x86_64/
 
@@ -1137,7 +1141,7 @@ project:
                 - name: pegasus-binary-x86_64_deb_9
                 - name: pegasus-binary-x86_64_deb_10
                 - name: pegasus-binary-x86_64_macos
-                - name: pegasus-binary-x86_64_rhel_6
+                #- name: pegasus-binary-x86_64_rhel_6
                 - name: pegasus-binary-x86_64_rhel_7
                 - name: pegasus-binary-x86_64_ubuntu_16
                 #- name: pegasus-binary-x86_64_ubuntu_17
@@ -1152,7 +1156,7 @@ project:
                 - name: pegasus-doc
                 - name: pegasus-python-source-versioned
                 - name: pegasus-r-dax3
-                - name: pegasus-rpm-x86_64_rhel_6
+                #- name: pegasus-rpm-x86_64_rhel_6
                 - name: pegasus-rpm-x86_64_rhel_7
                 #- name: pegasus-rpm-x86_rhel_6
                 - name: pegasus-source
@@ -1164,7 +1168,7 @@ project:
                 - name: pegasus-worker-x86_64_deb_9
                 - name: pegasus-worker-x86_64_deb_10
                 - name: pegasus-worker-x86_64_macos
-                - name: pegasus-worker-x86_64_rhel_6
+                #- name: pegasus-worker-x86_64_rhel_6
                 - name: pegasus-worker-x86_64_rhel_7
                 - name: pegasus-worker-x86_64_ubuntu_16
                 #- name: pegasus-worker-x86_64_ubuntu_17
