@@ -109,6 +109,7 @@ Install the following packages using apt-get:
 * g++
 * make
 * python-setuptools
+* R (optional, required to build R DAX api)
 * asciidoc (optional, required to build documentation)
 * fop (optional, required to build documentation)
 * lintian (optional, required to build DEB package)
@@ -129,6 +130,7 @@ Install the following packages using yum:
 * make
 * python-devel
 * openssl-devel
+* R (optional, required to build R DAX api)
 * rpm-build (optional, required to build RPM package)
 * mysql-devel (optional, required to access MySQL databases)
 * postgresql-devel (optional, required to access PostgreSQL databases)
@@ -152,6 +154,7 @@ Install homebrew and the following homebrew packages:
 
 * ant
 * openssl
+* R (optional, required to build R DAX api)
 * asciidoc (optional, required for manpages and docs)
 * fop (optional, required for docs)
 * mysql (optional, required to access MySQL databases)
@@ -172,6 +175,7 @@ Install the following packages:
 * python-setuptools
 * python-devel
 * libopenssl-devel
+* R (optional, required to build R DAX api)
 * asciidoc (optional, required for documentation)
 * libmysqlclient-devel (optional, required for MySQL support)
 
