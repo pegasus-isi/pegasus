@@ -167,6 +167,7 @@ class Job:
         self._stdout_text = None
         self._stderr_text = None
         self._additional_monitoring_events = []
+        self._cpu_attribs = None
         self._job_dagman_out = None    # _CONDOR_DAGMAN_LOG from environment
                                        # line for pegasus-plan and subdax_ jobs
         self._kickstart_parsed = False # Flag indicating if the kickstart
@@ -531,6 +532,10 @@ class Job:
                     except KeyError:
                         logger.exception( "Unable to parse stderr section from kickstart record for task %s from file %s " %(my_task_number, self.get_rotated_out_filename() ))
 
+            #PM-1398 pass cpu info
+            if "cpu" in my_record:
+                self._cpu_attribs = my_record["cpu"]
+
         if len(stdout_text_list) > 0 :
             self._stdout_text = "".join(stdout_text_list)
 
@@ -790,6 +795,10 @@ class Job:
 
         job_type = self._get_jobtype_desc()
         kwargs["jobtype"] = job_type
+
+        if self._cpu_attribs:
+            for key in self._cpu_attribs:
+                kwargs[key] = self._cpu_attribs[key]
 
         # sanity check
         if job_type == "unknown" or job_type == "unassigned":
