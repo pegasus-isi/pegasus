@@ -236,7 +236,8 @@ class Parser(object):
                              "stderr": [],
                              "statinfo": ["lfn", "size", "ctime", "user" ],
                              "checksum": ["type", "value", "timing"],
-                             "type": ["type", "value"]}
+                             "type": ["type", "value"],
+                             "cpu": ["count", "speed", "vendor"]}
 
         return self.parse(stampede_elements, tasks=True, clustered=True)
 
@@ -716,6 +717,7 @@ class XMLParser( Parser ):
         self._parsing_stderr = False
         self._parsing_data = False
         self._parsing_cwd = False
+        self._parsing_cpu = False
         self._parsing_final_statcall = False
         self._record_number = 0
         self._arguments = []
@@ -801,6 +803,7 @@ class XMLParser( Parser ):
         self._parsing_stderr = False
         self._parsing_data = False
         self._parsing_cwd = False
+        self._parsing_cpu = False
         self._parsing_signalled = False
         self._arguments = []
         self._stdout = ""
@@ -975,6 +978,14 @@ class XMLParser( Parser ):
             for attr_name in self._ks_elements[name]:
                 if attr_name in attrs:
                     self._keys[ name ] [attr_name] = attrs[attr_name]
+        elif name == "cpu" and name in self._ks_elements:
+            #PM-1398 <cpu count="4" speed="2600" vendor="GenuineIntel">Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz</cpu>
+            self._parsing_cpu = True
+            self._keys[name] = {}
+            for attr_name in self._ks_elements[name]:
+                if attr_name in attrs:
+                    # keep consitency with 5.0 yaml based naming
+                    self._keys[name]["cpu_" + attr_name] = attrs[attr_name]
         elif name == "data":
             # Start parsing data for stdout and stderr output
             self._parsing_data = True
@@ -1057,6 +1068,8 @@ class XMLParser( Parser ):
             self._parsing_arguments = False
         elif name == "cwd":
             self._parsing_cwd = False
+        elif name == "cpu":
+            self._parsing_cpu = False
         elif name == "mainjob":
             self._parsing_main_job = False
         elif name == "machine":
@@ -1093,6 +1106,11 @@ class XMLParser( Parser ):
         if self._parsing_cwd == True:
             self._cwd += data
 
+        if self._parsing_cpu == True:
+            if "model" not in self._keys["cpu"]:
+                self._keys["cpu"]["model"] = ''
+            self._keys["cpu"]["model"] += data
+
         elif self._parsing_arguments == True:
             self._arguments.append(data.strip())
 
@@ -1104,6 +1122,7 @@ class XMLParser( Parser ):
 
         elif self._parsing_signalled == True:
             self._keys["signalled"]["action"] += data
+
 
 
 if __name__ == "__main__":
