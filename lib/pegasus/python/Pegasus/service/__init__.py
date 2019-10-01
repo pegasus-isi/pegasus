@@ -36,7 +36,11 @@ def get_pegasus_home():
     return None
 
 
-from flask_cache import Cache
+try:
+    from flask_cache import Cache
+except ImportError:
+    from flask_caching import Cache
+
 cache = Cache(app)
 
 #

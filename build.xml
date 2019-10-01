@@ -26,7 +26,7 @@
   <path id="build.classpath">
     <fileset dir="share/pegasus/java" includes="*.jar"/>
   </path>
-  
+
   <path id="build.aws.classpath">
     <fileset dir="share/pegasus/java/aws" includes="*.jar"/>
   </path>
@@ -169,7 +169,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <compilerarg value="${compile.lint}"/>
     </javac>
   </target>
-  
+
   <target name="compile-aws-batch" depends="compile-planner" description="Compile Pegasus AWS Batch Code">
     <javac destdir="${build.src}" srcdir="src"
            target="${build.target}" source="${build.source}"
@@ -284,7 +284,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <arg line="${dist.doc}/wordpress/perl"/>
     </exec>
   </target>
-  
+
   <target name="doc-r" depends="setup,doc-user-guide,compile-r" description="Generate r documentation">
     <delete dir="${dist.doc}/wordpress/r"/>
     <mkdir dir="${dist.doc}/wordpress/r"/>
@@ -354,7 +354,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       </fileset>
     </chmod>
   </target>
-  
+
   <target name="compile-r" description="Compile R DAX API">
       <mkdir dir="${dist.share}/r"/>
       <exec executable="./setup.sh" dir="lib/pegasus/r/Pegasus" failonerror="true">
@@ -397,7 +397,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </copy>
 
     <copy preservelastmodified="true" todir="${dist.dir}" file="LICENSE"/>
-    
+
     <package-binary name="pegasus-worker-${pegasus.version}-${dist.arch}"/>
   </target>
 
@@ -487,7 +487,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
         <include name="RELEASE_NOTES"/>
       </fileset>
     </copy>
-    
+
   </target>
 
   <macrodef name="package-binary">
@@ -535,6 +535,9 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <exec executable="${dist.python}" dir="lib/pegasus/python" failonerror="false">
       <arg line="setup.py clean --all"/>
     </exec>
+    <delete dir="lib/pegasus/python/.tox" followsymlinks="false" removenotfollowedsymlinks="true"/>
+    <delete dir="lib/pegasus/python/.cache"/>
+    <delete dir="lib/pegasus/python/.pytest_cache"/>
     <delete>
       <fileset dir="lib/pegasus/python/Pegasus" includes="**/*.pyc"/>
     </delete>
@@ -561,6 +564,9 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <exec executable="${dist.python}" dir="lib/pegasus/python" failonerror="false">
       <arg line="setup.py clean --all"/>
     </exec>
+    <delete dir="lib/pegasus/python/.tox" followsymlinks="false" removenotfollowedsymlinks="true"/>
+    <delete dir="lib/pegasus/python/.cache"/>
+    <delete dir="lib/pegasus/python/.pytest_cache"/>
     <delete>
       <fileset dir="lib/pegasus/python/Pegasus" includes="**/*.pyc"/>
     </delete>
@@ -589,7 +595,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <arg line="${pegasus.version} ${dist.osid}"/>
     </exec>
   </target>
-  
+
   <target name="swamp-tarballs" depends="dist-source" description="Build source tarballs for SWAMP">
     <exec executable="release-tools/create-swamp-tarballs" failonerror="true">
       <arg line="${pegasus.version}"/>
@@ -636,13 +642,13 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
         <arg line="-c 'make test'"/>
     </exec>
   </target>
-  
+
   <target name="test-transfer" depends="dist" description="Run transfer unit tests">
     <exec executable="./test.sh" dir="test/unit/transfer" failonerror="true">
         <arg line="${dist.bin}"/>
     </exec>
   </target>
-  
+
   <target name="test-integrity" depends="dist" description="Run integrity unit tests">
     <exec executable="./test.sh" dir="test/unit/integrity" failonerror="true">
         <arg line="${dist.bin}"/>
@@ -651,5 +657,11 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
   <target name="test" depends="dist,test-python,test-kickstart,test-pmc,test-transfer,test-integrity,test-java" description="Run all unit tests"/>
 
+  <target name="test-python-tox" depends="compile-externals" description="Execute python unit tests">
+      <exec executable="tox" dir="lib/pegasus/python" failonerror="true">
+      <env key="PYTHONPATH" value="${basedir}/lib/pegasus/externals/python"/>
+      <env key="TOX_TESTENV_PASSENV" value="PYTHONPATH"/>
+      <env key="SKIP_INSTALL" value="True"/>
+    </exec>
+  </target>
 </project>
-
