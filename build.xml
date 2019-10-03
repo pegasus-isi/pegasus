@@ -339,9 +339,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <chmod perm="0755" type="file">
       <fileset dir="${dist.python-lib}">
         <include name="Pegasus/cli/*"/>
-        <include name="Pegasus/plots_stats/plots/populate.py"/>
-        <include name="Pegasus/plots_stats/plots/pegasus_breakdown.py"/>
-        <include name="Pegasus/plots_stats/plots/pegasus_time.py"/>
         <include name="Pegasus/tools/kickstart_parser.py"/>
       </fileset>
     </chmod>
