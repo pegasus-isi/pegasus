@@ -499,13 +499,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <package-binary name="pegasus-binary-${pegasus.version}-${dist.arch}"/>
   </target>
 
-  <target name="dist-macos" depends="dist-common,doc" description="Build binary release for Mac OS X">
-    <exec executable="release-tools/macos/package.sh" failonerror="true">
-      <arg value="${dist.dir}"/>
-      <arg value="dist/pegasus-binary-${pegasus.version}-${dist.arch}.dmg"/>
-    </exec>
-  </target>
-
   <target name="dist" depends="dist-common" description="Build binary release tarball without documentation">
     <package-binary name="pegasus-nodocs-${pegasus.version}-${dist.arch}"/>
   </target>
