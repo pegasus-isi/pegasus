@@ -17,7 +17,6 @@ install_requires = [
     "pamela==1.0.0",
     # TODO: Remove pyOpenSSL?
     # "pyOpenSSL==17.5.0",
-    "plex==2.0.0dev",
     "future==0.16.0",
     # Python 2.6
     'Flask==0.12.4;python_version<="2.6"',
