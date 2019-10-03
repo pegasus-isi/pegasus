@@ -277,14 +277,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </exec>
   </target>
 
-  <target name="doc-perl" depends="setup,doc-user-guide" description="Generate perl documentation">
-    <delete dir="${dist.doc}/wordpress/perl"/>
-    <mkdir dir="${dist.doc}/wordpress/perl"/>
-    <exec executable="./doc/perl-docs" dir="${basedir}" failonerror="true">
-      <arg line="${dist.doc}/wordpress/perl"/>
-    </exec>
-  </target>
-
   <target name="doc-r" depends="setup,doc-user-guide,compile-r" description="Generate r documentation">
     <delete dir="${dist.doc}/wordpress/r"/>
     <mkdir dir="${dist.doc}/wordpress/r"/>
@@ -309,7 +301,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <fixcrlf srcdir="${dist.doc}/wordpress/schemas" includes="**/*.xml" eol="lf"/>
   </target>
 
-  <target name="doc" depends="setup,doc-schemas,doc-manpages,doc-user-guide,doc-java,doc-python,doc-perl,doc-r" description="Generate documentation"/>
+  <target name="doc" depends="setup,doc-schemas,doc-manpages,doc-user-guide,doc-java,doc-python,doc-r" description="Generate documentation"/>
 
   <target name="compile-ctools" depends="setup" description="Compile C tools">
     <exec executable="${make}" dir="src/tools" failonerror="true">
