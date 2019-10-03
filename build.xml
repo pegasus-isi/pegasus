@@ -418,10 +418,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </copy>
 
     <!-- lib -->
-    <mkdir dir="${dist.lib}/pegasus/javascript"/>
-    <copy preservelastmodified="true" todir="${dist.lib}/pegasus/javascript">
-      <fileset dir="lib/pegasus/javascript" includes="**/*.js"/>
-    </copy>
     <mkdir dir="${dist.lib}/pegasus/perl"/>
     <copy preservelastmodified="true" todir="${dist.lib}/pegasus/perl">
       <fileset dir="lib/pegasus/perl" includes="**/*.pm"/>
