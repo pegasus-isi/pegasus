@@ -140,6 +140,8 @@ def parse_properties(my_file, hashref={}):
     logger.debug("# parsing properties in %s..." % (my_file))
 
     for line in my_file:
+        # line will be of type bytes if my_file was opened from a zipfile
+        line = line.decode() if isinstance(line, bytes) else line
         line = line.strip(" \t") # Remove leading and trailing spaces, tabs
         if line.startswith('!') or line.startswith('#'):
             # Skip comments
