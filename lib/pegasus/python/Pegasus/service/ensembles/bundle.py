@@ -30,8 +30,8 @@ class Bundle(object):
         if not self.contains(PROPERTIES_NAME):
             raise BundleException("Bundle does not contain %s" % PROPERTIES_NAME)
 
-        # Open the properties entry using universal newline support
-        self.properties = properties.parse_properties(self.zipfile.open(PROPERTIES_NAME, "rU"))
+        # Open the properties entry 
+        self.properties = properties.parse_properties(self.zipfile.open(PROPERTIES_NAME, "r"))
 
     def contains(self, name):
         # getinfo raises a KeyError if the entry does not exist
