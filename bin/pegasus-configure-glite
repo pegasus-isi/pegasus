@@ -58,7 +58,7 @@ for f in "$GLITE_CONFIG" "$GLITE_BIN_DIR"; do
 done
 
 # Copy all the pegasus scripts to the glite bin dir
-for f in $PEGASUS_GLITE_DIR/*.sh; do
+for f in $PEGASUS_GLITE_DIR/*.{sh,py}; do
     echo "Installing $(basename $f)"
     cp $f $GLITE_BIN_DIR/
 done

@@ -752,7 +752,7 @@ f.a gsiftp://somehost:port/path/to/file/f.a site=local</computeroutput></screen>
             <itemizedlist>
               <listitem>
                 <para><emphasis role="bold">shared-scratch</emphasis> - This
-                describe a scratch file systems. Pegasus will use this to
+                describes the scratch file systems. Pegasus will use this to
                 store intermediate data between jobs and other temporary
                 files.</para>
               </listitem>
@@ -765,7 +765,7 @@ f.a gsiftp://somehost:port/path/to/file/f.a site=local</computeroutput></screen>
 
               <listitem>
                 <para><emphasis role="bold">local-scratch</emphasis> - This
-                describe the scratch file systems available locally on a
+                describes the scratch file systems available locally on a
                 compute node. This parameter is not commonly used and can be
                 left unset in most cases.</para>
               </listitem>
@@ -1220,11 +1220,12 @@ cont centos-pegasus{
 
           <listitem>
             <para><emphasis role="bold">image</emphasis> - URL to image in a
-            docker|singularity hub| shifter repo URL or URL to an existing
-            docker image exported as a tar file or singularity image. Example
-            of a docker hub URL is docker:///rynge/montage:latest, while for
-            singularity shub://singularity-hub.org/pegasus-isi/fedora-montage
-            . Shifter images can only be referred to by shifter URL scheme
+            docker|singularity hub| singularity library | shifter repo URL or URL to an existing
+            docker image exported as a tar file or singularity image. An example
+            docker hub URL is docker:///rynge/montage:latest. An example Singularity hub
+            URL is shub://singularity-hub.org/pegasus-isi/fedora-montage. Singularity
+            library URLs are prefixed with "library" rather than "shub". 
+            Shifter images can only be referred to by shifter URL scheme
             that indicates that the image is available in the local shifter
             repository on the compute site. For example
             shifter:///papajim/namd_image:latest .</para>

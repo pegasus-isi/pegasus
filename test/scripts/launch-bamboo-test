@@ -86,7 +86,9 @@ pegasus-analyzer $RUN_DIR
 STATUS=$(($STATUS + $?))
 
 # PM-956 also run pegasus-analyzer on any sub workflows
-for subdir in `find $RUN_DIR -type d -name "*.*"`; do
+# PM-1390 -not -name ignores any hidden pegasus multipart dirs that
+# may have been created . for e.g. .pegasus.mulitpart.d   
+for subdir in `find $RUN_DIR -type d -name "*.*" -not -name '.*'`; do
     pegasus-analyzer --top-dir $RUN_DIR $subdir
     STATUS=$(($STATUS + $?))
 done

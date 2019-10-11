@@ -16,16 +16,17 @@ Synopsis
                    [*--threads* 'number_threads']
                    [*--max-attempts* 'attempts']
                    [*--threads* 'threads']
+                   [*--symlink*]
                    [*--debug*] 
 
 
 Description
 -----------
-*pegasus-transfer* takes a JSON defined list of urls, either on stdin
+*pegasus-transfer* takes a JSON defined list of urls, either through  stdin
 or with an input file, determines the correct tool to use for the transfer
 and  executes the transfer. Some of the protocols pegasus-transfer can
-handle  are GridFTP, SCP, SRM, Amazon S3, Google Storage, XRootD, HTTP,
-and local cp/symlinking. Failed transfers are retried.
+handle are GridFTP, SCP, SRM, Amazon S3, Google Storage, XRootD, HTTP,
+Docker, Singularity, and local cp/symlinking. Failed transfers are retried.
 
 Note that pegasus-transfer is a tool mostly used internally in Pegasus
 workflows, but the tool can be used stand alone as well.
@@ -36,21 +37,30 @@ Options
 *--help*::
 Prints a usage summary with all the available command-line options.
 
-*-f* 'inputfile'::
-*--file* 'inputfile'::
-JSON transfer specification. If not given, stdin will be used.
+*-f* 'FILE'::
+*--file=FILE*::
+File containing URL pairs to be transferred. If not given, list is read 
+from stdin.
 
-*-m*::
-*--max-attempts* 'attempts'::
-Maximum number of attempts for retrying failed transfers.
+*-m* 'MAX_ATTEMPTS'::
+*--max-attempts=MAX_ATTEMPTS*::
+Number of attempts allowed for each transfer. Default is 3.
 
-*-t*::
-*--threads* 'number_threads'::
-The number of threads to use. This controls the parallelism of transfers. 
+*-n* 'THREADS'::
+*--threads=THREADS*::
+Number of threads to process transfers. Default is 8. This option can also 
+be set via the PEGASUS_TRANSFER_THREADS environment variable. The command line 
+option takes precedence over the environment variable.
 
-*-d*::
-*--debug*::
-Enables debugging output.
+*-s*::
+*--symlink*::         
+Allow symlinking of file URLs. If the source and destination URLs chosen 
+are both file URLs with the same site_label then the source file will be 
+symlinked to the destination rather than being copied.
+
+*-d*:: 
+*--debug*::           
+Enables debugging ouput.
 
 Example
 -------
@@ -86,7 +96,7 @@ give the following input file:
 pegasus-transfer will expect either one environment variable specifying
 one credential to be used on both end of the connection (X509_USER_PROXY),
 or two separate environment variables specifying two different credentials
-to be used on the two ends of the connection. The the latter case, the
+to be used on the two ends of the connection. In the latter case, the
 environment variables are derived from the site labels. In the example
 above, the environment variables would be named X509_USER_PROXY_isi
 and X509_USER_PROXY_tacc_stampede

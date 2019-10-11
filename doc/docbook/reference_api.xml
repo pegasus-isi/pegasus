@@ -1224,8 +1224,8 @@
       easy creation of complex and huge workflows. This API is used by several
       applications to generate their abstract DAX. SCEC, which is Southern
       California Earthquake Center, uses this API in their CyberShake workflow
-      generator to generate huge DAX containing 10&amp;rsquor;s of thousands
-      of tasks with 100&amp;rsquor;s of thousands of input and output files.
+      generator to generate huge DAX containing 10&rsquor;s of thousands
+      of tasks with 100&rsquor;s of thousands of input and output files.
       The <ulink url="javadoc/index.html">Java API</ulink> is well documented
       using <ulink url="javadoc/edu/isi/pegasus/planner/dax/ADAG.html">Javadoc
       for ADAGs</ulink> .</para>

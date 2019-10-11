@@ -564,7 +564,6 @@ class TestJob(unittest.TestCase):
         self.assertEqual(j.version,"2")
         j = Job(Transformation('myxform',namespace="ns1"),namespace="ns2")
         self.assertEqual(j.namespace,"ns2")
-
     def testStd(self):
         """Should be able to set stdin/out/err using File or string"""
         j = Job('myjob')
@@ -914,6 +913,48 @@ class TestADAG(unittest.TestCase):
         self.assertRaises(NotFoundError, a.getJob, j)
         self.assertRaises(NotFoundError, a.removeJob, j)
 
+    def testGetJobFiles(self):
+        """Given a job, should be able to obtain a set of
+            its input and output files"""
+        a = ADAG("adag")
+        j = Job("job")
+
+        # case: job does not exist
+        a.addJob(j)
+        self.assertRaises(NotFoundError, a.getJobInputFiles, "invalid_job_id")
+        self.assertRaises(NotFoundError, a.getJobOutputFiles, "invalid_job_id")
+        a.removeJob(j)
+
+        # case: no files used
+        a.addJob(j)
+        self.assertEqual(0, len(a.getJobInputFiles(j.id)))
+        self.assertEqual(0, len(a.getJobOutputFiles(j.id)))
+        a.removeJob(j)
+
+        # case: job uses 2 input files and produces 1 output file
+        input_file1 = File("input_file1")
+        input_file2 = File("input_file2")
+        output_file = File("output_file")
+        a.addFile(input_file1)
+        a.addFile(input_file2)
+        a.addFile(output_file)
+        j.uses(input_file1, link=Link.INPUT)
+        j.uses(input_file2, link=Link.INPUT)
+        j.uses(output_file, link=Link.OUTPUT)
+        a.addJob(j)
+
+        # check for the 2 input files
+        j_input_files = a.getJobInputFiles(j.id)
+        self.assertEqual(2, len(j_input_files))
+        self.assertTrue(input_file1 in j_input_files)
+        self.assertTrue(input_file2 in j_input_files)
+
+        # check for the single output file 
+        j_output_files = a.getJobOutputFiles(j.id)
+        self.assertEqual(1, len(j_output_files))
+        self.assertTrue(output_file in j_output_files)
+        a.removeJob(j)
+
     def testMetadata(self):
         """Should be able to add/remove/has metadata"""
         c = ADAG("name")
@@ -930,18 +971,21 @@ class TestADAG(unittest.TestCase):
         self.assertFalse(c.hasMetadata(p))
 
     def testFiles(self):
-        """Should be able to add/remove/test files in ADAG"""
+        """Should be able to add/get/remove/test files in ADAG"""
         a = ADAG("adag")
-        f = File("file")
-        self.assertFalse(a.hasFile(f))
+        fname = "test_file"
+        f = File(fname)
+        self.assertFalse(a.hasFile(fname))
+        self.assertRaises(NotFoundError, a.getFile, fname)
         a.addFile(f)
-        self.assertTrue(a.hasFile(f))
-        a.removeFile(f)
-        self.assertFalse(a.hasFile(f))
+        self.assertTrue(a.hasFile(fname))
+        self.assertEqual(f, a.getFile(fname))
+        a.removeFile(fname)
+        self.assertFalse(a.hasFile(fname))
         a.addFile(f)
-        self.assertTrue(a.hasFile(f))
+        self.assertTrue(a.hasFile(fname))
         a.clearFiles()
-        self.assertFalse(a.hasFile(f))
+        self.assertFalse(a.hasFile(fname))
         a.addFile(f)
         self.assertRaises(DuplicateError, a.addFile, f)
         a.clearFiles()

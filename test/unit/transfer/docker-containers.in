@@ -1,0 +1,12 @@
+[
+ { "type": "transfer",
+   "lfn": "docker-image.tar.gz",
+   "id": 1,
+   "src_urls": [
+     { "site_label": "computesite", "url": "docker://hello-world", "priority": 100 }
+   ],
+   "dest_urls": [
+     { "site_label": "computesite", "url": "file://$PWD/docker-image.tar.gz" }
+   ] }
+]
+

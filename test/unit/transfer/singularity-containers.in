@@ -1,0 +1,20 @@
+[
+  { "type": "transfer",
+   "lfn": "singularity-library-image.tar.gz.sif",
+   "id": 3,
+   "src_urls": [
+     { "site_label": "computesite", "url": "library://sylabsed/examples/lolcow", "priority": 100 }
+   ],
+   "dest_urls": [
+     { "site_label": "computesite", "url": "file://$PWD/singularity-library-image.tar.gz" }
+   ] },
+ { "type": "transfer",
+   "lfn": "singularity-docker-image.tar.gz",
+   "id": 4,
+   "src_urls": [
+     { "site_label": "computesite", "url": "docker://godlovedc/lolcow", "priority": 100 }
+   ],
+   "dest_urls": [
+     { "site_label": "computesite", "url": "file://$PWD/singularity-docker-image.tar.gz", "type": "singularity" }
+   ] }
+]

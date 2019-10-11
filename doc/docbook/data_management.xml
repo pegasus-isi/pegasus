@@ -248,10 +248,10 @@ pegasus.replica.uwm.prefer.stagein.sites                   isi,cit
     node. Pegasus adds a directory creation job in the executable workflow
     that creates the workflow specific directory on the staging server.</para>
 
-    <para>In addition to data, Pegasus does transfer user executable to the
-    compute sites if the executable are not installed on the remote sites
-    before hand. This chapter gives an overview of how transfers of data and
-    executable is managed in Pegasus.</para>
+    <para>In addition to data, Pegasus will transfer user executables to the
+    compute sites if the executables are not installed on the remote sites
+    before hand. This chapter gives an overview of how the transfers of data and
+    executables are managed in Pegasus.</para>
 
     <para>Pegasus picks up files for data transfers based on the transfer
     attribute associated with the input and output files for the job. These
@@ -603,7 +603,7 @@ pegasus.replica.uwm.prefer.stagein.sites                   isi,cit
 
         <orderedlist>
           <listitem>
-            <para>Stagein Job executeson the submit host to stage in input
+            <para>Stagein Job executes on the submit host to stage in input
             data from Input Sites ( 1---n) to a workflow specific execution
             directory on the submit host</para>
           </listitem>
@@ -1420,8 +1420,21 @@ site corbusier {
           <row>
             <entry>htar</entry>
 
-            <entry>to retrieve input files from HPSS tape storage.</entry>
+            <entry>to retrieve input files from HPSS tape storage</entry>
           </row>
+
+          <row>
+            <entry>docker</entry>
+
+            <entry>to pull images from Docker hub</entry>
+          </row>
+
+          <row>
+            <entry>singularity</entry>
+
+            <entry>to pull images from Singularity hub and Singularity library (Sylabs Cloud)</entry>
+          </row>
+
         </tbody>
       </tgroup>
     </table>
@@ -1506,7 +1519,32 @@ site corbusier {
     <section id="transfer_docker">
       <title>Docker (docker://)</title>
 
-      <para/>
+      <para>Container images can be pulled directly from Docker Hub using Docker URLs.
+            Example: docker://pegasus/osg-el7
+      </para>
+      <para>Example: docker://pegasus/osg-el7
+      </para>
+      <para>Only public images are supported at this time.
+      </para>
+    </section>
+
+    <section id="transfer_singularity">
+      <title>Singularity (&lt;shub | library&gt;://)</title>
+        <para>Container images can be pulled directly from Singularity hub and
+          Singularity library depending on the version of Singularity installed
+          on a node requiring the container image. Singularity hub images require
+          at least Singularity v2.3, while Singularity library images require
+          at least Singularity v3.0. 
+        </para>
+
+        <para>Example: shub://vsoch/singularity-images
+        </para>
+     
+        <para>Example: library://sylabsed/examples/lolcow
+        </para>
+
+        <para>Only public images are supported at this time.
+        </para>
     </section>
 
     <section id="transfer_file">
