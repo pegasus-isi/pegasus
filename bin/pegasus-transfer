@@ -3958,7 +3958,7 @@ class Panorama:
         event_payload = {
             "event": "transfer.inv.local",
             "level": "INFO",
-            "status": status,
+            #"status": status,
             "hostname": socket.getfqdn(),
             "wf_uuid": None,
             "dag_job_id": None,
