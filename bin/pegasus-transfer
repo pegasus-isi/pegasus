@@ -3869,7 +3869,7 @@ class Stats:
         if publish_enabled and not self._detected_3rd_party:
             try: 
                 p = Panorama()
-                p.summary_transfer(self._total_files, self._t_start_global, self._t_end_global, self._total_bytes)
+                p.summary_transfer(self._total_count, self._t_start_global, self._t_end_global, self._total_bytes)
             except Exception as e:
                 logger.warn("Panorama send failure: " + str(e))
 
