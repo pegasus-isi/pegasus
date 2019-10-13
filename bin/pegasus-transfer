@@ -61,10 +61,27 @@ try:
 except:
     pass
 
-# panorama real time monitoring
-if "KICKSTART_MON_ENDPOINT_URL" in os.environ:
-    import urllib2
-    import base64
+#### Panorama real time monitoring ####
+# Use pegasus-config to find our lib path
+bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
+pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python"
+lib_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python-externals"
+lib_ext_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+
+# Insert this directory in our search path
+os.sys.path.insert(0, lib_dir)
+os.sys.path.insert(0, lib_ext_dir)
+
+from Pegasus.tools import amqp
+try:
+    # Python 3.0 and later
+    import urllib.parse as urlparse
+except ImportError:
+    # Fall back to Python 2's urlparse
+    import urlparse as urlparse
+
+#### 
 
 __author__ = "Mats Rynge <rynge@isi.edu>"
 
@@ -3754,7 +3771,7 @@ class Stats:
                 p = Panorama()
                 p.single_transfer(transfer, local_filename, was_successful, t_start, t_end, bytes)
             except Exception as e:
-                logger.warn("Panorama send failure: " + e)
+                logger.warn("Panorama send failure: " + str(e))
 
 
     def all_transfers_done(self):
@@ -3852,9 +3869,9 @@ class Stats:
         if publish_enabled and not self._detected_3rd_party:
             try: 
                 p = Panorama()
-                p.single_transfer(transfer)
+                p.summary_transfer(self._total_files, self._t_start_global, self._t_end_global, self._total_bytes)
             except Exception as e:
-                logger.warn("Panorama send failure: " + e)
+                logger.warn("Panorama send failure: " + str(e))
 
 
 class Panorama:
@@ -3877,7 +3894,7 @@ class Panorama:
         if self.amqp_url is None: 
             logger.warning("'%s' is not set in the environment" % self.amqp_env_var)
         else:
-            parsed_url = urlparse.urlparse(amqp_url)
+            parsed_url = urlparse.urlparse(self.amqp_url)
 
             if parsed_url.path.count("/") > 1 :
                 path_split = parsed_url.path.split("/")
@@ -3891,7 +3908,7 @@ class Panorama:
         amqp_channel = amqp_conn.channel()
         amqp_channel.exchange_declare(self.exchange_name, **self.EXCH_OPTS)
         
-        amqp_channel.basic_publish(exchange=exchange_name, routing_key=transfer_routing_key, body=json.dumps(event_payload, indent=2))
+        amqp_channel.basic_publish(exchange=self.exchange_name, routing_key=transfer_routing_key, body=json.dumps(event_payload, indent=2))
     
         amqp_conn.close()
 
@@ -3924,9 +3941,9 @@ class Panorama:
             "bytes_transferred": None
         }
 
-        event_payload["wf_uuid"] = os.getenv["PEGASUS_WF_UUID"]
-        event_payload["dag_job_id"] = os.getenv["PEGASUS_DAG_JOB_ID"]
-        event_payload["condor_job_id"] = os.getenv["CONDOR_JOBID"]
+        event_payload["wf_uuid"] = os.getenv("PEGASUS_WF_UUID")
+        event_payload["dag_job_id"] = os.getenv("PEGASUS_DAG_JOB_ID")
+        event_payload["condor_job_id"] = os.getenv("CONDOR_JOBID")
         
         if filesize is not None and filesize > 0:
             event_payload["bytes_transferred"] = int(filesize)
@@ -3934,9 +3951,9 @@ class Panorama:
         self.publish_transfer_metrics(event_payload["event"], event_payload)
         logger.info("Publish individual transfer statistics completed")
     
-    def summary_transfer(self, transfer)
-        total_secs = self._t_end_global - self._t_start_global
-        bytes_per_second = self._total_bytes / total_secs
+    def summary_transfer(self, total_files, t_start_global, t_end_global, total_bytes):
+        total_secs = t_end_global - t_start_global
+        bytes_per_second = total_bytes / total_secs
         
         event_payload = {
             "event": "transfer.inv.local",
@@ -3946,17 +3963,17 @@ class Panorama:
             "wf_uuid": None,
             "dag_job_id": None,
             "condor_job_id": None,
-            "total_files": transfer._total_count,
-            "transfer_start_time": int(transfer._t_start_global),
-            "transfer_completion_time": int(transfer._t_end_global),
+            "total_files": total_files,
+            "transfer_start_time": int(t_start_global),
+            "transfer_completion_time": int(t_end_global),
             "transfer_duration": int(total_secs),          
-            "bytes_transferred": int(tranfer._total_bytes),
+            "bytes_transferred": int(total_bytes),
             "effective_bytes_per_second": int(bytes_per_second)
         }
         
-        event_payload["wf_uuid"] = os.getenv["PEGASUS_WF_UUID"]
-        event_payload["dag_job_id"] = os.getenv["PEGASUS_DAG_JOB_ID"]
-        event_payload["condor_job_id"] = os.getenv["CONDOR_JOBID"]
+        event_payload["wf_uuid"] = os.getenv("PEGASUS_WF_UUID")
+        event_payload["dag_job_id"] = os.getenv("PEGASUS_DAG_JOB_ID")
+        event_payload["condor_job_id"] = os.getenv("CONDOR_JOBID")
         
         # If amqp_url is none try to use the generic monitoring event
         # to publish the statistics as a stampede event
