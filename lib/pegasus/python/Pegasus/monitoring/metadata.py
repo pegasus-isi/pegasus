@@ -64,7 +64,8 @@ class Metadata(object):
     def write_to_jsonfile(metadata_list, directory, name, prefix="pegasus-monitord"):
         try:
             temp_file = tempfile.NamedTemporaryFile(
-                dir=directory, prefix=prefix, suffix=".meta", delete=False
+                dir=directory, prefix=prefix, suffix=".meta", delete=False,
+                mode="w"
             )
             jsonify(metadata_list, temp_file)
             logger.debug("Written out metadata to %s", temp_file.name)
