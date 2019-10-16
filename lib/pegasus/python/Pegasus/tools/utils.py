@@ -33,7 +33,7 @@ import tempfile
 import threading
 import time
 import traceback
-import urllib
+from urllib import parse
 
 import six
 from six.moves.builtins import int
@@ -113,21 +113,22 @@ def quote(s):
     This will always return a byte string. If the argument is a unicode string
     then it will be utf-8 encoded before being quoted.
     """
-    if not isinstance(s, six.string_types):
-        raise TypeError("Not a string: %s" % str(s))
 
-    if isinstance(s, six.text_type):
-        # We need to utf-8 encode unicode strings
-        s = s.encode("utf-8")
+    if not isinstance(s, six.binary_type):
+        if isinstance(s, six.text_type):
+            # We need to utf-8 encode unicode strings
+            s = s.encode("utf-8")
+        else:
+            raise TypeError("Not a string: %s" % str(s))
 
     buf = []
-    for c in s:
-        i = ord(c)
-        if i < 0x20 or i >= 0x7F:
+    for byte in s:
+        c = chr(byte) 
+        if byte < 0x20 or byte >= 0x7F:
             # Any byte less than 0x20 is a control character
             # any byte >= 0x7F is either a control character
             # or a multibyte unicode character
-            buf.append("%%%02X" % i)
+            buf.append("%%%02X" % byte)
         elif c == "%":
             buf.append("%25")
         elif c == "'":
@@ -167,7 +168,7 @@ def unquote(s):
         # should have been removed by quote()
         s = s.encode("latin-1", "ignore")
 
-    return urllib.unquote(s)
+    return parse.unquote_to_bytes(s)
 
 
 def isodate(now=int(time.time()), utc=False, short=False):
