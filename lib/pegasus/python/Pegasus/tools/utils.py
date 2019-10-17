@@ -33,10 +33,10 @@ import tempfile
 import threading
 import time
 import traceback
-from urllib import parse
 
 import six
 from six.moves.builtins import int
+from six.moves import urllib
 
 __all__ = ["quote", "unquote"]
 
@@ -168,8 +168,7 @@ def unquote(s):
         # should have been removed by quote()
         s = s.encode("latin-1", "ignore")
 
-    return parse.unquote_to_bytes(s)
-
+    return urllib.parse.unquote_to_bytes(s)
 
 def isodate(now=int(time.time()), utc=False, short=False):
     """
