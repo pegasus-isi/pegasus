@@ -82,7 +82,7 @@ $(LIBDIR)/itsdangerous.py: itsdangerous-0.24.tar.gz
 $(LIBDIR)/boto: boto-2.48.0.tar.gz
 $(LIBDIR)/pamela: pamela-1.0.0.tar.gz
 $(LIBDIR)/OpenSSL: pyOpenSSL-16.2.0.tar.gz
-$(LIBDIR)/six: six-1.10.0.tar.gz
+$(LIBDIR)/six: six-1.12.0.tar.gz
 $(LIBDIR)/enum34: enum34-1.1.6.tar.gz
 $(LIBDIR)/cffi: cffi-1.10.0.tar.gz
 $(LIBDIR)/cryptography: cryptography-2.0.3.tar.gz
