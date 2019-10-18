@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 Pegasus utility for transfer of files during workflow enactment
@@ -750,7 +750,7 @@ class TransferHandlerBase(object):
             return False
 
         try:
-            f = open(path, "r")
+            f = open(path, "rb")
             if check_bytes > 0:
                 logger.debug("Reading %d bytes from %s to make sure the file is accessible" \
                              %(check_bytes, path))

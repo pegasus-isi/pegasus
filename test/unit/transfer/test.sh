@@ -148,7 +148,7 @@ function test_integrity_kickstart_large {
     mkdir kickstart_large
     cd kickstart_large
     # generate some data
-    dd if=/dev/urandom of=input.data bs=1k count=1 >/dev/null 2>&1
+    dd if=/dev/urandom of=input.data bs=512 count=1 >/dev/null 2>&1
     # generate a large number of transfers
     echo "[" >transfers.in
     for TID in `seq 1 $NUM_TRANSFERS`; do

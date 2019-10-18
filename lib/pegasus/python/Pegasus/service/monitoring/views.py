@@ -135,7 +135,7 @@ def get_query_args():
                 "Expecting integer for argument %s, found %r" % (q_arg, str(value))
             )
             e.codes = ("INVALID_QUERY_ARGUMENT", 400)
-            raise e
+            raise e from None
 
     def to_str(q_arg, value):
         return value
