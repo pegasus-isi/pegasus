@@ -31,7 +31,7 @@ Homepage: https://pegasus.isi.edu
 Package: pegasus
 Architecture: any
 Depends: default-jre (>= 2:1.8) | default-jre-headless (>= 2:1.8),
-  perl, python, python-openssl, python-yaml, ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
+  perl, python3, python3-openssl, python3-yaml, ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
 Recommends: condor
 Description: Workflow management system for HTCondor, Grid, and Clouds
  The Pegasus project encompasses a set of technologies the help

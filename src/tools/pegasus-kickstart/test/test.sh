@@ -220,7 +220,7 @@ function test_timeout_fail {
 }
 
 function test_timeout_kill {
-    kickstart -k 5 -K 5 python ignoreterm.py 30
+    kickstart -k 5 -K 5 python3 ignoreterm.py 30
     rc=$?
     if [ $rc -eq 0 ]; then
         echo "Expected non-zero exit"
@@ -238,7 +238,7 @@ function test_timeout_kill {
 }
 
 function test_timeout_nokill {
-    kickstart -k 1 -K 30 python ignoreterm.py 10
+    kickstart -k 1 -K 30 python3 ignoreterm.py 10
     rc=$?
     if [ $rc -eq 0 ]; then
         echo "Expected non-zero exit"
