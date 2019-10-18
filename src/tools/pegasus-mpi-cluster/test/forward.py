@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os
 import sys
@@ -8,6 +8,6 @@ for var in sys.argv[1:]:
     if fd is None:
         raise Exception("%s not in environment" % var)
     fd = int(fd)
-    os.write(fd, "Variable %s is fd %d\n" % (var,fd))
+    os.write(fd, bytes("Variable %s is fd %d\n" % (var,fd), 'utf-8'))
     os.close(fd)
 
