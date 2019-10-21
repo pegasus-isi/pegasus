@@ -14,6 +14,7 @@ class TutorialEnv:
     BLUEWATERS_GLITE = ("Bluewaters, with Glite", "bw-glite")
     TACC_WRANGLER = ("TACC Wrangler with Glite", "wrangler-glite")
     OLCF_TITAN = ("OLCF TITAN with Glite", "titan-glite")
+    OLCF_SUMMIT_KUBERNETES_BOSCO = ("OLCF Summit from Kubernetes using BOSCO", "summit-kub-bosco")
 
 
 class TutorialExample:
@@ -146,7 +147,8 @@ class Workflow(object):
                 TutorialEnv.XSEDE_BOSCO,
                 TutorialEnv.BLUEWATERS_GLITE,
                 TutorialEnv.TACC_WRANGLER,
-                TutorialEnv.OLCF_TITAN
+                TutorialEnv.OLCF_TITAN,
+                TutorialEnv.OLCF_SUMMIT_KUBERNETES_BOSCO
             ])
 
             # figure out what example options to provide
@@ -161,7 +163,7 @@ class Workflow(object):
             if self.tutorial_setup != "osg":
                 examples.append(TutorialExample.DIAMOND)
 
-            if self.tutorial_setup in ["bw-glite", "wrangler-glite", "titan-glite"]:
+            if self.tutorial_setup in ["bw-glite", "wrangler-glite", "titan-glite", "summit-kub-glite"]:
                 examples.append(TutorialExample.MPI)
                 self.project = query("What project your jobs should run under. For example on TACC there are like : TG-DDM160003 ?")
 
@@ -223,6 +225,10 @@ class Workflow(object):
             self.sitename = "titan"
             self.config = "glite"
             self.compute_queue = "titan"
+        elif self.tutorial_setup == "summit-kub-bosco":
+            self.sitename = "summit"
+            self.config   = "bosco"
+            self.compute_queue = "batch"
         return
 
     def generate(self):
