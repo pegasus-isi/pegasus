@@ -20,6 +20,10 @@ Requires:       java >= 1:1.8.0, python3, condor >= 8.6, graphviz, pyOpenSSL, py
 
 %define sourcedir %{name}-%{version}
 
+# Turn off automatic python bytecompilation
+# Will bytecompile manually with Python 2 and 3 separately
+%undefine __brp_python_bytecompile
+
 %description
 The Pegasus project encompasses a set of technologies that
 help workflow-based applications execute in a number of
