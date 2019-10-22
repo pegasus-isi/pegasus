@@ -1107,9 +1107,9 @@ class XMLParser( Parser ):
             self._cwd += data
 
         if self._parsing_cpu == True:
-            if "model" not in self._keys["cpu"]:
-                self._keys["cpu"]["model"] = ''
-            self._keys["cpu"]["model"] += data
+            if "cpu_model" not in self._keys["cpu"]:
+                self._keys["cpu"]["cpu_model"] = ''
+            self._keys["cpu"]["cpu_model"] += data
 
         elif self._parsing_arguments == True:
             self._arguments.append(data.strip())

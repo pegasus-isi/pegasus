@@ -836,6 +836,40 @@ class Job:
             for key in self._cpu_attribs:
                 kwargs[key] = self._cpu_attribs[key]
 
+        #PM-1398 for DIBBS we want task monitoring event that has metadata
+        #to be included in the composite event also
+        if self._additional_monitoring_events:
+            for event in self._additional_monitoring_events:
+                event_name = event["monitoring_event"] if "monitoring_event" in event else "monitoring.additional"
+                if event_name == "metadata":
+                    # flatten out metadata key values into event
+                    """
+                    # sample event we want to be able to parse
+                    {
+                     "ts": 1437688574,
+                     "monitoring_event": "metadata",
+                     "payload": [
+                       {
+                         "name": "num_template_banks",
+                         "value" : 3
+                       },
+                       {
+                         "name": "event_name",
+                         "value" : "binary start merger"
+                       }
+                      ]
+                    }
+
+                    """
+                    payload = event["payload"] if "payload" in event else None
+                    if payload is None:
+                        logger.error("No payload retrieved from event %s" % event)
+                    for m in event["payload"]:
+                        if "name" in m and "value" in m:
+                            kwargs["metadata__" + m["name"]] = m["value"]
+                        else:
+                            logger.error("Additional monitoring event of type metadata can only have name value pairs in payload %s" %event)
+
         # sanity check
         if job_type == "unknown" or job_type == "unassigned":
             logger.warning("Job %s has unknown type %s" %(self._exec_job_id,job_type))
