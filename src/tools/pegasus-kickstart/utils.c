@@ -25,6 +25,8 @@
 #include <fcntl.h>
 #include <utime.h>
 #include <sys/poll.h>
+#include <wchar.h>
+#include <locale.h>
 
 #include "utils.h"
 
@@ -47,10 +49,22 @@ static const char* asciilookup[128] = {
          "x",        "y",        "z",        "{",        "|",        "}",        "~",        ""
 };
 
+
+int yamlprintable(wint_t c)
+{
+    /* see https://yaml.org/spec/1.2/spec.html#id2770814 */
+    if (c == 0x9 || c == 0xA || c == 0xD || (c >= 0x20 && c <= 0x7E) ||
+        c == 0x85 || (c >= 0xA0 && c <= 0xD7FF) || (c <= 0xE000 && c >= 0xFFFD) ||
+        (c >= 0x10000 && c <= 0x10FFFF)) {
+        return 1;
+    }
+    return 0;
+}
+
+
 void yamlquote(FILE *out, const char* msg, size_t msglen) {
-    /* purpose: write a possibly binary message to the stream while XML
-     *          quoting
-     * paramtr: out (IO): stream to write the quoted xml to
+    /* purpose: write a possibly binary message to the stream with YAML
+     * paramtr: out (IO): stream to write the quoted yaml to
      *          msg (IN): message to append to buffer
      *          mlen (IN): length of message area to append
      * returns: nada
@@ -65,12 +79,13 @@ void yamlquote(FILE *out, const char* msg, size_t msglen) {
         if (j < 128) {
             fputs(asciilookup[j], out);
         } else {
+            /* FIXME */
             fputc(msg[i], out);
         }
     }
 }
 
-void yamldump(FILE *out, const int indent, const char* msg, size_t msglen) {
+void yamldump(FILE *in, FILE *out, const int indent) {
     /* purpose: write a stream to yaml as a literal`
      * paramtr: out (IO): stream to write the quoted xml to
      *          indent: indentation of the lines
@@ -78,13 +93,14 @@ void yamldump(FILE *out, const int indent, const char* msg, size_t msglen) {
      *          mlen (IN): length of message area to append
      * returns: nada
      */
-    size_t i;
-    for (i=0; i<msglen; ++i) {
-        fputc(msg[i], out);
-        if (msg[i] == '\n') {
-            fprintf(out, "%*s", indent, "");
+    wint_t c;
+    while ((c = fgetwc(in)) != WEOF)
+        if (c == 0xA) {
+            fprintf(out, "\n%*s", indent, "");
         }
-    }
+        else if (yamlprintable(c)) {
+            fprintf(out, "%lc", c);
+        }
 }
 
 static int isExtended = 1;     /* timestamp format concise or extended */

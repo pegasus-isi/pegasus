@@ -19,6 +19,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <wchar.h>
+#include <locale.h>
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -503,28 +505,28 @@ size_t printYAMLStatInfo(FILE *out, int indent, const char* id,
         if (fsize > 0) {
             /* initial indent */
             fprintf(out, "%*s", indent+4, "");
-            char buf [BUFSIZ];
+
+            wint_t c;
+            size_t ccount = 0;
+            size_t cskip = 0;
             int fd = dup(info->file.descriptor);
             if (fd != -1) {
-                /* Get the last dsize bytes of the file */
-                size_t offset = 0;
-                if (fsize > dsize) {
-                    offset = fsize - dsize;
-                }
-                if (lseek(fd, offset, SEEK_SET) != -1) {
-                    ssize_t total = 0;
-                    while (total < dsize) {
-                        ssize_t rsize = read(fd, buf, BUFSIZ);
-                        if (rsize == 0) {
-                            break;
-                        } else if (rsize < 0) {
-                            printerr("ERROR reading %s: %s",
-                                    info->file.name, strerror(errno));
-                            break;
-                        }
-                        yamldump(out, indent+4, buf, rsize);
-                        total += rsize;
-                    }
+                /* as utf8 can be multibyte, we have to walk the file twice - once
+                * to figure out how many characters to skip, and once to output */
+                if (lseek(fd, 0, SEEK_SET) != -1) {
+                    FILE *in = fdopen(fd, "r");
+                    while ((c = fgetwc(in)) != WEOF)
+                        ccount++;
+                    if (ccount > dsize)
+                        cskip = ccount - dsize;
+                    /* reset and start skipping */
+                    ccount = 0;
+                    lseek(fd, 0, SEEK_SET);
+                    in = fdopen(fd, "r");
+                    while (ccount < cskip && (c = fgetwc(in)) != WEOF) 
+                        ccount++;
+                    /* the rest of the file can be dumped to the yaml output */
+                    yamldump(in, out, indent+4);
                 }
                 close(fd);
             }

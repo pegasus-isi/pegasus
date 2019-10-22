@@ -21,7 +21,7 @@
 #include <time.h>
 
 extern void yamlquote(FILE *out, const char* msg, size_t msglen);
-extern void yamldump(FILE *out, const int indent, const char* msg, size_t msglen);
+extern void yamldump(FILE *in, FILE *out, const int indent);
 extern char* fmtisodate(time_t seconds, long micros);
 extern double doubletime(const struct timeval t);
 extern void now(struct timeval* t);

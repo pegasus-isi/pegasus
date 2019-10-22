@@ -26,6 +26,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <locale.h>
 
 #include "error.h"
 #include "appinfo.h"
@@ -667,6 +668,9 @@ int main(int argc, char* argv[]) {
         /* there is no application to run */
         helpMe(&appinfo);
     }
+
+    /* locale is getting more important now when we are using utf8 */
+    char *locale = setlocale(LC_ALL, "");
 
     /* make/change into new workdir NOW */
 REDIR:

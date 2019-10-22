@@ -519,6 +519,12 @@ function test_w_with_rel_exec {
     return $ec
 }
 
+function test_locale {
+    kickstart echo -e "Default \E[33mYellow\E[0m Normal" 
+    ec=$?
+    return $ec
+}
+
 export START_DIR=`pwd`
 
 # make sure we start cleanly
@@ -574,5 +580,5 @@ run_test test_integrity
 run_test test_integrity_failure
 run_test test_integrity_yaml_inc
 run_test test_w_with_rel_exec
-
+run_test test_locale
 
