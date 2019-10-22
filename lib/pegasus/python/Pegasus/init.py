@@ -307,6 +307,10 @@ class Workflow(object):
                 self.copy_template("pmc-wrapper.wrangler", "bin/pmc-wrapper", mode=0o755)
             elif self.tutorial_setup == "titan-glite":
                 self.copy_template("pmc-wrapper.titan", "bin/pmc-wrapper", mode=0o755)
+            elif self.tutorial_setup == "wrangler-glite":
+                self.copy_template("pmc-wrapper.wrangler", "bin/pmc-wrapper", mode=0o755)
+            elif self.tutorial_setup == "summit-kub-bosco":
+                self.copy_template("pmc-wrapper.summit", "bin/pmc-wrapper", mode=0o755)
 
         if self.generate_tutorial:
             sys.stdout.write("Pegasus Tutorial setup for example workflow - %s for execution on %s in directory %s\n"

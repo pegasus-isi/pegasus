@@ -1,0 +1,13 @@
+#!/bin/bash
+
+###################################### Fix for aprun change dir error on TITAN ################################################
+#### https://www.olcf.ornl.gov/for-users/system-user-guides/titan/titan-user-guide/#filesystems-available-to-compute-nodes ####
+###############################################################################################################################
+cp *.in $PEGASUS_SCRATCH_DIR
+cd $PEGASUS_SCRATCH_DIR
+###############################################################################################################################
+
+jsrun -n $PEGASUS_CORES ${PEGASUS_HOME}/bin/pegasus-mpi-cluster "$@"
+
+
+
