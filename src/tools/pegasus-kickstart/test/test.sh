@@ -159,9 +159,19 @@ function test_missing_args {
 }
 
 function test_quoting {
-    kickstart cat xmlquote.txt
+    TEST_LC_ALL=""
+    if (locale -a | grep ^en_US.UTF-8) >/dev/null 2>&1 ; then
+        TEST_LC_ALL=en_US.UTF-8
+    elif (locale -a | grep ^en_US.utf8) >/dev/null 2>&1 ; then
+        TEST_LC_ALL=en_US.utf8
+    elif (locale -a | grep ^C.utf8) >/dev/null 2>&1 ; then
+        TEST_LC_ALL=C.utf8
+    fi
+    LC_ALL=$TEST_LC_ALL kickstart cat xmlquote.txt
     rc=$?
     if ! [[ $(cat test.out) =~ "Jens Vöckler" ]]; then
+        echo "LC_ALL was $TEST_LC_ALL"
+        echo "LANG was $LANG"
         echo "Expected UTF-8 umlaut in output"
         return 1
     fi
