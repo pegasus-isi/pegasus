@@ -27,10 +27,10 @@ if [ -n "$WALLTIME" ]; then
     echo "#BSUB -W $(strip_quotes $WALLTIME)"
 fi
 
-# STRIPPED_REQUEST value strips out the first and last single-quote
-# LSF EXPERT MODE
-# -R "select[selection_string] order[order_string] rusage[usage_string [, usage_string][|| usage_string] ...] span[span_string] same[same_string] cu[cu_string]] affinity[affinity_string]"
-# eg. -R "select[hname!='host01'] rusage[mem=1024]"
+#### STRIPPED_REQUEST value strips out the first and last single-quote
+#### LSF EXPERT MODE
+#### -R "select[selection_string] order[order_string] rusage[usage_string [, usage_string][|| usage_string] ...] span[span_string] same[same_string] cu[cu_string]] affinity[affinity_string]"
+#### eg. -R "select[hname!='host01'] rusage[mem=1024]"
 expert=""
 if [ -n "$REQUEST" ]; then
     #### This is required to enter Expert Mode on Summit ####
@@ -48,9 +48,11 @@ if [[ -n "$NODES" && !(-n "$expert") ]]; then
     echo "#BSUB -nnodes $(strip_quotes $NODES)"
 fi
 
-if [[ -n "$CORES" && !(-n "$expert") ]]; then
-    echo "#BSUB -n $(strip_quotes $CORES)"
-fi
+#### OLCF Summit doesn't support requests specifying amount of cores ####
+#### If you want to parse requests for cores, uncomment the next segment. ####
+#if [[ -n "$CORES" && !(-n "$expert") ]]; then
+#    echo "#BSUB -n $(strip_quotes $CORES)"
+#fi
 
 if [[ -n "$TOTAL_MEMORY" && !(-n "$expert") ]]; then
     echo "#BSUB -M $(strip_quotes $TOTAL_MEMORY)"
