@@ -79,3 +79,19 @@ tr pegasus::mpiexec {
 }
 {% endif %}
 
+{% if generate_tutorial == true and tutorial_setup == "summit-kub-bosco" %}
+tr pegasus::mpiexec {
+  site summit {
+    # we cannot specify cores as pegasus profile on OLCF
+    # as in simple LSF requests only requires nodes to be allocated
+    profile env "PEGASUS_CORES" "36"
+    profile pegasus "nodes" "1"
+    profile pegasus "runtime" "43200"
+    profile pegasus "change.dir" "true"
+
+    pfn "{{workflowdir}}/bin/pmc-wrapper"
+    type "INSTALLED"
+  }
+}
+{% endif %}
+
