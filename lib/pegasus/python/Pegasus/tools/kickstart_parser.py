@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 Pegasus utility functions for pasing a kickstart output file and return wanted information

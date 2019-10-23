@@ -19,7 +19,7 @@ PYTHON_FILES=(DAX3 jupyter/instance catalogs/replica_catalog catalogs/sites_cata
 
 for pyfile in ${PYTHON_FILES[@]}; do
     # Generate the docs
-    pydoc -w ./$pyfile.py
+    pydoc3 -w ./$pyfile.py
 
     # getting the file name
     htmlfile=$(echo $pyfile| cut -d'/' -f 2)
