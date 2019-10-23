@@ -167,6 +167,7 @@ class Job:
         self._stdout_text = None
         self._stderr_text = None
         self._additional_monitoring_events = []
+        self._cpu_attribs = None
         self._job_dagman_out = None    # _CONDOR_DAGMAN_LOG from environment
                                        # line for pegasus-plan and subdax_ jobs
         self._kickstart_parsed = False # Flag indicating if the kickstart
@@ -531,6 +532,10 @@ class Job:
                     except KeyError:
                         logger.exception( "Unable to parse stderr section from kickstart record for task %s from file %s " %(my_task_number, self.get_rotated_out_filename() ))
 
+            #PM-1398 pass cpu info
+            if "cpu" in my_record:
+                self._cpu_attribs = my_record["cpu"]
+
         if len(stdout_text_list) > 0 :
             self._stdout_text = "".join(stdout_text_list)
 
@@ -790,6 +795,44 @@ class Job:
 
         job_type = self._get_jobtype_desc()
         kwargs["jobtype"] = job_type
+
+        if self._cpu_attribs:
+            for key in self._cpu_attribs:
+                kwargs[key] = self._cpu_attribs[key]
+
+        #PM-1398 for DIBBS we want task monitoring event that has metadata
+        #to be included in the composite event also
+        if self._additional_monitoring_events:
+            for event in self._additional_monitoring_events:
+                event_name = event["monitoring_event"] if "monitoring_event" in event else "monitoring.additional"
+                if event_name == "metadata":
+                    # flatten out metadata key values into event
+                    """
+                    # sample event we want to be able to parse
+                    {
+                     "ts": 1437688574,
+                     "monitoring_event": "metadata",
+                     "payload": [
+                       {
+                         "name": "num_template_banks",
+                         "value" : 3
+                       },
+                       {
+                         "name": "event_name",
+                         "value" : "binary start merger"
+                       }
+                      ]
+                    }
+
+                    """
+                    payload = event["payload"] if "payload" in event else None
+                    if payload is None:
+                        logger.error("No payload retrieved from event %s" % event)
+                    for m in event["payload"]:
+                        if "name" in m and "value" in m:
+                            kwargs["metadata__" + m["name"]] = m["value"]
+                        else:
+                            logger.error("Additional monitoring event of type metadata can only have name value pairs in payload %s" %event)
 
         # sanity check
         if job_type == "unknown" or job_type == "unassigned":

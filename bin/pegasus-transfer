@@ -1468,14 +1468,19 @@ class GridFtpHandler(TransferHandlerBase):
         return chunks
   
 
-class HTTPHandler(TransferHandlerBase):
+class TransferProtocolHandler(TransferHandlerBase):
     """
-    pulls from http/https using wget or curl
+    pulls from http/https/ftp using wget or curl
     """
 
-    _name = "HTTPHandler"
+    _name = "TransferProtocolHandler"
     _mkdir_cleanup_protocols = []
-    _protocol_map = ["http->file", "https->file"]
+    _protocol_map = [
+                    "http->file", 
+                    "https->file",
+                    "ftp->file"
+                    ]
+
 
     def do_transfers(self, transfers):
         
@@ -4011,7 +4016,7 @@ class SimilarWorkSet:
         # load all the handlers - does the order matter?
         self._available_handlers.append( FileHandler() )
         self._available_handlers.append( GridFtpHandler() )
-        self._available_handlers.append( HTTPHandler() )
+        self._available_handlers.append( TransferProtocolHandler() )
         self._available_handlers.append( IRodsHandler() )
         self._available_handlers.append( S3Handler() )
         self._available_handlers.append( GlobusOnlineHandler() )
