@@ -163,7 +163,7 @@ class Workflow(object):
             if self.tutorial_setup != "osg":
                 examples.append(TutorialExample.DIAMOND)
 
-            if self.tutorial_setup in ["bw-glite", "wrangler-glite", "titan-glite", "summit-kub-glite"]:
+            if self.tutorial_setup in ["bw-glite", "wrangler-glite", "titan-glite", "summit-kub-bosco"]:
                 examples.append(TutorialExample.MPI)
                 self.project = query("What project your jobs should run under. For example on TACC there are like : TG-DDM160003 ?")
 
