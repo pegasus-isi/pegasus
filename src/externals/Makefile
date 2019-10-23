@@ -70,7 +70,7 @@ $(LIBDIR)/%:
 
 $(LIBDIR)/argparse: argparse-1.4.0.tar.gz
 $(LIBDIR)/click: click-6.7.tar.gz
-$(LIBDIR)/sqlalchemy: SQLAlchemy-0.8.0.tar.gz
+$(LIBDIR)/sqlalchemy: SQLAlchemy-1.3.10.tar.gz
 $(LIBDIR)/flask: Flask-0.12.4.tar.gz
 $(LIBDIR)/flask_cache: Flask-Cache-0.13.1.tar.gz
 $(LIBDIR)/flask_sqlalchemy.py: Flask-SQLAlchemy-0.16.tar.gz
