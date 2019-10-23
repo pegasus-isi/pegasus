@@ -1070,16 +1070,12 @@ project:
                   taskConfig:
                     label: Ant
                     environmentVariables: 'PATH="${PATH}:/usr/local/bin:/Library/TeX/texbin" LDFLAGS="-L/usr/local/opt/openssl/lib" CPPFLAGS="-I/usr/local/opt/openssl/include"'
-                    target: dist-worker dist-release dist-macos
+                    target: dist-worker dist-release
                     buildJdk: JDK
                     workingSubDirectory: pegasus-source
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_macos
                   copyPattern: 'pegasus-binary-*.tar.gz'
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-dmg-x86_64_macos
-                  copyPattern: '*.dmg'
                   location: pegasus-source/dist
                   isShared: true
                 - name: pegasus-worker-x86_64_macos
@@ -1226,7 +1222,6 @@ project:
                       mv pegasus-doc-*.tar.gz $DOWNLOADS/
                       mv *.deb $DOWNLOADS/
                       mv *.rpm $DOWNLOADS/
-                      mv *.dmg $DOWNLOADS/
                       mv pegasus-r-dax3*.tar.gz $DOWNLOADS/
 
                       # debian
@@ -1285,7 +1280,6 @@ project:
                 - name: pegasus-deb-x86_64_ubuntu_16
                 #- name: pegasus-deb-x86_64_ubuntu_17
                 - name: pegasus-deb-x86_64_ubuntu_18
-                - name: pegasus-dmg-x86_64_macos
                 - name: pegasus-doc
                 - name: pegasus-python-source-versioned
                 - name: pegasus-r-dax3
