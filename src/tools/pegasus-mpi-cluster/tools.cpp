@@ -185,6 +185,19 @@ struct cpuinfo get_host_cpuinfo() {
     }
 
     infile.close();
+
+    // On some platforms, we can only detect the number of virtual cores
+    // https://jira.isi.edu/browse/PM-1403
+    if (c.threads > 0 && c.cores == 0) {
+        log_warn("Unable to determine the number of cores from /proc/cpuinfo - using the threads value");
+        c.cores = c.threads;
+    }
+    if (c.threads > 0 && c.sockets == 0) {
+        log_warn("Unable to determine the number of sockets from /proc/cpuinfo - setting it to 1");
+        c.sockets = 1;
+    }
+
+
 #endif
     if (c.threads == 0 || c.cores == 0 || c.sockets == 0 ||
             c.cores > c.threads || c.sockets > c.cores ||
