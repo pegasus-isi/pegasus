@@ -868,10 +868,6 @@ project:
                   copyPattern: '*x86_64.rpm'
                   location: pegasus-source/dist
                   isShared: true
-                - name: pegasus-srcrpm
-                  copyPattern: '*.src.rpm'
-                  location: pegasus-source/dist
-                  isShared: true
                 - name: pegasus-worker-x86_64_rhel_6
                   copyPattern: 'pegasus-worker-*-x86_64_rhel_6.tar.gz'
                   location: pegasus-source/dist
@@ -960,6 +956,10 @@ project:
                   isShared: true
                 - name: pegasus-worker-x86_64_rhel_8
                   copyPattern: 'pegasus-worker-*-x86_64_rhel_8.tar.gz'
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-srcrpm
+                  copyPattern: '*.src.rpm'
                   location: pegasus-source/dist
                   isShared: true
               artifactDependencies:
