@@ -239,9 +239,10 @@ class Workflow(object):
 
         if self.generate_tutorial:
             self.copy_template("%s/tc.txt" % self.tutorial, "tc.txt")
+
             if self.tutorial == "r-epa":
                 self.copy_template("%s/daxgen.R" % self.tutorial, "daxgen.R")
-            else:
+            elif self.tutorial != "mpi-hw":
                 self.copy_template("%s/daxgen.py" % self.tutorial, "daxgen.py")
 
             if self.tutorial == "diamond":
@@ -282,6 +283,7 @@ class Workflow(object):
                 self.copy_template("%s/mpi-hello-world-wrapper" % self.tutorial, "bin/mpi-hello-world-wrapper",
                                    mode=0o755)
                 self.copy_template("split/pegasus.html", "input/f.in")
+
         else:
             self.copy_template("tc.txt", "tc.txt")
             if self.daxgen == "python":
