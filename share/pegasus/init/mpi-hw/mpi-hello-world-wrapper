@@ -16,4 +16,6 @@ export MPICH_HOME=/opt/apps/intel15/mvapich2/2.1
 export LD_LIBRARY_PATH=/opt/apps/intel15/mvapich2/2.1/lib:/opt/apps/intel15/mvapich2/2.1/lib/shared:/opt/apps/intel/15/composer_xe_2015.3.187/mpirt/lib/intel64:/opt/apps/intel/15/composer_xe_2015.3.187/ipp/lib/intel64:/opt/apps/intel/15/composer_xe_2015.3.187/mkl/lib/intel64:/opt/apps/intel/15/composer_xe_2015.3.187/tbb/lib/intel64:/opt/apps/intel/15/composer_xe_2015.3.187/tbb/lib/intel64/gcc4.4:/opt/apps/intel/15/composer_xe_2015.3.187/compiler/lib/intel64:/opt/apps/gcc/4.9.1/lib:/opt/apps/gcc/4.9.1/lib64
 
 ibrun  {{workflowdir}}/bin/pegasus-mpi-hw  "$@"
+{% elif tutorial_setup == "summit-kub-bosco" %}
+jsrun -n $PEGASUS_CORES  /ccs/proj/csc355/summit/pegasus/stable/bin/pegasus-mpi-hw  "$@"
 {% endif %}

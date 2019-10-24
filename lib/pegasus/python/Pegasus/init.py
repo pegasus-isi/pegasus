@@ -163,7 +163,7 @@ class Workflow(object):
             if self.tutorial_setup != "osg":
                 examples.append(TutorialExample.DIAMOND)
 
-            if self.tutorial_setup in ["bw-glite", "wrangler-glite", "titan-glite", "summit-kub-glite"]:
+            if self.tutorial_setup in ["bw-glite", "wrangler-glite", "titan-glite", "summit-kub-bosco"]:
                 examples.append(TutorialExample.MPI)
                 self.project = query("What project your jobs should run under. For example on TACC there are like : TG-DDM160003 ?")
 
@@ -239,9 +239,10 @@ class Workflow(object):
 
         if self.generate_tutorial:
             self.copy_template("%s/tc.txt" % self.tutorial, "tc.txt")
+
             if self.tutorial == "r-epa":
                 self.copy_template("%s/daxgen.R" % self.tutorial, "daxgen.R")
-            else:
+            elif self.tutorial != "mpi-hw":
                 self.copy_template("%s/daxgen.py" % self.tutorial, "daxgen.py")
 
             if self.tutorial == "diamond":
@@ -278,9 +279,11 @@ class Workflow(object):
                 self.mkdir("bin")
                 self.copy_template("%s/pegasus-mpi-hw.c" % self.tutorial, "pegasus-mpi-hw.c")
                 self.copy_template("%s/Makefile" % self.tutorial, "Makefile")
+                self.copy_template("%s/daxgen.py.template" % self.tutorial, "daxgen.py")
                 self.copy_template("%s/mpi-hello-world-wrapper" % self.tutorial, "bin/mpi-hello-world-wrapper",
                                    mode=0o755)
                 self.copy_template("split/pegasus.html", "input/f.in")
+
         else:
             self.copy_template("tc.txt", "tc.txt")
             if self.daxgen == "python":

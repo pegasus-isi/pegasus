@@ -21,7 +21,7 @@ pegasus-plan --conf pegasus.properties \
     --output-dir $DIR/output \
 {% if generate_tutorial == true %}
     --cleanup leaf \
-{% if tutorial_setup == "usc-hpcc" or tutorial_setup == "wrangler-glite" or tutorial_setup == "titan-glite" %}
+{% if tutorial_setup == "usc-hpcc" or tutorial_setup == "wrangler-glite" or tutorial_setup == "titan-glite" or tutorial_setup == "summit-kub-bosco" %}
     --cluster label \
 {% else %}
     --cluster horizontal \
