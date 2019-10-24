@@ -183,8 +183,8 @@ EOF
 
 export TEST_DIR=`pwd`
 
-export TRANSFER_LOCATION=`cd ../../.. && pwd`/bin/pegasus-transfer
-export KICKSTART_LOCATION=`cd ../../../src/tools/pegasus-kickstart && pwd`/pegasus-kickstart
+export TRANSFER_LOCATION=$PEGASUS_BIN_DIR/pegasus-transfer
+export KICKSTART_LOCATION=$PEGASUS_BIN_DIR/pegasus-kickstart
 
 # we require kickstart
 (cd ../../../src/tools/pegasus-kickstart && make) >/dev/null 2>&1
