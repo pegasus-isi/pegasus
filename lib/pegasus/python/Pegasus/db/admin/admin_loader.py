@@ -524,7 +524,7 @@ def _discover_version(db, pegasus_version=None, force=False, verbose=True):
         try:
             _verify_tables(db)
             log.debug("Your database is already updated.")
-            return None
+            return 0
         except DBAdminError:
             current_version = 0
 
