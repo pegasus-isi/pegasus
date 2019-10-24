@@ -617,10 +617,10 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
         <arg line="-c 'make test'"/>
     </exec>
   </target>
-
-  <target name="test-transfer" depends="dist" description="Run transfer unit tests">
+  
+  <target name="test-transfer" depends="dist-common,compile-externals" description="Run transfer unit tests">
     <exec executable="./test.sh" dir="test/unit/transfer" failonerror="true">
-        <arg line="${dist.bin}"/>
+      <env key="PEGASUS_BIN_DIR" value="${dist.bin}"/>
     </exec>
   </target>
 

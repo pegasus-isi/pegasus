@@ -190,14 +190,8 @@ EOF
 
 export TEST_DIR=`pwd`
 
-if [ "x$1" = "x" ]; then
-    echo "Please specify the Pegasus bin dir as the first argument" >&2
-    exit 1
-fi
-export PATH=$1:$PATH
-
-export TRANSFER_LOCATION=$1/pegasus-transfer
-export KICKSTART_LOCATION=$1/pegasus-kickstart
+export TRANSFER_LOCATION=$PEGASUS_BIN_DIR/pegasus-transfer
+export KICKSTART_LOCATION=$PEGASUS_BIN_DIR/pegasus-kickstart
 
 export KICKSTART_INTEGRITY_DATA=ks.integrity.$$
 rm -f $KICKSTART_INTEGRITY_DATA

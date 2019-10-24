@@ -49,8 +49,11 @@ mpi_hw_job.addProfile( Profile( "globus", "jobtype", "mpi"))
 mpi_hw_job.addProfile( Profile("pegasus", "cores", "32" ))
 # pegasus.nodes
 mpi_hw_job.addProfile( Profile("pegasus", "nodes", "2" ))
+
+{% if tutorial_setup != "summit-kub-bosco" %}
 # pegasus.ppn
 mpi_hw_job.addProfile( Profile("pegasus", "ppn", "16" ))
+{% endif %}
 
 # pegasus.runtime is walltime in seconds.
 mpi_hw_job.addProfile( Profile("pegasus", "runtime", "300"))
