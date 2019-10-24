@@ -146,13 +146,13 @@ def format_seconds(duration, max_comp = 2):
 	milliseconds = math.modf(duration)[0]
 	sec = int(duration)
 	formatted_duration = ''
-	years = sec / 31536000
+	years = sec // 31536000
 	sec -= 31536000 * years
-	days = sec / 86400
+	days = sec // 86400
 	sec -= 86400 * days
-	hrs = sec / 3600
+	hrs = sec // 3600
 	sec -= 3600 * hrs
-	mins = sec / 60
+	mins = sec // 60
 	sec -= 60 * mins
 
    	# years
