@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 pegasus-dagman
@@ -9,7 +9,6 @@ condor_submit_dag -dagman /path/to/pegasus-dagman my.dag
 
 Usage: pegasus-dagman [options] 
 """
-from __future__ import print_function
 
 ##
 #  Copyright 2007-2010 University Of Southern California
@@ -55,18 +54,7 @@ def find_prog(prog,dir=[]):
 logger = logging.getLogger("pegasus-dagman")
 
 # Use pegasus-config to find our lib path
-bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
-pegasus_config = find_prog("pegasus-config",[bin_dir])
-lib_dir = subprocess.Popen([pegasus_config,"--noeoln","--python"], stdout=subprocess.PIPE, shell=False).communicate()[0]
-lib_ext_dir = subprocess.Popen([pegasus_config,"--noeoln","--python-externals"], stdout=subprocess.PIPE, shell=False).communicate()[0]
-print("Pegasus LIB %s" % lib_dir)
-print("Pegasus LIB %s" % lib_ext_dir)
-print("Pegasus BIN_DIR %s" % bin_dir)
-print("Pegasus DAGMAN is  %s" % sys.argv[0])
-
-# Insert this directory in our search path
-os.sys.path.insert(0, lib_dir)
-os.sys.path.insert(0, lib_ext_dir)
+print("Pegasus DAGMAN is %s" % sys.argv[0])
 
 from Pegasus.tools import utils
 utils.configureLogging()
@@ -201,7 +189,7 @@ if __name__ == "__main__":
     dagman = dagman_launch(dagman_bin,sys.argv[1:])
     
     # Find monitord Binary
-    monitord_bin = find_prog("pegasus-monitord",[bin_dir])
+    monitord_bin = find_prog("pegasus-monitord",[os.getenv('PEGASUS_HOME') + '/bin'])
 
     # Launch Monitord
     monitord = monitord_launch(monitord_bin)
