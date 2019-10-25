@@ -260,7 +260,7 @@ def append_to_wf_metadata_log(files_metadata, logfile):
     with io.open(logfile, 'a', encoding='utf8') as outfile:
         for file_metadata in files_metadata:
             res = file_metadata.convert_to_rce()
-            outfile.write(unicode(res + '\n'))
+            outfile.write(res + '\n')
 
 
 
@@ -379,7 +379,7 @@ def _write_logs(log_filename):
         # writing to log file (concurrency safe)
         with io.open(log_filename, 'a', encoding='utf8') as outfile:
             res = json.dumps(log, ensure_ascii=False)
-            outfile.write(unicode(res + '\n'))
+            outfile.write(res + '\n')
 
     else:
         print(json.dumps(log))
