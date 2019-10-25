@@ -20,10 +20,11 @@ Functions for output pegasus-monitord events to various destinations.
 
 import socket
 import logging
-import urlparse
 import traceback
 import json
 import re
+
+from urllib.parse import urlparse
 
 from Pegasus.tools import utils
 from Pegasus.tools import properties

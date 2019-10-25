@@ -25,7 +25,7 @@ import re
 import logging
 # PM-1332 cannot use cStringIO since job stdout can have unicode characters
 # cStringIO only supports ASCII
-from StringIO import StringIO
+from io import StringIO
 import json
 
 from Pegasus.tools import utils
