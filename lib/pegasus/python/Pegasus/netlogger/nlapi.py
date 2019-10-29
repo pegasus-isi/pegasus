@@ -24,7 +24,7 @@ import string
 import sys
 import time
 import types
-import urlparse
+import urllib.parse
 
 from Pegasus.netlogger.nldate import utcFormatISO
 from Pegasus.netlogger.util import uuid1

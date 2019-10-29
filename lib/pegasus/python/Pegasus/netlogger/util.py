@@ -17,7 +17,7 @@ except ImportError:
     md5_new = md5.new
 from optparse import OptionParser, Option, OptionValueError, make_option
 import os
-import Queue
+import queue
 import re
 import signal
 import sys
@@ -76,12 +76,12 @@ class ScriptOptionParser(OptionParser):
                     "repeat for even more detail"),
         )
 
-class CountingQueue(Queue.Queue):
+class CountingQueue(queue.Queue):
     """Wrapper around Queue that counts how many items
     were processed, for accounting purposes.
     """
     def __init__(self, type_, *args):
-        Queue.Queue.__init__(self, *args)
+        queue.Queue.__init__(self, *args)
         self.n = 0
         if type_ == 'get':
             self._gets, self._puts = True, False
@@ -91,12 +91,12 @@ class CountingQueue(Queue.Queue):
     def get(self, *args, **kwargs):
         if self._gets:
             self.n += 1
-        return Queue.Queue.get(self, *args, **kwargs)
+        return queue.Queue.get(self, *args, **kwargs)
 
     def put(self, *args, **kwargs):
         if self._puts:
             self.n += 1
-        return Queue.Queue.put(self, *args, **kwargs)
+        return queue.Queue.put(self, *args, **kwargs)
         
     def getNumProcessed(self):
         return self.n
