@@ -25,7 +25,6 @@ import sys
 import time
 import types
 import urllib.parse
-
 from Pegasus.netlogger.nldate import utcFormatISO
 from Pegasus.netlogger.util import uuid1
 
@@ -414,9 +413,9 @@ class Log:
 
 # set up urlparse to recognize x-netlog schemes
 for scheme in 'x-netlog','x-netlog-udp':
-    urlparse.uses_netloc.append(scheme)
+    urllib.parse.uses_netloc.append(scheme)
     try:
-        urlparse.uses_query.append(scheme)
+        urllib.parse.uses_query.append(scheme)
     except AttributeError as errorstring:
         pass
 
@@ -427,7 +426,7 @@ def urlfile(url):
     """
     #print "url='%s'" % url
     # Split URL
-    scheme, netloc, path, params, query, frag = urlparse.urlparse(url)
+    scheme, netloc, path, params, query, frag = urllib.parse.urlparse(url)
     # Put query parts into a dictionary for easy access later
     query_data = {}
     if query:
@@ -480,7 +479,7 @@ def urltype(url):
     Return a canonical string representing the type of URL,
     or None if the type is unknown
     """
-    scheme = urlparse.urlparse(url)[0]
+    scheme = urllib.parse.urlparse(url)[0]
     if scheme == "file" or scheme == "" or scheme is None:
         return 'file'
     elif scheme == "x-netlog":
