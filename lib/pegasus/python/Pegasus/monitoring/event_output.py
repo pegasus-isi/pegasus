@@ -24,7 +24,7 @@ import traceback
 import json
 import re
 
-from urllib.parse import urlparse
+import urllib.parse
 
 from Pegasus.tools import utils
 from Pegasus.tools import properties
@@ -103,10 +103,10 @@ class OutputURL:
             self.scheme, rest_url = url.split(":", 1)
             url = "http:" + rest_url
 
-            http_scheme, self.netloc, self.path, self.params, query, frag = urlparse.urlparse(url)
+            http_scheme, self.netloc, self.path, self.params, query, frag = urllib.parse.urlparse(url)
         else:
             # No need to change anything
-            self.scheme, self.netloc, self.path, self.params, query, frag = urlparse.urlparse(url)
+            self.scheme, self.netloc, self.path, self.params, query, frag = urllib.parse.urlparse(url)
 
         host_port = ''
         user_pass = ''
