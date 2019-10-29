@@ -30,7 +30,10 @@ try:
 except ImportError:
     # for IronPython
     pass
-from types import StringTypes
+
+# PM-1407 for python3 use isinstance() directly
+#from types import StringTypes
+
 from warnings import warn
 try:
     from codecs import BOM_UTF8, BOM_UTF16, BOM_UTF16_BE, BOM_UTF16_LE
@@ -579,7 +582,7 @@ class Section(dict):
     def __getitem__(self, key):
         """Fetch the item and do string interpolation."""
         val = dict.__getitem__(self, key)
-        if self.main.interpolation and isinstance(val, StringTypes):
+        if self.main.interpolation and isinstance(val, str):
             return self._interpolate(key, val)
         return val
 
@@ -598,7 +601,7 @@ class Section(dict):
         `unrepr`` must be set when setting a value to a dictionary, without
         creating a new sub-section.
         """
-        if not isinstance(key, StringTypes):
+        if not isinstance(key, str):
             raise ValueError('The key "%s" is not a string.' % key)
         
         # add the comment
@@ -632,11 +635,11 @@ class Section(dict):
             if key not in self:
                 self.scalars.append(key)
             if not self.main.stringify:
-                if isinstance(value, StringTypes):
+                if isinstance(value, str):
                     pass
                 elif isinstance(value, (list, tuple)):
                     for entry in value:
-                        if not isinstance(entry, StringTypes):
+                        if not isinstance(entry, str):
                             raise TypeError('Value is not a string "%s".' % entry)
                 else:
                     raise TypeError('Value is not a string "%s".' % value)
@@ -684,7 +687,7 @@ class Section(dict):
             del self.comments[key]
             del self.inline_comments[key]
             self.sections.remove(key)
-        if self.main.interpolation and isinstance(val, StringTypes):
+        if self.main.interpolation and isinstance(val, str):
             return self._interpolate(key, val)
         return val
 
@@ -1050,7 +1053,7 @@ class Section(dict):
             return False
         else:
             try:
-                if not isinstance(val, StringTypes):
+                if not isinstance(val, str):
                     # TODO: Why do we raise a KeyError here?
                     raise KeyError()
                 else:
@@ -1274,7 +1277,7 @@ class ConfigObj(Section):
         
         
     def _load(self, infile, configspec):
-        if isinstance(infile, StringTypes):
+        if isinstance(infile, str):
             self.filename = infile
             if os.path.isfile(infile):
                 h = open(infile, 'rb')
@@ -1485,7 +1488,7 @@ class ConfigObj(Section):
                     else:
                         infile = newline
                     # UTF8 - don't decode
-                    if isinstance(infile, StringTypes):
+                    if isinstance(infile, str):
                         return infile.splitlines(True)
                     else:
                         return infile
@@ -1493,7 +1496,7 @@ class ConfigObj(Section):
                 return self._decode(infile, encoding)
             
         # No BOM discovered and no encoding specified, just return
-        if isinstance(infile, StringTypes):
+        if isinstance(infile, str):
             # infile read from a file will be a single string
             return infile.splitlines(True)
         return infile
@@ -1513,12 +1516,12 @@ class ConfigObj(Section):
         
         if is a string, it also needs converting to a list.
         """
-        if isinstance(infile, StringTypes):
+        if isinstance(infile, str):
             # can't be unicode
             # NOTE: Could raise a ``UnicodeDecodeError``
             return infile.decode(encoding).splitlines(True)
         for i, line in enumerate(infile):
-            if not isinstance(line, unicode):
+            if not isinstance(line, str):
                 # NOTE: The isinstance test here handles mixed lists of unicode/string
                 # NOTE: But the decode will break on any non-string values
                 # NOTE: Or could raise a ``UnicodeDecodeError``
@@ -1540,7 +1543,7 @@ class ConfigObj(Section):
         Used by ``stringify`` within validate, to turn non-string values
         into strings.
         """
-        if not isinstance(value, StringTypes):
+        if not isinstance(value, str):
             return str(value)
         else:
             return value
@@ -2334,7 +2337,7 @@ class ConfigObj(Section):
         This method raises a ``ReloadError`` if the ConfigObj doesn't have
         a filename attribute pointing to a file.
         """
-        if not isinstance(self.filename, StringTypes):
+        if not isinstance(self.filename, str):
             raise ReloadError()
 
         filename = self.filename
