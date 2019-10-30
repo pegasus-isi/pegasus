@@ -10,7 +10,7 @@ import glob
 import imp
 from itertools import starmap
 import os
-from Queue import Queue, Empty
+from queue import Queue, Empty
 import re
 from select import select
 import sys
