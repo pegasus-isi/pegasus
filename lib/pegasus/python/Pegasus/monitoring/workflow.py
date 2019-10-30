@@ -44,6 +44,7 @@ try:
     from Pegasus.netlogger.parsers.base import NLSimpleParser
 except:
     logger.info("cannot import NL parser")
+    print(traceback.format_exc())
 
 # Compile our regular expressions
 
@@ -678,7 +679,7 @@ class Workflow:
                                 ( self._dagman_condor_id, self._submit_dir ) +
                                 " Inserting Workflow END event with timestamp %s" %( prev_wf_end_timestamp ))
                 self._dagman_exit_code = UNKNOWN_FAILURE_CODE
-                self._JSDB.write("%d INTERNAL *** DAGMAN_FINISHED %s ***\n".encode('utf-8')
+                self.write_to_jobstate( "%d INTERNAL *** DAGMAN_FINISHED %s ***\n"
                                         % (prev_wf_end_timestamp, self._dagman_exit_code))
                 self.db_send_wf_state(  "end", prev_wf_end_timestamp )
                 # PM-1217 reset exitcode to None as we don't want monitord to stop monitoring this workflow
@@ -687,11 +688,11 @@ class Workflow:
 
         if state == "start":
             logger.info("DAGMan starting with condor id %s" % (self._dagman_condor_id))
-            self._JSDB.write("%d INTERNAL *** DAGMAN_STARTED %s ***\n".encode('utf-8')
+            self.write_to_jobstate("%d INTERNAL *** DAGMAN_STARTED %s ***\n"
                                % (self._current_timestamp, self._dagman_condor_id))
             self._restart_count = self._restart_count + 1
         elif state == "end":
-            self._JSDB.write("%d INTERNAL *** DAGMAN_FINISHED %s ***\n".encode('utf-8')
+            self.write_to_jobstate("%d INTERNAL *** DAGMAN_FINISHED %s ***\n"
                                     % (self._current_timestamp, self._dagman_exit_code))
 
         # Take care of workflow-level notifications
@@ -1007,7 +1008,7 @@ class Workflow:
                     self._enable_notifications = False
 
         # Say hello.... add start information to JSDB
-        self._JSDB.write("%d INTERNAL *** MONITORD_STARTED ***\n".encode('utf-8') % (self._workflow_start))
+        self.write_to_jobstate("%d INTERNAL *** MONITORD_STARTED ***\n"  % (self._workflow_start))
 
         # Write monitord.started file
         if self._output_dir is None:
@@ -1145,7 +1146,7 @@ class Workflow:
             my_recover_file = os.path.join(self._output_dir, "%s-%s" % (self._wf_uuid,
                                                                     MONITORD_RECOVER_FILE))
 
-        self._JSDB.write("%d INTERNAL *** MONITORD_FINISHED %d ***\n".encode('utf-8')
+        self.write_to_jobstate("%d INTERNAL *** MONITORD_FINISHED %d ***\n"
                                 % (my_workflow_end, self._monitord_exit_code))
         self._JSDB.close()
 
@@ -2346,7 +2347,7 @@ class Workflow:
         logger.debug("new state: %s" % (my_line))
 
         # Prepare for atomic append
-        self._JSDB.write("%s\n".encode('utf-8') % (my_line))
+        self.write_to_jobstate("%s\n"  % (my_line))
 
         if self._sink is None and not self._enable_notifications:
             # Not generating events and notifcations, nothing else to do
@@ -2732,8 +2733,14 @@ class Workflow:
         """
         return self._dagman_version
 
-
-
+    def write_to_jobstate(self,str):
+        """
+        Encodes a string to utf-8 write out to the jobstate.log file
+        :param str:
+        :return:
+        """
+        if str is not None:
+            self._JSDB.write(str.encode('utf-8'))
 
 
 # End of Workflow Class
