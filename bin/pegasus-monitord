@@ -615,7 +615,7 @@ def process_dagman_out(wf, log_line):
             # New timestamp format
             adj_time[0] = int(my_expr.group(4)) + 2000 # Year
 
-        wf._current_timestamp = time.mktime(adj_time) + adjustment
+        wf._current_timestamp = time.mktime(tuple(adj_time)) + adjustment
         timestamp_found = True
     else:
         # FIXME: Use method from utils.py, do not re-invent the wheel!
