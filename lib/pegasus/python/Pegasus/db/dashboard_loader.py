@@ -334,6 +334,7 @@ class DashboardLoader(BaseLoader):
         """
         self.log.debug('Purging caches for: %s', wfs.wf_uuid)
 
+        """
         for k,v in self.wf_id_cache.items():
             if k == wfs.wf_uuid:
                 del self.wf_id_cache[k]
@@ -341,8 +342,22 @@ class DashboardLoader(BaseLoader):
         for k,v in self.root_wf_id_cache.items():
             if k == wfs.wf_uuid:
                 del self.root_wf_id_cache[k]
+        """
+        self.purgeCache(self.wf_id_cache,wfs.wf_uuid)
+        self.purgeCache(self.root_wf_id_cache, wfs.wf_uuid)
 
 
+
+    def purgeCache(self, cache, key):
+        """
+        Removes from a cache an entry matching a key id
+        :param cache:
+        :param key_id:
+        :return:
+        """
+
+        if key in cache:
+            del cache[key]
 
     ################
     # Cleanup, etc

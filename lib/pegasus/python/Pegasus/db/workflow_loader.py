@@ -1061,36 +1061,33 @@ class WorkflowLoader(BaseLoader):
         """
         self.log.debug('Purging caches for: %s', wfs.wf_uuid)
 
-        for k,v in self.wf_id_cache.items():
-            if k == wfs.wf_uuid:
-                del self.wf_id_cache[k]
+        self.purgeCache(self.wf_id_cache,wfs.wf_uuid)
 
-        for k,v in self.root_wf_id_cache.items():
-            if k == wfs.wf_uuid:
-                del self.root_wf_id_cache[k]
+        self.purgeCache(self.root_wf_id_cache,wfs.wf_uuid)
 
-        for k,v in self.job_instance_id_cache.items():
-            if k[0] == wfs.wf_id:
-                del self.job_instance_id_cache[k]
+        self.purgeCache(self.job_instance_id_cache, wfs.wf_id)
 
-        for k,v in self.host_cache.items():
-            if k[0] == wfs.wf_uuid:
-                del self.host_cache[k]
+        self.purgeCache(self.host_cache,wfs.wf_uuid)
 
-        for k,v in self.task_id_cache.items():
-            if k[0] == wfs.wf_id:
-                del self.task_id_cache[k]
+        self.purgeCache(self.task_id_cache, wfs.wf_id)
 
-        for k,v in self.lfn_id_cache.items():
-            if k[0] == wfs.wf_id:
-                del self.lfn_id_cache[k]
+        self.purgeCache(self.lfn_id_cache, wfs.wf_id)
 
-        for k,v in self.job_id_cache.items():
-            if k[0] == wfs.wf_id:
-                del self.job_id_cache[k]
+        self.purgeCache(self.job_id_cache, wfs.wf_id)
 
         if wfs.wf_uuid in self._task_map_flush:
             del self._task_map_flush[wfs.wf_uuid]
+
+    def purgeCache(self, cache, key):
+        """
+        Removes from a cache an entry matching a key id
+        :param cache:
+        :param key_id:
+        :return:
+        """
+        if key in cache:
+            del cache[key]
+
 
 
     ################
