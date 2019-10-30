@@ -2355,7 +2355,7 @@ class Workflow:
 
         # PM-749 only if condor version > 8.3.3 we look for JOB_HELD_REASON state
         job_held_state = "JOB_HELD"
-        if self._dagman_version >= Workflow.CONDOR_VERSION_8_3_3:
+        if self._dagman_version is not None and self._dagman_version >= Workflow.CONDOR_VERSION_8_3_3:
             job_held_state = "JOB_HELD_REASON"
 
         # PM-793 only parse job output here if a postscript is NOT associated with
