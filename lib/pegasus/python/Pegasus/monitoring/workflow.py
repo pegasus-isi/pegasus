@@ -678,7 +678,8 @@ class Workflow:
                                 ( self._dagman_condor_id, self._submit_dir ) +
                                 " Inserting Workflow END event with timestamp %s" %( prev_wf_end_timestamp ))
                 self._dagman_exit_code = UNKNOWN_FAILURE_CODE
-                self._JSDB.write("%d INTERNAL *** DAGMAN_FINISHED %s ***\n" % (prev_wf_end_timestamp, self._dagman_exit_code))
+                self._JSDB.write("%d INTERNAL *** DAGMAN_FINISHED %s ***\n".encode('utf-8')
+                                        % (prev_wf_end_timestamp, self._dagman_exit_code))
                 self.db_send_wf_state(  "end", prev_wf_end_timestamp )
                 # PM-1217 reset exitcode to None as we don't want monitord to stop monitoring this workflow
                 self._dagman_exit_code = None
@@ -686,10 +687,12 @@ class Workflow:
 
         if state == "start":
             logger.info("DAGMan starting with condor id %s" % (self._dagman_condor_id))
-            self._JSDB.write("%d INTERNAL *** DAGMAN_STARTED %s ***\n" % (self._current_timestamp, self._dagman_condor_id))
+            self._JSDB.write("%d INTERNAL *** DAGMAN_STARTED %s ***\n".encode('utf-8')
+                               % (self._current_timestamp, self._dagman_condor_id))
             self._restart_count = self._restart_count + 1
         elif state == "end":
-            self._JSDB.write("%d INTERNAL *** DAGMAN_FINISHED %s ***\n" % (self._current_timestamp, self._dagman_exit_code))
+            self._JSDB.write("%d INTERNAL *** DAGMAN_FINISHED %s ***\n".encode('utf-8')
+                                    % (self._current_timestamp, self._dagman_exit_code))
 
         # Take care of workflow-level notifications
         if self.check_notifications() == True and self._notifications_manager is not None:
@@ -984,10 +987,11 @@ class Workflow:
                 # or the recover mode
                 utils.rotate_log_file(self._jsd_file)
                 logger.info( " Rotating jobstate.log replay_mode %s previous_processed_line %s" %(self._replay_mode, self._previous_processed_line))
-                self._JSDB = open(self._jsd_file, 'w', 0)
+                self._JSDB = open(self._jsd_file, 'wb', 0)
         except:
             logger.critical("error creating/appending to %s!" % (self._jsd_file))
             self._monitord_exit_code = 1
+            print ( traceback.format_exc() )
             return
 
         # Skip notifications, if disabled
@@ -1003,7 +1007,7 @@ class Workflow:
                     self._enable_notifications = False
 
         # Say hello.... add start information to JSDB
-        self._JSDB.write("%d INTERNAL *** MONITORD_STARTED ***\n" % (self._workflow_start))
+        self._JSDB.write("%d INTERNAL *** MONITORD_STARTED ***\n".encode('utf-8') % (self._workflow_start))
 
         # Write monitord.started file
         if self._output_dir is None:
@@ -1141,7 +1145,8 @@ class Workflow:
             my_recover_file = os.path.join(self._output_dir, "%s-%s" % (self._wf_uuid,
                                                                     MONITORD_RECOVER_FILE))
 
-        self._JSDB.write("%d INTERNAL *** MONITORD_FINISHED %d ***\n" % (my_workflow_end, self._monitord_exit_code))
+        self._JSDB.write("%d INTERNAL *** MONITORD_FINISHED %d ***\n".encode('utf-8')
+                                % (my_workflow_end, self._monitord_exit_code))
         self._JSDB.close()
 
         # Save all state to disk so that we can start again later
@@ -2341,7 +2346,7 @@ class Workflow:
         logger.debug("new state: %s" % (my_line))
 
         # Prepare for atomic append
-        self._JSDB.write("%s\n" % (my_line))
+        self._JSDB.write("%s\n".encode('utf-8') % (my_line))
 
         if self._sink is None and not self._enable_notifications:
             # Not generating events and notifcations, nothing else to do
