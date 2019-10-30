@@ -32,8 +32,8 @@ import re
 import sys
 import time
 import errno
-import logging
-import commands
+import logging 
+from subprocess import getoutput, getstatusoutput
 import optparse
 import traceback
 import subprocess
