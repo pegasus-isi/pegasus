@@ -980,7 +980,7 @@ class Workflow:
                 # in recovering from previous errors
                 # this is for rescue dags and when a workflow is run for the first time
                 logger.info( "Appending to existing jobstate.log replay_mode %s previous_processed_line %s" %(self._replay_mode, self._previous_processed_line))
-                self._JSDB = open(self._jsd_file, 'a', 0)
+                self._JSDB = open(self._jsd_file, 'ab', 0)
             else:
                 # Rotate jobstate.log file, if any in case of replay
                 # mode of if we are starting from the beginning
