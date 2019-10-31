@@ -29,6 +29,7 @@ for TOOL in \
     pegasus-integrity \
     pegasus-s3 \
     pegasus-transfer \
+    pegasus-cwl-converter \
 ; do
     rm -f $TOOL
     cat pegasus-python-wrapper | sed "s/%%BASE_NAME%%/$TOOL/" >$TOOL
