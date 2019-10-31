@@ -782,13 +782,11 @@ class TimedCommand(object):
 
         if self._log_cmd or logger.isEnabledFor(logging.DEBUG):
             logger.info(self._cmd)
-            # provide a short version in exceptions
-            self._cmd_for_exc = re.sub(' .*', ' ...', self._cmd)
 
         sys.stdout.flush()
 
         # temp file for the stdout/stderr
-        self._out_file = tempfile.TemporaryFile(prefix="pegasus-transfer-", suffix=".out")
+        self._out_file = tempfile.TemporaryFile(prefix="pegasus-", suffix=".out")
 
         ts_start = time.time()
 

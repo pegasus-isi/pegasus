@@ -19,7 +19,7 @@ import math
 import stat
 import traceback
 import threading
-from six.moves import queue
+from six.moves import queue as Queue
 import fnmatch
 import re
 import time
