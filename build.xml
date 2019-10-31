@@ -382,6 +382,8 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <fileset dir="lib/pegasus/externals/python">
           <include name="**/boto/**/*"/>
           <include name="**/globus_sdk/**/*"/>
+          <include name="six"/>
+          <include name="six.py"/>
       </fileset>
     </copy>
 
