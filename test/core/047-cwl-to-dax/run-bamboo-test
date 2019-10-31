@@ -1,0 +1,87 @@
+#!/bin/bash
+
+set -e
+
+echo
+echo "Setting up virtualenv with cwl-utils and yaml packages."
+command -v virtualenv >/dev/null 2>&1 || { 
+    echo >&2 "virtualenv is required for this test but it is not installed. Aborting."
+    exit 1; 
+}
+VIRTUAL_ENV_DIR=cwl_venv
+virtualenv -p python3.6 $VIRTUAL_ENV_DIR 
+
+source cwl_venv/bin/activate
+
+pip install -r requirements.txt
+
+echo
+echo "Setting up work directory"
+TOP_DIR=`pwd`
+WORK_DIR=$TOP_DIR/work
+
+mkdir -p $WORK_DIR
+
+export RUN_ID=047-cwl-to-dax-test-workflow-`date +'%s'`
+
+echo
+echo
+
+echo
+echo "Creating the site catalog..."
+cat > sites.xml << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
+    <site  handle="local" arch="x86_64">
+        <directory type="shared-scratch" path="$WORK_DIR/$RUN_ID">
+            <file-server operation="all" url="file://$WORK_DIR/$RUN_ID"/>
+        </directory>
+        <directory type="local-storage" path="$WORK_DIR/outputs/$RUN_ID">
+            <file-server operation="all" url="file://$WORK_DIR/outputs/$RUN_ID"/>
+        </directory>
+    </site>
+
+    <!-- this is our execution site -->
+    <site  handle="condorpool" arch="x86_64" os="LINUX">
+        <profile namespace="pegasus" key="style" >condor</profile>
+        <profile namespace="condor" key="universe" >vanilla</profile>
+    </site>
+</sitecatalog>
+EOF
+
+echo
+echo "Creating pegasus configuration file"
+cat > pegasus.conf << EOF
+pegasus.catalog.site.file = sites.xml
+pegasus.catalog.transformation.file = tc.txt
+pegasus.catalog.replica.file = rc.txt
+pegasus.data.configuration = condorio
+EOF
+
+echo
+echo "Creating input.yml from input.yml.template"
+export INPUT_DIR=`pwd`/cwl
+envsubst < ./cwl/input.yml.template > ./cwl/input.yml
+
+echo
+echo "Converting the cwl workflow to dax"
+pegasus-cwl-converter ./cwl/workflow.cwl ./cwl/input.yml ./workflow.xml
+
+echo
+echo "Planning and submitting the converted workflow"
+pegasus-plan \
+    --conf pegasus.conf \
+    --force \
+    --dir $WORK_DIR \
+    --relative-dir $RUN_ID \
+    --sites condorpool \
+    --output-site local \
+    --dax workflow.xml \
+    --cluster horizontal \
+    --submit
+
+echo
+echo "Cleaning up virtual environment"
+deactivate
+rm -r $VIRTUAL_ENV_DIR
+
