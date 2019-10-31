@@ -8,7 +8,7 @@ home_dir = os.path.abspath(os.path.join(src_dir, "../../.."))
 
 install_requires = [
     "PyYAML",
-    "Werkzeug==0.14.1",
+    "Werkzeug==0.15.3",
     "Jinja2==2.8.1",
     "Flask-SQLAlchemy==2.3.2",
     "MarkupSafe==1.0",
