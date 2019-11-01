@@ -1164,7 +1164,7 @@ def get(args):
                 # Create the file and set it to the appropriate size.
                 f = open(outfile, "w+b")
                 f.seek(key.size-1)
-                f.write('\0')
+                f.write(b'0')
                 f.close()
 
                 # Create all the downloads
