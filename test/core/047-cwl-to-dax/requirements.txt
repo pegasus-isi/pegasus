@@ -18,3 +18,4 @@ schema-salad==4.5.20191023134839
 six==1.12.0
 typing-extensions==3.7.4.1
 urllib3==1.25.6
+pyOpenSSL==19.0.0
