@@ -14,14 +14,26 @@ fi
 # The base name is used to decide what Python tool to invoke
 BASE_NAME=%%BASE_NAME%%
 
-# Look for a python in a pre-determined order, prefer Python3
-for PEXE in $PEGASUS_PYTHON \
-            /usr/bin/python3.7 \
-            /usr/bin/python3.6 \
-            `which python3 2>/dev/null` \
-            /usr/bin/python \
-            `which python 2>/dev/null` \
-    ; do
+# some tools are made to woth both in 2 and 3, but most are 3 only
+ALLOW_PY2=0
+for NAME in \
+    pegasus-transfer \
+    pegasus-s3 \
+    pegasus-integrity \
+; do
+    if [ "X$NAME" == "X$BASE_NAME" ]; then
+        ALLOW_PY2=1
+    fi
+done
+
+if [ $ALLOW_PY2 == 1 ]; then
+    PEXE_LIST="$(which python3 2>/dev/null) $(which python 2>/dev/null)"
+else
+    PEXE_LIST="$(which python3 2>/dev/null)"
+fi
+
+# Look for a python in the give list
+for PEXE in $PEXE_LIST; do
     if [ -e "$PEXE" ]; then
         break
     fi
@@ -30,6 +42,16 @@ done
 if [ "x$PEXE" = "x" ]; then
     echo "ERROR: Unable to find Python!" >&2
     exit 1
+fi
+
+# warn if it is not the system python
+if ! (echo "$PEXE" | grep "^/usr/bin/") >/dev/null 2>&1; then
+    echo "Warning: Using a non-system Python ($PEXE)" 1>&2
+fi
+
+# some quick validations - only for Python 3
+if [ $ALLOW_PY2 == 0 ]; then
+    $PEXE $PEGASUS_HOME/@PYTHON_LIBDIR@/Pegasus/cli/startup-validation.py || exit 1
 fi
 
 # set up a PYTHONPATH so the tools do not have to worry about that
