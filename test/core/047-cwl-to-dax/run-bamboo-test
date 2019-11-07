@@ -3,7 +3,7 @@
 set -e
 
 echo
-echo "Setting up virtualenv with cwl-utils and yaml packages."
+echo "Setting up virtualenv with cwl-utils and yaml packages for pegasus-cwl-converter"
 command -v virtualenv >/dev/null 2>&1 || { 
     echo >&2 "virtualenv is required for this test but it is not installed. Aborting."
     exit 1; 
@@ -16,6 +16,14 @@ source cwl_venv/bin/activate
 pip install -r requirements.txt
 
 echo
+echo "Converting the cwl workflow to dax"
+pegasus-cwl-converter ./cwl/workflow.cwl ./cwl/input.yml ./workflow.xml
+
+echo
+echo "Cleaning up virtual environment"
+deactivate
+rm -r $VIRTUAL_ENV_DIR
+
 echo "Setting up work directory"
 TOP_DIR=`pwd`
 WORK_DIR=$TOP_DIR/work
@@ -23,9 +31,6 @@ WORK_DIR=$TOP_DIR/work
 mkdir -p $WORK_DIR
 
 export RUN_ID=047-cwl-to-dax-test-workflow-`date +'%s'`
-
-echo
-echo
 
 echo
 echo "Creating the site catalog..."
@@ -64,10 +69,6 @@ export INPUT_DIR=`pwd`/cwl
 envsubst < ./cwl/input.yml.template > ./cwl/input.yml
 
 echo
-echo "Converting the cwl workflow to dax"
-pegasus-cwl-converter ./cwl/workflow.cwl ./cwl/input.yml ./workflow.xml
-
-echo
 echo "Planning and submitting the converted workflow"
 pegasus-plan \
     --conf pegasus.conf \
@@ -79,9 +80,3 @@ pegasus-plan \
     --dax workflow.xml \
     --cluster horizontal \
     --submit
-
-echo
-echo "Cleaning up virtual environment"
-deactivate
-rm -r $VIRTUAL_ENV_DIR
-
