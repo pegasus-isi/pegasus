@@ -26,6 +26,9 @@ for NAME in \
     fi
 done
 
+# PATH must be visible to which
+export PATH
+
 if [ $ALLOW_PY2 == 1 ]; then
     PEXE_LIST="$(which python3 2>/dev/null) $(which python 2>/dev/null)"
 else
