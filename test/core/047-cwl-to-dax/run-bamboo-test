@@ -16,6 +16,11 @@ source cwl_venv/bin/activate
 pip install -r requirements.txt
 
 echo
+echo "Creating input.yml from input.yml.template"
+export INPUT_DIR=`pwd`/cwl
+envsubst < ./cwl/input.yml.template > ./cwl/input.yml
+
+echo
 echo "Converting the cwl workflow to dax"
 pegasus-cwl-converter ./cwl/workflow.cwl ./cwl/input.yml ./workflow.xml
 
@@ -24,12 +29,11 @@ echo "Cleaning up virtual environment"
 deactivate
 rm -r $VIRTUAL_ENV_DIR
 
+echo
 echo "Setting up work directory"
 TOP_DIR=`pwd`
 WORK_DIR=$TOP_DIR/work
-
 mkdir -p $WORK_DIR
-
 export RUN_ID=047-cwl-to-dax-test-workflow-`date +'%s'`
 
 echo
@@ -62,11 +66,6 @@ pegasus.catalog.transformation.file = tc.txt
 pegasus.catalog.replica.file = rc.txt
 pegasus.data.configuration = condorio
 EOF
-
-echo
-echo "Creating input.yml from input.yml.template"
-export INPUT_DIR=`pwd`/cwl
-envsubst < ./cwl/input.yml.template > ./cwl/input.yml
 
 echo
 echo "Planning and submitting the converted workflow"
