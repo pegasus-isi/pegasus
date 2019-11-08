@@ -29,10 +29,15 @@ done
 # PATH must be visible to which
 export PATH
 
+# first look in the PATH
+PEXE_LIST="$(which python3 2>/dev/null)"
 if [ $ALLOW_PY2 == 1 ]; then
-    PEXE_LIST="$(which python3 2>/dev/null) $(which python 2>/dev/null)"
-else
-    PEXE_LIST="$(which python3 2>/dev/null)"
+    PEXE_LIST="$PEXE_LIST $(which python 2>/dev/null)"
+fi
+# has to be last to find user defined environments
+PEXE_LIST="$PEXE_LIST /usr/bin/python3"
+if [ $ALLOW_PY2 == 1 ]; then
+    PEXE_LIST="$PEXE_LIST /usr/bin/python"
 fi
 
 # Look for a python in the give list
@@ -43,7 +48,7 @@ for PEXE in $PEXE_LIST; do
 done
 
 if [ "x$PEXE" = "x" ]; then
-    echo "ERROR: Unable to find Python!" >&2
+    echo "ERROR: Unable to find Python! Looked in: $PEXE_LIST. PATH=$PATH" >&2
     exit 1
 fi
 
