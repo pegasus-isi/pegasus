@@ -94,6 +94,7 @@ class Workflow(object):
         self.properties = {}
         self.home = os.environ["HOME"]
         self.user = pwd.getpwuid(os.getuid())[0]
+        self.tutorial = None
         self.generate_tutorial = False
         self.tutorial_setup = None
         self.compute_queue = "default"
