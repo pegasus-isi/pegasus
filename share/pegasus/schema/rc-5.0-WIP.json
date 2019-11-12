@@ -1,0 +1,15 @@
+{
+    "$schema": "http://json-schema.org/schema#",
+    "$id": "http://yourdoamin.com/schemas/myschema.json",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "lfn": { "type": "string" },
+            "pfn": { "type": "string" },
+            "site": { "type": "string" },
+            "regex": { "type": "boolean" } 
+        },
+        "required": ["lfn", "pfn", "site"]
+    }
+}
