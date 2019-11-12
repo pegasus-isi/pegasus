@@ -1,0 +1,106 @@
+{
+    "definitions": {
+        "profile": {
+            "description": "A profiles structured as [<namespace>, <key>, <value>]",
+            "type": "array",
+            "items": [
+                {
+                    "type": "string",
+                    "enum": [
+                        "env",
+                        "condor",
+                        "globus",
+                        "dagman",
+                        "pegasus"
+                    ]
+                },
+                { "type": "string" },
+                { "type": "string"}
+            ],
+            "minItems": 3,
+            "maxItems": 3
+        },
+
+        "profiles": {
+            "type": "array",
+            "items": { "$ref": "#definitions/profile" }
+        },
+
+        "transformation": {
+            "type": "object",
+            "properties": {
+                "namespace": { "type": "string" },
+                "name": { "type": "string" },
+                "version": { "type": "string" },
+                "profiles": { "$ref": "#definitions/profiles" },
+                "sites": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": { "type": "string" },
+                            "arch": {
+                                "type": "string",
+                                "default": "X86_64",
+                                "enum": [
+                                    "X86",
+                                    "X86_64",
+                                    "SPARCV7",
+                                    "SPARCV9",
+                                    "AIX",
+                                    "PPC"
+                                ]
+                            },
+                            "os": {
+                                "type": "string",
+                                "default": "LINUX",
+                                "enum": ["LINUX", "SUNOS", "MACOSX"]
+                            },
+                            "osrelease": { "type": "string" },
+                            "osversion": { "type": "string" },
+                            "glibc": { "type": "string" },
+                            "pfn": { "type": "string" },
+                            "profiles": { "$ref": "#definitions/profiles" },
+                            "type": {
+                                "type": "string",
+                                "enum": ["STAGEABLE", "INSTALLED"]
+                            },
+                            "container": { "type": "string" }
+                        },
+                        "required": ["name", "type", "pfn"]
+                    },
+                    "minItems": 1
+                }
+            },
+            "required": ["name", "sites"]
+        },
+
+        "container": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string" },
+                "type": {
+                    "type": "string",
+                    "enum": ["docker", "singularity", "shifter"]
+                },
+                "image": { "type": "string" },
+                "image_site": { "type": "string" },
+                "mount": { "type": "string" },
+                "profiles": { "$ref": "#definitions/profiles" }
+            },
+            "required": ["name", "type", "image", "mount"]
+        }
+    },
+
+    "type": "object",
+    "properties": {
+        "transformations": {
+            "type": "array",
+            "items": { "$ref": "#definitions/transformation" }
+        },
+        "containers": {
+            "type": "array",
+            "items": { "$ref": "#definitions/container" }
+        }
+    }
+}
