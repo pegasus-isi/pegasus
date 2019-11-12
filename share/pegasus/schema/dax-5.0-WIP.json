@@ -1,0 +1,345 @@
+{
+    "definitions": {
+        "version_string": {
+            "type": "string",
+            "pattern": "^[0-9]+(\\.[0-9]+(\\.[0-9]+)?)?$"
+        },
+
+        "nodeid_string": {
+            "type": "string",
+            "pattern": "^[\\-0-9a-zA-Z\\_]+$"
+        },
+
+        "filename_safe_string": {
+            "type": "string",
+            "pattern": "^[\\-0-9a-zA-Z\\_]+$"
+        },
+
+        "profile": {
+            "description": "A profiles structured as [<namespace>, <key>, <value>]",
+            "type": "array",
+            "items": [
+                {
+                    "type": "string",
+                    "enum": [
+                        "env",
+                        "condor",
+                        "globus",
+                        "dagman",
+                        "pegasus",
+                        "hints"
+                    ]
+                },
+                { "type": "string" },
+                { "anyOf": [
+                    { "type": "string" },
+                    { "type": "number" }
+                    ]
+                }
+
+            ],
+            "minItems": 3,
+            "maxItems": 3
+        },
+
+        "profiles": {
+            "type": "array",
+            "items": { "$ref": "#/definitions/profile" }
+        },
+
+        "metadata": {
+            "type": "object",
+            "patternProperties": {
+                "[a-zA-Z0-9\\._]+": { "type": "string" }
+            },
+            "minProperties": 1
+        },
+
+        "invoke": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "when": {
+                        "type": "string",
+                        "enum": [
+                            "never",
+                            "start",
+                            "on_error",
+                            "on_success",
+                            "at_end",
+                            "all"
+                        ]
+                    },
+                    "what": {
+                        "type": "string"
+                    }
+                },
+                "required": ["when", "what"],
+                "additionalProperties": false
+            }
+        },
+
+        "pfn": {
+            "type": "object",
+            "properties": {
+                "url": { "type": "string" },
+                "site": { "type": "string" }
+            },
+            "required": ["url"],
+            "additionalProperties": false
+        },
+
+        "pfns": {
+            "type": "array",
+            "items": { "$ref": "#/definitions/pfn" }
+        },
+
+        "catalog_type": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string" },
+                "profiles": { "$ref": "#/definitions/profiles" },
+                "metadata": { "$ref": "#/definitions/metadata" },
+                "pfns": { "$ref": "#/definitions/pfns" }
+            },
+            "required": ["name"]
+        },
+
+        "file": {
+            "type": "object",
+            "anyOf": [{ "$ref": "#/definitions/catalog_type"}]
+        },
+
+        "executable": {
+            "type": "object",
+            "anyOf": [{ "$ref": "#/definitions/catalog_type" }],
+            "properties": {
+                "namespace": { "type": "string" },
+                "version": { "$ref": "#/definitions/version_string" },
+                "installed": { "type": "boolean" },
+                "arch": {
+                    "type": "string",
+                    "enum": [
+                        "x86",
+                        "x86_64",
+                        "ppc",
+                        "ppc_64",
+                        "ia64",
+                        "sparcv7",
+                        "sparcv9",
+                        "amd64"
+                    ]
+                },
+                "os": {
+                    "type": "string",
+                    "enum": [
+                        "aix",
+                        "sunos",
+                        "linux",
+                        "macosx"
+                    ]
+                },
+                "osrelease": { "type": "string" },
+                "osversion": { "$ref": "#/definitions/version_string" },
+                "glibc": { "$ref": "#/definitions/version_string"},
+                "invoke": { "$ref": "#/definitions/invoke" }
+            }
+        },
+
+        "transformation": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string" },
+                "namespace": { "type": "string" },
+                "version": { "$ref": "#/definitions/version_string" },
+                "uses": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": { "type": "string" },
+                            "namespace": { "type": "string" },
+                            "version": { "$ref": "#/definitions/version_string" },
+                            "executable": { "type": "boolean" }
+                        },
+                        "required": ["name"],
+                        "additionalProperties": false
+                    },
+                    "minItems": 1
+                },
+                "invoke": { "$ref": "#/definition/invoke" }
+            },
+            "required": ["name"],
+            "additionalProperties": false
+        },
+
+        "linkage_type": {
+            "type": "string",
+            "enum": [
+                "none",
+                "input",
+                "output",
+                "inout"
+            ]
+        },
+
+        "transfer_type": {
+            "anyOf": [
+                {
+                    "type": "string",
+                    "enum": ["optional"]
+                },
+                { "type": "boolean" }
+            ]
+        },
+
+        "abstract_job": {
+            "type": "object",
+            "properties": {
+                "id": { "$ref": "#/definitions/nodeid_string" },
+                "node-label" : { "type": "string" },
+                "argument": {
+                    "type": "array",
+                    "items": {
+                        "anyOf": [
+                            { "type": "string" },
+                            { "$ref": "#/definitions/file" }
+                        ]
+                    }
+                },
+                "stdin": {
+                    "type": "object",
+                    "properties": {
+                        "name": { "type": "string" },
+                        "link": { "const": "input" }
+                    },
+                    "required": ["name"],
+                    "additionalProperties": false
+                },
+                "stdout": {
+                    "type": "object",
+                    "properties": {
+                        "name": { "type": "string" },
+                        "link": { "const": "output" }
+                    },
+                    "required": ["name"],
+                    "additionalProperties": false
+                },
+                "stderr": {
+                    "type": "object",
+                    "properties": {
+                        "name": { "type": "string" },
+                        "link": { "const": "output" }
+                    },
+                    "required": ["name"],
+                    "additionalProperties": false
+                },
+                "uses": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": { "type": "string" },
+                            "link": { "$ref": "#/definitions/linkage_type" },
+                            "optional": { "type": "boolean" },
+                            "register": { "type": "boolean" },
+                            "transfer": { "$ref": "#/definitions/transfer_type" },
+                            "size": { "type": "string" },
+                            "namespace": { "type": "string" },
+                            "version": { "$ref": "#/definitions/version_string" },
+                            "executable": { "type": "boolean" }
+                        },
+                        "required": ["name"]
+                    }
+                },
+                "profiles": { "$ref": "#/definitions/profiles" },
+                "invoke": { "$ref": "#/definitions/invoke" }
+            },
+            "required": ["id"]
+        },
+
+        "job": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string" },
+                "namespace": { "type": "string" },
+                "version": { "$ref": "#/definitions/version_string" }
+            },
+            "anyOf": [{ "$ref": "#/definitions/abstract_job" }],
+            "required": ["name"]
+        },
+
+        "dag": {
+            "type": "object",
+            "properties": {
+                "file": { "type": "string" }
+            },
+            "anyOf": [{ "$ref": "#/definitions/abstract_job" }],
+            "required": ["file"]
+        },
+
+        "dax": {
+            "type": "object",
+            "properties": {
+                "file": { "type": "string" }
+            },
+            "anyOf": [{ "$ref": "#/definitions/abstract_job" }],
+            "required": ["file"]
+        },
+
+        "child": {
+            "type": "object",
+            "properties": {
+                "id": { "ref": "#/definitions/nodeid_string" },
+                "parents": {
+                    "type": "array",
+                    "items": { "$ref": "#/definitions/nodeid_string" }
+                }
+            }
+        }
+    },
+
+    "type": "object",
+    "properties": {
+        "name": { "$ref": "#/definitions/filename_safe_string" },
+        "version": { "$ref": "#/definitions/version_string" },
+        "invoke": { "$ref": "#/definitions/invoke" },
+        "files": {
+            "type": "array",
+            "items": { "$ref": "#/definitions/file" },
+            "minItems": 0
+        },
+
+        "executables": {
+            "type": "array",
+            "items": { "$ref": "#/definitions/executable" },
+            "minItems": 0
+        },
+
+        "transformations": {
+            "type": "array",
+            "items": { "$ref": "#/definitions/transformation" },
+            "minItems": 0
+        },
+
+        "jobs": {
+            "type": "array",
+            "items": {
+                "anyOf": [
+                    { "$ref": "#/definitions/job" },
+                    { "$ref": "#/definitions/dag" },
+                    { "$ref": "#/definitions/dax" }
+                ]
+            },
+            "minItems": 1
+        },
+
+        "children": {
+            "type": "array",
+            "items": { "$ref": "#/definitions/child" },
+            "minItems": 0
+        }
+    },
+    "required": ["name", "version", "jobs"]
+}
