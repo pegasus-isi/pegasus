@@ -1906,7 +1906,10 @@ class IRodsHandler(TransferHandlerBase):
         failed_l = []        
         for t in mkdir_list:
 
-            cmd = "imkdir -p '" + t.get_path() + "'"
+            cmd = "imkdir"
+            if "IRODS_TICKET" in env:
+                cmd += " -t " + env["IRODS_TICKET"]
+            cmd += " -p '" + t.get_path() + "'"
             try:
                 tc = TimedCommand(cmd, env_overrides = env)
                 tc.run()
@@ -1953,6 +1956,8 @@ class IRodsHandler(TransferHandlerBase):
                 cmd = "iget -v -f -T -K -N 4"
                 if len(t.get_src_host()) > 0 and t.attempts <= 1:
                     cmd += " -R " + t.get_src_host()
+                if "IRODS_TICKET" in env:
+                    cmd += " -t " + env["IRODS_TICKET"]
                 cmd += " '" + t.get_src_path() + "'"
                 cmd += " '" + t.get_dst_path() + "'"
             else:
@@ -1972,6 +1977,8 @@ class IRodsHandler(TransferHandlerBase):
                 cmd = "iput -v -f -T -K -N 4"
                 if len(t.get_dst_host()) > 0 and t.attempts <= 1:
                     cmd += " -R " + t.get_dst_host()
+                if "IRODS_TICKET" in env:
+                    cmd += " -t " + env["IRODS_TICKET"]
                 cmd += " '" + t.get_src_path() + "'"
                 cmd += " '" +  t.get_dst_path() + "'"
             
@@ -2015,6 +2022,8 @@ class IRodsHandler(TransferHandlerBase):
             cmd = "irm -f"
             if t.get_recursive():
                 cmd += " -r"
+            if "IRODS_TICKET" in env:
+                cmd += " -t " + env["IRODS_TICKET"]
             cmd += " '" + t.get_path() + "'"
             try:
                 tc = TimedCommand(cmd, env_overrides = env, log_outerr = False)
@@ -2045,45 +2054,45 @@ class IRodsHandler(TransferHandlerBase):
             env = {}
             
             # irods requires a password hash file
-            env['irodsAuthFileName'] = os.getcwd() + "/.irodsA"
-            env['IRODS_AUTHENTICATION_FILE'] = env['irodsAuthFileName']
+            env['IRODS_AUTHENTICATION_FILE'] = os.getcwd() + "/.irodsA"
             
-            key = "irodsEnvFile_" + sitename
+            key = "IRODS_ENVIRONMENT_FILE_" + sitename
             if key in os.environ:
-                env["irodsEnvFile"] = os.environ[key]
+                env["IRODS_ENVIRONMENT_FILE"] = os.environ[key]
             else:
-                env["irodsEnvFile"] = os.environ["irodsEnvFile"]
-            # irods 4.0 rename
-            env['IRODS_ENVIRONMENT_FILE'] = env["irodsEnvFile"]
-
-            f = env['irodsAuthFileName']
-            if os.path.exists(f):
-                return env
+                env["IRODS_ENVIRONMENT_FILE"] = os.environ["IRODS_ENVIRONMENT_FILE"]
 
             # read password from env file
-            if not "irodsEnvFile" in env:
-                raise RuntimeError("Missing irodsEnvFile - unable to do irods transfers")
+            if not "IRODS_ENVIRONMENT_FILE" in env:
+                raise RuntimeError("Missing IRODS_ENVIRONMENT_FILE - unable to do irods transfers")
 
-            check_cred_fs_permissions(env["irodsEnvFile"])
+            check_cred_fs_permissions(env["IRODS_ENVIRONMENT_FILE"])
 
             password = None
-            h = open(env['irodsEnvFile'], 'r')
+            ticket = None
+            h = open(env['IRODS_ENVIRONMENT_FILE'], 'r')
             for line in h:
-
-                # flat file format
-                items = line.split(" ", 2)
-                if items[0].lower() == "irodspassword":
-                    password = items[1].strip(" \t'\"\r\n")
-
                 # json - irods 4.0
                 items = line.split(":", 2)
                 key = items[0].lower().strip(" \t'\"\r\n")
+
                 if key == "irodspassword" or key == "irods_password":
                     password = items[1].strip(" \t'\",\r\n")
+                
+                if key == "irodsticket" or key == "irods_ticket":
+                    ticket = items[1].strip(" \t'\",\r\n")
 
             h.close()
+
             if password is None:
                 raise RuntimeError("No irodsPassword specified in irods env file")
+            
+            if ticket is not None:
+                env["IRODS_TICKET"] = ticket
+
+            if os.path.exists(env['IRODS_AUTHENTICATION_FILE']):
+                # no need to log in again
+                return env
 
             if password is not None:
                 h = open(".irodsAc", "w")
@@ -2093,7 +2102,7 @@ class IRodsHandler(TransferHandlerBase):
                 tc = TimedCommand(cmd, env_overrides = env, timeout_secs = 5*60)
                 tc.run()
                 os.unlink(".irodsAc")
-                check_cred_fs_permissions(env['irodsAuthFileName'])
+                check_cred_fs_permissions(env['IRODS_AUTHENTICATION_FILE'])
 
         finally:
             self.lock.release()
