@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/schema#",
-    "$id": "http://yourdoamin.com/schemas/myschema.json",
+    "$id": "file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/rc-5.0.json",
     "type": "array",
     "items": {
         "type": "object",
@@ -8,8 +8,12 @@
             "lfn": { "type": "string" },
             "pfn": { "type": "string" },
             "site": { "type": "string" },
-            "regex": { "type": "boolean" } 
+            "regex": { "type": "boolean" }
         },
-        "required": ["lfn", "pfn", "site"]
+        "required": ["lfn", "pfn", "site"],
+        "additionalProperties": false,
+        "patternProperties": {
+          "^x-": { "$ref": "common.json#/$def/vendorExtension" }
+      }
     }
 }
