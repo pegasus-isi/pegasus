@@ -1,0 +1,96 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#"
+    "$id": "file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/common.json",
+    "$def": {
+        "versionString": {
+            "type": "string",
+            "pattern": "^[0-9]+(\\.[0-9]+(\\.[0-9]+)?)?$"
+        },
+
+        "nodeidString": {
+            "type": "string",
+            "pattern": "^[\\-0-9a-zA-Z\\_]+$"
+        },
+
+        "filenameSafeString": {
+            "type": "string",
+            "pattern": "^[\\-0-9a-zA-Z\\_]+$"
+        },
+
+        "arch": {
+            "type": "string",
+            "enum": [
+                "x86",
+                "x86_64",
+                "sparcv7",
+                "sparcv9",
+                "aix",
+                "ppc"
+            ]
+        },
+
+        "os.type": {
+            "type": "string",
+            "enum": [
+                "linux",
+                "sunos",
+                "macosx",
+                "aix",
+                "windows"
+            ]
+        },
+
+        "commonProfilePropertyType": {
+            "type": "object",
+            "patternProperties": {
+                "^[\\_\\.\\-a-zA-Z0-9_]+$": {
+                    "oneOf": [
+                        { "type": "string" },
+                        { "type": "number" }
+                    ]
+                }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^x-": { "$ref": "#/$def/vendorExtension" }
+          }
+        },
+
+        "profiles": {
+            "type": "object",
+            "properties": {
+                "env": {
+                    "type": "object",
+                    "patternProperties": {
+                        "^[a-zA-Z_]+[a-zA-Z0-9_]*$": {
+                            "oneOf": [
+                                { "type": "string" },
+                                { "type": "number" }
+                            ]
+                        }
+                    },
+                    "additionalProperties": false,
+                    "patternProperties": {
+                      "^x-": { "$ref": "#/$def/vendorExtension" }
+                    }
+                },
+
+                "condor": { "$ref": "#/$def/commonProfilePropertyType" },
+                "globus": { "$ref": "#/$def/commonProfilePropertyType" },
+                "dagman": { "$ref": "#/$def/commonProfilePropertyType" },
+                "pegasus": { "$ref": "#/$def/commonProfilePropertyType" },
+                "hints": { "$ref": "#/$def/commonProfilePropertyType" }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+                "^x-": { "$ref": "#/$def/vendorExtension" }
+            }
+        },
+
+        "vendorExtension": {
+          "description": "Any property starting with x- is valid.",
+          "additionalProperties": true,
+          "additionalItems": true
+        }
+    }
+}
