@@ -28,7 +28,7 @@ import edu.isi.pegasus.planner.namespace.Namespace;
 
 
 /**
- * A convenience class that allows us to determine the path to the user irodsEnvFile file.
+ * A convenience class that allows us to determine the path to the user IRODS_ENVIRONMENT_FILE file.
  *
  * @author Mats Rynge
  * @version $Revision$
@@ -39,7 +39,7 @@ public class Irods extends Abstract implements CredentialHandler{
      * The name of the environment variable that specifies the path to the
      * irods configuration file.
      */
-    public static final String IRODSENVFILE = "irodsEnvFile";
+    public static final String IRODSENVFILE = "IRODS_ENVIRONMENT_FILE";
 
     private static final String IRODSENVFILE_PEGASUS_PROFILE_KEY = Irods.IRODSENVFILE.toLowerCase() ;//has to be lowercased
     
@@ -101,9 +101,9 @@ public class Irods extends Abstract implements CredentialHandler{
      * Returns the path to user cred on the local site. 
      * The order of preference is as follows
      *
-     * - If a irodsEnvFile is specified in the site catalog entry as a Pegasus Profile that is used, else the corresponding env profile for backward support
-     * - Else the Pegasus Profile irodsEnvFile specified in the properties, else the corresponding env profile for backward support
-     * - Else the one pointed to by the environment variable irodsEnvFile
+     * - If a IRODS_ENVIRONMENT_FILE is specified in the site catalog entry as a Pegasus Profile that is used, else the corresponding env profile for backward support
+     * - Else the Pegasus Profile IRODS_ENVIRONMENT_FILE specified in the properties, else the corresponding env profile for backward support
+     * - Else the one pointed to by the environment variable IRODS_ENVIRONMENT_FILE
      * 
      * 
      * @param site   the  site catalog entry object.

@@ -1896,25 +1896,7 @@ proxy to access the Internet please see the instructions in that file.
 
       <para>If a workflow is using iRods URLs, Pegasus has to be given an
       irodsEnv file. It is a standard file, with the addtion of an password
-      attribute. Example when using iRods 3.X:</para>
-
-      <programlisting># iRODS personal configuration file.
-#
-# iRODS server host name:
-irodsHost 'some.host.edu'
-# iRODS server port number:
-irodsPort 1259
-
-# Account name:
-irodsUserName 'someuser'
-# Zone:
-irodsZone 'somezone' 
-
-# this is used with Pegasus
-irodsPassword 'somesecretpassword'</programlisting>
-
-      <para>iRods 4.0 switched to a JSON based configuration file. Pegasus can
-      handle either config file. JSON Example:</para>
+      attribute. Example:</para>
 
       <programlisting>
 {
@@ -1926,11 +1908,29 @@ irodsPassword 'somesecretpassword'</programlisting>
 }
 </programlisting>
 
+      <para>The <varname>irodsPassword</varname> is a required attribute when
+          using iRods in Pegasus. There is also an optional attribute for
+          passing iRods tickets, called <varname>irodsTicket</varname>. Please
+          note that the the password one is still needed, even when using
+          tickets. Example:
+      </para>
+
+      <programlisting>
+{
+    "irods_host": "some.host.edu",
+    "irods_port": 1247,
+    "irods_user_name": "someuser",
+    "irods_zone_name": "somezone",
+    "irodsPassword" : "somesecretpassword"
+    "irodsPassword" : "someticket"
+}
+</programlisting>
+
       <para>The location of the file can be given to the workflow using the
-      <varname>irodsEnvFile</varname> environment profile. Site catalog
+      <varname>IRODS_ENVIRONMENT_FILE</varname> environment profile. Site catalog
       example:</para>
 
-      <programlisting>&lt;profile namespace="pegasus" key="irodsEnvFile" &gt;/home/user/.irods/.irodsEnv&lt;/profile&gt;</programlisting>
+      <programlisting>&lt;profile namespace="pegasus" key="IRODS_ENVIRONMENT_FILE" &gt;${HOME}/.irods/irods_environment.json&lt;/profile&gt;</programlisting>
     </section>
 
     <section id="ssh_cred">

@@ -64,7 +64,7 @@ public class PegasusAWSBatchGS implements GridStart {
     public static final String CLASSNAME = "PegasusAWSBatchGS";
     
     private static final String[] CREDENTIALS_ENV_VARIABLE_PREFIXES = 
-        { "BOTO_CONFIG", "GOOGLE_PKCS12", "irodsEnvFile", "S3CFG", "SSH_PRIVATE_KEY", "X509_USER_PROXY" };
+        { "BOTO_CONFIG", "GOOGLE_PKCS12", "IRODS_ENVIRONMENT_FILE", "S3CFG", "SSH_PRIVATE_KEY", "X509_USER_PROXY" };
 
     /**
      * The SHORTNAME for this implementation.
@@ -401,7 +401,7 @@ public class PegasusAWSBatchGS implements GridStart {
             String value = (String) job.envVariables.get( key );
             int ch = key.charAt( 0 );
             switch( ch ){
-                //"BOTO_CONFIG", "GOOGLE_PKCS12", "irodsEnvFile", "S3CFG", "SSH_PRIVATE_KEY", "X509_USER_PROXY" 
+                //"BOTO_CONFIG", "GOOGLE_PKCS12", "IRODS_ENVIRONMENT_FILE", "S3CFG", "SSH_PRIVATE_KEY", "X509_USER_PROXY" 
                 case 'B':
                     if( key.startsWith( "BOTO_CONFIG") || key.startsWith( "BOTO_CONFIG_") ){
                         updatedCredentialEnvs.put(key, rewriteValue(value, bucket ));
@@ -415,7 +415,7 @@ public class PegasusAWSBatchGS implements GridStart {
                     break;
                     
                 case 'i':
-                    if( key.startsWith( "irodsEnvFile") || key.startsWith( "irodsEnvFile_") ){
+                    if( key.startsWith( "IRODS_ENVIRONMENT_FILE") || key.startsWith( "IRODS_ENVIRONMENT_FILE_") ){
                        updatedCredentialEnvs.put(key, rewriteValue(value, bucket )); 
                     }
                     break;    
