@@ -1,78 +1,47 @@
 {
+    "$schema": "http://json-schema.org/draft-07/schema#"
+    "$id": "file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/common.json",
     "definitions": {
-        "profile": {
-            "description": "A profiles structured as [<namespace>, <key>, <value>]",
-            "type": "array",
-            "items": [
-                {
-                    "type": "string",
-                    "enum": [
-                        "env",
-                        "condor",
-                        "globus",
-                        "dagman",
-                        "pegasus"
-                    ]
-                },
-                { "type": "string" },
-                { "type": "string"}
-            ],
-            "minItems": 3,
-            "maxItems": 3
-        },
-
-        "profiles": {
-            "type": "array",
-            "items": { "$ref": "#definitions/profile" }
-        },
-
         "transformation": {
             "type": "object",
             "properties": {
                 "namespace": { "type": "string" },
                 "name": { "type": "string" },
                 "version": { "type": "string" },
-                "profiles": { "$ref": "#definitions/profiles" },
+                "profiles": { "$ref": "common.json#/$def/profiles" },
                 "sites": {
                     "type": "array",
                     "items": {
                         "type": "object",
                         "properties": {
                             "name": { "type": "string" },
-                            "arch": {
-                                "type": "string",
-                                "default": "X86_64",
-                                "enum": [
-                                    "X86",
-                                    "X86_64",
-                                    "SPARCV7",
-                                    "SPARCV9",
-                                    "AIX",
-                                    "PPC"
-                                ]
-                            },
-                            "os": {
-                                "type": "string",
-                                "default": "LINUX",
-                                "enum": ["LINUX", "SUNOS", "MACOSX"]
-                            },
-                            "osrelease": { "type": "string" },
-                            "osversion": { "type": "string" },
-                            "glibc": { "type": "string" },
+                            "arch": { "$ref": "common.json#/$def/arch" },
+                            "os.type": { "$ref": "common.json#/$def/arch" },
+                            "os.release": { "type": "string" },
+                            "os.version": { "$ref": "common.json#/$def/versionString" },
+                            "glibc": { "$ref": "common.json#/$def/versionString" },
                             "pfn": { "type": "string" },
-                            "profiles": { "$ref": "#definitions/profiles" },
+                            "profiles": { "$ref": "common.json#/$def/profiles" },
                             "type": {
                                 "type": "string",
-                                "enum": ["STAGEABLE", "INSTALLED"]
+                                "enum": ["stageable", "installed"]
                             },
                             "container": { "type": "string" }
                         },
-                        "required": ["name", "type", "pfn"]
+                        "required": ["name", "type", "pfn"],
+                        "additionalProperties": false,
+                        "patternProperties": {
+                          "^x-": { "$ref": "common.json#/$def/vendorExtension" }
+                        }
                     },
                     "minItems": 1
                 }
             },
-            "required": ["name", "sites"]
+            "required": ["name", "sites"],
+            "additionalProperties": false,
+            "patternProperties": {
+              "^x-": { "$ref": "common.json#/$def/vendorExtension" }
+            }
         },
 
         "container": {
@@ -84,11 +53,15 @@
                     "enum": ["docker", "singularity", "shifter"]
                 },
                 "image": { "type": "string" },
-                "image_site": { "type": "string" },
+                "imageSite": { "type": "string" },
                 "mount": { "type": "string" },
-                "profiles": { "$ref": "#definitions/profiles" }
+                "profiles": { "$ref": "common.json#/$def/profiles" }
             },
-            "required": ["name", "type", "image", "mount"]
+            "required": ["name", "type", "image", "mount"],
+            "additionalProperties": false,
+            "patternProperties": {
+              "^x-": { "$ref": "common.json#/$def/vendorExtension" }
+            }
         }
     },
 
@@ -102,5 +75,9 @@
             "type": "array",
             "items": { "$ref": "#definitions/container" }
         }
+    },
+    "additionalProperties": false,
+    "patternProperties": {
+      "^x-": { "$ref": "common.json#/$def/vendorExtension" }
     }
 }
