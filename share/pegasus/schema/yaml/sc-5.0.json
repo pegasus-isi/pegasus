@@ -1,26 +1,8 @@
 {
-    "definitions": {
-        "profile": {
-            "description": "A profiles structured as [<namespace>, <key>, <value>]",
-            "type": "array",
-            "items": [
-                {
-                    "type": "string",
-                    "enum": ["env", "condor", "globus", "dagman", "pegasus", "hints"]
-                },
-                { "type": "string" },
-                { "type": "string" }
-            ],
-            "minItems": 3,
-            "maxItems": 3
-        },
-
-        "profiles": {
-            "type": "array",
-            "items": { "$ref": "#/definitions/profile" }
-        },
-
-        "file-server": {
+    "$schema": "http://json-schema.org/draft-07/schema#"
+    "$id": "file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/sc-5.0.json",
+    "$def": {
+        "fileServer": {
             "type": "object",
             "properties": {
                 "url": { "type": "string" },
@@ -28,9 +10,13 @@
                     "type": "string",
                     "enum": ["all", "put", "get"]
                 },
-                "profiles": { "$ref": "#/definitions/profiles" }
+                "profiles": { "$ref": "common.json#/$def/profiles" }
             },
-            "required": ["url"]
+            "required": ["url"],
+            "additionalProperties": false,
+            "patternProperties": {
+              "^x-": { "$ref": "common.json#/$def/vendorExtension" }
+            }
         },
 
         "directory": {
@@ -38,19 +24,27 @@
             "properties": {
                 "type": {
                     "type": "string",
-                    "enum": ["shared-scratch", "shared-storage", "local-scratch",
-                             "local-storage"]
+                    "enum": [
+                        "shared-scratch",
+                        "shared-storage",
+                        "local-scratch",
+                        "local-storage"
+                    ]
                 },
                 "path": { "type": "string" },
-                "free-size": { "type": "string" },
-                "total-size": { "type": "string" },
-                "file-servers": {
+                "freeSize": { "type": "string" },
+                "totalSize": { "type": "string" },
+                "fileServers": {
                     "type": "array",
-                    "items": { "$ref": "#/definitions/file-server" },
+                    "items": { "$ref": "#/$def/fileServer" },
                     "minItems": 1
                 }
             },
-            "required": ["type", "file-servers"]
+            "required": ["type", "fileServers"],
+            "additionalProperties": false,
+            "patternProperties": {
+              "^x-": { "$ref": "common.json#/$def/vendorExtension" }
+            }
         },
 
         "grid": {
@@ -58,46 +52,74 @@
             "properties": {
                 "type": {
                     "type": "string",
-                    "enum": ["gt2", "gt4", "gt5", "condor", "cream",
-                             "batch", "pbs", "lsf", "sge", "nordugrid",
-                             "unicore", "ec2", "deltacloud"]
+                    "enum": [
+                        "gt2",
+                        "gt4",
+                        "gt5",
+                        "condor",
+                        "cream",
+                        "batch",
+                        "pbs",
+                        "lsf",
+                        "sge",
+                        "nordugrid",
+                        "unicore",
+                        "ec2",
+                        "deltacloud"
+                    ]
                 },
                 "contact": { "type": "string" },
                 "scheduler": {
                     "type": "string",
-                    "enum": ["Fork", "PBS", "LSF", "Condor", "SGE", "unknown"]
+                    "enum": [
+                        "fork",
+                        "pbs",
+                        "lsf",
+                        "condor",
+                        "sge",
+                        "unknown"
+                    ]
                 },
                 "jobtype": {
                     "type": "string",
-                    "enum": ["compute", "auxillary", "transfer", "register",
-                             "cleanup"]
+                    "enum": [
+                        "compute",
+                        "auxillary",
+                        "transfer",
+                        "register",
+                        "cleanup"
+                    ]
                 },
-                "free-mem": { "type": "string" },
-                "total-mem": { "type": "string" },
-                "max-count": { "type": "string" },
-                "max-cpu-time": { "type": "string" },
-                "running-jobs": {
+                "freeMem": { "type": "string" },
+                "totalMem": { "type": "string" },
+                "maxCount": { "type": "string" },
+                "maxCPUTime": { "type": "string" },
+                "runningJobs": {
                     "type": "number",
                     "minimum": 0
                 },
-                "jobs-in-queue": {
+                "jobsInQueue": {
                     "type": "number",
                     "minimum": 0
                 },
-                "idle-nodes": {
+                "idleNodes": {
                     "type": "number",
                     "minimum": 0
                 },
-                "total-nodes": {
+                "totalNodes": {
                     "type": "number",
                     "minimum": 0
                 },
-                "sys-info": { "$ref": "#/definitions/sys-info" }
+
             },
-            "required": ["type", "contact", "scheduler"]
+            "required": ["type", "contact", "scheduler"],
+            "additionalProperties": false,
+            "patternProperties": {
+              "^x-": { "$ref": "common.json#/$def/vendorExtension" }
+            }
         },
 
-        "replica-catalog": {
+        "replicaCatalog": {
             "type": "object",
             "properties": {
                 "type": { "type": "string" },
@@ -111,7 +133,11 @@
                     "items": { "type": "string" }
                 }
             },
-            "required": ["type", "url"]
+            "required": ["type", "url"],
+            "additionalProperties": false,
+            "patternProperties": {
+              "^x-": { "$ref": "common.json#/$def/vendorExtension" }
+            }
         }
     },
 
@@ -119,36 +145,31 @@
     "items": {
         "type": "object",
         "properties": {
-            "handle": { "type": "string" },
-            "arch": {
-                "type": "string",
-                "default": "x86_64",
-                "enum": ["x86", "x86_64", "ppc", "ppc_64", "ia64", "sparcv7",
-                         "sparcv9"]
-            },
-            "os": {
-                "type": "string",
-                "default": "LINUX",
-                "enum": ["LINUX", "SUNOS", "MACOSX", "AIX", "WINDOWS"]
-            },
-            "osrelease": { "type": "string" },
-            "osversion": { "type": "string" },
-            "glibc": { "type": "string" },
+            "name": { "type": "string" },
+            "arch": { "$ref": "common.json#/$def/arch" },
+            "os.type": { "$ref": "common.json#/$def/os.type" },
+            "os.release": { "type": "string" },
+            "os.version": { "$ref": "common.json#/$def/versionString" },
+            "glibc": { "$ref": "common.json#/$def/versionString" },
             "directories": {
                 "type": "array",
-                "items": { "$ref": "#/definitions/directory" }
+                "items": { "$ref": "#/$def/directory" }
             },
             "grids": {
                 "type": "array",
-                "items": { "$ref": "#/definitions/grid" }
+                "items": { "$ref": "#/$def/grid" }
             },
-            "profiles": { "$ref": "#/definitions/profiles" },
+            "profiles": { "$ref": "common.json#/$def/profiles" },
             "replica-catalogs": {
                 "type": "array",
-                "items": { "$ref": "#/definitions/replica-catalog" }
+                "items": { "$ref": "#/$def/replicaCatalog" }
             }
         },
-        "required": ["handle"]
+        "required": ["handle"],
+        "additionalProperties": false,
+        "patternProperties": {
+          "^x-": { "$ref": "common.json#/$def/vendorExtension" }
+        }
     },
     "minItems": 1
 }
