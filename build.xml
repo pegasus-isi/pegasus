@@ -21,7 +21,6 @@
   <property name="dist.aws.jars" location="${dist.share}/java/aws"/>
   <property name="dist.schema" location="${dist.share}/schema"/>
   <property name="dist.doc" location="${dist.dir}/share/doc/pegasus"/>
-  <property name="dist.man" location="${dist.data}/man"/>
 
   <path id="build.classpath">
     <fileset dir="share/pegasus/java" includes="*.jar"/>
