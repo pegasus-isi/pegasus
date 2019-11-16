@@ -1921,8 +1921,8 @@ proxy to access the Internet please see the instructions in that file.
     "irods_port": 1247,
     "irods_user_name": "someuser",
     "irods_zone_name": "somezone",
-    "irodsPassword" : "somesecretpassword"
-    "irodsPassword" : "someticket"
+    "irodsPassword" : "somesecretpassword",
+    "irodsTicket" : "someticket"
 }
 </programlisting>
 
