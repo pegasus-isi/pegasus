@@ -15,5 +15,6 @@
         "patternProperties": {
           "^x-": { "$ref": "common.json#/$def/vendorExtension" }
       }
-    }
+  },
+  "minItems": 0
 }

@@ -97,6 +97,9 @@ public class Singularity extends Abstract{
         
         //assume singularity is available in path
         sb.append( "singularity exec ");
+
+        //do not mount home - this might not exists when running under for example the nobody user
+        sb.append( "--no-home ");
         
         //exec --bind $PWD:/srv
         sb.append( "--bind $PWD:" ).append( CONTAINER_WORKING_DIRECTORY ).append( " " );
