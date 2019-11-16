@@ -148,7 +148,7 @@ script="${1}"; shift
 
 # for staged credentials, download the credentials from s3 if specified, and set
 # the credential env variable to downloaded path 
-for base in X509_USER_PROXY S3CFG BOTO_CONFIG SSH_PRIVATE_KEY irodsEnvFile GOOGLE_PKCS12 ; do
+for base in X509_USER_PROXY S3CFG BOTO_CONFIG SSH_PRIVATE_KEY IRODS_ENVIRONMENT_FILE GOOGLE_PKCS12 ; do
     for key in `(env | grep -i ^$base | sed 's/=.*//') 2>/dev/null`; do
         eval val="\$$key"
 	scheme="$(echo "${val}" | cut -d: -f1)"

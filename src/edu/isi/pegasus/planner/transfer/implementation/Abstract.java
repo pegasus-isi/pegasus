@@ -410,20 +410,20 @@ public abstract class Abstract implements Implementation{
     }
 
     /**
-     * Determines if there is a need to transfer the irodsEnvFile for the transfer
+     * Determines if there is a need to transfer the IRODS_ENVIRONMENT_FILE for the transfer
      * job or not.  If there is a need to transfert the file, then the job is
      * modified to create the correct condor commands to transfer the file.
      * The file is transferred from the submit host (i.e site local).
      *
      * @param job   the transfer job .
      *
-     * @return boolean true job was modified to transfer the irodsEnvFile, else
+     * @return boolean true job was modified to transfer the IRODS_ENVIRONMENT_FILE, else
      *                 false when job is not modified.
      * @deprecated 
      */
     public boolean checkAndTransferIrodsEnvFile(TransferJob job){
            
-        // for remote execution, transfer the irodsEnvFile file
+        // for remote execution, transfer the IRODS_ENVIRONMENT_FILE file
         if ( ! job.getSiteHandle().equalsIgnoreCase( "local" ) &&
              mLocalIrodsEnv != null &&
              ! job.envVariables.containsKey(Irods.IRODSENVFILE) ) {
