@@ -234,16 +234,10 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <chmod perm="644" file="${dist.jars}/vdl.jar"/>
   </target>
 
-  <target name="doc-manpages" depends="setup" description="Generate manpages">
-    <exec executable="${make}" dir="doc/manpages" failonerror="true">
-      <arg line="prefix=${dist.dir} install"/>
-    </exec>
-  </target>
-
-  <target name="doc-user-guide" depends="setup,doc-manpages" description="Generate user guide from docbook source">
+  <target name="doc-user-guide" depends="setup" description="Generate user guide from docbook source">
     <mkdir dir="${dist.doc}"/>
     <exec executable="${make}" dir="doc/docbook" failonerror="true">
-      <arg line="prefix=${dist.doc} install"/>
+      <arg line="html"/>
     </exec>
   </target>
 
@@ -301,7 +295,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <fixcrlf srcdir="${dist.doc}/wordpress/schemas" includes="**/*.xml" eol="lf"/>
   </target>
 
-  <target name="doc" depends="setup,doc-schemas,doc-manpages,doc-user-guide,doc-java,doc-python,doc-r" description="Generate documentation"/>
+  <target name="doc" depends="setup,doc-schemas,doc-user-guide,doc-java,doc-python,doc-r" description="Generate documentation"/>
 
   <target name="compile-ctools" depends="setup" description="Compile C tools">
     <exec executable="${make}" dir="src/tools" failonerror="true">
@@ -532,9 +526,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <exec executable="${make}" dir="src/externals" failonerror="false">
       <arg line="clean"/>
     </exec>
-    <exec executable="${make}" dir="doc/manpages" failonerror="false">
-      <arg line="clean"/>
-    </exec>
     <exec executable="${make}" dir="doc/docbook" failonerror="false">
       <arg line="clean"/>
     </exec>
@@ -619,7 +610,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
         <arg line="-c 'make test'"/>
     </exec>
   </target>
-  
+
   <target name="test-transfer" depends="dist-common,compile-externals" description="Run transfer unit tests">
     <exec executable="./test.sh" dir="test/unit/transfer" failonerror="true">
       <env key="PEGASUS_BIN_DIR" value="${dist.bin}"/>
