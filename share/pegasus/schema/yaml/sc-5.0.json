@@ -1,7 +1,30 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema#"
+    "$schema": "http://json-schema.org/draft-07/schema#",
     "$id": "file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/sc-5.0.json",
     "$def": {
+        "arch": {
+            "type": "string",
+            "enum": [
+                "x86",
+                "x86_64",
+                "sparcv7",
+                "sparcv9",
+                "aix",
+                "ppc"
+            ]
+        },
+
+        "os.type": {
+            "type": "string",
+            "enum": [
+                "linux",
+                "sunos",
+                "macosx",
+                "aix",
+                "windows"
+            ]
+        },
+
         "fileServer": {
             "type": "object",
             "properties": {
@@ -109,8 +132,7 @@
                 "totalNodes": {
                     "type": "number",
                     "minimum": 0
-                },
-
+                }
             },
             "required": ["type", "contact", "scheduler"],
             "additionalProperties": false,
@@ -141,35 +163,42 @@
         }
     },
 
-    "type": "array",
-    "items": {
-        "type": "object",
-        "properties": {
-            "name": { "type": "string" },
-            "arch": { "$ref": "common.json#/$def/arch" },
-            "os.type": { "$ref": "common.json#/$def/os.type" },
-            "os.release": { "type": "string" },
-            "os.version": { "$ref": "common.json#/$def/versionString" },
-            "glibc": { "$ref": "common.json#/$def/versionString" },
-            "directories": {
-                "type": "array",
-                "items": { "$ref": "#/$def/directory" }
+    "type": "object",
+    "properties": {
+        "scVersion": { "$ref": "common.json#/$defs/versionString" },
+        "sites": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string" },
+                    "arch": { "$ref": "#/$def/arch" },
+                    "os.type": { "$ref": "#/$def/os.type" },
+                    "os.release": { "type": "string" },
+                    "os.version": { "$ref": "common.json#/$def/versionString" },
+                    "glibc": { "$ref": "common.json#/$def/versionString" },
+                    "directories": {
+                        "type": "array",
+                        "items": { "$ref": "#/$def/directory" }
+                    },
+                    "grids": {
+                        "type": "array",
+                        "items": { "$ref": "#/$def/grid" }
+                    },
+                    "profiles": { "$ref": "common.json#/$def/profiles" },
+                    "replica-catalogs": {
+                        "type": "array",
+                        "items": { "$ref": "#/$def/replicaCatalog" }
+                    }
+                },
+                "required": ["name"],
+                "additionalProperties": false,
+                "patternProperties": {
+                  "^x-": { "$ref": "common.json#/$def/vendorExtension" }
+                }
             },
-            "grids": {
-                "type": "array",
-                "items": { "$ref": "#/$def/grid" }
-            },
-            "profiles": { "$ref": "common.json#/$def/profiles" },
-            "replica-catalogs": {
-                "type": "array",
-                "items": { "$ref": "#/$def/replicaCatalog" }
-            }
-        },
-        "required": ["handle"],
-        "additionalProperties": false,
-        "patternProperties": {
-          "^x-": { "$ref": "common.json#/$def/vendorExtension" }
+            "minItems": 1
         }
     },
-    "minItems": 1
+    "required": ["scVersion"]
 }

@@ -1,5 +1,5 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema#"
+    "$schema": "http://json-schema.org/draft-07/schema#",
     "$id": "file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/common.json",
     "$def": {
         "versionString": {
@@ -7,7 +7,7 @@
             "pattern": "^[0-9]+(\\.[0-9]+(\\.[0-9]+)?)?$"
         },
 
-        "nodeidString": {
+        "nodeIdString": {
             "type": "string",
             "pattern": "^[\\-0-9a-zA-Z\\_]+$"
         },
@@ -17,30 +17,7 @@
             "pattern": "^[\\-0-9a-zA-Z\\_]+$"
         },
 
-        "arch": {
-            "type": "string",
-            "enum": [
-                "x86",
-                "x86_64",
-                "sparcv7",
-                "sparcv9",
-                "aix",
-                "ppc"
-            ]
-        },
-
-        "os.type": {
-            "type": "string",
-            "enum": [
-                "linux",
-                "sunos",
-                "macosx",
-                "aix",
-                "windows"
-            ]
-        },
-
-        "commonProfilePropertyType": {
+        "genericProfilePropertyType": {
             "type": "object",
             "patternProperties": {
                 "^[\\_\\.\\-a-zA-Z0-9_]+$": {
@@ -75,11 +52,11 @@
                     }
                 },
 
-                "condor": { "$ref": "#/$def/commonProfilePropertyType" },
-                "globus": { "$ref": "#/$def/commonProfilePropertyType" },
-                "dagman": { "$ref": "#/$def/commonProfilePropertyType" },
-                "pegasus": { "$ref": "#/$def/commonProfilePropertyType" },
-                "hints": { "$ref": "#/$def/commonProfilePropertyType" }
+                "condor": { "$ref": "#/$def/genericProfilePropertyType" },
+                "globus": { "$ref": "#/$def/genericProfilePropertyType" },
+                "dagman": { "$ref": "#/$def/genericProfilePropertyType" },
+                "pegasus": { "$ref": "#/$def/genericProfilePropertyType" },
+                "hints": { "$ref": "#/$def/genericProfilePropertyType" }
             },
             "additionalProperties": false,
             "patternProperties": {

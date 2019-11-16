@@ -1,149 +1,50 @@
 {
-    "definitions": {
-        "version_string": {
-            "type": "string",
-            "pattern": "^[0-9]+(\\.[0-9]+(\\.[0-9]+)?)?$"
-        },
-
-        "nodeid_string": {
-            "type": "string",
-            "pattern": "^[\\-0-9a-zA-Z\\_]+$"
-        },
-
-        "filename_safe_string": {
-            "type": "string",
-            "pattern": "^[\\-0-9a-zA-Z\\_]+$"
-        },
-
-        "profile": {
-            "description": "A profiles structured as [<namespace>, <key>, <value>]",
-            "type": "array",
-            "items": [
-                {
-                    "type": "string",
-                    "enum": [
-                        "env",
-                        "condor",
-                        "globus",
-                        "dagman",
-                        "pegasus",
-                        "hints"
-                    ]
-                },
-                { "type": "string" },
-                { "anyOf": [
-                    { "type": "string" },
-                    { "type": "number" }
-                    ]
-                }
-
-            ],
-            "minItems": 3,
-            "maxItems": 3
-        },
-
-        "profiles": {
-            "type": "array",
-            "items": { "$ref": "#/definitions/profile" }
-        },
-
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/dax-5.0.json",
+    "$def": {
         "metadata": {
             "type": "object",
             "patternProperties": {
-                "[a-zA-Z0-9\\._]+": { "type": "string" }
+                "[a-zA-Z0-9\\._]+": { "type": "string" },
+                "^x-": { "$ref": "common.json#/$def/vendorExtension" }
             },
-            "minProperties": 1
-        },
-
-        "invoke": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "when": {
-                        "type": "string",
-                        "enum": [
-                            "never",
-                            "start",
-                            "on_error",
-                            "on_success",
-                            "at_end",
-                            "all"
-                        ]
-                    },
-                    "what": {
-                        "type": "string"
-                    }
-                },
-                "required": ["when", "what"],
-                "additionalProperties": false
-            }
-        },
-
-        "pfn": {
-            "type": "object",
-            "properties": {
-                "url": { "type": "string" },
-                "site": { "type": "string" }
-            },
-            "required": ["url"],
+            "minProperties": 1,
             "additionalProperties": false
         },
 
-        "pfns": {
-            "type": "array",
-            "items": { "$ref": "#/definitions/pfn" }
+        "eventType": {
+            "enum": [
+                "never",
+                "start",
+                "error",
+                "success",
+                "end",
+                "all"
+            ]
         },
 
-        "catalog_type": {
+        "shellHook": {
             "type": "object",
             "properties": {
-                "name": { "type": "string" },
-                "profiles": { "$ref": "#/definitions/profiles" },
-                "metadata": { "$ref": "#/definitions/metadata" },
-                "pfns": { "$ref": "#/definitions/pfns" }
+                "on": { "$ref": "#/$def/eventType" },
+                "cmd": { "type": "string" }
             },
-            "required": ["name"]
+            "additionalProperties": false,
+            "required": ["cmd", "on"]
         },
 
-        "file": {
+        "hooks": {
             "type": "object",
-            "anyOf": [{ "$ref": "#/definitions/catalog_type"}]
-        },
-
-        "executable": {
-            "type": "object",
-            "anyOf": [{ "$ref": "#/definitions/catalog_type" }],
             "properties": {
-                "namespace": { "type": "string" },
-                "version": { "$ref": "#/definitions/version_string" },
-                "installed": { "type": "boolean" },
-                "arch": {
-                    "type": "string",
-                    "enum": [
-                        "x86",
-                        "x86_64",
-                        "ppc",
-                        "ppc_64",
-                        "ia64",
-                        "sparcv7",
-                        "sparcv9",
-                        "amd64"
-                    ]
-                },
-                "os": {
-                    "type": "string",
-                    "enum": [
-                        "aix",
-                        "sunos",
-                        "linux",
-                        "macosx"
-                    ]
-                },
-                "osrelease": { "type": "string" },
-                "osversion": { "$ref": "#/definitions/version_string" },
-                "glibc": { "$ref": "#/definitions/version_string"},
-                "invoke": { "$ref": "#/definitions/invoke" }
+                "shell": {
+                    "type": "array",
+                    "items": { "$ref": "#/$def/shellHook" },
+                    "minItems": 0
+                }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^x-": { "$ref": "common.json#/$def/vendorExtension" }
             }
         },
 
@@ -152,30 +53,32 @@
             "properties": {
                 "name": { "type": "string" },
                 "namespace": { "type": "string" },
-                "version": { "$ref": "#/definitions/version_string" },
+                "version": { "$ref": "common.json#/$def/versionString" },
                 "uses": {
                     "type": "array",
                     "items": {
                         "type": "object",
                         "properties": {
-                            "name": { "type": "string" },
+                            "lfn": { "type": "string" },
                             "namespace": { "type": "string" },
-                            "version": { "$ref": "#/definitions/version_string" },
-                            "executable": { "type": "boolean" }
+                            "version": { "$ref": "common.json#/$def/versionString" },
+                            "isExecutable": { "type": "boolean" }
                         },
                         "required": ["name"],
                         "additionalProperties": false
                     },
                     "minItems": 1
                 },
-                "invoke": { "$ref": "#/definition/invoke" }
+                "hooks": { "$ref": "#/$def/hooks" }
             },
             "required": ["name"],
-            "additionalProperties": false
+            "additionalProperties": false,
+            "patternProperties": {
+              "^x-": { "$ref": "common.json#/$def/vendorExtension" }
+            }
         },
 
-        "linkage_type": {
-            "type": "string",
+        "linkType": {
             "enum": [
                 "none",
                 "input",
@@ -184,35 +87,20 @@
             ]
         },
 
-        "transfer_type": {
-            "anyOf": [
-                {
-                    "type": "string",
-                    "enum": ["optional"]
-                },
-                { "type": "boolean" }
-            ]
-        },
-
-        "abstract_job": {
+        "abstractJob": {
             "type": "object",
             "properties": {
-                "id": { "$ref": "#/definitions/nodeid_string" },
-                "node-label" : { "type": "string" },
+                "id": { "$ref": "common.json#/definitions/nodeIdString" },
+                "nodeLabel" : { "type": "string" },
                 "argument": {
                     "type": "array",
-                    "items": {
-                        "anyOf": [
-                            { "type": "string" },
-                            { "$ref": "#/definitions/file" }
-                        ]
-                    }
+                    "items": { "type": "string" },
+                    "minItems": 0
                 },
                 "stdin": {
                     "type": "object",
                     "properties": {
-                        "name": { "type": "string" },
-                        "link": { "const": "input" }
+                        "name": { "type": "string" }
                     },
                     "required": ["name"],
                     "additionalProperties": false
@@ -220,8 +108,7 @@
                 "stdout": {
                     "type": "object",
                     "properties": {
-                        "name": { "type": "string" },
-                        "link": { "const": "output" }
+                        "name": { "type": "string" }
                     },
                     "required": ["name"],
                     "additionalProperties": false
@@ -229,8 +116,7 @@
                 "stderr": {
                     "type": "object",
                     "properties": {
-                        "name": { "type": "string" },
-                        "link": { "const": "output" }
+                        "name": { "type": "string" }
                     },
                     "required": ["name"],
                     "additionalProperties": false
@@ -240,17 +126,19 @@
                     "items": {
                         "type": "object",
                         "properties": {
-                            "name": { "type": "string" },
-                            "link": { "$ref": "#/definitions/linkage_type" },
+                            "lfn": { "type": "string" },
+                            "type": { "$ref": "#/definitions/linkage_type" },
                             "optional": { "type": "boolean" },
                             "register": { "type": "boolean" },
-                            "transfer": { "$ref": "#/definitions/transfer_type" },
+                            "stageOut": {
+                                "enum": ["true", "false", "optional"]
+                            },
                             "size": { "type": "string" },
                             "namespace": { "type": "string" },
-                            "version": { "$ref": "#/definitions/version_string" },
+                            "version": { "$ref": "common.json#/$def/versionString" },
                             "executable": { "type": "boolean" }
                         },
-                        "required": ["name"]
+                        "required": ["lfn"]
                     }
                 },
                 "profiles": { "$ref": "#/definitions/profiles" },
@@ -264,7 +152,7 @@
             "properties": {
                 "name": { "type": "string" },
                 "namespace": { "type": "string" },
-                "version": { "$ref": "#/definitions/version_string" }
+                "version": { "$ref": "common.json#/$def/versionString" }
             },
             "anyOf": [{ "$ref": "#/definitions/abstract_job" }],
             "required": ["name"]
@@ -291,10 +179,10 @@
         "child": {
             "type": "object",
             "properties": {
-                "id": { "ref": "#/definitions/nodeid_string" },
+                "id": { "ref": "common.json#/definitions/nodeIdString" },
                 "parents": {
                     "type": "array",
-                    "items": { "$ref": "#/definitions/nodeid_string" }
+                    "items": { "$ref": "common.json#/definitions/nodeIdString" }
                 }
             }
         }
@@ -302,25 +190,54 @@
 
     "type": "object",
     "properties": {
-        "name": { "$ref": "#/definitions/filename_safe_string" },
-        "version": { "$ref": "#/definitions/version_string" },
-        "invoke": { "$ref": "#/definitions/invoke" },
-        "files": {
-            "type": "array",
-            "items": { "$ref": "#/definitions/file" },
-            "minItems": 0
+        "name": { "$ref": "#/definitions/filenameSafeString" },
+        "version": { "$ref": "common.json#/$def/versionString" },
+        "hooks": { "$ref": "#/$def/hooks" },
+
+        "sites": {
+            "oneOf": [
+                { "$ref": "sc-5.0.json" },
+                {
+                    "properties": {
+                        "$ref": {
+                            "type": "string",
+                            "format": "iri"
+                        }
+                    }
+                }
+            ]
         },
 
-        "executables": {
-            "type": "array",
-            "items": { "$ref": "#/definitions/executable" },
-            "minItems": 0
+        "replicas": {
+            "oneOf": [
+                { "$ref": "rc-5.0.json" },
+                {
+                    "properties": {
+                        "$ref": {
+                            "type": "string",
+                            "format": "iri"
+                        }
+                    }
+                }
+            ]
         },
 
         "transformations": {
-            "type": "array",
-            "items": { "$ref": "#/definitions/transformation" },
-            "minItems": 0
+            "oneOf": [
+                {
+                    "type": "array",
+                    "items": { "$ref": "tc-5.0.json#/$def/transformation" },
+                    "minItems": 1
+                },
+                {
+                    "properties": {
+                        "$ref": {
+                            "type": "string",
+                            "format": "iri"
+                        }
+                    }
+                }
+            ]
         },
 
         "jobs": {
