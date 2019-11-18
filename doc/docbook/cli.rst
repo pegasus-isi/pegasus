@@ -14,7 +14,6 @@ Command Line Tools
     manpages/pegasus-config.rst
     manpages/pegasus-create-dir.rst
     manpages/pegasus-dagman.rst
-    manpages/pegasus-dashboard.rst
     manpages/pegasus-dax-validator.rst
     manpages/pegasus-db-admin.rst
     manpages/pegasus-em.rst
@@ -29,7 +28,6 @@ Command Line Tools
     manpages/pegasus-mpi-cluster.rst
     manpages/pegasus-mpi-keg.rst
     manpages/pegasus-plan.rst
-    manpages/pegasus-plots.rst
     manpages/pegasus-rc-client.rst
     manpages/pegasus-remove.rst
     manpages/pegasus-run.rst
