@@ -48,36 +48,6 @@
             }
         },
 
-        "transformation": {
-            "type": "object",
-            "properties": {
-                "name": { "type": "string" },
-                "namespace": { "type": "string" },
-                "version": { "$ref": "common.json#/$defs/versionString" },
-                "uses": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "lfn": { "type": "string" },
-                            "namespace": { "type": "string" },
-                            "version": { "$ref": "common.json#/$defs/versionString" },
-                            "isExecutable": { "type": "boolean" }
-                        },
-                        "required": ["name"],
-                        "additionalProperties": false
-                    },
-                    "minItems": 1
-                },
-                "hooks": { "$ref": "#/$defs/hooks" }
-            },
-            "required": ["name"],
-            "additionalProperties": false,
-            "patternProperties": {
-              "^x-": { "$ref": "common.json#/$defs/vendorExtension" }
-            }
-        },
-
         "linkType": {
             "enum": [
                 "none",
@@ -130,9 +100,7 @@
                             "type": { "$ref": "#/$defs/linkType" },
                             "optional": { "type": "boolean" },
                             "register": { "type": "boolean" },
-                            "stageOut": {
-                                "enum": ["true", "false", "optional"]
-                            },
+                            "stageOut": { "enum": ["true", "false", "optional"]},
                             "size": { "type": "string" },
                             "namespace": { "type": "string" },
                             "version": { "$ref": "common.json#/$defs/versionString" },
@@ -148,43 +116,51 @@
         },
 
         "job": {
-            "type": "object",
-            "properties": {
-                "name": { "type": "string" },
-                "namespace": { "type": "string" },
-                "version": { "$ref": "common.json#/$defs/versionString" }
-            },
-            "anyOf": [{ "$ref": "#/$defs/abstractJob" }],
-            "required": ["name"]
+            "allOf": [
+                { "$ref": "#/$defs/abstractJob" },
+                { "properties": {
+                        "name": { "type": "string" },
+                        "namespace": { "type": "string" },
+                        "version": { "$ref": "common.json#/$defs/versionString" }
+                  },
+                  "required": ["name"]
+                }
+            ]
         },
 
         "dag": {
-            "type": "object",
-            "properties": {
-                "file": { "type": "string" }
-            },
-            "anyOf": [{ "$ref": "#/$defs/abstractJob" }],
-            "required": ["file"]
+            "allOf": [
+                { "$ref": "#/$defs/abstractJob" },
+                { "properties": {
+                    "file": { "type": "string" }
+                  },
+                  "required": ["file"]
+                }
+            ]
         },
 
         "dax": {
-            "type": "object",
-            "properties": {
-                "file": { "type": "string" }
-            },
-            "anyOf": [{ "$ref": "#/$defs/abstractJob" }],
-            "required": ["file"]
+            "allOf": [
+                { "$ref": "#/$defs/abstractJob" },
+                { "properties": {
+                    "file": { "type": "string" }
+                  },
+                  "required": ["file"]
+                }
+            ]
         },
 
-        "child": {
+        "parent": {
             "type": "object",
             "properties": {
                 "id": { "ref": "common.json#/$defs/nodeIdString" },
-                "parents": {
+                "children": {
                     "type": "array",
-                    "items": { "$ref": "common.json#/$defs/nodeIdString" }
+                    "items": { "$ref": "common.json#/$defs/nodeIdString" },
+                    "minItems": 1
                 }
-            }
+            },
+            "required": ["id"]
         }
     },
 
@@ -253,9 +229,9 @@
             "minItems": 1
         },
 
-        "children": {
+        "dependencies": {
             "type": "array",
-            "items": { "$ref": "#/$defs/child" },
+            "items": { "$ref": "#/$defs/parent" },
             "minItems": 0
         }
     },
