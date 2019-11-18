@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "$id": "file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/common.json",
-    "$def": {
+    "$defs": {
         "versionString": {
             "type": "string",
             "pattern": "^[0-9]+(\\.[0-9]+(\\.[0-9]+)?)?$"
@@ -29,7 +29,7 @@
             },
             "additionalProperties": false,
             "patternProperties": {
-              "^x-": { "$ref": "#/$def/vendorExtension" }
+              "^x-": { "$ref": "#/$defs/vendorExtension" }
           }
         },
 
@@ -48,19 +48,19 @@
                     },
                     "additionalProperties": false,
                     "patternProperties": {
-                      "^x-": { "$ref": "#/$def/vendorExtension" }
+                      "^x-": { "$ref": "#/$defs/vendorExtension" }
                     }
                 },
 
-                "condor": { "$ref": "#/$def/genericProfilePropertyType" },
-                "globus": { "$ref": "#/$def/genericProfilePropertyType" },
-                "dagman": { "$ref": "#/$def/genericProfilePropertyType" },
-                "pegasus": { "$ref": "#/$def/genericProfilePropertyType" },
-                "hints": { "$ref": "#/$def/genericProfilePropertyType" }
+                "condor": { "$ref": "#/$defs/genericProfilePropertyType" },
+                "globus": { "$ref": "#/$defs/genericProfilePropertyType" },
+                "dagman": { "$ref": "#/$defs/genericProfilePropertyType" },
+                "pegasus": { "$ref": "#/$defs/genericProfilePropertyType" },
+                "hints": { "$ref": "#/$defs/genericProfilePropertyType" }
             },
             "additionalProperties": false,
             "patternProperties": {
-                "^x-": { "$ref": "#/$def/vendorExtension" }
+                "^x-": { "$ref": "#/$defs/vendorExtension" }
             }
         },
 
