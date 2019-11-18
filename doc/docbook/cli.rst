@@ -9,10 +9,8 @@ Command Line Tools
     :maxdepth: 1
 
     manpages/pegasus-analyzer.rst
-    manpages/pegasus-cleanup.rst
     manpages/pegasus-cluster.rst
     manpages/pegasus-config.rst
-    manpages/pegasus-create-dir.rst
     manpages/pegasus-dagman.rst
     manpages/pegasus-dax-validator.rst
     manpages/pegasus-db-admin.rst
