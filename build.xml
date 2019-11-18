@@ -237,7 +237,16 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <mkdir dir="${dist.doc}"/>
     <exec executable="${make}" dir="doc/docbook" failonerror="true">
       <arg line="html"/>
+      <arg line="man"/>
     </exec>
+    <!-- Copy HTML -->
+    <copy preservelastmodified="true" todir="${dist.doc}/wordpress">
+      <fileset dir="doc/docbook/_build/html" includes="**/*"/>
+    </copy>
+    <!-- Copy manpages -->
+    <copy preservelastmodified="true" todir="${dist.data}/man/man1">
+      <fileset dir="doc/docbook/_build/man" includes="*"/>
+    </copy>
   </target>
 
   <target name="doc-java" depends="setup,doc-user-guide" description="Generate java documentation">
