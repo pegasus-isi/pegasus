@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "$id": "file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/sc-5.0.json",
-    "$def": {
+    "$defs": {
         "arch": {
             "type": "string",
             "enum": [
@@ -33,12 +33,12 @@
                     "type": "string",
                     "enum": ["all", "put", "get"]
                 },
-                "profiles": { "$ref": "common.json#/$def/profiles" }
+                "profiles": { "$ref": "common.json#/$defs/profiles" }
             },
             "required": ["url"],
             "additionalProperties": false,
             "patternProperties": {
-              "^x-": { "$ref": "common.json#/$def/vendorExtension" }
+              "^x-": { "$ref": "common.json#/$defs/vendorExtension" }
             }
         },
 
@@ -48,10 +48,10 @@
                 "type": {
                     "type": "string",
                     "enum": [
-                        "shared-scratch",
-                        "shared-storage",
-                        "local-scratch",
-                        "local-storage"
+                        "sharedScratch",
+                        "sharedStorage",
+                        "localScratch",
+                        "localStorage"
                     ]
                 },
                 "path": { "type": "string" },
@@ -59,14 +59,14 @@
                 "totalSize": { "type": "string" },
                 "fileServers": {
                     "type": "array",
-                    "items": { "$ref": "#/$def/fileServer" },
+                    "items": { "$ref": "#/$defs/fileServer" },
                     "minItems": 1
                 }
             },
             "required": ["type", "fileServers"],
             "additionalProperties": false,
             "patternProperties": {
-              "^x-": { "$ref": "common.json#/$def/vendorExtension" }
+              "^x-": { "$ref": "common.json#/$defs/vendorExtension" }
             }
         },
 
@@ -137,7 +137,7 @@
             "required": ["type", "contact", "scheduler"],
             "additionalProperties": false,
             "patternProperties": {
-              "^x-": { "$ref": "common.json#/$def/vendorExtension" }
+              "^x-": { "$ref": "common.json#/$defs/vendorExtension" }
             }
         },
 
@@ -158,7 +158,7 @@
             "required": ["type", "url"],
             "additionalProperties": false,
             "patternProperties": {
-              "^x-": { "$ref": "common.json#/$def/vendorExtension" }
+              "^x-": { "$ref": "common.json#/$defs/vendorExtension" }
             }
         }
     },
