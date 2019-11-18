@@ -1,20 +1,27 @@
 {
     "$schema": "http://json-schema.org/schema#",
     "$id": "file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/rc-5.0.json",
-    "type": "array",
-    "items": {
-        "type": "object",
-        "properties": {
-            "lfn": { "type": "string" },
-            "pfn": { "type": "string" },
-            "site": { "type": "string" },
-            "regex": { "type": "boolean" }
-        },
-        "required": ["lfn", "pfn", "site"],
-        "additionalProperties": false,
-        "patternProperties": {
-          "^x-": { "$ref": "common.json#/$def/vendorExtension" }
-      }
-  },
-  "minItems": 0
+    "type": "object",
+    "properties": {
+        "rcVersion": { "$ref": "common.json#/$defs/versionString" },
+        "replicas": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "lfn": { "type": "string" },
+                    "pfn": { "type": "string" },
+                    "site": { "type": "string" },
+                    "regex": { "type": "boolean" }
+                },
+                "required": ["lfn", "pfn", "site"],
+                "additionalProperties": false,
+                "patternProperties": {
+                  "^x-": { "$ref": "common.json#/$defs/vendorExtension" }
+              }
+          },
+          "minItems": 0
+        }
+    },
+    "required": ["rcVersion", "replicas"]
 }

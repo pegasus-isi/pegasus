@@ -172,33 +172,33 @@
                 "type": "object",
                 "properties": {
                     "name": { "type": "string" },
-                    "arch": { "$ref": "#/$def/arch" },
-                    "os.type": { "$ref": "#/$def/os.type" },
+                    "arch": { "$ref": "#/$defs/arch" },
+                    "os.type": { "$ref": "#/$defs/os.type" },
                     "os.release": { "type": "string" },
-                    "os.version": { "$ref": "common.json#/$def/versionString" },
-                    "glibc": { "$ref": "common.json#/$def/versionString" },
+                    "os.version": { "$ref": "common.json#/$defs/versionString" },
+                    "glibc": { "$ref": "common.json#/$defs/versionString" },
                     "directories": {
                         "type": "array",
-                        "items": { "$ref": "#/$def/directory" }
+                        "items": { "$ref": "#/$defs/directory" }
                     },
                     "grids": {
                         "type": "array",
-                        "items": { "$ref": "#/$def/grid" }
+                        "items": { "$ref": "#/$defs/grid" }
                     },
-                    "profiles": { "$ref": "common.json#/$def/profiles" },
+                    "profiles": { "$ref": "common.json#/$defs/profiles" },
                     "replica-catalogs": {
                         "type": "array",
-                        "items": { "$ref": "#/$def/replicaCatalog" }
+                        "items": { "$ref": "#/$defs/replicaCatalog" }
                     }
                 },
                 "required": ["name"],
                 "additionalProperties": false,
                 "patternProperties": {
-                  "^x-": { "$ref": "common.json#/$def/vendorExtension" }
+                  "^x-": { "$ref": "common.json#/$defs/vendorExtension" }
                 }
             },
             "minItems": 1
         }
     },
-    "required": ["scVersion"]
+    "required": ["scVersion", "sites"]
 }

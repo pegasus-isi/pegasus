@@ -1,12 +1,12 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "$id": "file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/dax-5.0.json",
-    "$def": {
+    "$defs": {
         "metadata": {
             "type": "object",
             "patternProperties": {
                 "[a-zA-Z0-9\\._]+": { "type": "string" },
-                "^x-": { "$ref": "common.json#/$def/vendorExtension" }
+                "^x-": { "$ref": "common.json#/$defs/vendorExtension" }
             },
             "minProperties": 1,
             "additionalProperties": false
@@ -26,7 +26,7 @@
         "shellHook": {
             "type": "object",
             "properties": {
-                "on": { "$ref": "#/$def/eventType" },
+                "on": { "$ref": "#/$defs/eventType" },
                 "cmd": { "type": "string" }
             },
             "additionalProperties": false,
@@ -38,13 +38,13 @@
             "properties": {
                 "shell": {
                     "type": "array",
-                    "items": { "$ref": "#/$def/shellHook" },
+                    "items": { "$ref": "#/$defs/shellHook" },
                     "minItems": 0
                 }
             },
             "additionalProperties": false,
             "patternProperties": {
-              "^x-": { "$ref": "common.json#/$def/vendorExtension" }
+              "^x-": { "$ref": "common.json#/$defs/vendorExtension" }
             }
         },
 
@@ -53,7 +53,7 @@
             "properties": {
                 "name": { "type": "string" },
                 "namespace": { "type": "string" },
-                "version": { "$ref": "common.json#/$def/versionString" },
+                "version": { "$ref": "common.json#/$defs/versionString" },
                 "uses": {
                     "type": "array",
                     "items": {
@@ -61,7 +61,7 @@
                         "properties": {
                             "lfn": { "type": "string" },
                             "namespace": { "type": "string" },
-                            "version": { "$ref": "common.json#/$def/versionString" },
+                            "version": { "$ref": "common.json#/$defs/versionString" },
                             "isExecutable": { "type": "boolean" }
                         },
                         "required": ["name"],
@@ -69,12 +69,12 @@
                     },
                     "minItems": 1
                 },
-                "hooks": { "$ref": "#/$def/hooks" }
+                "hooks": { "$ref": "#/$defs/hooks" }
             },
             "required": ["name"],
             "additionalProperties": false,
             "patternProperties": {
-              "^x-": { "$ref": "common.json#/$def/vendorExtension" }
+              "^x-": { "$ref": "common.json#/$defs/vendorExtension" }
             }
         },
 
@@ -90,7 +90,7 @@
         "abstractJob": {
             "type": "object",
             "properties": {
-                "id": { "$ref": "common.json#/definitions/nodeIdString" },
+                "id": { "$ref": "common.json#/$defs/nodeIdString" },
                 "nodeLabel" : { "type": "string" },
                 "argument": {
                     "type": "array",
@@ -127,7 +127,7 @@
                         "type": "object",
                         "properties": {
                             "lfn": { "type": "string" },
-                            "type": { "$ref": "#/definitions/linkage_type" },
+                            "type": { "$ref": "#/$defs/linkType" },
                             "optional": { "type": "boolean" },
                             "register": { "type": "boolean" },
                             "stageOut": {
@@ -135,14 +135,14 @@
                             },
                             "size": { "type": "string" },
                             "namespace": { "type": "string" },
-                            "version": { "$ref": "common.json#/$def/versionString" },
+                            "version": { "$ref": "common.json#/$defs/versionString" },
                             "executable": { "type": "boolean" }
                         },
                         "required": ["lfn"]
                     }
                 },
-                "profiles": { "$ref": "#/definitions/profiles" },
-                "invoke": { "$ref": "#/definitions/invoke" }
+                "profiles": { "$ref": "#/$defs/profiles" },
+                "hooks": { "$ref": "#/$defs/hooks" }
             },
             "required": ["id"]
         },
@@ -152,9 +152,9 @@
             "properties": {
                 "name": { "type": "string" },
                 "namespace": { "type": "string" },
-                "version": { "$ref": "common.json#/$def/versionString" }
+                "version": { "$ref": "common.json#/$defs/versionString" }
             },
-            "anyOf": [{ "$ref": "#/definitions/abstract_job" }],
+            "anyOf": [{ "$ref": "#/$defs/abstractJob" }],
             "required": ["name"]
         },
 
@@ -163,7 +163,7 @@
             "properties": {
                 "file": { "type": "string" }
             },
-            "anyOf": [{ "$ref": "#/definitions/abstract_job" }],
+            "anyOf": [{ "$ref": "#/$defs/abstractJob" }],
             "required": ["file"]
         },
 
@@ -172,17 +172,17 @@
             "properties": {
                 "file": { "type": "string" }
             },
-            "anyOf": [{ "$ref": "#/definitions/abstract_job" }],
+            "anyOf": [{ "$ref": "#/$defs/abstractJob" }],
             "required": ["file"]
         },
 
         "child": {
             "type": "object",
             "properties": {
-                "id": { "ref": "common.json#/definitions/nodeIdString" },
+                "id": { "ref": "common.json#/$defs/nodeIdString" },
                 "parents": {
                     "type": "array",
-                    "items": { "$ref": "common.json#/definitions/nodeIdString" }
+                    "items": { "$ref": "common.json#/$defs/nodeIdString" }
                 }
             }
         }
@@ -190,7 +190,8 @@
 
     "type": "object",
     "properties": {
-        "name": { "$ref": "#/definitions/filenameSafeString" },
+        "daxVersion": { "$ref": "common.json#/$defs/versionString" },
+        "name": { "$ref": "#/$defs/filenameSafeString" },
         "version": { "$ref": "common.json#/$def/versionString" },
         "hooks": { "$ref": "#/$def/hooks" },
 
@@ -226,7 +227,7 @@
             "oneOf": [
                 {
                     "type": "array",
-                    "items": { "$ref": "tc-5.0.json#/$def/transformation" },
+                    "items": { "$ref": "tc-5.0.json#/$defs/transformation" },
                     "minItems": 1
                 },
                 {
@@ -244,9 +245,9 @@
             "type": "array",
             "items": {
                 "anyOf": [
-                    { "$ref": "#/definitions/job" },
-                    { "$ref": "#/definitions/dag" },
-                    { "$ref": "#/definitions/dax" }
+                    { "$ref": "#/$defs/job" },
+                    { "$ref": "#/$defs/dag" },
+                    { "$ref": "#/$defs/dax" }
                 ]
             },
             "minItems": 1
@@ -254,9 +255,9 @@
 
         "children": {
             "type": "array",
-            "items": { "$ref": "#/definitions/child" },
+            "items": { "$ref": "#/$defs/child" },
             "minItems": 0
         }
     },
-    "required": ["name", "version", "jobs"]
+    "required": ["daxVersion", "name", "version", "jobs"]
 }

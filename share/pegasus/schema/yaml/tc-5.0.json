@@ -1,15 +1,15 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "$id": "file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/common.json",
-    "definitions": {
+    "$defs": {
         "transformation": {
             "type": "object",
             "properties": {
                 "namespace": { "type": "string" },
                 "name": { "type": "string" },
                 "version": { "type": "string" },
-                "hooks": { "$ref": "dax-5.0.json#/$def/hooks" }
-                "profiles": { "$ref": "common.json#/$def/profiles" },
+                "hooks": { "$ref": "dax-5.0.json#/$defs/hooks" }
+                "profiles": { "$ref": "common.json#/$defs/profiles" },
                 "uses": {
                     "type": "array",
                     "items": { "type": "string" }
@@ -20,13 +20,13 @@
                         "type": "object",
                         "properties": {
                             "name": { "type": "string" },
-                            "arch": { "$ref": "sc-5.0.json#/$def/arch" },
-                            "os.type": { "$ref": "sc-5.0.json#/$def/os.type" },
+                            "arch": { "$ref": "sc-5.0.json#/$defs/arch" },
+                            "os.type": { "$ref": "sc-5.0.json#/$defs/os.type" },
                             "os.release": { "type": "string" },
-                            "os.version": { "$ref": "common.json#/$def/versionString" },
+                            "os.version": { "$ref": "common.json#/$defs/versionString" },
                             "glibc": { "$ref": "common.json#/$def/versionString" },
                             "pfn": { "type": "string" },
-                            "profiles": { "$ref": "common.json#/$def/profiles" },
+                            "profiles": { "$ref": "common.json#/$defs/profiles" },
                             "type": {
                                 "type": "string",
                                 "enum": ["stageable", "installed"]
@@ -36,7 +36,7 @@
                         "required": ["name", "type", "pfn"],
                         "additionalProperties": false,
                         "patternProperties": {
-                          "^x-": { "$ref": "common.json#/$def/vendorExtension" }
+                          "^x-": { "$ref": "common.json#/$defs/vendorExtension" }
                         }
                     },
                     "minItems": 1
@@ -45,7 +45,7 @@
             "required": ["name", "sites"],
             "additionalProperties": false,
             "patternProperties": {
-              "^x-": { "$ref": "common.json#/$def/vendorExtension" }
+              "^x-": { "$ref": "common.json#/$defs/vendorExtension" }
             }
         },
 
@@ -60,18 +60,19 @@
                 "image": { "type": "string" },
                 "imageSite": { "type": "string" },
                 "mount": { "type": "string" },
-                "profiles": { "$ref": "common.json#/$def/profiles" }
+                "profiles": { "$ref": "common.json#/$defs/profiles" }
             },
             "required": ["name", "type", "image", "mount"],
             "additionalProperties": false,
             "patternProperties": {
-              "^x-": { "$ref": "common.json#/$def/vendorExtension" }
+              "^x-": { "$ref": "common.json#/$defs/vendorExtension" }
             }
         }
     },
 
     "type": "object",
     "properties": {
+        "tcVersion": { "$ref": "common.json#/$defs/versionString" },
         "transformations": {
             "type": "array",
             "items": { "$ref": "#definitions/transformation" },
@@ -79,11 +80,13 @@
         },
         "containers": {
             "type": "array",
-            "items": { "$ref": "#definitions/container" }
+            "items": { "$ref": "#definitions/container" },
+            "minItems": 0
         }
     },
+    "required": ["tcVersion", "transformations"],
     "additionalProperties": false,
     "patternProperties": {
-      "^x-": { "$ref": "common.json#/$def/vendorExtension" }
+      "^x-": { "$ref": "common.json#/$defs/vendorExtension" }
     }
 }
