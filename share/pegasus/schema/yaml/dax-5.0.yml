@@ -1,0 +1,221 @@
+.yml$schema: 'http://json-schema.org/draft-07/schema#'
+$id: 'file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/dax-5.0.yml'
+$defs:
+  metadata:
+    type: object
+    patternProperties:
+      '[a-zA-Z0-9\._]+':
+        type: string
+      ^x-:
+        $ref: 'common.yml#/$defs/vendorExtension'
+    minProperties: 1
+    additionalProperties: false
+
+  eventType:
+    enum:
+      - never
+      - start
+      - error
+      - success
+      - end
+      - all
+
+  shellHook:
+    type: object
+    properties:
+      on:
+        $ref: '#/$defs/eventType'
+      cmd:
+        type: string
+    additionalProperties: false
+    required:
+      - cmd
+      - on
+
+  hooks:
+    type: object
+    properties:
+      shell:
+        type: array
+        items:
+          $ref: '#/$defs/shellHook'
+        minItems: 0
+    additionalProperties: false
+    patternProperties:
+      ^x-:
+        $ref: 'common.yml#/$defs/vendorExtension'
+
+  linkType:
+    enum:
+      - none
+      - input
+      - output
+      - inout
+
+  abstractJob:
+    type: object
+    properties:
+      id:
+        $ref: 'common.yml#/$defs/nodeIdString'
+      nodeLabel:
+        type: string
+      argument:
+        type: array
+        items:
+          type: string
+        minItems: 0
+      stdin:
+        type: object
+        properties:
+          name:
+            type: string
+        required:
+          - name
+        additionalProperties: false
+      stdout:
+        type: object
+        properties:
+          name:
+            type: string
+        required:
+          - name
+        additionalProperties: false
+      stderr:
+        type: object
+        properties:
+          name:
+            type: string
+        required:
+          - name
+        additionalProperties: false
+      uses:
+        type: array
+        items:
+          type: object
+          properties:
+            lfn:
+              type: string
+            type:
+              $ref: '#/$defs/linkType'
+            optional:
+              type: boolean
+            register:
+              type: boolean
+            stageOut:
+              enum:
+                - true
+                - false
+                - optional
+            size:
+              type: string
+            namespace:
+              type: string
+            version:
+              $ref: 'common.yml#/$defs/versionString'
+            executable:
+              type: boolean
+          required:
+            - lfn
+      profiles:
+        $ref: '#/$defs/profiles'
+      hooks:
+        $ref: '#/$defs/hooks'
+    required:
+      - id
+
+  job:
+    allOf:
+      - $ref: '#/$defs/abstractJob'
+      - properties: null
+          name:
+            type: string
+          namespace:
+            type: string
+          version:
+            $ref: 'common.yml#/$defs/versionString'
+        required:
+          - name
+
+  dag:
+    allOf:
+      - $ref: '#/$defs/abstractJob'
+      - properties:
+          file:
+            type: string
+        required:
+          - file
+
+  dax:
+    allOf:
+      - $ref: '#/$defs/abstractJob'
+      - properties:
+          file:
+            type: string
+        required:
+          - file
+
+  parent:
+    type: object
+    properties:
+      id:
+        ref: 'common.yml#/$defs/nodeIdString'
+      children:
+        type: array
+        items:
+          $ref: 'common.yml#/$defs/nodeIdString'
+        minItems: 1
+    required:
+      - id
+
+type: object
+properties:
+  daxVersion:
+    $ref: 'common.yml#/$defs/versionString'
+  name:
+    $ref: '#/$defs/filenameSafeString'
+  version:
+    $ref: 'common.yml#/$def/versionString'
+  hooks:
+    $ref: '#/$def/hooks'
+  sites:
+    oneOf:
+      - $ref: sc-5.0.yml
+      - properties:
+          $ref:
+            type: string
+            format: iri
+  replicas:
+    oneOf:
+      - $ref: rc-5.0.yml
+      - properties:
+          $ref:
+            type: string
+            format: iri
+  transformations:
+    oneOf:
+      - type: array
+        items:
+          $ref: 'tc-5.0.yml#/$defs/transformation'
+        minItems: 1
+      - properties:
+          $ref:
+            type: string
+            format: iri
+  jobs:
+    type: array
+    items:
+      anyOf:
+        - $ref: '#/$defs/job'
+        - $ref: '#/$defs/dag'
+        - $ref: '#/$defs/dax'
+    minItems: 1
+  dependencies:
+    type: array
+    items:
+      $ref: '#/$defs/parent'
+    minItems: 0
+required:
+  - daxVersion
+  - name
+  - version
+  - jobs
