@@ -20,18 +20,17 @@
         "genericProfilePropertyType": {
             "type": "object",
             "patternProperties": {
-                "^[\\_\\.\\-a-zA-Z0-9_]+$": {
+                "^(?!x-)[\\_\\.\\-a-zA-Z0-9_]+$": {
                     "oneOf": [
                         { "type": "string" },
                         { "type": "number" }
                     ]
-                }
+                },
+                "^x-": { "$ref": "#/$defs/vendorExtension" }
             },
-            "additionalProperties": false,
-            "patternProperties": {
-              "^x-": { "$ref": "#/$defs/vendorExtension" }
-          }
+            "additionalProperties": false
         },
+
 
         "profiles": {
             "type": "object",
@@ -39,17 +38,15 @@
                 "env": {
                     "type": "object",
                     "patternProperties": {
-                        "^[a-zA-Z_]+[a-zA-Z0-9_]*$": {
+                        "^(?!x-)[\\_\\.\\-a-zA-Z0-9_]+$": {
                             "oneOf": [
                                 { "type": "string" },
                                 { "type": "number" }
                             ]
-                        }
+                        },
+                        "^x-": { "$ref": "#/$defs/vendorExtension" }
                     },
-                    "additionalProperties": false,
-                    "patternProperties": {
-                      "^x-": { "$ref": "#/$defs/vendorExtension" }
-                    }
+                    "additionalProperties": false
                 },
 
                 "condor": { "$ref": "#/$defs/genericProfilePropertyType" },
