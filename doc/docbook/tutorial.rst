@@ -1,3 +1,5 @@
+.. _tutorial:
+
 ========
 Tutorial
 ========
@@ -102,7 +104,7 @@ using SSH as shown below.
 
 We have provided several virtual machines that contain all of the
 software required for this tutorial. Virtual machine images are provided
-for `VirtualBox <#vm_virtualbox>`__ and `Amazon EC2 <#vm_amazon>`__.
+for :ref:`vm-virtualbox` and :ref:`vm-amazon`.
 Information about deploying the tutorial VM on these platforms is in
 `the appendix <#tutorial_vm>`__. If you want to use the tutorial VM,
 please go to the appendix for the platform you are using and follow the
@@ -252,7 +254,7 @@ directory, like this:
 This script will run a small Python program (``daxgen.py``) that
 generates a file with a .dax extension using the Pegasus Python API. We
 will cover the details of creating a DAX programmatically `later in the
-tutorial <#tutorial_wf_generation>`__. Pegasus reads the DAX and
+tutorial <#tutorial-wf-generation>`__. Pegasus reads the DAX and
 generates an executable HTCondor workflow that is run on an execution
 site.
 

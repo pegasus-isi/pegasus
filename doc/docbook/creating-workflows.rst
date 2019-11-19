@@ -63,8 +63,8 @@ and are linked by six files.
 
 There are two main ways of generating DAX's
 
-1. Using a DAX generating API in `Java <#api-java>`__,
-   `Perl <#api-perl>`__ or `Python <#api-python>`__.
+1. Using a DAX generating API in `Python <#api-python>`__,
+   `Java <#api-java>`__, or `R <#api-r>`__.
 
    **Note:** We recommend this option.
 

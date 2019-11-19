@@ -83,7 +83,7 @@ Example for bourne shells:
    does not require PEGASUS_HOME to be set or sourcing of any
    environment setup scripts.
 
-If you want to use the `DAX APIs <#api>`__, you might also need to set
+If you want to use the :ref:`dax-generator-api`, you might also need to set
 your PYTHONPATH, PERL5LIB, or CLASSPATH. The right setting can be found
 by using pegasus-config:
 

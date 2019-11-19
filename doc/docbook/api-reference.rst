@@ -792,7 +792,7 @@ terms of the local machine. Please note that
 DAX Generator API
 =================
 
-The DAX generating APIs support Java, Perl, Python, and R. This section
+The DAX generating APIs support Python, Java, and R. This section
 will show in each language the necessary code, using Pegasus-provided
 libraries, to generate the diamond DAX example above. There may be minor
 differences in details, e.g. to show-case certain features, but

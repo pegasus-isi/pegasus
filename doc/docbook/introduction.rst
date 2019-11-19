@@ -35,10 +35,10 @@ workflows that link and manage ensembles of dependent tasks and related
 data files. Pegasus automatically chains dependent tasks together, so
 that a single scientist can complete complex computations that once
 required many different people. New users are encouraged to explore the
-`tutorial chapter <#tutorial>`__ to become familiar with how to operate
+:doc:`tutorial` to become familiar with how to operate
 Pegasus for their own workflows. Users create and run a sample project
-to demonstrate Pegasus capabilities. Users can also browse the `Useful
-Tips <#useful_tips>`__ chapter to aid them in designing their workflows.
+to demonstrate Pegasus capabilities. Users can also browse the
+:doc:`useful-tips` chapter to aid them in designing their workflows.
 
 Pegasus has a number of features that contribute to its useability and
 effectiveness.
@@ -137,10 +137,9 @@ Workflow Gallery
 ================
 
 Pegasus is curently being used in a broad range of applications. To
-review example workflows, see the `Example
-Workflows <#example_workflows>`__ chapter. To see additional details
-about the workflows of the applications see the `Gallery of
-Workflows <http://pegasus.isi.edu/workflow_gallery/>`__.
+review example workflows, see the :doc:`example-workflows` chapter.
+To see additional details about the workflows of the applications
+see the `Gallery of Workflows <http://pegasus.isi.edu/workflow_gallery/>`__.
 
 We are always looking for new applications willing to leverage our
 workflow technologies. If you are interested please contact us at
