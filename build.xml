@@ -489,7 +489,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </sequential>
   </macrodef>
 
-  <target name="dist-release" depends="dist-common,doc" description="Build binary release tarball">
+  <target name="dist-release" depends="dist-common" description="Build binary release tarball">
     <package-binary name="pegasus-binary-${pegasus.version}-${dist.arch}"/>
   </target>
 
@@ -548,7 +548,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </delete>
   </target>
 
-  <target name="dist-source" depends="doc,dist-clean" description="Build source tarball">
+  <target name="dist-source" depends="dist-clean,doc" description="Build source tarball">
     <exec executable="release-tools/create-source-tar" failonerror="true">
       <arg line="${pegasus.version}"/>
     </exec>
