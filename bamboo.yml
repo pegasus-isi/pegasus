@@ -1319,21 +1319,21 @@ project:
             botName: [Bamboo]
       variables:
         - key: TAG_CENTOS_6
-          value: centos6
+          value: 4.9-centos6
         - key: TAG_CENTOS_7
-          value: centos7
+          value: 4.9-centos7
         - key: TAG_DEBIAN_8
-          value: jessie
+          value: 4.9-jessie
         - key: TAG_DEBIAN_9
-          value: stretch
+          value: 4.9-stretch
         - key: TAG_DEBIAN_10
-          value: buster
+          value: 4.9-buster
         - key: TAG_UBUNTU_16
-          value: xenial
+          value: 4.9-xenial
         - key: TAG_UBUNTU_17
-          value: zesty
+          value: 4.9-zesty
         - key: TAG_UBUNTU_18
-          value: bionic
+          value: 4.9-bionic
 
     - key: TVM49
       name: Tutorial VM (4.9)
