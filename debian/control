@@ -4,12 +4,6 @@ Priority: extra
 Maintainer: Pegasus Development Team <pegasus-support@isi.edu>
 Build-Depends: debhelper (>= 9),
        ant,
-       asciidoc,
-       docbook-dsssl,
-       docbook-utils,
-       docbook-xml,
-       docbook-xsl,
-       fop,
        libpq-dev,
        libssl1.0-dev | libssl-dev,
        default-jdk (>= 2:1.8),
@@ -22,7 +16,6 @@ Build-Depends: debhelper (>= 9),
        python3-yaml,
        r-base-dev,
        texlive-latex-base, texlive-fonts-recommended,
-       xsltproc,
        zlib1g-dev
 Standards-Version: 3.9.4
 X-Python-Version: >= 2.7
