@@ -143,13 +143,14 @@ properties:
     $ref: 'common.yml#/$defs/versionString'
   hooks:
     $ref: 'common.yml#/$defs/hooks'
-  siteCatalog:
+  sites:
     oneOf:
       - $ref: sc-5.0.yml
       - properties:
           $ref:
             type: string
             format: iri
+          required: [$ref]
   replicas:
     oneOf:
       - type: array
@@ -160,6 +161,7 @@ properties:
            $ref:
              type: string
              format: iri
+           required: [$ref]
   transformations:
     oneOf:
       - type: object
@@ -186,7 +188,7 @@ properties:
         - $ref: '#/$defs/dag'
         - $ref: '#/$defs/dax'
     minItems: 1
-  dependencies:
+  jobDependencies:
     type: array
     items:
       $ref: '#/$defs/parent'
