@@ -1,5 +1,26 @@
 $schema: 'http://json-schema.org/schema#'
 $id: 'file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/rc-5.0.yml'
+$defs:
+  replica:
+     type: object
+     properties:
+       lfn:
+         type: string
+       pfn:
+         type: string
+       site:
+         type: string
+       regex:
+         type: boolean
+     required:
+       - lfn
+       - pfn
+       - site
+     additionalProperties: false
+     patternProperties:
+       ^x-:
+         $ref: 'common.yml#/$defs/vendorExtension'
+         
 type: object
 properties:
   rcVersion:
@@ -8,24 +29,8 @@ properties:
   replicas:
     type: array
     items:
-      type: object
-      properties:
-        lfn:
-          type: string
-        pfn:
-          type: string
-        site:
-          type: string
-        regex:
-          type: boolean
-      required:
-        - lfn
-        - pfn
-        - site
-      additionalProperties: false
-      patternProperties:
-        ^x-:
-          $ref: 'common.yml#/$defs/vendorExtension'
+      $ref: '#/$defs/replica'
+
     minItems: 0
 required:
   - rcVersion
