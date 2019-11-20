@@ -52,6 +52,40 @@ $defs:
       ^x-:
         $ref: '#/$defs/vendorExtension'
 
+  eventType:
+    enum:
+      - never
+      - start
+      - error
+      - success
+      - end
+      - all
+
+  shellHook:
+    type: object
+    properties:
+      _on:
+        $ref: '#/$defs/eventType'
+      cmd:
+        type: string
+    additionalProperties: false
+    required:
+      - cmd
+      - _on
+
+  hooks:
+    type: object
+    properties:
+      shell:
+        type: array
+        items:
+          $ref: '#/$defs/shellHook'
+        minItems: 0
+    additionalProperties: false
+    patternProperties:
+      ^x-:
+        $ref: '#/$defs/vendorExtension'
+
   vendorExtension:
     description: 'Any property starting with x- is valid.'
     additionalProperties: true

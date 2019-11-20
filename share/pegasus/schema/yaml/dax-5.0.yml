@@ -11,40 +11,6 @@ $defs:
     minProperties: 1
     additionalProperties: false
 
-  eventType:
-    enum:
-      - never
-      - start
-      - error
-      - success
-      - end
-      - all
-
-  shellHook:
-    type: object
-    properties:
-      on:
-        $ref: '#/$defs/eventType'
-      cmd:
-        type: string
-    additionalProperties: false
-    required:
-      - cmd
-      - on
-
-  hooks:
-    type: object
-    properties:
-      shell:
-        type: array
-        items:
-          $ref: '#/$defs/shellHook'
-        minItems: 0
-    additionalProperties: false
-    patternProperties:
-      ^x-:
-        $ref: 'common.yml#/$defs/vendorExtension'
-
   linkType:
     enum:
       - none
@@ -99,7 +65,7 @@ $defs:
               $ref: '#/$defs/linkType'
             optional:
               type: boolean
-            register:
+            registerReplica:
               type: boolean
             stageOut:
               enum:
@@ -119,14 +85,14 @@ $defs:
       profiles:
         $ref: '#/$defs/profiles'
       hooks:
-        $ref: '#/$defs/hooks'
+        $ref: 'common.yml#/$defs/hooks'
     required:
       - id
 
   job:
     allOf:
       - $ref: '#/$defs/abstractJob'
-      - properties: null
+      - properties:
           name:
             type: string
           namespace:
@@ -172,12 +138,12 @@ properties:
   daxVersion:
     $ref: 'common.yml#/$defs/versionString'
   name:
-    $ref: '#/$defs/filenameSafeString'
+    $ref: 'common.yml#/$defs/filenameSafeString'
   version:
-    $ref: 'common.yml#/$def/versionString'
+    $ref: 'common.yml#/$defs/versionString'
   hooks:
-    $ref: '#/$def/hooks'
-  sites:
+    $ref: 'common.yml#/$defs/hooks'
+  siteCatalog:
     oneOf:
       - $ref: sc-5.0.yml
       - properties:
@@ -186,21 +152,32 @@ properties:
             format: iri
   replicas:
     oneOf:
-      - $ref: rc-5.0.yml
-      - properties:
-          $ref:
-            type: string
-            format: iri
-  transformations:
-    oneOf:
       - type: array
         items:
-          $ref: 'tc-5.0.yml#/$defs/transformation'
-        minItems: 1
-      - properties:
+          $ref: 'rc-5.0.yml#/$defs/replica'
+      - type: object
+        properties:
+           $ref:
+             type: string
+             format: iri
+  transformations:
+    oneOf:
+      - type: object
+        properties:
+          transformations:
+            type: array
+            items:
+              $ref: 'tc-5.0.yml#/$defs/transformation'
+          containers:
+            type: array
+            items:
+              $ref: 'tc-5.0.yml#/$defs/container'
+      - type: object
+        properties:
           $ref:
             type: string
             format: iri
+        required: [$ref]
   jobs:
     type: array
     items:
@@ -217,5 +194,8 @@ properties:
 required:
   - daxVersion
   - name
-  - version
   - jobs
+additionalProperties: false
+patternProperties:
+  ^x-:
+    $ref: 'common.yml#/$defs/vendorExtension'
