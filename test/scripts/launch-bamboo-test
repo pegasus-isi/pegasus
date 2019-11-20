@@ -130,7 +130,7 @@ if cat monitord.log | grep -v "DAGMan was aborted for workflow" | grep WARN | gr
 fi
 
 # check for metrics file consistency with submit files
-METRICS_FILE=`ls *metrics 2>/dev/null|  grep -v dag`
+METRICS_FILE=`ls *.metrics 2>/dev/null|  grep -v dag.metrics`
 METRICS_TOTAL_JOBS=`grep total_jobs $METRICS_FILE | sed -E "s/.*\"total_jobs\": //"`
 NUM_SUBMIT_FILES=`find . -maxdepth 3 -name "*sub"  2>/dev/null| grep -v condor.sub | wc -l | sed -E "s/\s//"`
 
