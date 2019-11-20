@@ -190,7 +190,7 @@ properties:
             $ref: '#/$defs/grid'
         profiles:
           $ref: 'common.yml#/$defs/profiles'
-        replica-catalogs:
+        replicaCatalogs:
           type: array
           items:
             $ref: '#/$defs/replicaCatalog'
