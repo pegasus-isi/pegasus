@@ -143,39 +143,26 @@ properties:
     $ref: 'common.yml#/$defs/versionString'
   hooks:
     $ref: 'common.yml#/$defs/hooks'
-  sites:
+  siteCatalog:
     oneOf:
       - $ref: sc-5.0.yml
       - properties:
           $ref:
             type: string
             format: iri
-          required: [$ref]
-  replicas:
+        required: [$ref]
+  replicaCatalog:
     oneOf:
-      - type: array
-        items:
-          $ref: 'rc-5.0.yml#/$defs/replica'
-      - type: object
-        properties:
+      - $ref: 'rc-5.0.yml'
+      - properties:
            $ref:
              type: string
              format: iri
-           required: [$ref]
-  transformations:
+        required: [$ref]
+  transformationCatalog:
     oneOf:
-      - type: object
-        properties:
-          transformations:
-            type: array
-            items:
-              $ref: 'tc-5.0.yml#/$defs/transformation'
-          containers:
-            type: array
-            items:
-              $ref: 'tc-5.0.yml#/$defs/container'
-      - type: object
-        properties:
+      - $ref: 'tc-5.0.yml'
+      - properties:
           $ref:
             type: string
             format: iri
