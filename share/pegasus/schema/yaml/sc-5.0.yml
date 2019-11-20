@@ -136,29 +136,6 @@ $defs:
       ^x-:
         $ref: 'common.yml#/$defs/vendorExtension'
 
-  replicaCatalog:
-    type: object
-    properties:
-      type:
-        type: string
-      url:
-        type: string
-      aliases:
-        type: array
-        items:
-          type: string
-      connections:
-        type: array
-        items:
-          type: string
-    required:
-      - type
-      - url
-    additionalProperties: false
-    patternProperties:
-      ^x-:
-        $ref: 'common.yml#/$defs/vendorExtension'
-
   site:
     type: object
     properties:
@@ -184,10 +161,6 @@ $defs:
           $ref: '#/$defs/grid'
       profiles:
         $ref: 'common.yml#/$defs/profiles'
-      replicaCatalogs:
-        type: array
-        items:
-          $ref: '#/$defs/replicaCatalog'
     required:
       - name
     additionalProperties: false
