@@ -159,6 +159,42 @@ $defs:
       ^x-:
         $ref: 'common.yml#/$defs/vendorExtension'
 
+  site:
+    type: object
+    properties:
+      name:
+        type: string
+      arch:
+        $ref: '#/$defs/arch'
+      os.type:
+        $ref: '#/$defs/os.type'
+      os.release:
+        type: string
+      os.version:
+        $ref: 'common.yml#/$defs/versionString'
+      glibc:
+        $ref: 'common.yml#/$defs/versionString'
+      directories:
+        type: array
+        items:
+          $ref: '#/$defs/directory'
+      grids:
+        type: array
+        items:
+          $ref: '#/$defs/grid'
+      profiles:
+        $ref: 'common.yml#/$defs/profiles'
+      replicaCatalogs:
+        type: array
+        items:
+          $ref: '#/$defs/replicaCatalog'
+    required:
+      - name
+    additionalProperties: false
+    patternProperties:
+      ^x-:
+        $ref: 'common.yml#/$defs/vendorExtension'
+
 type: object
 properties:
   scVersion:
@@ -166,40 +202,7 @@ properties:
   sites:
     type: array
     items:
-      type: object
-      properties:
-        name:
-          type: string
-        arch:
-          $ref: '#/$defs/arch'
-        os.type:
-          $ref: '#/$defs/os.type'
-        os.release:
-          type: string
-        os.version:
-          $ref: 'common.yml#/$defs/versionString'
-        glibc:
-          $ref: 'common.yml#/$defs/versionString'
-        directories:
-          type: array
-          items:
-            $ref: '#/$defs/directory'
-        grids:
-          type: array
-          items:
-            $ref: '#/$defs/grid'
-        profiles:
-          $ref: 'common.yml#/$defs/profiles'
-        replicaCatalogs:
-          type: array
-          items:
-            $ref: '#/$defs/replicaCatalog'
-      required:
-        - name
-      additionalProperties: false
-      patternProperties:
-        ^x-:
-          $ref: 'common.yml#/$defs/vendorExtension'
+      $ref: '#/$defs/site'
     minItems: 1
 required:
   - scVersion
