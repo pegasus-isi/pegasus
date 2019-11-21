@@ -71,22 +71,63 @@ $defs:
               type: string
             type:
               $ref: '#/$defs/linkType'
-            optional:
-              type: boolean
-            registerReplica:
-              type: boolean
-            stageOut:
-                type: boolean
-            size:
-              type: string
-            namespace:
-              type: string
-            version:
-              $ref: 'common.yml#/$defs/versionString'
-            executable:
-              type: boolean
           required:
             - lfn
+            - type
+
+          allOf:
+            # a use of type 'input' cannot have the properties
+            # 'stageOut' and 'registerReplica'
+            - if:
+                properties:
+                  type:
+                    const: input
+              then:
+                properties:
+                  lfn:
+                    type: string
+                  type:
+                    const: input
+                  optional:
+                    type: boolean
+                  size:
+                    type: string
+                  namespace:
+                    type: string
+                  version:
+                    $ref: 'common.yml#/$defs/versionString'
+                  executable:
+                    type: boolean
+                additionalProperties: false
+            
+            # a use of type 'output' can have the properties
+            # 'stageOut' and 'registerReplica'
+            - if:
+                properties:
+                  type:
+                    const: output
+              then:
+                properties:
+                  lfn:
+                    type: string
+                  type:
+                    const: output
+                  stageOut:
+                    type: boolean
+                  registerReplica:
+                    type: boolean
+                  optional:
+                    type: boolean
+                  size:
+                    type: string
+                  namespace:
+                    type: string
+                  version:
+                    $ref: 'common.yml#/$defs/versionString'
+                  executable:
+                    type: boolean
+                additionalProperties: false
+
       profiles:
         $ref: '#/$defs/profiles'
       hooks:
