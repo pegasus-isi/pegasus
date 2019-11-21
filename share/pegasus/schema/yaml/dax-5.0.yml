@@ -28,7 +28,15 @@ $defs:
       argument:
         type: array
         items:
-          type: string
+          oneOf:
+              - type: string
+              - type: object
+                properties:
+                    lfn:
+                        type: string
+                required:
+                  - lfn
+                additionalProperties: false
         minItems: 0
       stdin:
         type: object
@@ -147,7 +155,8 @@ properties:
           $ref:
             type: string
             format: iri
-        required: [$ref]
+        required:
+          - $ref
   replicaCatalog:
     oneOf:
       - $ref: 'rc-5.0.yml#/$defs/inlineReplicaCatalog'
