@@ -168,15 +168,24 @@ $defs:
       ^x-:
         $ref: 'common.yml#/$defs/vendorExtension'
 
-type: object
-properties:
-  scVersion:
-    $ref: 'common.yml#/$defs/versionString'
-  sites:
-    type: array
-    items:
-      $ref: '#/$defs/site'
-    minItems: 1
-required:
-  - scVersion
-  - sites
+  inlineSiteCatalog:
+    type: object
+    properties:
+      scVersion:
+        $ref: 'common.yml#/$defs/versionString'
+      sites:
+        type: array
+        items:
+          $ref: '#/$defs/site'
+        minItems: 1
+    required:
+      - sites
+    patternProperties:
+      ^x-:
+        $ref: 'common.yml#/$defs/vendorExtension'
+
+allOf:
+  - $ref: '#/$defs/inlineSiteCatalog'
+  - type: object
+    required:
+      - scVersion
