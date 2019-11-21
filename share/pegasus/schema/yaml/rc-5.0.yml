@@ -24,7 +24,7 @@ $defs:
   inlineReplicaCatalog:
     type: object
     properties:
-      rcVersion:
+      pegasus:
         $ref: 'common.yml#/$defs/versionString'
       replicas:
         type: array
@@ -41,4 +41,4 @@ allOf:
   - $ref: '#/$defs/inlineReplicaCatalog'
   - type: object
     required:
-      - rcVersion
+      - pegasus
