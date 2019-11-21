@@ -68,10 +68,7 @@ $defs:
             registerReplica:
               type: boolean
             stageOut:
-              enum:
-                - true
-                - false
-                - optional
+                type: boolean
             size:
               type: string
             namespace:
