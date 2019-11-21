@@ -1,6 +1,9 @@
+# Defined here are schemas reused throughout.
+
 $schema: 'http://json-schema.org/draft-07/schema#'
 $id: 'file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/common.yml'
 $defs:
+  # --- string formats ---------------------------------------------------------
   versionString:
     type: string
     pattern: '^[0-9]+(\.[0-9]+(\.[0-9]+)?)?$'
@@ -13,6 +16,7 @@ $defs:
     type: string
     pattern: '^[\-0-9a-zA-Z\_]+$'
 
+  # --- profiles ---------------------------------------------------------------
   genericProfilePropertyType:
     type: object
     patternProperties:
@@ -52,6 +56,7 @@ $defs:
       ^x-:
         $ref: '#/$defs/vendorExtension'
 
+  # --- hooks (notifications) --------------------------------------------------
   eventType:
     enum:
       - never
@@ -72,6 +77,17 @@ $defs:
     required:
       - cmd
       - _on
+  
+  # adding a new xxHook should be as follows:
+  # newHook:
+  #   properties:
+  #     _on:
+  #       $ref: '#/$defs/eventType'
+  #     ... <- any properties specific to this hook
+  #   additionalProperties: false
+  #   required:
+  #     - _on
+  #     - any properties specific to this hook 
 
   hooks:
     type: object
@@ -81,11 +97,18 @@ $defs:
         items:
           $ref: '#/$defs/shellHook'
         minItems: 0
+    # adding more hooks
+    # newHandler:
+    #   type: array
+    #   items:
+    #     $ref: '#/$defs/newHook'
+    #   minItems: 0 
     additionalProperties: false
     patternProperties:
       ^x-:
         $ref: '#/$defs/vendorExtension'
 
+  # --- any vendor specific properties that may need to be added ---------------
   vendorExtension:
     description: 'Any property starting with x- is valid.'
     additionalProperties: true

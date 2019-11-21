@@ -1,6 +1,7 @@
 $schema: 'http://json-schema.org/schema#'
 $id: 'file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/rc-5.0.yml'
 $defs:
+  # --- a single entry in the replica catalog ----------------------------------
   replica:
     type: object
     properties:
@@ -21,6 +22,7 @@ $defs:
       ^x-:
         $ref: 'common.yml#/$defs/vendorExtension'
 
+  # --- schema when inlined in dax ---------------------------------------------
   inlineReplicaCatalog:
     type: object
     properties:
@@ -37,6 +39,7 @@ $defs:
       ^x-:
         $ref: 'common.yml#/$defs/vendorExtension'
 
+# --- schema for standalone file -----------------------------------------------
 allOf:
   - $ref: '#/$defs/inlineReplicaCatalog'
   - type: object

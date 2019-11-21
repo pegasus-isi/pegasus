@@ -1,6 +1,7 @@
 $schema: 'http://json-schema.org/draft-07/schema#'
 $id: 'file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/sc-5.0.yml'
 $defs:
+  # --- pre-defined site related properties ------------------------------------
   arch:
     type: string
     enum:
@@ -20,6 +21,7 @@ $defs:
       - aix
       - windows
 
+  # --- a file server entry ----------------------------------------------------
   fileServer:
     type: object
     properties:
@@ -40,6 +42,7 @@ $defs:
       ^x-:
         $ref: 'common.yml#/$defs/vendorExtension'
 
+  # --- a directory entry ------------------------------------------------------
   directory:
     type: object
     properties:
@@ -69,6 +72,7 @@ $defs:
       ^x-:
         $ref: 'common.yml#/$defs/vendorExtension'
 
+  # --- a grid entry -----------------------------------------------------------
   grid:
     type: object
     properties:
@@ -136,6 +140,7 @@ $defs:
       ^x-:
         $ref: 'common.yml#/$defs/vendorExtension'
 
+  # --- a site entry -----------------------------------------------------------
   site:
     type: object
     properties:
@@ -168,6 +173,7 @@ $defs:
       ^x-:
         $ref: 'common.yml#/$defs/vendorExtension'
 
+  # --- schema when inlined in dax ---------------------------------------------
   inlineSiteCatalog:
     type: object
     properties:
@@ -184,6 +190,7 @@ $defs:
       ^x-:
         $ref: 'common.yml#/$defs/vendorExtension'
 
+# --- schema for standalone file -----------------------------------------------
 allOf:
   - $ref: '#/$defs/inlineSiteCatalog'
   - type: object
