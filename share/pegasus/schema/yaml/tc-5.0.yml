@@ -95,7 +95,7 @@ $defs:
   inlineTransformationCatalog:
     type: object
     properties:
-      tcVersion:
+      pegasus:
         $ref: 'common.yml#/$defs/versionString'
       transformations:
         type: array
@@ -117,4 +117,4 @@ allOf:
   - $ref: '#/$defs/inlineTransformationCatalog'
   - type: object
     required:
-      - tcVersion
+      - pegasus
