@@ -140,7 +140,7 @@ $defs:
 
 type: object
 properties:
-  daxVersion:
+  pegasus:
     $ref: 'common.yml#/$defs/versionString'
   name:
     $ref: 'common.yml#/$defs/filenameSafeString'
@@ -189,8 +189,7 @@ properties:
       $ref: '#/$defs/parent'
     minItems: 0
 required:
-    # change to pegasus (pegasus version)
-  - daxVersion
+  - pegasus
   - name
   - jobs
 additionalProperties: false
