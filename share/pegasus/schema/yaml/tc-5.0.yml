@@ -92,24 +92,29 @@ $defs:
       ^x-:
         $ref: 'common.yml#/$defs/vendorExtension'
 
-type: object
-properties:
-  tcVersion:
-    $ref: 'common.yml#/$defs/versionString'
-  transformations:
-    type: array
-    items:
-      $ref: '#/$defs/transformation'
-    minItems: 1
-  containers:
-    type: array
-    items:
-      $ref: '#/$defs/container'
-    minItems: 0
-required:
-  - tcVersion
-  - transformations
-additionalProperties: false
-patternProperties:
-  ^x-:
-    $ref: 'common.yml#/$defs/vendorExtension'
+  inlineTransformationCatalog:
+    type: object
+    properties:
+      tcVersion:
+        $ref: 'common.yml#/$defs/versionString'
+      transformations:
+        type: array
+        items:
+          $ref: '#/$defs/transformation'
+        minItems: 1
+      containers:
+        type: array
+        items:
+          $ref: '#/$defs/container'
+        minItems: 0
+    required:
+      - transformations
+    patternProperties:
+      ^x-:
+        $ref: 'common.yml#/$defs/vendorExtension'
+
+allOf:
+  - $ref: '#/$defs/inlineTransformationCatalog'
+  - type: object
+    required:
+      - tcVersion
