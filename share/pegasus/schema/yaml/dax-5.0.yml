@@ -153,20 +153,22 @@ properties:
         required: [$ref]
   replicaCatalog:
     oneOf:
-      - $ref: 'rc-5.0.yml'
-      - properties:
-           $ref:
-             type: string
-             format: iri
-        required: [$ref]
+      - $ref: 'rc-5.0.yml#/$defs/inlineReplicaCatalog'
+# for future work if rc becomes reuseable
+#      - properties:
+#           $ref:
+#             type: string
+#             format: iri
+#        required: [$ref]
   transformationCatalog:
     oneOf:
-      - $ref: 'tc-5.0.yml'
-      - properties:
-          $ref:
-            type: string
-            format: iri
-        required: [$ref]
+      - $ref: 'tc-5.0.yml#/$defs/inlineTransformationCatalog'
+# for future work if tc becomes reuseable
+#      - properties:
+#          $ref:
+#            type: string
+#            format: iri
+#        required: [$ref]
   jobs:
     type: array
     items:
@@ -181,6 +183,7 @@ properties:
       $ref: '#/$defs/parent'
     minItems: 0
 required:
+    # change to pegasus (pegasus version)
   - daxVersion
   - name
   - jobs
