@@ -171,7 +171,7 @@ $defs:
   inlineSiteCatalog:
     type: object
     properties:
-      scVersion:
+      pegasus:
         $ref: 'common.yml#/$defs/versionString'
       sites:
         type: array
@@ -188,4 +188,4 @@ allOf:
   - $ref: '#/$defs/inlineSiteCatalog'
   - type: object
     required:
-      - scVersion
+      - pegasus
