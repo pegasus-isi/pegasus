@@ -3300,7 +3300,10 @@ class StashHandler(TransferHandlerBase):
         
                 local_dir = os.path.dirname(t.get_dst_path())
                 prepare_local_dir(local_dir)
-                cmd = "%s '%s' '%s'" \
+                # use --methods as we want to exclude cvmfs - it can take a 
+                # long time to update, and we have seen partial files being
+                # published there in the past
+                cmd = "%s --methods=http,xrootd '%s' '%s'" \
                     % (tools.full_path("stashcp"), src_path, local_dir)
                 remote_fname = os.path.basename(t.get_src_path())
                 local_fname = os.path.basename(t.get_dst_path())
