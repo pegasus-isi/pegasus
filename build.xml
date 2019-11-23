@@ -600,9 +600,9 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
   </target>
 
   <target name="test-python" depends="compile-externals" description="Execute python unit tests">
-      <exec executable="${dist.python}" dir="lib/pegasus/python" failonerror="true">
+    <exec executable="${dist.python}" dir="lib/pegasus/python" failonerror="true">
       <env key="PYTHONPATH" value="${basedir}/lib/pegasus/externals/python"/>
-      <arg line="test.py"/>
+      <arg line="-m pytest"/>
     </exec>
   </target>
 
@@ -633,11 +633,14 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
   <target name="test" depends="dist,test-python,test-kickstart,test-pmc,test-transfer,test-integrity,test-java" description="Run all unit tests"/>
 
-  <target name="test-python-tox" depends="compile-externals" description="Execute python unit tests">
-      <exec executable="tox" dir="lib/pegasus/python" failonerror="true">
+  <target name="test-python-tox" description="Execute python unit tests">
+    <exec executable="tox" dir="lib/pegasus/python" failonerror="true">
       <env key="PYTHONPATH" value="${basedir}/lib/pegasus/externals/python"/>
+      <!--
       <env key="TOX_TESTENV_PASSENV" value="PYTHONPATH"/>
       <env key="SKIP_INSTALL" value="True"/>
+      -->
+      <arg line="--recreate"/>
     </exec>
   </target>
 </project>

@@ -16,7 +16,10 @@ ifneq ($(shell $(PYTHON) -V 2>&1 | grep -E 'ython 2\.[3-6]'),)
     PACKAGES+=ordereddict.py
 endif
 
-PACKAGES+=argparse
+ifneq ($(shell python --version 2>&1 | grep " 2\.6"),)
+	PACKAGES+=argparse
+endif
+
 PACKAGES+=click
 PACKAGES+=flask
 PACKAGES+=flask_cache
