@@ -15,7 +15,7 @@ $defs:
         $ref: 'common.yml#/$defs/hooks'
       profiles:
         $ref: 'common.yml#/$defs/profiles'
-      uses:
+      requires:
         type: array
         items:
           type: string
