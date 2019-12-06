@@ -16,7 +16,7 @@ BuildRequires:  java-devel = 1:1.8.0, python36-pyOpenSSL, python36-PyYAML, pytho
 %if 0%{?rhel} >= 8
 BuildRequires:  java-11-openjdk-devel, python3-pyOpenSSL, python3-PyYAML, python3-devel, python3-setuptools
 %endif
-Requires:       java >= 1:1.8.0, python3, condor >= 8.6, graphviz, python3-amqplib, python36-PyYAML
+Requires:       java >= 1:1.8.0, python3, condor >= 8.6, graphviz, python3-pika, python36-PyYAML
 
 %define sourcedir %{name}-%{version}
 

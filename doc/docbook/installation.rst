@@ -54,7 +54,7 @@ Optional Software
 -  **psycopg2**. Python module for PostgreSQL access. Only needed if you
    want to store the runtime database in PostgreSQL (default is SQLite)
 
--  **python-amqplib**. Python module for sending workflow events to
+-  **python3-pika**. Python module for sending workflow events to
    RabbitMQ. This is optional, and has to be enabled in the Pegasus
    workflow configuration.
 
