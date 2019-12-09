@@ -27,6 +27,7 @@ for TOOL in \
     pegasus-dagman \
     pegasus-exitcode \
     pegasus-integrity \
+    pegasus-preflight-check \
     pegasus-s3 \
     pegasus-transfer \
     pegasus-cwl-converter \

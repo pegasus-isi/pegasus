@@ -9,12 +9,12 @@ if not sys.version_info >= (3, 5):
 try:
     import yaml
 except:
-    sys.stderr.write('Pegasus requires the Python YAML module to be installed\n')
+    sys.stderr.write('Pegasus requires the Python3 YAML module to be installed\n')
     sys.exit(1)
 
 try:
     import OpenSSL
 except:
-    sys.stderr.write('Pegasus requires the Python PyOpenSSL module to be installed\n')
+    sys.stderr.write('Pegasus requires the Python3 PyOpenSSL module to be installed\n')
     sys.exit(1)
 

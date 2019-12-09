@@ -14,6 +14,9 @@ eval `$PEGASUS_CONFIG --sh-dump`
 # places in the planner which still depends on PEGASUS_HOME
 unset PEGASUS_HOME
 
+# ensure we have a good environment to run in
+$PEGASUS_BIN_DIR/pegasus-preflight-check
+
 # run java program
 nice ${JAVA} \
        "-Dpegasus.home.sysconfdir=$PEGASUS_CONF_DIR" \

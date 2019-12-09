@@ -14,7 +14,7 @@ fi
 # The base name is used to decide what Python tool to invoke
 BASE_NAME=%%BASE_NAME%%
 
-# some tools are made to woth both in 2 and 3, but most are 3 only
+# some tools are made to work both in 2 and 3, but most are 3 only
 ALLOW_PY2=0
 for NAME in \
     pegasus-transfer \
