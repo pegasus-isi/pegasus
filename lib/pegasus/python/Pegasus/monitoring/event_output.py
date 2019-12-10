@@ -296,7 +296,7 @@ class AMQPEventSink(EventSink):
         parameters = amqp.ConnectionParameters(host=host,
                                                port=port,
                                                ssl=ssl_enabled,
-                                               ssl_options={"certs_reqs": ssl.CERT_NONE},
+                                               ssl_options=None,
                                                virtual_host=virtual_host,
                                                credentials=creds,
                                                blocked_connection_timeout=connect_timeout,
