@@ -433,7 +433,7 @@ def json_encode(event, **kw):
     kw['event'] = STAMPEDE_NS + event
 
     # PM-1355 , PM-1365 replace all __ and . with _
-    for k, v in kw.items():
+    for k, v in list(kw.items()):
         new_key = k.replace('.', '_')
         new_key = new_key.replace("__","_")
         kw[new_key] = kw.pop(k)
