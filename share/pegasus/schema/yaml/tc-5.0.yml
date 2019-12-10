@@ -5,6 +5,8 @@ $defs:
   transformation:
     type: object
     properties:
+      metadata:
+        $ref: 'common.yml#/$defs/metadata'
       namespace:
         type: string
       name:

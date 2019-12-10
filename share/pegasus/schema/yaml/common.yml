@@ -16,6 +16,17 @@ $defs:
     type: string
     pattern: '^[\-0-9a-zA-Z\_]+$'
 
+  # --- metadata ---------------------------------------------------------------
+  metadata:
+    type: object
+    patternProperties:
+      '[a-zA-Z0-9\._]+':
+        type: string
+      ^x-:
+        $ref: '#/$defs/vendorExtension'
+    minProperties: 1
+    additionalProperties: false
+
   # --- profiles ---------------------------------------------------------------
   genericProfilePropertyType:
     type: object
@@ -77,7 +88,7 @@ $defs:
     required:
       - cmd
       - _on
-  
+
   # adding a new xxHook should be as follows:
   # newHook:
   #   properties:
@@ -87,7 +98,7 @@ $defs:
   #   additionalProperties: false
   #   required:
   #     - _on
-  #     - any properties specific to this hook 
+  #     - any properties specific to this hook
 
   hooks:
     type: object
@@ -102,7 +113,7 @@ $defs:
     #   type: array
     #   items:
     #     $ref: '#/$defs/newHook'
-    #   minItems: 0 
+    #   minItems: 0
     additionalProperties: false
     patternProperties:
       ^x-:
