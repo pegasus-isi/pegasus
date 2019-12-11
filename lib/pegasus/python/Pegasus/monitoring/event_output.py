@@ -23,6 +23,7 @@ import logging
 import traceback
 import json
 import re
+import ssl
 
 import urllib.parse
 
@@ -292,11 +293,19 @@ class AMQPEventSink(EventSink):
                 connect_timeout = float(connect_timeout)
 
         self._log.info( "Connecting to host: %s:%s virtual host: %s exchange: %s with user: %s ssl: %s" %(host, port, virtual_host, exch, userid, ssl_enabled ))
+
+        #insecure ssl
+        SSLOptions = None
+        if ssl_enabled:
+            context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH)
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+            SSLOptions = amqp.SSLOptions(context)
+
         creds = amqp.PlainCredentials(userid, password)
         parameters = amqp.ConnectionParameters(host=host,
                                                port=port,
-                                               ssl=ssl_enabled,
-                                               ssl_options=None,
+                                               ssl_options=SSLOptions,
                                                virtual_host=virtual_host,
                                                credentials=creds,
                                                blocked_connection_timeout=connect_timeout,
@@ -503,12 +512,15 @@ def create_wf_event_sink(dest, db_type, enc=None, prefix=STAMPEDE_NS, props=None
             url.port = 14380
         sink = TCPEventSink(url.host, url.port, encoder=pick_encfn(enc, prefix), **kw)
         _type, _name = "network", "%s:%s" % (url.host, url.port)
-    elif url.scheme == 'amqp':
+    elif url.scheme in ["amqp", "amqps"]:
         # amqp://[USERNAME:PASSWORD@]<hostname>[:port]/[<virtualhost>]/<exchange_name>
         if amqp is None:
             raise Exception("AMQP destination selected, but cannot import AMQP library")
         if url.port is None:
-            url.port = 5672 # RabbitMQ default
+            if url.scheme == "amqps":
+                url.port = 5671 # RabbitMQ default TLS
+            else:
+                url.port = 5672 # RabbitMQ default
 
         # PM-1258 parse exchange and virtual host info
         exchange = None
@@ -524,7 +536,7 @@ def create_wf_event_sink(dest, db_type, enc=None, prefix=STAMPEDE_NS, props=None
         # PM-1355 set encoder to json always for AMQP endpoints
         enc = "json"
         sink = AMQPEventSink(url.host, url.port, virtual_host=virtual_host, exch=exchange,
-                             userid = url.user, password=url.password, ssl_enabled=False,
+                             userid = url.user, password=url.password, ssl_enabled=(url.scheme == "amqps"),
                              encoder=pick_encfn(enc,prefix),props=sink_props, **kw)
         _type, _name="AMQP", "%s:%s/%s" % (url.host, url.port, url.path)
     else:
