@@ -1,0 +1,46 @@
+pegasus: "5.0"
+transformations:
+    - namespace: example
+      name: keg
+      version: "1.0"
+      profiles:
+          env:
+              APP_HOME: /tmp/myscratch
+              JAVA_HOME: /opt/java/1.6
+
+      requires:
+          - anotherTr
+
+      sites:
+        - name: isi
+          type: installed
+          pfn: /path/to/keg
+          arch: x86_64
+          os.type: linux
+          os.release: fc
+          os.version: "4"
+          profiles:
+            env:
+                Hello: World
+                JAVA_HOME: /bin/java.1.6
+            condor:
+                FOO: bar
+          container: centos-pegasus
+
+    - namespace: example
+      name: anotherTr
+      version: "1.2.3"
+
+      sites:
+          - name: isi
+            type: installed
+            pfn: /path/to/anotherTr
+
+containers:
+    - name: centos-pegasus
+      type: docker
+      image: docker:///rynge/montage:latest
+      mount: /Volumes/Work/lfs1:/shared-data/:ro
+      profiles:
+        env:
+            JAVA_HOME: /opt/java/1.6
