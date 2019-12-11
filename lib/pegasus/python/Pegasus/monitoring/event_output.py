@@ -94,20 +94,7 @@ class OutputURL:
     """
     def __init__(self, url):
 
-        # Fix for Python 2.5 and earlier 2.6, as their urlparse module
-        # does not handle these schemes correctly (netloc empty and
-        # everything after the scheme in path)
-        if (url.startswith("amqp:")
-            or url.startswith("mysql:")
-            or url.startswith("x-tcp:")
-            or url.startswith("sqlite:")):
-            self.scheme, rest_url = url.split(":", 1)
-            url = "http:" + rest_url
-
-            http_scheme, self.netloc, self.path, self.params, query, frag = urllib.parse.urlparse(url)
-        else:
-            # No need to change anything
-            self.scheme, self.netloc, self.path, self.params, query, frag = urllib.parse.urlparse(url)
+        self.scheme, self.netloc, self.path, self.params, query, frag = urllib.parse.urlparse(url)
 
         host_port = ''
         user_pass = ''
