@@ -97,8 +97,8 @@ $(LIBDIR)/idna: idna-2.6.tar.gz
 $(LIBDIR)/certifi: python-certifi-2017.11.05.tar.gz
 $(LIBDIR)/urllib3: urllib3-1.22.tar.gz
 $(LIBDIR)/pyjwt: pyjwt-1.5.3.tar.gz
-$(LIBDIR)/globus_sdk: pika-1.0.0.tar.gz
 $(LIBDIR)/globus_sdk: globus-sdk-python-1.4.1.tar.gz
+$(LIBDIR)/pika: pika-1.1.0.tar.gz
 
 clean:
 	rm -rf $(EXTDIR)
