@@ -42,6 +42,7 @@ PACKAGES+=idna
 PACKAGES+=certifi
 PACKAGES+=urllib3
 PACKAGES+=pyjwt
+PACKAGES+=pika
 ifeq ($(shell python --version 2>&1 | grep " 2.6"),)
     PACKAGES+=globus_sdk
 else
@@ -96,6 +97,7 @@ $(LIBDIR)/idna: idna-2.6.tar.gz
 $(LIBDIR)/certifi: python-certifi-2017.11.05.tar.gz
 $(LIBDIR)/urllib3: urllib3-1.22.tar.gz
 $(LIBDIR)/pyjwt: pyjwt-1.5.3.tar.gz
+$(LIBDIR)/globus_sdk: pika-1.0.0.tar.gz
 $(LIBDIR)/globus_sdk: globus-sdk-python-1.4.1.tar.gz
 
 clean:
