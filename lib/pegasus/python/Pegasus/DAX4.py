@@ -3,14 +3,58 @@
 """API for generating and running Pegasus workflows.
 """
 
-__author__= "Pegasus Team"
-__version__= "4.0"
+__author__ = "Pegasus Team"
+__version__ = "4.0"
+
+import json
+from collections import namedtuple, defaultdict
+from dataclasses import dataclass, asdict
+from enum import Enum
 
 import yaml
-from collections import namedtuple
+
+# TODO: pydocstyle everything
+
+# TODO: look at pyyaml Dumper, and instead of using YAMLAble, implement a
+# __json__() function
+# Inside the catalog.write function, use json encoder
+# https://gist.github.com/claraj/3b2b95a62c5ba6860c03b5c737c214ab
+# yaml.dump(DeliveryEncoder().default(catalog), stream)
+# json.dump(catalog, cls=DeliveryEncoder, stream)
+
+"""
+class DeliveryEncoder(json.JSONEncoder):
+	def default(self, obj):
+		
+		if isinstance(obj, Date):
+			return "whatever spec we come up with for Date such as ISO8601"
+        elif isinstance(obj, Path):
+            return obj.resolve
+        elif hasattr(obj, "__json__"):
+            if callable(obj.__json__):
+                return obj.__json__()
+            else:
+                raise TypeError or something along those lines 
+
+		return json.JSONEncoder.default(self, obj) # default, if not Delivery object. Caller's problem if this is not serialziable.
+
+"""
+
+
+def todict(_dict, cls):
+    # https://pypi.org/project/dataclasses-fromdict/
+    raise NotImplementedError()
+
+
+# TODO: transformation catalog, replica catalog, adag
+
+# TODO: print to stdout, executive summary of generated workflow which includes
+# things such as: executables, num jobs, replicas, sites, etc..
+# This way a user can glance over the summary and re-generate the workflow if
+# something looks off (e.g. they expected to add 10 jobs, but actually added 9)
 
 # TODO: decide which symbols to expose
-#__all__ = []
+# __all__ = []
 
 # --- PEGASUS VERSION ----------------------------------------------------------
 PEGASUS_VERSION = 5.0
@@ -20,31 +64,101 @@ PEGASUS_VERSION = 5.0
 class DAX4Error(Exception):
     pass
 
+
 class DuplicateError(DAX4Error):
     pass
+
 
 class NotFoundError(DAX4Error):
     pass
 
+
 class FormatError(DAX4Error):
     pass
+
 
 class ParseError(DAX4Error):
     pass
 
-# --- YAML ---------------------------------------------------------------------
-class YAMLAble:
-    """
-    Derived classes must implement functionality to return themselves as
-    objects such that they can be used with PyYaml.dump(...)
-    """
-    def _YAMLify(self):
-        """Return a a representation of self that can be dumped to yaml"""
-        raise NotImplementedError
+
+# --- FILE FORMAT --------------------------------------------------------------
+class FileFormat(Enum):
+    JSON = "json"
+    YAML = "yml"
+
+
+# --- JSON ---------------------------------------------------------------------
+class CustomEncoder(json.JSONEncoder):
+    def default(self, obj):
+        # TODO: handle instance of Date and Path
+        if hasattr(obj, "__json__"):
+            if callable(obj.__json__):
+                return obj.__json__()
+            else:
+                raise TypeError("__json__ is not callable for {}".format(obj))
+
+        return json.JSONEncoder.default(self, obj)
+
+
+def filter_out_nones(_dict):
+    if not isinstance(_dict, dict):
+        raise ValueError(
+            "a dict must be passed to this function, not {}".format(type(_dict))
+        )
+
+    return {key: value for key, value in _dict.items() if value is not None}
+
+
+'''
+# --- Metadata -----------------------------------------------------------------
+class _MetadataMixin:
+    def add_metadata(self, key, value):
+        """Add metadata as a key value pair to this object
+        
+        :param key: key
+        :type key: str
+        :param value: value
+        :type value: str
+        :raises DuplicateError: metadata keys must be unique
+        """
+        if key in self.metadata:
+            raise DuplicateError
+        else:
+            self.metadata[key] = value
+
+    def update_metadata(self, key, value):
+        """Update metadata
+        
+        :param key: key
+        :type key: str
+        :param value: value
+        :type value: str
+        :raises NotFoundError: key not found 
+        """
+        if key not in self.metadata:
+            raise NotFoundError
+        else:
+            self.metadata[key] = value
+
+    def has_metadata(self, key):
+        """Check if metadata with the given key exists for this object
+        
+        :param key: key
+        :type key: str
+        :return: whether or not the given metadata key exists for this object
+        :rtype: bool
+        """
+        return key in self.metadata
+
+    def clear_metadata(self):
+        """Clear all the metadata given to this object"""
+        self.metadata.clear()
+
 
 # --- Hooks --------------------------------------------------------------------
-class EventType:
+class EventType(Enum):
     """Event type on which a hook will be triggered"""
+
     NEVER = "never"
     START = "start"
     ERROR = "error"
@@ -52,16 +166,19 @@ class EventType:
     END = "end"
     ALL = "all"
 
-class HookMixin(YAMLAble):
+
+class _HookMixin:
     """Derived class can have hooks assigned to it. This currently supports
     shell hooks, and will be extended to web hooks etc.
     """
 
     def __init__(self):
         """Constructor"""
-        self.hooks = dict()
-        self.hooks["shell"] = list()
-    
+        self.hooks = defaultdict()
+
+        # num hooks as if self.hooks was flattened
+        self.num_hooks = 0
+
     def add_shell_hook(self, event_type, cmd):
         """Add a shell hook
         
@@ -70,12 +187,19 @@ class HookMixin(YAMLAble):
         :param cmd: shell command
         :type cmd: str
         """
-        self.hooks["shell"].append(ShellHook(event_type, cmd))
-    
+        if not isinstance(event_type, EventType):
+            raise ValueError("event_type must be one of EventType")
+
+        self.hooks[ShellHook.__hook_type__].append(ShellHook(event_type.value, cmd))
+        self.num_hooks += 1
+
+    def __len__(self):
+        return self.num_hooks
+
     def _YAMLify(self):
         yaml_obj = dict()
 
-        '''
+        """
         group hooks together s.t. we have the following:
         {
             "shell": [
@@ -83,32 +207,44 @@ class HookMixin(YAMLAble):
                 ...
             ]
         }
-        '''
+        """
         for hook_type, items in self.hooks.items():
             yaml_obj[hook_type] = [hook._YAMLify() for hook in items]
-        
+
         return yaml_obj
 
-class Hook(YAMLAble):
+
+class Hook(_YAMLAble):
     """Base class that specific hook types will inherit from"""
+
     def __init__(self, event_type):
-        self.on = event_type
+        if not isinstance(event_type, EventType):
+            raise ValueError("event_type must be one of EventType")
+
+        self.on = event_type.value
+
 
 class ShellHook(Hook):
     """A hook that executes a shell command"""
+
+    __hook_type__ = "shell"
+
     def __init__(self, event_type, cmd):
-        Hook.__init__(self, event_type)
+        Hook.__init__(self, event_type.value)
         self.cmd = cmd
-    
+
     def _YAMLify(self):
         return {"_on": self.on, "cmd": self.cmd}
 
+
+'''
 # --- Profiles -----------------------------------------------------------------
-class Namespace:
+class Namespace(Enum):
     """
     Profile Namespace values recognized by Pegasus. See Executable,
     Transformation, and Job.
     """
+
     PEGASUS = "pegasus"
     CONDOR = "condor"
     DAGMAN = "dagman"
@@ -118,15 +254,9 @@ class Namespace:
     SELECTOR = "selector"
     STAT = "stat"
 
-class ProfileMixin(YAMLAble):
-    """Deriving class can have Profiles assigned to it"""
-    
-    # a profile entry 
-    Profile = namedtuple("Profile", ["namespace", "key", "value"])
 
-    def __init__(self):
-        """Constructor"""
-        self.profiles = set()
+class ProfileMixin:
+    """Deriving class can have Profiles assigned to it"""
 
     def add_profile(self, namespace, key, value):
         """Add a profile to this object
@@ -138,11 +268,23 @@ class ProfileMixin(YAMLAble):
         :param value: value
         :type value: str
         :raises DuplicateError: profiles must be unique
+        :return: self
+        :rtype: type(self)
         """
-        p = ProfileMixin.Profile(namespace, key, value)
-        if self.has_profile(namespace, key, value):
-            raise DuplicateError("Duplicate profile %s" % p)
-        self.profiles.add(p)
+        if not isinstance(namespace, Namespace):
+            raise ValueError("namespace must be one of Namespace")
+
+        if namespace.value in self.profiles:
+            if key in self.profiles[namespace.value]:
+                raise DuplicateError(
+                    "Duplicate profile with namespace: {0}, key: {1}, value: {2}".format(
+                        namespace.value, key, value
+                    )
+                )
+
+        self.profiles[namespace.value][key] = value
+
+        return self
 
     def has_profile(self, namespace, key, value):
         """Check if a profile with the given namespace, key, and value exists
@@ -157,54 +299,93 @@ class ProfileMixin(YAMLAble):
         :return: True if it exists, else false
         :rtype: bool
         """
+        if not isinstance(namespace, Namespace):
+            raise ValueError("namespace must be one of Namespace")
 
-        p = ProfileMixin.Profile(namespace, key, value)
-        return p in self.profiles
+        is_found = False
+        if namespace.value in self.profiles:
+            if key in self.profiles[namespace.value]:
+                found = True
+
+        return is_found
 
     def remove_profile(self, namespace, key, value):
-        """Remove profile from this object"""
-        p = ProfileMixin.Profile(namespace, key, value)
-        if not self.has_profile(p):
-            raise NotFoundError("Profile not found", p)
-        self.profiles.remove(p)
+        """Remove a profile from this object
+        
+        :param namespace: a namespace defined in DAX4.Namespace
+        :type namespace: str (defined in DAX4.Namespace)
+        :param key: key
+        :type key: str
+        :param value: value
+        :type value: str
+        :raises ValueError: Namespace must be one of DAX4.Namespace
+        :raises NotFoundError: given profile with namespace key and value is not found 
+        :return: self
+        :rtype: type(self)
+        """
+        if not isinstance(namespace, Namespace):
+            raise ValueError("namespace must be one of Namespace")
+
+        if not self.has_profile(namespace, key, value):
+            raise NotFoundError(
+                "Profile with namespace: {}, key: {}, value: {} not found".format(
+                    namespace.value, key, value
+                )
+            )
+
+        del self.profiles[namespace.value][key]
+
+        # Removing namespaces with no k,v pairs
+        if len(self.profiles[namespace.value]) == 0:
+            del self.profiles[namespace.value]
+
+        return self
 
     def clear_profiles(self):
-        """Remove all profiles from this object"""
+        """Remove all profiles from this object
+        
+        :return: self
+        :rtype: type(self)
+        """
         self.profiles.clear()
 
-    def _YAMLify(self):
-        yaml_obj = dict()
+        return self
 
-        '''
-        group profiles together s.t. we have the following:
-        {
-            "ns1": {
-                "key1": "value",
-                "key2"" "value
-            },
-            "ns2": {...},
-            ...
-        }
-        '''
-        for p in self.profiles:
-            if p.namespace not in yaml_obj:
-                yaml_obj[p.namespace] = {p.key: p.value}
-            else:
-                yaml_obj[p.namespace][p.key] = p.value
 
-        return yaml_obj
+# --- Sites --------------------------------------------------------------------
+class Architecture(Enum):
+    """Architecture types"""
 
-# --- Catalogs -----------------------------------------------------------------
+    X86 = "x86"
+    X86_64 = "x86_64"
+    PPC = "ppc"
+    PPC_64 = "ppc_64"
+    IA64 = "ia64"
+    SPARCV7 = "sparcv7"
+    SPARCV9 = "sparcv9"
+    AMD64 = "amd64"
+
+
 class SiteCatalog:
     pass
 
-class ReplicaCatalog(YAMLAble):
+
+# --- Replicas -----------------------------------------------------------------
+@dataclass(frozen=True)
+class Replica:
+    lfn: str = None
+    pfn: str = None
+    site: str = None
+    regex: bool = False
+
+    def __json__(self):
+        return filter_out_nones(asdict(self))
+
+
+class ReplicaCatalog:
     """ReplicaCatalog class which maintains a mapping of logical filenames
     to physical filenames. This mapping is a one to many relationship.
     """
-
-    # a replica catalog entry 
-    Replica = namedtuple("Replica", ["lfn", "pfn", "site", "regex"])
 
     def __init__(self, filepath="ReplicaCatalog.yml"):
         """Constructor
@@ -214,7 +395,7 @@ class ReplicaCatalog(YAMLAble):
         """
         self.filepath = filepath
         self.replicas = set()
-    
+
     def add_replica(self, lfn, pfn, site, regex=False):
         """Add an entry to the replica catalog
         
@@ -228,56 +409,648 @@ class ReplicaCatalog(YAMLAble):
         :type regex: bool, optional
         :raises DuplicateError: an entry with the same parameters already exists in the catalog
         """
-        r = ReplicaCatalog.Replica(lfn, pfn, site, regex)
+        r = Replica(lfn, pfn, site, regex)
         if r in self.replicas:
             raise DuplicateError("Duplicate replica catalog entry {}".format(r))
         else:
             self.replicas.add(r)
-    
-    def write(self, filepath=""):
+
+        return self
+
+    def remove_replica(self, lfn, pfn, site, regex=False):
+        """Remove a replica with the given lfn, pfn, site, and regex value
+        
+        :param lfn: logical filename
+        :type lfn: str
+        :param pfn: physical file name 
+        :type pfn: str
+        :param site: site at which this file resides
+        :type site: str
+        :param regex: whether or not the lfn is a regex pattern, defaults to False
+        :type regex: bool, optional
+        :raises NotFoundError: Replica(lfn, pfn, site, regex) has not been added to this catalog
+        :return: self
+        :rtype: ReplicaCatalog
+        """
+        args = (lfn, pfn, site, regex)
+        if not self.has_replica(*args):
+            raise NotFoundError(
+                "replica with lfn: {0}, pfn: {1}, site: {2}, regex: {3} does not exist".format(
+                    lfn, pfn, site, regex
+                )
+            )
+
+        self.replicas.remove(Replica(*args))
+
+        return self
+
+    def has_replica(self, lfn, pfn, site, regex=False):
+        """[summary]
+        
+        :param lfn: logical filename
+        :type lfn: str
+        :param pfn: physical file name 
+        :type pfn: str
+        :param site: site at which this file resides
+        :type site: str
+        :param regex: whether or not the lfn is a regex pattern, defaults to False
+        :type regex: bool, optional
+        :return: whether or not Replica(lfn, pfn, site, regex) has been added to this catalog
+        :rtype: bool
+        """
+        return Replica(lfn, pfn, site, regex) in self.replicas
+
+    def write(self, non_default_filepath="", file_format=FileFormat.YAML):
         """Write this catalog, formatted in YAML, to a file
         
         :param filepath: path to which this catalog will be written, defaults to self.filepath if filepath is "" or None
         :type filepath: str, optional
         """
-        catalog = self._YAMLify()
 
-        # when written out to a separate file, the catalog must contain
-        # the pegasus api version 
-        catalog["pegasus"] = PEGASUS_VERSION
+        path = self.filepath
+        if non_default_filepath != "":
+            path = non_default_filepath
 
-        path = self.filepath if filepath == "" or filepath == None else filepath
         with open(path, "w") as file:
-            yaml.dump(catalog, file)
-            
-    def _YAMLify(self):
-        replicas_as_dicts = list()
-        for e in self.replicas:
-            replicas_as_dicts.append(
-                {
-                    "lfn": e.lfn,
-                    "pfn": e.pfn,
-                    "site": e.site,
-                    "regex": e.regex
-                }
+            if file_format == FileFormat.YAML:
+                yaml.dump(CustomEncoder().default(self), file)
+            elif file_format == FileFormat.JSON:
+                json.dump(self, file, cls=CustomEncoder)
+            else:
+                raise ValueError("invalid file format {}".format(file_format))
+
+    def __json__(self):
+        return {
+            "pegasus": PEGASUS_VERSION,
+            "replicas": [r.__json__() for r in self.replicas],
+        }
+
+
+# --- Transformations ----------------------------------------------------------
+class TransformationType(Enum):
+    """Specifies the type of the transformation. STAGEABLE denotes that it can
+    be shipped around as a file. INSTALLED denotes that the transformation is
+    installed on a specified machine, and that it cannot be shipped around as
+    a file to be executed somewher else. 
+    """
+
+    STAGEABLE = "stageable"
+    INSTALLED = "installed"
+
+
+class TransformationSite(ProfileMixin):
+    """Site specific information about a Transformation. Transformations will contain
+    at least one TransformationSite object which includes, at minimum, the name of the site,
+    the transformation's pfn on that site and whether or not it is installed or stageable at
+    that site.  
+    """
+
+    def __init__(
+        self,
+        name,
+        pfn,
+        transformation_type,
+        arch=None,
+        os_type=None,
+        os_release=None,
+        os_version=None,
+        glibc=None,
+        container=None,
+    ):
+        """Constructor
+        
+        :param name: site name associated with this transformation
+        :type name: str
+        :param pfn: physical file name
+        :type pfn: str
+        :param type: TransformationType.STAGEABLE or TransformationType.INSTALLED
+        :type type: TransformationType
+        :param arch: Architecture that this transformation was compiled for, defaults to None
+        :type arch: Architecture, optional
+        :param os_type: Name of os that this transformation was compiled for, defaults to None
+        :type os_type: str, optional
+        :param os_release: Release of os that this transformation was compiled for, defaults to None, defaults to None
+        :type os_release: str, optional
+        :param os_version: Version of os that this transformation was compiled for, defaults to None, defaults to None
+        :type os_version: str, optional
+        :param glibc: Version of glibc this transformation was compiled against, defaults to None
+        :type glibc: str, optional
+        :param container: specify the container to use, optional
+        :type container: str 
+        """
+
+        self.name = name
+        self.pfn = pfn
+
+        if not isinstance(transformation_type, TransformationType):
+            raise ValueError("type must be one of TransformationType")
+
+        self.transformation_type = transformation_type.value
+
+        if arch is not None:
+            if not isinstance(arch, Architecture):
+                raise ValueError("arch must be one of Arch")
+            else:
+                self.arch = arch.value
+
+        self.os_type = os_type
+        self.os_release = os_release
+        self.os_version = os_version
+        self.glibc = glibc
+        self.container = container
+
+        self.profiles = defaultdict(dict)
+
+    def __json__(self):
+
+        return filter_out_nones(
+            {
+                "name": self.name,
+                "pfn": self.pfn,
+                "type": self.transformation_type,
+                "arch": self.arch,
+                "os.type": self.os_type,
+                "os.release": self.os_release,
+                "os.version": self.os_version,
+                "glibc": self.glibc,
+                "container": self.container,
+                "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
+            }
+        )
+
+
+class ContainerType(Enum):
+    """Container types recognized by Pegasus"""
+
+    DOCKER = "docker"
+    SINGULARITY = "singularity"
+    SHIFTER = "shifter"
+
+
+class Container(ProfileMixin):
+    def __init__(self, name, container_type, image, mount, image_site=None):
+        """Constructor
+        
+        :param name: name of this container
+        :type name: str
+        :param container_type: a type defined in ContainerType
+        :type container_type: ContainerType
+        :param image: image, such as 'docker:///rynge/montage:latest'
+        :type image: str
+        :param mount: mount, such as '/Volumes/Work/lfs1:/shared-data/:ro'
+        :type mount: str
+        :param image_site: optional site attribute to tell pegasus which site tar file exists, defaults to None
+        :type image_site: str, optional
+        :raises ValueError: container_type must be one of ContainerType
+        """
+        self.name = name
+
+        if not isinstance(container_type, ContainerType):
+            raise ValueError("container_type must be one of ContainerType")
+
+        self.container_type = container_type.value
+        self.image = image
+        self.mount = mount
+        self.image_site = image_site
+
+        self.profiles = defaultdict(dict)
+
+    def __json__(self):
+        return filter_out_nones(
+            {
+                "name": self.name,
+                "type": self.container_type,
+                "image": self.image,
+                "mount": self.mount,
+                "imageSite": self.image_site,
+                "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
+            }
+        )
+
+
+# class Transformation(ProfileMixin, HookMixin)
+class Transformation(ProfileMixin):
+    """A transformation, which can be a standalone executable, or one that
+        requires other executables. Transformations can reside on one or
+        more sites where they are either stageable (a binary that can be shipped
+        around) or installed.
+    """
+
+    def __init__(
+        self, name, namespace=None, version=None,
+    ):
+        """Constructor
+
+        :param name: Logical name of executable
+        :type name: str
+        :param namespace: Transformation namespace
+        :type namespace: str, optional
+        :param version: Transformation version, defaults to None
+        :type version: str, optional
+        """
+        self.name = name
+        self.namespace = namespace
+        self.version = version
+        self.sites = dict()
+        self.requires = set()
+
+        self.profiles = defaultdict(dict)
+        self.hooks = dict()
+
+    def add_site(
+        self,
+        name,
+        pfn,
+        transformation_type,
+        arch=None,
+        ostype=None,
+        osrelease=None,
+        osversion=None,
+        glibc=None,
+        container=None,
+    ):
+        """Add a TransformationSite to this Transformation
+        
+        :param name: site name associated with this transformation
+        :type name: str
+        :param pfn: physical file name
+        :type pfn: str
+        :param type: TransformationType.STAGEABLE or TransformationType.INSTALLED
+        :type type: TransformationType
+        :param arch: Architecture that this transformation was compiled for, defaults to None
+        :type arch: Architecture, optional
+        :param os: Name of os that this transformation was compiled for, defaults to None
+        :type os: str, optional
+        :param osrelease: Release of os that this transformation was compiled for, defaults to None, defaults to None
+        :type osrelease: str, optional
+        :param osversion: Version of os that this transformation was compiled for, defaults to None, defaults to None
+        :type osversion: str, optional
+        :param glibc: Version of glibc this transformation was compiled against, defaults to None
+        :type glibc: str, optional
+        :param container: specify the container to use, optional
+        :type container: str 
+        :raises DuplicateError: a site with this is already associated to this Transformation
+        """
+
+        if name in self.sites:
+            raise DuplicateError(
+                "Site {0} already exists for transformation {1}".format(name, self.name)
             )
-        return {"replicas": replicas_as_dicts}
+
+        if not isinstance(transformation_type, TransformationType):
+            raise ValueError("type must be one of TransformationType")
+
+        if arch is not None:
+            if not isinstance(arch, Architecture):
+                raise ValueError("arch must be one of Arch")
+
+        self.sites[name] = TransformationSite(
+            name,
+            pfn,
+            transformation_type,
+            arch,
+            ostype,
+            osrelease,
+            osversion,
+            glibc,
+            container,
+        )
+
+        return self
+
+    def get_site(self, name):
+        """Retrieve a TransformationSite object associated with this 
+        Transformation by site name
+
+        
+        :param name: site name
+        :type name: str
+        :raises NotFoundError: the site has not been added for this Transformation
+        :return: the TransformationSite object associated with this Transformation 
+        :rtype: TransformationSite
+        """
+        if name not in self.sites:
+            raise NotFoundError(
+                "Site {0} not found for transformation {1}".format(name, self.name)
+            )
+
+        return self.sites[name]
+
+    def has_site(self, name):
+        """Check if a site has been added for this Transformation
+        
+        :param name: site name
+        :type name: str
+        :return: True if site has been added, else False
+        :rtype: bool
+        """
+        return name in self.sites
+
+    def remove_site(self, name):
+        """Remove the given site from this Transformation
+        
+        :param name: name of site to be removed
+        :type name: str
+        :raises NotFoundError: the site has not been added for this Transformation 
+        """
+        if name not in self.sites:
+            raise NotFoundError(
+                "Site {0} not found for transformation {1}".format(name, self.name)
+            )
+
+        del self.sites[name]
+
+    def add_requirement(self, transformation_name):
+        """Add a requirement to this Transformation
+        
+        :param transformation_name: name of the Transformation that this transformation requires
+        :type transformation_name: str
+        :raises DuplicateError: this requirement already exists
+        :return: self
+        :rtype: Transformation
+        """
+        if transformation_name in self.requires:
+            raise DuplicateError(
+                "Transformation {0} already requires {1}".format(
+                    self.name, transformation_name
+                )
+            )
+
+        self.requires.add(transformation_name)
+
+        return self
+
+    def has_requirement(self, transformation_name):
+        """Check if this Transformation requires the given transformation
+        
+        :param transformation_name: Transformation name to check
+        :type transformation_name: str
+        :return: whether or not this Transformation requires transformation_name
+        :rtype: bool
+        """
+        return transformation_name in self.requires
+
+    def remove_requirement(self, transformation_name):
+        """Remove a requirement from this Transformation
+        
+        :param transformation_name: name of the Transformation to be removed from the list of requirements
+        :type transformation_name: str
+        :raises NotFoundError: this requirement does not exist
+        """
+        if not has_requirement(transformation_name):
+            raise NotFoundError(
+                "Transformation {0} does not have requirement {1}".format(
+                    self.name, transformation_name
+                )
+            )
+
+        self.requires.remove(transformation_name)
+
+        return self
+
+    def __json__(self):
+        return filter_out_nones(
+            {
+                "namespace": self.namespace,
+                "name": self.name,
+                "version": self.version,
+                "requires": list(self.requires) if len(self.requires) > 0 else None,
+                "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
+                "hooks": self.hooks if len(self.hooks) > 0 else None,
+            }
+        )
+
+    def __str__(self):
+        return "<Transformation {0}::{1}:{2}>".format(
+            self.namespace, self.name, self.version
+        )
+
 
 class TransformationCatalog:
-    pass
+    """TransformationCatalog class maintains a list a Transformations, site specific
+    Transformation information, and a list of containers
+    """
+
+    def __init__(self, filepath="TransformationCatalog.yml"):
+        """Constructor
+        
+        :param filepath: filepath to write this catalog to , defaults to "TransformationCatalog.yml"
+        :type filepath: str, optional
+        """
+        self.transformations = dict()
+        self.containers = dict()
+        self.filepath = filepath
+
+    def add_transformation(self, name, namespace=None, version=None):
+        """Add a Transformation to this TransformationCatalog
+        
+        :param name: Transformation name 
+        :type name: str
+        :param namespace: a namespace this Transformation belongs to, defaults to None
+        :type namespace: str, optional
+        :param version: version of this Transformation, defaults to None
+        :type version: str, optional
+        :raises DuplicateError: a Transformation with this (name, namespace, version) already exists
+        :return: the added Transformation object 
+        :rtype: Transformation
+        """
+        if self.has_transformation(name, namespace, version):
+            raise DuplicateError(
+                "Transformation with name: {0}, namespace: {1}, version: {2} already exists".format(
+                    name, namespace, version
+                )
+            )
+
+        t = Transformation(name, namespace, version)
+        self.transformations[(name, namespace, version)] = t
+
+        return self
+
+    def get_transformation(self, name, namespace=None, version=None):
+        """Retrieve a Transformation from this catalog by the key (name, namespace, version)
+
+        :param name: Transformation name 
+        :type name: str
+        :param namespace: a namespace this Transformation belongs to, defaults to None
+        :type namespace: str, optional
+        :param version: version of this Transformation, defaults to None
+        :type version: str, optional
+        :raises NotFoundError: Transformation with (name, namespace, key) does not exist
+        :return: the Transformation with the given (name, namespace, key)
+        :rtype: Transformation
+        """
+        if not self.has_transformation(name, namespace, version):
+            raise NotFoundError(
+                "Transformation with name: {0}, namespace: {1}, version: {2} does not exist".format(
+                    name, namespace, version
+                )
+            )
+
+        return self.transformations[(name, namespace, version)]
+
+    def has_transformation(self, name, namespace=None, version=None):
+        """Check if a Transformation with (name, namespace, version) exists in this catalog
+        
+        :param name: Transformation name 
+        :type name: str
+        :param namespace: a namespace this Transformation belongs to, defaults to None
+        :type namespace: str, optional
+        :param version: version of this Transformation, defaults to None
+        :type version: str, optional
+        :return: whether or not a Transformation with (name, namespace, version) exists 
+        :rtype: bool
+        """
+        return (name, namespace, version) in self.transformations
+
+    def remove_transformation(self, name, namespace=None, version=None):
+        """Remove the given Transformation from this catalog
+        
+        :param name: Transformation name 
+        :type name: str
+        :param namespace: a namespace this Transformation belongs to, defaults to None
+        :type namespace: str, optional
+        :param version: version of this Transformation, defaults to None
+        :type version: str, optional
+        :raises NotFoundError: Transformation with (name, namespace, key) does not exist
+        :return: the Transformation with the given (name, namespace, key)
+        :rtype: Transformation
+        """
+        if not has_transformation(name, namespace, version):
+            raise NotFoundError(
+                "Transformation with namespace: {0}, name: {1}, version: {2} does not exist".format(
+                    namespace, name, version
+                )
+            )
+
+        del self.transformations[(name, namespace, version)]
+
+        return self
+
+    def add_container(self, name, container_type, image, mount, image_site=None):
+        """Retrieve a container by its name
+        
+        :param name: name of this container
+        :type name: str
+        :param container_type: a type defined in ContainerType
+        :type container_type: ContainerType
+        :param image: image, such as 'docker:///rynge/montage:latest'
+        :type image: str
+        :param mount: mount, such as '/Volumes/Work/lfs1:/shared-data/:ro'
+        :type mount: str
+        :param image_site: optional site attribute to tell pegasus which site tar file exists, defaults to None
+        :type image_site: str, optional
+        :raises DuplicateError: a Container with this name already exists
+        :raises ValueError: container_type must be one of ContainerType
+        :return: self
+        :rtype: TransformationCatalog
+        """
+        if has_container(name):
+            raise DuplicateError("Container {0} already exists".format(name))
+
+        if not isinstance(container_type, ContainerType):
+            raise ValueError("container_type must be one of ContainerType")
+
+        self.containers[name] = Container(
+            name, container_type, image, mount, image_site
+        )
+
+        return self
+
+    def has_container(self, name):
+        """Check if a container exists in this catalog
+        
+        :param name: name of the container
+        :type name: str
+        :return: wether or not the container exists in this catalog
+        :rtype: bool
+        """
+        return name in self.containers
+
+    def get_container(self, name):
+        """Retrieve a container from this catalog by its name
+        
+        :param name: Container name
+        :type name: str
+        :raises NotFoundError: a Container by this name does not exist in this catalog
+        :return: the Container with the given name
+        :rtype: Container
+        """
+        if not has_container(name):
+            raise NotFoundError(
+                "Container {0} does not exist in this catalog".format(name)
+            )
+
+        return self.containers[name]
+
+    def remove_container(self, name):
+        """Remove a conatiner with the given name
+        
+        :param name: container name
+        :type name: str
+        :raises NotFoundError: the Container with the given name does not exist in this catalog
+        :return: self
+        :rtype: TransformationCatalog
+        """
+        if not has_container(name):
+            raise NotFoundError(
+                "Container {0} does not exist in this catalog".format(name)
+            )
+
+        del self.containers[name]
+
+        return self
+
+    def write(self, non_default_filepath="", file_format=FileFormat.YAML):
+        """Write this catalog, formatted in YAML, to a file
+        
+        :param filepath: path to which this catalog will be written, defaults to self.filepath if filepath is "" or None
+        :type filepath: str, optional
+        """
+
+        path = self.filepath
+        if non_default_filepath != "":
+            path = non_default_filepath
+
+        with open(path, "w") as file:
+            if file_format == FileFormat.YAML:
+                yaml.dump(CustomEncoder().default(self), file)
+            elif file_format == FileFormat.JSON:
+                json.dump(self, file, cls=CustomEncoder)
+            else:
+                raise ValueError("invalid file format {}".format(file_format))
+
+    def __json__(self):
+        return filter_out_nones(
+            {
+                "pegasus": PEGASUS_VERSION,
+                "transformations": [
+                    t.__json__() for key, t in self.transformations.items()
+                ],
+                "containers": [c.__json__() for key, c in self.containers]
+                if len(self.containers) > 0
+                else None,
+            }
+        )
+
+
+"""
 
 # --- Workflow -----------------------------------------------------------------
+
 
 class AbstractJob:
     pass
 
+
 class Job(AbstractJob):
     pass
+
 
 class DAX(AbstractJob):
     pass
 
+
 class Workflow:
     pass
-
+"""
 
