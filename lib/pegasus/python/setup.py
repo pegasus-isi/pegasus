@@ -15,6 +15,8 @@ install_requires = [
     "itsdangerous==0.24",
     "boto==2.48.0",
     "pamela==1.0.0",
+    "globus-sdk==1.4.1",
+    "pika==1.1.0",
     # TODO: Remove pyOpenSSL?
     # "pyOpenSSL==17.5.0",
     # Python 2.6
