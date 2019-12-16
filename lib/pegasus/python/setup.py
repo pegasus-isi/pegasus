@@ -1,7 +1,8 @@
 import os
-import sys
 import subprocess
-from setuptools import setup, find_packages
+import sys
+
+from setuptools import find_packages, setup
 
 src_dir = os.path.dirname(__file__)
 home_dir = os.path.abspath(os.path.join(src_dir, "../../.."))
@@ -16,6 +17,7 @@ install_requires = [
     "boto==2.48.0",
     "pamela==1.0.0",
     "globus-sdk==1.4.1",
+    "pika==1.1.0",
     "pika==1.1.0",
     # TODO: Remove pyOpenSSL?
     # "pyOpenSSL==17.5.0",
@@ -34,6 +36,7 @@ install_requires = [
     # Python 3 Backport
     'pathlib2;python_version<"3.0"',
     'functools32;python_version<"3.0"',
+    # 'dataclasses;python_version=="3.6"',
 ]
 
 
