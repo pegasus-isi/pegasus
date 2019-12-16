@@ -15,38 +15,13 @@ import yaml
 
 # TODO: pydocstyle everything
 
-# TODO: look at pyyaml Dumper, and instead of using YAMLAble, implement a
-# __json__() function
-# Inside the catalog.write function, use json encoder
-# https://gist.github.com/claraj/3b2b95a62c5ba6860c03b5c737c214ab
-# yaml.dump(DeliveryEncoder().default(catalog), stream)
-# json.dump(catalog, cls=DeliveryEncoder, stream)
-
-"""
-class DeliveryEncoder(json.JSONEncoder):
-	def default(self, obj):
-		
-		if isinstance(obj, Date):
-			return "whatever spec we come up with for Date such as ISO8601"
-        elif isinstance(obj, Path):
-            return obj.resolve
-        elif hasattr(obj, "__json__"):
-            if callable(obj.__json__):
-                return obj.__json__()
-            else:
-                raise TypeError or something along those lines 
-
-		return json.JSONEncoder.default(self, obj) # default, if not Delivery object. Caller's problem if this is not serialziable.
-
-"""
+# TODO: pegasus.conf (define schema, then add functionality here)
 
 
 def todict(_dict, cls):
     # https://pypi.org/project/dataclasses-fromdict/
     raise NotImplementedError()
 
-
-# TODO: transformation catalog, replica catalog, adag
 
 # TODO: print to stdout, executive summary of generated workflow which includes
 # things such as: executables, num jobs, replicas, sites, etc..
@@ -56,10 +31,10 @@ def todict(_dict, cls):
 # TODO: decide which symbols to expose
 # __all__ = []
 
-# --- PEGASUS VERSION ----------------------------------------------------------
-PEGASUS_VERSION = 5.0
+# --- pegasus api version ------------------------------------------------------
+PEGASUS_VERSION = "5.0"
 
-# --- ERRORS -------------------------------------------------------------------
+# --- errors -------------------------------------------------------------------
 # TODO: document errors
 class DAX4Error(Exception):
     pass
@@ -81,16 +56,23 @@ class ParseError(DAX4Error):
     pass
 
 
-# --- FILE FORMAT --------------------------------------------------------------
+# --- file format --------------------------------------------------------------
 class FileFormat(Enum):
     JSON = "json"
     YAML = "yml"
 
 
-# --- JSON ---------------------------------------------------------------------
+# --- json ---------------------------------------------------------------------
 class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
         # TODO: handle instance of Date and Path
+        """
+        if isinstance(obj, Date):
+			return "whatever spec we come up with for Date such as ISO8601"
+        elif isinstance(obj, Path):
+            return obj.resolve
+        """
+
         if hasattr(obj, "__json__"):
             if callable(obj.__json__):
                 return obj.__json__()
@@ -110,7 +92,7 @@ def filter_out_nones(_dict):
 
 
 '''
-# --- Metadata -----------------------------------------------------------------
+# --- metadata -----------------------------------------------------------------
 class _MetadataMixin:
     def add_metadata(self, key, value):
         """Add metadata as a key value pair to this object
@@ -155,7 +137,7 @@ class _MetadataMixin:
         self.metadata.clear()
 
 
-# --- Hooks --------------------------------------------------------------------
+# --- hooks --------------------------------------------------------------------
 class EventType(Enum):
     """Event type on which a hook will be triggered"""
 
@@ -238,7 +220,7 @@ class ShellHook(Hook):
 
 
 '''
-# --- Profiles -----------------------------------------------------------------
+# --- profiles -----------------------------------------------------------------
 class Namespace(Enum):
     """
     Profile Namespace values recognized by Pegasus. See Executable,
@@ -277,9 +259,7 @@ class ProfileMixin:
         if namespace.value in self.profiles:
             if key in self.profiles[namespace.value]:
                 raise DuplicateError(
-                    "Duplicate profile with namespace: {0}, key: {1}, value: {2}".format(
-                        namespace.value, key, value
-                    )
+                    f"Duplicate profile with namespace: {namespace.value}, key: {key}, value: {value}"
                 )
 
         self.profiles[namespace.value][key] = value
@@ -305,7 +285,7 @@ class ProfileMixin:
         is_found = False
         if namespace.value in self.profiles:
             if key in self.profiles[namespace.value]:
-                found = True
+                is_found = True
 
         return is_found
 
@@ -352,7 +332,7 @@ class ProfileMixin:
         return self
 
 
-# --- Sites --------------------------------------------------------------------
+# --- sites --------------------------------------------------------------------
 class Architecture(Enum):
     """Architecture types"""
 
@@ -370,7 +350,18 @@ class SiteCatalog:
     pass
 
 
-# --- Replicas -----------------------------------------------------------------
+# --- replicas -----------------------------------------------------------------
+@dataclass(frozen=True)
+class File:
+    lfn: str = None
+
+    def __json__(self):
+        return asdict(self)
+
+    def __str__(self):
+        return self.lfn
+
+
 @dataclass(frozen=True)
 class Replica:
     lfn: str = None
@@ -387,13 +378,13 @@ class ReplicaCatalog:
     to physical filenames. This mapping is a one to many relationship.
     """
 
-    def __init__(self, filepath="ReplicaCatalog.yml"):
+    def __init__(self, default_filepath="ReplicaCatalog"):
         """Constructor
         
         :param filepath: filepath to write this catalog to, defaults to "ReplicaCatalog.yml"
         :type filepath: str, optional
         """
-        self.filepath = filepath
+        self.default_filepath = default_filepath
         self.replicas = set()
 
     def add_replica(self, lfn, pfn, site, regex=False):
@@ -466,18 +457,23 @@ class ReplicaCatalog:
         :param filepath: path to which this catalog will be written, defaults to self.filepath if filepath is "" or None
         :type filepath: str, optional
         """
+        if not isinstance(file_format, FileFormat):
+            raise ValueError("invalid file format {}".format(file_format))
 
-        path = self.filepath
+        path = self.default_filepath
         if non_default_filepath != "":
             path = non_default_filepath
+        else:
+            if file_format == FileFormat.YAML:
+                path = ".".join([self.default_filepath, FileFormat.YAML.value])
+            elif file_format == FileFormat.JSON:
+                path = ".".join([self.default_filepath, FileFormat.JSON.value])
 
         with open(path, "w") as file:
             if file_format == FileFormat.YAML:
                 yaml.dump(CustomEncoder().default(self), file)
             elif file_format == FileFormat.JSON:
-                json.dump(self, file, cls=CustomEncoder)
-            else:
-                raise ValueError("invalid file format {}".format(file_format))
+                json.dump(self, file, cls=CustomEncoder, indent=4)
 
     def __json__(self):
         return {
@@ -486,7 +482,7 @@ class ReplicaCatalog:
         }
 
 
-# --- Transformations ----------------------------------------------------------
+# --- transformations ----------------------------------------------------------
 class TransformationType(Enum):
     """Specifies the type of the transformation. STAGEABLE denotes that it can
     be shipped around as a file. INSTALLED denotes that the transformation is
@@ -797,7 +793,7 @@ class Transformation(ProfileMixin):
         :type transformation_name: str
         :raises NotFoundError: this requirement does not exist
         """
-        if not has_requirement(transformation_name):
+        if not self.has_requirement(transformation_name):
             raise NotFoundError(
                 "Transformation {0} does not have requirement {1}".format(
                     self.name, transformation_name
@@ -831,15 +827,15 @@ class TransformationCatalog:
     Transformation information, and a list of containers
     """
 
-    def __init__(self, filepath="TransformationCatalog.yml"):
+    def __init__(self, default_filepath="TransformationCatalog"):
         """Constructor
         
         :param filepath: filepath to write this catalog to , defaults to "TransformationCatalog.yml"
         :type filepath: str, optional
         """
+        self.default_filepath = default_filepath
         self.transformations = dict()
         self.containers = dict()
-        self.filepath = filepath
 
     def add_transformation(self, name, namespace=None, version=None):
         """Add a Transformation to this TransformationCatalog
@@ -915,7 +911,7 @@ class TransformationCatalog:
         :return: the Transformation with the given (name, namespace, key)
         :rtype: Transformation
         """
-        if not has_transformation(name, namespace, version):
+        if not self.has_transformation(name, namespace, version):
             raise NotFoundError(
                 "Transformation with namespace: {0}, name: {1}, version: {2} does not exist".format(
                     namespace, name, version
@@ -944,7 +940,7 @@ class TransformationCatalog:
         :return: self
         :rtype: TransformationCatalog
         """
-        if has_container(name):
+        if self.has_container(name):
             raise DuplicateError("Container {0} already exists".format(name))
 
         if not isinstance(container_type, ContainerType):
@@ -975,7 +971,7 @@ class TransformationCatalog:
         :return: the Container with the given name
         :rtype: Container
         """
-        if not has_container(name):
+        if not self.has_container(name):
             raise NotFoundError(
                 "Container {0} does not exist in this catalog".format(name)
             )
@@ -991,7 +987,7 @@ class TransformationCatalog:
         :return: self
         :rtype: TransformationCatalog
         """
-        if not has_container(name):
+        if not self.has_container(name):
             raise NotFoundError(
                 "Container {0} does not exist in this catalog".format(name)
             )
@@ -1006,18 +1002,23 @@ class TransformationCatalog:
         :param filepath: path to which this catalog will be written, defaults to self.filepath if filepath is "" or None
         :type filepath: str, optional
         """
+        if not isinstance(file_format, FileFormat):
+            raise ValueError("invalid file format {}".format(file_format))
 
-        path = self.filepath
+        path = self.default_filepath
         if non_default_filepath != "":
             path = non_default_filepath
+        else:
+            if file_format == FileFormat.YAML:
+                path = ".".join([self.default_filepath, FileFormat.YAML.value])
+            elif file_format == FileFormat.JSON:
+                path = ".".join([self.default_filepath, FileFormat.JSON.value])
 
         with open(path, "w") as file:
             if file_format == FileFormat.YAML:
                 yaml.dump(CustomEncoder().default(self), file)
             elif file_format == FileFormat.JSON:
-                json.dump(self, file, cls=CustomEncoder)
-            else:
-                raise ValueError("invalid file format {}".format(file_format))
+                json.dump(self, file, cls=CustomEncoder, indent=4)
 
     def __json__(self):
         return filter_out_nones(
@@ -1033,24 +1034,252 @@ class TransformationCatalog:
         )
 
 
-"""
+# --- workflow -----------------------------------------------------------------
+@dataclass(frozen=True)
+class JobInput:
+    file: File
+    _type: str = "input"
 
-# --- Workflow -----------------------------------------------------------------
+    def __json__(self):
+        return {
+            "type": self._type, 
+            "lfn": self.file.lfn
+        }
+            
 
 
+@dataclass(frozen=True)
+class JobOutput:
+    file: File
+    _type: str = "output"
+    stage_out: bool = True
+    register_replica: bool = False
+
+    def __json__(self):
+        return {
+            "lfn": self.file.lfn,
+            "type": self._type,
+            "stageOut": self.stage_out,
+            "registerReplica": self.register_replica,
+        }
+
+
+@dataclass
+class JobDependency:
+    _id: str
+    children: set
+
+    def __json__(self):
+        return {"id": self._id, "children": list(self.children)}
+
+
+# TODO: metadata
+# TODO: hooks
+# TODO: profiles
 class AbstractJob:
-    pass
+    def __init__(self, _id=None, node_label=None):
+        self._id = _id
+        self.node_label = node_label
+
+        # self.stdout = None
+        # self.stderr = None
+        # self.stdin = None
+
+        # self.hooks = defaultdict(dict)
+        # self.profiles = defaultdict(dict)
+        # self.metadata = dict()
+
+    def __json__(self):
+        raise NotImplementedError()
 
 
 class Job(AbstractJob):
-    pass
+    def __init__(
+        self,
+        transformation,
+        *arguments,
+        _id=None,
+        node_label=None,
+        namespace=None,
+        version=None,
+    ):
+        self.namespace = None
+        self.version = None
+        self.transformation = transformation
+        self.arguments = arguments
+        self.inputs = set()
+        self.outputs = set()
+
+        AbstractJob.__init__(self, _id=_id, node_label=node_label)
+
+    def add_inputs(self, *input_files):
+        for file in input_files:
+            self.inputs.add(JobInput(file))
+
+        return self
+
+    def add_outputs(self, *output_files, stage_out=True, register_replica=False):
+        for file in output_files:
+            self.outputs.add(
+                JobOutput(file, stage_out=stage_out, register_replica=register_replica)
+            )
+
+        return self
+
+    def __json__(self):
+        return filter_out_nones(
+            {
+                "namespace": self.namespace,
+                "version": self.version,
+                "name": self.transformation.name,
+                "id": self._id,
+                "nodeLabel": self.node_label,
+                "arguments": [
+                    arg.__json__() if isinstance(arg, File) else arg
+                    for arg in self.arguments
+                ],
+                "uses": [_input.__json__() for _input in self.inputs]
+                + [output.__json__() for output in self.outputs],
+            }
+        )
 
 
 class DAX(AbstractJob):
     pass
 
 
-class Workflow:
+class DAG(AbstractJob):
     pass
-"""
+
+
+# TODO: profiles
+# TODO: hooks
+# TODO: metadata
+class Workflow:
+    def __init__(self, name, default_filepath="Workflow"):
+
+        self.name = name
+        self.default_filepath = default_filepath
+
+        self.jobs = dict()
+        self.dependencies = defaultdict(JobDependency)
+
+        # sequence unique to this workflow only
+        self.sequence = 1
+
+        """
+        TBD, its a touchy subject...
+        self.site_catalog = None
+        self.transformation_catalog = None
+        self.replica_catalog = None
+        """
+
+    def add_job(
+        self,
+        transformation,
+        *arguments,
+        _id=None,
+        namespace=None,
+        version=None,
+        node_label=None,
+    ):
+        if _id == None:
+            _id = self.get_next_job_id()
+        elif _id in self.jobs:
+            raise DuplicateError("Job with id {0} already exists".format(_id))
+        else:
+            self.jobs[_id] = Job(
+                transformation,
+                *arguments,
+                _id=_id,
+                namespace=namespace,
+                version=version,
+                node_label=node_label,
+            )
+
+    def get_job(self, _id):
+        if not _id in self.jobs:
+            raise NotFoundError("Job with id {0} does not exist".format(_id))
+
+        return self.jobs[_id]
+
+    def get_next_job_id(self):
+        next_id = None
+        while next_id != None or next_id in self.jobs:
+            next_id = "ID{:07d}".format(self.sequence)
+            self.sequence += 1
+
+        return next
+
+    """
+    TBD, its a touchy subject...
+    def add_site_catalog(self, site_catalog):
+        pass
+
+    def add_replica_catalog(self, replica_catalog):
+        pass
+
+    def add_transformation_catalog(self, transformation_catalog):
+        pass
+    """
+
+    def add_dependency(self, parent_id, *children_ids):
+        children_ids = set(children_ids)
+        if parent_id in self.dependencies:
+            if not self.dependencies[parent_id].children.isdisjoint(children_ids):
+                raise DuplicateError(
+                    "A dependency already exists between parentid: {0} and children_ids: {1}".format(
+                        parent_id, children_ids
+                    )
+                )
+
+            self.dependencies[parent_id].children.update(children_ids)
+
+        self.dependencies[parent_id] = JobDependency(parent_id, children_ids)
+
+        return self
+
+    def _infer_dependencies(self):
+        pass
+
+    def write(self, non_default_filepath="", file_format=FileFormat.YAML):
+        """Write this catalog, formatted in YAML, to a file
+        
+        :param filepath: path to which this catalog will be written, defaults to self.filepath if filepath is "" or None
+        :type filepath: str, optional
+        """
+        if not isinstance(file_format, FileFormat):
+            raise ValueError("invalid file format {}".format(file_format))
+
+        path = self.default_filepath
+        if non_default_filepath != "":
+            path = non_default_filepath
+        else:
+            if file_format == FileFormat.YAML:
+                path = ".".join([self.default_filepath, FileFormat.YAML.value])
+            elif file_format == FileFormat.JSON:
+                path = ".".join([self.default_filepath, FileFormat.JSON.value])
+
+        with open(path, "w") as file:
+            if file_format == FileFormat.YAML:
+                yaml.dump(CustomEncoder().default(self), file)
+            elif file_format == FileFormat.JSON:
+                json.dump(self, file, cls=CustomEncoder, indent=4)
+
+    def __json__(self):
+        # TODO: remove 'pegasus' from tc, rc, sc
+
+        return filter_out_nones(
+            {
+                "pegasus": PEGASUS_VERSION,
+                "name": self.name,
+                "jobs": [job.__json__() for _id, job in self.jobs.items()],
+                "jobDependencies": [
+                    dependency.__json__()
+                    for _id, dependency in self.dependencies.items()
+                ]
+                if len(self.dependencies) > 0
+                else None,
+            }
+        )
 
