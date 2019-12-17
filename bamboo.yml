@@ -3,7 +3,7 @@ project:
   name: Pegasus
   plans:
     - key: BNT50
-      name: Build & Test (master)
+      name: Build and Test (master)
       scm:
         - !git
           name: Pegasus
@@ -3913,7 +3913,7 @@ project:
                 cleanWorkingDirectoryAfterEachBuild: false
             - key: T047A
               name: 047-cwl-to-dax
-              description: CWL workflow converted to DAX, then run on condor pool 
+              description: CWL workflow converted to DAX, then run on condor pool
               tasks:
                 - !script
                   description: Cleanup
