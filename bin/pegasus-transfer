@@ -3415,6 +3415,10 @@ class StashHandler(TransferHandlerBase):
         if tools.find("stashcp") is None:
             logger.error("Unable to do Stash transfers because stashcp could not be found")
             return [[], transfers_l]
+
+        # ensure we do not use http_proxy for curl
+        if "http_proxy" in os.environ:
+            os.environ['http_proxy'] = ""
             
         successful_l = []
         failed_l = []
