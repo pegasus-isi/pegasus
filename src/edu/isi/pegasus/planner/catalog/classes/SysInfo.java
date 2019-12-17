@@ -46,7 +46,7 @@ public class SysInfo implements Cloneable {
      * Enumerates the new architecture types supported in Pegasus.
      */
     public  enum Architecture {
-        x86, x86_64, ppc, ppc_64, ia64,  sparcv7, sparcv9, amd64
+        x86, x86_64, ppc, ppc_64, ia64,  sparcv7, sparcv9, amd64, ppc64le
     }
 
     /**
