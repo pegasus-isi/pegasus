@@ -3,7 +3,7 @@ project:
   name: Pegasus
   plans:
     - key: BNT49
-      name: Build & Test (4.9)
+      name: Build and Test (4.9)
       scm:
         - !git
           name: Pegasus
