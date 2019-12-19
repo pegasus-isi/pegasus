@@ -6,9 +6,6 @@ set -o pipefail
 
 TOP_DIR=`pwd`
 
-# ensure we have a good umask - bamboo sets its own
-umask 0022
-
 #export PEGASUS_USER_METRICS_SERVER="http://butterfly.isi.edu/metrics"
 
 # The first argument is the build plan name which contains
