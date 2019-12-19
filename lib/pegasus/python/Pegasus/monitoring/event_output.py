@@ -24,6 +24,7 @@ import traceback
 import json
 import re
 import ssl
+import queue
 
 import urllib.parse
 
@@ -34,6 +35,7 @@ from Pegasus.db.workflow_loader import WorkflowLoader
 from Pegasus.db.dashboard_loader import DashboardLoader
 from Pegasus.db import expunge
 from Pegasus.db import connection
+from threading import Thread
 
 log = logging.getLogger(__name__)
 
@@ -272,14 +274,18 @@ class AMQPEventSink(EventSink):
         super(AMQPEventSink, self).__init__()
         self._log.info( "Encoder used %s Properties received %s" %(encoder,props))
         self._encoder = encoder
+        self._handled_events = set()
+        self._handle_all_events = False
+        self.configure_filters(props.property("events"))
+        self._msg_queue = queue.Queue()
+        self._stopping = False
+        self._exch = exch
 
         if connect_timeout is None:
             # pick timeout from properties
             connect_timeout = props.property("timeout")
             if connect_timeout:
                 connect_timeout = float(connect_timeout)
-
-        self._log.info( "Connecting to host: %s:%s virtual host: %s exchange: %s with user: %s ssl: %s" %(host, port, virtual_host, exch, userid, ssl_enabled ))
 
         #insecure ssl
         SSLOptions = None
@@ -290,21 +296,68 @@ class AMQPEventSink(EventSink):
             SSLOptions = amqp.SSLOptions(context)
 
         creds = amqp.PlainCredentials(userid, password)
-        parameters = amqp.ConnectionParameters(host=host,
+        self._params = amqp.ConnectionParameters(host=host,
                                                port=port,
                                                ssl_options=SSLOptions,
                                                virtual_host=virtual_host,
                                                credentials=creds,
                                                blocked_connection_timeout=connect_timeout,
-                                               heartbeat=0)
+                                               heartbeat=None) # None -> negotiate heartbeat with the AMQP server
 
-        self._conn = amqp.BlockingConnection(parameters)
-        self._channel = self._conn.channel()
-        self._exch = exch
-        self._channel.exchange_declare(exch, **self.EXCH_OPTS)
-        self._handled_events = set()
-        self._handle_all_events = False
-        self.configure_filters(props.property("events"))
+        #initialize worker thread in daemon and start it
+        self._worker_thread = Thread(target=self.event_publisher, daemon=True)
+        self._worker_thread.start()
+
+    def event_publisher(self):
+        full_event, event, data = (None, None, None)
+        while not self._stopping:
+            try:
+                self._log.info( "Connecting to host: %s:%s virtual host: %s exchange: %s with user: %s ssl: %s" %
+                                   (self._params.host,
+                                    self._params.port,
+                                    self._params.virtual_host,
+                                    self._exch,
+                                    self._params.credentials.username,
+                                    not self._params.ssl_options == None))
+
+                self._conn = amqp.BlockingConnection(self._params)
+                self._channel = self._conn.channel()
+                self._channel.exchange_declare(self._exch, **self.EXCH_OPTS)
+
+                while not self._stopping:
+                    try:
+                        #if variables are initialized we haven't sent them yet.
+                        #don't retrieve a new event, send the old one
+                        if (full_event is None) and (event is None) and (data is None):
+                            full_event, event, data = self._msg_queue.get(timeout=5)
+                        self._log.trace("send.start event=%s", full_event)
+                        self._channel.basic_publish(body=data, exchange=self._exch, routing_key=full_event)
+                        self._log.trace("send.end event=%s", event)
+                        # reset vars
+                        full_event, event, data = (None, None, None)
+                        # mark item as processed
+                        self._msg_queue.task_done()
+                    except queue.Empty:
+                        self._conn.process_data_events() # keep up with the AMQP heartbeats
+                        continue
+
+            # Recover if connection was closed by broker
+            except amqp.exceptions.ConnectionClosedByBroker:
+                self._log.info( "AMQP Connection to %s:%s was closed by Broker - Will try to recover the connection" % (self._params.host, self._params.port) )
+                continue
+            # Do not recover on channel errors
+            except amqp.exceptions.AMQPChannelError as err:
+                self._log.error( "AMQP Channel Error at %s:%s - Not Recovering" % (self._params.host, self._params.port) )
+                self._log.error( "AMQP Client Caught a channel error: %s, stopping..." % err )
+                break
+            # Recover on all other connection errors
+            except amqp.exceptions.AMQPConnectionError:
+                self._log.info( "AMQP Connection to %s:%s was closed - Will try to recover the connection" % (self._params.host, self._params.port) )
+                continue
+
+        self._log.trace("AMQP connection - close.start")
+        self._conn.close()
+        self._log.trace("AMQP connection - close.end")
 
     def configure_filters(self, events):
         event_regexes = set()
@@ -334,16 +387,12 @@ class AMQPEventSink(EventSink):
 
         self._log.debug( "Events Handled: %s", self._handled_events)
 
-
     def send(self, event, kw):
         full_event = STAMPEDE_NS + event
         if self.ignore(full_event):
             return
-
-        self._log.trace("send.start event=%s", full_event)
         data = self._encoder(event=event, **kw)
-        self._channel.basic_publish(body=data, exchange=self._exch, routing_key=full_event)
-        self._log.trace("send.end event=%s", event)
+        self._msg_queue.put((full_event, event, data))
 
     def ignore(self, event):
         if self._handle_all_events:
@@ -352,12 +401,14 @@ class AMQPEventSink(EventSink):
 
         return event not in self._handled_events
 
-
-
     def close(self):
-        self._log.trace("close.start")
-        self._conn.close()
-        self._log.trace("close.end")
+        if self._worker_thread.is_alive():
+            self._log.trace("AMQP waiting for queue to emtpy.")
+            self._msg_queue.join() #wait for queue to empty if worker is alive
+        self._stopping = True
+        self._log.trace("AMQP waiting for worker thread to exit.")
+        self._worker_thread.join()
+        self._log.trace("AMQP worker thread exited.")
 
 
 class MultiplexEventSink(EventSink):
@@ -378,6 +429,7 @@ class MultiplexEventSink(EventSink):
                 try:
                     self._endpoints[ sink_name ] = create_wf_event_sink(props.property(key), db_type=connection.DBType.WORKFLOW, enc=enc,
                                                                                    prefix=prefix, props=endpoint_props, multiplexed = True, **kw)
+
                 except:
                     self._log.error("[multiplex event sender] Unable to connect to endpoint %s with props %s . Disabling" % (sink_name,endpoint_props))
                     self._log.error(traceback.format_exc())
