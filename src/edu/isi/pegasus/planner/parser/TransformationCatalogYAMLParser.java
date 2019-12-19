@@ -162,7 +162,8 @@ public class TransformationCatalogYAMLParser {
      * @throws ScannerException
      */
     public TransformationCatalogYAMLParser(Reader stream, File schemaDir, LogManager logger) throws IOException, ScannerException {
-        SCHEMA_FILENAME = new File(schemaDir, new File(SCHEMA_URI).getName());
+        File yamlSchemaDir = new File( schemaDir, "yaml");
+        SCHEMA_FILENAME = new File(yamlSchemaDir, new File(SCHEMA_URI).getName());
         mReader = stream;
         mLogger = logger;
     }
