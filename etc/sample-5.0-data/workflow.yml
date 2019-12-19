@@ -68,28 +68,35 @@ jobs:
       name: preprocess
       namespace: diamond
       version: "2.0"
-      argument: ["-a", "preprocess", "-T60", "-i", lfn: f.a, "-o", "f.b1", "f.b2"]
+      arguments: ["-a", "preprocess", "-T60", "-i", lfn: f.a, "-o", "f.b1", "f.b2"]
       uses:
-          - lfn: f.b2
+          - file:
+              lfn: f.b2
             type: output
             registerReplica: false
             stageOut: true
-          - lfn: f.b1
+          - file:
+              lfn: f.b1
+              metadata:
+                size: "2048"
             type: output
             registerReplica: false
             stageOut: true
-          - lfn: f.a
+          - file:
+              lfn: f.a
             type: input
 
     - id: ID000002
       name: findrange
       namespace: diamond
       version: "2.0"
-      argument: ["-a", "findrange", "-T60", "-i", "f.b1", "-o", "f.c1"]
+      arguments: ["-a", "findrange", "-T60", "-i", "f.b1", "-o", "f.c1"]
       uses:
-          - lfn: f.b1
+          - file:
+              lfn: f.b1
             type: input
-          - lfn: f.c1
+          - file:
+              lfn: f.c1
             type: output
             registerReplica: false
             stageOut: true
@@ -98,11 +105,13 @@ jobs:
       name: findrange
       namespace: diamond
       version: "2.0"
-      argument: ["-a", "findrange", "-T60", "-i", "f.b2", "-o", "f.c2"]
+      arguments: ["-a", "findrange", "-T60", "-i", "f.b2", "-o", "f.c2"]
       uses:
-          - lfn: f.b2
+          - file:
+              lfn: f.b2
             type: input
-          - lfn: f.c2
+          - file:
+              lfn: f.c2
             type: output
             registerReplica: false
             stageOut: true
@@ -111,13 +120,16 @@ jobs:
       name: analyze
       namespace: diamond
       version: "2.0"
-      argument: ["-a", "analyze", "-T60", "-i", "f.c1", "f.c2", "-o", "f.d"]
+      arguments: ["-a", "analyze", "-T60", "-i", "f.c1", "f.c2", "-o", "f.d"]
       uses:
-          - lfn: f.c2
+          - file:
+              lfn: f.c2
             type: input
-          - lfn: f.c1
+          - file:
+              lfn: f.c1
             type: input
-          - lfn: f.d
+          - file:
+              lfn: f.d
             type: output
             registerReplica: false
             stageOut: true
