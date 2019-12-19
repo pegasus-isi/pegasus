@@ -1,6 +1,21 @@
 .yml$schema: 'http://json-schema.org/draft-07/schema#'
 $id: 'file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/dax-5.0.yml'
 $defs:
+  # --- a file object ----------------------------------------------------------
+  file:
+    type: object
+    properties:
+      lfn:
+        type: string
+      metadata:
+        $ref: 'common.yml#/$defs/metadata'
+    required:
+      - lfn
+    additionalProperties: false
+    patternProperties:
+      ^x-:
+        $ref: 'common.yml#/$defs/vendorExtension'
+
   # --- abstractJob 'use' types ------------------------------------------------
   linkType:
     enum:
@@ -19,7 +34,7 @@ $defs:
         type: string
       metadata:
         $ref: 'common.yml#/$defs/metadata'
-      argument:
+      arguments:
         type: array
         items:
           oneOf:
@@ -61,12 +76,12 @@ $defs:
         items:
           type: object
           properties:
-            lfn:
-              type: string
+            file:
+              $ref: '#/$defs/file'
             type:
               $ref: '#/$defs/linkType'
           required:
-            - lfn
+            - file
             - type
 
           allOf:
@@ -78,8 +93,8 @@ $defs:
                     const: input
               then:
                 properties:
-                  lfn:
-                    type: string
+                  file:
+                    $ref: '#/$defs/file'
                   type:
                     const: input
                   optional:
@@ -102,8 +117,8 @@ $defs:
                     const: output
               then:
                 properties:
-                  lfn:
-                    type: string
+                  file:
+                    $ref: '#/$defs/file'
                   type:
                     const: output
                   stageOut:
@@ -121,6 +136,7 @@ $defs:
                   executable:
                     type: boolean
                 additionalProperties: false
+        minItems: 0
 
       profiles:
         $ref: '#/$defs/profiles'
@@ -128,6 +144,8 @@ $defs:
         $ref: 'common.yml#/$defs/hooks'
     required:
       - id
+      - arguments
+      - uses
 
   job:
     allOf:
