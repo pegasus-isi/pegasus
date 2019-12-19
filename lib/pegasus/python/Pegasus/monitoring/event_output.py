@@ -310,6 +310,7 @@ class AMQPEventSink(EventSink):
 
     def event_publisher(self):
         full_event, event, data = (None, None, None)
+        reconnect_attempts = 0
         while not self._stopping:
             try:
                 self._log.info( "Connecting to host: %s:%s virtual host: %s exchange: %s with user: %s ssl: %s" %
@@ -323,6 +324,8 @@ class AMQPEventSink(EventSink):
                 self._conn = amqp.BlockingConnection(self._params)
                 self._channel = self._conn.channel()
                 self._channel.exchange_declare(self._exch, **self.EXCH_OPTS)
+
+                reconnect_attempts = 0
 
                 while not self._stopping:
                     try:
@@ -341,23 +344,32 @@ class AMQPEventSink(EventSink):
                         self._conn.process_data_events() # keep up with the AMQP heartbeats
                         continue
 
-            # Recover if connection was closed by broker
-            except amqp.exceptions.ConnectionClosedByBroker:
-                self._log.info( "AMQP Connection to %s:%s was closed by Broker - Will try to recover the connection" % (self._params.host, self._params.port) )
-                continue
+            # Do not recover if connection was closed by broker
+            except amqp.exceptions.ConnectionClosedByBroker as err:
+                self._log.error( "Connection to %s:%s was closed by Broker - Not Recovering" % (self._params.host, self._params.port) )
+                self._log.error( "Broker closed connection with: %s, stopping..." % err )
+                self._conn = None
+                break
             # Do not recover on channel errors
             except amqp.exceptions.AMQPChannelError as err:
-                self._log.error( "AMQP Channel Error at %s:%s - Not Recovering" % (self._params.host, self._params.port) )
-                self._log.error( "AMQP Client Caught a channel error: %s, stopping..." % err )
+                self._log.error( "Channel error at %s:%s - Not Recovering" % (self._params.host, self._params.port) )
+                self._log.error( "Channel error: %s, stopping..." % err )
+                self._conn = None
                 break
-            # Recover on all other connection errors
+            # Recover on all other connection errors if reconnect attempts is less than 5
             except amqp.exceptions.AMQPConnectionError:
-                self._log.info( "AMQP Connection to %s:%s was closed - Will try to recover the connection" % (self._params.host, self._params.port) )
-                continue
+                reconnect_attempts += 1
+                if reconnect_attempts >= 5:
+                    self._log.info( "Connection to %s:%s was closed - Not Recovering" % (self._params.host, self._params.port) )
+                    break
+                else:
+                    self._log.info( "Connection to %s:%s was closed - Will try to recover the connection" % (self._params.host, self._params.port) )
+                    continue
 
-        self._log.trace("AMQP connection - close.start")
-        self._conn.close()
-        self._log.trace("AMQP connection - close.end")
+        if not self._conn is None:
+            self._log.trace("connection - close.start")
+            self._conn.close()
+            self._log.trace("connection - close.end")
 
     def configure_filters(self, events):
         event_regexes = set()
@@ -388,6 +400,9 @@ class AMQPEventSink(EventSink):
         self._log.debug( "Events Handled: %s", self._handled_events)
 
     def send(self, event, kw):
+        if not self._worker_thread.is_alive():
+            raise Exception("AMQP publisher thread is dead. Cannot send amqp events.")
+
         full_event = STAMPEDE_NS + event
         if self.ignore(full_event):
             return
@@ -403,12 +418,12 @@ class AMQPEventSink(EventSink):
 
     def close(self):
         if self._worker_thread.is_alive():
-            self._log.trace("AMQP waiting for queue to emtpy.")
+            self._log.trace("Waiting for queue to emtpy.")
             self._msg_queue.join() #wait for queue to empty if worker is alive
         self._stopping = True
-        self._log.trace("AMQP waiting for worker thread to exit.")
+        self._log.trace("Waiting for publisher thread to exit.")
         self._worker_thread.join()
-        self._log.trace("AMQP worker thread exited.")
+        self._log.trace("Publisher thread exited.")
 
 
 class MultiplexEventSink(EventSink):
