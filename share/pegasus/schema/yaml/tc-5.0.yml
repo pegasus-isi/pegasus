@@ -37,7 +37,7 @@ $defs:
             os.version:
               $ref: 'common.yml#/$defs/versionString'
             glibc:
-              $ref: 'common.yml#/$def/versionString'
+              $ref: 'common.yml#/$defs/versionString'
             pfn:
               type: string
             profiles:
