@@ -55,7 +55,7 @@ import edu.isi.pegasus.planner.parser.TransformationCatalogYAMLParser;
  *
  * The implementation refers to the following same format for specifying a
  * transformation catalog entry.
-	- namespace: "ls"
+- namespace: "ls"
   name: "keg"    
   version: 1.0
 
