@@ -2,18 +2,24 @@ import json
 
 import yaml
 
-from .Encoding import filter_out_nones, FileFormat, CustomEncoder
+from .Writable import Writable, filter_out_nones, FileFormat
 from .Errors import DuplicateError, NotFoundError
+from .Mixins import MetadataMixin
 
 PEGASUS_VERSION = "5.0"
 
-# TODO: MetadataMixin
-class File:
-    def __init__(self, lfn):
-        self.lfn = lfn
 
-    def __json__(self):
-        return {"lfn": self.lfn}
+class File(MetadataMixin):
+    """A workflow File"""
+
+    def __init__(self, lfn):
+        """Constuctor
+        
+        :param lfn: a unique logical filename 
+        :type lfn: str
+        """
+        self.metadata = dict()
+        self.lfn = lfn
 
     def __str__(self):
         return self.lfn
@@ -21,10 +27,36 @@ class File:
     def __hash__(self):
         return hash(self.lfn)
 
+    def __json__(self):
+        return filter_out_nones(
+            {
+                "lfn": self.lfn,
+                "metadata": dict(self.metadata) if len(self.metadata) > 0 else None,
+            }
+        )
+
 
 class Replica:
+    """A ReplicaCatalog entry"""
+
     def __init__(self, lfn, pfn, site, regex=False):
-        self.lfn = lfn
+        """Constructor
+        
+        :param lfn: File or logical filename
+        :type lfn: File|str
+        :param pfn: physical filename
+        :type pfn: str
+        :param site: site at which this file(replica) resides
+        :type site: str
+        :param regex: whether or not to evaluate this lfn and pfn as a regex, defaults to False
+        :type regex: bool, optional
+        """
+        if isinstance(lfn, File):
+            # lfn is a File object
+            self.lfn = lfn.lfn
+        else:
+            self.lfn = lfn
+
         self.pfn = pfn
         self.site = site
         self.regex = regex
@@ -41,18 +73,13 @@ class Replica:
         return hash((self.lfn, self.pfn, self.site, self.regex))
 
 
-class ReplicaCatalog:
+class ReplicaCatalog(Writable):
     """ReplicaCatalog class which maintains a mapping of logical filenames
     to physical filenames. This mapping is a one to many relationship.
     """
 
-    def __init__(self, default_filepath="ReplicaCatalog"):
-        """Constructor
-        
-        :param filepath: filepath to write this catalog to, defaults to "ReplicaCatalog.yml"
-        :type filepath: str, optional
-        """
-        self.default_filepath = default_filepath
+    def __init__(self):
+        """Constructor"""
         self.replicas = set()
 
     def add_replica(self, lfn, pfn, site, regex=False):
@@ -104,7 +131,7 @@ class ReplicaCatalog:
         return self
 
     def has_replica(self, lfn, pfn, site, regex=False):
-        """[summary]
+        """Check if a Replica with the following properties exists in this catalog
         
         :param lfn: logical filename
         :type lfn: str
@@ -118,30 +145,6 @@ class ReplicaCatalog:
         :rtype: bool
         """
         return Replica(lfn, pfn, site, regex) in self.replicas
-
-    def write(self, non_default_filepath="", file_format=FileFormat.YAML):
-        """Write this catalog, formatted in YAML, to a file
-        
-        :param filepath: path to which this catalog will be written, defaults to self.filepath if filepath is "" or None
-        :type filepath: str, optional
-        """
-        if not isinstance(file_format, FileFormat):
-            raise ValueError("invalid file format {}".format(file_format))
-
-        path = self.default_filepath
-        if non_default_filepath != "":
-            path = non_default_filepath
-        else:
-            if file_format == FileFormat.YAML:
-                path = ".".join([self.default_filepath, FileFormat.YAML.value])
-            elif file_format == FileFormat.JSON:
-                path = ".".join([self.default_filepath, FileFormat.JSON.value])
-
-        with open(path, "w") as file:
-            if file_format == FileFormat.YAML:
-                yaml.dump(CustomEncoder().default(self), file)
-            elif file_format == FileFormat.JSON:
-                json.dump(self, file, cls=CustomEncoder, indent=4)
 
     def __json__(self):
         return {
