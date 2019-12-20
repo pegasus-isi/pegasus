@@ -25,6 +25,7 @@ import json
 import re
 import ssl
 import queue
+import time
 
 import urllib.parse
 
@@ -359,11 +360,12 @@ class AMQPEventSink(EventSink):
             # Recover on all other connection errors if reconnect attempts is less than 5
             except amqp.exceptions.AMQPConnectionError:
                 reconnect_attempts += 1
-                if reconnect_attempts >= 5:
+                if reconnect_attempts > 5:
                     self._log.info( "Connection to %s:%s was closed - Not Recovering" % (self._params.host, self._params.port) )
                     break
                 else:
                     self._log.info( "Connection to %s:%s was closed - Will try to recover the connection" % (self._params.host, self._params.port) )
+                    time.sleep(5)
                     continue
 
         if not self._conn is None:
