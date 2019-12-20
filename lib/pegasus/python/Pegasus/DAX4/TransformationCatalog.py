@@ -4,9 +4,9 @@ from collections import defaultdict
 
 import yaml
 
-from .Mixins import ProfileMixin
-from .SiteCatalog import Architecture
-from .Encoding import filter_out_nones, FileFormat, CustomEncoder
+from .Mixins import ProfileMixin, HookMixin, MetadataMixin
+from .SiteCatalog import Arch
+from .Writable import filter_out_nones, Writable
 from .Errors import DuplicateError, NotFoundError
 
 PEGASUS_VERSION = "5.0"
@@ -73,7 +73,7 @@ class TransformationSite(ProfileMixin):
         self.transformation_type = transformation_type.value
 
         if arch is not None:
-            if not isinstance(arch, Architecture):
+            if not isinstance(arch, Arch):
                 raise ValueError("arch must be one of Arch")
             else:
                 self.arch = arch.value
@@ -153,15 +153,7 @@ class Container(ProfileMixin):
         )
 
 
-# TODO: refactor so that:
-# 1. Transformation is a hash of name, namespace, and version
-# 2. requires takes in a transformation and not transformation name
-# 3. TransformationCatalog.add_transformation(...) takes in as input a Transformation object
-# 4. TransformationCatalog.has_transformation(...) takes in as input a Transformation object
-# 5. get Transformation doesn't really make sense as we already have it... (because it was created)
-
-# class Transformation(ProfileMixin, HookMixin)
-class Transformation(ProfileMixin):
+class Transformation(ProfileMixin, HookMixin, MetadataMixin):
     """A transformation, which can be a standalone executable, or one that
         requires other executables. Transformations can reside on one or
         more sites where they are either stageable (a binary that can be shipped
@@ -188,8 +180,9 @@ class Transformation(ProfileMixin):
         self.sites = dict()
         self.requires = set()
 
+        self.hooks = defaultdict(list)
         self.profiles = defaultdict(dict)
-        self.hooks = dict()
+        self.metadata = dict()
 
     def add_site(
         self,
@@ -235,7 +228,7 @@ class Transformation(ProfileMixin):
             raise ValueError("type must be one of TransformationType")
 
         if arch is not None:
-            if not isinstance(arch, Architecture):
+            if not isinstance(arch, Arch):
                 raise ValueError("arch must be one of Arch")
 
         self.sites[name] = TransformationSite(
@@ -297,6 +290,20 @@ class Transformation(ProfileMixin):
         return self
 
     def add_site_profile(self, site_name, namespace, key, value):
+        """Add a profile to a TransformationSite with site_name 
+        
+        :param site_name: the name of the site to which the profile is to be added
+        :type site_name: str
+        :param namespace: a namespace defined in DAX4.Namespace
+        :type namespace: str (defined in DAX4.Namespace)
+        :param key: key
+        :type key: str
+        :param value: value
+        :type value: str
+        :raises NotFoundError: the given site_name was not found
+        :return: self
+        :rtype: Transformation
+        """
         if site_name not in self.sites:
             raise NotFoundError(
                 "Site {0} not found for transformation {1}".format(site_name, self.name)
@@ -365,7 +372,8 @@ class Transformation(ProfileMixin):
                 else None,
                 "sites": [site.__json__() for name, site in self.sites.items()],
                 "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
-                "hooks": self.hooks if len(self.hooks) > 0 else None,
+                "hooks": dict(self.hooks) if len(self.hooks) > 0 else None,
+                "metadata": self.metadata if len(self.metadata) > 0 else None,
             }
         )
 
@@ -383,22 +391,22 @@ class Transformation(ProfileMixin):
         return ValueError("must compare with type Transformation")
 
 
-class TransformationCatalog:
+class TransformationCatalog(Writable):
     """TransformationCatalog class maintains a list a Transformations, site specific
     Transformation information, and a list of containers
     """
 
-    def __init__(self, default_filepath="TransformationCatalog"):
-        """Constructor
-        
-        :param filepath: filepath to write this catalog to , defaults to "TransformationCatalog.yml"
-        :type filepath: str, optional
-        """
-        self.default_filepath = default_filepath
+    def __init__(self):
+        """Constructor"""
         self.transformations = dict()
         self.containers = dict()
 
     def add_transformations(self, *transformations):
+        """Add one or more Transformations to this catalog
+        
+        :raises ValueError: argument(s) must be of type Transformation
+        :raises DuplicateError: Transformation already exists in this catalog
+        """
         for tr in transformations:
             if not isinstance(tr, Transformation):
                 raise ValueError("input must be of type Transformation")
@@ -408,7 +416,16 @@ class TransformationCatalog:
 
             self.transformations[tr.key] = tr
 
+        return self
+
     def has_transformation(self, transformation):
+        """Check if this catalog contains the given Transformation
+        
+        :param transformation: the Transformation to check for 
+        :type transformation: Transformation
+        :return: whether or not this Transformation exists in this catalog
+        :rtype: bool
+        """
         return transformation.key in self.transformations
 
     def add_container(self, name, container_type, image, mount, image_site=None):
@@ -484,30 +501,6 @@ class TransformationCatalog:
         del self.containers[name]
 
         return self
-
-    def write(self, non_default_filepath="", file_format=FileFormat.YAML):
-        """Write this catalog, formatted in YAML, to a file
-        
-        :param filepath: path to which this catalog will be written, defaults to self.filepath if filepath is "" or None
-        :type filepath: str, optional
-        """
-        if not isinstance(file_format, FileFormat):
-            raise ValueError("invalid file format {}".format(file_format))
-
-        path = self.default_filepath
-        if non_default_filepath != "":
-            path = non_default_filepath
-        else:
-            if file_format == FileFormat.YAML:
-                path = ".".join([self.default_filepath, FileFormat.YAML.value])
-            elif file_format == FileFormat.JSON:
-                path = ".".join([self.default_filepath, FileFormat.JSON.value])
-
-        with open(path, "w") as file:
-            if file_format == FileFormat.YAML:
-                yaml.dump(CustomEncoder().default(self), file)
-            elif file_format == FileFormat.JSON:
-                json.dump(self, file, cls=CustomEncoder, indent=4)
 
     def __json__(self):
         return filter_out_nones(
