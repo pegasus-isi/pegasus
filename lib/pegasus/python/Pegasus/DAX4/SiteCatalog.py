@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class Architecture(Enum):
+class Arch(Enum):
     """Architecture types"""
 
     X86 = "x86"
