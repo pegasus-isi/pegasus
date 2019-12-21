@@ -18,6 +18,9 @@ class File(MetadataMixin):
         :param lfn: a unique logical filename 
         :type lfn: str
         """
+        if not isinstance(lfn, str):
+            raise ValueError("lfn must be a string")
+
         self.metadata = dict()
         self.lfn = lfn
 
@@ -27,6 +30,11 @@ class File(MetadataMixin):
     def __hash__(self):
         return hash(self.lfn)
 
+    def __eq__(self, other):
+        if isinstance(other, File):
+            return self.lfn == other.lfn
+        return False
+
     def __json__(self):
         return filter_out_nones(
             {
@@ -34,43 +42,6 @@ class File(MetadataMixin):
                 "metadata": dict(self.metadata) if len(self.metadata) > 0 else None,
             }
         )
-
-
-class Replica:
-    """A ReplicaCatalog entry"""
-
-    def __init__(self, lfn, pfn, site, regex=False):
-        """Constructor
-        
-        :param lfn: File or logical filename
-        :type lfn: File|str
-        :param pfn: physical filename
-        :type pfn: str
-        :param site: site at which this file(replica) resides
-        :type site: str
-        :param regex: whether or not to evaluate this lfn and pfn as a regex, defaults to False
-        :type regex: bool, optional
-        """
-        if isinstance(lfn, File):
-            # lfn is a File object
-            self.lfn = lfn.lfn
-        else:
-            self.lfn = lfn
-
-        self.pfn = pfn
-        self.site = site
-        self.regex = regex
-
-    def __json__(self):
-        return {
-            "lfn": self.lfn,
-            "pfn": self.pfn,
-            "site": self.site,
-            "regex": self.regex,
-        }
-
-    def __hash__(self):
-        return hash((self.lfn, self.pfn, self.site, self.regex))
 
 
 class ReplicaCatalog(Writable):
@@ -85,8 +56,8 @@ class ReplicaCatalog(Writable):
     def add_replica(self, lfn, pfn, site, regex=False):
         """Add an entry to the replica catalog
         
-        :param lfn: logical filename
-        :type lfn: str
+        :param lfn: logical filename or File object
+        :type lfn: str|File
         :param pfn: physical file name 
         :type pfn: str
         :param site: site at which this file resides
@@ -94,20 +65,27 @@ class ReplicaCatalog(Writable):
         :param regex: whether or not the lfn is a regex pattern, defaults to False
         :type regex: bool, optional
         :raises DuplicateError: an entry with the same parameters already exists in the catalog
+        :raises ValueError: lfn must be of type File or str
         """
-        r = Replica(lfn, pfn, site, regex)
-        if r in self.replicas:
-            raise DuplicateError("Duplicate replica catalog entry {}".format(r))
+        if not isinstance(lfn, File) and not isinstance(lfn, str):
+            raise ValueError("lfn must be File or str")
+
+        if isinstance(lfn, File):
+            lfn = lfn.lfn
+
+        replica = (lfn, pfn, site, regex)
+        if replica in self.replicas:
+            raise DuplicateError("duplicate replica catalog entry {}".format(replica))
         else:
-            self.replicas.add(r)
+            self.replicas.add(replica)
 
         return self
 
     def remove_replica(self, lfn, pfn, site, regex=False):
         """Remove a replica with the given lfn, pfn, site, and regex value
         
-        :param lfn: logical filename
-        :type lfn: str
+        :param lfn: logical filename or File object
+        :type lfn: str|File
         :param pfn: physical file name 
         :type pfn: str
         :param site: site at which this file resides
@@ -115,39 +93,56 @@ class ReplicaCatalog(Writable):
         :param regex: whether or not the lfn is a regex pattern, defaults to False
         :type regex: bool, optional
         :raises NotFoundError: Replica(lfn, pfn, site, regex) has not been added to this catalog
+        :raises ValueError: lfn must be of type File or str
         :return: self
         :rtype: ReplicaCatalog
         """
-        args = (lfn, pfn, site, regex)
-        if not self.has_replica(*args):
+        if not isinstance(lfn, File) and not isinstance(lfn, str):
+            raise ValueError("lfn must be File or str")
+
+        if isinstance(lfn, File):
+            lfn = lfn.lfn
+
+        replica = (lfn, pfn, site, regex)
+        if not self.has_replica(*replica):
             raise NotFoundError(
                 "replica with lfn: {0}, pfn: {1}, site: {2}, regex: {3} does not exist".format(
-                    lfn, pfn, site, regex
+                    *replica
                 )
             )
 
-        self.replicas.remove(Replica(*args))
+        self.replicas.remove(replica)
 
         return self
 
     def has_replica(self, lfn, pfn, site, regex=False):
         """Check if a Replica with the following properties exists in this catalog
         
-        :param lfn: logical filename
-        :type lfn: str
+        :param lfn: logical filename or File
+        :type lfn: str|File
         :param pfn: physical file name 
         :type pfn: str
         :param site: site at which this file resides
         :type site: str
         :param regex: whether or not the lfn is a regex pattern, defaults to False
         :type regex: bool, optional
-        :return: whether or not Replica(lfn, pfn, site, regex) has been added to this catalog
+        :raises ValueError: lfn must be of type File or str
+        :return: whether or not (lfn, pfn, site, regex) has been added to this catalog
         :rtype: bool
         """
-        return Replica(lfn, pfn, site, regex) in self.replicas
+        if not isinstance(lfn, File) and not isinstance(lfn, str):
+            raise ValueError("lfn must be File or str")
+
+        if isinstance(lfn, File):
+            lfn = lfn.lfn
+
+        return (lfn, pfn, site, regex) in self.replicas
 
     def __json__(self):
         return {
             "pegasus": PEGASUS_VERSION,
-            "replicas": [r.__json__() for r in self.replicas],
+            "replicas": [
+                {"lfn": r[0], "pfn": r[1], "site": r[2], "regex": r[3]}
+                for r in self.replicas
+            ],
         }
