@@ -14,5 +14,15 @@ class Arch(Enum):
     AMD64 = "amd64"
 
 
+class OSType(Enum):
+    """Operating system types"""
+
+    LINUX = "linux"
+    SUNOS = "sunos"
+    AIX = "aix"
+    MACOSX = "macosx"
+    WINDOWS = "windows"
+
+
 class SiteCatalog:
     pass

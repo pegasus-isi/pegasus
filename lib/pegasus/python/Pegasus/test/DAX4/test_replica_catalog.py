@@ -1,3 +1,4 @@
+import os
 import json
 
 import pytest
@@ -11,7 +12,7 @@ from Pegasus.DAX4.Mixins import Namespace
 class TestFile:
     @pytest.mark.parametrize("lfn", [("a"), ("例")])
     def test_valid_file(self, lfn: str):
-        assert isinstance(File(lfn), File)
+        File(lfn)
 
     @pytest.mark.parametrize("lfn", [(1), (list())])
     def test_invalid_file(self, lfn: str):
@@ -22,9 +23,9 @@ class TestFile:
         assert File("lfn").__json__() == {"lfn": "lfn"}
 
     def test_eq(self):
-        assert (File("a") == File("a")) == True
-        assert (File("a") == File("b")) == False
-        assert (File("a") == 1) == False
+        assert File("a") == File("a")
+        assert File("a") != File("b")
+        assert File("a") != 1
 
     def test_tojson_with_metdata(self):
         assert File("lfn").add_metadata("key", "value").__json__() == {
@@ -103,7 +104,7 @@ class TestReplicaCatalog:
         result = rc.__json__()
         result["replicas"] = sorted(result["replicas"], key=lambda d: d["lfn"])
 
-        assert (result == expected) == True
+        assert result == expected
 
     def test_write(self):
         rc = ReplicaCatalog()
@@ -119,11 +120,17 @@ class TestReplicaCatalog:
         }
         expected["replicas"] = sorted(expected["replicas"], key=lambda d: d["lfn"])
 
-        test_output_filename = "ReplicaCatalogTest.json"
+        test_output_filename = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "ReplicaCatalogTestOutput.json"
+        )
+
         rc.write(non_default_filepath=test_output_filename, file_format=FileFormat.JSON)
 
         with open(test_output_filename, "r") as f:
             result = json.load(f)
             result["replicas"] = sorted(result["replicas"], key=lambda d: d["lfn"])
 
-        assert (result == expected) == True
+        assert result == expected
+
+        # cleanup
+        os.remove(test_output_filename)
