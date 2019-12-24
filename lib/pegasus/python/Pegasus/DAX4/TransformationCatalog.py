@@ -5,7 +5,7 @@ from collections import defaultdict
 import yaml
 
 from .Mixins import ProfileMixin, HookMixin, MetadataMixin
-from .SiteCatalog import Arch
+from .SiteCatalog import Arch, OSType
 from .Writable import filter_out_nones, Writable
 from .Errors import DuplicateError, NotFoundError
 
@@ -53,7 +53,7 @@ class TransformationSite(ProfileMixin):
         :param arch: Architecture that this transformation was compiled for, defaults to None
         :type arch: Architecture, optional
         :param os_type: Name of os that this transformation was compiled for, defaults to None
-        :type os_type: str, optional
+        :type os_type: OSType, optional
         :param os_release: Release of os that this transformation was compiled for, defaults to None, defaults to None
         :type os_release: str, optional
         :param os_version: Version of os that this transformation was compiled for, defaults to None, defaults to None
@@ -77,8 +77,17 @@ class TransformationSite(ProfileMixin):
                 raise ValueError("arch must be one of Arch")
             else:
                 self.arch = arch.value
+        else:
+            self.arch = None
 
-        self.os_type = os_type
+        if os_type is not None:
+            if not isinstance(os_type, OSType):
+                raise ValueError("os_type must be one of OSType")
+            else:
+                self.os_type = os_type.value
+        else:
+            self.os_type = None
+
         self.os_release = os_release
         self.os_version = os_version
         self.glibc = glibc
@@ -175,7 +184,6 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         self.name = name
         self.namespace = namespace
         self.version = version
-        self.key = (self.name, self.namespace, self.version)
 
         self.sites = dict()
         self.requires = set()
@@ -183,6 +191,9 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         self.hooks = defaultdict(list)
         self.profiles = defaultdict(dict)
         self.metadata = dict()
+
+    def get_key(self):
+        return (self.name, self.namespace, self.version)
 
     def add_site(
         self,
@@ -245,24 +256,6 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
 
         return self
 
-    def get_site(self, name):
-        """Retrieve a TransformationSite object associated with this 
-        Transformation by site name
-
-        
-        :param name: site name
-        :type name: str
-        :raises NotFoundError: the site has not been added for this Transformation
-        :return: the TransformationSite object associated with this Transformation 
-        :rtype: TransformationSite
-        """
-        if name not in self.sites:
-            raise NotFoundError(
-                "Site {0} not found for transformation {1}".format(name, self.name)
-            )
-
-        return self.sites[name]
-
     def has_site(self, name):
         """Check if a site has been added for this Transformation
         
@@ -313,7 +306,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
 
         return self
 
-    def add_requirement(self, required_transformation):
+    def add_requirement(self, required_transformation, namespace=None, version=None):
         """Add a requirement to this Transformation
         
         :param required_transformation: Transformation that this transformation requires
@@ -322,18 +315,27 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         :return: self
         :rtype: Transformation
         """
-        if required_transformation in self.requires:
+        if isinstance(required_transformation, Transformation):
+            key = required_transformation.get_key()
+        elif isinstance(required_transformation, str):
+            key = (required_transformation, namespace, version)
+        else:
+            raise ValueError(
+                "required_transformation must be of type Transformation or str"
+            )
+
+        if key in self.requires:
             raise DuplicateError(
-                "Transformation {0} already requires {1}".format(
-                    self.name, required_transformation.name
+                "Transformation {0} already requires Transformation {1}".format(
+                    self.name, key
                 )
             )
 
-        self.requires.add(required_transformation)
+        self.requires.add(key)
 
         return self
 
-    def has_requirement(self, transformation):
+    def has_requirement(self, transformation, namespace=None, version=None):
         """Check if this Transformation requires the given transformation
         
         :param transformation: the Transformation to check for 
@@ -341,38 +343,63 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         :return: whether or not this Transformation requires the given Transformation
         :rtype: bool
         """
-        return transformation in self.requires
+        if isinstance(transformation, Transformation):
+            key = transformation.get_key()
+        elif isinstance(transformation, str):
+            key = (transformation, namespace, version)
+        else:
+            raise ValueError(
+                "required_transformation must be of type Transformation or str"
+            )
 
-    def remove_requirement(self, transformation):
+        return key in self.requires
+
+    def remove_requirement(self, transformation, namespace=None, version=None):
         """Remove a requirement from this Transformation
         
         :param transformation: the Transformation to be removed from the list of requirements
         :type transformation: Transformation
         :raises NotFoundError: this requirement does not exist
         """
-        if not self.has_requirement(transformation):
+
+        if isinstance(transformation, Transformation):
+            key = transformation.get_key()
+        elif isinstance(transformation, str):
+            key = (transformation, namespace, version)
+        else:
+            raise ValueError(
+                "required_transformation must be of type Transformation or str"
+            )
+
+        if not self.has_requirement(transformation, namespace, version):
             raise NotFoundError(
                 "Transformation {0} does not have requirement {1}".format(
                     self.name, str(transformation)
                 )
             )
 
-        self.requires.remove(transformation)
+        self.requires.remove(key)
 
         return self
 
     def __json__(self):
+        # TODO: implement yaml dumper that rajiv suggested so that you don't have to loop through and call Object.__json__()...
         return filter_out_nones(
             {
                 "namespace": self.namespace,
                 "name": self.name,
                 "version": self.version,
-                "requires": [req.name for req in self.requires]
+                "requires": [req[0] for req in self.requires]
                 if len(self.requires) > 0
                 else None,
                 "sites": [site.__json__() for name, site in self.sites.items()],
                 "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
-                "hooks": dict(self.hooks) if len(self.hooks) > 0 else None,
+                "hooks": {
+                    hook_name: [hook.__json__() for hook in values]
+                    for hook_name, values in self.hooks.items()
+                }
+                if len(self.hooks) > 0
+                else None,
                 "metadata": self.metadata if len(self.metadata) > 0 else None,
             }
         )
@@ -383,11 +410,11 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         )
 
     def __hash__(self):
-        return hash(self.key)
+        return hash(self.get_key())
 
     def __eq__(self, other):
         if isinstance(other, Transformation):
-            return self.key == other.key
+            return self.get_key() == other.get_key()
         return ValueError("must compare with type Transformation")
 
 
