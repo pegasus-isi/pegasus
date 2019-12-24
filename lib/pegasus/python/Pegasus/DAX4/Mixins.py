@@ -101,8 +101,7 @@ class HookMixin:
         if not isinstance(event_type, EventType):
             raise ValueError("event_type must be one of EventType")
 
-        if ShellHook.__hook_type__ in self.hooks:
-            self.hooks[ShellHook.__hook_type__].append(ShellHook(event_type.value, cmd))
+        self.hooks[ShellHook.__hook_type__].append(ShellHook(event_type, cmd))
 
         return self
 
@@ -136,7 +135,7 @@ class ShellHook(Hook):
         :param cmd: shell command to be executed
         :type cmd: str
         """
-        Hook.__init__(self, event_type.value)
+        Hook.__init__(self, event_type)
         self.cmd = cmd
 
     def __json__(self):
