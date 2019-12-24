@@ -10,10 +10,12 @@ from Pegasus.DAX4.TransformationCatalog import (
     Container,
     Transformation,
     TransformationCatalog,
+    PEGASUS_VERSION,
 )
 from Pegasus.DAX4.SiteCatalog import OSType, Arch
 from Pegasus.DAX4.Mixins import Namespace, EventType
 from Pegasus.DAX4.Errors import DuplicateError, NotFoundError
+from Pegasus.DAX4.Writable import FileFormat
 
 
 class TestTransformationSite:
@@ -181,6 +183,21 @@ class TestTransformationSite:
 
 
 class TestTransformation:
+    @pytest.mark.parametrize(
+        "transformation",
+        [
+            (Transformation("name")),
+            (Transformation("name", namespace="namespace")),
+            (Transformation("name", namespace="namespace", version="1.1")),
+        ],
+    )
+    def test_get_key(self, transformation):
+        assert transformation.get_key() == (
+            transformation.name,
+            transformation.namespace,
+            transformation.version,
+        )
+
     def test_has_site(self):
         t = Transformation("test")
         assert not t.has_site("sitename that doesn't exist")
@@ -343,6 +360,18 @@ class TestTransformation:
         with pytest.raises(ValueError):
             t.remove_requirement(123)
 
+    def test_chaining(self):
+        t = (
+            Transformation("test")
+            .add_site("local", "/pfn", TransformationType.STAGEABLE)
+            .add_requirement("required")
+            .add_site_profile("local", Namespace.ENV, "JAVA_HOME", "/java/home")
+        )
+
+        assert t.has_site("local")
+        assert t.sites["local"].has_profile(Namespace.ENV, "JAVA_HOME", "/java/home")
+        assert t.has_requirement("required")
+
     def test_tojson_without_profiles_hooks_metadata(self):
         t = Transformation("test", namespace="pegasus")
         t.add_site("local", "/pfn", TransformationType.STAGEABLE)
@@ -408,4 +437,201 @@ class TestContainer:
 
 
 class TestTransformationCatalog:
-    pass
+    def test_add_single_transformation(self):
+        tc = TransformationCatalog()
+        tc.add_transformations(Transformation("test"))
+
+        assert ("test", None, None) in tc.transformations
+        assert len(tc.transformations) == 1
+
+    def test_add_multiple_transformations(self):
+        tc = TransformationCatalog()
+
+        t1 = Transformation("name")
+        t2 = Transformation("name", namespace="namespace")
+        t3 = Transformation("name", namespace="namespace", version="version")
+
+        tc.add_transformations(t1, t2, t3)
+
+        assert ("name", None, None) in tc.transformations
+        assert ("name", "namespace", None) in tc.transformations
+        assert ("name", "namespace", "version") in tc.transformations
+        assert len(tc.transformations) == 3
+
+    def test_add_duplicate_transformation(self):
+        tc = TransformationCatalog()
+        tc.add_transformations(Transformation("name"))
+        with pytest.raises(DuplicateError):
+            tc.add_transformations(Transformation("name", namespace=None, version=None))
+
+    def test_add_invalid_transformation(self):
+        tc = TransformationCatalog()
+        with pytest.raises(ValueError):
+            tc.add_transformations(1)
+
+    def test_has_transformation_str(self):
+        tc = TransformationCatalog()
+        tc.add_transformations(Transformation("name", namespace="namespace"))
+        assert tc.has_transformation("name", namespace="namespace")
+
+    def test_has_transformation_obj(self):
+        tc = TransformationCatalog()
+        t = Transformation("name", namespace="namespace")
+        tc.add_transformations(t)
+        assert tc.has_transformation(t)
+
+    def test_has_invalid_transformation(self):
+        tc = TransformationCatalog()
+        with pytest.raises(ValueError):
+            tc.has_transformation(1)
+
+    def test_add_container(self):
+        tc = TransformationCatalog()
+        tc.add_container("container", ContainerType.DOCKER, "image", "mount")
+
+        assert len(tc.containers) == 1
+        assert "container" in tc.containers
+
+    def test_add_duplicate_container(self):
+        tc = TransformationCatalog()
+        tc.add_container("container", ContainerType.DOCKER, "image", "mount")
+        with pytest.raises(DuplicateError):
+            tc.add_container("container", ContainerType.DOCKER, "image", "mount")
+
+    def test_add_invlaid_container(self):
+        tc = TransformationCatalog()
+        with pytest.raises(ValueError):
+            tc.add_container("container", "docker", "image", "mount")
+
+    def test_has_container(self):
+        tc = TransformationCatalog()
+        tc.add_container("container1", ContainerType.DOCKER, "image", "mount")
+        tc.add_container("container2", ContainerType.DOCKER, "image", "mount")
+
+        assert tc.has_container("container1")
+        assert tc.has_container("container2")
+
+    def remove_container(self):
+        tc = TransformationCatalog()
+        tc.add_container("container", ContainerType.DOCKER, "image", "mount")
+
+        assert tc.has_container("container")
+        assert len(tc.containers) == 1
+
+        tc.remove_container("container")
+        assert not tc.has_container("container")
+        assert len(tc.containers) == 0
+
+    def remove_container_not_added(self):
+        tc = TransformationCatalog()
+        with pytest.raises(NotFoundError):
+            tc.remove_container("container")
+
+    def test_chaining(self):
+        tc = TransformationCatalog()
+
+        (
+            tc.add_transformations(Transformation("t1"))
+            .add_transformations(Transformation("t2"))
+            .add_container("container1", ContainerType.DOCKER, "image", "mount")
+            .add_container("container2", ContainerType.DOCKER, "image", "mount")
+        )
+
+        assert tc.has_transformation("t1")
+        assert tc.has_transformation("t2")
+        assert tc.has_container("container1")
+        assert tc.has_container("container2")
+
+        (tc.remove_container("container1").remove_container("container2"))
+
+        assert len(tc.containers) == 0
+
+    def test_tojson(self):
+        tc = TransformationCatalog()
+        (
+            tc.add_transformations(Transformation("t1"))
+            .add_transformations(Transformation("t2"))
+            .add_container("container1", ContainerType.DOCKER, "image", "mount")
+            .add_container("container2", ContainerType.DOCKER, "image", "mount")
+        )
+
+        expected = {
+            "pegasus": PEGASUS_VERSION,
+            "transformations": [t.__json__() for _, t in tc.transformations.items()],
+            "containers": [c.__json__() for _, c in tc.containers.items()],
+        }
+
+        expected["transformations"] = sorted(
+            expected["transformations"], key=lambda t: t["name"]
+        )
+        expected["containers"] = sorted(expected["containers"], key=lambda c: c["name"])
+
+        result = tc.__json__()
+
+        result["transformations"] = sorted(
+            result["transformations"], key=lambda t: t["name"]
+        )
+        result["containers"] = sorted(result["containers"], key=lambda c: c["name"])
+
+        assert expected == result
+
+    def test_tojson_no_containers(self):
+        tc = TransformationCatalog()
+        (
+            tc.add_transformations(Transformation("t1")).add_transformations(
+                Transformation("t2")
+            )
+        )
+
+        expected = {
+            "pegasus": PEGASUS_VERSION,
+            "transformations": [t.__json__() for _, t in tc.transformations.items()],
+        }
+
+        expected["transformations"] = sorted(
+            expected["transformations"], key=lambda t: t["name"]
+        )
+
+        result = tc.__json__()
+
+        result["transformations"] = sorted(
+            result["transformations"], key=lambda t: t["name"]
+        )
+
+        assert expected == result
+
+    def test_write(self):
+        tc = TransformationCatalog()
+        (
+            tc.add_transformations(Transformation("t1")).add_transformations(
+                Transformation("t2")
+            )
+        )
+
+        expected = {
+            "pegasus": PEGASUS_VERSION,
+            "transformations": [t.__json__() for _, t in tc.transformations.items()],
+        }
+
+        expected["transformations"] = sorted(
+            expected["transformations"], key=lambda t: t["name"]
+        )
+
+        test_output_filename = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "TransformationCatalogTestOutput.json",
+        )
+
+        tc.write(non_default_filepath=test_output_filename, file_format=FileFormat.JSON)
+
+        with open(test_output_filename, "r") as f:
+            result = json.load(f)
+            result["transformations"] = sorted(
+                result["transformations"], key=lambda t: t["name"]
+            )
+
+        assert result == expected
+
+        # cleanup
+        os.remove(test_output_filename)
+
