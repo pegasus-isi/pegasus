@@ -441,11 +441,11 @@ class TransformationCatalog(Writable):
             if self.has_transformation(tr):
                 raise DuplicateError("transformation already exists in catalog")
 
-            self.transformations[tr.key] = tr
+            self.transformations[tr.get_key()] = tr
 
         return self
 
-    def has_transformation(self, transformation):
+    def has_transformation(self, transformation, namespace=None, version=None):
         """Check if this catalog contains the given Transformation
         
         :param transformation: the Transformation to check for 
@@ -453,7 +453,15 @@ class TransformationCatalog(Writable):
         :return: whether or not this Transformation exists in this catalog
         :rtype: bool
         """
-        return transformation.key in self.transformations
+        if isinstance(transformation, Transformation):
+            key = transformation.get_key()
+        elif isinstance(transformation, str):
+            key = (transformation, namespace, version)
+        else:
+            raise ValueError(
+                "required_transformation must be of type Transformation or str"
+            )
+        return key in self.transformations
 
     def add_container(self, name, container_type, image, mount, image_site=None):
         """Retrieve a container by its name
@@ -495,22 +503,6 @@ class TransformationCatalog(Writable):
         """
         return name in self.containers
 
-    def get_container(self, name):
-        """Retrieve a container from this catalog by its name
-        
-        :param name: Container name
-        :type name: str
-        :raises NotFoundError: a Container by this name does not exist in this catalog
-        :return: the Container with the given name
-        :rtype: Container
-        """
-        if not self.has_container(name):
-            raise NotFoundError(
-                "Container {0} does not exist in this catalog".format(name)
-            )
-
-        return self.containers[name]
-
     def remove_container(self, name):
         """Remove a conatiner with the given name
         
@@ -536,7 +528,7 @@ class TransformationCatalog(Writable):
                 "transformations": [
                     t.__json__() for key, t in self.transformations.items()
                 ],
-                "containers": [c.__json__() for key, c in self.containers]
+                "containers": [c.__json__() for key, c in self.containers.items()]
                 if len(self.containers) > 0
                 else None,
             }
