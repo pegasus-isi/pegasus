@@ -5,7 +5,6 @@ Pegasus Metadata is a tool to query metadata collected by Pegasus workflows.
 
 Usage: pegasus-metadata [-h] [-v] [-c] {task,file,workflow} ... submit_dir
 """
-from __future__ import print_function
 
 ##
 #  Copyright 2007-2012 University Of Southern California
