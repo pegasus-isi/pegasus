@@ -50,7 +50,7 @@ title.xml: ../../build.properties
 wordpress: $(XML) pegasus-wordpress-style.xsl pegasus-user-guide.pdf
 	mkdir -p ./wordpress/images
 	xsltproc --noout --stringparam base.dir ./wordpress/ --xinclude pegasus-wordpress-style.xsl pegasus-book.xml
-	cp images/*.png images/*.jpg ./wordpress/images/
+	cp images/*.png images/*.jpg images/*.svg ./wordpress/images/
 	cp pegasus-user-guide.pdf wordpress/
 	touch wordpress
 

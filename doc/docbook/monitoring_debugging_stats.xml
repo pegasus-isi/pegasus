@@ -4707,11 +4707,12 @@ output {
       </section>
       <section id="elk_stack_infrastructure">
         <title>A Pre-Configured Data Collection Pipeline</title>
-        <imagedata fileref="images/data-collection-pipeline.svg"/>
         <para>In this <ulink url="https://github.com/pegasus-isi/dibbs-data-collection-setup">
-        <citetitle>repository</citetitle></ulink>, we provide a containerized data-collection/visualization 
-        pipeline similar to what we use in production. For more information regarding
+        <citetitle>repository</citetitle></ulink>, we provide a containerized data-collection/visualization
+        pipeline similar to what we use in production. The figure below illustrates the processes involved
+        in the pipeline and how they are connected to one another. For more information regarding
         setup and usage, please visit the link referenced above.</para>
+        <imagedata fileref="images/data-collection-pipeline.svg" width="100%"/>
       </section>
     </section>
   </section>
