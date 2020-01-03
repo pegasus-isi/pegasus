@@ -25,4 +25,5 @@ class OSType(Enum):
 
 
 class SiteCatalog:
-    pass
+    def __init__(self):
+        pass
