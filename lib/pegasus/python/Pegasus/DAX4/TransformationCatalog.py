@@ -415,7 +415,9 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
     def __eq__(self, other):
         if isinstance(other, Transformation):
             return self.get_key() == other.get_key()
-        return ValueError("must compare with type Transformation")
+        raise ValueError(
+            "Transformation cannot be compared with {0}".format(type(other))
+        )
 
 
 class TransformationCatalog(Writable):
