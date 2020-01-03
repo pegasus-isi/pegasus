@@ -42,10 +42,14 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         """Add one or more Files as input to this job
         
         :raises DuplicateError: all input files must be unique
+        :raises ValueError: job inputs must be of type File
         :return: self
         :rtype: AbstractJob
         """
         for file in input_files:
+            if not isinstance(file, File):
+                raise ValueError("a job input must be of type File")
+
             _input = JobInput(file)
             if _input in self.inputs:
                 raise DuplicateError(
@@ -73,10 +77,14 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         :param register_replica: whether or not to register replica with a replica catalog, defaults to False
         :type register_replica: bool, optional
         :raises DuplicateError: all output files must be unique 
+        :raises ValueError: a job output must be of type File 
         :return: self
         :rtype: AbstractJob
         """
         for file in output_files:
+            if not isinstance(file, File):
+                raise ValueError("a job output must be of type File")
+
             output = JobOutput(
                 file, stage_out=stage_out, register_replica=register_replica
             )
@@ -263,18 +271,35 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
 
 
 class Job(AbstractJob):
+    """A typical workflow Job that wraps a transformation/executable"""
+
     def __init__(
         self, transformation, _id=None, node_label=None, namespace=None, version=None,
     ):
+        """Constructor
+        
+        :param transformation: Transformation object or name of the Transformation that this job uses
+        :type transformation: Transformation|str
+        :param _id: a unique id; if none is given then one will be assigned when the job is added by a Workflow, defaults to None
+        :type _id: str, optional
+        :param node_label: a brief job description, defaults to None
+        :type node_label: str, optional
+        :param namespace: namespace to which the transformation belongs, defaults to None
+        :type namespace: str, optional
+        :param version: version of the given transformation, defaults to None
+        :type version: str, optional
+        :raises ValueError: transformation must be one of Transformation or str
+        """
         if isinstance(transformation, Transformation):
             self.transformation = transformation.name
+            self.namespace = transformation.namespace
+            self.version = transformation.version
         elif isinstance(transformation, str):
             self.transformation = transformation
+            self.namespace = namespace
+            self.version = version
         else:
             raise ValueError("transformation must be of type Transformation or str")
-
-        self.namespace = namespace
-        self.version = version
 
         AbstractJob.__init__(self, _id=_id, node_label=node_label)
 
@@ -297,12 +322,19 @@ class Job(AbstractJob):
                 + [output.__json__() for output in self.outputs],
                 "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
                 "metadata": self.metadata if len(self.metadata) > 0 else None,
-                "hooks": dict(self.hooks) if len(self.hooks) > 0 else None,
+                "hooks": {
+                    hook_name: [hook.__json__() for hook in values]
+                    for hook_name, values in self.hooks.items()
+                }
+                if len(self.hooks) > 0
+                else None,
             }
         )
 
 
 class JobInput:
+    """Internal class used to represent a job's input"""
+
     def __init__(self, file):
         self.file = file
         self._type = "input"
@@ -320,6 +352,8 @@ class JobInput:
 
 
 class JobOutput:
+    """Internal class used to represent a job's output"""
+
     def __init__(self, file, stage_out=True, register_replica=False):
         self.file = file
         self._type = "output"
@@ -344,9 +378,21 @@ class JobOutput:
 
 
 class JobDependency:
+    """Internal class used to represent a job's dependencies"""
+
     def __init__(self, parent_id, children_ids):
         self.parent_id = parent_id
         self.children_ids = children_ids
+
+    def __eq__(self, other):
+        if isinstance(other, JobDependency):
+            return (
+                self.parent_id == other.parent_id
+                and self.children_ids == other.children_ids
+            )
+        raise ValueError(
+            "JobDependency cannot be compared with {0}".format(type(other))
+        )
 
     def __json__(self):
         return {"id": self.parent_id, "children": list(self.children_ids)}
@@ -361,7 +407,17 @@ class DAG(AbstractJob):
 
 
 class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
+    """ Main abastraction for representing multi-step computational steps as a directed
+    acyclic graph. """
+
     def __init__(self, name, infer_dependencies=False):
+        """Constructor
+        
+        :param name: name of the Workflow
+        :type name: str
+        :param infer_dependencies: whether or not to automatically compute job dependencies based on input and output files used by each job, defaults to False
+        :type infer_dependencies: bool, optional
+        """
         self.name = name
         self.infer_dependencies = infer_dependencies
 
@@ -380,9 +436,15 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         self.metadata = dict()
 
     def add_jobs(self, *jobs):
+        """Add one or more jobs at a time to the Workflow
+        
+        :raises DuplicateError: a job with the same id already exists in this workflow 
+        :return: self
+        :rtype: Workflow
+        """
         for job in jobs:
             if job._id == None:
-                job._id = self.get_next_job_id()
+                job._id = self._get_next_job_id()
 
             if job._id in self.jobs:
                 raise DuplicateError("Job with id {0} already exists".format(job._id))
@@ -392,12 +454,25 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         return self
 
     def get_job(self, _id):
+        """Retrieve the job with the given id
+        
+        :param _id: id of the job to be retrieved from the Workflow
+        :type _id: str
+        :raises NotFoundError: a job with the given id does not exist in this Workflow
+        :return: the Job with the given id
+        :rtype: Job
+        """
         if _id not in self.jobs:
-            raise NotFoundError
+            raise NotFoundError("job with _id={0} not found".format(_id))
 
         return self.jobs[_id]
 
-    def get_next_job_id(self):
+    def _get_next_job_id(self):
+        """Get the next job id from a sequence specific to this workflow
+        
+        :return: a new unique job id
+        :rtype: str
+        """
         next_id = None
         while not next_id or next_id in self.jobs:
             next_id = "ID{:07d}".format(self.sequence)
@@ -406,6 +481,19 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         return next_id
 
     def include_catalog(self, catalog):
+        """Inline the given catalog into this Workflow. When a Workflow is written 
+        to a file, if a catalog has been included, then the contents of the catalog
+        will appear on the same file as the Workflow. 
+        
+        :param catalog: the catalog to be included
+        :type catalog: SiteCatalog|TransformationCatalog|ReplicaCatalog
+        :raises ValueError: a ReplicaCatalog has already been included
+        :raises ValueError: a TransformationCatalog has already been included
+        :raises ValueError: a SiteCatalog has already been included
+        :raises ValueError: a type other than the aformentioned catalogs was given
+        :return: self
+        :rtype: Workflow
+        """
         if isinstance(catalog, ReplicaCatalog):
             if self.replica_catalog is not None:
                 raise ValueError(
@@ -436,6 +524,15 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         return self
 
     def add_dependency(self, parent, *children):
+        """Manually specify a dependency between one job to one or more other jobs
+        
+        :param parent: parent job
+        :type parent: Job
+        :param children: one or more child jobs
+        :raises DuplicateError: a dependency has already been added between the parent job and one of the child jobs
+        :return: self
+        :rtype: Workflow
+        """
         children_ids = {child._id for child in children}
         parent_id = parent._id
         if parent_id in self.dependencies:
@@ -453,6 +550,11 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         return self
 
     def _infer_dependencies(self):
+        """Internal function for automatically computing dependencies based on
+        Job input and output files. This is called when Workflow.infer_dependencies is
+        set to True. 
+        """
+
         if self.infer_dependencies:
             mapping = dict()
 
@@ -556,6 +658,11 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
                 else None,
                 "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
                 "metadata": self.metadata if len(self.metadata) > 0 else None,
-                "hooks": dict(self.hooks) if len(self.hooks) > 0 else None,
+                "hooks": {
+                    hook_name: [hook.__json__() for hook in values]
+                    for hook_name, values in self.hooks.items()
+                }
+                if len(self.hooks) > 0
+                else None,
             }
         )
