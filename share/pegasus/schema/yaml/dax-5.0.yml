@@ -133,6 +133,8 @@ $defs:
     allOf:
       - $ref: '#/$defs/abstractJob'
       - properties:
+          type:
+            const: job
           name:
             type: string
           namespace:
@@ -140,24 +142,31 @@ $defs:
           version:
             $ref: 'common.yml#/$defs/versionString'
         required:
+          - type
           - name
 
   dag:
     allOf:
       - $ref: '#/$defs/abstractJob'
       - properties:
+          type:
+            const: dag
           file:
             type: string
         required:
+          - type
           - file
 
   dax:
     allOf:
       - $ref: '#/$defs/abstractJob'
       - properties:
+          type:
+            const: dax
           file:
             type: string
         required:
+          - type
           - file
 
   # --- parent child dependencies ----------------------------------------------
