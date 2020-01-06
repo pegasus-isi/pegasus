@@ -267,7 +267,29 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         return self
 
     def __json__(self):
-        raise NotImplementedError()
+        return filter_out_nones(
+            {
+                "id": self._id,
+                "stdin": self.stdin.__json__() if self.stdin is not None else None,
+                "stdout": self.stdout.__json__() if self.stdout is not None else None,
+                "stderr": self.stderr.__json__() if self.stderr is not None else None,
+                "nodeLabel": self.node_label,
+                "arguments": [
+                    {"lfn": arg.lfn} if isinstance(arg, File) else arg
+                    for arg in self.args
+                ],
+                "uses": [_input.__json__() for _input in self.inputs]
+                + [output.__json__() for output in self.outputs],
+                "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
+                "metadata": self.metadata if len(self.metadata) > 0 else None,
+                "hooks": {
+                    hook_name: [hook.__json__() for hook in values]
+                    for hook_name, values in self.hooks.items()
+                }
+                if len(self.hooks) > 0
+                else None,
+            }
+        )
 
 
 class Job(AbstractJob):
@@ -304,32 +326,84 @@ class Job(AbstractJob):
         AbstractJob.__init__(self, _id=_id, node_label=node_label)
 
     def __json__(self):
-        return filter_out_nones(
-            {
-                "namespace": self.namespace,
-                "version": self.version,
-                "name": self.transformation,
-                "id": self._id,
-                "stdin": self.stdin.__json__() if self.stdin is not None else None,
-                "stdout": self.stdout.__json__() if self.stdout is not None else None,
-                "stderr": self.stderr.__json__() if self.stderr is not None else None,
-                "nodeLabel": self.node_label,
-                "arguments": [
-                    {"lfn": arg.lfn} if isinstance(arg, File) else arg
-                    for arg in self.args
-                ],
-                "uses": [_input.__json__() for _input in self.inputs]
-                + [output.__json__() for output in self.outputs],
-                "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
-                "metadata": self.metadata if len(self.metadata) > 0 else None,
-                "hooks": {
-                    hook_name: [hook.__json__() for hook in values]
-                    for hook_name, values in self.hooks.items()
-                }
-                if len(self.hooks) > 0
-                else None,
-            }
-        )
+        job_json = {
+            "type": "job",
+            "namespace": self.namespace,
+            "version": self.version,
+            "name": self.transformation,
+        }
+
+        job_json.update(AbstractJob.__json__(self))
+
+        return filter_out_nones(job_json)
+
+
+class DAX(AbstractJob):
+    """This type of job represents a sub-DAX that will be planned and executed
+    by the workflow"""
+
+    def __init__(self, file, _id=None, node_label=None):
+        """Constructor
+        
+        :param file: File object or name of the dax file that will be used for this job
+        :type file: File|str
+        :param _id: a unique id; if none is given then one will be assigned when the job is added by a Workflow, defaults to None
+        :type _id: str, optional
+        :param node_label: a brief job description, defaults to None
+        :type node_label: str, optional
+        :raises ValueError: file must be of type File or str
+        """
+        AbstractJob.__init__(self, _id=_id, node_label=node_label)
+
+        if not isinstance(file, File) and not isinstance(file, str):
+            raise ValueError("file must be of type File or str")
+
+        if isinstance(file, File):
+            self.file = file
+        else:
+            self.file = File(file)
+
+        self.add_inputs(self.file)
+
+    def __json__(self):
+        dax_json = {"type": "dax", "file": self.file.lfn}
+        dax_json.update(AbstractJob.__json__(self))
+
+        return dax_json
+
+
+class DAG(AbstractJob):
+    """This type of job represents a sub-DAG that will be executed by this 
+    workflow"""
+
+    def __init__(self, file, _id=None, node_label=None):
+        """Constructor
+        
+        :param file: File object or name of the dag file that will be used for this job
+        :type file: File|str
+        :param _id: a unique id; if none is given then one will be assigned when the job is added by a Workflow, defaults to None
+        :type _id: str, optional
+        :param node_label: a brief job description, defaults to None
+        :type node_label: str, optional
+        :raises ValueError: file must be of type File or str
+        """
+        AbstractJob.__init__(self, _id=_id, node_label=node_label)
+
+        if not isinstance(file, File) and not isinstance(file, str):
+            raise ValueError("file must be of type File or str")
+
+        if isinstance(file, File):
+            self.file = file
+        else:
+            self.file = File(file)
+
+        self.add_inputs(self.file)
+
+    def __json__(self):
+        dag_json = {"type": "dag", "file": self.file.lfn}
+        dag_json.update(AbstractJob.__json__(self))
+
+        return dag_json
 
 
 class JobInput:
@@ -396,14 +470,6 @@ class JobDependency:
 
     def __json__(self):
         return {"id": self.parent_id, "children": list(self.children_ids)}
-
-
-class DAX(AbstractJob):
-    pass
-
-
-class DAG(AbstractJob):
-    pass
 
 
 class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
