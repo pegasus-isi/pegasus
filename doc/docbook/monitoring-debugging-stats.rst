@@ -3362,3 +3362,18 @@ Grafana dashboard like:
    :width: 100.0%
 
    Grafana Dashboard
+
+A Pre-Configured Data Collection Pipeline
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In this `repository <https://github.com/pegasus-isi/dibbs-data-collection-setup>`_, 
+we provide a containerized data-collection/visualization pipeline similar to 
+what we use in production. The figure below illustrates the processes involved 
+in the pipeline and how they are connected to one another. For more information 
+regarding setup and usage, please visit the link referenced above.
+
+.. figure:: images/data-collection-pipeline.svg
+   :alt: Data Collection/Visualization Pipeline
+   :width: 100.0%
+
+   Data Collection/Visualization Pipeline
