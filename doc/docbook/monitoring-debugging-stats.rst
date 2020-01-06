@@ -3356,3 +3356,9 @@ something like:
 
 Once the data is ElasticSearch, you can easily create for example
 Grafana dashboard like:
+
+.. figure:: images/grafana.png
+   :alt: Grafana Dashboard
+   :width: 100.0%
+
+   Grafana Dashboard
