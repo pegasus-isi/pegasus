@@ -6,6 +6,8 @@ import pytest
 from Pegasus.DAX4.Workflow import (
     AbstractJob,
     Job,
+    DAX,
+    DAG,
     JobInput,
     JobOutput,
     JobDependency,
@@ -303,6 +305,7 @@ class TestJob:
         result["uses"] = sorted(result["uses"], key=lambda use: use["file"]["lfn"])
 
         expected = {
+            "type": "job",
             "name": "t1",
             "namespace": "ns",
             "id": "id",
@@ -354,6 +357,7 @@ class TestJob:
         j.add_metadata("key", "value")
 
         assert j.__json__() == {
+            "type": "job",
             "name": "t1",
             "arguments": [],
             "uses": [],
@@ -373,22 +377,61 @@ class TestJobDependency:
 
 
 class TestDAX:
-    pass
+    @pytest.mark.parametrize("file", [(File("dax-file")), ("dax-file")])
+    def test_valid_dax(self, file):
+        DAX(file)
+
+    def test_invalid_dax(self):
+        with pytest.raises(ValueError):
+            DAX(123)
+
+    def test_tojson(self):
+        dax = DAX("file", _id="test-dax", node_label="label").add_args(
+            "--sites", "condorpool"
+        )
+
+        assert dax.__json__() == {
+            "type": "dax",
+            "file": "file",
+            "id": "test-dax",
+            "nodeLabel": "label",
+            "arguments": ["--sites", "condorpool"],
+            "uses": [{"file": {"lfn": "file"}, "type": "input"}],
+        }
 
 
 class TestDAG:
-    pass
+    @pytest.mark.parametrize("file", [(File("dag-file")), ("dag-file")])
+    def test_valid_dag(self, file):
+        DAG(file)
+
+    def test_invalid_dag(self):
+        with pytest.raises(ValueError):
+            DAX(123)
+
+    def test_tojson(self):
+        dax = DAG("file", _id="test-dag", node_label="label").add_args("test", "args")
+
+        assert dax.__json__() == {
+            "type": "dag",
+            "file": "file",
+            "id": "test-dag",
+            "nodeLabel": "label",
+            "arguments": ["test", "args"],
+            "uses": [{"file": {"lfn": "file"}, "type": "input"}],
+        }
 
 
 class TestWorkflow:
-    def test_add_job(self):
+    @pytest.mark.parametrize(
+        "job",
+        [(Job("t1", _id="job")), (DAX(File("f1"), _id="job")), (DAG("f1", _id="job"))],
+    )
+    def test_add_job(self, job):
         wf = Workflow("wf")
-        j1 = Job("t1", _id="j1")
-        j2 = Job("t2", _id="j2")
-        wf.add_jobs(j1, j2)
+        wf.add_jobs(job)
 
-        assert j1 == wf.get_job("j1")
-        assert j2 == wf.get_job("j2")
+        assert job == wf.get_job("job")
 
     def test_add_duplicate_job(self):
         wf = Workflow("wf")
@@ -602,14 +645,15 @@ class TestWorkflow:
             "metadata": {"key": "value"},
         }
 
-        test_output_filename = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-        "WorkflowTestOutput.json")
+        test_output_filename = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "WorkflowTestOutput.json"
+        )
 
         wf.write(non_default_filepath=test_output_filename, file_format=FileFormat.JSON)
 
         with open(test_output_filename, "r") as f:
             result = json.load(f)
-        
+
         assert result == expected
 
         # cleanup
