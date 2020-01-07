@@ -31,14 +31,11 @@ import com.networknt.schema.ValidationMessage;
 import edu.isi.pegasus.planner.parser.tokens.TransformationCatalogKeywords;
 
 import java.io.File;
-import java.io.IOException;
 
 import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * This class if used to yaml object against the specified schema..
@@ -65,30 +62,20 @@ public class YAMLSchemaValidator {
      * This method is used to validate yaml data with schema and returns the
      * result.
      *
-     * @param yamlData   Object representing the yaml data
+     * @param jsonNode    the root of the json node tree representing the yaml document
      * @param schemaFile  this represents the schema file for validation.
      * @param catalogType whether the transformation catalog or the site catalog 
      * @return YAMLSchemaValidationResult - A result representing the
      * success/failure along with the errors if any.
      */
-    public YAMLSchemaValidationResult validate(Object yamlData, File schemaFile, String catalogType) {
+    public YAMLSchemaValidationResult validate(JsonNode jsonNode, File schemaFile, String catalogType) {
         //need to pass URI path to ensure common.json gets resolved correctly
         URI schemaUri = schemaFile.toURI();
         ObjectMapper mapper =new ObjectMapper(new YAMLFactory());
         JsonSchemaFactory factory = JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7)).objectMapper(mapper).build();
+        JsonSchema schema = factory.getSchema(schemaUri);
         
-        JsonNode jsonNode = null;
-        JsonSchema schema = null;
-        try {
-            schema = factory.getSchema(schemaUri);
-            jsonNode = mapper.readTree(new File("/lfs1/work/pegasus-features/yaml-tc/conf/tc.yml"));
-        } catch (IOException ex) {
-            Logger.getLogger(YAMLSchemaValidator.class.getName()).log(Level.SEVERE, null, ex);
-        }
-      
         Set<ValidationMessage> messages = schema.validate(jsonNode);
-        
-        
         return processValidation( jsonNode, messages,  catalogType );
     }
     

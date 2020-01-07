@@ -16,6 +16,7 @@
 
 package edu.isi.pegasus.planner.parser;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -31,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.JacksonYAMLParseException;
+import com.networknt.schema.JsonSchema;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
@@ -185,16 +187,18 @@ public class TransformationCatalogYAMLParser {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
         Object yamlData = null;
-        
+        JsonNode jsonNode = null;
         try {
-            yamlData = mapper.readValue(mReader, Object.class);
+            //yamlData = mapper.readValue(mReader, Object.class);
+            jsonNode = mapper.readTree(mReader);
+        
         } catch (JacksonYAMLParseException e) {
             throw new ScannerException( e.getLocation().getLineNr(), parseError(e));
         } catch (Exception e) {
             throw new ScannerException("Error in loading the yaml file " + mReader, e);
         }
-        if (yamlData != null) {
-            YAMLSchemaValidationResult result = YAMLSchemaValidator.getInstance().validate(mReader,
+        if ( jsonNode != null) {
+            YAMLSchemaValidationResult result = YAMLSchemaValidator.getInstance().validate( jsonNode,
                     SCHEMA_FILENAME, "transformation");
 
             // schema validation is done here.. in case of any validation error we throw the
