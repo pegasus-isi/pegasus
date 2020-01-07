@@ -564,6 +564,9 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <delete>
       <fileset dir="lib/pegasus/python/Pegasus" includes="**/*.pyc"/>
     </delete>
+    <!-- Clean auto-generated doc -->
+    <delete dir="doc/docbook/python/"/>
+    <delete dir="doc/docbook/java/"/>
   </target>
 
   <target name="dist-source" depends="dist-clean,doc" description="Build source tarball">
