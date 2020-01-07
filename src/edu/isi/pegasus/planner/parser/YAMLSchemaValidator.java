@@ -22,23 +22,23 @@ import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.github.fge.jackson.JsonLoader;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
-import com.github.fge.jsonschema.core.report.LogLevel;
-import com.github.fge.jsonschema.core.report.ProcessingMessage;
-import com.github.fge.jsonschema.core.report.ProcessingReport;
-import com.github.fge.jsonschema.main.JsonSchema;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
+
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.SpecVersion;
+import com.networknt.schema.ValidationMessage;
 
 import edu.isi.pegasus.planner.parser.tokens.TransformationCatalogKeywords;
 
 import java.io.File;
 import java.io.IOException;
 
+import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
-
-import java.net.URI;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This class if used to yaml object against the specified schema..
@@ -68,66 +68,48 @@ public class YAMLSchemaValidator {
      * @param yamlData   Object representing the yaml data
      * @param schemaFile  this represents the schema file for validation.
      * @param catalogType whether the transformation catalog or the site catalog 
-     * @return YAMLSchemaValidationResult - A result representhing the
+     * @return YAMLSchemaValidationResult - A result representing the
      * success/failure along with the errors if any.
-     * @throws ProcessingException
      */
-    public YAMLSchemaValidationResult validateYAMLSchema(Object yamlData, File schemaFile, String catalogType) {
-
-        //JsonNode schemaNode;
-
-        /**
-         * Load the JSON file for validaion.
-         *
-         */
-        /*
+    public YAMLSchemaValidationResult validate(Object yamlData, File schemaFile, String catalogType) {
+        //need to pass URI path to ensure common.json gets resolved correctly
+        URI schemaUri = schemaFile.toURI();
+        ObjectMapper mapper =new ObjectMapper(new YAMLFactory());
+        JsonSchemaFactory factory = JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7)).objectMapper(mapper).build();
+        
+        JsonNode jsonNode = null;
+        JsonSchema schema = null;
         try {
-            URI uri = schemaFile.toURI();
-            schemaNode = JsonLoader.fromFile(schemaFile);
-        } catch (IOException e) {
-            throw new ScannerException("Error in loading schema file ", e);
+            schema = factory.getSchema(schemaUri);
+            jsonNode = mapper.readTree(new File("/lfs1/work/pegasus-features/yaml-tc/conf/tc.yml"));
+        } catch (IOException ex) {
+            Logger.getLogger(YAMLSchemaValidator.class.getName()).log(Level.SEVERE, null, ex);
         }
-        */
-        ObjectMapper jsonWriter = new ObjectMapper();
-
-        JsonNode dataJSON;
-
-        /**
-         * Converts the YAML Based object to JSON
-         *
-         */
-        try {
-            dataJSON = JsonLoader.fromString(jsonWriter.writeValueAsString(yamlData));
-        } catch (IOException e) {
-            throw new ScannerException("Error in transforming the yaml data", e);
-        }
-
-        // schema factory creation..
-        JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
-        JsonSchema schema;
-        try {
-            //need to pass URI path to ensure common.json gets resolved correctly
-            URI uri = schemaFile.toURI();
-            schema = factory.getJsonSchema( uri.toString() );
-        } catch (ProcessingException e) {
-            throw new ScannerException("Error in schema processing ", e);
-
-        }
-
-        // validate the schema against the json data..
-        ProcessingReport report;
-        try {
-            report = schema.validate(dataJSON);
-        } catch (ProcessingException e) {
-            throw new ScannerException("Error in schema processing ", e);
-
-        }
-
-        TreeNode node = dataJSON;
-
-        // process the report and return the validation result
-        return processReport(node, report, catalogType);
+      
+        Set<ValidationMessage> messages = schema.validate(jsonNode);
+        
+        
+        return processValidation( jsonNode, messages,  catalogType );
     }
+    
+    /**
+     * This method is used to extract the result for any possible errors..
+     *
+     * @param node - TreeNode representing the yaml data
+     * @param report - report generated from the json schema validation
+     * @return YAMLSchemaValidationResult
+     */
+    private YAMLSchemaValidationResult processValidation(TreeNode node, Set<ValidationMessage> messages, String catalogType) {
+        YAMLSchemaValidationResult result = new YAMLSchemaValidationResult();
+        List<String> errorMessages = new LinkedList<String>();
+        for(ValidationMessage message: messages ){
+            errorMessages.add( message.getMessage() );
+        }
+        result.setSuccess( messages.isEmpty() );
+        result.setErrorMessage(errorMessages);
+        return result;
+    }
+    
 
     /**
      * This method is used to extract the result for any possible errors..
@@ -136,6 +118,7 @@ public class YAMLSchemaValidator {
      * @param report - report generated from the json schema validation
      * @return YAMLSchemaValidationResult
      */
+    /*
     private YAMLSchemaValidationResult processReport(TreeNode node, ProcessingReport report, String catalogType) {
         YAMLSchemaValidationResult result = new YAMLSchemaValidationResult();
         System.err.println(report);
@@ -175,6 +158,7 @@ public class YAMLSchemaValidator {
         result.setErrorMessage(errorMessages);
         return result;
     }
+    */
 
     /**
      * This is used to populate the error location or the node which causes the

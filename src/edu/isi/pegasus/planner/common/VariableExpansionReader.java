@@ -141,4 +141,11 @@ public class VariableExpansionReader extends Reader {
             }
         }
         
+        
+        public void reset() throws IOException{
+            mReader.reset();
+            mPosition = 0;
+            mBuffer = "";
+        }
+        
     }

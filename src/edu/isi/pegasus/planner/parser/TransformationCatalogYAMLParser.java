@@ -28,9 +28,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.parser.ParserException;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
+import com.fasterxml.jackson.dataformat.yaml.JacksonYAMLParseException;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
@@ -152,13 +152,13 @@ public class TransformationCatalogYAMLParser {
     /**
      * Initializes the parser with an input stream to read from.
      *
+     * @param stream
      * @param schemaDir
      *
      * @param input is the stream opened for reading.
      * @param logger the transformation to the logger.
      *
-     * @throws IOExceptionnew File( this.mProps.getSchemaDir(),new
-     * File(SCHEMA_URIL).getName())
+     * @throws IOException
      * @throws ScannerException
      */
     public TransformationCatalogYAMLParser(Reader stream, File schemaDir, LogManager logger) throws IOException, ScannerException {
@@ -181,27 +181,20 @@ public class TransformationCatalogYAMLParser {
      */
     @SuppressWarnings("unchecked")
     public TransformationStore parse(boolean modifyFileURL) throws ScannerException {
-
         TransformationStore store = new TransformationStore();
-
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
         Object yamlData = null;
-
-        /**
-         * Loads the yaml data
-		 * *
-         */
+        
         try {
             yamlData = mapper.readValue(mReader, Object.class);
-        } catch (ParserException e) {
-            String errorMessage = parseError(e);
-            throw new ScannerException(e.getProblemMark().getLine() + 1, errorMessage);
+        } catch (JacksonYAMLParseException e) {
+            throw new ScannerException( e.getLocation().getLineNr(), parseError(e));
         } catch (Exception e) {
-            throw new ScannerException("Error in loading the yaml file", e);
+            throw new ScannerException("Error in loading the yaml file " + mReader, e);
         }
         if (yamlData != null) {
-            YAMLSchemaValidationResult result = YAMLSchemaValidator.getInstance().validateYAMLSchema(yamlData,
+            YAMLSchemaValidationResult result = YAMLSchemaValidator.getInstance().validate(mReader,
                     SCHEMA_FILENAME, "transformation");
 
             // schema validation is done here.. in case of any validation error we throw the
@@ -321,11 +314,13 @@ public class TransformationCatalogYAMLParser {
      *
      * @return String representing the line number and the problem is returned
      */
-    private String parseError(ParserException e) {
+    
+    private String parseError(JacksonYAMLParseException e) {
         StringBuilder builder = new StringBuilder();
-        builder.append("Problem in the line :" + (e.getProblemMark().getLine() + 1) + ", column:"
-                + e.getProblemMark().getColumn() + " with tag "
-                + e.getProblemMark().get_snippet().replaceAll("\\s", ""));
+        builder.append("Problem in the line :").append(e.getLocation().getLineNr()).
+                append(", column:").append(e.getLocation().getColumnNr()).append( " ").
+                append(e.getMessage());
+        
         return builder.toString();
     }
 

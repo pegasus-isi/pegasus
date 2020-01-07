@@ -40,7 +40,8 @@ import java.util.logging.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.parser.ParserException;
+//import com.fasterxml.jackson.dataformat.yaml.snakeyaml.parser.ParserException;
+import com.fasterxml.jackson.dataformat.yaml.JacksonYAMLParseException;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
@@ -185,14 +186,15 @@ public class SiteCatalogYAMLParser {
 			 **/
 			try {
 				yamlData = mapper.readValue(mReader, Object.class);
-			} catch (ParserException e) {
+			} catch (JacksonYAMLParseException e) {
 				String errorMessage = parseError(e);
-				throw new ScannerException(e.getProblemMark().getLine() + 1, errorMessage);
+				//throw new ScannerException(e.getProblemMark().getLine() + 1, errorMessage);
+                                throw new ScannerException(errorMessage);
 			} catch (Exception e) {
 				throw new ScannerException("Error in loading the yaml file", e);
 			}
 			if (yamlData != null) {
-				YAMLSchemaValidationResult result = YAMLSchemaValidator.getInstance().validateYAMLSchema(yamlData,
+				YAMLSchemaValidationResult result = YAMLSchemaValidator.getInstance().validate(yamlData,
 						SCHEMA_FILENAME, "site");
 
 				// schema validation is done here.. in case of any validation error we throw the
@@ -558,12 +560,15 @@ public class SiteCatalogYAMLParser {
 	 * 
 	 * @return String representing the line number and the problem is returned
 	 */
-	private String parseError(ParserException e) {
+	private String parseError(JacksonYAMLParseException e) {
+            /*
 		StringBuilder builder = new StringBuilder();
 		builder.append("Problem in the line :" + (e.getProblemMark().getLine() + 1) + ", column:"
 				+ e.getProblemMark().getColumn() + " with tag "
 				+ e.getProblemMark().get_snippet().replaceAll("\\s", ""));
 		return builder.toString();
+            */
+            return e.toString();
 	}
 
 	/**
