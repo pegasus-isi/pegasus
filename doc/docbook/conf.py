@@ -22,6 +22,10 @@ import shlex
 import string
 import sphinx_rtd_theme
 
+sys.path.insert(
+    0, os.path.abspath(os.path.dirname(__file__) + "/../../lib/pegasus/python")
+)
+
 
 # -- Project information -----------------------------------------------------
 

@@ -235,6 +235,12 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
   <target name="doc-user-guide" depends="setup" description="Generate user guide from docbook source">
     <mkdir dir="${dist.doc}"/>
+    <!-- Generate Python Documentation from docstrings in code. -->
+    <exec executable="sh" failonerror="true">
+      <arg value="-c"/>
+      <arg value="sphinx-apidoc --force --output-dir doc/docbook/python/ lib/pegasus/python/ lib/pegasus/python/{setup,test}.py lib/pegasus/python/Pegasus/{cluster,command,compat,exitcode,init,s3,submitdir,user}.py lib/pegasus/python/Pegasus/{test,db,monitoring,catalogs,cli,netlogger,plots_stats,service,tools}"/>
+    </exec>
+
     <exec executable="${make}" dir="doc/docbook" failonerror="true">
       <arg line="html"/>
       <arg line="man"/>
