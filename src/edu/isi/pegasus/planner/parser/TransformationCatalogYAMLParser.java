@@ -131,7 +131,7 @@ public class TransformationCatalogYAMLParser {
      * Schema file name;
 	 *
      */
-    private static final String SCHEMA_URI = "http://pegasus.isi.edu/schema/tc-5.0.json";
+    private static final String SCHEMA_URI = "http://pegasus.isi.edu/schema/tc-5.0.yml";
     /**
      * Schema File Object;
 	 *
