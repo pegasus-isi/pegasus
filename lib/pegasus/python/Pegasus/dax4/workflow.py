@@ -3,12 +3,12 @@ from collections import defaultdict
 
 import yaml
 
-from .Writable import filter_out_nones, FileFormat, Writable
-from .Errors import DuplicateError, NotFoundError
-from .TransformationCatalog import Transformation, TransformationCatalog
-from .ReplicaCatalog import ReplicaCatalog, File
-from .SiteCatalog import SiteCatalog
-from .Mixins import MetadataMixin, HookMixin, ProfileMixin
+from .writable import filter_out_nones, FileFormat, Writable
+from .errors import DuplicateError, NotFoundError
+from .transformation_catalog import Transformation, TransformationCatalog
+from .replica_catalog import ReplicaCatalog, File
+from .site_catalog import SiteCatalog
+from .mixins import MetadataMixin, HookMixin, ProfileMixin
 
 PEGASUS_VERSION = "5.0"
 

@@ -2,9 +2,9 @@ import json
 
 import yaml
 
-from .Writable import Writable, filter_out_nones, FileFormat
-from .Errors import DuplicateError, NotFoundError
-from .Mixins import MetadataMixin
+from .writable import Writable, filter_out_nones, FileFormat
+from .errors import DuplicateError, NotFoundError
+from .mixins import MetadataMixin
 
 PEGASUS_VERSION = "5.0"
 

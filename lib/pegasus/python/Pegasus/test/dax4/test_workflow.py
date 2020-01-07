@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from Pegasus.DAX4.Workflow import (
+from Pegasus.dax4.workflow import (
     AbstractJob,
     Job,
     DAX,
@@ -14,18 +14,18 @@ from Pegasus.DAX4.Workflow import (
     Workflow,
     PEGASUS_VERSION,
 )
-from Pegasus.DAX4.ReplicaCatalog import File, ReplicaCatalog
-from Pegasus.DAX4.Errors import DuplicateError, NotFoundError
-from Pegasus.DAX4.TransformationCatalog import Transformation, TransformationCatalog
-from Pegasus.DAX4.Mixins import (
+from Pegasus.dax4.replica_catalog import File, ReplicaCatalog
+from Pegasus.dax4.errors import DuplicateError, NotFoundError
+from Pegasus.dax4.transformation_catalog import Transformation, TransformationCatalog
+from Pegasus.dax4.mixins import (
     ProfileMixin,
     HookMixin,
     MetadataMixin,
     Namespace,
     EventType,
 )
-from Pegasus.DAX4.SiteCatalog import SiteCatalog
-from Pegasus.DAX4.Writable import FileFormat
+from Pegasus.dax4.site_catalog import SiteCatalog
+from Pegasus.dax4.writable import FileFormat
 
 
 class TestJobInput:

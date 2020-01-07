@@ -3,10 +3,10 @@ import json
 
 import pytest
 
-from Pegasus.DAX4.ReplicaCatalog import File, ReplicaCatalog, PEGASUS_VERSION
-from Pegasus.DAX4.Writable import FileFormat
-from Pegasus.DAX4.Errors import NotFoundError, DuplicateError
-from Pegasus.DAX4.Mixins import Namespace
+from Pegasus.dax4.replica_catalog import File, ReplicaCatalog, PEGASUS_VERSION
+from Pegasus.dax4.writable import FileFormat
+from Pegasus.dax4.errors import NotFoundError, DuplicateError
+from Pegasus.dax4.mixins import Namespace
 
 
 class TestFile:

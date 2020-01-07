@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from Pegasus.DAX4.TransformationCatalog import (
+from Pegasus.dax4.transformation_catalog import (
     TransformationType,
     TransformationSite,
     ContainerType,
@@ -12,10 +12,10 @@ from Pegasus.DAX4.TransformationCatalog import (
     TransformationCatalog,
     PEGASUS_VERSION,
 )
-from Pegasus.DAX4.SiteCatalog import OSType, Arch
-from Pegasus.DAX4.Mixins import Namespace, EventType
-from Pegasus.DAX4.Errors import DuplicateError, NotFoundError
-from Pegasus.DAX4.Writable import FileFormat
+from Pegasus.dax4.site_catalog import OSType, Arch
+from Pegasus.dax4.mixins import Namespace, EventType
+from Pegasus.dax4.errors import DuplicateError, NotFoundError
+from Pegasus.dax4.writable import FileFormat
 
 
 class TestTransformationSite:
