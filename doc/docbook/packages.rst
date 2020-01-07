@@ -11,3 +11,4 @@ Packages
     :maxdepth: 2
 
     python.rst
+    java.rst
