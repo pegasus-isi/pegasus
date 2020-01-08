@@ -86,6 +86,9 @@ exclude_patterns = [u"_build", "Thumbs.db", ".DS_Store", "_*.rst"]
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
 
+# If true, the current module name will be prepended to all description
+# unit titles (such as .. function::).
+add_module_names = False
 
 # -- Options for HTML output -------------------------------------------------
 
