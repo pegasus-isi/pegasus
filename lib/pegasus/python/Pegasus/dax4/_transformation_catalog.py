@@ -4,10 +4,15 @@ from collections import defaultdict
 
 import yaml
 
-from .mixins import ProfileMixin, HookMixin, MetadataMixin
-from .site_catalog import Arch, OSType
-from .writable import _filter_out_nones, Writable
-from .errors import DuplicateError, NotFoundError
+from ._mixins import ProfileMixin
+from ._mixins import HookMixin
+from ._mixins import MetadataMixin
+from ._site_catalog import Arch
+from ._site_catalog import OSType
+from ._writable import _filter_out_nones
+from ._writable import Writable
+from ._errors import DuplicateError
+from ._errors import NotFoundError
 
 PEGASUS_VERSION = "5.0"
 
