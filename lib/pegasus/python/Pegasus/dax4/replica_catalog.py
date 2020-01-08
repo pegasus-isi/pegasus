@@ -11,9 +11,14 @@ from .mixins import MetadataMixin
 
 PEGASUS_VERSION = "5.0"
 
+__all__ = ["File", "ReplicaCatalog"]
+
 
 class File(MetadataMixin):
-    """A workflow File"""
+    """
+    A workflow File. This class is used to represent 
+    :py:class:`~Pegasus.dax4.workflow.Job` inputs and outputs.
+    """
 
     def __init__(self, lfn):
         """Constuctor
@@ -49,7 +54,7 @@ class File(MetadataMixin):
 
 class ReplicaCatalog(Writable):
     """ReplicaCatalog class which maintains a mapping of logical filenames
-    to physical filenames. This mapping is a one to many relationship.
+    to physical filenames.
     """
 
     def __init__(self):

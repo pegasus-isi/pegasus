@@ -3,6 +3,8 @@ from enum import Enum
 
 import yaml
 
+__all__ = ["FileFormat"]
+
 # TODO: if we need to deserialize a class
 def todict(_dict, cls):
     # https://pypi.org/project/dataclasses-fromdict/

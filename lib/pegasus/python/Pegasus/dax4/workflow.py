@@ -19,6 +19,8 @@ from .mixins import ProfileMixin
 
 PEGASUS_VERSION = "5.0"
 
+__all__ = ["Job", "DAX", "DAG", "Workflow"]
+
 
 class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
     """An abstract representation of a workflow job"""

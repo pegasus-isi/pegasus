@@ -1,5 +1,7 @@
 from enum import Enum
 
+__all__ = ["Arch", "OSType", "SiteCatalog"]
+
 
 class Arch(Enum):
     """Architecture types"""
