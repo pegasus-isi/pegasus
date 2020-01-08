@@ -23,49 +23,48 @@ import java.util.Map;
  *
  */
 public enum TransformationCatalogKeywords {
-	
-	
-	NAMESPACE("namespace"),
-	VERSION("version"),
-	PROFILE("profile"),
-	METADATA("metadata"),
-	SITE("site"),
-	SITE_PFN("pfn"),
-	SITE_ARCHITECTURE("arch"),
-	SITE_OS("os"),
-	SITE_OS_RELEASE("osrelease"),
-	SITE_OS_VERSION("osversion"),
-	TYPE("type"),
-	SITE_CONTAINER_NAME("container"),
-	CONTAINER("cont"),
-	NAME("name"),
-	CONTAINER_IMAGE("image"),
-	CONTAINER_IMAGE_SITE("image_site"),
-	CONTAINER_MOUNT("mount"),
-	CONTAINER_DOCKERFILE("dockerfile"), 
-	TRANSFORMATION("transformations")
-	
-	;
-	
-	String name;
-	
-	static Map<String, TransformationCatalogKeywords> keywordsVsType = new HashMap<>();
-	
-	static {
-		for (TransformationCatalogKeywords key : TransformationCatalogKeywords.values()) {
-			keywordsVsType.put(key.getReservedName(), key);
-		}
-	}
-	
-	TransformationCatalogKeywords(String name) {
-		this.name = name;
-	}
-	
-	public String getReservedName() {
-		return name;
-	}
-	
-	public static TransformationCatalogKeywords getReservedKey(String key) {
-		return keywordsVsType.get(key);
-	}
- }
+
+    NAMESPACE("namespace"),
+    VERSION("version"),
+    PROFILES("profiles"),
+    METADATA("metadata"),
+    SITES("sites"),
+    SITE_PFN("pfn"),
+    SITE_ARCHITECTURE("arch"),
+    SITE_OS("os"),
+    SITE_OS_TYPE("os.type"),
+    SITE_OS_RELEASE("os.release"),
+    SITE_OS_VERSION("os.version"),
+    TYPE("type"),
+    SITE_CONTAINER_NAME("container"),
+    NAME("name"),
+    CONTAINERS("containers"),
+    CONTAINER_IMAGE("image"),
+    CONTAINER_IMAGE_SITE("image_site"),
+    CONTAINER_MOUNT("mount"),
+    CONTAINER_DOCKERFILE("dockerfile"),
+    REQUIRES("requires"),
+    TRANSFORMATIONS("transformations");
+
+    String name;
+
+    static Map<String, TransformationCatalogKeywords> keywordsVsType = new HashMap<>();
+
+    static {
+        for (TransformationCatalogKeywords key : TransformationCatalogKeywords.values()) {
+            keywordsVsType.put(key.getReservedName(), key);
+        }
+    }
+
+    TransformationCatalogKeywords(String name) {
+        this.name = name;
+    }
+
+    public String getReservedName() {
+        return name;
+    }
+
+    public static TransformationCatalogKeywords getReservedKey(String key) {
+        return keywordsVsType.get(key);
+    }
+}

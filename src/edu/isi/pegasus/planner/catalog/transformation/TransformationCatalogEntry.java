@@ -19,6 +19,7 @@ package edu.isi.pegasus.planner.catalog.transformation;
 
 
 
+import com.fasterxml.jackson.databind.JsonNode;
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntry;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.classes.VDSSysInfo2NMI;
@@ -639,6 +640,10 @@ public class TransformationCatalogEntry
      */
     public boolean equals( TransformationCatalogEntry entry ) {
         return this.toTCString().equalsIgnoreCase( entry.toTCString() );
+    }
+
+    public void addProfiles(JsonNode get) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
 

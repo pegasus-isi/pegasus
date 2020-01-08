@@ -311,18 +311,18 @@ public class TCFormatUtility {
 				}
 				List<Profile> profiles = entry.getProfiles();
 				
-				Object siteData = entryMap.get(TransformationCatalogKeywords.SITE.getReservedName());
+				Object siteData = entryMap.get(TransformationCatalogKeywords.SITES.getReservedName());
 				
 				if (siteData == null) {
 					siteData = new LinkedList<Map<String, Object>>();
-					entryMap.put(TransformationCatalogKeywords.SITE.getReservedName(), siteData);
+					entryMap.put(TransformationCatalogKeywords.SITES.getReservedName(), siteData);
 				}
 				LinkedList<Map<String, Object>> siteList = (LinkedList<Map<String, Object>>) siteData;
 				//populate site information among with profile/meta information..
 				siteList.add(buildSite(entry.getResourceId(), entry.getPhysicalTransformation(), container,
 						entry.getSysInfo(), entry.getType(),profiles ));
 				//add the site information..
-				entryMap.put(TransformationCatalogKeywords.SITE.getReservedName(), siteList);
+				entryMap.put(TransformationCatalogKeywords.SITES.getReservedName(), siteList);
 				transformations.add(entryMap);
 			}
 			/**
@@ -359,7 +359,7 @@ public class TCFormatUtility {
 				if (profiles != null) {
 					List<Map<String, Map<String, Object>>> profileData = buildProfiles(profiles);
 					if (profileData != null && profileData.size() > 0) {
-						containerData.put(TransformationCatalogKeywords.PROFILE.getReservedName(),
+						containerData.put(TransformationCatalogKeywords.PROFILES.getReservedName(),
 								profileData);
 					}
 					Map<String, Object> metaData = buildMeta(profiles);
@@ -440,7 +440,7 @@ public class TCFormatUtility {
 		if (profiles != null) {
 			List<Map<String, Map<String, Object>>> profileData = buildProfiles(profiles);
 			if (profileData != null && profileData.size() > 0) {
-				siteInfo.put(TransformationCatalogKeywords.PROFILE.getReservedName(),
+				siteInfo.put(TransformationCatalogKeywords.PROFILES.getReservedName(),
 						profileData);
 			}
 			Map<String, Object> metaData = buildMeta(profiles);

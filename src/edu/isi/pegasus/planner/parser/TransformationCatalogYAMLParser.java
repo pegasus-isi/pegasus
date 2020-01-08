@@ -13,7 +13,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package edu.isi.pegasus.planner.parser;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -46,81 +45,84 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStor
 import edu.isi.pegasus.planner.catalog.transformation.impl.Abstract;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
+import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.parser.tokens.TransformationCatalogKeywords;
+import java.util.Iterator;
+import java.util.LinkedList;
 
 /**
  * Parses the input stream and generates the TransformationStore as output.
  *
  * This parser is able to parse the Transformation Catalog specification in the
  * following format
- * 
+ *
  * <pre>
-	- namespace: "ls"
-	  name: "keg"    
-	  version: 1.0
-	
-	  profile:
-	   - environment: 
-	      "APP_HOME": "/tmp/myscratch"
-	      "JAVA_HOME": "/opt/java/1.6"
-	
-	  site:
-	   - name: "isi"
-	     profile: 
-	      environment: 
-	       "HELLo": "WORLD"
-	       "JAVA_HOME": "/opt/java/1.6"
-	       condor: 
-	        "FOO": "bar"
-	     pfn: /usr/bin/ls
-	     arch: x86
-	     osrelease: fc
-	     osversion: 4
-	     os_type: INSTALLED
-	      
-	   - name: "ads"
-	     profile: 
-	      environment: 
-	       "HELLo": "WORLD"
-	       "JAVA_HOME": "/opt/java/1.6"
-	       condor: 
-	        "FOO": "bar"
-	     pfn: /path/to/keg
-	     arch: x86
-	     os: linux
-	     osrelease: fc
-	     osversion: 4
-	     os_type: INSTALLED
-	     container: "centos-pegasus"
-	     
-	  cont:
-	   - name: "centos-pegasus"
-	     image: docker:///rynge/montage:latest
-	     image_site: optional site
-	     mount: /Volumes/Work/lfs1:/shared-data/:ro
-	     profile: 
-	      environment: 
-	       "JAVA_HOME": "/opt/java/1.6"
-	
-	- namespace: "cat"
-	  name: "keg"
-	  version: 1.0
-	
-	  site:    
-	   - name: "ads"
-	     profile: 
-	      environment: 
-	       "HELLo": "WORLD"
-	       "JAVA_HOME": "/opt/java/1.6"
-	       condor: 
-	        "FOO": "bar"
-	     pfn: /usr/bin/cat
-	     arch: x86
-	     os: linux
-	     osrelease: fc
-	     osversion: 4
-	     os_type: INSTALLED
- * </pre>
+ - namespace: "ls"
+ name: "keg"
+ version: 1.0
+
+ profile:
+ - environment:
+ "APP_HOME": "/tmp/myscratch"
+ "JAVA_HOME": "/opt/java/1.6"
+
+ site:
+ - name: "isi"
+ profile:
+ environment:
+ "HELLo": "WORLD"
+ "JAVA_HOME": "/opt/java/1.6"
+ condor:
+ "FOO": "bar"
+ pfn: /usr/bin/ls
+ arch: x86
+ osrelease: fc
+ osversion: 4
+ os_type: INSTALLED
+
+ - name: "ads"
+ profile:
+ environment:
+ "HELLo": "WORLD"
+ "JAVA_HOME": "/opt/java/1.6"
+ condor:
+ "FOO": "bar"
+ pfn: /path/to/keg
+ arch: x86
+ os: linux
+ osrelease: fc
+ osversion: 4
+ os_type: INSTALLED
+ c: "centos-pegasus"
+
+ cont:
+ - name: "centos-pegasus"
+ image: docker:///rynge/montage:latest
+ image_site: optional site
+ mount: /Volumes/Work/lfs1:/shared-data/:ro
+ profile:
+ environment:
+ "JAVA_HOME": "/opt/java/1.6"
+
+ - namespace: "cat"
+ name: "keg"
+ version: 1.0
+
+ site:
+ - name: "ads"
+ profile:
+ environment:
+ "HELLo": "WORLD"
+ "JAVA_HOME": "/opt/java/1.6"
+ condor:
+ "FOO": "bar"
+ pfn: /usr/bin/cat
+ arch: x86
+ os: linux
+ osrelease: fc
+ osversion: 4
+ os_type: INSTALLED
+ </pre>
  *
  * @author Mukund Murrali
  * @version $Revision$
@@ -131,12 +133,12 @@ public class TransformationCatalogYAMLParser {
 
     /**
      * Schema file name;
-	 *
+     *
      */
     private static final String SCHEMA_URI = "http://pegasus.isi.edu/schema/tc-5.0.yml";
     /**
      * Schema File Object;
-	 *
+     *
      */
     private static File SCHEMA_FILENAME = null;
 
@@ -147,7 +149,7 @@ public class TransformationCatalogYAMLParser {
 
     /**
      * This reader is used for reading the contents of the YAML file
-	 *
+     *
      */
     private Reader mReader;
 
@@ -164,7 +166,7 @@ public class TransformationCatalogYAMLParser {
      * @throws ScannerException
      */
     public TransformationCatalogYAMLParser(Reader stream, File schemaDir, LogManager logger) throws IOException, ScannerException {
-        File yamlSchemaDir = new File( schemaDir, "yaml");
+        File yamlSchemaDir = new File(schemaDir, "yaml");
         SCHEMA_FILENAME = new File(yamlSchemaDir, new File(SCHEMA_URI).getName());
         mReader = stream;
         mLogger = logger;
@@ -187,18 +189,17 @@ public class TransformationCatalogYAMLParser {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
         Object yamlData = null;
-        JsonNode jsonNode = null;
+        JsonNode root = null;
         try {
-            //yamlData = mapper.readValue(mReader, Object.class);
-            jsonNode = mapper.readTree(mReader);
-        
+            root = mapper.readTree(mReader);
+
         } catch (JacksonYAMLParseException e) {
-            throw new ScannerException( e.getLocation().getLineNr(), parseError(e));
+            throw new ScannerException(e.getLocation().getLineNr(), parseError(e));
         } catch (Exception e) {
             throw new ScannerException("Error in loading the yaml file " + mReader, e);
         }
-        if ( jsonNode != null) {
-            YAMLSchemaValidationResult result = YAMLSchemaValidator.getInstance().validate( jsonNode,
+        if (root != null) {
+            YAMLSchemaValidationResult result = YAMLSchemaValidator.getInstance().validate(root,
                     SCHEMA_FILENAME, "transformation");
 
             // schema validation is done here.. in case of any validation error we throw the
@@ -216,95 +217,45 @@ public class TransformationCatalogYAMLParser {
                 }
                 throw new ScannerException(errorResult.toString());
             }
-
-            List<Object> transformationData = (List<Object>) yamlData;
-
-            for (Object transformation : transformationData) {
-
-                Map<String, Object> transformationAndContainers = (Map<String, Object>) transformation;
-
-                /**
-                 * Based on containers/transformations the corresponding data is
-                 * loaded..
-				 *
-                 */
-                if (transformationAndContainers
-                        .containsKey(TransformationCatalogKeywords.CONTAINER.getReservedName())) {
-                    List<Object> containerInformations = (List<Object>) transformationAndContainers
-                            .get(TransformationCatalogKeywords.CONTAINER.getReservedName());
-                    for (Object containerInformationObjects : containerInformations) {
-
-                        Map<String, Object> containerInformation = (Map<String, Object>) containerInformationObjects;
-
-                        Container container = new Container();
-
-                        getContainerInfo(container, containerInformation);
-
-                        // we have information about one transformation catalog container
-                        mLogger.log("Container Entry parsed is - " + container, LogManager.DEBUG_MESSAGE_LEVEL);
-
-                        store.addContainer(container);
-                    }
-
-                } else {
-                    List<Object> transformationInformations = (List<Object>) transformationAndContainers
-                            .get(TransformationCatalogKeywords.TRANSFORMATION.getReservedName());
-
-                    for (Object transformationInfo : transformationInformations) {
-
-                        Map<String, Object> singleTransformation = (Map<String, Object>) transformationInfo;
-
-                        /**
-                         * Get the basic properties for the transformation..
-						 *
-                         */
-                        String nameSpace = (String) singleTransformation
-                                .get(TransformationCatalogKeywords.NAMESPACE.getReservedName());
-
-                        String name = (String) singleTransformation
-                                .get(TransformationCatalogKeywords.NAME.getReservedName());
-
-                        Object version_obj = singleTransformation
-                                .get(TransformationCatalogKeywords.VERSION.getReservedName());
-
-                        String version = null;
-
-                        if (version_obj != null) {
-                            version = String.valueOf(version_obj);
-                        }
-
-                        Object profileObj = singleTransformation
-                                .get(TransformationCatalogKeywords.PROFILE.getReservedName());
-
-                        Object metaObj = singleTransformation
-                                .get(TransformationCatalogKeywords.METADATA.getReservedName());
-
-                        Profiles profiles = getProfilesForTransformation(profileObj, metaObj);
-
-                        List<Object> sites = (List<Object>) singleTransformation
-                                .get(TransformationCatalogKeywords.SITE.getReservedName());
-
-                        for (Object siteObj : sites) {
-
-                            Map<String, Object> siteData = (Map<String, Object>) siteObj;
-
-                            TransformationCatalogEntry entry = new TransformationCatalogEntry(nameSpace, name, version);
-
-                            getTransformationCatalogEntry(entry, siteData, profiles);
-
+            JsonNode node = root;
+            if (root.has(TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName())) {
+                node = node.get(TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName());
+                System.out.println(node);
+                if (node.isArray()) {
+                    for (JsonNode transformation : node) {
+                        List<TransformationCatalogEntry> entries = this.createTransformationCatalogEntry(transformation);
+                        for(TransformationCatalogEntry entry: entries ){
                             if (modifyFileURL) {
                                 store.addEntry(Abstract.modifyForFileURLS(entry));
                             } else {
                                 store.addEntry(entry);
                             }
-
-                            // we have information about one transformation catalog container
+                            // we have information about one transformation catalog c
                             mLogger.log("Transformation Catalog Entry parsed is - " + entry,
-                                    LogManager.DEBUG_MESSAGE_LEVEL);
+                                         LogManager.DEBUG_MESSAGE_LEVEL);
                         }
                     }
+                } else {
+                    throw new ScannerException("transformations: value should be of type array ");
                 }
             }
+            if (root.has(TransformationCatalogKeywords.CONTAINERS.getReservedName())) {
+                node = root.get(TransformationCatalogKeywords.CONTAINERS.getReservedName());
+                System.out.println(node);
+                if (node.isArray()) {
+                    for (JsonNode contNode : node) {
+                        Container c = this.createContainer(contNode);
+                        // we have information about one transformation catalog c
+                        mLogger.log("Container Entry parsed is - " + c,
+                                     LogManager.DEBUG_MESSAGE_LEVEL);
+                        store.addContainer(c);
+
+                    }
+                } else {
+                    throw new ScannerException("transformations: value should be of type array ");
+                }
+            }
+            //connect container references
             store.resolveContainerReferences();
         }
         return store;
@@ -318,183 +269,279 @@ public class TransformationCatalogYAMLParser {
      *
      * @return String representing the line number and the problem is returned
      */
-    
     private String parseError(JacksonYAMLParseException e) {
         StringBuilder builder = new StringBuilder();
         builder.append("Problem in the line :").append(e.getLocation().getLineNr()).
-                append(", column:").append(e.getLocation().getColumnNr()).append( " ").
+                append(", column:").append(e.getLocation().getColumnNr()).append(" ").
                 append(e.getMessage());
-        
+
         return builder.toString();
     }
 
+    
     /**
-     * This method is to load all the container information from the yaml data..
+     * Creates a transformation catalog entry object from a JSON node tree.
+     * <pre>
+ namespace: "example"
+ name: "keg"
+ version: "1.0"
+ profiles:
+     env:
+         APP_HOME: "/tmp/myscratch"
+         JAVA_HOME: "/opt/java/1.6"
+     pegasus:
+         clusters.num: "1"
+
+ requires:
+     - anotherTr
+
+ sites:
+   - name: "isi"
+     type: "installed"
+     pfn: "/path/to/keg"
+     arch: "x86_64"
+     os.type: "linux"
+     os.release: "fc"
+     os.version: "1.0"
+     profiles:
+       env:
+           Hello: World
+           JAVA_HOME: /bin/java.1.6
+       condor:
+           FOO: bar
+     c: centos-pegasus
+ </pre>
      *
-     * @param container - The container object to be populated.
-     * @param containerInformation - Map representing the container related
-     * information from the yaml data
+     * @param node
      *
-     *
+     * @return TransformationCatalogEntry
      */
-    private void getContainerInfo(Container container, Map<String, Object> containerInformation) {
-
-        for (Entry<String, Object> entries : containerInformation.entrySet()) {
-
-            String key = entries.getKey();
-
-            TransformationCatalogKeywords reservedKey = TransformationCatalogKeywords.getReservedKey(key);
-
-            if (reservedKey == null) {
-                throw new ScannerException(-1, "Illegeal key " + key + " for container ");
-            }
-
-            switch (reservedKey) {
-                case NAME:
-                    String containerName = (String) containerInformation.get(key);
-                    container.setName(containerName);
-                    break;
-
-                case TYPE:
-                    String type = (String) containerInformation.get(key);
-                    container.setType(TYPE.valueOf(type));
-                    break;
-
-                case CONTAINER_IMAGE:
-                    String url = (String) containerInformation.get(key);
-                    container.setImageURL(url);
-                    break;
-
-                case CONTAINER_IMAGE_SITE:
-                    String imageSite = (String) containerInformation.get(key);
-                    container.setImageSite(imageSite);
-                    break;
-
-                case CONTAINER_DOCKERFILE:
-                    String dockerFile = (String) containerInformation.get(key);
-                    container.setImageDefinitionURL(dockerFile);
-                    break;
-
-                case CONTAINER_MOUNT:
-                    @SuppressWarnings("unchecked") List<String> mountPoints = (List<String>) containerInformation.get(key);
-                    for (String mountPoint : mountPoints) {
-                        container.addMountPoint(mountPoint);
-                    }
-                    break;
-
-                case PROFILE:
-                    Object profileObj = containerInformation.get(key);
-                    Profiles profiles = getProfilesForTransformation(profileObj, null);
-                    container.addProfiles(profiles);
-
-                default:
-                    break;
-            }
-
+    protected List<TransformationCatalogEntry> createTransformationCatalogEntry(JsonNode node) {
+        List<TransformationCatalogEntry> entries = new LinkedList();
+        TransformationCatalogEntry baseEntry = new TransformationCatalogEntry();
+        if (node.has(TransformationCatalogKeywords.NAMESPACE.getReservedName())) {
+            baseEntry.setLogicalNamespace(node.get(TransformationCatalogKeywords.NAMESPACE.getReservedName()).asText());
+        }
+        if (node.has(TransformationCatalogKeywords.NAME.getReservedName())) {
+            baseEntry.setLogicalName(node.get(TransformationCatalogKeywords.NAME.getReservedName()).asText());
+        }
+        if (node.has(TransformationCatalogKeywords.VERSION.getReservedName())) {
+            baseEntry.setLogicalVersion(node.get(TransformationCatalogKeywords.VERSION.getReservedName()).asText());
         }
 
+        if (node.has(TransformationCatalogKeywords.PROFILES.getReservedName())) {
+            baseEntry.addProfiles(createProfiles(node.get(TransformationCatalogKeywords.PROFILES.getReservedName())));
+        }
+        if (node.has(TransformationCatalogKeywords.REQUIRES.getReservedName())) {
+            mLogger.log("Compound transformations are not yet supported. Specified in tx " + baseEntry.getLogicalName() ,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+        }
+        if (node.has(TransformationCatalogKeywords.SITES.getReservedName())) {
+            TransformationCatalogEntry entry = (TransformationCatalogEntry) baseEntry.clone();
+            JsonNode sitesNode = node.get(TransformationCatalogKeywords.SITES.getReservedName());
+            if (sitesNode.isArray()) {
+                for (JsonNode siteNode : sitesNode) {
+                    addSiteInformation(entry, siteNode);
+                    entries.add(entry);
+                }
+            } else {
+                throw new ScannerException("sites: value should be of type array ");
+            }
+        }
+        
+        return entries;
     }
 
     /**
+     * Creates a profile from a JSON node representing
+     * <pre>
+     * profiles:
+     *  env:
+     *      APP_HOME: "/tmp/myscratch"
+     *      JAVA_HOME: "/opt/java/1.6"
+     *  pegasus:
+     *      clusters.num: "1"
+     * </pre>
      *
-     * This function is used to populate the site related information from the
-     * yaml object
-     *
-     * @param entry - Entry to populate the site data
-     * @param siteData - Map representing the site information
-     * @param profiles - Global profiles of a transformation. This is for
-     * overwritting the site data
-     *
+     * @param node
+     * @return Profiles
      */
-    private void getTransformationCatalogEntry(TransformationCatalogEntry entry, Map<String, Object> siteData,
-            Profiles profiles) {
+    protected Profiles createProfiles(JsonNode node) {
+        Profiles profiles = new Profiles();
+        for (Iterator<Entry<String, JsonNode>> it = node.fields(); it.hasNext();) {
+            Entry<String, JsonNode> entry = it.next();
+            profiles.addProfilesDirectly(this.createProfiles(entry.getKey(), entry.getValue()));
+        }
+        return profiles;
+    }
 
-        SysInfo systemInfo = new SysInfo();
-
-        Object profileObj = null, metaObj = null;
-
-        for (Entry<String, Object> entries : siteData.entrySet()) {
-            String key = entries.getKey();
-
+    /**
+     * Creates a profile from a JSON node representing
+     * <pre>
+     * APP_HOME: "/tmp/myscratch"
+     * JAVA_HOME: "/opt/java/1.6"
+     * </pre>
+     *
+     * @param namespace
+     * @param node
+     * @return Profiles
+     */
+    protected List<Profile> createProfiles(String namespace, JsonNode node) {
+        List<Profile> profiles = new LinkedList();
+        if (Namespace.isNamespaceValid(namespace)) {
+            for (Iterator<Entry<String, JsonNode>> it = node.fields(); it.hasNext();) {
+                Entry<String, JsonNode> entry = it.next();
+                profiles.add(new Profile(namespace, entry.getKey(), entry.getValue().asText()));
+            }
+        } else {
+            throw new ScannerException("Invalid namespace specified " + namespace + " for profiles " + node);
+        }
+        return profiles;
+    }
+    
+    /**
+     * Parses site information from JsonNode and adds it to the transformation 
+     * catalog entry. 
+     * <pre>
+     name: "isi"
+     type: "installed"
+     pfn: "/path/to/keg"
+     arch: "x86_64"
+     os.type: "linux"
+     os.release: "fc"
+     os.version: "1.0"
+     profiles:
+       env:
+           Hello: World
+           JAVA_HOME: /bin/java.1.6
+       condor:
+           FOO: bar
+     c: centos-pegasus
+ </pre>
+     * @param entry
+     * @param node 
+     */
+    protected void addSiteInformation(TransformationCatalogEntry entry, JsonNode node) {
+        SysInfo sysInfo = new SysInfo();
+        for (Iterator<Entry<String, JsonNode>> it = node.fields(); it.hasNext();) {
+            Entry<String, JsonNode> e = it.next();
+            String key = e.getKey();
             TransformationCatalogKeywords reservedKey = TransformationCatalogKeywords.getReservedKey(key);
-
             if (reservedKey == null) {
-                throw new ScannerException(-1, "Illegeal key " + key + " for container ");
+                throw new ScannerException(-1, "Illegal key " + key + " for sites: for transformation " + entry );
             }
 
             switch (reservedKey) {
-
                 case NAME:
-                    String siteName = (String) siteData.get(key);
+                    String siteName = node.get(key).asText();
                     entry.setResourceId(siteName);
                     break;
 
                 case SITE_ARCHITECTURE:
-                    String architecture = (String) siteData.get(key);
-                    systemInfo.setArchitecture(SysInfo.Architecture.valueOf(architecture));
+                    String architecture = node.get(key).asText();
+                    sysInfo.setArchitecture(SysInfo.Architecture.valueOf(architecture));
                     break;
 
                 case SITE_OS:
-                    String os = (String) siteData.get(key);
-                    systemInfo.setOS(SysInfo.OS.valueOf(os));
+                    String os = node.get(key).asText();
+                    sysInfo.setOS(SysInfo.OS.valueOf(os));
                     break;
 
                 case SITE_OS_RELEASE:
-                    String release = (String) siteData.get(key);
-                    systemInfo.setOSRelease(release);
+                    String release = node.get(key).asText();
+                    sysInfo.setOSRelease(release);
                     break;
 
                 case SITE_OS_VERSION:
-                    Integer osVersion = (Integer) siteData.get(key);
-                    systemInfo.setOSVersion(String.valueOf(osVersion));
+                    Integer osVersion = (Integer) node.get(key).asInt();
+                    sysInfo.setOSVersion(String.valueOf(osVersion));
                     break;
 
                 case TYPE:
-                    String type = (String) siteData.get(key);
+                    String type = node.get(key).asText();;
                     entry.setType(TCType.valueOf(type.toUpperCase()));
                     break;
 
-                case PROFILE:
-                    profileObj = siteData.get(key);
+                case PROFILES:
+                    entry.addProfiles(this.createProfiles(node.get(TransformationCatalogKeywords.PROFILES.getReservedName())));
                     break;
 
                 case METADATA:
-                    metaObj = siteData.get(key);
-                    break;
+                    throw new ScannerException("Metadata is unsupported currently");
 
                 case SITE_PFN:
-                    String pfn = (String) siteData.get(key);
+                    String pfn = node.get(key).asText();
                     entry.setPhysicalTransformation(pfn);
                     break;
 
                 case SITE_CONTAINER_NAME:
-                    String containerName = (String) siteData
-                            .get(TransformationCatalogKeywords.SITE_CONTAINER_NAME.getReservedName());
-
+                    String containerName = node.get(key).asText();
                     entry.setContainer(new Container(containerName));
                     break;
 
                 default:
                     break;
             }
+        }
+        entry.setSysInfo(sysInfo);
+    }
+ 
+    protected Container createContainer(JsonNode node){
+        Container c = new Container();
+        for (Iterator<Entry<String, JsonNode>> it = node.fields(); it.hasNext();) {
+            Entry<String, JsonNode> e = it.next();
+            String key = e.getKey();
+            TransformationCatalogKeywords reservedKey = TransformationCatalogKeywords.getReservedKey(key);
+            if (reservedKey == null) {
+                throw new ScannerException(-1, "Illegal key " + key + " for container " + node );
+            }
+
+            switch (reservedKey) {
+                case NAME:
+                    String containerName = node.get(key).asText();
+                    c.setName(containerName);
+                    break;
+
+                case TYPE:
+                    String type = node.get(key).asText();
+                    c.setType(TYPE.valueOf(type));
+                    break;
+
+                case CONTAINER_IMAGE:
+                    String url = node.get(key).asText();
+                    c.setImageURL(url);
+                    break;
+
+                case CONTAINER_IMAGE_SITE:
+                    String imageSite = node.get(key).asText();
+                    c.setImageSite(imageSite);
+                    break;
+
+                case CONTAINER_DOCKERFILE:
+                    String dockerFile = node.get(key).asText();
+                    c.setImageDefinitionURL(dockerFile);
+                    break;
+
+                case CONTAINER_MOUNT:
+                    String mountPoint = node.get(key).asText();
+                    c.addMountPoint( mountPoint);
+                    break;
+
+                case PROFILES:
+                    c.addProfiles(this.createProfiles(node.get(key)));
+                    break;
+
+                default:
+                    break;
+            }
 
         }
-        Profiles siteProfiles = getProfilesForTransformation(profileObj, metaObj);
-
-        for (Profile profile : siteProfiles.getProfiles()) {
-            profiles.addProfileDirectly(profile);
-        }
-
-        // add all the profiles for the container only if they are empty
-        if (!profiles.isEmpty()) {
-            entry.addProfiles(profiles);
-        }
-
-        entry.setSysInfo(systemInfo);
+        return c;
     }
 
+    
     /**
-     * Remove potential leading and trainling quotes from a string.
+     * Remove potential leading and trailing quotes from a string.
      *
      * @param input is a string which may have leading and trailing quotes
      * @return a string that is either identical to the input, or a substring
@@ -516,51 +563,6 @@ public class TransformationCatalogYAMLParser {
         } else {
             return input;
         }
-    }
-
-    /**
-     * Returns a list of profiles that have to be applied to the entries for all
-     * the sites corresponding to a transformation.
-     *
-     * @param metaObj
-     * @param profileObj
-     *
-     * @return Profiles specified
-     *
-     * @throws IOException
-     * @throws ScannerException
-     */
-    @SuppressWarnings("unchecked")
-    private Profiles getProfilesForTransformation(Object profileObj, Object metaObj) {
-        Profiles profiles = new Profiles();
-        if (profileObj != null) {
-            List<Object> profileInfo = (List<Object>) profileObj;
-            for (Object profile : profileInfo) {
-                Map<String, Object> profileMaps = (Map<String, Object>) profile;
-                for (Entry<String, Object> profileMapsEntries : profileMaps.entrySet()) {
-                    String profileName = profileMapsEntries.getKey();
-                    if (Profile.namespaceValid(profileName)) {
-                        Map<String, String> profileMap = (Map<String, String>) profileMapsEntries.getValue();
-                        for (Entry<String, String> profileMapEntries : profileMap.entrySet()) {
-                            Object key = profileMapEntries.getKey();
-                            Object value = profileMapEntries.getValue();
-                            profiles.addProfile(new Profile(profileName, niceString(String.valueOf(key)),
-                                    niceString(String.valueOf(value))));
-                        }
-                    }
-                }
-            }
-        }
-        if (metaObj != null) {
-            Map<String, String> metaMap = (Map<String, String>) metaObj;
-            for (Entry<String, String> profileMapEntries : metaMap.entrySet()) {
-                Object key = profileMapEntries.getKey();
-                Object value = profileMapEntries.getValue();
-                profiles.addProfile(new Profile(Profile.METADATA, niceString(String.valueOf(key)),
-                        niceString(String.valueOf(value))));
-            }
-        }
-        return profiles;
     }
 
     /**
@@ -590,4 +592,6 @@ public class TransformationCatalogYAMLParser {
         }
 
     }
+
+
 }

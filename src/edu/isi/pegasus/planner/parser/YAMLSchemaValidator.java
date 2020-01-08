@@ -180,14 +180,14 @@ public class YAMLSchemaValidator {
                     TransformationCatalogKeywords reservedKey = TransformationCatalogKeywords.getReservedKey(name);
                     nodeDetails = nodeDetails.get(location);
                     switch (reservedKey) {
-                        case TRANSFORMATION:
+                        case TRANSFORMATIONS:
                             try {
                                 errorMessage.append(" details - " + mapper.writeValueAsString(nodeDetails.get("namespace")));
                             } catch (JsonProcessingException e) {
                                 errorMessage.append(" details - " + nodeDetails.get("namespace"));
                             }
                             break;
-                        case SITE:
+                        case SITES:
                             errorMessage.append(",Site - " + nodeDetails);
                             break;
                         case CONTAINER:
