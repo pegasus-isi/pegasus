@@ -6,7 +6,7 @@ import yaml
 
 from .mixins import ProfileMixin, HookMixin, MetadataMixin
 from .site_catalog import Arch, OSType
-from .writable import filter_out_nones, Writable
+from .writable import _filter_out_nones, Writable
 from .errors import DuplicateError, NotFoundError
 
 PEGASUS_VERSION = "5.0"
@@ -99,7 +99,7 @@ class _TransformationSite(ProfileMixin):
 
     def __json__(self):
 
-        return filter_out_nones(
+        return _filter_out_nones(
             {
                 "name": self.name,
                 "pfn": self.pfn,
@@ -152,7 +152,7 @@ class _Container(ProfileMixin):
         self.profiles = defaultdict(dict)
 
     def __json__(self):
-        return filter_out_nones(
+        return _filter_out_nones(
             {
                 "name": self.name,
                 "type": self.container_type,
@@ -386,7 +386,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
 
     def __json__(self):
         # TODO: implement yaml dumper that rajiv suggested so that you don't have to loop through and call Object.__json__()...
-        return filter_out_nones(
+        return _filter_out_nones(
             {
                 "namespace": self.namespace,
                 "name": self.name,
@@ -416,7 +416,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
 
     def __eq__(self, other):
         if isinstance(other, Transformation):
-            return self.get_key() == other.get_key()
+            return self._get_key() == other._get_key()
         raise ValueError(
             "Transformation cannot be compared with {0}".format(type(other))
         )
@@ -445,7 +445,7 @@ class TransformationCatalog(Writable):
             if self.has_transformation(tr):
                 raise DuplicateError("transformation already exists in catalog")
 
-            self.transformations[tr.get_key()] = tr
+            self.transformations[tr._get_key()] = tr
 
         return self
 
@@ -458,7 +458,7 @@ class TransformationCatalog(Writable):
         :rtype: bool
         """
         if isinstance(transformation, Transformation):
-            key = transformation.get_key()
+            key = transformation._get_key()
         elif isinstance(transformation, str):
             key = (transformation, namespace, version)
         else:
@@ -526,7 +526,7 @@ class TransformationCatalog(Writable):
         return self
 
     def __json__(self):
-        return filter_out_nones(
+        return _filter_out_nones(
             {
                 "pegasus": PEGASUS_VERSION,
                 "transformations": [

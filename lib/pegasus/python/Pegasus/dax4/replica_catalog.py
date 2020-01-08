@@ -2,7 +2,7 @@ import json
 
 import yaml
 
-from .writable import Writable, filter_out_nones, FileFormat
+from .writable import Writable, _filter_out_nones, FileFormat
 from .errors import DuplicateError, NotFoundError
 from .mixins import MetadataMixin
 
@@ -36,7 +36,7 @@ class File(MetadataMixin):
         return False
 
     def __json__(self):
-        return filter_out_nones(
+        return _filter_out_nones(
             {
                 "lfn": self.lfn,
                 "metadata": dict(self.metadata) if len(self.metadata) > 0 else None,

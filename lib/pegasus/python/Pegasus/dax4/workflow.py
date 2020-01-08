@@ -3,7 +3,7 @@ from collections import defaultdict
 
 import yaml
 
-from .writable import filter_out_nones, FileFormat, Writable
+from .writable import _filter_out_nones, FileFormat, Writable
 from .errors import DuplicateError, NotFoundError
 from .transformation_catalog import Transformation, TransformationCatalog
 from .replica_catalog import ReplicaCatalog, File
@@ -267,7 +267,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         return self
 
     def __json__(self):
-        return filter_out_nones(
+        return _filter_out_nones(
             {
                 "id": self._id,
                 "stdin": self.stdin.__json__() if self.stdin is not None else None,
@@ -335,7 +335,7 @@ class Job(AbstractJob):
 
         job_json.update(AbstractJob.__json__(self))
 
-        return filter_out_nones(job_json)
+        return _filter_out_nones(job_json)
 
 
 class DAX(AbstractJob):
@@ -708,7 +708,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             sc = self.site_catalog.__json__()
             del sc["pegasus"]
 
-        return filter_out_nones(
+        return _filter_out_nones(
             {
                 "pegasus": PEGASUS_VERSION,
                 "name": self.name,

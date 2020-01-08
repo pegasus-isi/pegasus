@@ -192,7 +192,7 @@ class TestTransformation:
         ],
     )
     def test_get_key(self, transformation):
-        assert transformation.get_key() == (
+        assert transformation._get_key() == (
             transformation.name,
             transformation.namespace,
             transformation.version,
@@ -283,7 +283,7 @@ class TestTransformation:
         required = Transformation("required", namespace=None, version=None)
 
         t.add_requirement(required)
-        assert required.get_key() in t.requires
+        assert required._get_key() in t.requires
 
     def test_add_invalid_requirement(self):
         t = Transformation("test")
@@ -318,7 +318,7 @@ class TestTransformation:
         required = Transformation("required", namespace="pegasus", version="1.1")
 
         t.add_requirement(required)
-        assert required.get_key() in t.requires
+        assert required._get_key() in t.requires
 
     def test_has_invalid_requirement(self):
         t = Transformation("test")
