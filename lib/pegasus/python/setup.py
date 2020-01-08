@@ -8,8 +8,12 @@ src_dir = os.path.dirname(__file__)
 home_dir = os.path.abspath(os.path.join(src_dir, "../../.."))
 
 install_requires = [
+    # DAX/Workflow
     "PyYAML",
-    "Jinja2==2.8.1",
+    # Python 2 compatibility
+    "six>=1.9.0",
+    # pegasus-init
+    "Jinja2==2.10.3",
     "Flask-SQLAlchemy==2.3.2",
     "boto==2.48.0",
     "pamela==1.0.0",
