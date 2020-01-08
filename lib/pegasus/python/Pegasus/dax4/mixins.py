@@ -1,10 +1,10 @@
 from enum import Enum
 
-from .Errors import DuplicateError, NotFoundError
+from .errors import DuplicateError
+from .errors import NotFoundError
 
-'''
 # --- metadata -----------------------------------------------------------------
-class _MetadataMixin:
+class MetadataMixin:
     def add_metadata(self, key, value):
         """Add metadata as a key value pair to this object
         
@@ -13,11 +13,15 @@ class _MetadataMixin:
         :param value: value
         :type value: str
         :raises DuplicateError: metadata keys must be unique
+        :return: self
+        :rtype: type(self)
         """
         if key in self.metadata:
             raise DuplicateError
-        else:
-            self.metadata[key] = value
+
+        self.metadata[key] = value
+
+        return self
 
     def update_metadata(self, key, value):
         """Update metadata
@@ -27,11 +31,15 @@ class _MetadataMixin:
         :param value: value
         :type value: str
         :raises NotFoundError: key not found 
+        :return: self
+        :rtype: type(self)
         """
         if key not in self.metadata:
             raise NotFoundError
-        else:
-            self.metadata[key] = value
+
+        self.metadata[key] = value
+
+        return self
 
     def has_metadata(self, key):
         """Check if metadata with the given key exists for this object
@@ -43,9 +51,27 @@ class _MetadataMixin:
         """
         return key in self.metadata
 
+    def remove_metadata(self, key):
+        """Remove a metadata key value pair
+        
+        :param key: key
+        :type key: str
+        :raises NotFoundError: key not found
+        :return: self
+        :rtype: type(self)
+        """
+        if key not in self.metadata:
+            raise NotFoundError
+
+        del self.metadata[key]
+
+        return self
+
     def clear_metadata(self):
         """Clear all the metadata given to this object"""
         self.metadata.clear()
+
+        return self
 
 
 # --- hooks --------------------------------------------------------------------
@@ -60,19 +86,13 @@ class EventType(Enum):
     ALL = "all"
 
 
-class _HookMixin:
+class HookMixin:
     """Derived class can have hooks assigned to it. This currently supports
     shell hooks, and will be extended to web hooks etc.
     """
 
-    def __init__(self):
-        """Constructor"""
-        self.hooks = defaultdict()
-
-        # num hooks as if self.hooks was flattened
-        self.num_hooks = 0
-
     def add_shell_hook(self, event_type, cmd):
+        # TODO: consider making event_type either an event type or an actual ShellHook
         """Add a shell hook
         
         :param event_type: an event type defined in DAX4.EventType
@@ -83,59 +103,54 @@ class _HookMixin:
         if not isinstance(event_type, EventType):
             raise ValueError("event_type must be one of EventType")
 
-        self.hooks[ShellHook.__hook_type__].append(ShellHook(event_type.value, cmd))
-        self.num_hooks += 1
+        self.hooks[_ShellHook.__hook_type__].append(_ShellHook(event_type, cmd))
 
-    def __len__(self):
-        return self.num_hooks
-
-    def _YAMLify(self):
-        yaml_obj = dict()
-
-        """
-        group hooks together s.t. we have the following:
-        {
-            "shell": [
-                {"_on": <EventType.xxxx>, "cmd": <shell command>},
-                ...
-            ]
-        }
-        """
-        for hook_type, items in self.hooks.items():
-            yaml_obj[hook_type] = [hook._YAMLify() for hook in items]
-
-        return yaml_obj
+        return self
 
 
-class Hook(_YAMLAble):
+class _Hook:
     """Base class that specific hook types will inherit from"""
 
     def __init__(self, event_type):
+        """Constructor
+        
+        :param event_type: one of EventType
+        :type event_type: EventType
+        :raises ValueError: event_type must be one of EventType
+        """
         if not isinstance(event_type, EventType):
             raise ValueError("event_type must be one of EventType")
 
         self.on = event_type.value
 
+    # TODO: def get/set event type
 
-class ShellHook(Hook):
+
+# TODO: make this public
+class _ShellHook(_Hook):
     """A hook that executes a shell command"""
 
     __hook_type__ = "shell"
 
     def __init__(self, event_type, cmd):
-        Hook.__init__(self, event_type.value)
+        """Constructor
+        
+        :param event_type: one of EventType
+        :type event_type: EventType
+        :param cmd: shell command to be executed
+        :type cmd: str
+        """
+        _Hook.__init__(self, event_type)
         self.cmd = cmd
 
-    def _YAMLify(self):
+    def __json__(self):
         return {"_on": self.on, "cmd": self.cmd}
 
 
-'''
 # --- profiles -----------------------------------------------------------------
 class Namespace(Enum):
     """
-    Profile Namespace values recognized by Pegasus. See Executable,
-    Transformation, and Job.
+    Profile Namespace values recognized by Pegasus. See Transformation, and Job.
     """
 
     PEGASUS = "pegasus"

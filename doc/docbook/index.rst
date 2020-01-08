@@ -30,6 +30,7 @@ Welcome to Pegasus WMS's documentation!
     api-reference.rst
     cli.rst
     useful-tips.rst
+    packages.rst
     funding-citing-usage-stats.rst
     glossary.rst
     tutorial-vm.rst

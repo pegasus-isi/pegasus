@@ -4,12 +4,24 @@ from collections import defaultdict
 
 import yaml
 
-from .Mixins import ProfileMixin
-from .SiteCatalog import Architecture
-from .Encoding import filter_out_nones, FileFormat, CustomEncoder
-from .Errors import DuplicateError, NotFoundError
+from .mixins import ProfileMixin
+from .mixins import HookMixin
+from .mixins import MetadataMixin
+from .site_catalog import Arch
+from .site_catalog import OSType
+from .writable import _filter_out_nones
+from .writable import Writable
+from .errors import DuplicateError
+from .errors import NotFoundError
 
 PEGASUS_VERSION = "5.0"
+
+__all__: [
+    "TransformationType",
+    "ContainerType",
+    "Transformation",
+    "TransformationCatalog",
+]
 
 
 class TransformationType(Enum):
@@ -23,9 +35,9 @@ class TransformationType(Enum):
     INSTALLED = "installed"
 
 
-class TransformationSite(ProfileMixin):
+class _TransformationSite(ProfileMixin):
     """Site specific information about a Transformation. Transformations will contain
-    at least one TransformationSite object which includes, at minimum, the name of the site,
+    at least one _TransformationSite object which includes, at minimum, the name of the site,
     the transformation's pfn on that site and whether or not it is installed or stageable at
     that site.  
     """
@@ -51,9 +63,9 @@ class TransformationSite(ProfileMixin):
         :param type: TransformationType.STAGEABLE or TransformationType.INSTALLED
         :type type: TransformationType
         :param arch: Architecture that this transformation was compiled for, defaults to None
-        :type arch: Architecture, optional
+        :type arch: Arch, optional
         :param os_type: Name of os that this transformation was compiled for, defaults to None
-        :type os_type: str, optional
+        :type os_type: OSType, optional
         :param os_release: Release of os that this transformation was compiled for, defaults to None, defaults to None
         :type os_release: str, optional
         :param os_version: Version of os that this transformation was compiled for, defaults to None, defaults to None
@@ -73,12 +85,21 @@ class TransformationSite(ProfileMixin):
         self.transformation_type = transformation_type.value
 
         if arch is not None:
-            if not isinstance(arch, Architecture):
+            if not isinstance(arch, Arch):
                 raise ValueError("arch must be one of Arch")
             else:
                 self.arch = arch.value
+        else:
+            self.arch = None
 
-        self.os_type = os_type
+        if os_type is not None:
+            if not isinstance(os_type, OSType):
+                raise ValueError("os_type must be one of OSType")
+            else:
+                self.os_type = os_type.value
+        else:
+            self.os_type = None
+
         self.os_release = os_release
         self.os_version = os_version
         self.glibc = glibc
@@ -88,7 +109,7 @@ class TransformationSite(ProfileMixin):
 
     def __json__(self):
 
-        return filter_out_nones(
+        return _filter_out_nones(
             {
                 "name": self.name,
                 "pfn": self.pfn,
@@ -112,7 +133,7 @@ class ContainerType(Enum):
     SHIFTER = "shifter"
 
 
-class Container(ProfileMixin):
+class _Container(ProfileMixin):
     def __init__(self, name, container_type, image, mount, image_site=None):
         """Constructor
         
@@ -141,7 +162,7 @@ class Container(ProfileMixin):
         self.profiles = defaultdict(dict)
 
     def __json__(self):
-        return filter_out_nones(
+        return _filter_out_nones(
             {
                 "name": self.name,
                 "type": self.container_type,
@@ -153,15 +174,7 @@ class Container(ProfileMixin):
         )
 
 
-# TODO: refactor so that:
-# 1. Transformation is a hash of name, namespace, and version
-# 2. requires takes in a transformation and not transformation name
-# 3. TransformationCatalog.add_transformation(...) takes in as input a Transformation object
-# 4. TransformationCatalog.has_transformation(...) takes in as input a Transformation object
-# 5. get Transformation doesn't really make sense as we already have it... (because it was created)
-
-# class Transformation(ProfileMixin, HookMixin)
-class Transformation(ProfileMixin):
+class Transformation(ProfileMixin, HookMixin, MetadataMixin):
     """A transformation, which can be a standalone executable, or one that
         requires other executables. Transformations can reside on one or
         more sites where they are either stageable (a binary that can be shipped
@@ -183,13 +196,16 @@ class Transformation(ProfileMixin):
         self.name = name
         self.namespace = namespace
         self.version = version
-        self.key = (self.name, self.namespace, self.version)
 
         self.sites = dict()
         self.requires = set()
 
+        self.hooks = defaultdict(list)
         self.profiles = defaultdict(dict)
-        self.hooks = dict()
+        self.metadata = dict()
+
+    def _get_key(self):
+        return (self.name, self.namespace, self.version)
 
     def add_site(
         self,
@@ -203,7 +219,7 @@ class Transformation(ProfileMixin):
         glibc=None,
         container=None,
     ):
-        """Add a TransformationSite to this Transformation
+        """Add a transformation site to this Transformation
         
         :param name: site name associated with this transformation
         :type name: str
@@ -212,7 +228,7 @@ class Transformation(ProfileMixin):
         :param type: TransformationType.STAGEABLE or TransformationType.INSTALLED
         :type type: TransformationType
         :param arch: Architecture that this transformation was compiled for, defaults to None
-        :type arch: Architecture, optional
+        :type arch: Arch, optional
         :param os: Name of os that this transformation was compiled for, defaults to None
         :type os: str, optional
         :param osrelease: Release of os that this transformation was compiled for, defaults to None, defaults to None
@@ -235,10 +251,10 @@ class Transformation(ProfileMixin):
             raise ValueError("type must be one of TransformationType")
 
         if arch is not None:
-            if not isinstance(arch, Architecture):
+            if not isinstance(arch, Arch):
                 raise ValueError("arch must be one of Arch")
 
-        self.sites[name] = TransformationSite(
+        self.sites[name] = _TransformationSite(
             name,
             pfn,
             transformation_type,
@@ -251,24 +267,6 @@ class Transformation(ProfileMixin):
         )
 
         return self
-
-    def get_site(self, name):
-        """Retrieve a TransformationSite object associated with this 
-        Transformation by site name
-
-        
-        :param name: site name
-        :type name: str
-        :raises NotFoundError: the site has not been added for this Transformation
-        :return: the TransformationSite object associated with this Transformation 
-        :rtype: TransformationSite
-        """
-        if name not in self.sites:
-            raise NotFoundError(
-                "Site {0} not found for transformation {1}".format(name, self.name)
-            )
-
-        return self.sites[name]
 
     def has_site(self, name):
         """Check if a site has been added for this Transformation
@@ -297,6 +295,20 @@ class Transformation(ProfileMixin):
         return self
 
     def add_site_profile(self, site_name, namespace, key, value):
+        """Add a profile to a transformation site with the corresponding site name
+        
+        :param site_name: the name of the site to which the profile is to be added
+        :type site_name: str
+        :param namespace: a namespace defined in DAX4.Namespace
+        :type namespace: str (defined in DAX4.Namespace)
+        :param key: key
+        :type key: str
+        :param value: value
+        :type value: str
+        :raises NotFoundError: the given site_name was not found
+        :return: self
+        :rtype: Transformation
+        """
         if site_name not in self.sites:
             raise NotFoundError(
                 "Site {0} not found for transformation {1}".format(site_name, self.name)
@@ -306,7 +318,7 @@ class Transformation(ProfileMixin):
 
         return self
 
-    def add_requirement(self, required_transformation):
+    def add_requirement(self, required_transformation, namespace=None, version=None):
         """Add a requirement to this Transformation
         
         :param required_transformation: Transformation that this transformation requires
@@ -315,18 +327,27 @@ class Transformation(ProfileMixin):
         :return: self
         :rtype: Transformation
         """
-        if required_transformation in self.requires:
+        if isinstance(required_transformation, Transformation):
+            key = required_transformation._get_key()
+        elif isinstance(required_transformation, str):
+            key = (required_transformation, namespace, version)
+        else:
+            raise ValueError(
+                "required_transformation must be of type Transformation or str"
+            )
+
+        if key in self.requires:
             raise DuplicateError(
-                "Transformation {0} already requires {1}".format(
-                    self.name, required_transformation.name
+                "Transformation {0} already requires Transformation {1}".format(
+                    self.name, key
                 )
             )
 
-        self.requires.add(required_transformation)
+        self.requires.add(key)
 
         return self
 
-    def has_requirement(self, transformation):
+    def has_requirement(self, transformation, namespace=None, version=None):
         """Check if this Transformation requires the given transformation
         
         :param transformation: the Transformation to check for 
@@ -334,38 +355,64 @@ class Transformation(ProfileMixin):
         :return: whether or not this Transformation requires the given Transformation
         :rtype: bool
         """
-        return transformation in self.requires
+        if isinstance(transformation, Transformation):
+            key = transformation._get_key()
+        elif isinstance(transformation, str):
+            key = (transformation, namespace, version)
+        else:
+            raise ValueError(
+                "required_transformation must be of type Transformation or str"
+            )
 
-    def remove_requirement(self, transformation):
+        return key in self.requires
+
+    def remove_requirement(self, transformation, namespace=None, version=None):
         """Remove a requirement from this Transformation
         
         :param transformation: the Transformation to be removed from the list of requirements
         :type transformation: Transformation
         :raises NotFoundError: this requirement does not exist
         """
-        if not self.has_requirement(transformation):
+
+        if isinstance(transformation, Transformation):
+            key = transformation._get_key()
+        elif isinstance(transformation, str):
+            key = (transformation, namespace, version)
+        else:
+            raise ValueError(
+                "required_transformation must be of type Transformation or str"
+            )
+
+        if not self.has_requirement(transformation, namespace, version):
             raise NotFoundError(
                 "Transformation {0} does not have requirement {1}".format(
                     self.name, str(transformation)
                 )
             )
 
-        self.requires.remove(transformation)
+        self.requires.remove(key)
 
         return self
 
     def __json__(self):
-        return filter_out_nones(
+        # TODO: implement yaml dumper that rajiv suggested so that you don't have to loop through and call Object.__json__()...
+        return _filter_out_nones(
             {
                 "namespace": self.namespace,
                 "name": self.name,
                 "version": self.version,
-                "requires": [req.name for req in self.requires]
+                "requires": [req[0] for req in self.requires]
                 if len(self.requires) > 0
                 else None,
                 "sites": [site.__json__() for name, site in self.sites.items()],
                 "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
-                "hooks": self.hooks if len(self.hooks) > 0 else None,
+                "hooks": {
+                    hook_name: [hook.__json__() for hook in values]
+                    for hook_name, values in self.hooks.items()
+                }
+                if len(self.hooks) > 0
+                else None,
+                "metadata": self.metadata if len(self.metadata) > 0 else None,
             }
         )
 
@@ -375,30 +422,32 @@ class Transformation(ProfileMixin):
         )
 
     def __hash__(self):
-        return hash(self.key)
+        return hash(self._get_key())
 
     def __eq__(self, other):
         if isinstance(other, Transformation):
-            return self.key == other.key
-        return ValueError("must compare with type Transformation")
+            return self._get_key() == other._get_key()
+        raise ValueError(
+            "Transformation cannot be compared with {0}".format(type(other))
+        )
 
 
-class TransformationCatalog:
+class TransformationCatalog(Writable):
     """TransformationCatalog class maintains a list a Transformations, site specific
     Transformation information, and a list of containers
     """
 
-    def __init__(self, default_filepath="TransformationCatalog"):
-        """Constructor
-        
-        :param filepath: filepath to write this catalog to , defaults to "TransformationCatalog.yml"
-        :type filepath: str, optional
-        """
-        self.default_filepath = default_filepath
+    def __init__(self):
+        """Constructor"""
         self.transformations = dict()
         self.containers = dict()
 
     def add_transformations(self, *transformations):
+        """Add one or more Transformations to this catalog
+        
+        :raises ValueError: argument(s) must be of type Transformation
+        :raises DuplicateError: Transformation already exists in this catalog
+        """
         for tr in transformations:
             if not isinstance(tr, Transformation):
                 raise ValueError("input must be of type Transformation")
@@ -406,10 +455,27 @@ class TransformationCatalog:
             if self.has_transformation(tr):
                 raise DuplicateError("transformation already exists in catalog")
 
-            self.transformations[tr.key] = tr
+            self.transformations[tr._get_key()] = tr
 
-    def has_transformation(self, transformation):
-        return transformation.key in self.transformations
+        return self
+
+    def has_transformation(self, transformation, namespace=None, version=None):
+        """Check if this catalog contains the given Transformation
+        
+        :param transformation: the Transformation to check for 
+        :type transformation: Transformation
+        :return: whether or not this Transformation exists in this catalog
+        :rtype: bool
+        """
+        if isinstance(transformation, Transformation):
+            key = transformation._get_key()
+        elif isinstance(transformation, str):
+            key = (transformation, namespace, version)
+        else:
+            raise ValueError(
+                "required_transformation must be of type Transformation or str"
+            )
+        return key in self.transformations
 
     def add_container(self, name, container_type, image, mount, image_site=None):
         """Retrieve a container by its name
@@ -435,7 +501,7 @@ class TransformationCatalog:
         if not isinstance(container_type, ContainerType):
             raise ValueError("container_type must be one of ContainerType")
 
-        self.containers[name] = Container(
+        self.containers[name] = _Container(
             name, container_type, image, mount, image_site
         )
 
@@ -450,22 +516,6 @@ class TransformationCatalog:
         :rtype: bool
         """
         return name in self.containers
-
-    def get_container(self, name):
-        """Retrieve a container from this catalog by its name
-        
-        :param name: Container name
-        :type name: str
-        :raises NotFoundError: a Container by this name does not exist in this catalog
-        :return: the Container with the given name
-        :rtype: Container
-        """
-        if not self.has_container(name):
-            raise NotFoundError(
-                "Container {0} does not exist in this catalog".format(name)
-            )
-
-        return self.containers[name]
 
     def remove_container(self, name):
         """Remove a conatiner with the given name
@@ -485,38 +535,14 @@ class TransformationCatalog:
 
         return self
 
-    def write(self, non_default_filepath="", file_format=FileFormat.YAML):
-        """Write this catalog, formatted in YAML, to a file
-        
-        :param filepath: path to which this catalog will be written, defaults to self.filepath if filepath is "" or None
-        :type filepath: str, optional
-        """
-        if not isinstance(file_format, FileFormat):
-            raise ValueError("invalid file format {}".format(file_format))
-
-        path = self.default_filepath
-        if non_default_filepath != "":
-            path = non_default_filepath
-        else:
-            if file_format == FileFormat.YAML:
-                path = ".".join([self.default_filepath, FileFormat.YAML.value])
-            elif file_format == FileFormat.JSON:
-                path = ".".join([self.default_filepath, FileFormat.JSON.value])
-
-        with open(path, "w") as file:
-            if file_format == FileFormat.YAML:
-                yaml.dump(CustomEncoder().default(self), file)
-            elif file_format == FileFormat.JSON:
-                json.dump(self, file, cls=CustomEncoder, indent=4)
-
     def __json__(self):
-        return filter_out_nones(
+        return _filter_out_nones(
             {
                 "pegasus": PEGASUS_VERSION,
                 "transformations": [
                     t.__json__() for key, t in self.transformations.items()
                 ],
-                "containers": [c.__json__() for key, c in self.containers]
+                "containers": [c.__json__() for key, c in self.containers.items()]
                 if len(self.containers) > 0
                 else None,
             }

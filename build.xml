@@ -235,14 +235,29 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
   <target name="doc-user-guide" depends="setup" description="Generate user guide from docbook source">
     <mkdir dir="${dist.doc}"/>
+
+    <!-- Generate Python Documentation from docstrings in code. -->
+    <exec executable="sh" failonerror="true">
+      <arg value="-c"/>
+      <arg value="sphinx-apidoc --force --output-dir doc/docbook/python/ lib/pegasus/python/ lib/pegasus/python/{setup,test}.py lib/pegasus/python/Pegasus/{cluster,command,compat,exitcode,init,s3,submitdir,user}.py lib/pegasus/python/Pegasus/{test,db,monitoring,catalogs,cli,netlogger,plots_stats,service,tools}"/>
+    </exec>
+
+    <!-- Generate Java Documentation from code. -->
+    <exec executable="sh" failonerror="true">
+      <arg value="-c"/>
+      <arg value="javasphinx-apidoc --update --output-dir doc/docbook/java/ src ${basedir}/src/edu/isi/pegasus/aws/batch/common/" />
+    </exec>
+
     <exec executable="${make}" dir="doc/docbook" failonerror="true">
       <arg line="html"/>
       <arg line="man"/>
     </exec>
+
     <!-- Copy HTML -->
     <copy preservelastmodified="true" todir="${dist.doc}/wordpress">
       <fileset dir="doc/docbook/_build/html" includes="**/*"/>
     </copy>
+
     <!-- Copy manpages -->
     <copy preservelastmodified="true" todir="${dist.data}/man/man1">
       <fileset dir="doc/docbook/_build/man" includes="*"/>
@@ -520,6 +535,9 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <delete>
       <fileset dir="lib/pegasus/python/Pegasus" includes="**/*.pyc"/>
     </delete>
+    <!-- Clean auto-generated doc -->
+    <delete dir="doc/docbook/python/"/>
+    <delete dir="doc/docbook/java/"/>
   </target>
 
   <target name="clean" description="Delete all build artifacts">
@@ -546,6 +564,9 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <delete>
       <fileset dir="lib/pegasus/python/Pegasus" includes="**/*.pyc"/>
     </delete>
+    <!-- Clean auto-generated doc -->
+    <delete dir="doc/docbook/python/"/>
+    <delete dir="doc/docbook/java/"/>
   </target>
 
   <target name="dist-source" depends="dist-clean,doc" description="Build source tarball">
@@ -641,6 +662,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <env key="SKIP_INSTALL" value="True"/>
       -->
       <arg line="--recreate"/>
+      <arg line="-e py"/>
     </exec>
   </target>
 </project>

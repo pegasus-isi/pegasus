@@ -48,29 +48,11 @@ $defs:
                 additionalProperties: false
         minItems: 0
       stdin:
-        type: object
-        properties:
-          name:
-            type: string
-        required:
-          - name
-        additionalProperties: false
+        $ref: '#/$defs/file'
       stdout:
-        type: object
-        properties:
-          name:
-            type: string
-        required:
-          - name
-        additionalProperties: false
+        $ref: '#/$defs/file'
       stderr:
-        type: object
-        properties:
-          name:
-            type: string
-        required:
-          - name
-        additionalProperties: false
+        $ref: '#/$defs/file'
       uses:
         type: array
         items:
@@ -139,7 +121,7 @@ $defs:
         minItems: 0
 
       profiles:
-        $ref: '#/$defs/profiles'
+        $ref: 'common.yml#/$defs/profiles'
       hooks:
         $ref: 'common.yml#/$defs/hooks'
     required:
@@ -151,6 +133,8 @@ $defs:
     allOf:
       - $ref: '#/$defs/abstractJob'
       - properties:
+          type:
+            const: job
           name:
             type: string
           namespace:
@@ -158,24 +142,31 @@ $defs:
           version:
             $ref: 'common.yml#/$defs/versionString'
         required:
+          - type
           - name
 
   dag:
     allOf:
       - $ref: '#/$defs/abstractJob'
       - properties:
+          type:
+            const: dag
           file:
             type: string
         required:
+          - type
           - file
 
   dax:
     allOf:
       - $ref: '#/$defs/abstractJob'
       - properties:
+          type:
+            const: dax
           file:
             type: string
         required:
+          - type
           - file
 
   # --- parent child dependencies ----------------------------------------------
@@ -245,6 +236,12 @@ properties:
     items:
       $ref: '#/$defs/parent'
     minItems: 0
+  profiles:
+    $ref: 'common.yml#/$defs/profiles'
+  hooks:
+    $ref: 'common.yml#/$defs/hooks'
+  metadata:
+    $ref: 'common.yml#/$defs/metadata'
 required:
   - pegasus
   - name

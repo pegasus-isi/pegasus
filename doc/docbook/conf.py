@@ -22,6 +22,10 @@ import shlex
 import string
 import sphinx_rtd_theme
 
+sys.path.insert(
+    0, os.path.abspath(os.path.dirname(__file__) + "/../../lib/pegasus/python")
+)
+
 
 # -- Project information -----------------------------------------------------
 
@@ -82,6 +86,9 @@ exclude_patterns = [u"_build", "Thumbs.db", ".DS_Store", "_*.rst"]
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
 
+# If true, the current module name will be prepended to all description
+# unit titles (such as .. function::).
+add_module_names = False
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -204,3 +211,7 @@ epub_exclude_files = ["search.html"]
 
 
 # -- Extension configuration -------------------------------------------------
+
+# -- sphinx.ext.autodoc ------------------------------------------------------
+
+autoclass_content = "both"
