@@ -211,3 +211,7 @@ epub_exclude_files = ["search.html"]
 
 
 # -- Extension configuration -------------------------------------------------
+
+# -- sphinx.ext.autodoc ------------------------------------------------------
+
+autoclass_content = "both"
