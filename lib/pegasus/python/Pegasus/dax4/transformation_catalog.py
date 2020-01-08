@@ -16,7 +16,7 @@ from .errors import NotFoundError
 
 PEGASUS_VERSION = "5.0"
 
-__all__: [
+__all__ = [
     "TransformationType",
     "ContainerType",
     "Transformation",
