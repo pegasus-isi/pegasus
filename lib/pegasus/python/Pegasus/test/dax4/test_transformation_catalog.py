@@ -3,20 +3,20 @@ import json
 
 import pytest
 
-from Pegasus.dax4._transformation_catalog import TransformationType
-from Pegasus.dax4._transformation_catalog import _TransformationSite
-from Pegasus.dax4._transformation_catalog import ContainerType
-from Pegasus.dax4._transformation_catalog import _Container
-from Pegasus.dax4._transformation_catalog import Transformation
-from Pegasus.dax4._transformation_catalog import TransformationCatalog
-from Pegasus.dax4._transformation_catalog import PEGASUS_VERSION
-from Pegasus.dax4._site_catalog import OSType
-from Pegasus.dax4._site_catalog import Arch
-from Pegasus.dax4._mixins import Namespace
-from Pegasus.dax4._mixins import EventType
-from Pegasus.dax4._errors import DuplicateError
-from Pegasus.dax4._errors import NotFoundError
-from Pegasus.dax4._writable import FileFormat
+from Pegasus.dax4.transformation_catalog import TransformationType
+from Pegasus.dax4.transformation_catalog import _TransformationSite
+from Pegasus.dax4.transformation_catalog import ContainerType
+from Pegasus.dax4.transformation_catalog import _Container
+from Pegasus.dax4.transformation_catalog import Transformation
+from Pegasus.dax4.transformation_catalog import TransformationCatalog
+from Pegasus.dax4.transformation_catalog import PEGASUS_VERSION
+from Pegasus.dax4.site_catalog import OSType
+from Pegasus.dax4.site_catalog import Arch
+from Pegasus.dax4.mixins import Namespace
+from Pegasus.dax4.mixins import EventType
+from Pegasus.dax4.errors import DuplicateError
+from Pegasus.dax4.errors import NotFoundError
+from Pegasus.dax4.writable import FileFormat
 
 
 class Test_TransformationSite:

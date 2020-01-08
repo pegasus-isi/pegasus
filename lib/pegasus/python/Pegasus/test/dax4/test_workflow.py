@@ -3,28 +3,28 @@ import json
 
 import pytest
 
-from Pegasus.dax4._workflow import AbstractJob
-from Pegasus.dax4._workflow import Job
-from Pegasus.dax4._workflow import DAX
-from Pegasus.dax4._workflow import DAG
-from Pegasus.dax4._workflow import _JobInput
-from Pegasus.dax4._workflow import _JobOutput
-from Pegasus.dax4._workflow import JobDependency
-from Pegasus.dax4._workflow import Workflow
-from Pegasus.dax4._workflow import PEGASUS_VERSION
-from Pegasus.dax4._replica_catalog import File
-from Pegasus.dax4._replica_catalog import ReplicaCatalog
-from Pegasus.dax4._errors import DuplicateError
-from Pegasus.dax4._errors import NotFoundError
-from Pegasus.dax4._transformation_catalog import Transformation
-from Pegasus.dax4._transformation_catalog import TransformationCatalog
-from Pegasus.dax4._mixins import ProfileMixin
-from Pegasus.dax4._mixins import HookMixin
-from Pegasus.dax4._mixins import MetadataMixin
-from Pegasus.dax4._mixins import Namespace
-from Pegasus.dax4._mixins import EventType
-from Pegasus.dax4._site_catalog import SiteCatalog
-from Pegasus.dax4._writable import FileFormat
+from Pegasus.dax4.workflow import AbstractJob
+from Pegasus.dax4.workflow import Job
+from Pegasus.dax4.workflow import DAX
+from Pegasus.dax4.workflow import DAG
+from Pegasus.dax4.workflow import _JobInput
+from Pegasus.dax4.workflow import _JobOutput
+from Pegasus.dax4.workflow import JobDependency
+from Pegasus.dax4.workflow import Workflow
+from Pegasus.dax4.workflow import PEGASUS_VERSION
+from Pegasus.dax4.replica_catalog import File
+from Pegasus.dax4.replica_catalog import ReplicaCatalog
+from Pegasus.dax4.errors import DuplicateError
+from Pegasus.dax4.errors import NotFoundError
+from Pegasus.dax4.transformation_catalog import Transformation
+from Pegasus.dax4.transformation_catalog import TransformationCatalog
+from Pegasus.dax4.mixins import ProfileMixin
+from Pegasus.dax4.mixins import HookMixin
+from Pegasus.dax4.mixins import MetadataMixin
+from Pegasus.dax4.mixins import Namespace
+from Pegasus.dax4.mixins import EventType
+from Pegasus.dax4.site_catalog import SiteCatalog
+from Pegasus.dax4.writable import FileFormat
 
 
 class Test_JobInput:

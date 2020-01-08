@@ -1,7 +1,7 @@
 from enum import Enum
 
-from ._errors import DuplicateError
-from ._errors import NotFoundError
+from .errors import DuplicateError
+from .errors import NotFoundError
 
 # --- metadata -----------------------------------------------------------------
 class MetadataMixin:
