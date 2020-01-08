@@ -16,7 +16,7 @@ class FileFormat(Enum):
     YAML = "yml"
 
 
-class CustomEncoder(json.JSONEncoder):
+class _CustomEncoder(json.JSONEncoder):
     def default(self, obj):
         # TODO: handle instance of Date and Path
         """
@@ -35,7 +35,7 @@ class CustomEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-def filter_out_nones(_dict):
+def _filter_out_nones(_dict):
     """Helper function to remove keys where their values are set to None to avoid cluttering yaml/json files
     
     :param _dict: object represented as a dict
@@ -77,6 +77,6 @@ class Writable:
 
         with open(path, "w") as file:
             if file_format == FileFormat.YAML:
-                yaml.dump(CustomEncoder().default(self), file, sort_keys=False)
+                yaml.dump(_CustomEncoder().default(self), file, sort_keys=False)
             elif file_format == FileFormat.JSON:
-                json.dump(self, file, cls=CustomEncoder, indent=4)
+                json.dump(self, file, cls=_CustomEncoder, indent=4)

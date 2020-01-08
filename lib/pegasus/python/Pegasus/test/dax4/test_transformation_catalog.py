@@ -5,9 +5,9 @@ import pytest
 
 from Pegasus.dax4.transformation_catalog import (
     TransformationType,
-    TransformationSite,
+    _TransformationSite,
     ContainerType,
-    Container,
+    _Container,
     Transformation,
     TransformationCatalog,
     PEGASUS_VERSION,
@@ -18,7 +18,7 @@ from Pegasus.dax4.errors import DuplicateError, NotFoundError
 from Pegasus.dax4.writable import FileFormat
 
 
-class TestTransformationSite:
+class Test_TransformationSite:
     @pytest.mark.parametrize(
         "name, pfn, transformation_type, kwargs",
         [
@@ -79,7 +79,7 @@ class TestTransformationSite:
     def test_valid_transformation_site(
         self, name: str, pfn: str, transformation_type: TransformationType, kwargs: dict
     ):
-        TransformationSite(name, pfn, transformation_type, **kwargs)
+        _TransformationSite(name, pfn, transformation_type, **kwargs)
 
     @pytest.mark.parametrize(
         "name, pfn, transformation_type, kwargs",
@@ -129,17 +129,17 @@ class TestTransformationSite:
         self, name: str, pfn: str, transformation_type: TransformationType, kwargs: dict
     ):
         with pytest.raises(ValueError):
-            TransformationSite(name, pfn, transformation_type, **kwargs)
+            _TransformationSite(name, pfn, transformation_type, **kwargs)
 
     @pytest.mark.parametrize(
         "transformation_site, expected_json",
         [
             (
-                TransformationSite("local", "/pfn", TransformationType.STAGEABLE),
+                _TransformationSite("local", "/pfn", TransformationType.STAGEABLE),
                 {"name": "local", "pfn": "/pfn", "type": "stageable"},
             ),
             (
-                TransformationSite(
+                _TransformationSite(
                     "local",
                     "/pfn",
                     TransformationType.INSTALLED,
@@ -165,12 +165,12 @@ class TestTransformationSite:
         ],
     )
     def test_tojson_no_profiles(
-        self, transformation_site: TransformationSite, expected_json: dict
+        self, transformation_site: _TransformationSite, expected_json: dict
     ):
         assert transformation_site.__json__() == expected_json
 
     def test_tojson_with_profiles(self):
-        t = TransformationSite(
+        t = _TransformationSite(
             "local", "/pfn", TransformationType.INSTALLED
         ).add_profile(Namespace.ENV, "JAVA_HOME", "/java/home")
 
@@ -405,16 +405,16 @@ class TestTransformation:
         }
 
 
-class TestContainer:
+class Test_Container:
     def test_valid_container(self):
-        Container("test", ContainerType.DOCKER, "image", "mount")
+        _Container("test", ContainerType.DOCKER, "image", "mount")
 
     def test_invalid_container(self):
         with pytest.raises(ValueError):
-            Container("test", "container_type", "image", "mount")
+            _Container("test", "container_type", "image", "mount")
 
     def test_tojson_no_profiles(self):
-        c = Container("test", ContainerType.DOCKER, "image", "mount")
+        c = _Container("test", ContainerType.DOCKER, "image", "mount")
 
         assert c.__json__() == {
             "name": "test",
@@ -424,7 +424,7 @@ class TestContainer:
         }
 
     def test_tojson_with_profiles(self):
-        c = Container("test", ContainerType.DOCKER, "image", "mount")
+        c = _Container("test", ContainerType.DOCKER, "image", "mount")
         c.add_profile(Namespace.ENV, "JAVA_HOME", "/java/home")
 
         assert c.__json__() == {

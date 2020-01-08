@@ -11,6 +11,8 @@ from .errors import DuplicateError, NotFoundError
 
 PEGASUS_VERSION = "5.0"
 
+# TODO: __all__: []
+
 
 class TransformationType(Enum):
     """Specifies the type of the transformation. STAGEABLE denotes that it can
@@ -23,9 +25,9 @@ class TransformationType(Enum):
     INSTALLED = "installed"
 
 
-class TransformationSite(ProfileMixin):
+class _TransformationSite(ProfileMixin):
     """Site specific information about a Transformation. Transformations will contain
-    at least one TransformationSite object which includes, at minimum, the name of the site,
+    at least one _TransformationSite object which includes, at minimum, the name of the site,
     the transformation's pfn on that site and whether or not it is installed or stageable at
     that site.  
     """
@@ -51,7 +53,7 @@ class TransformationSite(ProfileMixin):
         :param type: TransformationType.STAGEABLE or TransformationType.INSTALLED
         :type type: TransformationType
         :param arch: Architecture that this transformation was compiled for, defaults to None
-        :type arch: Architecture, optional
+        :type arch: Arch, optional
         :param os_type: Name of os that this transformation was compiled for, defaults to None
         :type os_type: OSType, optional
         :param os_release: Release of os that this transformation was compiled for, defaults to None, defaults to None
@@ -121,7 +123,7 @@ class ContainerType(Enum):
     SHIFTER = "shifter"
 
 
-class Container(ProfileMixin):
+class _Container(ProfileMixin):
     def __init__(self, name, container_type, image, mount, image_site=None):
         """Constructor
         
@@ -192,7 +194,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         self.profiles = defaultdict(dict)
         self.metadata = dict()
 
-    def get_key(self):
+    def _get_key(self):
         return (self.name, self.namespace, self.version)
 
     def add_site(
@@ -207,7 +209,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         glibc=None,
         container=None,
     ):
-        """Add a TransformationSite to this Transformation
+        """Add a transformation site to this Transformation
         
         :param name: site name associated with this transformation
         :type name: str
@@ -216,7 +218,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         :param type: TransformationType.STAGEABLE or TransformationType.INSTALLED
         :type type: TransformationType
         :param arch: Architecture that this transformation was compiled for, defaults to None
-        :type arch: Architecture, optional
+        :type arch: Arch, optional
         :param os: Name of os that this transformation was compiled for, defaults to None
         :type os: str, optional
         :param osrelease: Release of os that this transformation was compiled for, defaults to None, defaults to None
@@ -242,7 +244,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
             if not isinstance(arch, Arch):
                 raise ValueError("arch must be one of Arch")
 
-        self.sites[name] = TransformationSite(
+        self.sites[name] = _TransformationSite(
             name,
             pfn,
             transformation_type,
@@ -283,7 +285,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         return self
 
     def add_site_profile(self, site_name, namespace, key, value):
-        """Add a profile to a TransformationSite with site_name 
+        """Add a profile to a transformation site with the corresponding site name
         
         :param site_name: the name of the site to which the profile is to be added
         :type site_name: str
@@ -316,7 +318,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         :rtype: Transformation
         """
         if isinstance(required_transformation, Transformation):
-            key = required_transformation.get_key()
+            key = required_transformation._get_key()
         elif isinstance(required_transformation, str):
             key = (required_transformation, namespace, version)
         else:
@@ -344,7 +346,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         :rtype: bool
         """
         if isinstance(transformation, Transformation):
-            key = transformation.get_key()
+            key = transformation._get_key()
         elif isinstance(transformation, str):
             key = (transformation, namespace, version)
         else:
@@ -363,7 +365,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         """
 
         if isinstance(transformation, Transformation):
-            key = transformation.get_key()
+            key = transformation._get_key()
         elif isinstance(transformation, str):
             key = (transformation, namespace, version)
         else:
@@ -410,7 +412,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         )
 
     def __hash__(self):
-        return hash(self.get_key())
+        return hash(self._get_key())
 
     def __eq__(self, other):
         if isinstance(other, Transformation):
@@ -489,7 +491,7 @@ class TransformationCatalog(Writable):
         if not isinstance(container_type, ContainerType):
             raise ValueError("container_type must be one of ContainerType")
 
-        self.containers[name] = Container(
+        self.containers[name] = _Container(
             name, container_type, image, mount, image_site
         )
 

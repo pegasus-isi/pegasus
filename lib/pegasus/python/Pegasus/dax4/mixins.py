@@ -91,6 +91,7 @@ class HookMixin:
     """
 
     def add_shell_hook(self, event_type, cmd):
+        # TODO: consider making event_type either an event type or an actual ShellHook
         """Add a shell hook
         
         :param event_type: an event type defined in DAX4.EventType
@@ -101,12 +102,12 @@ class HookMixin:
         if not isinstance(event_type, EventType):
             raise ValueError("event_type must be one of EventType")
 
-        self.hooks[ShellHook.__hook_type__].append(ShellHook(event_type, cmd))
+        self.hooks[_ShellHook.__hook_type__].append(_ShellHook(event_type, cmd))
 
         return self
 
 
-class Hook:
+class _Hook:
     """Base class that specific hook types will inherit from"""
 
     def __init__(self, event_type):
@@ -121,8 +122,11 @@ class Hook:
 
         self.on = event_type.value
 
+    # TODO: def get/set event type
 
-class ShellHook(Hook):
+
+# TODO: make this public
+class _ShellHook(_Hook):
     """A hook that executes a shell command"""
 
     __hook_type__ = "shell"
@@ -135,7 +139,7 @@ class ShellHook(Hook):
         :param cmd: shell command to be executed
         :type cmd: str
         """
-        Hook.__init__(self, event_type)
+        _Hook.__init__(self, event_type)
         self.cmd = cmd
 
     def __json__(self):
@@ -145,8 +149,7 @@ class ShellHook(Hook):
 # --- profiles -----------------------------------------------------------------
 class Namespace(Enum):
     """
-    Profile Namespace values recognized by Pegasus. See Executable,
-    Transformation, and Job.
+    Profile Namespace values recognized by Pegasus. See Transformation, and Job.
     """
 
     PEGASUS = "pegasus"

@@ -8,8 +8,8 @@ from Pegasus.dax4.workflow import (
     Job,
     DAX,
     DAG,
-    JobInput,
-    JobOutput,
+    _JobInput,
+    _JobOutput,
     JobDependency,
     Workflow,
     PEGASUS_VERSION,
@@ -28,22 +28,25 @@ from Pegasus.dax4.site_catalog import SiteCatalog
 from Pegasus.dax4.writable import FileFormat
 
 
-class TestJobInput:
+class Test_JobInput:
     def test_eq(self):
-        assert JobInput(File("a")) == JobInput(File("a"))
-        assert JobInput(File("a")) != JobInput(File("b"))
+        assert _JobInput(File("a")) == _JobInput(File("a"))
+        assert _JobInput(File("a")) != _JobInput(File("b"))
 
     def test_tojson(self):
-        assert JobInput(File("a")).__json__() == {"file": {"lfn": "a"}, "type": "input"}
+        assert _JobInput(File("a")).__json__() == {
+            "file": {"lfn": "a"},
+            "type": "input",
+        }
 
 
-class TestJobOutput:
+class Test_JobOutput:
     def test_eq(self):
-        assert JobOutput(File("a")) == JobOutput(File("a"))
-        assert JobOutput(File("a")) != JobOutput(File("b"))
+        assert _JobOutput(File("a")) == _JobOutput(File("a"))
+        assert _JobOutput(File("a")) != _JobOutput(File("b"))
 
     def test_tojson(self):
-        assert JobOutput(
+        assert _JobOutput(
             File("a"), stage_out=False, register_replica=True
         ).__json__() == {
             "file": {"lfn": "a"},
@@ -52,7 +55,7 @@ class TestJobOutput:
             "registerReplica": True,
         }
 
-        assert JobOutput(
+        assert _JobOutput(
             File("a"), stage_out=True, register_replica=True
         ).__json__() == {
             "file": {"lfn": "a"},

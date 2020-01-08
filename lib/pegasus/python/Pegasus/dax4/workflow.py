@@ -50,7 +50,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
             if not isinstance(file, File):
                 raise ValueError("a job input must be of type File")
 
-            _input = JobInput(file)
+            _input = _JobInput(file)
             if _input in self.inputs:
                 raise DuplicateError(
                     "file {0} already added as input to this job".format(file.lfn)
@@ -85,7 +85,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
             if not isinstance(file, File):
                 raise ValueError("a job output must be of type File")
 
-            output = JobOutput(
+            output = _JobOutput(
                 file, stage_out=stage_out, register_replica=register_replica
             )
             if output in self.outputs:
@@ -120,7 +120,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         """Set stdin to a file
         
         :param file: a file that will be read into stdin  
-        :type file: File|str
+        :type file: File or str
         :raises ValueError: file must be of type File or str
         :raises DuplicateError: stdin is already set or the given file has already been added as an input to this job
         :return: self
@@ -406,7 +406,7 @@ class DAG(AbstractJob):
         return dag_json
 
 
-class JobInput:
+class _JobInput:
     """Internal class used to represent a job's input"""
 
     def __init__(self, file):
@@ -417,15 +417,15 @@ class JobInput:
         return hash(self.file)
 
     def __eq__(self, other):
-        if isinstance(other, JobInput):
+        if isinstance(other, _JobInput):
             return self.file.lfn == other.file.lfn
-        raise ValueError("JobInput cannot be compared with {0}".format(type(other)))
+        raise ValueError("_JobInput cannot be compared with {0}".format(type(other)))
 
     def __json__(self):
         return {"file": self.file.__json__(), "type": self._type}
 
 
-class JobOutput:
+class _JobOutput:
     """Internal class used to represent a job's output"""
 
     def __init__(self, file, stage_out=True, register_replica=False):
@@ -438,9 +438,9 @@ class JobOutput:
         return hash(self.file)
 
     def __eq__(self, other):
-        if isinstance(other, JobOutput):
+        if isinstance(other, _JobOutput):
             return self.file.lfn == other.file.lfn
-        raise ValueError("JobOutput cannot be comapred with {0}".format(type(other)))
+        raise ValueError("__JobOutput cannot be comapred with {0}".format(type(other)))
 
     def __json__(self):
         return {
