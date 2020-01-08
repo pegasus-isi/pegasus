@@ -9,7 +9,7 @@ from Pegasus.dax4.workflow import DAX
 from Pegasus.dax4.workflow import DAG
 from Pegasus.dax4.workflow import _JobInput
 from Pegasus.dax4.workflow import _JobOutput
-from Pegasus.dax4.workflow import JobDependency
+from Pegasus.dax4.workflow import _JobDependency
 from Pegasus.dax4.workflow import Workflow
 from Pegasus.dax4.workflow import PEGASUS_VERSION
 from Pegasus.dax4.replica_catalog import File
@@ -369,9 +369,9 @@ class TestJob:
         }
 
 
-class TestJobDependency:
+class Test_JobDependency:
     def test_tojson(self):
-        jd = JobDependency("parent_id", {"child_id1"})
+        jd = _JobDependency("parent_id", {"child_id1"})
         assert jd.__json__() == {
             "id": "parent_id",
             "children": ["child_id1"],
@@ -501,7 +501,7 @@ class TestWorkflow:
         wf.add_jobs(parent, child1)
         wf.add_dependency(parent, child1)
 
-        assert wf.dependencies["parent"] == JobDependency(parent._id, {child1._id})
+        assert wf.dependencies["parent"] == _JobDependency(parent._id, {child1._id})
 
     def test_add_to_existing_dependencies(self):
         wf = Workflow("wf")
@@ -512,7 +512,7 @@ class TestWorkflow:
         wf.add_jobs(parent, child1, child2)
         wf.add_dependency(parent, child1, child2)
 
-        assert wf.dependencies["parent"] == JobDependency(
+        assert wf.dependencies["parent"] == _JobDependency(
             parent._id, {child1._id, child2._id}
         )
 
@@ -545,9 +545,9 @@ class TestWorkflow:
         # wf.write() is called
         wf._infer_dependencies()
 
-        assert wf.dependencies["fork"] == JobDependency("fork", {"work1", "work2"})
-        assert wf.dependencies["work1"] == JobDependency("work1", {"join"})
-        assert wf.dependencies["work2"] == JobDependency("work2", {"join"})
+        assert wf.dependencies["fork"] == _JobDependency("fork", {"work1", "work2"})
+        assert wf.dependencies["work1"] == _JobDependency("work1", {"join"})
+        assert wf.dependencies["work2"] == _JobDependency("work2", {"join"})
 
     def test_infer_dependencies_when_job_uses_stdin_stdout_and_stderr(self):
         wf = Workflow("wf", infer_dependencies=True)
@@ -560,8 +560,8 @@ class TestWorkflow:
         # wf.write() is called
         wf._infer_dependencies()
 
-        assert wf.dependencies["j1"] == JobDependency("j1", {"j2"})
-        assert wf.dependencies["j2"] == JobDependency("j2", {"j3"})
+        assert wf.dependencies["j1"] == _JobDependency("j1", {"j2"})
+        assert wf.dependencies["j2"] == _JobDependency("j2", {"j3"})
 
     def test_tojson(self):
         tc = TransformationCatalog()
@@ -599,7 +599,7 @@ class TestWorkflow:
             "replicaCatalog": rc_json,
             "transformationCatalog": tc_json,
             "jobs": [j1.__json__(), j2.__json__()],
-            "jobDependencies": [JobDependency("j1", {"ID0000001"}).__json__()],
+            "jobDependencies": [_JobDependency("j1", {"ID0000001"}).__json__()],
             "profiles": {Namespace.ENV.value: {"JAVA_HOME": "/java/home"}},
             "hooks": {"shell": [{"_on": EventType.START.value, "cmd": "/bin/echo hi"}]},
             "metadata": {"key": "value"},
@@ -641,7 +641,7 @@ class TestWorkflow:
             "replicaCatalog": rc_json,
             "transformationCatalog": tc_json,
             "jobs": [j1.__json__(), j2.__json__()],
-            "jobDependencies": [JobDependency("j1", {"ID0000001"}).__json__()],
+            "jobDependencies": [_JobDependency("j1", {"ID0000001"}).__json__()],
             "profiles": {Namespace.ENV.value: {"JAVA_HOME": "/java/home"}},
             "hooks": {"shell": [{"_on": EventType.START.value, "cmd": "/bin/echo hi"}]},
             "metadata": {"key": "value"},

@@ -460,7 +460,7 @@ class _JobOutput:
         }
 
 
-class JobDependency:
+class _JobDependency:
     """Internal class used to represent a job's dependencies"""
 
     def __init__(self, parent_id, children_ids):
@@ -468,13 +468,13 @@ class JobDependency:
         self.children_ids = children_ids
 
     def __eq__(self, other):
-        if isinstance(other, JobDependency):
+        if isinstance(other, _JobDependency):
             return (
                 self.parent_id == other.parent_id
                 and self.children_ids == other.children_ids
             )
         raise ValueError(
-            "JobDependency cannot be compared with {0}".format(type(other))
+            "_JobDependency cannot be compared with {0}".format(type(other))
         )
 
     def __json__(self):
@@ -497,7 +497,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         self.infer_dependencies = infer_dependencies
 
         self.jobs = dict()
-        self.dependencies = defaultdict(JobDependency)
+        self.dependencies = defaultdict(_JobDependency)
 
         # sequence unique to this workflow only
         self.sequence = 1
@@ -620,7 +620,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
             self.dependencies[parent_id].children_ids.update(children_ids)
         else:
-            self.dependencies[parent_id] = JobDependency(parent_id, children_ids)
+            self.dependencies[parent_id] = _JobDependency(parent_id, children_ids)
 
         return self
 
