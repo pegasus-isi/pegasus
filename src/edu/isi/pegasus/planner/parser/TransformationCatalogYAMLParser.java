@@ -15,17 +15,19 @@
  */
 package edu.isi.pegasus.planner.parser;
 
-import com.fasterxml.jackson.databind.JsonNode;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Iterator;
+import java.util.LinkedList;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -45,8 +47,6 @@ import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.parser.tokens.TransformationCatalogKeywords;
-import java.util.Iterator;
-import java.util.LinkedList;
 
 /**
  * Parses the input stream and generates the TransformationStore as output.
@@ -55,74 +55,59 @@ import java.util.LinkedList;
  * following format
  *
  * <pre>
- - namespace: "ls"
- name: "keg"
- version: 1.0
-
- profile:
- - environment:
- "APP_HOME": "/tmp/myscratch"
- "JAVA_HOME": "/opt/java/1.6"
-
- site:
- - name: "isi"
- profile:
- environment:
- "HELLo": "WORLD"
- "JAVA_HOME": "/opt/java/1.6"
- condor:
- "FOO": "bar"
- pfn: /usr/bin/ls
- arch: x86
- osrelease: fc
- osversion: 4
- os_type: INSTALLED
-
- - name: "ads"
- profile:
- environment:
- "HELLo": "WORLD"
- "JAVA_HOME": "/opt/java/1.6"
- condor:
- "FOO": "bar"
- pfn: /path/to/keg
- arch: x86
- os: linux
- osrelease: fc
- osversion: 4
- os_type: INSTALLED
- c: "centos-pegasus"
-
- cont:
- - name: "centos-pegasus"
- image: docker:///rynge/montage:latest
- image_site: optional site
- mount: /Volumes/Work/lfs1:/shared-data/:ro
- profile:
- environment:
- "JAVA_HOME": "/opt/java/1.6"
-
- - namespace: "cat"
- name: "keg"
- version: 1.0
-
- site:
- - name: "ads"
- profile:
- environment:
- "HELLo": "WORLD"
- "JAVA_HOME": "/opt/java/1.6"
- condor:
- "FOO": "bar"
- pfn: /usr/bin/cat
- arch: x86
- os: linux
- osrelease: fc
- osversion: 4
- os_type: INSTALLED
- </pre>
+ * pegasus: "5.0"
+ * transformations:
+ *    - namespace: "example"
+ *      name: "keg"
+ *      version: "1.0"
+ *      profiles:
+ *          env:
+ *              APP_HOME: "/tmp/myscratch"
+ *              JAVA_HOME: "/opt/java/1.6"
+ *          pegasus:
+ *              clusters.num: "1"
+ * 
+ *      requires:
+ *          - anotherTr
+ * 
+ *      sites:
+ *       - name: "isi"
+ *          type: "installed"
+ *          pfn: "/path/to/keg"
+ *          arch: "x86_64"
+ *          os.type: "linux"
+ *          os.release: "fc"
+ *          os.version: "1.0"
+ *          profiles:
+ *            env:
+ *                Hello: World
+ *                JAVA_HOME: /bin/java.1.6
+ *            condor:
+ *                FOO: bar
+ *          container: centos-pegasus
+ * 
+ *    - namespace: example
+ *      name: anotherTr
+ *      version: "1.2.3"
+ * 
+ *      sites:
+ *          - name: isi
+ *            type: installed
+ *            pfn: /path/to/anotherTr
+ * 
+ * containers:
+ *    - name: centos-pegasus
+ *      type: docker
+ *      image: docker:///rynge/montage:latest
+ *      mount: /Volumes/Work/lfs1:/shared-data/:ro
+ *      mount: /Volumes/Work/lfs12:/shared-data1/:ro
+ *      profiles:
+ *          env:
+ *              JAVA_HOME: /opt/java/1.6
+ * </pre>
  *
  * @author Mukund Murrali
+ * @author Karan Vahi
  * @version $Revision$
  *
  *
@@ -156,8 +141,6 @@ public class TransformationCatalogYAMLParser {
      *
      * @param stream
      * @param schemaDir
-     *
-     * @param input is the stream opened for reading.
      * @param logger the transformation to the logger.
      *
      * @throws IOException
@@ -218,7 +201,6 @@ public class TransformationCatalogYAMLParser {
             JsonNode node = root;
             if (root.has(TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName())) {
                 node = node.get(TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName());
-                System.out.println(node);
                 if (node.isArray()) {
                     for (JsonNode transformation : node) {
                         List<TransformationCatalogEntry> entries = this.createTransformationCatalogEntry(transformation);
@@ -239,7 +221,6 @@ public class TransformationCatalogYAMLParser {
             }
             if (root.has(TransformationCatalogKeywords.CONTAINERS.getReservedName())) {
                 node = root.get(TransformationCatalogKeywords.CONTAINERS.getReservedName());
-                System.out.println(node);
                 if (node.isArray()) {
                     for (JsonNode contNode : node) {
                         Container c = this.createContainer(contNode);
@@ -285,10 +266,10 @@ public class TransformationCatalogYAMLParser {
      * version: "1.0"
      * profiles:
      *   env:
-     *       APP_HOME: "/tmp/myscratch"
-     *       JAVA_HOME: "/opt/java/1.6"
+     *     APP_HOME: "/tmp/myscratch"
+     *     JAVA_HOME: "/opt/java/1.6"
      *   pegasus:
-     *       clusters.num: "1"
+     *     clusters.num: "1"
      * 
      * requires:
      *   - anotherTr
@@ -303,10 +284,10 @@ public class TransformationCatalogYAMLParser {
      *   os.version: "1.0"
      *   profiles:
      *     env:
-     *         Hello: World
-     *         JAVA_HOME: /bin/java.1.6
+     *       Hello: World
+     *       JAVA_HOME: /bin/java.1.6
      *     condor:
-     *         FOO: bar
+     *       FOO: bar
      *   container: centos-pegasus
      * </pre>
      *
@@ -599,7 +580,7 @@ public class TransformationCatalogYAMLParser {
             p.parse(true);
 
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(TransformationCatalogYAMLParser.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
         } catch (ScannerException se) {
             se.printStackTrace();
         } catch (IOException ioe) {
