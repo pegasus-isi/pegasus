@@ -12,13 +12,10 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-__author__ = "Rajiv Mayani"
-
 import hashlib
 import json
 import logging
-
-from six import StringIO
+from io import StringIO
 
 from flask import current_app, g, make_response, request
 from Pegasus.service import cache

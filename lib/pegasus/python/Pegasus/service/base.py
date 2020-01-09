@@ -12,18 +12,9 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-__author__ = "Rajiv Mayani"
-
-import re
-
-from six import StringIO
+from collections import OrderedDict
 
 from werkzeug.routing import BaseConverter
-
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
 
 
 class PagedResponse(object):
