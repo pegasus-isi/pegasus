@@ -585,7 +585,7 @@ def _backup_db(db):
     """
     url = db.get_bind().url
     # Backup SQLite databases
-    if url.drivername == "sqlite":
+    if url.drivername == "sqlite" and str(url).lower() != "sqlite://":
         db_list = glob.glob(url.database + ".[0-9][0-9][0-9]")
         max_index = -1
         for file in db_list:

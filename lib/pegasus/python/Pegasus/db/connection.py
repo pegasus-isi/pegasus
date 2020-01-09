@@ -593,7 +593,7 @@ def _validate(dburi):
 
 
 def _check_db_permissions(dburi, db_type, mask=None):
-    if urlparse(dburi).scheme == "sqlite":
+    if urlparse(dburi).scheme == "sqlite" and dburi.lower() != "sqlite://":
         path = urlparse(dburi).path[1:]
         if db_type:
             if db_type == DBType.MASTER or db_type == DBType.WORKFLOW:
