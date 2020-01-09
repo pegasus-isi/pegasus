@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import errno
 import os
 import re
@@ -12,9 +14,7 @@ from Pegasus.db.schema import *
 
 class TestDBAdmin(unittest.TestCase):
     def test_create_database(self):
-        filename = str(uuid.uuid4())
-        _silentremove(filename)
-        dburi = "sqlite:///%s" % filename
+        dburi = "sqlite://"
 
         db = connection.connect(dburi, create=True, verbose=False)
         self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
@@ -44,7 +44,7 @@ class TestDBAdmin(unittest.TestCase):
         db.close()
         db = connection.connect(dburi, create=True, verbose=False)
         self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
-        _remove(filename)
+        db.close()
 
     def test_parse_pegasus_version(self):
         self.assertEqual(parse_pegasus_version(), CURRENT_DB_VERSION)
@@ -60,9 +60,7 @@ class TestDBAdmin(unittest.TestCase):
         self.assertRaises(DBAdminError, parse_pegasus_version, "4")
 
     def test_version_operations(self):
-        filename = str(uuid.uuid4())
-        _silentremove(filename)
-        dburi = "sqlite:///%s" % filename
+        dburi = "sqlite://"
         db = connection.connect(dburi, create=True, verbose=False)
 
         db_downgrade(db, pegasus_version="4.5.0", verbose=False)
@@ -74,49 +72,13 @@ class TestDBAdmin(unittest.TestCase):
         db = connection.connect(dburi, create=True, verbose=False)
         self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
-        _remove(filename)
 
-        fn = str(uuid.uuid4())
-        _silentremove(fn)
-        dburi2 = "sqlite:///%s" % fn
+        dburi2 = "sqlite://"
         db2 = connection.connect(dburi2, create=True, verbose=False)
-        _remove(fn)
-
-    # def test_minimum_downgrade(self):
-    #     filename = str(uuid.uuid4())
-    #     _silentremove(filename)
-    #     dburi = "sqlite:///%s" % filename
-    #     db = connection.connect(dburi, create=True)
-    #
-    #     db_downgrade(db, "4.3.0")
-    #     self.assertEquals(db_current_version(db), 1)
-    #
-    #     db_downgrade(db)
-    #     self.assertEquals(db_current_version(db), 1)
-    #     _remove(filename)
-    #
-    # def test_all_downgrade_update(self):
-    #     filename = str(uuid.uuid4())
-    #     print filename
-    #     _silentremove(filename)
-    #     dburi = "sqlite:///%s" % filename
-    #     db = connection.connect(dburi, create=True)
-    #
-    #     db_downgrade(db, "4.3.0")
-    #     self.assertEquals(db_current_version(db), 1)
-    #     self.assertRaises(DBAdminError, db_verify, db)
-    #     self.assertTrue(db_verify(db, "4.3.0"))
-    #     db.close()
-    #
-    #     db = connection.connect(dburi, create=True)
-    #     self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
-    #     self.assertTrue(db_verify(db))
-    #     _remove(filename)
+        db2.close()
 
     def test_partial_database(self):
-        filename = str(uuid.uuid4())
-        _silentremove(filename)
-        dburi = "sqlite:///%s" % filename
+        dburi = "sqlite://"
         db = connection.connect(dburi, schema_check=False, create=False, verbose=False)
         rc_sequences.create(db.get_bind(), checkfirst=True)
         rc_lfn.create(db.get_bind(), checkfirst=True)
@@ -127,7 +89,7 @@ class TestDBAdmin(unittest.TestCase):
 
         db = connection.connect(dburi, create=True, verbose=False)
         self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
-        _remove(filename)
+        db.close()
 
         db = connection.connect(dburi, schema_check=False, create=False, verbose=False)
         pg_workflow.create(db.get_bind(), checkfirst=True)
@@ -139,7 +101,7 @@ class TestDBAdmin(unittest.TestCase):
 
         db = connection.connect(dburi, create=True, verbose=False)
         self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
-        _remove(filename)
+        db.close()
 
         db = connection.connect(dburi, schema_check=False, create=False, verbose=False)
         st_workflow.create(db.get_bind(), checkfirst=True)
@@ -157,12 +119,10 @@ class TestDBAdmin(unittest.TestCase):
 
         db = connection.connect(dburi, create=True, verbose=False)
         self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
-        _remove(filename)
+        db.close()
 
     def test_malformed_db(self):
-        filename = str(uuid.uuid4())
-        _silentremove(filename)
-        dburi = "sqlite:///%s" % filename
+        dburi = "sqlite://"
         db = connection.connect(dburi, create=True, verbose=False)
         self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         db.execute("DROP TABLE rc_pfn")
@@ -172,57 +132,48 @@ class TestDBAdmin(unittest.TestCase):
         db = connection.connect(dburi, create=True, verbose=False)
         self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
-        _remove(filename)
 
     def test_connection_from_properties_file(self):
         """
         Test whether DB connections are being established from properties loaded from the properties file.
         """
         props_filename = str(uuid.uuid4())
-        filename = str(uuid.uuid4())
-        _silentremove(filename)
-        dburi = "sqlite:///%s" % filename
+        dburi = "sqlite://"
 
-        f = open(props_filename, "w")
-        # JDBCRC
-        f.write("pegasus.catalog.replica=JDBCRC\n")
-        f.write("pegasus.catalog.replica.db.driver=SQLite\n")
-        f.write("pegasus.catalog.replica.db.url=jdbc:sqlite:%s\n" % filename)
-        # MASTER
-        f.write("pegasus.dashboard.output=%s\n" % dburi)
-        # WORKFLOW
-        f.write("pegasus.monitord.output=%s\n" % dburi)
-        f.close()
+        with open(props_filename, "w") as f:
+            # JDBCRC
+            f.write("pegasus.catalog.replica=JDBCRC\n")
+            f.write("pegasus.catalog.replica.db.driver=SQLite\n")
+            f.write("pegasus.catalog.replica.db.url=jdbc:sqlite::memory:\n")
+            # MASTER
+            f.write("pegasus.dashboard.output=%s\n" % dburi)
+            # WORKFLOW
+            f.write("pegasus.monitord.output=%s\n" % dburi)
 
         db = connection.connect_by_properties(
             props_filename, connection.DBType.JDBCRC, create=True, verbose=False
         )
         self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
-        _remove(filename)
 
         db = connection.connect_by_properties(
             props_filename, connection.DBType.MASTER, create=True, verbose=False
         )
         self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
-        _remove(filename)
 
         db = connection.connect_by_properties(
             props_filename, connection.DBType.WORKFLOW, create=True, verbose=False
         )
         self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
-        _remove(filename)
         _silentremove(props_filename)
 
     def test_upper_version(self):
         """
         Test whether DBs created with newer Pegasus version raises an exception.
         """
-        filename = str(uuid.uuid4())
-        _silentremove(filename)
-        dburi = "sqlite:///%s" % filename
+        dburi = "sqlite://"
         db = connection.connect(dburi, create=True, verbose=False)
         dbversion = DBVersion()
         dbversion.version = CURRENT_DB_VERSION + 1
@@ -234,7 +185,7 @@ class TestDBAdmin(unittest.TestCase):
         self.assertRaises(DBAdminError, db_current_version, db)
         self.assertRaises(DBAdminError, db_verify, db)
 
-        _remove(filename)
+        db.close()
 
     def test_dbs(self):
         dbs = ["test-01.db", "test-02.db"]
