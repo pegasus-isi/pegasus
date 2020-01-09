@@ -111,9 +111,8 @@ class FlaskTestClient:
 
 @pytest.fixture(scope="session")
 def app():
-    from nrgr.service.server import create_app
-
-    app = create_app(env="testing")
+    # TODO: Replace with use of factory_method
+    from Pegasus.service import app
 
     with app.app_context():
         yield app
