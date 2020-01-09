@@ -19,8 +19,6 @@ install_requires = [
     "pamela==1.0.0",
     "globus-sdk==1.4.1",
     "pika==1.1.0",
-    # TODO: Remove pyOpenSSL?
-    # "pyOpenSSL==17.5.0",
     # Python 2.6
     'Flask==0.12.4;python_version<="2.6"',
     'Flask-Cache==0.13.1;python_version<="2.6"',
