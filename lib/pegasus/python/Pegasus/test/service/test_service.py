@@ -12,11 +12,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-__author__ = 'Rajiv Mayani'
-
-import unittest
+__author__ = "Rajiv Mayani"
 
 
-class PegasusServiceTestCase(unittest.TestCase):
-    def test_imports(self):
-        from Pegasus.service.server import main
+def test_imports():
+    from Pegasus.service.server import main
