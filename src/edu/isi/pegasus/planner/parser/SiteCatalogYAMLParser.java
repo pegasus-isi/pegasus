@@ -38,6 +38,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 //import com.fasterxml.jackson.dataformat.yaml.snakeyaml.parser.ParserException;
@@ -194,7 +195,7 @@ public class SiteCatalogYAMLParser {
 				throw new ScannerException("Error in loading the yaml file", e);
 			}
 			if (yamlData != null) {
-				YAMLSchemaValidationResult result = YAMLSchemaValidator.getInstance().validate(yamlData,
+				YAMLSchemaValidationResult result = YAMLSchemaValidator.getInstance().validate((JsonNode) yamlData,
 						SCHEMA_FILENAME, "site");
 
 				// schema validation is done here.. in case of any validation error we throw the
