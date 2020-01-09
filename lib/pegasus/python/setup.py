@@ -42,26 +42,6 @@ excludes = ["Pegasus.test*"]
 
 
 #
-# Create Manifest file to exclude tests, and service files
-#
-def create_manifest_file():
-    global excludes
-
-    f = None
-    try:
-        f = open("MANIFEST.in", "w")
-        f.write("recursive-exclude Pegasus/test *\n")
-
-        if sys.version_info[1] <= 4:
-            f.write("recursive-exclude Pegasus/service *\n")
-            excludes.append("Pegasus.service*")
-
-    finally:
-        if f:
-            f.close()
-
-
-#
 # Install conditional dependencies
 #
 def setup_installer_dependencies():
@@ -125,7 +105,6 @@ def find_package_data(dirname):
     return [path.replace(dirname, "") for path in items]
 
 
-create_manifest_file()
 setup_installer_dependencies()
 
 setup(
