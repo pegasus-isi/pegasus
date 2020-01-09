@@ -100,7 +100,7 @@ setup(
     long_description=read("README"),
     license="Apache2",
     url="http://pegasus.isi.edu",
-    python_requires=">=2.6,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*",
+    python_requires=">=2.6,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*",
     keywords=["scientific workflows"],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
