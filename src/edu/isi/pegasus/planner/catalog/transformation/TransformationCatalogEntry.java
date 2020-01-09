@@ -261,7 +261,7 @@ public class TransformationCatalogEntry
             this.getLogicalTransformation() + "\t" +
             this.getPhysicalTransformation() + "\t" +
             this.getType() + "\t" +
-            this.getVDSSysInfo() + "\t";
+            this.getSysInfo() + "\t";
         if ( mProfiles != null ) {
             st += ProfileParser.combine( mProfiles );
         } else {
