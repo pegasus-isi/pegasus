@@ -117,9 +117,7 @@ class TestDBAdmin(unittest.TestCase):
         filename = str(uuid.uuid4())
         _silentremove(filename)
         dburi = "sqlite:///%s" % filename
-        db = connection.connect(
-            dburi, schema_check=False, create=False, verbose=False
-        )
+        db = connection.connect(dburi, schema_check=False, create=False, verbose=False)
         rc_sequences.create(db.get_bind(), checkfirst=True)
         rc_lfn.create(db.get_bind(), checkfirst=True)
         rc_pfn.create(db.get_bind(), checkfirst=True)
@@ -131,9 +129,7 @@ class TestDBAdmin(unittest.TestCase):
         self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         _remove(filename)
 
-        db = connection.connect(
-            dburi, schema_check=False, create=False, verbose=False
-        )
+        db = connection.connect(dburi, schema_check=False, create=False, verbose=False)
         pg_workflow.create(db.get_bind(), checkfirst=True)
         pg_workflowstate.create(db.get_bind(), checkfirst=True)
         pg_ensemble.create(db.get_bind(), checkfirst=True)
@@ -145,9 +141,7 @@ class TestDBAdmin(unittest.TestCase):
         self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         _remove(filename)
 
-        db = connection.connect(
-            dburi, schema_check=False, create=False, verbose=False
-        )
+        db = connection.connect(dburi, schema_check=False, create=False, verbose=False)
         st_workflow.create(db.get_bind(), checkfirst=True)
         st_workflowstate.create(db.get_bind(), checkfirst=True)
         st_host.create(db.get_bind(), checkfirst=True)
@@ -189,42 +183,33 @@ class TestDBAdmin(unittest.TestCase):
         _silentremove(filename)
         dburi = "sqlite:///%s" % filename
 
-        f = open(props_filename, 'w')
+        f = open(props_filename, "w")
         # JDBCRC
-        f.write('pegasus.catalog.replica=JDBCRC\n')
-        f.write('pegasus.catalog.replica.db.driver=SQLite\n')
-        f.write('pegasus.catalog.replica.db.url=jdbc:sqlite:%s\n' % filename)
+        f.write("pegasus.catalog.replica=JDBCRC\n")
+        f.write("pegasus.catalog.replica.db.driver=SQLite\n")
+        f.write("pegasus.catalog.replica.db.url=jdbc:sqlite:%s\n" % filename)
         # MASTER
-        f.write('pegasus.dashboard.output=%s\n' % dburi)
+        f.write("pegasus.dashboard.output=%s\n" % dburi)
         # WORKFLOW
-        f.write('pegasus.monitord.output=%s\n' % dburi)
+        f.write("pegasus.monitord.output=%s\n" % dburi)
         f.close()
 
         db = connection.connect_by_properties(
-            props_filename,
-            connection.DBType.JDBCRC,
-            create=True,
-            verbose=False
+            props_filename, connection.DBType.JDBCRC, create=True, verbose=False
         )
         self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
         _remove(filename)
 
         db = connection.connect_by_properties(
-            props_filename,
-            connection.DBType.MASTER,
-            create=True,
-            verbose=False
+            props_filename, connection.DBType.MASTER, create=True, verbose=False
         )
         self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
         _remove(filename)
 
         db = connection.connect_by_properties(
-            props_filename,
-            connection.DBType.WORKFLOW,
-            create=True,
-            verbose=False
+            props_filename, connection.DBType.WORKFLOW, create=True, verbose=False
         )
         self.assertEqual(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
@@ -255,8 +240,7 @@ class TestDBAdmin(unittest.TestCase):
         dbs = ["test-01.db", "test-02.db"]
 
         for db in dbs:
-            orig_filename = os.path.dirname(os.path.abspath(__file__)
-                                            ) + "/input/" + db
+            orig_filename = os.path.dirname(os.path.abspath(__file__)) + "/input/" + db
             filename = str(uuid.uuid4())
             shutil.copyfile(orig_filename, filename)
             dburi = "sqlite:///%s" % filename
@@ -288,5 +272,5 @@ def _remove(filename):
     _silentremove(filename)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
