@@ -190,7 +190,7 @@ public class YAMLSchemaValidator {
                         case SITES:
                             errorMessage.append(",Site - " + nodeDetails);
                             break;
-                        case CONTAINER:
+                        case CONTAINERS:
                             try {
                                 errorMessage.append(" details - " + mapper.writeValueAsString(nodeDetails.get("name")));
                             } catch (JsonProcessingException e) {
