@@ -154,6 +154,15 @@ public class TransformationCatalogYAMLParser {
     }
 
     /**
+     * 
+     * @param logger 
+     */
+    public TransformationCatalogYAMLParser(LogManager logger) {
+        mLogger = logger;
+    }
+        
+
+    /**
      * Parses the complete input stream
      *
      * @param modifyFileURL Boolean indicating whether to modify the file URL or
@@ -169,7 +178,6 @@ public class TransformationCatalogYAMLParser {
         TransformationStore store = new TransformationStore();
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
-        Object yamlData = null;
         JsonNode root = null;
         try {
             root = mapper.readTree(mReader);
@@ -327,6 +335,12 @@ public class TransformationCatalogYAMLParser {
                 throw new ScannerException("sites: value should be of type array ");
             }
         }
+        else{
+            //add a base TC entry without site information
+            //maybe raise exception instead?
+            entries.add(baseEntry);
+        }
+        
         
         return entries;
     }
@@ -334,7 +348,6 @@ public class TransformationCatalogYAMLParser {
     /**
      * Creates a profile from a JSON node representing
      * <pre>
-     * profiles:
      *  env:
      *      APP_HOME: "/tmp/myscratch"
      *      JAVA_HOME: "/opt/java/1.6"
