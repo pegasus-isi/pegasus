@@ -445,7 +445,7 @@ public class TransformationCatalogYAMLParser {
                     break;
 
                 case SITE_OS_VERSION:
-                    Integer osVersion = (Integer) node.get(key).asInt();
+                    String osVersion = node.get(key).asText();
                     sysInfo.setOSVersion(String.valueOf(osVersion));
                     break;
 
