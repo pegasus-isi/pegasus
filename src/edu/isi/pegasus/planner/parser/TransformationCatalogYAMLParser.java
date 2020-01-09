@@ -22,7 +22,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,7 +30,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.JacksonYAMLParseException;
-import com.networknt.schema.JsonSchema;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
@@ -282,35 +280,35 @@ public class TransformationCatalogYAMLParser {
     /**
      * Creates a transformation catalog entry object from a JSON node tree.
      * <pre>
- namespace: "example"
- name: "keg"
- version: "1.0"
- profiles:
-     env:
-         APP_HOME: "/tmp/myscratch"
-         JAVA_HOME: "/opt/java/1.6"
-     pegasus:
-         clusters.num: "1"
-
- requires:
-     - anotherTr
-
- sites:
-   - name: "isi"
-     type: "installed"
-     pfn: "/path/to/keg"
-     arch: "x86_64"
-     os.type: "linux"
-     os.release: "fc"
-     os.version: "1.0"
-     profiles:
-       env:
-           Hello: World
-           JAVA_HOME: /bin/java.1.6
-       condor:
-           FOO: bar
-     c: centos-pegasus
- </pre>
+     * namespace: "example"
+     * name: "keg"
+     * version: "1.0"
+     * profiles:
+     *   env:
+     *       APP_HOME: "/tmp/myscratch"
+     *       JAVA_HOME: "/opt/java/1.6"
+     *   pegasus:
+     *       clusters.num: "1"
+     * 
+     * requires:
+     *   - anotherTr
+     * 
+     * sites:
+     *   name: "isi"
+     *   type: "installed"
+     *   pfn: "/path/to/keg"
+     *   arch: "x86_64"
+     *   os.type: "linux"
+     *   os.release: "fc"
+     *   os.version: "1.0"
+     *   profiles:
+     *     env:
+     *         Hello: World
+     *         JAVA_HOME: /bin/java.1.6
+     *     condor:
+     *         FOO: bar
+     *   container: centos-pegasus
+     * </pre>
      *
      * @param node
      *
@@ -403,21 +401,21 @@ public class TransformationCatalogYAMLParser {
      * Parses site information from JsonNode and adds it to the transformation 
      * catalog entry. 
      * <pre>
-     name: "isi"
-     type: "installed"
-     pfn: "/path/to/keg"
-     arch: "x86_64"
-     os.type: "linux"
-     os.release: "fc"
-     os.version: "1.0"
-     profiles:
-       env:
-           Hello: World
-           JAVA_HOME: /bin/java.1.6
-       condor:
-           FOO: bar
-     c: centos-pegasus
- </pre>
+     * name: "isi"
+     * type: "installed"
+     * pfn: "/path/to/keg"
+     * arch: "x86_64"
+     * os.type: "linux"
+     * os.release: "fc"
+     * os.version: "1.0"
+     * profiles:
+     *   env:
+     *       Hello: World
+     *       JAVA_HOME: /bin/java.1.6
+     *   condor:
+     *       FOO: bar
+     * container: centos-pegasus
+     * </pre>
      * @param entry
      * @param node 
      */
@@ -486,6 +484,23 @@ public class TransformationCatalogYAMLParser {
         entry.setSysInfo(sysInfo);
     }
  
+    /**
+     * Parses and creates a container object
+     * 
+     * <pre>
+     * containers:
+     *   - name: centos-pegasus
+     *     type: docker
+     *     image: docker:///rynge/montage:latest
+     *     mount: /Volumes/Work/lfs1:/shared-data/:ro
+     * 
+     * profiles:
+     *   env:
+     *       JAVA_HOME: /opt/java/1.6
+     * </pre>
+     * @param node
+     * @return Container 
+     */
     protected Container createContainer(JsonNode node){
         Container c = new Container();
         for (Iterator<Entry<String, JsonNode>> it = node.fields(); it.hasNext();) {
