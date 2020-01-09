@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
+
 import os
 import subprocess
-import sys
 
 from setuptools import find_packages, setup
 
@@ -46,23 +47,6 @@ excludes = ["Pegasus.test*"]
 #
 def setup_installer_dependencies():
     global install_requires
-
-    # if sys.version_info >= (3, 0):
-    #    install_requires.append('future==0.16.0')
-
-    # if sys.version_info[1] < 7:
-    #    install_requires.append('ordereddict==1.1')
-    #    install_requires.append('argparse==1.4.0')
-
-    # if sys.version_info[1] <= 4:
-    #    install_requires.append('SQLAlchemy==0.7.6')
-    #    install_requires.append('pysqlite==2.6.0')
-
-    # else:
-    #    install_requires.append('SQLAlchemy==0.8.0')
-
-    # if subprocess.call(["which", "pg_config"]) == 0:
-    #    install_requires.append('psycopg2==2.6')
 
     if subprocess.call(["which", "mysql_config"]) == 0:
         install_requires.append('MySQL-Python;python_version<="2.6"')
