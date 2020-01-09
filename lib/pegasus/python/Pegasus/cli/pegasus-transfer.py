@@ -3283,10 +3283,10 @@ class StashHandler(TransferHandlerBase):
                     failed_l.append(t)
                     continue
 
-                if os.path.exists("/stash"):
+                if os.path.exists('/mnt/ceph/osg/public'):
                     # hack for now - local cp
                     src_path = t.get_src_path()
-                    dst_path = "/stash" + t.get_dst_path()
+                    dst_path = re.sub('^/osgconnect', '', t.get_dst_path())
 
                     prepare_local_dir(os.path.dirname(dst_path))
                     cmd = "/bin/cp '%s' '%s'" %(src_path, dst_path)
