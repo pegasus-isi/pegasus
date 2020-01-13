@@ -319,6 +319,9 @@ public class TransformationCatalogYAMLParser {
         if (node.has(TransformationCatalogKeywords.PROFILES.getReservedName())) {
             baseEntry.addProfiles(createProfiles(node.get(TransformationCatalogKeywords.PROFILES.getReservedName())));
         }
+        if (node.has(TransformationCatalogKeywords.METADATA.getReservedName())) {
+            baseEntry.addProfiles(this.createProfiles("metadata", node.get(TransformationCatalogKeywords.METADATA.getReservedName())));
+        }
         if (node.has(TransformationCatalogKeywords.REQUIRES.getReservedName())) {
             mLogger.log("Compound transformations are not yet supported. Specified in tx " + baseEntry.getLogicalName() ,
                         LogManager.ERROR_MESSAGE_LEVEL);
@@ -459,8 +462,9 @@ public class TransformationCatalogYAMLParser {
                     break;
 
                 case METADATA:
-                    throw new ScannerException("Metadata is unsupported currently");
-
+                    entry.addProfiles(this.createProfiles("metadata", node.get(TransformationCatalogKeywords.METADATA.getReservedName())));
+                    break;
+                    
                 case SITE_PFN:
                     String pfn = node.get(key).asText();
                     entry.setPhysicalTransformation(pfn);
