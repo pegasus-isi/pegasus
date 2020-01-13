@@ -70,13 +70,13 @@ public class YAMLTest {
 
     private static final String PROPERTIES_BASENAME = "properties";
 
-    private static final String EXPANDED_SITE = "bamboo";
-    private static final String EXPANDED_NAMESPACE = "pegasus";
-    private static final String EXPANDED_NAME = "keg";
-    private static final String EXPANDED_VERSION = "1.0";
-    private static final String EXPANDED_ARCH = "x86_64";
-    private static final String EXPANDED_OS = "linux";
-    private static final String EXPANDED_KEG_PATH = "file:///usr/bin/pegasus-keg";
+    private static final String EXPANDED_SITE = "\"bamboo\"";
+    private static final String EXPANDED_NAMESPACE = "\"pegasus\"";
+    private static final String EXPANDED_NAME = "\"keg\"";
+    private static final String EXPANDED_VERSION = "\"1.0\"";
+    private static final String EXPANDED_ARCH = "\"x86_64\"";
+    private static final String EXPANDED_OS = "\"linux\"";
+    private static final String EXPANDED_KEG_PATH = "\"file:///usr/bin/pegasus-keg\"";
 
     @BeforeClass
     public static void setUpClass() {
