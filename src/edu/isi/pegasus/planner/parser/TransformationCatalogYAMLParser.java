@@ -327,10 +327,10 @@ public class TransformationCatalogYAMLParser {
                         LogManager.ERROR_MESSAGE_LEVEL);
         }
         if (node.has(TransformationCatalogKeywords.SITES.getReservedName())) {
-            TransformationCatalogEntry entry = (TransformationCatalogEntry) baseEntry.clone();
             JsonNode sitesNode = node.get(TransformationCatalogKeywords.SITES.getReservedName());
             if (sitesNode.isArray()) {
                 for (JsonNode siteNode : sitesNode) {
+                    TransformationCatalogEntry entry = (TransformationCatalogEntry) baseEntry.clone();
                     addSiteInformation(entry, siteNode);
                     entries.add(entry);
                 }
