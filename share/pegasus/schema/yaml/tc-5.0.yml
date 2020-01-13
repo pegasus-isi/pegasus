@@ -86,7 +86,7 @@ $defs:
         type: string
       mount:
         type: array
-          items: string
+        items: string
       profiles:
         $ref: 'common.yml#/$defs/profiles'
     required:
