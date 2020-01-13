@@ -7,6 +7,8 @@ transformations:
        env: 
          "APP_HOME": "/tmp/karan"
          "JAVA_HOME": "/bin/java.1.5"
+     metadata:
+       "size": "3"
                 
      sites:
       - name: "isi"
