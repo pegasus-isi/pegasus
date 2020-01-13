@@ -46,10 +46,10 @@ transformations:
             "JAVA_HOME": "/opt/java/1.6"
           condor: 
             "FOO": "bar"
-#        metadata: 
-#           "key": "value"
-#           "appmodel": "myxform.aspen"
-#           "version": "2.0" 
+        metadata: 
+           "key": "value"
+           "appmodel": "myxform.aspen"
+           "version": "2.0" 
         arch: x86_64
         os.type: "linux"
         os.release: fc
@@ -70,10 +70,10 @@ transformations:
             "JAVA_HOME": "/opt/java/1.6"
           condor: 
             "FOO": "bar"
- #       metadata: 
- #          "key": "value"
- #          "appmodel": "myxform.aspen"
- #          "version": "2.0" 
+        metadata: 
+           "key": "value"
+           "appmodel": "myxform.aspen"
+           "version": "2.0" 
         arch: ${ARCH}
         os.type: ${OS}
         os.release: fc
@@ -81,17 +81,16 @@ transformations:
         os.version: "4"
         type: stageable
         container: "centos-pegasus" 
-        
-            
+                    
 
 containers:
    - name: "centos-pegasus"
      type: "docker"
      image: "docker:///rynge/montage:latest"
-     image_site: "optional site"
-     mount: 
-        - "/Volumes/Work/lfs1:/shared-data/:ro"
-        - "/Volumes/Work/lfs1:/shared-data/:wo"
+     image.site: "optional site"
+#     mount: 
+#        - "/Volumes/Work/lfs1:/shared-data/:ro"
+#        - "/Volumes/Work/lfs1:/shared-data/:wo"
      profiles: 
        env: 
          "JAVA_HOME": "/opt/java/1.6"
@@ -99,9 +98,9 @@ containers:
    - name: "centos-pegasus_1"
      type: "docker"
      image: "docker:///will/montage:latest"
-     image_site: "optional site"
-     mount: 
-        - "/Volumes/Work/lfs1:/shared-data/:ro"
+     image.site: "optional site"
+#     mount: 
+#        - "/Volumes/Work/lfs1:/shared-data/:ro"
      profiles: 
        env: 
          "JAVA_HOME": "/opt/java/1.6"
