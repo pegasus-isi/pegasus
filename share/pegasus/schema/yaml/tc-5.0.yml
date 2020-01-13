@@ -42,6 +42,8 @@ $defs:
               type: string
             profiles:
               $ref: 'common.yml#/$defs/profiles'
+            metadata:
+              $ref: 'common.yml#/$defs/metadata'
             type:
               type: string
               enum:
@@ -80,17 +82,17 @@ $defs:
           - shifter
       image:
         type: string
-      imageSite:
+      image.site:
         type: string
       mount:
-        type: string
+        type: array
+          items: string
       profiles:
         $ref: 'common.yml#/$defs/profiles'
     required:
       - name
       - type
       - image
-      - mount
     additionalProperties: false
     patternProperties:
       ^x-:
