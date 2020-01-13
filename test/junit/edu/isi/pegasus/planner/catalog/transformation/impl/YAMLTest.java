@@ -48,7 +48,7 @@ import edu.isi.pegasus.planner.test.TestSetup;
  */
 public class YAMLTest {
 
-    private static final String CORRECT_FILE = "transformationcatalogue_test.yaml";
+    private static final String CORRECT_FILE = "tc_test.yml";
 
     private static final String ERROR_FILE = "transformationcatalogue_test_error.yaml";
 
