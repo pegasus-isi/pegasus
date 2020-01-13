@@ -35,7 +35,7 @@ class TransformationType(Enum):
     INSTALLED = "installed"
 
 
-class _TransformationSite(ProfileMixin):
+class _TransformationSite(ProfileMixin, MetadataMixin):
     """Site specific information about a Transformation. Transformations will contain
     at least one _TransformationSite object which includes, at minimum, the name of the site,
     the transformation's pfn on that site and whether or not it is installed or stageable at
@@ -106,6 +106,7 @@ class _TransformationSite(ProfileMixin):
         self.container = container
 
         self.profiles = defaultdict(dict)
+        self.metadata = dict()
 
     def __json__(self):
 
@@ -121,6 +122,7 @@ class _TransformationSite(ProfileMixin):
                 "glibc": self.glibc,
                 "container": self.container,
                 "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
+                "metadata": dict(self.metadata) if len(self.metadata) > 0 else None,
             }
         )
 
@@ -143,8 +145,8 @@ class _Container(ProfileMixin):
         :type container_type: ContainerType
         :param image: image, such as 'docker:///rynge/montage:latest'
         :type image: str
-        :param mount: mount, such as '/Volumes/Work/lfs1:/shared-data/:ro'
-        :type mount: str
+        :param mounts: list of mount strings such as ['/Volumes/Work/lfs1:/shared-data/:ro']
+        :type mount: list
         :param image_site: optional site attribute to tell pegasus which site tar file exists, defaults to None
         :type image_site: str, optional
         :raises ValueError: container_type must be one of ContainerType
@@ -168,7 +170,7 @@ class _Container(ProfileMixin):
                 "type": self.container_type,
                 "image": self.image,
                 "mount": self.mount,
-                "imageSite": self.image_site,
+                "image.site": self.image_site,
                 "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
             }
         )
@@ -295,7 +297,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         return self
 
     def add_site_profile(self, site_name, namespace, key, value):
-        """Add a profile to a transformation site with the corresponding site name
+        """Add a profile to a transformation site with the given site name
         
         :param site_name: the name of the site to which the profile is to be added
         :type site_name: str
@@ -315,6 +317,28 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
             )
 
         self.sites[site_name].add_profile(namespace, key, value)
+
+        return self
+
+    def add_site_metadata(self, site_name, key, value):
+        """Add metadata to a transformation site with the given site name
+        
+        :param site_name: the name of the site to which the metadata is to be added
+        :type site_name: str
+        :param key: key
+        :type key: str
+        :param value: value
+        :type value: str
+        :raises NotFoundError: the given site_name was not found
+        :return: self
+        :rtype: Transformation
+        """
+        if site_name not in self.sites:
+            raise NotFoundError(
+                "Site {0} not found for transformation {1}".format(site_name, self.name)
+            )
+
+        self.sites[site_name].add_metadata(key, value)
 
         return self
 
