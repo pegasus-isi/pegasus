@@ -70,13 +70,14 @@ public class YAMLTest {
 
     private static final String PROPERTIES_BASENAME = "properties";
 
-    private static final String EXPANDED_SITE = "\"bamboo\"";
-    private static final String EXPANDED_NAMESPACE = "\"pegasus\"";
-    private static final String EXPANDED_NAME = "\"keg\"";
-    private static final String EXPANDED_VERSION = "\"1.0\"";
-    private static final String EXPANDED_ARCH = "\"x86_64\"";
-    private static final String EXPANDED_OS = "\"linux\"";
-    private static final String EXPANDED_KEG_PATH = "\"file:///usr/bin/pegasus-keg\"";
+    private static final String EXPANDED_SITE = "bamboo";
+    private static final String EXPANDED_NAMESPACE = "pegasus";
+    private static final String EXPANDED_NAME = "keg";
+    private static final String EXPANDED_VERSION = "\"1.0\"";// need to specify like this to ensure YAML parser see's quoted value 
+    private static final String EXPECTED_VERSION = "1.0";
+    private static final String EXPANDED_ARCH = "x86_64";
+    private static final String EXPANDED_OS = "linux";
+    private static final String EXPANDED_KEG_PATH = "file:///usr/bin/pegasus-keg";
 
     @BeforeClass
     public static void setUpClass() {
@@ -234,13 +235,13 @@ public class YAMLTest {
     @Test
     public void testParameterExpansionContents() throws Exception {
         mLogger.logEventStart("test.catalog.transformation.impl.Text", "parameter-expansion-contents", Integer.toString(mTestNumber++));
-        List<TransformationCatalogEntry> kegEntries = mCorrectCatalog.lookup(EXPANDED_NAMESPACE, EXPANDED_NAME, EXPANDED_VERSION,
+        List<TransformationCatalogEntry> kegEntries = mCorrectCatalog.lookup(EXPANDED_NAMESPACE, EXPANDED_NAME, EXPECTED_VERSION,
                 EXPANDED_SITE, null);
         TransformationCatalogEntry expanded = kegEntries.get(0);
         SysInfo info = expanded.getSysInfo();
         assertEquals("Expected attribute ", EXPANDED_NAMESPACE, expanded.getLogicalNamespace());
         assertEquals("Expected attribute ", EXPANDED_NAME, expanded.getLogicalName());
-        assertEquals("Expected attribute ", EXPANDED_VERSION, expanded.getLogicalVersion());
+        assertEquals("Expected attribute ", EXPECTED_VERSION, expanded.getLogicalVersion());
         assertEquals("Expected attribute ", EXPANDED_SITE, expanded.getResourceId());
         assertEquals("Expected attribute ", EXPANDED_ARCH, info.getArchitecture().name());
         assertEquals("Expected attribute ", EXPANDED_OS, info.getOS().name());
