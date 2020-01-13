@@ -5,6 +5,8 @@ from .errors import NotFoundError
 
 # --- metadata -----------------------------------------------------------------
 class MetadataMixin:
+    """Derived class can have metadata assigned to it as key value pairs."""
+
     def add_metadata(self, key, value):
         """Add metadata as a key value pair to this object
         
@@ -14,28 +16,10 @@ class MetadataMixin:
         :type value: str
         :raises DuplicateError: metadata keys must be unique
         :return: self
-        :rtype: type(self)
+        :rtype: object type that uses MetadataMixin
         """
         if key in self.metadata:
             raise DuplicateError
-
-        self.metadata[key] = value
-
-        return self
-
-    def update_metadata(self, key, value):
-        """Update metadata
-        
-        :param key: key
-        :type key: str
-        :param value: value
-        :type value: str
-        :raises NotFoundError: key not found 
-        :return: self
-        :rtype: type(self)
-        """
-        if key not in self.metadata:
-            raise NotFoundError
 
         self.metadata[key] = value
 
@@ -58,7 +42,7 @@ class MetadataMixin:
         :type key: str
         :raises NotFoundError: key not found
         :return: self
-        :rtype: type(self)
+        :rtype: object type that uses MetadataMixin
         """
         if key not in self.metadata:
             raise NotFoundError
@@ -68,7 +52,11 @@ class MetadataMixin:
         return self
 
     def clear_metadata(self):
-        """Clear all the metadata given to this object"""
+        """Clear all the metadata given to this object
+        
+        :return: self
+        :rtype: object type that uses MetadataMixin
+        """
         self.metadata.clear()
 
         return self
