@@ -50,11 +50,11 @@ public class YAMLTest {
 
     private static final String CORRECT_FILE = "tc_test.yml";
 
-    private static final String ERROR_FILE = "transformationcatalogue_test_error.yaml";
+    private static final String ERROR_FILE = "tc_test_error.yml";
 
     private static final String INVALID_YAML_FILE = "tc_test_invalid.yml";
 
-    private static final String EMPTY_FILE = "transformationcatalogue_test_empty.yaml";
+    private static final String EMPTY_FILE = "tc_test_empty.yml";
 
     private PegasusBag mBag;
 
