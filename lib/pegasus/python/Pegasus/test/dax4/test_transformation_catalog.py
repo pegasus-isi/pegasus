@@ -165,21 +165,24 @@ class Test_TransformationSite:
             ),
         ],
     )
-    def test_tojson_no_profiles(
+    def test_tojson_no_profiles_or_metadata(
         self, transformation_site: _TransformationSite, expected_json: dict
     ):
         assert transformation_site.__json__() == expected_json
 
-    def test_tojson_with_profiles(self):
-        t = _TransformationSite(
-            "local", "/pfn", TransformationType.INSTALLED
-        ).add_profile(Namespace.ENV, "JAVA_HOME", "/java/home")
+    def test_tojson_with_profiles_and_metadata(self):
+        t = (
+            _TransformationSite("local", "/pfn", TransformationType.INSTALLED)
+            .add_profile(Namespace.ENV, "JAVA_HOME", "/java/home")
+            .add_metadata("key", "value")
+        )
 
         assert t.__json__() == {
             "name": "local",
             "pfn": "/pfn",
             "type": TransformationType.INSTALLED.value,
             "profiles": {Namespace.ENV.value: {"JAVA_HOME": "/java/home"}},
+            "metadata": {"key": "value"},
         }
 
 
@@ -271,6 +274,16 @@ class TestTransformation:
 
         assert Namespace.ENV.value in t_local_profiles
         assert "JAVA_HOME" in t_local_profiles[Namespace.ENV.value]
+
+    def test_add_site_metadata(self):
+        t = Transformation("test")
+        t.add_site("local", "/pfn", TransformationType.STAGEABLE)
+        t.add_site_metadata("local", "key", "value")
+
+        t_local_metadata = t.sites["local"].metadata
+
+        assert "key" in t_local_metadata
+        assert t_local_metadata["key"] == "value"
 
     def test_add_requirement_as_str(self):
         t = Transformation("test")
