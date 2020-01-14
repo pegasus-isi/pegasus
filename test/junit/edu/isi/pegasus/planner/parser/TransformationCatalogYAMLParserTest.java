@@ -219,7 +219,8 @@ public class TransformationCatalogYAMLParserTest {
 "      name: centos-pegasus\n" +
 "      type: docker\n" +
 "      image: docker:///rynge/montage:latest\n" +
-"      mount: /Volumes/Work/lfs1:/shared-data/:ro\n" +
+"      mount: \n" +
+"        - /Volumes/Work/lfs1:/shared-data/:ro\n" +
 "      profiles:\n" +
 "        env:\n" +
 "            JAVA_HOME: /opt/java/1.6";

@@ -490,7 +490,10 @@ public class TransformationCatalogYAMLParser {
      *   - name: centos-pegasus
      *     type: docker
      *     image: docker:///rynge/montage:latest
-     *     mount: /Volumes/Work/lfs1:/shared-data/:ro
+     *     mount: 
+     *        - /Volumes/Work/lfs1:/shared-data/:ro
+     *        - /Volumes/Work/lfs2:/shared-data2/:ro
+     * 
      * 
      * profiles:
      *   env:
@@ -536,8 +539,10 @@ public class TransformationCatalogYAMLParser {
                     break;
 
                 case CONTAINER_MOUNT:
-                    String mountPoint = node.get(key).asText();
-                    c.addMountPoint( mountPoint);
+                    List<String> mps = this.createMountPoints(node.get(TransformationCatalogKeywords.CONTAINER_MOUNT.getReservedName()));
+                    for(String mountPoint: mps){
+                        c.addMountPoint( mountPoint);
+                    }
                     break;
 
                 case PROFILES:
@@ -552,7 +557,29 @@ public class TransformationCatalogYAMLParser {
         return c;
     }
 
+    /**
+     * Creates a list of mount points for the container
+     * <pre>
+     *    - /Volumes/Work/lfs1:/shared-data/:ro
+     *    - /Volumes/Work/lfs2:/shared-data2/:ro
+     * </pre>
+     * 
+     * @param node
+     * @return 
+     */
+    protected List<String> createMountPoints(JsonNode node) {
+        List<String> mps = new LinkedList();
+        if (node.isArray()) {
+            for (JsonNode mpNode : node) {
+                mps.add(mpNode.asText());
+            }
+        } else {
+            throw new ScannerException("containers.mount: value should be of type array ");
+        }
+        return mps;
+    }
     
+
     /**
      * Remove potential leading and trailing quotes from a string.
      *
@@ -606,5 +633,6 @@ public class TransformationCatalogYAMLParser {
 
     }
 
+    
 
 }
