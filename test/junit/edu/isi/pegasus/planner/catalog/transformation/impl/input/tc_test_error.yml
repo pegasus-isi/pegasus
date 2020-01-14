@@ -1,80 +1,25 @@
-- transformations:
+pegasus: "5.0"
+transformations:
    - name: "keg"
      namespace: "example"
      version: "1.0"
          
-     profile:
-      - env: 
+     profiles:
+       env: 
          "APP_HOME": "/tmp/karan"
          "JAVA_HOME": "/bin/java.1.5"
                 
-     site:
+     sites:
       - name: "isi"
-        profile: 
-         - env: 
+        profiles: 
+          env: 
             "me": "with"
             "JAVA_HOME": "/bin/java.1.6"
-         - condor: 
+          condor: 
             "more": "test"
         pfn: "/path/to/keg"
         unknown: "unknown"
-        os: "linux"
-        osrelease: fc
-        osversion: "as"
-        type: INSTALLED
-     
-      - name: "wind"
-        profile: 
-         - env: 
-            "me": "with"
-         - condor: 
-            "more": "test"
-        pfn: "/path/to/keg"
-        arch: x86
-        os: "linux"
-        osrelease: fc
-        osversion: 4
-        type: STAGEABLE
-
-   - name: "myxform"   
-              
-     site:
-      - name: "condorpool"
-        profile: 
-         - env: 
-            "HELLo": "WORLD"
-            "JAVA_HOME": "/opt/java/1.6"
-         - condor: 
-            "FOO": "bar"
-        metadata: 
-           "key": "value"
-           "appmodel": "myxform.aspen"
-           "version": "2.0" 
-        arch: x86_64
-        os: "linux"
-        osrelease: fc
-        pfn: "/usr/bin/true"
-        osversion: 4
-        type: INSTALLED
-        container: "centos-pegasus"        
-
-- cont:
-   - name: "centos-pegasus"
-     type: "docker"
-     image: "docker:///rynge/montage:latest"
-     image_site: "optional site"
-     mount: 
-        - "/Volumes/Work/lfs1:/shared-data/:ro"
-     profile: 
-      - env: 
-         "JAVA_HOME": "/opt/java/1.6"
-       
-   - name: "centos-pegasus_1"
-     type: "docker"
-     image: "docker:///will/montage:latest"
-     image_site: "optional site"
-     mount: 
-        - "/Volumes/Work/lfs1:/shared-data/:ro"
-     profile: 
-      - env: 
-         "JAVA_HOME": "/opt/java/1.6"
+        os.type: "linux"
+        os.release: fc
+        os.version: "1.0"
+        type: installed

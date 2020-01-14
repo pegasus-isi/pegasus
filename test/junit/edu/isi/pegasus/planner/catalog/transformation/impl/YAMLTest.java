@@ -201,14 +201,13 @@ public class YAMLTest {
         mBag.add(PegasusBag.PEGASUS_PROPERTIES, mErrorProps);
         mLogger.logEventStart("test.catalog.transformation.impl.YAML", "setup", "0");
 
-        YAML mCorrectCatalog = new YAML();
+        YAML catalog = new YAML();
         mErrorProps.setProperty(PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
                 new File(mTestSetup.getInputDirectory(), ERROR_FILE).getAbsolutePath());
         try {
-            mCorrectCatalog.initialize(mBag);
+            catalog.initialize(mBag);
         } catch (RuntimeException e) {
-            assertTrue(e.getCause().getMessage().contains("Unknown fields [\"unknown\"] present in transformations details"));
-            assertTrue(e.getCause().getMessage().contains("Missing required fields [\"arch\"] in transformations details"));
+            assertTrue(e.getCause().getMessage().contains("unknown: is not defined in the schema"));
         }
     }
 
