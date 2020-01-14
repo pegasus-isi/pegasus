@@ -7,6 +7,7 @@ from Pegasus.dax4.mixins import _Hook
 from Pegasus.dax4.mixins import EventType
 from Pegasus.dax4.mixins import _ShellHook
 from Pegasus.dax4.mixins import HookMixin
+from Pegasus.dax4.mixins import Namespace
 from Pegasus.dax4.mixins import ProfileMixin
 from Pegasus.dax4.errors import DuplicateError
 from Pegasus.dax4.errors import NotFoundError
@@ -156,29 +157,58 @@ def profile_mixin_obj():
 
 
 class TestProfileMixin:
-    def test_add_valid_profile(self):
-        pass
+    def test_add_valid_profile(self, profile_mixin_obj):
+        profile_mixin_obj.add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
 
-    def test_add_invalid_profile(self):
-        pass
+        assert Namespace.ENV.value in profile_mixin_obj.profiles
+        assert "JAVA_HOME" in profile_mixin_obj.profiles[Namespace.ENV.value]
+        assert (
+            profile_mixin_obj.profiles[Namespace.ENV.value]["JAVA_HOME"]
+            == "/usr/bin/java"
+        )
 
-    def test_has_valid_profile(self):
-        pass
+    def test_add_invalid_profile(self, profile_mixin_obj):
+        with pytest.raises(ValueError):
+            profile_mixin_obj.add_profile("namespace", "key", "value")
 
-    def test_has_invalid_profile(self):
-        pass
+    def test_has_valid_profile(self, profile_mixin_obj):
+        profile_mixin_obj.add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
+        assert (
+            profile_mixin_obj.has_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
+            == True
+        )
 
-    def test_remove_valid_profile(self):
-        pass
+        print(profile_mixin_obj.profiles)
+        assert (
+            profile_mixin_obj.has_profile(
+                Namespace.ENV, "JAVA_HOME", "/usr/bin/java123"
+            )
+            == False
+        )
 
-    def test_remove_invalid_profile(self):
-        pass
+    def test_has_invalid_profile(self, profile_mixin_obj):
+        with pytest.raises(ValueError):
+            profile_mixin_obj.has_profile("123", "key", "value")
 
-    def test_remove_profile_not_added(self):
-        pass
+    def test_clear_profiles(self, profile_mixin_obj):
+        profile_mixin_obj.add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
+        profile_mixin_obj.add_profile(Namespace.GLOBUS, "key", "value")
 
-    def test_clear_profiles(self):
-        pass
+        assert len(profile_mixin_obj.profiles) == 2
+        profile_mixin_obj.clear_profiles()
 
-    def test_chaining(self):
-        pass
+        assert len(profile_mixin_obj.profiles) == 0
+
+    def test_chaining(self, profile_mixin_obj):
+        (
+            profile_mixin_obj.add_profile(Namespace.ENV, "key", "value").add_profile(
+                Namespace.GLOBUS, "key", "value"
+            )
+        )
+
+        assert len(profile_mixin_obj.profiles) == 2
+
+        assert id(profile_mixin_obj.add_profile(Namespace.ENV, "key2", "value")) == id(
+            profile_mixin_obj
+        )
+
