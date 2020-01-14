@@ -1,0 +1,9 @@
+pegasus: "5.0"
+transformations:
+   - name: "keg"
+     namespace: "example"
+     version: "1.0"
+     profiles:
+       env: 
+         "APP_HOME": "/tmp/karan"
+         "JAVA_HOME": "/bin/java.1.5"

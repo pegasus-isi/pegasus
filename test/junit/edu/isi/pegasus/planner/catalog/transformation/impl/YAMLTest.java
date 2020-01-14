@@ -52,7 +52,7 @@ public class YAMLTest {
 
     private static final String ERROR_FILE = "transformationcatalogue_test_error.yaml";
 
-    private static final String INVALID_YAML_FILE = "transformationcatalogue_test_invalid.yaml";
+    private static final String INVALID_YAML_FILE = "tc_test_invalid.yml";
 
     private static final String EMPTY_FILE = "transformationcatalogue_test_empty.yaml";
 
@@ -260,13 +260,13 @@ public class YAMLTest {
         mBag.add(PegasusBag.PEGASUS_PROPERTIES, mErrorProps);
         mLogger.logEventStart("test.catalog.transformation.impl.YAML", "setup", "0");
 
-        YAML mCorrectCatalog = new YAML();
+        YAML catalog = new YAML();
         mErrorProps.setProperty(PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
                 new File(mTestSetup.getInputDirectory(), INVALID_YAML_FILE).getAbsolutePath());
         try {
-            mCorrectCatalog.initialize(mBag);
+            catalog.initialize(mBag);
         } catch (RuntimeException e) {
-            assertTrue(e.getCause().getMessage().contains("line 6: Problem in the line :6, column:4 with tag profile:^"));
+            assertTrue(e.getCause().getMessage().contains("{$.transformations[0].sites: is missing but it is required}"));
         }
     }
 
