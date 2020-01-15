@@ -28,8 +28,7 @@ public class Invoke {
      * WHEN To INVOKE
      */
     public static enum WHEN {
-
-        never, start, on_success, on_error, at_end, all
+        never, start, on_success, success, on_error, error, at_end, end, all
     };
 
     /**
@@ -64,7 +63,6 @@ public class Invoke {
     public Invoke(WHEN when, String what) {
         mWhen = when;
         mWhat = what;
-
     }
 
     /**

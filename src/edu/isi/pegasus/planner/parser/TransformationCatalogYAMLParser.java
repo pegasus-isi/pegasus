@@ -43,8 +43,10 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.Container.TYPE;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.catalog.transformation.impl.Abstract;
+import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
+import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.parser.tokens.TransformationCatalogKeywords;
 
@@ -315,7 +317,9 @@ public class TransformationCatalogYAMLParser {
         if (node.has(TransformationCatalogKeywords.VERSION.getReservedName())) {
             baseEntry.setLogicalVersion(node.get(TransformationCatalogKeywords.VERSION.getReservedName()).asText());
         }
-
+        if (node.has(TransformationCatalogKeywords.HOOKS.getReservedName())) {
+            baseEntry.addNotifications(this.createNotifications(node.get(TransformationCatalogKeywords.HOOKS.getReservedName())));
+        }
         if (node.has(TransformationCatalogKeywords.PROFILES.getReservedName())) {
             baseEntry.addProfiles(createProfiles(node.get(TransformationCatalogKeywords.PROFILES.getReservedName())));
         }
@@ -326,6 +330,7 @@ public class TransformationCatalogYAMLParser {
             mLogger.log("Compound transformations are not yet supported. Specified in tx " + baseEntry.getLogicalName() ,
                         LogManager.ERROR_MESSAGE_LEVEL);
         }
+        
         if (node.has(TransformationCatalogKeywords.SITES.getReservedName())) {
             JsonNode sitesNode = node.get(TransformationCatalogKeywords.SITES.getReservedName());
             if (sitesNode.isArray()) {
@@ -395,6 +400,55 @@ public class TransformationCatalogYAMLParser {
     }
     
     /**
+     * Creates a notifications object 
+     * <pre>
+     *   shell:
+     *        - on: start
+     *          cmd: /bin/date
+     * </pre>
+     * @param node
+     * @return 
+     */
+    protected Notifications createNotifications(JsonNode node) {
+        Notifications n = new Notifications();
+        for (Iterator<Entry<String, JsonNode>> it = node.fields(); it.hasNext();) {
+            Entry<String, JsonNode> entry = it.next();
+            n.addAll( this.createNotifications(entry.getKey(), entry.getValue()) );
+        }
+        return n;
+    }
+
+    /**
+     * Parses an array of notifications of same type
+     * 
+     * - on: start
+     *   cmd: /bin/date
+     * 
+     * @param key
+     * @param value
+     * @return 
+     */
+    protected Notifications createNotifications(String type, JsonNode node) {
+        Notifications notifications = new Notifications();
+        if( type.equals( "shell" ) ){
+            if( node.isArray() ){
+                for( JsonNode hook: node ){
+                    notifications.add(new Invoke( Invoke.WHEN.valueOf( hook.get("_on").asText()),
+                                                  hook.get("cmd").asText()));
+                }
+            }
+            else{
+                throw new ScannerException( "Expected an array of hooks " + node );
+            }
+        }
+        else{
+            throw new ScannerException( "Unsupported notifications of type " + type + " - " + node );
+        }
+        return notifications;
+    }
+
+    
+    /**
      * Parses site information from JsonNode and adds it to the transformation 
      * catalog entry. 
      * <pre>
@@ -425,7 +479,7 @@ public class TransformationCatalogYAMLParser {
             if (reservedKey == null) {
                 throw new ScannerException(-1, "Illegal key " + key + " for sites: for transformation " + entry );
             }
-
+            
             switch (reservedKey) {
                 case NAME:
                     String siteName = node.get(key).asText();
@@ -456,7 +510,7 @@ public class TransformationCatalogYAMLParser {
                     String type = node.get(key).asText();;
                     entry.setType(TCType.valueOf(type.toUpperCase()));
                     break;
-
+                    
                 case PROFILES:
                     entry.addProfiles(this.createProfiles(node.get(TransformationCatalogKeywords.PROFILES.getReservedName())));
                     break;
@@ -633,6 +687,8 @@ public class TransformationCatalogYAMLParser {
 
     }
 
+    
+    
     
 
 }

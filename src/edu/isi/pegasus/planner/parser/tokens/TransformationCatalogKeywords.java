@@ -28,6 +28,7 @@ public enum TransformationCatalogKeywords {
     VERSION("version"),
     PROFILES("profiles"),
     METADATA("metadata"),
+    HOOKS("hooks"),
     SITES("sites"),
     SITE_PFN("pfn"),
     SITE_ARCHITECTURE("arch"),

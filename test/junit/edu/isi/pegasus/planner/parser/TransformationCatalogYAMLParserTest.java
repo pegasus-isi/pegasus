@@ -24,8 +24,10 @@ import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
+import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.Reader;
@@ -238,6 +240,23 @@ public class TransformationCatalogYAMLParserTest {
         
     }
     
+    @Test
+    public void testHooks(){
+        String input = 
+" shell:\n" +
+"    - _on: start\n" +
+"      cmd: /bin/date\n" +
+"    - _on: end\n" +
+"      cmd: /bin/echo \"Finished\"";
+        JsonNode n = this.getJsonNode(input);
+        TransformationCatalogYAMLParser parser = new TransformationCatalogYAMLParser(mLogger);
+        Notifications actual = parser.createNotifications(n);
+        Notifications expected = new Notifications();
+        expected.add(new Invoke(Invoke.WHEN.start,"/bin/date"));
+        expected.add(new Invoke(Invoke.WHEN.end,"/bin/echo \"Finished\"" ));
+        assertEquals(expected.toString(),actual.toString());
+    }
+    
     private JsonNode getJsonNode( String input ){
         JsonNode root = null;
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
@@ -258,5 +277,8 @@ public class TransformationCatalogYAMLParserTest {
         assertEquals("Value mismatch", expected.getProfileValue(), actual.getProfileValue());
     }
     
-    
+    private void assertNotification(Invoke expected, Invoke actual) {
+        assertEquals("Condition mismatch", expected.getWhen(), actual.getWhen());
+        assertEquals("Command mismatch", expected.getWhat(), actual.getWhat());
+    }
 }
