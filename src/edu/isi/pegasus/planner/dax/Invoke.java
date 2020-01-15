@@ -52,7 +52,7 @@ public class Invoke {
      * @param when
      */
     public Invoke(WHEN when) {
-        mWhen = when;
+        setWhen(when);
     }
 
     /**
@@ -61,7 +61,7 @@ public class Invoke {
      * @param what
      */
     public Invoke(WHEN when, String what) {
-        mWhen = when;
+        setWhen(when);
         mWhat = what;
     }
 
@@ -78,8 +78,19 @@ public class Invoke {
      * @param when
      * @return
      */
-    public Invoke setWhen(WHEN when) {
-        mWhen = when;
+    public final Invoke setWhen(WHEN when) {
+        if( when.equals( WHEN.at_end) ){
+            this.mWhen = WHEN.end;
+        }
+        else if( when.equals( WHEN.on_error)){
+            this.mWhen = WHEN.error;
+        }
+        else if( when.equals(WHEN.on_success)){
+            this.mWhen = WHEN.success;
+        }
+        else{
+            this.mWhen = when;
+        }
         return this;
     }
 
