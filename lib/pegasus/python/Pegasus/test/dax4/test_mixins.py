@@ -178,7 +178,6 @@ class TestProfileMixin:
             == True
         )
 
-        print(profile_mixin_obj.profiles)
         assert (
             profile_mixin_obj.has_profile(
                 Namespace.ENV, "JAVA_HOME", "/usr/bin/java123"
