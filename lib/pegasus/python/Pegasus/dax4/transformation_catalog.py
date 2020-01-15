@@ -25,10 +25,10 @@ __all__ = [
 
 
 class TransformationType(Enum):
-    """Specifies the type of the transformation. STAGEABLE denotes that it can
-    be shipped around as a file. INSTALLED denotes that the transformation is
-    installed on a specified machine, and that it cannot be shipped around as
-    a file to be executed somewher else. 
+    """Specifies the type of the transformation. **STAGEABLE** denotes that it can
+    be staged from one site to another. **INSTALLED** denotes that the transformation is
+    installed on a specified machine, and that it cannot be staged and executed on
+    other sites. 
     """
 
     STAGEABLE = "stageable"
@@ -36,10 +36,9 @@ class TransformationType(Enum):
 
 
 class _TransformationSite(ProfileMixin, MetadataMixin):
-    """Site specific information about a Transformation. Transformations will contain
-    at least one _TransformationSite object which includes, at minimum, the name of the site,
-    the transformation's pfn on that site and whether or not it is installed or stageable at
-    that site.  
+    """Site specific information about a :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`. 
+    A :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` must contain at least one
+    _TransformationSite. 
     """
 
     def __init__(
@@ -54,26 +53,28 @@ class _TransformationSite(ProfileMixin, MetadataMixin):
         glibc=None,
         container=None,
     ):
-        """Constructor
-        
-        :param name: site name associated with this transformation
+        """
+        :param name: name of the site at which this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` resides
         :type name: str
         :param pfn: physical file name
         :type pfn: str
-        :param type: TransformationType.STAGEABLE or TransformationType.INSTALLED
+        :param type: a transformation type defined in :py:class:`~Pegasus.dax4.transformation_catalog.TransformationType`
         :type type: TransformationType
-        :param arch: Architecture that this transformation was compiled for, defaults to None
+        :param arch: architecture that this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.dax4.site_catalog.Arch`), defaults to None
         :type arch: Arch, optional
-        :param os_type: Name of os that this transformation was compiled for, defaults to None
+        :param os_type: name of os that this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.dax4.site_catalog.OSType`), defaults to None
         :type os_type: OSType, optional
-        :param os_release: Release of os that this transformation was compiled for, defaults to None, defaults to None
+        :param os_release: release of os that this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` was compiled for, defaults to None, defaults to None
         :type os_release: str, optional
-        :param os_version: Version of os that this transformation was compiled for, defaults to None, defaults to None
+        :param os_version: version of os that this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` was compiled for, defaults to None, defaults to None
         :type os_version: str, optional
-        :param glibc: Version of glibc this transformation was compiled against, defaults to None
+        :param glibc: version of glibc this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` was compiled against, defaults to None
         :type glibc: str, optional
-        :param container: specify the container to use, optional
+        :param container: specify the name of the container to use, optional
         :type container: str 
+        :raises ValueError: transformation_type must be one of :py:class:`~Pegasus.dax4.transformation_catalog.TransformationType`
+        :raises ValueError: arch must be one of :py:class:`~Pegasus.dax4.site_catalog.Arch`
+        :raises ValueError: os_type must be one of :py:class:`~Pegasus.dax4.site_catalog.OSType`
         """
 
         self.name = name
@@ -136,12 +137,13 @@ class ContainerType(Enum):
 
 
 class _Container(ProfileMixin):
-    def __init__(self, name, container_type, image, mounts, image_site=None):
-        """Constructor
-        
+    """Describes container specifications"""
+
+    def __init__(self, name, container_type, image, mounts=None, image_site=None):
+        """
         :param name: name of this container
         :type name: str
-        :param container_type: a type defined in ContainerType
+        :param container_type: a container type defined in :py:class:`~Pegasus.dax4.transformation_catalog.ContainerType`
         :type container_type: ContainerType
         :param image: image, such as 'docker:///rynge/montage:latest'
         :type image: str
@@ -149,7 +151,7 @@ class _Container(ProfileMixin):
         :type mounts: list
         :param image_site: optional site attribute to tell pegasus which site tar file exists, defaults to None
         :type image_site: str, optional
-        :raises ValueError: container_type must be one of ContainerType
+        :raises ValueError: container_type must be one of :py:class:`~Pegasus.dax4.transformation_catalog.ContainerType`
         """
         self.name = name
 
@@ -179,20 +181,27 @@ class _Container(ProfileMixin):
 class Transformation(ProfileMixin, HookMixin, MetadataMixin):
     """A transformation, which can be a standalone executable, or one that
         requires other executables. Transformations can reside on one or
-        more sites where they are either stageable (a binary that can be shipped
-        around) or installed.
+        more sites where they are either **STAGEABLE** (a binary that can be shipped
+        around) or **INSTALLED**.
+
+    .. code-block:: python
+
+        # Example
+        foo = (Transformation("foo")
+                .add_site("local", "/nfs/u2/ryan/bin/foo", TransformationType.STAGEABLE, arch=Arch.X86_64, ostype=OSType.LINUX)
+                .add_site_profile("local", Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
+                .add_requirement("bar")) 
     """
 
     def __init__(
         self, name, namespace=None, version=None,
     ):
-        """Constructor
-
-        :param name: Logical name of executable
+        """
+        :param name: logical name of the transformation
         :type name: str
-        :param namespace: Transformation namespace
+        :param namespace: transformation namespace
         :type namespace: str, optional
-        :param version: Transformation version, defaults to None
+        :param version: transformation version, defaults to None
         :type version: str, optional
         """
         self.name = name
@@ -221,27 +230,30 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         glibc=None,
         container=None,
     ):
-        """Add a transformation site to this Transformation
+        """Add a transformation site to this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`
         
-        :param name: site name associated with this transformation
+        :param name: name of the site at which this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` resides
         :type name: str
         :param pfn: physical file name
         :type pfn: str
-        :param type: TransformationType.STAGEABLE or TransformationType.INSTALLED
+        :param type: a transformation type defined in :py:class:`~Pegasus.dax4.transformation_catalog.TransformationType`
         :type type: TransformationType
-        :param arch: Architecture that this transformation was compiled for, defaults to None
+        :param arch: architecture that this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.dax4.site_catalog.Arch`), defaults to None
         :type arch: Arch, optional
-        :param os: Name of os that this transformation was compiled for, defaults to None
-        :type os: str, optional
-        :param osrelease: Release of os that this transformation was compiled for, defaults to None, defaults to None
-        :type osrelease: str, optional
-        :param osversion: Version of os that this transformation was compiled for, defaults to None, defaults to None
-        :type osversion: str, optional
-        :param glibc: Version of glibc this transformation was compiled against, defaults to None
+        :param os_type: name of os that this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.dax4.site_catalog.OSType`), defaults to None
+        :type os_type: OSType, optional
+        :param os_release: release of os that this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` was compiled for, defaults to None, defaults to None
+        :type os_release: str, optional
+        :param os_version: version of os that this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` was compiled for, defaults to None, defaults to None
+        :type os_version: str, optional
+        :param glibc: version of glibc this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` was compiled against, defaults to None
         :type glibc: str, optional
-        :param container: specify the container to use, optional
+        :param container: specify the name of the container to use, optional
         :type container: str 
-        :raises DuplicateError: a site with this is already associated to this Transformation
+        :raises ValueError: transformation_type must be one of :py:class:`~Pegasus.dax4.transformation_catalog.TransformationType`
+        :raises ValueError: arch must be one of :py:class:`~Pegasus.dax4.site_catalog.Arch`
+        :raises DuplicateError: a site with this is already associated to this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`
+        :return: self
         """
 
         if name in self.sites:
@@ -271,7 +283,8 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         return self
 
     def has_site(self, name):
-        """Check if a site has been added for this Transformation
+        """Check if a site with the given name has been added for this 
+        :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`
         
         :param name: site name
         :type name: str
@@ -281,11 +294,12 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         return name in self.sites
 
     def remove_site(self, name):
-        """Remove the given site from this Transformation
+        """Remove the given site from this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`
         
         :param name: name of site to be removed
         :type name: str
-        :raises NotFoundError: the site has not been added for this Transformation 
+        :raises NotFoundError: the site has not been added for this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`
+        :return: self
         """
         if name not in self.sites:
             raise NotFoundError(
@@ -301,15 +315,14 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         
         :param site_name: the name of the site to which the profile is to be added
         :type site_name: str
-        :param namespace: a namespace defined in DAX4.Namespace
-        :type namespace: str (defined in DAX4.Namespace)
+        :param namespace: a namespace defined in :py:class:`~Pegasus.dax4.mixins.Namespace`
+        :type namespace: Namespace
         :param key: key
         :type key: str
         :param value: value
         :type value: str
         :raises NotFoundError: the given site_name was not found
         :return: self
-        :rtype: Transformation
         """
         if site_name not in self.sites:
             raise NotFoundError(
@@ -331,7 +344,6 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         :type value: str
         :raises NotFoundError: the given site_name was not found
         :return: self
-        :rtype: Transformation
         """
         if site_name not in self.sites:
             raise NotFoundError(
@@ -343,13 +355,17 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         return self
 
     def add_requirement(self, required_transformation, namespace=None, version=None):
-        """Add a requirement to this Transformation
+        """Add a requirement to this Transformation. Specify the other
+        transformation, identified by name, namespace, and version, that this 
+        transformation depends upon. If a :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`
+        is passed in for *required_transformation*, then namespace and version
+        are ignored. 
         
-        :param required_transformation: Transformation that this transformation requires
-        :type required_transformation: Transformation
+        :param required_transformation: transformation that this transformation requires
+        :type required_transformation: str or Transformation
         :raises DuplicateError: this requirement already exists
+        :raises ValueError: required_transformation must be of type :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` or str
         :return: self
-        :rtype: Transformation
         """
         if isinstance(required_transformation, Transformation):
             key = required_transformation._get_key()
@@ -372,11 +388,15 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         return self
 
     def has_requirement(self, transformation, namespace=None, version=None):
-        """Check if this Transformation requires the given transformation
-        
+        """Check if this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` 
+        requires the given transformation. If a :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`
+        is passed in for *required_transformation*, then namespace and version
+        are ignored. 
+
         :param transformation: the Transformation to check for 
-        :type transformation: Transformation
-        :return: whether or not this Transformation requires the given Transformation
+        :type transformation: Transformation or str        
+        :raises ValueError: required_transformation must be of type :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` or str
+        :return: whether or not this transformation requires the given transformation
         :rtype: bool
         """
         if isinstance(transformation, Transformation):
@@ -391,11 +411,16 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         return key in self.requires
 
     def remove_requirement(self, transformation, namespace=None, version=None):
-        """Remove a requirement from this Transformation
+        """Remove a requirement from this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`.
+        If a :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`
+        is passed in for *required_transformation*, then namespace and version
+        are ignored. 
         
-        :param transformation: the Transformation to be removed from the list of requirements
+        :param transformation: the :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` to be removed from the list of requirements
         :type transformation: Transformation
         :raises NotFoundError: this requirement does not exist
+        :raises ValueError: required_transformation must be of type :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` or str
+        :return: self
         """
 
         if isinstance(transformation, Transformation):
@@ -457,20 +482,37 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
 
 
 class TransformationCatalog(Writable):
-    """TransformationCatalog class maintains a list a Transformations, site specific
-    Transformation information, and a list of containers
+    """Maintains a list a :py:class:`~Pegasus.dax4.transformation_catalog.Transformations`, site specific
+    transformation information, and a list of containers
+
+    .. code-block:: python
+
+        # Example
+        foo = (Transformation("foo")
+                .add_site("local", "/nfs/u2/ryan/bin/foo", TransformationType.STAGEABLE, arch=Arch.X86_64, ostype=OSType.LINUX)
+                .add_site_profile("local", Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
+                .add_requirement("bar"))
+
+        bar = (Transformation("bar")
+                .add_site("local", "/nfs/u2/ryan/bin/bar", TransformationType.STAGEABLE, arch=Arch.X86_64, ostype=OSType.LINUX))
+
+        tc = (TransformationCatalog()
+                .add_transformations(foo, bar)
+                .add_container("centos-pegasus", ContainerType.DOCKER, "docker:///rynge/centos-pegasus:latest", mounts=["/Volumes/Work/lfs1:/shared-data/:ro"])
+                .write(non_default_filepath="tc.yml", file_format=FileFormat.YAML))
     """
 
     def __init__(self):
-        """Constructor"""
         self.transformations = dict()
         self.containers = dict()
 
     def add_transformations(self, *transformations):
-        """Add one or more Transformations to this catalog
+        """Add one or more :py:class:`~Pegasus.dax4.transformation_catalog.Transformations` to this catalog
         
-        :raises ValueError: argument(s) must be of type Transformation
+        :param transformations: the :py:class:`~Pegasus.dax4.transformation_catalog.Transformations` to be added
+        :raises ValueError: argument(s) must be of type :py:class:`~Pegasus.dax4.transformation_catalog.Transformations`
         :raises DuplicateError: Transformation already exists in this catalog
+        :return: self 
         """
         for tr in transformations:
             if not isinstance(tr, Transformation):
@@ -484,11 +526,15 @@ class TransformationCatalog(Writable):
         return self
 
     def has_transformation(self, transformation, namespace=None, version=None):
-        """Check if this catalog contains the given Transformation
-        
-        :param transformation: the Transformation to check for 
+        """Check if this catalog contains the given :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`.
+        If a :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`
+        is passed in for *required_transformation*, then namespace and version
+        are ignored. 
+
+        :param transformation: the :py:class:`~Pegasus.dax4.transformation_catalog.Transformations` to check for 
         :type transformation: Transformation
-        :return: whether or not this Transformation exists in this catalog
+        :return: whether or not the given :py:class:`~Pegasus.dax4.transformation_catalog.Transformations` exists in this catalog
+        :raises ValueError: required_transformation must be of type :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` or str
         :rtype: bool
         """
         if isinstance(transformation, Transformation):
@@ -501,23 +547,22 @@ class TransformationCatalog(Writable):
             )
         return key in self.transformations
 
-    def add_container(self, name, container_type, image, mounts, image_site=None):
-        """Retrieve a container by its name
+    def add_container(self, name, container_type, image, mounts=None, image_site=None):
+        """Add a container with the given specifications to this catalog
         
         :param name: name of this container
         :type name: str
-        :param container_type: a type defined in ContainerType
+        :param container_type: a container type defined in :py:class:`~Pegasus.dax4.transformation_catalog.ContainerType`
         :type container_type: ContainerType
-        :param image: image, such as 'docker:///rynge/montage:latest'
+        :param image: image, such as `'docker:///rynge/montage:latest'`
         :type image: str
-        :param mounts: list of mount strings such as ['/Volumes/Work/lfs1:/shared-data/:ro', ...]
-        :type mounts: str
+        :param mounts: list of mount strings such as `['/Volumes/Work/lfs1:/shared-data/:ro', ...]`, defaults to None
+        :type mounts: list
         :param image_site: optional site attribute to tell pegasus which site tar file exists, defaults to None
         :type image_site: str, optional
         :raises DuplicateError: a Container with this name already exists
-        :raises ValueError: container_type must be one of ContainerType
+        :raises ValueError: container_type must be one of :py:class:`~Pegasus.dax4.transformation_catalog.ContainerType`
         :return: self
-        :rtype: TransformationCatalog
         """
         if self.has_container(name):
             raise DuplicateError("Container {0} already exists".format(name))
@@ -542,13 +587,12 @@ class TransformationCatalog(Writable):
         return name in self.containers
 
     def remove_container(self, name):
-        """Remove a conatiner with the given name
+        """Remove a conatiner with the given name from this catalog
         
         :param name: container name
         :type name: str
         :raises NotFoundError: the Container with the given name does not exist in this catalog
         :return: self
-        :rtype: TransformationCatalog
         """
         if not self.has_container(name):
             raise NotFoundError(

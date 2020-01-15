@@ -10,13 +10,12 @@ class MetadataMixin:
     def add_metadata(self, key, value):
         """Add metadata as a key value pair to this object
         
-        :param key: key
+        :param key: metadata key
         :type key: str
-        :param value: value
+        :param value: metadata value
         :type value: str
         :raises DuplicateError: metadata keys must be unique
         :return: self
-        :rtype: object type that uses MetadataMixin
         """
         if key in self.metadata:
             raise DuplicateError
@@ -28,7 +27,7 @@ class MetadataMixin:
     def has_metadata(self, key):
         """Check if metadata with the given key exists for this object
         
-        :param key: key
+        :param key: metadata key
         :type key: str
         :return: whether or not the given metadata key exists for this object
         :rtype: bool
@@ -38,11 +37,10 @@ class MetadataMixin:
     def remove_metadata(self, key):
         """Remove a metadata key value pair
         
-        :param key: key
+        :param key: metadata key
         :type key: str
-        :raises NotFoundError: key not found
+        :raises NotFoundError: metadata key not found
         :return: self
-        :rtype: object type that uses MetadataMixin
         """
         if key not in self.metadata:
             raise NotFoundError
@@ -52,10 +50,9 @@ class MetadataMixin:
         return self
 
     def clear_metadata(self):
-        """Clear all the metadata given to this object
+        """Clear all the metadata assigned to this object
         
         :return: self
-        :rtype: object type that uses MetadataMixin
         """
         self.metadata.clear()
 
@@ -76,17 +73,27 @@ class EventType(Enum):
 
 class HookMixin:
     """Derived class can have hooks assigned to it. This currently supports
-    shell hooks, and will be extended to web hooks etc.
+    shell hooks. The supported hooks are triggered when some event,
+    specified by :py:class:`~Pegasus.dax4.mixins.EventType`, takes place.
     """
 
     def add_shell_hook(self, event_type, cmd):
         # TODO: consider making event_type either an event type or an actual ShellHook
-        """Add a shell hook
+        """Add a shell hook. The given command will be executed by the shell
+        when the specified :py:class:`~Pegasus.dax4.mixins.EventType` takes
+        place.
+
+        .. code-block:: python
+
+            # Example
+            wf.add_shell_hook(EventType.START, "echo 'hello'")
         
-        :param event_type: an event type defined in DAX4.EventType
-        :type event_type: str
+        :param event_type: an event type defined in :py:class:`~Pegasus.dax4.mixins.EventType`
+        :type event_type: EventType
         :param cmd: shell command
         :type cmd: str
+        :raises ValueError: event_type must be one of :py:class:`~Pegasus.dax4.mixins.EventType`
+        :return: self
         """
         if not isinstance(event_type, EventType):
             raise ValueError("event_type must be one of EventType")
@@ -102,9 +109,9 @@ class _Hook:
     def __init__(self, event_type):
         """Constructor
         
-        :param event_type: one of EventType
+        :param event_type: an event type defined in :py:class:`~Pegasus.dax4.mixins.EventType`
         :type event_type: EventType
-        :raises ValueError: event_type must be one of EventType
+        :raises ValueError: event_type must be of type :py:class:`~Pegasus.dax4.mixins.EventType`
         """
         if not isinstance(event_type, EventType):
             raise ValueError("event_type must be one of EventType")
@@ -123,9 +130,9 @@ class _ShellHook(_Hook):
     def __init__(self, event_type, cmd):
         """Constructor
         
-        :param event_type: one of EventType
+        :param event_type: an event type defined in :py:class:`~Pegasus.dax4.mixins.EventType`
         :type event_type: EventType
-        :param cmd: shell command to be executed
+        :param cmd: shell command
         :type cmd: str
         """
         _Hook.__init__(self, event_type)
@@ -137,9 +144,7 @@ class _ShellHook(_Hook):
 
 # --- profiles -----------------------------------------------------------------
 class Namespace(Enum):
-    """
-    Profile Namespace values recognized by Pegasus. See Transformation, and Job.
-    """
+    """Profile Namespace values recognized by Pegasus"""
 
     PEGASUS = "pegasus"
     CONDOR = "condor"
@@ -152,20 +157,35 @@ class Namespace(Enum):
 
 
 class ProfileMixin:
-    """Deriving class can have Profiles assigned to it"""
+    """Derived class can have profiles assigned to it"""
 
     def add_profile(self, namespace, key, value):
         """Add a profile to this object
         
-        :param namespace: a namespace defined in DAX4.Namespace
-        :type namespace: str (defined in DAX4.Namespace)
+        .. code-block:: python
+
+            # Example 1
+            preprocess = (
+                Transformation("preprocess")
+                    .add_profile(Namespace.GLOBUS, "maxtime", 2)
+                    .add_profile(Namespace.DAGMAN, "retry", 3)
+            )
+
+            # Example 2
+            job = (
+                Job(preprocess)
+                    .add_profile(Namespace.ENV, "FOO", "bar")
+            )
+
+        :param namespace: a namespace defined in :py:class:`~Pegasus.dax4.mixins.Namespace`
+        :type namespace: Namespace
         :param key: key
         :type key: str
         :param value: value
         :type value: str
+        :raises ValueError: namespace must be one of :py:class:`~Pegasus.dax4.mixins.Namespace`
         :raises DuplicateError: profiles must be unique
         :return: self
-        :rtype: type(self)
         """
         if not isinstance(namespace, Namespace):
             raise ValueError("namespace must be one of Namespace")
@@ -183,16 +203,18 @@ class ProfileMixin:
         return self
 
     def has_profile(self, namespace, key, value):
-        """Check if a profile with the given namespace, key, and value exists
+        """Check if a profile with the given namespace, key, and value exists for
+        this object.
         
-        :param namespace: a namespace defined in DAX4.Namespace
-        :type namespace: str (defined in DAX4.Namespace)
+        :param namespace: a namespace defined in :py:class:`~Pegasus.dax4.mixins.Namespace`
+        :type namespace: Namespace
         :param key: key
         :type key: str
         :param value: value
         :type value: str
         :raises DuplicateError: profiles must be unique
-        :return: True if it exists, else false
+        :raises ValueError: namespace must be one of :py:class:`~Pegasus.dax4.mixins.Namespace`
+        :return: whether or not the given profile exists
         :rtype: bool
         """
         if not isinstance(namespace, Namespace):
@@ -244,7 +266,6 @@ class ProfileMixin:
         """Remove all profiles from this object
         
         :return: self
-        :rtype: type(self)
         """
         self.profiles.clear()
 

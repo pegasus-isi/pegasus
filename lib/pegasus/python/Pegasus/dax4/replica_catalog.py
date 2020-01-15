@@ -21,8 +21,7 @@ class File(MetadataMixin):
     """
 
     def __init__(self, lfn):
-        """Constuctor
-        
+        """
         :param lfn: a unique logical filename 
         :type lfn: str
         """
@@ -53,19 +52,25 @@ class File(MetadataMixin):
 
 
 class ReplicaCatalog(Writable):
-    """ReplicaCatalog class which maintains a mapping of logical filenames
-    to physical filenames.
-    """
+    """Maintains a mapping of logical filenames to physical filenames"""
 
     def __init__(self):
-        """Constructor"""
         self.replicas = set()
 
     def add_replica(self, lfn, pfn, site, regex=False):
         """Add an entry to the replica catalog
         
-        :param lfn: logical filename or File object
-        :type lfn: str|File
+        .. code-block:: python
+
+            # Example
+            input_file = File("input_file")
+
+            rc = ReplicaCatalog()
+            (rc.add_replica(input_file, "/nfs/u2/ryan/data.csv", "local")
+                .add_replica("if2", "/nfs/u2/ryan/data2.csv", "local"))
+
+        :param lfn: logical filename or :py:class:`~Pegasus.dax4.replica_catalog.File`
+        :type lfn: str or File
         :param pfn: physical file name 
         :type pfn: str
         :param site: site at which this file resides
@@ -73,7 +78,8 @@ class ReplicaCatalog(Writable):
         :param regex: whether or not the lfn is a regex pattern, defaults to False
         :type regex: bool, optional
         :raises DuplicateError: an entry with the same parameters already exists in the catalog
-        :raises ValueError: lfn must be of type File or str
+        :raises ValueError: lfn must be of type :py:class:`~Pegasus.dax4.replica_catalog.File` or str
+        :return: self
         """
         if not isinstance(lfn, File) and not isinstance(lfn, str):
             raise ValueError("lfn must be File or str")
@@ -92,8 +98,8 @@ class ReplicaCatalog(Writable):
     def remove_replica(self, lfn, pfn, site, regex=False):
         """Remove a replica with the given lfn, pfn, site, and regex value
         
-        :param lfn: logical filename or File object
-        :type lfn: str|File
+        :param lfn: logical filename or :py:class:`~Pegasus.dax4.replica_catalog.File`
+        :type lfn: str or File
         :param pfn: physical file name 
         :type pfn: str
         :param site: site at which this file resides
@@ -101,9 +107,8 @@ class ReplicaCatalog(Writable):
         :param regex: whether or not the lfn is a regex pattern, defaults to False
         :type regex: bool, optional
         :raises NotFoundError: Replica(lfn, pfn, site, regex) has not been added to this catalog
-        :raises ValueError: lfn must be of type File or str
+        :raises ValueError: lfn must be of type :py:class:`~Pegasus.dax4.replica_catalog.File` or str
         :return: self
-        :rtype: ReplicaCatalog
         """
         if not isinstance(lfn, File) and not isinstance(lfn, str):
             raise ValueError("lfn must be File or str")
@@ -124,17 +129,17 @@ class ReplicaCatalog(Writable):
         return self
 
     def has_replica(self, lfn, pfn, site, regex=False):
-        """Check if a Replica with the following properties exists in this catalog
+        """Check if a replica with the given (lfn, pfn, site, regex) exists in this catalog
         
-        :param lfn: logical filename or File
-        :type lfn: str|File
+        :param lfn: logical filename or :py:class:`~Pegasus.dax4.replica_catalog.File`
+        :type lfn: str or File
         :param pfn: physical file name 
         :type pfn: str
         :param site: site at which this file resides
         :type site: str
         :param regex: whether or not the lfn is a regex pattern, defaults to False
         :type regex: bool, optional
-        :raises ValueError: lfn must be of type File or str
+        :raises ValueError: lfn must be of type :py:class:`~Pegasus.dax4.replica_catalog.File` or str
         :return: whether or not (lfn, pfn, site, regex) has been added to this catalog
         :rtype: bool
         """

@@ -26,9 +26,8 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
     """An abstract representation of a workflow job"""
 
     def __init__(self, _id=None, node_label=None):
-        """Constructor
-        
-        :param _id: a unique id, if None is given then one will be assigned when this job is added to a Workflow, defaults to None
+        """
+        :param _id: a unique id, if None is given then one will be assigned when this job is added to a :py:class:`~Pegasus.dax4.workflow.Workflow`, defaults to None
         :type _id: str, optional
         :param node_label: a short descriptive label that can be assined to this job, defaults to None
         :type node_label: str, optional
@@ -48,12 +47,12 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         self.metadata = dict()
 
     def add_inputs(self, *input_files):
-        """Add one or more Files as input to this job
+        """Add one or more :py:class:`~Pegasus.dax4.replica_catalog.File`s as input to this job
         
+        :param input_files: the :py:class:`~Pegasus.dax4.replica_catalog.File`s to be added as inputs to this job
         :raises DuplicateError: all input files must be unique
-        :raises ValueError: job inputs must be of type File
+        :raises ValueError: job inputs must be of type :py:class:`~Pegasus.dax4.replica_catalog.File`
         :return: self
-        :rtype: AbstractJob
         """
         for file in input_files:
             if not isinstance(file, File):
@@ -78,17 +77,16 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         return {_input.file for _input in self.inputs}
 
     def add_outputs(self, *output_files, stage_out=True, register_replica=False):
-        """Add one or more Files as outputs to this job. stage_out and register_replica
+        """Add one or more :py:class:`~Pegasus.dax4.replica_catalog.File`s as outputs to this job. stage_out and register_replica
         will be applied to all files given.
         
         :param stage_out: whether or not to send files back to an output directory, defaults to True
         :type stage_out: bool, optional
-        :param register_replica: whether or not to register replica with a replica catalog, defaults to False
+        :param register_replica: whether or not to register replica with a :py:class:`~Pegasus.dax4.replica_catalog.ReplicaCatalog`, defaults to False
         :type register_replica: bool, optional
         :raises DuplicateError: all output files must be unique 
         :raises ValueError: a job output must be of type File 
         :return: self
-        :rtype: AbstractJob
         """
         for file in output_files:
             if not isinstance(file, File):
@@ -126,14 +124,13 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         return self
 
     def set_stdin(self, file):
-        """Set stdin to a file
+        """Set stdin to a :py:class:`~Pegasus.dax4.replica_catalog.File`
         
         :param file: a file that will be read into stdin  
         :type file: File or str
-        :raises ValueError: file must be of type File or str
+        :raises ValueError: file must be of type :py:class:`~Pegasus.dax4.replica_catalog.File` or str
         :raises DuplicateError: stdin is already set or the given file has already been added as an input to this job
         :return: self
-        :rtype: AbstractJob
         """
         if not isinstance(file, File) and not isinstance(file, str):
             raise ValueError("file must be of type File or str")
@@ -150,7 +147,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         return self
 
     def get_stdin(self):
-        """Get the file being used for stdin
+        """Get the :py:class:`~Pegasus.dax4.replica_catalog.File` being used for stdin
         
         :return: the stdin file
         :rtype: File
@@ -161,7 +158,6 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         """Clear stdin and remove it from the list of inputs 
         
         :return: self
-        :rtype: AbstractJob
         """
         if self.stdin != None:
             # stdin file was added as an input, therefore it must be
@@ -176,14 +172,13 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         return self
 
     def set_stdout(self, file):
-        """Set stdout to a file
+        """Set stdout to a :py:class:`~Pegasus.dax4.replica_catalog.File`
         
         :param file: a file that stdout will be written to
-        :type file: File|str
-        :raises ValueError: file must be of type File or str
+        :type file: File or
+        :raises ValueError: file must be of type :py:class:`~Pegasus.dax4.replica_catalog.File` or str
         :raises DuplicateError: stdout is already set or the given file has already been added as an output to this job 
         :return: self
-        :rtype: AbstractJob
         """
         if not isinstance(file, File) and not isinstance(file, str):
             raise ValueError("file must be of type File or str")
@@ -200,7 +195,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         return self
 
     def get_stdout(self):
-        """Get the file being used for stdout
+        """Get the :py:class:`~Pegasus.dax4.replica_catalog.File` being used for stdout
         
         :return: the stdout file
         :rtype: File
@@ -211,7 +206,6 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         """Clear stdout and remove it from the list of outputs
         
         :return: self
-        :rtype: AbstractJob
         """
         if self.stdout != None:
             # stdout file was added as an output, therefore it
@@ -226,14 +220,13 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         return self
 
     def set_stderr(self, file):
-        """Set stderr to a file 
+        """Set stderr to a :py:class:`~Pegasus.dax4.replica_catalog.File` 
         
         :param file: a file that stderr will be written to
-        :type file: File|str
+        :type file: File or str
         :raises ValueError: file must be of type File or str
         :raises DuplicateError: stderr is already set or the given file has already been added as an output to this job 
         :return: self
-        :rtype: AbstractJob
         """
         if not isinstance(file, File) and not isinstance(file, str):
             raise ValueError("file must be of type File or str")
@@ -250,7 +243,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         return self
 
     def get_stderr(self):
-        """Get the file being used for stderr
+        """Get the :py:class:`~Pegasus.dax4.replica_catalog.File` being used for stderr
         
         :return: the stderr file 
         :rtype: File
@@ -261,7 +254,6 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         """Clear stderr and remove it from the list of outputs
         
         :return: self
-        :rtype: AbstractJob
         """
         if self.stderr != None:
             # stderr file was added as an output, therefore it
@@ -302,24 +294,43 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
 
 
 class Job(AbstractJob):
-    """A typical workflow Job that wraps a transformation/executable"""
+    """A typical workflow Job that executes a :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`.
+
+    .. code-block:: python
+
+        # Example
+        preprocess = (Transformation("preprocess")
+                        .add_metadata("size", 2048)
+                        .add_site("test-cluster", "/usr/bin/keg", TransformationType.INSTALLED))`
+
+        if1 = File("if1")
+        if2 = File("if2")
+
+        of1 = File("of1")
+        of2 = File("of2")
+
+        job = (Job(preprocess)
+                .add_args("-i", if1, if2, "-o", of1, of2)
+                .add_inputs(if1, if2)
+                .add_outputs(of1, of2, stage_out=True, register_replica=False))
+
+    """
 
     def __init__(
         self, transformation, _id=None, node_label=None, namespace=None, version=None,
     ):
-        """Constructor
-        
-        :param transformation: Transformation object or name of the Transformation that this job uses
-        :type transformation: Transformation|str
-        :param _id: a unique id; if none is given then one will be assigned when the job is added by a Workflow, defaults to None
+        """        
+        :param transformation: :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` object or name of the transformation that this job uses
+        :type transformation: Transformation or str
+        :param _id: a unique id; if none is given then one will be assigned when the job is added by a :py:class:`~Pegasus.dax4.workflow.Workflow`, defaults to None
         :type _id: str, optional
         :param node_label: a brief job description, defaults to None
         :type node_label: str, optional
-        :param namespace: namespace to which the transformation belongs, defaults to None
+        :param namespace: namespace to which the :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` belongs, defaults to None
         :type namespace: str, optional
-        :param version: version of the given transformation, defaults to None
+        :param version: version of the given :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`, defaults to None
         :type version: str, optional
-        :raises ValueError: transformation must be one of Transformation or str
+        :raises ValueError: transformation must be one of :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` or str
         """
         if isinstance(transformation, Transformation):
             self.transformation = transformation.name
@@ -348,19 +359,18 @@ class Job(AbstractJob):
 
 
 class DAX(AbstractJob):
-    """This type of job represents a sub-DAX that will be planned and executed
+    """Job that represents a sub-DAX that will be planned and executed
     by the workflow"""
 
     def __init__(self, file, _id=None, node_label=None):
-        """Constructor
-        
-        :param file: File object or name of the dax file that will be used for this job
-        :type file: File|str
-        :param _id: a unique id; if none is given then one will be assigned when the job is added by a Workflow, defaults to None
+        """
+        :param file: :py:class:`~Pegasus.dax4.replica_catalog.File` object or name of the dax file that will be used for this job
+        :type file: File or str
+        :param _id: a unique id; if none is given then one will be assigned when the job is added by a :py:class:`~Pegasus.dax4.workflow.Workflow`, defaults to None
         :type _id: str, optional
         :param node_label: a brief job description, defaults to None
         :type node_label: str, optional
-        :raises ValueError: file must be of type File or str
+        :raises ValueError: file must be of type :py:class:`~Pegasus.dax4.replica_catalog.File` or str
         """
         AbstractJob.__init__(self, _id=_id, node_label=node_label)
 
@@ -382,19 +392,19 @@ class DAX(AbstractJob):
 
 
 class DAG(AbstractJob):
-    """This type of job represents a sub-DAG that will be executed by this 
+    """Job represents a sub-DAG that will be executed by this 
     workflow"""
 
     def __init__(self, file, _id=None, node_label=None):
         """Constructor
         
-        :param file: File object or name of the dag file that will be used for this job
-        :type file: File|str
-        :param _id: a unique id; if none is given then one will be assigned when the job is added by a Workflow, defaults to None
+        :param file: :py:class:`~Pegasus.dax4.replica_catalog.File` object or name of the dag file that will be used for this job
+        :type file: File or str
+        :param _id: a unique id; if none is given then one will be assigned when the job is added by a :py:class:`~Pegasus.dax4.workflow.Workflow`, defaults to None
         :type _id: str, optional
         :param node_label: a brief job description, defaults to None
         :type node_label: str, optional
-        :raises ValueError: file must be of type File or str
+        :raises ValueError: file must be of type :py:class:`~Pegasus.dax4.replica_catalog.File` or str
         """
         AbstractJob.__init__(self, _id=_id, node_label=node_label)
 
@@ -461,7 +471,7 @@ class _JobOutput:
 
 
 class _JobDependency:
-    """Internal class used to represent a job's dependencies"""
+    """Internal class used to represent a jobs dependencies within a workflow"""
 
     def __init__(self, parent_id, children_ids):
         self.parent_id = parent_id
@@ -482,13 +492,96 @@ class _JobDependency:
 
 
 class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
-    """ Main abastraction for representing multi-step computational steps as a directed
-    acyclic graph. """
+    """Represents multi-step computational steps as a directed
+    acyclic graph.
+    
+    .. code-block:: python
+
+        # Example
+        from Pegasus.dax4 import *
+
+        # --- replicas -----------------------------------------------------------------
+        rc = ReplicaCatalog()
+        fa = File("f.a").add_metadata("SIZE", "1024")
+
+        rc.add_replica(
+            fa,
+            "file:///lfs/voeckler/src/svn/pegasus/trunk/examples/grid-blackdiamond-perl/f.a",
+            "local",
+        )
+
+        # --- transformations ----------------------------------------------------------
+        tc = TransformationCatalog()
+
+        preprocess = (Transformation("preprocess", namespace="diamond", version="2.0")
+                        .add_profile(Namespace.GLOBUS, "maxtime", 2)
+                        .add_profile(Namespace.DAGMAN, "retry", 3)
+                        .add_site("local", "file:///opt/pegasus/latest/bin/keg", TransformationType.STAGEABLE, arch=Arch.X86_64, ostype=OSType.LINUX) 
+                        .add_site_profile("local", Namespace.ENV, "JAVA_HOME", "/path")
+                        .add_shell_hook(EventType.START, "/bin/echo 'hello i started'")
+                        .add_shell_hook(EventType.END, "/bin/echo 'hello i ended'")
+                        .add_metadata("metadata_key", "metadata_value")
+                        .add_metadata("metadata_key2", "metadata_value2"))
+
+        analyze = (Transformation("analyze", namespace="diamond", version="2.0")
+                    .add_profile(Namespace.GLOBUS, "maxtime", 2)
+                    .add_profile(Namespace.DAGMAN, "retry", 3)
+                    .add_site("local", "file:///opt/pegasus/latest/bin/keg", TransformationType.STAGEABLE, arch=Arch.X86_64, ostype=OSType.LINUX))
+
+        findrange = (Transformation("findrange", namespace="diamond", version="2.0")
+                        .add_profile(Namespace.GLOBUS, "maxtime", 2)
+                        .add_profile(Namespace.DAGMAN, "retry", 3)
+                        .add_site("local", "file:///opt/pegasus/latest/bin/keg", TransformationType.STAGEABLE, arch=Arch.X86_64, ostype=OSType.LINUX))
+
+        tc.add_transformations(preprocess, analyze, findrange)
+
+        # --- workflow -----------------------------------------------------------------
+        wf = Workflow("black-diamond", infer_dependencies=True)
+
+        (wf.add_profile(Namespace.ENV, "WORKFLOW_ENV", "something")
+            .add_shell_hook(EventType.START, "/bin/echo 123")
+            .add_metadata("WORKFLOW_AUTHOR", "GIDEON"))
+
+        fb1 = File("f.b1").add_metadata("SIZE", "1024")
+        fb2 = File("f.b2").add_metadata("SIZE", "2048")
+        wf.add_jobs(Job(preprocess, _id="pre")
+                    .add_args("-a", "preprocess", "-T60", "-i", fa, "-o", fb1, fb2)
+                    .add_inputs(fa)
+                    .add_outputs(fb1, fb2, stage_out=True, register_replica=False)
+                    .add_profile(Namespace.ENV, "ENV", "234")
+                    .add_shell_hook(EventType.START, "/bin/echo 'hello i started'")
+                    .add_shell_hook(EventType.END, "/bin/echo 'hello i ended'")
+                    .add_metadata("metadata_key", "metadata_value")
+                    .add_metadata("metadat_key2", "metadata_value2"))
+
+        fc1 = File("f.c1")
+        wf.add_jobs(Job(findrange, _id="fr1")
+                    .add_args("-a", "findrange", "-T60", "-i", fb1, "-o", fc1)
+                    .add_inputs(fb1)
+                    .add_outputs(fc1))
+
+        fc2 = File("f.c2")
+        wf.add_jobs(Job(findrange, _id="fr2")
+                    .add_args("-a", "findrange", "-T60", "-i", fb2, "-o", fc2)
+                    .add_inputs(fb2)
+                    .add_outputs(fc2))
+
+        fd = File("f.d")
+        wf.add_jobs(Job(analyze, _id="analyze")
+                        .add_args("-a", "analyze", "-T60", "-i", fc1, fc2, "-o", fd)
+                        .add_inputs(fc1, fc2)
+                        .add_outputs(fd)) 
+
+        (wf.include_catalog(rc)
+            .include_catalog(tc))
+
+        wf.write(non_default_filepath="workflow_with_catalogs.yml", file_format=FileFormat.YAML)
+    
+    """
 
     def __init__(self, name, infer_dependencies=False):
-        """Constructor
-        
-        :param name: name of the Workflow
+        """
+        :param name: name of the :py:class:`~Pegasus.dax4.workflow.Workflow`
         :type name: str
         :param infer_dependencies: whether or not to automatically compute job dependencies based on input and output files used by each job, defaults to False
         :type infer_dependencies: bool, optional
@@ -515,7 +608,6 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         
         :raises DuplicateError: a job with the same id already exists in this workflow 
         :return: self
-        :rtype: Workflow
         """
         for job in jobs:
             if job._id == None:
@@ -533,8 +625,8 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         
         :param _id: id of the job to be retrieved from the Workflow
         :type _id: str
-        :raises NotFoundError: a job with the given id does not exist in this Workflow
-        :return: the Job with the given id
+        :raises NotFoundError: a job with the given id does not exist in this workflow
+        :return: the job with the given id
         :rtype: Job
         """
         if _id not in self.jobs:
@@ -556,18 +648,19 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         return next_id
 
     def include_catalog(self, catalog):
-        """Inline the given catalog into this Workflow. When a Workflow is written 
+        """Inline the any of :py:class:`~Pegasus.dax4.replica_catalog.ReplicaCatalog`, 
+        :py:class:`~Pegasus.dax4.transformation_catalog.TransformationCatalog`, or
+        :py:class:`~Pegasus.dax4.site_catalog.SiteCatalog` into this workflow. When a workflow is written 
         to a file, if a catalog has been included, then the contents of the catalog
-        will appear on the same file as the Workflow. 
+        will appear on the same file as the workflow. 
         
         :param catalog: the catalog to be included
-        :type catalog: SiteCatalog|TransformationCatalog|ReplicaCatalog
-        :raises ValueError: a ReplicaCatalog has already been included
-        :raises ValueError: a TransformationCatalog has already been included
-        :raises ValueError: a SiteCatalog has already been included
-        :raises ValueError: a type other than the aformentioned catalogs was given
+        :type catalog: SiteCatalog or TransformationCatalog or ReplicaCatalog
+        :raises ValueError: a :py:class:`~Pegasus.dax4.replica_catalog.ReplicaCatalog` has already been included
+        :raises ValueError: a :py:class:`~Pegasus.dax4.transformation_catalog.TransformationCatalog` has already been included
+        :raises ValueError: a :py:class:`~Pegasus.dax4.site_catalog.SiteCatalog` has already been included
+        :raises ValueError: invalid catalog was given
         :return: self
-        :rtype: Workflow
         """
         if isinstance(catalog, ReplicaCatalog):
             if self.replica_catalog is not None:
@@ -602,11 +695,10 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         """Manually specify a dependency between one job to one or more other jobs
         
         :param parent: parent job
-        :type parent: Job
+        :type parent: AbstractJob
         :param children: one or more child jobs
         :raises DuplicateError: a dependency has already been added between the parent job and one of the child jobs
         :return: self
-        :rtype: Workflow
         """
         children_ids = {child._id for child in children}
         parent_id = parent._id
