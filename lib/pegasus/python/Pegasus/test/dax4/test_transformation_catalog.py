@@ -2,6 +2,7 @@ import os
 import json
 
 import pytest
+from jsonschema import validate
 
 from Pegasus.dax4.transformation_catalog import TransformationType
 from Pegasus.dax4.transformation_catalog import _TransformationSite
@@ -166,24 +167,47 @@ class Test_TransformationSite:
         ],
     )
     def test_tojson_no_profiles_or_metadata(
-        self, transformation_site: _TransformationSite, expected_json: dict
+        self,
+        transformation_site: _TransformationSite,
+        expected_json: dict,
+        convert_yaml_schemas_to_json,
+        load_schema,
     ):
+        result = transformation_site.__json__()
+
+        transformation_site_schema = load_schema("tc-5.0.json")["$defs"][
+            "transformation"
+        ]["properties"]["sites"]["items"]
+
+        validate(instance=result, schema=transformation_site_schema)
+
         assert transformation_site.__json__() == expected_json
 
-    def test_tojson_with_profiles_and_metadata(self):
+    def test_tojson_with_profiles_and_metadata(
+        self, convert_yaml_schemas_to_json, load_schema
+    ):
         t = (
             _TransformationSite("local", "/pfn", TransformationType.INSTALLED)
             .add_profile(Namespace.ENV, "JAVA_HOME", "/java/home")
             .add_metadata("key", "value")
         )
 
-        assert t.__json__() == {
+        result = t.__json__()
+        expected = {
             "name": "local",
             "pfn": "/pfn",
             "type": TransformationType.INSTALLED.value,
             "profiles": {Namespace.ENV.value: {"JAVA_HOME": "/java/home"}},
             "metadata": {"key": "value"},
         }
+
+        transformation_site_schema = load_schema("tc-5.0.json")["$defs"][
+            "transformation"
+        ]["properties"]["sites"]["items"]
+
+        validate(instance=result, schema=transformation_site_schema)
+
+        assert result == expected
 
 
 class TestTransformation:
@@ -386,19 +410,30 @@ class TestTransformation:
         assert t.sites["local"].has_profile(Namespace.ENV, "JAVA_HOME", "/java/home")
         assert t.has_requirement("required")
 
-    def test_tojson_without_profiles_hooks_metadata(self):
+    def test_tojson_without_profiles_hooks_metadata(
+        self, convert_yaml_schemas_to_json, load_schema
+    ):
         t = Transformation("test", namespace="pegasus")
         t.add_site("local", "/pfn", TransformationType.STAGEABLE)
         t.add_requirement("required")
 
-        assert t.__json__() == {
+        result = t.__json__()
+        expected = {
             "name": "test",
             "namespace": "pegasus",
             "requires": ["required"],
             "sites": [t.sites["local"].__json__()],
         }
 
-    def test_tojson_with_profiles_hooks_metadata(self):
+        transformation_schema = load_schema("tc-5.0.json")["$defs"]["transformation"]
+
+        validate(instance=result, schema=transformation_schema)
+
+        assert result == expected
+
+    def test_tojson_with_profiles_hooks_metadata(
+        self, convert_yaml_schemas_to_json, load_schema
+    ):
         t = Transformation("test", namespace="pegasus")
         t.add_site("local", "/pfn", TransformationType.STAGEABLE)
         t.add_site_profile("local", Namespace.ENV, "JAVA_HOME", "/java/home")
@@ -408,7 +443,8 @@ class TestTransformation:
         t.add_shell_hook(EventType.START, "/bin/echo hi")
         t.add_metadata("key", "value")
 
-        assert t.__json__() == {
+        result = t.__json__()
+        expected = {
             "name": "test",
             "namespace": "pegasus",
             "requires": ["required"],
@@ -418,36 +454,53 @@ class TestTransformation:
             "hooks": {"shell": [{"_on": EventType.START.value, "cmd": "/bin/echo hi"}]},
         }
 
+        transformation_schema = load_schema("tc-5.0.json")["$defs"]["transformation"]
+        validate(instance=result, schema=transformation_schema)
+
+        assert result == expected
+
 
 class Test_Container:
     def test_valid_container(self):
-        _Container("test", ContainerType.DOCKER, "image", "mount")
+        _Container("test", ContainerType.DOCKER, "image", ["mount"])
 
     def test_invalid_container(self):
         with pytest.raises(ValueError):
-            _Container("test", "container_type", "image", "mount")
+            _Container("test", "container_type", "image", ["mount"])
 
-    def test_tojson_no_profiles(self):
-        c = _Container("test", ContainerType.DOCKER, "image", "mount")
+    def test_tojson_no_profiles(self, convert_yaml_schemas_to_json, load_schema):
+        c = _Container("test", ContainerType.DOCKER, "image", ["mount"])
 
-        assert c.__json__() == {
+        result = c.__json__()
+        expected = {
             "name": "test",
             "type": ContainerType.DOCKER.value,
             "image": "image",
-            "mount": "mount",
+            "mounts": ["mount"],
         }
 
-    def test_tojson_with_profiles(self):
-        c = _Container("test", ContainerType.DOCKER, "image", "mount")
+        container_schema = load_schema("tc-5.0.json")["$defs"]["container"]
+        validate(instance=result, schema=container_schema)
+
+        assert result == expected
+
+    def test_tojson_with_profiles(self, convert_yaml_schemas_to_json, load_schema):
+        c = _Container("test", ContainerType.DOCKER, "image", ["mount"])
         c.add_profile(Namespace.ENV, "JAVA_HOME", "/java/home")
 
-        assert c.__json__() == {
+        result = c.__json__()
+        expected = {
             "name": "test",
             "type": ContainerType.DOCKER.value,
             "image": "image",
-            "mount": "mount",
+            "mounts": ["mount"],
             "profiles": {Namespace.ENV.value: {"JAVA_HOME": "/java/home"}},
         }
+
+        container_schema = load_schema("tc-5.0.json")["$defs"]["container"]
+        validate(instance=result, schema=container_schema)
+
+        assert result == expected
 
 
 class TestTransformationCatalog:
@@ -501,33 +554,33 @@ class TestTransformationCatalog:
 
     def test_add_container(self):
         tc = TransformationCatalog()
-        tc.add_container("container", ContainerType.DOCKER, "image", "mount")
+        tc.add_container("container", ContainerType.DOCKER, "image", ["mount"])
 
         assert len(tc.containers) == 1
         assert "container" in tc.containers
 
     def test_add_duplicate_container(self):
         tc = TransformationCatalog()
-        tc.add_container("container", ContainerType.DOCKER, "image", "mount")
+        tc.add_container("container", ContainerType.DOCKER, "image", ["mount"])
         with pytest.raises(DuplicateError):
-            tc.add_container("container", ContainerType.DOCKER, "image", "mount")
+            tc.add_container("container", ContainerType.DOCKER, "image", ["mount"])
 
     def test_add_invlaid_container(self):
         tc = TransformationCatalog()
         with pytest.raises(ValueError):
-            tc.add_container("container", "docker", "image", "mount")
+            tc.add_container("container", "docker", "image", ["mount"])
 
     def test_has_container(self):
         tc = TransformationCatalog()
-        tc.add_container("container1", ContainerType.DOCKER, "image", "mount")
-        tc.add_container("container2", ContainerType.DOCKER, "image", "mount")
+        tc.add_container("container1", ContainerType.DOCKER, "image", ["mount"])
+        tc.add_container("container2", ContainerType.DOCKER, "image", ["mount"])
 
         assert tc.has_container("container1")
         assert tc.has_container("container2")
 
     def remove_container(self):
         tc = TransformationCatalog()
-        tc.add_container("container", ContainerType.DOCKER, "image", "mount")
+        tc.add_container("container", ContainerType.DOCKER, "image", ["mount"])
 
         assert tc.has_container("container")
         assert len(tc.containers) == 1
@@ -547,8 +600,12 @@ class TestTransformationCatalog:
         (
             tc.add_transformations(Transformation("t1"))
             .add_transformations(Transformation("t2"))
-            .add_container("container1", ContainerType.DOCKER, "image", "mount")
-            .add_container("container2", ContainerType.DOCKER, "image", "mount")
+            .add_container(
+                "container1", ContainerType.DOCKER, "image", ["mount1", "mount2"]
+            )
+            .add_container(
+                "container2", ContainerType.DOCKER, "image", ["mount1", "mount2"]
+            )
         )
 
         assert tc.has_transformation("t1")
@@ -560,13 +617,21 @@ class TestTransformationCatalog:
 
         assert len(tc.containers) == 0
 
-    def test_tojson(self):
+    def test_tojson(self, convert_yaml_schemas_to_json, load_schema):
         tc = TransformationCatalog()
         (
-            tc.add_transformations(Transformation("t1"))
-            .add_transformations(Transformation("t2"))
-            .add_container("container1", ContainerType.DOCKER, "image", "mount")
-            .add_container("container2", ContainerType.DOCKER, "image", "mount")
+            tc.add_transformations(
+                Transformation("t1").add_site(
+                    "local", "/pfn", TransformationType.INSTALLED
+                )
+            )
+            .add_transformations(
+                Transformation("t2").add_site(
+                    "local", "/pfn", TransformationType.INSTALLED
+                )
+            )
+            .add_container("container1", ContainerType.DOCKER, "image", ["mount1"])
+            .add_container("container2", ContainerType.DOCKER, "image", ["mount1"])
         )
 
         expected = {
@@ -587,13 +652,17 @@ class TestTransformationCatalog:
         )
         result["containers"] = sorted(result["containers"], key=lambda c: c["name"])
 
-        assert expected == result
+        tc_schema = load_schema("tc-5.0.json")
+        validate(instance=result, schema=tc_schema)
 
-    def test_tojson_no_containers(self):
+        assert result == expected
+
+    def test_tojson_no_containers(self, convert_yaml_schemas_to_json, load_schema):
         tc = TransformationCatalog()
         (
-            tc.add_transformations(Transformation("t1")).add_transformations(
-                Transformation("t2")
+            tc.add_transformations(Transformation("t1")
+                .add_site("local", "/pfn", TransformationType.INSTALLED)).add_transformations(
+                Transformation("t2").add_site("local2", "/pfn", TransformationType.STAGEABLE)
             )
         )
 
@@ -611,6 +680,9 @@ class TestTransformationCatalog:
         result["transformations"] = sorted(
             result["transformations"], key=lambda t: t["name"]
         )
+
+        tc_schema = load_schema("tc-5.0.json")
+        validate(instance=result, schema=tc_schema)
 
         assert expected == result
 
