@@ -1,7 +1,9 @@
 import os
+import sys
 import json
 
 import pytest
+from jsonschema import validate
 
 from Pegasus.dax4.replica_catalog import File
 from Pegasus.dax4.replica_catalog import ReplicaCatalog
@@ -30,11 +32,17 @@ class TestFile:
         assert File("a") != File("b")
         assert File("a") != 1
 
-    def test_tojson_with_metdata(self):
-        assert File("lfn").add_metadata("key", "value").__json__() == {
+    def test_tojson_with_metdata(self, convert_yaml_schemas_to_json, load_schema):
+        result = File("lfn").add_metadata("key", "value").__json__()
+        expected = {
             "lfn": "lfn",
             "metadata": {"key": "value"},
         }
+
+        file_schema = load_schema("dax-5.0.json")["$defs"]["file"]
+        validate(instance=result, schema=file_schema)
+
+        assert result == expected
 
 
 class TestReplicaCatalog:
@@ -90,7 +98,7 @@ class TestReplicaCatalog:
         with pytest.raises(ValueError):
             rc.remove_replica(set(), "pfn", "site")
 
-    def test_tojson(self):
+    def test_tojson(self, convert_yaml_schemas_to_json, load_schema):
         rc = ReplicaCatalog()
         rc.add_replica("lfn1", "pfn1", "site1", True)
         rc.add_replica("lfn2", "pfn2", "site2", True)
@@ -106,6 +114,9 @@ class TestReplicaCatalog:
 
         result = rc.__json__()
         result["replicas"] = sorted(result["replicas"], key=lambda d: d["lfn"])
+
+        rc_schema = load_schema("rc-5.0.json")
+        validate(instance=result, schema=rc_schema)
 
         assert result == expected
 
