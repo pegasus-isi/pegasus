@@ -540,8 +540,7 @@ public class TransformationCatalogYAMLParser {
      * Parses and creates a container object
      * 
      * <pre>
-     * containers:
-     *   - name: centos-pegasus
+     * - name: centos-pegasus
      *     type: docker
      *     image: docker:///rynge/montage:latest
      *     mount: 
