@@ -2,6 +2,7 @@ import os
 import json
 
 import pytest
+from jsonschema import validate
 
 from Pegasus.dax4.workflow import AbstractJob
 from Pegasus.dax4.workflow import Job
@@ -18,6 +19,7 @@ from Pegasus.dax4.errors import DuplicateError
 from Pegasus.dax4.errors import NotFoundError
 from Pegasus.dax4.transformation_catalog import Transformation
 from Pegasus.dax4.transformation_catalog import TransformationCatalog
+from Pegasus.dax4.transformation_catalog import TransformationType
 from Pegasus.dax4.mixins import ProfileMixin
 from Pegasus.dax4.mixins import HookMixin
 from Pegasus.dax4.mixins import MetadataMixin
@@ -563,9 +565,13 @@ class TestWorkflow:
         assert wf.dependencies["j1"] == _JobDependency("j1", {"j2"})
         assert wf.dependencies["j2"] == _JobDependency("j2", {"j3"})
 
-    def test_tojson(self):
+    def test_tojson(self, convert_yaml_schemas_to_json, load_schema):
         tc = TransformationCatalog()
-        tc.add_transformations(Transformation("t1"), Transformation("t2"))
+        tc.add_transformations(Transformation("t1")
+                .add_site("local", "/pfn", TransformationType.INSTALLED), 
+            Transformation("t2")
+                .add_site("local2", "/pfn", TransformationType.STAGEABLE)
+        )
 
         rc = ReplicaCatalog()
         rc.add_replica("lfn", "pfn", "site")
@@ -605,11 +611,20 @@ class TestWorkflow:
             "metadata": {"key": "value"},
         }
 
+        workflow_schema = load_schema("dax-5.0.json")
+        validate(instance=result, schema=workflow_schema)
+
         assert result == expected
 
-    def test_write(self):
+    def test_write(self, convert_yaml_schemas_to_json, load_schema):
         tc = TransformationCatalog()
-        tc.add_transformations(Transformation("t1"), Transformation("t2"))
+        tc.add_transformations(
+            Transformation("t1")
+                .add_site("local", "/pfn", TransformationType.STAGEABLE), 
+            Transformation("t2")
+                .add_site("local2", "/pfn", TransformationType.INSTALLED)
+        )
+
 
         rc = ReplicaCatalog()
         rc.add_replica("lfn", "pfn", "site")
@@ -655,6 +670,9 @@ class TestWorkflow:
 
         with open(test_output_filename, "r") as f:
             result = json.load(f)
+
+        workflow_schema = load_schema("dax-5.0.json")
+        validate(instance=result, schema=workflow_schema)
 
         assert result == expected
 

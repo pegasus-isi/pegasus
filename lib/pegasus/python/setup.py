@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
+
 import os
 import subprocess
-import sys
 
 from setuptools import find_packages, setup
 
@@ -42,47 +43,10 @@ excludes = ["Pegasus.test*"]
 
 
 #
-# Create Manifest file to exclude tests, and service files
-#
-def create_manifest_file():
-    global excludes
-
-    f = None
-    try:
-        f = open("MANIFEST.in", "w")
-        f.write("recursive-exclude Pegasus/test *\n")
-
-        if sys.version_info[1] <= 4:
-            f.write("recursive-exclude Pegasus/service *\n")
-            excludes.append("Pegasus.service*")
-
-    finally:
-        if f:
-            f.close()
-
-
-#
 # Install conditional dependencies
 #
 def setup_installer_dependencies():
     global install_requires
-
-    # if sys.version_info >= (3, 0):
-    #    install_requires.append('future==0.16.0')
-
-    # if sys.version_info[1] < 7:
-    #    install_requires.append('ordereddict==1.1')
-    #    install_requires.append('argparse==1.4.0')
-
-    # if sys.version_info[1] <= 4:
-    #    install_requires.append('SQLAlchemy==0.7.6')
-    #    install_requires.append('pysqlite==2.6.0')
-
-    # else:
-    #    install_requires.append('SQLAlchemy==0.8.0')
-
-    # if subprocess.call(["which", "pg_config"]) == 0:
-    #    install_requires.append('psycopg2==2.6')
 
     if subprocess.call(["which", "mysql_config"]) == 0:
         install_requires.append('MySQL-Python;python_version<="2.6"')
@@ -125,7 +89,6 @@ def find_package_data(dirname):
     return [path.replace(dirname, "") for path in items]
 
 
-create_manifest_file()
 setup_installer_dependencies()
 
 setup(
@@ -137,7 +100,7 @@ setup(
     long_description=read("README"),
     license="Apache2",
     url="http://pegasus.isi.edu",
-    python_requires=">=2.6,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*",
+    python_requires=">=2.6,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*",
     keywords=["scientific workflows"],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
@@ -149,7 +112,6 @@ setup(
         "Programming Language :: Python :: 2.6",
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
@@ -162,5 +124,5 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=install_requires,
-    extras_require={"postgresql": ["psycopg2"], "mysql": []},
+    extras_require={"postgresql": ["psycopg2"], "mysql": [], "cwl": ["cwl-utils"]},
 )

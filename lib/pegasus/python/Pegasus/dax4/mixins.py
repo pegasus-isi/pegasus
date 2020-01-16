@@ -201,10 +201,12 @@ class ProfileMixin:
         is_found = False
         if namespace.value in self.profiles:
             if key in self.profiles[namespace.value]:
-                is_found = True
+                if self.profiles[namespace.value][key] == value:
+                    is_found = True
 
         return is_found
 
+    '''
     def remove_profile(self, namespace, key, value):
         """Remove a profile from this object
         
@@ -236,6 +238,7 @@ class ProfileMixin:
             del self.profiles[namespace.value]
 
         return self
+    '''
 
     def clear_profiles(self):
         """Remove all profiles from this object

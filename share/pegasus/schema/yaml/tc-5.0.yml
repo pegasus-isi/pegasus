@@ -84,9 +84,10 @@ $defs:
         type: string
       image.site:
         type: string
-      mount:
+      mounts:
         type: array
-        items: string
+        items: 
+          type: string
       profiles:
         $ref: 'common.yml#/$defs/profiles'
     required:

@@ -136,7 +136,7 @@ class ContainerType(Enum):
 
 
 class _Container(ProfileMixin):
-    def __init__(self, name, container_type, image, mount, image_site=None):
+    def __init__(self, name, container_type, image, mounts, image_site=None):
         """Constructor
         
         :param name: name of this container
@@ -145,8 +145,8 @@ class _Container(ProfileMixin):
         :type container_type: ContainerType
         :param image: image, such as 'docker:///rynge/montage:latest'
         :type image: str
-        :param mounts: list of mount strings such as ['/Volumes/Work/lfs1:/shared-data/:ro']
-        :type mount: list
+        :param mounts: list of mount strings such as ['/Volumes/Work/lfs1:/shared-data/:ro', ...]
+        :type mounts: list
         :param image_site: optional site attribute to tell pegasus which site tar file exists, defaults to None
         :type image_site: str, optional
         :raises ValueError: container_type must be one of ContainerType
@@ -158,7 +158,7 @@ class _Container(ProfileMixin):
 
         self.container_type = container_type.value
         self.image = image
-        self.mount = mount
+        self.mounts = mounts
         self.image_site = image_site
 
         self.profiles = defaultdict(dict)
@@ -169,7 +169,7 @@ class _Container(ProfileMixin):
                 "name": self.name,
                 "type": self.container_type,
                 "image": self.image,
-                "mount": self.mount,
+                "mounts": self.mounts,
                 "image.site": self.image_site,
                 "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
             }
@@ -501,7 +501,7 @@ class TransformationCatalog(Writable):
             )
         return key in self.transformations
 
-    def add_container(self, name, container_type, image, mount, image_site=None):
+    def add_container(self, name, container_type, image, mounts, image_site=None):
         """Retrieve a container by its name
         
         :param name: name of this container
@@ -510,8 +510,8 @@ class TransformationCatalog(Writable):
         :type container_type: ContainerType
         :param image: image, such as 'docker:///rynge/montage:latest'
         :type image: str
-        :param mount: mount, such as '/Volumes/Work/lfs1:/shared-data/:ro'
-        :type mount: str
+        :param mounts: list of mount strings such as ['/Volumes/Work/lfs1:/shared-data/:ro', ...]
+        :type mounts: str
         :param image_site: optional site attribute to tell pegasus which site tar file exists, defaults to None
         :type image_site: str, optional
         :raises DuplicateError: a Container with this name already exists
@@ -526,7 +526,7 @@ class TransformationCatalog(Writable):
             raise ValueError("container_type must be one of ContainerType")
 
         self.containers[name] = _Container(
-            name, container_type, image, mount, image_site
+            name, container_type, image, mounts, image_site
         )
 
         return self
