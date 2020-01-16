@@ -34,23 +34,23 @@ import static org.junit.Assert.*;
  */
 public class RegexRCTest {
 
-    private Regex regex = null;
-    private File rcFile = null;
+    private Regex mRegex = null;
+    private File mRCFile = null;
 
     public RegexRCTest() {
     }
 
     @Before
     public void setUp() throws IOException {
-        regex = new Regex();
-        rcFile = File.createTempFile("replica", ".txt");
-        regex.connect(rcFile.getName());
+        mRegex = new Regex();
+        mRCFile = File.createTempFile("replica", ".txt");
+        mRegex.connect(mRCFile.getName());
     }
 
     @Test
     public void simpleInsert() {
-        regex.insert("a", new ReplicaCatalogEntry("b"));
-        Collection<ReplicaCatalogEntry> c = regex.lookup("a");
+        mRegex.insert("a", new ReplicaCatalogEntry("b"));
+        Collection<ReplicaCatalogEntry> c = mRegex.lookup("a");
         assertTrue(c.contains(new ReplicaCatalogEntry("b")));
     }
 
@@ -58,31 +58,44 @@ public class RegexRCTest {
     public void lookupWithSubstitutionsTest() {
         HashMap attr = new HashMap();
         attr.put("regex", "true");
-        regex.insert("(\\w+)_f[xyz]_(\\d+)\\.sgt.*", new ReplicaCatalogEntry("file://test.isi.edu/scratch/[2]/[1]/[0]", attr));
-        Collection<ReplicaCatalogEntry> c = regex.lookup("TEST_fy_3810.sgt.md5");
+        mRegex.insert("(\\w+)_f[xyz]_(\\d+)\\.sgt.*", new ReplicaCatalogEntry("file://test.isi.edu/scratch/[2]/[1]/[0]", attr));
+        Collection<ReplicaCatalogEntry> c = mRegex.lookup("TEST_fy_3810.sgt.md5");
 
         for (ReplicaCatalogEntry x : c) {
             assertEquals("file://test.isi.edu/scratch/3810/TEST/TEST_fy_3810.sgt.md5", x.getPFN());
         }
 
-        c = regex.lookup("TEST_fz_33810.sgt.md5");
+        c = mRegex.lookup("TEST_fz_33810.sgt.md5");
 
         for (ReplicaCatalogEntry x : c) {
             assertEquals("file://test.isi.edu/scratch/33810/TEST/TEST_fz_33810.sgt.md5", x.getPFN());
         }
 
-        c = regex.lookup("TEST_fa_33810.sgt.md5");
+        c = mRegex.lookup("TEST_fa_33810.sgt.md5");
         assertEquals(0, c.size());
+    }
+    
+    @Test
+    public void lookupWithSubstitutionsTestSummit() {
+        HashMap attr = new HashMap();
+        attr.put("regex", "true");
+        attr.put("pool", "summit");
+        mRegex.insert("(\\w+)_f[xyz]_(\\d+)\\.sgt.*", new ReplicaCatalogEntry("gsiftp://gridftp.ccs.ornl.gov/gpfs/alpine/scratch/callag/geo112/SGT_Storage/[1]/[0]", attr));
+        Collection<ReplicaCatalogEntry> c = mRegex.lookup("USC_fx_7056.sgt");
+
+        for (ReplicaCatalogEntry x : c) {
+            assertEquals("gsiftp://gridftp.ccs.ornl.gov/gpfs/alpine/scratch/callag/geo112/SGT_Storage/USC/USC_fx_7056.sgt", x.getPFN());
+        }
     }
 
     @Test
     public void multipleSimpleInsert() {
-        regex.insert("a", new ReplicaCatalogEntry("b"));
-        regex.insert("a", new ReplicaCatalogEntry("b", "handle"));
-        regex.insert("a", new ReplicaCatalogEntry("c"));
-        regex.insert("a", new ReplicaCatalogEntry("c", "handle"));
+        mRegex.insert("a", new ReplicaCatalogEntry("b"));
+        mRegex.insert("a", new ReplicaCatalogEntry("b", "handle"));
+        mRegex.insert("a", new ReplicaCatalogEntry("c"));
+        mRegex.insert("a", new ReplicaCatalogEntry("c", "handle"));
 
-        Collection<ReplicaCatalogEntry> c = regex.lookup("a");
+        Collection<ReplicaCatalogEntry> c = mRegex.lookup("a");
         assertTrue(c.contains(new ReplicaCatalogEntry("b")));
         assertTrue(c.contains(new ReplicaCatalogEntry("b", "handle")));
         assertTrue(c.contains(new ReplicaCatalogEntry("c")));
@@ -94,10 +107,10 @@ public class RegexRCTest {
         HashMap attr = new HashMap();
         attr.put("regex", "true");
 
-        regex.insert("a", new ReplicaCatalogEntry("b"));
-        regex.insert("a", new ReplicaCatalogEntry("b", attr));
+        mRegex.insert("a", new ReplicaCatalogEntry("b"));
+        mRegex.insert("a", new ReplicaCatalogEntry("b", attr));
 
-        Collection<ReplicaCatalogEntry> c = regex.lookup("a");
+        Collection<ReplicaCatalogEntry> c = mRegex.lookup("a");
 
         assertFalse(c.contains(new ReplicaCatalogEntry("b")));
         for (ReplicaCatalogEntry x : c) {
@@ -111,10 +124,10 @@ public class RegexRCTest {
         HashMap attr = new HashMap();
         attr.put("regex", "true");
 
-        regex.insert("a", new ReplicaCatalogEntry("b", attr));
-        regex.insert("a", new ReplicaCatalogEntry("b"));
+        mRegex.insert("a", new ReplicaCatalogEntry("b", attr));
+        mRegex.insert("a", new ReplicaCatalogEntry("b"));
 
-        Collection<ReplicaCatalogEntry> c = regex.lookup("a");
+        Collection<ReplicaCatalogEntry> c = mRegex.lookup("a");
 
         for (ReplicaCatalogEntry x : c) {
             assertEquals("b", x.getPFN());
@@ -126,6 +139,6 @@ public class RegexRCTest {
 
     @After
     public void tearDown() {
-        rcFile.delete();
+        mRCFile.delete();
     }
 }
