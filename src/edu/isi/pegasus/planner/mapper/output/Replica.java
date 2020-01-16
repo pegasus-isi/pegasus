@@ -192,7 +192,8 @@ public class Replica implements OutputMapper {
         String url = mRCCatalog.lookup(lfn, site);
         
         if( url == null ){
-            throw new MapperException( this.getErrorMessagePrefix() + "Unable to retrive location from Mapper Replica Backend for lfn " + lfn );
+            throw new MapperException( this.getErrorMessagePrefix() + "Unable to retrive location from Mapper Replica Backend for lfn " + 
+                                        lfn + " for site " + site + " and operation " + operation );
         }
         
         return url;
