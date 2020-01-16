@@ -12,3 +12,5 @@ from .workflow import Job
 from .workflow import DAX
 from .workflow import DAG
 from .workflow import Workflow
+from .mixins import Namespace
+from .mixins import EventType
