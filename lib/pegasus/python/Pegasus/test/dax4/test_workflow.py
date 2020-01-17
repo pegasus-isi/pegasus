@@ -567,7 +567,7 @@ class TestWorkflow:
 
     def test_tojson(self, convert_yaml_schemas_to_json, load_schema):
         tc = TransformationCatalog()
-        tc.add_transformations(Transformation("t1")
+        tc.add_transformation(Transformation("t1")
                 .add_site("local", "/pfn", TransformationType.INSTALLED), 
             Transformation("t2")
                 .add_site("local2", "/pfn", TransformationType.STAGEABLE)
@@ -618,7 +618,7 @@ class TestWorkflow:
 
     def test_write(self, convert_yaml_schemas_to_json, load_schema):
         tc = TransformationCatalog()
-        tc.add_transformations(
+        tc.add_transformation(
             Transformation("t1")
                 .add_site("local", "/pfn", TransformationType.STAGEABLE), 
             Transformation("t2")

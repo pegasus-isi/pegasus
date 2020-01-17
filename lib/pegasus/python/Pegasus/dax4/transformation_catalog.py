@@ -136,8 +136,15 @@ class ContainerType(Enum):
     SHIFTER = "shifter"
 
 
-class _Container(ProfileMixin):
-    """Describes container specifications"""
+class Container(ProfileMixin):
+    """Describes a container that can be added to the :py:class:`~Pegasus.dax4.transformation_catalog.TransformationCatalog`
+
+    .. code-block:: python
+
+        c = Container("centos-pegasus", ContainerType.DOCKER, "docker:///ryan/centos-pegasus:latest", ["/Volumes/Work/lfs1:/shared-data/:ro"])\
+                .add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
+            
+    """
 
     def __init__(self, name, container_type, image, mounts=None, image_site=None):
         """
@@ -180,9 +187,9 @@ class _Container(ProfileMixin):
 
 class Transformation(ProfileMixin, HookMixin, MetadataMixin):
     """A transformation, which can be a standalone executable, or one that
-        requires other executables. Transformations can reside on one or
-        more sites where they are either **STAGEABLE** (a binary that can be shipped
-        around) or **INSTALLED**.
+    requires other executables. Transformations can reside on one or
+    more sites where they are either **STAGEABLE** (a binary that can be shipped
+    around) or **INSTALLED**.
 
     .. code-block:: python
 
@@ -491,22 +498,23 @@ class TransformationCatalog(Writable):
         foo = (Transformation("foo")
                 .add_site("local", "/nfs/u2/ryan/bin/foo", TransformationType.STAGEABLE, arch=Arch.X86_64, ostype=OSType.LINUX)
                 .add_site_profile("local", Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
+                .add_site_metadata("local", "size", 2048)
                 .add_requirement("bar"))
 
         bar = (Transformation("bar")
                 .add_site("local", "/nfs/u2/ryan/bin/bar", TransformationType.STAGEABLE, arch=Arch.X86_64, ostype=OSType.LINUX))
 
         tc = (TransformationCatalog()
-                .add_transformations(foo, bar)
-                .add_container("centos-pegasus", ContainerType.DOCKER, "docker:///rynge/centos-pegasus:latest", mounts=["/Volumes/Work/lfs1:/shared-data/:ro"])
-                .write(non_default_filepath="tc.yml", file_format=FileFormat.YAML))
+                .add_transformation(foo)
+                .add_transformation(bar)
+                .add_container("centos-pegasus", ContainerType.DOCKER, "docker:///rynge/centos-pegasus:latest", mounts=["/Volumes/Work/lfs1:/shared-data/:ro"]))
     """
 
     def __init__(self):
         self.transformations = dict()
         self.containers = dict()
 
-    def add_transformations(self, *transformations):
+    def add_transformation(self, *transformations):
         """Add one or more :py:class:`~Pegasus.dax4.transformation_catalog.Transformations` to this catalog
         
         :param transformations: the :py:class:`~Pegasus.dax4.transformation_catalog.Transformations` to be added
@@ -547,32 +555,23 @@ class TransformationCatalog(Writable):
             )
         return key in self.transformations
 
-    def add_container(self, name, container_type, image, mounts=None, image_site=None):
-        """Add a container with the given specifications to this catalog
+    def add_container(self, container):
+        """Add a :py:class:`~Pegasus.dax4.transformation_catalog.Container` to this catalog
         
-        :param name: name of this container
-        :type name: str
-        :param container_type: a container type defined in :py:class:`~Pegasus.dax4.transformation_catalog.ContainerType`
-        :type container_type: ContainerType
-        :param image: image, such as `'docker:///rynge/montage:latest'`
-        :type image: str
-        :param mounts: list of mount strings such as `['/Volumes/Work/lfs1:/shared-data/:ro', ...]`, defaults to None
-        :type mounts: list
-        :param image_site: optional site attribute to tell pegasus which site tar file exists, defaults to None
-        :type image_site: str, optional
-        :raises DuplicateError: a Container with this name already exists
-        :raises ValueError: container_type must be one of :py:class:`~Pegasus.dax4.transformation_catalog.ContainerType`
+        :param container: the :py:class:`~Pegasus.dax4.transformation_catalog.Container` to be added
+        :type container: Container
+        :raises ValueError: container must be of type :py:class:`~Pegasus.dax4.transformation_catalog.Container`
+        :raises DuplicateError: a container with the same name already exists in this catalog
         :return: self
         """
-        if self.has_container(name):
-            raise DuplicateError("Container {0} already exists".format(name))
 
-        if not isinstance(container_type, ContainerType):
-            raise ValueError("container_type must be one of ContainerType")
+        if not isinstance(container, Container):
+            raise ValueError("container must be of type Container")
 
-        self.containers[name] = _Container(
-            name, container_type, image, mounts, image_site
-        )
+        if self.has_container(container.name):
+            raise DuplicateError("Container {0} already exists".format(container.name))
+
+        self.containers[container.name] = container
 
         return self
 

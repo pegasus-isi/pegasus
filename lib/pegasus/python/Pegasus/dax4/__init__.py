@@ -3,6 +3,7 @@ from .replica_catalog import File
 from .replica_catalog import ReplicaCatalog
 from .transformation_catalog import TransformationType
 from .transformation_catalog import ContainerType
+from .transformation_catalog import Container
 from .transformation_catalog import Transformation
 from .transformation_catalog import TransformationCatalog
 from .site_catalog import Arch

@@ -7,7 +7,7 @@ from jsonschema import validate
 from Pegasus.dax4.transformation_catalog import TransformationType
 from Pegasus.dax4.transformation_catalog import _TransformationSite
 from Pegasus.dax4.transformation_catalog import ContainerType
-from Pegasus.dax4.transformation_catalog import _Container
+from Pegasus.dax4.transformation_catalog import Container
 from Pegasus.dax4.transformation_catalog import Transformation
 from Pegasus.dax4.transformation_catalog import TransformationCatalog
 from Pegasus.dax4.transformation_catalog import PEGASUS_VERSION
@@ -460,16 +460,16 @@ class TestTransformation:
         assert result == expected
 
 
-class Test_Container:
+class TestContainer:
     def test_valid_container(self):
-        _Container("test", ContainerType.DOCKER, "image", ["mount"])
+        Container("test", ContainerType.DOCKER, "image", ["mount"])
 
     def test_invalid_container(self):
         with pytest.raises(ValueError):
-            _Container("test", "container_type", "image", ["mount"])
+            Container("test", "container_type", "image", ["mount"])
 
     def test_tojson_no_profiles(self, convert_yaml_schemas_to_json, load_schema):
-        c = _Container("test", ContainerType.DOCKER, "image", ["mount"])
+        c = Container("test", ContainerType.DOCKER, "image", ["mount"])
 
         result = c.__json__()
         expected = {
@@ -485,7 +485,7 @@ class Test_Container:
         assert result == expected
 
     def test_tojson_with_profiles(self, convert_yaml_schemas_to_json, load_schema):
-        c = _Container("test", ContainerType.DOCKER, "image", ["mount"])
+        c = Container("test", ContainerType.DOCKER, "image", ["mount"])
         c.add_profile(Namespace.ENV, "JAVA_HOME", "/java/home")
 
         result = c.__json__()
@@ -506,7 +506,7 @@ class Test_Container:
 class TestTransformationCatalog:
     def test_add_single_transformation(self):
         tc = TransformationCatalog()
-        tc.add_transformations(Transformation("test"))
+        tc.add_transformation(Transformation("test"))
 
         assert ("test", None, None) in tc.transformations
         assert len(tc.transformations) == 1
@@ -518,7 +518,7 @@ class TestTransformationCatalog:
         t2 = Transformation("name", namespace="namespace")
         t3 = Transformation("name", namespace="namespace", version="version")
 
-        tc.add_transformations(t1, t2, t3)
+        tc.add_transformation(t1, t2, t3)
 
         assert ("name", None, None) in tc.transformations
         assert ("name", "namespace", None) in tc.transformations
@@ -527,24 +527,24 @@ class TestTransformationCatalog:
 
     def test_add_duplicate_transformation(self):
         tc = TransformationCatalog()
-        tc.add_transformations(Transformation("name"))
+        tc.add_transformation(Transformation("name"))
         with pytest.raises(DuplicateError):
-            tc.add_transformations(Transformation("name", namespace=None, version=None))
+            tc.add_transformation(Transformation("name", namespace=None, version=None))
 
     def test_add_invalid_transformation(self):
         tc = TransformationCatalog()
         with pytest.raises(ValueError):
-            tc.add_transformations(1)
+            tc.add_transformation(1)
 
     def test_has_transformation_str(self):
         tc = TransformationCatalog()
-        tc.add_transformations(Transformation("name", namespace="namespace"))
+        tc.add_transformation(Transformation("name", namespace="namespace"))
         assert tc.has_transformation("name", namespace="namespace")
 
     def test_has_transformation_obj(self):
         tc = TransformationCatalog()
         t = Transformation("name", namespace="namespace")
-        tc.add_transformations(t)
+        tc.add_transformation(t)
         assert tc.has_transformation(t)
 
     def test_has_invalid_transformation(self):
@@ -554,33 +554,45 @@ class TestTransformationCatalog:
 
     def test_add_container(self):
         tc = TransformationCatalog()
-        tc.add_container("container", ContainerType.DOCKER, "image", ["mount"])
+        tc.add_container(
+            Container("container", ContainerType.DOCKER, "image", ["mount"])
+        )
 
         assert len(tc.containers) == 1
         assert "container" in tc.containers
 
     def test_add_duplicate_container(self):
         tc = TransformationCatalog()
-        tc.add_container("container", ContainerType.DOCKER, "image", ["mount"])
+        tc.add_container(
+            Container("container", ContainerType.DOCKER, "image", ["mount"])
+        )
         with pytest.raises(DuplicateError):
-            tc.add_container("container", ContainerType.DOCKER, "image", ["mount"])
+            tc.add_container(
+                Container("container", ContainerType.DOCKER, "image", ["mount"])
+            )
 
     def test_add_invlaid_container(self):
         tc = TransformationCatalog()
         with pytest.raises(ValueError):
-            tc.add_container("container", "docker", "image", ["mount"])
+            tc.add_container("container")
 
     def test_has_container(self):
         tc = TransformationCatalog()
-        tc.add_container("container1", ContainerType.DOCKER, "image", ["mount"])
-        tc.add_container("container2", ContainerType.DOCKER, "image", ["mount"])
+        tc.add_container(
+            Container("container1", ContainerType.DOCKER, "image", ["mount"])
+        )
+        tc.add_container(
+            Container("container2", ContainerType.DOCKER, "image", ["mount"])
+        )
 
         assert tc.has_container("container1")
         assert tc.has_container("container2")
 
     def remove_container(self):
         tc = TransformationCatalog()
-        tc.add_container("container", ContainerType.DOCKER, "image", ["mount"])
+        tc.add_container(
+            Container("container", ContainerType.DOCKER, "image", ["mount"])
+        )
 
         assert tc.has_container("container")
         assert len(tc.containers) == 1
@@ -598,14 +610,14 @@ class TestTransformationCatalog:
         tc = TransformationCatalog()
 
         (
-            tc.add_transformations(Transformation("t1"))
-            .add_transformations(Transformation("t2"))
-            .add_container(
+            tc.add_transformation(Transformation("t1"))
+            .add_transformation(Transformation("t2"))
+            .add_container(Container(
                 "container1", ContainerType.DOCKER, "image", ["mount1", "mount2"]
-            )
-            .add_container(
+            ))
+            .add_container(Container(
                 "container2", ContainerType.DOCKER, "image", ["mount1", "mount2"]
-            )
+            ))
         )
 
         assert tc.has_transformation("t1")
@@ -620,18 +632,18 @@ class TestTransformationCatalog:
     def test_tojson(self, convert_yaml_schemas_to_json, load_schema):
         tc = TransformationCatalog()
         (
-            tc.add_transformations(
+            tc.add_transformation(
                 Transformation("t1").add_site(
                     "local", "/pfn", TransformationType.INSTALLED
                 )
             )
-            .add_transformations(
+            .add_transformation(
                 Transformation("t2").add_site(
                     "local", "/pfn", TransformationType.INSTALLED
                 )
             )
-            .add_container("container1", ContainerType.DOCKER, "image", ["mount1"])
-            .add_container("container2", ContainerType.DOCKER, "image", ["mount1"])
+            .add_container(Container("container1", ContainerType.DOCKER, "image", ["mount1"]))
+            .add_container(Container("container2", ContainerType.DOCKER, "image", ["mount1"]))
         )
 
         expected = {
@@ -660,9 +672,14 @@ class TestTransformationCatalog:
     def test_tojson_no_containers(self, convert_yaml_schemas_to_json, load_schema):
         tc = TransformationCatalog()
         (
-            tc.add_transformations(Transformation("t1")
-                .add_site("local", "/pfn", TransformationType.INSTALLED)).add_transformations(
-                Transformation("t2").add_site("local2", "/pfn", TransformationType.STAGEABLE)
+            tc.add_transformation(
+                Transformation("t1").add_site(
+                    "local", "/pfn", TransformationType.INSTALLED
+                )
+            ).add_transformation(
+                Transformation("t2").add_site(
+                    "local2", "/pfn", TransformationType.STAGEABLE
+                )
             )
         )
 
@@ -689,7 +706,7 @@ class TestTransformationCatalog:
     def test_write(self):
         tc = TransformationCatalog()
         (
-            tc.add_transformations(Transformation("t1")).add_transformations(
+            tc.add_transformation(Transformation("t1")).add_transformation(
                 Transformation("t2")
             )
         )
@@ -720,4 +737,3 @@ class TestTransformationCatalog:
 
         # cleanup
         os.remove(test_output_filename)
-
