@@ -737,3 +737,43 @@ class TestTransformationCatalog:
 
         # cleanup
         os.remove(test_output_filename)
+    
+    def test_example_transformation_catalog(self, convert_yaml_schemas_to_json, load_schema):
+        # validates the sample tc in pegasus/etc/sample-5.0-data/tc.yml
+        tc = TransformationCatalog()
+
+        foo = (Transformation("foo")
+            .add_profile(Namespace.GLOBUS, "maxtime", 2)
+            .add_profile(Namespace.DAGMAN, "retry", 2)
+            .add_metadata("size", "2048")
+            .add_site("local", "/nfs/u2/ryan/bin/foo", TransformationType.STAGEABLE, arch=Arch.X86_64, ostype=OSType.LINUX)
+            .add_site_profile("local", Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
+            .add_site_metadata("local", "size", "2048")
+            .add_requirement("bar")
+            .add_shell_hook(EventType.START, "/bin/echo 'starting'"))
+
+        bar = (Transformation("bar")
+            .add_site("local", "/nfs/u2/ryan/bin/bar", TransformationType.STAGEABLE, arch=Arch.X86_64, ostype=OSType.LINUX))
+        
+        centos_pegasus_container = (Container("centos-pegasus", ContainerType.DOCKER, "docker:///ryan/centos-pegasus:latest", ["/Volumes/Work/lfs1:/shared-data/:ro"])
+            .add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java"))
+        
+        (tc.add_transformation(foo, bar)
+            .add_container(centos_pegasus_container))
+        
+        test_output_filename = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "TransformationCatalogTestOutput.json",
+        )
+
+        tc.write(non_default_filepath=test_output_filename, file_format=FileFormat.JSON)
+
+        with open(test_output_filename, "r") as f:
+            tc_json = json.load(f)
+
+        tc_schema = load_schema("tc-5.0.json")
+        validate(instance=tc_json, schema=tc_schema)
+
+        # cleanup
+        os.remove(test_output_filename)
+

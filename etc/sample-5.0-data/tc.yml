@@ -1,46 +1,43 @@
-pegasus: "5.0"
+pegasus: '5.0'
 transformations:
-    - namespace: example
-      name: keg
-      version: "1.0"
-      profiles:
-          env:
-              APP_HOME: /tmp/myscratch
-              JAVA_HOME: /opt/java/1.6
-
-      requires:
-          - anotherTr
-
-      sites:
-        - name: isi
-          type: installed
-          pfn: /path/to/keg
-          arch: x86_64
-          os.type: linux
-          os.release: fc
-          os.version: "4"
-          profiles:
-            env:
-                Hello: World
-                JAVA_HOME: /bin/java.1.6
-            condor:
-                FOO: bar
-          container: centos-pegasus
-
-    - namespace: example
-      name: anotherTr
-      version: "1.2.3"
-
-      sites:
-          - name: isi
-            type: installed
-            pfn: /path/to/anotherTr
-
+- name: foo
+  requires:
+  - bar
+  sites:
+  - name: local
+    pfn: /nfs/u2/ryan/bin/foo
+    type: stageable
+    arch: x86_64
+    os.type: linux
+    profiles:
+      env:
+        JAVA_HOME: /usr/bin/java
+    metadata:
+      size: '2048'
+  profiles:
+    globus:
+      maxtime: 2
+    dagman:
+      retry: 2
+  hooks:
+    shell:
+    - _on: start
+      cmd: /bin/echo 'starting''
+  metadata:
+    size: '2048'
+- name: bar
+  sites:
+  - name: local
+    pfn: /nfs/u2/ryan/bin/bar
+    type: stageable
+    arch: x86_64
+    os.type: linux
 containers:
-    - name: centos-pegasus
-      type: docker
-      image: docker:///rynge/montage:latest
-      mount: /Volumes/Work/lfs1:/shared-data/:ro
-      profiles:
-        env:
-            JAVA_HOME: /opt/java/1.6
+- name: centos-pegasus
+  type: docker
+  image: docker:///ryan/centos-pegasus:latest
+  mounts:
+  - /Volumes/Work/lfs1:/shared-data/:ro
+  profiles:
+    env:
+      JAVA_HOME: /usr/bin/java
