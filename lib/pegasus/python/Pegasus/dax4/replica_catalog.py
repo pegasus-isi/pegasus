@@ -63,11 +63,14 @@ class ReplicaCatalog(Writable):
         .. code-block:: python
 
             # Example
-            input_file = File("input_file")
+            if1 = File("if")
+            if2 = File("if2")
 
-            rc = ReplicaCatalog()
-            (rc.add_replica(input_file, "/nfs/u2/ryan/data.csv", "local")
-                .add_replica("if2", "/nfs/u2/ryan/data2.csv", "local"))
+            rc = (
+                ReplicaCatalog()
+                .add_replica(if1, "/nfs/u2/ryan/data.csv", "local")
+                .add_replica("if2", "/nfs/u2/ryan/data2.csv", "local")
+            )
 
         :param lfn: logical filename or :py:class:`~Pegasus.dax4.replica_catalog.File`
         :type lfn: str or File

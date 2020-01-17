@@ -507,7 +507,7 @@ class TransformationCatalog(Writable):
         tc = (TransformationCatalog()
                 .add_transformation(foo)
                 .add_transformation(bar)
-                .add_container("centos-pegasus", ContainerType.DOCKER, "docker:///rynge/centos-pegasus:latest", mounts=["/Volumes/Work/lfs1:/shared-data/:ro"]))
+                .add_container(Container("centos-pegasus", ContainerType.DOCKER, "docker:///rynge/centos-pegasus:latest", mounts=["/Volumes/Work/lfs1:/shared-data/:ro"])))
     """
 
     def __init__(self):

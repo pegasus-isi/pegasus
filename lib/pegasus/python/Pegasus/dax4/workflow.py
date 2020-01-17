@@ -301,7 +301,7 @@ class Job(AbstractJob):
         # Example
         preprocess = (Transformation("preprocess")
                         .add_metadata("size", 2048)
-                        .add_site("test-cluster", "/usr/bin/keg", TransformationType.INSTALLED))`
+                        .add_site("test-cluster", "/usr/bin/keg", TransformationType.INSTALLED))
 
         if1 = File("if1")
         if2 = File("if2")
@@ -648,7 +648,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         return next_id
 
     def include_catalog(self, catalog):
-        """Inline the any of :py:class:`~Pegasus.dax4.replica_catalog.ReplicaCatalog`, 
+        """Inline any of :py:class:`~Pegasus.dax4.replica_catalog.ReplicaCatalog`, 
         :py:class:`~Pegasus.dax4.transformation_catalog.TransformationCatalog`, or
         :py:class:`~Pegasus.dax4.site_catalog.SiteCatalog` into this workflow. When a workflow is written 
         to a file, if a catalog has been included, then the contents of the catalog
