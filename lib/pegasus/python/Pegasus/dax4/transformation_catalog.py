@@ -25,13 +25,14 @@ __all__ = [
 
 
 class TransformationType(Enum):
-    """Specifies the type of the transformation. **STAGEABLE** denotes that it can
-    be staged from one site to another. **INSTALLED** denotes that the transformation is
-    installed on a specified machine, and that it cannot be staged and executed on
-    other sites. 
+    """Specifies the type of the transformation
     """
 
+    #: **STAGEABLE** denotes that it can be staged from one site to another
     STAGEABLE = "stageable"
+
+    #: **INSTALLED** denotes that the transformation is installed on a specified
+    #: machine, and that it cannot be staged and executed on other sites
     INSTALLED = "installed"
 
 
