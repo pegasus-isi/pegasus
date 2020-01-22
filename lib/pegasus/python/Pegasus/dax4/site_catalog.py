@@ -3,6 +3,12 @@ from collections import defaultdict
 
 from Pegasus.dax4.mixins import ProfileMixin
 from Pegasus.dax4.writable import _filter_out_nones
+from Pegasus.dax4.writable import Writable
+from Pegasus.dax4.writable import FileFormat
+from Pegasus.dax4.errors import DuplicateError
+
+
+PEGASUS_VERSION = "5.0"
 
 __all__ = [
     "Arch",
@@ -65,11 +71,11 @@ class DirectoryType(Enum):
 
     #: Describes a long term storage file system. This is the directory
     #: Pegasus will stage output files to.
-    LOCAL_STOARGE = "localStorage"
+    LOCAL_STORAGE = "localStorage"
 
 
 class GridType(Enum):
-    """Different grid types that can be supporte by Pegasus. Mirror the Condor
+    """Different grid types that can be supported by Pegasus. Mirror the Condor
     grid types. http://research.cs.wisc.edu/htcondor/manual/v7.9/5_3Grid_Universe.html
     """
 
@@ -126,7 +132,7 @@ class FileServer(ProfileMixin):
         """
         :param url: url including protocol such as 'scp://obelix.isi.edu/data'
         :type url: str
-        :param operation_type: operation type defined in :py:class`~Pegasus.dax4.site_catalog.OperationType`
+        :param operation_type: operation type defined in :py:class:`~Pegasus.dax4.site_catalog.OperationType`
         :type operation_type: OperationType
         :raises ValueError: operation_type must be one defined in :py:class:`~Pegasus.dax4.site_catalog.OperationType`
         """
@@ -140,11 +146,13 @@ class FileServer(ProfileMixin):
         self.profiles = defaultdict(dict)
 
     def __json__(self):
-        return {
-            "url": self.url,
-            "operation": self.operation_type,
-            "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
-        }
+        return _filter_out_nones(
+            {
+                "url": self.url,
+                "operation": self.operation_type,
+                "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
+            }
+        )
 
 
 class Directory:
@@ -187,7 +195,7 @@ class Directory:
     def add_file_server(self, file_server):
         """Add access methods to this directory
         
-        :param file_server: a :py:class:`~Pegasus.dax4.site_catalog.FileServer
+        :param file_server: a :py:class:`~Pegasus.dax4.site_catalog.FileServer`
         :type file_server: FileServer
         :raises ValueError: file_server must be of type :py:class:`~Pegasus.dax4.site_catalog.FileServer`
         :return: self
@@ -211,13 +219,316 @@ class Directory:
         )
 
 
-class SiteCatalog:
-    def __init__(self):
-        pass
+class Grid:
+    """Each site supports various (usually two) job managers
+    
+    .. code-block:: python
 
-    def add_site(self):
-        pass
+        # Example
+        g = Grid(
+            GridType.GT5,
+            "smarty.isi.edu/jobmanager-pbs",
+            SchedulerType.PBS,
+            job_type=JobType.AUXILLARY,
+        )
+
+    """
+
+    def __init__(
+        self,
+        grid_type,
+        contact,
+        scheduler_type,
+        job_type=None,
+        free_mem=None,
+        total_mem=None,
+        max_count=None,
+        max_cpu_time=None,
+        running_jobs=None,
+        jobs_in_queue=None,
+        idle_nodes=None,
+        total_nodes=None,
+    ):
+        # TODO: get descriptions for params
+        """
+        :param grid_type: [description]
+        :type grid_type: [type]
+        :param contact: [description]
+        :type contact: [type]
+        :param scheduler_type: [description]
+        :type scheduler_type: [type]
+        :param job_type: [description], defaults to None
+        :type job_type: [type], optional
+        :param free_mem: [description], defaults to None
+        :type free_mem: [type], optional
+        :param total_mem: [description], defaults to None
+        :type total_mem: [type], optional
+        :param max_count: [description], defaults to None
+        :type max_count: [type], optional
+        :param max_cpu_time: [description], defaults to None
+        :type max_cpu_time: [type], optional
+        :param running_jobs: [description], defaults to None
+        :type running_jobs: [type], optional
+        :param jobs_in_queue: [description], defaults to None
+        :type jobs_in_queue: [type], optional
+        :param idle_nodes: [description], defaults to None
+        :type idle_nodes: [type], optional
+        :param total_nodes: [description], defaults to None
+        :type total_nodes: [type], optional
+        :raises ValueError: grid_type must be one of :py:class:`~Pegasus.dax4.site_catalog.GridType`
+        :raises ValueError: scheduler_type must be one of :py:class:`~Pegasus.dax4.site_catalog.SchedulerType`
+        :raises ValueError: job_type must be one of :py:class:`~Pegasus.dax4.site_catalog.JobType`
+        """
+        if not isinstance(grid_type, GridType):
+            raise ValueError("grid_type must be one of GridType")
+
+        self.grid_type = grid_type.value
+
+        self.contact = contact
+
+        if not isinstance(scheduler_type, SchedulerType):
+            raise ValueError("scheduler_type must be one of SchedulerType")
+
+        self.scheduler_type = scheduler_type.value
+
+        if job_type is not None:
+            if not isinstance(job_type, JobType):
+                raise ValueError("job_type must be one of JobType")
+            else:
+                self.job_type = job_type.value
+        else:
+            self.job_type = None
+
+        self.free_mem = free_mem
+        self.total_mem = total_mem
+        self.max_count = max_count
+        self.max_cpu_time = max_cpu_time
+        self.running_jobs = running_jobs
+        self.jobs_in_queue = jobs_in_queue
+        self.idle_nodes = idle_nodes
+        self.total_nodes = total_nodes
 
     def __json__(self):
-        pass
+        return _filter_out_nones(
+            {
+                "type": self.grid_type,
+                "contact": self.contact,
+                "scheduler": self.scheduler_type,
+                "jobtype": self.job_type,
+                "freeMem": self.free_mem,
+                "totalMem": self.total_mem,
+                "maxCount": self.max_count,
+                "maxCPUTime": self.max_cpu_time,
+                "runningJobs": self.running_jobs,
+                "jobsInQueue": self.jobs_in_queue,
+                "idleNodes": self.idle_nodes,
+                "totalNodes": self.total_nodes,
+            }
+        )
+
+
+class Site(ProfileMixin):
+    """A compute resource (which is often a cluster) that we indent to run
+    the workflow upon. A site is a homogeneous part of a cluster that has at 
+    least a single GRAM gatekeeper with a jobmanager-fork and jobmanager-<scheduler> 
+    interface and at least one gridftp server along with a shared file system. 
+    The GRAM gatekeeper can be either WS GRAM or Pre-WS GRAM. A site can also 
+    be a condor pool or glidein pool with a shared file system.
+    
+    .. code-block:: python
+
+        # Example
+        s = (
+            Site("condor_pool", arch=Arch.X86_64, os_type=OSType.LINUX)
+            .add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
+            .add_directory(
+                Directory(DirectoryType.SHARED_SCRATCH, "/lustre").add_file_server(
+                    FileServer("gsiftp://smarty.isi.edu/lustre", OperationType.ALL)
+                )
+            )
+            .add_grid(
+                Grid(
+                    GridType.GT5,
+                    "smarty.isi.edu/jobmanager-pbs",
+                    SchedulerType.PBS,
+                    job_type=JobType.AUXILLARY,
+                )
+            )
+            .add_grid(
+                Grid(
+                    GridType.GT5,
+                    "smarty.isi.edu/jobmanager-pbs",
+                    SchedulerType.PBS,
+                    job_type=JobType.COMPUTE,
+                )
+            )
+        )
+
+    """
+
+    def __init__(
+        self,
+        name,
+        arch=None,
+        os_type=None,
+        os_release=None,
+        os_version=None,
+        glibc=None,
+    ):
+        """
+        :param name: name of the site
+        :type name: str
+        :param arch: the site's architecture, defaults to None
+        :type arch: Arch, optional
+        :param os_type: the site's operating system, defaults to None
+        :type os_type: OSType, optional
+        :param os_release: the release of the site's operating system, defaults to None
+        :type os_release: str, optional
+        :param os_version: the version of the site's operating system, defaults to None
+        :type os_version: str, optional
+        :param glibc: glibc used on the site, defaults to None
+        :type glibc: str, optional
+        :raises ValueError: arch must be one of :py:class:`~Pegasus.dax4.site_catalog.Arch`
+        :raises ValueError: os_type must be one of :py:class:`~Pegasus.dax4.site_catalog.OSType`
+        """
+        self.name = name
+        self.directories = list()
+        self.grids = list()
+
+        if arch is not None:
+            if not isinstance(arch, Arch):
+                raise ValueError("arch must be one of Arch")
+            else:
+                self.arch = arch.value
+        else:
+            self.arch = arch
+
+        if os_type is not None:
+            if not isinstance(os_type, OSType):
+                raise ValueError("os_type must be one of OSType")
+            else:
+                self.os_type = os_type.value
+        else:
+            self.os_type = os_type
+
+        self.os_release = os_release
+        self.os_version = os_version
+        self.glibc = glibc
+
+        self.profiles = defaultdict(dict)
+
+    def add_directory(self, directory):
+        """Add a :py:class:`~Pegasus.dax4.site_catalog.Directory` to this :py:class:`~Pegasus.dax4.site_catalog.Site`
+        
+        :param directory: the :py:class:`~Pegasus.dax4.site_catalog.Directory` to be added
+        :type directory: Directory
+        :raises ValueError: directory must be of type :py:class:`~Pegasus.dax4.site_catalog.Directory`
+        :return: self
+        """
+        if not isinstance(directory, Directory):
+            raise ValueError("directory is not of type Directory")
+
+        self.directories.append(directory)
+
+        return self
+
+    def add_grid(self, grid):
+        """Add a :py:class:`~Pegasus.dax4.site_catalog.Grid` to this :py:class:`~Pegasus.dax4.site_catalog.Site`
+        
+        :param grid: the :py:class:`~Pegasus.dax4.site_catalog.Grid` to be added
+        :type grid: Grid
+        :raises ValueError: grid must be of type :py:class:`~Pegasus.dax4.site_catalog.Grid`
+        :return: self
+        """
+        if not isinstance(grid, Grid):
+            raise ValueError("grid must be of type Grid")
+
+        self.grids.append(grid)
+
+        return self
+
+    def __json__(self):
+        return _filter_out_nones(
+            {
+                "name": self.name,
+                "arch": self.arch,
+                "os.type": self.os_type,
+                "os.release": self.os_release,
+                "os.version": self.os_version,
+                "glibc": self.glibc,
+                "directories": [d.__json__() for d in self.directories],
+                "grids": [g.__json__() for g in self.grids],
+                "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
+            }
+        )
+
+
+class SiteCatalog(Writable):
+    """The SiteCatalog describes the compute resources, or :py:class:`~Pegasus.dax4.site_catalog.Site` s
+    that we intend to run the workflow upon.
+
+    .. code-block:: python
+
+        # Example
+        sc = (
+            SiteCatalog()
+                .add_site(
+                    Site("local", arch=Arch.X86_64, os_type=OSType.LINUX)
+                        .add_directory(
+                            Directory(DirectoryType.SHARED_SCRATCH, "/tmp/workflows/scratch")
+                                .add_file_server(FileServer("file:///tmp/workflows/scratch", OperationType.ALL))
+                        )
+                        .add_directory(
+                            Directory(DirectoryType.LOCAL_STORAGE, "/tmp/workflows/outputs")
+                                .add_file_server(FileServer("file:///tmp/workflows/outputs", OperationType.ALL))
+                        )
+                )
+                .add_site(
+                    Site("condor_pool", arch=Arch.X86_64, os_type=OSType.LINUX)
+                        .add_directory(
+                            Directory(DirectoryType.SHARED_SCRATCH, "/lustre")
+                                .add_file_server(FileServer("gsiftp://smarty.isi.edu/lustre", OperationType.ALL))
+                        )
+                        .add_grid(Grid(GridType.GT5, "smarty.isi.edu/jobmanager-pbs", SchedulerType.PBS, job_type=JobType.AUXILLARY))
+                        .add_grid(Grid(GridType.GT5, "smarty.isi.edu/jobmanager-pbs", SchedulerType.PBS, job_type=JobType.COMPUTE))
+                        .add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/javap")
+                )
+                .add_site(
+                    Site("staging_site", arch=Arch.X86_64, os_type=OSType.LINUX)
+                        .add_directory(
+                            Directory(DirectoryType.SHARED_SCRATCH, "/data")
+                                .add_file_server(FileServer("scp://obelix.isi.edu/data", OperationType.PUT))
+                                .add_file_server(FileServer("http://obelix.isi.edu/data", OperationType.GET))
+                        )
+                )
+        )
+    """
+
+    def __init__(self):
+        self.sites = dict()
+
+    def add_site(self, site):
+        """Add a site to this catalog
+        
+        :param site: the site to be added
+        :type site: Site
+        :raises ValueError: site must be of type :py:class:`~Pegasus.dax4.site_catalog.Site`
+        :raises DuplicateError: a site with the same name already exists in this catalog
+        :return: self
+        """
+        if not isinstance(site, Site):
+            raise ValueError("site must be of type Site")
+
+        if site.name in self.sites:
+            raise DuplicateError("site with name: {0} already exists".format(site.name))
+
+        self.sites[site.name] = site
+
+        return self
+
+    def __json__(self):
+        return {
+            "pegasus": PEGASUS_VERSION,
+            "sites": [site.__json__() for _, site in self.sites.items()],
+        }
 
