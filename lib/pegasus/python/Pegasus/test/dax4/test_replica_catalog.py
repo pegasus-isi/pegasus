@@ -65,39 +65,6 @@ class TestReplicaCatalog:
         with pytest.raises(ValueError):
             rc.add_replica(set(), "pfn", "site")
 
-    @pytest.mark.parametrize(
-        "replica", [("lfn", "pfn", "site", False), (File("lfn"), "pfn", "site", True)]
-    )
-    def test_has_replica(self, replica: tuple):
-        rc = ReplicaCatalog()
-        rc.add_replica(*replica)
-
-        assert rc.has_replica(*replica) == True
-        assert rc.has_replica("lfn2", "pfn", "site", False) == False
-
-    def test_has_invalid_replica(self):
-        rc = ReplicaCatalog()
-        with pytest.raises(ValueError):
-            rc.has_replica(set(), "pfn", "ste")
-
-    def test_remove_replica(self):
-        rc = ReplicaCatalog()
-        replica = ("lfn", "pfn", "site")
-        rc.add_replica(*replica)
-        assert rc.has_replica(*replica) == True
-
-        rc.remove_replica(*replica)
-        assert len(rc.replicas) == 0
-        assert rc.has_replica(*replica) == False
-
-        with pytest.raises(NotFoundError):
-            rc.remove_replica(*replica)
-
-    def test_remove_invalid_replica(self):
-        rc = ReplicaCatalog()
-        with pytest.raises(ValueError):
-            rc.remove_replica(set(), "pfn", "site")
-
     def test_tojson(self, convert_yaml_schemas_to_json, load_schema):
         rc = ReplicaCatalog()
         rc.add_replica("lfn1", "pfn1", "site1", True)

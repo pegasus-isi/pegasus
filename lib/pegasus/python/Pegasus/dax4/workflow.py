@@ -154,23 +154,6 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         """
         return self.stdin
 
-    def clear_stdin(self):
-        """Clear stdin and remove it from the list of inputs 
-        
-        :return: self
-        """
-        if self.stdin != None:
-            # stdin file was added as an input, therefore it must be
-            # removed from inputs when stdin is cleared
-            for _input in self.inputs:
-                if _input.file == self.stdin:
-                    self.inputs.remove(_input)
-                    break
-
-        self.stdin = None
-
-        return self
-
     def set_stdout(self, file):
         """Set stdout to a :py:class:`~Pegasus.dax4.replica_catalog.File`
         
@@ -202,23 +185,6 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         """
         return self.stdout
 
-    def clear_stdout(self):
-        """Clear stdout and remove it from the list of outputs
-        
-        :return: self
-        """
-        if self.stdout != None:
-            # stdout file was added as an output, therefore it
-            # must be removed from outputs when stdout is cleared
-            for output in self.outputs:
-                if output.file == self.stdout:
-                    self.outputs.remove(output)
-                    break
-
-        self.stdout = None
-
-        return self
-
     def set_stderr(self, file):
         """Set stderr to a :py:class:`~Pegasus.dax4.replica_catalog.File` 
         
@@ -249,23 +215,6 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         :rtype: File
         """
         return self.stderr
-
-    def clear_stderr(self):
-        """Clear stderr and remove it from the list of outputs
-        
-        :return: self
-        """
-        if self.stderr != None:
-            # stderr file was added as an output, therefore it
-            # must be removed from outputs when stderr is cleared
-            for output in self.outputs:
-                if output.file == self.stderr:
-                    self.outputs.remove(output)
-                    break
-
-        self.stderr = None
-
-        return self
 
     def __json__(self):
         return _filter_out_nones(

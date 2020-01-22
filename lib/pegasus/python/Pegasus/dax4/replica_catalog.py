@@ -98,62 +98,6 @@ class ReplicaCatalog(Writable):
 
         return self
 
-    def remove_replica(self, lfn, pfn, site, regex=False):
-        """Remove a replica with the given lfn, pfn, site, and regex value
-        
-        :param lfn: logical filename or :py:class:`~Pegasus.dax4.replica_catalog.File`
-        :type lfn: str or File
-        :param pfn: physical file name 
-        :type pfn: str
-        :param site: site at which this file resides
-        :type site: str
-        :param regex: whether or not the lfn is a regex pattern, defaults to False
-        :type regex: bool, optional
-        :raises NotFoundError: Replica(lfn, pfn, site, regex) has not been added to this catalog
-        :raises ValueError: lfn must be of type :py:class:`~Pegasus.dax4.replica_catalog.File` or str
-        :return: self
-        """
-        if not isinstance(lfn, File) and not isinstance(lfn, str):
-            raise ValueError("lfn must be File or str")
-
-        if isinstance(lfn, File):
-            lfn = lfn.lfn
-
-        replica = (lfn, pfn, site, regex)
-        if not self.has_replica(*replica):
-            raise NotFoundError(
-                "replica with lfn: {0}, pfn: {1}, site: {2}, regex: {3} does not exist".format(
-                    *replica
-                )
-            )
-
-        self.replicas.remove(replica)
-
-        return self
-
-    def has_replica(self, lfn, pfn, site, regex=False):
-        """Check if a replica with the given (lfn, pfn, site, regex) exists in this catalog
-        
-        :param lfn: logical filename or :py:class:`~Pegasus.dax4.replica_catalog.File`
-        :type lfn: str or File
-        :param pfn: physical file name 
-        :type pfn: str
-        :param site: site at which this file resides
-        :type site: str
-        :param regex: whether or not the lfn is a regex pattern, defaults to False
-        :type regex: bool, optional
-        :raises ValueError: lfn must be of type :py:class:`~Pegasus.dax4.replica_catalog.File` or str
-        :return: whether or not (lfn, pfn, site, regex) has been added to this catalog
-        :rtype: bool
-        """
-        if not isinstance(lfn, File) and not isinstance(lfn, str):
-            raise ValueError("lfn must be File or str")
-
-        if isinstance(lfn, File):
-            lfn = lfn.lfn
-
-        return (lfn, pfn, site, regex) in self.replicas
-
     def __json__(self):
         return {
             "pegasus": PEGASUS_VERSION,

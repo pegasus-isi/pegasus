@@ -290,34 +290,6 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
 
         return self
 
-    def has_site(self, name):
-        """Check if a site with the given name has been added for this 
-        :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`
-        
-        :param name: site name
-        :type name: str
-        :return: True if site has been added, else False
-        :rtype: bool
-        """
-        return name in self.sites
-
-    def remove_site(self, name):
-        """Remove the given site from this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`
-        
-        :param name: name of site to be removed
-        :type name: str
-        :raises NotFoundError: the site has not been added for this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`
-        :return: self
-        """
-        if name not in self.sites:
-            raise NotFoundError(
-                "Site {0} not found for transformation {1}".format(name, self.name)
-            )
-
-        del self.sites[name]
-
-        return self
-
     def add_site_profile(self, site_name, namespace, key, value):
         """Add a profile to a transformation site with the given site name
         
@@ -392,62 +364,6 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
             )
 
         self.requires.add(key)
-
-        return self
-
-    def has_requirement(self, transformation, namespace=None, version=None):
-        """Check if this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` 
-        requires the given transformation. If a :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`
-        is passed in for *required_transformation*, then namespace and version
-        are ignored. 
-
-        :param transformation: the Transformation to check for 
-        :type transformation: Transformation or str        
-        :raises ValueError: required_transformation must be of type :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` or str
-        :return: whether or not this transformation requires the given transformation
-        :rtype: bool
-        """
-        if isinstance(transformation, Transformation):
-            key = transformation._get_key()
-        elif isinstance(transformation, str):
-            key = (transformation, namespace, version)
-        else:
-            raise ValueError(
-                "required_transformation must be of type Transformation or str"
-            )
-
-        return key in self.requires
-
-    def remove_requirement(self, transformation, namespace=None, version=None):
-        """Remove a requirement from this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`.
-        If a :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`
-        is passed in for *required_transformation*, then namespace and version
-        are ignored. 
-        
-        :param transformation: the :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` to be removed from the list of requirements
-        :type transformation: Transformation
-        :raises NotFoundError: this requirement does not exist
-        :raises ValueError: required_transformation must be of type :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` or str
-        :return: self
-        """
-
-        if isinstance(transformation, Transformation):
-            key = transformation._get_key()
-        elif isinstance(transformation, str):
-            key = (transformation, namespace, version)
-        else:
-            raise ValueError(
-                "required_transformation must be of type Transformation or str"
-            )
-
-        if not self.has_requirement(transformation, namespace, version):
-            raise NotFoundError(
-                "Transformation {0} does not have requirement {1}".format(
-                    self.name, str(transformation)
-                )
-            )
-
-        self.requires.remove(key)
 
         return self
 
@@ -527,34 +443,12 @@ class TransformationCatalog(Writable):
             if not isinstance(tr, Transformation):
                 raise ValueError("input must be of type Transformation")
 
-            if self.has_transformation(tr):
+            if tr._get_key() in self.transformations:
                 raise DuplicateError("transformation already exists in catalog")
 
             self.transformations[tr._get_key()] = tr
 
         return self
-
-    def has_transformation(self, transformation, namespace=None, version=None):
-        """Check if this catalog contains the given :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`.
-        If a :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`
-        is passed in for *required_transformation*, then namespace and version
-        are ignored. 
-
-        :param transformation: the :py:class:`~Pegasus.dax4.transformation_catalog.Transformations` to check for 
-        :type transformation: Transformation
-        :return: whether or not the given :py:class:`~Pegasus.dax4.transformation_catalog.Transformations` exists in this catalog
-        :raises ValueError: required_transformation must be of type :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` or str
-        :rtype: bool
-        """
-        if isinstance(transformation, Transformation):
-            key = transformation._get_key()
-        elif isinstance(transformation, str):
-            key = (transformation, namespace, version)
-        else:
-            raise ValueError(
-                "required_transformation must be of type Transformation or str"
-            )
-        return key in self.transformations
 
     def add_container(self, container):
         """Add a :py:class:`~Pegasus.dax4.transformation_catalog.Container` to this catalog
@@ -569,37 +463,10 @@ class TransformationCatalog(Writable):
         if not isinstance(container, Container):
             raise ValueError("container must be of type Container")
 
-        if self.has_container(container.name):
+        if container.name in self.containers:
             raise DuplicateError("Container {0} already exists".format(container.name))
 
         self.containers[container.name] = container
-
-        return self
-
-    def has_container(self, name):
-        """Check if a container exists in this catalog
-        
-        :param name: name of the container
-        :type name: str
-        :return: wether or not the container exists in this catalog
-        :rtype: bool
-        """
-        return name in self.containers
-
-    def remove_container(self, name):
-        """Remove a conatiner with the given name from this catalog
-        
-        :param name: container name
-        :type name: str
-        :raises NotFoundError: the Container with the given name does not exist in this catalog
-        :return: self
-        """
-        if not self.has_container(name):
-            raise NotFoundError(
-                "Container {0} does not exist in this catalog".format(name)
-            )
-
-        del self.containers[name]
 
         return self
 

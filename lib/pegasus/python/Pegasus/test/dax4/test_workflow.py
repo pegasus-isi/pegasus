@@ -142,10 +142,6 @@ class TestAbstractJob:
 
         assert job.get_stdin() == File("a")
         assert job.get_inputs() == {File("a")}
-        job.clear_stdin()
-
-        job.set_stdin("a")
-        assert job.get_stdin() == File("a")
 
     def test_stdin_already_set(self):
         job = AbstractJob()
@@ -169,26 +165,12 @@ class TestAbstractJob:
         job.set_stdin("a")
         assert job.get_stdin() == File("a")
 
-    def test_clear_stdin(self):
-        job = AbstractJob()
-        job.set_stdin(File("a"))
-
-        assert job.get_inputs() == {File("a")}
-        job.clear_stdin()
-
-        assert job.get_stdin() == None
-        assert job.get_inputs() == set()
-
     def test_set_stdout(self):
         job = AbstractJob()
         job.set_stdout(File("a"))
 
         assert job.get_stdout() == File("a")
         assert job.get_outputs() == {File("a")}
-        job.clear_stdout()
-
-        job.set_stdout("a")
-        assert job.get_stdout() == File("a")
 
     def test_set_stdout_already_set(self):
         job = AbstractJob()
@@ -212,26 +194,12 @@ class TestAbstractJob:
         job.set_stdout("a")
         assert job.get_stdout() == File("a")
 
-    def test_clear_stdout(self):
-        job = AbstractJob()
-        job.set_stdout(File("a"))
-
-        assert job.get_outputs() == {File("a")}
-        job.clear_stdout()
-
-        assert job.get_stdout() == None
-        assert job.get_outputs() == set()
-
     def test_set_stderr(self):
         job = AbstractJob()
         job.set_stderr(File("a"))
 
         assert job.get_stderr() == File("a")
         assert job.get_outputs() == {File("a")}
-        job.clear_stderr()
-
-        job.set_stderr("a")
-        assert job.get_stderr() == File("a")
 
     def test_set_stderr_already_set(self):
         job = AbstractJob()
@@ -254,16 +222,6 @@ class TestAbstractJob:
         job = AbstractJob()
         job.set_stderr("a")
         assert job.get_stderr() == File("a")
-
-    def test_clear_stderr(self):
-        job = AbstractJob()
-        job.set_stderr(File("a"))
-
-        assert job.get_outputs() == {File("a")}
-        job.clear_stderr()
-
-        assert job.get_stderr() == None
-        assert job.get_outputs() == set()
 
 
 class TestJob:
@@ -290,11 +248,6 @@ class TestJob:
         assert j.args == ["-n5"]
         assert j.get_inputs() == {File("if"), File("stdin")}
         assert j.get_outputs() == {File("of"), File("stdout"), File("stderr")}
-
-        (j.clear_stdin().clear_stdout().clear_stderr())
-
-        assert j.get_inputs() == {File("if")}
-        assert j.get_outputs() == {File("of")}
 
     def test_tojson_no_mixins(self):
         j = Job("t1", namespace="ns", node_label="label", _id="id", version="1")
@@ -567,10 +520,13 @@ class TestWorkflow:
 
     def test_tojson(self, convert_yaml_schemas_to_json, load_schema):
         tc = TransformationCatalog()
-        tc.add_transformation(Transformation("t1")
-                .add_site("local", "/pfn", TransformationType.INSTALLED), 
-            Transformation("t2")
-                .add_site("local2", "/pfn", TransformationType.STAGEABLE)
+        tc.add_transformation(
+            Transformation("t1").add_site(
+                "local", "/pfn", TransformationType.INSTALLED
+            ),
+            Transformation("t2").add_site(
+                "local2", "/pfn", TransformationType.STAGEABLE
+            ),
         )
 
         rc = ReplicaCatalog()
@@ -619,12 +575,13 @@ class TestWorkflow:
     def test_write(self, convert_yaml_schemas_to_json, load_schema):
         tc = TransformationCatalog()
         tc.add_transformation(
-            Transformation("t1")
-                .add_site("local", "/pfn", TransformationType.STAGEABLE), 
-            Transformation("t2")
-                .add_site("local2", "/pfn", TransformationType.INSTALLED)
+            Transformation("t1").add_site(
+                "local", "/pfn", TransformationType.STAGEABLE
+            ),
+            Transformation("t2").add_site(
+                "local2", "/pfn", TransformationType.INSTALLED
+            ),
         )
-
 
         rc = ReplicaCatalog()
         rc.add_replica("lfn", "pfn", "site")

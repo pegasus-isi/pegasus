@@ -24,40 +24,6 @@ class MetadataMixin:
 
         return self
 
-    def has_metadata(self, key):
-        """Check if metadata with the given key exists for this object
-        
-        :param key: metadata key
-        :type key: str
-        :return: whether or not the given metadata key exists for this object
-        :rtype: bool
-        """
-        return key in self.metadata
-
-    def remove_metadata(self, key):
-        """Remove a metadata key value pair
-        
-        :param key: metadata key
-        :type key: str
-        :raises NotFoundError: metadata key not found
-        :return: self
-        """
-        if key not in self.metadata:
-            raise NotFoundError
-
-        del self.metadata[key]
-
-        return self
-
-    def clear_metadata(self):
-        """Clear all the metadata assigned to this object
-        
-        :return: self
-        """
-        self.metadata.clear()
-
-        return self
-
 
 # --- hooks --------------------------------------------------------------------
 class EventType(Enum):
@@ -199,75 +165,6 @@ class ProfileMixin:
                 )
 
         self.profiles[namespace.value][key] = value
-
-        return self
-
-    def has_profile(self, namespace, key, value):
-        """Check if a profile with the given namespace, key, and value exists for
-        this object.
-        
-        :param namespace: a namespace defined in :py:class:`~Pegasus.dax4.mixins.Namespace`
-        :type namespace: Namespace
-        :param key: key
-        :type key: str
-        :param value: value
-        :type value: str
-        :raises DuplicateError: profiles must be unique
-        :raises ValueError: namespace must be one of :py:class:`~Pegasus.dax4.mixins.Namespace`
-        :return: whether or not the given profile exists
-        :rtype: bool
-        """
-        if not isinstance(namespace, Namespace):
-            raise ValueError("namespace must be one of Namespace")
-
-        is_found = False
-        if namespace.value in self.profiles:
-            if key in self.profiles[namespace.value]:
-                if self.profiles[namespace.value][key] == value:
-                    is_found = True
-
-        return is_found
-
-    '''
-    def remove_profile(self, namespace, key, value):
-        """Remove a profile from this object
-        
-        :param namespace: a namespace defined in DAX4.Namespace
-        :type namespace: str (defined in DAX4.Namespace)
-        :param key: key
-        :type key: str
-        :param value: value
-        :type value: str
-        :raises ValueError: Namespace must be one of DAX4.Namespace
-        :raises NotFoundError: given profile with namespace key and value is not found 
-        :return: self
-        :rtype: type(self)
-        """
-        if not isinstance(namespace, Namespace):
-            raise ValueError("namespace must be one of Namespace")
-
-        if not self.has_profile(namespace, key, value):
-            raise NotFoundError(
-                "Profile with namespace: {}, key: {}, value: {} not found".format(
-                    namespace.value, key, value
-                )
-            )
-
-        del self.profiles[namespace.value][key]
-
-        # Removing namespaces with no k,v pairs
-        if len(self.profiles[namespace.value]) == 0:
-            del self.profiles[namespace.value]
-
-        return self
-    '''
-
-    def clear_profiles(self):
-        """Remove all profiles from this object
-        
-        :return: self
-        """
-        self.profiles.clear()
 
         return self
 

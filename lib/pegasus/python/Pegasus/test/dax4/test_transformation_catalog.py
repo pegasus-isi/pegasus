@@ -226,17 +226,10 @@ class TestTransformation:
             transformation.version,
         )
 
-    def test_has_site(self):
-        t = Transformation("test")
-        assert not t.has_site("sitename that doesn't exist")
-
-        t.add_site("local", "/pfn", TransformationType.STAGEABLE)
-        assert t.has_site("local")
-
     def test_add_site(self):
         t = Transformation("test")
         t.add_site("local", "/pfn", TransformationType.STAGEABLE)
-        assert t.has_site("local")
+        assert "local" in t.sites
 
     def test_add_duplicate_site(self):
         t = Transformation("test")
@@ -275,19 +268,6 @@ class TestTransformation:
         t = Transformation("test")
         with pytest.raises(ValueError):
             t.add_site(name, pfn, transformation_type, **kwargs)
-
-    def test_remove_site(self):
-        t = Transformation("test")
-        t.add_site("local", "/pfn", TransformationType.STAGEABLE)
-        assert t.has_site("local")
-
-        t.remove_site("local")
-        assert not t.has_site("local")
-
-    def test_remove_not_added_site(self):
-        t = Transformation("test")
-        with pytest.raises(NotFoundError):
-            t.remove_site("local")
 
     def test_add_site_profile(self):
         t = Transformation("test")
@@ -344,60 +324,6 @@ class TestTransformation:
         with pytest.raises(DuplicateError):
             t.add_requirement(required)
 
-    def test_has_requirement_as_str(self):
-        t = Transformation("test")
-        required = "required"
-
-        t.add_requirement(required, "pegasus", "1.1")
-        assert (required, "pegasus", "1.1") in t.requires
-
-    def test_has_requirement_as_obj(self):
-        t = Transformation("test")
-        required = Transformation("required", namespace="pegasus", version="1.1")
-
-        t.add_requirement(required)
-        assert required._get_key() in t.requires
-
-    def test_has_invalid_requirement(self):
-        t = Transformation("test")
-        with pytest.raises(ValueError):
-            t.has_requirement(1)
-
-    def test_remove_requirement_as_str(self):
-        t = Transformation("test")
-        required = "required"
-
-        t.add_requirement(required)
-        assert t.has_requirement(required)
-
-        t.remove_requirement(required)
-        assert not t.has_requirement(required)
-        assert len(t.requires) == 0
-
-    def test_remove_requirement_as_obj(self):
-        t = Transformation("test")
-        required = Transformation("required", namespace="pegasus", version="1.1")
-
-        t.add_requirement(required)
-        assert t.has_requirement(required)
-
-        t.remove_requirement(required)
-        assert not t.has_requirement(required)
-        assert len(t.requires) == 0
-
-    def test_remove_requirement_not_added(self):
-        t = Transformation("test")
-        with pytest.raises(NotFoundError):
-            t.remove_requirement("123")
-
-        with pytest.raises(NotFoundError):
-            t.remove_requirement(Transformation("required"))
-
-    def test_remove_invalid_requirement(self):
-        t = Transformation("test")
-        with pytest.raises(ValueError):
-            t.remove_requirement(123)
-
     def test_chaining(self):
         t = (
             Transformation("test")
@@ -406,9 +332,9 @@ class TestTransformation:
             .add_site_profile("local", Namespace.ENV, "JAVA_HOME", "/java/home")
         )
 
-        assert t.has_site("local")
-        assert t.sites["local"].has_profile(Namespace.ENV, "JAVA_HOME", "/java/home")
-        assert t.has_requirement("required")
+        assert "local" in t.sites
+        assert t.sites["local"].profiles["env"]["JAVA_HOME"] == "/java/home"
+        assert ("required", None, None) in t.requires
 
     def test_tojson_without_profiles_hooks_metadata(
         self, convert_yaml_schemas_to_json, load_schema
@@ -536,22 +462,6 @@ class TestTransformationCatalog:
         with pytest.raises(ValueError):
             tc.add_transformation(1)
 
-    def test_has_transformation_str(self):
-        tc = TransformationCatalog()
-        tc.add_transformation(Transformation("name", namespace="namespace"))
-        assert tc.has_transformation("name", namespace="namespace")
-
-    def test_has_transformation_obj(self):
-        tc = TransformationCatalog()
-        t = Transformation("name", namespace="namespace")
-        tc.add_transformation(t)
-        assert tc.has_transformation(t)
-
-    def test_has_invalid_transformation(self):
-        tc = TransformationCatalog()
-        with pytest.raises(ValueError):
-            tc.has_transformation(1)
-
     def test_add_container(self):
         tc = TransformationCatalog()
         tc.add_container(
@@ -576,58 +486,29 @@ class TestTransformationCatalog:
         with pytest.raises(ValueError):
             tc.add_container("container")
 
-    def test_has_container(self):
-        tc = TransformationCatalog()
-        tc.add_container(
-            Container("container1", ContainerType.DOCKER, "image", ["mount"])
-        )
-        tc.add_container(
-            Container("container2", ContainerType.DOCKER, "image", ["mount"])
-        )
-
-        assert tc.has_container("container1")
-        assert tc.has_container("container2")
-
-    def remove_container(self):
-        tc = TransformationCatalog()
-        tc.add_container(
-            Container("container", ContainerType.DOCKER, "image", ["mount"])
-        )
-
-        assert tc.has_container("container")
-        assert len(tc.containers) == 1
-
-        tc.remove_container("container")
-        assert not tc.has_container("container")
-        assert len(tc.containers) == 0
-
-    def remove_container_not_added(self):
-        tc = TransformationCatalog()
-        with pytest.raises(NotFoundError):
-            tc.remove_container("container")
-
     def test_chaining(self):
         tc = TransformationCatalog()
 
         (
             tc.add_transformation(Transformation("t1"))
             .add_transformation(Transformation("t2"))
-            .add_container(Container(
-                "container1", ContainerType.DOCKER, "image", ["mount1", "mount2"]
-            ))
-            .add_container(Container(
-                "container2", ContainerType.DOCKER, "image", ["mount1", "mount2"]
-            ))
+            .add_container(
+                Container(
+                    "container1", ContainerType.DOCKER, "image", ["mount1", "mount2"]
+                )
+            )
+            .add_container(
+                Container(
+                    "container2", ContainerType.DOCKER, "image", ["mount1", "mount2"]
+                )
+            )
         )
 
-        assert tc.has_transformation("t1")
-        assert tc.has_transformation("t2")
-        assert tc.has_container("container1")
-        assert tc.has_container("container2")
+        assert ("t1", None, None) in tc.transformations
+        assert ("t2", None, None) in tc.transformations
+        assert "container1" in tc.containers
+        assert "container2" in tc.containers
 
-        (tc.remove_container("container1").remove_container("container2"))
-
-        assert len(tc.containers) == 0
 
     def test_tojson(self, convert_yaml_schemas_to_json, load_schema):
         tc = TransformationCatalog()
@@ -642,8 +523,12 @@ class TestTransformationCatalog:
                     "local", "/pfn", TransformationType.INSTALLED
                 )
             )
-            .add_container(Container("container1", ContainerType.DOCKER, "image", ["mount1"]))
-            .add_container(Container("container2", ContainerType.DOCKER, "image", ["mount1"]))
+            .add_container(
+                Container("container1", ContainerType.DOCKER, "image", ["mount1"])
+            )
+            .add_container(
+                Container("container2", ContainerType.DOCKER, "image", ["mount1"])
+            )
         )
 
         expected = {
@@ -737,30 +622,48 @@ class TestTransformationCatalog:
 
         # cleanup
         os.remove(test_output_filename)
-    
-    def test_example_transformation_catalog(self, convert_yaml_schemas_to_json, load_schema):
+
+    def test_example_transformation_catalog(
+        self, convert_yaml_schemas_to_json, load_schema
+    ):
         # validates the sample tc in pegasus/etc/sample-5.0-data/tc.yml
         tc = TransformationCatalog()
 
-        foo = (Transformation("foo")
+        foo = (
+            Transformation("foo")
             .add_profile(Namespace.GLOBUS, "maxtime", 2)
             .add_profile(Namespace.DAGMAN, "retry", 2)
             .add_metadata("size", "2048")
-            .add_site("local", "/nfs/u2/ryan/bin/foo", TransformationType.STAGEABLE, arch=Arch.X86_64, ostype=OSType.LINUX)
+            .add_site(
+                "local",
+                "/nfs/u2/ryan/bin/foo",
+                TransformationType.STAGEABLE,
+                arch=Arch.X86_64,
+                ostype=OSType.LINUX,
+            )
             .add_site_profile("local", Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
             .add_site_metadata("local", "size", "2048")
             .add_requirement("bar")
-            .add_shell_hook(EventType.START, "/bin/echo 'starting'"))
+            .add_shell_hook(EventType.START, "/bin/echo 'starting'")
+        )
 
-        bar = (Transformation("bar")
-            .add_site("local", "/nfs/u2/ryan/bin/bar", TransformationType.STAGEABLE, arch=Arch.X86_64, ostype=OSType.LINUX))
-        
-        centos_pegasus_container = (Container("centos-pegasus", ContainerType.DOCKER, "docker:///ryan/centos-pegasus:latest", ["/Volumes/Work/lfs1:/shared-data/:ro"])
-            .add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java"))
-        
-        (tc.add_transformation(foo, bar)
-            .add_container(centos_pegasus_container))
-        
+        bar = Transformation("bar").add_site(
+            "local",
+            "/nfs/u2/ryan/bin/bar",
+            TransformationType.STAGEABLE,
+            arch=Arch.X86_64,
+            ostype=OSType.LINUX,
+        )
+
+        centos_pegasus_container = Container(
+            "centos-pegasus",
+            ContainerType.DOCKER,
+            "docker:///ryan/centos-pegasus:latest",
+            ["/Volumes/Work/lfs1:/shared-data/:ro"],
+        ).add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
+
+        (tc.add_transformation(foo, bar).add_container(centos_pegasus_container))
+
         test_output_filename = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             "TransformationCatalogTestOutput.json",

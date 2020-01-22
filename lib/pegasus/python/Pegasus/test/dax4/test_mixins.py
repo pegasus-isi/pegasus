@@ -35,41 +35,10 @@ class TestMetadataMixin:
         with pytest.raises(DuplicateError):
             md_mixin_obj.add_metadata("key", "value")
 
-    def test_has_metadata(self, md_mixin_obj):
-        md_mixin_obj.add_metadata("key", "value")
-        assert md_mixin_obj.has_metadata("key") == True
-
-    def test_remove_metadata(self, md_mixin_obj):
-        md_mixin_obj.add_metadata("key", "value")
-        md_mixin_obj.remove_metadata("key")
-        assert "key" not in md_mixin_obj.metadata
-        assert len(md_mixin_obj.metadata) == 0
-
-    def test_remove_invalid_metadata(self, md_mixin_obj):
-        with pytest.raises(NotFoundError):
-            md_mixin_obj.remove_metadata("key")
-
-    def test_clear_metadata(self, md_mixin_obj):
-        md_mixin_obj.add_metadata("key1", "value")
-        md_mixin_obj.add_metadata("key2", "value")
-        assert len(md_mixin_obj.metadata) == 2
-
-        md_mixin_obj.clear_metadata()
-        assert len(md_mixin_obj.metadata) == 0
-
     def test_chaining(self, md_mixin_obj):
         (md_mixin_obj.add_metadata("key1", "value").add_metadata("key2", "value"))
 
         assert len(md_mixin_obj.metadata) == 2
-
-        (md_mixin_obj.remove_metadata("key1").remove_metadata("key2"))
-
-        assert len(md_mixin_obj.metadata) == 0
-
-        (md_mixin_obj.clear_metadata().add_metadata("key1", "value1"))
-
-        assert md_mixin_obj.has_metadata("key1") == True
-
         assert id(md_mixin_obj) == id(md_mixin_obj.add_metadata("key3", "value"))
 
 
@@ -171,33 +140,6 @@ class TestProfileMixin:
         with pytest.raises(ValueError):
             profile_mixin_obj.add_profile("namespace", "key", "value")
 
-    def test_has_valid_profile(self, profile_mixin_obj):
-        profile_mixin_obj.add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
-        assert (
-            profile_mixin_obj.has_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
-            == True
-        )
-
-        assert (
-            profile_mixin_obj.has_profile(
-                Namespace.ENV, "JAVA_HOME", "/usr/bin/java123"
-            )
-            == False
-        )
-
-    def test_has_invalid_profile(self, profile_mixin_obj):
-        with pytest.raises(ValueError):
-            profile_mixin_obj.has_profile("123", "key", "value")
-
-    def test_clear_profiles(self, profile_mixin_obj):
-        profile_mixin_obj.add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
-        profile_mixin_obj.add_profile(Namespace.GLOBUS, "key", "value")
-
-        assert len(profile_mixin_obj.profiles) == 2
-        profile_mixin_obj.clear_profiles()
-
-        assert len(profile_mixin_obj.profiles) == 0
-
     def test_chaining(self, profile_mixin_obj):
         (
             profile_mixin_obj.add_profile(Namespace.ENV, "key", "value").add_profile(
@@ -206,7 +148,6 @@ class TestProfileMixin:
         )
 
         assert len(profile_mixin_obj.profiles) == 2
-
         assert id(profile_mixin_obj.add_profile(Namespace.ENV, "key2", "value")) == id(
             profile_mixin_obj
         )
