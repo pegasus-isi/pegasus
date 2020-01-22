@@ -1,0 +1,19 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>pegasus</groupId>
+    <artifactId>pegasus</artifactId>
+    <version>2.11.0</version>
+    <name></name>
+
+    <dependencies>
+        <!-- https://mvnrepository.com/artifact/com.google.googlejavaformat/google-java-format/ -->
+        <dependency>
+            <groupId>com.google.googlejavaformat</groupId>
+            <artifactId>google-java-format</artifactId>
+            <version>1.7</version>
+        </dependency>
+    </dependencies>
+</project>
