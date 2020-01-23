@@ -1,21 +1,6 @@
 $schema: 'http://json-schema.org/draft-07/schema#'
 $id: 'file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/dax-5.0.yml'
 $defs:
-  # --- a file object ----------------------------------------------------------
-  file:
-    type: object
-    properties:
-      lfn:
-        type: string
-      metadata:
-        $ref: 'common.yml#/$defs/metadata'
-    required:
-      - lfn
-    additionalProperties: false
-    patternProperties:
-      ^x-:
-        $ref: 'common.yml#/$defs/vendorExtension'
-
   # --- abstractJob 'use' types ------------------------------------------------
   linkType:
     enum:
@@ -23,6 +8,7 @@ $defs:
       - input
       - output
       - inout
+      - checkpoint
 
   # --- workflow job types -----------------------------------------------------
   abstractJob:
@@ -48,18 +34,18 @@ $defs:
                 additionalProperties: false
         minItems: 0
       stdin:
-        $ref: '#/$defs/file'
+        $ref: 'rc-5.0.yml#/$defs/file'
       stdout:
-        $ref: '#/$defs/file'
+        $ref: 'rc-5.0.yml#/$defs/file'
       stderr:
-        $ref: '#/$defs/file'
+        $ref: 'rc-5.0.yml#/$defs/file'
       uses:
         type: array
         items:
           type: object
           properties:
             file:
-              $ref: '#/$defs/file'
+              $ref: 'rc-5.0.yml#/$defs/file'
             type:
               $ref: '#/$defs/linkType'
           required:
@@ -76,7 +62,7 @@ $defs:
               then:
                 properties:
                   file:
-                    $ref: '#/$defs/file'
+                    $ref: 'rc-5.0.yml#/$defs/file'
                   type:
                     const: input
                   optional:
@@ -96,11 +82,13 @@ $defs:
             - if:
                 properties:
                   type:
-                    const: output
+                    anyOf:
+                      - const: output
+                      - const: checkpoint
               then:
                 properties:
                   file:
-                    $ref: '#/$defs/file'
+                    $ref: 'rc-5.0.yml#/$defs/file'
                   type:
                     const: output
                   stageOut:

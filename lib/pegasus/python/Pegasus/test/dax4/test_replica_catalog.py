@@ -39,7 +39,7 @@ class TestFile:
             "metadata": {"key": "value"},
         }
 
-        file_schema = load_schema("dax-5.0.json")["$defs"]["file"]
+        file_schema = load_schema("rc-5.0.json")["$defs"]["file"]
         validate(instance=result, schema=file_schema)
 
         assert result == expected
