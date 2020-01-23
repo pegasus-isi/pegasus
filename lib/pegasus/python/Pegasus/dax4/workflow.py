@@ -1,5 +1,6 @@
 import json
 from collections import defaultdict
+from enum import Enum
 
 import yaml
 
@@ -35,8 +36,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         self._id = _id
         self.node_label = node_label
         self.args = list()
-        self.inputs = set()
-        self.outputs = set()
+        self.uses = set()
 
         self.stdout = None
         self.stderr = None
@@ -58,13 +58,15 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
             if not isinstance(file, File):
                 raise ValueError("a job input must be of type File")
 
-            _input = _JobInput(file)
-            if _input in self.inputs:
+            _input = _Use(
+                file, _LinkType.INPUT, register_replica=False, stage_out=False
+            )
+            if _input in self.uses:
                 raise DuplicateError(
                     "file {0} already added as input to this job".format(file.lfn)
                 )
 
-            self.inputs.add(_input)
+            self.uses.add(_input)
 
         return self
 
@@ -74,12 +76,13 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         :return: all input files associated with this job
         :rtype: set
         """
-        return {_input.file for _input in self.inputs}
+        return {use.file for use in self.uses if use._type == "input"}
 
     def add_outputs(self, *output_files, stage_out=True, register_replica=False):
         """Add one or more :py:class:`~Pegasus.dax4.replica_catalog.File`s as outputs to this job. stage_out and register_replica
         will be applied to all files given.
         
+        :param output_files: the :py:class:`~Pegasus.dax4.replica_catalog.File` s to be added as outputs to this job
         :param stage_out: whether or not to send files back to an output directory, defaults to True
         :type stage_out: bool, optional
         :param register_replica: whether or not to register replica with a :py:class:`~Pegasus.dax4.replica_catalog.ReplicaCatalog`, defaults to False
@@ -92,15 +95,18 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
             if not isinstance(file, File):
                 raise ValueError("a job output must be of type File")
 
-            output = _JobOutput(
-                file, stage_out=stage_out, register_replica=register_replica
+            output = _Use(
+                file,
+                _LinkType.OUTPUT,
+                stage_out=stage_out,
+                register_replica=register_replica,
             )
-            if output in self.outputs:
+            if output in self.uses:
                 raise DuplicateError(
                     "file {0} already added as output to this job".format(file.lfn)
                 )
 
-            self.outputs.add(output)
+            self.uses.add(output)
 
         return self
 
@@ -110,7 +116,42 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         :return: all output files associated with this job 
         :rtype: set
         """
-        return {output.file for output in self.outputs}
+        return {use.file for use in self.uses if use._type == "output"}
+
+    def add_checkpoint(self, checkpoint_file, stage_out=True, register_replica=False):
+        """Add an output file of this job as a checkpoint file
+        
+        :param checkpoint_file: the :py:class:`~Pegasus.dax4.replica_catalog.File` to be added as a checkpoint file to this job
+        :type checkpoint_file: File
+        :param stage_out: whether or not to send files back to an output directory, defaults to True
+        :type stage_out: bool, optional
+        :param register_replica: whether or not to register replica with a :py:class:`~Pegasus.dax4.replica_catalog.ReplicaCatalog`, defaults to False
+        :type register_replica: bool, optional
+        :raises DuplicateError: all output files must be unique 
+        :raises ValueError: a job output must be of type File 
+        :return: self
+        """
+
+        if not isinstance(checkpoint_file, File):
+            raise ValueError("checkpoint file must be of type File")
+
+        checkpoint = _Use(
+            checkpoint_file,
+            _LinkType.CHECKPOINT,
+            stage_out=stage_out,
+            register_replica=register_replica,
+        )
+
+        if checkpoint in self.uses:
+            raise DuplicateError(
+                "file {0} already added as output to this job".format(
+                    checkpoint_file.lfn
+                )
+            )
+
+        self.uses.add(checkpoint)
+
+        return self
 
     def add_args(self, *args):
         """Add arguments to this job. Each argument will be separated by a space.
@@ -228,8 +269,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
                     {"lfn": arg.lfn} if isinstance(arg, File) else arg
                     for arg in self.args
                 ],
-                "uses": [_input.__json__() for _input in self.inputs]
-                + [output.__json__() for output in self.outputs],
+                "uses": [io.__json__() for io in self.uses],
                 "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
                 "metadata": self.metadata if len(self.metadata) > 0 else None,
                 "hooks": {
@@ -374,31 +414,28 @@ class DAG(AbstractJob):
         return dag_json
 
 
-class _JobInput:
-    """Internal class used to represent a job's input"""
+class _LinkType(Enum):
+    """Internal class defining link types"""
 
-    def __init__(self, file):
+    INPUT = "input"
+    OUTPUT = "output"
+    CHECKPOINT = "checkpoint"
+
+
+class _Use:
+    """Internal class used to represent input and output files of a job"""
+
+    def __init__(self, file, link_type, stage_out=True, register_replica=True):
+        if not isinstance(file, File):
+            raise ValueError("file must be one of type File")
+
         self.file = file
-        self._type = "input"
 
-    def __hash__(self):
-        return hash(self.file)
+        if not isinstance(link_type, _LinkType):
+            raise ValueError("link_type must be one of _LinkType")
 
-    def __eq__(self, other):
-        if isinstance(other, _JobInput):
-            return self.file.lfn == other.file.lfn
-        raise ValueError("_JobInput cannot be compared with {0}".format(type(other)))
+        self._type = link_type.value
 
-    def __json__(self):
-        return {"file": self.file.__json__(), "type": self._type}
-
-
-class _JobOutput:
-    """Internal class used to represent a job's output"""
-
-    def __init__(self, file, stage_out=True, register_replica=False):
-        self.file = file
-        self._type = "output"
         self.stage_out = stage_out
         self.register_replica = register_replica
 
@@ -406,9 +443,9 @@ class _JobOutput:
         return hash(self.file)
 
     def __eq__(self, other):
-        if isinstance(other, _JobOutput):
+        if isinstance(other, _Use):
             return self.file.lfn == other.file.lfn
-        raise ValueError("__JobOutput cannot be comapred with {0}".format(type(other)))
+        raise ValueError("_Use cannot be compared with {0}".format(type(other)))
 
     def __json__(self):
         return {
@@ -700,6 +737,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
                     if job.stderr.lfn not in mapping:
                         mapping[job.stderr.lfn][1].add(job)
 
+                """
                 for _input in job.inputs:
                     if _input.file.lfn not in mapping:
                         mapping[_input.file.lfn] = (set(), set())
@@ -711,6 +749,15 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
                         mapping[output.file.lfn] = (set(), set())
 
                     mapping[output.file.lfn][1].add(job)
+                """
+                for io in job.uses:
+                    if io.file.lfn not in mapping:
+                        mapping[io.file.lfn] = (set(), set())
+
+                    if io._type == _LinkType.INPUT.value:
+                        mapping[io.file.lfn][0].add(job)
+                    elif io._type == _LinkType.OUTPUT.value:
+                        mapping[io.file.lfn][1].add(job)
 
             """    
             Go through the mapping and for each file add dependencies between the

@@ -8,8 +8,8 @@ from Pegasus.dax4.workflow import AbstractJob
 from Pegasus.dax4.workflow import Job
 from Pegasus.dax4.workflow import DAX
 from Pegasus.dax4.workflow import DAG
-from Pegasus.dax4.workflow import _JobInput
-from Pegasus.dax4.workflow import _JobOutput
+from Pegasus.dax4.workflow import _LinkType
+from Pegasus.dax4.workflow import _Use
 from Pegasus.dax4.workflow import _JobDependency
 from Pegasus.dax4.workflow import Workflow
 from Pegasus.dax4.workflow import PEGASUS_VERSION
@@ -29,26 +29,23 @@ from Pegasus.dax4.site_catalog import SiteCatalog
 from Pegasus.dax4.writable import FileFormat
 
 
-class Test_JobInput:
+class Test_Use:
     def test_eq(self):
-        assert _JobInput(File("a")) == _JobInput(File("a"))
-        assert _JobInput(File("a")) != _JobInput(File("b"))
+        assert _Use(File("a"), _LinkType.INPUT) == _Use(File("a"), _LinkType.OUTPUT)
+        assert _Use(File("a"), _LinkType.INPUT) != _Use(File("b"), _LinkType.INPUT) 
 
     def test_tojson(self):
-        assert _JobInput(File("a")).__json__() == {
+        assert _Use(
+            File("a"), _LinkType.INPUT, stage_out=True, register_replica=True
+        ).__json__() == {
             "file": {"lfn": "a"},
             "type": "input",
+            "stageOut": True,
+            "registerReplica": True,
         }
 
-
-class Test_JobOutput:
-    def test_eq(self):
-        assert _JobOutput(File("a")) == _JobOutput(File("a"))
-        assert _JobOutput(File("a")) != _JobOutput(File("b"))
-
-    def test_tojson(self):
-        assert _JobOutput(
-            File("a"), stage_out=False, register_replica=True
+        assert _Use(
+            File("a"), _LinkType.OUTPUT, stage_out=False, register_replica=True
         ).__json__() == {
             "file": {"lfn": "a"},
             "type": "output",
@@ -56,15 +53,14 @@ class Test_JobOutput:
             "registerReplica": True,
         }
 
-        assert _JobOutput(
-            File("a"), stage_out=True, register_replica=True
+        assert _Use(
+            File("a"), _LinkType.CHECKPOINT, stage_out=True, register_replica=True
         ).__json__() == {
             "file": {"lfn": "a"},
-            "type": "output",
+            "type": "checkpoint",
             "stageOut": True,
             "registerReplica": True,
         }
-
 
 class TestAbstractJob:
     def test_get_inputs(self):
@@ -122,6 +118,31 @@ class TestAbstractJob:
         job = AbstractJob()
         with pytest.raises(ValueError):
             job.add_outputs(123, "abc")
+
+    def test_add_inputs_and_outputs(self):
+        job = AbstractJob()
+        job.add_inputs(File("a"))
+        job.add_outputs(File("b"))
+
+        with pytest.raises(DuplicateError):
+            job.add_inputs(File("b"))
+
+    def test_add_checkpoint(self):
+        job = AbstractJob()
+        job.add_checkpoint(File("checkpoint"))
+
+        assert _Use(File("checkpoint"), _LinkType.CHECKPOINT) in job.uses
+
+    def test_add_invalid_checkpoint(self):
+        job = AbstractJob()
+        with pytest.raises(ValueError):
+            job.add_checkpoint("badfile")
+
+    def test_add_duplicate_checkpoint(self):
+        job = AbstractJob()
+        job.add_inputs(File("abc"))
+        with pytest.raises(DuplicateError):
+            job.add_checkpoint(File("abc"))
 
     def test_add_args(self):
         job = AbstractJob()
@@ -222,7 +243,82 @@ class TestAbstractJob:
         job = AbstractJob()
         job.set_stderr("a")
         assert job.get_stderr() == File("a")
+    
+    def test_tojson(self):
+        j = AbstractJob(_id="aj", node_label="test")
+        j.set_stdin("stdin")
+        j.set_stdout("stdout")
+        j.set_stderr("stderr")
+        j.add_args("-i", File("f1"))
+        j.add_inputs(File("if1"), File("if2"))
+        j.add_outputs(File("of1"), File("of2"))
+        j.add_checkpoint(File("cpf"))
 
+        result = j.__json__()
+        result["uses"] = sorted(result["uses"], key=lambda use: use["file"]["lfn"])
+
+        expected = {    
+            "id": "aj",
+            "nodeLabel": "test",
+            "arguments": ["-i", {"lfn": "f1"}],
+            "stdin": {"lfn": "stdin"},
+            "stdout": {"lfn": "stdout"},
+            "stderr": {"lfn": "stderr"},
+            "uses": [
+                {
+                    "file": {"lfn": "stdin"}, 
+                    "type": "input",
+                    "stageOut": False,
+                    "registerReplica": False
+                },
+                {
+                    "file": {"lfn": "if1"}, 
+                    "type": "input",
+                    "stageOut": False,
+                    "registerReplica": False
+                },
+                {
+                    "file": {"lfn": "if2"}, 
+                    "type": "input",
+                    "stageOut": False,
+                    "registerReplica": False
+                },
+                {
+                    "file": {"lfn": "stdout"},
+                    "type": "output",
+                    "stageOut": True,
+                    "registerReplica": False,
+                },
+                {
+                    "file": {"lfn": "stderr"},
+                    "type": "output",
+                    "stageOut": True,
+                    "registerReplica": False,
+                },
+                {
+                    "file": {"lfn": "of1"},
+                    "type": "output",
+                    "stageOut": True,
+                    "registerReplica": False,
+                },
+                {
+                    "file": {"lfn": "of2"},
+                    "type": "output",
+                    "stageOut": True,
+                    "registerReplica": False,
+                },
+                {
+                    "file": {"lfn": "cpf"},
+                    "type": "checkpoint",
+                    "stageOut": True,
+                    "registerReplica": False
+                }
+            ],
+        }
+
+        expected["uses"] = sorted(expected["uses"], key=lambda use: use["file"]["lfn"])
+
+        assert result == expected
 
 class TestJob:
     @pytest.mark.parametrize("transformation", [(Transformation("t")), ("t")])
@@ -273,9 +369,24 @@ class TestJob:
             "stdout": {"lfn": "stdout"},
             "stderr": {"lfn": "stderr"},
             "uses": [
-                {"file": {"lfn": "stdin"}, "type": "input"},
-                {"file": {"lfn": "if1"}, "type": "input"},
-                {"file": {"lfn": "if2"}, "type": "input"},
+                {
+                    "file": {"lfn": "stdin"}, 
+                    "type": "input",
+                    "stageOut": False,
+                    "registerReplica": False
+                },
+                {
+                    "file": {"lfn": "if1"}, 
+                    "type": "input",
+                    "stageOut": False,
+                    "registerReplica": False
+                },
+                {
+                    "file": {"lfn": "if2"}, 
+                    "type": "input",
+                    "stageOut": False,
+                    "registerReplica": False
+                },
                 {
                     "file": {"lfn": "stdout"},
                     "type": "output",
@@ -353,7 +464,14 @@ class TestDAX:
             "id": "test-dax",
             "nodeLabel": "label",
             "arguments": ["--sites", "condorpool"],
-            "uses": [{"file": {"lfn": "file"}, "type": "input"}],
+            "uses": [
+                {
+                    "file": {"lfn": "file"}, 
+                    "type": "input",
+                    "stageOut": False,
+                    "registerReplica": False
+                    }
+            ],
         }
 
 
@@ -375,7 +493,14 @@ class TestDAG:
             "id": "test-dag",
             "nodeLabel": "label",
             "arguments": ["test", "args"],
-            "uses": [{"file": {"lfn": "file"}, "type": "input"}],
+            "uses": [
+                {
+                    "file": {"lfn": "file"}, 
+                    "type": "input",
+                    "stageOut": False,
+                    "registerReplica": False
+                }
+            ],
         }
 
 
@@ -537,7 +662,7 @@ class TestWorkflow:
         wf.include_catalog(rc)
 
         j1 = Job("t1", _id="j1").add_outputs(File("f1"), File("f2"))
-        j2 = Job("t1").add_inputs(File("f1"), File("f2"))
+        j2 = Job("t1").add_inputs(File("f1"), File("f2")).add_checkpoint(File("checkpoint"))
 
         wf.add_jobs(j1, j2)
 
