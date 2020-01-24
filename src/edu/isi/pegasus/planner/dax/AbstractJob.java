@@ -1,32 +1,28 @@
 /**
- *  Copyright 2007-2012 University Of Southern California
+ * Copyright 2007-2012 University Of Southern California
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing,
- *  software distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package edu.isi.pegasus.planner.dax;
 
-import java.util.List;
-import java.util.LinkedList;
-import java.util.Collections;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.util.XMLWriter;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 /**
- *
  * @author gmehta
  * @version $Revision$
  */
@@ -44,14 +40,13 @@ public class AbstractJob {
     protected String mNamespace;
     protected String mVersion;
     protected String mNodeLabel;
-    /**
-     * The metadata attributes associated with the whole workflow.
-     */
+    /** The metadata attributes associated with the whole workflow. */
     private Set<MetaData> mMetaDataAttributes;
+
     protected static LogManager mLogger;
     private static final String ARG_DELIMITER = " ";
     private static final String FILE_DELIMITER = " ";
-    private static final String JOBTYPE="AbstractJob";
+    private static final String JOBTYPE = "AbstractJob";
 
     protected AbstractJob() {
         mLogger = LogManagerFactory.loadSingletonInstance();
@@ -59,12 +54,13 @@ public class AbstractJob {
         mUses = new LinkedHashSet<File>();
         mInvokes = new LinkedList<Invoke>();
         mProfiles = new LinkedList<Profile>();
-        mMetaDataAttributes= new LinkedHashSet<MetaData>();
+        mMetaDataAttributes = new LinkedHashSet<MetaData>();
     }
 
     /**
      * Copy constructor
-     * @param a 
+     *
+     * @param a
      */
     protected AbstractJob(AbstractJob a) {
         this.mArguments = new LinkedList(a.mArguments);
@@ -73,7 +69,7 @@ public class AbstractJob {
         this.mStdout = new File(a.mStdout);
         this.mStderr = new File(a.mStderr);
         this.mUses = new LinkedHashSet<File>(a.mUses);
-        this.mMetaDataAttributes= new LinkedHashSet<MetaData>( a.mMetaDataAttributes );
+        this.mMetaDataAttributes = new LinkedHashSet<MetaData>(a.mMetaDataAttributes);
         this.mInvokes = new LinkedList<Invoke>(a.mInvokes);
         this.mName = a.mName;
         this.mId = a.mId;
@@ -84,7 +80,8 @@ public class AbstractJob {
 
     /**
      * Copy Constructor
-     * @param a 
+     *
+     * @param a
      */
     protected static void checkID(String id) {
         if (!Patterns.isNodeIdValid(id)) {
@@ -95,7 +92,9 @@ public class AbstractJob {
     }
 
     /**
-     * Return the argument List. The List contains both {@link String} as well as {@link File} objects
+     * Return the argument List. The List contains both {@link String} as well as {@link File}
+     * objects
+     *
      * @return List
      */
     public List getArguments() {
@@ -103,7 +102,9 @@ public class AbstractJob {
     }
 
     /**
-     * Add a string argument to the argument List. Each call to argument adds a space in between entries
+     * Add a string argument to the argument List. Each call to argument adds a space in between
+     * entries
+     *
      * @param argument
      * @return AbstractJob
      */
@@ -119,6 +120,7 @@ public class AbstractJob {
 
     /**
      * Add a file object to the argument List. Each call to argument adds a space between entries.
+     *
      * @param file
      * @return AbstractJob
      * @see File
@@ -134,7 +136,9 @@ public class AbstractJob {
     }
 
     /**
-     * Add a Array of {@link File} objects to the argument list. The files will be separated by space when rendered on the command line
+     * Add a Array of {@link File} objects to the argument list. The files will be separated by
+     * space when rendered on the command line
+     *
      * @param files File[]
      * @return AbstractJob
      * @see File
@@ -145,7 +149,9 @@ public class AbstractJob {
     }
 
     /**
-     * Add a List of {@link File} objects to the argument list. The files will be separated by space when rendered on the command line
+     * Add a List of {@link File} objects to the argument list. The files will be separated by space
+     * when rendered on the command line
+     *
      * @param files List<File>
      * @return AbstractJob
      * @see File
@@ -156,8 +162,9 @@ public class AbstractJob {
     }
 
     /**
-     * Add a Array of {@link File} objects to the argument list.
-     * The files will be separated by the filedelimiter(default is space) when rendered on the command line.
+     * Add a Array of {@link File} objects to the argument list. The files will be separated by the
+     * filedelimiter(default is space) when rendered on the command line.
+     *
      * @param files File[] Array of file objects
      * @param filedelimiter String delimiter for the files. Default is space
      * @return AbstractJob
@@ -182,8 +189,9 @@ public class AbstractJob {
     }
 
     /**
-     * Add a List of {@link File} objects to the argument list.
-     * The files will be separated by the filedelimiter(default is space) when rendered on the command line.
+     * Add a List of {@link File} objects to the argument list. The files will be separated by the
+     * filedelimiter(default is space) when rendered on the command line.
+     *
      * @param files List<File> Array of file objects
      * @param filedelimiter String delimiter for the files. Default is space
      * @return AbstractJob
@@ -197,13 +205,12 @@ public class AbstractJob {
     }
 
     /**
-     * Add a argument key and value to the argument List.
-     * The argkey and argvalue are seperated by space.
-     * Example addArgument("-p","0") will result in the argument being added as
-     * -p 0<Br>
+     * Add a argument key and value to the argument List. The argkey and argvalue are seperated by
+     * space. Example addArgument("-p","0") will result in the argument being added as -p 0<br>
      * Multiple calls to addArgument results in the arguments being separated by space.
+     *
      * @param argkey String
-     * @param argvalue  String
+     * @param argvalue String
      * @return AbstractJob
      */
     public AbstractJob addArgument(String argkey, String argvalue) {
@@ -212,33 +219,31 @@ public class AbstractJob {
     }
 
     /**
-     * Add a argument key and value to the argument List.<Br>
+     * Add a argument key and value to the argument List.<br>
      * The argkey and argvalue are seperated by argdelimiter.<br>
-     * Example addArgument("-p","0","=") will result in the argument being added as
-     * -p=0<Br>
+     * Example addArgument("-p","0","=") will result in the argument being added as -p=0<br>
      * Multiple calls to addArgument results in the arguments being separated by space.
+     *
      * @param argkey String Key
      * @param argvalue String Value
      * @param argdelimiter String argdelimiter
      * @return AbstractJob
-     *
      */
-    public AbstractJob addArgument(String argkey, String argvalue,
-            String argdelimiter) {
+    public AbstractJob addArgument(String argkey, String argvalue, String argdelimiter) {
         argdelimiter = (argdelimiter == null) ? ARG_DELIMITER : argdelimiter;
         if (argkey != null && argvalue != null) {
             this.addArgument(argkey + argdelimiter + argvalue);
         }
         return this;
-
     }
 
     /**
-     * Add a argument key and File value to the argument List.<Br>
+     * Add a argument key and File value to the argument List.<br>
      * The argkey and argvalue are seperated by space.<br>
-     * Example addArgument("-i",new File("f.a")) will result in the argument being added as
-     * -i &lt;file name="f.a"&gt;<Br>
+     * Example addArgument("-i",new File("f.a")) will result in the argument being added as -i
+     * &lt;file name="f.a"&gt;<br>
      * Multiple calls to addArgument results in the arguments being separated by space.
+     *
      * @param argkey String
      * @param argvalue File
      * @return AbstractJob
@@ -249,18 +254,18 @@ public class AbstractJob {
     }
 
     /**
-     * Add a argument key and File value to the argument List.<Br>
+     * Add a argument key and File value to the argument List.<br>
      * The argkey and argvalue are separated by the argdelimiter.<br>
      * Example addArgument("-i",new File("f.a"),"=") will result in the argument being added as
-     * -i=&lt;file name="f.a"&gt;<Br>
+     * -i=&lt;file name="f.a"&gt;<br>
      * Multiple calls to addArgument results in the arguments being separated by space.
+     *
      * @param argkey String
      * @param argvalue File
      * @param argdelimiter
      * @return AbstractJob
      */
-    public AbstractJob addArgument(String argkey, File argvalue,
-            String argdelimiter) {
+    public AbstractJob addArgument(String argkey, File argvalue, String argdelimiter) {
         argdelimiter = (argdelimiter == null) ? ARG_DELIMITER : argdelimiter;
         if (argkey != null && argvalue != null) {
             this.addArgument(argkey + argdelimiter);
@@ -270,15 +275,16 @@ public class AbstractJob {
     }
 
     /**
-     * Add a argument key and an array of Files  to the argument List.<Br>
+     * Add a argument key and an array of Files to the argument List.<br>
      * The argkey and argvalue are separated space.<br>
      * The files are separated by a space <br>
      * Example:<br>
      * <i>File[] files = {new File("f.a1"), new File("f.a2")};<br>
-     *  job.addArgument("-i",files)</i><br>
-     *  will result in the argument being added as
-     * <b>-i &lt;file name="f.a1"&gt; &lt;file name="f.a2"&gt;</b><Br>
+     * job.addArgument("-i",files)</i><br>
+     * will result in the argument being added as <b>-i &lt;file name="f.a1"&gt; &lt;file
+     * name="f.a2"&gt;</b><br>
      * Multiple calls to addArgument results in the arguments being separated by space.
+     *
      * @param argkey String
      * @param argvalue File[]
      * @return AbstractJob
@@ -289,17 +295,18 @@ public class AbstractJob {
     }
 
     /**
-     * Add a argument key and a List of Files  to the argument List.<Br>
+     * Add a argument key and a List of Files to the argument List.<br>
      * The argkey and argvalue are separated space.<br>
      * The files are separated by a space <br>
      * Example:<br>
      * <i>List<File> files = new LinkedList<File>();<br>
      * files.add(new File("f.a1"));<br>
      * files.add(new File("f.a2"));<br>
-     *  job.addArgument("-i",files)</i><br>
-     *   will result in the argument being added as
-     * <b>-i &lt;file name="f.a1"&gt; &lt;file name="f.a2"&gt;</b><Br>
+     * job.addArgument("-i",files)</i><br>
+     * will result in the argument being added as <b>-i &lt;file name="f.a1"&gt; &lt;file
+     * name="f.a2"&gt;</b><br>
      * Multiple calls to addArgument results in the arguments being separated by space.
+     *
      * @param argkey String
      * @param argvalue List<File>
      * @return AbstractJob
@@ -310,23 +317,24 @@ public class AbstractJob {
     }
 
     /**
-     * Add a argument key and an array of Files  to the argument List.<Br>
+     * Add a argument key and an array of Files to the argument List.<br>
      * The argkey and argvalue are separated by the argdelimiter.<br>
      * The files are separated by a filedelimiter <br>
      * Example:<br>
      * <i>File[] files = {new File("f.a1"), new File("f.a2")};<br>
-     *  job.addArgument("-i",files,"=",",")</i><br>
-     *  will result in the argument being added as
-     * <b>-i=&lt;file name="f.a1"&gt;,&lt;file name="f.a2"&gt;</b><Br>
+     * job.addArgument("-i",files,"=",",")</i><br>
+     * will result in the argument being added as <b>-i=&lt;file name="f.a1"&gt;,&lt;file
+     * name="f.a2"&gt;</b><br>
      * Multiple calls to addArgument results in the arguments being separated by space.
+     *
      * @param argkey String
      * @param argvalue File[]
      * @param argdelimiter String
      * @param filedelimiter String
      * @return AbstractJob
      */
-    public AbstractJob addArgument(String argkey, File[] argvalue,
-            String argdelimiter, String filedelimiter) {
+    public AbstractJob addArgument(
+            String argkey, File[] argvalue, String argdelimiter, String filedelimiter) {
         argdelimiter = (argdelimiter == null) ? ARG_DELIMITER : argdelimiter;
         filedelimiter = (filedelimiter == null) ? FILE_DELIMITER : filedelimiter;
 
@@ -345,34 +353,35 @@ public class AbstractJob {
     }
 
     /**
-     * Add a argument key and a List of Files  to the argument List.<Br>
+     * Add a argument key and a List of Files to the argument List.<br>
      * The argkey and argvalue are separated by the argdelimiter.<br>
      * The files are separated by a filedelimter <br>
      * Example:<br>
      * <i>List<File> files = new LinkedList<File>();<br>
      * files.add(new File("f.a1"));<br>
      * files.add(new File("f.a2"));<br>
-     *  job.addArgument("-i",files,"=",",")</i><br>
-     *   will result in the argument being added as
-     * <b>-i=&lt;file name="f.a1"&gt;,&lt;file name="f.a2"&gt;</b><Br>
+     * job.addArgument("-i",files,"=",",")</i><br>
+     * will result in the argument being added as <b>-i=&lt;file name="f.a1"&gt;,&lt;file
+     * name="f.a2"&gt;</b><br>
      * Multiple calls to addArgument results in the arguments being separated by space.
+     *
      * @param argkey String
      * @param argvalue List&lt;File&gt; List of File objects
      * @param argdelimiter String
      * @param filedelimiter String
      * @return AbstractJob
      */
-    public AbstractJob addArgument(String argkey, List<File> argvalue,
-            String argdelimiter, String filedelimiter) {
+    public AbstractJob addArgument(
+            String argkey, List<File> argvalue, String argdelimiter, String filedelimiter) {
         if (argkey != null && argvalue != null && !argvalue.isEmpty()) {
-            this.addArgument(argkey, (File[]) argvalue.toArray(), argdelimiter,
-                    filedelimiter);
+            this.addArgument(argkey, (File[]) argvalue.toArray(), argdelimiter, filedelimiter);
         }
         return this;
     }
 
     /**
      * Add a profile to the job
+     *
      * @param namespace String
      * @param key String
      * @param value String
@@ -385,19 +394,20 @@ public class AbstractJob {
 
     /**
      * Add a profile to the job
+     *
      * @param namespace {@link Profile.NAMESPACE}
      * @param key String
      * @param value String
      * @return AbstractJob
      */
-    public AbstractJob addProfile(Profile.NAMESPACE namespace, String key,
-            String value) {
+    public AbstractJob addProfile(Profile.NAMESPACE namespace, String key, String value) {
         mProfiles.add(new Profile(namespace, key, value));
         return this;
     }
 
     /**
      * Add a Profile object
+     *
      * @param profile
      * @return AbstractJob
      * @see Profile
@@ -409,6 +419,7 @@ public class AbstractJob {
 
     /**
      * Add a list of Profile objects
+     *
      * @param profiles List&lt;Profile&gt;
      * @return
      */
@@ -419,6 +430,7 @@ public class AbstractJob {
 
     /**
      * Return the profile List. The List contains both {@link Profile} objects
+     *
      * @return List
      */
     public List getProfiles() {
@@ -427,16 +439,14 @@ public class AbstractJob {
 
     /**
      * Get the STDIN file object
+     *
      * @return File
      */
     public File getStdin() {
         return mStdin;
-
-
     }
 
     /**
-     *
      * @param stdin
      * @return AbstractJob
      */
@@ -447,7 +457,6 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stdin
      * @param transfer
      * @return AbstractJob
@@ -460,7 +469,6 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stdin
      * @param register
      * @return AbstractJob
@@ -473,14 +481,12 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stdin
      * @param transfer
      * @param register
      * @return AbstractJob
      */
-    public AbstractJob setStdin(File stdin, File.TRANSFER transfer,
-            boolean register) {
+    public AbstractJob setStdin(File stdin, File.TRANSFER transfer, boolean register) {
         File f = new File(stdin, File.LINK.INPUT);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -489,14 +495,13 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stdin
      * @param transfer
      * @param register
      * @return AbstractJob
      */
-    public AbstractJob setStdin(File stdin, File.TRANSFER transfer,
-            boolean register, boolean optional) {
+    public AbstractJob setStdin(
+            File stdin, File.TRANSFER transfer, boolean register, boolean optional) {
         File f = new File(stdin, File.LINK.INPUT);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -506,7 +511,6 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stdin
      * @return AbstractJob
      */
@@ -517,7 +521,6 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stdin
      * @param transfer
      * @return AbstractJob
@@ -530,7 +533,6 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stdin
      * @param register
      * @return AbstractJob
@@ -543,14 +545,12 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stdin
      * @param transfer
      * @param register
      * @return AbstractJob
      */
-    public AbstractJob setStdin(String stdin, File.TRANSFER transfer,
-            boolean register) {
+    public AbstractJob setStdin(String stdin, File.TRANSFER transfer, boolean register) {
         File f = new File(stdin, File.LINK.INPUT);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -559,15 +559,14 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stdin
      * @param transfer
      * @param register
      * @param optional
      * @return AbstractJob
      */
-    public AbstractJob setStdin(String stdin, File.TRANSFER transfer,
-            boolean register, boolean optional) {
+    public AbstractJob setStdin(
+            String stdin, File.TRANSFER transfer, boolean register, boolean optional) {
         File f = new File(stdin, File.LINK.INPUT);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -576,16 +575,12 @@ public class AbstractJob {
         return this;
     }
 
-    /**
-     *
-     * @return File
-     */
+    /** @return File */
     public File getStdout() {
         return mStdout;
     }
 
     /**
-     *
      * @param stdout
      * @return AbstractJob
      */
@@ -596,7 +591,6 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stdout
      * @param transfer
      * @return AbstractJob
@@ -609,7 +603,6 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stdout
      * @param register
      * @return AbstractJob
@@ -622,14 +615,12 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stdout
      * @param transfer
      * @param register
      * @return AbstractJob
      */
-    public AbstractJob setStdout(File stdout, File.TRANSFER transfer,
-            boolean register) {
+    public AbstractJob setStdout(File stdout, File.TRANSFER transfer, boolean register) {
         File f = new File(stdout, File.LINK.OUTPUT);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -638,15 +629,14 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stdout
      * @param transfer
      * @param register
      * @param optional
      * @return AbstractJob
      */
-    public AbstractJob setStdout(File stdout, File.TRANSFER transfer,
-            boolean register, boolean optional) {
+    public AbstractJob setStdout(
+            File stdout, File.TRANSFER transfer, boolean register, boolean optional) {
         File f = new File(stdout, File.LINK.OUTPUT);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -656,7 +646,6 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stdout
      * @return AbstractJob
      */
@@ -667,7 +656,6 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stdout
      * @param transfer
      * @return AbstractJob
@@ -680,7 +668,6 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stdout
      * @param register
      * @return AbstractJob
@@ -693,14 +680,12 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stdout
      * @param transfer
      * @param register
      * @return AbstractJob
      */
-    public AbstractJob setStdout(String stdout, File.TRANSFER transfer,
-            boolean register) {
+    public AbstractJob setStdout(String stdout, File.TRANSFER transfer, boolean register) {
         File f = new File(stdout, File.LINK.OUTPUT);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -710,15 +695,14 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stdout
      * @param transfer
      * @param register
      * @param optional
      * @return AbstractJob
      */
-    public AbstractJob setStdout(String stdout, File.TRANSFER transfer,
-            boolean register, boolean optional) {
+    public AbstractJob setStdout(
+            String stdout, File.TRANSFER transfer, boolean register, boolean optional) {
         File f = new File(stdout, File.LINK.OUTPUT);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -727,17 +711,12 @@ public class AbstractJob {
         return this;
     }
 
-    /**
-     *
-     * @return File
-     */
+    /** @return File */
     public File getStderr() {
         return mStderr;
-
     }
 
     /**
-     * 
      * @param stderr
      * @return AbstractJob
      */
@@ -748,7 +727,6 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stderr
      * @param transfer
      * @return AbstractJob
@@ -761,7 +739,6 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stderr
      * @param register
      * @return AbstractJob
@@ -774,14 +751,12 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stderr
      * @param transfer
      * @param register
      * @return AbstractJob
      */
-    public AbstractJob setStderr(File stderr, File.TRANSFER transfer,
-            boolean register) {
+    public AbstractJob setStderr(File stderr, File.TRANSFER transfer, boolean register) {
         File f = new File(stderr, File.LINK.OUTPUT);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -790,15 +765,14 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stderr
      * @param transfer
      * @param register
      * @param optional
      * @return AbstractJob
      */
-    public AbstractJob setStderr(File stderr, File.TRANSFER transfer,
-            boolean register, boolean optional) {
+    public AbstractJob setStderr(
+            File stderr, File.TRANSFER transfer, boolean register, boolean optional) {
         File f = new File(stderr, File.LINK.OUTPUT);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -808,7 +782,6 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stderr
      * @return AbstractJob
      */
@@ -819,7 +792,6 @@ public class AbstractJob {
     }
 
     /**
-     * 
      * @param stderr
      * @param transfer
      * @return AbstractJob
@@ -832,7 +804,6 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stderr
      * @param register
      * @return AbstractJob
@@ -845,14 +816,12 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stderr
      * @param transfer
      * @param register
      * @return AbstractJob
      */
-    public AbstractJob setStderr(String stderr, File.TRANSFER transfer,
-            boolean register) {
+    public AbstractJob setStderr(String stderr, File.TRANSFER transfer, boolean register) {
         File f = new File(stderr, File.LINK.OUTPUT);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -861,15 +830,14 @@ public class AbstractJob {
     }
 
     /**
-     *
      * @param stderr
      * @param transfer
      * @param register
      * @param optional
      * @return AbstractJob
      */
-    public AbstractJob setStderr(String stderr, File.TRANSFER transfer,
-            boolean register, boolean optional) {
+    public AbstractJob setStderr(
+            String stderr, File.TRANSFER transfer, boolean register, boolean optional) {
         File f = new File(stderr, File.LINK.OUTPUT);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -878,19 +846,12 @@ public class AbstractJob {
         return this;
     }
 
-    /**
-     *
-     * @return Set<File>
-     */
+    /** @return Set<File> */
     public Set<File> getUses() {
         return mUses;
     }
 
     /**
-     *
-     *
-     *
-     *
      * @param file
      * @param link
      * @return AbstractJob
@@ -900,15 +861,18 @@ public class AbstractJob {
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.
-                    combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring",
+            mLogger.log(
+                    "Job "
+                            + Separator.combine(mNamespace, mName, mVersion)
+                            + "already contains a file "
+                            + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                            + ". Ignoring",
                     LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
 
     /**
-     *
      * @param file
      * @param link
      * @param register
@@ -920,37 +884,43 @@ public class AbstractJob {
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.
-                    combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring",
-                    LogManager.WARNING_MESSAGE_LEVEL);
-        }
-        return this;
-    }
-    
-    /**
-     *
-     * @param file
-     * @param link
-     * @param register
-     * @param size
-     * @return AbstractJob
-     */
-    public AbstractJob uses(String file, File.LINK link, boolean register,String size) {
-        File f = new File(file, link);
-        f.setRegister(register);
-        f.setSize(size);
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.
-                    combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring",
+            mLogger.log(
+                    "Job "
+                            + Separator.combine(mNamespace, mName, mVersion)
+                            + "already contains a file "
+                            + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                            + ". Ignoring",
                     LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
 
     /**
-     *
+     * @param file
+     * @param link
+     * @param register
+     * @param size
+     * @return AbstractJob
+     */
+    public AbstractJob uses(String file, File.LINK link, boolean register, String size) {
+        File f = new File(file, link);
+        f.setRegister(register);
+        f.setSize(size);
+        if (!mUses.contains(f)) {
+            mUses.add(f);
+        } else {
+            mLogger.log(
+                    "Job "
+                            + Separator.combine(mNamespace, mName, mVersion)
+                            + "already contains a file "
+                            + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                            + ". Ignoring",
+                    LogManager.WARNING_MESSAGE_LEVEL);
+        }
+        return this;
+    }
+
+    /**
      * @param file
      * @param link
      * @param size
@@ -962,15 +932,18 @@ public class AbstractJob {
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.
-                    combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring",
+            mLogger.log(
+                    "Job "
+                            + Separator.combine(mNamespace, mName, mVersion)
+                            + "already contains a file "
+                            + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                            + ". Ignoring",
                     LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
-    
+
     /**
-     *
      * @param file
      * @param link
      * @param transfer
@@ -982,15 +955,18 @@ public class AbstractJob {
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.
-                    combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring",
+            mLogger.log(
+                    "Job "
+                            + Separator.combine(mNamespace, mName, mVersion)
+                            + "already contains a file "
+                            + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                            + ". Ignoring",
                     LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
 
     /**
-     *
      * @param file
      * @param link
      * @param transfer
@@ -1004,38 +980,43 @@ public class AbstractJob {
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.
-                    combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring",
+            mLogger.log(
+                    "Job "
+                            + Separator.combine(mNamespace, mName, mVersion)
+                            + "already contains a file "
+                            + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                            + ". Ignoring",
                     LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
-    
+
     /**
-     *
      * @param file
      * @param link
      * @param transfer
      * @param register
      * @return AbstractJob
      */
-    public AbstractJob uses(String file, File.LINK link, File.TRANSFER transfer,
-            boolean register) {
+    public AbstractJob uses(String file, File.LINK link, File.TRANSFER transfer, boolean register) {
         File f = new File(file, link);
         f.setRegister(register);
         f.setTransfer(transfer);
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.
-                    combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring",
+            mLogger.log(
+                    "Job "
+                            + Separator.combine(mNamespace, mName, mVersion)
+                            + "already contains a file "
+                            + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                            + ". Ignoring",
                     LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
-    
+
     /**
-     *
      * @param file
      * @param link
      * @param transfer
@@ -1043,8 +1024,8 @@ public class AbstractJob {
      * @param size
      * @return AbstractJob
      */
-    public AbstractJob uses(String file, File.LINK link, File.TRANSFER transfer,
-            boolean register, String size) {
+    public AbstractJob uses(
+            String file, File.LINK link, File.TRANSFER transfer, boolean register, String size) {
         File f = new File(file, link);
         f.setRegister(register);
         f.setTransfer(transfer);
@@ -1052,15 +1033,18 @@ public class AbstractJob {
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.
-                    combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring",
+            mLogger.log(
+                    "Job "
+                            + Separator.combine(mNamespace, mName, mVersion)
+                            + "already contains a file "
+                            + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                            + ". Ignoring",
                     LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
 
     /**
-     * 
      * @param file
      * @param link
      * @param transfer
@@ -1069,8 +1053,13 @@ public class AbstractJob {
      * @param executable
      * @return AbstractJob
      */
-    public AbstractJob uses(String file, File.LINK link, File.TRANSFER transfer,
-            boolean register, boolean optional, boolean executable) {
+    public AbstractJob uses(
+            String file,
+            File.LINK link,
+            File.TRANSFER transfer,
+            boolean register,
+            boolean optional,
+            boolean executable) {
         File f = new File(file, link);
         f.setRegister(register);
         f.setOptional(optional);
@@ -1079,16 +1068,18 @@ public class AbstractJob {
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion)
-                    + "already contains a file " + Separator.combine(
-                    f.mNamespace, f.mName, f.mVersion)
-                    + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+            mLogger.log(
+                    "Job "
+                            + Separator.combine(mNamespace, mName, mVersion)
+                            + "already contains a file "
+                            + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                            + ". Ignoring",
+                    LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
-    
+
     /**
-     * 
      * @param file
      * @param link
      * @param transfer
@@ -1098,8 +1089,14 @@ public class AbstractJob {
      * @param size
      * @return AbstractJob
      */
-    public AbstractJob uses(String file, File.LINK link, File.TRANSFER transfer,
-            boolean register, boolean optional, boolean executable, String size) {
+    public AbstractJob uses(
+            String file,
+            File.LINK link,
+            File.TRANSFER transfer,
+            boolean register,
+            boolean optional,
+            boolean executable,
+            String size) {
         File f = new File(file, link);
         f.setRegister(register);
         f.setOptional(optional);
@@ -1109,16 +1106,18 @@ public class AbstractJob {
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion)
-                    + "already contains a file " + Separator.combine(
-                    f.mNamespace, f.mName, f.mVersion)
-                    + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+            mLogger.log(
+                    "Job "
+                            + Separator.combine(mNamespace, mName, mVersion)
+                            + "already contains a file "
+                            + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                            + ". Ignoring",
+                    LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
 
     /**
-     *
      * @param file
      * @param link
      * @return AbstractJob
@@ -1128,16 +1127,18 @@ public class AbstractJob {
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion)
-                    + "already contains a file " + Separator.combine(
-                    f.mNamespace, f.mName, f.mVersion)
-                    + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+            mLogger.log(
+                    "Job "
+                            + Separator.combine(mNamespace, mName, mVersion)
+                            + "already contains a file "
+                            + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                            + ". Ignoring",
+                    LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
 
     /**
-     * 
      * @param file
      * @param link
      * @param transfer
@@ -1149,40 +1150,43 @@ public class AbstractJob {
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion)
-                    + "already contains a file " + Separator.combine(
-                    f.mNamespace, f.mName, f.mVersion)
-                    + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+            mLogger.log(
+                    "Job "
+                            + Separator.combine(mNamespace, mName, mVersion)
+                            + "already contains a file "
+                            + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                            + ". Ignoring",
+                    LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
-    
-        /**
-     * 
+
+    /**
      * @param file
      * @param link
      * @param transfer
      * @param size
      * @return AbstractJob
      */
-    public AbstractJob uses(File file, File.LINK link, File.TRANSFER transfer,String size) {
+    public AbstractJob uses(File file, File.LINK link, File.TRANSFER transfer, String size) {
         File f = new File(file, link);
         f.setTransfer(transfer);
         f.setSize(size);
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion)
-                    + "already contains a file " + Separator.combine(
-                    f.mNamespace, f.mName, f.mVersion)
-                    + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+            mLogger.log(
+                    "Job "
+                            + Separator.combine(mNamespace, mName, mVersion)
+                            + "already contains a file "
+                            + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                            + ". Ignoring",
+                    LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
 
-
     /**
-     * 
      * @param file
      * @param link
      * @param register
@@ -1194,18 +1198,18 @@ public class AbstractJob {
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion)
-                    + "already contains a file "
-                    + Separator.combine(f.mNamespace, f.mName, f.mVersion)
-                    + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+            mLogger.log(
+                    "Job "
+                            + Separator.combine(mNamespace, mName, mVersion)
+                            + "already contains a file "
+                            + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                            + ". Ignoring",
+                    LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
-
-
     }
-    
-       /**
-     * 
+
+    /**
      * @param file
      * @param link
      * @param register
@@ -1219,18 +1223,18 @@ public class AbstractJob {
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion)
-                    + "already contains a file "
-                    + Separator.combine(f.mNamespace, f.mName, f.mVersion)
-                    + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+            mLogger.log(
+                    "Job "
+                            + Separator.combine(mNamespace, mName, mVersion)
+                            + "already contains a file "
+                            + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                            + ". Ignoring",
+                    LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
-
-
     }
 
     /**
-     * 
      * @param file
      * @param link
      * @param size
@@ -1242,43 +1246,43 @@ public class AbstractJob {
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion)
-                    + "already contains a file "
-                    + Separator.combine(f.mNamespace, f.mName, f.mVersion)
-                    + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+            mLogger.log(
+                    "Job "
+                            + Separator.combine(mNamespace, mName, mVersion)
+                            + "already contains a file "
+                            + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                            + ". Ignoring",
+                    LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
-
-
     }
-    
+
     /**
-     *
      * @param file
      * @param link
      * @param transfer
      * @param register
      * @return AbstractJob
      */
-    public AbstractJob uses(File file, File.LINK link, File.TRANSFER transfer,
-            boolean register) {
+    public AbstractJob uses(File file, File.LINK link, File.TRANSFER transfer, boolean register) {
         File f = new File(file, link);
         f.setTransfer(transfer);
         f.setRegister(register);
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion)
-                    + "already contains a file " + Separator.combine(
-                    f.mNamespace, f.mName, f.mVersion)
-                    + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+            mLogger.log(
+                    "Job "
+                            + Separator.combine(mNamespace, mName, mVersion)
+                            + "already contains a file "
+                            + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                            + ". Ignoring",
+                    LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
-    
-        
+
     /**
-     *
      * @param file
      * @param link
      * @param transfer
@@ -1286,8 +1290,8 @@ public class AbstractJob {
      * @param size
      * @return AbstractJob
      */
-    public AbstractJob uses(File file, File.LINK link, File.TRANSFER transfer,
-            boolean register, String size) {
+    public AbstractJob uses(
+            File file, File.LINK link, File.TRANSFER transfer, boolean register, String size) {
         File f = new File(file, link);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -1295,16 +1299,18 @@ public class AbstractJob {
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion)
-                    + "already contains a file " + Separator.combine(
-                    f.mNamespace, f.mName, f.mVersion)
-                    + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+            mLogger.log(
+                    "Job "
+                            + Separator.combine(mNamespace, mName, mVersion)
+                            + "already contains a file "
+                            + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                            + ". Ignoring",
+                    LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
 
     /**
-     *
      * @param file
      * @param link
      * @param transfer
@@ -1313,8 +1319,13 @@ public class AbstractJob {
      * @param executable
      * @return AbstractJob
      */
-    public AbstractJob uses(File file, File.LINK link, File.TRANSFER transfer,
-            boolean register, boolean optional, boolean executable) {
+    public AbstractJob uses(
+            File file,
+            File.LINK link,
+            File.TRANSFER transfer,
+            boolean register,
+            boolean optional,
+            boolean executable) {
         File f = new File(file, link);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -1323,17 +1334,18 @@ public class AbstractJob {
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion)
-                    + "already contains a file " + Separator.combine(
-                    f.mNamespace, f.mName, f.mVersion)
-                    + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+            mLogger.log(
+                    "Job "
+                            + Separator.combine(mNamespace, mName, mVersion)
+                            + "already contains a file "
+                            + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                            + ". Ignoring",
+                    LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
-    
-    
+
     /**
-     *
      * @param file
      * @param link
      * @param transfer
@@ -1343,8 +1355,14 @@ public class AbstractJob {
      * @param size
      * @return AbstractJob
      */
-    public AbstractJob uses(File file, File.LINK link, File.TRANSFER transfer,
-            boolean register, boolean optional, boolean executable, String size) {
+    public AbstractJob uses(
+            File file,
+            File.LINK link,
+            File.TRANSFER transfer,
+            boolean register,
+            boolean optional,
+            boolean executable,
+            String size) {
         File f = new File(file, link);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -1354,16 +1372,18 @@ public class AbstractJob {
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion)
-                    + "already contains a file " + Separator.combine(
-                    f.mNamespace, f.mName, f.mVersion)
-                    + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+            mLogger.log(
+                    "Job "
+                            + Separator.combine(mNamespace, mName, mVersion)
+                            + "already contains a file "
+                            + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                            + ". Ignoring",
+                    LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
 
     /**
-     *
      * @param files
      * @param link
      * @return AbstractJob
@@ -1374,11 +1394,13 @@ public class AbstractJob {
             if (!mUses.contains(f)) {
                 mUses.add(f);
             } else {
-                mLogger.log("Job " + Separator.combine(mNamespace, mName,
-                        mVersion)
-                        + "already contains a file " + Separator.combine(
-                        f.mNamespace, f.mName, f.mVersion)
-                        + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+                mLogger.log(
+                        "Job "
+                                + Separator.combine(mNamespace, mName, mVersion)
+                                + "already contains a file "
+                                + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                                + ". Ignoring",
+                        LogManager.WARNING_MESSAGE_LEVEL);
             }
         }
         return this;
@@ -1386,23 +1408,25 @@ public class AbstractJob {
 
     /**
      * Returns list of Invoke objects
+     *
      * @return List<Invoke>
      */
     public List<Invoke> getInvoke() {
         return mInvokes;
     }
 
-    
     /**
      * Same as getInvoke(). Returns list of Invoke objects
+     *
      * @return List<Invoke>
      */
     public List<Invoke> getNotification() {
         return getInvoke();
     }
-    
+
     /**
      * Add Notification to the job
+     *
      * @param when
      * @param what
      * @return AbstractJob
@@ -1413,18 +1437,20 @@ public class AbstractJob {
         return this;
     }
 
-     /**
+    /**
      * Add Notification to the job
+     *
      * @param when
      * @param what
      * @return AbstractJob
      */
     public AbstractJob addNotification(Invoke.WHEN when, String what) {
-        return addInvoke(when,what);
+        return addInvoke(when, what);
     }
 
     /**
      * Add notification to the job
+     *
      * @param invoke
      * @return AbstractJob
      */
@@ -1435,6 +1461,7 @@ public class AbstractJob {
 
     /**
      * Add notification to the job
+     *
      * @param invoke
      * @return AbstractJob
      */
@@ -1444,6 +1471,7 @@ public class AbstractJob {
 
     /**
      * Add Notifications to the job
+     *
      * @param invokes
      * @return AbstractJob
      */
@@ -1456,42 +1484,42 @@ public class AbstractJob {
 
     /**
      * Add Notifications to the job
+     *
      * @param invokes
      * @return AbstractJob
      */
     public AbstractJob addNotifications(List<Invoke> invokes) {
         return addInvokes(invokes);
     }
-    
+
     /**
      * Adds metadata to the workflow
-     * 
-     * @param key       key name for metadata
-     * @param value     value
-     * @return 
+     *
+     * @param key key name for metadata
+     * @param value value
+     * @return
      */
-    public AbstractJob addMetaData( String key, String value ){
-        this.mMetaDataAttributes.add( new MetaData( key, value ) );
+    public AbstractJob addMetaData(String key, String value) {
+        this.mMetaDataAttributes.add(new MetaData(key, value));
         return this;
     }
-    
+
     /**
      * Returns the metadata associated for a key if exists, else null
-     * 
+     *
      * @param key
-     * 
-     * @return 
+     * @return
      */
-    public String getMetaData( String key ){
-       return this.mMetaDataAttributes.contains( key )?
-              ((MetaData)mMetaDataAttributes).getValue():
-               null;
+    public String getMetaData(String key) {
+        return this.mMetaDataAttributes.contains(key)
+                ? ((MetaData) mMetaDataAttributes).getValue()
+                : null;
     }
-    
-    
+
     /**
      * Is this Object a Job
-     * @return 
+     *
+     * @return
      */
     public boolean isJob() {
         return false;
@@ -1499,7 +1527,8 @@ public class AbstractJob {
 
     /**
      * Is this Object a DAX
-     * @return 
+     *
+     * @return
      */
     public boolean isDAX() {
         return false;
@@ -1507,40 +1536,29 @@ public class AbstractJob {
 
     /**
      * Is this Object a DAG
-     * @return 
+     *
+     * @return
      */
     public boolean isDAG() {
         return false;
     }
 
-    /**
-     * 
-     * @return String
-     */
+    /** @return String */
     public String getName() {
         return mName;
     }
 
-    /**
-     *
-     * @return String
-     */
+    /** @return String */
     public String getId() {
         return mId;
     }
 
-    /**
-     *
-     * @return String
-     */
+    /** @return String */
     public String getNodeLabel() {
         return mNodeLabel;
     }
 
-    /**
-     *
-     * @param label
-     */
+    /** @param label */
     public void setNodeLabel(String label) {
         this.mNodeLabel = label;
     }
@@ -1554,8 +1572,7 @@ public class AbstractJob {
             return false;
         }
         final AbstractJob other = (AbstractJob) obj;
-        if ((this.mId == null) ? (other.mId != null) : !this.mId.equals(
-                other.mId)) {
+        if ((this.mId == null) ? (other.mId != null) : !this.mId.equals(other.mId)) {
             return false;
         }
         return true;
@@ -1568,106 +1585,104 @@ public class AbstractJob {
         return hash;
     }
 
-    /**
-     *
-     * @param writer
-     */
+    /** @param writer */
     public void toXML(XMLWriter writer) {
         toXML(writer, 0);
     }
 
     /**
-     * 
      * @param writer
      * @param indent
      */
     public void toXML(XMLWriter writer, int indent) {
 
-        //Check if its a dax, dag or job class
+        // Check if its a dax, dag or job class
 
         if (mNodeLabel != null && !mNodeLabel.isEmpty()) {
             writer.writeAttribute("node-label", mNodeLabel);
-        } //add argument
-        
+        } // add argument
+
         if (!mArguments.isEmpty()) {
             writer.startElement("argument", indent + 1);
             for (Object o : mArguments) {
                 if (o.getClass() == String.class) {
-                    //if class is string add argument string in the data section
-                    writer.writeData(
-                            (String) o);
+                    // if class is string add argument string in the data section
+                    writer.writeData((String) o);
                 }
                 if (o.getClass() == File.class) {
-                    //add file tags in the argument elements data section
+                    // add file tags in the argument elements data section
                     ((File) o).toXML(writer, 0, "argument");
                 }
             }
             writer.endElement();
-        } 
+        }
 
-        //PM-902
+        // PM-902
         for (MetaData md : mMetaDataAttributes) {
             md.toXML(writer, indent + 1);
         }
-        
-        //add profiles
+
+        // add profiles
         for (Profile p : mProfiles) {
             p.toXML(writer, indent + 1);
-        } 
-        
-        //PM-708 add extra uses for stdout|stderr|stdin if not 
-        //specified by the user in the uses section
+        }
+
+        // PM-708 add extra uses for stdout|stderr|stdin if not
+        // specified by the user in the uses section
         Set<File> addOnUses = new LinkedHashSet<File>();
-        
-        //add stdin
+
+        // add stdin
         if (mStdin != null) {
-            if( !mUses.contains( mStdin) ){
-                //add uses with default flags
-                File f = new File( mStdin, File.LINK.INPUT);
+            if (!mUses.contains(mStdin)) {
+                // add uses with default flags
+                File f = new File(mStdin, File.LINK.INPUT);
                 addOnUses.add(f);
             }
             mStdin.toXML(writer, indent + 1, "stdin");
-        } 
-        
-        //add stdout
+        }
+
+        // add stdout
         if (mStdout != null) {
-            if( !mUses.contains( mStdout) ){
-                //add uses with default flags
-                File f = new File( mStdout, File.LINK.OUTPUT);
+            if (!mUses.contains(mStdout)) {
+                // add uses with default flags
+                File f = new File(mStdout, File.LINK.OUTPUT);
                 addOnUses.add(f);
             }
             mStdout.toXML(writer, indent + 1, "stdout");
-        } 
-        
-        //add stderr
+        }
+
+        // add stderr
         if (mStderr != null) {
-            if( !mUses.contains( mStderr) ){
-                //add uses with default flags
-                File f = new File( mStderr, File.LINK.OUTPUT);
+            if (!mUses.contains(mStderr)) {
+                // add uses with default flags
+                File f = new File(mStderr, File.LINK.OUTPUT);
                 addOnUses.add(f);
             }
             mStderr.toXML(writer, indent + 1, "stderr");
-        } 
-        
-        //print add on uses first
+        }
+
+        // print add on uses first
         for (File f : addOnUses) {
             f.toXML(writer, indent + 1, "uses");
         }
-        
-        //add uses
+
+        // add uses
         for (File f : mUses) {
             f.toXML(writer, indent + 1, "uses");
-        } //add invoke
+        } // add invoke
         for (Invoke i : mInvokes) {
             i.toXML(writer, indent + 1);
         }
-        if (!(mUses.isEmpty() && mInvokes.isEmpty() && mStderr == null && mStdout == null && mStdin == null && mProfiles.
-                isEmpty() && mArguments.isEmpty())) {
+        if (!(mUses.isEmpty()
+                && mInvokes.isEmpty()
+                && mStderr == null
+                && mStdout == null
+                && mStdin == null
+                && mProfiles.isEmpty()
+                && mArguments.isEmpty())) {
             writer.endElement(indent);
         } else {
             writer.endElement();
-
         }
-
     }
 }

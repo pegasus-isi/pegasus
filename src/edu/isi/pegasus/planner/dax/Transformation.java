@@ -1,53 +1,45 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ * Copyright 2007-2008 University Of Southern California
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing,
- *  software distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package edu.isi.pegasus.planner.dax;
 
-import java.util.List;
-import java.util.LinkedList;
 import edu.isi.pegasus.common.util.XMLWriter;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
- * This Object is used to create a complex Transformation.
- * A complex transformation is one that uses other executables and files
+ * This Object is used to create a complex Transformation. A complex transformation is one that uses
+ * other executables and files
+ *
  * @author gmehta
  * @version $Revision$
  */
 public class Transformation {
 
-    /**
-     * Namespace of the Transformation
-     */
+    /** Namespace of the Transformation */
     protected String mNamespace;
-    /**
-     * Name of the transformation
-     */
+    /** Name of the transformation */
     protected String mName;
-    /**
-     * Version of the transformation
-     */
+    /** Version of the transformation */
     protected String mVersion;
-    /**
-     * List of executable of files used by the transformation
-     */
+    /** List of executable of files used by the transformation */
     protected List<CatalogType> mUses;
-    
+
     protected List<Invoke> mInvokes;
 
     /**
      * Create a new Transformation object
+     *
      * @param name
      */
     public Transformation(String name) {
@@ -56,17 +48,18 @@ public class Transformation {
 
     /**
      * Copy Constructor
-     * @param t 
+     *
+     * @param t
      */
     public Transformation(Transformation t) {
-        this(t.mNamespace,t.mName,t.mVersion);
+        this(t.mNamespace, t.mName, t.mVersion);
         this.mUses = new LinkedList<CatalogType>(t.mUses);
         this.mInvokes = new LinkedList<Invoke>(t.mInvokes);
     }
 
-    
     /**
      * Create a new Transformation Object
+     *
      * @param namespace
      * @param name
      * @param version
@@ -82,6 +75,7 @@ public class Transformation {
 
     /**
      * Get the name of the transformation
+     *
      * @return
      */
     public String getName() {
@@ -90,6 +84,7 @@ public class Transformation {
 
     /**
      * Get the namespace of the transformation
+     *
      * @return
      */
     public String getNamespace() {
@@ -98,30 +93,34 @@ public class Transformation {
 
     /**
      * Get the version of the transformation
+     *
      * @return
      */
     public String getVersion() {
         return mVersion;
     }
 
-        /**
+    /**
      * Return the list of Notification objects
+     *
      * @return List<Invoke>
      */
     public List<Invoke> getInvoke() {
         return mInvokes;
     }
-    
-     /**
+
+    /**
      * Return the list of Notification objects (same as getInvoke()
+     *
      * @return List<Invoke>
      */
     public List<Invoke> getNotification() {
         return getInvoke();
     }
-    
+
     /**
      * Add a Notification for this Transformation
+     *
      * @param when
      * @param what
      * @return Transformation
@@ -131,19 +130,21 @@ public class Transformation {
         mInvokes.add(i);
         return this;
     }
-    
+
     /**
      * Add a Notification for this Transformation same as addInvoke()
+     *
      * @param when
      * @param what
      * @return Transformation
      */
     public Transformation addNotification(Invoke.WHEN when, String what) {
-        return addInvoke(when,what);
+        return addInvoke(when, what);
     }
-    
-   /**
+
+    /**
      * Add a Notification for this Transformation
+     *
      * @param invoke
      * @return Transformation
      */
@@ -154,28 +155,30 @@ public class Transformation {
 
     /**
      * Add a List of Notifications for this Transformation
+     *
      * @param invokes
      * @return Transformation
      */
     public Transformation addInvokes(List<Invoke> invokes) {
-        for (Invoke invoke: invokes){
+        for (Invoke invoke : invokes) {
             this.addInvoke(invoke);
         }
         return this;
     }
-    
-    
+
     /**
      * Add a List of Notifications for this Transformation. Same as addInvokes()
+     *
      * @param invokes
      * @return Transformation
      */
     public Transformation addNotifications(List<Invoke> invokes) {
         return addInvokes(invokes);
     }
-    
+
     /**
      * Set the file or executable being used by the transformation
+     *
      * @param fileorexecutable
      * @return
      */
@@ -197,6 +200,7 @@ public class Transformation {
 
     /**
      * Get the List of files and/or executables being used by the transformation
+     *
      * @return
      */
     public List<CatalogType> getUses() {
@@ -212,13 +216,17 @@ public class Transformation {
             return false;
         }
         final Transformation other = (Transformation) obj;
-        if ((this.mNamespace == null) ? (other.mNamespace != null) : !this.mNamespace.equals(other.mNamespace)) {
+        if ((this.mNamespace == null)
+                ? (other.mNamespace != null)
+                : !this.mNamespace.equals(other.mNamespace)) {
             return false;
         }
         if ((this.mName == null) ? (other.mName != null) : !this.mName.equals(other.mName)) {
             return false;
         }
-        if ((this.mVersion == null) ? (other.mVersion != null) : !this.mVersion.equals(other.mVersion)) {
+        if ((this.mVersion == null)
+                ? (other.mVersion != null)
+                : !this.mVersion.equals(other.mVersion)) {
             return false;
         }
         return true;
@@ -233,13 +241,11 @@ public class Transformation {
         return hash;
     }
 
-   
-    
     @Override
-    public String toString(){
-        return mNamespace+"::"+mName+":"+mVersion;
+    public String toString() {
+        return mNamespace + "::" + mName + ":" + mVersion;
     }
-     
+
     public void toXML(XMLWriter writer) {
         toXML(writer, 0);
     }
@@ -259,9 +265,9 @@ public class Transformation {
                     File f = (File) c;
                     writer.startElement("uses", indent + 1);
                     writer.writeAttribute("name", f.getName());
-                    //PM-1316 data files should explicitly have executable set to false
-                    //to override the default attribute value for this in the schema for 
-                    //occurences of uses in the transformation element
+                    // PM-1316 data files should explicitly have executable set to false
+                    // to override the default attribute value for this in the schema for
+                    // occurences of uses in the transformation element
                     writer.writeAttribute("executable", "false");
                     writer.endElement();
                 } else if (c.getClass() == Executable.class) {

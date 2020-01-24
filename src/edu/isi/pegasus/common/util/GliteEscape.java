@@ -1,64 +1,59 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ * Copyright 2007-2008 University Of Southern California
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing,
- *  software distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
-
 package edu.isi.pegasus.common.util;
 
 /**
  * This class tries to define an interface to deal with quoting, escaping.
  *
- * The quoting algorithm is safe to only itself. Thus,
- * <p/>
+ * <p>The quoting algorithm is safe to only itself. Thus,
+ *
+ * <p>
+ *
  * <pre>
  * unescape( escape( s ) ) === s
  * </pre>
- * <p/>
- * holds true, but
- * <p/>
+ *
+ * <p>holds true, but
+ *
+ * <p>
+ *
  * <pre>
  * escape( unescape( s ) ) =?= s
  * </pre>
- * <p/>
- * does not necessarily hold.
+ *
+ * <p>does not necessarily hold.
  *
  * @author Rajiv Mayani
  * @version $Revision$
  */
 public class GliteEscape {
-    /**
-     * Defines the character used to escape characters.
-     */
+    /** Defines the character used to escape characters. */
     private char m_escape;
 
-    /**
-     * Defines the set of characters that require escaping.
-     */
+    /** Defines the set of characters that require escaping. */
     private String m_escapable;
 
     /**
-     * Defines the set of characters that are unescapable.
-     * Unescapable characters are those which when processed by condor and written to a PBS script will cause failure,
-     * or be ignored without warning.
+     * Defines the set of characters that are unescapable. Unescapable characters are those which
+     * when processed by condor and written to a PBS script will cause failure, or be ignored
+     * without warning.
      */
     private String m_unescapable;
 
     /**
-     * Defines the default quoting and escaping rules, escaping the
-     * apostrophe, double quote and backslash. The escape character
-     * is the backslash.
+     * Defines the default quoting and escaping rules, escaping the apostrophe, double quote and
+     * backslash. The escape character is the backslash.
      */
     public GliteEscape() {
         m_escape = '\\';
@@ -70,7 +65,7 @@ public class GliteEscape {
      * Constructs arbitrary escaping rules.
      *
      * @param escapable is the set of characters that require escaping
-     * @param escape    is the escape character itself.
+     * @param escape is the escape character itself.
      */
     public GliteEscape(String escapable, char escape) {
         m_escape = escape;
@@ -99,9 +94,8 @@ public class GliteEscape {
     }
 
     /**
-     * Transforms a given string by escaping all characters inside the
-     * quotable characters set with the escape character. The escape
-     * character itself is also escaped.
+     * Transforms a given string by escaping all characters inside the quotable characters set with
+     * the escape character. The escape character itself is also escaped.
      *
      * @param s is the string to escape.
      * @return the quoted string
@@ -113,7 +107,12 @@ public class GliteEscape {
         }
 
         if (!isEscapable(s)) {
-            throw new RuntimeException("String " + s + " contains some un-escapable characters \"" + m_unescapable + "\"");
+            throw new RuntimeException(
+                    "String "
+                            + s
+                            + " contains some un-escapable characters \""
+                            + m_unescapable
+                            + "\"");
         }
 
         StringBuilder result = new StringBuilder(s.length());
@@ -126,7 +125,7 @@ public class GliteEscape {
 
                 if (ch == '\"') {
                     result.append(m_escape);
-                    //result.append(m_escape);
+                    // result.append(m_escape);
                 }
             }
 

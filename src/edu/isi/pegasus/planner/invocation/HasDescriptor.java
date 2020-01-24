@@ -15,28 +15,28 @@
 package edu.isi.pegasus.planner.invocation;
 
 /**
- * This interface defines a common base for all File elements in an invocation
- * record that carry a descriptor in their values. It exists primarily for
- * grouping purposes and for easier access for the database manager.
+ * This interface defines a common base for all File elements in an invocation record that carry a
+ * descriptor in their values. It exists primarily for grouping purposes and for easier access for
+ * the database manager.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
  */
-public interface HasDescriptor
-{
-  /**
-   * Accessor: Obtains the descriptor of the file handle
-   * @return the descriptor number, or -1 for none.
-   *
-   * @see #setDescriptor(int)
-   */
-  public int getDescriptor();
+public interface HasDescriptor {
+    /**
+     * Accessor: Obtains the descriptor of the file handle
+     *
+     * @return the descriptor number, or -1 for none.
+     * @see #setDescriptor(int)
+     */
+    public int getDescriptor();
 
-  /**
-   * Accessor: Sets the descriptor number of a file object.
-   * @param descriptor is the new descriptor to store.
-   * @see #getDescriptor()
-   */
-  public void setDescriptor( int descriptor );
+    /**
+     * Accessor: Sets the descriptor number of a file object.
+     *
+     * @param descriptor is the new descriptor to store.
+     * @see #getDescriptor()
+     */
+    public void setDescriptor(int descriptor);
 }

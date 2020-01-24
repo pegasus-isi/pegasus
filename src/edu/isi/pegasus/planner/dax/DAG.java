@@ -1,17 +1,15 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ * Copyright 2007-2008 University Of Southern California
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing,
- *  software distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package edu.isi.pegasus.planner.dax;
 
@@ -28,6 +26,7 @@ public class DAG extends AbstractJob {
 
     /**
      * Create a DAG object
+     *
      * @param id The unique id of the DAG job object. Must be of type [A-Za-z][-A-Za-z0-9_]*
      * @param dagname The dag file to submit
      */
@@ -37,7 +36,8 @@ public class DAG extends AbstractJob {
 
     /**
      * Copy Constructor
-     * @param dag 
+     *
+     * @param dag
      */
     public DAG(DAG dag) {
         super(dag);
@@ -45,6 +45,7 @@ public class DAG extends AbstractJob {
 
     /**
      * Create a DAG object
+     *
      * @param id The unique id of the DAG job object. Must be of type [A-Za-z][-A-Za-z0-9_]*
      * @param dagname The dag file to submit
      * @param label The label for this job.
@@ -60,7 +61,8 @@ public class DAG extends AbstractJob {
 
     /**
      * Is this Object a DAG
-     * @return 
+     *
+     * @return
      */
     public boolean isDAG() {
         return true;
@@ -68,13 +70,9 @@ public class DAG extends AbstractJob {
 
     public void toXML(XMLWriter writer, int indent) {
 
-        writer.startElement(
-                "dag", indent);
-        writer.writeAttribute(
-                "id", mId);
-        writer.writeAttribute(
-                "file", mName);
+        writer.startElement("dag", indent);
+        writer.writeAttribute("id", mId);
+        writer.writeAttribute("file", mName);
         super.toXML(writer, indent);
-
     }
 }

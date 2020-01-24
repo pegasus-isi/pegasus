@@ -16,37 +16,27 @@
 package org.griphyn.vdl.router;
 
 /**
- * This exception is thrown if a transformation uses the same name for
- * a formal argument as for a local variable. 
+ * This exception is thrown if a transformation uses the same name for a formal argument as for a
+ * local variable.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
- *
  * @see org.griphyn.vdl.classes.Transformation
  * @see org.griphyn.vdl.classes.Local
  */
-public class DuplicateIdentifier
-  extends java.lang.RuntimeException 
-{
-  /**
-   * Constructs a <code>DuplicateIdentifier</code> with no
-   * detail message.
-   */
-  public DuplicateIdentifier()
-  {
-    super();
-  }
+public class DuplicateIdentifier extends java.lang.RuntimeException {
+    /** Constructs a <code>DuplicateIdentifier</code> with no detail message. */
+    public DuplicateIdentifier() {
+        super();
+    }
 
-  /**
-   * Constructs a <code>DuplicateIdentifier</code> with the
-   * specified detailed message.
-   *
-   * @param s is the detailled message.
-   */
-  public DuplicateIdentifier( String s )
-  {
-    super(s);
-  }
+    /**
+     * Constructs a <code>DuplicateIdentifier</code> with the specified detailed message.
+     *
+     * @param s is the detailled message.
+     */
+    public DuplicateIdentifier(String s) {
+        super(s);
+    }
 }
-

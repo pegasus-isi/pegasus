@@ -15,14 +15,12 @@
 package org.griphyn.vdl.parser;
 
 /**
- * Base class for the tokens passed from the VDLt scanner to the VDLt parser.
- * This class is module-local on purpose.
+ * Base class for the tokens passed from the VDLt scanner to the VDLt parser. This class is
+ * module-local on purpose.
  *
  * @author Jens-S. Vöckler
  * @version $Revision$
- *
  */
-interface VDLtToken
-{
-  // empty
+interface VDLtToken {
+    // empty
 }

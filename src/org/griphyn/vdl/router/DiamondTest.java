@@ -14,56 +14,55 @@
  */
 
 package org.griphyn.vdl.router;
-import org.griphyn.vdl.classes.*;
-import org.griphyn.vdl.router.*;
-import org.griphyn.vdl.dbschema.*;
-import org.griphyn.vdl.dax.*;
-import org.griphyn.vdl.util.Logging;
+
 import java.io.*;
-import java.sql.SQLException;
 import java.lang.reflect.*;
+import java.sql.SQLException;
+import org.griphyn.vdl.classes.*;
+import org.griphyn.vdl.dax.*;
+import org.griphyn.vdl.dbschema.*;
+import org.griphyn.vdl.util.Logging;
 
 public class DiamondTest {
-  public static void main( String[] args )
-    throws IllegalArgumentException, IOException, ClassNotFoundException,
-	   NoSuchMethodException, InstantiationException, SQLException,
-	   IllegalAccessException, InvocationTargetException
-  {
-    // create debug output
-    Logging.instance().register( "dag", System.err );
-    Logging.instance().register( "state", System.err );
-    Logging.instance().register( "route", System.err );
+    public static void main(String[] args)
+            throws IllegalArgumentException, IOException, ClassNotFoundException,
+                    NoSuchMethodException, InstantiationException, SQLException,
+                    IllegalAccessException, InvocationTargetException {
+        // create debug output
+        Logging.instance().register("dag", System.err);
+        Logging.instance().register("state", System.err);
+        Logging.instance().register("route", System.err);
 
-    // create new route object, in memory classes
-    Definitions original = org.griphyn.vdl.router.CreateDiamond.create(); 
+        // create new route object, in memory classes
+        Definitions original = org.griphyn.vdl.router.CreateDiamond.create();
 
-    // serialize onto disk
-    Logging.instance().log( "default", 0, "serializing to disk" );
-    ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("data.out"));
-    oos.writeObject(original);
-    oos.flush();
-    oos.close();
-    Logging.instance().log( "default", 0, "serializing done" );
+        // serialize onto disk
+        Logging.instance().log("default", 0, "serializing to disk");
+        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("data.out"));
+        oos.writeObject(original);
+        oos.flush();
+        oos.close();
+        Logging.instance().log("default", 0, "serializing done");
 
-    // de-serialize from file
-    Logging.instance().log( "default", 0, "de-serialize from disk" );
-    ObjectInputStream ois = new  ObjectInputStream(new FileInputStream("data.out"));
-    Definitions diamond = (Definitions) ois.readObject();
-    ois.close();
-    Logging.instance().log( "default", 0, "de-serializing done" );
+        // de-serialize from file
+        Logging.instance().log("default", 0, "de-serialize from disk");
+        ObjectInputStream ois = new ObjectInputStream(new FileInputStream("data.out"));
+        Definitions diamond = (Definitions) ois.readObject();
+        ois.close();
+        Logging.instance().log("default", 0, "de-serializing done");
 
-    // create a router
-    Route r = new Route( new InMemorySchema(diamond) );
-    
-    // request known production
-    BookKeeper bk = r.requestLfn("f.d");
-    
-    // show us the result
-    System.out.println( bk.toString() );
-    
-    // show the DAX
-    System.out.println( "----------" );
-    System.out.println( bk.getDAX("testing").toXML("",null) );
-    System.exit(0);
-  }
+        // create a router
+        Route r = new Route(new InMemorySchema(diamond));
+
+        // request known production
+        BookKeeper bk = r.requestLfn("f.d");
+
+        // show us the result
+        System.out.println(bk.toString());
+
+        // show the DAX
+        System.out.println("----------");
+        System.out.println(bk.getDAX("testing").toXML("", null));
+        System.exit(0);
+    }
 }

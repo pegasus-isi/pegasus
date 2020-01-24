@@ -1,33 +1,27 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ * Copyright 2007-2008 University Of Southern California
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing,
- *  software distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
-
 package edu.isi.pegasus.planner.selector.site;
 
-
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
-import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
-
-import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.planner.catalog.site.classes.Directory;
-
-
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusFile;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
@@ -35,42 +29,37 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.PegasusBag;
 
 /**
- * This is the class that implements a call-out to a site selector which
- * is an application or executable script. In order to use the site
- * selector implemented by this class, the property
- * <code>pegasus.selector.site</code> must be set to value
- * <code>NonJavaCallout</code>.<p>
+ * This is the class that implements a call-out to a site selector which is an application or
+ * executable script. In order to use the site selector implemented by this class, the property
+ * <code>pegasus.selector.site</code> must be set to value <code>NonJavaCallout</code>.
  *
- * This site selector implements a <code>popen()</code> like call to an
- * external application that conforms to the API laid out here. The name
- * of the application to run is specified by the property
- * <code>pegasus.selector.site.path</code>. Its value points to a locally
- * available application.<p>
+ * <p>This site selector implements a <code>popen()</code> like call to an external application that
+ * conforms to the API laid out here. The name of the application to run is specified by the
+ * property <code>pegasus.selector.site.path</code>. Its value points to a locally available
+ * application.
  *
- * If the external executable requires certain environment variables to
- * be set for execution, these can be specified in the property files,
- * using the prefix <code>pegasus.selector.site.env</code>. The name of the
- * environment variable is obtained by stripping the prefix. For
- * example, to set the variable PATH to a certain value, use the
- * following entry in your user property file:<p>
+ * <p>If the external executable requires certain environment variables to be set for execution,
+ * these can be specified in the property files, using the prefix <code>pegasus.selector.site.env
+ * </code>. The name of the environment variable is obtained by stripping the prefix. For example,
+ * to set the variable PATH to a certain value, use the following entry in your user property file:
+ *
+ * <p>
  *
  * <pre>
  *   pegasus.selector.site.env.PATH = /usr/bin:/bin:/usr/X11R6/bin
  * </pre>
  *
- * The site selector populates the environment of the external
- * application with the following default properties, which can
- * be overwritten by user-specified properties:<p>
+ * The site selector populates the environment of the external application with the following
+ * default properties, which can be overwritten by user-specified properties:
+ *
+ * <p>
  *
  * <table border="1">
  * <tr align="left"><th>key</th><th>value</th></tr>
@@ -90,49 +79,47 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
  *  <td>From <tt>java.io.tmpdir</tt>, if present</td></tr>
  * <tr align="left"><th>TZ</th>
  *  <td>From <tt>user.timezone</tt>, if present</td></tr>
- * </table><p>
+ * </table>
  *
- * The user can specify the environment variables, by specifying the
- * properties with the prefix pegasus.selector.site.env. prefix. for e.g user
- * can override the default user.name property by setting the property
- * pegasus.selector.site.env.user.home .<p>
+ * <p>The user can specify the environment variables, by specifying the properties with the prefix
+ * pegasus.selector.site.env. prefix. for e.g user can override the default user.name property by
+ * setting the property pegasus.selector.site.env.user.home .
  *
- * The external application is invoked with one commandline argument.
- * This argument is the name of a temporary file. The temporary file is
- * created for each invocation anew by the site selecting caller. Being
- * temporary, the file is deleted after the site selector returns with
- * success. The deletion of the file is governed by the property
- * pegasus.selector.site.keep.tmp. It can have a tristate value with the valid
- * values being
+ * <p>The external application is invoked with one commandline argument. This argument is the name
+ * of a temporary file. The temporary file is created for each invocation anew by the site selecting
+ * caller. Being temporary, the file is deleted after the site selector returns with success. The
+ * deletion of the file is governed by the property pegasus.selector.site.keep.tmp. It can have a
+ * tristate value with the valid values being
+ *
  * <pre>
  *              ALWAYS
  *              NEVER
  *              ONERROR
  * </pre>
- * <p>
  *
- * The external application is expected to write one line to stdout.
- * The line starts with the string <code>SOLUTION:</code>, followed
- * by the chosen site handle. Optionally, separated by a colon, the
- * name of a jobmanager for the site can be provided by the site
- * selector. Two examples for successful site selections are:<p>
+ * <p>The external application is expected to write one line to stdout. The line starts with the
+ * string <code>SOLUTION:</code>, followed by the chosen site handle. Optionally, separated by a
+ * colon, the name of a jobmanager for the site can be provided by the site selector. Two examples
+ * for successful site selections are:
+ *
+ * <p>
  *
  * <pre>
  *   SOLUTION:mysite:my.job.mgr/jobmanager-batch
  *   SOLUTION:siteY
  * </pre>
  *
- * Note, these are two examples. The site selector only returns one line
- * with the appropriate solution. If no site is found to be eligble, the
- * poolhandle should be set to NONE by the site selector. <p>
+ * Note, these are two examples. The site selector only returns one line with the appropriate
+ * solution. If no site is found to be eligble, the poolhandle should be set to NONE by the site
+ * selector.
  *
- * The temporary file is the corner stone of the communication between
- * the site selecting caller and the external site selector. It is a
- * collection of key-value pairs. Each pair is separated by an equals
- * (=) sign, and stands on a line of its own. There are no multi-line
- * values permitted.<p>
+ * <p>The temporary file is the corner stone of the communication between the site selecting caller
+ * and the external site selector. It is a collection of key-value pairs. Each pair is separated by
+ * an equals (=) sign, and stands on a line of its own. There are no multi-line values permitted.
  *
- * The following pairs are generated for the siteselector temporary file:<p>
+ * <p>The following pairs are generated for the siteselector temporary file:
+ *
+ * <p>
  *
  * <table border="1">
  * <tr align="left"><th>#</th><th>key</th><th>value</th></tr>
@@ -164,208 +151,167 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
  *  <td>unused at present, name of the virtual organization who runs this WF.</td></tr>
  * <tr align="left"><th>1</th><th>vo.group</th>
  *  <td>unused at present, usage not clear .</td></tr>
- * </table><p>
+ * </table>
  *
- * In order to detect malfunctioning site selectors, a timeout is
- * attached with each site selector, see property
- * <code>pegasus.selector.site.timeout</code>. By default, a site selector
- * is given up upon after 60 s.<p>
+ * <p>In order to detect malfunctioning site selectors, a timeout is attached with each site
+ * selector, see property <code>pegasus.selector.site.timeout</code>. By default, a site selector is
+ * given up upon after 60 s.
+ *
+ * <p>
  *
  * @author Karan Vahi
  * @author Jens Vöckler
- *
  * @version $Revision$
- *
  * @see java.lang.Runtime
  * @see java.lang.Process
  */
 public class NonJavaCallout extends AbstractPerJob {
 
     /**
-     * The prefix to be used while creating a temporary file to pass to
-     * the external siteselector.
+     * The prefix to be used while creating a temporary file to pass to the external siteselector.
      */
     public static final String PREFIX_TEMPORARY_FILE = "pegasus";
 
     /**
-     * The suffix to be used while creating a temporary file to pass to
-     * the external siteselector.
+     * The suffix to be used while creating a temporary file to pass to the external siteselector.
      */
     public static final String SUFFIX_TEMPORARY_FILE = null;
 
-
     /**
-     * The prefix of the property names that specify the environment
-     * variables that need to be set before calling out to the site
-     * selector.
+     * The prefix of the property names that specify the environment variables that need to be set
+     * before calling out to the site selector.
      */
     public static final String PREFIX_PROPERTIES = "pegasus.selector.site.env.";
 
     /**
-     * The prefix that the site selector writes out on its stdout to
-     * designate that it is sending a solution.
+     * The prefix that the site selector writes out on its stdout to designate that it is sending a
+     * solution.
      */
     public static final String SOLUTION_PREFIX = "SOLUTION:";
 
-    /**
-     * The version number associated with this API of non java callout
-     * site selection.
-     */
+    /** The version number associated with this API of non java callout site selection. */
     public static final String VERSION = "2.0";
 
-    //tristate variables for keeping the temporary files generated
+    // tristate variables for keeping the temporary files generated
 
-    /**
-     * The state denoting never to keep the temporary files.
-     */
+    /** The state denoting never to keep the temporary files. */
     public static final int KEEP_NEVER = 0;
 
-    /**
-     * The state denoting to keep the temporary files only in case of error.
-     */
+    /** The state denoting to keep the temporary files only in case of error. */
     public static final int KEEP_ONERROR = 1;
 
-    /**
-     * The state denoting always to keep the temporary files.
-     */
+    /** The state denoting always to keep the temporary files. */
     public static final int KEEP_ALWAYS = 2;
 
-    /**
-     * The description of the site selector.
-     */
-    private static final String mDescription =
-        "External call-out to a site-selector application";
-
+    /** The description of the site selector. */
+    private static final String mDescription = "External call-out to a site-selector application";
 
     /**
-     * The map that contains the environment variables including the
-     * default ones that are set while calling out to the site selector
-     * unless they are overridden by the values set in the properties
-     * file.
+     * The map that contains the environment variables including the default ones that are set while
+     * calling out to the site selector unless they are overridden by the values set in the
+     * properties file.
      */
     private Map mEnvVar;
 
-
     /**
-     * The timeout value in seconds after which to timeout, in the case
-     * where the external site selector does nothing (nothing on stdout
-     * nor stderr).
+     * The timeout value in seconds after which to timeout, in the case where the external site
+     * selector does nothing (nothing on stdout nor stderr).
      */
     private int mTimeout;
 
-    /**
-     * The tristate value for whether keeping the temporary files generated or
-     * not.
-     */
+    /** The tristate value for whether keeping the temporary files generated or not. */
     private int mKeepTMP;
 
-    /**
-     * The path to the site selector.
-     */
+    /** The path to the site selector. */
     private String mSiteSelectorPath;
 
-    /**
-     * The abstract DAG.
-     */
+    /** The abstract DAG. */
     private ADag mAbstractDag;
 
-    /**
-     * The default constructor.
-     */
-    public NonJavaCallout(){
+    /** The default constructor. */
+    public NonJavaCallout() {
         super();
         // set the default timeout to 60 seconds
         mTimeout = 60;
-        //default would be onerror
+        // default would be onerror
         mKeepTMP = KEEP_ONERROR;
     }
 
     /**
      * Initializes the site selector.
      *
-     * @param bag   the bag of objects that is useful for initialization.
-     *
+     * @param bag the bag of objects that is useful for initialization.
      */
-    public void initialize( PegasusBag bag ){
-        super.initialize( bag );
+    public void initialize(PegasusBag bag) {
+        super.initialize(bag);
         mTimeout = mProps.getSiteSelectorTimeout();
         mSiteSelectorPath = mProps.getSiteSelectorPath();
 
         // load the environment variables from the properties file
         // and the default values.
         this.loadEnvironmentVariables();
-        //get the value from the properties file.
+        // get the value from the properties file.
         mKeepTMP = getKeepTMPValue(mProps.getSiteSelectorKeep());
     }
 
-
     /**
-     * Maps the jobs in the workflow to the various grid sites.
-     * The jobs are mapped by setting the site handle for the jobs.
+     * Maps the jobs in the workflow to the various grid sites. The jobs are mapped by setting the
+     * site handle for the jobs.
      *
-     * @param workflow   the workflow.
-     *
-     * @param sites     the list of <code>String</code> objects representing the
-     *                  execution sites that can be used.
+     * @param workflow the workflow.
+     * @param sites the list of <code>String</code> objects representing the execution sites that
+     *     can be used.
      */
-    public void mapWorkflow( ADag workflow, List sites ){
+    public void mapWorkflow(ADag workflow, List sites) {
         mAbstractDag = workflow;
-        //PM-747 no need for conversion as ADag now implements Graph interface
-        super.mapWorkflow( workflow , sites );
+        // PM-747 no need for conversion as ADag now implements Graph interface
+        super.mapWorkflow(workflow, sites);
     }
 
-
     /**
-     * Returns a brief description of the site selection technique
-     * implemented by this class.
+     * Returns a brief description of the site selection technique implemented by this class.
      *
      * @return a self-description of this site selector.
      */
-    public String description(){
+    public String description() {
         return mDescription;
     }
 
     /**
-     * Calls out to the external site selector. The method converts a
-     * <code>Job</code> object into an API-compliant temporary file.
-     * The file's name is provided as single commandline argument to the
-     * site selector executable when it is invoked. The executable,
-     * representing the external site selector, provides its answer
-     * on <i>stdout</i>. The answer is captures, and returned.
+     * Calls out to the external site selector. The method converts a <code>Job</code> object into
+     * an API-compliant temporary file. The file's name is provided as single commandline argument
+     * to the site selector executable when it is invoked. The executable, representing the external
+     * site selector, provides its answer on <i>stdout</i>. The answer is captures, and returned.
      *
-     * @param job is a representation of the DAX compute job whose site of
-     * execution need to be determined.
-     *
-     * @param sites  the list of <code>String</code> objects representing the
-     *               execution sites that can be used.
-     *
-     *
-     *
-     * FIXME: Some site selector return an empty string on failures. Also:
-     * NONE could be a valid site name.
-     *
+     * @param job is a representation of the DAX compute job whose site of execution need to be
+     *     determined.
+     * @param sites the list of <code>String</code> objects representing the execution sites that
+     *     can be used.
+     *     <p>FIXME: Some site selector return an empty string on failures. Also: NONE could be a
+     *     valid site name.
      * @see org.griphyn.cPlanner.classes.Job
      */
-    public void mapJob( Job job, List sites ){
+    public void mapJob(Job job, List sites) {
         Runtime rt = Runtime.getRuntime();
 
         // prepare the temporary file that needs to be sent to the
         // Site Selector via command line.
-        File ipFile = prepareInputFile( job, sites );
+        File ipFile = prepareInputFile(job, sites);
 
         // sanity check
-        if(ipFile == null){
-            job.setSiteHandle( null );
+        if (ipFile == null) {
+            job.setSiteHandle(null);
             return;
         }
 
         // prepare the environment to call out the site selector
         String command = this.mSiteSelectorPath;
-        if ( command == null ) {
+        if (command == null) {
             // delete the temporary file generated
             ipFile.delete();
-            throw new RuntimeException( "Site Selector: Please set the path to the external site " +
-                                        "selector in the properties! " );
+            throw new RuntimeException(
+                    "Site Selector: Please set the path to the external site "
+                            + "selector in the properties! ");
         }
 
         try {
@@ -373,9 +319,8 @@ public class NonJavaCallout extends AbstractPerJob {
 
             // get hold of all the environment variables that are to be set
             String[] envArr = this.getEnvArrFromMap();
-            mLogger.log( "Calling out to site selector " + command,
-                         LogManager.DEBUG_MESSAGE_LEVEL);
-            Process p = rt.exec( command , envArr );
+            mLogger.log("Calling out to site selector " + command, LogManager.DEBUG_MESSAGE_LEVEL);
+            Process p = rt.exec(command, envArr);
 
             // set up to read subprogram output
             InputStream is = p.getInputStream();
@@ -393,26 +338,26 @@ public class NonJavaCallout extends AbstractPerJob {
             String se = null;
 
             // set the variable to check if the timeout needs to be set or not
-            boolean notTimeout = ( mTimeout <= 0 );
+            boolean notTimeout = (mTimeout <= 0);
 
             boolean stdout = false;
             boolean stderr = false;
             int time = 0;
-            while( ( (stdout =br.ready()) || (stderr = ebr.ready()) ) ||
-                   notTimeout ||
-                   time < mTimeout){
+            while (((stdout = br.ready()) || (stderr = ebr.ready()))
+                    || notTimeout
+                    || time < mTimeout) {
 
-                if ( ! ( stdout || stderr ) ) {
+                if (!(stdout || stderr)) {
                     // nothing on either streams
                     // sleep for some time
                     try {
-                        time +=5;
-                        mLogger.log("main thread going to sleep " + time,
-                                    LogManager.DEBUG_MESSAGE_LEVEL);
+                        time += 5;
+                        mLogger.log(
+                                "main thread going to sleep " + time,
+                                LogManager.DEBUG_MESSAGE_LEVEL);
                         Thread.sleep(5000);
-                        mLogger.log("main thread woken up",
-                                    LogManager.DEBUG_MESSAGE_LEVEL);
-                    } catch ( InterruptedException e ) {
+                        mLogger.log("main thread woken up", LogManager.DEBUG_MESSAGE_LEVEL);
+                    } catch (InterruptedException e) {
                         // do nothing
                         // we potentially loose time here.
                     }
@@ -421,22 +366,19 @@ public class NonJavaCallout extends AbstractPerJob {
                     // reset the time counter
                     time = 0;
 
-                    if ( stdout ) {
+                    if (stdout) {
                         s = br.readLine();
-                        mLogger.log("[Site Selector stdout] " + s,
-                                    LogManager.DEBUG_MESSAGE_LEVEL);
+                        mLogger.log("[Site Selector stdout] " + s, LogManager.DEBUG_MESSAGE_LEVEL);
 
                         // parse the string to get the output
-                        if ( parseStdOut( job, s ) ){
+                        if (parseStdOut(job, s)) {
                             break;
                         }
-
                     }
 
-                    if ( stderr ) {
+                    if (stderr) {
                         se = ebr.readLine();
-                        mLogger.log("[Site Selector stderr] " + se,
-                                    LogManager.ERROR_MESSAGE_LEVEL);
+                        mLogger.log("[Site Selector stderr] " + se, LogManager.ERROR_MESSAGE_LEVEL);
                     }
                 }
             } // while
@@ -445,12 +387,13 @@ public class NonJavaCallout extends AbstractPerJob {
             br.close();
             ebr.close();
 
-            if ( time >= mTimeout ) {
-                mLogger.log( "External Site Selector timeout after " +
-                             mTimeout + " seconds", LogManager.ERROR_MESSAGE_LEVEL);
+            if (time >= mTimeout) {
+                mLogger.log(
+                        "External Site Selector timeout after " + mTimeout + " seconds",
+                        LogManager.ERROR_MESSAGE_LEVEL);
                 p.destroy();
                 // no use closing the streams as it would be probably hung
-                job.setSiteHandle( null );
+                job.setSiteHandle(null);
                 return;
             }
 
@@ -459,53 +402,49 @@ public class NonJavaCallout extends AbstractPerJob {
             // process exited with a status of 0
             // FIXME: Who is going to clean up after us?
             int status = p.waitFor();
-            if ( status != 0){
+            if (status != 0) {
                 // let the user know site selector exited with non zero
-                mLogger.log("Site Selector exited with non zero exit " +
-                            "status " + status, LogManager.DEBUG_MESSAGE_LEVEL);
+                mLogger.log(
+                        "Site Selector exited with non zero exit " + "status " + status,
+                        LogManager.DEBUG_MESSAGE_LEVEL);
             }
-            //delete the temporary file on basis of keep value
-            if((status == 0 && mKeepTMP < KEEP_ALWAYS) ||
-               (status != 0  && mKeepTMP == KEEP_NEVER )){
-                //deleting the file
-                if ( ! ipFile.delete() )
-                    mLogger.log("Unable to delete temporary file " +
-                                ipFile.getAbsolutePath(),LogManager.WARNING_MESSAGE_LEVEL);
+            // delete the temporary file on basis of keep value
+            if ((status == 0 && mKeepTMP < KEEP_ALWAYS)
+                    || (status != 0 && mKeepTMP == KEEP_NEVER)) {
+                // deleting the file
+                if (!ipFile.delete())
+                    mLogger.log(
+                            "Unable to delete temporary file " + ipFile.getAbsolutePath(),
+                            LogManager.WARNING_MESSAGE_LEVEL);
             }
 
-        } catch ( IOException e ) {
-            mLogger.log("[Site selector] " + e.getMessage(),
-                        LogManager.ERROR_MESSAGE_LEVEL);
-        } catch ( InterruptedException e ) {
-            mLogger.log("Waiting for site selector to exit: " + e.getMessage(),
-                        LogManager.ERROR_MESSAGE_LEVEL);
+        } catch (IOException e) {
+            mLogger.log("[Site selector] " + e.getMessage(), LogManager.ERROR_MESSAGE_LEVEL);
+        } catch (InterruptedException e) {
+            mLogger.log(
+                    "Waiting for site selector to exit: " + e.getMessage(),
+                    LogManager.ERROR_MESSAGE_LEVEL);
         }
 
         return;
     }
 
-
     /**
-     * Writes job knowledge into the temporary file passed to the external
-     * site selector. The job knowledge derives from the contents of the
-     * DAX job's <code>Job</code> record, and the a list of site
-     * candidates. The format of the file is laid out in the class's
-     * introductory documentation.
+     * Writes job knowledge into the temporary file passed to the external site selector. The job
+     * knowledge derives from the contents of the DAX job's <code>Job</code> record, and the a list
+     * of site candidates. The format of the file is laid out in the class's introductory
+     * documentation.
      *
-     * @param job is a representation of the DAX compute job whose site of
-     * execution need to be determined.
-     *
-     * @param pools is a list of site candidates. The items of the list are
-     * <code>String</code> objects.
-     *
-     * @return the temporary input file was successfully prepared. A value
-     * of <code>null</code> implies that an error occured while writing
-     * the file.
-     *
+     * @param job is a representation of the DAX compute job whose site of execution need to be
+     *     determined.
+     * @param pools is a list of site candidates. The items of the list are <code>String</code>
+     *     objects.
+     * @return the temporary input file was successfully prepared. A value of <code>null</code>
+     *     implies that an error occured while writing the file.
      * @see #getTempFilename()
      */
-    private File prepareInputFile( Job job, List pools ) {
-        File f = new File( this.getTempFilename() );
+    private File prepareInputFile(Job job, List pools) {
+        File f = new File(this.getTempFilename());
         PrintWriter pw;
 
         try {
@@ -522,14 +461,14 @@ public class NonJavaCallout extends AbstractPerJob {
             pw.println("job.level=" + job.level);
             pw.println("job.id=" + job.logicalId);
 
-            //at present Pegasus always asks to schedule compute jobs
-            //User should be able to specify through vdl or the pool config file.
-            //Karan Feb 10 3:00 PM PDT
-            //pw.println("vds_scheduler_preference=regular");
+            // at present Pegasus always asks to schedule compute jobs
+            // User should be able to specify through vdl or the pool config file.
+            // Karan Feb 10 3:00 PM PDT
+            // pw.println("vds_scheduler_preference=regular");
 
             // write down the list of exec Pools and their corresponding grid
             // ftp servers
-            if ( pools.isEmpty() ) {
+            if (pools.isEmpty()) {
                 // just write out saying illustrating no exec pool or grid ftp
                 // server passed to site selector. Upto the selector to do what
                 // it wants.
@@ -542,21 +481,20 @@ public class NonJavaCallout extends AbstractPerJob {
                 pw.println("resource.id=NONE NONE");
             } else {
                 String st, pool;
-                for ( Iterator i = pools.iterator(); i.hasNext(); ) {
+                for (Iterator i = pools.iterator(); i.hasNext(); ) {
                     pool = (String) i.next();
                     st = "resource.id=" + pool + " ";
 
-
-                    SiteCatalogEntry site = mSiteStore.lookup( pool );
+                    SiteCatalogEntry site = mSiteStore.lookup(pool);
                     /*
                     for( Iterator it = site.getHeadNodeFS().getScratch().getSharedDirectory().getFileServersIterator(); it.hasNext();){
                         pw.println(st + ( (FileServer) it.next()).getURLPrefix() );
                     }*/
-                    Directory d = site.getDirectory( Directory.TYPE.shared_scratch );
-                    if( d != null ){
-                        for( FileServer.OPERATION op : FileServer.OPERATION.values() ){
-                            for( Iterator it = d.getFileServersIterator(op); it.hasNext();){
-                                pw.println(st + ( (FileServer) it.next()).getURLPrefix() );
+                    Directory d = site.getDirectory(Directory.TYPE.shared_scratch);
+                    if (d != null) {
+                        for (FileServer.OPERATION op : FileServer.OPERATION.values()) {
+                            for (Iterator it = d.getFileServersIterator(op); it.hasNext(); ) {
+                                pw.println(st + ((FileServer) it.next()).getURLPrefix());
                             }
                         }
                     }
@@ -564,13 +502,13 @@ public class NonJavaCallout extends AbstractPerJob {
             }
 
             // write the input files
-            for ( Iterator i=job.inputFiles.iterator(); i.hasNext(); )
-                pw.println("input.lfn=" + ((PegasusFile)i.next()).getLFN());
+            for (Iterator i = job.inputFiles.iterator(); i.hasNext(); )
+                pw.println("input.lfn=" + ((PegasusFile) i.next()).getLFN());
 
-                // write workflow related metadata
-            if ( this.mAbstractDag != null ) {
-                pw.println("wf.name=" + mAbstractDag.getLabel() );
-                pw.println("wf.index=" + mAbstractDag.getIndex() );
+            // write workflow related metadata
+            if (this.mAbstractDag != null) {
+                pw.println("wf.name=" + mAbstractDag.getLabel());
+                pw.println("wf.index=" + mAbstractDag.getIndex());
                 // pw.println("workflow.time=" + mAbstractDag.dagInfo.time??);
                 // FIXME: Try File.lastModified() on the DAX file
 
@@ -586,53 +524,47 @@ public class NonJavaCallout extends AbstractPerJob {
             pw.flush();
             pw.close();
 
-        } catch ( IOException e ) {
-            mLogger.log("While writing to the temporary file :" + e.getMessage(),
-                        LogManager.ERROR_MESSAGE_LEVEL);
+        } catch (IOException e) {
+            mLogger.log(
+                    "While writing to the temporary file :" + e.getMessage(),
+                    LogManager.ERROR_MESSAGE_LEVEL);
             return null;
 
-        } catch ( Exception ex ) {
-            //an unknown exception
-            mLogger.log("Unknown error while writing to the temp file :" +
-                        ex.getMessage(), LogManager.ERROR_MESSAGE_LEVEL);
+        } catch (Exception ex) {
+            // an unknown exception
+            mLogger.log(
+                    "Unknown error while writing to the temp file :" + ex.getMessage(),
+                    LogManager.ERROR_MESSAGE_LEVEL);
             return null;
         }
 
         return f;
     }
 
-
     /**
-     * Extracts the chosen site from the site selector's answer. Parses
-     * the <i>stdout</i> sent by the selector, to see, if the execution
-     * pool and the jobmanager were sent or not.
+     * Extracts the chosen site from the site selector's answer. Parses the <i>stdout</i> sent by
+     * the selector, to see, if the execution pool and the jobmanager were sent or not.
      *
-     * @param job  the job that has to be mapped.
+     * @param job the job that has to be mapped.
      * @param s is the stdout received from the site selector.
-     *
-     * @return boolean indicating if the stdout was succesfully parsed and
-     *         job populated.
-     *
-     *
+     * @return boolean indicating if the stdout was succesfully parsed and job populated.
      */
-    private boolean parseStdOut( Job job, String s ){
+    private boolean parseStdOut(Job job, String s) {
         String val = null;
 
         s = s.trim();
         boolean result = false;
-        if(s.startsWith(SOLUTION_PREFIX)){
+        if (s.startsWith(SOLUTION_PREFIX)) {
             s = s.substring(SOLUTION_PREFIX.length());
 
-            StringTokenizer st = new StringTokenizer(s,":");
+            StringTokenizer st = new StringTokenizer(s, ":");
 
-           while(st.hasMoreTokens()){
-               result = true;
-               job.setSiteHandle( (String)st.nextToken() );
+            while (st.hasMoreTokens()) {
+                result = true;
+                job.setSiteHandle((String) st.nextToken());
 
-               job.setJobManager( st.hasMoreTokens() ?
-                                  st.nextToken():
-                                  null );
-           }
+                job.setJobManager(st.hasMoreTokens() ? st.nextToken() : null);
+            }
         }
 
         // HMMM: String.indexOf() functions can be used in Jens HO.
@@ -640,146 +572,134 @@ public class NonJavaCallout extends AbstractPerJob {
     }
 
     /**
-     * Creates a temporary file and obtains its name. This method returns
-     * the absolute path to a temporary file in the system's TEMP
-     * directory. The file is guarenteed to be unique for the current
-     * invocation of the virtual machine.
+     * Creates a temporary file and obtains its name. This method returns the absolute path to a
+     * temporary file in the system's TEMP directory. The file is guarenteed to be unique for the
+     * current invocation of the virtual machine.
      *
-     * FIXME: However, since we return a filename and not an opened file, race
-     * conditions are still possible.
+     * <p>FIXME: However, since we return a filename and not an opened file, race conditions are
+     * still possible.
      *
      * @return the absolute path of a newly created temporary file.
      */
-    private String getTempFilename(){
+    private String getTempFilename() {
         File f = null;
         try {
-            f = File.createTempFile(PREFIX_TEMPORARY_FILE,SUFFIX_TEMPORARY_FILE);
+            f = File.createTempFile(PREFIX_TEMPORARY_FILE, SUFFIX_TEMPORARY_FILE);
             return f.getAbsolutePath();
-        } catch ( IOException e ) {
-            throw new RuntimeException( "Unable to get handle to a temporary file :" + e.getMessage());
+        } catch (IOException e) {
+            throw new RuntimeException(
+                    "Unable to get handle to a temporary file :" + e.getMessage());
         }
     }
 
     /**
-     * Initializes the internal hash that collects environment variables.
-     * These variables are set up to run the external helper application.
-     * Environment variables come from two source.
+     * Initializes the internal hash that collects environment variables. These variables are set up
+     * to run the external helper application. Environment variables come from two source.
      *
      * <ol>
-     * <li>Default environment variables, fixed, hard-coded.
-     * <li>User environment variables, from properties.
+     *   <li>Default environment variables, fixed, hard-coded.
+     *   <li>User environment variables, from properties.
      * </ol>
      */
-    private void loadEnvironmentVariables(){
+    private void loadEnvironmentVariables() {
         // load the default environment variables
         String value = null;
         mEnvVar = new HashMap();
-        mEnvVar.put("CLASSPATH",mProps.getProperty("java.class.path"));
-        mEnvVar.put("JAVA_HOME",mProps.getProperty("java.home"));
+        mEnvVar.put("CLASSPATH", mProps.getProperty("java.class.path"));
+        mEnvVar.put("JAVA_HOME", mProps.getProperty("java.home"));
 
         // set $LOGNAME and $USER if corresponding property set in JVM
-        if ( (value = mProps.getProperty("user.name")) != null ) {
-            mEnvVar.put("USER",value);
-            mEnvVar.put("LOGNAME",value);
+        if ((value = mProps.getProperty("user.name")) != null) {
+            mEnvVar.put("USER", value);
+            mEnvVar.put("LOGNAME", value);
         }
 
         // set the $HOME if user.home is set
-        if ( (value = mProps.getProperty("user.home")) != null )
-            mEnvVar.put("HOME",value);
+        if ((value = mProps.getProperty("user.home")) != null) mEnvVar.put("HOME", value);
 
-            // set the $TMP if java.io.tmpdir is set
-        if ( (value = mProps.getProperty("java.io.tmpdir")) != null )
-            mEnvVar.put("TMP",value);
+        // set the $TMP if java.io.tmpdir is set
+        if ((value = mProps.getProperty("java.io.tmpdir")) != null) mEnvVar.put("TMP", value);
 
-            // set $TZ if user.timezone is set
-        if ( (value = mProps.getProperty("user.timezone")) != null )
-            mEnvVar.put("TZ",value);
+        // set $TZ if user.timezone is set
+        if ((value = mProps.getProperty("user.timezone")) != null) mEnvVar.put("TZ", value);
 
         // get hold of the environment variables that user might have set
         // and put them in the map overriding the variables already set.
-        mEnvVar.putAll( mProps.matchingSubset(PREFIX_PROPERTIES,false) );
-  }
+        mEnvVar.putAll(mProps.matchingSubset(PREFIX_PROPERTIES, false));
+    }
 
-  /**
-   * Generates an array of environment variables. The variables are kept
-   * in an internal map. Converts the environment variables in the map
-   * to the array format.
-   *
-   * @return array of enviroment variables set, or <code>null</code> if
-   * the map is empty.
-   * @see #loadEnvironmentVariables()
-   */
-  private String[] getEnvArrFromMap(){
-      String result[] = null;
+    /**
+     * Generates an array of environment variables. The variables are kept in an internal map.
+     * Converts the environment variables in the map to the array format.
+     *
+     * @return array of enviroment variables set, or <code>null</code> if the map is empty.
+     * @see #loadEnvironmentVariables()
+     */
+    private String[] getEnvArrFromMap() {
+        String result[] = null;
 
-      // short-cut
-      if ( mEnvVar == null || mEnvVar.isEmpty() )
-          return result;
-      else
-          result = new String[mEnvVar.size()];
+        // short-cut
+        if (mEnvVar == null || mEnvVar.isEmpty()) return result;
+        else result = new String[mEnvVar.size()];
 
-      Iterator it = mEnvVar.entrySet().iterator();
-      int i = 0;
-      while(it.hasNext()){
-          Map.Entry entry = (Map.Entry)it.next();
-          result[i] = entry.getKey() + "=" + entry.getValue();
-          i++;
-      }
+        Iterator it = mEnvVar.entrySet().iterator();
+        int i = 0;
+        while (it.hasNext()) {
+            Map.Entry entry = (Map.Entry) it.next();
+            result[i] = entry.getKey() + "=" + entry.getValue();
+            i++;
+        }
 
-      return result;
-  }
+        return result;
+    }
 
-  /**
-   * Returns the int value corresponding to the string value passed.
-   *
-   * @param value  the string value for keeping the temporary files.
-   *
-   * @return  the corresponding int value.
-   * @see #KEEP_ALWAYS
-   * @see #KEEP_NEVER
-   * @see #KEEP_ONERROR
-   */
-  private int getKeepTMPValue(String value){
-      //default value is keep on error
-      int val = KEEP_ONERROR;
+    /**
+     * Returns the int value corresponding to the string value passed.
+     *
+     * @param value the string value for keeping the temporary files.
+     * @return the corresponding int value.
+     * @see #KEEP_ALWAYS
+     * @see #KEEP_NEVER
+     * @see #KEEP_ONERROR
+     */
+    private int getKeepTMPValue(String value) {
+        // default value is keep on error
+        int val = KEEP_ONERROR;
 
-      //sanity check of the string value
-      if(value == null || value.length() == 0){
-          //return the default value
-          return val;
-      }
-      value = value.trim();
-      if(value.equalsIgnoreCase("always"))
-          val = KEEP_ALWAYS;
-      if(value.equalsIgnoreCase("never"))
-          val = KEEP_NEVER;
+        // sanity check of the string value
+        if (value == null || value.length() == 0) {
+            // return the default value
+            return val;
+        }
+        value = value.trim();
+        if (value.equalsIgnoreCase("always")) val = KEEP_ALWAYS;
+        if (value.equalsIgnoreCase("never")) val = KEEP_NEVER;
 
-      return val;
-  }
+        return val;
+    }
 
-  /**
-   * The main program that allows you to test.
-   * FIXME: Test programs should have prefix Test.....java
-   *
-   * @param args the arguments
-   *
-   */
-  public static void main( String[] args ){
-      LogManagerFactory.loadSingletonInstance().setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
+    /**
+     * The main program that allows you to test. FIXME: Test programs should have prefix
+     * Test.....java
+     *
+     * @param args the arguments
+     */
+    public static void main(String[] args) {
+        LogManagerFactory.loadSingletonInstance().setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
 
-      NonJavaCallout nj = new NonJavaCallout( );
+        NonJavaCallout nj = new NonJavaCallout();
 
-      Job s = new Job();
-      s.logicalName = "test";
-      s.namespace   = "pegasus";
-      s.version     = "1.01";
-      s.jobName     = "test_ID00001";
+        Job s = new Job();
+        s.logicalName = "test";
+        s.namespace = "pegasus";
+        s.version = "1.01";
+        s.jobName = "test_ID00001";
 
-      List pools = new java.util.ArrayList();
-      pools.add("isi-condor");pools.add("isi-lsf");
+        List pools = new java.util.ArrayList();
+        pools.add("isi-condor");
+        pools.add("isi-lsf");
 
-      nj.mapJob( s,pools );
-      System.out.println("Exec Pool return by site selector is " + s.getSiteHandle() );
-  }
-
+        nj.mapJob(s, pools);
+        System.out.println("Exec Pool return by site selector is " + s.getSiteHandle());
+    }
 }

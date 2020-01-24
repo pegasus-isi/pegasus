@@ -15,15 +15,11 @@
 package org.griphyn.vdl.parser;
 
 /**
- * Class to signal a single colon to the parser.
- * This class is module-local on purpose.
+ * Class to signal a single colon to the parser. This class is module-local on purpose.
  *
  * @author Jens-S. Vöckler
  * @version $Revision$
- *
  */
-class VDLtColon
-  implements VDLtToken
-{
-  // empty
+class VDLtColon implements VDLtToken {
+    // empty
 }

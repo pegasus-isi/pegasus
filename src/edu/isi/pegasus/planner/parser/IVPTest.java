@@ -16,45 +16,38 @@
 package edu.isi.pegasus.planner.parser;
 
 import edu.isi.pegasus.planner.invocation.InvocationRecord;
-
-import org.griphyn.vdl.util.*;
 import java.io.*;
+import org.griphyn.vdl.util.*;
 
 /**
- * This class is used to test the <code>InvocationParser</code> class.
- * It parses an invocation record, creates the corresponding java
- * objects, and generates an XML document from these objects.
+ * This class is used to test the <code>InvocationParser</code> class. It parses an invocation
+ * record, creates the corresponding java objects, and generates an XML document from these objects.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
- *
  * @see InvocationParser
  * @see org.griphyn.vdl.invocation.Invocation
  */
+public class IVPTest {
+    public static void main(String[] args) throws IOException {
+        if (args.length == 0) {
+            System.err.println("Usage: java IVPTest [invocationfile] ...");
+            return;
+        }
 
-public class IVPTest 
-{
-  static public void main(String[] args) 
-    throws IOException
-  {
-    if (args.length == 0) {
-      System.err.println( "Usage: java IVPTest [invocationfile] ..." );
-      return;
+        // connect debug stream
+        Logging.instance().register("parser", System.err);
+        Logging.instance().register("app", System.err);
+        //    Logging.instance().register( "app", System.err );
+
+        InvocationParser ip = new InvocationParser(InvocationRecord.SCHEMA_LOCATION);
+        Writer stdout = new BufferedWriter(new OutputStreamWriter(System.out));
+        for (int i = 0; i < args.length; i++) {
+            InvocationRecord invocation = ip.parse(new FileInputStream(args[i]));
+            System.err.println("\nNow convert back to XML\n");
+            invocation.toXML(stdout, "", null);
+            Logging.instance().log("app", 0, "done writing XML");
+        }
     }
-
-    // connect debug stream
-    Logging.instance().register( "parser", System.err );
-    Logging.instance().register( "app", System.err );
-//    Logging.instance().register( "app", System.err );
-
-    InvocationParser ip = new InvocationParser( InvocationRecord.SCHEMA_LOCATION );
-    Writer stdout = new BufferedWriter(new OutputStreamWriter(System.out));
-    for (int i = 0; i < args.length; i++) {
-      InvocationRecord invocation = ip.parse( new FileInputStream(args[i]) );
-      System.err.println("\nNow convert back to XML\n");
-      invocation.toXML( stdout, "", null );
-      Logging.instance().log( "app", 0, "done writing XML" );
-    }
-  }
 }

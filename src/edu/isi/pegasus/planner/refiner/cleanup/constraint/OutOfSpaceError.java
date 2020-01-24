@@ -6,7 +6,6 @@
 package edu.isi.pegasus.planner.refiner.cleanup.constraint;
 
 /**
- *
  * @author Sudarshan Srinivasan
  * @author Rafael Ferreira da Silva
  */

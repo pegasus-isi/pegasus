@@ -1,32 +1,25 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ * Copyright 2007-2008 University Of Southern California
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing,
- *  software distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
-
 package edu.isi.pegasus.planner.classes;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Metadata;
-
 import java.io.File;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -39,150 +32,126 @@ import java.util.Properties;
  * @author Karan Vahi
  * @version $Revision$
  */
-public class PlannerMetrics extends Data{
+public class PlannerMetrics extends Data {
 
-    
-    
-    /**
-     * The base submit directory where the files are being created.
-     */
+    /** The base submit directory where the files are being created. */
     private String mBaseSubmitDirectory;
 
-    /**
-     * The relative submit directory for this run.
-     */
+    /** The relative submit directory for this run. */
     private String mRelativeSubmitDirectory;
-
 
     /*
      * The file to which the metrics should be written out in the submit directory
      */
     private File mMetricsFileInSubmitDirectory;
 
-
-    /**
-     * The path to the DAX that was planned by the workflow.
-     */
+    /** The path to the DAX that was planned by the workflow. */
     private String mDAXPath;
 
-    /**
-     * The pointer to the properties file that was used.
-     */
+    /** The pointer to the properties file that was used. */
     private String mPropertiesPath;
 
-    /**
-     * The user who planned the workflow.
-     */
+    /** The user who planned the workflow. */
     private String mUser;
 
-    /**
-     * The VOGroup to which the user belonged to.
-     */
+    /** The VOGroup to which the user belonged to. */
     private String mVOGroup;
 
-
-    /**
-     * The number formatter to format the run submit dir entries.
-     */
+    /** The number formatter to format the run submit dir entries. */
     private NumberFormat mNumFormatter;
 
+    /** The name of the client */
+    @Expose
+    @SerializedName("client")
+    private final String mClient = "pegasus-plan";
 
-    /**
-     * The name of the client
-     */
-    @Expose @SerializedName( "client" ) private  final String mClient = "pegasus-plan";
+    /** The planner version */
+    @Expose
+    @SerializedName("version")
+    private final String mVersion = new Version().getVersion();
 
-    /**
-     * The planner version
-     */
-    @Expose @SerializedName( "version" ) private  final String mVersion = new Version().getVersion();
-    
-    /**
-     * The DAX API used
-     */
-    @Expose @SerializedName( "dax_api" ) private String mDAXAPI ;
+    /** The DAX API used */
+    @Expose
+    @SerializedName("dax_api")
+    private String mDAXAPI;
 
-    /**
-     * The name of the client
-     */
-    @Expose @SerializedName( "type" ) private   String mType ;
+    /** The name of the client */
+    @Expose
+    @SerializedName("type")
+    private String mType;
 
-    /**
-     * The start time for the planning.
-     */
-    @Expose @SerializedName("start_time") private double mStartTime;
+    /** The start time for the planning. */
+    @Expose
+    @SerializedName("start_time")
+    private double mStartTime;
 
-    /**
-     * The end time for the planning.
-     */
-    @Expose @SerializedName("end_time") private double mEndTime;
+    /** The end time for the planning. */
+    @Expose
+    @SerializedName("end_time")
+    private double mEndTime;
 
-    /**
-     * The planning duration
-     */
-    @Expose @SerializedName("duration") private double mDuration;
+    /** The planning duration */
+    @Expose
+    @SerializedName("duration")
+    private double mDuration;
 
-    /**
-     * the exitcode of the planner
-     */
-    @Expose @SerializedName("exitcode") private int mExitcode;
+    /** the exitcode of the planner */
+    @Expose
+    @SerializedName("exitcode")
+    private int mExitcode;
 
-    /**
-     * The Root Workflow UUID.
-     */
-    @Expose @SerializedName( "root_wf_uuid" ) private String mRootWorkflowUUID;
+    /** The Root Workflow UUID. */
+    @Expose
+    @SerializedName("root_wf_uuid")
+    private String mRootWorkflowUUID;
 
-    /**
-     * The UUID associated with the workflow.
-     */
-    @Expose @SerializedName( "wf_uuid" ) private String mWorkflowUUID;
+    /** The UUID associated with the workflow. */
+    @Expose
+    @SerializedName("wf_uuid")
+    private String mWorkflowUUID;
 
-    /**
-     * The data configuration mode
-     */
-    @Expose @SerializedName( "data_config" )private String mDataConfiguration;
-    
-    /**
-     * The arguments with which the planner was invoked with
-     */
-    @Expose @SerializedName( "planner_args" )private String mPlannerArguments;
-    
-    /**
-     * A boolean indicating whether pmc was used or not.
-     */
-    @Expose @SerializedName( "uses_pmc" )private boolean mUsesPMC;
+    /** The data configuration mode */
+    @Expose
+    @SerializedName("data_config")
+    private String mDataConfiguration;
 
-    /**
-     * The metrics about the workflow.
-     */
-    @Expose @SerializedName("wf_metrics") private WorkflowMetrics mWFMetrics;
-    
-    /**
-     * The application metrics that need to be forwarded
-     */
-    @Expose @SerializedName( "app_metrics" ) private Properties mApplicationMetrics;
+    /** The arguments with which the planner was invoked with */
+    @Expose
+    @SerializedName("planner_args")
+    private String mPlannerArguments;
 
-    /**
-     * The error message to be logged
-     */
-    @Expose @SerializedName( "error" ) private String mErrorMessage;
-    
-    
+    /** A boolean indicating whether pmc was used or not. */
+    @Expose
+    @SerializedName("uses_pmc")
+    private boolean mUsesPMC;
 
-    /**
-     * The default metrics.
-     */
+    /** The metrics about the workflow. */
+    @Expose
+    @SerializedName("wf_metrics")
+    private WorkflowMetrics mWFMetrics;
+
+    /** The application metrics that need to be forwarded */
+    @Expose
+    @SerializedName("app_metrics")
+    private Properties mApplicationMetrics;
+
+    /** The error message to be logged */
+    @Expose
+    @SerializedName("error")
+    private String mErrorMessage;
+
+    /** The default metrics. */
     public PlannerMetrics() {
-        //the exitcode is explicitly set to -1
-        //it should be set when the planner ends with the correct exitcode
+        // the exitcode is explicitly set to -1
+        // it should be set when the planner ends with the correct exitcode
         mExitcode = -1;
-        mNumFormatter = new DecimalFormat( "#.###" );
+        mNumFormatter = new DecimalFormat("#.###");
         mType = "metrics";
         mPlannerArguments = "";
         mUsesPMC = false;
-        mDAXAPI  = Metadata.DEFAULT_DAX_API;
-        //we want metrics to be serialized only if user specified
-        //mApplicationMetrics = new Properties();
+        mDAXAPI = Metadata.DEFAULT_DAX_API;
+        // we want metrics to be serialized only if user specified
+        // mApplicationMetrics = new Properties();
     }
 
     /**
@@ -194,16 +163,14 @@ public class PlannerMetrics extends Data{
         return this.mRootWorkflowUUID;
     }
 
-
     /**
      * Sets the root UUID for the workflow
      *
-     * @param uuid   the UUID of the workflow
+     * @param uuid the UUID of the workflow
      */
-    public void setRootWorkflowUUID( String uuid ) {
+    public void setRootWorkflowUUID(String uuid) {
         this.mRootWorkflowUUID = uuid;
     }
-
 
     /**
      * Returns the UUID for the workflow
@@ -214,13 +181,12 @@ public class PlannerMetrics extends Data{
         return this.mWorkflowUUID;
     }
 
-
     /**
      * Sets the UUID for the workflow
      *
-     * @param uuid   the UUID of the workflow
+     * @param uuid the UUID of the workflow
      */
-    public void setWorkflowUUID( String uuid ) {
+    public void setWorkflowUUID(String uuid) {
         this.mWorkflowUUID = uuid;
     }
 
@@ -229,7 +195,7 @@ public class PlannerMetrics extends Data{
      *
      * @return the workflow metrics.
      */
-    public WorkflowMetrics getWorkflowMetrics(){
+    public WorkflowMetrics getWorkflowMetrics() {
         return mWFMetrics;
     }
 
@@ -238,47 +204,46 @@ public class PlannerMetrics extends Data{
      *
      * @param metrics the workflow metrics.
      */
-    public void setWorkflowMetrics( WorkflowMetrics metrics ){
+    public void setWorkflowMetrics(WorkflowMetrics metrics) {
         mWFMetrics = metrics;
     }
 
     /**
      * Sets the app metrics that need to be forwarded.
-     * 
+     *
      * @param metrics the application metrics
      */
-    public void setApplicationMetrics( Properties properties ){
+    public void setApplicationMetrics(Properties properties) {
         this.mApplicationMetrics = properties;
     }
 
     /**
      * Sets the app metrics that need to be forwarded.
-     * 
-     * @param metrics       the application metrics
-     * @param defaultName   the default name to use for the app if users have not specified it
+     *
+     * @param metrics the application metrics
+     * @param defaultName the default name to use for the app if users have not specified it
      */
-    public void setApplicationMetrics( PegasusProperties properties, String defaultName ){
-        //figure out the application name if set
-        String name = properties.getProperty( PegasusProperties.PEGASUS_APP_METRICS_PREFIX );
-        if( name == null ){
+    public void setApplicationMetrics(PegasusProperties properties, String defaultName) {
+        // figure out the application name if set
+        String name = properties.getProperty(PegasusProperties.PEGASUS_APP_METRICS_PREFIX);
+        if (name == null) {
             name = defaultName;
         }
-        
-        if( name != null ){
-            mApplicationMetrics = properties.matchingSubset( PegasusProperties.PEGASUS_APP_METRICS_PREFIX, false );
-            //add the name
-            mApplicationMetrics.setProperty( "name", name );
+
+        if (name != null) {
+            mApplicationMetrics =
+                    properties.matchingSubset(PegasusProperties.PEGASUS_APP_METRICS_PREFIX, false);
+            // add the name
+            mApplicationMetrics.setProperty("name", name);
         }
-        
     }
 
     /**
-     * Returns the application specific metrics that will be forwarded to the
-     * server
-     * 
+     * Returns the application specific metrics that will be forwarded to the server
+     *
      * @return the application metrics
      */
-    public Properties getApplicationMetrics( ){
+    public Properties getApplicationMetrics() {
         return this.mApplicationMetrics;
     }
 
@@ -287,151 +252,142 @@ public class PlannerMetrics extends Data{
      *
      * @return the user.
      */
-    public String getUser( ){
+    public String getUser() {
         return mUser;
     }
-
 
     /**
      * Sets the user.
      *
-     * @param user  the user.
+     * @param user the user.
      */
-    public void setUser( String user ){
+    public void setUser(String user) {
         mUser = user;
     }
-    
+
     /**
      * Returns the DAX API used
      *
      * @return the dax api.
      */
-    public String getDAXAPI( ){
+    public String getDAXAPI() {
         return mDAXAPI;
     }
-
 
     /**
      * Sets the user.
      *
      * @param api the api used
      */
-    public void setDAXAPI( String api ){
+    public void setDAXAPI(String api) {
         mDAXAPI = api;
     }
 
     /**
      * Sets the metrics
      *
-     * @param type  the metrics type
+     * @param type the metrics type
      */
-    public void setMetricsType( String type ){
+    public void setMetricsType(String type) {
         mType = type;
     }
 
     /**
      * Convenience setter method
      *
-     * @param type  the metrics type
+     * @param type the metrics type
      */
-    public void setMetricsTypeToError(   ){
+    public void setMetricsTypeToError() {
         mType = "error";
     }
-
 
     /**
      * Returns the metric type
      *
-     * @return  metrics type
+     * @return metrics type
      */
-    public String getMetricsType(   ){
+    public String getMetricsType() {
         return mType;
     }
-
 
     /**
      * Sets the vo group
      *
      * @param group the vo group.
      */
-    public void setVOGroup( String group ){
+    public void setVOGroup(String group) {
         this.mVOGroup = group;
     }
-
 
     /**
      * Returns the VO Group.
      *
-     * @return  the VO Group to which the user belongs
+     * @return the VO Group to which the user belongs
      */
-    public String getVOGroup( ){
+    public String getVOGroup() {
         return this.mVOGroup;
     }
-
 
     /**
      * Sets the path to the properties file for the run.
      *
-     * @param path  the path to the properties file.
+     * @param path the path to the properties file.
      */
-    public void setProperties( String path ){
+    public void setProperties(String path) {
         mPropertiesPath = path;
     }
 
     /**
      * Returns the path to the properties file for the run.
      *
-     * @return  the path to the properties file.
+     * @return the path to the properties file.
      */
-    public String getProperties( ){
+    public String getProperties() {
         return mPropertiesPath;
     }
-
 
     /**
      * Sets the path to the base submit directory.
      *
-     * @param base  the path to the base submit directory.
+     * @param base the path to the base submit directory.
      */
-    public void setBaseSubmitDirectory( String base ){
+    public void setBaseSubmitDirectory(String base) {
         mBaseSubmitDirectory = base;
     }
-
 
     /**
      * Returns the path to the base submit directory.
      *
-     * @return  the path to the base submit directory.
+     * @return the path to the base submit directory.
      */
-    public String getBaseSubmitDirectory( ){
+    public String getBaseSubmitDirectory() {
         return mBaseSubmitDirectory;
     }
 
     /**
      * Sets the path to the submit directory relative to the base.
      *
-     * @param relative  the relative path from the base submit directory.
+     * @param relative the relative path from the base submit directory.
      */
-    public void setRelativeSubmitDirectory( String relative ){
+    public void setRelativeSubmitDirectory(String relative) {
         mRelativeSubmitDirectory = relative;
     }
-
 
     /**
      * Returns the path to the relative submit directory.
      *
-     * @return  the path to the relative submit directory.
+     * @return the path to the relative submit directory.
      */
-    public String getRelativeSubmitDirectory( ){
+    public String getRelativeSubmitDirectory() {
         return mRelativeSubmitDirectory;
     }
 
     /**
      * Sets the metrics file location in the submit directory
-     * 
-     * @param f  the file pointing to the metrics file
+     *
+     * @param f the file pointing to the metrics file
      */
-    public void setMetricsFileLocationInSubmitDirectory( File f ){
+    public void setMetricsFileLocationInSubmitDirectory(File f) {
         this.mMetricsFileInSubmitDirectory = f;
     }
 
@@ -440,34 +396,32 @@ public class PlannerMetrics extends Data{
      *
      * @return the file pointing to the metrics file. can be null
      */
-    public File getMetricsFileLocationInSubmitDirectory(   ){
+    public File getMetricsFileLocationInSubmitDirectory() {
         return this.mMetricsFileInSubmitDirectory;
     }
-
 
     /**
      * Sets the path to the DAX.
      *
-     * @param path  the path to the DAX file.
+     * @param path the path to the DAX file.
      */
-    public void setDAX( String path ){
+    public void setDAX(String path) {
         mDAXPath = path;
     }
 
     /**
      * Sets the path to the DAX.
      *
-     * @return  the path to the DAX file.
+     * @return the path to the DAX file.
      */
-    public String getDAX( ){
+    public String getDAX() {
         return mDAXPath;
     }
-
 
     /**
      * The data configuration
      *
-     * @param configuration   the data configuration
+     * @param configuration the data configuration
      */
     public void setDataConfiguration(String configuration) {
         mDataConfiguration = configuration;
@@ -478,26 +432,26 @@ public class PlannerMetrics extends Data{
      *
      * @return the data configuration
      */
-    public String getDataConfiguration( ) {
-        return mDataConfiguration ;
+    public String getDataConfiguration() {
+        return mDataConfiguration;
     }
 
     /**
      * Sets the planner options
      *
-     * @param options   options
+     * @param options options
      */
     public void setPlannerOptions(PlannerOptions options) {
-        this.setPlannerOptions( options.getOriginalArgString() );
+        this.setPlannerOptions(options.getOriginalArgString());
     }
-    
+
     /**
-     *Sets The planner options
+     * Sets The planner options
      *
-     * @param arguments   options
+     * @param arguments options
      */
     public void setPlannerOptions(String arguments) {
-         mPlannerArguments = arguments;
+        mPlannerArguments = arguments;
     }
 
     /**
@@ -505,14 +459,14 @@ public class PlannerMetrics extends Data{
      *
      * @return the data configuration
      */
-    public String getPlannerArguments( ) {
-        return mPlannerArguments ;
+    public String getPlannerArguments() {
+        return mPlannerArguments;
     }
 
     /**
      * Returns boolean indicating whether PMC was used or not
-     * 
-     * @return 
+     *
+     * @return
      */
     public boolean usesPMC() {
         return this.mUsesPMC;
@@ -520,8 +474,8 @@ public class PlannerMetrics extends Data{
 
     /**
      * Sets the uses PMC parameter
-     * 
-     * @param usesPMC 
+     *
+     * @param usesPMC
      */
     public void setUsesPMC(boolean usesPMC) {
         mUsesPMC = usesPMC;
@@ -530,62 +484,58 @@ public class PlannerMetrics extends Data{
     /**
      * Set the start time for the planning operation.
      *
-     * @param start   the start time.
+     * @param start the start time.
      */
-    public void setStartTime( Date start ){
+    public void setStartTime(Date start) {
         double t = start.getTime();
-        //mStartTime = mNumFormatter.format( t/1000 );
-        mStartTime = t/1000;
+        // mStartTime = mNumFormatter.format( t/1000 );
+        mStartTime = t / 1000;
     }
 
     /**
      * Set the start time for the planning operation.
      *
-     * @param start   the start time.
+     * @param start the start time.
      */
-    public void setStartTime( double start ){
+    public void setStartTime(double start) {
         mStartTime = start;
     }
 
     /**
-     * Returns the start time for the planning operation as epoch with
-     * millisecond precision
+     * Returns the start time for the planning operation as epoch with millisecond precision
      *
-     * @return   the start time.
+     * @return the start time.
      */
-    public double getStartTime( ){
+    public double getStartTime() {
         return mStartTime;
     }
 
-
     /**
      * Set the end time for the planning operation.
      *
-     * @param end   the end time.
+     * @param end the end time.
      */
-    public void setEndTime( Date end ){
+    public void setEndTime(Date end) {
         double t = end.getTime();
-        //mEndTime = mNumFormatter.format( t/1000 );
-        mEndTime   = t/1000;
+        // mEndTime = mNumFormatter.format( t/1000 );
+        mEndTime = t / 1000;
     }
 
     /**
      * Set the end time for the planning operation.
      *
-     * @param end   the end time.
+     * @param end the end time.
      */
-    public void setEndTime( double end ){
+    public void setEndTime(double end) {
         mEndTime = end;
     }
 
-
     /**
-     * Returns the end time for the planning operation as epoch with
-     * millisecond precision
+     * Returns the end time for the planning operation as epoch with millisecond precision
      *
-     * @return   the end time.
+     * @return the end time.
      */
-    public double getEndTime( ){
+    public double getEndTime() {
         return mEndTime;
     }
 
@@ -594,17 +544,16 @@ public class PlannerMetrics extends Data{
      *
      * @return the duration
      */
-    public double getDuration( ){
+    public double getDuration() {
         return mDuration;
     }
-
 
     /**
      * Sets the user.
      *
-     * @param duration  the duration
+     * @param duration the duration
      */
-    public void setDuration( double duration ){
+    public void setDuration(double duration) {
         mDuration = duration;
     }
 
@@ -613,110 +562,110 @@ public class PlannerMetrics extends Data{
      *
      * @return the exitcode
      */
-    public int getExitcode( ){
+    public int getExitcode() {
         return mExitcode;
     }
-
 
     /**
      * Sets the exitcode for the planner.
      *
      * @param exitcode the exitcode
      */
-    public void setExitcode( int exitcode ){
+    public void setExitcode(int exitcode) {
         mExitcode = exitcode;
     }
 
     /**
      * Set the error message that we want to log
      *
-     * @param error   error
+     * @param error error
      */
-    public void setErrorMessage(String error ) {
+    public void setErrorMessage(String error) {
         mErrorMessage = error;
     }
-
 
     /**
      * Returns the error message that we want to log
      *
-     * @return  the error message
+     * @return the error message
      */
-    public String getErrorMessage( ) {
+    public String getErrorMessage() {
         return mErrorMessage;
     }
 
     /**
      * Converts the planner metrics to JSON
-     * 
-     * @return  the planner metrics in JSON
+     *
+     * @return the planner metrics in JSON
      */
-    public String toJson(){
+    public String toJson() {
         Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
-        return gson.toJson( this );      
+        return gson.toJson(this);
     }
 
     /**
      * Converts the planner metrics to JSON
-     * 
-     * @return  the planner metrics in JSON
+     *
+     * @return the planner metrics in JSON
      */
-    public String toPrettyJson(){
-        //Gson gson = new Gson();
-        //Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create();
-        return gson.toJson( this );      
+    public String toPrettyJson() {
+        // Gson gson = new Gson();
+        // Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        Gson gson =
+                new GsonBuilder()
+                        .excludeFieldsWithoutExposeAnnotation()
+                        .setPrettyPrinting()
+                        .create();
+        return gson.toJson(this);
     }
-
 
     /**
      * Returns a textual description of the object.
      *
      * @return Object
      */
-    public String toString(){
+    public String toString() {
         StringBuffer sb = new StringBuffer();
 
-        sb.append( "{" ).append( "\n" );
+        sb.append("{").append("\n");
 
-        append( sb, "client", this.mClient );
-        append( sb, "version", this.mVersion );
-        append( sb, "dax_api", this.mDAXAPI );
-        append( sb, "user", this.mUser );
-        append( sb, "vogroup", this.mVOGroup );
-        append( sb, "submitdir.base", this.mBaseSubmitDirectory );
-        append( sb, "submitdir.relative", this.mRelativeSubmitDirectory );
-        append( sb, "planning.start",   mNumFormatter.format( mStartTime ) );
-        append( sb, "planning.end", mNumFormatter.format( mEndTime ) );
-        append( sb, "planning.arguments", mPlannerArguments );
-        append( sb, "uses_pmc", Boolean.toString(this.usesPMC()) );
-        append( sb, "duration" ,  Double.toString( mDuration )  );
-        append( sb, "exitcode" ,  Integer.toString( mExitcode )  );
-        append( sb, "error" , mErrorMessage );
-        append( sb, "properties", this.mPropertiesPath );
-        append( sb, "dax", this.mDAXPath );
-        append( sb, "data.configuration", this.mDataConfiguration );
-        append( sb, "root.wf.uuid", this.mRootWorkflowUUID );
-        append( sb, "wf.uuid", this.mWorkflowUUID );
-        sb.append( this.getWorkflowMetrics() );
-        if( this.mApplicationMetrics != null ){
-            append( sb, "app.metrics", this.mApplicationMetrics.toString() );
+        append(sb, "client", this.mClient);
+        append(sb, "version", this.mVersion);
+        append(sb, "dax_api", this.mDAXAPI);
+        append(sb, "user", this.mUser);
+        append(sb, "vogroup", this.mVOGroup);
+        append(sb, "submitdir.base", this.mBaseSubmitDirectory);
+        append(sb, "submitdir.relative", this.mRelativeSubmitDirectory);
+        append(sb, "planning.start", mNumFormatter.format(mStartTime));
+        append(sb, "planning.end", mNumFormatter.format(mEndTime));
+        append(sb, "planning.arguments", mPlannerArguments);
+        append(sb, "uses_pmc", Boolean.toString(this.usesPMC()));
+        append(sb, "duration", Double.toString(mDuration));
+        append(sb, "exitcode", Integer.toString(mExitcode));
+        append(sb, "error", mErrorMessage);
+        append(sb, "properties", this.mPropertiesPath);
+        append(sb, "dax", this.mDAXPath);
+        append(sb, "data.configuration", this.mDataConfiguration);
+        append(sb, "root.wf.uuid", this.mRootWorkflowUUID);
+        append(sb, "wf.uuid", this.mWorkflowUUID);
+        sb.append(this.getWorkflowMetrics());
+        if (this.mApplicationMetrics != null) {
+            append(sb, "app.metrics", this.mApplicationMetrics.toString());
         }
-        sb.append( "}" ).append( "\n" );
+        sb.append("}").append("\n");
 
         return sb.toString();
     }
 
-
     /**
      * Appends a key=value pair to the StringBuffer.
      *
-     * @param buffer    the StringBuffer that is to be appended to.
-     * @param key   the key.
+     * @param buffer the StringBuffer that is to be appended to.
+     * @param key the key.
      * @param value the value.
      */
-    protected void append( StringBuffer buffer, String key, String value ){
-        buffer.append( key ).append( " = " ).append( value ).append( "\n" );
+    protected void append(StringBuffer buffer, String key, String value) {
+        buffer.append(key).append(" = ").append(value).append("\n");
     }
 
     /**
@@ -724,43 +673,35 @@ public class PlannerMetrics extends Data{
      *
      * @return the clone
      */
-    public Object clone(){
+    public Object clone() {
         PlannerMetrics pm;
         try {
-            pm = ( PlannerMetrics )super.clone();
-        }
-        catch (CloneNotSupportedException e) {
-            //somewhere in the hierarch chain clone is not implemented
-            throw new RuntimeException( "Clone not implemented in the base class of " +
-                                        this.getClass().getName(),
-                                        e);
+            pm = (PlannerMetrics) super.clone();
+        } catch (CloneNotSupportedException e) {
+            // somewhere in the hierarch chain clone is not implemented
+            throw new RuntimeException(
+                    "Clone not implemented in the base class of " + this.getClass().getName(), e);
         }
 
         pm.mNumFormatter = (NumberFormat) this.mNumFormatter.clone();
-        pm.setUser( this.mUser );
-        pm.setVOGroup( this.mVOGroup );
-        pm.setBaseSubmitDirectory( this.mBaseSubmitDirectory );
-        pm.setRelativeSubmitDirectory( this.mRelativeSubmitDirectory );
-        pm.setProperties( this.mPropertiesPath );
-        pm.setDAX( this.mDAXPath );
-        pm.setDAXAPI( this.mDAXAPI );
-        pm.setDataConfiguration( this.mDataConfiguration );
-        pm.setPlannerOptions( this.mPlannerArguments);
-        pm.setUsesPMC( this.mUsesPMC );
-        pm.setStartTime( this.mStartTime );
-        pm.setEndTime( this.mEndTime );
-        pm.setDuration( this.mDuration );
-        pm.setExitcode( this.mExitcode );
-        pm.setErrorMessage( this.mErrorMessage );
-        if( this.mApplicationMetrics != null ){
-            pm.setApplicationMetrics( (Properties) this.mApplicationMetrics.clone());
+        pm.setUser(this.mUser);
+        pm.setVOGroup(this.mVOGroup);
+        pm.setBaseSubmitDirectory(this.mBaseSubmitDirectory);
+        pm.setRelativeSubmitDirectory(this.mRelativeSubmitDirectory);
+        pm.setProperties(this.mPropertiesPath);
+        pm.setDAX(this.mDAXPath);
+        pm.setDAXAPI(this.mDAXAPI);
+        pm.setDataConfiguration(this.mDataConfiguration);
+        pm.setPlannerOptions(this.mPlannerArguments);
+        pm.setUsesPMC(this.mUsesPMC);
+        pm.setStartTime(this.mStartTime);
+        pm.setEndTime(this.mEndTime);
+        pm.setDuration(this.mDuration);
+        pm.setExitcode(this.mExitcode);
+        pm.setErrorMessage(this.mErrorMessage);
+        if (this.mApplicationMetrics != null) {
+            pm.setApplicationMetrics((Properties) this.mApplicationMetrics.clone());
         }
         return pm;
     }
-
-    
-    
-
-
-    
 }

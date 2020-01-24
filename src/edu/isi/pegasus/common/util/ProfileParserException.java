@@ -1,55 +1,46 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ * Copyright 2007-2008 University Of Southern California
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing,
- *  software distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package edu.isi.pegasus.common.util;
 
 /**
  * This class is used to signal errors while parsing profile strings
- * @see ProfileParser
  *
+ * @see ProfileParser
  * @author Gaurang Mehta
  * @author Jens-S. Vöckler
  * @version $Revision$
  */
-public class ProfileParserException
-  extends Exception
-{
-  /**
-   * Remembers the position that cause the exception to be thrown.
-   */
-  private int m_position;
+public class ProfileParserException extends Exception {
+    /** Remembers the position that cause the exception to be thrown. */
+    private int m_position;
 
-  public ProfileParserException( String msg, int position )
-  {
-    super(msg);
-    m_position = position;
-  }
+    public ProfileParserException(String msg, int position) {
+        super(msg);
+        m_position = position;
+    }
 
-  public ProfileParserException( String msg, int position, Throwable cause )
-  {
-    super(msg,cause);
-    m_position = position;
-  }
+    public ProfileParserException(String msg, int position, Throwable cause) {
+        super(msg, cause);
+        m_position = position;
+    }
 
-  /**
-   * Obtains the position at which point the exception was thrown.
-   * @return a column position into the string
-   */
-  public int getPosition()
-  {
-    return this.m_position;
-  }
+    /**
+     * Obtains the position at which point the exception was thrown.
+     *
+     * @return a column position into the string
+     */
+    public int getPosition() {
+        return this.m_position;
+    }
 }

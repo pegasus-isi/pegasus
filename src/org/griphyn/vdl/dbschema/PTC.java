@@ -14,52 +14,43 @@
  */
 package org.griphyn.vdl.dbschema;
 
-import java.sql.SQLException;
 import edu.isi.pegasus.planner.invocation.InvocationRecord;
 import java.net.InetAddress;
+import java.sql.SQLException;
 import java.util.Date;
 
 /**
- * This interface defines a common base for all database schemas that
- * supports the handling of the provenance tracking catalog. It exists
- * primarily for grouping purposes.<p>
+ * This interface defines a common base for all database schemas that supports the handling of the
+ * provenance tracking catalog. It exists primarily for grouping purposes.
  *
- * For the moment, we are happy to be able to store things inside. The
- * rest, in form of more required methods, comes later.
+ * <p>For the moment, we are happy to be able to store things inside. The rest, in form of more
+ * required methods, comes later.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
  */
-public interface PTC extends Catalog
-{
-  /**
-   * Names the property key prefix employed for schemas dealing with the PTC.
-   */
-  public static final String PROPERTY_PREFIX = "pegasus.catalog.provenance.db.schema";
+public interface PTC extends Catalog {
+    /** Names the property key prefix employed for schemas dealing with the PTC. */
+    public static final String PROPERTY_PREFIX = "pegasus.catalog.provenance.db.schema";
 
-  /**
-   * Checks the existence of an invocation record in the database.
-   * The information is based on the (start,host,pid) tuple, although
-   * with private networks, cases may arise that have this tuple
-   * identical, yet are different.
-   *
-   * @param start is the start time of the grid launcher
-   * @param host is the address of the host it ran upon
-   * @param pid is the process id of the grid launcher itself.
-   * @return the id of the existing record, or -1
-   */
-  public long
-    getInvocationID( Date start, InetAddress host, int pid )
-    throws SQLException;
+    /**
+     * Checks the existence of an invocation record in the database. The information is based on the
+     * (start,host,pid) tuple, although with private networks, cases may arise that have this tuple
+     * identical, yet are different.
+     *
+     * @param start is the start time of the grid launcher
+     * @param host is the address of the host it ran upon
+     * @param pid is the process id of the grid launcher itself.
+     * @return the id of the existing record, or -1
+     */
+    public long getInvocationID(Date start, InetAddress host, int pid) throws SQLException;
 
-  /**
-   * Inserts an invocation record into the database.
-   *
-   * @param ivr is the invocation record to store.
-   * @return true, if insertion was successful, false otherwise.
-   */
-  public boolean
-    saveInvocation( InvocationRecord ivr )
-    throws SQLException;
+    /**
+     * Inserts an invocation record into the database.
+     *
+     * @param ivr is the invocation record to store.
+     * @return true, if insertion was successful, false otherwise.
+     */
+    public boolean saveInvocation(InvocationRecord ivr) throws SQLException;
 }

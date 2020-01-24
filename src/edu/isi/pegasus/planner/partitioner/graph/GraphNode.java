@@ -1,19 +1,16 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ * Copyright 2007-2008 University Of Southern California
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing,
- *  software distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package edu.isi.pegasus.planner.partitioner.graph;
 
 import com.google.gson.annotations.Expose;
@@ -25,57 +22,47 @@ import java.util.Iterator;
 import java.util.Set;
 
 /**
- * Data class that allows us to construct information about the nodes
- * in the abstract graph. Contains for each node the references to it's
- * parents and children. The direction of the edges is usually following the
- * children from a node. Parents are kept to facilitate bottom up traversals.
+ * Data class that allows us to construct information about the nodes in the abstract graph.
+ * Contains for each node the references to it's parents and children. The direction of the edges is
+ * usually following the children from a node. Parents are kept to facilitate bottom up traversals.
  *
  * @author Karan Vahi
  * @version $Revision$
  */
 public class GraphNode extends Data {
 
-    //the constants for the color of the nodes
+    // the constants for the color of the nodes
     public static final int WHITE_COLOR = 0;
-    public static final int GRAY_COLOR  = 1;
+    public static final int GRAY_COLOR = 1;
     public static final int BLACK_COLOR = 2;
 
-    /**
-     * The logical id of the job as identified in the dax.
-     */
+    /** The logical id of the job as identified in the dax. */
     private String mLogicalID;
 
-    /**
-     * The logical name of the node as identified in the dax.
-     */
+    /** The logical name of the node as identified in the dax. */
     private String mLogicalName;
 
-    /**
-     * The depth of the node from the root or any arbitary node.
-     */
+    /** The depth of the node from the root or any arbitary node. */
     private int mDepth;
 
-    /**
-     * The color the node is colored.
-     */
+    /** The color the node is colored. */
     private int mColor;
 
     /**
-     * The list of parents of the job/node in the abstract graph. Each element
-     * of the list is a <code>GraphNode</code> object.
+     * The list of parents of the job/node in the abstract graph. Each element of the list is a
+     * <code>GraphNode</code> object.
      */
     private Set<GraphNode> mParents;
 
     /**
-     * The list of children of the job/node in the abstract graph. Each element
-     * of the list is a <code>GraphNode</code> object.
+     * The list of children of the job/node in the abstract graph. Each element of the list is a
+     * <code>GraphNode</code> object.
      */
     private Set<GraphNode> mChildren;
 
-    /**
-     * The content associated with this node.
-     */
-    @Expose @SerializedName( "content" )
+    /** The content associated with this node. */
+    @Expose
+    @SerializedName("content")
     private GraphNodeContent mContent;
 
     /**
@@ -85,25 +72,22 @@ public class GraphNode extends Data {
      */
     private Bag mBag;
 
-    /**
-     * The default constructor.
-     */
+    /** The default constructor. */
     public GraphNode() {
         mLogicalID = "";
         this.resetEdges();
         mDepth = -1;
         mLogicalName = "";
         mColor = this.WHITE_COLOR;
-        mBag   = null;
+        mBag = null;
     }
-
 
     /**
      * The overloaded constructor.
      *
-     * @param id       the id of the node in the graph.
+     * @param id the id of the node in the graph.
      */
-    public GraphNode( String id  ){
+    public GraphNode(String id) {
         this();
         mLogicalID = id;
     }
@@ -111,10 +95,10 @@ public class GraphNode extends Data {
     /**
      * The overloaded constructor.
      *
-     * @param id       the id of the node in the graph.
-     * @param content  the content to be associated with the node.
+     * @param id the id of the node in the graph.
+     * @param content the content to be associated with the node.
      */
-    public GraphNode( String id, GraphNodeContent content ){
+    public GraphNode(String id, GraphNodeContent content) {
         this();
         mLogicalID = id;
         mContent = content;
@@ -124,8 +108,8 @@ public class GraphNode extends Data {
     /**
      * The overloaded constructor.
      *
-     * @param id    the logical id of the node.
-     * @param name  the name of the node.
+     * @param id the logical id of the node.
+     * @param name the name of the node.
      */
     public GraphNode(String id, String name) {
         mLogicalID = id;
@@ -137,60 +121,59 @@ public class GraphNode extends Data {
     }
 
     /**
-     * Sets the bag of objects associated with the node. Overwrite the previous
-     * bag if existing.
+     * Sets the bag of objects associated with the node. Overwrite the previous bag if existing.
      *
-     * @param bag  the <code>Bag</code> to be associated with the node.
+     * @param bag the <code>Bag</code> to be associated with the node.
      */
-    public void setBag( Bag bag ) {
+    public void setBag(Bag bag) {
         mBag = bag;
     }
 
     /**
-     * Sets the content associated with the node. Overwrites the previous
-     * content if existing.
+     * Sets the content associated with the node. Overwrites the previous content if existing.
      *
-     * @param content  the <code>GraphNodeContent</code> to be associated with the node.
+     * @param content the <code>GraphNodeContent</code> to be associated with the node.
      */
-    public void setContent( GraphNodeContent content ) {
+    public void setContent(GraphNodeContent content) {
         mContent = content;
-        mContent.setGraphNodeReference( this );
+        mContent.setGraphNodeReference(this);
     }
 
-
     /**
-     * It adds the parents to the node. It ends up overwriting all the existing
-     * parents if some already exist.
+     * It adds the parents to the node. It ends up overwriting all the existing parents if some
+     * already exist.
+     *
      * @param parents
      */
-    public void setParents( Collection<GraphNode> parents ) {
-        mParents = ( parents instanceof Set)? (Set)parents:new HashSet(parents);
+    public void setParents(Collection<GraphNode> parents) {
+        mParents = (parents instanceof Set) ? (Set) parents : new HashSet(parents);
     }
 
     /**
-     * It sets the children to the node. It ends up overwriting all the existing
-     * parents if some already exist.
+     * It sets the children to the node. It ends up overwriting all the existing parents if some
+     * already exist.
+     *
      * @param children
      */
-    public void setChildren( Collection<GraphNode> children ) {
-        mChildren = ( children instanceof Set)? (Set)children: new HashSet(children);
+    public void setChildren(Collection<GraphNode> children) {
+        mChildren = (children instanceof Set) ? (Set) children : new HashSet(children);
     }
 
     /**
      * Sets the depth associated with the node.
+     *
      * @param depth
      */
-    public void setDepth( int depth ) {
+    public void setDepth(int depth) {
         mDepth = depth;
     }
-
 
     /**
      * Returns the bag of objects associated with the node.
      *
      * @return the bag or null if no bag associated
      */
-    public Bag getBag(){
+    public Bag getBag() {
         return mBag;
     }
 
@@ -199,10 +182,9 @@ public class GraphNode extends Data {
      *
      * @return the content or null if no content associated
      */
-    public GraphNodeContent getContent(){
+    public GraphNodeContent getContent() {
         return mContent;
     }
-
 
     /**
      * Returns a list of <code>GraphNode</code> objects that are parents of the node.
@@ -214,8 +196,7 @@ public class GraphNode extends Data {
     }
 
     /**
-     * Returns a list of <code>GraphNode</code> objects that are children of the
-     * node.
+     * Returns a list of <code>GraphNode</code> objects that are children of the node.
      *
      * @return list of <code>GraphNode</code> objects.
      */
@@ -226,107 +207,95 @@ public class GraphNode extends Data {
     /**
      * Adds a child to end of the child list.
      *
-     * @param child  adds a child to the node.
+     * @param child adds a child to the node.
      */
-    public void addChild( GraphNode child ) {
-        mChildren.add( child );
+    public void addChild(GraphNode child) {
+        mChildren.add(child);
     }
 
     /**
      * Adds a parent to end of the parent list.
      *
-     * @param parent  adds a parent to the node.
+     * @param parent adds a parent to the node.
      */
-    public void addParent( GraphNode parent ) {
-        mParents.add( parent );
+    public void addParent(GraphNode parent) {
+        mParents.add(parent);
     }
 
     /**
      * Removes a child linkage to the node.
      *
-     * @param child  child to be removed.
+     * @param child child to be removed.
      */
-    public void removeChild( GraphNode child ){
-        mChildren.remove( child );
+    public void removeChild(GraphNode child) {
+        mChildren.remove(child);
     }
 
     /**
      * Removes a parent linkage to the node.
      *
-     * @param parent  parent to be removed.
+     * @param parent parent to be removed.
      */
-    public void removeParent( GraphNode parent ){
-        mParents.remove( parent );
+    public void removeParent(GraphNode parent) {
+        mParents.remove(parent);
     }
 
-    /**
-     * Reset all the edges associated with this node.
-     */
+    /** Reset all the edges associated with this node. */
     public final void resetEdges() {
-        mParents  = new HashSet();
+        mParents = new HashSet();
         mChildren = new HashSet();
     }
 
-    /**
-     * Returns the logical id of the graph node.
-     */
+    /** Returns the logical id of the graph node. */
     public String getID() {
         return mLogicalID;
     }
 
-    /**
-     * Returns the logical name of the graph node.
-     */
+    /** Returns the logical name of the graph node. */
     public String getName() {
         return mLogicalName;
     }
 
-    /**
-     * Returns the depth of the node in the graph.
-     */
+    /** Returns the depth of the node in the graph. */
     public int getDepth() {
         return mDepth;
     }
 
-
     /**
      * Returns if the color of the node is as specified.
      *
-     * @param color  color that node should be.
+     * @param color color that node should be.
      */
-    public boolean isColor( int color ){
-        return (mColor == color)?true:false;
+    public boolean isColor(int color) {
+        return (mColor == color) ? true : false;
     }
 
     /**
      * Sets the color of the node to the color specified
      *
-     * @param color  color that node should be.
+     * @param color color that node should be.
      */
-    public void setColor( int color ){
+    public void setColor(int color) {
         mColor = color;
     }
-    
+
     /**
      * Gets the color of the node to the color specified
      *
      * @return
      */
-    public int getColor( ){
+    public int getColor() {
         return mColor;
     }
-
-
 
     /**
      * Returns if all the parents of that node have the color that is specified.
      *
      * @param color the color of the node.
-     *
-     * @return  true if there are no parents or all parents are of the color.
-     *          false in all other  cases.
+     * @return true if there are no parents or all parents are of the color. false in all other
+     *     cases.
      */
-    public boolean parentsColored( int color ) {
+    public boolean parentsColored(int color) {
         boolean colored = true;
         GraphNode par;
         if (mParents == null) {
@@ -346,11 +315,10 @@ public class GraphNode extends Data {
      * Returns if all the children of the node have the color that is specified.
      *
      * @param color the color of the node.
-     *
-     * @return  true if there are no children or all children are of the color.
-     *          false in all other  cases.
+     * @return true if there are no children or all children are of the color. false in all other
+     *     cases.
      */
-    public boolean childrenColored( int color ) {
+    public boolean childrenColored(int color) {
         boolean colored = true;
         GraphNode child;
         if (mChildren == null) {
@@ -367,36 +335,34 @@ public class GraphNode extends Data {
     }
 
     /**
-     * A convenience methods that generates a comma separated list of parents
-     * as String
+     * A convenience methods that generates a comma separated list of parents as String
      *
      * @return String
      */
-    public String parentsToString(){
+    public String parentsToString() {
         StringBuffer sb = new StringBuffer();
-        sb.append( "{" );
-        for( GraphNode n : this.getParents() ){
-            sb.append( n.getID() ).append( "," );
+        sb.append("{");
+        for (GraphNode n : this.getParents()) {
+            sb.append(n.getID()).append(",");
         }
 
-        sb.append( "}" );
+        sb.append("}");
         return sb.toString();
     }
 
     /**
-     * A convenience methods that generates a comma separated list of children
-     * as String
+     * A convenience methods that generates a comma separated list of children as String
      *
      * @return String
      */
-    public String childrenToString(){
+    public String childrenToString() {
         StringBuffer sb = new StringBuffer();
-        sb.append( "{" );
-        for( GraphNode n : this.getChildren() ){
-            sb.append( n.getID() ).append( "," );
+        sb.append("{");
+        for (GraphNode n : this.getChildren()) {
+            sb.append(n.getID()).append(",");
         }
 
-        sb.append( "}" );
+        sb.append("}");
         return sb.toString();
     }
 
@@ -409,46 +375,49 @@ public class GraphNode extends Data {
         StringBuffer sb = new StringBuffer();
         Iterator it;
 
-        sb.append( "ID->" ).append(mLogicalID).append( " name->" ).
-            append( mLogicalName ).append( " parents->" ).
-            append( this.parentsToString() );
-        
-        sb.append( "} children->" ).append( this.childrenToString() );
+        sb.append("ID->")
+                .append(mLogicalID)
+                .append(" name->")
+                .append(mLogicalName)
+                .append(" parents->")
+                .append(this.parentsToString());
 
-        sb.append( " Content-{" ).append( getContent() ).append( "}" );
-        sb.append( " Bag-{" ).append( getBag() ).append( "}" );
+        sb.append("} children->").append(this.childrenToString());
+
+        sb.append(" Content-{").append(getContent()).append("}");
+        sb.append(" Bag-{").append(getBag()).append("}");
         return sb.toString();
     }
 
     /**
-     * Matches two GraphNode objects. A GraphNode object is considered
-     * equal to another if there id's match.
+     * Matches two GraphNode objects. A GraphNode object is considered equal to another if there
+     * id's match.
      *
      * @param obj the reference object with which to compare.
      * @return true, if the primary keys match, false otherwise.
      */
     public boolean equals(Object obj) {
-        
+
         // ward against null
-        if ( obj == null ) {
+        if (obj == null) {
             return false;
         }
-        
+
         // shortcut
-        if ( obj == this ) {
+        if (obj == this) {
             return true;
         }
 
         // don't compare apples with oranges
-        if ( ! (obj instanceof GraphNode) ){
+        if (!(obj instanceof GraphNode)) {
             return false;
         }
 
         // now we can safely cast
         GraphNode d = (GraphNode) obj;
-        return this.getID().equals( d.getID() );
+        return this.getID().equals(d.getID());
     }
-    
+
     /**
      * Calculate a hash code value for the object to support hash based Collections.
      *
@@ -458,15 +427,8 @@ public class GraphNode extends Data {
         return this.getID().hashCode();
     }
 
-
-   
-    /**
-     * Returns a copy of the object.
-     */
-    public Object clone(){
-        return new java.lang.CloneNotSupportedException(
-            "Clone() not implemented in GraphNode");
+    /** Returns a copy of the object. */
+    public Object clone() {
+        return new java.lang.CloneNotSupportedException("Clone() not implemented in GraphNode");
     }
-
-    
 }

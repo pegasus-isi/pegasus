@@ -15,33 +15,27 @@
 package org.griphyn.vdl.euryale;
 
 /**
- * This run-time error is thrown, if variables from the set a virtual
- * constructor relies upon are write-changed after the virtual
- * constructor has already been used.
+ * This run-time error is thrown, if variables from the set a virtual constructor relies upon are
+ * write-changed after the virtual constructor has already been used.
  *
  * @author Kavitha Ranganathan
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
- *
  * @see HashedFileFactory
  */
-public class VTorInUseException extends RuntimeException 
-{
-  /**
-   * Constructor: Assembles a standard exception without message.
-   */
-  public VTorInUseException()
-  {
-    super();
-  }
+public class VTorInUseException extends RuntimeException {
+    /** Constructor: Assembles a standard exception without message. */
+    public VTorInUseException() {
+        super();
+    }
 
-  /**
-   * Constructor: Assembles a standard exception with a message.
-   * @param message is the user notification. 
-   */
-  public VTorInUseException( String message )
-  {
-    super(message);
-  }
+    /**
+     * Constructor: Assembles a standard exception with a message.
+     *
+     * @param message is the user notification.
+     */
+    public VTorInUseException(String message) {
+        super(message);
+    }
 }

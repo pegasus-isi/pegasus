@@ -14,20 +14,18 @@
  */
 package edu.isi.pegasus.planner.invocation;
 
-import org.griphyn.vdl.Chimera;
 import java.io.Serializable;
+import org.griphyn.vdl.Chimera;
 
 /**
- * This abstract class defines a common base for all invocation record
- * related Java objects. Since all necessary functionality is described
- * in {@link Chimera}, this class is empty. It exists for grouping
- * purposes.
+ * This abstract class defines a common base for all invocation record related Java objects. Since
+ * all necessary functionality is described in {@link Chimera}, this class is empty. It exists for
+ * grouping purposes.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
  */
-public abstract class Invocation extends Chimera implements Serializable
-{
-  // empty class, existence just for grouping purposes
+public abstract class Invocation extends Chimera implements Serializable {
+    // empty class, existence just for grouping purposes
 }

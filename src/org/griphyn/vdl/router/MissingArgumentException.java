@@ -16,47 +16,36 @@
 package org.griphyn.vdl.router;
 
 /**
- * This exception is thrown if the job specification is incomplete. 
- * Any job specification must have a supplied value for formal arguments.
- * The value can come from one of two possible sources.
+ * This exception is thrown if the job specification is incomplete. Any job specification must have
+ * a supplied value for formal arguments. The value can come from one of two possible sources.
+ *
  * <ol>
- * <li>The formal argument may contain a default value. In the absence of 
- * any other supplied value, the default will be taken.
- * <li>The actual argument may supply an overwriting value for a formal
- * argument with a default value. An actual argument must be supplied for
- * formal arguments without a default value.
+ *   <li>The formal argument may contain a default value. In the absence of any other supplied
+ *       value, the default will be taken.
+ *   <li>The actual argument may supply an overwriting value for a formal argument with a default
+ *       value. An actual argument must be supplied for formal arguments without a default value.
  * </ol>
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
- *
  * @see org.griphyn.vdl.classes.Derivation
  * @see org.griphyn.vdl.classes.Transformation
  * @see org.griphyn.vdl.classes.Pass
  * @see org.griphyn.vdl.classes.Declare
  */
-public class MissingArgumentException
-  extends java.lang.RuntimeException 
-{
-  /**
-   * Constructs a <code>MissingArgumentException</code> with no
-   * detail message.
-   */
-  public MissingArgumentException()
-  {
-    super();
-  }
+public class MissingArgumentException extends java.lang.RuntimeException {
+    /** Constructs a <code>MissingArgumentException</code> with no detail message. */
+    public MissingArgumentException() {
+        super();
+    }
 
-  /**
-   * Constructs a <code>MissingArgumentException</code> with the
-   * specified detailed message.
-   *
-   * @param s is the detailled message.
-   */
-  public MissingArgumentException( String s )
-  {
-    super(s);
-  }
+    /**
+     * Constructs a <code>MissingArgumentException</code> with the specified detailed message.
+     *
+     * @param s is the detailled message.
+     */
+    public MissingArgumentException(String s) {
+        super(s);
+    }
 }
-

@@ -15,15 +15,11 @@
 package org.griphyn.vdl.parser;
 
 /**
- * Class to signal an opened parenthesis to the parser.
- * This class is module-local on purpose.
+ * Class to signal an opened parenthesis to the parser. This class is module-local on purpose.
  *
  * @author Jens-S. Vöckler
  * @version $Revision$
- *
  */
-class VDLtOpenParenthesis
-  implements VDLtToken
-{
-  // empty
+class VDLtOpenParenthesis implements VDLtToken {
+    // empty
 }

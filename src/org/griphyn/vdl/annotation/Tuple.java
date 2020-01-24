@@ -14,111 +14,85 @@
  */
 package org.griphyn.vdl.annotation;
 
-import java.sql.Types;
 
 /**
- * This abstract base class defines the key value tuple that define the
- * heart of Yong's annotations. 
+ * This abstract base class defines the key value tuple that define the heart of Yong's annotations.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
  */
-public abstract class Tuple
-{
-  /**
-   * Defines the key for which we store the annotation.
-   */
-  private String m_key;
+public abstract class Tuple {
+    /** Defines the key for which we store the annotation. */
+    private String m_key;
 
-  /**
-   * Array constructor, please don't use. 
-   */
-  public Tuple()
-  {
-    m_key = null;
-  }
+    /** Array constructor, please don't use. */
+    public Tuple() {
+        m_key = null;
+    }
 
-  /**
-   * Constructs the key portion of a tuple.
-   *
-   * @param key is the key to store annotations for.
-   */
-  public Tuple( String key )
-  {
-    m_key = key;
-  }
+    /**
+     * Constructs the key portion of a tuple.
+     *
+     * @param key is the key to store annotations for.
+     */
+    public Tuple(String key) {
+        m_key = key;
+    }
 
-  /**
-   * Obtains the current value of the key.
-   *
-   * @return the current value of the key.
-   * @see #setKey( String )
-   */
-  public String getKey()
-  {
-    return m_key;
-  }
+    /**
+     * Obtains the current value of the key.
+     *
+     * @return the current value of the key.
+     * @see #setKey( String )
+     */
+    public String getKey() {
+        return m_key;
+    }
 
-  /**
-   * Overwrites the key with a different name.
-   *
-   * @param key is the new key to use from now on.
-   * @see #getKey()
-   */
-  public void setKey( String key )
-  {
-    m_key = key;
-  }
+    /**
+     * Overwrites the key with a different name.
+     *
+     * @param key is the new key to use from now on.
+     * @see #getKey()
+     */
+    public void setKey(String key) {
+        m_key = key;
+    }
 
-  /**
-   * Generate interface to obtain the value from an instance.
-   * The value will be wrapped into the appropriate Java class.
-   * For the timestamp object, the Java SQL Date will be used.
-   *
-   * @return the value wrapped as Java object.
-   * @see #setValue( Object )
-   */ 
-  public abstract Object getValue();
+    /**
+     * Generate interface to obtain the value from an instance. The value will be wrapped into the
+     * appropriate Java class. For the timestamp object, the Java SQL Date will be used.
+     *
+     * @return the value wrapped as Java object.
+     * @see #setValue( Object )
+     */
+    public abstract Object getValue();
 
-  /**
-   * Generic interface to set a value in an instance. Note
-   * that this action may fail, if the instance is of an 
-   * incompatible type.
-   *
-   * @param value is the data object to set. 
-   * @see #getValue()
-   * @exception ClassCastException if the actual argument type of the value
-   * is incompatible with the value maintained by the instance.
-   */ 
-  public abstract void setValue( Object value )
-    throws ClassCastException;
+    /**
+     * Generic interface to set a value in an instance. Note that this action may fail, if the
+     * instance is of an incompatible type.
+     *
+     * @param value is the data object to set.
+     * @see #getValue()
+     * @exception ClassCastException if the actual argument type of the value is incompatible with
+     *     the value maintained by the instance.
+     */
+    public abstract void setValue(Object value) throws ClassCastException;
 
-  /**
-   * Returns the type of the value as SQL Type.
-   *
-   * @return a constant from the set of SQL types. 
-   * @see java.sql.Types
-   */ 
-  public abstract int getType();
+    /**
+     * Returns the type of the value as SQL Type.
+     *
+     * @return a constant from the set of SQL types.
+     * @see java.sql.Types
+     */
+    public abstract int getType();
 
-  /**
-   * Returns the string representation of the type.
-   */ 
-  public abstract String getTypeString();
+    /** Returns the string representation of the type. */
+    public abstract String getTypeString();
 
-  /**
-   * Return a string representation of the tuple
-   */
-  public String toString()
-  {
-    return  m_key + "\t" + getTypeString() + "\t" + getValue();
-  }
+    /** Return a string representation of the tuple */
+    public String toString() {
+        return m_key + "\t" + getTypeString() + "\t" + getValue();
+    }
 }
-
-
-
-
-
-
-

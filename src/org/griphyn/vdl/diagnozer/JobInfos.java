@@ -14,42 +14,39 @@
  */
 package org.griphyn.vdl.diagnozer;
 
-import java.util.*;
 import java.io.*;
+import java.util.*;
 
-/**
- * Description of a job.
- */
-class JobInfos
-{
+/** Description of a job. */
+class JobInfos {
     private Map m_jobs;
     String m_id;
 
-    public JobInfos(String id){
-	m_jobs=new HashMap();
-	m_id=id;
+    public JobInfos(String id) {
+        m_jobs = new HashMap();
+        m_id = id;
     }
 
-    public void addJobInfo(JobInfo job, String key){
-	m_jobs.put(key,job);
+    public void addJobInfo(JobInfo job, String key) {
+        m_jobs.put(key, job);
     }
 
-    public JobInfo getJobInfo(String key){
-	return (JobInfo) m_jobs.get(key);
+    public JobInfo getJobInfo(String key) {
+        return (JobInfo) m_jobs.get(key);
     }
 
-    public void dump(PrintWriter pw){
-	try{
-	    System.out.println("****************************************************");
-	    System.out.println("*             "+m_id+"'s record                    *");
-	    System.out.println("****************************************************");
-	    pw.flush();
-	    for ( Iterator i=m_jobs.keySet().iterator(); i.hasNext(); ) {
-		String jid=(String)i.next();	
-		((JobInfo) m_jobs.get(jid)).dump(pw);
-	    }
-	}catch (Exception e){
-	    e.printStackTrace();
-	}
+    public void dump(PrintWriter pw) {
+        try {
+            System.out.println("****************************************************");
+            System.out.println("*             " + m_id + "'s record                    *");
+            System.out.println("****************************************************");
+            pw.flush();
+            for (Iterator i = m_jobs.keySet().iterator(); i.hasNext(); ) {
+                String jid = (String) i.next();
+                ((JobInfo) m_jobs.get(jid)).dump(pw);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
