@@ -57,7 +57,6 @@ import edu.isi.pegasus.planner.invocation.JobStatusFailure;
 
 import org.griphyn.vdl.util.Logging;
 
-// Xerces
 import org.xml.sax.*;
 import org.xml.sax.helpers.DefaultHandler;
 import java.io.*;
@@ -191,7 +190,7 @@ public class InvocationParser extends DefaultHandler
       // mysteriously, this one fails with recent Xerces
       // set( "http://apache.org/xml/features/validation/warn-on-undeclared-elemdef", true );
       set( "http://apache.org/xml/features/warn-on-duplicate-entitydef", true );
-      set( "http://apache.org/xml/features/honour-all-schemaLocations", true ); 
+      set( "http://apache.org/xml/features/honour-all-schemaLocations", true );
 
       // set the schema default location.
       if ( schemaLocation != null ) {
@@ -303,14 +302,14 @@ public class InvocationParser extends DefaultHandler
   private String full_where()
   {
     return ( "line " + m_location.getLineNumber() +
-	     ", col " + m_location.getColumnNumber() ); 
+	     ", col " + m_location.getColumnNumber() );
   }
 
   private String where()
   {
-    return ( m_location.getLineNumber() + 
+    return ( m_location.getLineNumber() +
 	     ":" +
-	     m_location.getColumnNumber() ); 
+	     m_location.getColumnNumber() );
   }
 
   /**
@@ -451,7 +450,7 @@ public class InvocationParser extends DefaultHandler
     m_depth--;
     m_log.log( "parser", 3,
 	       "</" + map(namespaceURI) + localName + "> at " +
-	       where() ); 
+	       where() );
 
     IVSElement tos = (IVSElement) m_stack.pop();
     if ( ! qName.equals(tos.m_name) ) {
@@ -661,8 +660,8 @@ public class InvocationParser extends DefaultHandler
    * @return A new VDL Java object, which may only be partly constructed.
    * @exception IllegalArgumentException if the element name is too short.
    */
-  protected Invocation createObject( Invocation parent, 
-				     String e, 
+  protected Invocation createObject( Invocation parent,
+				     String e,
 				     java.util.List names,
 				     java.util.List values )
     throws IllegalArgumentException
@@ -736,12 +735,12 @@ public class InvocationParser extends DefaultHandler
 	  return b;
         } else if ( e.equals("basic") ) {
 	  MachineSpecific basic = new MachineSpecific("basic");
-	  return basic; 
+	  return basic;
 	}
 
-	// unknown 
+	// unknown
         return null;
-        
+
 	//
 	// C
 	//
@@ -800,9 +799,9 @@ public class InvocationParser extends DefaultHandler
 	    }
 	  }
 	  return file;
-	} else if ( e.equals("darwin") ) { 
+	} else if ( e.equals("darwin") ) {
 	  MachineSpecific darwin = new MachineSpecific("darwin");
-	  return darwin; 
+	  return darwin;
 	}
 
 	// unknown
@@ -952,14 +951,14 @@ public class InvocationParser extends DefaultHandler
 	      this.log( e, name, value );
 	      m_result.setResource( value );
 	    } else if ( name.equals("ram" ) ) {
-	      this.log( e, name, value ); 
-	      m_result.setPhysicalMemory( Long.parseLong(value) ); 
+	      this.log( e, name, value );
+	      m_result.setPhysicalMemory( Long.parseLong(value) );
 	    } else if ( name.equals("pid") ) {
 	      this.log( e, name, value );
-	      m_result.setPID( (int) (Long.parseLong(value) & 0xFFFFFFFF) ); 
+	      m_result.setPID( (int) (Long.parseLong(value) & 0xFFFFFFFF) );
 	    } else if ( name.equals("uid") ) {
 	      this.log( e, name, value );
-	      m_result.setUID( (int) (Long.parseLong(value) & 0xFFFFFFFF) ); 
+	      m_result.setUID( (int) (Long.parseLong(value) & 0xFFFFFFFF) );
 	    } else if ( name.equals("gid") ) {
 	      this.log( e, name, value );
 	      m_result.setGID( (int) (Long.parseLong(value) & 0xFFFFFFFF) );
@@ -989,7 +988,7 @@ public class InvocationParser extends DefaultHandler
 
 	// unknown
 	return null;
-        
+
         //
 	// L
 	//
@@ -999,8 +998,8 @@ public class InvocationParser extends DefaultHandler
           l.addAttributes( names, values );
 	  return l;
 	} else if ( e.equals("linux") ) {
-	  MachineSpecific linux = new MachineSpecific("linux"); 
-	  return linux; 
+	  MachineSpecific linux = new MachineSpecific("linux");
+	  return linux;
 	}
 
 	// unknown
@@ -1019,12 +1018,12 @@ public class InvocationParser extends DefaultHandler
 	  for ( int i=0; i< names.size(); ++i ) {
 	    String name = (String) names.get(i);
 	    String value = (String) values.get(i);
-	    
+
 	    if ( name.equals("page-size") ) {
 	      this.log( e, name, value );
-	      machine.setPageSize( Long.parseLong(value) ); 
+	      machine.setPageSize( Long.parseLong(value) );
 	    } else {
-	      this.complain( e, name, value ); 
+	      this.complain( e, name, value );
 	    }
 	  }
 	  return machine;
@@ -1079,7 +1078,7 @@ public class InvocationParser extends DefaultHandler
 	  RAM r = new RAM();
 	  r.addAttributes( names, values );
 	  return r;
-        } 
+        }
 
 	// unknown
 	return null;
@@ -1223,14 +1222,14 @@ public class InvocationParser extends DefaultHandler
 	  s.addAttributes( names, values );
 	  return s;
 
-        } else if ( e.equals("sunos") ) { 
+        } else if ( e.equals("sunos") ) {
 	  MachineSpecific sunos = new MachineSpecific("sunos");
-	  return sunos; 
+	  return sunos;
 	}
 
 	// unknown
 	return null;
- 
+
 	//
 	// T
 	//
@@ -1256,7 +1255,7 @@ public class InvocationParser extends DefaultHandler
 	  Task t = new Task();
 	  t.addAttributes(names, values);
 	  return t;
-        } 
+        }
 
 	// unknown
 	return null;
@@ -1358,7 +1357,7 @@ public class InvocationParser extends DefaultHandler
 	  }
 	  return uname;
 	}
-        
+
 	// unknown
 	return null;
 
@@ -1371,12 +1370,12 @@ public class InvocationParser extends DefaultHandler
     } catch ( NumberFormatException nfe ) {
       m_log.log( "filler", 0,
 		 "Error: Unable to parse a number: " + nfe.getMessage() +
-		 " at " + where() ); 
+		 " at " + where() );
       return null;
     } catch ( UnknownHostException uh ) {
       m_log.log( "filler", 0,
 		 "Error: Unable to parse a hostname: " + uh.getMessage() +
-		 " at " + where() ); 
+		 " at " + where() );
       return null;
     } catch ( ParseException pe ) {
       m_log.log( "filler", 0,
@@ -1477,8 +1476,8 @@ public class InvocationParser extends DefaultHandler
 	  return true;
 	} else if ( child instanceof Machine ) {
           Machine machine = (Machine) child;
-	  invocation.setMachine(machine); 
-          
+	  invocation.setMachine(machine);
+
           // convert uname object to Architecture object
           // reqd for Pegasus Bug 39
 	  invocation.setArchitecture( machine.getUname().toArchitecture() );
@@ -1511,13 +1510,13 @@ public class InvocationParser extends DefaultHandler
 	Machine m = (Machine) parent;
 	if ( child instanceof Stamp ) {
 	  m.setStamp( (Stamp) child );
-	  return true; 
+	  return true;
 	} else if ( child instanceof Uname ) {
-	  m.setUname( (Uname) child ); 
-	  return true; 
+	  m.setUname( (Uname) child );
+	  return true;
 	} else if ( child instanceof MachineSpecific ) {
-	  m.setMachineSpecific( (MachineSpecific) child ); 
-	  return true; 
+	  m.setMachineSpecific( (MachineSpecific) child );
+	  return true;
 	}
       } else if ( parent instanceof MachineSpecific ) {
 	MachineSpecific ms = (MachineSpecific) parent;
@@ -1532,7 +1531,7 @@ public class InvocationParser extends DefaultHandler
 	  return true;
 	}
       }
-      
+
       // unknown
       return false;
 

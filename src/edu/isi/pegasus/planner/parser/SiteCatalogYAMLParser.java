@@ -1,19 +1,19 @@
 /*
- * 
+ *
  *   Copyright 2007-2008 University Of Southern California
- * 
+ *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
  *   You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *   Unless required by applicable law or agreed to in writing,
  *   software distributed under the License is distributed on an "AS IS" BASIS,
  *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
- * 
+ *
  */
 
 package edu.isi.pegasus.planner.parser;
@@ -41,7 +41,6 @@ import java.util.logging.Logger;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-//import com.fasterxml.jackson.dataformat.yaml.snakeyaml.parser.ParserException;
 import com.fasterxml.jackson.dataformat.yaml.JacksonYAMLParseException;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -73,10 +72,10 @@ import edu.isi.pegasus.planner.common.VariableExpansionReader;
 /**
  * This class uses the Xerces SAX2 parser to validate and parse an XML document
  * conforming to the Site Catalog schema v4.0
- * 
- * 
+ *
+ *
  * http://pegasus.isi.edu/schema/sc-3.0.xsd
- * 
+ *
  * @author Mukund Murrali
  * @version $Revision$
  */
@@ -119,7 +118,7 @@ public class SiteCatalogYAMLParser {
 
 	/**
 	 * Holder for various Pegasus properties..
-	 * 
+	 *
 	 */
 	private final PegasusProperties mProps;
 
@@ -148,7 +147,7 @@ public class SiteCatalogYAMLParser {
 
 	/**
 	 * Returns the constructed site store object
-	 * 
+	 *
 	 * @return <code>SiteStore<code> if parsing completed
 	 */
 	public SiteStore getSiteStore() {
@@ -161,7 +160,7 @@ public class SiteCatalogYAMLParser {
 
 	/**
 	 * The main method that starts the parsing.
-	 * 
+	 *
 	 * @param file the YAML file to be parsed.
 	 */
 	@SuppressWarnings("unchecked")
@@ -217,14 +216,14 @@ public class SiteCatalogYAMLParser {
 
 				//the yaml data we store is in the form of map structure..
 				Map<String, Object> data = (LinkedHashMap<String, Object>) yamlData;
-				
+
 				//the "site" top level will have list of site catalog data which we need to populate..
 				List<Object> siteCatatalogs = (List<Object>) data.get("site");
 				for (Object siteCatalog : siteCatatalogs) {
 					//each of the linked list object has a map of key, value representing the data.
 					Map<String, Object> siteCatalogInfo = (LinkedHashMap<String, Object>) siteCatalog;
 					SiteCatalogEntry entry = new SiteCatalogEntry();
-					
+
 					/***
 					 * Here we construct the top level information for a site.
 					 */
@@ -474,9 +473,9 @@ public class SiteCatalogYAMLParser {
 
 	/**
 	 * Whether to laod a site or not in the <code>SiteStore</code>
-	 * 
+	 *
 	 * @param site the <code>SiteCatalogEntry</code> object.
-	 * 
+	 *
 	 * @return boolean
 	 */
 	private boolean loadSite(SiteCatalogEntry site) {
@@ -486,7 +485,7 @@ public class SiteCatalogYAMLParser {
 	/**
 	 * Returns a list of profiles that have to be applied to the entries for all the
 	 * sites corresponding to a transformation.
-	 * 
+	 *
 	 * @param metaObj
 	 * @param profileObj
 	 *
@@ -556,9 +555,9 @@ public class SiteCatalogYAMLParser {
 	/**
 	 * This method is used to extract the necessary information from the parsing
 	 * exception
-	 * 
+	 *
 	 * @param e The parsing exception generated from the yaml.
-	 * 
+	 *
 	 * @return String representing the line number and the problem is returned
 	 */
 	private String parseError(JacksonYAMLParseException e) {
@@ -600,7 +599,7 @@ public class SiteCatalogYAMLParser {
 				if (handle != null) {
 					siteCatalogInfo.put("handle", handle);
 				}
-				
+
 				if (architecture != null) {
 					siteCatalogInfo.put("arch", architecture.name());
 				}
@@ -608,7 +607,7 @@ public class SiteCatalogYAMLParser {
 				OS os = entry.getOS();
 				if (os != null) {
 					siteCatalogInfo.put("os", os.name());
-				}	
+				}
 
 				String osrelease = entry.getOSRelease();
 				if (osrelease != null) {
@@ -862,12 +861,12 @@ public class SiteCatalogYAMLParser {
 	/**
 	 * This helper method is used to build the profiles from the existing profile..
 	 * Profiles will have meta also, omit this..
-	 * 
+	 *
 	 * @param profiles - List of profiles..
 	 * @return List<Map<String, Map<String, Object>>> because of the following
 	 *         format: profile: - env: APP_HOME: "/tmp/mukund" JAVA_HOME:
 	 *         "/bin/java.1.6" me: "with" - condor: more: "test"
-	 * 
+	 *
 	 */
 	private static List<Map<String, Map<String, Object>>> buildProfiles(List<Profile> profiles) {
 		List<Map<String, Map<String, Object>>> profileList = new LinkedList<Map<String, Map<String, Object>>>();
@@ -884,7 +883,7 @@ public class SiteCatalogYAMLParser {
 
 	/**
 	 * This method extracts and builds the meta data information.
-	 * 
+	 *
 	 * @param profiles - List of profiles..
 	 * @return Map<String, Object> - Simple key value inforamtion of meta.
 	 */
@@ -927,7 +926,7 @@ public class SiteCatalogYAMLParser {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param args
 	 */
 	public static void main(String[] args) {

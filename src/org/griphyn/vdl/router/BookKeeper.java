@@ -17,7 +17,6 @@ import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.util.*;
 import org.griphyn.vdl.dax.*;
 
-// java.util.List clashes with org.griphyn.vdl.classes.List
 import java.util.HashMap;
 import java.util.Vector;
 import java.util.HashSet;
@@ -41,7 +40,7 @@ import java.io.*;
  * @version $Revision$
  * @see Route
  */
-public class BookKeeper 
+public class BookKeeper
 {
   /**
    * This contains the set of visited derivations.
@@ -69,7 +68,7 @@ public class BookKeeper
   private SequenceMapping m_mapping;
 
   /**
-   * The <code>Profile</code> elements in nested compound TR can 
+   * The <code>Profile</code> elements in nested compound TR can
    * be equally nested.
    */
   private ListStack m_profileStack;
@@ -87,7 +86,7 @@ public class BookKeeper
   private HashSet m_tempfiles;
 
   /**
-   * To create temporary filenames, we need an entropy source. 
+   * To create temporary filenames, we need an entropy source.
    */
   private Random m_rng;
 
@@ -159,7 +158,7 @@ public class BookKeeper
 
   /**
    * Accessor: obtains all transformations that were pushed as space
-   * separated string. 
+   * separated string.
    *
    * @return all transformation names, may be empty.
    * @see #addJob( Job )
@@ -203,26 +202,26 @@ public class BookKeeper
    * @see #getCurrent()
    */
   public void setCurrent( HasPass dv )
-  { 
+  {
     // assign a new cursor
     Logging.instance().log( "state", 2,
 			    "NOOP: setting cursor to " + dv.identify() );
   }
 
   /**
-   * Obtains the current cursor position. 
+   * Obtains the current cursor position.
    * @return the derivation that the cursor is located at.
    * @see #setCurrent( HasPass )
    */
   public HasPass getCurrent()
-  { 
+  {
     throw new RuntimeException( "method not implemented" );
   }
 
   /**
    * Maps a DV identification to a name that can be put into the XML
    * datatypes NMTOKEN, ID and IDREF. The identification used to be
-   * the DV's short ID, but recent changes use the full ID.  
+   * the DV's short ID, but recent changes use the full ID.
    *
    * @param id is the derivation identifier
    * @return an XML-compatible job id
@@ -245,15 +244,15 @@ public class BookKeeper
   public String jobOf( String id )
   {
     String s = this.m_mapping.get(id);
-    Logging.instance().log( "state", 3, "jobOf(" + id + ") = " + 
+    Logging.instance().log( "state", 3, "jobOf(" + id + ") = " +
 			    (s == null ? "(null)" : s) );
     return s;
   }
 
-  /** 
+  /**
    * Accessor: Obtains the level of a given job from the DAX structure.
    * @param jobid is the job identifier
-   * @return the level of the job, or -1 in case of error (no such job). 
+   * @return the level of the job, or -1 in case of error (no such job).
    */
   private int getJobLevel( String jobid )
   {
@@ -329,16 +328,16 @@ public class BookKeeper
    * to the visited set.
    */
   public boolean addVisited( HasPass current, Set real )
-  { 
+  {
     String id = current.identify();
     boolean exists = this.m_visited.containsKey(id);
     if ( exists ) {
       Set temp = (Set) this.m_visited.get(id);
-      Logging.instance().log( "state", 2, "already visited node " + id + 
+      Logging.instance().log( "state", 2, "already visited node " + id +
 			      " keeping " + temp );
     } else {
       this.m_visited.put( id, real );
-      Logging.instance().log( "state", 2, "adding visited node " + id + 
+      Logging.instance().log( "state", 2, "adding visited node " + id +
 			      " with " + real );
     }
     return exists;
@@ -354,7 +353,7 @@ public class BookKeeper
   public boolean wasVisited( HasPass dv )
   {
     String id = dv.identify();
-    boolean result = this.m_visited.containsKey(id); 
+    boolean result = this.m_visited.containsKey(id);
     Logging.instance().log( "state", 5, "wasVisited(" + id + ") = " + result );
     return result;
   }
@@ -386,12 +385,12 @@ public class BookKeeper
       LFN lfn = (LFN) i.next();
       String name = lfn.getFilename();
       if ( lfn.getLink() == LFN.INPUT || lfn.getLink() == LFN.INOUT ) {
-	this.m_dax.addFilename( name, true , lfn.getTemporary(), 
+	this.m_dax.addFilename( name, true , lfn.getTemporary(),
 				lfn.getDontRegister(), lfn.getDontTransfer() );
 	Logging.instance().log( "state", 5, "adding input filename " + name );
       }
       if ( lfn.getLink() == LFN.OUTPUT || lfn.getLink() == LFN.INOUT ) {
-	this.m_dax.addFilename( name, false, lfn.getTemporary(), 
+	this.m_dax.addFilename( name, false, lfn.getTemporary(),
 				lfn.getDontRegister(), lfn.getDontTransfer() );
 	Logging.instance().log( "state", 5, "adding output filename " + name );
       }
@@ -412,10 +411,10 @@ public class BookKeeper
   /**
    * Creates a unique temporary filename. The new name is registered
    * locally to ensure uniqueness. A string of multiple capitol X, at
-   * least six, is replaced with some random factor. 
+   * least six, is replaced with some random factor.
    *
    * @param hint is a filename hint.
-   * @param suffix is the suffix for the filename. 
+   * @param suffix is the suffix for the filename.
    * @return a somewhat unique filename - for this workflow only.
    */
   public String createTempName( String hint, String suffix )
@@ -448,7 +447,7 @@ public class BookKeeper
       }
 
       // check uniqueness
-      if ( suffix.length() > 0 ) 
+      if ( suffix.length() > 0 )
 	result = sb.toString() + suffix;
       if ( ! m_tempfiles.contains(result) ) {
 	m_tempfiles.add(result);
@@ -460,7 +459,7 @@ public class BookKeeper
   }
 
   /**
-   * Detects valid results in the ADAG as opposed to an empty shell. 
+   * Detects valid results in the ADAG as opposed to an empty shell.
    *
    * @return true, if the ADAG is an empty shell.
    */
@@ -471,7 +470,7 @@ public class BookKeeper
   }
 
   /**
-   * This method is a possibly more memory efficient version of 
+   * This method is a possibly more memory efficient version of
    * constructing a DAG.
    * @param stream is a generic stream to put textual results onto.
    */
@@ -480,13 +479,13 @@ public class BookKeeper
   { this.m_dax.toString(stream); }
 
   /**
-   * dumps the state of this object into human readable format. 
+   * dumps the state of this object into human readable format.
    */
   public String toString()
   { return this.m_dax.toString(); }
 
   /**
-   * This method is a possibly more memory efficient version of 
+   * This method is a possibly more memory efficient version of
    * constructing a DAX.
    * @param stream is a generic stream to put XML results onto.
    * @param indent is the initial indentation level.
@@ -497,7 +496,7 @@ public class BookKeeper
   { this.m_dax.toXML(stream,indent,namespace); }
 
   /**
-   * This method is a possibly more memory efficient version of 
+   * This method is a possibly more memory efficient version of
    * constructing a DAX.
    * @param stream is a generic stream to put XML results onto.
    * @param indent is the initial indentation level.
@@ -507,7 +506,7 @@ public class BookKeeper
   { this.m_dax.toXML(stream,indent,null); }
 
   /**
-   * Dumps the state of this object into machine readable XML. 
+   * Dumps the state of this object into machine readable XML.
    * @param indent is the initial indentation level.
    * @param namespace is an optional XML namespace.
    */

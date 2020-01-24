@@ -17,14 +17,13 @@ package org.griphyn.vdl.parser;
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.util.Logging;
 
-// Xerces
 import org.xml.sax.*;
 import javax.xml.parsers.*;
 import java.io.*;
 
 /**
  * This class uses the Xerces SAX2 parser to validate and parse an XML
- * document. The content handler <code>VDLContentHandler</code> and 
+ * document. The content handler <code>VDLContentHandler</code> and
  * error handler <code>VDLErrorHandler</code> are necessary to handle
  * various callbacks.
 
@@ -40,7 +39,7 @@ public class VDLxParser
   /**
    * Default parser is the Xerces parser.
    */
-  protected static final String vendorParserClass = 
+  protected static final String vendorParserClass =
     "org.apache.xerces.parsers.SAXParser";
 
   /**
@@ -49,14 +48,14 @@ public class VDLxParser
   private XMLReader m_parser;
 
   /**
-   * Handles the filling in of content, and callbacks to the 
+   * Handles the filling in of content, and callbacks to the
    * {@link DefinitionHandler} interface.
    */
   private VDLContentHandler m_contentHandler;
 
   /**
    * Sets a feature while capturing failed features right here.
-   * 
+   *
    * @param uri is the feature's URI to modify
    * @param flag is the new value to set.
    * @return true, if the feature could be set, false for an exception
@@ -68,8 +67,8 @@ public class VDLxParser
       this.m_parser.setFeature( uri, flag );
       result = true;
     } catch ( SAXException se ) {
-      Logging.instance().log( "default", 0, 
-			      "Could not set parser feature " + 
+      Logging.instance().log( "default", 0,
+			      "Could not set parser feature " +
 			      se.getMessage() );
     }
     return result;
@@ -81,11 +80,11 @@ public class VDLxParser
    *
    * @param schemaLocation is the default location of the XML Schema
    * which this parser is capable of parsing. It may be null to use
-   * the defaults provided in the document. 
+   * the defaults provided in the document.
    */
   public VDLxParser( String schemaLocation )
   {
-    try { 
+    try {
       m_parser = (XMLReader) Class.forName(vendorParserClass).newInstance();
       m_contentHandler = new VDLContentHandler();
       m_parser.setContentHandler(m_contentHandler);
@@ -97,7 +96,7 @@ public class VDLxParser
       // time+memory consuming, see http://xml.apache.org/xerces2-j/features.html
       // set( "http://apache.org/xml/features/validation/schema-full-checking", true );
 
-      // Send XML Schema element default values via characters().  
+      // Send XML Schema element default values via characters().
       set( "http://apache.org/xml/features/validation/schema/element-default", true );
       set( "http://apache.org/xml/features/validation/warn-on-duplicate-attdef", true );
       // mysteriously, this one fails with recent Xerces
@@ -112,13 +111,13 @@ public class VDLxParser
 	Logging.instance().log("parser", 0, "will use document schema hint" );
       }
     } catch (ClassNotFoundException e) {
-      Logging.instance().log( "defaut", 0, 
+      Logging.instance().log( "defaut", 0,
 			      "The SAXParser class was not found: " + e);
     } catch (InstantiationException e) {
-      Logging.instance().log( "default", 0, 
+      Logging.instance().log( "default", 0,
 			      "The SAXParser class could not be instantiated: " + e);
     } catch (IllegalAccessException e) {
-      Logging.instance().log( "default", 0, 
+      Logging.instance().log( "default", 0,
 			      "The SAXParser class could not be accessed: " + e);
     }
   }
@@ -136,14 +135,14 @@ public class VDLxParser
   public void setSchemaLocations( String list )
   {
     /*
-    // default place to add 
+    // default place to add
     list += "http://www.griphyn.org/working_groups/VDS/vdl-1.24.xsd " +
       "http://www.griphyn.org/working_groups/VDS/vdl-1.24.xsd";
     */
 
     // schema location handling
     try {
-      m_parser.setProperty( 
+      m_parser.setProperty(
 	"http://apache.org/xml/properties/schema/external-schemaLocation",
 	list );
     } catch ( SAXException se ) {
@@ -163,14 +162,14 @@ public class VDLxParser
   public void setDefaultSchemaLocation( String location )
   {
     /*
-    // default place to add 
+    // default place to add
     list += "http://www.griphyn.org/working_groups/VDS/vdl-1.19.xsd " +
       "http://www.griphyn.org/working_groups/VDS/vdl-1.19.xsd";
     */
 
     // schema location handling
     try {
-      m_parser.setProperty( 
+      m_parser.setProperty(
 	"http://apache.org/xml/properties/schema/external-noNamespaceSchemaLocation",
 	location );
     } catch ( SAXException se ) {
@@ -187,10 +186,10 @@ public class VDLxParser
    * @param reader is a bytestream opened for reading.
    * @param definitions is a reference to the already known definitions in
    * the system. The definitions may be empty, but must not be null.
-   * @param overwrite is a flag to indicate the insertion mode. If set to 
+   * @param overwrite is a flag to indicate the insertion mode. If set to
    * <code>false</code>, an insert mode is assumed. Violations will be
-   * returned as clashes. With value <code>true</code>, an update mode 
-   * is assumed. Old definitions of updates will be returned. 
+   * returned as clashes. With value <code>true</code>, an update mode
+   * is assumed. Old definitions of updates will be returned.
    * @param dontcare is a flag to minimize memory consumption. Clashes in
    * insert mode will be signalled with an Exception. Old values in update
    * mode will be ignored. Effectively, the resulting list is always empty
@@ -202,23 +201,23 @@ public class VDLxParser
    * Derivation. It is not a Definitions object, since multiple old
    * versions may appear in update mode. Returns null on error!
    *
-   * @see org.griphyn.vdl.classes.Definitions 
+   * @see org.griphyn.vdl.classes.Definitions
    */
   public java.util.List parse( java.io.InputStream reader,
 			       Definitions definitions,
 			       boolean overwrite, boolean dontcare )
   {
     try {
-      MemoryStorage database = 
+      MemoryStorage database =
 	new MemoryStorage( definitions, overwrite, dontcare );
       m_contentHandler.setDefinitionHandler(database);
 
       m_parser.parse( new InputSource(reader) );
 
       java.util.List result = database.getRejects();
-      Logging.instance().log( "parser", 1, "Now with " + 
+      Logging.instance().log( "parser", 1, "Now with " +
 			      definitions.getDefinitionCount() +
-			      " definitions, and " + result.size() + 
+			      " definitions, and " + result.size() +
 			      " rejects" );
       return result;
     } catch (SAXException e) {
@@ -233,7 +232,7 @@ public class VDLxParser
   /**
    * This function parses an XML source (could be a document, a stream,
    * etc.), and creates java class instances that correspond to
-   * different elements in the XML source. 
+   * different elements in the XML source.
    *
    * @param reader is an XML input source, which may be a character stream,
    * byte stream, or even an URI.
@@ -241,7 +240,7 @@ public class VDLxParser
    * one complete definition each time one is ready to be processed.
    *
    * @return true for successful parsing, false in case of error.
-   * @see org.griphyn.vdl.classes.Definitions 
+   * @see org.griphyn.vdl.classes.Definitions
    */
   public boolean parse( InputSource reader, DefinitionHandler callback )
   {
@@ -263,7 +262,7 @@ public class VDLxParser
    * etc.), and invokes a callback for the top-level element with the
    * corresponding Java class. Note: The finalizer cannot be called for
    * Definitions elements. This method should be used for "partial VDLx",
-   * which contains XML for a Transformation or Derivation. 
+   * which contains XML for a Transformation or Derivation.
    *
    * @param reader is an XML input source, which may be a character stream,
    * byte stream, or even an URI.
@@ -271,7 +270,7 @@ public class VDLxParser
    * one complete definition.
    *
    * @return true for successful parsing, false in case of error.
-   * @see org.griphyn.vdl.classes.Definitions 
+   * @see org.griphyn.vdl.classes.Definitions
    */
   public boolean parse( InputSource reader, FinalizerHandler callback )
   {
