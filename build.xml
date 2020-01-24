@@ -132,6 +132,21 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </exec>
   </target>
 
+  <!-- Java code format -->
+  <target name="code-format-java" description="Java code format">
+    <fileset id="java.source" dir="src">
+      <include name="**/*.java"/>
+      <exclude name="**/aws/**/CloudWatchLog.java"/>
+    </fileset>
+
+    <pathconvert refid="java.source" property="java.source" pathsep=" " />
+
+    <java jar="${basedir}/release-tools/jars/google-java-format-1.7-all-deps.jar" fork="true" failonerror="true" maxmemory="128m">
+      <arg value="--aosp"/>
+      <arg value="--replace"/>
+      <arg line="${java.source}"/>
+    </java>
+  </target>
 
   <target name="compile-common" depends="setup" description="Compile common java code">
     <javac destdir="${build.src}" srcdir="src"
