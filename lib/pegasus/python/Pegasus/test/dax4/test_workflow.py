@@ -18,6 +18,7 @@ from Pegasus.dax4.replica_catalog import ReplicaCatalog
 from Pegasus.dax4.errors import DuplicateError
 from Pegasus.dax4.errors import NotFoundError
 from Pegasus.dax4.transformation_catalog import Transformation
+from Pegasus.dax4.transformation_catalog import TransformationSite
 from Pegasus.dax4.transformation_catalog import TransformationCatalog
 from Pegasus.dax4.transformation_catalog import TransformationType
 from Pegasus.dax4.mixins import ProfileMixin
@@ -422,7 +423,7 @@ class TestJob:
         j = Job("t1")
         j.add_profile(Namespace.ENV, "JAVA_HOME", "/java/home")
         j.add_shell_hook(EventType.START, "/bin/echo hi")
-        j.add_metadata("key", "value")
+        j.add_metadata(key="value")
 
         assert j.__json__() == {
             "type": "job",
@@ -647,10 +648,10 @@ class TestWorkflow:
         tc = TransformationCatalog()
         tc.add_transformation(
             Transformation("t1").add_site(
-                "local", "/pfn", TransformationType.INSTALLED
+                TransformationSite("local", "/pfn", TransformationType.INSTALLED)
             ),
             Transformation("t2").add_site(
-                "local2", "/pfn", TransformationType.STAGEABLE
+                TransformationSite("local2", "/pfn", TransformationType.STAGEABLE)
             ),
         )
 
@@ -670,7 +671,7 @@ class TestWorkflow:
 
         wf.add_profile(Namespace.ENV, "JAVA_HOME", "/java/home")
         wf.add_shell_hook(EventType.START, "/bin/echo hi")
-        wf.add_metadata("key", "value")
+        wf.add_metadata(key="value")
 
         result = wf.__json__()
 
@@ -701,10 +702,10 @@ class TestWorkflow:
         tc = TransformationCatalog()
         tc.add_transformation(
             Transformation("t1").add_site(
-                "local", "/pfn", TransformationType.STAGEABLE
+                TransformationSite("local", "/pfn", TransformationType.STAGEABLE)
             ),
             Transformation("t2").add_site(
-                "local2", "/pfn", TransformationType.INSTALLED
+                TransformationSite("local2", "/pfn", TransformationType.INSTALLED)
             ),
         )
 
@@ -724,7 +725,7 @@ class TestWorkflow:
 
         wf.add_profile(Namespace.ENV, "JAVA_HOME", "/java/home")
         wf.add_shell_hook(EventType.START, "/bin/echo hi")
-        wf.add_metadata("key", "value")
+        wf.add_metadata(key="value")
 
         rc_json = rc.__json__()
         del rc_json["pegasus"]

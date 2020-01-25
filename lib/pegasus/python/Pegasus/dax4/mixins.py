@@ -1,4 +1,5 @@
 from enum import Enum
+from functools import partialmethod
 
 from .errors import DuplicateError
 from .errors import NotFoundError
@@ -7,20 +8,32 @@ from .errors import NotFoundError
 class MetadataMixin:
     """Derived class can have metadata assigned to it as key value pairs."""
 
-    def add_metadata(self, key, value):
-        """Add metadata as a key value pair to this object
-        
-        :param key: metadata key
-        :type key: str
-        :param value: metadata value
-        :type value: str
-        :raises DuplicateError: metadata keys must be unique
+    def add_metadata(self, *args, **kwargs):
+        """Add metadata key value pairs to this object
+
+        .. code-block:: python
+
+            # Example 1
+            job.add_metadata({"key1": "value1"})
+
+            # Example 2
+            job.add_metadata(key1="value1, key2="value2")
+
+        :param args: dictionary of key value pair to add as metadata
+        :type args: dict, optional
+        :raises TypeError: each arg in args must be a dict
         :return: self
         """
-        if key in self.metadata:
-            raise DuplicateError
 
-        self.metadata[key] = value
+        # values will be converted to str; metadata schema requires str values
+        for arg in args:
+            if isinstance(arg, dict):
+                self.metadata.update({key: str(value) for key, value in arg.items()})
+            else:
+                raise TypeError("{arg} must be of type dict".format(arg=arg))
+
+        for key, value in kwargs.items():
+            self.metadata[key] = str(value)
 
         return self
 

@@ -26,20 +26,28 @@ def md_mixin_obj():
 
 
 class TestMetadataMixin:
-    def test_add_metadata(self, md_mixin_obj):
-        md_mixin_obj.add_metadata("key", "value")
+    def test_add_metadata_method_1(self, md_mixin_obj):
+        assert id(md_mixin_obj.add_metadata({"key": "value"})) == id(md_mixin_obj)
         assert md_mixin_obj.metadata["key"] == "value"
 
-    def test_add_duplicate_metadata(self, md_mixin_obj):
-        md_mixin_obj.add_metadata("key", "value")
-        with pytest.raises(DuplicateError):
-            md_mixin_obj.add_metadata("key", "value")
+    def test_add_metadata_method_2(self, md_mixin_obj):
+        assert id(md_mixin_obj.add_metadata(key1="value1", key2="value2")) == id(
+            md_mixin_obj
+        )
+        assert md_mixin_obj.metadata["key1"] == "value1"
+        assert md_mixin_obj.metadata["key2"] == "value2"
+
+    def test_add_invalid_metadata(self, md_mixin_obj):
+        with pytest.raises(TypeError) as e:
+            md_mixin_obj.add_metadata([1, 2])
+
+        assert "[1, 2]" in str(e)
 
     def test_chaining(self, md_mixin_obj):
-        (md_mixin_obj.add_metadata("key1", "value").add_metadata("key2", "value"))
+        assert md_mixin_obj.add_metadata(key1="value").add_metadata(key2="value")
 
         assert len(md_mixin_obj.metadata) == 2
-        assert id(md_mixin_obj) == id(md_mixin_obj.add_metadata("key3", "value"))
+        assert id(md_mixin_obj) == id(md_mixin_obj.add_metadata(key3="value"))
 
 
 class Test_Hook:

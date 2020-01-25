@@ -20,6 +20,7 @@ __all__ = [
     "TransformationType",
     "ContainerType",
     "Transformation",
+    "TransformationSite",
     "TransformationCatalog",
 ]
 
@@ -36,10 +37,10 @@ class TransformationType(Enum):
     INSTALLED = "installed"
 
 
-class _TransformationSite(ProfileMixin, MetadataMixin):
+class TransformationSite(ProfileMixin, MetadataMixin):
     """Site specific information about a :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`. 
     A :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` must contain at least one
-    _TransformationSite. 
+    TransformationSite. 
     """
 
     def __init__(
@@ -191,14 +192,6 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
     requires other executables. Transformations can reside on one or
     more sites where they are either **STAGEABLE** (a binary that can be shipped
     around) or **INSTALLED**.
-
-    .. code-block:: python
-
-        # Example
-        foo = (Transformation("foo")
-                .add_site("local", "/nfs/u2/ryan/bin/foo", TransformationType.STAGEABLE, arch=Arch.X86_64, ostype=OSType.LINUX)
-                .add_site_profile("local", Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
-                .add_requirement("bar")) 
     """
 
     def __init__(
@@ -226,111 +219,31 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
     def _get_key(self):
         return (self.name, self.namespace, self.version)
 
-    def add_site(
-        self,
-        name,
-        pfn,
-        transformation_type,
-        arch=None,
-        ostype=None,
-        osrelease=None,
-        osversion=None,
-        glibc=None,
-        container=None,
-    ):
-        """Add a transformation site to this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`
-        
-        :param name: name of the site at which this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` resides
-        :type name: str
-        :param pfn: physical file name
-        :type pfn: str
-        :param type: a transformation type defined in :py:class:`~Pegasus.dax4.transformation_catalog.TransformationType`
-        :type type: TransformationType
-        :param arch: architecture that this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.dax4.site_catalog.Arch`), defaults to None
-        :type arch: Arch, optional
-        :param os_type: name of os that this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.dax4.site_catalog.OSType`), defaults to None
-        :type os_type: OSType, optional
-        :param os_release: release of os that this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` was compiled for, defaults to None, defaults to None
-        :type os_release: str, optional
-        :param os_version: version of os that this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` was compiled for, defaults to None, defaults to None
-        :type os_version: str, optional
-        :param glibc: version of glibc this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` was compiled against, defaults to None
-        :type glibc: str, optional
-        :param container: specify the name of the container to use, optional
-        :type container: str 
-        :raises ValueError: transformation_type must be one of :py:class:`~Pegasus.dax4.transformation_catalog.TransformationType`
-        :raises ValueError: arch must be one of :py:class:`~Pegasus.dax4.site_catalog.Arch`
-        :raises DuplicateError: a site with this is already associated to this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`
+    def add_site(self, transformation_site):
+        """Add a :py:class:`~Pegasus.dax4.transformation_catalog.TransformationSite` to this
+        transformation
+
+        :param transformation_site: the transformation site to be added
+        :type transformation_site: TransformationSite
+        :raises TypeError: transformation_site must be of type TransformationSite
+        :raises DuplicateError: a transformation site with the same name as the one you are attempting to add already exists
         :return: self
         """
+        if not isinstance(transformation_site, TransformationSite):
+            raise TypeError(
+                "{transformation_site} must be of type TransformationSite".format(
+                    transformation_site=transformation_site
+                )
+            )
 
-        if name in self.sites:
+        if transformation_site.name in self.sites:
             raise DuplicateError(
-                "Site {0} already exists for transformation {1}".format(name, self.name)
+                "transformation site with name {name} has already been added for {transformation}".format(
+                    name=transformation_site.name, transformation=self
+                )
             )
 
-        if not isinstance(transformation_type, TransformationType):
-            raise ValueError("type must be one of TransformationType")
-
-        if arch is not None:
-            if not isinstance(arch, Arch):
-                raise ValueError("arch must be one of Arch")
-
-        self.sites[name] = _TransformationSite(
-            name,
-            pfn,
-            transformation_type,
-            arch,
-            ostype,
-            osrelease,
-            osversion,
-            glibc,
-            container,
-        )
-
-        return self
-
-    def add_site_profile(self, site_name, namespace, key, value):
-        """Add a profile to a transformation site with the given site name
-        
-        :param site_name: the name of the site to which the profile is to be added
-        :type site_name: str
-        :param namespace: a namespace defined in :py:class:`~Pegasus.dax4.mixins.Namespace`
-        :type namespace: Namespace
-        :param key: key
-        :type key: str
-        :param value: value
-        :type value: str
-        :raises NotFoundError: the given site_name was not found
-        :return: self
-        """
-        if site_name not in self.sites:
-            raise NotFoundError(
-                "Site {0} not found for transformation {1}".format(site_name, self.name)
-            )
-
-        self.sites[site_name].add_profile(namespace, key, value)
-
-        return self
-
-    def add_site_metadata(self, site_name, key, value):
-        """Add metadata to a transformation site with the given site name
-        
-        :param site_name: the name of the site to which the metadata is to be added
-        :type site_name: str
-        :param key: key
-        :type key: str
-        :param value: value
-        :type value: str
-        :raises NotFoundError: the given site_name was not found
-        :return: self
-        """
-        if site_name not in self.sites:
-            raise NotFoundError(
-                "Site {0} not found for transformation {1}".format(site_name, self.name)
-            )
-
-        self.sites[site_name].add_metadata(key, value)
+        self.sites[transformation_site.name] = transformation_site
 
         return self
 

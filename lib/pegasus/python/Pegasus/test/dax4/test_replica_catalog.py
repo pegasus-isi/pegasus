@@ -33,7 +33,7 @@ class TestFile:
         assert File("a") != 1
 
     def test_tojson_with_metdata(self, convert_yaml_schemas_to_json, load_schema):
-        result = File("lfn").add_metadata("key", "value").__json__()
+        result = File("lfn").add_metadata(key="value").__json__()
         expected = {
             "lfn": "lfn",
             "metadata": {"key": "value"},

@@ -5,7 +5,7 @@ import pytest
 from jsonschema import validate
 
 from Pegasus.dax4.transformation_catalog import TransformationType
-from Pegasus.dax4.transformation_catalog import _TransformationSite
+from Pegasus.dax4.transformation_catalog import TransformationSite
 from Pegasus.dax4.transformation_catalog import ContainerType
 from Pegasus.dax4.transformation_catalog import Container
 from Pegasus.dax4.transformation_catalog import Transformation
@@ -20,7 +20,7 @@ from Pegasus.dax4.errors import NotFoundError
 from Pegasus.dax4.writable import FileFormat
 
 
-class Test_TransformationSite:
+class TestTransformationSite:
     @pytest.mark.parametrize(
         "name, pfn, transformation_type, kwargs",
         [
@@ -81,7 +81,7 @@ class Test_TransformationSite:
     def test_valid_transformation_site(
         self, name: str, pfn: str, transformation_type: TransformationType, kwargs: dict
     ):
-        _TransformationSite(name, pfn, transformation_type, **kwargs)
+        assert TransformationSite(name, pfn, transformation_type, **kwargs)
 
     @pytest.mark.parametrize(
         "name, pfn, transformation_type, kwargs",
@@ -131,17 +131,17 @@ class Test_TransformationSite:
         self, name: str, pfn: str, transformation_type: TransformationType, kwargs: dict
     ):
         with pytest.raises(ValueError):
-            _TransformationSite(name, pfn, transformation_type, **kwargs)
+            TransformationSite(name, pfn, transformation_type, **kwargs)
 
     @pytest.mark.parametrize(
         "transformation_site, expected_json",
         [
             (
-                _TransformationSite("local", "/pfn", TransformationType.STAGEABLE),
+                TransformationSite("local", "/pfn", TransformationType.STAGEABLE),
                 {"name": "local", "pfn": "/pfn", "type": "stageable"},
             ),
             (
-                _TransformationSite(
+                TransformationSite(
                     "local",
                     "/pfn",
                     TransformationType.INSTALLED,
@@ -168,7 +168,7 @@ class Test_TransformationSite:
     )
     def test_tojson_no_profiles_or_metadata(
         self,
-        transformation_site: _TransformationSite,
+        transformation_site: TransformationSite,
         expected_json: dict,
         convert_yaml_schemas_to_json,
         load_schema,
@@ -187,9 +187,9 @@ class Test_TransformationSite:
         self, convert_yaml_schemas_to_json, load_schema
     ):
         t = (
-            _TransformationSite("local", "/pfn", TransformationType.INSTALLED)
+            TransformationSite("local", "/pfn", TransformationType.INSTALLED)
             .add_profile(Namespace.ENV, "JAVA_HOME", "/java/home")
-            .add_metadata("key", "value")
+            .add_metadata(key="value")
         )
 
         result = t.__json__()
@@ -228,66 +228,29 @@ class TestTransformation:
 
     def test_add_site(self):
         t = Transformation("test")
-        t.add_site("local", "/pfn", TransformationType.STAGEABLE)
+        t.add_site(TransformationSite("local", "/pfn", TransformationType.STAGEABLE))
         assert "local" in t.sites
 
     def test_add_duplicate_site(self):
-        t = Transformation("test")
-        t.add_site("local", "/pfn", TransformationType.STAGEABLE)
-        t.add_site("isi", "/pfn", TransformationType.STAGEABLE)
+        with pytest.raises(DuplicateError) as e:
+            t = Transformation("test")
+            t.add_site(
+                TransformationSite("local", "/pfn", TransformationType.STAGEABLE)
+            )
+            t.add_site(TransformationSite("isi", "/pfn", TransformationType.STAGEABLE))
 
-        with pytest.raises(DuplicateError):
-            t.add_site("local", "/pfn", TransformationType.STAGEABLE)
+            t.add_site(
+                TransformationSite("local", "/pfn", TransformationType.STAGEABLE)
+            )
 
-    @pytest.mark.parametrize(
-        "name, pfn, transformation_type, kwargs",
-        [
-            ("local", "/pfn", "invalid transformation type", {}),
-            ("local", "/pfn", "invalid transformation type", {"arch": "invalid arch"}),
-            (
-                "local",
-                "/pfn",
-                TransformationType.STAGEABLE,
-                {"arch": Arch.X86_64, "ostype": "invalid os type"},
-            ),
-            (
-                "local",
-                "/pfn",
-                TransformationType.STAGEABLE,
-                {"arch": Arch.X86_64, "ostype": "invalid os type"},
-            ),
-            (
-                "local",
-                "/pfn",
-                TransformationType.STAGEABLE,
-                {"arch": Arch.X86_64, "ostype": "invalid os type"},
-            ),
-        ],
-    )
-    def test_add_invalid_site(self, name, pfn, transformation_type, kwargs):
-        t = Transformation("test")
-        with pytest.raises(ValueError):
-            t.add_site(name, pfn, transformation_type, **kwargs)
+        assert "local" in str(e)
 
-    def test_add_site_profile(self):
-        t = Transformation("test")
-        t.add_site("local", "/pfn", TransformationType.STAGEABLE)
-        t.add_site_profile("local", Namespace.ENV, "JAVA_HOME", "/java/home")
+    def test_add_invalid_site(self):
+        with pytest.raises(TypeError) as e:
+            t = Transformation("test")
+            t.add_site("badsite")
 
-        t_local_profiles = dict(t.sites["local"].profiles)
-
-        assert Namespace.ENV.value in t_local_profiles
-        assert "JAVA_HOME" in t_local_profiles[Namespace.ENV.value]
-
-    def test_add_site_metadata(self):
-        t = Transformation("test")
-        t.add_site("local", "/pfn", TransformationType.STAGEABLE)
-        t.add_site_metadata("local", "key", "value")
-
-        t_local_metadata = t.sites["local"].metadata
-
-        assert "key" in t_local_metadata
-        assert t_local_metadata["key"] == "value"
+        assert "badsite" in str(e)
 
     def test_add_requirement_as_str(self):
         t = Transformation("test")
@@ -327,9 +290,12 @@ class TestTransformation:
     def test_chaining(self):
         t = (
             Transformation("test")
-            .add_site("local", "/pfn", TransformationType.STAGEABLE)
+            .add_site(
+                TransformationSite(
+                    "local", "/pfn", TransformationType.STAGEABLE
+                ).add_profile(Namespace.ENV, "JAVA_HOME", "/java/home")
+            )
             .add_requirement("required")
-            .add_site_profile("local", Namespace.ENV, "JAVA_HOME", "/java/home")
         )
 
         assert "local" in t.sites
@@ -340,7 +306,7 @@ class TestTransformation:
         self, convert_yaml_schemas_to_json, load_schema
     ):
         t = Transformation("test", namespace="pegasus")
-        t.add_site("local", "/pfn", TransformationType.STAGEABLE)
+        t.add_site(TransformationSite("local", "/pfn", TransformationType.STAGEABLE))
         t.add_requirement("required")
 
         result = t.__json__()
@@ -361,13 +327,16 @@ class TestTransformation:
         self, convert_yaml_schemas_to_json, load_schema
     ):
         t = Transformation("test", namespace="pegasus")
-        t.add_site("local", "/pfn", TransformationType.STAGEABLE)
-        t.add_site_profile("local", Namespace.ENV, "JAVA_HOME", "/java/home")
+        t.add_site(
+            TransformationSite(
+                "local", "/pfn", TransformationType.STAGEABLE
+            ).add_profile(Namespace.ENV, "JAVA_HOME", "/java/home")
+        )
         t.add_requirement("required")
 
         t.add_profile(Namespace.ENV, "JAVA_HOME", "/java/home")
         t.add_shell_hook(EventType.START, "/bin/echo hi")
-        t.add_metadata("key", "value")
+        t.add_metadata(key="value")
 
         result = t.__json__()
         expected = {
@@ -509,18 +478,17 @@ class TestTransformationCatalog:
         assert "container1" in tc.containers
         assert "container2" in tc.containers
 
-
     def test_tojson(self, convert_yaml_schemas_to_json, load_schema):
         tc = TransformationCatalog()
         (
             tc.add_transformation(
                 Transformation("t1").add_site(
-                    "local", "/pfn", TransformationType.INSTALLED
+                    TransformationSite("local", "/pfn", TransformationType.INSTALLED)
                 )
             )
             .add_transformation(
                 Transformation("t2").add_site(
-                    "local", "/pfn", TransformationType.INSTALLED
+                    TransformationSite("local", "/pfn", TransformationType.INSTALLED)
                 )
             )
             .add_container(
@@ -559,11 +527,11 @@ class TestTransformationCatalog:
         (
             tc.add_transformation(
                 Transformation("t1").add_site(
-                    "local", "/pfn", TransformationType.INSTALLED
+                    TransformationSite("local", "/pfn", TransformationType.INSTALLED)
                 )
             ).add_transformation(
                 Transformation("t2").add_site(
-                    "local2", "/pfn", TransformationType.STAGEABLE
+                    TransformationSite("local2", "/pfn", TransformationType.STAGEABLE)
                 )
             )
         )
@@ -633,26 +601,30 @@ class TestTransformationCatalog:
             Transformation("foo")
             .add_profile(Namespace.GLOBUS, "maxtime", 2)
             .add_profile(Namespace.DAGMAN, "retry", 2)
-            .add_metadata("size", "2048")
+            .add_metadata(size=2048)
             .add_site(
-                "local",
-                "/nfs/u2/ryan/bin/foo",
-                TransformationType.STAGEABLE,
-                arch=Arch.X86_64,
-                ostype=OSType.LINUX,
+                TransformationSite(
+                    "local",
+                    "/nfs/u2/ryan/bin/foo",
+                    TransformationType.STAGEABLE,
+                    arch=Arch.X86_64,
+                    os_type=OSType.LINUX,
+                )
+                .add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
+                .add_metadata(size=2048)
             )
-            .add_site_profile("local", Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
-            .add_site_metadata("local", "size", "2048")
             .add_requirement("bar")
             .add_shell_hook(EventType.START, "/bin/echo 'starting'")
         )
 
         bar = Transformation("bar").add_site(
-            "local",
-            "/nfs/u2/ryan/bin/bar",
-            TransformationType.STAGEABLE,
-            arch=Arch.X86_64,
-            ostype=OSType.LINUX,
+            TransformationSite(
+                "local",
+                "/nfs/u2/ryan/bin/bar",
+                TransformationType.STAGEABLE,
+                arch=Arch.X86_64,
+                os_type=OSType.LINUX,
+            )
         )
 
         centos_pegasus_container = Container(
