@@ -1,5 +1,5 @@
-# Created by https://www.gitignore.io/api/linux,macos,windows,code,eclipse,emacs,intellij+all,vim,cvs,git,svn,c,c++,java,node,perl,perl6,python,r,packer,terraform,vagrant
-# Edit at https://www.gitignore.io/?templates=linux,macos,windows,code,eclipse,emacs,intellij+all,vim,cvs,git,svn,c,c++,java,node,perl,perl6,python,r,packer,terraform,vagrant
+# Created by https://www.gitignore.io/api/linux,macos,windows,code,eclipse,emacs,intellij+all,vim,cvs,git,svn,c,c++,java,maven,node,perl,perl6,python,r,packer,terraform,vagrant
+# Edit at https://www.gitignore.io/?templates=linux,macos,windows,code,eclipse,emacs,intellij+all,vim,cvs,git,svn,c,c++,java,maven,node,perl,perl6,python,r,packer,terraform,vagrant
 
 ### C ###
 # Prerequisites
@@ -374,6 +374,19 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
+### Maven ###
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+.flattened-pom.xml
+
 ### Node ###
 # Logs
 logs
@@ -451,6 +464,17 @@ typings/
 # nuxt.js build output
 .nuxt
 
+# rollup.js default build output
+
+# Uncomment the public line if your project uses Gatsby
+# https://nextjs.org/blog/next-9-1#public-directory-support
+# https://create-react-app.dev/docs/using-the-public-folder/#docsNav
+# public
+
+# Storybook build outputs
+.out
+.storybook-out
+
 # vuepress build output
 .vuepress/dist
 
@@ -462,6 +486,9 @@ typings/
 
 # DynamoDB Local files
 .dynamodb/
+
+# Temporary folders
+temp/
 
 ### Packer ###
 # Cache objects
@@ -568,15 +595,6 @@ coverage.xml
 *.mo
 *.pot
 
-# Django stuff:
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
 # Scrapy stuff:
 .scrapy
 
@@ -584,14 +602,6 @@ instance/
 docs/_build/
 
 # PyBuilder
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
 
 # pyenv
 .python-version
@@ -609,20 +619,16 @@ celerybeat-schedule
 # SageMath parsed files
 *.sage.py
 
-# Environments
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
 # Spyder project settings
 .spyderproject
 .spyproject
 
 # Rope project settings
 .ropeproject
+
+# Mr Developer
+.mr.developer.cfg
+.pydevproject
 
 # mkdocs documentation
 /site
@@ -642,6 +648,7 @@ dmypy.json
 
 # Session Data files
 .RData
+.RDataTmp
 
 # User-specific files
 .Ruserdata
@@ -712,7 +719,7 @@ override.tf.json
 
 ### Vagrant ###
 # General
-.vagrant/
+.vagrant/*
 
 # Log files (if you are creating logs in debug mode, uncomment this)
 # *.log
@@ -733,10 +740,15 @@ Sessionx.vim
 
 # Temporary
 .netrwhist
+
 # Auto-generated tag files
 tags
+
 # Persistent undo
 [._]*.un~
+
+# Coc configuration directory
+.vim
 
 ### Windows ###
 # Windows thumbnail cache files
@@ -764,7 +776,4 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.gitignore.io/api/linux,macos,windows,code,eclipse,emacs,intellij+all,vim,cvs,git,svn,c,c++,java,node,perl,perl6,python,r,packer,terraform,vagrant
-
-test/unit/transfer/do-not-execute/
-test/unit/transfer/index.html
+# End of https://www.gitignore.io/api/linux,macos,windows,code,eclipse,emacs,intellij+all,vim,cvs,git,svn,c,c++,java,maven,node,perl,perl6,python,r,packer,terraform,vagrant
