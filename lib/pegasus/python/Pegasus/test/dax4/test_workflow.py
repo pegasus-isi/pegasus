@@ -21,7 +21,6 @@ from Pegasus.dax4.errors import NotFoundError
 from Pegasus.dax4.transformation_catalog import Transformation
 from Pegasus.dax4.transformation_catalog import TransformationSite
 from Pegasus.dax4.transformation_catalog import TransformationCatalog
-from Pegasus.dax4.transformation_catalog import TransformationType
 from Pegasus.dax4.mixins import ProfileMixin
 from Pegasus.dax4.mixins import HookMixin
 from Pegasus.dax4.mixins import MetadataMixin
@@ -648,10 +647,10 @@ class TestWorkflow:
         tc = TransformationCatalog()
         tc.add_transformation(
             Transformation("t1").add_site(
-                TransformationSite("local", "/pfn", TransformationType.INSTALLED)
+                TransformationSite("local", "/pfn", False)
             ),
             Transformation("t2").add_site(
-                TransformationSite("local2", "/pfn", TransformationType.STAGEABLE)
+                TransformationSite("local2", "/pfn", True)
             ),
         )
 
@@ -702,10 +701,10 @@ class TestWorkflow:
         tc = TransformationCatalog()
         tc.add_transformation(
             Transformation("t1").add_site(
-                TransformationSite("local", "/pfn", TransformationType.STAGEABLE)
+                TransformationSite("local", "/pfn", True)
             ),
             Transformation("t2").add_site(
-                TransformationSite("local2", "/pfn", TransformationType.INSTALLED)
+                TransformationSite("local2", "/pfn", False)
             ),
         )
 

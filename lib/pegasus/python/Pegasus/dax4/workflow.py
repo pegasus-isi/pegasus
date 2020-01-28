@@ -289,7 +289,7 @@ class Job(AbstractJob):
         # Example
         preprocess = (Transformation("preprocess")
                         .add_metadata("size", 2048)
-                        .add_site("test-cluster", "/usr/bin/keg", TransformationType.INSTALLED))
+                        .add_site("test-cluster", "/usr/bin/keg", False))
 
         if1 = File("if1")
         if2 = File("if2")
@@ -303,8 +303,6 @@ class Job(AbstractJob):
                 .add_outputs(of1, of2, stage_out=True, register_replica=False))
 
     """
-
-    # TODO: reference enums here (JobType)
 
     def __init__(
         self, transformation, _id=None, node_label=None, namespace=None, version=None,
@@ -503,7 +501,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         preprocess = (Transformation("preprocess", namespace="diamond", version="2.0")
                         .add_profile(Namespace.GLOBUS, "maxtime", 2)
                         .add_profile(Namespace.DAGMAN, "retry", 3)
-                        .add_site("local", "file:///opt/pegasus/latest/bin/keg", TransformationType.STAGEABLE, arch=Arch.X86_64, ostype=OSType.LINUX) 
+                        .add_site("local", "file:///opt/pegasus/latest/bin/keg", True, arch=Arch.X86_64, ostype=OSType.LINUX) 
                         .add_site_profile("local", Namespace.ENV, "JAVA_HOME", "/path")
                         .add_shell_hook(EventType.START, "/bin/echo 'hello i started'")
                         .add_shell_hook(EventType.END, "/bin/echo 'hello i ended'")
@@ -513,12 +511,12 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         analyze = (Transformation("analyze", namespace="diamond", version="2.0")
                     .add_profile(Namespace.GLOBUS, "maxtime", 2)
                     .add_profile(Namespace.DAGMAN, "retry", 3)
-                    .add_site("local", "file:///opt/pegasus/latest/bin/keg", TransformationType.STAGEABLE, arch=Arch.X86_64, ostype=OSType.LINUX))
+                    .add_site("local", "file:///opt/pegasus/latest/bin/keg", True, arch=Arch.X86_64, ostype=OSType.LINUX))
 
         findrange = (Transformation("findrange", namespace="diamond", version="2.0")
                         .add_profile(Namespace.GLOBUS, "maxtime", 2)
                         .add_profile(Namespace.DAGMAN, "retry", 3)
-                        .add_site("local", "file:///opt/pegasus/latest/bin/keg", TransformationType.STAGEABLE, arch=Arch.X86_64, ostype=OSType.LINUX))
+                        .add_site("local", "file:///opt/pegasus/latest/bin/keg", True, arch=Arch.X86_64, ostype=OSType.LINUX))
 
         tc.add_transformations(preprocess, analyze, findrange)
 

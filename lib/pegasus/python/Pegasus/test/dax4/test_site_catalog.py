@@ -6,15 +6,13 @@ import pytest
 from jsonschema import validate
 
 from Pegasus.dax4.site_catalog import Arch
-from Pegasus.dax4.site_catalog import OSType
-from Pegasus.dax4.site_catalog import OperationType
+from Pegasus.dax4.site_catalog import OS
+from Pegasus.dax4.site_catalog import Operation
 from Pegasus.dax4.site_catalog import FileServer
-from Pegasus.dax4.site_catalog import DirectoryType
 from Pegasus.dax4.site_catalog import Directory
-from Pegasus.dax4.site_catalog import GridType
 from Pegasus.dax4.site_catalog import Grid
-from Pegasus.dax4.site_catalog import SchedulerType
-from Pegasus.dax4.site_catalog import JobType
+from Pegasus.dax4.site_catalog import SupportedJobs
+from Pegasus.dax4.site_catalog import Scheduler
 from Pegasus.dax4.site_catalog import Site
 from Pegasus.dax4.site_catalog import SiteCatalog
 from Pegasus.dax4.site_catalog import PEGASUS_VERSION
@@ -24,7 +22,7 @@ from Pegasus.dax4.errors import DuplicateError
 
 class TestFileServer:
     def test_valid_file_server(self):
-        FileServer("url", OperationType.PUT)
+        FileServer("url", Operation.PUT)
 
     def test_invlaid_file_server(self):
         with pytest.raises(ValueError):
@@ -32,7 +30,7 @@ class TestFileServer:
 
     def test_tojson_with_profiles(self, convert_yaml_schemas_to_json, load_schema):
         result = (
-            FileServer("url", OperationType.PUT)
+            FileServer("url", Operation.PUT)
             .add_profile(Namespace.ENV, "key", "value")
             .__json__()
         )
@@ -51,42 +49,42 @@ class TestFileServer:
 
 class TestDirectory:
     def test_valid_directory(self):
-        assert Directory(DirectoryType.LOCAL_SCRATCH, "/path")
+        assert Directory(Directory.LOCAL_SCRATCH, "/path")
 
     def test_invalid_directory(self):
         with pytest.raises(ValueError):
             Directory("invalid type", "/path")
 
     def test_add_valid_file_server(self):
-        d = Directory(DirectoryType.LOCAL_SCRATCH, "/path")
-        d.add_file_server(FileServer("url", OperationType.PUT))
+        d = Directory(Directory.LOCAL_SCRATCH, "/path")
+        d.add_file_server(FileServer("url", Operation.PUT))
 
     def test_add_invalid_file_server(self):
         with pytest.raises(ValueError) as e:
-            d = Directory(DirectoryType.LOCAL_SCRATCH, "/path")
+            d = Directory(Directory.LOCAL_SCRATCH, "/path")
             d.add_file_server(123)
 
             assert e.mes
 
     def test_chaining(self):
-        a = Directory(DirectoryType.LOCAL_SCRATCH, "/path")
-        b = a.add_file_server(FileServer("url", OperationType.PUT)).add_file_server(
-            FileServer("url", OperationType.GET)
+        a = Directory(Directory.LOCAL_SCRATCH, "/path")
+        b = a.add_file_server(FileServer("url", Operation.PUT)).add_file_server(
+            FileServer("url", Operation.GET)
         )
 
         assert id(a) == id(b)
 
     def test_tojson(self):
         result = (
-            Directory(DirectoryType.LOCAL_SCRATCH, "/path")
-            .add_file_server(FileServer("url", OperationType.PUT))
+            Directory(Directory.LOCAL_SCRATCH, "/path")
+            .add_file_server(FileServer("url", Operation.PUT))
             .__json__()
         )
 
         expected = {
             "type": "localScratch",
             "path": "/path",
-            "fileServers": [FileServer("url", OperationType.PUT).__json__()],
+            "fileServers": [FileServer("url", Operation.PUT).__json__()],
         }
 
         assert result == expected
@@ -95,18 +93,18 @@ class TestDirectory:
 class TestGrid:
     def test_valid_grid(self):
         Grid(
-            GridType.GT5,
+            Grid.GT5,
             "smarty.isi.edu/jobmanager-pbs",
-            SchedulerType.PBS,
-            JobType.AUXILLARY,
+            Scheduler.PBS,
+            SupportedJobs.AUXILLARY,
         )
 
     @pytest.mark.parametrize(
         "grid_type, contact, scheduler_type, job_type",
         [
-            ("badgridtype", "contact", SchedulerType.PBS, JobType.AUXILLARY),
-            (GridType.PBS, "contact", "badschedulertype", JobType.AUXILLARY),
-            (GridType.PBS, "contact", SchedulerType.PBS, "badjobtype"),
+            ("badgridtype", "contact", Scheduler.PBS, SupportedJobs.AUXILLARY),
+            (Grid.PBS, "contact", "badschedulertype", SupportedJobs.AUXILLARY),
+            (Grid.PBS, "contact", Scheduler.PBS, "badjobtype"),
         ],
     )
     def test_invalid_grid(self, grid_type, contact, scheduler_type, job_type):
@@ -117,10 +115,10 @@ class TestGrid:
 
     def test_tojson(self, convert_yaml_schemas_to_json, load_schema):
         result = Grid(
-            GridType.GT5,
+            Grid.GT5,
             "smarty.isi.edu/jobmanager-pbs",
-            SchedulerType.PBS,
-            JobType.AUXILLARY,
+            Scheduler.PBS,
+            SupportedJobs.AUXILLARY,
             free_mem="123",
             total_mem="1230",
             max_count="10",
@@ -157,7 +155,7 @@ class TestSite:
         Site(
             "site",
             arch=Arch.X86_64,
-            os_type=OSType.LINUX,
+            os_type=OS.LINUX,
             os_release="release",
             os_version="1.1.1",
             glibc="123",
@@ -165,7 +163,7 @@ class TestSite:
 
     @pytest.mark.parametrize(
         "name, arch, os_type",
-        [("site", "badarch", OSType.LINUX), ("site", Arch.X86_64, "badostype")],
+        [("site", "badarch", OS.LINUX), ("site", Arch.X86_64, "badostype")],
     )
     def test_invalid_site(self, name, arch, os_type):
         with pytest.raises(ValueError):
@@ -173,8 +171,8 @@ class TestSite:
 
     def test_add_valid_directory(self):
         site = Site("s")
-        site.add_directory(Directory(DirectoryType.LOCAL_SCRATCH, "/path"))
-        site.add_directory(Directory(DirectoryType.LOCAL_STORAGE, "/path"))
+        site.add_directory(Directory(Directory.LOCAL_SCRATCH, "/path"))
+        site.add_directory(Directory(Directory.LOCAL_STORAGE, "/path"))
 
         assert len(site.directories) == 2
 
@@ -187,18 +185,18 @@ class TestSite:
         site = Site("s")
         site.add_grid(
             Grid(
-                GridType.GT5,
+                Grid.GT5,
                 "smarty.isi.edu/jobmanager-pbs",
-                SchedulerType.PBS,
-                job_type=JobType.AUXILLARY,
+                Scheduler.PBS,
+                job_type=SupportedJobs.AUXILLARY,
             )
         )
         site.add_grid(
             Grid(
-                GridType.GT5,
+                Grid.GT5,
                 "smarty.isi.edu/jobmanager-pbs",
-                SchedulerType.PBS,
-                job_type=JobType.COMPUTE,
+                Scheduler.PBS,
+                job_type=SupportedJobs.COMPUTE,
             )
         )
 
@@ -211,13 +209,13 @@ class TestSite:
 
     def test_chaining(self):
         site = Site("s")
-        a = site.add_directory(Directory(DirectoryType.LOCAL_SCRATCH, "/path"))
+        a = site.add_directory(Directory(Directory.LOCAL_SCRATCH, "/path"))
         b = site.add_grid(
             Grid(
-                GridType.GT5,
+                Grid.GT5,
                 "smarty.isi.edu/jobmanager-pbs",
-                SchedulerType.PBS,
-                job_type=JobType.AUXILLARY,
+                Scheduler.PBS,
+                job_type=SupportedJobs.AUXILLARY,
             )
         )
 
@@ -227,18 +225,18 @@ class TestSite:
         site = Site(
             "s",
             arch=Arch.X86_64,
-            os_type=OSType.LINUX,
+            os_type=OS.LINUX,
             os_release="release",
             os_version="1.2.3",
             glibc="1",
         )
-        site.add_directory(Directory(DirectoryType.LOCAL_SCRATCH, "/path"))
+        site.add_directory(Directory(Directory.LOCAL_SCRATCH, "/path"))
         site.add_grid(
             Grid(
-                GridType.GT5,
+                Grid.GT5,
                 "smarty.isi.edu/jobmanager-pbs",
-                SchedulerType.PBS,
-                job_type=JobType.AUXILLARY,
+                Scheduler.PBS,
+                job_type=SupportedJobs.AUXILLARY,
             )
         )
         site.add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
@@ -361,57 +359,55 @@ class TestSiteCatalog:
         sc = (
             SiteCatalog()
             .add_site(
-                Site("local", arch=Arch.X86_64, os_type=OSType.LINUX)
+                Site("local", arch=Arch.X86_64, os_type=OS.LINUX)
                 .add_directory(
                     Directory(
-                        DirectoryType.SHARED_SCRATCH, "/tmp/workflows/scratch"
+                        Directory.SHARED_SCRATCH, "/tmp/workflows/scratch"
                     ).add_file_server(
-                        FileServer("file:///tmp/workflows/scratch", OperationType.ALL)
+                        FileServer("file:///tmp/workflows/scratch", Operation.ALL)
                     )
                 )
                 .add_directory(
                     Directory(
-                        DirectoryType.LOCAL_STORAGE, "/tmp/workflows/outputs"
+                        Directory.LOCAL_STORAGE, "/tmp/workflows/outputs"
                     ).add_file_server(
-                        FileServer("file:///tmp/workflows/outputs", OperationType.ALL)
+                        FileServer("file:///tmp/workflows/outputs", Operation.ALL)
                     )
                 )
             )
             .add_site(
-                Site("condor_pool", arch=Arch.X86_64, os_type=OSType.LINUX)
+                Site("condor_pool", arch=Arch.X86_64, os_type=OS.LINUX)
                 .add_directory(
-                    Directory(DirectoryType.SHARED_SCRATCH, "/lustre").add_file_server(
-                        FileServer("gsiftp://smarty.isi.edu/lustre", OperationType.ALL)
+                    Directory(Directory.SHARED_SCRATCH, "/lustre").add_file_server(
+                        FileServer("gsiftp://smarty.isi.edu/lustre", Operation.ALL)
                     )
                 )
                 .add_grid(
                     Grid(
-                        GridType.GT5,
+                        Grid.GT5,
                         "smarty.isi.edu/jobmanager-pbs",
-                        SchedulerType.PBS,
-                        job_type=JobType.AUXILLARY,
+                        Scheduler.PBS,
+                        job_type=SupportedJobs.AUXILLARY,
                     )
                 )
                 .add_grid(
                     Grid(
-                        GridType.GT5,
+                        Grid.GT5,
                         "smarty.isi.edu/jobmanager-pbs",
-                        SchedulerType.PBS,
-                        job_type=JobType.COMPUTE,
+                        Scheduler.PBS,
+                        job_type=SupportedJobs.COMPUTE,
                     )
                 )
                 .add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/javap")
             )
             .add_site(
-                Site(
-                    "staging_site", arch=Arch.X86_64, os_type=OSType.LINUX
-                ).add_directory(
-                    Directory(DirectoryType.SHARED_SCRATCH, "/data")
+                Site("staging_site", arch=Arch.X86_64, os_type=OS.LINUX).add_directory(
+                    Directory(Directory.SHARED_SCRATCH, "/data")
                     .add_file_server(
-                        FileServer("scp://obelix.isi.edu/data", OperationType.PUT)
+                        FileServer("scp://obelix.isi.edu/data", Operation.PUT)
                     )
                     .add_file_server(
-                        FileServer("http://obelix.isi.edu/data", OperationType.GET)
+                        FileServer("http://obelix.isi.edu/data", Operation.GET)
                     )
                 )
             )

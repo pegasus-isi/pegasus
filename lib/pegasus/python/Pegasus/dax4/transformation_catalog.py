@@ -8,7 +8,7 @@ from .mixins import ProfileMixin
 from .mixins import HookMixin
 from .mixins import MetadataMixin
 from .site_catalog import Arch
-from .site_catalog import OSType
+from .site_catalog import OS
 from .writable import _filter_out_nones
 from .writable import Writable
 from .errors import DuplicateError
@@ -17,24 +17,11 @@ from .errors import NotFoundError
 PEGASUS_VERSION = "5.0"
 
 __all__ = [
-    "TransformationType",
     "ContainerType",
     "Transformation",
     "TransformationSite",
     "TransformationCatalog",
 ]
-
-
-class TransformationType(Enum):
-    """Specifies the type of the transformation
-    """
-
-    #: **STAGEABLE** denotes that it can be staged from one site to another
-    STAGEABLE = "stageable"
-
-    #: **INSTALLED** denotes that the transformation is installed on a specified
-    #: machine, and that it cannot be staged and executed on other sites
-    INSTALLED = "installed"
 
 
 class TransformationSite(ProfileMixin, MetadataMixin):
@@ -47,7 +34,7 @@ class TransformationSite(ProfileMixin, MetadataMixin):
         self,
         name,
         pfn,
-        transformation_type,
+        is_stageable,
         arch=None,
         os_type=None,
         os_release=None,
@@ -60,12 +47,12 @@ class TransformationSite(ProfileMixin, MetadataMixin):
         :type name: str
         :param pfn: physical file name
         :type pfn: str
-        :param type: a transformation type defined in :py:class:`~Pegasus.dax4.transformation_catalog.TransformationType`
-        :type type: TransformationType
+        :param is_stageable: whether or not this transformation is stageable or installed
+        :type type: bool
         :param arch: architecture that this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.dax4.site_catalog.Arch`), defaults to None
         :type arch: Arch, optional
-        :param os_type: name of os that this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.dax4.site_catalog.OSType`), defaults to None
-        :type os_type: OSType, optional
+        :param os_type: name of os that this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.dax4.site_catalog.OS`), defaults to None
+        :type os_type: OS, optional
         :param os_release: release of os that this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` was compiled for, defaults to None, defaults to None
         :type os_release: str, optional
         :param os_version: version of os that this :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` was compiled for, defaults to None, defaults to None
@@ -74,18 +61,13 @@ class TransformationSite(ProfileMixin, MetadataMixin):
         :type glibc: str, optional
         :param container: specify the name of the container to use, optional
         :type container: str 
-        :raises ValueError: transformation_type must be one of :py:class:`~Pegasus.dax4.transformation_catalog.TransformationType`
         :raises ValueError: arch must be one of :py:class:`~Pegasus.dax4.site_catalog.Arch`
-        :raises ValueError: os_type must be one of :py:class:`~Pegasus.dax4.site_catalog.OSType`
+        :raises ValueError: os_type must be one of :py:class:`~Pegasus.dax4.site_catalog.OS`
         """
 
         self.name = name
         self.pfn = pfn
-
-        if not isinstance(transformation_type, TransformationType):
-            raise ValueError("type must be one of TransformationType")
-
-        self.transformation_type = transformation_type.value
+        self.transformation_type = "stageable" if is_stageable else "installed"
 
         if arch is not None:
             if not isinstance(arch, Arch):
@@ -96,8 +78,8 @@ class TransformationSite(ProfileMixin, MetadataMixin):
             self.arch = None
 
         if os_type is not None:
-            if not isinstance(os_type, OSType):
-                raise ValueError("os_type must be one of OSType")
+            if not isinstance(os_type, OS):
+                raise ValueError("os_type must be one of OS")
             else:
                 self.os_type = os_type.value
         else:
@@ -321,23 +303,6 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
 class TransformationCatalog(Writable):
     """Maintains a list a :py:class:`~Pegasus.dax4.transformation_catalog.Transformations`, site specific
     transformation information, and a list of containers
-
-    .. code-block:: python
-
-        # Example
-        foo = (Transformation("foo")
-                .add_site("local", "/nfs/u2/ryan/bin/foo", TransformationType.STAGEABLE, arch=Arch.X86_64, ostype=OSType.LINUX)
-                .add_site_profile("local", Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
-                .add_site_metadata("local", "size", 2048)
-                .add_requirement("bar"))
-
-        bar = (Transformation("bar")
-                .add_site("local", "/nfs/u2/ryan/bin/bar", TransformationType.STAGEABLE, arch=Arch.X86_64, ostype=OSType.LINUX))
-
-        tc = (TransformationCatalog()
-                .add_transformation(foo)
-                .add_transformation(bar)
-                .add_container(Container("centos-pegasus", ContainerType.DOCKER, "docker:///rynge/centos-pegasus:latest", mounts=["/Volumes/Work/lfs1:/shared-data/:ro"])))
     """
 
     def __init__(self):

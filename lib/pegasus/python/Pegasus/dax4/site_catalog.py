@@ -6,17 +6,13 @@ from Pegasus.dax4.writable import _filter_out_nones
 from Pegasus.dax4.writable import Writable
 from Pegasus.dax4.errors import DuplicateError
 
-
 PEGASUS_VERSION = "5.0"
 
 __all__ = [
     "Arch",
-    "OSType",
-    "OperationType",
-    "DirectoryType",
-    "GridType",
-    "SchedulerType",
-    "JobType",
+    "OS",
+    "Operation",
+    "Scheduler",
     "FileServer",
     "Directory",
     "Site",
@@ -37,7 +33,7 @@ class Arch(Enum):
     AMD64 = "amd64"
 
 
-class OSType(Enum):
+class OS(Enum):
     """Operating system types"""
 
     LINUX = "linux"
@@ -47,7 +43,7 @@ class OSType(Enum):
     WINDOWS = "windows"
 
 
-class OperationType(Enum):
+class Operation(Enum):
     """Different types of operations supported by a file server"""
 
     ALL = "all"
@@ -55,7 +51,7 @@ class OperationType(Enum):
     GET = "get"
 
 
-class DirectoryType(Enum):
+class _DirectoryType(Enum):
     """Different types of directories supported for a site"""
 
     #: Describes a scratch file systems. Pegasus will use this to store
@@ -73,7 +69,7 @@ class DirectoryType(Enum):
     LOCAL_STORAGE = "localStorage"
 
 
-class GridType(Enum):
+class _GridType(Enum):
     """Different grid types that can be supported by Pegasus. Mirror the Condor
     grid types. http://research.cs.wisc.edu/htcondor/manual/v7.9/5_3Grid_Universe.html
     """
@@ -93,10 +89,7 @@ class GridType(Enum):
     DELTACLOUD = "deltacloud"
 
 
-GT5 = GridType.GT5
-
-# TODO: change to Scheduler
-class SchedulerType(Enum):
+class Scheduler(Enum):
     """Different scheduler types on the Grid"""
 
     FORK = "fork"
@@ -107,28 +100,8 @@ class SchedulerType(Enum):
     UNKNOWN = "unknown"
 
 
-# TODO: make class variable of Job
-class JobType(Enum):
-    """Types of jobs in the executable workflow this grid supports"""
-
-    COMPUTE = "compute"
-    AUXILLARY = "auxillary"
-    TRANSFER = "transfer"
-    REGISTER = "register"
-    CLEANUP = "cleanup"
-
-
 class FileServer(ProfileMixin):
     """Describes the fileserver to access data from outside
-    
-    .. code-block:: python
-
-        # Example 1
-        fs1 = FileServer("scp://obelix.isi.edu/data", OperationType.PUT)
-
-        # Example 2
-        fs2 = FileServer("http://obelix.isi.edu/data", OperationType.GET)
-
     """
 
     def __init__(self, url, operation_type):
@@ -141,7 +114,7 @@ class FileServer(ProfileMixin):
         """
         self.url = url
 
-        if not isinstance(operation_type, OperationType):
+        if not isinstance(operation_type, Operation):
             raise ValueError("operation_type must be one of OperationType")
 
         self.operation_type = operation_type.value
@@ -161,17 +134,21 @@ class FileServer(ProfileMixin):
 class Directory:
     """Information about filesystems Pegasus can use for storing temporary and long-term
     files. 
-    
-    .. code-block:: python
-
-        # Example
-        d = (
-            Directory(DirectoryType.SHARED_SCRATCH, "/data")
-                .add_file_server(FileServer("scp://obelix.isi.edu/data", OperationType.PUT))
-                .add_file_server(FileServer("http://obelix.isi.edu/data", OperationType.GET))
-        )
-
     """
+
+    #: Describes a scratch file systems. Pegasus will use this to store
+    #: intermediate data between jobs and other temporary files.
+    SHARED_SCRATCH = _DirectoryType.SHARED_SCRATCH
+
+    # TODO: where is this documented? the others were in user guide
+    SHARED_STORAGE = _DirectoryType.SHARED_STORAGE
+
+    #: Describes the scratch file systems available locally on a compute node.
+    LOCAL_SCRATCH = _DirectoryType.LOCAL_SCRATCH
+
+    #: Describes a long term storage file system. This is the directory
+    #: Pegasus will stage output files to.
+    LOCAL_STORAGE = _DirectoryType.LOCAL_STORAGE
 
     # the site catalog schema lists freeSize and totalSize as an attribute
     # however this appears to not be used; removing it as a parameter
@@ -184,7 +161,7 @@ class Directory:
         :type path: str
         :raises ValueError: directory_type must be one of :py:class:`~Pegasus.dax4.site_catalog.DirectoryType`
         """
-        if not isinstance(directory_type, DirectoryType):
+        if not isinstance(directory_type, _DirectoryType):
             raise ValueError("directory_type must be one of DirectoryType")
 
         self.directory_type = directory_type.value
@@ -222,20 +199,32 @@ class Directory:
         )
 
 
+class SupportedJobs(Enum):
+    """Types of jobs in the executable workflow this grid supports"""
+
+    COMPUTE = "compute"
+    AUXILLARY = "auxillary"
+    TRANSFER = "transfer"
+    REGISTER = "register"
+    CLEANUP = "cleanup"
+
+
 class Grid:
-    """Each site supports various (usually two) job managers
-    
-    .. code-block:: python
+    """Each site supports various (usually two) job managers"""
 
-        # Example
-        g = Grid(
-            GridType.GT5,
-            "smarty.isi.edu/jobmanager-pbs",
-            SchedulerType.PBS,
-            job_type=JobType.AUXILLARY,
-        )
-
-    """
+    GT2 = _GridType.GT2
+    GT4 = _GridType.GT4
+    GT5 = _GridType.GT5
+    CONDOR = _GridType.CONDOR
+    CREAM = _GridType.CREAM
+    BATCH = _GridType.BATCH
+    PBS = _GridType.PBS
+    LSF = _GridType.LSF
+    SGE = _GridType.SGE
+    NORDUGRID = _GridType.NORDUGRID
+    UNICORE = _GridType.UNICORE
+    EC2 = _GridType.EC2
+    DELTACLOUD = _GridType.DELTACLOUD
 
     def __init__(
         self,
@@ -278,24 +267,24 @@ class Grid:
         :type idle_nodes: [type], optional
         :param total_nodes: [description], defaults to None
         :type total_nodes: [type], optional
-        :raises ValueError: grid_type must be one of :py:class:`~Pegasus.dax4.site_catalog.GridType`
-        :raises ValueError: scheduler_type must be one of :py:class:`~Pegasus.dax4.site_catalog.SchedulerType`
-        :raises ValueError: job_type must be one of :py:class:`~Pegasus.dax4.site_catalog.JobType`
+        :raises ValueError: 
+        :raises ValueError: 
+        :raises ValueError:
         """
-        if not isinstance(grid_type, GridType):
+        if not isinstance(grid_type, _GridType):
             raise ValueError("grid_type must be one of GridType")
 
         self.grid_type = grid_type.value
 
         self.contact = contact
 
-        if not isinstance(scheduler_type, SchedulerType):
+        if not isinstance(scheduler_type, Scheduler):
             raise ValueError("scheduler_type must be one of SchedulerType")
 
         self.scheduler_type = scheduler_type.value
 
         if job_type is not None:
-            if not isinstance(job_type, JobType):
+            if not isinstance(job_type, SupportedJobs):
                 raise ValueError("job_type must be one of JobType")
             else:
                 self.job_type = job_type.value
@@ -337,36 +326,6 @@ class Site(ProfileMixin):
     interface and at least one gridftp server along with a shared file system. 
     The GRAM gatekeeper can be either WS GRAM or Pre-WS GRAM. A site can also 
     be a condor pool or glidein pool with a shared file system.
-    
-    .. code-block:: python
-
-        # Example
-        s = (
-            Site("condor_pool", arch=Arch.X86_64, os_type=OSType.LINUX)
-            .add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
-            .add_directory(
-                Directory(DirectoryType.SHARED_SCRATCH, "/lustre").add_file_server(
-                    FileServer("gsiftp://smarty.isi.edu/lustre", OperationType.ALL)
-                )
-            )
-            .add_grid(
-                Grid(
-                    GridType.GT5,
-                    "smarty.isi.edu/jobmanager-pbs",
-                    SchedulerType.PBS,
-                    job_type=JobType.AUXILLARY,
-                )
-            )
-            .add_grid(
-                Grid(
-                    GridType.GT5,
-                    "smarty.isi.edu/jobmanager-pbs",
-                    SchedulerType.PBS,
-                    job_type=JobType.COMPUTE,
-                )
-            )
-        )
-
     """
 
     def __init__(
@@ -384,7 +343,7 @@ class Site(ProfileMixin):
         :param arch: the site's architecture, defaults to None
         :type arch: Arch, optional
         :param os_type: the site's operating system, defaults to None
-        :type os_type: OSType, optional
+        :type os_type: OS, optional
         :param os_release: the release of the site's operating system, defaults to None
         :type os_release: str, optional
         :param os_version: the version of the site's operating system, defaults to None
@@ -407,7 +366,7 @@ class Site(ProfileMixin):
             self.arch = arch
 
         if os_type is not None:
-            if not isinstance(os_type, OSType):
+            if not isinstance(os_type, OS):
                 raise ValueError("os_type must be one of OSType")
             else:
                 self.os_type = os_type.value
@@ -469,42 +428,6 @@ class Site(ProfileMixin):
 class SiteCatalog(Writable):
     """The SiteCatalog describes the compute resources, or :py:class:`~Pegasus.dax4.site_catalog.Site` s
     that we intend to run the workflow upon.
-
-    .. code-block:: python
-
-        # Example
-        sc = (
-            SiteCatalog()
-                .add_site(
-                    Site("local", arch=Arch.X86_64, os_type=OSType.LINUX)
-                        .add_directory(
-                            Directory(DirectoryType.SHARED_SCRATCH, "/tmp/workflows/scratch")
-                                .add_file_server(FileServer("file:///tmp/workflows/scratch", OperationType.ALL))
-                        )
-                        .add_directory(
-                            Directory(DirectoryType.LOCAL_STORAGE, "/tmp/workflows/outputs")
-                                .add_file_server(FileServer("file:///tmp/workflows/outputs", OperationType.ALL))
-                        )
-                )
-                .add_site(
-                    Site("condor_pool", arch=Arch.X86_64, os_type=OSType.LINUX)
-                        .add_directory(
-                            Directory(DirectoryType.SHARED_SCRATCH, "/lustre")
-                                .add_file_server(FileServer("gsiftp://smarty.isi.edu/lustre", OperationType.ALL))
-                        )
-                        .add_grid(Grid(GridType.GT5, "smarty.isi.edu/jobmanager-pbs", SchedulerType.PBS, job_type=JobType.AUXILLARY))
-                        .add_grid(Grid(GridType.GT5, "smarty.isi.edu/jobmanager-pbs", SchedulerType.PBS, job_type=JobType.COMPUTE))
-                        .add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/javap")
-                )
-                .add_site(
-                    Site("staging_site", arch=Arch.X86_64, os_type=OSType.LINUX)
-                        .add_directory(
-                            Directory(DirectoryType.SHARED_SCRATCH, "/data")
-                                .add_file_server(FileServer("scp://obelix.isi.edu/data", OperationType.PUT))
-                                .add_file_server(FileServer("http://obelix.isi.edu/data", OperationType.GET))
-                        )
-                )
-        )
     """
 
     def __init__(self):
