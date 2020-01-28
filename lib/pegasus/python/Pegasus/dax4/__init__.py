@@ -6,7 +6,6 @@ from .workflow import DAX
 from .workflow import DAG
 from .workflow import Workflow
 
-from .transformation_catalog import ContainerType
 from .transformation_catalog import Container
 from .transformation_catalog import Transformation
 from .transformation_catalog import TransformationSite

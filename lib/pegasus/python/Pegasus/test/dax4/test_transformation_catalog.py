@@ -3,10 +3,10 @@ import json
 from tempfile import NamedTemporaryFile
 
 import pytest
+import yaml
 from jsonschema import validate
 
 from Pegasus.dax4.transformation_catalog import TransformationSite
-from Pegasus.dax4.transformation_catalog import ContainerType
 from Pegasus.dax4.transformation_catalog import Container
 from Pegasus.dax4.transformation_catalog import Transformation
 from Pegasus.dax4.transformation_catalog import TransformationCatalog
@@ -17,6 +17,7 @@ from Pegasus.dax4.mixins import Namespace
 from Pegasus.dax4.mixins import EventType
 from Pegasus.dax4.errors import DuplicateError
 from Pegasus.dax4.errors import NotFoundError
+from Pegasus.dax4.writable import _CustomEncoder
 
 
 class TestTransformationSite:
@@ -116,8 +117,10 @@ class TestTransformationSite:
     def test_invalid_transformation_site(
         self, name: str, pfn: str, transformation_type: bool, kwargs: dict
     ):
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError) as e:
             TransformationSite(name, pfn, transformation_type, **kwargs)
+
+        assert "invalid" in str(e)
 
     @pytest.mark.parametrize(
         "transformation_site, expected_json",
@@ -250,24 +253,32 @@ class TestTransformation:
 
     def test_add_invalid_requirement(self):
         t = Transformation("test")
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError) as e:
             t.add_requirement(1)
+
+        assert "invalid required_transformation: {tr}".format(tr=1) in str(e)
 
     def test_add_duplicate_requirement_as_str(self):
         t = Transformation("test")
         required = "required"
 
         t.add_requirement(required)
-        with pytest.raises(DuplicateError):
+        with pytest.raises(DuplicateError) as e:
             t.add_requirement(required)
+
+        assert "transformation: ('required', None, None)" in str(e)
 
     def test_add_duplicate_requirement_as_transformation_object(self):
         t = Transformation("test")
         required = Transformation("required", namespace=None, version=None)
 
         t.add_requirement(required)
-        with pytest.raises(DuplicateError):
+        with pytest.raises(DuplicateError) as e:
             t.add_requirement(required)
+
+        assert "transformation: {r}".format(
+            r=(required.name, required.namespace, required.version)
+        ) in str(e)
 
     def test_chaining(self):
         t = (
@@ -291,12 +302,12 @@ class TestTransformation:
         t.add_site(TransformationSite("local", "/pfn", True))
         t.add_requirement("required")
 
-        result = t.__json__()
+        result = json.loads(json.dumps(t, cls=_CustomEncoder))
         expected = {
             "name": "test",
             "namespace": "pegasus",
             "requires": ["required"],
-            "sites": [t.sites["local"].__json__()],
+            "sites": [{"name": "local", "pfn": "/pfn", "type": "stageable"}],
         }
 
         transformation_schema = load_schema("tc-5.0.json")["$defs"]["transformation"]
@@ -320,12 +331,19 @@ class TestTransformation:
         t.add_shell_hook(EventType.START, "/bin/echo hi")
         t.add_metadata(key="value")
 
-        result = t.__json__()
+        result = json.loads(json.dumps(t, cls=_CustomEncoder))
         expected = {
             "name": "test",
             "namespace": "pegasus",
             "requires": ["required"],
-            "sites": [t.sites["local"].__json__()],
+            "sites": [
+                {
+                    "name": "local",
+                    "pfn": "/pfn",
+                    "type": "stageable",
+                    "profiles": {"env": {"JAVA_HOME": "/java/home"}},
+                }
+            ],
             "metadata": {"key": "value"},
             "profiles": {Namespace.ENV.value: {"JAVA_HOME": "/java/home"}},
             "hooks": {"shell": [{"_on": EventType.START.value, "cmd": "/bin/echo hi"}]},
@@ -339,19 +357,21 @@ class TestTransformation:
 
 class TestContainer:
     def test_valid_container(self):
-        Container("test", ContainerType.DOCKER, "image", ["mount"])
+        assert Container("test", Container.DOCKER, "image", ["mount"])
 
     def test_invalid_container(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError) as e:
             Container("test", "container_type", "image", ["mount"])
 
+        assert "invalid container_type: container_type" in str(e)
+
     def test_tojson_no_profiles(self, convert_yaml_schemas_to_json, load_schema):
-        c = Container("test", ContainerType.DOCKER, "image", ["mount"])
+        c = Container("test", Container.DOCKER, "image", ["mount"])
 
         result = c.__json__()
         expected = {
             "name": "test",
-            "type": ContainerType.DOCKER.value,
+            "type": Container.DOCKER.value,
             "image": "image",
             "mounts": ["mount"],
         }
@@ -362,13 +382,13 @@ class TestContainer:
         assert result == expected
 
     def test_tojson_with_profiles(self, convert_yaml_schemas_to_json, load_schema):
-        c = Container("test", ContainerType.DOCKER, "image", ["mount"])
+        c = Container("test", Container.DOCKER, "image", ["mount"])
         c.add_profile(Namespace.ENV, "JAVA_HOME", "/java/home")
 
         result = c.__json__()
         expected = {
             "name": "test",
-            "type": ContainerType.DOCKER.value,
+            "type": Container.DOCKER.value,
             "image": "image",
             "mounts": ["mount"],
             "profiles": {Namespace.ENV.value: {"JAVA_HOME": "/java/home"}},
@@ -410,32 +430,32 @@ class TestTransformationCatalog:
 
     def test_add_invalid_transformation(self):
         tc = TransformationCatalog()
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError) as e:
             tc.add_transformation(1)
+
+        assert "invalid transformation: 1" in str(e)
 
     def test_add_container(self):
         tc = TransformationCatalog()
-        tc.add_container(
-            Container("container", ContainerType.DOCKER, "image", ["mount"])
-        )
+        tc.add_container(Container("container", Container.DOCKER, "image", ["mount"]))
 
         assert len(tc.containers) == 1
         assert "container" in tc.containers
 
     def test_add_duplicate_container(self):
         tc = TransformationCatalog()
-        tc.add_container(
-            Container("container", ContainerType.DOCKER, "image", ["mount"])
-        )
+        tc.add_container(Container("container", Container.DOCKER, "image", ["mount"]))
         with pytest.raises(DuplicateError):
             tc.add_container(
-                Container("container", ContainerType.DOCKER, "image", ["mount"])
+                Container("container", Container.DOCKER, "image", ["mount"])
             )
 
-    def test_add_invlaid_container(self):
+    def test_add_invalid_container(self):
         tc = TransformationCatalog()
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError) as e:
             tc.add_container("container")
+
+        assert "invalid container: container" in str(e)
 
     def test_chaining(self):
         tc = TransformationCatalog()
@@ -444,14 +464,10 @@ class TestTransformationCatalog:
             tc.add_transformation(Transformation("t1"))
             .add_transformation(Transformation("t2"))
             .add_container(
-                Container(
-                    "container1", ContainerType.DOCKER, "image", ["mount1", "mount2"]
-                )
+                Container("container1", Container.DOCKER, "image", ["mount1", "mount2"])
             )
             .add_container(
-                Container(
-                    "container2", ContainerType.DOCKER, "image", ["mount1", "mount2"]
-                )
+                Container("container2", Container.DOCKER, "image", ["mount1", "mount2"])
             )
         )
 
@@ -474,17 +490,39 @@ class TestTransformationCatalog:
                 )
             )
             .add_container(
-                Container("container1", ContainerType.DOCKER, "image", ["mount1"])
+                Container("container1", Container.DOCKER, "image", ["mount1"])
             )
             .add_container(
-                Container("container2", ContainerType.DOCKER, "image", ["mount1"])
+                Container("container2", Container.DOCKER, "image", ["mount1"])
             )
         )
 
         expected = {
             "pegasus": PEGASUS_VERSION,
-            "transformations": [t.__json__() for _, t in tc.transformations.items()],
-            "containers": [c.__json__() for _, c in tc.containers.items()],
+            "transformations": [
+                {
+                    "name": "t1",
+                    "sites": [{"name": "local", "pfn": "/pfn", "type": "installed"}],
+                },
+                {
+                    "name": "t2",
+                    "sites": [{"name": "local", "pfn": "/pfn", "type": "installed"}],
+                },
+            ],
+            "containers": [
+                {
+                    "name": "container1",
+                    "type": "docker",
+                    "image": "image",
+                    "mounts": ["mount1"],
+                },
+                {
+                    "name": "container2",
+                    "type": "docker",
+                    "image": "image",
+                    "mounts": ["mount1"],
+                },
+            ],
         }
 
         expected["transformations"] = sorted(
@@ -492,7 +530,7 @@ class TestTransformationCatalog:
         )
         expected["containers"] = sorted(expected["containers"], key=lambda c: c["name"])
 
-        result = tc.__json__()
+        result = json.loads(json.dumps(tc, cls=_CustomEncoder))
 
         result["transformations"] = sorted(
             result["transformations"], key=lambda t: t["name"]
@@ -520,14 +558,23 @@ class TestTransformationCatalog:
 
         expected = {
             "pegasus": PEGASUS_VERSION,
-            "transformations": [t.__json__() for _, t in tc.transformations.items()],
+            "transformations": [
+                {
+                    "name": "t1",
+                    "sites": [{"name": "local", "pfn": "/pfn", "type": "installed"}],
+                },
+                {
+                    "name": "t2",
+                    "sites": [{"name": "local2", "pfn": "/pfn", "type": "stageable"}],
+                },
+            ],
         }
 
         expected["transformations"] = sorted(
             expected["transformations"], key=lambda t: t["name"]
         )
 
-        result = tc.__json__()
+        result = json.loads(json.dumps(tc, cls=_CustomEncoder))
 
         result["transformations"] = sorted(
             result["transformations"], key=lambda t: t["name"]
@@ -565,8 +612,11 @@ class TestTransformationCatalog:
 
         assert result == expected
 
+    @pytest.mark.parametrize(
+        "_format, loader", [("json", json.load), ("yml", yaml.safe_load)]
+    )
     def test_example_transformation_catalog(
-        self, convert_yaml_schemas_to_json, load_schema
+        self, convert_yaml_schemas_to_json, load_schema, _format, loader
     ):
         # validates the sample tc in pegasus/etc/sample-5.0-data/tc.yml
         tc = TransformationCatalog()
@@ -603,7 +653,7 @@ class TestTransformationCatalog:
 
         centos_pegasus_container = Container(
             "centos-pegasus",
-            ContainerType.DOCKER,
+            Container.DOCKER,
             "docker:///ryan/centos-pegasus:latest",
             ["/Volumes/Work/lfs1:/shared-data/:ro"],
         ).add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
@@ -611,9 +661,9 @@ class TestTransformationCatalog:
         (tc.add_transformation(foo, bar).add_container(centos_pegasus_container))
 
         with NamedTemporaryFile(mode="r+") as f:
-            tc.write(f, _format="json")
+            tc.write(f, _format=_format)
             f.seek(0)
-            tc_json = json.load(f)
+            tc_json = loader(f)
 
         tc_schema = load_schema("tc-5.0.json")
         validate(instance=tc_json, schema=tc_schema)

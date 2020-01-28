@@ -3,6 +3,7 @@ import json
 from tempfile import NamedTemporaryFile
 
 import pytest
+import yaml
 from jsonschema import validate
 
 from Pegasus.dax4.site_catalog import Arch
@@ -18,22 +19,25 @@ from Pegasus.dax4.site_catalog import SiteCatalog
 from Pegasus.dax4.site_catalog import PEGASUS_VERSION
 from Pegasus.dax4.mixins import Namespace
 from Pegasus.dax4.errors import DuplicateError
+from Pegasus.dax4.writable import _CustomEncoder
 
 
 class TestFileServer:
     def test_valid_file_server(self):
-        FileServer("url", Operation.PUT)
+        assert FileServer("url", Operation.PUT)
 
     def test_invlaid_file_server(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError) as e:
             FileServer("url", "put")
 
+        assert "invalid operation_type: put" in str(e)
+
     def test_tojson_with_profiles(self, convert_yaml_schemas_to_json, load_schema):
-        result = (
-            FileServer("url", Operation.PUT)
-            .add_profile(Namespace.ENV, "key", "value")
-            .__json__()
+        file_server = FileServer("url", Operation.PUT).add_profile(
+            Namespace.ENV, "key", "value"
         )
+
+        result = json.loads(json.dumps(file_server, cls=_CustomEncoder))
 
         expected = {
             "url": "url",
@@ -52,19 +56,21 @@ class TestDirectory:
         assert Directory(Directory.LOCAL_SCRATCH, "/path")
 
     def test_invalid_directory(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError) as e:
             Directory("invalid type", "/path")
+
+        assert "invalid directory_type: invalid type" in str(e)
 
     def test_add_valid_file_server(self):
         d = Directory(Directory.LOCAL_SCRATCH, "/path")
-        d.add_file_server(FileServer("url", Operation.PUT))
+        assert d.add_file_server(FileServer("url", Operation.PUT))
 
     def test_add_invalid_file_server(self):
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(TypeError) as e:
             d = Directory(Directory.LOCAL_SCRATCH, "/path")
             d.add_file_server(123)
 
-            assert e.mes
+            assert "invalid file_server: 123" in str(e)
 
     def test_chaining(self):
         a = Directory(Directory.LOCAL_SCRATCH, "/path")
@@ -75,16 +81,16 @@ class TestDirectory:
         assert id(a) == id(b)
 
     def test_tojson(self):
-        result = (
-            Directory(Directory.LOCAL_SCRATCH, "/path")
-            .add_file_server(FileServer("url", Operation.PUT))
-            .__json__()
+        directory = Directory(Directory.LOCAL_SCRATCH, "/path").add_file_server(
+            FileServer("url", Operation.PUT)
         )
+
+        result = json.loads(json.dumps(directory, cls=_CustomEncoder))
 
         expected = {
             "type": "localScratch",
             "path": "/path",
-            "fileServers": [FileServer("url", Operation.PUT).__json__()],
+            "fileServers": [{"url": "url", "operation": "put"}],
         }
 
         assert result == expected
@@ -92,7 +98,7 @@ class TestDirectory:
 
 class TestGrid:
     def test_valid_grid(self):
-        Grid(
+        assert Grid(
             Grid.GT5,
             "smarty.isi.edu/jobmanager-pbs",
             Scheduler.PBS,
@@ -100,21 +106,39 @@ class TestGrid:
         )
 
     @pytest.mark.parametrize(
-        "grid_type, contact, scheduler_type, job_type",
+        "grid_type, contact, scheduler_type, job_type, invalid_var",
         [
-            ("badgridtype", "contact", Scheduler.PBS, SupportedJobs.AUXILLARY),
-            (Grid.PBS, "contact", "badschedulertype", SupportedJobs.AUXILLARY),
-            (Grid.PBS, "contact", Scheduler.PBS, "badjobtype"),
+            (
+                "badgridtype",
+                "contact",
+                Scheduler.PBS,
+                SupportedJobs.AUXILLARY,
+                "grid_type",
+            ),
+            (
+                Grid.PBS,
+                "contact",
+                "badschedulertype",
+                SupportedJobs.AUXILLARY,
+                "scheduler_type",
+            ),
+            (Grid.PBS, "contact", Scheduler.PBS, "badjobtype", "job_type"),
         ],
     )
-    def test_invalid_grid(self, grid_type, contact, scheduler_type, job_type):
-        with pytest.raises(ValueError):
+    def test_invalid_grid(
+        self, grid_type, contact, scheduler_type, job_type, invalid_var
+    ):
+        with pytest.raises(TypeError) as e:
             Grid(
                 grid_type, contact, scheduler_type, job_type,
             )
 
+        assert "invalid {invalid_var}: {value}".format(
+            invalid_var=invalid_var, value=locals()[invalid_var]
+        ) in str(e)
+
     def test_tojson(self, convert_yaml_schemas_to_json, load_schema):
-        result = Grid(
+        grid = Grid(
             Grid.GT5,
             "smarty.isi.edu/jobmanager-pbs",
             Scheduler.PBS,
@@ -127,7 +151,9 @@ class TestGrid:
             jobs_in_queue=10,
             idle_nodes=1,
             total_nodes=10,
-        ).__json__()
+        )
+
+        result = json.loads(json.dumps(grid, cls=_CustomEncoder))
 
         expected = {
             "type": "gt5",
@@ -152,7 +178,7 @@ class TestGrid:
 
 class TestSite:
     def test_valid_site(self):
-        Site(
+        assert Site(
             "site",
             arch=Arch.X86_64,
             os_type=OS.LINUX,
@@ -162,12 +188,19 @@ class TestSite:
         )
 
     @pytest.mark.parametrize(
-        "name, arch, os_type",
-        [("site", "badarch", OS.LINUX), ("site", Arch.X86_64, "badostype")],
+        "name, arch, os_type, invalid_var",
+        [
+            ("site", "badarch", OS.LINUX, "arch"),
+            ("site", Arch.X86_64, "badostype", "os_type"),
+        ],
     )
-    def test_invalid_site(self, name, arch, os_type):
-        with pytest.raises(ValueError):
+    def test_invalid_site(self, name, arch, os_type, invalid_var):
+        with pytest.raises(TypeError) as e:
             Site(name, arch=arch, os_type=os_type)
+
+        assert "invalid {invalid_var}: {value}".format(
+            invalid_var=invalid_var, value=locals()[invalid_var]
+        ) in str(e)
 
     def test_add_valid_directory(self):
         site = Site("s")
@@ -177,9 +210,11 @@ class TestSite:
         assert len(site.directories) == 2
 
     def test_add_invalid_directory(self):
-        site = Site("s")
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError) as e:
+            site = Site("s")
             site.add_directory("baddirectory")
+
+        assert "invalid directory: baddirectory" in str(e)
 
     def test_add_valid_grid(self):
         site = Site("s")
@@ -203,9 +238,11 @@ class TestSite:
         assert len(site.grids) == 2
 
     def test_add_invalid_grid(self):
-        site = Site("s")
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError) as e:
+            site = Site("s")
             site.add_grid("badgrid")
+
+        assert "invalid grid: badgrid" in str(e)
 
     def test_chaining(self):
         site = Site("s")
@@ -230,7 +267,11 @@ class TestSite:
             os_version="1.2.3",
             glibc="1",
         )
-        site.add_directory(Directory(Directory.LOCAL_SCRATCH, "/path"))
+        site.add_directory(
+            Directory(Directory.LOCAL_SCRATCH, "/path").add_file_server(
+                FileServer("url", Operation.GET)
+            )
+        )
         site.add_grid(
             Grid(
                 Grid.GT5,
@@ -241,7 +282,7 @@ class TestSite:
         )
         site.add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
 
-        result = site.__json__()
+        result = json.loads(json.dumps(site, cls=_CustomEncoder))
 
         expected = {
             "name": "s",
@@ -250,23 +291,121 @@ class TestSite:
             "os.release": "release",
             "os.version": "1.2.3",
             "glibc": "1",
-            "directories": [d.__json__() for d in site.directories],
-            "grids": [g.__json__() for g in site.grids],
+            "directories": [
+                {
+                    "type": "localScratch",
+                    "path": "/path",
+                    "fileServers": [{"url": "url", "operation": "get"}],
+                }
+            ],
+            "grids": [
+                {
+                    "type": "gt5",
+                    "contact": "smarty.isi.edu/jobmanager-pbs",
+                    "scheduler": "pbs",
+                    "jobtype": "auxillary",
+                }
+            ],
             "profiles": {"env": {"JAVA_HOME": "/usr/bin/java"}},
         }
 
         assert result == expected
 
 
+@pytest.fixture
+def expected_json():
+    return {
+        "pegasus": PEGASUS_VERSION,
+        "sites": [
+            {
+                "name": "local",
+                "arch": "x86_64",
+                "os.type": "linux",
+                "directories": [
+                    {
+                        "type": "sharedScratch",
+                        "path": "/tmp/workflows/scratch",
+                        "fileServers": [
+                            {
+                                "url": "file:///tmp/workflows/scratch",
+                                "operation": "all",
+                            }
+                        ],
+                    },
+                    {
+                        "type": "localStorage",
+                        "path": "/tmp/workflows/outputs",
+                        "fileServers": [
+                            {
+                                "url": "file:///tmp/workflows/outputs",
+                                "operation": "all",
+                            }
+                        ],
+                    },
+                ],
+            },
+            {
+                "name": "condor_pool",
+                "arch": "x86_64",
+                "os.type": "linux",
+                "directories": [
+                    {
+                        "type": "sharedScratch",
+                        "path": "/lustre",
+                        "fileServers": [
+                            {
+                                "url": "gsiftp://smarty.isi.edu/lustre",
+                                "operation": "all",
+                            }
+                        ],
+                    }
+                ],
+                "grids": [
+                    {
+                        "type": "gt5",
+                        "contact": "smarty.isi.edu/jobmanager-pbs",
+                        "scheduler": "pbs",
+                        "jobtype": "auxillary",
+                    },
+                    {
+                        "type": "gt5",
+                        "contact": "smarty.isi.edu/jobmanager-pbs",
+                        "scheduler": "pbs",
+                        "jobtype": "compute",
+                    },
+                ],
+                "profiles": {"env": {"JAVA_HOME": "/usr/bin/java"}},
+            },
+            {
+                "name": "staging_site",
+                "arch": "x86_64",
+                "os.type": "linux",
+                "directories": [
+                    {
+                        "type": "sharedScratch",
+                        "path": "/data",
+                        "fileServers": [
+                            {"url": "scp://obelix.isi.edu/data", "operation": "put",},
+                            {"url": "http://obelix.isi.edu/data", "operation": "get",},
+                        ],
+                    }
+                ],
+            },
+        ],
+    }
+
+
 class TestSiteCatalog:
     def test_add_valid_site(self):
         sc = SiteCatalog()
-        sc.add_site(Site("local"))
+        assert sc.add_site(Site("local"))
 
     def test_add_invalid_site(self):
-        sc = SiteCatalog()
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError) as e:
+            sc = SiteCatalog()
             sc.add_site("badsite")
+
+        assert "invalid site: badsite" in str(e)
 
     def test_add_duplicate_site(self):
         sc = SiteCatalog()
@@ -281,81 +420,7 @@ class TestSiteCatalog:
 
         assert id(a) == id(b)
 
-    """
-    def test_tojson(self, convert_yaml_schemas_to_json, load_schema):
-        sc = (
-            SiteCatalog()
-            .add_site(
-                Site("local", arch=Arch.X86_64, os_type=OSType.LINUX)
-                .add_directory(
-                    Directory(
-                        DirectoryType.SHARED_SCRATCH, "/tmp/workflows/scratch"
-                    ).add_file_server(
-                        FileServer("file:///tmp/workflows/scratch", OperationType.ALL)
-                    )
-                )
-                .add_directory(
-                    Directory(
-                        DirectoryType.LOCAL_STORAGE, "/tmp/workflows/outputs"
-                    ).add_file_server(
-                        FileServer("file:///tmp/workflows/outputs", OperationType.ALL)
-                    )
-                )
-            )
-            .add_site(
-                Site("condor_pool", arch=Arch.X86_64, os_type=OSType.LINUX)
-                .add_directory(
-                    Directory(DirectoryType.SHARED_SCRATCH, "/lustre").add_file_server(
-                        FileServer("gsiftp://smarty.isi.edu/lustre", OperationType.ALL)
-                    )
-                )
-                .add_grid(
-                    Grid(
-                        GridType.GT5,
-                        "smarty.isi.edu/jobmanager-pbs",
-                        SchedulerType.PBS,
-                        job_type=JobType.AUXILLARY,
-                    )
-                )
-                .add_grid(
-                    Grid(
-                        GridType.GT5,
-                        "smarty.isi.edu/jobmanager-pbs",
-                        SchedulerType.PBS,
-                        job_type=JobType.COMPUTE,
-                    )
-                )
-                .add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/javap")
-            )
-            .add_site(
-                Site(
-                    "staging_site", arch=Arch.X86_64, os_type=OSType.LINUX
-                ).add_directory(
-                    Directory(DirectoryType.SHARED_SCRATCH, "/data")
-                    .add_file_server(
-                        FileServer("scp://obelix.isi.edu/data", OperationType.PUT)
-                    )
-                    .add_file_server(
-                        FileServer("http://obelix.isi.edu/data", OperationType.GET)
-                    )
-                )
-            )
-        )
-
-        result = sc.__json__()
-
-        expected = {
-            "pegasus": PEGASUS_VERSION,
-            "sites": [s.__json__() for _, s in sc.sites.items()],
-        }
-
-        sc_schema = load_schema("sc-5.0.json")
-        validate(instance=result, schema=sc_schema)
-
-        assert result == expected
-    """
-
-    def test_write(self):
+    def test_tojson(self, convert_yaml_schemas_to_json, load_schema, expected_json):
         sc = (
             SiteCatalog()
             .add_site(
@@ -398,7 +463,7 @@ class TestSiteCatalog:
                         job_type=SupportedJobs.COMPUTE,
                     )
                 )
-                .add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/javap")
+                .add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
             )
             .add_site(
                 Site("staging_site", arch=Arch.X86_64, os_type=OS.LINUX).add_directory(
@@ -413,15 +478,78 @@ class TestSiteCatalog:
             )
         )
 
-        expected = {
-            "pegasus": PEGASUS_VERSION,
-            "sites": [s.__json__() for _, s in sc.sites.items()],
-        }
+        result = json.loads(json.dumps(sc, cls=_CustomEncoder))
+
+        sc_schema = load_schema("sc-5.0.json")
+        validate(instance=result, schema=sc_schema)
+
+        assert result == expected_json
+
+    @pytest.mark.parametrize(
+        "_format, loader", [("json", json.load), ("yml", yaml.safe_load)]
+    )
+    def test_write(self, expected_json, _format, loader):
+        sc = (
+            SiteCatalog()
+            .add_site(
+                Site("local", arch=Arch.X86_64, os_type=OS.LINUX)
+                .add_directory(
+                    Directory(
+                        Directory.SHARED_SCRATCH, "/tmp/workflows/scratch"
+                    ).add_file_server(
+                        FileServer("file:///tmp/workflows/scratch", Operation.ALL)
+                    )
+                )
+                .add_directory(
+                    Directory(
+                        Directory.LOCAL_STORAGE, "/tmp/workflows/outputs"
+                    ).add_file_server(
+                        FileServer("file:///tmp/workflows/outputs", Operation.ALL)
+                    )
+                )
+            )
+            .add_site(
+                Site("condor_pool", arch=Arch.X86_64, os_type=OS.LINUX)
+                .add_directory(
+                    Directory(Directory.SHARED_SCRATCH, "/lustre").add_file_server(
+                        FileServer("gsiftp://smarty.isi.edu/lustre", Operation.ALL)
+                    )
+                )
+                .add_grid(
+                    Grid(
+                        Grid.GT5,
+                        "smarty.isi.edu/jobmanager-pbs",
+                        Scheduler.PBS,
+                        job_type=SupportedJobs.AUXILLARY,
+                    )
+                )
+                .add_grid(
+                    Grid(
+                        Grid.GT5,
+                        "smarty.isi.edu/jobmanager-pbs",
+                        Scheduler.PBS,
+                        job_type=SupportedJobs.COMPUTE,
+                    )
+                )
+                .add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
+            )
+            .add_site(
+                Site("staging_site", arch=Arch.X86_64, os_type=OS.LINUX).add_directory(
+                    Directory(Directory.SHARED_SCRATCH, "/data")
+                    .add_file_server(
+                        FileServer("scp://obelix.isi.edu/data", Operation.PUT)
+                    )
+                    .add_file_server(
+                        FileServer("http://obelix.isi.edu/data", Operation.GET)
+                    )
+                )
+            )
+        )
 
         with NamedTemporaryFile(mode="r+") as f:
-            sc.write(f, _format="json")
+            sc.write(f, _format=_format)
             f.seek(0)
-            result = json.load(f)
+            result = loader(f)
 
-        assert result == expected
+        assert result == expected_json
 

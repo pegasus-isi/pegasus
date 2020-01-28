@@ -25,7 +25,9 @@ class File(MetadataMixin):
         :type lfn: str
         """
         if not isinstance(lfn, str):
-            raise ValueError("lfn must be a string")
+            raise TypeError(
+                "invalid lfn: {lfn}; lfn must be of type str".format(lfn=lfn)
+            )
 
         self.metadata = dict()
         self.lfn = lfn
@@ -80,18 +82,24 @@ class ReplicaCatalog(Writable):
         :param regex: whether or not the lfn is a regex pattern, defaults to False
         :type regex: bool, optional
         :raises DuplicateError: an entry with the same parameters already exists in the catalog
-        :raises ValueError: lfn must be of type :py:class:`~Pegasus.dax4.replica_catalog.File` or str
+        :raises TypeError: lfn must be of type :py:class:`~Pegasus.dax4.replica_catalog.File` or str
         :return: self
         """
         if not isinstance(lfn, File) and not isinstance(lfn, str):
-            raise ValueError("lfn must be File or str")
+            raise TypeError(
+                "invalid lfn: {lfn}; lfn must be of type File or str".format(lfn=lfn)
+            )
 
         if isinstance(lfn, File):
             lfn = lfn.lfn
 
         replica = (lfn, pfn, site, regex)
         if replica in self.replicas:
-            raise DuplicateError("duplicate replica catalog entry {}".format(replica))
+            raise DuplicateError(
+                "entry: {replica} already exists in this ReplicaCatalog".format(
+                    replica=replica
+                )
+            )
         else:
             self.replicas.add(replica)
 

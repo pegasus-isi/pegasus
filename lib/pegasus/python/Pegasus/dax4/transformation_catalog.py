@@ -13,11 +13,12 @@ from .writable import _filter_out_nones
 from .writable import Writable
 from .errors import DuplicateError
 from .errors import NotFoundError
+from Pegasus.dax4._utils import _get_enum_str
+from Pegasus.dax4._utils import _get_class_enum_member_str
 
 PEGASUS_VERSION = "5.0"
 
 __all__ = [
-    "ContainerType",
     "Transformation",
     "TransformationSite",
     "TransformationCatalog",
@@ -71,7 +72,11 @@ class TransformationSite(ProfileMixin, MetadataMixin):
 
         if arch is not None:
             if not isinstance(arch, Arch):
-                raise ValueError("arch must be one of Arch")
+                raise TypeError(
+                    "invalid arch: {arch}; arch must be one of {enum_str}".format(
+                        arch=arch, enum_str=_get_enum_str(Arch)
+                    )
+                )
             else:
                 self.arch = arch.value
         else:
@@ -79,7 +84,11 @@ class TransformationSite(ProfileMixin, MetadataMixin):
 
         if os_type is not None:
             if not isinstance(os_type, OS):
-                raise ValueError("os_type must be one of OS")
+                raise TypeError(
+                    "invalid os_type: {os_type}; os_type must be one of {enum_str}".format(
+                        os_type=os_type, enum_str=_get_enum_str(OS)
+                    )
+                )
             else:
                 self.os_type = os_type.value
         else:
@@ -112,7 +121,7 @@ class TransformationSite(ProfileMixin, MetadataMixin):
         )
 
 
-class ContainerType(Enum):
+class _ContainerType(Enum):
     """Container types recognized by Pegasus"""
 
     DOCKER = "docker"
@@ -125,29 +134,38 @@ class Container(ProfileMixin):
 
     .. code-block:: python
 
-        c = Container("centos-pegasus", ContainerType.DOCKER, "docker:///ryan/centos-pegasus:latest", ["/Volumes/Work/lfs1:/shared-data/:ro"])\
+        c = Container("centos-pegasus", Container.DOCKER, "docker:///ryan/centos-pegasus:latest", ["/Volumes/Work/lfs1:/shared-data/:ro"])\
                 .add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
             
     """
+
+    DOCKER = _ContainerType.DOCKER
+    SINGULARITY = _ContainerType.SINGULARITY
+    SHIFTER = _ContainerType.SHIFTER
 
     def __init__(self, name, container_type, image, mounts=None, image_site=None):
         """
         :param name: name of this container
         :type name: str
-        :param container_type: a container type defined in :py:class:`~Pegasus.dax4.transformation_catalog.ContainerType`
-        :type container_type: ContainerType
+        :param container_type: a container type defined in :py:class:`~Pegasus.dax4.transformation_catalog.Container`
+        :type container_type: _ContainerType
         :param image: image, such as 'docker:///rynge/montage:latest'
         :type image: str
         :param mounts: list of mount strings such as ['/Volumes/Work/lfs1:/shared-data/:ro', ...]
         :type mounts: list
         :param image_site: optional site attribute to tell pegasus which site tar file exists, defaults to None
         :type image_site: str, optional
-        :raises ValueError: container_type must be one of :py:class:`~Pegasus.dax4.transformation_catalog.ContainerType`
+        :raises ValueError: container_type must be one of :py:class:`~Pegasus.dax4.transformation_catalog._ContainerType`
         """
         self.name = name
 
-        if not isinstance(container_type, ContainerType):
-            raise ValueError("container_type must be one of ContainerType")
+        if not isinstance(container_type, _ContainerType):
+            raise TypeError(
+                "invalid container_type: {container_type}; container_type must be one of {enum_str}".format(
+                    container_type=container_type,
+                    enum_str=_get_class_enum_member_str(Container, _ContainerType),
+                )
+            )
 
         self.container_type = container_type.value
         self.image = image
@@ -213,14 +231,14 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         """
         if not isinstance(transformation_site, TransformationSite):
             raise TypeError(
-                "{transformation_site} must be of type TransformationSite".format(
+                "invalid transformation_site: {transformation_site}; transformation_site must be of type TransformationSite".format(
                     transformation_site=transformation_site
                 )
             )
 
         if transformation_site.name in self.sites:
             raise DuplicateError(
-                "transformation site with name {name} has already been added for {transformation}".format(
+                "transformation site: {name} has already been added to {transformation}".format(
                     name=transformation_site.name, transformation=self
                 )
             )
@@ -247,14 +265,16 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         elif isinstance(required_transformation, str):
             key = (required_transformation, namespace, version)
         else:
-            raise ValueError(
-                "required_transformation must be of type Transformation or str"
+            raise TypeError(
+                "invalid required_transformation: {required_transformation}; required_transformation must be of type Transformation or str".format(
+                    required_transformation=required_transformation
+                )
             )
 
         if key in self.requires:
             raise DuplicateError(
-                "Transformation {0} already requires Transformation {1}".format(
-                    self.name, key
+                "transformation: {key} already added as a required transformation to {tr}".format(
+                    key=key, tr=self
                 )
             )
 
@@ -263,7 +283,6 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         return self
 
     def __json__(self):
-        # TODO: implement yaml dumper that rajiv suggested so that you don't have to loop through and call Object.__json__()...
         return _filter_out_nones(
             {
                 "namespace": self.namespace,
@@ -272,10 +291,10 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
                 "requires": [req[0] for req in self.requires]
                 if len(self.requires) > 0
                 else None,
-                "sites": [site.__json__() for name, site in self.sites.items()],
+                "sites": [site for _, site in self.sites.items()],
                 "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
                 "hooks": {
-                    hook_name: [hook.__json__() for hook in values]
+                    hook_name: [hook for hook in values]
                     for hook_name, values in self.hooks.items()
                 }
                 if len(self.hooks) > 0
@@ -319,10 +338,18 @@ class TransformationCatalog(Writable):
         """
         for tr in transformations:
             if not isinstance(tr, Transformation):
-                raise ValueError("input must be of type Transformation")
+                raise TypeError(
+                    "invalid transformation: {tr}, transformation(s) must be of type Transformation".format(
+                        tr=tr
+                    )
+                )
 
             if tr._get_key() in self.transformations:
-                raise DuplicateError("transformation already exists in catalog")
+                raise DuplicateError(
+                    "transformation: {key} has already been added to this TransformationCatalog".format(
+                        key=tr._get_key()
+                    )
+                )
 
             self.transformations[tr._get_key()] = tr
 
@@ -339,10 +366,18 @@ class TransformationCatalog(Writable):
         """
 
         if not isinstance(container, Container):
-            raise ValueError("container must be of type Container")
+            raise TypeError(
+                "invalid container: {container}; container must be of type Container".format(
+                    container=container
+                )
+            )
 
         if container.name in self.containers:
-            raise DuplicateError("Container {0} already exists".format(container.name))
+            raise DuplicateError(
+                "container: {0} has already been added to this TransformationCatalog".format(
+                    container.name
+                )
+            )
 
         self.containers[container.name] = container
 
@@ -352,10 +387,8 @@ class TransformationCatalog(Writable):
         return _filter_out_nones(
             {
                 "pegasus": PEGASUS_VERSION,
-                "transformations": [
-                    t.__json__() for key, t in self.transformations.items()
-                ],
-                "containers": [c.__json__() for key, c in self.containers.items()]
+                "transformations": [t for _, t in self.transformations.items()],
+                "containers": [c for _, c in self.containers.items()]
                 if len(self.containers) > 0
                 else None,
             }

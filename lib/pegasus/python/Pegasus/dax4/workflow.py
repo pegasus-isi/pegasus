@@ -5,6 +5,7 @@ from enum import Enum
 import yaml
 
 from .writable import _filter_out_nones
+from .writable import _CustomEncoder
 from .writable import Writable
 from .errors import DuplicateError
 from .errors import NotFoundError
@@ -16,6 +17,7 @@ from .site_catalog import SiteCatalog
 from .mixins import MetadataMixin
 from .mixins import HookMixin
 from .mixins import ProfileMixin
+from ._utils import _get_enum_str
 
 PEGASUS_VERSION = "5.0"
 
@@ -55,14 +57,20 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         """
         for file in input_files:
             if not isinstance(file, File):
-                raise ValueError("a job input must be of type File")
+                raise TypeError(
+                    "invalid input_file: {file}; input_file(s) must be of type File".format(
+                        file=file
+                    )
+                )
 
             _input = _Use(
                 file, _LinkType.INPUT, register_replica=False, stage_out=False
             )
             if _input in self.uses:
                 raise DuplicateError(
-                    "file {0} already added as input to this job".format(file.lfn)
+                    "file: {file} has already been added as input to this job".format(
+                        file=file.lfn
+                    )
                 )
 
             self.uses.add(_input)
@@ -92,7 +100,11 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         """
         for file in output_files:
             if not isinstance(file, File):
-                raise ValueError("a job output must be of type File")
+                raise TypeError(
+                    "invalid output_file: {file}; output_file(s) must be of type File".format(
+                        file=file
+                    )
+                )
 
             output = _Use(
                 file,
@@ -102,7 +114,9 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
             )
             if output in self.uses:
                 raise DuplicateError(
-                    "file {0} already added as output to this job".format(file.lfn)
+                    "file: {file} already added as output to this job".format(
+                        file=file.lfn
+                    )
                 )
 
             self.uses.add(output)
@@ -132,7 +146,11 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         """
 
         if not isinstance(checkpoint_file, File):
-            raise ValueError("checkpoint file must be of type File")
+            raise TypeError(
+                "invalid checkpoint_file: {file}; checkpoint_file must be of type File".format(
+                    file=checkpoint_file
+                )
+            )
 
         checkpoint = _Use(
             checkpoint_file,
@@ -143,8 +161,8 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
 
         if checkpoint in self.uses:
             raise DuplicateError(
-                "file {0} already added as output to this job".format(
-                    checkpoint_file.lfn
+                "file: {file} already added as output to this job".format(
+                    file=checkpoint_file.lfn
                 )
             )
 
@@ -172,8 +190,12 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         :raises DuplicateError: stdin is already set or the given file has already been added as an input to this job
         :return: self
         """
-        if not isinstance(file, File) and not isinstance(file, str):
-            raise ValueError("file must be of type File or str")
+        if not isinstance(file, (File, str)):
+            raise TypeError(
+                "invalid file: {file}; file must be of type File or str".format(
+                    file=file
+                )
+            )
 
         if self.stdin is not None:
             raise DuplicateError("stdin has already been set to a file")
@@ -203,8 +225,12 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         :raises DuplicateError: stdout is already set or the given file has already been added as an output to this job 
         :return: self
         """
-        if not isinstance(file, File) and not isinstance(file, str):
-            raise ValueError("file must be of type File or str")
+        if not isinstance(file, (File, str)):
+            raise TypeError(
+                "invalid file: {file}; file must be of type File or str".format(
+                    file=file
+                )
+            )
 
         if self.stdout is not None:
             raise DuplicateError("stdout has already been set to a file")
@@ -234,8 +260,12 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         :raises DuplicateError: stderr is already set or the given file has already been added as an output to this job 
         :return: self
         """
-        if not isinstance(file, File) and not isinstance(file, str):
-            raise ValueError("file must be of type File or str")
+        if not isinstance(file, (File, str)):
+            raise TypeError(
+                "invalid file: {file}; file must be of type File or str".format(
+                    file=file
+                )
+            )
 
         if self.stderr is not None:
             raise DuplicateError("stderr has already been set to a file")
@@ -260,19 +290,19 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         return _filter_out_nones(
             {
                 "id": self._id,
-                "stdin": self.stdin.__json__() if self.stdin is not None else None,
-                "stdout": self.stdout.__json__() if self.stdout is not None else None,
-                "stderr": self.stderr.__json__() if self.stderr is not None else None,
+                "stdin": self.stdin if self.stdin is not None else None,
+                "stdout": self.stdout if self.stdout is not None else None,
+                "stderr": self.stderr if self.stderr is not None else None,
                 "nodeLabel": self.node_label,
                 "arguments": [
                     {"lfn": arg.lfn} if isinstance(arg, File) else arg
                     for arg in self.args
                 ],
-                "uses": [io.__json__() for io in self.uses],
+                "uses": [use for use in self.uses],
                 "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
                 "metadata": self.metadata if len(self.metadata) > 0 else None,
                 "hooks": {
-                    hook_name: [hook.__json__() for hook in values]
+                    hook_name: [hook for hook in values]
                     for hook_name, values in self.hooks.items()
                 }
                 if len(self.hooks) > 0
@@ -329,7 +359,11 @@ class Job(AbstractJob):
             self.namespace = namespace
             self.version = version
         else:
-            raise ValueError("transformation must be of type Transformation or str")
+            raise TypeError(
+                "invalid transformation: {transformation}; transformation must be of type Transformation or str".format(
+                    transformation=transformation
+                )
+            )
 
         AbstractJob.__init__(self, _id=_id, node_label=node_label)
 
@@ -362,8 +396,12 @@ class DAX(AbstractJob):
         """
         AbstractJob.__init__(self, _id=_id, node_label=node_label)
 
-        if not isinstance(file, File) and not isinstance(file, str):
-            raise ValueError("file must be of type File or str")
+        if not isinstance(file, (File, str)):
+            raise TypeError(
+                "invalid file: {file}; file must be of type File or str".format(
+                    file=file
+                )
+            )
 
         if isinstance(file, File):
             self.file = file
@@ -396,8 +434,8 @@ class DAG(AbstractJob):
         """
         AbstractJob.__init__(self, _id=_id, node_label=node_label)
 
-        if not isinstance(file, File) and not isinstance(file, str):
-            raise ValueError("file must be of type File or str")
+        if not isinstance(file, (File, str)):
+            raise TypeError("invalid file: {file}; file must be of type File or str")
 
         if isinstance(file, File):
             self.file = file
@@ -426,12 +464,20 @@ class _Use:
 
     def __init__(self, file, link_type, stage_out=True, register_replica=True):
         if not isinstance(file, File):
-            raise ValueError("file must be one of type File")
+            raise TypeError(
+                "invalid file: {file}; file must be of type File or str".format(
+                    file=file
+                )
+            )
 
         self.file = file
 
         if not isinstance(link_type, _LinkType):
-            raise ValueError("link_type must be one of _LinkType")
+            raise TypeError(
+                "invalid link_type: {link_type}; link_type must one of {enum_str}".format(
+                    link_type=link_type, enum_str=_get_enum_str(_LinkType)
+                )
+            )
 
         self._type = link_type.value
 
@@ -448,7 +494,7 @@ class _Use:
 
     def __json__(self):
         return {
-            "file": self.file.__json__(),
+            "file": self.file,
             "type": self._type,
             "stageOut": self.stage_out,
             "registerReplica": self.register_replica,
@@ -599,7 +645,9 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
                 job._id = self._get_next_job_id()
 
             if job._id in self.jobs:
-                raise DuplicateError("Job with id {0} already exists".format(job._id))
+                raise DuplicateError(
+                    "Job with id {0} already added to this workflow".format(job._id)
+                )
 
             self.jobs[job._id] = job
 
@@ -615,7 +663,9 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :rtype: Job
         """
         if _id not in self.jobs:
-            raise NotFoundError("job with _id={0} not found".format(_id))
+            raise NotFoundError(
+                "job with _id={0} not found in this workflow".format(_id)
+            )
 
         return self.jobs[_id]
 
@@ -672,7 +722,11 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             self.site_catalog = catalog
 
         else:
-            raise ValueError("{0} cannot be included in this Workflow".format(catalog))
+            raise TypeError(
+                "invalid catalog: {catalog}; only a SiteCatalog, ReplicaCatalog, or TransformationCatalog can be inlined into a Workflow".format(
+                    catalog=catalog
+                )
+            )
 
         return self
 
@@ -690,7 +744,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         if parent_id in self.dependencies:
             if not self.dependencies[parent_id].children_ids.isdisjoint(children_ids):
                 raise DuplicateError(
-                    "A dependency already exists between parentid: {0} and children_ids: {1}".format(
+                    "A dependency already exists between parent_id: {0} and children_ids: {1}".format(
                         parent_id, children_ids
                     )
                 )
@@ -789,17 +843,17 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         # are included in the Workflow which already contains 'pegasus'
         rc = None
         if self.replica_catalog is not None:
-            rc = self.replica_catalog.__json__()
+            rc = json.loads(json.dumps(self.replica_catalog, cls=_CustomEncoder))
             del rc["pegasus"]
 
         tc = None
         if self.transformation_catalog is not None:
-            tc = self.transformation_catalog.__json__()
+            tc = json.loads(json.dumps(self.transformation_catalog, cls=_CustomEncoder))
             del tc["pegasus"]
 
         sc = None
         if self.site_catalog is not None:
-            sc = self.site_catalog.__json__()
+            sc = json.loads(json.dumps(self.site_catalog, cls=_CustomEncoder))
             del sc["pegasus"]
 
         return _filter_out_nones(
@@ -809,17 +863,16 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
                 "replicaCatalog": rc,
                 "transformationCatalog": tc,
                 "siteCatalog": sc,
-                "jobs": [job.__json__() for _id, job in self.jobs.items()],
+                "jobs": [job for _id, job in self.jobs.items()],
                 "jobDependencies": [
-                    dependency.__json__()
-                    for _id, dependency in self.dependencies.items()
+                    dependency for _id, dependency in self.dependencies.items()
                 ]
                 if len(self.dependencies) > 0
                 else None,
                 "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
                 "metadata": self.metadata if len(self.metadata) > 0 else None,
                 "hooks": {
-                    hook_name: [hook.__json__() for hook in values]
+                    hook_name: [hook for hook in values]
                     for hook_name, values in self.hooks.items()
                 }
                 if len(self.hooks) > 0

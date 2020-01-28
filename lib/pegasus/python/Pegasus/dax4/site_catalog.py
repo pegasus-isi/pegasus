@@ -5,6 +5,8 @@ from Pegasus.dax4.mixins import ProfileMixin
 from Pegasus.dax4.writable import _filter_out_nones
 from Pegasus.dax4.writable import Writable
 from Pegasus.dax4.errors import DuplicateError
+from Pegasus.dax4._utils import _get_enum_str
+from Pegasus.dax4._utils import _get_class_enum_member_str
 
 PEGASUS_VERSION = "5.0"
 
@@ -115,7 +117,11 @@ class FileServer(ProfileMixin):
         self.url = url
 
         if not isinstance(operation_type, Operation):
-            raise ValueError("operation_type must be one of OperationType")
+            raise TypeError(
+                "invalid operation_type: {operation_type}; operation_type must be one of {enum_str}".format(
+                    operation_type=operation_type, enum_str=_get_enum_str(Operation)
+                )
+            )
 
         self.operation_type = operation_type.value
 
@@ -162,7 +168,12 @@ class Directory:
         :raises ValueError: directory_type must be one of :py:class:`~Pegasus.dax4.site_catalog.DirectoryType`
         """
         if not isinstance(directory_type, _DirectoryType):
-            raise ValueError("directory_type must be one of DirectoryType")
+            raise TypeError(
+                "invalid directory_type: {directory_type}; directory type must be one of {cls_enum_str}".format(
+                    directory_type=directory_type,
+                    cls_enum_str=_get_class_enum_member_str(Directory, _DirectoryType),
+                )
+            )
 
         self.directory_type = directory_type.value
 
@@ -181,7 +192,11 @@ class Directory:
         :return: self
         """
         if not isinstance(file_server, FileServer):
-            raise ValueError("file_server must be of type FileServer")
+            raise TypeError(
+                "invalid file_server: {file_server}; file_server must be of type FileServer".format(
+                    file_server=file_server
+                )
+            )
 
         self.file_servers.append(file_server)
 
@@ -192,7 +207,7 @@ class Directory:
             {
                 "type": self.directory_type,
                 "path": self.path,
-                "fileServers": [fs.__json__() for fs in self.file_servers],
+                "fileServers": [fs for fs in self.file_servers],
                 "freeSize": None,
                 "totalSize": None,
             }
@@ -272,20 +287,33 @@ class Grid:
         :raises ValueError:
         """
         if not isinstance(grid_type, _GridType):
-            raise ValueError("grid_type must be one of GridType")
+            raise TypeError(
+                "invalid grid_type: {grid_type}; grid_type must be one of {cls_enum_str}".format(
+                    grid_type=grid_type,
+                    cls_enum_str=_get_class_enum_member_str(Grid, _GridType),
+                )
+            )
 
         self.grid_type = grid_type.value
 
         self.contact = contact
 
         if not isinstance(scheduler_type, Scheduler):
-            raise ValueError("scheduler_type must be one of SchedulerType")
+            raise TypeError(
+                "invalid scheduler_type: {scheduler_type}; scheduler_type must be one of {enum_str}".format(
+                    scheduler_type=scheduler_type, enum_str=_get_enum_str(Scheduler)
+                )
+            )
 
         self.scheduler_type = scheduler_type.value
 
         if job_type is not None:
             if not isinstance(job_type, SupportedJobs):
-                raise ValueError("job_type must be one of JobType")
+                raise TypeError(
+                    "invalid job_type: {job_type}; job_type must be one of {enum_str}".format(
+                        job_type=job_type, enum_str=_get_enum_str(SupportedJobs)
+                    )
+                )
             else:
                 self.job_type = job_type.value
         else:
@@ -359,7 +387,11 @@ class Site(ProfileMixin):
 
         if arch is not None:
             if not isinstance(arch, Arch):
-                raise ValueError("arch must be one of Arch")
+                raise TypeError(
+                    "invalid arch: {arch}; arch must be one of {enum_str}".format(
+                        arch=arch, enum_str=_get_enum_str(Arch)
+                    )
+                )
             else:
                 self.arch = arch.value
         else:
@@ -367,7 +399,11 @@ class Site(ProfileMixin):
 
         if os_type is not None:
             if not isinstance(os_type, OS):
-                raise ValueError("os_type must be one of OSType")
+                raise TypeError(
+                    "invalid os_type: {os_type}; os_type must be one of {enum_str}".format(
+                        os_type=os_type, enum_str=_get_enum_str(OS)
+                    )
+                )
             else:
                 self.os_type = os_type.value
         else:
@@ -388,7 +424,11 @@ class Site(ProfileMixin):
         :return: self
         """
         if not isinstance(directory, Directory):
-            raise ValueError("directory is not of type Directory")
+            raise TypeError(
+                "invalid directory: {directory}; directory is not of type Directory".format(
+                    directory=directory
+                )
+            )
 
         self.directories.append(directory)
 
@@ -403,7 +443,9 @@ class Site(ProfileMixin):
         :return: self
         """
         if not isinstance(grid, Grid):
-            raise ValueError("grid must be of type Grid")
+            raise TypeError(
+                "invalid grid: {grid}; grid must be of type Grid".format(grid=grid)
+            )
 
         self.grids.append(grid)
 
@@ -418,8 +460,8 @@ class Site(ProfileMixin):
                 "os.release": self.os_release,
                 "os.version": self.os_version,
                 "glibc": self.glibc,
-                "directories": [d.__json__() for d in self.directories],
-                "grids": [g.__json__() for g in self.grids],
+                "directories": [d for d in self.directories],
+                "grids": [g for g in self.grids] if len(self.grids) > 0 else None,
                 "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
             }
         )
@@ -443,10 +485,16 @@ class SiteCatalog(Writable):
         :return: self
         """
         if not isinstance(site, Site):
-            raise ValueError("site must be of type Site")
+            raise TypeError(
+                "invalid site: {site}; site must be of type Site".format(site=site)
+            )
 
         if site.name in self.sites:
-            raise DuplicateError("site with name: {0} already exists".format(site.name))
+            raise DuplicateError(
+                "site with name: {0} already exists in this SiteCatalog".format(
+                    site.name
+                )
+            )
 
         self.sites[site.name] = site
 

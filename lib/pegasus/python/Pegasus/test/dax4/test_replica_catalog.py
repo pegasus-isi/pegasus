@@ -4,6 +4,7 @@ import json
 from tempfile import NamedTemporaryFile
 
 import pytest
+import yaml
 from jsonschema import validate
 
 from Pegasus.dax4.replica_catalog import File
@@ -17,12 +18,14 @@ from Pegasus.dax4.mixins import Namespace
 class TestFile:
     @pytest.mark.parametrize("lfn", [("a"), ("例")])
     def test_valid_file(self, lfn: str):
-        File(lfn)
+        assert File(lfn)
 
     @pytest.mark.parametrize("lfn", [(1), (list())])
     def test_invalid_file(self, lfn: str):
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError) as e:
             File(lfn)
+
+        assert "invalid lfn: {lfn}".format(lfn=lfn) in str(e)
 
     def test_tojson_no_metadata(self):
         assert File("lfn").__json__() == {"lfn": "lfn"}
@@ -56,14 +59,18 @@ class TestReplicaCatalog:
 
     def test_add_duplicate_replica(self):
         rc = ReplicaCatalog()
-        with pytest.raises(DuplicateError):
+        with pytest.raises(DuplicateError) as e:
             rc.add_replica("lfn", "pfn", "site", True)
             rc.add_replica(File("lfn"), "pfn", "site", True)
 
+        assert "entry: {replica}".format(replica=("lfn", "pfn", "site", True)) in str(e)
+
     def test_add_invalid_replica(self):
         rc = ReplicaCatalog()
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError) as e:
             rc.add_replica(set(), "pfn", "site")
+
+        assert "invalid lfn: {lfn}".format(lfn=set()) in str(e)
 
     def test_tojson(self, convert_yaml_schemas_to_json, load_schema):
         rc = ReplicaCatalog()
@@ -87,7 +94,10 @@ class TestReplicaCatalog:
 
         assert result == expected
 
-    def test_write(self):
+    @pytest.mark.parametrize(
+        "_format, loader", [("json", json.load), ("yml", yaml.safe_load)]
+    )
+    def test_write(self, _format, loader):
         rc = ReplicaCatalog()
         rc.add_replica("lfn1", "pfn1", "site1", True)
         rc.add_replica("lfn2", "pfn2", "site2", True)
@@ -102,9 +112,9 @@ class TestReplicaCatalog:
         expected["replicas"] = sorted(expected["replicas"], key=lambda d: d["lfn"])
 
         with NamedTemporaryFile(mode="r+") as f:
-            rc.write(f, _format="json")
+            rc.write(f, _format=_format)
             f.seek(0)
-            result = json.load(f)
+            result = loader(f)
 
         result["replicas"] = sorted(result["replicas"], key=lambda d: d["lfn"])
 
