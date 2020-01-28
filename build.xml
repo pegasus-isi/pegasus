@@ -635,7 +635,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </junit>
   </target>
 
-  <target name="test-python" depends="compile-externals" description="Execute python unit tests">
+  <target name="test-python-orig" depends="compile-externals" description="Execute python unit tests">
     <exec executable="${dist.python}" dir="lib/pegasus/python" failonerror="true">
       <env key="PYTHONPATH" value="${basedir}/lib/pegasus/externals/python"/>
       <arg line="-m pytest"/>
@@ -669,10 +669,10 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
   <target name="test" depends="dist,test-python,test-kickstart,test-pmc,test-transfer,test-integrity,test-java" description="Run all unit tests"/>
 
-  <target name="test-python-tox" description="Execute python unit tests">
+  <target name="test-python" description="Execute python unit tests">
     <exec executable="tox" dir="lib/pegasus/python" failonerror="true">
-      <env key="PYTHONPATH" value="${basedir}/lib/pegasus/externals/python"/>
       <!--
+      <env key="PYTHONPATH" value="${basedir}/lib/pegasus/externals/python"/>
       <env key="TOX_TESTENV_PASSENV" value="PYTHONPATH"/>
       <env key="SKIP_INSTALL" value="True"/>
       -->
