@@ -1,5 +1,6 @@
 import os
 import json
+from tempfile import NamedTemporaryFile
 
 import pytest
 from jsonschema import validate
@@ -744,13 +745,10 @@ class TestWorkflow:
             "metadata": {"key": "value"},
         }
 
-        test_output_filename = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), "WorkflowTestOutput.json"
-        )
 
-        wf.write(test_output_filename, _format="json")
-
-        with open(test_output_filename, "r") as f:
+        with NamedTemporaryFile("r+") as f:
+            wf.write(f, _format="json")
+            f.seek(0)
             result = json.load(f)
 
         workflow_schema = load_schema("dax-5.0.json")
@@ -758,5 +756,3 @@ class TestWorkflow:
 
         assert result == expected
 
-        # cleanup
-        os.remove(test_output_filename)

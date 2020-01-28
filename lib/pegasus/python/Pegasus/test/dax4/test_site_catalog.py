@@ -1,5 +1,6 @@
 import os
 import json
+from tempfile import NamedTemporaryFile
 
 import pytest
 from jsonschema import validate
@@ -421,16 +422,10 @@ class TestSiteCatalog:
             "sites": [s.__json__() for _, s in sc.sites.items()],
         }
 
-        test_output_filename = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), "SiteCatalogTestOutput.json"
-        )
-
-        sc.write(test_output_filename, _format="json")
-
-        with open(test_output_filename, "r") as f:
+        with NamedTemporaryFile(mode="r+") as f:
+            sc.write(f, _format="json")
+            f.seek(0)
             result = json.load(f)
 
         assert result == expected
 
-        # cleanup
-        os.remove(test_output_filename)

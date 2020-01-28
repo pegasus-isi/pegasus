@@ -1,5 +1,6 @@
 import os
 import json
+from tempfile import NamedTemporaryFile
 
 import pytest
 from jsonschema import validate
@@ -565,30 +566,22 @@ class TestTransformationCatalog:
 
         expected = {
             "pegasus": "5.0",
-            "transformations": [{"name": "t1", "sites": []}, {"name": "t2", "sites": []}],
+            "transformations": [
+                {"name": "t1", "sites": []},
+                {"name": "t2", "sites": []},
+            ],
         }
 
         expected["transformations"] = sorted(
             expected["transformations"], key=lambda t: t["name"]
         )
 
-        test_output_filename = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            "TransformationCatalogTestOutput.json",
-        )
-
-        tc.write(test_output_filename, _format="json")
-
-        with open(test_output_filename, "r") as f:
+        with NamedTemporaryFile("r+") as f:
+            tc.write(f, _format="json")
+            f.seek(0)
             result = json.load(f)
-            result["transformations"] = sorted(
-                result["transformations"], key=lambda t: t["name"]
-            )
 
         assert result == expected
-
-        # cleanup
-        os.remove(test_output_filename)
 
     def test_example_transformation_catalog(
         self, convert_yaml_schemas_to_json, load_schema
@@ -635,19 +628,11 @@ class TestTransformationCatalog:
 
         (tc.add_transformation(foo, bar).add_container(centos_pegasus_container))
 
-        test_output_filename = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            "TransformationCatalogTestOutput.json",
-        )
-
-        tc.write(test_output_filename, _format="json")
-
-        with open(test_output_filename, "r") as f:
+        with NamedTemporaryFile(mode="r+") as f:
+            tc.write(f, _format="json")
+            f.seek(0)
             tc_json = json.load(f)
 
         tc_schema = load_schema("tc-5.0.json")
         validate(instance=tc_json, schema=tc_schema)
-
-        # cleanup
-        os.remove(test_output_filename)
 
