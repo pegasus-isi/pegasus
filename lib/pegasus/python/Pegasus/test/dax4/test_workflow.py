@@ -27,7 +27,6 @@ from Pegasus.dax4.mixins import MetadataMixin
 from Pegasus.dax4.mixins import Namespace
 from Pegasus.dax4.mixins import EventType
 from Pegasus.dax4.site_catalog import SiteCatalog
-from Pegasus.dax4.writable import FileFormat
 
 
 class Test_Use:
@@ -749,7 +748,7 @@ class TestWorkflow:
             os.path.dirname(os.path.realpath(__file__)), "WorkflowTestOutput.json"
         )
 
-        wf.write(non_default_filepath=test_output_filename, file_format=FileFormat.JSON)
+        wf.write(test_output_filename, _format="json")
 
         with open(test_output_filename, "r") as f:
             result = json.load(f)

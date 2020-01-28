@@ -1,5 +1,3 @@
-from .writable import FileFormat
-
 from .replica_catalog import File
 from .replica_catalog import ReplicaCatalog
 

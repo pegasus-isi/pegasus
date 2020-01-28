@@ -4,7 +4,6 @@ from collections import defaultdict
 from Pegasus.dax4.mixins import ProfileMixin
 from Pegasus.dax4.writable import _filter_out_nones
 from Pegasus.dax4.writable import Writable
-from Pegasus.dax4.writable import FileFormat
 from Pegasus.dax4.errors import DuplicateError
 
 
@@ -94,6 +93,9 @@ class GridType(Enum):
     DELTACLOUD = "deltacloud"
 
 
+GT5 = GridType.GT5
+
+# TODO: change to Scheduler
 class SchedulerType(Enum):
     """Different scheduler types on the Grid"""
 
@@ -105,6 +107,7 @@ class SchedulerType(Enum):
     UNKNOWN = "unknown"
 
 
+# TODO: make class variable of Job
 class JobType(Enum):
     """Types of jobs in the executable workflow this grid supports"""
 
@@ -529,6 +532,6 @@ class SiteCatalog(Writable):
     def __json__(self):
         return {
             "pegasus": PEGASUS_VERSION,
-            "sites": [site.__json__() for _, site in self.sites.items()],
+            "sites": [site for _, site in self.sites.items()],
         }
 

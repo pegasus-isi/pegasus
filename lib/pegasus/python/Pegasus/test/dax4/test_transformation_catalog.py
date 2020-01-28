@@ -17,7 +17,6 @@ from Pegasus.dax4.mixins import Namespace
 from Pegasus.dax4.mixins import EventType
 from Pegasus.dax4.errors import DuplicateError
 from Pegasus.dax4.errors import NotFoundError
-from Pegasus.dax4.writable import FileFormat
 
 
 class TestTransformationSite:
@@ -565,8 +564,8 @@ class TestTransformationCatalog:
         )
 
         expected = {
-            "pegasus": PEGASUS_VERSION,
-            "transformations": [t.__json__() for _, t in tc.transformations.items()],
+            "pegasus": "5.0",
+            "transformations": [{"name": "t1", "sites": []}, {"name": "t2", "sites": []}],
         }
 
         expected["transformations"] = sorted(
@@ -578,7 +577,7 @@ class TestTransformationCatalog:
             "TransformationCatalogTestOutput.json",
         )
 
-        tc.write(non_default_filepath=test_output_filename, file_format=FileFormat.JSON)
+        tc.write(test_output_filename, _format="json")
 
         with open(test_output_filename, "r") as f:
             result = json.load(f)
@@ -641,7 +640,7 @@ class TestTransformationCatalog:
             "TransformationCatalogTestOutput.json",
         )
 
-        tc.write(non_default_filepath=test_output_filename, file_format=FileFormat.JSON)
+        tc.write(test_output_filename, _format="json")
 
         with open(test_output_filename, "r") as f:
             tc_json = json.load(f)

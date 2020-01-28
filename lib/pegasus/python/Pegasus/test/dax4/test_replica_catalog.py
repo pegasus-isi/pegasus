@@ -8,7 +8,6 @@ from jsonschema import validate
 from Pegasus.dax4.replica_catalog import File
 from Pegasus.dax4.replica_catalog import ReplicaCatalog
 from Pegasus.dax4.replica_catalog import PEGASUS_VERSION
-from Pegasus.dax4.writable import FileFormat
 from Pegasus.dax4.errors import NotFoundError
 from Pegasus.dax4.errors import DuplicateError
 from Pegasus.dax4.mixins import Namespace
@@ -105,7 +104,7 @@ class TestReplicaCatalog:
             os.path.dirname(os.path.realpath(__file__)), "ReplicaCatalogTestOutput.json"
         )
 
-        rc.write(non_default_filepath=test_output_filename, file_format=FileFormat.JSON)
+        rc.write(test_output_filename, _format="json")
 
         with open(test_output_filename, "r") as f:
             result = json.load(f)

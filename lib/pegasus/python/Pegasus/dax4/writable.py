@@ -1,21 +1,16 @@
 import json
+import warnings
 from enum import Enum
+from pathlib import Path
 
 import yaml
 
-__all__ = ["FileFormat"]
+__all__ = []
 
 # TODO: if we need to deserialize a class
 def todict(_dict, cls):
     # https://pypi.org/project/dataclasses-fromdict/
     raise NotImplementedError()
-
-
-class FileFormat(Enum):
-    """Supported file types we can write"""
-
-    JSON = "json"
-    YAML = "yml"
 
 
 class _CustomEncoder(json.JSONEncoder):
@@ -55,30 +50,71 @@ def _filter_out_nones(_dict):
 
 
 class Writable:
-    """Derived class can serialized to a json or yaml file"""
+    """Derived class can be serialized to a json or yaml file"""
 
-    def write(self, non_default_filepath="", file_format=FileFormat.YAML):
-        """Write this object, formatted in YAML, to a file
+    FORMATS = {"yml", "yaml", "json"}
+
+    def _write(self, file, _format):
+        """Internal function to dump to file in either yaml or json formats
         
-        :param non_default_filepath: path to which this catalog will be written, defaults to '<ClassName>.yml' if non_default_filepath is "" or None
-        :type non_default_filepath: str, optional
-        :param file_format: class can be serialized as either YAML or JSON, defaults to YAML
-        :type file_format: FileFormat
+        :param file: file object to write to 
+        :type file: file
+        :param _format: file format that can be "yml", "yaml", or "json
+        :type _ext: str
+        :raises ValueError: _format must be one of "yml", "yaml" or "json"
         """
-        if not isinstance(file_format, FileFormat):
-            raise ValueError("invalid file format {}".format(file_format))
+        if _format.lower() not in Writable.FORMATS:
+            raise ValueError(
+                "invalid _ext: {_format}, extension must be one of {formats}".format(
+                    _format=_format, formats=Writable.FORMATS
+                )
+            )
 
-        default_filepath = type(self).__name__
-        if non_default_filepath != "":
-            path = non_default_filepath
+        if _format == "yml" or _format == "yaml":
+            # TODO: figure out how to get yaml.dump to recurse down into nested objects
+            # yaml.dump(_CustomEncoder().default(self), file, sort_keys=False)
+            yaml.dump(
+                json.loads(json.dumps(self, cls=_CustomEncoder)), file, sort_keys=False
+            )
         else:
-            if file_format == FileFormat.YAML:
-                path = ".".join([default_filepath, FileFormat.YAML.value])
-            elif file_format == FileFormat.JSON:
-                path = ".".join([default_filepath, FileFormat.JSON.value])
+            json.dump(self, file, cls=_CustomEncoder, indent=4)
 
-        with open(path, "w") as file:
-            if file_format == FileFormat.YAML:
-                yaml.dump(_CustomEncoder().default(self), file, sort_keys=False)
-            elif file_format == FileFormat.JSON:
-                json.dump(self, file, cls=_CustomEncoder, indent=4)
+    def write(self, file, _format="yml"):
+        """Serialize this class as either yaml or json and write to the given
+        file
+        
+        :param file: path or file object to write to, defaults to None
+        :type file: str or file, optional
+        :param _format: can be either "yml", "yaml" or "json", defaults to "yml"
+        :type _format: str, optional
+        :raises ValueError: _format must be one of "yml", "yaml" or "json"
+        :raises TypeError: file must be a str or file object
+        """
+        if _format.lower() not in Writable.FORMATS:
+            raise ValueError(
+                "invalid file format: {_format}, format should be one of 'yml', 'yaml', or 'json'"
+            )
+
+        if isinstance(file, str):
+            path = Path(file)
+            ext = path.suffix[1:].lower()
+
+            with open(file, "w") as f:
+                if ext in Writable.FORMATS:
+                    self._write(f, ext)
+                else:
+                    self._write(f, _format)
+
+        elif hasattr(file, "read"):
+            ext = Path(file.name).suffix[1:]
+
+            if ext in Writable.FORMATS:
+                self._write(file, ext)
+            else:
+                self._write(file, _format)
+
+        else:
+            raise TypeError(
+                "{file} must be of type str or file object".format(file=file)
+            )
+

@@ -5,7 +5,6 @@ from enum import Enum
 import yaml
 
 from .writable import _filter_out_nones
-from .writable import FileFormat
 from .writable import Writable
 from .errors import DuplicateError
 from .errors import NotFoundError
@@ -304,6 +303,8 @@ class Job(AbstractJob):
                 .add_outputs(of1, of2, stage_out=True, register_replica=False))
 
     """
+
+    # TODO: reference enums here (JobType)
 
     def __init__(
         self, transformation, _id=None, node_label=None, namespace=None, version=None,
@@ -776,16 +777,14 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
                         except DuplicateError:
                             pass
 
-    def write(self, non_default_filepath="", file_format=FileFormat.YAML):
+    def write(self, file, _format="yml"):
         """Write this catalog, formatted in YAML, to a file
         
-        :param filepath: path to which this catalog will be written, defaults to self.filepath if filepath is "" or None
+        :param file: path to which this catalog will be written, defaults to self.filepath if filepath is "" or None
         :type filepath: str, optional
         """
         self._infer_dependencies()
-        Writable.write(
-            self, non_default_filepath=non_default_filepath, file_format=file_format
-        )
+        Writable.write(self, file, _format=_format)
 
     def __json__(self):
         # remove 'pegasus' from tc, rc, sc as it is not needed when they
