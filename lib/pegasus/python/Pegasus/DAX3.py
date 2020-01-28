@@ -12,7 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-"""API for generating Pegasus DAXes
+"""API for generating Pegasus DAXes.
 
 The classes in this module can be used to generate DAXes that can be
 read by Pegasus.
@@ -143,44 +143,44 @@ __all__ = [
     "Dependency",
     "ADAG",
     "parseString",
-    "parse"
+    "parse",
 ]
 
-import datetime, os, sys
 import codecs
-import shlex
-import codecs
+import datetime
+import os
+import sys
 import warnings
 
-if sys.version_info >= (3, 0):
-    # compatibility with Python 3
-    from past.builtins import basestring
-
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+import six
+from six import StringIO
 
 SCHEMA_NAMESPACE = "http://pegasus.isi.edu/schema/DAX"
 SCHEMA_LOCATION = "http://pegasus.isi.edu/schema/dax-3.6.xsd"
 SCHEMA_VERSION = "3.6"
 
 
-class DAX3Error(Exception): pass
+class DAX3Error(Exception):
+    pass
 
 
-class DuplicateError(DAX3Error): pass
+class DuplicateError(DAX3Error):
+    pass
 
 
-class NotFoundError(DAX3Error): pass
+class NotFoundError(DAX3Error):
+    pass
 
 
-class FormatError(DAX3Error): pass
+class FormatError(DAX3Error):
+    pass
 
 
-class ParseError(DAX3Error): pass
+class ParseError(DAX3Error):
+    pass
 
 
+@six.python_2_unicode_compatible
 class Element:
     """Representation of an XML element for formatting output"""
 
@@ -191,9 +191,9 @@ class Element:
             if value is not None:
                 if isinstance(value, bool):
                     value = str(value).lower()
-                elif not isinstance(value, basestring):
+                elif not isinstance(value, six.string_types):
                     value = repr(value)
-                attr = attr.replace('__', ':')
+                attr = attr.replace("__", ":")
                 self.attrs.append((attr, value))
         self.children = []
         self.flat = False
@@ -214,14 +214,14 @@ class Element:
                 o.append("&amp;")
             else:
                 o.append(c)
-        return ''.join(o)
+        return "".join(o)
 
     def element(self, element):
         self.children.append(element)
         return element
 
     def text(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, six.string_types):
             value = str(value)
         self.children.append(self._escape(value))
         return self
@@ -233,125 +233,130 @@ class Element:
         self.flat = True
         return self
 
-    def __unicode__(self):
+    def __str__(self):
         s = StringIO()
         self.write(s)
         x = s.getvalue()
         s.close()
-        return unicode(x)
-
-    def __str__(self):
-        return unicode(self).encode('utf-8')
+        return six.text_type(x)
 
     def write(self, stream=sys.stdout, level=0, flatten=False):
         flat = self.flat or flatten
 
-        stream.write('<%s' % self.name)
+        stream.write("<%s" % self.name)
 
         for attr, value in self.attrs:
             value = self._escape(value)
             stream.write(' %s="%s"' % (attr, value))
 
         if len(self.children) == 0:
-            stream.write('/>')
+            stream.write("/>")
         else:
-            stream.write('>')
+            stream.write(">")
             if not flat:
-                stream.write('\n')
+                stream.write("\n")
             for child in self.children:
                 if not flat:
-                    stream.write('\t' * (level + 1))
-                if isinstance(child, basestring):
+                    stream.write("\t" * (level + 1))
+                if isinstance(child, six.string_types):
                     stream.write(child)
                 else:
                     child.write(stream, level + 1, flat)
                 if not flat:
-                    stream.write('\n')
+                    stream.write("\n")
             if not flat:
-                stream.write('\t' * level)
-            stream.write('</%s>' % self.name)
+                stream.write("\t" * level)
+            stream.write("</%s>" % self.name)
 
 
 class Namespace:
     """
-    Namespace values recognized by Pegasus. See Executable, 
+    Namespace values recognized by Pegasus. See Executable,
     Transformation, and Job.
     """
-    PEGASUS = 'pegasus'
-    CONDOR = 'condor'
-    DAGMAN = 'dagman'
-    ENV = 'env'
-    HINTS = 'hints'
-    GLOBUS = 'globus'
-    SELECTOR = 'selector'
-    STAT = 'stat'
+
+    PEGASUS = "pegasus"
+    CONDOR = "condor"
+    DAGMAN = "dagman"
+    ENV = "env"
+    HINTS = "hints"
+    GLOBUS = "globus"
+    SELECTOR = "selector"
+    STAT = "stat"
 
 
 class Arch:
     """
     Architecture types. See Executable.
     """
-    X86 = 'x86'
-    X86_64 = 'x86_64'
-    PPC = 'ppc'
-    PPC_64 = 'ppc_64'
-    IA64 = 'ia64'
-    SPARCV7 = 'sparcv7'
-    SPARCV9 = 'sparcv9'
-    AMD64 = 'amd64'
+
+    X86 = "x86"
+    X86_64 = "x86_64"
+    PPC = "ppc"
+    PPC_64 = "ppc_64"
+    IA64 = "ia64"
+    SPARCV7 = "sparcv7"
+    SPARCV9 = "sparcv9"
+    AMD64 = "amd64"
 
 
 class Link:
     """
     Linkage attributes. See File, Executable and uses().
     """
-    NONE = 'none'
-    INPUT = 'input'
-    OUTPUT = 'output'
-    INOUT = 'inout'
-    CHECKPOINT = 'checkpoint'
+
+    NONE = "none"
+    INPUT = "input"
+    OUTPUT = "output"
+    INOUT = "inout"
+    CHECKPOINT = "checkpoint"
 
 
 class Transfer:
     """
     Transfer types for uses. See Executable, File.
     """
-    FALSE = 'false'
-    OPTIONAL = 'optional'
-    TRUE = 'true'
+
+    FALSE = "false"
+    OPTIONAL = "optional"
+    TRUE = "true"
 
 
 class OS:
     """
     OS types. See Executable.
     """
-    LINUX = 'linux'
-    SUNOS = 'sunos'
-    AIX = 'aix'
-    MACOS = 'macos'
-    WINDOWS = 'windows'
+
+    LINUX = "linux"
+    SUNOS = "sunos"
+    AIX = "aix"
+    MACOS = "macos"
+    WINDOWS = "windows"
 
 
 class When:
     """
     Job states for notifications. See Job/DAX/DAG.invoke().
     """
-    NEVER = 'never'
-    START = 'start'
-    ON_ERROR = 'on_error'
-    ON_SUCCESS = 'on_success'
-    AT_END = 'at_end'
-    ALL = 'all'
+
+    NEVER = "never"
+    START = "start"
+    ON_ERROR = "on_error"
+    ON_SUCCESS = "on_success"
+    AT_END = "at_end"
+    ALL = "all"
 
 
 class ContainerType:
     """
     Container types. See Container.
     """
-    DOCKER = 'docker'
-    SINGULARITY = 'singularity'
+
+    DOCKER = "docker"
+    SINGULARITY = "singularity"
 
 
+@six.python_2_unicode_compatible
 class Invoke:
     def __init__(self, when, what):
         if not when:
@@ -361,11 +366,8 @@ class Invoke:
         self.when = when
         self.what = what
 
-    def __unicode__(self):
-        return u"<Invoke %s %s>" % (self.when, self.what)
-
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return u"<Invoke %s %s>" % (self.when, self.what)
 
     def __hash__(self):
         return hash((self.when, self.what))
@@ -376,7 +378,7 @@ class Invoke:
         return False
 
     def toXML(self):
-        e = Element('invoke', [('when', self.when)])
+        e = Element("invoke", [("when", self.when)])
         e.text(self.what)
         e.flatten()
         return e
@@ -405,7 +407,7 @@ class InvokeMixin:
 
     def invoke(self, when, what):
         """
-        Invoke executable 'what' when job reaches status 'when'. The value of 
+        Invoke executable 'what' when job reaches status 'when'. The value of
         'what' should be a command that can be executed on the submit host.
 
         The list of valid values for 'when' is:
@@ -521,7 +523,7 @@ class CatalogType(ProfileMixin, MetadataMixin, PFNMixin):
             name: The name of the file (required)
         """
         if not name:
-            raise FormatError('name required')
+            raise FormatError("name required")
         self.name = name
         self.profiles = set()
         self._metadata = set()
@@ -536,6 +538,7 @@ class CatalogType(ProfileMixin, MetadataMixin, PFNMixin):
             parent.element(p.toXML())
 
 
+@six.python_2_unicode_compatible
 class File(CatalogType):
     """File(name)
 
@@ -568,11 +571,8 @@ class File(CatalogType):
         """
         CatalogType.__init__(self, name)
 
-    def __unicode__(self):
-        return u"<File %s>" % self.name
-
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return u"<File %s>" % self.name
 
     def __hash__(self):
         return hash(self.name)
@@ -582,21 +582,20 @@ class File(CatalogType):
 
     def toArgumentXML(self):
         """Returns an XML representation of this File with no inner elements"""
-        return Element('file', [('name', self.name)])
+        return Element("file", [("name", self.name)])
 
     def toStdioXML(self, tag):
         """Returns an XML representation of this file as a stdin/out/err tag"""
-        if tag is 'stdin':
+        if tag == "stdin":
             link = "input"  # stdin is always input
-        elif tag in ['stdout', 'stderr']:
+        elif tag in ["stdout", "stderr"]:
             link = "output"  # stdout/stderr are always output
         else:
-            raise FormatError("invalid tag", tag, "should be one of stdin, stdout, stderr")
+            raise FormatError(
+                "invalid tag", tag, "should be one of stdin, stdout, stderr"
+            )
 
-        return Element(tag, [
-            ('name', self.name),
-            ('link', link)
-        ])
+        return Element(tag, [("name", self.name), ("link", link)])
 
     def toXML(self):
         """Return the XML representation of this File with inner elements"""
@@ -605,6 +604,7 @@ class File(CatalogType):
         return e
 
 
+@six.python_2_unicode_compatible
 class Executable(CatalogType, InvokeMixin):
     """Executable(name[,namespace][,version][,arch][,os][,osrelease][,osversion][,glibc][,installed])
 
@@ -617,9 +617,19 @@ class Executable(CatalogType, InvokeMixin):
         grep = Executable(namespace="os",name="grep",version="2.3",arch=Arch.X86,os=OS.LINUX)
     """
 
-    def __init__(self, name, namespace=None, version=None, arch=None, os=None,
-                 osrelease=None, osversion=None, glibc=None, installed=None,
-                 container=None):
+    def __init__(
+        self,
+        name,
+        namespace=None,
+        version=None,
+        arch=None,
+        os=None,
+        osrelease=None,
+        osversion=None,
+        glibc=None,
+        installed=None,
+        container=None,
+    ):
         """
         Arguments:
             name: Logical name of executable
@@ -645,56 +655,64 @@ class Executable(CatalogType, InvokeMixin):
         self.container = container
         self.invocations = set()
 
-    def __unicode__(self):
+    def __str__(self):
         return u"<Executable %s::%s:%s>" % (self.namespace, self.name, self.version)
 
-    def __str__(self):
-        return unicode(self).encode('utf-8')
-
     def __hash__(self):
-        return hash((self.name,
-                     self.namespace,
-                     self.version,
-                     self.arch,
-                     self.os,
-                     self.osrelease,
-                     self.osversion,
-                     self.glibc,
-                     self.installed,
-                     self.container))
+        return hash(
+            (
+                self.name,
+                self.namespace,
+                self.version,
+                self.arch,
+                self.os,
+                self.osrelease,
+                self.osversion,
+                self.glibc,
+                self.installed,
+                self.container,
+            )
+        )
 
     def __eq__(self, other):
         if isinstance(other, Executable):
-            return self.name == other.name and \
-                   self.namespace == other.namespace and \
-                   self.version == other.version and \
-                   self.arch == other.arch and \
-                   self.os == other.os and \
-                   self.osrelease == other.osrelease and \
-                   self.osversion == other.osversion and \
-                   self.glibc == other.glibc and \
-                   self.installed == other.installed and \
-                   self.container == other.container
+            return (
+                self.name == other.name
+                and self.namespace == other.namespace
+                and self.version == other.version
+                and self.arch == other.arch
+                and self.os == other.os
+                and self.osrelease == other.osrelease
+                and self.osversion == other.osversion
+                and self.glibc == other.glibc
+                and self.installed == other.installed
+                and self.container == other.container
+            )
         return False
 
     def toXML(self):
         """Returns an XML representation of this file as a filename tag"""
-        e = Element('executable', [
-            ('name', self.name),
-            ('namespace', self.namespace),
-            ('version', self.version),
-            ('arch', self.arch),
-            ('os', self.os),
-            ('osrelease', self.osrelease),
-            ('osversion', self.osversion),
-            ('glibc', self.glibc),
-            ('installed', self.installed)
-            # containers are not support by the DAX3 schema
-        ])
+        e = Element(
+            "executable",
+            [
+                ("name", self.name),
+                ("namespace", self.namespace),
+                ("version", self.version),
+                ("arch", self.arch),
+                ("os", self.os),
+                ("osrelease", self.osrelease),
+                ("osversion", self.osversion),
+                ("glibc", self.glibc),
+                ("installed", self.installed)
+                # containers are not support by the DAX3 schema
+            ],
+        )
         self.innerXML(e)
 
         if self.container:
-            warnings.warn('The DAX API extensions do not support references for containers.')
+            warnings.warn(
+                "The DAX API extensions do not support references for containers."
+            )
 
         # Invocations
         for inv in self.invocations:
@@ -703,6 +721,7 @@ class Executable(CatalogType, InvokeMixin):
         return e
 
 
+@six.python_2_unicode_compatible
 class Container(ProfileMixin):
     """Container(name,type,image[,image_site])
 
@@ -736,29 +755,25 @@ class Container(ProfileMixin):
         self.mount = mount if mount else []
         self.profiles = set()
 
-    def __unicode__(self):
+    def __str__(self):
         return u"<Container %s:%s>" % (self.name, self.type)
 
-    def __str__(self):
-        return unicode(self).encode('utf-8')
-
     def __hash__(self):
-        return hash((self.name,
-                     self.type,
-                     self.image,
-                     self.imagesite,
-                     self.dockerfile))
+        return hash((self.name, self.type, self.image, self.imagesite, self.dockerfile))
 
     def __eq__(self, other):
         if isinstance(other, Container):
-            return self.name == other.name and \
-                   self.type == other.type and \
-                   self.image == other.image and \
-                   self.imagesite == other.imagesite and \
-                   self.dockerfile == other.dockerfile
+            return (
+                self.name == other.name
+                and self.type == other.type
+                and self.image == other.image
+                and self.imagesite == other.imagesite
+                and self.dockerfile == other.dockerfile
+            )
         return False
 
 
+@six.python_2_unicode_compatible
 class Metadata:
     """Metadata(key,value)
 
@@ -786,11 +801,8 @@ class Metadata:
         self.key = key
         self.value = value
 
-    def __unicode__(self):
-        return u"<Metadata %s = %s>" % (self.key, self.value)
-
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return u"<Metadata %s = %s>" % (self.key, self.value)
 
     def __hash__(self):
         return hash(self.key)
@@ -799,13 +811,12 @@ class Metadata:
         return isinstance(other, Metadata) and self.key == other.key
 
     def toXML(self):
-        m = Element('metadata', [
-            ('key', self.key)
-        ])
+        m = Element("metadata", [("key", self.key)])
         m.text(self.value).flatten()
         return m
 
 
+@six.python_2_unicode_compatible
 class PFN(ProfileMixin):
     """PFN(url[,site])
 
@@ -834,34 +845,29 @@ class PFN(ProfileMixin):
         self.site = site
         self.profiles = set()
 
-    def __unicode__(self):
-        return u"<PFN %s %s>" % (self.site, self.url)
-
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return u"<PFN %s %s>" % (self.site, self.url)
 
     def __hash__(self):
         return hash((self.url, self.site))
 
     def __eq__(self, other):
-        return isinstance(other, PFN) and \
-               self.url == other.url and \
-               self.site == other.site
+        return (
+            isinstance(other, PFN) and self.url == other.url and self.site == other.site
+        )
 
     def toXML(self):
-        pfn = Element('pfn', [
-            ('url', self.url),
-            ('site', self.site)
-        ])
+        pfn = Element("pfn", [("url", self.url), ("site", self.site)])
         for p in self.profiles:
             pfn.element(p.toXML())
         return pfn
 
 
+@six.python_2_unicode_compatible
 class Profile:
     """Profile(namespace,key,value)
 
-    A Profile captures scheduler-, system-, and environment-specific 
+    A Profile captures scheduler-, system-, and environment-specific
     parameters in a uniform fashion. Each profile declaration assigns a value
     to a key within a namespace.
 
@@ -877,7 +883,7 @@ class Profile:
     def __init__(self, namespace, key, value):
         """
         Arguments:
-            namespace: The namespace of the profile (see Namespace) 
+            namespace: The namespace of the profile (see Namespace)
             key: The key name. Can be anything that responds to str().
             value: The value for the profile. Can be anything that responds to str().
         """
@@ -885,30 +891,27 @@ class Profile:
         self.key = key
         self.value = value
 
-    def __unicode__(self):
-        return u"<Profile %s::%s = %s>" % (self.namespace, self.key, self.value)
-
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return u"<Profile %s::%s = %s>" % (self.namespace, self.key, self.value)
 
     def __hash__(self):
         return hash((self.namespace, self.key))
 
     def __eq__(self, other):
-        return isinstance(other, Profile) and \
-               self.namespace == other.namespace and \
-               self.key == other.key
+        return (
+            isinstance(other, Profile)
+            and self.namespace == other.namespace
+            and self.key == other.key
+        )
 
     def toXML(self):
         """Return an XML element for this profile"""
-        p = Element("profile", [
-            ('namespace', self.namespace),
-            ('key', self.key)
-        ])
+        p = Element("profile", [("namespace", self.namespace), ("key", self.key)])
         p.text(self.value).flatten()
         return p
 
 
+@six.python_2_unicode_compatible
 class Use(MetadataMixin):
     """Use(file[,link][,register][,transfer][,optional]
            [,namespace][,version][,executable][,size])
@@ -934,11 +937,20 @@ class Use(MetadataMixin):
     value for executable is 'true'.
     """
 
-    def __init__(self, name, link=None, register=None, transfer=None,
-                 optional=None, namespace=None, version=None, executable=None,
-                 size=None):
+    def __init__(
+        self,
+        name,
+        link=None,
+        register=None,
+        transfer=None,
+        optional=None,
+        namespace=None,
+        version=None,
+        executable=None,
+        size=None,
+    ):
         if not name:
-            raise FormatError('Invalid name', name)
+            raise FormatError("Invalid name", name)
 
         self.name = name
         self.link = link
@@ -952,28 +964,30 @@ class Use(MetadataMixin):
 
         self._metadata = set()
 
-    def __unicode__(self):
-        return u"<Use %s::%s:%s>" % (self.namespace, self.name, self.version)
-
     def __str__(self):
-        return unicode(self).encode("utf-8")
+        return u"<Use %s::%s:%s>" % (self.namespace, self.name, self.version)
 
     def __hash__(self):
         return hash((self.namespace, self.name, self.version))
 
     def __eq__(self, other):
         if isinstance(other, Use):
-            return self.namespace == other.namespace and \
-                   self.name == other.name and \
-                   self.version == other.version
+            return (
+                self.namespace == other.namespace
+                and self.name == other.name
+                and self.version == other.version
+            )
 
     def toTransformationXML(self):
-        e = Element('uses', [
-            ('namespace', self.namespace),
-            ('name', self.name),
-            ('version', self.version),
-            ('executable', self.executable)
-        ])
+        e = Element(
+            "uses",
+            [
+                ("namespace", self.namespace),
+                ("name", self.name),
+                ("version", self.version),
+                ("executable", self.executable),
+            ],
+        )
 
         for m in self._metadata:
             e.element(m.toXML())
@@ -981,17 +995,20 @@ class Use(MetadataMixin):
         return e
 
     def toJobXML(self):
-        e = Element('uses', [
-            ('namespace', self.namespace),
-            ('name', self.name),
-            ('version', self.version),
-            ('link', self.link),
-            ('register', self.register),
-            ('transfer', self.transfer),
-            ('optional', self.optional),
-            ('executable', self.executable),
-            ('size', self.size)
-        ])
+        e = Element(
+            "uses",
+            [
+                ("namespace", self.namespace),
+                ("name", self.name),
+                ("version", self.version),
+                ("link", self.link),
+                ("register", self.register),
+                ("transfer", self.transfer),
+                ("optional", self.optional),
+                ("executable", self.executable),
+                ("size", self.size),
+            ],
+        )
 
         for m in self._metadata:
             e.element(m.toXML())
@@ -1020,9 +1037,18 @@ class UseMixin:
         """Remove all uses from this object"""
         self.used.clear()
 
-    def uses(self, arg, link=None, register=None, transfer=None,
-             optional=None, namespace=None, version=None, executable=None,
-             size=None):
+    def uses(
+        self,
+        arg,
+        link=None,
+        register=None,
+        transfer=None,
+        optional=None,
+        namespace=None,
+        version=None,
+        executable=None,
+        size=None,
+    ):
 
         if isinstance(arg, CatalogType):
             _name = arg.name
@@ -1054,8 +1080,17 @@ class UseMixin:
         if executable is not None:
             _executable = executable
 
-        use = Use(_name, link, register, transfer, optional, _namespace,
-                  _version, _executable, size)
+        use = Use(
+            _name,
+            link,
+            register,
+            transfer,
+            optional,
+            _namespace,
+            _version,
+            _executable,
+            size,
+        )
 
         # Copy metadata from File or Executable
         # XXX Maybe we only want this if link!=input
@@ -1066,6 +1101,7 @@ class UseMixin:
         self.addUse(use)
 
 
+@six.python_2_unicode_compatible
 class Transformation(UseMixin, InvokeMixin, MetadataMixin):
     """Transformation((name|executable)[,namespace][,version])
 
@@ -1119,7 +1155,7 @@ class Transformation(UseMixin, InvokeMixin, MetadataMixin):
         """
         The name argument can be either a string or an Executable object.
         If it is an Executable object, then the Transformation inherits
-        its name, namespace and version from the Executable, and the 
+        its name, namespace and version from the Executable, and the
         Transformation is set to use the Executable with link=input,
         transfer=true, and register=False.
 
@@ -1140,31 +1176,35 @@ class Transformation(UseMixin, InvokeMixin, MetadataMixin):
             self.version = name.version
         else:
             self.name = name
-        if namespace: self.namespace = namespace
-        if version: self.version = version
-
-    def __unicode__(self):
-        return u"<Transformation %s::%s:%s>" % (self.namespace, self.name, self.version)
+        if namespace:
+            self.namespace = namespace
+        if version:
+            self.version = version
 
     def __str__(self):
-        return unicode(self).encode("utf-8")
+        return u"<Transformation %s::%s:%s>" % (self.namespace, self.name, self.version)
 
     def __hash__(self):
         return hash((self.namespace, self.name, self.version))
 
     def __eq__(self, other):
         if isinstance(other, Transformation):
-            return self.namespace == other.namespace and \
-                   self.name == other.name and \
-                   self.version == other.version
+            return (
+                self.namespace == other.namespace
+                and self.name == other.name
+                and self.version == other.version
+            )
 
     def toXML(self):
         """Return an XML representation of this transformation"""
-        e = Element('transformation', [
-            ('namespace', self.namespace),
-            ('name', self.name),
-            ('version', self.version)
-        ])
+        e = Element(
+            "transformation",
+            [
+                ("namespace", self.namespace),
+                ("name", self.name),
+                ("version", self.version),
+            ],
+        )
 
         # Metadata
         for m in self._metadata:
@@ -1209,17 +1249,17 @@ class AbstractJob(ProfileMixin, UseMixin, InvokeMixin, MetadataMixin):
     def addArguments(self, *arguments):
         """Add one or more arguments to the job (this will add whitespace)"""
         for arg in arguments:
-            if not isinstance(arg, (File, basestring)):
+            if not isinstance(arg, (File, six.string_types)):
                 raise FormatError("Invalid argument", arg)
         for arg in arguments:
             if len(self.arguments) > 0:
-                self.arguments.append(' ')
+                self.arguments.append(" ")
             self.arguments.append(arg)
 
     def addRawArguments(self, *arguments):
         """Add one or more arguments to the job (whitespace will NOT be added)"""
         for arg in arguments:
-            if not isinstance(arg, (File, basestring)):
+            if not isinstance(arg, (File, six.string_types)):
                 raise FormatError("Invalid argument", arg)
         self.arguments.extend(arguments)
 
@@ -1232,10 +1272,10 @@ class AbstractJob(ProfileMixin, UseMixin, InvokeMixin, MetadataMixin):
         args = []
         for a in self.arguments:
             if isinstance(a, File):
-                args.append(unicode(a.toArgumentXML()))
+                args.append(six.text_type(a.toArgumentXML()))
             else:
                 args.append(a)
-        return ''.join(args)
+        return "".join(args)
 
     def setStdout(self, filename):
         """Redirect stdout to a file"""
@@ -1274,7 +1314,7 @@ class AbstractJob(ProfileMixin, UseMixin, InvokeMixin, MetadataMixin):
         """Return an XML representation of this job"""
         # Arguments
         if len(self.arguments) > 0:
-            args = Element('argument').flatten()
+            args = Element("argument").flatten()
             for x in self.arguments:
                 if isinstance(x, File):
                     args.element(x.toArgumentXML())
@@ -1292,11 +1332,11 @@ class AbstractJob(ProfileMixin, UseMixin, InvokeMixin, MetadataMixin):
 
         # Stdin/xml/err
         if self.stdin is not None:
-            element.element(self.stdin.toStdioXML('stdin'))
+            element.element(self.stdin.toStdioXML("stdin"))
         if self.stdout is not None:
-            element.element(self.stdout.toStdioXML('stdout'))
+            element.element(self.stdout.toStdioXML("stdout"))
         if self.stderr is not None:
-            element.element(self.stderr.toStdioXML('stderr'))
+            element.element(self.stderr.toStdioXML("stderr"))
 
         # Uses
         def getlink(a):
@@ -1315,6 +1355,7 @@ class AbstractJob(ProfileMixin, UseMixin, InvokeMixin, MetadataMixin):
             element.element(inv.toXML())
 
 
+@six.python_2_unicode_compatible
 class Job(AbstractJob):
     """Job((name|Executable|Transformation)[,id][,namespace][,version][,node_label])
 
@@ -1355,7 +1396,7 @@ class Job(AbstractJob):
         it will be automatically generated when the job is added to the DAX.
 
         The name, namespace, and version should match what you have in your
-        transformation catalog. For example, if namespace="foo" name="bar" 
+        transformation catalog. For example, if namespace="foo" name="bar"
         and version="1.0", then the transformation catalog should have an
         entry for "foo::bar:1.0".
 
@@ -1376,34 +1417,42 @@ class Job(AbstractJob):
             self.name = name.name
             self.namespace = name.namespace
             self.version = name.version
-        elif isinstance(name, basestring):
+        elif isinstance(name, six.string_types):
             self.name = name
         else:
             raise FormatError("Name must be a string, Transformation or Executable")
         if not self.name:
             raise FormatError("Invalid name", self.name)
         AbstractJob.__init__(self, id=id, node_label=node_label)
-        if namespace: self.namespace = namespace
-        if version: self.version = version
-
-    def __unicode__(self):
-        return u"<Job %s %s::%s:%s>" % (self.id, self.namespace, self.name, self.version)
+        if namespace:
+            self.namespace = namespace
+        if version:
+            self.version = version
 
     def __str__(self):
-        return unicode(self).encode("utf-8")
+        return u"<Job %s %s::%s:%s>" % (
+            self.id,
+            self.namespace,
+            self.name,
+            self.version,
+        )
 
     def toXML(self):
-        e = Element('job', [
-            ('id', self.id),
-            ('namespace', self.namespace),
-            ('name', self.name),
-            ('version', self.version),
-            ('node-label', self.node_label)
-        ])
+        e = Element(
+            "job",
+            [
+                ("id", self.id),
+                ("namespace", self.namespace),
+                ("name", self.name),
+                ("version", self.version),
+                ("node-label", self.node_label),
+            ],
+        )
         self.innerXML(e)
         return e
 
 
+@six.python_2_unicode_compatible
 class DAX(AbstractJob):
     """DAX(file[,id][,node_label])
 
@@ -1421,7 +1470,7 @@ class DAX(AbstractJob):
         """
 
         The name argument can be either a string, or a File object. If
-        it is a File object, then this job will inherit its name from the 
+        it is a File object, then this job will inherit its name from the
         File and the File will be added in a <uses> with transfer=True,
         register=False, and link=input.
 
@@ -1432,29 +1481,30 @@ class DAX(AbstractJob):
         """
         if isinstance(file, File):
             self.file = file
-        elif isinstance(file, str) or isinstance(file, unicode):
+        elif isinstance(file, six.string_types):
             self.file = File(name=file)
         else:
             raise FormatError("invalid file", file)
         AbstractJob.__init__(self, id=id, node_label=node_label)
 
-    def __unicode__(self):
-        return u"<DAX %s %s>" % (self.id, self.file.name)
-
     def __str__(self):
-        return unicode(self).encode("utf-8")
+        return u"<DAX %s %s>" % (self.id, self.file.name)
 
     def toXML(self):
         """Return an XML representation of this job"""
-        e = Element('dax', [
-            ('id', self.id),
-            ('file', self.file.name),
-            ('node-label', self.node_label)
-        ])
+        e = Element(
+            "dax",
+            [
+                ("id", self.id),
+                ("file", self.file.name),
+                ("node-label", self.node_label),
+            ],
+        )
         self.innerXML(e)
         return e
 
 
+@six.python_2_unicode_compatible
 class DAG(AbstractJob):
     """DAG(file[,id][,node_label])
 
@@ -1471,7 +1521,7 @@ class DAG(AbstractJob):
     def __init__(self, file, id=None, node_label=None):
         """
         The name argument can be either a string, or a File object. If
-        it is a File object, then this job will inherit its name from the 
+        it is a File object, then this job will inherit its name from the
         File and the File will be added in a <uses> with transfer=True,
         register=False, and link=input.
 
@@ -1482,29 +1532,30 @@ class DAG(AbstractJob):
         """
         if isinstance(file, File):
             self.file = file
-        elif isinstance(file, str) or isinstance(file, unicode):
+        elif isinstance(file, six.string_types):
             self.file = File(name=file)
         else:
             raise FormatError("Invalid file", file)
         AbstractJob.__init__(self, id=id, node_label=node_label)
 
-    def __unicode__(self):
-        return u"<DAG %s %s>" % (self.id, self.file.name)
-
     def __str__(self):
-        return unicode(self).encode("utf-8")
+        return u"<DAG %s %s>" % (self.id, self.file.name)
 
     def toXML(self):
         """Return an XML representation of this DAG"""
-        e = Element('dag', [
-            ('id', self.id),
-            ('file', self.file.name),
-            ('node-label', self.node_label)
-        ])
+        e = Element(
+            "dag",
+            [
+                ("id", self.id),
+                ("file", self.file.name),
+                ("node-label", self.node_label),
+            ],
+        )
         self.innerXML(e)
         return e
 
 
+@six.python_2_unicode_compatible
 class Dependency:
     """A dependency between two nodes in the ADAG"""
 
@@ -1529,11 +1580,8 @@ class Dependency:
             raise FormatError("No self edges allowed", (self.parent, self.child))
         self.edge_label = edge_label
 
-    def __unicode__(self):
-        return "<Dependency %s -> %s>" % (self.parent, self.child)
-
     def __str__(self):
-        return unicode(self).encode("utf-8")
+        return "<Dependency %s -> %s>" % (self.parent, self.child)
 
     def __hash__(self):
         return hash((self.parent, self.child))
@@ -1545,6 +1593,7 @@ class Dependency:
         return False
 
 
+@six.python_2_unicode_compatible
 class ADAG(InvokeMixin, MetadataMixin):
     """ADAG(name[,count][,index])
 
@@ -1563,7 +1612,7 @@ class ADAG(InvokeMixin, MetadataMixin):
         dax.addDependency(Dependency(parent=a,child=b))
         dax.addDependency(Dependency(parent=a,child=c))
         dax.addDependency(Dependency(parent=b,child=d))
-        dax.addDependency(Dependency(parent=c,child=d)) 
+        dax.addDependency(Dependency(parent=c,child=d))
     or:
         dax.depends(child=b, parent=a)
 
@@ -1595,8 +1644,10 @@ class ADAG(InvokeMixin, MetadataMixin):
         if not name:
             raise FormatError("Invalid ADAG name", name)
         self.name = name
-        if count: count = int(count)
-        if index: index = int(index)
+        if count:
+            count = int(count)
+        if index:
+            index = int(index)
         self.count = count
         self.index = index
         self._auto = auto if auto is True else False
@@ -1615,11 +1666,8 @@ class ADAG(InvokeMixin, MetadataMixin):
         # PM-1311 always associate dax.api metadata
         self.metadata("dax.api", "python")
 
-    def __unicode__(self):
-        return u"<ADAG %s>" % self.name
-
     def __str__(self):
-        return unicode(self).encode("utf-8")
+        return u"<ADAG %s>" % self.name
 
     def nextJobID(self):
         """Get an autogenerated ID for the next job"""
@@ -1631,7 +1679,7 @@ class ADAG(InvokeMixin, MetadataMixin):
 
     def getJob(self, jobid):
         """Get a Job/DAG/DAX"""
-        if not jobid in self.jobs:
+        if jobid not in self.jobs:
             raise NotFoundError("Job not found", jobid)
         return self.jobs[jobid]
 
@@ -1897,16 +1945,17 @@ class ADAG(InvokeMixin, MetadataMixin):
         # Preamble
         out.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 
-        out.write('<!-- generated: %s -->\n' % datetime.datetime.now())
-        if os.name == 'posix':
+        out.write("<!-- generated: %s -->\n" % datetime.datetime.now())
+        if os.name == "posix":
             import pwd
+
             username = pwd.getpwuid(os.getuid())[0]
-        elif os.name == 'nt':
+        elif os.name == "nt":
             username = os.getenv("USERNAME", "N/A")
         else:
             username = "N/A"
-        out.write('<!-- generated by: %s -->\n' % username)
-        out.write('<!-- generator: python -->\n')
+        out.write("<!-- generated by: %s -->\n" % username)
+        out.write("<!-- generator: python -->\n")
 
         # Open tag
         out.write('<adag xmlns="%s" ' % SCHEMA_NAMESPACE)
@@ -1914,48 +1963,50 @@ class ADAG(InvokeMixin, MetadataMixin):
         out.write('xsi:schemaLocation="%s %s" ' % (SCHEMA_NAMESPACE, SCHEMA_LOCATION))
         out.write('version="%s" ' % SCHEMA_VERSION)
         out.write('name="%s"' % self.name)
-        if self.count: out.write(' count="%d"' % self.count)
-        if self.index: out.write(' index="%d"' % self.index)
-        out.write('>\n')
+        if self.count:
+            out.write(' count="%d"' % self.count)
+        if self.index:
+            out.write(' index="%d"' % self.index)
+        out.write(">\n")
 
         # Metadata
         for m in self._metadata:
-            out.write('\t')
+            out.write("\t")
             m.toXML().write(stream=out, level=1)
-            out.write('\n')
+            out.write("\n")
 
         # Invocations
         for i in self.invocations:
-            out.write('\t')
+            out.write("\t")
             i.toXML().write(stream=out, level=1)
-            out.write('\n')
+            out.write("\n")
 
         # Files
         for fname, f in self.files.items():
             out.write('\t')
             f.toXML().write(stream=out, level=1)
-            out.write('\n')
+            out.write("\n")
 
         # Executables
         for e in self.executables:
-            out.write('\t')
+            out.write("\t")
             e.toXML().write(stream=out, level=1)
-            out.write('\n')
+            out.write("\n")
 
         # Transformations
         for t in self.transformations:
-            out.write('\t')
+            out.write("\t")
             t.toXML().write(stream=out, level=1)
-            out.write('\n')
+            out.write("\n")
 
         # Jobs
         keys = self.jobs.keys()
         keys = sorted(keys)
         for job_id in keys:
             job = self.jobs[job_id]
-            out.write('\t')
+            out.write("\t")
             job.toXML().write(stream=out, level=1)
-            out.write('\n')
+            out.write("\n")
 
         # Dependencies
         # Since we store dependencies as tuples, but we need to print them as nested elements
@@ -1970,21 +2021,18 @@ class ADAG(InvokeMixin, MetadataMixin):
         keys = children.keys()
         keys = sorted(keys)
         for child in keys:
-            out.write('\t')
+            out.write("\t")
             c = Element("child", [("ref", child)])
             parents = children[child]
             parents = sorted(parents)
             for parent, edge_label in parents:
-                p = Element("parent", [
-                    ("ref", parent),
-                    ("edge-label", edge_label)
-                ])
+                p = Element("parent", [("ref", parent), ("edge-label", edge_label)])
                 c.element(p)
             c.write(stream=out, level=1)
-            out.write('\n')
+            out.write("\n")
 
         # Close tag
-        out.write('</adag>\n')
+        out.write("</adag>\n")
 
 
 def parseString(string):
@@ -2010,7 +2058,9 @@ def parse(infile):
         return NS + tag
 
     def badattr(e, exc):
-        return ParseError("Attribute '%s' is required for element %s" % (exc.args[0], e.tag))
+        return ParseError(
+            "Attribute '%s' is required for element %s" % (exc.args[0], e.tag)
+        )
 
     def parse_invoke(e):
         try:
@@ -2020,7 +2070,7 @@ def parse(infile):
 
     def parse_adag(e):
         try:
-            name = e.attrib['name']
+            name = e.attrib["name"]
             count = e.get("count", None)
             index = e.get("index", None)
             return ADAG(name=name, count=count, index=index)
@@ -2030,26 +2080,20 @@ def parse(infile):
     def parse_profile(e):
         try:
             return Profile(
-                namespace=e.attrib["namespace"],
-                key=e.attrib["key"],
-                value=e.text)
+                namespace=e.attrib["namespace"], key=e.attrib["key"], value=e.text
+            )
         except KeyError as ke:
             raise badattr(e, ke)
 
     def parse_metadata(e):
         try:
-            return Metadata(
-                key=e.attrib['key'],
-                value=e.text)
+            return Metadata(key=e.attrib["key"], value=e.text)
         except KeyError as ke:
             raise badattr(e, ke)
 
     def parse_pfn(e):
         try:
-            p = PFN(
-                url=e.attrib['url'],
-                site=e.get("site", None)
-            )
+            p = PFN(url=e.attrib["url"], site=e.get("site", None))
         except KeyError as ke:
             raise badattr(e, ke)
         for pr in e.findall(QN("profile")):
@@ -2067,7 +2111,7 @@ def parse(infile):
 
     def parse_file(e):
         try:
-            f = File(e.attrib['name'])
+            f = File(e.attrib["name"])
         except KeyError as ke:
             raise badattr(e, ke)
         return parse_catalog(e, f)
@@ -2075,7 +2119,7 @@ def parse(infile):
     def parse_executable(e):
         try:
             exe = Executable(
-                name=e.attrib['name'],
+                name=e.attrib["name"],
                 namespace=e.get("namespace", None),
                 version=e.get("version", None),
                 arch=e.get("arch", None),
@@ -2083,7 +2127,7 @@ def parse(infile):
                 osrelease=e.get("osrelease", None),
                 osversion=e.get("osversion", None),
                 glibc=e.get("glibc", None),
-                installed=e.get("installed", None)
+                installed=e.get("installed", None),
             )
         except KeyError as ke:
             raise badattr(e, ke)
@@ -2095,14 +2139,14 @@ def parse(infile):
     def parse_uses(e):
         try:
             u = Use(
-                e.attrib['name'],
-                namespace=e.get('namespace', None),
-                version=e.get('version', None),
-                link=e.get('link', None),
-                register=e.get('register', None),
-                transfer=e.get('transfer', None),
-                optional=e.get('optional', None),
-                executable=e.get('executable', None)
+                e.attrib["name"],
+                namespace=e.get("namespace", None),
+                version=e.get("version", None),
+                link=e.get("link", None),
+                register=e.get("register", None),
+                transfer=e.get("transfer", None),
+                optional=e.get("optional", None),
+                executable=e.get("executable", None),
             )
         except KeyError as ke:
             raise badattr(e, ke)
@@ -2114,8 +2158,9 @@ def parse(infile):
         try:
             t = Transformation(
                 namespace=e.get("namespace", None),
-                name=e.attrib['name'],
-                version=e.get("version", None))
+                name=e.attrib["name"],
+                version=e.get("version", None),
+            )
         except KeyError as ke:
             raise badattr(e, ke)
         for u in e.findall(QN("uses")):
@@ -2140,23 +2185,23 @@ def parse(infile):
         args = e.find(QN("argument"))
         if args is not None:
             for i in iterelem(args):
-                if isinstance(i, basestring):
+                if isinstance(i, six.string_types):
                     j.addRawArguments(i)
                 else:
-                    j.addRawArguments(File(i.attrib['name']))
+                    j.addRawArguments(File(i.attrib["name"]))
 
         try:
             s = e.find(QN("stdin"))
             if s is not None:
-                j.setStdin(s.attrib['name'])
+                j.setStdin(s.attrib["name"])
 
             s = e.find(QN("stdout"))
             if s is not None:
-                j.setStdout(s.attrib['name'])
+                j.setStdout(s.attrib["name"])
 
             s = e.find(QN("stderr"))
             if s is not None:
-                j.setStderr(s.attrib['name'])
+                j.setStderr(s.attrib["name"])
         except KeyError as ke:
             raise badattr(s, ke)
 
@@ -2181,7 +2226,7 @@ def parse(infile):
                 id=e.attrib["id"],
                 namespace=e.get("namespace", None),
                 version=e.get("version", None),
-                node_label=e.get("node-label", None)
+                node_label=e.get("node-label", None),
             )
         except KeyError as ke:
             raise badattr(e, ke)
@@ -2192,7 +2237,7 @@ def parse(infile):
             d = DAX(
                 file=e.attrib["file"],
                 id=e.attrib["id"],
-                node_label=e.get("node-label", None)
+                node_label=e.get("node-label", None),
             )
         except KeyError as ke:
             raise badattr(e, ke)
@@ -2203,7 +2248,7 @@ def parse(infile):
             d = DAG(
                 file=e.attrib["file"],
                 id=e.attrib["id"],
-                node_label=e.get("node-label", None)
+                node_label=e.get("node-label", None),
             )
         except KeyError as ke:
             raise badattr(e, ke)
@@ -2289,7 +2334,7 @@ def main():
     diamond.metadata("createdby", "Gideon Juve")
 
     # add some invoke condition
-    diamond.invoke('on_error', '/usr/bin/update_db -failure')
+    diamond.invoke("on_error", "/usr/bin/update_db -failure")
 
     # Add input file to the DAX-level replica catalog
     a = File("f.a")
@@ -2298,16 +2343,22 @@ def main():
     diamond.addFile(a)
 
     # Add executables to the DAX-level replica catalog
-    e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64")
+    e_preprocess = Executable(
+        namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64"
+    )
     e_preprocess.metadata("size", "2048")
     e_preprocess.addPFN(PFN("gsiftp://site.com/bin/preprocess", "site"))
     diamond.addExecutable(e_preprocess)
 
-    e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64")
+    e_findrange = Executable(
+        namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64"
+    )
     e_findrange.addPFN(PFN("gsiftp://site.com/bin/findrange", "site"))
     diamond.addExecutable(e_findrange)
 
-    e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64")
+    e_analyze = Executable(
+        namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64"
+    )
     e_analyze.addPFN(PFN("gsiftp://site.com/bin/analyze", "site"))
     e_analyze.addProfile(Profile(namespace="env", key="APP_HOME", value="/app"))
     diamond.addExecutable(e_analyze)
@@ -2359,8 +2410,9 @@ def main():
 
     # Get generated diamond dax
     import sys
+
     diamond.writeXML(sys.stdout)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
