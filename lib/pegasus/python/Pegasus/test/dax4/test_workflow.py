@@ -458,7 +458,7 @@ class TestJob:
 
     def test_tojson_with_mixins(self):
         j = Job("t1")
-        j.add_profile(Namespace.ENV, "JAVA_HOME", "/java/home")
+        j.add_env(JAVA_HOME="/java/home")
         j.add_shell_hook(EventType.START, "/bin/echo hi")
         j.add_metadata(key="value")
 
@@ -684,7 +684,7 @@ def wf():
 
     wf._infer_dependencies()
 
-    wf.add_profile(Namespace.ENV, "JAVA_HOME", "/java/home")
+    wf.add_env(JAVA_HOME="/java/home")
     wf.add_shell_hook(EventType.START, "/bin/echo hi")
     wf.add_metadata(key="value")
 

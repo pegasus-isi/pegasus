@@ -33,16 +33,14 @@ class TestFileServer:
         assert "invalid operation_type: put" in str(e)
 
     def test_tojson_with_profiles(self, convert_yaml_schemas_to_json, load_schema):
-        file_server = FileServer("url", Operation.PUT).add_profile(
-            Namespace.ENV, "key", "value"
-        )
+        file_server = FileServer("url", Operation.PUT).add_env(SOME_ENV="1")
 
         result = json.loads(json.dumps(file_server, cls=_CustomEncoder))
 
         expected = {
             "url": "url",
             "operation": "put",
-            "profiles": {"env": {"key": "value"}},
+            "profiles": {"env": {"SOME_ENV": "1"}},
         }
 
         file_server_schema = load_schema("sc-5.0.json")["$defs"]["fileServer"]
@@ -280,7 +278,7 @@ class TestSite:
                 job_type=SupportedJobs.AUXILLARY,
             )
         )
-        site.add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
+        site.add_env(JAVA_HOME="/usr/bin/java")
 
         result = json.loads(json.dumps(site, cls=_CustomEncoder))
 
@@ -463,7 +461,7 @@ class TestSiteCatalog:
                         job_type=SupportedJobs.COMPUTE,
                     )
                 )
-                .add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
+                .add_env(JAVA_HOME="/usr/bin/java")
             )
             .add_site(
                 Site("staging_site", arch=Arch.X86_64, os_type=OS.LINUX).add_directory(
@@ -531,7 +529,7 @@ class TestSiteCatalog:
                         job_type=SupportedJobs.COMPUTE,
                     )
                 )
-                .add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
+                .add_env(JAVA_HOME="/usr/bin/java")
             )
             .add_site(
                 Site("staging_site", arch=Arch.X86_64, os_type=OS.LINUX).add_directory(

@@ -122,7 +122,7 @@ class TestHookMixin:
 
 
 @pytest.fixture(scope="function")
-def profile_mixin_obj():
+def obj():
     def _profile_mixin_obj():
         class ProfileMixinObj(ProfileMixin):
             def __init__(self):
@@ -134,29 +134,256 @@ def profile_mixin_obj():
 
 
 class TestProfileMixin:
-    def test_add_valid_profile(self, profile_mixin_obj):
-        profile_mixin_obj.add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
+    def test_add_valid_profile(self, obj):
+        assert id(
+            obj._add_profiles(Namespace.ENV, key="JAVA_HOME", value="/usr/bin/java")
+        ) == id(obj)
+        assert dict(obj.profiles) == {"env": {"JAVA_HOME": "/usr/bin/java"}}
 
-        assert Namespace.ENV.value in profile_mixin_obj.profiles
-        assert "JAVA_HOME" in profile_mixin_obj.profiles[Namespace.ENV.value]
-        assert (
-            profile_mixin_obj.profiles[Namespace.ENV.value]["JAVA_HOME"]
-            == "/usr/bin/java"
+    def test_add_valid_profiles(self, obj):
+        assert id(obj._add_profiles(Namespace.ENV, ENV1="env1", ENV2="env2",)) == id(
+            obj
         )
 
-    def test_add_invalid_profile(self, profile_mixin_obj):
-        with pytest.raises(ValueError):
-            profile_mixin_obj.add_profile("namespace", "key", "value")
+        assert dict(obj.profiles) == {"env": {"ENV1": "env1", "ENV2": "env2"}}
 
-    def test_chaining(self, profile_mixin_obj):
-        (
-            profile_mixin_obj.add_profile(Namespace.ENV, "key", "value").add_profile(
-                Namespace.GLOBUS, "key", "value"
+    def test_add_invalid_profile(self, obj):
+        with pytest.raises(TypeError) as e:
+            obj._add_profiles("ns")
+
+        assert "invalid ns: ns" in str(e)
+
+    def test_add_env(self, obj):
+        assert id(obj.add_env(ENV1="env1", ENV2="env2")) == id(obj)
+        assert dict(obj.profiles) == {"env": {"ENV1": "env1", "ENV2": "env2"}}
+
+    def test_add_globus(self, obj):
+        assert id(
+            obj.add_globus(
+                count=1,
+                job_type="single",
+                max_cpu_time=2,
+                max_memory=3,
+                max_time=4,
+                max_wall_time=5,
+                min_memory=6,
+                project="abc",
+                queue="queue",
             )
-        )
+        ) == id(obj)
 
-        assert len(profile_mixin_obj.profiles) == 2
-        assert id(profile_mixin_obj.add_profile(Namespace.ENV, "key2", "value")) == id(
-            profile_mixin_obj
-        )
+        assert dict(obj.profiles) == {
+            "globus": {
+                "count": 1,
+                "jobtype": "single",
+                "maxcputime": 2,
+                "maxmemory": 3,
+                "maxtime": 4,
+                "maxwalltime": 5,
+                "minmemory": 6,
+                "project": "abc",
+                "queue": "queue",
+            }
+        }
+
+    def test_add_globus_invalid_profile(self, obj):
+        with pytest.raises(TypeError) as e:
+            obj.add_globus(aa=1)
+
+        assert "add_globus() got an unexpected" in str(e)
+
+    def test_add_dagman(self, obj):
+        assert id(
+            obj.add_dagman(
+                pre="pre",
+                pre_arguments="pre_args",
+                post="post",
+                post_path="post_path",
+                post_arguments="post_args",
+                retry=1,
+                category="cat",
+                priority="prio",
+                abort_dag_on="abrt",
+                max_pre="mp",
+                max_post="mp",
+                max_jobs="mj",
+                max_idle="mi",
+                max_jobs_category="ABC",
+                max_jobs_category_value="10",
+                post_scope="ps",
+            )
+        ) == id(obj)
+
+        assert dict(obj.profiles) == {
+            "dagman": {
+                "PRE": "pre",
+                "PRE.ARGUMENTS": "pre_args",
+                "POST": "post",
+                "post.path.post": "post_path",
+                "POST.ARGUMENTS": "post_args",
+                "RETRY": 1,
+                "CATEGORY": "cat",
+                "PRIORITY": "prio",
+                "ABORT-DAG-ON": "abrt",
+                "MAXPRE": "mp",
+                "MAXPOST": "mp",
+                "MAXJOBS": "mj",
+                "MAXIDLE": "mi",
+                "ABC.MAXJOBS": "10",
+                "POST.SCOPE": "ps",
+            }
+        }
+
+    def test_add_dagman_invalid_profile(self, obj):
+        with pytest.raises(TypeError) as e:
+            obj.add_dagman(aa=1)
+
+        assert "add_dagman() got an unexpected" in str(e)
+
+    def test_add_condor(self, obj):
+        assert id(
+            obj.add_condor(
+                universe="un",
+                periodic_release="pr",
+                periodic_remove="pr",
+                filesystem_domain="fsd",
+                stream_error="se",
+                stream_output="so",
+                priority="prio",
+                request_cpus="rc",
+                request_gpus="rg",
+                request_memory="rm",
+                request_disk="rd",
+            )
+        ) == id(obj)
+
+        assert dict(obj.profiles) == {
+            "condor": {
+                "universe": "un",
+                "periodic_release": "pr",
+                "periodic_remove": "pr",
+                "filesystemdomain": "fsd",
+                "stream_error": "se",
+                "stream_output": "so",
+                "priority": "prio",
+                "request_cpus": "rc",
+                "request_gpus": "rg",
+                "request_memory": "rm",
+                "request_disk": "rd",
+            }
+        }
+
+    def test_add_condor_invalid_profile(self, obj):
+        with pytest.raises(TypeError) as e:
+            obj.add_condor(aa=1)
+
+        assert "add_condor() got an unexpected" in str(e)
+
+    def test_add_pegasus(self, obj):
+        assert id(
+            obj.add_pegasus(
+                clusters_num="clusters.num",
+                clusters_size="clusters.size",
+                job_aggregator="job.aggregator",
+                grid_start="gridstart",
+                grid_start_path="gridstart.path",
+                grid_start_arguments="gridstart.arguments",
+                stagein_clusters="stagein.clusters",
+                stagein_local_clusters="stagein.local.clusters",
+                stagein_remove_clusters="stagein.remove.clusters",
+                stageout_clusters="stageout.clusters",
+                stageout_local_clusters="stageout.local.clusters",
+                stageout_remote_clusters="stageout.remote.clusters",
+                group="group",
+                change_dir="change.dir",
+                create_dir="create.dir",
+                transfer_proxy="transfer.proxy",
+                style="style",
+                pmc_request_memory="pmc_request_memory",
+                pmc_request_cpus="pmc_request_cpus",
+                pmc_priority="pmc_priority",
+                pmc_task_arguments="pmc_task_arguments",
+                exitcode_failure_msg="exitcode.failuremsg",
+                exitcode_success_msg="exitcode.successmsg",
+                checkpoint_time="checkpoint_time",
+                max_walltime="maxwalltime",
+                glite_arguments="glite.arguments",
+                auxillary_local="auxillary.local",
+                condor_arguments_quote="condor.arguments.quote",
+                runtime="runtime",
+                clusters_max_runtime="clusters.maxruntime",
+                cores="cores",
+                nodes="nodes",
+                ppn="ppn",
+                memory="memory",
+                diskspace="diskspace",
+            )
+        ) == id(obj)
+
+        assert dict(obj.profiles) == {
+            "pegasus": {
+                "clusters.num": "clusters.num",
+                "clusters.size": "clusters.size",
+                "job.aggregator": "job.aggregator",
+                "gridstart": "gridstart",
+                "gridstart.path": "gridstart.path",
+                "gridstart.arguments": "gridstart.arguments",
+                "stagein.clusters": "stagein.clusters",
+                "stagein.local.clusters": "stagein.local.clusters",
+                "stagein.remove.clusters": "stagein.remove.clusters",
+                "stageout.clusters": "stageout.clusters",
+                "stageout.local.clusters": "stageout.local.clusters",
+                "stageout.remote.clusters": "stageout.remote.clusters",
+                "group": "group",
+                "change.dir": "change.dir",
+                "create.dir": "create.dir",
+                "transfer.proxy": "transfer.proxy",
+                "style": "style",
+                "pmc_request_memory": "pmc_request_memory",
+                "pmc_request_cpus": "pmc_request_cpus",
+                "pmc_priority": "pmc_priority",
+                "pmc_task_arguments": "pmc_task_arguments",
+                "exitcode.failuremsg": "exitcode.failuremsg",
+                "exitcode.successmsg": "exitcode.successmsg",
+                "checkpoint_time": "checkpoint_time",
+                "maxwalltime": "maxwalltime",
+                "glite.arguments": "glite.arguments",
+                "auxillary.local": "auxillary.local",
+                "condor.arguments.quote": "condor.arguments.quote",
+                "runtime": "runtime",
+                "clusters.maxruntime": "clusters.maxruntime",
+                "cores": "cores",
+                "nodes": "nodes",
+                "ppn": "ppn",
+                "memory": "memory",
+                "diskspace": "diskspace",
+            }
+        }
+
+    def test_add_pegasus_invalid_profile(self, obj):
+        with pytest.raises(TypeError) as e:
+            obj.add_pegasus(aa=1)
+
+        assert "add_pegasus() got an unexpected" in str(e)
+
+    def test_add_hint(self, obj):
+        assert id(
+            obj.add_hint(
+                execution_site="condor-pool", pfn="/tmp", grid_job_type="compute"
+            )
+        ) == id(obj)
+
+        assert dict(obj.profiles) == {
+            "hints": {
+                "execution.site": "condor-pool",
+                "pfn": "/tmp",
+                "grid.jobtype": "compute",
+            }
+        }
+
+    def test_add_hint_invalid_profilew(self, obj):
+        with pytest.raises(TypeError) as e:
+            obj.add_hint(aa=1)
+
+        assert "add_hint() got an unexpected" in str(e)
 

@@ -177,7 +177,7 @@ class TestTransformationSite:
     ):
         t = (
             TransformationSite("local", "/pfn", False)
-            .add_profile(Namespace.ENV, "JAVA_HOME", "/java/home")
+            .add_env(JAVA_HOME="/java/home")
             .add_metadata(key="value")
         )
 
@@ -284,8 +284,8 @@ class TestTransformation:
         t = (
             Transformation("test")
             .add_site(
-                TransformationSite("local", "/pfn", True).add_profile(
-                    Namespace.ENV, "JAVA_HOME", "/java/home"
+                TransformationSite("local", "/pfn", True).add_env(
+                    JAVA_HOME="/java/home"
                 )
             )
             .add_requirement("required")
@@ -321,13 +321,11 @@ class TestTransformation:
     ):
         t = Transformation("test", namespace="pegasus")
         t.add_site(
-            TransformationSite("local", "/pfn", True).add_profile(
-                Namespace.ENV, "JAVA_HOME", "/java/home"
-            )
+            TransformationSite("local", "/pfn", True).add_env(JAVA_HOME="/java/home")
         )
         t.add_requirement("required")
 
-        t.add_profile(Namespace.ENV, "JAVA_HOME", "/java/home")
+        t.add_env(JAVA_HOME="/java/home")
         t.add_shell_hook(EventType.START, "/bin/echo hi")
         t.add_metadata(key="value")
 
@@ -383,7 +381,7 @@ class TestContainer:
 
     def test_tojson_with_profiles(self, convert_yaml_schemas_to_json, load_schema):
         c = Container("test", Container.DOCKER, "image", ["mount"])
-        c.add_profile(Namespace.ENV, "JAVA_HOME", "/java/home")
+        c.add_env(JAVA_HOME="/java/home")
 
         result = c.__json__()
         expected = {
@@ -623,8 +621,8 @@ class TestTransformationCatalog:
 
         foo = (
             Transformation("foo")
-            .add_profile(Namespace.GLOBUS, "maxtime", 2)
-            .add_profile(Namespace.DAGMAN, "retry", 2)
+            .add_globus(max_time=2)
+            .add_dagman(retry=2)
             .add_metadata(size=2048)
             .add_site(
                 TransformationSite(
@@ -634,7 +632,7 @@ class TestTransformationCatalog:
                     arch=Arch.X86_64,
                     os_type=OS.LINUX,
                 )
-                .add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
+                .add_env(JAVA_HOME="/usr/bin/java")
                 .add_metadata(size=2048)
             )
             .add_requirement("bar")
@@ -656,7 +654,7 @@ class TestTransformationCatalog:
             Container.DOCKER,
             "docker:///ryan/centos-pegasus:latest",
             ["/Volumes/Work/lfs1:/shared-data/:ro"],
-        ).add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
+        ).add_env(JAVA_HOME="/usr/bin/java")
 
         (tc.add_transformation(foo, bar).add_container(centos_pegasus_container))
 
