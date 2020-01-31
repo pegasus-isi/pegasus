@@ -138,6 +138,29 @@ class Namespace(Enum):
 
 
 def _profiles(ns, **map_p):
+    """Internal decorator that enables the use of kw args in functions like
+    ProfileMixin.add_condor() and ProfileMixin.add_dagman(). A handful of profile
+    keys contain "." or "-", and so those profile keys cannot be used for kw args.
+    By providing a mapping of legal key names to actual key names, adding profiles
+    becomes more natural. For example we can have the following:
+
+    .. code-block:: python
+
+        # Example
+        @_profiles(
+            Namespace.DAGMAN,
+            pre_args="PRE.ARGUMENTS"
+        )
+        def add_dagman(self, pre_args: str = None):
+            ...
+    
+    This way, available Profile keys will appear in an IDE and we can use kw args
+    for keys that would be invalid as python variable names.
+    
+    :param ns: namespace
+    :type ns: Namespace
+    """
+
     def wrap(f):
         @wraps(f)
         def wrapped_f(self, *a, **kw):
@@ -165,52 +188,14 @@ def _profiles(ns, **map_p):
 
 
 class ProfileMixin:
-    '''
-    """Derived class can have profiles assigned to it"""
+    """Internal function used to add profiles.
 
-    def add_profile(self, namespace, key, value):
-        """Add a profile to this object
-        
-        .. code-block:: python
-
-            # Example 1
-            preprocess = (
-                Transformation("preprocess")
-                    .add_profile(Namespace.GLOBUS, "maxtime", 2)
-                    .add_profile(Namespace.DAGMAN, "retry", 3)
-            )
-
-            # Example 2
-            job = (
-                Job(preprocess)
-                    .add_profile(Namespace.ENV, "FOO", "bar")
-            )
-
-        :param namespace: a namespace defined in :py:class:`~Pegasus.dax4.mixins.Namespace`
-        :type namespace: Namespace
-        :param key: key
-        :type key: str
-        :param value: value
-        :type value: str
-        :raises ValueError: namespace must be one of :py:class:`~Pegasus.dax4.mixins.Namespace`
-        :raises DuplicateError: profiles must be unique
-        :return: self
-        """
-        if not isinstance(namespace, Namespace):
-            raise ValueError("namespace must be one of Namespace")
-
-        if namespace.value in self.profiles:
-            if key in self.profiles[namespace.value]:
-                raise DuplicateError(
-                    "Duplicate profile with namespace: {0}, key: {1}, value: {2}".format(
-                        namespace.value, key, value
-                    )
-                )
-
-        self.profiles[namespace.value][key] = value
-
-        return self
-    '''
+    If key and value are given, then **kw are ignored and {Namespace::key : value}
+    is added. Else **kw is added. 
+    
+    :raises TypeError: namespace must be one of Namespace
+    :return: self
+    """
 
     def _add_profiles(self, ns, key=None, value=None, **kw):
         if not isinstance(ns, Namespace):
@@ -230,6 +215,7 @@ class ProfileMixin:
 
         return self
 
+    #: Add an environment variable
     add_env = partialmethod(_add_profiles, Namespace.ENV)
 
     @_profiles(
@@ -257,26 +243,31 @@ class ProfileMixin:
         project: str = None,
         queue: str = None,
     ):
-        """[summary]
+        """Add Globus profile(s).
+
+        The globus profile namespace encapsulates Globus resource specification 
+        language (RSL) instructions. The RSL configures settings and behavior of 
+        the remote scheduling system.
         
-        :param count: [description], defaults to None
+        :param count: the number of times an executable is started, defaults to None
         :type count: int, optional
-        :param job_type: [description], defaults to None
+        :param job_type: specifies how the job manager should start the remote job. While Pegasus defaults to single, use mpi when running MPI jobs., defaults to None
         :type job_type: str, optional
-        :param max_cpu_time: [description], defaults to None
+        :param max_cpu_time: the max CPU time in minutes for a single execution of a job, defaults to None
         :type max_cpu_time: int, optional
-        :param max_memory: [description], defaults to None
+        :param max_memory: the maximum memory in MB required for the job, defaults to None
         :type max_memory: int, optional
-        :param max_time: [description], defaults to None
+        :param max_time: the maximum time or walltime in minutes for a single execution of a job, defaults to None
         :type max_time: int, optional
-        :param max_wall_time: [description], defaults to None
+        :param max_wall_time: the maximum walltime in minutes for a single execution of a job, defaults to None
         :type max_wall_time: int, optional
-        :param min_memory: [description], defaults to None
+        :param min_memory: the minumum amount of memory required for this job, defaults to None
         :type min_memory: int, optional
-        :param project: [description], defaults to None
+        :param project: associates an account with a job at the remote end, defaults to None
         :type project: str, optional
-        :param queue: [description], defaults to None
+        :param queue: the remote queue in which the job should be run. Used when remote scheduler is PBS that supports queues, defaults to None
         :type queue: str, optional
+        :return: self 
         """
         ...
 
@@ -309,28 +300,33 @@ class ProfileMixin:
         request_memory: str = None,
         request_disk: str = None,
     ):
-        """[summary]
+        """Add Condor profile(s).
+
+        The condor profiles permit to add or overwrite instructions in the Condor submit file.
         
-        :param universe: [description], defaults to None
+        :param universe: Pegasus defaults to either globus or scheduler universes. Set to standard for compute jobs that require standard universe. Set to vanilla to run natively in a condor pool, or to run on resources grabbed via condor glidein, defaults to None
         :type universe: str, optional
-        :param periodic_release: [description], defaults to None
+        :param periodic_release: is the number of times job is released back to the queue if it goes to HOLD, e.g. due to Globus errors. Pegasus defaults to 3, defaults to None
         :type periodic_release: str, optional
-        :param periodic_remove: [description], defaults to None
+        :param periodic_remove: is the number of times a job is allowed to get into HOLD state before being removed from the queue. Pegasus defaults to 3, defaults to None
         :type periodic_remove: str, optional
-        :param filesystem_domain: [description], defaults to None
+        :param filesystem_domain: Useful for Condor glide-ins to pin a job to a remote site, defaults to None
         :type filesystem_domain: str, optional
-        :param stream_error: [description], defaults to None
+        :param stream_error: boolean to turn on the streaming of the stderr of the remote job back to submit host, defaults to None
         :type stream_error: bool, optional
-        :param stream_output: [description], defaults to None
+        :param stream_output: boolean to turn on the streaming of the stdout of the remote job back to submit host, defaults to None
         :type stream_output: bool, optional
-        :param priority: [description], defaults to None
+        :param priority: integer value to assign the priority of a job. Higher value means higher priority. The priorities are only applied for vanilla / standard/ local universe jobs. Determines the order in which a users own jobs are executed, defaults to None
         :type priority: str, optional
-        :param request_cpus: [description], defaults to None
+        :param request_cpus: Number of CPU's a job requires, defaults to None
         :type request_cpus: str, optional
-        :param request_memory: [description], defaults to None
+        :param request_gpus: Number of GPU's a job requires, defaults to None
+        :type request_gpus: str, optional
+        :param request_memory: Amount of memory a job requires, defaults to None
         :type request_memory: str, optional
-        :param request_disk: [description], defaults to None
+        :param request_disk: Amount of disk a job requires, defaults to None
         :type request_disk: str, optional
+        :return: self
         """
         ...
 
@@ -344,7 +340,7 @@ class ProfileMixin:
         grid_start_arguments="gridstart.arguments",
         stagein_clusters="stagein.clusters",
         stagein_local_clusters="stagein.local.clusters",
-        stagein_remove_clusters="stagein.remove.clusters",
+        stagein_remote_clusters="stagein.remote.clusters",
         stageout_clusters="stageout.clusters",
         stageout_local_clusters="stageout.local.clusters",
         stageout_remote_clusters="stageout.remote.clusters",
@@ -383,7 +379,7 @@ class ProfileMixin:
         grid_start_arguments: str = None,
         stagein_clusters: int = None,
         stagein_local_clusters: int = None,
-        stagein_remove_clusters: int = None,
+        stagein_remote_clusters: int = None,
         stageout_clusters: int = None,
         stageout_local_clusters: int = None,
         stageout_remote_clusters: int = None,
@@ -411,64 +407,65 @@ class ProfileMixin:
         memory: int = None,
         diskspace: int = None,
     ):
-        """[summary]
+        """Add Pegasus profile(s).
         
-        :param clusters_num: [description], defaults to None
+        :param clusters_num: Determines the total number of clusters per level, jobs are evenly spread across clusters (see `Pegasus Clustering Guide <https://pegasus.isi.edu/documentation/job_clustering.php#horizontal_clustering>`_ for more information), defaults to None
         :type clusters_num: int, optional
-        :param clusters_size: [description], defaults to None
+        :param clusters_size: Determines the number of jobs in each cluster (see `Pegasus Clustering Guide <https://pegasus.isi.edu/documentation/job_clustering.php#horizontal_clustering>`_ for more information), defaults to None
         :type clusters_size: int, optional
-        :param job_aggregator: [description], defaults to None
+        :param job_aggregator: Indicates the clustering executable that is used to run the clustered job on the remote site, defaults to None
         :type job_aggregator: int, optional
-        :param grid_start: [description], defaults to None
+        :param grid_start: Determines the executable for launching a job (see `docs <https://pegasus.isi.edu/documentation/profiles.php#hints_profiles>`_ for more information), defaults to None
         :type grid_start: int, optional
-        :param grid_start_path: [description], defaults to None
+        :param grid_start_path: Sets the path to the gridstart . This profile is best set in the Site Catalog, defaults to None
         :type grid_start_path: str, optional
-        :param grid_start_arguments: [description], defaults to None
+        :param grid_start_arguments: Sets the arguments with which GridStart is used to launch a job on the remote site, defaults to None
         :type grid_start_arguments: str, optional
-        :param stagein_clusters: [description], defaults to None
+        :param stagein_clusters: This key determines the maximum number of stage-in jobs that are can executed locally or remotely per compute site per workflow. This is used to configure the BalancedCluster Transfer Refiner, which is the Default Refiner used in Pegasus. This profile is best set in the Site Catalog or in the Properties file, defaults to None
         :type stagein_clusters: int, optional
-        :param stagein_local_clusters: [description], defaults to None
+        :param stagein_local_clusters: This key provides finer grained control in determining the number of stage-in jobs that are executed locally and are responsible for staging data to a particular remote site. This profile is best set in the Site Catalog or in the Properties file, defaults to None
         :type stagein_local_clusters: int, optional
-        :param stagein_remove_clusters: [description], defaults to None
-        :type stagein_remove_clusters: int, optional
-        :param stageout_clusters: [description], defaults to None
+        :param stagein_remote_clusters: This key provides finer grained control in determining the number of stage-in jobs that are executed remotely on the remote site and are responsible for staging data to it. This profile is best set in the Site Catalog or in the Properties file, defaults to None
+        :type stagein_remote_clusters: int, optional
+        :param stageout_clusters: This key determines the maximum number of stage-out jobs that are can executed locally or remotely per compute site per workflow. This is used to configure the BalancedCluster Transfer Refiner, , which is the Default Refiner used in Pegasus, defaults to None
         :type stageout_clusters: int, optional
-        :param stageout_local_clusters: [description], defaults to None
+        :param stageout_local_clusters: This key provides finer grained control in determining the number of stage-out jobs that are executed locally and are responsible for staging data from a particular remote site. This profile is best set in the Site Catalog or in the Properties file, defaults to None
         :type stageout_local_clusters: int, optional
-        :param stageout_remote_clusters: [description], defaults to None
+        :param stageout_remote_clusters: This key provides finer grained control in determining the number of stage-out jobs that are executed remotely on the remote site and are responsible for staging data from it. This profile is best set in the Site Catalog or in the Properties file, defaults to None
         :type stageout_remote_clusters: int, optional
-        :param group: [description], defaults to None
+        :param group: Tags a job with an arbitrary group identifier. The group site selector makes use of the tag, defaults to None
         :type group: str, optional
-        :param change_dir: [description], defaults to None
+        :param change_dir: If true, tells kickstart to change into the remote working directory. Kickstart itself is executed in whichever directory the remote scheduling system chose for the job, defaults to None
         :type change_dir: bool, optional
-        :param create_dir: [description], defaults to None
+        :param create_dir: If true, tells kickstart to create the the remote working directory before changing into the remote working directory. Kickstart itself is executed in whichever directory the remote scheduling system chose for the job, defaults to None
         :type create_dir: bool, optional
-        :param transfer_proxy: [description], defaults to None
+        :param transfer_proxy: If true, tells Pegasus to explicitly transfer the proxy for transfer jobs to the remote site. This is useful, when you want to use a full proxy at the remote end, instead of the limited proxy that is transferred by CondorG, defaults to None
         :type transfer_proxy: bool, optional
-        :param style: [description], defaults to None
+        :param style: Sets the condor submit file style. If set to globus, submit file generated refers to CondorG job submissions. If set to condor, submit file generated refers to direct Condor submission to the local Condor pool. It applies for glidein, where nodes from remote grid sites are glided into the local condor pool. The default style that is applied is globus, defaults to None
         :type style: str, optional
-        :param pmc_request_memory: [description], defaults to None
+        :param pmc_request_memory: This key is used to set the -m option for pegasus-mpi-cluster. It specifies the amount of memory in MB that a job requires. This profile is usually set in the DAX for each job, defaults to None
         :type pmc_request_memory: int, optional
-        :param pmc_request_cpus: [description], defaults to None
+        :param pmc_request_cpus: This key is used to set the -c option for pegasus-mpi-cluster. It specifies the number of cpu's that a job requires. This profile is usually set in the DAX for each job, defaults to None
         :type pmc_request_cpus: int, optional
-        :param pmc_priority: [description], defaults to None
+        :param pmc_priority: This key is used to set the -p option for pegasus-mpi-cluster. It specifies the priority for a job . This profile is usually set in the DAX for each job. Negative values are allowed for priorities, defaults to None
         :type pmc_priority: int, optional
-        :param pmc_task_arguments: [description], defaults to None
+        :param pmc_task_arguments: The key is used to pass any extra arguments to the PMC task during the planning time. They are added to the very end of the argument string constructed for the task in the PMC file. Hence, allows for overriding of any argument constructed by the planner for any particular task in the PMC job, defaults to None
         :type pmc_task_arguments: str, optional
-        :param exitcode_failure_msg: [description], defaults to None
+        :param exitcode_failure_msg: The message string that pegasus-exitcode searches for in the stdout and stderr of the job to flag failures, defaults to None
         :type exitcode_failure_msg: str, optional
-        :param exitcode_success_msg: [description], defaults to None
+        :param exitcode_success_msg: The message string that pegasus-exitcode searches for in the stdout and stderr of the job to determine whether a job logged it's success message or not. Note this value is used to check for whether a job failed or not i.e if this profile is specified, and pegasus-exitcode DOES NOT find the string in the job stdout or stderr, the job is flagged as failed. The complete rules for determining failure are described in the man page for pegasus-exitcode, defaults to None
         :type exitcode_success_msg: str, optional
-        :param checkpoint_time: [description], defaults to None
+        :param checkpoint_time: the expected time in minutes for a job after which it should be sent a TERM signal to generate a job checkpoint file, defaults to None
         :type checkpoint_time: int, optional
-        :param max_walltime: [description], defaults to None
+        :param max_walltime: the maximum walltime in minutes for a single execution of a job, defaults to None
         :type max_walltime: int, optional
-        :param glite_arguments: [description], defaults to None
+        :param glite_arguments: specifies the extra arguments that must appear in the local PBS generated script for a job, when running workflows on a local cluster with submissions through Glite. This is useful when you want to pass through special options to underlying LRMS such as PBS e.g. you can set value -l walltime=01:23:45 -l nodes=2 to specify your job's resource requirements, defaults to None
         :type glite_arguments: str, optional
-        :param auxillary_local: [description], defaults to None
+        :param auxillary_local: indicates whether auxillary jobs associated with a compute site X, can be run on local site. This CAN ONLY be specified as a profile in the site catalog and should be set when the compute site filesystem is accessible locally on the submit host, defaults to None
         :type auxillary_local: bool, optional
-        :param condor_arguments_quote: [description], defaults to None
+        :param condor_arguments_quote: indicates whether condor quoting rules should be applied for writing out the arguments key in the condor submit file. By default it is true unless the job is schedule to a glite style site. The value is automatically set to false for glite style sites, as condor quoting is broken in batch_gahp, defaults to None
         :type condor_arguments_quote: bool, optional
+        :return: self 
         """
         ...
 
@@ -481,14 +478,19 @@ class ProfileMixin:
     def add_hint(
         self, *, execution_site: str = None, pfn: str = None, grid_job_type: str = None
     ):
-        """[summary]
+        """Add Hint(s).
         
-        :param execution_site: [description], defaults to None
+        The hints namespace allows users to override the beahvior of the Workflow
+        Mapper during site selection. This gives you finer grained control over 
+        where a job executes and what executable it refers to.
+
+        :param execution_site: the execution site where a job should be executed, defaults to None
         :type execution_site: str, optional
-        :param pfn: [description], defaults to None
+        :param pfn: the physical file name to the main executable that a job refers to. Overrides any entries specified in the transformation catalog, defaults to None
         :type pfn: str, optional
-        :param grid_job_type: [description], defaults to None
+        :param grid_job_type: This profile is usually used to ensure that a compute job executes on another job manager (see `docs <https://pegasus.isi.edu/documentation/profiles.php#hints_profiles>`_ for more information), defaults to None
         :type grid_job_type: str, optional
+        :return: self
         """
         ...
 
@@ -512,42 +514,41 @@ class ProfileMixin:
         max_jobs_category_value: str = None,
         post_scope: str = None,
     ):
-        """[summary]
+        """Add Dagman profile(s).
         
-        :param pre: [description], defaults to None
+        :param pre: is the path to the pre-script. DAGMan executes the pre-script before it runs the job, defaults to None
         :type pre: str, optional
-        :param pre_arguments: [description], defaults to None
+        :param pre_arguments: are command-line arguments for the pre-script, if any, defaults to None
         :type pre_arguments: str, optional
-        :param post: [description], defaults to None
+        :param post: is the postscript type/mode that a user wants to associate with a job (see `docs <https://pegasus.isi.edu/documentation/profiles.php>`_ for more information), defaults to None
         :type post: str, optional
-        :param post_path: [description], defaults to None
+        :param post_path: the path to the post script on the submit host, defaults to None
         :type post_path: str, optional
-        :param post_arguments: [description], defaults to None
+        :param post_arguments: are the command line arguments for the post script, if any, defaults to None
         :type post_arguments: str, optional
-        :param retry: [description], defaults to None
+        :param retry: is the number of times DAGMan retries the full job cycle from pre-script through post-script, if failure was detected, defaults to None
         :type retry: int, optional
-        :param category: [description], defaults to None
+        :param category: the DAGMan category the job belongs to, defaults to None
         :type category: str, optional
-        :param priority: [description], defaults to None
+        :param priority: the priority to apply to a job. DAGMan uses this to select what jobs to release when MAXJOBS is enforced for the DAG, defaults to None
         :type priority: int, optional
-        :param abort_dag_on: [description], defaults to None
+        :param abort_dag_on: The ABORT-DAG-ON key word provides a way to abort the entire DAG if a given node returns a specific exit code (AbortExitValue). The syntax for the value of the key is AbortExitValue [RETURN DAGReturnValue] . When a DAG aborts, by default it exits with the node return value that caused the abort. This can be changed by using the optional RETURN key word along with specifying the desired DAGReturnValue, defaults to None
         :type abort_dag_on: str, optional
-        :param max_pre: [description], defaults to None
+        :param max_pre: sets the maximum number of PRE scripts within the DAG that may be running at one time, defaults to None
         :type max_pre: str, optional
-        :param max_post: [description], defaults to None
+        :param max_post: sets the maximum number of POST scripts within the DAG that may be running at one time, defaults to None
         :type max_post: str, optional
-        :param max_jobs: [description], defaults to None
+        :param max_jobs: sets the maximum number of jobs within the DAG that will be submitted to Condor at one time, defaults to None
         :type max_jobs: str, optional
-        :param max_idle: [description], defaults to None
+        :param max_idle: Sets the maximum number of idle jobs allowed before HTCondor DAGMan stops submitting more jobs. Once idle jobs start to run, HTCondor DAGMan will resume submitting jobs. If the option is omitted, the number of idle jobs is unlimited, defaults to None
         :type max_idle: str, optional
-        :param max_jobs_category: [description], defaults to None
+        :param max_jobs_category: category name; this profile key will become <max_jobs_category>.MAXJOBS (note that max_jobs_category_value should also be set), defaults to None
         :type max_jobs_category: str, optional
-        :param max_jobs_category_value: [description], defaults to None
+        :param max_jobs_category_value: is the value of maxjobs for a particular category. Users can associate different categories to the jobs at a per job basis. However, the value of a dagman knob for a category can only be specified at a per workflow basis in the properties, defaults to None
         :type max_jobs_category_value: str, optional
-        :param post_scope: [description], defaults to None
+        :param post_scope: can be "all", "none" or "essential" (see `docs <https://pegasus.isi.edu/documentation/profiles.php>`_ for more information), defaults to None
         :type post_scope: str, optional
-        :return: [description]
-        :rtype: [type]
+        :return: self
         """
         map_p = {
             "pre": "PRE",
