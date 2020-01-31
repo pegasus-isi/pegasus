@@ -215,8 +215,14 @@ class ProfileMixin:
 
         return self
 
-    #: Add an environment variable
+    #: Add environment variable(s)
     add_env = partialmethod(_add_profiles, Namespace.ENV)
+
+    #: Add stat profile(s)
+    add_stat = partialmethod(_add_profiles, Namespace.STAT)
+
+    #: Add selector profile(s)
+    add_selector = partialmethod(_add_profiles, Namespace.SELECTOR)
 
     @_profiles(
         Namespace.GLOBUS,
