@@ -2,15 +2,15 @@ import pytest
 
 from collections import defaultdict
 
-from Pegasus.dax4.mixins import MetadataMixin
-from Pegasus.dax4.mixins import _Hook
-from Pegasus.dax4.mixins import EventType
-from Pegasus.dax4.mixins import _ShellHook
-from Pegasus.dax4.mixins import HookMixin
-from Pegasus.dax4.mixins import Namespace
-from Pegasus.dax4.mixins import ProfileMixin
-from Pegasus.dax4.errors import DuplicateError
-from Pegasus.dax4.errors import NotFoundError
+from Pegasus.api.mixins import MetadataMixin
+from Pegasus.api.mixins import _Hook
+from Pegasus.api.mixins import EventType
+from Pegasus.api.mixins import _ShellHook
+from Pegasus.api.mixins import HookMixin
+from Pegasus.api.mixins import Namespace
+from Pegasus.api.mixins import ProfileMixin
+from Pegasus.api.errors import DuplicateError
+from Pegasus.api.errors import NotFoundError
 
 
 @pytest.fixture(scope="function")

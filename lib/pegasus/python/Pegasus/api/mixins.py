@@ -55,13 +55,13 @@ class EventType(Enum):
 class HookMixin:
     """Derived class can have hooks assigned to it. This currently supports
     shell hooks. The supported hooks are triggered when some event,
-    specified by :py:class:`~Pegasus.dax4.mixins.EventType`, takes place.
+    specified by :py:class:`~Pegasus.api.mixins.EventType`, takes place.
     """
 
     def add_shell_hook(self, event_type, cmd):
         # TODO: consider making event_type either an event type or an actual ShellHook
         """Add a shell hook. The given command will be executed by the shell
-        when the specified :py:class:`~Pegasus.dax4.mixins.EventType` takes
+        when the specified :py:class:`~Pegasus.api.mixins.EventType` takes
         place.
 
         .. code-block:: python
@@ -69,11 +69,11 @@ class HookMixin:
             # Example
             wf.add_shell_hook(EventType.START, "echo 'hello'")
         
-        :param event_type: an event type defined in :py:class:`~Pegasus.dax4.mixins.EventType`
+        :param event_type: an event type defined in :py:class:`~Pegasus.api.mixins.EventType`
         :type event_type: EventType
         :param cmd: shell command
         :type cmd: str
-        :raises ValueError: event_type must be one of :py:class:`~Pegasus.dax4.mixins.EventType`
+        :raises ValueError: event_type must be one of :py:class:`~Pegasus.api.mixins.EventType`
         :return: self
         """
         if not isinstance(event_type, EventType):
@@ -90,9 +90,9 @@ class _Hook:
     def __init__(self, event_type):
         """Constructor
         
-        :param event_type: an event type defined in :py:class:`~Pegasus.dax4.mixins.EventType`
+        :param event_type: an event type defined in :py:class:`~Pegasus.api.mixins.EventType`
         :type event_type: EventType
-        :raises ValueError: event_type must be of type :py:class:`~Pegasus.dax4.mixins.EventType`
+        :raises ValueError: event_type must be of type :py:class:`~Pegasus.api.mixins.EventType`
         """
         if not isinstance(event_type, EventType):
             raise ValueError("event_type must be one of EventType")
@@ -111,7 +111,7 @@ class _ShellHook(_Hook):
     def __init__(self, event_type, cmd):
         """Constructor
         
-        :param event_type: an event type defined in :py:class:`~Pegasus.dax4.mixins.EventType`
+        :param event_type: an event type defined in :py:class:`~Pegasus.api.mixins.EventType`
         :type event_type: EventType
         :param cmd: shell command
         :type cmd: str

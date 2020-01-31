@@ -6,29 +6,29 @@ import pytest
 import yaml
 from jsonschema import validate
 
-from Pegasus.dax4.workflow import AbstractJob
-from Pegasus.dax4.workflow import Job
-from Pegasus.dax4.workflow import DAX
-from Pegasus.dax4.workflow import DAG
-from Pegasus.dax4.workflow import _LinkType
-from Pegasus.dax4.workflow import _Use
-from Pegasus.dax4.workflow import _JobDependency
-from Pegasus.dax4.workflow import Workflow
-from Pegasus.dax4.workflow import PEGASUS_VERSION
-from Pegasus.dax4.replica_catalog import File
-from Pegasus.dax4.replica_catalog import ReplicaCatalog
-from Pegasus.dax4.errors import DuplicateError
-from Pegasus.dax4.errors import NotFoundError
-from Pegasus.dax4.transformation_catalog import Transformation
-from Pegasus.dax4.transformation_catalog import TransformationSite
-from Pegasus.dax4.transformation_catalog import TransformationCatalog
-from Pegasus.dax4.mixins import ProfileMixin
-from Pegasus.dax4.mixins import HookMixin
-from Pegasus.dax4.mixins import MetadataMixin
-from Pegasus.dax4.mixins import Namespace
-from Pegasus.dax4.mixins import EventType
-from Pegasus.dax4.site_catalog import SiteCatalog
-from Pegasus.dax4.writable import _CustomEncoder
+from Pegasus.api.workflow import AbstractJob
+from Pegasus.api.workflow import Job
+from Pegasus.api.workflow import DAX
+from Pegasus.api.workflow import DAG
+from Pegasus.api.workflow import _LinkType
+from Pegasus.api.workflow import _Use
+from Pegasus.api.workflow import _JobDependency
+from Pegasus.api.workflow import Workflow
+from Pegasus.api.workflow import PEGASUS_VERSION
+from Pegasus.api.replica_catalog import File
+from Pegasus.api.replica_catalog import ReplicaCatalog
+from Pegasus.api.errors import DuplicateError
+from Pegasus.api.errors import NotFoundError
+from Pegasus.api.transformation_catalog import Transformation
+from Pegasus.api.transformation_catalog import TransformationSite
+from Pegasus.api.transformation_catalog import TransformationCatalog
+from Pegasus.api.mixins import ProfileMixin
+from Pegasus.api.mixins import HookMixin
+from Pegasus.api.mixins import MetadataMixin
+from Pegasus.api.mixins import Namespace
+from Pegasus.api.mixins import EventType
+from Pegasus.api.site_catalog import SiteCatalog
+from Pegasus.api.writable import _CustomEncoder
 
 
 class Test_Use:

@@ -1,12 +1,12 @@
 from enum import Enum
 from collections import defaultdict
 
-from Pegasus.dax4.mixins import ProfileMixin
-from Pegasus.dax4.writable import _filter_out_nones
-from Pegasus.dax4.writable import Writable
-from Pegasus.dax4.errors import DuplicateError
-from Pegasus.dax4._utils import _get_enum_str
-from Pegasus.dax4._utils import _get_class_enum_member_str
+from Pegasus.api.mixins import ProfileMixin
+from Pegasus.api.writable import _filter_out_nones
+from Pegasus.api.writable import Writable
+from Pegasus.api.errors import DuplicateError
+from Pegasus.api._utils import _get_enum_str
+from Pegasus.api._utils import _get_class_enum_member_str
 
 PEGASUS_VERSION = "5.0"
 
@@ -110,9 +110,9 @@ class FileServer(ProfileMixin):
         """
         :param url: url including protocol such as 'scp://obelix.isi.edu/data'
         :type url: str
-        :param operation_type: operation type defined in :py:class:`~Pegasus.dax4.site_catalog.OperationType`
+        :param operation_type: operation type defined in :py:class:`~Pegasus.api.site_catalog.OperationType`
         :type operation_type: OperationType
-        :raises ValueError: operation_type must be one defined in :py:class:`~Pegasus.dax4.site_catalog.OperationType`
+        :raises ValueError: operation_type must be one defined in :py:class:`~Pegasus.api.site_catalog.OperationType`
         """
         self.url = url
 
@@ -161,11 +161,11 @@ class Directory:
     # def __init__(self, directory_type, path, free_size=None, total_size=None):
     def __init__(self, directory_type, path):
         """
-        :param directory_type: directory type defined in :py:class:`~Pegasus.dax4.site_catalog.DirectoryType`
+        :param directory_type: directory type defined in :py:class:`~Pegasus.api.site_catalog.DirectoryType`
         :type directory_type: DirectoryType
         :param path: directory path
         :type path: str
-        :raises ValueError: directory_type must be one of :py:class:`~Pegasus.dax4.site_catalog.DirectoryType`
+        :raises ValueError: directory_type must be one of :py:class:`~Pegasus.api.site_catalog.DirectoryType`
         """
         if not isinstance(directory_type, _DirectoryType):
             raise TypeError(
@@ -186,9 +186,9 @@ class Directory:
     def add_file_server(self, file_server):
         """Add access methods to this directory
         
-        :param file_server: a :py:class:`~Pegasus.dax4.site_catalog.FileServer`
+        :param file_server: a :py:class:`~Pegasus.api.site_catalog.FileServer`
         :type file_server: FileServer
-        :raises ValueError: file_server must be of type :py:class:`~Pegasus.dax4.site_catalog.FileServer`
+        :raises ValueError: file_server must be of type :py:class:`~Pegasus.api.site_catalog.FileServer`
         :return: self
         """
         if not isinstance(file_server, FileServer):
@@ -378,8 +378,8 @@ class Site(ProfileMixin):
         :type os_version: str, optional
         :param glibc: glibc used on the site, defaults to None
         :type glibc: str, optional
-        :raises ValueError: arch must be one of :py:class:`~Pegasus.dax4.site_catalog.Arch`
-        :raises ValueError: os_type must be one of :py:class:`~Pegasus.dax4.site_catalog.OSType`
+        :raises ValueError: arch must be one of :py:class:`~Pegasus.api.site_catalog.Arch`
+        :raises ValueError: os_type must be one of :py:class:`~Pegasus.api.site_catalog.OSType`
         """
         self.name = name
         self.directories = list()
@@ -416,11 +416,11 @@ class Site(ProfileMixin):
         self.profiles = defaultdict(dict)
 
     def add_directory(self, directory):
-        """Add a :py:class:`~Pegasus.dax4.site_catalog.Directory` to this :py:class:`~Pegasus.dax4.site_catalog.Site`
+        """Add a :py:class:`~Pegasus.api.site_catalog.Directory` to this :py:class:`~Pegasus.api.site_catalog.Site`
         
-        :param directory: the :py:class:`~Pegasus.dax4.site_catalog.Directory` to be added
+        :param directory: the :py:class:`~Pegasus.api.site_catalog.Directory` to be added
         :type directory: Directory
-        :raises ValueError: directory must be of type :py:class:`~Pegasus.dax4.site_catalog.Directory`
+        :raises ValueError: directory must be of type :py:class:`~Pegasus.api.site_catalog.Directory`
         :return: self
         """
         if not isinstance(directory, Directory):
@@ -435,11 +435,11 @@ class Site(ProfileMixin):
         return self
 
     def add_grid(self, grid):
-        """Add a :py:class:`~Pegasus.dax4.site_catalog.Grid` to this :py:class:`~Pegasus.dax4.site_catalog.Site`
+        """Add a :py:class:`~Pegasus.api.site_catalog.Grid` to this :py:class:`~Pegasus.api.site_catalog.Site`
         
-        :param grid: the :py:class:`~Pegasus.dax4.site_catalog.Grid` to be added
+        :param grid: the :py:class:`~Pegasus.api.site_catalog.Grid` to be added
         :type grid: Grid
-        :raises ValueError: grid must be of type :py:class:`~Pegasus.dax4.site_catalog.Grid`
+        :raises ValueError: grid must be of type :py:class:`~Pegasus.api.site_catalog.Grid`
         :return: self
         """
         if not isinstance(grid, Grid):
@@ -468,7 +468,7 @@ class Site(ProfileMixin):
 
 
 class SiteCatalog(Writable):
-    """The SiteCatalog describes the compute resources, or :py:class:`~Pegasus.dax4.site_catalog.Site` s
+    """The SiteCatalog describes the compute resources, or :py:class:`~Pegasus.api.site_catalog.Site` s
     that we intend to run the workflow upon.
     """
 
@@ -480,7 +480,7 @@ class SiteCatalog(Writable):
         
         :param site: the site to be added
         :type site: Site
-        :raises ValueError: site must be of type :py:class:`~Pegasus.dax4.site_catalog.Site`
+        :raises ValueError: site must be of type :py:class:`~Pegasus.api.site_catalog.Site`
         :raises DuplicateError: a site with the same name already exists in this catalog
         :return: self
         """

@@ -6,20 +6,20 @@ import pytest
 import yaml
 from jsonschema import validate
 
-from Pegasus.dax4.site_catalog import Arch
-from Pegasus.dax4.site_catalog import OS
-from Pegasus.dax4.site_catalog import Operation
-from Pegasus.dax4.site_catalog import FileServer
-from Pegasus.dax4.site_catalog import Directory
-from Pegasus.dax4.site_catalog import Grid
-from Pegasus.dax4.site_catalog import SupportedJobs
-from Pegasus.dax4.site_catalog import Scheduler
-from Pegasus.dax4.site_catalog import Site
-from Pegasus.dax4.site_catalog import SiteCatalog
-from Pegasus.dax4.site_catalog import PEGASUS_VERSION
-from Pegasus.dax4.mixins import Namespace
-from Pegasus.dax4.errors import DuplicateError
-from Pegasus.dax4.writable import _CustomEncoder
+from Pegasus.api.site_catalog import Arch
+from Pegasus.api.site_catalog import OS
+from Pegasus.api.site_catalog import Operation
+from Pegasus.api.site_catalog import FileServer
+from Pegasus.api.site_catalog import Directory
+from Pegasus.api.site_catalog import Grid
+from Pegasus.api.site_catalog import SupportedJobs
+from Pegasus.api.site_catalog import Scheduler
+from Pegasus.api.site_catalog import Site
+from Pegasus.api.site_catalog import SiteCatalog
+from Pegasus.api.site_catalog import PEGASUS_VERSION
+from Pegasus.api.mixins import Namespace
+from Pegasus.api.errors import DuplicateError
+from Pegasus.api.writable import _CustomEncoder
 
 
 class TestFileServer:

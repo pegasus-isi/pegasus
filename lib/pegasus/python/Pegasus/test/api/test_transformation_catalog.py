@@ -6,18 +6,18 @@ import pytest
 import yaml
 from jsonschema import validate
 
-from Pegasus.dax4.transformation_catalog import TransformationSite
-from Pegasus.dax4.transformation_catalog import Container
-from Pegasus.dax4.transformation_catalog import Transformation
-from Pegasus.dax4.transformation_catalog import TransformationCatalog
-from Pegasus.dax4.transformation_catalog import PEGASUS_VERSION
-from Pegasus.dax4.site_catalog import OS
-from Pegasus.dax4.site_catalog import Arch
-from Pegasus.dax4.mixins import Namespace
-from Pegasus.dax4.mixins import EventType
-from Pegasus.dax4.errors import DuplicateError
-from Pegasus.dax4.errors import NotFoundError
-from Pegasus.dax4.writable import _CustomEncoder
+from Pegasus.api.transformation_catalog import TransformationSite
+from Pegasus.api.transformation_catalog import Container
+from Pegasus.api.transformation_catalog import Transformation
+from Pegasus.api.transformation_catalog import TransformationCatalog
+from Pegasus.api.transformation_catalog import PEGASUS_VERSION
+from Pegasus.api.site_catalog import OS
+from Pegasus.api.site_catalog import Arch
+from Pegasus.api.mixins import Namespace
+from Pegasus.api.mixins import EventType
+from Pegasus.api.errors import DuplicateError
+from Pegasus.api.errors import NotFoundError
+from Pegasus.api.writable import _CustomEncoder
 
 
 class TestTransformationSite:

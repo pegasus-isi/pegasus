@@ -7,12 +7,12 @@ import pytest
 import yaml
 from jsonschema import validate
 
-from Pegasus.dax4.replica_catalog import File
-from Pegasus.dax4.replica_catalog import ReplicaCatalog
-from Pegasus.dax4.replica_catalog import PEGASUS_VERSION
-from Pegasus.dax4.errors import NotFoundError
-from Pegasus.dax4.errors import DuplicateError
-from Pegasus.dax4.mixins import Namespace
+from Pegasus.api.replica_catalog import File
+from Pegasus.api.replica_catalog import ReplicaCatalog
+from Pegasus.api.replica_catalog import PEGASUS_VERSION
+from Pegasus.api.errors import NotFoundError
+from Pegasus.api.errors import DuplicateError
+from Pegasus.api.mixins import Namespace
 
 
 class TestFile:

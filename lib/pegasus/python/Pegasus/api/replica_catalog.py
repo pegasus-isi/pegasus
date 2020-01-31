@@ -16,7 +16,7 @@ __all__ = ["File", "ReplicaCatalog"]
 class File(MetadataMixin):
     """
     A workflow File. This class is used to represent 
-    :py:class:`~Pegasus.dax4.workflow.Job` inputs and outputs.
+    :py:class:`~Pegasus.api.workflow.Job` inputs and outputs.
     """
 
     def __init__(self, lfn):
@@ -73,7 +73,7 @@ class ReplicaCatalog(Writable):
                 .add_replica("if2", "/nfs/u2/ryan/data2.csv", "local")
             )
 
-        :param lfn: logical filename or :py:class:`~Pegasus.dax4.replica_catalog.File`
+        :param lfn: logical filename or :py:class:`~Pegasus.api.replica_catalog.File`
         :type lfn: str or File
         :param pfn: physical file name 
         :type pfn: str
@@ -82,7 +82,7 @@ class ReplicaCatalog(Writable):
         :param regex: whether or not the lfn is a regex pattern, defaults to False
         :type regex: bool, optional
         :raises DuplicateError: an entry with the same parameters already exists in the catalog
-        :raises TypeError: lfn must be of type :py:class:`~Pegasus.dax4.replica_catalog.File` or str
+        :raises TypeError: lfn must be of type :py:class:`~Pegasus.api.replica_catalog.File` or str
         :return: self
         """
         if not isinstance(lfn, File) and not isinstance(lfn, str):

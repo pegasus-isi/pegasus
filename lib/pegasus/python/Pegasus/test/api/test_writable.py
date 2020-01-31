@@ -5,8 +5,8 @@ from tempfile import TemporaryFile
 import yaml
 import pytest
 
-from Pegasus.dax4.writable import _CustomEncoder
-from Pegasus.dax4.writable import Writable
+from Pegasus.api.writable import _CustomEncoder
+from Pegasus.api.writable import Writable
 
 
 @pytest.fixture(scope="function")

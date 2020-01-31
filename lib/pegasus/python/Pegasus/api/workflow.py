@@ -29,7 +29,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
 
     def __init__(self, _id=None, node_label=None):
         """
-        :param _id: a unique id, if None is given then one will be assigned when this job is added to a :py:class:`~Pegasus.dax4.workflow.Workflow`, defaults to None
+        :param _id: a unique id, if None is given then one will be assigned when this job is added to a :py:class:`~Pegasus.api.workflow.Workflow`, defaults to None
         :type _id: str, optional
         :param node_label: a short descriptive label that can be assined to this job, defaults to None
         :type node_label: str, optional
@@ -48,11 +48,11 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         self.metadata = dict()
 
     def add_inputs(self, *input_files):
-        """Add one or more :py:class:`~Pegasus.dax4.replica_catalog.File`s as input to this job
+        """Add one or more :py:class:`~Pegasus.api.replica_catalog.File`s as input to this job
         
-        :param input_files: the :py:class:`~Pegasus.dax4.replica_catalog.File`s to be added as inputs to this job
+        :param input_files: the :py:class:`~Pegasus.api.replica_catalog.File`s to be added as inputs to this job
         :raises DuplicateError: all input files must be unique
-        :raises ValueError: job inputs must be of type :py:class:`~Pegasus.dax4.replica_catalog.File`
+        :raises ValueError: job inputs must be of type :py:class:`~Pegasus.api.replica_catalog.File`
         :return: self
         """
         for file in input_files:
@@ -86,13 +86,13 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         return {use.file for use in self.uses if use._type == "input"}
 
     def add_outputs(self, *output_files, stage_out=True, register_replica=False):
-        """Add one or more :py:class:`~Pegasus.dax4.replica_catalog.File`s as outputs to this job. stage_out and register_replica
+        """Add one or more :py:class:`~Pegasus.api.replica_catalog.File`s as outputs to this job. stage_out and register_replica
         will be applied to all files given.
         
-        :param output_files: the :py:class:`~Pegasus.dax4.replica_catalog.File` s to be added as outputs to this job
+        :param output_files: the :py:class:`~Pegasus.api.replica_catalog.File` s to be added as outputs to this job
         :param stage_out: whether or not to send files back to an output directory, defaults to True
         :type stage_out: bool, optional
-        :param register_replica: whether or not to register replica with a :py:class:`~Pegasus.dax4.replica_catalog.ReplicaCatalog`, defaults to False
+        :param register_replica: whether or not to register replica with a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog`, defaults to False
         :type register_replica: bool, optional
         :raises DuplicateError: all output files must be unique 
         :raises ValueError: a job output must be of type File 
@@ -134,11 +134,11 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
     def add_checkpoint(self, checkpoint_file, stage_out=True, register_replica=False):
         """Add an output file of this job as a checkpoint file
         
-        :param checkpoint_file: the :py:class:`~Pegasus.dax4.replica_catalog.File` to be added as a checkpoint file to this job
+        :param checkpoint_file: the :py:class:`~Pegasus.api.replica_catalog.File` to be added as a checkpoint file to this job
         :type checkpoint_file: File
         :param stage_out: whether or not to send files back to an output directory, defaults to True
         :type stage_out: bool, optional
-        :param register_replica: whether or not to register replica with a :py:class:`~Pegasus.dax4.replica_catalog.ReplicaCatalog`, defaults to False
+        :param register_replica: whether or not to register replica with a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog`, defaults to False
         :type register_replica: bool, optional
         :raises DuplicateError: all output files must be unique 
         :raises ValueError: a job output must be of type File 
@@ -182,11 +182,11 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         return self
 
     def set_stdin(self, file):
-        """Set stdin to a :py:class:`~Pegasus.dax4.replica_catalog.File`
+        """Set stdin to a :py:class:`~Pegasus.api.replica_catalog.File`
         
         :param file: a file that will be read into stdin  
         :type file: File or str
-        :raises ValueError: file must be of type :py:class:`~Pegasus.dax4.replica_catalog.File` or str
+        :raises ValueError: file must be of type :py:class:`~Pegasus.api.replica_catalog.File` or str
         :raises DuplicateError: stdin is already set or the given file has already been added as an input to this job
         :return: self
         """
@@ -209,7 +209,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         return self
 
     def get_stdin(self):
-        """Get the :py:class:`~Pegasus.dax4.replica_catalog.File` being used for stdin
+        """Get the :py:class:`~Pegasus.api.replica_catalog.File` being used for stdin
         
         :return: the stdin file
         :rtype: File
@@ -217,11 +217,11 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         return self.stdin
 
     def set_stdout(self, file):
-        """Set stdout to a :py:class:`~Pegasus.dax4.replica_catalog.File`
+        """Set stdout to a :py:class:`~Pegasus.api.replica_catalog.File`
         
         :param file: a file that stdout will be written to
         :type file: File or
-        :raises ValueError: file must be of type :py:class:`~Pegasus.dax4.replica_catalog.File` or str
+        :raises ValueError: file must be of type :py:class:`~Pegasus.api.replica_catalog.File` or str
         :raises DuplicateError: stdout is already set or the given file has already been added as an output to this job 
         :return: self
         """
@@ -244,7 +244,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         return self
 
     def get_stdout(self):
-        """Get the :py:class:`~Pegasus.dax4.replica_catalog.File` being used for stdout
+        """Get the :py:class:`~Pegasus.api.replica_catalog.File` being used for stdout
         
         :return: the stdout file
         :rtype: File
@@ -252,7 +252,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         return self.stdout
 
     def set_stderr(self, file):
-        """Set stderr to a :py:class:`~Pegasus.dax4.replica_catalog.File` 
+        """Set stderr to a :py:class:`~Pegasus.api.replica_catalog.File` 
         
         :param file: a file that stderr will be written to
         :type file: File or str
@@ -279,7 +279,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         return self
 
     def get_stderr(self):
-        """Get the :py:class:`~Pegasus.dax4.replica_catalog.File` being used for stderr
+        """Get the :py:class:`~Pegasus.api.replica_catalog.File` being used for stderr
         
         :return: the stderr file 
         :rtype: File
@@ -312,7 +312,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
 
 
 class Job(AbstractJob):
-    """A typical workflow Job that executes a :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`.
+    """A typical workflow Job that executes a :py:class:`~Pegasus.api.transformation_catalog.Transformation`.
 
     .. code-block:: python
 
@@ -338,17 +338,17 @@ class Job(AbstractJob):
         self, transformation, _id=None, node_label=None, namespace=None, version=None,
     ):
         """        
-        :param transformation: :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` object or name of the transformation that this job uses
+        :param transformation: :py:class:`~Pegasus.api.transformation_catalog.Transformation` object or name of the transformation that this job uses
         :type transformation: Transformation or str
-        :param _id: a unique id; if none is given then one will be assigned when the job is added by a :py:class:`~Pegasus.dax4.workflow.Workflow`, defaults to None
+        :param _id: a unique id; if none is given then one will be assigned when the job is added by a :py:class:`~Pegasus.api.workflow.Workflow`, defaults to None
         :type _id: str, optional
         :param node_label: a brief job description, defaults to None
         :type node_label: str, optional
-        :param namespace: namespace to which the :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` belongs, defaults to None
+        :param namespace: namespace to which the :py:class:`~Pegasus.api.transformation_catalog.Transformation` belongs, defaults to None
         :type namespace: str, optional
-        :param version: version of the given :py:class:`~Pegasus.dax4.transformation_catalog.Transformation`, defaults to None
+        :param version: version of the given :py:class:`~Pegasus.api.transformation_catalog.Transformation`, defaults to None
         :type version: str, optional
-        :raises ValueError: transformation must be one of :py:class:`~Pegasus.dax4.transformation_catalog.Transformation` or str
+        :raises ValueError: transformation must be one of :py:class:`~Pegasus.api.transformation_catalog.Transformation` or str
         """
         if isinstance(transformation, Transformation):
             self.transformation = transformation.name
@@ -386,13 +386,13 @@ class DAX(AbstractJob):
 
     def __init__(self, file, _id=None, node_label=None):
         """
-        :param file: :py:class:`~Pegasus.dax4.replica_catalog.File` object or name of the dax file that will be used for this job
+        :param file: :py:class:`~Pegasus.api.replica_catalog.File` object or name of the dax file that will be used for this job
         :type file: File or str
-        :param _id: a unique id; if none is given then one will be assigned when the job is added by a :py:class:`~Pegasus.dax4.workflow.Workflow`, defaults to None
+        :param _id: a unique id; if none is given then one will be assigned when the job is added by a :py:class:`~Pegasus.api.workflow.Workflow`, defaults to None
         :type _id: str, optional
         :param node_label: a brief job description, defaults to None
         :type node_label: str, optional
-        :raises ValueError: file must be of type :py:class:`~Pegasus.dax4.replica_catalog.File` or str
+        :raises ValueError: file must be of type :py:class:`~Pegasus.api.replica_catalog.File` or str
         """
         AbstractJob.__init__(self, _id=_id, node_label=node_label)
 
@@ -424,13 +424,13 @@ class DAG(AbstractJob):
     def __init__(self, file, _id=None, node_label=None):
         """Constructor
         
-        :param file: :py:class:`~Pegasus.dax4.replica_catalog.File` object or name of the dag file that will be used for this job
+        :param file: :py:class:`~Pegasus.api.replica_catalog.File` object or name of the dag file that will be used for this job
         :type file: File or str
-        :param _id: a unique id; if none is given then one will be assigned when the job is added by a :py:class:`~Pegasus.dax4.workflow.Workflow`, defaults to None
+        :param _id: a unique id; if none is given then one will be assigned when the job is added by a :py:class:`~Pegasus.api.workflow.Workflow`, defaults to None
         :type _id: str, optional
         :param node_label: a brief job description, defaults to None
         :type node_label: str, optional
-        :raises ValueError: file must be of type :py:class:`~Pegasus.dax4.replica_catalog.File` or str
+        :raises ValueError: file must be of type :py:class:`~Pegasus.api.replica_catalog.File` or str
         """
         AbstractJob.__init__(self, _id=_id, node_label=node_label)
 
@@ -529,7 +529,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     .. code-block:: python
 
         # Example
-        from Pegasus.dax4 import *
+        from Pegasus.api import *
 
         # --- replicas -----------------------------------------------------------------
         rc = ReplicaCatalog()
@@ -612,7 +612,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
     def __init__(self, name, infer_dependencies=False):
         """
-        :param name: name of the :py:class:`~Pegasus.dax4.workflow.Workflow`
+        :param name: name of the :py:class:`~Pegasus.api.workflow.Workflow`
         :type name: str
         :param infer_dependencies: whether or not to automatically compute job dependencies based on input and output files used by each job, defaults to False
         :type infer_dependencies: bool, optional
@@ -683,17 +683,17 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         return next_id
 
     def include_catalog(self, catalog):
-        """Inline any of :py:class:`~Pegasus.dax4.replica_catalog.ReplicaCatalog`, 
-        :py:class:`~Pegasus.dax4.transformation_catalog.TransformationCatalog`, or
-        :py:class:`~Pegasus.dax4.site_catalog.SiteCatalog` into this workflow. When a workflow is written 
+        """Inline any of :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog`, 
+        :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog`, or
+        :py:class:`~Pegasus.api.site_catalog.SiteCatalog` into this workflow. When a workflow is written 
         to a file, if a catalog has been included, then the contents of the catalog
         will appear on the same file as the workflow. 
         
         :param catalog: the catalog to be included
         :type catalog: SiteCatalog or TransformationCatalog or ReplicaCatalog
-        :raises ValueError: a :py:class:`~Pegasus.dax4.replica_catalog.ReplicaCatalog` has already been included
-        :raises ValueError: a :py:class:`~Pegasus.dax4.transformation_catalog.TransformationCatalog` has already been included
-        :raises ValueError: a :py:class:`~Pegasus.dax4.site_catalog.SiteCatalog` has already been included
+        :raises ValueError: a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog` has already been included
+        :raises ValueError: a :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog` has already been included
+        :raises ValueError: a :py:class:`~Pegasus.api.site_catalog.SiteCatalog` has already been included
         :raises ValueError: invalid catalog was given
         :return: self
         """

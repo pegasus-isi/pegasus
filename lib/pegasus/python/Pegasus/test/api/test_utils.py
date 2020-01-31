@@ -1,8 +1,8 @@
 import pytest
 from enum import Enum
 
-from Pegasus.dax4._utils import _get_class_enum_member_str
-from Pegasus.dax4._utils import _get_enum_str
+from Pegasus.api._utils import _get_class_enum_member_str
+from Pegasus.api._utils import _get_enum_str
 
 
 def test__get_class_enum_member_str():
