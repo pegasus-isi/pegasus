@@ -1864,9 +1864,9 @@ Scope       :</emphasis> TC, SC, DAX, Properties
 
                 <row>
                   <entry><literallayout><emphasis role="bold"><emphasis
-                          role="bold">Property Key: </emphasis></emphasis>clusters.maxruntime<emphasis
+                          role="bold">Property Key: </emphasis></emphasis>pegasus.clusters.maxruntime<emphasis
                         role="bold"><emphasis role="bold">
-Profile  Key: </emphasis></emphasis>pegasus.clusters.maxruntime<emphasis
+Profile  Key: </emphasis></emphasis>clusters.maxruntime<emphasis
                         role="bold">
 Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.0
