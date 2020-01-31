@@ -858,7 +858,7 @@ Scope       :</emphasis> TC, SC, DAX, Properties
               <entry><literallayout><emphasis role="bold"><emphasis
                       role="bold">Property Key: </emphasis></emphasis>condor.request_gpus<emphasis
                     role="bold"><emphasis role="bold">
-Profile  Key: </emphasis></emphasis>request_cpus<emphasis role="bold">
+Profile  Key: </emphasis></emphasis>request_gpus<emphasis role="bold">
 Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.6
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
