@@ -1,4 +1,52 @@
 ===============================
+Release Notes for Pegasus 4.9.3
+===============================
+
+We are happy to announce the release of Pegasus 4.9.3. Pegasus 4.9.3 is a
+minor bug fix release after Pegasus 4.9.2.   
+
+This release has support for Singularity Library as a source for pulling
+singularity containers, in lieu of Singularity HUB.  It also has support
+for non authenticated ftp to file transfers for pulling in input datasets. 
+
+The tutorial utility pegasus-init was updated to support to execute on
+Summit from a Kubernetes cluster at OLCF. 
+
+The release also improvement to workflow monitoring events that can be
+sent to an AMQP endpoint, that in turn in can be used to populate
+ElasticSearch and build a dashboard in Grafana. More details can be
+found in the guide at https://pegasus.isi.edu/docs/monitoring_amqp.php. 
+
+New Features
+----------------------------
+1) [PM-1398] - include machine information in job_instance.composite event
+
+2) [PM-1402] - pegasus-init to support summit as execution env for tutorial
+
+3) [PM-1397] - Support ftp to file transfers in pegasus-transfer
+
+4) [PM-1416] - add data collection setup instructions to docs under
+   	       section 6.7.1.1. Monitord, RabbitMQ, ElasticSearch Example
+	       
+5) [PM-1403] - Support POWER9 nodes in PMC
+
+6) [PM-1404] - pegasus tutorial for summit from Kubernetes
+
+Bugs Fixed
+----------------------------
+1) [PM-1346] - Pegasus job checkpointing is incompatible with condorio
+
+2) [PM-1380] - Support for Singularity Library
+
+3) [PM-1388] - PegasusLite cannot locate osname and version SLES 15
+
+4) [PM-1389] - pegasus.cores causes issues on Summit
+
+5) [PM-1395] - GLite LSF scripts don't work as intended on OLCF's DTNs
+
+6) [PM-1405] - Is Pegasus supposed to build on 32-bit x86 (Debian i386 Stretch)?
+
+===============================
 Release Notes for Pegasus 4.9.2
 ===============================
 
