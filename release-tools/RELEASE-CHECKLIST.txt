@@ -38,9 +38,10 @@ NOTE: Do not copy and paste the commands below without double checking.
 
 8.  Build APT repo. First copy the debs into their final place in 
     the apt trees (Debian and Ubuntu). Then run
-    update-pegasus-apt-repo on a Debian machine. Do this on obelix.
+    update-pegasus-apt-repo on a Debian machine. Do this on
+    download.pegasus.isi.edu (/opt/release-tools)
 
-9.  Built Yum repo. Similar to Apt repo, but the step has to be
+9.  Build Yum repo. Similar to Apt repo, but the step has to be
     done on a RHEL machine. Do this on workflow.
 
 10. Update Homebrew formula in repo https://github.com/pegasus-isi/homebrew-tools.git. 
@@ -55,7 +56,7 @@ ssh admin@pegasus-tutorial.isi.edu "cd /lfs1/pegasus-docker-tutorial ; ./build.s
 
 13. Change the symbolic link for the latest documentation to point 
     to latest stable release
-    https://pegasus.isi.edu/wms/docs/latest/
+    https://pegasus.isi.edu/documentation/
 
 14. Send annouce email to pegasus-announce@mailman.isi.edu
     (Karan has to do this step)
