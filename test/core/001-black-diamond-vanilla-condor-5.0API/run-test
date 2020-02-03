@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -e
+set -v
+
+testdir=`dirname  $0`
+export testdir
+
+$testdir/run-bamboo-test
+
+# wait for workflow to finish
+$testdir/../../common/wait-for-workflow
+
+# check success with pegasus-analyzer - does it use exit codes correctly?
+cd work/001-black-diamond-vanilla-condor-5.0API-*
+pegasus-analyzer
+
+# show some stats
+pegasus-statistics `pwd`
