@@ -136,20 +136,18 @@ def obj():
 class TestProfileMixin:
     def test_add_valid_profile(self, obj):
         assert id(
-            obj._add_profiles(Namespace.ENV, key="JAVA_HOME", value="/usr/bin/java")
+            obj.add_profiles(Namespace.ENV, key="ABC-123.45/", value="value")
         ) == id(obj)
-        assert dict(obj.profiles) == {"env": {"JAVA_HOME": "/usr/bin/java"}}
+        assert dict(obj.profiles) == {"env": {"ABC-123.45/": "value"}}
 
     def test_add_valid_profiles(self, obj):
-        assert id(obj._add_profiles(Namespace.ENV, ENV1="env1", ENV2="env2",)) == id(
-            obj
-        )
+        assert id(obj.add_profiles(Namespace.ENV, ENV1="env1", ENV2="env2",)) == id(obj)
 
         assert dict(obj.profiles) == {"env": {"ENV1": "env1", "ENV2": "env2"}}
 
     def test_add_invalid_profile(self, obj):
         with pytest.raises(TypeError) as e:
-            obj._add_profiles("ns")
+            obj.add_profiles("ns")
 
         assert "invalid ns: ns" in str(e)
 
@@ -198,7 +196,6 @@ class TestProfileMixin:
                 pre="pre",
                 pre_arguments="pre_args",
                 post="post",
-                post_path="post_path",
                 post_arguments="post_args",
                 retry=1,
                 category="cat",
@@ -208,8 +205,6 @@ class TestProfileMixin:
                 max_post="mp",
                 max_jobs="mj",
                 max_idle="mi",
-                max_jobs_category="ABC",
-                max_jobs_category_value="10",
                 post_scope="ps",
             )
         ) == id(obj)
@@ -219,7 +214,6 @@ class TestProfileMixin:
                 "PRE": "pre",
                 "PRE.ARGUMENTS": "pre_args",
                 "POST": "post",
-                "post.path.post": "post_path",
                 "POST.ARGUMENTS": "post_args",
                 "RETRY": 1,
                 "CATEGORY": "cat",
@@ -229,7 +223,6 @@ class TestProfileMixin:
                 "MAXPOST": "mp",
                 "MAXJOBS": "mj",
                 "MAXIDLE": "mi",
-                "ABC.MAXJOBS": "10",
                 "POST.SCOPE": "ps",
             }
         }
@@ -366,24 +359,24 @@ class TestProfileMixin:
 
         assert "add_pegasus() got an unexpected" in str(e)
 
-    def test_add_hint(self, obj):
+    def test_add_selector(self, obj):
         assert id(
-            obj.add_hint(
+            obj.add_selector(
                 execution_site="condor-pool", pfn="/tmp", grid_job_type="compute"
             )
         ) == id(obj)
 
         assert dict(obj.profiles) == {
-            "hints": {
+            "selector": {
                 "execution.site": "condor-pool",
                 "pfn": "/tmp",
                 "grid.jobtype": "compute",
             }
         }
 
-    def test_add_hint_invalid_profilew(self, obj):
+    def test_add_selector_invalid_profile(self, obj):
         with pytest.raises(TypeError) as e:
-            obj.add_hint(aa=1)
+            obj.add_selector(aa=1)
 
-        assert "add_hint() got an unexpected" in str(e)
+        assert "add_selector() got an unexpected" in str(e)
 

@@ -131,7 +131,6 @@ class Namespace(Enum):
     CONDOR = "condor"
     DAGMAN = "dagman"
     ENV = "env"
-    HINTS = "hints"
     GLOBUS = "globus"
     SELECTOR = "selector"
     STAT = "stat"
@@ -180,7 +179,7 @@ def _profiles(ns, **map_p):
             # calling this will verify kwargs
             f(self, **kw)
 
-            return ProfileMixin._add_profiles(self, ns, **new_kw)
+            return ProfileMixin.add_profiles(self, ns, **new_kw)
 
         return wrapped_f
 
@@ -188,16 +187,30 @@ def _profiles(ns, **map_p):
 
 
 class ProfileMixin:
-    """Internal function used to add profiles.
+    def add_profiles(self, ns, key=None, value=None, **kw):
+        """Add a profile.
 
-    If key and value are given, then **kw are ignored and {Namespace::key : value}
-    is added. Else **kw is added. 
-    
-    :raises TypeError: namespace must be one of Namespace
-    :return: self
-    """
+        If key and value are given, then **kw are ignored and {Namespace::key : value}
+        is added. Else **kw is added. When the value of "key" is not a valid python
+        variable name, the usage in Example #1 should be used, else follow the usage
+        shown in Example #2.
 
-    def _add_profiles(self, ns, key=None, value=None, **kw):
+        .. code-block:: python
+
+            # Example 1
+            job.add_profiles(Namespace.DAGMAN, key="pre.arguments", value="-i f1")
+
+            # Example 2
+            job.add_profiles(Namespace.ENV, JAVA_HOME="/usr/bin/java", USER="ryan")
+        
+        For add_globus(), add_condor(), add_dagman(), add_selector(), and add_pegasus(),
+        if a profile key that you are trying to use is not listed as a key word argument,
+        use this function to add the profile. 
+
+        :raises TypeError: namespace must be one of Namespace
+        :return: self
+        """
+
         if not isinstance(ns, Namespace):
             raise TypeError(
                 "invalid ns: {ns}; ns should be one of {enum_str}".format(
@@ -216,13 +229,10 @@ class ProfileMixin:
         return self
 
     #: Add environment variable(s)
-    add_env = partialmethod(_add_profiles, Namespace.ENV)
+    add_env = partialmethod(add_profiles, Namespace.ENV)
 
     #: Add stat profile(s)
-    add_stat = partialmethod(_add_profiles, Namespace.STAT)
-
-    #: Add selector profile(s)
-    add_selector = partialmethod(_add_profiles, Namespace.SELECTOR)
+    add_stat = partialmethod(add_profiles, Namespace.STAT)
 
     @_profiles(
         Namespace.GLOBUS,
@@ -476,17 +486,17 @@ class ProfileMixin:
         ...
 
     @_profiles(
-        Namespace.HINTS,
+        Namespace.SELECTOR,
         execution_site="execution.site",
         pfn="pfn",
         grid_job_type="grid.jobtype",
     )
-    def add_hint(
+    def add_selector(
         self, *, execution_site: str = None, pfn: str = None, grid_job_type: str = None
     ):
-        """Add Hint(s).
+        """Add Selector(s).
         
-        The hints namespace allows users to override the beahvior of the Workflow
+        The Selector namespace allows users to override the beahvior of the Workflow
         Mapper during site selection. This gives you finer grained control over 
         where a job executes and what executable it refers to.
 
@@ -500,27 +510,48 @@ class ProfileMixin:
         """
         ...
 
+    @_profiles(
+        Namespace.DAGMAN,
+        pre="PRE",
+        pre_arguments="PRE.ARGUMENTS",
+        post="POST",
+        post_arguments="POST.ARGUMENTS",
+        retry="RETRY",
+        category="CATEGORY",
+        priority="PRIORITY",
+        abort_dag_on="ABORT-DAG-ON",
+        max_pre="MAXPRE",
+        max_post="MAXPOST",
+        max_jobs="MAXJOBS",
+        max_idle="MAXIDLE",
+        post_scope="POST.SCOPE",
+    )
     def add_dagman(
         self,
         *,
         pre: str = None,
         pre_arguments: str = None,
         post: str = None,
-        post_path: str = None,
         post_arguments: str = None,
-        retry: int = None,
+        retry: str = None,
         category: str = None,
-        priority: int = None,
+        priority: str = None,
         abort_dag_on: str = None,
         max_pre: str = None,
         max_post: str = None,
         max_jobs: str = None,
         max_idle: str = None,
-        max_jobs_category: str = None,
-        max_jobs_category_value: str = None,
         post_scope: str = None,
     ):
         """Add Dagman profile(s).
+
+        Note, to add the profile keys "post.path.[value of dagman.post]" or 
+        ["category-name].maxjobs", use the following:
+
+        .. code-block:: python
+
+            job.add_profiles(Namespace.DAGMAN, key="post.path.<value of dagman.post>", value=<value string>)
+            job.add_profiles(Namespace.DAGMAN, key="<category-name>.maxjobs", value=<value string>)
         
         :param pre: is the path to the pre-script. DAGMan executes the pre-script before it runs the job, defaults to None
         :type pre: str, optional
@@ -528,8 +559,6 @@ class ProfileMixin:
         :type pre_arguments: str, optional
         :param post: is the postscript type/mode that a user wants to associate with a job (see `docs <https://pegasus.isi.edu/documentation/profiles.php>`_ for more information), defaults to None
         :type post: str, optional
-        :param post_path: the path to the post script on the submit host, defaults to None
-        :type post_path: str, optional
         :param post_arguments: are the command line arguments for the post script, if any, defaults to None
         :type post_arguments: str, optional
         :param retry: is the number of times DAGMan retries the full job cycle from pre-script through post-script, if failure was detected, defaults to None
@@ -548,50 +577,9 @@ class ProfileMixin:
         :type max_jobs: str, optional
         :param max_idle: Sets the maximum number of idle jobs allowed before HTCondor DAGMan stops submitting more jobs. Once idle jobs start to run, HTCondor DAGMan will resume submitting jobs. If the option is omitted, the number of idle jobs is unlimited, defaults to None
         :type max_idle: str, optional
-        :param max_jobs_category: category name; this profile key will become <max_jobs_category>.MAXJOBS (note that max_jobs_category_value should also be set), defaults to None
-        :type max_jobs_category: str, optional
-        :param max_jobs_category_value: is the value of maxjobs for a particular category. Users can associate different categories to the jobs at a per job basis. However, the value of a dagman knob for a category can only be specified at a per workflow basis in the properties, defaults to None
-        :type max_jobs_category_value: str, optional
         :param post_scope: can be "all", "none" or "essential" (see `docs <https://pegasus.isi.edu/documentation/profiles.php>`_ for more information), defaults to None
         :type post_scope: str, optional
         :return: self
         """
-        map_p = {
-            "pre": "PRE",
-            "pre_arguments": "PRE.ARGUMENTS",
-            "post": "POST",
-            "post_path": "post.path",
-            "post_arguments": "POST.ARGUMENTS",
-            "retry": "RETRY",
-            "category": "CATEGORY",
-            "priority": "PRIORITY",
-            "abort_dag_on": "ABORT-DAG-ON",
-            "max_pre": "MAXPRE",
-            "max_post": "MAXPOST",
-            "max_jobs": "MAXJOBS",
-            "max_idle": "MAXIDLE",
-            "post_scope": "POST.SCOPE",
-        }
-
-        kw = locals()
-        new_kw = {}
-        for k, v in kw.items():
-            if v is not None and k in map_p:
-                new_kw[map_p[k]] = v
-
-        # set the key: post.path.[value of dagman.post]
-        if post_path and post:
-            new_kw["post.path.{POST}".format(POST=kw["post"])] = new_kw["post.path"]
-            try:
-                del new_kw["post.path"]
-            except KeyError:
-                pass
-
-        # set the key: [CATEGORY-NAME].MAXJOBS
-        if max_jobs_category and max_jobs_category_value:
-            new_kw["{CATEGORY}.MAXJOBS".format(CATEGORY=kw["max_jobs_category"])] = kw[
-                "max_jobs_category_value"
-            ]
-
-        return self._add_profiles(Namespace.DAGMAN, **new_kw)
+        ...
 
