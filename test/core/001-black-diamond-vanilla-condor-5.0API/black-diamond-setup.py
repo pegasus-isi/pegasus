@@ -18,8 +18,8 @@ TOP_DIR = Path(args.top_dir)
 WORK_DIR = Path(args.work_dir)
 
 # --- Sites --------------------------------------------------------------------
-LOCAL = "local"
-CONDOR_POOL = "condor-pool"
+LOCAL = "locäl"
+CONDOR_POOL = "⿔condor-pool⼤"
 
 shared_scratch_dir = str(WORK_DIR / RUN_ID)
 local_storage_dir = str(WORK_DIR / "outputs" / RUN_ID)
@@ -49,10 +49,10 @@ RC_FILENAME = "ReplicaCatalog.yml"
 print("Generating replica catalog at: {}".format(TOP_DIR / RC_FILENAME))
 
 # create initial input file 
-with open("f.a", "w") as f:
+with open("f.å", "w") as f:
     f.write("This is sample input to KEG\n")
 
-fa = File("f.a")
+fa = File("f.å").add_metadata({"㐦": "㒦"})
 ReplicaCatalog()\
     .add_replica(fa, "file://" + str(TOP_DIR / fa.lfn), LOCAL)\
     .write(RC_FILENAME)
@@ -62,7 +62,7 @@ TC_FILENAME = "TransformationCatalog.yml"
 
 print("Generating transformation catalog at: {}".format(TOP_DIR / TC_FILENAME))
 
-preprocess = Transformation("preprocess", namespace="pegasus", version="4.0")\
+preprocess = Transformation("pЯёprocess", namespace="pέgasuζ", version="4.0")\
                 .add_site(
                     TransformationSite(
                         CONDOR_POOL, 
@@ -72,7 +72,7 @@ preprocess = Transformation("preprocess", namespace="pegasus", version="4.0")\
                         os_type=OS.LINUX)
                 )
 
-findrage = Transformation("findrange", namespace="pegasus", version="4.0")\
+findrage = Transformation("findrange", namespace="pέgasuζ", version="4.0")\
                 .add_site(
                     TransformationSite(
                         CONDOR_POOL, 
@@ -82,7 +82,7 @@ findrage = Transformation("findrange", namespace="pegasus", version="4.0")\
                         os_type=OS.LINUX)
                 )
 
-analyze = Transformation("analyze", namespace="pegasus", version="4.0")\
+analyze = Transformation("analyze", namespace="pέgasuζ", version="4.0")\
                 .add_site(
                     TransformationSite(
                         CONDOR_POOL, 
@@ -101,13 +101,13 @@ WF_FILENAME = "Workflow.yml"
 
 print("Generating workflow at: {}".format(TOP_DIR / WF_FILENAME))
 
-fb1 = File("f.b1")
-fb2 = File("f.b2")
-fc1 = File("f.c1")
-fc2 = File("f.c2")
-fd = File("f.d")
+fb1 = File("f.ƀ1")
+fb2 = File("f.β2")
+fc1 = File("f.Ҫ1")
+fc2 = File("f.Ͻ2")
+fd = File("f.Ɗ")
 
-Workflow("blackdiamond", infer_dependencies=True)\
+Workflow("blÅckƊiamond㒀㑖", infer_dependencies=True)\
     .add_jobs(
         Job(preprocess)
             .add_args("-a", "preprocess", "-T", "60", "-i", fa, "-o", fb1, fb2)
