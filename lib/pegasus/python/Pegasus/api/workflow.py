@@ -380,14 +380,15 @@ class Job(AbstractJob):
         return _filter_out_nones(job_json)
 
 
-class DAX(AbstractJob):
-    """Job that represents a sub-DAX that will be planned and executed
-    by the workflow"""
+class SubWorkflow(AbstractJob):
+    """Job that represents a subworkflow that will be executed as a job."""
 
-    def __init__(self, file, _id=None, node_label=None):
+    def __init__(self, file, is_planned, _id=None, node_label=None):
         """
         :param file: :py:class:`~Pegasus.api.replica_catalog.File` object or name of the dax file that will be used for this job
         :type file: File or str
+        :param is_planned: whether or not this subworkflow has already been planned by the Pegasus planner
+        :type is_planned: bool
         :param _id: a unique id; if none is given then one will be assigned when the job is added by a :py:class:`~Pegasus.api.workflow.Workflow`, defaults to None
         :type _id: str, optional
         :param node_label: a brief job description, defaults to None
@@ -403,52 +404,16 @@ class DAX(AbstractJob):
                 )
             )
 
-        if isinstance(file, File):
-            self.file = file
-        else:
-            self.file = File(file)
+        self.type = "dax" if not is_planned else "dag"
+        self.file = file if isinstance(file, File) else File(file)
 
         self.add_inputs(self.file)
 
     def __json__(self):
-        dax_json = {"type": "dax", "file": self.file.lfn}
+        dax_json = {"type": self.type, "file": self.file.lfn}
         dax_json.update(AbstractJob.__json__(self))
 
         return dax_json
-
-
-class DAG(AbstractJob):
-    """Job represents a sub-DAG that will be executed by this 
-    workflow"""
-
-    def __init__(self, file, _id=None, node_label=None):
-        """Constructor
-        
-        :param file: :py:class:`~Pegasus.api.replica_catalog.File` object or name of the dag file that will be used for this job
-        :type file: File or str
-        :param _id: a unique id; if none is given then one will be assigned when the job is added by a :py:class:`~Pegasus.api.workflow.Workflow`, defaults to None
-        :type _id: str, optional
-        :param node_label: a brief job description, defaults to None
-        :type node_label: str, optional
-        :raises ValueError: file must be of type :py:class:`~Pegasus.api.replica_catalog.File` or str
-        """
-        AbstractJob.__init__(self, _id=_id, node_label=node_label)
-
-        if not isinstance(file, (File, str)):
-            raise TypeError("invalid file: {file}; file must be of type File or str")
-
-        if isinstance(file, File):
-            self.file = file
-        else:
-            self.file = File(file)
-
-        self.add_inputs(self.file)
-
-    def __json__(self):
-        dag_json = {"type": "dag", "file": self.file.lfn}
-        dag_json.update(AbstractJob.__json__(self))
-
-        return dag_json
 
 
 class _LinkType(Enum):

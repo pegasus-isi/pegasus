@@ -2,8 +2,7 @@ from .replica_catalog import File
 from .replica_catalog import ReplicaCatalog
 
 from .workflow import Job
-from .workflow import DAX
-from .workflow import DAG
+from .workflow import SubWorkflow
 from .workflow import Workflow
 
 from .transformation_catalog import Container

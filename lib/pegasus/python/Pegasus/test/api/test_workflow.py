@@ -8,8 +8,7 @@ from jsonschema import validate
 
 from Pegasus.api.workflow import AbstractJob
 from Pegasus.api.workflow import Job
-from Pegasus.api.workflow import DAX
-from Pegasus.api.workflow import DAG
+from Pegasus.api.workflow import SubWorkflow
 from Pegasus.api.workflow import _LinkType
 from Pegasus.api.workflow import _Use
 from Pegasus.api.workflow import _JobDependency
@@ -34,40 +33,51 @@ from Pegasus.api.writable import _CustomEncoder
 class Test_Use:
     def test_eq(self):
         assert _Use(File("a"), _LinkType.INPUT) == _Use(File("a"), _LinkType.OUTPUT)
-        assert _Use(File("a"), _LinkType.INPUT) != _Use(File("b"), _LinkType.INPUT) 
+        assert _Use(File("a"), _LinkType.INPUT) != _Use(File("b"), _LinkType.INPUT)
 
-    @pytest.mark.parametrize("use, expected", [
-        (
-            _Use(File("a"), _LinkType.INPUT, stage_out=True, register_replica=True),
-            {
-                "file": {"lfn": "a"},
-                "type": "input",
-                "stageOut": True,
-                "registerReplica": True,
-            }
-        ),
-        (
-            _Use(File("a"), _LinkType.OUTPUT, stage_out=False, register_replica=True),
-            {
-                "file": {"lfn": "a"},
-                "type": "output",
-                "stageOut": False,
-                "registerReplica": True,
-            }
-        ),
-        (
-            _Use(File("a"), _LinkType.CHECKPOINT, stage_out=True, register_replica=True),
-            {
-                "file": {"lfn": "a"},
-                "type": "checkpoint",
-                "stageOut": True,
-                "registerReplica": True,
-            }
-        )
-    ])
+    @pytest.mark.parametrize(
+        "use, expected",
+        [
+            (
+                _Use(File("a"), _LinkType.INPUT, stage_out=True, register_replica=True),
+                {
+                    "file": {"lfn": "a"},
+                    "type": "input",
+                    "stageOut": True,
+                    "registerReplica": True,
+                },
+            ),
+            (
+                _Use(
+                    File("a"), _LinkType.OUTPUT, stage_out=False, register_replica=True
+                ),
+                {
+                    "file": {"lfn": "a"},
+                    "type": "output",
+                    "stageOut": False,
+                    "registerReplica": True,
+                },
+            ),
+            (
+                _Use(
+                    File("a"),
+                    _LinkType.CHECKPOINT,
+                    stage_out=True,
+                    register_replica=True,
+                ),
+                {
+                    "file": {"lfn": "a"},
+                    "type": "checkpoint",
+                    "stageOut": True,
+                    "registerReplica": True,
+                },
+            ),
+        ],
+    )
     def test_tojson(self, use, expected):
         result = json.loads(json.dumps(use, cls=_CustomEncoder))
         assert result == expected
+
 
 class TestAbstractJob:
     def test_get_inputs(self):
@@ -92,14 +102,14 @@ class TestAbstractJob:
         job.add_inputs(File("a"))
         with pytest.raises(DuplicateError) as e:
             job.add_inputs(File("a"))
-        
+
         assert "file: {file}".format(file=File("a")) in str(e)
 
     def test_add_invalid_input(self):
         job = AbstractJob()
         with pytest.raises(TypeError) as e:
             job.add_inputs(123, "abc")
-        
+
         assert "invalid input_file: 123" in str(e)
 
     def test_get_outputs(self):
@@ -124,7 +134,7 @@ class TestAbstractJob:
         job.add_outputs(File("a"))
         with pytest.raises(DuplicateError) as e:
             job.add_outputs(File("a"))
-        
+
         assert "file: {file}".format(file=File("a")) in str(e)
 
     def test_add_invalid_output(self):
@@ -134,7 +144,6 @@ class TestAbstractJob:
 
         assert "invalid output_file: 123" in str(e)
 
-
     def test_add_inputs_and_outputs(self):
         job = AbstractJob()
         job.add_inputs(File("a"))
@@ -142,7 +151,7 @@ class TestAbstractJob:
 
         with pytest.raises(DuplicateError) as e:
             job.add_inputs(File("b"))
-        
+
         assert "file: {file}".format(file=File("b")) in str(e)
 
     def test_add_checkpoint(self):
@@ -155,7 +164,7 @@ class TestAbstractJob:
         job = AbstractJob()
         with pytest.raises(TypeError) as e:
             job.add_checkpoint("badfile")
-        
+
         assert "invalid checkpoint_file: badfile" in str(e)
 
     def test_add_duplicate_checkpoint(self):
@@ -163,7 +172,7 @@ class TestAbstractJob:
         job.add_inputs(File("abc"))
         with pytest.raises(DuplicateError) as e:
             job.add_checkpoint(File("abc"))
-        
+
         assert "file: {file}".format(file=File("abc")) in str(e)
 
     def test_add_args(self):
@@ -191,7 +200,7 @@ class TestAbstractJob:
         job.set_stdin(File("a"))
         with pytest.raises(DuplicateError) as e:
             job.set_stdin(File("b"))
-        
+
         assert "stdin has already" in str(e)
 
     def test_set_duplicate_stdin(self):
@@ -199,14 +208,14 @@ class TestAbstractJob:
         job.add_inputs(File("a"))
         with pytest.raises(DuplicateError) as e:
             job.set_stdin(File("a"))
-        
+
         assert "file: {file}".format(file=File("a")) in str(e)
 
     def test_set_invalid_stdin(self):
         job = AbstractJob()
         with pytest.raises(TypeError) as e:
             job.set_stdin(123)
-        
+
         assert "invalid file: 123" in str(e)
 
     def test_get_stdin(self):
@@ -226,7 +235,7 @@ class TestAbstractJob:
         job.set_stdout(File("a"))
         with pytest.raises(DuplicateError) as e:
             job.set_stdout(File("b"))
-        
+
         assert "stdout has already been set" in str(e)
 
     def test_set_duplicate_stdout(self):
@@ -241,7 +250,7 @@ class TestAbstractJob:
         job = AbstractJob()
         with pytest.raises(TypeError) as e:
             job.set_stdout(123)
-        
+
         assert "invalid file: 123" in str(e)
 
     def test_get_stdout(self):
@@ -272,14 +281,14 @@ class TestAbstractJob:
         job = AbstractJob()
         with pytest.raises(TypeError) as e:
             job.set_stderr(123)
-        
+
         assert "invalid file: 123" in str(e)
 
     def test_get_stderr(self):
         job = AbstractJob()
         job.set_stderr("a")
         assert job.get_stderr() == File("a")
-    
+
     def test_tojson(self):
         j = AbstractJob(_id="aj", node_label="test")
         j.set_stdin("stdin")
@@ -293,7 +302,7 @@ class TestAbstractJob:
         result = json.loads(json.dumps(j, cls=_CustomEncoder))
         result["uses"] = sorted(result["uses"], key=lambda use: use["file"]["lfn"])
 
-        expected = {    
+        expected = {
             "id": "aj",
             "nodeLabel": "test",
             "arguments": ["-i", {"lfn": "f1"}],
@@ -302,22 +311,22 @@ class TestAbstractJob:
             "stderr": {"lfn": "stderr"},
             "uses": [
                 {
-                    "file": {"lfn": "stdin"}, 
+                    "file": {"lfn": "stdin"},
                     "type": "input",
                     "stageOut": False,
-                    "registerReplica": False
+                    "registerReplica": False,
                 },
                 {
-                    "file": {"lfn": "if1"}, 
+                    "file": {"lfn": "if1"},
                     "type": "input",
                     "stageOut": False,
-                    "registerReplica": False
+                    "registerReplica": False,
                 },
                 {
-                    "file": {"lfn": "if2"}, 
+                    "file": {"lfn": "if2"},
                     "type": "input",
                     "stageOut": False,
-                    "registerReplica": False
+                    "registerReplica": False,
                 },
                 {
                     "file": {"lfn": "stdout"},
@@ -347,14 +356,15 @@ class TestAbstractJob:
                     "file": {"lfn": "cpf"},
                     "type": "checkpoint",
                     "stageOut": True,
-                    "registerReplica": False
-                }
+                    "registerReplica": False,
+                },
             ],
         }
 
         expected["uses"] = sorted(expected["uses"], key=lambda use: use["file"]["lfn"])
 
         assert result == expected
+
 
 class TestJob:
     @pytest.mark.parametrize("transformation", [(Transformation("t")), ("t")])
@@ -364,7 +374,7 @@ class TestJob:
     def test_invalid_job(self):
         with pytest.raises(TypeError) as e:
             Job(123)
-        
+
         assert "invalid transformation: 123" in str(e)
 
     def test_chaining(self):
@@ -408,22 +418,22 @@ class TestJob:
             "stderr": {"lfn": "stderr"},
             "uses": [
                 {
-                    "file": {"lfn": "stdin"}, 
+                    "file": {"lfn": "stdin"},
                     "type": "input",
                     "stageOut": False,
-                    "registerReplica": False
+                    "registerReplica": False,
                 },
                 {
-                    "file": {"lfn": "if1"}, 
+                    "file": {"lfn": "if1"},
                     "type": "input",
                     "stageOut": False,
-                    "registerReplica": False
+                    "registerReplica": False,
                 },
                 {
-                    "file": {"lfn": "if2"}, 
+                    "file": {"lfn": "if2"},
                     "type": "input",
                     "stageOut": False,
-                    "registerReplica": False
+                    "registerReplica": False,
                 },
                 {
                     "file": {"lfn": "stdout"},
@@ -473,7 +483,7 @@ class TestJob:
             "metadata": {"key": "value"},
         }
 
-        assert result ==  expected
+        assert result == expected
 
 
 class Test_JobDependency:
@@ -485,189 +495,182 @@ class Test_JobDependency:
         }
 
 
-class TestDAX:
-    @pytest.mark.parametrize("file", [(File("dax-file")), ("dax-file")])
-    def test_valid_dax(self, file):
-        assert DAX(file)
+class TestSubWorkflow:
+    @pytest.mark.parametrize("file, is_planned", [(File("wf-file"), False), ("wf-file", True)])
+    def test_valid_subworkflow(self, file, is_planned):
+        assert SubWorkflow(file, is_planned)
 
-    def test_invalid_dax(self):
+    def test_invalid_subworkflow(self):
         with pytest.raises(TypeError) as e:
-            DAX(123)
-        
+            SubWorkflow(123, False)
+
         assert "invalid file: 123" in str(e)
 
-    def test_tojson(self):
-        dax = DAX("file", _id="test-dax", node_label="label").add_args(
-            "--sites", "condorpool"
-        )
-
-        result = json.loads(json.dumps(dax, cls=_CustomEncoder))
-        expected = {
-            "type": "dax",
-            "file": "file",
-            "id": "test-dax",
-            "nodeLabel": "label",
-            "arguments": ["--sites", "condorpool"],
-            "uses": [
+    @pytest.mark.parametrize(
+        "subworkflow, expected",
+        [
+            ( 
+                SubWorkflow("file", False, _id="test-subworkflow", node_label="label").add_args(
+                "--sites", "condorpool"),
                 {
-                    "file": {"lfn": "file"}, 
-                    "type": "input",
-                    "stageOut": False,
-                    "registerReplica": False
-                    }
-            ],
-        }
-
-        assert result == expected
-
-class TestDAG:
-    @pytest.mark.parametrize("file", [(File("dag-file")), ("dag-file")])
-    def test_valid_dag(self, file):
-       assert DAG(file)
-
-    def test_invalid_dag(self):
-        with pytest.raises(TypeError) as e:
-            DAX(123)
-        
-        assert "invalid file: 123" in str(e)
-
-    def test_tojson(self):
-        dax = DAG("file", _id="test-dag", node_label="label").add_args("test", "args")
-
-        result = json.loads(json.dumps(dax, cls=_CustomEncoder))
-        expected = {
-            "type": "dag",
-            "file": "file",
-            "id": "test-dag",
-            "nodeLabel": "label",
-            "arguments": ["test", "args"],
-            "uses": [
-                {
-                    "file": {"lfn": "file"}, 
-                    "type": "input",
-                    "stageOut": False,
-                    "registerReplica": False
+                    "type": "dax",
+                    "file": "file",
+                    "id": "test-subworkflow",
+                    "nodeLabel": "label",
+                    "arguments": ["--sites", "condorpool"],
+                    "uses": [
+                        {
+                            "file": {"lfn": "file"},
+                            "type": "input",
+                            "stageOut": False,
+                            "registerReplica": False,
+                        }
+                    ],
                 }
-            ],
-        }
-
-        assert result == expected 
+            ),
+            (
+                SubWorkflow("file", True, _id="test-subworkflow", node_label="label"),
+                {
+                    "type": "dag",
+                    "file": "file",
+                    "id": "test-subworkflow",
+                    "nodeLabel": "label",
+                    "arguments": [],
+                    "uses": [
+                        {
+                            "file": {"lfn": "file"},
+                            "type": "input",
+                            "stageOut": False,
+                            "registerReplica": False,
+                        }
+                    ],
+                }
+            )
+        ]
+    )
+    def test_tojson(self, subworkflow, expected):
+        result = json.loads(json.dumps(subworkflow, cls=_CustomEncoder))
+        assert result == expected
 
 @pytest.fixture
 def expected_json():
     expected = {
-            "pegasus": PEGASUS_VERSION,
-            "name": "wf",
-            "replicaCatalog": {
-                "replicas": [
-                    {
-                        "lfn": "lfn",
-                        "pfn": "pfn",
-                        "site": "site",
-                        "regex": False
-                    }
-                ]
-            },
-            "transformationCatalog": {
-                "transformations": [
-                    {
-                        "name": "t1",
-                        "sites": [{
-                            "name": "local",
-                            "pfn": "/pfn",
-                            "type": "installed"
-                        }]
-                    },
-                    {
-                        "name": "t2",
-                        "sites": [{
-                            "name": "local2",
-                            "pfn": "/pfn",
-                            "type": "stageable"
-                        }]
-                    }
-                ]
-            },
-            "jobs": [
+        "pegasus": PEGASUS_VERSION,
+        "name": "wf",
+        "replicaCatalog": {
+            "replicas": [{"lfn": "lfn", "pfn": "pfn", "site": "site", "regex": False}]
+        },
+        "transformationCatalog": {
+            "transformations": [
                 {
-                    "type": "job",
-                    "id": "j1",
                     "name": "t1",
-                    "arguments": [],
-                    "uses": [
-                        {
-                            "file": {
-                                "lfn": "f1"
-                            },
-                            "type": "output",
-                            "stageOut": True,
-                            "registerReplica": False
-                        },
-                        {
-                            "file": {
-                                "lfn": "f2"
-                            },
-                            "type": "output",
-                            "stageOut": True,
-                            "registerReplica": False
-                        }
-                    ]
+                    "sites": [{"name": "local", "pfn": "/pfn", "type": "installed"}],
                 },
                 {
-                    "type": "job",
-                    "id": "ID0000001",
-                    "name": "t1",
-                    "arguments": [],
-                    "uses": [
-                        {
-                            "file": {
-                                "lfn": "f1"
-                            },
-                            "type": "input",
-                            "stageOut": False,
-                            "registerReplica": False
-                        },
-                        {
-                            "file": {
-                                "lfn": "f2"
-                            },
-                            "type": "input",
-                            "stageOut": False,
-                            "registerReplica": False
-                        },
-                        {
-                            "file": {
-                                "lfn": "checkpoint"
-                            },
-                            "type": "checkpoint",
-                            "stageOut": True,
-                            "registerReplica": False
-                        },
-                    ]
-                }
-            ],
-            "jobDependencies": [{"id":"j1", "children": ["ID0000001"]}],
-            "profiles": {Namespace.ENV.value: {"JAVA_HOME": "/java/home"}},
-            "hooks": {"shell": [{"_on": EventType.START.value, "cmd": "/bin/echo hi"}]},
-            "metadata": {"key": "value"},
-        }
+                    "name": "t2",
+                    "sites": [{"name": "local2", "pfn": "/pfn", "type": "stageable"}],
+                },
+            ]
+        },
+        "jobs": [
+            {
+                "type": "job",
+                "id": "a",
+                "name": "t1",
+                "arguments": [],
+                "uses": [
+                    {
+                        "file": {"lfn": "f1"},
+                        "type": "output",
+                        "stageOut": True,
+                        "registerReplica": False,
+                    },
+                    {
+                        "file": {"lfn": "f2"},
+                        "type": "output",
+                        "stageOut": True,
+                        "registerReplica": False,
+                    },
+                ],
+            },
+            {
+                "type": "job",
+                "id": "b",
+                "name": "t1",
+                "arguments": [],
+                "uses": [
+                    {
+                        "file": {"lfn": "f1"},
+                        "type": "input",
+                        "stageOut": False,
+                        "registerReplica": False,
+                    },
+                    {
+                        "file": {"lfn": "f2"},
+                        "type": "input",
+                        "stageOut": False,
+                        "registerReplica": False,
+                    },
+                    {
+                        "file": {"lfn": "checkpoint"},
+                        "type": "checkpoint",
+                        "stageOut": True,
+                        "registerReplica": False,
+                    },
+                ],
+            },
+            {
+                "type": "dag",
+                "file": "subworkflow.dag",
+                "id": "c",
+                "arguments": ["--sites", "condorpool"],
+                "uses": [
+                    {
+                        "file": {"lfn": "subworkflow.dag"},
+                        "type": "input",
+                        "stageOut": False,
+                        "registerReplica": False,
+                    }
+                ],
+            },
+            {
+                "type": "dax",
+                "file": "subworkflow.dax",
+                "id": "d",
+                "arguments": [],
+                "uses": [
+                    {
+                        "file": {"lfn": "subworkflow.dax"},
+                        "type": "input",
+                        "stageOut": False,
+                        "registerReplica": False,
+                    }
+                ],
+            }
+        ],
+        "jobDependencies": [{"id": "a", "children": ["b"]}],
+        "profiles": {Namespace.ENV.value: {"JAVA_HOME": "/java/home"}},
+        "hooks": {"shell": [{"_on": EventType.START.value, "cmd": "/bin/echo hi"}]},
+        "metadata": {"key": "value"},
+    }
 
     expected["jobs"] = sorted(expected["jobs"], key=lambda j: j["id"])
-    expected["jobs"][0]["uses"] = sorted(expected["jobs"][0]["uses"], key=lambda u: u["file"]["lfn"])
-    expected["jobs"][1]["uses"] = sorted(expected["jobs"][1]["uses"], key=lambda u: u["file"]["lfn"])
+    expected["jobs"][0]["uses"] = sorted(
+        expected["jobs"][0]["uses"], key=lambda u: u["file"]["lfn"]
+    )
+    expected["jobs"][1]["uses"] = sorted(
+        expected["jobs"][1]["uses"], key=lambda u: u["file"]["lfn"]
+    )
 
     return expected
+
 
 @pytest.fixture(scope="function")
 def wf():
     tc = TransformationCatalog()
     tc.add_transformation(
-        Transformation("t1").add_site(
-            TransformationSite("local", "/pfn", False)
-        ),
-        Transformation("t2").add_site(
-            TransformationSite("local2", "/pfn", True)
-        ),
+        Transformation("t1").add_site(TransformationSite("local", "/pfn", False)),
+        Transformation("t2").add_site(TransformationSite("local2", "/pfn", True)),
     )
 
     rc = ReplicaCatalog()
@@ -677,10 +680,12 @@ def wf():
     wf.include_catalog(tc)
     wf.include_catalog(rc)
 
-    j1 = Job("t1", _id="j1").add_outputs(File("f1"), File("f2"))
-    j2 = Job("t1").add_inputs(File("f1"), File("f2")).add_checkpoint(File("checkpoint"))
+    j1 = Job("t1", _id="a").add_outputs(File("f1"), File("f2"))
+    j2 = Job("t1", _id="b").add_inputs(File("f1"), File("f2")).add_checkpoint(File("checkpoint"))
+    j3 = SubWorkflow("subworkflow.dag", True, _id="c").add_args("--sites", "condorpool")
+    j4 = SubWorkflow(File("subworkflow.dax"), False, _id="d")
 
-    wf.add_jobs(j1, j2)
+    wf.add_jobs(j1, j2, j3, j4)
 
     wf._infer_dependencies()
 
@@ -690,10 +695,11 @@ def wf():
 
     return wf
 
+
 class TestWorkflow:
     @pytest.mark.parametrize(
         "job",
-        [(Job("t1", _id="job")), (DAX(File("f1"), _id="job")), (DAG("f1", _id="job"))],
+        [(Job("t1", _id="job")), (SubWorkflow(File("f1"), False, _id="job")), (SubWorkflow("f1", True, _id="job"))],
     )
     def test_add_job(self, job):
         wf = Workflow("wf")
@@ -758,9 +764,8 @@ class TestWorkflow:
         wf = Workflow("wf")
         with pytest.raises(TypeError) as e:
             wf.include_catalog(123)
-        
-        assert "invalid catalog: 123" in str(e)
 
+        assert "invalid catalog: 123" in str(e)
 
     def test_add_dependency(self):
         wf = Workflow("wf")
@@ -832,23 +837,34 @@ class TestWorkflow:
         assert wf.dependencies["j1"] == _JobDependency("j1", {"j2"})
         assert wf.dependencies["j2"] == _JobDependency("j2", {"j3"})
 
-    def test_tojson(self, convert_yaml_schemas_to_json, load_schema, wf, expected_json):        
+    def test_tojson(self, convert_yaml_schemas_to_json, load_schema, wf, expected_json):
         result = json.loads(json.dumps(wf, cls=_CustomEncoder))
 
         workflow_schema = load_schema("wf-5.0.json")
         validate(instance=result, schema=workflow_schema)
 
         result["jobs"] = sorted(result["jobs"], key=lambda j: j["id"])
-        result["jobs"][0]["uses"] = sorted(result["jobs"][0]["uses"], key=lambda u: u["file"]["lfn"])
-        result["jobs"][1]["uses"] = sorted(result["jobs"][1]["uses"], key=lambda u: u["file"]["lfn"])
+        result["jobs"][0]["uses"] = sorted(
+            result["jobs"][0]["uses"], key=lambda u: u["file"]["lfn"]
+        )
+        result["jobs"][1]["uses"] = sorted(
+            result["jobs"][1]["uses"], key=lambda u: u["file"]["lfn"]
+        )
 
         assert result == expected_json
 
-    @pytest.mark.parametrize("_format, loader", [
-        ("json", json.load),
-        ("yml", yaml.safe_load)
-    ])
-    def test_write(self, convert_yaml_schemas_to_json, load_schema, wf, expected_json, _format, loader):
+    @pytest.mark.parametrize(
+        "_format, loader", [("json", json.load), ("yml", yaml.safe_load)]
+    )
+    def test_write(
+        self,
+        convert_yaml_schemas_to_json,
+        load_schema,
+        wf,
+        expected_json,
+        _format,
+        loader,
+    ):
         with NamedTemporaryFile("r+") as f:
             wf.write(f, _format=_format)
             f.seek(0)
@@ -858,8 +874,12 @@ class TestWorkflow:
         validate(instance=result, schema=workflow_schema)
 
         result["jobs"] = sorted(result["jobs"], key=lambda j: j["id"])
-        result["jobs"][0]["uses"] = sorted(result["jobs"][0]["uses"], key=lambda u: u["file"]["lfn"])
-        result["jobs"][1]["uses"] = sorted(result["jobs"][1]["uses"], key=lambda u: u["file"]["lfn"])
+        result["jobs"][0]["uses"] = sorted(
+            result["jobs"][0]["uses"], key=lambda u: u["file"]["lfn"]
+        )
+        result["jobs"][1]["uses"] = sorted(
+            result["jobs"][1]["uses"], key=lambda u: u["file"]["lfn"]
+        )
 
         assert result == expected_json
 
