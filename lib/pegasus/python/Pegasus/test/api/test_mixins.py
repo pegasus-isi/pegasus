@@ -9,6 +9,7 @@ from Pegasus.api.mixins import _ShellHook
 from Pegasus.api.mixins import HookMixin
 from Pegasus.api.mixins import Namespace
 from Pegasus.api.mixins import ProfileMixin
+from Pegasus.api.mixins import to_mb
 from Pegasus.api.errors import DuplicateError
 from Pegasus.api.errors import NotFoundError
 
@@ -161,10 +162,10 @@ class TestProfileMixin:
                 count=1,
                 job_type="single",
                 max_cpu_time=2,
-                max_memory=3,
+                max_memory="3",
                 max_time=4,
                 max_wall_time=5,
-                min_memory=6,
+                min_memory="2 GB",
                 project="abc",
                 queue="queue",
             )
@@ -178,7 +179,7 @@ class TestProfileMixin:
                 "maxmemory": 3,
                 "maxtime": 4,
                 "maxwalltime": 5,
-                "minmemory": 6,
+                "minmemory": 2048,
                 "project": "abc",
                 "queue": "queue",
             }
@@ -245,8 +246,8 @@ class TestProfileMixin:
                 priority="prio",
                 request_cpus="rc",
                 request_gpus="rg",
-                request_memory="rm",
-                request_disk="rd",
+                request_memory="100 MB",
+                request_disk="200 MB",
             )
         ) == id(obj)
 
@@ -261,8 +262,8 @@ class TestProfileMixin:
                 "priority": "prio",
                 "request_cpus": "rc",
                 "request_gpus": "rg",
-                "request_memory": "rm",
-                "request_disk": "rd",
+                "request_memory": 100,
+                "request_disk": 200,
             }
         }
 
@@ -292,7 +293,7 @@ class TestProfileMixin:
                 create_dir="create.dir",
                 transfer_proxy="transfer.proxy",
                 style="style",
-                pmc_request_memory="pmc_request_memory",
+                pmc_request_memory="512",
                 pmc_request_cpus="pmc_request_cpus",
                 pmc_priority="pmc_priority",
                 pmc_task_arguments="pmc_task_arguments",
@@ -308,8 +309,8 @@ class TestProfileMixin:
                 cores="cores",
                 nodes="nodes",
                 ppn="ppn",
-                memory="memory",
-                diskspace="diskspace",
+                memory="2 GB",
+                diskspace="1 GB",
             )
         ) == id(obj)
 
@@ -332,7 +333,7 @@ class TestProfileMixin:
                 "create.dir": "create.dir",
                 "transfer.proxy": "transfer.proxy",
                 "style": "style",
-                "pmc_request_memory": "pmc_request_memory",
+                "pmc_request_memory": 512,
                 "pmc_request_cpus": "pmc_request_cpus",
                 "pmc_priority": "pmc_priority",
                 "pmc_task_arguments": "pmc_task_arguments",
@@ -348,8 +349,8 @@ class TestProfileMixin:
                 "cores": "cores",
                 "nodes": "nodes",
                 "ppn": "ppn",
-                "memory": "memory",
-                "diskspace": "diskspace",
+                "memory": 2048,
+                "diskspace": 1024,
             }
         }
 
@@ -380,3 +381,18 @@ class TestProfileMixin:
 
         assert "add_selector() got an unexpected" in str(e)
 
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [("0", 0), (1, 1), ("1", 1), ("2 MB", 2), ("2 GB", 2048), ("10 GB", 10240)],
+)
+def test_to_mb(value, expected):
+    assert to_mb(value) == expected
+
+
+@pytest.mark.parametrize("value", [("abc MB"), ("MB"), ("1 KB")])
+def test_to_mb_invalid_input(value):
+    with pytest.raises(ValueError) as e:
+        to_mb(value)
+
+    assert "value: {} should be a str".format(value) in str(e)

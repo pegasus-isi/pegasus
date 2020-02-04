@@ -186,6 +186,33 @@ def _profiles(ns, **map_p):
     return wrap
 
 
+def to_mb(value):
+    try:
+        tokens = str(value).strip().split()
+
+        if len(tokens) == 1:
+            return int(tokens[0])
+        elif len(tokens) == 2:
+            amt = int(tokens[0])
+            unit = tokens[1].lower()
+
+            _bytes = {
+                "mb": 1 << 20,
+                "gb": 1 << 30,
+                "tb": 1 << 40,
+                "pb": 1 << 50,
+                "eb": 1 << 60,
+            }
+
+            return (amt * _bytes[unit]) / _bytes["mb"]
+    except:
+        raise ValueError(
+            "value: {} should be a str formatted as '<int> [MB | GB | TB | PB | EB]'".format(
+                value
+            )
+        )
+
+
 class ProfileMixin:
     def add_profiles(self, ns, key=None, value=None, **kw):
         """Add a profile.
@@ -239,10 +266,10 @@ class ProfileMixin:
         count="count",
         job_type="jobtype",
         max_cpu_time="maxcputime",
-        max_memory="maxmemory",
+        max_memory=("maxmemory", to_mb),
         max_time="maxtime",
         max_wall_time="maxwalltime",
-        min_memory="minmemory",
+        min_memory=("minmemory", to_mb),
         project="project",
         queue="queue",
     )
@@ -271,14 +298,14 @@ class ProfileMixin:
         :type job_type: str, optional
         :param max_cpu_time: the max CPU time in minutes for a single execution of a job, defaults to None
         :type max_cpu_time: int, optional
-        :param max_memory: the maximum memory in MB required for the job, defaults to None
-        :type max_memory: int, optional
+        :param max_memory: the maximum memory in MB required for the job. Given as a str formatted as '<int> [MB | GB | TB | PB | EB]', defaults to None
+        :type max_memory: str, optional
         :param max_time: the maximum time or walltime in minutes for a single execution of a job, defaults to None
         :type max_time: int, optional
         :param max_wall_time: the maximum walltime in minutes for a single execution of a job, defaults to None
         :type max_wall_time: int, optional
-        :param min_memory: the minumum amount of memory required for this job, defaults to None
-        :type min_memory: int, optional
+        :param min_memory: the minumum amount of memory required for this job. Given as a str formatted as '<int> [MB | GB | TB | PB | EB]', defaults to None
+        :type min_memory: str, optional
         :param project: associates an account with a job at the remote end, defaults to None
         :type project: str, optional
         :param queue: the remote queue in which the job should be run. Used when remote scheduler is PBS that supports queues, defaults to None
@@ -298,8 +325,8 @@ class ProfileMixin:
         priority="priority",
         request_cpus="request_cpus",
         request_gpus="request_gpus",
-        request_memory="request_memory",
-        request_disk="request_disk",
+        request_memory=("request_memory", to_mb),
+        request_disk=("request_disk", to_mb),
     )
     def add_condor(
         self,
@@ -338,9 +365,9 @@ class ProfileMixin:
         :type request_cpus: str, optional
         :param request_gpus: Number of GPU's a job requires, defaults to None
         :type request_gpus: str, optional
-        :param request_memory: Amount of memory a job requires, defaults to None
+        :param request_memory: Amount of memory a job requires. Given as a str formatted as '<int> [MB | GB | TB | PB | EB]', defaults to None
         :type request_memory: str, optional
-        :param request_disk: Amount of disk a job requires, defaults to None
+        :param request_disk: Amount of disk a job requires. Given as a str formatted as '<int> [MB | GB | TB | PB | EB]', defaults to None
         :type request_disk: str, optional
         :return: self
         """
@@ -365,7 +392,7 @@ class ProfileMixin:
         create_dir="create.dir",
         transfer_proxy="transfer.proxy",
         style="style",
-        pmc_request_memory="pmc_request_memory",
+        pmc_request_memory=("pmc_request_memory", to_mb),
         pmc_request_cpus="pmc_request_cpus",
         pmc_priority="pmc_priority",
         pmc_task_arguments="pmc_task_arguments",
@@ -381,8 +408,8 @@ class ProfileMixin:
         cores="cores",
         nodes="nodes",
         ppn="ppn",
-        memory="memory",
-        diskspace="diskspace",
+        memory=("memory", to_mb),
+        diskspace=("diskspace", to_mb),
     )
     def add_pegasus(
         self,
@@ -404,7 +431,7 @@ class ProfileMixin:
         create_dir: bool = None,
         transfer_proxy: bool = None,
         style: str = None,
-        pmc_request_memory: int = None,
+        pmc_request_memory: str = None,
         pmc_request_cpus: int = None,
         pmc_priority: int = None,
         pmc_task_arguments: str = None,
@@ -420,8 +447,8 @@ class ProfileMixin:
         cores: int = None,
         nodes: int = None,
         ppn: int = None,
-        memory: int = None,
-        diskspace: int = None,
+        memory: str = None,
+        diskspace: str = None,
     ):
         """Add Pegasus profile(s).
         
@@ -459,8 +486,8 @@ class ProfileMixin:
         :type transfer_proxy: bool, optional
         :param style: Sets the condor submit file style. If set to globus, submit file generated refers to CondorG job submissions. If set to condor, submit file generated refers to direct Condor submission to the local Condor pool. It applies for glidein, where nodes from remote grid sites are glided into the local condor pool. The default style that is applied is globus, defaults to None
         :type style: str, optional
-        :param pmc_request_memory: This key is used to set the -m option for pegasus-mpi-cluster. It specifies the amount of memory in MB that a job requires. This profile is usually set in the DAX for each job, defaults to None
-        :type pmc_request_memory: int, optional
+        :param pmc_request_memory: This key is used to set the -m option for pegasus-mpi-cluster. It specifies the amount of memory in MB that a job requires. This profile is usually set in the DAX for each job. Given as a str formatted as '<int> [MB | GB | TB | PB | EB]', defaults to None
+        :type pmc_request_memory: str, optional
         :param pmc_request_cpus: This key is used to set the -c option for pegasus-mpi-cluster. It specifies the number of cpu's that a job requires. This profile is usually set in the DAX for each job, defaults to None
         :type pmc_request_cpus: int, optional
         :param pmc_priority: This key is used to set the -p option for pegasus-mpi-cluster. It specifies the priority for a job . This profile is usually set in the DAX for each job. Negative values are allowed for priorities, defaults to None
@@ -481,7 +508,20 @@ class ProfileMixin:
         :type auxillary_local: bool, optional
         :param condor_arguments_quote: indicates whether condor quoting rules should be applied for writing out the arguments key in the condor submit file. By default it is true unless the job is schedule to a glite style site. The value is automatically set to false for glite style sites, as condor quoting is broken in batch_gahp, defaults to None
         :type condor_arguments_quote: bool, optional
-        :return: self 
+        :param runtime: Specifies the expected runtime of a job in seconds, defaults to None
+        :type runtime: str, optional
+        :param clusters_max_runtime: Specifies the maximum runtime of a job, defaults to None
+        :type clusters_max_runtime: int, optional
+        :param cores: The total number of cores required for a job. This is also used for accounting purposes in the database while generating statistics. It corresponds to the multiplier_factor in the job_instance table, defaults to None
+        :type cores: int, optional
+        :param nodes: Indicates the number of nodes a job requires, defaults to None
+        :type nodes: int, optional
+        :param ppn: Indicates the number of processors per node. This profile is best set in the Site Catalog and usually set when running workflows with MPI jobs, defaults to None
+        :type ppn: int, optional
+        :param memory: Indicates the maximum memory a job requires. Given as a str formatted as '<int> [MB | GB | TB | PB | EB]', defaults to None
+        :type memory: str, optional
+        :param diskspace: Indicates the maximum diskspace a job requires in MB. Given as a str formatted as '<int> [MB | GB | TB | PB | EB]', defaults to None
+        :type diskspace: int, optional
         """
         ...
 
@@ -582,4 +622,3 @@ class ProfileMixin:
         :return: self
         """
         ...
-
