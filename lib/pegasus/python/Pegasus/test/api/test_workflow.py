@@ -835,7 +835,7 @@ class TestWorkflow:
     def test_tojson(self, convert_yaml_schemas_to_json, load_schema, wf, expected_json):        
         result = json.loads(json.dumps(wf, cls=_CustomEncoder))
 
-        workflow_schema = load_schema("dax-5.0.json")
+        workflow_schema = load_schema("wf-5.0.json")
         validate(instance=result, schema=workflow_schema)
 
         result["jobs"] = sorted(result["jobs"], key=lambda j: j["id"])
@@ -854,7 +854,7 @@ class TestWorkflow:
             f.seek(0)
             result = loader(f)
 
-        workflow_schema = load_schema("dax-5.0.json")
+        workflow_schema = load_schema("wf-5.0.json")
         validate(instance=result, schema=workflow_schema)
 
         result["jobs"] = sorted(result["jobs"], key=lambda j: j["id"])

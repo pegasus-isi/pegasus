@@ -29,7 +29,7 @@ def convert_yaml_schemas_to_json():
             "rc-5.0.yml",
             "tc-5.0.yml",
             "sc-5.0.yml",
-            "dax-5.0.yml",
+            "wf-5.0.yml",
         ]
     }
 

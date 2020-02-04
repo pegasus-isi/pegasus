@@ -8,7 +8,7 @@ from jsonschema import Draft7Validator
     "schema_file",
     [
         ("common.json"),
-        ("dax-5.0.json"),
+        ("wf-5.0.json"),
         ("rc-5.0.json"),
         ("tc-5.0.json"),
         ("sc-5.0.json"),
