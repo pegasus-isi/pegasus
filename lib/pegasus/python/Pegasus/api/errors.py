@@ -1,18 +1,18 @@
-class DAX4Error(Exception):
+class PegasusError(Exception):
     pass
 
 
-class DuplicateError(DAX4Error):
+class DuplicateError(PegasusError):
     pass
 
 
-class NotFoundError(DAX4Error):
+class NotFoundError(PegasusError):
     pass
 
 
-class FormatError(DAX4Error):
+class FormatError(PegasusError):
     pass
 
 
-class ParseError(DAX4Error):
+class ParseError(PegasusError):
     pass
