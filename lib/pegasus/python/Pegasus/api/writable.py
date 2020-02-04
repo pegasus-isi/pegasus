@@ -74,16 +74,19 @@ class Writable:
             # TODO: figure out how to get yaml.dump to recurse down into nested objects
             # yaml.dump(_CustomEncoder().default(self), file, sort_keys=False)
             yaml.dump(
-                json.loads(json.dumps(self, cls=_CustomEncoder)), file, sort_keys=False
+                json.loads(json.dumps(self, cls=_CustomEncoder)),
+                file,
+                sort_keys=False,
+                allow_unicode=True,
             )
         else:
-            json.dump(self, file, cls=_CustomEncoder, indent=4)
+            json.dump(self, file, cls=_CustomEncoder, indent=4, ensure_ascii=False)
 
     def write(self, file, _format="yml"):
         """Serialize this class as either yaml or json and write to the given
-        file
+        file.
         
-        :param file: path or file object to write to, defaults to None
+        :param file: path or file object (opened in "w" mode) to write to, defaults to None
         :type file: str or file, optional
         :param _format: can be either "yml", "yaml" or "json", defaults to "yml"
         :type _format: str, optional
