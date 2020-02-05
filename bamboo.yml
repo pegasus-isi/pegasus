@@ -159,6 +159,7 @@ project:
                       --rm \
                       --entrypoint ant \
                       --env "USER=bamboo" \
+                      --env "LANG=C.UTF-8" \
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-python
               artifactDependencies:
@@ -455,6 +456,7 @@ project:
                       --rm \
                       --entrypoint ant \
                       --env "USER=bamboo" \
+                      --env "LANG=en_US.utf8" \
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-python
               artifactDependencies:
@@ -633,6 +635,7 @@ project:
                       --rm \
                       --entrypoint ant \
                       --env "USER=bamboo" \
+                      --env "LANG=C.UTF-8" \
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-python
               artifactDependencies:
@@ -722,6 +725,7 @@ project:
                       --rm \
                       --entrypoint ant \
                       --env "USER=bamboo" \
+                      --env "LANG=C.UTF-8" \
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-python
               artifactDependencies:
