@@ -312,7 +312,7 @@ class TestSite:
 
 @pytest.fixture
 def expected_json():
-    return {
+    expected = {
         "pegasus": PEGASUS_VERSION,
         "sites": [
             {
@@ -392,6 +392,17 @@ def expected_json():
         ],
     }
 
+    expected["sites"].sort(key=lambda s: s["name"])
+    for i in range(len(expected["sites"])):
+        expected["sites"][i]["directories"].sort(key=lambda d: d["path"])
+
+        for j in range(len(expected["sites"][i]["directories"])):
+            expected["sites"][i]["directories"][j]["fileServers"].sort(key=lambda fs: fs["url"])
+        
+        if "grids" in expected["sites"][i]:
+            expected["sites"][i]["grids"].sort(key=lambda g: g["jobtype"])
+    
+    return expected
 
 class TestSiteCatalog:
     def test_add_valid_site(self):
@@ -481,6 +492,16 @@ class TestSiteCatalog:
         sc_schema = load_schema("sc-5.0.json")
         validate(instance=result, schema=sc_schema)
 
+        result["sites"].sort(key=lambda s: s["name"])
+        for i in range(len(result["sites"])):
+            result["sites"][i]["directories"].sort(key=lambda d: d["path"])
+
+            for j in range(len(result["sites"][i]["directories"])):
+                result["sites"][i]["directories"][j]["fileServers"].sort(key=lambda fs: fs["url"])
+            
+            if "grids" in result["sites"][i]:
+                result["sites"][i]["grids"].sort(key=lambda g: g["jobtype"])
+
         assert result == expected_json
 
     @pytest.mark.parametrize(
@@ -548,6 +569,16 @@ class TestSiteCatalog:
             sc.write(f, _format=_format)
             f.seek(0)
             result = loader(f)
+
+        result["sites"].sort(key=lambda s: s["name"])
+        for i in range(len(result["sites"])):
+            result["sites"][i]["directories"].sort(key=lambda d: d["path"])
+
+            for j in range(len(result["sites"][i]["directories"])):
+                result["sites"][i]["directories"][j]["fileServers"].sort(key=lambda fs: fs["url"])
+            
+            if "grids" in result["sites"][i]:
+                result["sites"][i]["grids"].sort(key=lambda g: g["jobtype"])
 
         assert result == expected_json
 
