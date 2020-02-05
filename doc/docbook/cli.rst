@@ -12,7 +12,6 @@ Command Line Tools
     manpages/pegasus-cluster.rst
     manpages/pegasus-config.rst
     manpages/pegasus-dagman.rst
-    manpages/pegasus-dax-validator.rst
     manpages/pegasus-db-admin.rst
     manpages/pegasus-em.rst
     manpages/pegasus-exitcode.rst

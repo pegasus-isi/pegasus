@@ -24,13 +24,23 @@ done
 # python version at runtime
 cd $1
 for TOOL in \
+    pegasus-analyzer \
+    pegasus-cwl-converter \
     pegasus-dagman \
+    pegasus-db-admin \
+    pegasus-em \
     pegasus-exitcode \
+    pegasus-globus-online \
+    pegasus-globus-online-init \
     pegasus-integrity \
+    pegasus-metadata \
+    pegasus-monitord \
     pegasus-preflight-check \
     pegasus-s3 \
+    pegasus-service \
+    pegasus-statistics \
+    pegasus-submitdir \
     pegasus-transfer \
-    pegasus-cwl-converter \
 ; do
     rm -f $TOOL
     cat pegasus-python-wrapper | sed "s/%%BASE_NAME%%/$TOOL/" >$TOOL

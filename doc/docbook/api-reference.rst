@@ -1259,31 +1259,6 @@ any language. For instance, LIGO, the Laser Interferometer Gravitational
 Wave Observatory, generate their DAX files as XML using their own Python
 code, not using our provided API.
 
-If you write your own XML, you *must* ensure that the generated XML is
-well formed and valid with respect to the DAX schema. You can use the
-``pegasus-dax-validator`` to verify the validity of your generated file.
-Typically, you generate a smallish test file to, validate that your
-generator creates valid XML using the validator, and then ramp it up to
-produce the full workflow(s) you want to run. At this point the
-``pegasus-dax-validator`` is a very simple program that will only take
-exactly one argument, the name of the file to check.The following
-snippet checks a black-diamond file that uses an improper *osversion*
-attribute in its *executable* element:
-
-::
-
-   $ pegasus-dax-validator blackdiamond.dax
-   ERROR: cvc-pattern-valid: Value '2.6.18-194.26.1.el5' is not facet-valid
-    with respect to pattern '[0-9]+(\.[0-9]+(\.[0-9]+)?)?' for type 'VersionPattern'.
-   ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
-    on element 'executable' is not valid with respect to its type, 'VersionPattern'.
-
-   0 warnings, 2 errors, and 0 fatal errors detected.
-
-We are working on improving this program, e.g. provide output with
-regards to the line number where the issue occurred. However, it will
-return with a non-zero exit code whenever errors were detected.
-
 .. _rest-api-monitoring:
 
 Monitoring
