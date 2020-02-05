@@ -40,6 +40,7 @@ def _get_class_enum_member_str(_cls, _type):
             if isinstance(member, _type):
                 enums.append(name)
 
+    enums.sort()
     return _cls.__name__ + ".<{members}>".format(members=" | ".join(enums))
 
 
@@ -70,6 +71,6 @@ def _get_enum_str(enum_cls):
         )
 
     return enum_cls.__name__ + ".<{members}>".format(
-        members=" | ".join(enum_cls._member_names_)
+        members=" | ".join(sorted(enum_cls._member_names_))
     )
 
