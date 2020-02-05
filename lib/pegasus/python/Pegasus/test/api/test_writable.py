@@ -14,14 +14,14 @@ def writable_obj():
     def _writable_obj():
         class Item:
             def __init__(self, n):
-                self.name = "⽷itÈm" + str(n)
+                self.name = "item" + str(n)
 
             def __json__(self):
-                return {"näme": self.name}
+                return {"name": self.name}
 
         class Container(Writable):
             def __init__(self):
-                self.name = "ƇontaineƦ"
+                self.name = "container⽷"
                 self.items = [Item(i) for i in range(3)]
 
             def __json__(self):
@@ -35,8 +35,8 @@ def writable_obj():
 @pytest.fixture(scope="function")
 def expected():
     return {
-        "name": "ƇontaineƦ",
-        "items": [{"näme": "⽷itÈm0"}, {"näme": "⽷itÈm1"}, {"näme": "⽷itÈm2"}],
+        "name": "container⽷",
+        "items": [{"name": "item0"}, {"name": "item1"}, {"name": "item2"}],
     }
 
 
