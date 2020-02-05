@@ -68,7 +68,7 @@ class HookMixin:
 
             # Example
             wf.add_shell_hook(EventType.START, "echo 'hello'")
-        
+
         :param event_type: an event type defined in :py:class:`~Pegasus.api.mixins.EventType`
         :type event_type: EventType
         :param cmd: shell command
@@ -89,7 +89,7 @@ class _Hook:
 
     def __init__(self, event_type):
         """Constructor
-        
+
         :param event_type: an event type defined in :py:class:`~Pegasus.api.mixins.EventType`
         :type event_type: EventType
         :raises ValueError: event_type must be of type :py:class:`~Pegasus.api.mixins.EventType`
@@ -110,7 +110,7 @@ class _ShellHook(_Hook):
 
     def __init__(self, event_type, cmd):
         """Constructor
-        
+
         :param event_type: an event type defined in :py:class:`~Pegasus.api.mixins.EventType`
         :type event_type: EventType
         :param cmd: shell command
@@ -152,10 +152,10 @@ def _profiles(ns, **map_p):
         )
         def add_dagman(self, pre_args: str = None):
             ...
-    
+
     This way, available Profile keys will appear in an IDE and we can use kw args
     for keys that would be invalid as python variable names.
-    
+
     :param ns: namespace
     :type ns: Namespace
     """
@@ -229,10 +229,10 @@ class ProfileMixin:
 
             # Example 2
             job.add_profiles(Namespace.ENV, JAVA_HOME="/usr/bin/java", USER="ryan")
-        
+
         For add_globus(), add_condor(), add_dagman(), add_selector(), and add_pegasus(),
         if a profile key that you are trying to use is not listed as a key word argument,
-        use this function to add the profile. 
+        use this function to add the profile.
 
         :raises TypeError: namespace must be one of Namespace
         :return: self
@@ -284,14 +284,14 @@ class ProfileMixin:
         max_wall_time: int = None,
         min_memory: int = None,
         project: str = None,
-        queue: str = None,
+        queue: str = None
     ):
         """Add Globus profile(s).
 
-        The globus profile namespace encapsulates Globus resource specification 
-        language (RSL) instructions. The RSL configures settings and behavior of 
+        The globus profile namespace encapsulates Globus resource specification
+        language (RSL) instructions. The RSL configures settings and behavior of
         the remote scheduling system.
-        
+
         :param count: the number of times an executable is started, defaults to None
         :type count: int, optional
         :param job_type: specifies how the job manager should start the remote job. While Pegasus defaults to single, use mpi when running MPI jobs., defaults to None
@@ -310,7 +310,7 @@ class ProfileMixin:
         :type project: str, optional
         :param queue: the remote queue in which the job should be run. Used when remote scheduler is PBS that supports queues, defaults to None
         :type queue: str, optional
-        :return: self 
+        :return: self
         """
         ...
 
@@ -341,12 +341,12 @@ class ProfileMixin:
         request_cpus: str = None,
         request_gpus: str = None,
         request_memory: str = None,
-        request_disk: str = None,
+        request_disk: str = None
     ):
         """Add Condor profile(s).
 
         The condor profiles permit to add or overwrite instructions in the Condor submit file.
-        
+
         :param universe: Pegasus defaults to either globus or scheduler universes. Set to standard for compute jobs that require standard universe. Set to vanilla to run natively in a condor pool, or to run on resources grabbed via condor glidein, defaults to None
         :type universe: str, optional
         :param periodic_release: is the number of times job is released back to the queue if it goes to HOLD, e.g. due to Globus errors. Pegasus defaults to 3, defaults to None
@@ -448,10 +448,10 @@ class ProfileMixin:
         nodes: int = None,
         ppn: int = None,
         memory: str = None,
-        diskspace: str = None,
+        diskspace: str = None
     ):
         """Add Pegasus profile(s).
-        
+
         :param clusters_num: Determines the total number of clusters per level, jobs are evenly spread across clusters (see `Pegasus Clustering Guide <https://pegasus.isi.edu/documentation/job_clustering.php#horizontal_clustering>`_ for more information), defaults to None
         :type clusters_num: int, optional
         :param clusters_size: Determines the number of jobs in each cluster (see `Pegasus Clustering Guide <https://pegasus.isi.edu/documentation/job_clustering.php#horizontal_clustering>`_ for more information), defaults to None
@@ -535,9 +535,9 @@ class ProfileMixin:
         self, *, execution_site: str = None, pfn: str = None, grid_job_type: str = None
     ):
         """Add Selector(s).
-        
+
         The Selector namespace allows users to override the beahvior of the Workflow
-        Mapper during site selection. This gives you finer grained control over 
+        Mapper during site selection. This gives you finer grained control over
         where a job executes and what executable it refers to.
 
         :param execution_site: the execution site where a job should be executed, defaults to None
@@ -581,18 +581,18 @@ class ProfileMixin:
         max_post: str = None,
         max_jobs: str = None,
         max_idle: str = None,
-        post_scope: str = None,
+        post_scope: str = None
     ):
         """Add Dagman profile(s).
 
-        Note, to add the profile keys "post.path.[value of dagman.post]" or 
+        Note, to add the profile keys "post.path.[value of dagman.post]" or
         ["category-name].maxjobs", use the following:
 
         .. code-block:: python
 
             job.add_profiles(Namespace.DAGMAN, key="post.path.<value of dagman.post>", value=<value string>)
             job.add_profiles(Namespace.DAGMAN, key="<category-name>.maxjobs", value=<value string>)
-        
+
         :param pre: is the path to the pre-script. DAGMan executes the pre-script before it runs the job, defaults to None
         :type pre: str, optional
         :param pre_arguments: are command-line arguments for the pre-script, if any, defaults to None
