@@ -251,21 +251,9 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
   <target name="doc-user-guide" depends="setup" description="Generate user guide from docbook source">
     <mkdir dir="${dist.doc}"/>
 
-    <!-- Generate Python Documentation from docstrings in code. -->
-    <exec executable="sh" failonerror="true">
-      <arg value="-c"/>
-      <arg value="sphinx-apidoc --force --output-dir doc/docbook/python/ lib/pegasus/python/ lib/pegasus/python/{setup,test}.py lib/pegasus/python/Pegasus/{cluster,command,compat,exitcode,init,s3,submitdir,user}.py lib/pegasus/python/Pegasus/{test,db,monitoring,catalogs,cli,netlogger,plots_stats,service,tools}"/>
-    </exec>
-
-    <!-- Generate Java Documentation from code. -->
-    <exec executable="sh" failonerror="true">
-      <arg value="-c"/>
-      <arg value="javasphinx-apidoc --update --output-dir doc/docbook/java/ src ${basedir}/src/edu/isi/pegasus/aws/batch/common/" />
-    </exec>
-
-    <exec executable="${make}" dir="doc/docbook" failonerror="true">
-      <arg line="html"/>
-      <arg line="man"/>
+    <exec executable="tox" dir="lib/pegasus/python" failonerror="true">
+      <arg line="--recreate"/>
+      <arg line="-e docs"/>
     </exec>
 
     <!-- Copy HTML -->
@@ -298,15 +286,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <group title="Pegasus" packages="edu.isi.pegasus.*"/>
       <link href="http://java.sun.com/j2se/1.5.0/docs/api/"/>
     </javadoc>
-  </target>
-
-  <target name="doc-python" depends="setup,doc-user-guide,compile-externals" description="Generate python documentation">
-    <delete dir="${dist.doc}/wordpress/python"/>
-    <mkdir dir="${dist.doc}/wordpress/python"/>
-    <exec executable="./doc/python-docs" dir="" failonerror="true">
-      <env key="PYTHONPATH" value="${basedir}/lib/pegasus/externals/python"/>
-      <arg line="${basedir}/lib/pegasus/python ${dist.doc}/wordpress/python"/>
-    </exec>
   </target>
 
   <target name="doc-r" depends="setup,doc-user-guide,compile-r" description="Generate r documentation">
