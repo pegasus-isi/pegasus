@@ -607,6 +607,8 @@ class TestTransformationCatalog:
             tc.write(f, _format="json")
             f.seek(0)
             result = json.load(f)
+        
+        result["transformations"] = sorted(expected["transformations"], key=lambda t: t["name"])
 
         assert result == expected
 
