@@ -18,15 +18,32 @@
 
 package edu.isi.pegasus.planner.catalog.site.classes;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
+import edu.isi.pegasus.common.util.PegasusURL;
+
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
+
 import java.io.IOException;
 import java.io.Writer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This class describes a file server that can be used to stage data to and from a site.
  *
  * @author Karan Vahi
  */
+@JsonDeserialize(using = FileServerDeserializer.class)
 public class FileServer extends FileServerType {
 
     /** The default constructor. */
@@ -104,4 +121,60 @@ public class FileServer extends FileServerType {
     public Profiles getProfiles() {
         return this.mProfiles;
     }
+
+    public static void main(String[] args){
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+        /*SimpleModule module = new SimpleModule();
+        module.addDeserializer(FileServer.class, new FileServerDeserializer());
+        mapper.registerModule(module);
+        */
+        String test = 
+                "operation: all\n" +
+                "url: file:///tmp/workflows/scratch";
+        try {
+            FileServer fs = mapper.readValue(test, FileServer.class);
+            System.out.println(fs);
+        } catch (IOException ex) {
+            Logger.getLogger(FileServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 }
+
+/**
+ * Custom deserializer for YAML representation of FileServer
+ * 
+ * @author vahi
+ */
+class FileServerDeserializer extends JsonDeserializer<FileServer> {
+
+    /**
+     * Deserializes a FileServer YAML description of the type
+     * <pre>
+         - operation: all
+           url: file:///tmp/workflows/scratch
+     * </pre>
+     * @param jp
+     * @param dc
+     * @return
+     * @throws IOException
+     * @throws JsonProcessingException 
+     */
+    @Override
+    public FileServer deserialize(JsonParser jp, DeserializationContext dc) throws IOException, JsonProcessingException {
+        ObjectCodec oc = jp.getCodec();
+        JsonNode node = oc.readTree(jp);
+        FileServer fs = new FileServer();
+        
+        String operation = node.get("operation").asText();
+        String fullURL = node.get("url").asText();
+        PegasusURL url = new PegasusURL(fullURL);
+        fs.setURLPrefix(url.getURLPrefix());
+        fs.setProtocol(url.getProtocol());
+        fs.setMountPoint(url.getPath());
+        
+        return fs;
+    }
+}
+
+

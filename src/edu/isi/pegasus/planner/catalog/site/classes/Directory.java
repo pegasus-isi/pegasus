@@ -18,11 +18,25 @@
 
 package edu.isi.pegasus.planner.catalog.site.classes;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The Directory class used for Site Catalog Schema version 4 onwards. The type of directory is
@@ -31,6 +45,8 @@ import java.util.List;
  * @author Karan Vahi
  * @version $Revision$
  */
+
+@JsonDeserialize(using = DirectorySerializer.class)
 public class Directory extends DirectoryLayout {
 
     /** Enumerates the new directory types supported in this schema */
@@ -194,5 +210,69 @@ public class Directory extends DirectoryLayout {
         obj.setType(this.getType());
 
         return obj;
+    }
+    
+    public static void main(String[] args){
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+        /*SimpleModule module = new SimpleModule();
+        module.addDeserializer(FileServer.class, new FileServerDeserializer());
+        mapper.registerModule(module);
+        */
+        String test = 
+                "  type: sharedScratch\n" +
+                "  path: /tmp/workflows/scratch\n" +
+                "  fileServers:\n" +
+                "    - operation: all\n" +
+                "      url: file:///tmp/workflows/scratch";
+        try {
+            Directory dir = mapper.readValue(test, Directory.class);
+            System.out.println(dir);
+        } catch (IOException ex) {
+            Logger.getLogger(FileServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+}
+
+/**
+ * Custom deserializer for YAML representation of Directory
+ * 
+ * @author vahi
+ */
+class DirectorySerializer extends JsonDeserializer<Directory> {
+
+    /**
+     * Deserializes a Directory YAML description of the type
+     * <pre>
+          type: sharedScratch
+          path: /tmp/workflows/scratch
+          fileServers:
+            - operation: all
+              url: file:///tmp/workflows/scratch
+     * </pre>
+     * @param parser
+     * @param dc
+     * @return
+     * @throws IOException
+     * @throws JsonProcessingException 
+     */
+    @Override
+    public Directory deserialize(JsonParser parser, DeserializationContext dc) throws IOException, JsonProcessingException {
+        ObjectCodec oc = parser.getCodec();
+        JsonNode node = oc.readTree(parser);
+        Directory directory = new Directory();
+        
+        JsonNode fileServersNodes = node.get("fileServers");
+        if (fileServersNodes != null) {
+            parser = fileServersNodes.traverse(oc);
+            List<FileServer> servers = parser.readValueAs(LinkedList.class);
+            for (FileServer fs : servers) {
+                directory.addFileServer(fs);
+            }
+            System.out.println(servers);
+        }
+
+        return directory;
+        
     }
 }
