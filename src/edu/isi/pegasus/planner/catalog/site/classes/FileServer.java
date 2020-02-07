@@ -30,11 +30,14 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import edu.isi.pegasus.common.util.PegasusURL;
+import edu.isi.pegasus.planner.catalog.CatalogException;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -166,12 +169,32 @@ class FileServerDeserializer extends JsonDeserializer<FileServer> {
         JsonNode node = oc.readTree(jp);
         FileServer fs = new FileServer();
         
-        String operation = node.get("operation").asText();
-        String fullURL = node.get("url").asText();
-        PegasusURL url = new PegasusURL(fullURL);
-        fs.setURLPrefix(url.getURLPrefix());
-        fs.setProtocol(url.getProtocol());
-        fs.setMountPoint(url.getPath());
+        for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
+            Map.Entry<String, JsonNode> e = it.next();
+            String key = e.getKey();
+            SiteCatalogKeywords reservedKey =
+                    SiteCatalogKeywords.getReservedKey(key);
+            if (reservedKey == null) {
+                throw new CatalogException("Illegal key " + key + " for element " + SiteCatalogKeywords.FILESERVERS + " -" + node);
+            }
+
+            switch (reservedKey) {
+                case OPERATION:
+                    fs.setSupportedOperation(node.get("operation").asText());
+                    break;
+                    
+                case URL:
+                    String fullURL = node.get("url").asText();
+                    PegasusURL url = new PegasusURL(fullURL);
+                    fs.setURLPrefix(url.getURLPrefix());
+                    fs.setProtocol(url.getProtocol());
+                    fs.setMountPoint(url.getPath());
+                    break;
+                    
+                default:
+                    throw new CatalogException("Unsupported key " + key + " for element " + SiteCatalogKeywords.FILESERVERS + " -" + node);
+            }
+        }
         
         return fs;
     }

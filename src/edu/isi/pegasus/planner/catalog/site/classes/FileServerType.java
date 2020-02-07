@@ -177,6 +177,15 @@ public abstract class FileServerType extends AbstractSiteData {
     public void setSupportedOperation(OPERATION operation) {
         mOperation = operation;
     }
+    
+    /**
+     * The operation supported by the file server
+     *
+     * @param operation the supported operation
+     */
+    public void setSupportedOperation(String operation) {
+        mOperation = OPERATION.valueOf(operation);
+    }
 
     /**
      * Returns the operation supported by the file server
