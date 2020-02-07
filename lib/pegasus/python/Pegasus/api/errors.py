@@ -8,11 +8,3 @@ class DuplicateError(PegasusError):
 
 class NotFoundError(PegasusError):
     pass
-
-
-class FormatError(PegasusError):
-    pass
-
-
-class ParseError(PegasusError):
-    pass
