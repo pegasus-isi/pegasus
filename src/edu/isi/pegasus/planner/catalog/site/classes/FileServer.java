@@ -149,7 +149,7 @@ public class FileServer extends FileServerType {
  * 
  * @author vahi
  */
-class FileServerDeserializer extends JsonDeserializer<FileServer> {
+class FileServerDeserializer extends SiteDataJsonDeserializer<FileServer> {
 
     /**
      * Deserializes a FileServer YAML description of the type
@@ -175,7 +175,7 @@ class FileServerDeserializer extends JsonDeserializer<FileServer> {
             SiteCatalogKeywords reservedKey =
                     SiteCatalogKeywords.getReservedKey(key);
             if (reservedKey == null) {
-                throw new CatalogException("Illegal key " + key + " for element " + SiteCatalogKeywords.FILESERVERS + " -" + node);
+                this.complainForIllegalKey(SiteCatalogKeywords.FILESERVERS.getReservedName(), key, node );
             }
 
             switch (reservedKey) {
@@ -192,7 +192,7 @@ class FileServerDeserializer extends JsonDeserializer<FileServer> {
                     break;
                     
                 default:
-                    throw new CatalogException("Unsupported key " + key + " for element " + SiteCatalogKeywords.FILESERVERS + " -" + node);
+                    this.complainForUnsupportedKey(SiteCatalogKeywords.FILESERVERS.getReservedName(), key, node);
             }
         }
         
