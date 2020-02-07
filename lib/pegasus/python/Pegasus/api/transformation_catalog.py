@@ -134,8 +134,9 @@ class Container(ProfileMixin):
 
     .. code-block:: python
 
-        c = Container("centos-pegasus", Container.DOCKER, "docker:///ryan/centos-pegasus:latest", ["/Volumes/Work/lfs1:/shared-data/:ro"])\
-                .add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
+        # Example
+        (Container("centos-pegasus", Container.DOCKER, "docker:///ryan/centos-pegasus:latest", ["/Volumes/Work/lfs1:/shared-data/:ro"])
+            .add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java"))
             
     """
 
@@ -192,6 +193,20 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
     requires other executables. Transformations can reside on one or
     more sites where they are either **STAGEABLE** (a binary that can be shipped
     around) or **INSTALLED**.
+
+    .. code-block:: python
+
+        # Example
+        preprocess = (Transformation("preprocess", namespace="pegasus", version="4.0")
+                        .add_site(
+                            TransformationSite(
+                                CONDOR_POOL, 
+                                PEGASUS_LOCATION, 
+                                is_stageable=False, 
+                                arch=Arch.X86_64, 
+                                os_type=OS.LINUX)
+                        ))
+
     """
 
     def __init__(
@@ -322,6 +337,44 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
 class TransformationCatalog(Writable):
     """Maintains a list a :py:class:`~Pegasus.api.transformation_catalog.Transformations`, site specific
     transformation information, and a list of containers
+
+    .. code-block:: python
+
+        # Example
+        preprocess = (Transformation("preprocess", namespace="pegasus", version="4.0")
+                .add_site(
+                    TransformationSite(
+                        CONDOR_POOL, 
+                        PEGASUS_LOCATION, 
+                        is_stageable=False, 
+                        arch=Arch.X86_64, 
+                        os_type=OS.LINUX)
+                ))
+
+        findrage = (Transformation("findrange", namespace="pegasus", version="4.0")
+                        .add_site(
+                            TransformationSite(
+                                CONDOR_POOL, 
+                                PEGASUS_LOCATION, 
+                                is_stageable=False, 
+                                arch=Arch.X86_64, 
+                                os_type=OS.LINUX)
+                        ))
+
+        analyze = (Transformation("analyze", namespace="pegasus", version="4.0")
+                        .add_site(
+                            TransformationSite(
+                                CONDOR_POOL, 
+                                PEGASUS_LOCATION, 
+                                is_stageable=False, 
+                                arch=Arch.X86_64, 
+                                os_type=OS.LINUX)
+                        ))
+
+        (TransformationCatalog()
+            .add_transformation(preprocess, findrage, analyze)
+            .write("TransformationCatalog.yml"))
+
     """
 
     def __init__(self):

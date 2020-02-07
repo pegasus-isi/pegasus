@@ -57,7 +57,7 @@ class _DirectoryType(Enum):
     """Different types of directories supported for a site"""
 
     #: Describes a scratch file systems. Pegasus will use this to store
-    #: intermediate data between jobs and other temporary files.
+    #: intermediate `da`ta between jobs and other temporary files.
     SHARED_SCRATCH = "sharedScratch"
 
     # TODO: where is this documented? the others were in user guide
@@ -354,6 +354,18 @@ class Site(ProfileMixin):
     interface and at least one gridftp server along with a shared file system. 
     The GRAM gatekeeper can be either WS GRAM or Pre-WS GRAM. A site can also 
     be a condor pool or glidein pool with a shared file system.
+
+    .. code-block:: python
+
+        # Example
+        (Site(LOCAL, arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7")
+            .add_directory(
+                Directory(Directory.SHARED_SCRATCH, shared_scratch_dir)
+                    .add_file_server(FileServer("file://" + shared_scratch_dir, Operation.ALL))
+            ).add_directory(
+                Directory(Directory.LOCAL_STORAGE, local_storage_dir)
+                    .add_file_server(FileServer("file://" + local_storage_dir, Operation.ALL))
+            ))
     """
 
     def __init__(
@@ -470,6 +482,26 @@ class Site(ProfileMixin):
 class SiteCatalog(Writable):
     """The SiteCatalog describes the compute resources, or :py:class:`~Pegasus.api.site_catalog.Site` s
     that we intend to run the workflow upon.
+
+    .. code-block:: python
+
+        # Example 
+        (SiteCatalog()
+            .add_site(
+                Site(LOCAL, arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7")
+                    .add_directory(
+                        Directory(Directory.SHARED_SCRATCH, shared_scratch_dir)
+                            .add_file_server(FileServer("file://" + shared_scratch_dir, Operation.ALL))
+                    ).add_directory(
+                        Directory(Directory.LOCAL_STORAGE, local_storage_dir)
+                            .add_file_server(FileServer("file://" + local_storage_dir, Operation.ALL))
+                    )
+            ).add_site(
+                Site(CONDOR_POOL, arch=Arch.X86_64, os_type=OS.LINUX)
+                    .add_pegasus(style="condor")
+                    .add_condor(universe="vanilla")
+            ).write("SiteCatalog.yml"))
+            
     """
 
     def __init__(self):

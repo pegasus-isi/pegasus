@@ -494,85 +494,118 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     .. code-block:: python
 
         # Example
+        from pathlib import Path
+        from datetime import date
+
         from Pegasus.api import *
 
-        # --- replicas -----------------------------------------------------------------
-        rc = ReplicaCatalog()
-        fa = File("f.a").add_metadata("SIZE", "1024")
+        PEGASUS_LOCATION = "file:///usr/bin/pegasus-keg"
 
-        rc.add_replica(
-            fa,
-            "file:///lfs/voeckler/src/svn/pegasus/trunk/examples/grid-blackdiamond-perl/f.a",
-            "local",
-        )
+        RUN_ID = "001-black-diamond-vanilla-condor-5.0-api-" + date.today().strftime("%s")
 
-        # --- transformations ----------------------------------------------------------
-        tc = TransformationCatalog()
+        TOP_DIR = Path(Path.cwd())
+        WORK_DIR = TOP_DIR / "work"
+        Path.mkdir(WORK_DIR)
 
-        preprocess = (Transformation("preprocess", namespace="diamond", version="2.0")
-                        .add_profile(Namespace.GLOBUS, "maxtime", 2)
-                        .add_profile(Namespace.DAGMAN, "retry", 3)
-                        .add_site("local", "file:///opt/pegasus/latest/bin/keg", True, arch=Arch.X86_64, ostype=OSType.LINUX) 
-                        .add_site_profile("local", Namespace.ENV, "JAVA_HOME", "/path")
-                        .add_shell_hook(EventType.START, "/bin/echo 'hello i started'")
-                        .add_shell_hook(EventType.END, "/bin/echo 'hello i ended'")
-                        .add_metadata("metadata_key", "metadata_value")
-                        .add_metadata("metadata_key2", "metadata_value2"))
+        # --- Sites --------------------------------------------------------------------
+        LOCAL = "local"
+        CONDOR_POOL = "condor-pool"
 
-        analyze = (Transformation("analyze", namespace="diamond", version="2.0")
-                    .add_profile(Namespace.GLOBUS, "maxtime", 2)
-                    .add_profile(Namespace.DAGMAN, "retry", 3)
-                    .add_site("local", "file:///opt/pegasus/latest/bin/keg", True, arch=Arch.X86_64, ostype=OSType.LINUX))
+        shared_scratch_dir = str(WORK_DIR / RUN_ID)
+        local_storage_dir = str(WORK_DIR / "outputs" / RUN_ID)
 
-        findrange = (Transformation("findrange", namespace="diamond", version="2.0")
-                        .add_profile(Namespace.GLOBUS, "maxtime", 2)
-                        .add_profile(Namespace.DAGMAN, "retry", 3)
-                        .add_site("local", "file:///opt/pegasus/latest/bin/keg", True, arch=Arch.X86_64, ostype=OSType.LINUX))
+        sc = (SiteCatalog()
+                .add_site(
+                    Site(LOCAL, arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7")
+                        .add_directory(
+                            Directory(Directory.SHARED_SCRATCH, shared_scratch_dir)
+                                .add_file_server(FileServer("file://" + shared_scratch_dir, Operation.ALL))
+                        ).add_directory(
+                            Directory(Directory.LOCAL_STORAGE, local_storage_dir)
+                                .add_file_server(FileServer("file://" + local_storage_dir, Operation.ALL))
+                        )
+                ).add_site(
+                    Site(CONDOR_POOL, arch=Arch.X86_64, os_type=OS.LINUX)
+                        .add_pegasus(style="condor")
+                        .add_condor(universe="vanilla")
+                ))
 
-        tc.add_transformations(preprocess, analyze, findrange)
+        # --- Replicas -----------------------------------------------------------------
+        # create initial input file 
+        with open("f.a", "w") as f:
+            f.write("This is sample input to KEG")
 
-        # --- workflow -----------------------------------------------------------------
-        wf = Workflow("black-diamond", infer_dependencies=True)
+        fa = File("f.a")
+        rc = (ReplicaCatalog()
+            .add_replica(fa, "file://" + str(TOP_DIR / fa.lfn), LOCAL))
 
-        (wf.add_profile(Namespace.ENV, "WORKFLOW_ENV", "something")
-            .add_shell_hook(EventType.START, "/bin/echo 123")
-            .add_metadata("WORKFLOW_AUTHOR", "GIDEON"))
+        # --- Transformations ----------------------------------------------------------
+        preprocess = (Transformation("preprocess", namespace="pegasus", version="4.0")
+                        .add_site(
+                            TransformationSite(
+                                CONDOR_POOL, 
+                                PEGASUS_LOCATION, 
+                                is_stageable=False, 
+                                arch=Arch.X86_64, 
+                                os_type=OS.LINUX)
+                        ))
 
-        fb1 = File("f.b1").add_metadata("SIZE", "1024")
-        fb2 = File("f.b2").add_metadata("SIZE", "2048")
-        wf.add_jobs(Job(preprocess, _id="pre")
-                    .add_args("-a", "preprocess", "-T60", "-i", fa, "-o", fb1, fb2)
-                    .add_inputs(fa)
-                    .add_outputs(fb1, fb2, stage_out=True, register_replica=False)
-                    .add_profile(Namespace.ENV, "ENV", "234")
-                    .add_shell_hook(EventType.START, "/bin/echo 'hello i started'")
-                    .add_shell_hook(EventType.END, "/bin/echo 'hello i ended'")
-                    .add_metadata("metadata_key", "metadata_value")
-                    .add_metadata("metadat_key2", "metadata_value2"))
+        findrage = (Transformation("findrange", namespace="pegasus", version="4.0")
+                        .add_site(
+                            TransformationSite(
+                                CONDOR_POOL, 
+                                PEGASUS_LOCATION, 
+                                is_stageable=False, 
+                                arch=Arch.X86_64, 
+                                os_type=OS.LINUX)
+                        ))
 
+        analyze = (Transformation("analyze", namespace="pegasus", version="4.0")
+                        .add_site(
+                            TransformationSite(
+                                CONDOR_POOL, 
+                                PEGASUS_LOCATION, 
+                                is_stageable=False, 
+                                arch=Arch.X86_64, 
+                                os_type=OS.LINUX)
+                        ))
+
+        tc = (TransformationCatalog()
+                .add_transformation(preprocess, findrage, analyze))
+
+        # --- Workflow -----------------------------------------------------------------
+        fb1 = File("f.b1")
+        fb2 = File("f.b2")
         fc1 = File("f.c1")
-        wf.add_jobs(Job(findrange, _id="fr1")
-                    .add_args("-a", "findrange", "-T60", "-i", fb1, "-o", fc1)
-                    .add_inputs(fb1)
-                    .add_outputs(fc1))
-
         fc2 = File("f.c2")
-        wf.add_jobs(Job(findrange, _id="fr2")
-                    .add_args("-a", "findrange", "-T60", "-i", fb2, "-o", fc2)
-                    .add_inputs(fb2)
-                    .add_outputs(fc2))
-
         fd = File("f.d")
-        wf.add_jobs(Job(analyze, _id="analyze")
-                        .add_args("-a", "analyze", "-T60", "-i", fc1, fc2, "-o", fd)
-                        .add_inputs(fc1, fc2)
-                        .add_outputs(fd)) 
 
-        (wf.include_catalog(rc)
-            .include_catalog(tc))
-
-        wf.write(non_default_filepath="workflow_with_catalogs.yml", file_format=FileFormat.YAML)
-    
+        (Workflow("blackdiamond", infer_dependencies=True)
+            .add_jobs(
+                Job(preprocess)
+                    .add_args("-a", "preprocess", "-T", "60", "-i", fa, "-o", fb1, fb2)
+                    .add_inputs(fa)
+                    .add_outputs(fb1, fb2),
+                
+                Job(findrage)
+                    .add_args("-a", "findrange", "-T", "60", "-i", fb1, "-o", fc1)
+                    .add_inputs(fb1)
+                    .add_outputs(fc1),
+                
+                Job(findrage)
+                    .add_args("-a", "findrange", "-T", "60", "-i", fb2, "-o", fc2)
+                    .add_inputs(fb2)
+                    .add_outputs(fc2),
+                
+                Job(analyze)
+                    .add_args("-a", "analyze", "-T", "60", "-i", fc1, fc2, "-o", fd)
+                    .add_inputs(fc1, fc2)
+                    .add_outputs(fd)
+            ).include_catalog(sc)
+            .include_catalog(rc)
+            .include_catalog(tc)
+            .write("Workflow.yml"))
+            
     """
 
     def __init__(self, name, infer_dependencies=False):

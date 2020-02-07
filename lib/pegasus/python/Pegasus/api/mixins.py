@@ -1,6 +1,7 @@
 from enum import Enum
 from functools import partialmethod
 from functools import wraps
+from typing import Union
 
 from .errors import DuplicateError
 from .errors import NotFoundError
@@ -279,7 +280,7 @@ class ProfileMixin:
         count: int = None,
         job_type: str = None,
         max_cpu_time: int = None,
-        max_memory: int = None,
+        max_memory: Union[int, str] = None,
         max_time: int = None,
         max_wall_time: int = None,
         min_memory: int = None,
@@ -299,7 +300,6 @@ class ProfileMixin:
         :param max_cpu_time: the max CPU time in minutes for a single execution of a job, defaults to None
         :type max_cpu_time: int, optional
         :param max_memory: the maximum memory in MB required for the job. Given as a str formatted as '<int> [MB | GB | TB | PB | EB]', defaults to None
-        :type max_memory: str, optional
         :param max_time: the maximum time or walltime in minutes for a single execution of a job, defaults to None
         :type max_time: int, optional
         :param max_wall_time: the maximum walltime in minutes for a single execution of a job, defaults to None
