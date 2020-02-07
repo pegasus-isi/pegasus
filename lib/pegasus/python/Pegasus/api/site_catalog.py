@@ -7,6 +7,7 @@ from Pegasus.api.writable import Writable
 from Pegasus.api.errors import DuplicateError
 from Pegasus.api._utils import _get_enum_str
 from Pegasus.api._utils import _get_class_enum_member_str
+from Pegasus.api._utils import _chained
 
 PEGASUS_VERSION = "5.0"
 
@@ -183,6 +184,7 @@ class Directory:
 
         self.file_servers = list()
 
+    @_chained
     def add_file_server(self, file_server):
         """Add access methods to this directory
         
@@ -200,7 +202,6 @@ class Directory:
 
         self.file_servers.append(file_server)
 
-        return self
 
     def __json__(self):
         return _filter_out_nones(
@@ -427,6 +428,7 @@ class Site(ProfileMixin):
 
         self.profiles = defaultdict(dict)
 
+    @_chained
     def add_directory(self, directory):
         """Add a :py:class:`~Pegasus.api.site_catalog.Directory` to this :py:class:`~Pegasus.api.site_catalog.Site`
         
@@ -444,8 +446,7 @@ class Site(ProfileMixin):
 
         self.directories.append(directory)
 
-        return self
-
+    @_chained
     def add_grid(self, grid):
         """Add a :py:class:`~Pegasus.api.site_catalog.Grid` to this :py:class:`~Pegasus.api.site_catalog.Site`
         
@@ -460,8 +461,6 @@ class Site(ProfileMixin):
             )
 
         self.grids.append(grid)
-
-        return self
 
     def __json__(self):
         return _filter_out_nones(
@@ -507,6 +506,7 @@ class SiteCatalog(Writable):
     def __init__(self):
         self.sites = dict()
 
+    @_chained
     def add_site(self, site):
         """Add a site to this catalog
         
@@ -529,8 +529,6 @@ class SiteCatalog(Writable):
             )
 
         self.sites[site.name] = site
-
-        return self
 
     def __json__(self):
         return {

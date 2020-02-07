@@ -15,6 +15,7 @@ from .errors import DuplicateError
 from .errors import NotFoundError
 from Pegasus.api._utils import _get_enum_str
 from Pegasus.api._utils import _get_class_enum_member_str
+from Pegasus.api._utils import _chained
 
 PEGASUS_VERSION = "5.0"
 
@@ -234,6 +235,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
     def _get_key(self):
         return (self.name, self.namespace, self.version)
 
+    @_chained
     def add_site(self, transformation_site):
         """Add a :py:class:`~Pegasus.api.transformation_catalog.TransformationSite` to this
         transformation
@@ -260,8 +262,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
 
         self.sites[transformation_site.name] = transformation_site
 
-        return self
-
+    @_chained
     def add_requirement(self, required_transformation, namespace=None, version=None):
         """Add a requirement to this Transformation. Specify the other
         transformation, identified by name, namespace, and version, that this 
@@ -295,7 +296,6 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
 
         self.requires.add(key)
 
-        return self
 
     def __json__(self):
         return _filter_out_nones(
@@ -381,6 +381,7 @@ class TransformationCatalog(Writable):
         self.transformations = dict()
         self.containers = dict()
 
+    @_chained
     def add_transformation(self, *transformations):
         """Add one or more :py:class:`~Pegasus.api.transformation_catalog.Transformations` to this catalog
         
@@ -406,8 +407,7 @@ class TransformationCatalog(Writable):
 
             self.transformations[tr._get_key()] = tr
 
-        return self
-
+    @_chained
     def add_container(self, container):
         """Add a :py:class:`~Pegasus.api.transformation_catalog.Container` to this catalog
         
@@ -434,7 +434,6 @@ class TransformationCatalog(Writable):
 
         self.containers[container.name] = container
 
-        return self
 
     def __json__(self):
         return _filter_out_nones(

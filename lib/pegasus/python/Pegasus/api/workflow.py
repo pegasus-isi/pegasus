@@ -18,10 +18,11 @@ from .mixins import MetadataMixin
 from .mixins import HookMixin
 from .mixins import ProfileMixin
 from ._utils import _get_enum_str
+from ._utils import _chained
 
 PEGASUS_VERSION = "5.0"
 
-__all__ = ["Job", "DAX", "DAG", "Workflow"]
+__all__ = ["Job", "SubWorkflow", "Workflow"]
 
 
 class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
@@ -47,6 +48,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         self.profiles = defaultdict(dict)
         self.metadata = dict()
 
+    @_chained
     def add_inputs(self, *input_files):
         """Add one or more :py:class:`~Pegasus.api.replica_catalog.File`s as input to this job
         
@@ -75,7 +77,6 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
 
             self.uses.add(_input)
 
-        return self
 
     def get_inputs(self):
         """Get this job's input files
@@ -85,6 +86,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         """
         return {use.file for use in self.uses if use._type == "input"}
 
+    @_chained
     def add_outputs(self, *output_files, stage_out=True, register_replica=False):
         """Add one or more :py:class:`~Pegasus.api.replica_catalog.File`s as outputs to this job. stage_out and register_replica
         will be applied to all files given.
@@ -121,8 +123,6 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
 
             self.uses.add(output)
 
-        return self
-
     def get_outputs(self):
         """Get this job's output files
         
@@ -131,6 +131,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         """
         return {use.file for use in self.uses if use._type == "output"}
 
+    @_chained
     def add_checkpoint(self, checkpoint_file, stage_out=True, register_replica=False):
         """Add an output file of this job as a checkpoint file
         
@@ -168,8 +169,8 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
 
         self.uses.add(checkpoint)
 
-        return self
 
+    @_chained
     def add_args(self, *args):
         """Add arguments to this job. Each argument will be separated by a space.
         Each argument must be either a File or a primitive type. 
@@ -179,8 +180,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         """
         self.args.extend(args)
 
-        return self
-
+    @_chained
     def set_stdin(self, file):
         """Set stdin to a :py:class:`~Pegasus.api.replica_catalog.File`
         
@@ -206,7 +206,6 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         self.add_inputs(file)
         self.stdin = file
 
-        return self
 
     def get_stdin(self):
         """Get the :py:class:`~Pegasus.api.replica_catalog.File` being used for stdin
@@ -216,6 +215,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         """
         return self.stdin
 
+    @_chained
     def set_stdout(self, file):
         """Set stdout to a :py:class:`~Pegasus.api.replica_catalog.File`
         
@@ -241,7 +241,6 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         self.add_outputs(file)
         self.stdout = file
 
-        return self
 
     def get_stdout(self):
         """Get the :py:class:`~Pegasus.api.replica_catalog.File` being used for stdout
@@ -251,6 +250,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         """
         return self.stdout
 
+    @_chained
     def set_stderr(self, file):
         """Set stderr to a :py:class:`~Pegasus.api.replica_catalog.File` 
         
@@ -275,8 +275,6 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
 
         self.add_outputs(file)
         self.stderr = file
-
-        return self
 
     def get_stderr(self):
         """Get the :py:class:`~Pegasus.api.replica_catalog.File` being used for stderr
@@ -632,6 +630,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         self.profiles = defaultdict(dict)
         self.metadata = dict()
 
+    @_chained
     def add_jobs(self, *jobs):
         """Add one or more jobs at a time to the Workflow
         
@@ -648,8 +647,6 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
                 )
 
             self.jobs[job._id] = job
-
-        return self
 
     def get_job(self, _id):
         """Retrieve the job with the given id
@@ -680,6 +677,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
         return next_id
 
+    @_chained
     def include_catalog(self, catalog):
         """Inline any of :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog`, 
         :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog`, or
@@ -726,8 +724,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
                 )
             )
 
-        return self
-
+    @_chained
     def add_dependency(self, parent, *children):
         """Manually specify a dependency between one job to one or more other jobs
         
@@ -751,7 +748,6 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         else:
             self.dependencies[parent_id] = _JobDependency(parent_id, children_ids)
 
-        return self
 
     def _infer_dependencies(self):
         """Internal function for automatically computing dependencies based on

@@ -7,6 +7,7 @@ from .writable import _filter_out_nones
 from .errors import DuplicateError
 from .errors import NotFoundError
 from .mixins import MetadataMixin
+from ._utils import _chained
 
 PEGASUS_VERSION = "5.0"
 
@@ -70,6 +71,7 @@ class ReplicaCatalog(Writable):
     def __init__(self):
         self.replicas = set()
 
+    @_chained
     def add_replica(self, lfn, pfn, site, regex=False):
         """Add an entry to the replica catalog
         
@@ -102,8 +104,6 @@ class ReplicaCatalog(Writable):
             )
         else:
             self.replicas.add(replica)
-
-        return self
 
     def __json__(self):
         return {

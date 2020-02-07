@@ -1,5 +1,6 @@
 import inspect
 from enum import Enum
+from functools import wraps
 
 
 def _get_class_enum_member_str(_cls, _type):
@@ -74,3 +75,12 @@ def _get_enum_str(enum_cls):
         members=" | ".join(sorted(enum_cls._member_names_))
     )
 
+def _chained(method):
+    """Method decorator to allow chaining. Methods decorated by this should
+    not return anything. If they do an exception will be thrown."""
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        assert method(self, *args, **kwargs) == None
+        return self 
+
+    return wrapper
