@@ -22,19 +22,20 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import edu.isi.pegasus.common.util.PegasusURL;
+import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
+
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -90,6 +91,56 @@ public class Directory extends DirectoryLayout {
         }
     }
 
+    /** Enumerates the new directory types supported in this schema */
+    public static enum YAML_TYPE {
+        sharedScratch,
+        sharedStorage,
+        localScratch,
+        localStorage;
+    }
+    
+    /**
+     * Maps the values for type key in yaml schema to old types
+     * 
+     * @param yamlType
+     * @return 
+     */
+    public static TYPE yamlTypeToType(String yamlType){
+        return yamlTypeToType(YAML_TYPE.valueOf(yamlType));
+    }
+    
+    /**
+     * Maps the values for type key in yaml schema to old types
+     * 
+     * @param yamlType
+     * @return 
+     */
+    public static TYPE yamlTypeToType(YAML_TYPE yamlType){
+        TYPE type = TYPE.shared_scratch;
+        switch (yamlType){
+            case sharedScratch:
+                type = TYPE.shared_scratch;
+                break;
+                
+            case sharedStorage:
+                type = TYPE.shared_storage;
+                break;
+                
+            case localScratch:
+                type = TYPE.local_scratch;
+                break;
+                
+            case localStorage:
+                type = TYPE.local_storage;
+                break;
+                
+            default:
+                throw new SiteCatalogException("Unkown type value " + yamlType);
+        }
+                
+        return type;
+    }
+    
     /** Default constructor */
     public Directory() {
         super();
@@ -239,7 +290,7 @@ public class Directory extends DirectoryLayout {
  * 
  * @author vahi
  */
-class DirectorySerializer extends JsonDeserializer<Directory> {
+class DirectorySerializer extends SiteDataJsonDeserializer<Directory> {
 
     /**
      * Deserializes a Directory YAML description of the type
@@ -262,14 +313,41 @@ class DirectorySerializer extends JsonDeserializer<Directory> {
         JsonNode node = oc.readTree(parser);
         Directory directory = new Directory();
         
-        JsonNode fileServersNodes = node.get("fileServers");
-        if (fileServersNodes != null) {
-            parser = fileServersNodes.traverse(oc);
-            List<FileServer> servers = parser.readValueAs(LinkedList.class);
-            for (FileServer fs : servers) {
-                directory.addFileServer(fs);
+        for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
+            Map.Entry<String, JsonNode> e = it.next();
+            String key = e.getKey();
+            SiteCatalogKeywords reservedKey =
+                    SiteCatalogKeywords.getReservedKey(key);
+            if (reservedKey == null) {
+                this.complainForIllegalKey(SiteCatalogKeywords.DIRECTORIES.getReservedName(), key, node );
             }
-            System.out.println(servers);
+
+            switch (reservedKey) {
+                case TYPE:
+                    directory.setType(Directory.yamlTypeToType(node.get(key).asText()));
+                    break;
+                    
+                case PATH:
+                    directory.setInternalMountPoint(new InternalMountPoint(node.get(key).asText()));
+                    break;
+
+                case FILESERVERS:
+                    JsonNode fileServersNodes = node.get(key);
+                    if (fileServersNodes != null) {
+                        if( fileServersNodes.isArray() ){
+                            for( JsonNode fileServerNode: fileServersNodes ){
+                                parser = fileServerNode.traverse(oc);
+                                FileServer fs = parser.readValueAs(FileServer.class);
+                                directory.addFileServer(fs);
+                            }
+                        }
+                    }
+                    break;
+
+                default:
+                    this.complainForUnsupportedKey(SiteCatalogKeywords.FILESERVERS.getReservedName(), key, node);
+            }
+
         }
 
         return directory;

@@ -35,7 +35,7 @@ public enum SiteCatalogKeywords {
     TYPE("type"),
     DIRECTORIES("directories"),
     PATH("path"),
-    FILESERVERS("fileservers"),
+    FILESERVERS("fileServers"),
     OPERATION("operation"),
     URL("url");
 

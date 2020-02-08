@@ -180,11 +180,11 @@ class FileServerDeserializer extends SiteDataJsonDeserializer<FileServer> {
 
             switch (reservedKey) {
                 case OPERATION:
-                    fs.setSupportedOperation(node.get("operation").asText());
+                    fs.setSupportedOperation(node.get(key).asText());
                     break;
                     
                 case URL:
-                    String fullURL = node.get("url").asText();
+                    String fullURL = node.get(key).asText();
                     PegasusURL url = new PegasusURL(fullURL);
                     fs.setURLPrefix(url.getURLPrefix());
                     fs.setProtocol(url.getProtocol());

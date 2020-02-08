@@ -15,8 +15,9 @@
  *   limitations under the License.
  *
  */
-
 package edu.isi.pegasus.planner.catalog.site.classes;
+
+import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 
 /**
  * The abstract base class for all site catalog classes.
@@ -24,4 +25,7 @@ package edu.isi.pegasus.planner.catalog.site.classes;
  * @author Karan Vahi
  * @version $Revision$
  */
-public abstract class SiteData implements Cloneable {}
+public abstract class SiteData implements Cloneable {
+
+    
+}
