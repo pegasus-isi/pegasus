@@ -37,7 +37,11 @@ public enum SiteCatalogKeywords {
     PATH("path"),
     FILESERVERS("fileServers"),
     OPERATION("operation"),
-    URL("url");
+    URL("url"),
+    GRIDS("grids"),
+    CONTACT("contact"),
+    SCHEDULER("scheduler"),
+    JOB_TYPE("jobtype");
 
     private String mName;
 

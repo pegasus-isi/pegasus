@@ -22,7 +22,6 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,7 +29,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import edu.isi.pegasus.common.util.PegasusURL;
-import edu.isi.pegasus.planner.catalog.CatalogException;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 
@@ -154,7 +152,7 @@ class FileServerDeserializer extends SiteDataJsonDeserializer<FileServer> {
     /**
      * Deserializes a FileServer YAML description of the type
      * <pre>
-         - operation: all
+           operation: all
            url: file:///tmp/workflows/scratch
      * </pre>
      * @param jp

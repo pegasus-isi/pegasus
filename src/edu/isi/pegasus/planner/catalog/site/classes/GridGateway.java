@@ -18,9 +18,24 @@
 
 package edu.isi.pegasus.planner.catalog.site.classes;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This class describes the Grid Gateway into a site.
@@ -28,6 +43,7 @@ import java.io.Writer;
  * @version $Revision$
  * @author Karan Vahi
  */
+@JsonDeserialize(using = GridGatewayDeserializer.class)
 public class GridGateway extends AbstractSiteData {
 
     /** An enumeration of valid types of grid gateway. */
@@ -453,4 +469,85 @@ public class GridGateway extends AbstractSiteData {
         visitor.visit(this);
         visitor.depart(this);
     }
+    
+    public static void main(String[] args){
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+       
+        String test = 
+                "type: gt5\n" +
+                "contact: smarty.isi.edu/jobmanager-pbs\n" +
+                "scheduler: pbs\n" +
+                "jobtype: auxillary";
+        try {
+            GridGateway gateway = mapper.readValue(test, GridGateway.class);
+            System.out.println(gateway);
+        } catch (IOException ex) {
+            Logger.getLogger(FileServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 }
+
+/**
+ * Custom deserializer for YAML representation of GridGateway
+ * 
+ * @author Karan Vahi
+ */
+class GridGatewayDeserializer extends SiteDataJsonDeserializer<GridGateway> {
+
+    /**
+     * Deserializes a GridGateway YAML description of the type
+     * <pre>
+         type: gt5
+         contact: smarty.isi.edu/jobmanager-pbs
+         scheduler: pbs
+         jobtype: auxillary
+     * </pre>
+     * @param jp
+     * @param dc
+     * @return
+     * @throws IOException
+     * @throws JsonProcessingException 
+     */
+    @Override
+    public GridGateway deserialize(JsonParser jp, DeserializationContext dc) throws IOException, JsonProcessingException {
+        ObjectCodec oc = jp.getCodec();
+        JsonNode node = oc.readTree(jp);
+        GridGateway gateway = new GridGateway();
+        
+        for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
+            Map.Entry<String, JsonNode> e = it.next();
+            String key = e.getKey();
+            SiteCatalogKeywords reservedKey =
+                    SiteCatalogKeywords.getReservedKey(key);
+            if (reservedKey == null) {
+                this.complainForIllegalKey(SiteCatalogKeywords.FILESERVERS.getReservedName(), key, node );
+            }
+
+            switch (reservedKey) {
+                case TYPE:
+                    gateway.setType(GridGateway.TYPE.valueOf(node.get(key).asText()));
+                    break;
+                    
+                case JOB_TYPE:
+                    gateway.setJobType(GridGateway.JOB_TYPE.valueOf(node.get(key).asText()));
+                    break;
+                    
+                case CONTACT:
+                    gateway.setContact(node.get(key).asText());
+                    break;
+                 
+                case SCHEDULER:
+                    gateway.setScheduler(GridGateway.SCHEDULER_TYPE.valueOf(node.get(key).asText()));
+                    break;
+                    
+                default:
+                    this.complainForUnsupportedKey(SiteCatalogKeywords.GRIDS.getReservedName(), key, node);
+            }
+        }
+        
+        return gateway;
+    }
+}
+
+
