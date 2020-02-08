@@ -284,7 +284,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <fileset dir="src" includes="*.java"/>
       <doctitle><![CDATA[PEGASUS ${pegasus.version}]]></doctitle>
       <group title="Pegasus" packages="edu.isi.pegasus.*"/>
-      <link href="http://java.sun.com/j2se/1.5.0/docs/api/"/>
+      <link href="https://docs.oracle.com/javase/8/docs/api/"/>
     </javadoc>
   </target>
 

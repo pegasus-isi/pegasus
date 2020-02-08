@@ -7,6 +7,7 @@ from .writable import _filter_out_nones
 from .errors import DuplicateError
 from .errors import NotFoundError
 from .mixins import MetadataMixin
+from ._utils import _chained
 
 PEGASUS_VERSION = "5.0"
 
@@ -53,13 +54,7 @@ class File(MetadataMixin):
 
 
 class ReplicaCatalog(Writable):
-    """Maintains a mapping of logical filenames to physical filenames"""
-
-    def __init__(self):
-        self.replicas = set()
-
-    def add_replica(self, lfn, pfn, site, regex=False):
-        """Add an entry to the replica catalog
+    """Maintains a mapping of logical filenames to physical filenames
         
         .. code-block:: python
 
@@ -67,12 +62,19 @@ class ReplicaCatalog(Writable):
             if1 = File("if")
             if2 = File("if2")
 
-            rc = (
-                ReplicaCatalog()
+            (ReplicaCatalog()
                 .add_replica(if1, "/nfs/u2/ryan/data.csv", "local")
                 .add_replica("if2", "/nfs/u2/ryan/data2.csv", "local")
-            )
+                .write("ReplicaCatalog.yml"))
+    """
 
+    def __init__(self):
+        self.replicas = set()
+
+    @_chained
+    def add_replica(self, lfn, pfn, site, regex=False):
+        """Add an entry to the replica catalog
+        
         :param lfn: logical filename or :py:class:`~Pegasus.api.replica_catalog.File`
         :type lfn: str or File
         :param pfn: physical file name 
@@ -102,8 +104,6 @@ class ReplicaCatalog(Writable):
             )
         else:
             self.replicas.add(replica)
-
-        return self
 
     def __json__(self):
         return {

@@ -661,6 +661,7 @@ def expected_json():
     expected["jobs"][1]["uses"] = sorted(
         expected["jobs"][1]["uses"], key=lambda u: u["file"]["lfn"]
     )
+    expected["transformationCatalog"]["transformations"] = sorted(expected["transformationCatalog"]["transformations"], key=lambda t: t["name"]) 
 
     return expected
 
@@ -851,6 +852,8 @@ class TestWorkflow:
             result["jobs"][1]["uses"], key=lambda u: u["file"]["lfn"]
         )
 
+        result["transformationCatalog"]["transformations"] = sorted(result["transformationCatalog"]["transformations"], key=lambda t: t["name"]) 
+
         assert result == expected_json
 
     @pytest.mark.parametrize(
@@ -880,6 +883,8 @@ class TestWorkflow:
         result["jobs"][1]["uses"] = sorted(
             result["jobs"][1]["uses"], key=lambda u: u["file"]["lfn"]
         )
+
+        result["transformationCatalog"]["transformations"] = sorted(result["transformationCatalog"]["transformations"], key=lambda t: t["name"]) 
 
         assert result == expected_json
 

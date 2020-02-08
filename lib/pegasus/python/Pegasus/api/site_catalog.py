@@ -7,6 +7,7 @@ from Pegasus.api.writable import Writable
 from Pegasus.api.errors import DuplicateError
 from Pegasus.api._utils import _get_enum_str
 from Pegasus.api._utils import _get_class_enum_member_str
+from Pegasus.api._utils import _chained
 
 PEGASUS_VERSION = "5.0"
 
@@ -57,7 +58,7 @@ class _DirectoryType(Enum):
     """Different types of directories supported for a site"""
 
     #: Describes a scratch file systems. Pegasus will use this to store
-    #: intermediate data between jobs and other temporary files.
+    #: intermediate `da`ta between jobs and other temporary files.
     SHARED_SCRATCH = "sharedScratch"
 
     # TODO: where is this documented? the others were in user guide
@@ -183,6 +184,7 @@ class Directory:
 
         self.file_servers = list()
 
+    @_chained
     def add_file_server(self, file_server):
         """Add access methods to this directory
         
@@ -200,7 +202,6 @@ class Directory:
 
         self.file_servers.append(file_server)
 
-        return self
 
     def __json__(self):
         return _filter_out_nones(
@@ -354,6 +355,18 @@ class Site(ProfileMixin):
     interface and at least one gridftp server along with a shared file system. 
     The GRAM gatekeeper can be either WS GRAM or Pre-WS GRAM. A site can also 
     be a condor pool or glidein pool with a shared file system.
+
+    .. code-block:: python
+
+        # Example
+        (Site(LOCAL, arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7")
+            .add_directory(
+                Directory(Directory.SHARED_SCRATCH, shared_scratch_dir)
+                    .add_file_server(FileServer("file://" + shared_scratch_dir, Operation.ALL))
+            ).add_directory(
+                Directory(Directory.LOCAL_STORAGE, local_storage_dir)
+                    .add_file_server(FileServer("file://" + local_storage_dir, Operation.ALL))
+            ))
     """
 
     def __init__(
@@ -415,6 +428,7 @@ class Site(ProfileMixin):
 
         self.profiles = defaultdict(dict)
 
+    @_chained
     def add_directory(self, directory):
         """Add a :py:class:`~Pegasus.api.site_catalog.Directory` to this :py:class:`~Pegasus.api.site_catalog.Site`
         
@@ -432,8 +446,7 @@ class Site(ProfileMixin):
 
         self.directories.append(directory)
 
-        return self
-
+    @_chained
     def add_grid(self, grid):
         """Add a :py:class:`~Pegasus.api.site_catalog.Grid` to this :py:class:`~Pegasus.api.site_catalog.Site`
         
@@ -448,8 +461,6 @@ class Site(ProfileMixin):
             )
 
         self.grids.append(grid)
-
-        return self
 
     def __json__(self):
         return _filter_out_nones(
@@ -470,11 +481,32 @@ class Site(ProfileMixin):
 class SiteCatalog(Writable):
     """The SiteCatalog describes the compute resources, or :py:class:`~Pegasus.api.site_catalog.Site` s
     that we intend to run the workflow upon.
+
+    .. code-block:: python
+
+        # Example 
+        (SiteCatalog()
+            .add_site(
+                Site(LOCAL, arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7")
+                    .add_directory(
+                        Directory(Directory.SHARED_SCRATCH, shared_scratch_dir)
+                            .add_file_server(FileServer("file://" + shared_scratch_dir, Operation.ALL))
+                    ).add_directory(
+                        Directory(Directory.LOCAL_STORAGE, local_storage_dir)
+                            .add_file_server(FileServer("file://" + local_storage_dir, Operation.ALL))
+                    )
+            ).add_site(
+                Site(CONDOR_POOL, arch=Arch.X86_64, os_type=OS.LINUX)
+                    .add_pegasus(style="condor")
+                    .add_condor(universe="vanilla")
+            ).write("SiteCatalog.yml"))
+            
     """
 
     def __init__(self):
         self.sites = dict()
 
+    @_chained
     def add_site(self, site):
         """Add a site to this catalog
         
@@ -497,8 +529,6 @@ class SiteCatalog(Writable):
             )
 
         self.sites[site.name] = site
-
-        return self
 
     def __json__(self):
         return {

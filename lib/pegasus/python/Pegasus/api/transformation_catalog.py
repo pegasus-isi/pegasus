@@ -15,6 +15,7 @@ from .errors import DuplicateError
 from .errors import NotFoundError
 from Pegasus.api._utils import _get_enum_str
 from Pegasus.api._utils import _get_class_enum_member_str
+from Pegasus.api._utils import _chained
 
 PEGASUS_VERSION = "5.0"
 
@@ -134,8 +135,9 @@ class Container(ProfileMixin):
 
     .. code-block:: python
 
-        c = Container("centos-pegasus", Container.DOCKER, "docker:///ryan/centos-pegasus:latest", ["/Volumes/Work/lfs1:/shared-data/:ro"])\
-                .add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java")
+        # Example
+        (Container("centos-pegasus", Container.DOCKER, "docker:///ryan/centos-pegasus:latest", ["/Volumes/Work/lfs1:/shared-data/:ro"])
+            .add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java"))
             
     """
 
@@ -192,6 +194,20 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
     requires other executables. Transformations can reside on one or
     more sites where they are either **STAGEABLE** (a binary that can be shipped
     around) or **INSTALLED**.
+
+    .. code-block:: python
+
+        # Example
+        preprocess = (Transformation("preprocess", namespace="pegasus", version="4.0")
+                        .add_site(
+                            TransformationSite(
+                                CONDOR_POOL, 
+                                PEGASUS_LOCATION, 
+                                is_stageable=False, 
+                                arch=Arch.X86_64, 
+                                os_type=OS.LINUX)
+                        ))
+
     """
 
     def __init__(
@@ -219,6 +235,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
     def _get_key(self):
         return (self.name, self.namespace, self.version)
 
+    @_chained
     def add_site(self, transformation_site):
         """Add a :py:class:`~Pegasus.api.transformation_catalog.TransformationSite` to this
         transformation
@@ -245,8 +262,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
 
         self.sites[transformation_site.name] = transformation_site
 
-        return self
-
+    @_chained
     def add_requirement(self, required_transformation, namespace=None, version=None):
         """Add a requirement to this Transformation. Specify the other
         transformation, identified by name, namespace, and version, that this 
@@ -280,7 +296,6 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
 
         self.requires.add(key)
 
-        return self
 
     def __json__(self):
         return _filter_out_nones(
@@ -322,12 +337,51 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
 class TransformationCatalog(Writable):
     """Maintains a list a :py:class:`~Pegasus.api.transformation_catalog.Transformations`, site specific
     transformation information, and a list of containers
+
+    .. code-block:: python
+
+        # Example
+        preprocess = (Transformation("preprocess", namespace="pegasus", version="4.0")
+                .add_site(
+                    TransformationSite(
+                        CONDOR_POOL, 
+                        PEGASUS_LOCATION, 
+                        is_stageable=False, 
+                        arch=Arch.X86_64, 
+                        os_type=OS.LINUX)
+                ))
+
+        findrage = (Transformation("findrange", namespace="pegasus", version="4.0")
+                        .add_site(
+                            TransformationSite(
+                                CONDOR_POOL, 
+                                PEGASUS_LOCATION, 
+                                is_stageable=False, 
+                                arch=Arch.X86_64, 
+                                os_type=OS.LINUX)
+                        ))
+
+        analyze = (Transformation("analyze", namespace="pegasus", version="4.0")
+                        .add_site(
+                            TransformationSite(
+                                CONDOR_POOL, 
+                                PEGASUS_LOCATION, 
+                                is_stageable=False, 
+                                arch=Arch.X86_64, 
+                                os_type=OS.LINUX)
+                        ))
+
+        (TransformationCatalog()
+            .add_transformation(preprocess, findrage, analyze)
+            .write("TransformationCatalog.yml"))
+
     """
 
     def __init__(self):
         self.transformations = dict()
         self.containers = dict()
 
+    @_chained
     def add_transformation(self, *transformations):
         """Add one or more :py:class:`~Pegasus.api.transformation_catalog.Transformations` to this catalog
         
@@ -353,8 +407,7 @@ class TransformationCatalog(Writable):
 
             self.transformations[tr._get_key()] = tr
 
-        return self
-
+    @_chained
     def add_container(self, container):
         """Add a :py:class:`~Pegasus.api.transformation_catalog.Container` to this catalog
         
@@ -381,7 +434,6 @@ class TransformationCatalog(Writable):
 
         self.containers[container.name] = container
 
-        return self
 
     def __json__(self):
         return _filter_out_nones(

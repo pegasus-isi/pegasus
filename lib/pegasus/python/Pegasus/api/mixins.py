@@ -5,11 +5,13 @@ from functools import wraps
 from .errors import DuplicateError
 from .errors import NotFoundError
 from ._utils import _get_enum_str
+from ._utils import _chained
 
 # --- metadata -----------------------------------------------------------------
 class MetadataMixin:
     """Derived class can have metadata assigned to it as key value pairs."""
 
+    @_chained
     def add_metadata(self, *args, **kwargs):
         """Add metadata key value pairs to this object
 
@@ -37,8 +39,6 @@ class MetadataMixin:
         for key, value in kwargs.items():
             self.metadata[key] = str(value)
 
-        return self
-
 
 # --- hooks --------------------------------------------------------------------
 class EventType(Enum):
@@ -58,6 +58,7 @@ class HookMixin:
     specified by :py:class:`~Pegasus.api.mixins.EventType`, takes place.
     """
 
+    @_chained
     def add_shell_hook(self, event_type, cmd):
         # TODO: consider making event_type either an event type or an actual ShellHook
         """Add a shell hook. The given command will be executed by the shell
@@ -81,7 +82,6 @@ class HookMixin:
 
         self.hooks[_ShellHook.__hook_type__].append(_ShellHook(event_type, cmd))
 
-        return self
 
 
 class _Hook:
@@ -214,6 +214,7 @@ def to_mb(value):
 
 
 class ProfileMixin:
+    @_chained
     def add_profiles(self, ns, key=None, value=None, **kw):
         """Add a profile.
 
@@ -253,8 +254,6 @@ class ProfileMixin:
         else:
             self.profiles[ns].update(kw)
 
-        return self
-
     #: Add environment variable(s)
     add_env = partialmethod(add_profiles, Namespace.ENV)
 
@@ -279,7 +278,7 @@ class ProfileMixin:
         count: int = None,
         job_type: str = None,
         max_cpu_time: int = None,
-        max_memory: int = None,
+        max_memory: str = None,
         max_time: int = None,
         max_wall_time: int = None,
         min_memory: int = None,
