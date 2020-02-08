@@ -13,9 +13,20 @@
  */
 package edu.isi.pegasus.planner.catalog.site.classes;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.classes.Profiles.NAMESPACES;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.classes.SysInfo.Architecture;
+import edu.isi.pegasus.planner.catalog.classes.SysInfo.OS;
 import edu.isi.pegasus.planner.catalog.classes.VDSSysInfo2NMI;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway.JOB_TYPE;
 import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2VDSSysInfo;
@@ -33,6 +44,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This data class describes a site in the site catalog.
@@ -40,6 +53,7 @@ import java.util.Map.Entry;
  * @author Karan Vahi
  * @version $Revision$
  */
+@JsonDeserialize(using = SiteCatalogEntryDeserializer.class)
 public class SiteCatalogEntry extends AbstractSiteData {
 
     /** The name of the environment variable PEGASUS_BIN_DIR. */
@@ -281,7 +295,7 @@ public class SiteCatalogEntry extends AbstractSiteData {
     /**
      * Adds a directory internally. Complains if directory of same type already exists
      *
-     * @param directory the directory to be added.
+     * @param directory the siteEntry to be added.
      */
     public void addDirectory(Directory directory) {
         // check for existence
@@ -298,16 +312,16 @@ public class SiteCatalogEntry extends AbstractSiteData {
     }
 
     /**
-     * Sets a directory corresponding to a particular type
+     * Sets a siteEntry corresponding to a particular type
      *
-     * @param directory the directory to be set
+     * @param directory the siteEntry to be set
      */
     public void setDirectory(Directory directory) {
         this.mDirectories.put(directory.getType(), directory);
     }
 
     /**
-     * Returns a directory corresponding to a particular type
+     * Returns a siteEntry corresponding to a particular type
      *
      * @return the iterator
      */
@@ -316,9 +330,9 @@ public class SiteCatalogEntry extends AbstractSiteData {
     }
 
     /**
-     * Returns a directory corresponding to a particular type
+     * Returns a siteEntry corresponding to a particular type
      *
-     * @param the type the directory type
+     * @param the type the siteEntry type
      */
     public Directory getDirectory(Directory.TYPE type) {
         return this.mDirectories.get(type);
@@ -328,7 +342,7 @@ public class SiteCatalogEntry extends AbstractSiteData {
      * Returns the local-storage directory. If it is not specified, then returns shared-storage If
      * none is associated, then returns null
      *
-     * @return the appropriate directory
+     * @return the appropriate siteEntry
      */
     public Directory getHeadNodeStorageDirectory() {
         Directory result = this.getDirectory(Directory.TYPE.local_storage);
@@ -341,7 +355,7 @@ public class SiteCatalogEntry extends AbstractSiteData {
     /**
      * Returns the work directory for the compute jobs on a site.
      *
-     * <p>Currently, the work directory is picked up from the head node shared filesystem.
+     * <p>Currently, the work siteEntry is picked up from the head node shared filesystem.
      *
      * @return the internal mount point, else null
      */
@@ -749,5 +763,154 @@ public class SiteCatalogEntry extends AbstractSiteData {
     public boolean isVisibleToLocalSite() {
         Pegasus pegasusProfiles = (Pegasus) this.getProfiles().get(NAMESPACES.pegasus);
         return pegasusProfiles.getBooleanValue(Pegasus.LOCAL_VISIBLE_KEY);
+    }
+    
+    public static void main(String[] args){
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+       
+        String test = 
+                "name: condor_pool\n" +
+                "arch: x86_64\n" +
+                "os.type: linux\n" +
+                "grids:\n" +
+                "  - type: gt5\n" +
+                "    contact: smarty.isi.edu/jobmanager-pbs\n" +
+                "    scheduler: pbs\n" +
+                "    jobtype: auxillary\n" +
+                "  - type: gt5\n" +
+                "    contact: smarty.isi/edu/jobmanager-pbs\n" +
+                "    scheduler: pbs\n" +
+                "    jobtype: compute\n" +
+                "directories:\n" +
+                "  - type: sharedScratch\n" +
+                "    path: /lustre\n" +
+                "    fileServers:\n" +
+                "      - operation: all\n" +
+                "        url: gsiftp://smarty.isi.edu/lustre\n" +
+                "profiles:\n" +
+                "  env:\n" +
+                "    PATH: /usr/bin:/bin\n" +
+                "    x-ext: true";
+        try {
+            SiteCatalogEntry site = mapper.readValue(test, SiteCatalogEntry.class);
+            System.out.println(site);
+        } catch (IOException ex) {
+            Logger.getLogger(FileServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+}
+
+/**
+ * Custom deserializer for YAML representation of Directory
+ * 
+ * @author Karan Vahi
+ */
+class SiteCatalogEntryDeserializer extends SiteDataJsonDeserializer<SiteCatalogEntry> {
+
+    /**
+     * Deserializes a SiteCatalogEntry YAML description of the type
+     * <pre>
+     *  name: condor_pool
+     *  arch: x86_64
+     *  os.type: linux
+     *  grids:
+     *    - type: gt5
+     *      contact: smarty.isi.edu/jobmanager-pbs
+     *      scheduler: pbs
+     *      jobtype: auxillary
+     *    - type: gt5
+     *      contact: smarty.isi/edu/jobmanager-pbs
+     *      scheduler: pbs
+     *      jobtype: compute
+     *  directories:
+     *    - type: sharedScratch
+     *      path: /lustre
+     *      fileServers:
+     *        - operation: all
+     *          url: gsiftp://smarty.isi.edu/lustre
+     *  profiles:
+     *      env:
+     *          PATH: /usr/bin:/bin
+     *          x-ext: true
+     * </pre>
+     * @param parser
+     * @param dc
+     * @return
+     * @throws IOException
+     * @throws JsonProcessingException 
+     */
+    @Override
+    public SiteCatalogEntry deserialize(JsonParser parser, DeserializationContext dc) throws IOException, JsonProcessingException {
+        ObjectCodec oc = parser.getCodec();
+        JsonNode node = oc.readTree(parser);
+        SiteCatalogEntry siteEntry = new SiteCatalogEntry();
+        
+        for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
+            Map.Entry<String, JsonNode> e = it.next();
+            String key = e.getKey();
+            SiteCatalogKeywords reservedKey =
+                    SiteCatalogKeywords.getReservedKey(key);
+            if (reservedKey == null) {
+                this.complainForIllegalKey(SiteCatalogKeywords.SITES.getReservedName(), key, node );
+            }
+
+            switch (reservedKey) {
+                case NAME:
+                    siteEntry.setSiteHandle(node.get(key).asText());
+                    break;
+                    
+                case ARCH:
+                    siteEntry.setArchitecture(Architecture.valueOf(node.get(key).asText()));
+                    break;
+                    
+                case OS_TYPE:
+                    siteEntry.setOS(OS.valueOf(node.get(key).asText()));
+                    break;
+                 
+                case OS_RELEASE:
+                     siteEntry.setOSRelease(node.get(key).asText());
+                     break;
+                     
+                case OS_VERSION:
+                     siteEntry.setOSVersion(node.get(key).asText());
+                     break;
+
+                case DIRECTORIES:
+                    JsonNode directoriesNodes = node.get(key);
+                    if (directoriesNodes != null) {
+                        if( directoriesNodes.isArray() ){
+                            for( JsonNode directoryNode: directoriesNodes ){
+                                parser = directoryNode.traverse(oc);
+                                Directory directory = parser.readValueAs(Directory.class);
+                                siteEntry.addDirectory(directory);
+                            }
+                        }
+                    }
+                    break;
+                 
+                case GRIDS:
+                    JsonNode gridGatewayNodes = node.get(key);
+                    if (gridGatewayNodes != null) {
+                        if( gridGatewayNodes.isArray() ){
+                            for( JsonNode gridGatewayNode: gridGatewayNodes ){
+                                parser = gridGatewayNode.traverse(oc);
+                                GridGateway gridGateway = parser.readValueAs(GridGateway.class);
+                                siteEntry.addGridGateway(gridGateway);
+                            }
+                        }
+                    }
+                    break;
+
+
+                default:
+                    System.err.println(siteEntry);
+                    this.complainForUnsupportedKey(SiteCatalogKeywords.SITES.getReservedName(), key, node);
+            }
+
+        }
+
+        return siteEntry;
+        
     }
 }

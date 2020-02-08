@@ -345,7 +345,7 @@ class DirectorySerializer extends SiteDataJsonDeserializer<Directory> {
                     break;
 
                 default:
-                    this.complainForUnsupportedKey(SiteCatalogKeywords.FILESERVERS.getReservedName(), key, node);
+                    this.complainForUnsupportedKey(SiteCatalogKeywords.DIRECTORIES.getReservedName(), key, node);
             }
 
         }
