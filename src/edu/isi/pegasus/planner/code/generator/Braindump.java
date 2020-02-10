@@ -13,6 +13,9 @@
  */
 package edu.isi.pegasus.planner.code.generator;
 
+import com.fasterxml.jackson.databind.SequenceWriter;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
 import edu.isi.pegasus.common.credential.impl.Proxy;
@@ -25,11 +28,8 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.cluster.aggregator.JobAggregatorFactory;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
@@ -80,7 +80,7 @@ import org.ietf.jgss.GSSName;
 public class Braindump {
 
     /** The basename of the braindump file. */
-    public static final String BRAINDUMP_FILE = "braindump.txt";
+    public static final String BRAINDUMP_FILE = "braindump.yml";
 
     /** The Key designating type of Pegasus Code Generator. */
     public static final String GENERATOR_TYPE_KEY = "type";
@@ -365,19 +365,11 @@ public class Braindump {
      * @throws IOException in case of error while writing out file.
      */
     protected File writeOutBraindumpFile(Map<String, String> entries) throws IOException {
-
-        // create a writer to the braindump.txt in the directory.
-        File f = new File(mSubmitFileDir, BRAINDUMP_FILE);
-        PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(f)));
-
-        // go through all the keys and write out to the file
-        for (Map.Entry<String, String> entry : entries.entrySet()) {
-            StringBuffer sb = new StringBuffer();
-            sb.append(entry.getKey()).append(" ").append(entry.getValue());
-            writer.println(sb.toString());
-        }
-
-        writer.close();
+        File f = new File(mSubmitFileDir, BRAINDUMP_FILE + ".yaml");
+        YAMLMapper mapper = new YAMLMapper();
+        mapper.configure(Feature.WRITE_DOC_START_MARKER, false);
+        SequenceWriter writer = mapper.writerWithDefaultPrettyPrinter().writeValues(f);
+        writer.write(entries);
 
         return f;
     }
