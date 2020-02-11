@@ -793,7 +793,7 @@ public class SiteCatalogEntry extends AbstractSiteData {
                 "    PATH: /usr/bin:/bin\n" +
                 "  pegasus:\n" +
                 "    clusters.num: 1\n" +
-                "    x-ext: true";
+                "  x-ext: true";
         try {
             SiteCatalogEntry site = mapper.readValue(test, SiteCatalogEntry.class);
             System.out.println(site);
@@ -914,7 +914,6 @@ class SiteCatalogEntryDeserializer extends SiteDataJsonDeserializer<SiteCatalogE
                     break;
                     
                 default:
-                    System.err.println(siteEntry);
                     this.complainForUnsupportedKey(SiteCatalogKeywords.SITES.getReservedName(), key, node);
             }
 
