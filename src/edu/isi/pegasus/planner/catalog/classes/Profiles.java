@@ -19,8 +19,6 @@ import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogKeywords;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteDataJsonDeserializer;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.namespace.Condor;
@@ -33,7 +31,6 @@ import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.namespace.Selector;
 import edu.isi.pegasus.planner.namespace.Stat;
-import edu.isi.pegasus.planner.parser.ScannerException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -524,7 +521,12 @@ class ProfilesDeserializer extends SiteDataJsonDeserializer<Profiles> {
                 Map.Entry<String, JsonNode> entry = it.next();
                 profiles.add(new Profile(namespace, entry.getKey(), entry.getValue().asText()));
             }
-        } else {
+        }
+        else if( namespace.startsWith("x-") ){
+            //ignore any user defined extensions
+            //example x-ext: true
+        }
+        else {
             throw new RuntimeException(
                     "Invalid namespace specified " + namespace + " for profiles " + node);
         }
