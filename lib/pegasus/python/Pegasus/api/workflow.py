@@ -1,6 +1,9 @@
 import json
 from collections import defaultdict
 from enum import Enum
+from functools import partial 
+from functools import wraps
+from uuid import uuid4
 
 import yaml
 
@@ -19,6 +22,8 @@ from .mixins import HookMixin
 from .mixins import ProfileMixin
 from ._utils import _get_enum_str
 from ._utils import _chained
+from Pegasus.client._client import from_env
+from Pegasus.client._client import Client
 
 PEGASUS_VERSION = "5.0"
 
@@ -484,6 +489,25 @@ class _JobDependency:
     def __json__(self):
         return {"id": self.parent_id, "children": list(self.children_ids)}
 
+def _needs_client(f):
+    @wraps(f)
+    def wrapper(self, *args, **kwargs):
+        if not self._client:
+            self._client = from_env()
+        
+        f(self, *args, **kwargs)
+    
+    return wrapper
+
+def _needs_submit_dir(f):
+    @wraps(f)
+    def wrapper(self, *args, **kwargs):
+        if not self._submit_dir:
+            raise ValueError("{f} requires a submit directory to be set; Workflow.plan() must be called prior to {f}".format(f=f))
+
+        f(self, *args, **kwargs)
+    
+    return wrapper
 
 class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     """Represents multi-step computational steps as a directed
@@ -616,11 +640,17 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         self.name = name
         self.infer_dependencies = infer_dependencies
 
-        self.jobs = dict()
-        self.dependencies = defaultdict(_JobDependency)
+        # client specific members
+        self._submit_dir = None
+        self._client = None
+
+        self._path = None
 
         # sequence unique to this workflow only
         self.sequence = 1
+
+        self.jobs = dict()
+        self.dependencies = defaultdict(_JobDependency)
 
         self.site_catalog = None
         self.transformation_catalog = None
@@ -629,6 +659,132 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         self.hooks = defaultdict(list)
         self.profiles = defaultdict(dict)
         self.metadata = dict()
+
+    @_chained
+    @_needs_client
+    def plan(
+        self,
+        conf: str = None,
+        sites: str = "local",
+        output_site: str = "local",
+        input_dir: str = None,
+        output_dir: str = None,
+        dir: str = None,
+        relative_dir: str= None,
+        cleanup:str = "none",
+        verbose: bool = False,
+        force: bool = False,
+        submit: bool = False,
+        **kwargs
+    ):
+        """Plan the workflow.
+        
+        :param conf:  the path to the properties file to use for planning, defaults to None
+        :type conf: str, optional
+        :param sites: comma separated list of executions sites on which to map the workflow, defaults to "local"
+        :type sites: str, optional
+        :param output_site: the output site where the data products during workflow execution are transferred to, defaults to "local"
+        :type output_site: str, optional
+        :param input_dir: comma separated list of optional input directories where the input files reside on submit host, defaults to None
+        :type input_dir: str, optional
+        :param output_dir: an optional output directory where the output files should be transferred to on submit host, defaults to None
+        :type output_dir: str, optional
+        :param dir: the directory where to generate the executable workflow, defaults to None
+        :type dir: str, optional
+        :param relative_dir: the relative directory to the base directory where to generate the concrete workflow, defaults to None
+        :type relative_dir: str, optional
+        :param cleanup: the cleanup strategy to use. Can be none|inplace|leaf|constraint, defaults to inplace
+        :type cleanup: str, optional
+        :param verbose: verbose mode, defaults to False
+        :type verbose: bool, optional
+        :param force: skip reduction of the workflow, resulting in build style dag, defaults to False
+        :type force: bool, optional
+        :param submit: submit the executable workflow generated, defaults to False
+        :type submit: bool, optional
+        """
+        if self._path:
+            self.write(self._path)
+        else:
+            self.write(str(uuid4()))
+        
+        self._submit_dir = self._client.plan(
+            self._path,
+            conf=conf,
+            sites=sites,
+            output_site=output_site,
+            input_dir=input_dir,
+            output_dir=output_dir,
+            dir=dir,
+            relative_dir=relative_dir,
+            cleanup=cleanup,
+            verbose=verbose,
+            force=force,
+            submit=submit,
+            **kwargs
+        )._submit_dir
+
+    @_chained
+    @_needs_client
+    def run(self, verbose: bool = False):
+        """Run the planned workflow.
+        
+        :param verbose: verbose mode, defaults to None
+        :type verbose: str, optional
+        """
+        self._client.run(self._submit_dir, verbose=verbose)
+
+    @_chained
+    @_needs_submit_dir
+    @_needs_client
+    def status(
+        self,
+        long: bool = False,
+        verbose: bool = False
+    ):
+        """Monitor the workflow by quering Condor and directories.
+        
+        :param long: Show all DAG states, including sub-DAGs, default only totals. defaults to False
+        :type long: bool, optional
+        :param verbose:  verbose mode, defaults to False
+        :type verbose: bool, optional
+        """
+
+        self._client.status(self._submit_dir, long=long, verbose=verbose)
+
+    @_chained
+    @_needs_submit_dir
+    @_needs_client
+    def remove(self, verbose: bool = False):
+        """Removes this workflow that has been planned and submitted.
+        
+        :param verbose: verbose mode, defaults to False
+        :type verbose: bool, optional
+        """
+        self._client.remove(self._submit_dir, verbose=verbose)
+    
+    @_chained
+    @_needs_submit_dir
+    @_needs_client
+    def analyze(self, verbose: bool = False):
+        """Debug a workflow.
+        
+        :param verbose: verbose mode, defaults to False
+        :type verbose: bool, optional
+        """
+        self._client.analyzer(self._submit_dir, verbose=verbose)
+
+    # should wait until wf is done or else we will just get msg:
+    # pegasus-monitord still running. Please wait for it to complete.
+    @_chained
+    @_needs_submit_dir
+    @_needs_client
+    def statistics(self, verbose: bool = False):
+        """Generate statistics about the workflow run.
+        
+        :param verbose: verbose mode, defaults to False
+        :type verbose: bool, optional
+        """
+        self._client.statistics(self._submit_dir, verbose=verbose)
 
     @_chained
     def add_jobs(self, *jobs):
@@ -823,6 +979,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
                         except DuplicateError:
                             pass
 
+    @_chained
     def write(self, file, _format="yml"):
         """Write this catalog, formatted in YAML, to a file
         
@@ -831,6 +988,12 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         """
         self._infer_dependencies()
         Writable.write(self, file, _format=_format)
+
+        # save path so that it can be used by Client.plan()
+        if isinstance(file, str):
+            self._path = file
+        elif hasattr(file, "read"):
+            self._path = file.name
 
     def __json__(self):
         # remove 'pegasus' from tc, rc, sc as it is not needed when they
