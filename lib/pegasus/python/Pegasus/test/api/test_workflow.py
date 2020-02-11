@@ -1,6 +1,10 @@
 import os
 import json
+import stat
 from tempfile import NamedTemporaryFile
+from shutil import which
+from pathlib import Path
+
 
 import pytest
 import yaml
@@ -13,6 +17,9 @@ from Pegasus.api.workflow import _LinkType
 from Pegasus.api.workflow import _Use
 from Pegasus.api.workflow import _JobDependency
 from Pegasus.api.workflow import Workflow
+from Pegasus.api.workflow import _needs_client
+from Pegasus.api.workflow import _needs_submit_dir
+from Pegasus.client._client import Client
 from Pegasus.api.workflow import PEGASUS_VERSION
 from Pegasus.api.replica_catalog import File
 from Pegasus.api.replica_catalog import ReplicaCatalog
@@ -888,3 +895,37 @@ class TestWorkflow:
 
         assert result == expected_json
 
+
+@pytest.fixture(scope="function")
+def obj():
+    def _obj():
+        class Obj:
+            def __init__(self):
+                self._client = None
+                self._submit_dir = None
+            
+            @_needs_client
+            def func_that_requires_client(self):
+                ...
+            @_needs_submit_dir
+            def func_that_requires_submit_dir(self):
+                ...
+        
+        return Obj()
+
+    return _obj()
+
+def test__needs_client(obj, pegasus_version_file):
+    obj.func_that_requires_client()
+    assert isinstance(obj._client, Client)
+
+def test__needs_submit_dir(obj, pegasus_version_file):
+    obj._submit_dir = "/path"
+    try:
+        obj.func_that_requires_submit_dir()
+    except ValueError:
+        pytest.fail("should not have thrown")
+
+def test__needs_submit_dir_invalid(obj, pegasus_version_file):
+    with pytest.raises(ValueError):
+        obj.func_that_requires_submit_dir()
