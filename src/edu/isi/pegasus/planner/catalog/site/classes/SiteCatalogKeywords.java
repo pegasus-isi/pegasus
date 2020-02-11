@@ -35,6 +35,7 @@ public enum SiteCatalogKeywords {
     PATH("path"),
     FILESERVERS("fileServers"),
     OPERATION("operation"),
+    PEGASUS("pegasus"),
     URL("url"),
     GRIDS("grids"),
     CONTACT("contact"),
