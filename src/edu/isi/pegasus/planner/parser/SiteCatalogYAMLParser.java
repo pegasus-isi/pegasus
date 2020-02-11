@@ -143,9 +143,8 @@ public class SiteCatalogYAMLParser {
         try {
 
             File f = new File(file);
-
+            mResult = new SiteStore();
             if (!(f.exists() && f.length() > 0)) {
-                mResult = new SiteStore();
                 mLogger.log(
                         "The Site Catalog file " + file + " was not found or empty",
                         LogManager.INFO_MESSAGE_LEVEL);
@@ -155,15 +154,17 @@ public class SiteCatalogYAMLParser {
             
             //first attempt to validate
             if (validate(f, SCHEMA_FILENAME)) {
+                //validation succeeded. load.
                 Reader reader = new VariableExpansionReader(new FileReader(f));
                 ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
                 mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
                 SiteStore store = mapper.readValue(reader, SiteStore.class);
-                System.err.println(store);
-                /*if (loadSite(entry)) {
+                for (Iterator<SiteCatalogEntry> it= store.entryIterator(); it.hasNext(); ){
+                    SiteCatalogEntry entry = it.next();
+                    if (loadSite(entry)) {
                         mResult.addEntry(entry);
                     }
-                */
+                }
             }
         } catch (IOException ioe) {
             mLogger.log("IO Error :" + ioe.getMessage(), LogManager.ERROR_MESSAGE_LEVEL);
