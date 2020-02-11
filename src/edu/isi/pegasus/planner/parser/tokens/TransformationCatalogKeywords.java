@@ -36,7 +36,7 @@ public enum TransformationCatalogKeywords {
     CONTAINERS("containers"),
     CONTAINER_IMAGE("image"),
     CONTAINER_IMAGE_SITE("image.site"),
-    CONTAINER_MOUNT("mount"),
+    CONTAINER_MOUNT("mounts"),
     CONTAINER_DOCKERFILE("dockerfile"),
     REQUIRES("requires"),
     TRANSFORMATIONS("transformations");

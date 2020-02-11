@@ -545,7 +545,7 @@ public class TransformationCatalogYAMLParser {
      * - name: centos-pegasus
      *     type: docker
      *     image: docker:///rynge/montage:latest
-     *     mount:
+     *     mounts:
      *        - /Volumes/Work/lfs1:/shared-data/:ro
      *        - /Volumes/Work/lfs2:/shared-data2/:ro
      *
