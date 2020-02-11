@@ -19,21 +19,19 @@
 package edu.isi.pegasus.planner.parser;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.JacksonYAMLParseException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
-import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo.Architecture;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo.OS;
 import edu.isi.pegasus.planner.catalog.site.classes.Connection;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory.TYPE;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
-import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway.JOB_TYPE;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway.SCHEDULER_TYPE;
@@ -68,22 +66,19 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * This class uses the Xerces SAX2 parser to validate and parse an XML document conforming to the
- * Site Catalog schema v4.0
+ * This class parses and validates Site Catalog in YAML format corresponding to
+ * Site Catalog schema v5.0
  *
- * <p>http://pegasus.isi.edu/schema/sc-3.0.xsd
- *
- * @author Mukund Murrali
+ * 
+ * @author Karan Vahi
  * @version $Revision$
  */
 public class SiteCatalogYAMLParser {
 
     /** The "not-so-official" location URL of the Site Catalog Schema. */
-    public static final String SCHEMA_LOCATION = "http://pegasus.isi.edu/schema/sc-5.0.json";
+    public static final String SCHEMA_URI = "http://pegasus.isi.edu/schema/sc-5.0.yml";
 
-    /** Schema file name */
-    public static final String SCHEMA_URI = "sc-5.0.json";
-
+    
     /** The final result constructed. */
     private SiteStore mResult;
 
@@ -119,7 +114,9 @@ public class SiteCatalogYAMLParser {
         mLoadAll = mSites.contains("*");
         mLogger = bag.getLogger();
         mProps = bag.getPegasusProperties();
-        SCHEMA_FILENAME = new File(mProps.getSchemaDir(), new File(SCHEMA_URI).getName());
+        File schemaDir = this.mProps.getSchemaDir();
+        File yamlSchemaDir = new File(schemaDir, "yaml");
+        SCHEMA_FILENAME = new File(yamlSchemaDir, new File(SCHEMA_URI).getName());
     }
 
     /**
@@ -155,302 +152,19 @@ public class SiteCatalogYAMLParser {
                 mParsingDone = true;
                 return;
             }
-            Reader mReader = new VariableExpansionReader(new FileReader(f));
-
-            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-
-            Object yamlData = null;
-
-            /** Loads the yaml data */
-            try {
-                yamlData = mapper.readValue(mReader, Object.class);
-            } catch (JacksonYAMLParseException e) {
-                String errorMessage = parseError(e);
-                // throw new ScannerException(e.getProblemMark().getLine() + 1, errorMessage);
-                throw new ScannerException(errorMessage);
-            } catch (Exception e) {
-                throw new ScannerException("Error in loading the yaml file", e);
-            }
-            if (yamlData != null) {
-                YAMLSchemaValidationResult result =
-                        YAMLSchemaValidator.getInstance()
-                                .validate((JsonNode) yamlData, SCHEMA_FILENAME, "site");
-
-                // schema validation is done here.. in case of any validation error we throw the
-                // result..
-                if (!result.isSuccess()) {
-                    List<String> errors = result.getErrorMessage();
-                    StringBuilder errorResult = new StringBuilder();
-                    int i = 1;
-                    for (String error : errors) {
-                        if (i > 1) {
-                            errorResult.append(",");
-                        }
-                        errorResult.append("Error ").append(i++).append(":{");
-                        errorResult.append(error).append("}");
-                    }
-                    throw new ScannerException(errorResult.toString());
-                }
-                mResult = new SiteStore();
-
-                // the yaml data we store is in the form of map structure..
-                Map<String, Object> data = (LinkedHashMap<String, Object>) yamlData;
-
-                // the "site" top level will have list of site catalog data which we need to
-                // populate..
-                List<Object> siteCatatalogs = (List<Object>) data.get("site");
-                for (Object siteCatalog : siteCatatalogs) {
-                    // each of the linked list object has a map of key, value representing the data.
-                    Map<String, Object> siteCatalogInfo =
-                            (LinkedHashMap<String, Object>) siteCatalog;
-                    SiteCatalogEntry entry = new SiteCatalogEntry();
-
-                    /** * Here we construct the top level information for a site. */
-                    Object architecture = siteCatalogInfo.get("arch");
-                    if (architecture != null) {
-                        entry.setArchitecture(Architecture.valueOf((String) architecture));
-                    }
-
-                    Object os = siteCatalogInfo.get("os");
-                    if (os != null) {
-                        entry.setOS(OS.valueOf((String) os));
-                    }
-
-                    Object handle = siteCatalogInfo.get("handle");
-                    if (handle != null) {
-                        entry.setSiteHandle((String) handle);
-                    }
-
-                    Object osrelease = siteCatalogInfo.get("osrelease");
-                    if (osrelease != null) {
-                        entry.setOSRelease(((String) osrelease));
-                    }
-
-                    Object osversion = siteCatalogInfo.get("osversion");
-                    if (osversion != null) {
-                        entry.setOSVersion(((String) osversion));
-                    }
-
-                    Object glibc = siteCatalogInfo.get("glibc");
-                    if (glibc != null) {
-                        entry.setGlibc((String) glibc);
-                    }
-
-                    Object profileObj = siteCatalogInfo.get("profile");
-
-                    Object metaObj = siteCatalogInfo.get("metadata");
-
-                    // construction of profiles and metadata if present..
-                    List<Profile> profiles =
-                            getProfilesForTransformation(profileObj, metaObj).getProfiles();
-
-                    for (Profile profile : profiles) {
-                        entry.addProfile(profile);
-                    }
-
-                    Object directoryObject = siteCatalogInfo.get("directory");
-
-                    // if directory is present in the site, we extract those and parse it..
-                    if (directoryObject != null) {
-                        List<Object> directories = (List<Object>) directoryObject;
-                        for (Object directory : directories) {
-                            Directory d = new Directory();
-                            InternalMountPoint mountPoint = new InternalMountPoint();
-                            d.setInternalMountPoint(mountPoint);
-
-                            Map<String, Object> directoryInfo = (Map<String, Object>) directory;
-
-                            Object type = directoryInfo.get("type");
-                            if (type != null) {
-                                d.setType((String) type);
-                            }
-
-                            Object path = directoryInfo.get("path");
-                            if (path != null) {
-                                mountPoint.setMountPoint((String) path);
-                            }
-
-                            Object free_size = directoryInfo.get("free-size");
-                            if (free_size != null) {
-                                mountPoint.setFreeSize((String) free_size);
-                            }
-
-                            Object total_size = directoryInfo.get("total-size");
-                            if (total_size != null) {
-                                mountPoint.setTotalSize((String) total_size);
-                            }
-
-                            List<Object> fileserversInfo =
-                                    (List<Object>) directoryInfo.get("file-server");
-                            List<FileServer> fileservers = new LinkedList<FileServer>();
-
-                            for (Object fileserverInfo : fileserversInfo) {
-                                FileServer fs = new FileServer();
-                                Map<String, Object> fileServerMap =
-                                        (Map<String, Object>) fileserverInfo;
-
-                                Object protocol = fileServerMap.get("protocol");
-                                if (protocol != null) {
-                                    fs.setProtocol((String) protocol);
-                                }
-
-                                Object mount_point = fileServerMap.get("mount-point");
-                                if (mount_point != null) {
-                                    fs.setMountPoint((String) mount_point);
-                                }
-
-                                Object operation = fileServerMap.get("operation");
-                                if (operation != null) {
-                                    fs.setSupportedOperation(OPERATION.valueOf((String) operation));
-                                }
-
-                                Object url = fileServerMap.get("url");
-                                if (url != null) {
-                                    PegasusURL pegasusurl = new PegasusURL((String) url);
-                                    fs.setURLPrefix(pegasusurl.getURLPrefix());
-                                    fs.setProtocol(pegasusurl.getProtocol());
-                                    fs.setMountPoint(pegasusurl.getPath());
-                                }
-
-                                profileObj = siteCatalogInfo.get("profile");
-
-                                metaObj = siteCatalogInfo.get("metadata");
-
-                                profiles =
-                                        getProfilesForTransformation(profileObj, metaObj)
-                                                .getProfiles();
-
-                                for (Profile profile : profiles) {
-                                    fs.addProfile(profile);
-                                }
-
-                                fileservers.add(fs);
-                            }
-
-                            d.setFileServers(fileservers);
-                            entry.addDirectory(d);
-                        }
-                    }
-
-                    // if grid  is present in the site, we extract those and parse it..
-                    Object gridObject = siteCatalogInfo.get("grid");
-
-                    if (gridObject != null) {
-                        List<Object> gridsInformation = (List<Object>) gridObject;
-                        for (Object gridInfo : gridsInformation) {
-                            GridGateway gw = new GridGateway();
-                            Map<String, Object> gridInformationMap = (Map<String, Object>) gridInfo;
-
-                            Object arch = gridInformationMap.get("arch");
-                            if (arch != null) {
-                                gw.setArchitecture(Architecture.valueOf((String) arch));
-                            }
-
-                            Object type = gridInformationMap.get("type");
-                            if (type != null) {
-                                gw.setType(GridGateway.TYPE.valueOf((String) type));
-                            }
-
-                            Object contact = gridInformationMap.get("contact");
-                            if (contact != null) {
-                                gw.setContact((String) contact);
-                            }
-
-                            Object scheduler = gridInformationMap.get("scheduler");
-                            if (scheduler != null) {
-                                gw.setScheduler((String) scheduler);
-                            }
-
-                            Object jobtype = gridInformationMap.get("jobtype");
-                            if (jobtype != null) {
-                                gw.setJobType(GridGateway.JOB_TYPE.valueOf((String) jobtype));
-                            }
-
-                            os = gridInformationMap.get("os");
-                            if (os != null) {
-                                gw.setOS(SysInfo.OS.valueOf(((String) os).toLowerCase()));
-                            }
-
-                            osrelease = gridInformationMap.get("osrelease");
-                            if (osrelease != null) {
-                                gw.setOSRelease(((String) osrelease));
-                            }
-
-                            osversion = gridInformationMap.get("osversion");
-                            if (osversion != null) {
-                                gw.setOSVersion(((String) osversion));
-                            }
-
-                            glibc = gridInformationMap.get("glibc");
-                            if (glibc != null) {
-                                gw.setGlibc((String) glibc);
-                            }
-
-                            Object idle_nodes = gridInformationMap.get("idle-nodes");
-                            if (idle_nodes != null) {
-                                gw.setIdleNodes((String) idle_nodes);
-                            }
-
-                            Object total_nodes = gridInformationMap.get("total-nodes");
-                            if (total_nodes != null) {
-                                gw.setTotalNodes((String) total_nodes);
-                            }
-
-                            entry.addGridGateway(gw);
-                        }
-                    }
-
-                    // if replica is present in the site, we extract those and parse it..
-                    Object replicaCatalogObject = siteCatalogInfo.get("replica-catalog");
-
-                    if (replicaCatalogObject != null) {
-                        List<Object> replicaCatalogs = (List<Object>) replicaCatalogObject;
-                        for (Object replicationCatalog : replicaCatalogs) {
-                            ReplicaCatalog rc = new ReplicaCatalog();
-                            Map<String, Object> replicationCatalogInfo =
-                                    (Map<String, Object>) replicationCatalog;
-
-                            Object type = replicationCatalogInfo.get("type");
-                            if (type != null) {
-                                rc.setType((String) type);
-                            }
-
-                            Object url = replicationCatalogInfo.get("url");
-                            if (url != null) {
-                                rc.setURL((String) url);
-                            }
-
-                            Object aliasObj = replicationCatalogInfo.get("alias");
-
-                            if (aliasObj != null) {
-                                List<String> aliases = (List<String>) aliasObj;
-                                for (String alias : aliases) {
-                                    rc.addAlias(alias);
-                                }
-                            }
-
-                            Object connectionObj = replicationCatalogInfo.get("connection");
-
-                            if (connectionObj != null) {
-                                List<Object> connections = (List<Object>) connectionObj;
-                                for (Object connection : connections) {
-                                    Map<String, String> connectionMap =
-                                            (Map<String, String>) connection;
-                                    Connection c = new Connection();
-                                    c.setKey(connectionMap.get("key"));
-                                    c.setValue(connectionMap.get("value"));
-                                    rc.addConnection(c);
-                                }
-                            }
-                            entry.addReplicaCatalog(rc);
-                        }
-                    }
-                    if (loadSite(entry)) {
+            
+            //first attempt to validate
+            if (validate(f, SCHEMA_FILENAME)) {
+                Reader reader = new VariableExpansionReader(new FileReader(f));
+                ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+                mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+                SiteStore store = mapper.readValue(reader, SiteStore.class);
+                System.err.println(store);
+                /*if (loadSite(entry)) {
                         mResult.addEntry(entry);
                     }
-                }
+                */
             }
-
         } catch (IOException ioe) {
             mLogger.log("IO Error :" + ioe.getMessage(), LogManager.ERROR_MESSAGE_LEVEL);
         }
@@ -952,5 +666,58 @@ public class SiteCatalogYAMLParser {
         }
 
         //        System.out.println( Directory.TYPE.value( "shared-scratch" ));
+    }
+
+    /**
+     * Validates a file against the Site Catalog Schema file
+     * 
+     * @param f
+     * @param schemaFile
+     * @return 
+     */
+    protected boolean validate(File f, File schemaFile) {
+        boolean validate = true;
+        Reader reader = null;
+        try {
+            reader = new VariableExpansionReader(new FileReader(f));
+        }
+        catch (IOException ioe) {
+            mLogger.log("IO Error :" + ioe.getMessage(), LogManager.ERROR_MESSAGE_LEVEL);
+        }
+        
+        
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+        JsonNode root = null;
+        try {
+            root = mapper.readTree(reader);
+
+        } catch (JacksonYAMLParseException e) {
+            throw new ScannerException(e.getLocation().getLineNr(), parseError(e));
+        } catch (Exception e) {
+            throw new ScannerException("Error in loading the yaml file " + reader, e);
+        }
+        if (root != null) {
+            YAMLSchemaValidationResult result =
+                    YAMLSchemaValidator.getInstance()
+                            .validate(root, SCHEMA_FILENAME, "site");
+
+            // schema validation is done here.. in case of any validation error we throw the
+            // result..
+            if (!result.isSuccess()) {
+                List<String> errors = result.getErrorMessage();
+                StringBuilder errorResult = new StringBuilder();
+                int i = 1;
+                for (String error : errors) {
+                    if (i > 1) {
+                        errorResult.append(",");
+                    }
+                    errorResult.append("Error ").append(i++).append(":{");
+                    errorResult.append(error).append("}");
+                }
+                throw new ScannerException(errorResult.toString());
+            }
+        }
+        return validate;
     }
 }

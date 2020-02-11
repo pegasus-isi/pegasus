@@ -881,7 +881,6 @@ class SiteStoreDeserializer extends SiteDataJsonDeserializer<SiteStore> {
 
                     
                 default:
-                    System.err.println(store);
                     this.complainForUnsupportedKey(SiteCatalogKeywords.SITES.getReservedName(), key, node);
             }
 

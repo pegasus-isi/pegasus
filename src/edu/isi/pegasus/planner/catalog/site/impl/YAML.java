@@ -46,7 +46,7 @@ import java.util.Set;
 public class YAML implements SiteCatalog {
 
     /** The default basename of the site catalog file. */
-    public static final String DEFAULT_SITE_CATALOG_BASENAME = "sites.yaml";
+    public static final String DEFAULT_SITE_CATALOG_BASENAME = "sites.yml";
 
     /** The handle to parser instance that will parse the site catalog. */
     private SiteCatalogYAMLParser mParser;
