@@ -13,6 +13,15 @@
  */
 package edu.isi.pegasus.planner.catalog.classes;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogKeywords;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteDataJsonDeserializer;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Dagman;
@@ -24,6 +33,7 @@ import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.namespace.Selector;
 import edu.isi.pegasus.planner.namespace.Stat;
+import edu.isi.pegasus.planner.parser.ScannerException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -31,6 +41,7 @@ import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,6 +51,7 @@ import java.util.logging.Logger;
  * @author Karan Vahi
  * @version $Revision$
  */
+@JsonDeserialize(using = ProfilesDeserializer.class)
 public class Profiles {
 
     /** The enumeration of valid namespaces. It should be */
@@ -450,4 +462,73 @@ public class Profiles {
             Logger.getLogger(Profiles.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+    
+}
+
+/**
+ * Custom deserializer for YAML representation of Profiles
+ * 
+ * @author Karan Vahi
+ */
+class ProfilesDeserializer extends SiteDataJsonDeserializer<Profiles> {
+
+    /**
+     * Deserializes a Profiles YAML description of the type
+     * <pre>
+     *    profiles:
+     *     env:
+     *         PATH: /usr/bin:/bin
+     *     pegasus:
+     *         clusters.num: 1
+     *         x-ext: true
+     * </pre>
+     * @param jp
+     * @param dc
+     * @return
+     * @throws IOException
+     * @throws JsonProcessingException 
+     */
+    @Override
+    public Profiles deserialize(JsonParser jp, DeserializationContext dc) throws IOException, JsonProcessingException {
+        ObjectCodec oc = jp.getCodec();
+        JsonNode profilesNode = oc.readTree(jp);
+        Profiles p = new Profiles();
+
+        if (profilesNode != null) {
+            for (Iterator<Map.Entry<String, JsonNode>> it = profilesNode.fields(); it.hasNext(); ) {
+                Map.Entry<String, JsonNode> entry = it.next();
+                p.addProfilesDirectly(this.createProfiles(entry.getKey(), entry.getValue()));
+            }
+            
+        }
+        return p;
+    }
+
+    /**
+     * Creates a profile from a JSON node representing
+     *
+     * <pre>
+     * APP_HOME: "/tmp/myscratch"
+     * JAVA_HOME: "/opt/java/1.6"
+     * </pre>
+     *
+     * @param namespace
+     * @param node
+     * @return Profiles
+     */
+    protected List<Profile> createProfiles(String namespace, JsonNode node) {
+        List<Profile> profiles = new LinkedList();
+        if (Namespace.isNamespaceValid(namespace)) {
+            for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
+                Map.Entry<String, JsonNode> entry = it.next();
+                profiles.add(new Profile(namespace, entry.getKey(), entry.getValue().asText()));
+            }
+        } else {
+            throw new RuntimeException(
+                    "Invalid namespace specified " + namespace + " for profiles " + node);
+        }
+        return profiles;
+    }
+
 }

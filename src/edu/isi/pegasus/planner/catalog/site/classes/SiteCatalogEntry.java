@@ -791,6 +791,8 @@ public class SiteCatalogEntry extends AbstractSiteData {
                 "profiles:\n" +
                 "  env:\n" +
                 "    PATH: /usr/bin:/bin\n" +
+                "  pegasus:\n" +
+                "    clusters.num: 1\n" +
                 "    x-ext: true";
         try {
             SiteCatalogEntry site = mapper.readValue(test, SiteCatalogEntry.class);
@@ -902,7 +904,15 @@ class SiteCatalogEntryDeserializer extends SiteDataJsonDeserializer<SiteCatalogE
                     }
                     break;
 
-
+                case PROFILES:
+                    JsonNode profilesNode = node.get(key);
+                    if( profilesNode != null ){
+                        parser = profilesNode.traverse(oc);
+                        Profiles profiles = parser.readValueAs(Profiles.class);
+                        siteEntry.setProfiles(profiles);
+                    }
+                    break;
+                    
                 default:
                     System.err.println(siteEntry);
                     this.complainForUnsupportedKey(SiteCatalogKeywords.SITES.getReservedName(), key, node);
