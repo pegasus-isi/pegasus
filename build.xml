@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<project name="pegasus" default="dist">
+<project name="pegasus" default="dist" xmlns:if="ant:if" xmlns:unless="ant:unless">
   <property environment="env"/>
   <property file="build.properties"/>
   <property file="build.git.properties"/>
@@ -22,6 +22,10 @@
   <property name="dist.schema" location="${dist.share}/schema"/>
   <property name="dist.doc" location="${dist.dir}/share/doc/pegasus"/>
 
+  <!-- Set property to identify if running in CI mode. -->
+  <property name="CI" value="true" if:set="env.bamboo_buildKey" />
+  <property name="CI" value="false" unless:set="env.bamboo_buildKey" />
+
   <path id="build.classpath">
     <fileset dir="share/pegasus/java" includes="*.jar"/>
   </path>
@@ -33,6 +37,7 @@
   <echo>Pegasus Version: ${pegasus.version}</echo>
   <echo>JAVA TARGET is ${build.target}</echo>
   <echo>JAVA SOURCE is ${build.source}</echo>
+  <echo>Running in CI ${CI}</echo>
 
   <tstamp>
     <format property="ISODATE.full" pattern="yyyy-MM-dd'T'HH:mm:ssZZZZZ"/>
@@ -143,7 +148,8 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
     <java jar="${basedir}/release-tools/jars/google-java-format-1.7-all-deps.jar" fork="true" failonerror="true" maxmemory="128m">
       <arg value="--aosp"/>
-      <arg value="--replace"/>
+      <arg value="--replace" unless:true="${CI}" />
+      <arg line="--set-exit-if-changed --dry-run" if:true="${CI}" />
       <arg line="${java.source}"/>
     </java>
   </target>
