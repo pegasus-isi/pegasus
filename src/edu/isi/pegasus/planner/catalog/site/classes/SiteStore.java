@@ -18,6 +18,15 @@
 
 package edu.isi.pegasus.planner.catalog.site.classes;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import edu.isi.pegasus.planner.classes.Job;
@@ -33,6 +42,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The site store contains the collection of sites backed by a HashMap.
@@ -41,6 +52,7 @@ import java.util.Set;
  * @author Mats Rynge
  * @version $Revision$
  */
+@JsonDeserialize(using = SiteStoreDeserializer.class)
 public class SiteStore extends AbstractSiteData {
 
     /** The internal map that maps a site catalog entry to the site handle. */
@@ -691,5 +703,191 @@ public class SiteStore extends AbstractSiteData {
      */
     public File getFileSource() {
         return this.mFileSource;
+    }
+    
+    public static void main(String[] args){
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+        /*SimpleModule module = new SimpleModule();
+        module.addDeserializer(FileServer.class, new FileServerDeserializer());
+        mapper.registerModule(module);
+        */
+        String test = 
+                "pegasus: \"5.0\"\n" +
+        "sites:\n" +
+        "    - name: local\n" +
+        "      arch: x86_64\n" +
+        "      os.type: linux\n" +
+        "      directories:\n" +
+        "          - type: sharedScratch\n" +
+        "            path: /tmp/workflows/scratch\n" +
+        "            fileServers:\n" +
+        "              - operation: all\n" +
+        "                url: file:///tmp/workflows/scratch\n" +
+        "          - type: localStorage\n" +
+        "            path: /tmp/workflows/outputs\n" +
+        "            fileServers:\n" +
+        "              - operation: all\n" +
+        "                url: file:///tmp/workflows/outputs\n" +
+        "      profiles:\n" +
+        "          env:\n" +
+        "              PATH: /usr/bin:/bin\n" +
+        "          x-ext: true\n" +
+        "          pegasus:\n" +
+        "              clusters.num: 1\n" +
+        "\n" +
+        "\n" +
+        "    - name: condor_pool\n" +
+        "      arch: x86_64\n" +
+        "      os.type: linux\n" +
+        "      grids:\n" +
+        "        - type: gt5\n" +
+        "          contact: smarty.isi.edu/jobmanager-pbs\n" +
+        "          scheduler: pbs\n" +
+        "          jobtype: auxillary\n" +
+        "        - type: gt5\n" +
+        "          contact: smarty.isi/edu/jobmanager-pbs\n" +
+        "          scheduler: pbs\n" +
+        "          jobtype: compute\n" +
+        "      directories:\n" +
+        "        - type: sharedScratch\n" +
+        "          path: /lustre\n" +
+        "          fileServers:\n" +
+        "            - operation: all\n" +
+        "              url: gsiftp://smarty.isi.edu/lustre\n" +
+        "\n" +
+        "    - name: staging_site\n" +
+        "      arch: x86_64\n" +
+        "      os.type: linux\n" +
+        "      directories:\n" +
+        "          - type: sharedScratch\n" +
+        "            path: /data\n" +
+        "            fileServers:\n" +
+        "              - operation: put\n" +
+        "                url: scp://obelix.isi.edu/data\n" +
+        "              - operation: get\n" +
+        "                url: http://obelix.isi.edu/data";
+        try {
+            SiteStore store = mapper.readValue(test, SiteStore.class);
+            System.out.println(store);
+        } catch (IOException ex) {
+            Logger.getLogger(FileServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+}
+/**
+ * Custom deserializer for YAML representation of Directory
+ * 
+ * @author Karan Vahi
+ */
+class SiteStoreDeserializer extends SiteDataJsonDeserializer<SiteStore> {
+
+    /**
+     * Deserializes a SiteCatalogEntry YAML description of the type
+     * <pre>
+     *  pegasus: "5.0"
+     *  sites:
+     *      - name: local
+     *        arch: x86_64
+     *        os.type: linux
+     *        directories:
+     *            - type: sharedScratch
+     *              path: /tmp/workflows/scratch
+     *              fileServers:
+     *                - operation: all
+     *                  url: file:///tmp/workflows/scratch
+     *            - type: localStorage
+     *              path: /tmp/workflows/outputs
+     *              fileServers:
+     *                - operation: all
+     *                  url: file:///tmp/workflows/outputs
+     *        profiles:
+     *            env:
+     *                PATH: /usr/bin:/bin
+     *            x-ext: true
+     *            pegasus:
+     *                clusters.num: 1
+     * 
+     *      - name: condor_pool
+     *        arch: x86_64
+     *        os.type: linux
+     *        grids:
+     *          - type: gt5
+     *            contact: smarty.isi.edu/jobmanager-pbs
+     *            scheduler: pbs
+     *            jobtype: auxillary
+     *          - type: gt5
+     *            contact: smarty.isi/edu/jobmanager-pbs
+     *            scheduler: pbs
+     *            jobtype: compute
+     *        directories:
+     *          - type: sharedScratch
+     *            path: /lustre
+     *            fileServers:
+     *              - operation: all
+     *                url: gsiftp://smarty.isi.edu/lustre
+     *  
+     *      - name: staging_site
+     *        arch: x86_64
+     *        os.type: linux
+     *        directories:
+     *            - type: sharedScratch
+     *              path: /data
+     *              fileServers:
+     *                - operation: put
+     *                  url: scp://obelix.isi.edu/data
+     *                - operation: get
+     *                  url: http://obelix.isi.edu/data
+     *  
+     * </pre>
+     * @param parser
+     * @param dc
+     * @return
+     * @throws IOException
+     * @throws JsonProcessingException 
+     */
+    @Override
+    public SiteStore deserialize(JsonParser parser, DeserializationContext dc) throws IOException, JsonProcessingException {
+        ObjectCodec oc = parser.getCodec();
+        JsonNode node = oc.readTree(parser);
+        SiteStore store = new SiteStore();
+        
+        for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
+            Map.Entry<String, JsonNode> e = it.next();
+            String key = e.getKey();
+            SiteCatalogKeywords reservedKey =
+                    SiteCatalogKeywords.getReservedKey(key);
+            if (reservedKey == null) {
+                this.complainForIllegalKey(SiteCatalogKeywords.SITES.getReservedName(), key, node );
+            }
+
+            switch (reservedKey) {
+                case PEGASUS:
+                    //nothing to check on version for time being
+                    break;
+                    
+                case SITES:
+                    JsonNode sitesNodes = node.get(key);
+                    if (sitesNodes != null) {
+                        if( sitesNodes.isArray() ){
+                            for( JsonNode siteNode: sitesNodes ){
+                                parser = siteNode.traverse(oc);
+                                SiteCatalogEntry site = parser.readValueAs(SiteCatalogEntry.class);
+                                store.addEntry(site);
+                            }
+                        }
+                    }
+                    break;
+
+                    
+                default:
+                    System.err.println(store);
+                    this.complainForUnsupportedKey(SiteCatalogKeywords.SITES.getReservedName(), key, node);
+            }
+
+        }
+
+        return store;
+        
     }
 }
