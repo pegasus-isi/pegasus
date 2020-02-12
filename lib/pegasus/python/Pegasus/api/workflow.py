@@ -672,7 +672,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         dir: str = None,
         relative_dir: str= None,
         cleanup:str = "none",
-        verbose: bool = False,
+        verbose: int = 0,
         force: bool = False,
         submit: bool = False,
         **kwargs
@@ -695,8 +695,8 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :type relative_dir: str, optional
         :param cleanup: the cleanup strategy to use. Can be none|inplace|leaf|constraint, defaults to inplace
         :type cleanup: str, optional
-        :param verbose: verbose mode, defaults to False
-        :type verbose: bool, optional
+        :param verbose: verbosity, defaults to False
+        :type verbose: int, optional
         :param force: skip reduction of the workflow, resulting in build style dag, defaults to False
         :type force: bool, optional
         :param submit: submit the executable workflow generated, defaults to False
@@ -725,11 +725,11 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
     @_chained
     @_needs_client
-    def run(self, verbose: bool = False):
+    def run(self, verbose: int = 0):
         """Run the planned workflow.
         
-        :param verbose: verbose mode, defaults to None
-        :type verbose: str, optional
+        :param verbose: verbosity, defaults to False
+        :type verbose: int, optional
         """
         self._client.run(self._submit_dir, verbose=verbose)
 
@@ -739,14 +739,14 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     def status(
         self,
         long: bool = False,
-        verbose: bool = False
+        verbose: int = 0
     ):
         """Monitor the workflow by quering Condor and directories.
         
         :param long: Show all DAG states, including sub-DAGs, default only totals. defaults to False
         :type long: bool, optional
-        :param verbose:  verbose mode, defaults to False
-        :type verbose: bool, optional
+        :param verbose:  verbosity, defaults to False
+        :type verbose: int, optional
         """
 
         self._client.status(self._submit_dir, long=long, verbose=verbose)
@@ -754,22 +754,22 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     @_needs_submit_dir
     @_needs_client
-    def remove(self, verbose: bool = False):
+    def remove(self, verbose: int = 0):
         """Removes this workflow that has been planned and submitted.
         
-        :param verbose: verbose mode, defaults to False
-        :type verbose: bool, optional
+        :param verbose:  verbosity, defaults to False
+        :type verbose: int, optional
         """
         self._client.remove(self._submit_dir, verbose=verbose)
     
     @_chained
     @_needs_submit_dir
     @_needs_client
-    def analyze(self, verbose: bool = False):
+    def analyze(self, verbose: int = 0):
         """Debug a workflow.
         
-        :param verbose: verbose mode, defaults to False
-        :type verbose: bool, optional
+        :param verbose:  verbosity, defaults to False
+        :type verbose: int, optional
         """
         self._client.analyzer(self._submit_dir, verbose=verbose)
 
@@ -778,11 +778,11 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     @_needs_submit_dir
     @_needs_client
-    def statistics(self, verbose: bool = False):
+    def statistics(self, verbose: int = 0):
         """Generate statistics about the workflow run.
         
-        :param verbose: verbose mode, defaults to False
-        :type verbose: bool, optional
+        :param verbose:  verbosity, defaults to False
+        :type verbose: int, optional
         """
         self._client.statistics(self._submit_dir, verbose=verbose)
 
