@@ -18,14 +18,18 @@
 
 package edu.isi.pegasus.planner.catalog.site.classes;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import edu.isi.pegasus.common.util.PegasusURL;
@@ -45,6 +49,7 @@ import java.util.logging.Logger;
  * @author Karan Vahi
  */
 @JsonDeserialize(using = FileServerDeserializer.class)
+@JsonSerialize(using = FileServerSerializer.class)
 public class FileServer extends FileServerType {
 
     /** The default constructor. */
@@ -136,10 +141,13 @@ public class FileServer extends FileServerType {
         try {
             FileServer fs = mapper.readValue(test, FileServer.class);
             System.out.println(fs);
+            System.out.println(mapper.writeValueAsString(fs));
+            
         } catch (IOException ex) {
             Logger.getLogger(FileServer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
 }
 
 /**
@@ -197,5 +205,29 @@ class FileServerDeserializer extends SiteDataJsonDeserializer<FileServer> {
         return fs;
     }
 }
+/**
+ * Custom serializer for YAML representation of FileServer
+ * 
+ * @author Karan Vahi
+ */
+class FileServerSerializer extends JsonSerializer<FileServer> {
 
+    public FileServerSerializer() {
+    }
 
+    /**
+     * Serializes contents into  YAML representation
+     * 
+     * @param fs
+     * @param gen
+     * @param sp
+     * @throws IOException 
+     */
+    public void serialize(FileServer fs, JsonGenerator gen, SerializerProvider sp) throws IOException {
+       gen.writeStartObject();
+       gen.writeStringField("operation", fs.mOperation.toString());
+       gen.writeStringField("url", fs.getURL());
+       gen.writeEndObject();
+    }
+
+}

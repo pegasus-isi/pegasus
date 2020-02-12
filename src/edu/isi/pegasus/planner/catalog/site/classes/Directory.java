@@ -18,15 +18,20 @@
 
 package edu.isi.pegasus.planner.catalog.site.classes;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
@@ -34,6 +39,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -47,7 +53,8 @@ import java.util.logging.Logger;
  * @version $Revision$
  */
 
-@JsonDeserialize(using = DirectorySerializer.class)
+@JsonSerialize(using = DirectorySerializer.class)
+@JsonDeserialize(using = DirectoryDeserializer.class)
 public class Directory extends DirectoryLayout {
 
     /** Enumerates the new directory types supported in this schema */
@@ -264,7 +271,7 @@ public class Directory extends DirectoryLayout {
     }
     
     public static void main(String[] args){
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
         /*SimpleModule module = new SimpleModule();
         module.addDeserializer(FileServer.class, new FileServerDeserializer());
@@ -276,21 +283,32 @@ public class Directory extends DirectoryLayout {
                 "  fileServers:\n" +
                 "    - operation: all\n" +
                 "      url: file:///tmp/workflows/scratch";
+        
+        test = "type: \"sharedScratch\"\n" +
+"path: \"/tmp/workflows/scratch\"\n" +
+"fileServers:\n" +
+" -\n" +
+"  operation: \"all\"\n" +
+"  url: \"file:///tmp/workflows/scratch\"";
+                
+        Directory dir = null;
         try {
-            Directory dir = mapper.readValue(test, Directory.class);
+            dir = mapper.readValue(test, Directory.class);
             System.out.println(dir);
+            System.out.println(mapper.writeValueAsString(dir));
         } catch (IOException ex) {
             Logger.getLogger(FileServer.class.getName()).log(Level.SEVERE, null, ex);
         }
+            
     }
 }
 
 /**
  * Custom deserializer for YAML representation of Directory
  * 
- * @author vahi
+ * @author Karan Vahi
  */
-class DirectorySerializer extends SiteDataJsonDeserializer<Directory> {
+class DirectoryDeserializer extends SiteDataJsonDeserializer<Directory> {
 
     /**
      * Deserializes a Directory YAML description of the type
@@ -353,4 +371,54 @@ class DirectorySerializer extends SiteDataJsonDeserializer<Directory> {
         return directory;
         
     }
+}
+/**
+ * Custom serializer for YAML representation of Directory
+ * 
+ * @author Karan Vahi
+ */
+class DirectorySerializer extends JsonSerializer<Directory> {
+
+    public DirectorySerializer() {
+    }
+
+    /**
+     * Serializes contents into  YAML representation
+     * 
+     * @param directory
+     * @param gen
+     * @param sp
+     * @throws IOException 
+     */
+    public void serialize(Directory directory, JsonGenerator gen, SerializerProvider sp) throws IOException {
+        gen.writeStartObject();
+        gen.writeStringField("type", directory.getType().toString());
+        gen.writeStringField("path", directory.getInternalMountPoint().getMountPoint());
+
+        
+        /*gen.writeArrayFieldStart(SiteCatalogKeywords.FILESERVERS.getReservedName());
+        // iterate through all the file servers
+        for (FileServer.OPERATION op : FileServer.OPERATION.values()) {
+            for (Iterator<FileServer> it = directory.getFileServersIterator(op); it.hasNext();) {
+                FileServer fs = it.next();
+                gen.writeObject(fs);
+            }
+        }
+        gen.writeEndArray();
+        */
+        List<FileServer> fservers = new LinkedList();
+        // iterate through all the file servers
+        for (FileServer.OPERATION op : FileServer.OPERATION.values()) {
+            for (Iterator<FileServer> it = directory.getFileServersIterator(op); it.hasNext();) {
+                FileServer fs = it.next();
+                fservers.add(fs);
+            }
+        }
+        if(!fservers.isEmpty()){
+            gen.writeFieldName(SiteCatalogKeywords.FILESERVERS.getReservedName());
+            gen.writeObject(fservers);
+        }
+        gen.writeEndObject();
+    }
+
 }
