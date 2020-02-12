@@ -561,7 +561,7 @@ class GridGatewayDeserializer extends SiteDataJsonDeserializer<GridGateway> {
  * 
  * @author Karan Vahi
  */
-class GridGatewaySerializer extends JsonSerializer<GridGateway> {
+class GridGatewaySerializer extends SiteDataJsonSerializer<GridGateway> {
 
     public GridGatewaySerializer() {
     }
@@ -576,10 +576,10 @@ class GridGatewaySerializer extends JsonSerializer<GridGateway> {
      */
     public void serialize(GridGateway gateway, JsonGenerator gen, SerializerProvider sp) throws IOException {
        gen.writeStartObject();
-       gen.writeStringField(SiteCatalogKeywords.TYPE.getReservedName(), gateway.getType().toString());
-       gen.writeStringField(SiteCatalogKeywords.CONTACT.getReservedName(), gateway.getContact());
-       gen.writeStringField(SiteCatalogKeywords.SCHEDULER.getReservedName(), gateway.getScheduler().toString());
-       gen.writeStringField(SiteCatalogKeywords.JOB_TYPE.getReservedName(), gateway.getJobType().toString());
+       writeStringField(gen, SiteCatalogKeywords.TYPE.getReservedName(), gateway.getType().toString());
+       writeStringField(gen, SiteCatalogKeywords.CONTACT.getReservedName(), gateway.getContact());
+       writeStringField(gen, SiteCatalogKeywords.SCHEDULER.getReservedName(), gateway.getScheduler().toString());
+       writeStringField(gen, SiteCatalogKeywords.JOB_TYPE.getReservedName(), gateway.getJobType().toString());
        gen.writeEndObject();
     }
 

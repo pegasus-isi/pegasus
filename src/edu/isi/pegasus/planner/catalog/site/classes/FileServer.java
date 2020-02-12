@@ -210,7 +210,7 @@ class FileServerDeserializer extends SiteDataJsonDeserializer<FileServer> {
  * 
  * @author Karan Vahi
  */
-class FileServerSerializer extends JsonSerializer<FileServer> {
+class FileServerSerializer extends SiteDataJsonSerializer<FileServer> {
 
     public FileServerSerializer() {
     }
@@ -225,8 +225,8 @@ class FileServerSerializer extends JsonSerializer<FileServer> {
      */
     public void serialize(FileServer fs, JsonGenerator gen, SerializerProvider sp) throws IOException {
        gen.writeStartObject();
-       gen.writeStringField("operation", fs.mOperation.toString());
-       gen.writeStringField("url", fs.getURL());
+       writeStringField(gen, SiteCatalogKeywords.OPERATION.getReservedName(), fs.mOperation.toString());
+       writeStringField(gen, SiteCatalogKeywords.URL.getReservedName(), fs.getURL());
        gen.writeEndObject();
     }
 

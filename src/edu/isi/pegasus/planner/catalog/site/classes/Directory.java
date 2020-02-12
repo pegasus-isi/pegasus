@@ -420,7 +420,7 @@ class DirectoryDeserializer extends SiteDataJsonDeserializer<Directory> {
  * 
  * @author Karan Vahi
  */
-class DirectorySerializer extends JsonSerializer<Directory> {
+class DirectorySerializer extends SiteDataJsonSerializer<Directory> {
 
     public DirectorySerializer() {
     }
@@ -435,8 +435,8 @@ class DirectorySerializer extends JsonSerializer<Directory> {
      */
     public void serialize(Directory directory, JsonGenerator gen, SerializerProvider sp) throws IOException {
         gen.writeStartObject();
-        gen.writeStringField(SiteCatalogKeywords.TYPE.getReservedName(), Directory.typeToYAMLType(directory.getType().toString()).toString());
-        gen.writeStringField(SiteCatalogKeywords.PATH.getReservedName(), directory.getInternalMountPoint().getMountPoint());
+        writeStringField(gen, SiteCatalogKeywords.TYPE.getReservedName(), Directory.typeToYAMLType(directory.getType().toString()).toString());
+        writeStringField(gen, SiteCatalogKeywords.PATH.getReservedName(), directory.getInternalMountPoint().getMountPoint());
 
         
         /*gen.writeArrayFieldStart(SiteCatalogKeywords.FILESERVERS.getReservedName());
@@ -457,10 +457,8 @@ class DirectorySerializer extends JsonSerializer<Directory> {
                 fservers.add(fs);
             }
         }
-        if(!fservers.isEmpty()){
-            gen.writeFieldName(SiteCatalogKeywords.FILESERVERS.getReservedName());
-            gen.writeObject(fservers);
-        }
+        writeArray(gen, SiteCatalogKeywords.FILESERVERS.getReservedName(), fservers);
+        
         gen.writeEndObject();
     }
 
