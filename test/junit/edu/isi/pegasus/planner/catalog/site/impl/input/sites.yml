@@ -121,3 +121,18 @@ sites:
     idleNodes: "-1"
     totalNodes: "-1"
 
+-
+  name: "${SITE}"
+  arch: "${ARCH}"
+  os.type: "${OS}"
+  directories:
+   -
+    type:"${DIRECTORY_TYPE}"
+    path: "${INTERNAL_MOUNT_POINT}"
+    fileServers:
+     -
+      operation: "all"
+      url: "${EXTERNAL_MOUNT_POINT}
+  profiles:
+    env:
+      PEGASUS_HOME: ${PEGASUS_HOME}

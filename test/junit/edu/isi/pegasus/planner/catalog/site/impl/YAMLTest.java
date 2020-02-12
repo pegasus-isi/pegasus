@@ -121,7 +121,7 @@ public class YAMLTest {
         mProps.setProperty( PegasusProperties.PEGASUS_SITE_CATALOG_PROPERTY, 
                             "YAML");
         mProps.setProperty( PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY, 
-                            new File( mTestSetup.getInputDirectory(), "sites.yaml" ).getAbsolutePath() );
+                            new File( mTestSetup.getInputDirectory(), "sites.yml" ).getAbsolutePath() );
         
         mLogger  = mTestSetup.loadLogger( mProps );
         mLogger.setLevel( LogManager.INFO_MESSAGE_LEVEL );
@@ -310,7 +310,7 @@ public class YAMLTest {
         mProps.setProperty( PegasusProperties.PEGASUS_SITE_CATALOG_PROPERTY, 
                             "YAML");
         mProps.setProperty( PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY, 
-                            new File( mTestSetup.getInputDirectory(), "sites_invalid.yaml" ).getAbsolutePath() );
+                            new File( mTestSetup.getInputDirectory(), "sites_invalid.yml" ).getAbsolutePath() );
         
         mLogger  = mTestSetup.loadLogger( mProps );
         mLogger.setLevel( LogManager.INFO_MESSAGE_LEVEL );
@@ -341,7 +341,7 @@ public class YAMLTest {
         mProps.setProperty( PegasusProperties.PEGASUS_SITE_CATALOG_PROPERTY, 
                             "YAML");
         mProps.setProperty( PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY, 
-                            new File( mTestSetup.getInputDirectory(), "sites_invalid_fromat.yaml" ).getAbsolutePath() );
+                            new File( mTestSetup.getInputDirectory(), "sites_invalid_fromat.yml" ).getAbsolutePath() );
         
         mLogger  = mTestSetup.loadLogger( mProps );
         mLogger.setLevel( LogManager.INFO_MESSAGE_LEVEL );
@@ -371,7 +371,7 @@ public class YAMLTest {
         mProps.setProperty( PegasusProperties.PEGASUS_SITE_CATALOG_PROPERTY, 
                             "YAML");
         mProps.setProperty( PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY, 
-                            new File( mTestSetup.getInputDirectory(), "sites_empty.yaml" ).getAbsolutePath() );
+                            new File( mTestSetup.getInputDirectory(), "sites_empty.yml" ).getAbsolutePath() );
         
         mLogger  = mTestSetup.loadLogger( mProps );
         mLogger.setLevel( LogManager.INFO_MESSAGE_LEVEL );
