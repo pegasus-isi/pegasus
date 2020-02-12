@@ -13,6 +13,10 @@
  */
 package edu.isi.pegasus.planner.client;
 
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.FactoryException;
@@ -68,7 +72,7 @@ public class SCClient extends Executable {
     public void initialize(String[] opts) {
         super.initialize(opts);
         // the output format is whatever user specified in the properties
-        mOutputFormat = mProps.getPoolMode();
+        mOutputFormat = "YAML";
         mInputFormat = "XML";
         mLoggingLevel = LogManager.WARNING_MESSAGE_LEVEL;
         // mText = false;
@@ -285,8 +289,9 @@ public class SCClient extends Executable {
                         if (outputFormat.equals("YAML")) {
                             // in case of yaml we write it directly to the output file so we are
                             // returning null..
-                            SiteCatalogYAMLParser.parseToYAML(result, mOutputFile);
-                            return null;
+                            ObjectMapper mapper = new ObjectMapper(new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
+                            mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+                            return mapper.writeValueAsString(result);
                         }
                     }
                 } finally {
@@ -322,7 +327,7 @@ public class SCClient extends Executable {
                 "\n $Id$ "
                         + "\n "
                         + getGVDSVersion()
-                        + "\n pegasus-sc-converter - Parses the site catalogs in old format ( XML3 ) and generates site catalog in new format ( XML4 )"
+                        + "\n pegasus-sc-converter - Parses the site catalogs in old format ( XML ) and generates site catalog in new format ( YAML )"
                         + "\n "
                         + "\n Usage: pegasus-sc-converter [-Dprop  [..]]  --input <list of input files> --output <output file to write> "
                         + "\n        [--iformat input format] [--oformat <output format>] [--conf <path to property file>] [--verbose] [--quiet] [--Version] [--help]"
@@ -339,7 +344,7 @@ public class SCClient extends Executable {
                         +
                         // "\n -I |--iformat    the input format for the files . Can be [XML , Text]
                         // "  +
-                        "\n -O |--oformat    the output format of the file. Usually [XML4] "
+                        "\n -O |--oformat    the output format of the file. Usually [YAML] "
                         + "\n -c |--conf       path to  property file"
                         + "\n -v |--verbose    increases the verbosity of messages about what is going on"
                         + "\n -q |--quiet      decreases the verbosity of messages about what is going on"
@@ -355,14 +360,12 @@ public class SCClient extends Executable {
                         // "\n                    Use --iformat instead " +
                         // "\n" +
                         "\n --files | -f  The local text site catalog file|files to be converted to "
-                        + "\n                    xml or text. This file needs to be in multiline textual "
-                        + "\n                    format not the single line or in xml format if converting "
-                        + "\n                    to text format. See $PEGASUS_HOME/etc/sample.sites.txt. "
+                        + "\n                    YAML"
                         + "\n"
                         + "\n"
                         + "\n Example Usage "
                         + "\n"
-                        + "\n pegasus-sc-converter  -i sites.xml -o sites.xml.new  -O XML3 -vvvvv\n";
+                        + "\n pegasus-sc-converter  -i sites.xml -o sites.yml  -O YAML -vvvvv\n";
 
         System.out.print(text);
     }
