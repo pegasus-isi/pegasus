@@ -940,6 +940,7 @@ class SiteStoreSerializer extends SiteDataJsonSerializer<SiteStore> {
             return;
         }
         gen.writeStartObject();
+        writeStringField(gen, SiteCatalogKeywords.PEGASUS.getReservedName(), store.getVersion());
         
         gen.writeArrayFieldStart(SiteCatalogKeywords.SITES.getReservedName());
         for( Iterator<SiteCatalogEntry> it = store.entryIterator(); it.hasNext();){
