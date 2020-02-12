@@ -18,6 +18,7 @@
 
 package edu.isi.pegasus.planner.catalog.site.classes;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
@@ -25,8 +26,11 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import edu.isi.pegasus.planner.classes.Job;
@@ -52,6 +56,7 @@ import java.util.logging.Logger;
  * @author Mats Rynge
  * @version $Revision$
  */
+@JsonSerialize(using = SiteStoreSerializer.class)
 @JsonDeserialize(using = SiteStoreDeserializer.class)
 public class SiteStore extends AbstractSiteData {
 
@@ -65,6 +70,12 @@ public class SiteStore extends AbstractSiteData {
 
     /** The file backend for the site catalog. */
     private File mFileSource;
+    
+    
+    /**
+     * The version for the site catalog
+     */
+    private String mVersion;
 
     /**
      * A boolean indicating whether to have a deep directory structure for the storage directory or
@@ -78,8 +89,9 @@ public class SiteStore extends AbstractSiteData {
     }
 
     /** The intialize method. */
-    public void initialize() {
+    public final void initialize() {
         mStore = new HashMap<String, SiteCatalogEntry>();
+        mVersion = "";
     }
 
     /**
@@ -123,6 +135,15 @@ public class SiteStore extends AbstractSiteData {
     public Set<String> list() {
         return mStore.keySet();
     }
+    
+    /**
+     * Returns if the store is empty
+     * 
+     * @return boolean
+     */
+    public boolean isEmpty(){
+        return this.mStore.isEmpty();
+    }
 
     /**
      * Returns SiteCatalogEntry matching a site handle.
@@ -159,21 +180,7 @@ public class SiteStore extends AbstractSiteData {
         return result;
     }
 
-    /**
-     * @param sites the list of site identifiers for which sysinfo is required.
-     * @return the sysinfo map
-     */
-    /*private Map<String,VDSSysInfo> getVDSSysInfos( List<String> sites ) {
-        HashMap result = new HashMap();
-        for ( Iterator i = sites.iterator(); i.hasNext(); ) {
-            SiteCatalogEntry site = this.lookup (( String ) i.next());
-            if( site != null ){
-                result.put( site.getSiteHandle(), site.getVDSSysInfo() );
-            }
-        }
-        return result;
-    }
-     */
+    
 
     /**
      * Returns the <code>VDSSysInfo</code> for the site
@@ -609,6 +616,23 @@ public class SiteStore extends AbstractSiteData {
 
         return execPoolDir;
     }
+    
+    
+    /**
+     * Set the Catalog version 
+     * @param version 
+     */
+    public void setVersion(String version) {
+        this.mVersion = version;
+    }
+    
+    /**
+     * Get the Catalog version 
+     * @return version 
+     */
+    public String getVersion() {
+        return this.mVersion;
+    }
 
     /**
      * Writes out the contents of the replica store as XML document
@@ -706,7 +730,7 @@ public class SiteStore extends AbstractSiteData {
     }
     
     public static void main(String[] args){
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
         /*SimpleModule module = new SimpleModule();
         module.addDeserializer(FileServer.class, new FileServerDeserializer());
@@ -770,10 +794,12 @@ public class SiteStore extends AbstractSiteData {
         try {
             SiteStore store = mapper.readValue(test, SiteStore.class);
             System.out.println(store);
+            System.out.println(mapper.writeValueAsString(store));
         } catch (IOException ex) {
             Logger.getLogger(FileServer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
 }
 /**
  * Custom deserializer for YAML representation of Directory
@@ -863,7 +889,7 @@ class SiteStoreDeserializer extends SiteDataJsonDeserializer<SiteStore> {
 
             switch (reservedKey) {
                 case PEGASUS:
-                    //nothing to check on version for time being
+                    store.setVersion(e.getValue().asText());
                     break;
                     
                 case SITES:
@@ -889,4 +915,39 @@ class SiteStoreDeserializer extends SiteDataJsonDeserializer<SiteStore> {
         return store;
         
     }
+}
+
+/**
+ * Custom serializer for YAML representation of SiteStore
+ *
+ * @author Karan Vahi
+ */
+class SiteStoreSerializer extends SiteDataJsonSerializer<SiteStore> {
+
+    public SiteStoreSerializer() {
+    }
+
+    /**
+     * Serializes contents into YAML representation
+     *
+     * @param store
+     * @param gen
+     * @param sp
+     * @throws IOException
+     */
+    public void serialize(SiteStore store, JsonGenerator gen, SerializerProvider sp) throws IOException {
+        if(store.isEmpty()){
+            return;
+        }
+        gen.writeStartObject();
+        
+        gen.writeArrayFieldStart(SiteCatalogKeywords.SITES.getReservedName());
+        for( Iterator<SiteCatalogEntry> it = store.entryIterator(); it.hasNext();){
+            gen.writeObject(it.next());
+        }
+        gen.writeEndArray();
+        gen.writeEndObject();
+    }
+ 
+
 }
