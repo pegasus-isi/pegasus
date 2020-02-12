@@ -98,6 +98,29 @@ by using pegasus-config:
 RHEL / CentOS / Scientific Linux
 ================================
 
+.. tabs::
+
+   .. code-tab:: bash CentOS 6
+
+      curl --output /etc/yum.repos.d/pegasus.repo \
+            https://download.pegasus.isi.edu/wms/download/rhel/6/pegasus.repo
+
+      yum install pegasus
+
+   .. code-tab:: bash CentOS 7
+
+      curl --output /etc/yum.repos.d/pegasus.repo \
+            https://download.pegasus.isi.edu/wms/download/rhel/7/pegasus.repo
+
+      yum install pegasus
+
+   .. code-tab:: bash CentOS 8
+
+      curl --output /etc/yum.repos.d/pegasus.repo \
+            https://download.pegasus.isi.edu/wms/download/rhel/8/pegasus.repo
+
+      yum install pegasus
+
 Binary packages provided for: RHEL 6 x86_64, RHEL 7 x86_64 (and OSes
 derived from RHEL: CentOS, SL)
 

@@ -401,7 +401,7 @@ class TestContainer:
 class TestTransformationCatalog:
     def test_add_single_transformation(self):
         tc = TransformationCatalog()
-        tc.add_transformation(Transformation("test"))
+        tc.add_transformations(Transformation("test"))
 
         assert ("test", None, None) in tc.transformations
         assert len(tc.transformations) == 1
@@ -413,7 +413,7 @@ class TestTransformationCatalog:
         t2 = Transformation("name", namespace="namespace")
         t3 = Transformation("name", namespace="namespace", version="version")
 
-        tc.add_transformation(t1, t2, t3)
+        tc.add_transformations(t1, t2, t3)
 
         assert ("name", None, None) in tc.transformations
         assert ("name", "namespace", None) in tc.transformations
@@ -422,14 +422,14 @@ class TestTransformationCatalog:
 
     def test_add_duplicate_transformation(self):
         tc = TransformationCatalog()
-        tc.add_transformation(Transformation("name"))
+        tc.add_transformations(Transformation("name"))
         with pytest.raises(DuplicateError):
-            tc.add_transformation(Transformation("name", namespace=None, version=None))
+            tc.add_transformations(Transformation("name", namespace=None, version=None))
 
     def test_add_invalid_transformation(self):
         tc = TransformationCatalog()
         with pytest.raises(TypeError) as e:
-            tc.add_transformation(1)
+            tc.add_transformations(1)
 
         assert "invalid transformation: 1" in str(e)
 
@@ -459,8 +459,8 @@ class TestTransformationCatalog:
         tc = TransformationCatalog()
 
         (
-            tc.add_transformation(Transformation("t1"))
-            .add_transformation(Transformation("t2"))
+            tc.add_transformations(Transformation("t1"))
+            .add_transformations(Transformation("t2"))
             .add_container(
                 Container("container1", Container.DOCKER, "image", ["mount1", "mount2"])
             )
@@ -477,12 +477,12 @@ class TestTransformationCatalog:
     def test_tojson(self, convert_yaml_schemas_to_json, load_schema):
         tc = TransformationCatalog()
         (
-            tc.add_transformation(
+            tc.add_transformations(
                 Transformation("t1").add_site(
                     TransformationSite("local", "/pfn", False)
                 )
             )
-            .add_transformation(
+            .add_transformations(
                 Transformation("t2").add_site(
                     TransformationSite("local", "/pfn", False)
                 )
@@ -543,11 +543,11 @@ class TestTransformationCatalog:
     def test_tojson_no_containers(self, convert_yaml_schemas_to_json, load_schema):
         tc = TransformationCatalog()
         (
-            tc.add_transformation(
+            tc.add_transformations(
                 Transformation("t1").add_site(
                     TransformationSite("local", "/pfn", False)
                 )
-            ).add_transformation(
+            ).add_transformations(
                 Transformation("t2").add_site(
                     TransformationSite("local2", "/pfn", True)
                 )
@@ -586,7 +586,7 @@ class TestTransformationCatalog:
     def test_write(self):
         tc = TransformationCatalog()
         (
-            tc.add_transformation(Transformation("t1")).add_transformation(
+            tc.add_transformations(Transformation("t1")).add_transformations(
                 Transformation("t2")
             )
         )
@@ -658,7 +658,7 @@ class TestTransformationCatalog:
             ["/Volumes/Work/lfs1:/shared-data/:ro"],
         ).add_env(JAVA_HOME="/usr/bin/java")
 
-        (tc.add_transformation(foo, bar).add_container(centos_pegasus_container))
+        (tc.add_transformations(foo, bar).add_container(centos_pegasus_container))
 
         with NamedTemporaryFile(mode="r+") as f:
             tc.write(f, _format=_format)
