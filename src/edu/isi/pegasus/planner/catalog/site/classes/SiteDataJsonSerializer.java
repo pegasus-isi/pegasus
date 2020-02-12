@@ -30,7 +30,7 @@ public abstract class SiteDataJsonSerializer<T> extends JsonSerializer<T> {
      * @throws java.io.IOException
      */
     public void writeStringField(JsonGenerator gen, String key, String value) throws IOException{
-        if (value != null || value.length() > 0) {
+        if (value != null && value.length() > 0) {
             gen.writeStringField(key, value);
         }
     }
@@ -44,7 +44,7 @@ public abstract class SiteDataJsonSerializer<T> extends JsonSerializer<T> {
      * @throws java.io.IOException
      */
     public void writeArray(JsonGenerator gen, String key, Collection value) throws IOException{
-        if (value != null || !value.isEmpty()) {
+        if (value != null && !value.isEmpty()) {
             gen.writeFieldName(key);
             gen.writeObject(value);
         }
