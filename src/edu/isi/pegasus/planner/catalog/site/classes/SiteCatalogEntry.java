@@ -1,27 +1,37 @@
 /**
  * Copyright 2007-2008 University Of Southern California
  *
- * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of the License at
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
  *
- * <p>http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * <p>Unless required by applicable law or agreed to in writing, software distributed under the
- * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing permissions and
- * limitations under the License.
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 package edu.isi.pegasus.planner.catalog.site.classes;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.classes.Profiles.NAMESPACES;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
@@ -38,6 +48,7 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -54,45 +65,66 @@ import java.util.logging.Logger;
  * @version $Revision$
  */
 @JsonDeserialize(using = SiteCatalogEntryDeserializer.class)
+@JsonSerialize(using = SiteCatalogEntrySerializer.class)
 public class SiteCatalogEntry extends AbstractSiteData {
 
-    /** The name of the environment variable PEGASUS_BIN_DIR. */
+    /**
+     * The name of the environment variable PEGASUS_BIN_DIR.
+     */
     public static final String PEGASUS_BIN_DIR = "PEGASUS_BIN_DIR";
 
-    /** The name of the environment variable PEGASUS_HOME. */
+    /**
+     * The name of the environment variable PEGASUS_HOME.
+     */
     public static final String PEGASUS_HOME = "PEGASUS_HOME";
 
-    /** The name of the environment variable VDS_HOME. */
+    /**
+     * The name of the environment variable VDS_HOME.
+     */
     public static final String VDS_HOME = "VDS_HOME";
 
-    /** The site identifier. */
+    /**
+     * The site identifier.
+     */
     private String mID;
 
-    /** The System Information for the Site. */
+    /**
+     * The System Information for the Site.
+     */
     private SysInfo mSysInfo;
 
-    /** The profiles asscociated with the site. */
+    /**
+     * The profiles asscociated with the site.
+     */
     private Profiles mProfiles;
 
-    /** The handle to the head node filesystem. */
-    //    private HeadNodeFS mHeadFS;
-
-    /** The handle to the worker node filesystem. */
-    //    private WorkerNodeFS mWorkerFS;
-
     /**
-     * A Map of different directories indexed by Directory.TYPE associated with the site catalog
-     * entry
+     * The handle to the head node filesystem.
+     */
+    //    private HeadNodeFS mHeadFS;
+    /**
+     * The handle to the worker node filesystem.
+     */
+    //    private WorkerNodeFS mWorkerFS;
+    /**
+     * A Map of different directories indexed by Directory.TYPE associated with
+     * the site catalog entry
      */
     private Map<Directory.TYPE, Directory> mDirectories;
 
-    /** Map of grid gateways at the site for submitting different job types. */
+    /**
+     * Map of grid gateways at the site for submitting different job types.
+     */
     private Map<GridGateway.JOB_TYPE, GridGateway> mGridGateways;
 
-    /** The list of replica catalog associated with the site. */
+    /**
+     * The list of replica catalog associated with the site.
+     */
     private List<ReplicaCatalog> mReplicaCatalogs;
 
-    /** The default constructor. */
+    /**
+     * The default constructor.
+     */
     public SiteCatalogEntry() {
         this("");
     }
@@ -129,8 +161,8 @@ public class SiteCatalogEntry extends AbstractSiteData {
      *
      * @return UnsupportedOperationException
      */
-    public List getGridGateways() {
-        throw new UnsupportedOperationException("Not yet implemented");
+    public Collection<GridGateway> getGridGateways() {
+        return this.mGridGateways.values();
     }
 
     /**
@@ -291,9 +323,9 @@ public class SiteCatalogEntry extends AbstractSiteData {
         return mSysInfo.getGlibc();
     }
 
-    
     /**
-     * Adds a directory internally. Complains if directory of same type already exists
+     * Adds a directory internally. Complains if directory of same type already
+     * exists
      *
      * @param directory the siteEntry to be added.
      */
@@ -321,12 +353,21 @@ public class SiteCatalogEntry extends AbstractSiteData {
     }
 
     /**
-     * Returns a siteEntry corresponding to a particular type
+     * Returns a directory corresponding to a particular type
      *
      * @return the iterator
      */
     public Iterator<Directory> getDirectoryIterator() {
         return this.mDirectories.values().iterator();
+    }
+    
+    /**
+     * Returns a all directories associated with a site
+     *
+     * @return collection of directories
+     */
+    public Collection<Directory> getDirectories() {
+        return this.mDirectories.values();
     }
 
     /**
@@ -339,8 +380,8 @@ public class SiteCatalogEntry extends AbstractSiteData {
     }
 
     /**
-     * Returns the local-storage directory. If it is not specified, then returns shared-storage If
-     * none is associated, then returns null
+     * Returns the local-storage directory. If it is not specified, then returns
+     * shared-storage If none is associated, then returns null
      *
      * @return the appropriate siteEntry
      */
@@ -355,7 +396,9 @@ public class SiteCatalogEntry extends AbstractSiteData {
     /**
      * Returns the work directory for the compute jobs on a site.
      *
-     * <p>Currently, the work siteEntry is picked up from the head node shared filesystem.
+     * <p>
+     * Currently, the work siteEntry is picked up from the head node shared
+     * filesystem.
      *
      * @return the internal mount point, else null
      */
@@ -482,8 +525,9 @@ public class SiteCatalogEntry extends AbstractSiteData {
     }
 
     /**
-     * Selects a grid gateway object corresponding to a job type. It also defaults to other
-     * GridGateways if grid gateway not found for that job type.
+     * Selects a grid gateway object corresponding to a job type. It also
+     * defaults to other GridGateways if grid gateway not found for that job
+     * type.
      *
      * @param type the job type
      * @return GridGateway
@@ -503,14 +547,16 @@ public class SiteCatalogEntry extends AbstractSiteData {
     }
 
     /**
-     * A convenience method to select the URL Prefix for the FileServer for the shared scratch space
-     * on the HeadNode matching a particular operation.
+     * A convenience method to select the URL Prefix for the FileServer for the
+     * shared scratch space on the HeadNode matching a particular operation.
      *
-     * <p>For get and put operations, the results default back to searching for an ALL operation
-     * server.
+     * <p>
+     * For get and put operations, the results default back to searching for an
+     * ALL operation server.
      *
      * @param operation the operation for which the file server is required
-     * @return URL Prefix for the FileServer for the shared scratch space , else null
+     * @return URL Prefix for the FileServer for the shared scratch space , else
+     * null
      * @deprecated should be removed
      */
     public String selectHeadNodeScratchSharedFileServerURLPrefix(FileServer.OPERATION operation) {
@@ -519,10 +565,12 @@ public class SiteCatalogEntry extends AbstractSiteData {
     }
 
     /**
-     * A convenience method to select the FileServer for the shared scratch space on the HeadNode.
+     * A convenience method to select the FileServer for the shared scratch
+     * space on the HeadNode.
      *
-     * <p>For get and put operations, the results default back to searching for an ALL operation
-     * server.
+     * <p>
+     * For get and put operations, the results default back to searching for an
+     * ALL operation server.
      *
      * @param operation the operation for which the file server is required
      * @return FileServer for the shared scratch space , else null
@@ -539,12 +587,17 @@ public class SiteCatalogEntry extends AbstractSiteData {
     }
 
     /**
-     * A convenience method that selects a file server for staging the data out to a site. It
-     * returns the file server to which the generated data is staged out / published.
+     * A convenience method that selects a file server for staging the data out
+     * to a site. It returns the file server to which the generated data is
+     * staged out / published.
      *
-     * <p>The <code>FileServer</code> selected is associated with the HeadNode Filesystem.
+     * <p>
+     * The <code>FileServer</code> selected is associated with the HeadNode
+     * Filesystem.
      *
-     * <p>For get and put operations, the results default back to searching for an ALL server.
+     * <p>
+     * For get and put operations, the results default back to searching for an
+     * ALL server.
      *
      * @param operation the operation for which the file server is required
      * @return the <code>FileServer</code> else null.
@@ -582,16 +635,17 @@ public class SiteCatalogEntry extends AbstractSiteData {
     }
 
     /**
-     * This is a soft state remove, that removes a GridGateway from a particular site.
+     * This is a soft state remove, that removes a GridGateway from a particular
+     * site.
      *
      * @param contact the contact string for the grid gateway.
-     * @return true if was able to remove the jobmanager from the cache false if unable to remove,
-     *     or the matching entry is not found or if the implementing class does not maintain a soft
-     *     state.
+     * @return true if was able to remove the jobmanager from the cache false if
+     * unable to remove, or the matching entry is not found or if the
+     * implementing class does not maintain a soft state.
      */
     public boolean removeGridGateway(String contact) {
         // iterate through the entry set
-        for (Iterator it = this.mGridGateways.entrySet().iterator(); it.hasNext(); ) {
+        for (Iterator it = this.mGridGateways.entrySet().iterator(); it.hasNext();) {
             Map.Entry entry = (Entry) it.next();
             GridGateway g = (GridGateway) entry.getValue();
             if (g.getContact().equals(contact)) {
@@ -624,7 +678,7 @@ public class SiteCatalogEntry extends AbstractSiteData {
      * Selects a Random ReplicaCatalog.
      *
      * @return <code>ReplicaCatalog</object> if more than one associates else
-     *         returns null.
+     * returns null.
      */
     public ReplicaCatalog selectReplicaCatalog() {
 
@@ -636,8 +690,8 @@ public class SiteCatalogEntry extends AbstractSiteData {
     /**
      * Writes out the xml description of the object.
      *
-     * @param writer is a Writer opened and ready for writing. This can also be a StringWriter for
-     *     efficient output.
+     * @param writer is a Writer opened and ready for writing. This can also be
+     * a StringWriter for efficient output.
      * @param indent the indent to be used.
      * @exception IOException if something fishy happens to the stream.
      */
@@ -669,7 +723,7 @@ public class SiteCatalogEntry extends AbstractSiteData {
         writer.write(newLine);
 
         // list all the gridgateways
-        for (Iterator<GridGateway> it = this.getGridGatewayIterator(); it.hasNext(); ) {
+        for (Iterator<GridGateway> it = this.getGridGatewayIterator(); it.hasNext();) {
             it.next().toXML(writer, newIndent);
         }
 
@@ -679,7 +733,7 @@ public class SiteCatalogEntry extends AbstractSiteData {
         }
 
         // list all the replica catalogs associate
-        for (Iterator<ReplicaCatalog> it = this.getReplicaCatalogIterator(); it.hasNext(); ) {
+        for (Iterator<ReplicaCatalog> it = this.getReplicaCatalogIterator(); it.hasNext();) {
             it.next().toXML(writer, newIndent);
         }
 
@@ -703,7 +757,7 @@ public class SiteCatalogEntry extends AbstractSiteData {
             obj.setSysInfo((SysInfo) this.getSysInfo().clone());
 
             // list all the gridgateways
-            for (Iterator<GridGateway> it = this.getGridGatewayIterator(); it.hasNext(); ) {
+            for (Iterator<GridGateway> it = this.getGridGatewayIterator(); it.hasNext();) {
                 obj.addGridGateway((GridGateway) it.next().clone());
             }
 
@@ -712,7 +766,7 @@ public class SiteCatalogEntry extends AbstractSiteData {
             }
 
             // list all the replica catalogs associate
-            for (Iterator<ReplicaCatalog> it = this.getReplicaCatalogIterator(); it.hasNext(); ) {
+            for (Iterator<ReplicaCatalog> it = this.getReplicaCatalogIterator(); it.hasNext();) {
                 obj.addReplicaCatalog((ReplicaCatalog) it.next().clone());
             }
 
@@ -737,7 +791,7 @@ public class SiteCatalogEntry extends AbstractSiteData {
         visitor.visit(this);
 
         // list all the gridgateways
-        for (Iterator<GridGateway> it = this.getGridGatewayIterator(); it.hasNext(); ) {
+        for (Iterator<GridGateway> it = this.getGridGatewayIterator(); it.hasNext();) {
             it.next().accept(visitor);
         }
 
@@ -746,7 +800,7 @@ public class SiteCatalogEntry extends AbstractSiteData {
         }
 
         // list all the replica catalogs associate
-        for (Iterator<ReplicaCatalog> it = this.getReplicaCatalogIterator(); it.hasNext(); ) {
+        for (Iterator<ReplicaCatalog> it = this.getReplicaCatalogIterator(); it.hasNext();) {
             it.next().accept(visitor);
         }
 
@@ -755,8 +809,8 @@ public class SiteCatalogEntry extends AbstractSiteData {
     }
 
     /**
-     * Returns a boolean indicating whether the filesystem for this site is visible to the local
-     * site.
+     * Returns a boolean indicating whether the filesystem for this site is
+     * visible to the local site.
      *
      * @return
      */
@@ -764,39 +818,40 @@ public class SiteCatalogEntry extends AbstractSiteData {
         Pegasus pegasusProfiles = (Pegasus) this.getProfiles().get(NAMESPACES.pegasus);
         return pegasusProfiles.getBooleanValue(Pegasus.LOCAL_VISIBLE_KEY);
     }
-    
-    public static void main(String[] args){
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+
+    public static void main(String[] args) {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
-       
-        String test = 
-                "name: condor_pool\n" +
-                "arch: x86_64\n" +
-                "os.type: linux\n" +
-                "grids:\n" +
-                "  - type: gt5\n" +
-                "    contact: smarty.isi.edu/jobmanager-pbs\n" +
-                "    scheduler: pbs\n" +
-                "    jobtype: auxillary\n" +
-                "  - type: gt5\n" +
-                "    contact: smarty.isi/edu/jobmanager-pbs\n" +
-                "    scheduler: pbs\n" +
-                "    jobtype: compute\n" +
-                "directories:\n" +
-                "  - type: sharedScratch\n" +
-                "    path: /lustre\n" +
-                "    fileServers:\n" +
-                "      - operation: all\n" +
-                "        url: gsiftp://smarty.isi.edu/lustre\n" +
-                "profiles:\n" +
-                "  env:\n" +
-                "    PATH: /usr/bin:/bin\n" +
-                "  pegasus:\n" +
-                "    clusters.num: 1\n" +
-                "  x-ext: true";
+
+        String test
+                = "name: condor_pool\n"
+                + "arch: x86_64\n"
+                + "os.type: linux\n"
+                + "grids:\n"
+                + "  - type: gt5\n"
+                + "    contact: smarty.isi.edu/jobmanager-pbs\n"
+                + "    scheduler: pbs\n"
+                + "    jobtype: auxillary\n"
+                + "  - type: gt5\n"
+                + "    contact: smarty.isi/edu/jobmanager-pbs\n"
+                + "    scheduler: pbs\n"
+                + "    jobtype: compute\n"
+                + "directories:\n"
+                + "  - type: sharedScratch\n"
+                + "    path: /lustre\n"
+                + "    fileServers:\n"
+                + "      - operation: all\n"
+                + "        url: gsiftp://smarty.isi.edu/lustre\n"
+                + "profiles:\n"
+                + "  env:\n"
+                + "    PATH: /usr/bin:/bin\n"
+                + "  pegasus:\n"
+                + "    clusters.num: 1\n"
+                + "  x-ext: true";
         try {
             SiteCatalogEntry site = mapper.readValue(test, SiteCatalogEntry.class);
             System.out.println(site);
+            System.out.println(mapper.writeValueAsString(site));
         } catch (IOException ex) {
             Logger.getLogger(FileServer.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -805,7 +860,7 @@ public class SiteCatalogEntry extends AbstractSiteData {
 
 /**
  * Custom deserializer for YAML representation of Directory
- * 
+ *
  * @author Karan Vahi
  */
 class SiteCatalogEntryDeserializer extends SiteDataJsonDeserializer<SiteCatalogEntry> {
@@ -836,53 +891,54 @@ class SiteCatalogEntryDeserializer extends SiteDataJsonDeserializer<SiteCatalogE
      *          PATH: /usr/bin:/bin
      *          x-ext: true
      * </pre>
+     *
      * @param parser
      * @param dc
      * @return
      * @throws IOException
-     * @throws JsonProcessingException 
+     * @throws JsonProcessingException
      */
     @Override
     public SiteCatalogEntry deserialize(JsonParser parser, DeserializationContext dc) throws IOException, JsonProcessingException {
         ObjectCodec oc = parser.getCodec();
         JsonNode node = oc.readTree(parser);
         SiteCatalogEntry siteEntry = new SiteCatalogEntry();
-        
-        for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
+
+        for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext();) {
             Map.Entry<String, JsonNode> e = it.next();
             String key = e.getKey();
-            SiteCatalogKeywords reservedKey =
-                    SiteCatalogKeywords.getReservedKey(key);
+            SiteCatalogKeywords reservedKey
+                    = SiteCatalogKeywords.getReservedKey(key);
             if (reservedKey == null) {
-                this.complainForIllegalKey(SiteCatalogKeywords.SITES.getReservedName(), key, node );
+                this.complainForIllegalKey(SiteCatalogKeywords.SITES.getReservedName(), key, node);
             }
 
             switch (reservedKey) {
                 case NAME:
                     siteEntry.setSiteHandle(node.get(key).asText());
                     break;
-                    
+
                 case ARCH:
                     siteEntry.setArchitecture(Architecture.valueOf(node.get(key).asText()));
                     break;
-                    
+
                 case OS_TYPE:
                     siteEntry.setOS(OS.valueOf(node.get(key).asText()));
                     break;
-                 
+
                 case OS_RELEASE:
-                     siteEntry.setOSRelease(node.get(key).asText());
-                     break;
-                     
+                    siteEntry.setOSRelease(node.get(key).asText());
+                    break;
+
                 case OS_VERSION:
-                     siteEntry.setOSVersion(node.get(key).asText());
-                     break;
+                    siteEntry.setOSVersion(node.get(key).asText());
+                    break;
 
                 case DIRECTORIES:
                     JsonNode directoriesNodes = node.get(key);
                     if (directoriesNodes != null) {
-                        if( directoriesNodes.isArray() ){
-                            for( JsonNode directoryNode: directoriesNodes ){
+                        if (directoriesNodes.isArray()) {
+                            for (JsonNode directoryNode : directoriesNodes) {
                                 parser = directoryNode.traverse(oc);
                                 Directory directory = parser.readValueAs(Directory.class);
                                 siteEntry.addDirectory(directory);
@@ -890,12 +946,12 @@ class SiteCatalogEntryDeserializer extends SiteDataJsonDeserializer<SiteCatalogE
                         }
                     }
                     break;
-                 
+
                 case GRIDS:
                     JsonNode gridGatewayNodes = node.get(key);
                     if (gridGatewayNodes != null) {
-                        if( gridGatewayNodes.isArray() ){
-                            for( JsonNode gridGatewayNode: gridGatewayNodes ){
+                        if (gridGatewayNodes.isArray()) {
+                            for (JsonNode gridGatewayNode : gridGatewayNodes) {
                                 parser = gridGatewayNode.traverse(oc);
                                 GridGateway gridGateway = parser.readValueAs(GridGateway.class);
                                 siteEntry.addGridGateway(gridGateway);
@@ -906,13 +962,13 @@ class SiteCatalogEntryDeserializer extends SiteDataJsonDeserializer<SiteCatalogE
 
                 case PROFILES:
                     JsonNode profilesNode = node.get(key);
-                    if( profilesNode != null ){
+                    if (profilesNode != null) {
                         parser = profilesNode.traverse(oc);
                         Profiles profiles = parser.readValueAs(Profiles.class);
                         siteEntry.setProfiles(profiles);
                     }
                     break;
-                    
+
                 default:
                     this.complainForUnsupportedKey(SiteCatalogKeywords.SITES.getReservedName(), key, node);
             }
@@ -920,6 +976,71 @@ class SiteCatalogEntryDeserializer extends SiteDataJsonDeserializer<SiteCatalogE
         }
 
         return siteEntry;
-        
+
     }
+}
+
+/**
+ * Custom serializer for YAML representation of SiteCatalogEntry
+ *
+ * @author Karan Vahi
+ */
+class SiteCatalogEntrySerializer extends JsonSerializer<SiteCatalogEntry> {
+
+    public SiteCatalogEntrySerializer() {
+    }
+
+    /**
+     * Serializes contents into YAML representation
+     *
+     * @param entry
+     * @param gen
+     * @param sp
+     * @throws IOException
+     */
+    public void serialize(SiteCatalogEntry entry, JsonGenerator gen, SerializerProvider sp) throws IOException {
+        gen.writeStartObject();
+        writeStringField(gen, SiteCatalogKeywords.NAME.getReservedName(), entry.getSiteHandle());
+        writeStringField(gen, SiteCatalogKeywords.ARCH.getReservedName(), entry.getArchitecture().toString());
+        writeStringField(gen, SiteCatalogKeywords.OS_TYPE.getReservedName(), entry.getOS().toString());
+
+        writeArray(gen, SiteCatalogKeywords.DIRECTORIES.getReservedName(), entry.getDirectories());
+        writeArray(gen, SiteCatalogKeywords.GRIDS.getReservedName(), entry.getGridGateways());
+        /*
+        if (!fservers.isEmpty()) {
+            gen.writeFieldName(SiteCatalogKeywords.FILESERVERS.getReservedName());
+            gen.writeObject(fservers);
+        }
+        */
+        gen.writeEndObject();
+    }
+
+    /**
+     * Writes out only if value is not null and non empty
+     *
+     * @param gen
+     * @param key
+     * @param value
+     */
+    public void writeStringField(JsonGenerator gen, String key, String value) throws IOException{
+        if (value != null || value.length() > 0) {
+            gen.writeStringField(key, value);
+        }
+    }
+    
+    /**
+     * Writes out only if value is not null and non empty
+     *
+     * @param gen
+     * @param key
+     * @param value
+     */
+    public void writeArray(JsonGenerator gen, String key, Collection value) throws IOException{
+        if (value != null || !value.isEmpty()) {
+            gen.writeFieldName(key);
+            gen.writeObject(value);
+        }
+    }
+
+
 }
