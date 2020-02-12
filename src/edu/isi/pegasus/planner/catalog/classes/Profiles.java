@@ -13,13 +13,17 @@
  */
 package edu.isi.pegasus.planner.catalog.classes;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize; 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteDataJsonDeserializer;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteDataJsonSerializer;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Dagman;
@@ -48,6 +52,7 @@ import java.util.logging.Logger;
  * @author Karan Vahi
  * @version $Revision$
  */
+@JsonSerialize(using = ProfilesSerializer.class)
 @JsonDeserialize(using = ProfilesDeserializer.class)
 public class Profiles {
 
@@ -532,5 +537,48 @@ class ProfilesDeserializer extends SiteDataJsonDeserializer<Profiles> {
         }
         return profiles;
     }
+
+}
+
+/**
+ * Custom serializer for YAML representation of Profiles
+ *
+ * @author Karan Vahi
+ */
+class ProfilesSerializer extends SiteDataJsonSerializer<Profiles> {
+
+    public ProfilesSerializer() {
+    }
+
+    /**
+     * Serializes contents into YAML representation
+     *
+     * @param profiles
+     * @param gen
+     * @param sp
+     * @throws IOException
+     */
+    public void serialize(Profiles profiles, JsonGenerator gen, SerializerProvider sp) throws IOException {
+        gen.writeStartObject();
+        // traverse through all the enum keys
+        for (Profiles.NAMESPACES n : Profiles.NAMESPACES.values()) {
+            Namespace nm = profiles.get(n);
+            if(nm.isEmpty()){
+                continue;
+            }
+            gen.writeFieldName(nm.namespaceName());
+            gen.writeStartObject( );
+            for (Iterator it = nm.getProfileKeyIterator(); it.hasNext(); ) {
+                String key = (String) it.next();
+                String value = (String)nm.get(key);
+                gen.writeStringField(key, value);
+            }
+            gen.writeEndObject();
+        }
+        gen.writeEndObject();
+    }
+
+    
+
 
 }

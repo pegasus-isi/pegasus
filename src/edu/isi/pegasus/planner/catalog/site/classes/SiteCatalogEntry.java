@@ -1006,6 +1006,7 @@ class SiteCatalogEntrySerializer extends SiteDataJsonSerializer<SiteCatalogEntry
         writeArray(gen, SiteCatalogKeywords.DIRECTORIES.getReservedName(), entry.getDirectories());
         writeArray(gen, SiteCatalogKeywords.GRIDS.getReservedName(), entry.getGridGateways());
         
+        gen.writeFieldName(SiteCatalogKeywords.PROFILES.getReservedName());
         gen.writeObject(entry.getProfiles());
         
         gen.writeEndObject();
