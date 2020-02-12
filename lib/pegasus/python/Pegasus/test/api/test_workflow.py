@@ -685,8 +685,8 @@ def wf():
     rc.add_replica("lfn", "pfn", "site")
 
     wf = Workflow("wf", infer_dependencies=True)
-    wf.include_catalog(tc)
-    wf.include_catalog(rc)
+    wf.add_transformation_catalog(tc)
+    wf.add_replica_catalog(rc)
 
     j1 = Job("t1", _id="a").add_outputs(File("f1"), File("f2"))
     j2 = Job("t1", _id="b").add_inputs(File("f1"), File("f2")).add_checkpoint(File("checkpoint"))
@@ -745,36 +745,84 @@ class TestWorkflow:
         assert j4._id == "ID0000002"
         assert j5._id == "ID0000003"
 
-    def test_include_catalogs(self):
-        tc = TransformationCatalog()
-        rc = ReplicaCatalog()
+    def test_add_site_catalog(self):
         sc = SiteCatalog()
-
         wf = Workflow("wf")
-        wf.include_catalog(tc)
-        wf.include_catalog(rc)
-        wf.include_catalog(sc)
 
-        assert wf.transformation_catalog == tc
-        assert wf.replica_catalog == rc
-        assert wf.site_catalog == sc
+        try:
+            wf.add_site_catalog(sc)
+        except:
+            pytest.fail("should not have raised exception")
 
-    @pytest.mark.parametrize(
-        "catalog", [(TransformationCatalog()), (ReplicaCatalog()), (SiteCatalog())]
-    )
-    def test_include_catalog_multiple_times(self, catalog):
-        wf = Workflow("wf")
-        wf.include_catalog(catalog)
-        with pytest.raises(ValueError):
-            wf.include_catalog(catalog)
-
-    def test_include_invalid_catalog(self):
+    def test_add_invalid_site_catalog(self):
         wf = Workflow("wf")
         with pytest.raises(TypeError) as e:
-            wf.include_catalog(123)
-
+            wf.add_site_catalog(123)
+        
         assert "invalid catalog: 123" in str(e)
 
+    def test_add_duplicate_site_catalog(self):
+        sc = SiteCatalog()
+        wf = Workflow("wf")
+        wf.add_site_catalog(sc)
+
+        with pytest.raises(DuplicateError) as e:
+            wf.add_site_catalog(sc)
+        
+        assert "a SiteCatalog has already" in str(e)
+
+    def test_add_replica_catalog(self):
+        rc = ReplicaCatalog()
+        wf = Workflow("wf")
+
+        try:
+            wf.add_replica_catalog(rc)
+        except:
+            pytest.fail("should not have raised exception")
+
+    def test_add_invalid_replica_catalog(self):
+        wf = Workflow("wf")
+        with pytest.raises(TypeError) as e:
+            wf.add_replica_catalog(123)
+        
+        assert "invalid catalog: 123" in str(e)
+
+    def test_add_duplicate_replica_catalog(self):
+        rc = ReplicaCatalog()
+        wf = Workflow("wf")
+        wf.add_replica_catalog(rc)
+
+        with pytest.raises(DuplicateError) as e:
+            wf.add_replica_catalog(rc)
+        
+        assert "a ReplicaCatalog has already" in str(e)
+
+    def test_add_transformation_catalog(self):
+        tc = TransformationCatalog()
+        wf = Workflow("wf")
+
+        try:
+            wf.add_transformation_catalog(tc)
+        except:
+            pytest.fail("should not have raised exception")
+
+    def test_add_invalid_transformation_catalog(self):
+        wf = Workflow("wf")
+        with pytest.raises(TypeError) as e:
+            wf.add_transformation_catalog(123)
+        
+        assert "invalid catalog: 123" in str(e)
+
+    def test_add_duplicate_transformation_catalog(self):
+        tc = TransformationCatalog()
+        wf = Workflow("wf")
+        wf.add_transformation_catalog(tc)
+
+        with pytest.raises(DuplicateError) as e:
+            wf.add_transformation_catalog(tc)
+        
+        assert "a TransformationCatalog has already" in str(e)
+    
     def test_add_dependency(self):
         wf = Workflow("wf")
         parent = Job("t1", _id="parent")

@@ -623,9 +623,9 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
                     .add_args("-a", "analyze", "-T", "60", "-i", fc1, fc2, "-o", fd)
                     .add_inputs(fc1, fc2)
                     .add_outputs(fd)
-            ).include_catalog(sc)
-            .include_catalog(rc)
-            .include_catalog(tc)
+            ).add_site_catalog(sc)
+            .add_replica_catalog(rc)
+            .add_transformation_catalog(tc)
             .write("Workflow.yml"))
             
     """
@@ -832,53 +832,69 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             self.sequence += 1
 
         return next_id
+    
+    @_chained
+    def add_site_catalog(self, sc):
+        """Add a site catalog to this workflow. The contents fo the site catalog
+        will be inlined into the same file as this workflow when it is written
+        out.
+        
+        :param sc: the SiteCatalog to be added
+        :type sc: SiteCatalog
+        :raises TypeError: sc must be of type SiteCatalog
+        :raises DuplicateError: a SiteCatalog has already been added
+        """
+        if not isinstance(sc, SiteCatalog):
+            raise TypeError(
+                "invalid catalog: {}; sc must be of type SiteCatalog".format(sc)
+            )
+        
+        if self.site_catalog is not None:
+            raise DuplicateError("a SiteCatalog has already been added to this workflow")
+
+        self.site_catalog = sc
 
     @_chained
-    def include_catalog(self, catalog):
-        """Inline any of :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog`, 
-        :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog`, or
-        :py:class:`~Pegasus.api.site_catalog.SiteCatalog` into this workflow. When a workflow is written 
-        to a file, if a catalog has been included, then the contents of the catalog
-        will appear on the same file as the workflow. 
+    def add_replica_catalog(self, rc):
+        """Add a replica catalog to this workflow. The contents fo the replica catalog
+        will be inlined into the same file as this workflow when it is written
+        out.
         
-        :param catalog: the catalog to be included
-        :type catalog: SiteCatalog or TransformationCatalog or ReplicaCatalog
-        :raises ValueError: a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog` has already been included
-        :raises ValueError: a :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog` has already been included
-        :raises ValueError: a :py:class:`~Pegasus.api.site_catalog.SiteCatalog` has already been included
-        :raises ValueError: invalid catalog was given
-        :return: self
+        :param rc: the ReplicaCatalog to be added
+        :type rc: ReplicaCatalog
+        :raises TypeError: rc must be of type ReplicaCatalog
+        :raises DuplicateError: a ReplicaCatalog has already been added
         """
-        if isinstance(catalog, ReplicaCatalog):
-            if self.replica_catalog is not None:
-                raise ValueError(
-                    "a ReplicaCatalog has already been inlined in this Workflow"
-                )
-
-            self.replica_catalog = catalog
-
-        elif isinstance(catalog, TransformationCatalog):
-            if self.transformation_catalog is not None:
-                raise ValueError(
-                    "a TransformationCatalog has already been inlined in this Workflow"
-                )
-
-            self.transformation_catalog = catalog
-
-        elif isinstance(catalog, SiteCatalog):
-            if self.site_catalog is not None:
-                raise ValueError(
-                    "a SiteCatalog has already been inlined in this Workflow"
-                )
-
-            self.site_catalog = catalog
-
-        else:
+        if not isinstance(rc, ReplicaCatalog):
             raise TypeError(
-                "invalid catalog: {catalog}; only a SiteCatalog, ReplicaCatalog, or TransformationCatalog can be inlined into a Workflow".format(
-                    catalog=catalog
-                )
+                "invalid catalog: {}; rc must be of type ReplicaCatalog".format(rc)
             )
+        
+        if self.replica_catalog is not None:
+            raise DuplicateError("a ReplicaCatalog has already been added to this workflow")
+
+        self.replica_catalog = rc
+
+    @_chained
+    def add_transformation_catalog(self, tc):
+        """Add a transformation catalog to this workflow. The contents fo the transformation 
+        catalog will be inlined into the same file as this workflow when it is written
+        out.
+        
+        :param tc: the TransformationCatalog to be added
+        :type tc: TransformationCatalog
+        :raises TypeError: tc must be of type TransformationCatalog
+        :raises DuplicateError: a TransformationCatalog has already been added
+        """
+        if not isinstance(tc, TransformationCatalog):
+            raise TypeError(
+                "invalid catalog: {}; rc must be of type TransformationCatalog".format(tc)
+            )
+        
+        if self.transformation_catalog is not None:
+            raise DuplicateError("a TransformationCatalog has already been added to this workflow")
+    
+        self.transformation_catalog = tc
 
     @_chained
     def add_dependency(self, parent, *children):
