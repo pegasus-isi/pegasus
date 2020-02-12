@@ -107,7 +107,7 @@ public class Directory extends DirectoryLayout {
     }
     
     /**
-     * Maps the values for type key in yaml schema to old types
+     * Maps the values for yamlType key in yaml schema to old types
      * 
      * @param yamlType
      * @return 
@@ -117,7 +117,7 @@ public class Directory extends DirectoryLayout {
     }
     
     /**
-     * Maps the values for type key in yaml schema to old types
+     * Maps the values for yamlType key in yaml schema to old types
      * 
      * @param yamlType
      * @return 
@@ -148,6 +148,49 @@ public class Directory extends DirectoryLayout {
         return type;
     }
     
+    /**
+     * Maps the values for old types to camel case types in the YAML schema
+     * 
+     * @param yamlType
+     * @return 
+     */
+    public static YAML_TYPE typeToYAMLType(String type){
+        return typeToYAMLType(TYPE.value(type));
+    }
+    
+    /**
+     * Maps the values for old types to camel case types in the YAML schema
+     * 
+     * @param yamlType
+     * @return 
+     */
+    public static YAML_TYPE typeToYAMLType(TYPE type){
+        YAML_TYPE yamlType = YAML_TYPE.sharedScratch;
+        switch (type){
+            case shared_scratch:
+                yamlType = YAML_TYPE.sharedScratch;
+                break;
+                
+            case shared_storage:
+                yamlType = YAML_TYPE.sharedStorage;
+                break;
+                
+            case local_scratch:
+                yamlType = YAML_TYPE.localScratch;
+                break;
+                
+            case local_storage:
+                yamlType = YAML_TYPE.localStorage;
+                break;
+                
+            default:
+                throw new SiteCatalogException("Unkown type value " + yamlType);
+        }
+                
+        return yamlType;
+    }
+    
+    
     /** Default constructor */
     public Directory() {
         super();
@@ -157,7 +200,7 @@ public class Directory extends DirectoryLayout {
      * Convenience constructor for adapter class
      *
      * @param directory the directory layout object
-     * @param type the type associated
+     * @param type the yamlType associated
      */
     public Directory(DirectoryLayout directory, TYPE type) {
         super(directory);
@@ -189,31 +232,31 @@ public class Directory extends DirectoryLayout {
         visitor.depart(this);
     }
 
-    /** The type of directory */
+    /** The yamlType of directory */
     private TYPE mType;
 
     /**
-     * Set the type of directory
+     * Set the yamlType of directory
      *
-     * @param type the type of directory
+     * @param type the yamlType of directory
      */
     public void setType(String type) {
         mType = TYPE.value(type);
     }
 
     /**
-     * Set the type of directory
+     * Set the yamlType of directory
      *
-     * @param type the type of directory
+     * @param type the yamlType of directory
      */
     public void setType(Directory.TYPE type) {
         mType = type;
     }
 
     /**
-     * Set the type of directory
+     * Set the yamlType of directory
      *
-     * @return the type of directory
+     * @return the yamlType of directory
      */
     public TYPE getType() {
         return mType;
@@ -313,12 +356,12 @@ class DirectoryDeserializer extends SiteDataJsonDeserializer<Directory> {
     /**
      * Deserializes a Directory YAML description of the type
      * <pre>
-          type: sharedScratch
+          yamlType: sharedScratch
           path: /tmp/workflows/scratch
           fileServers:
             - operation: all
               url: file:///tmp/workflows/scratch
-     * </pre>
+ </pre>
      * @param parser
      * @param dc
      * @return
@@ -392,7 +435,7 @@ class DirectorySerializer extends JsonSerializer<Directory> {
      */
     public void serialize(Directory directory, JsonGenerator gen, SerializerProvider sp) throws IOException {
         gen.writeStartObject();
-        gen.writeStringField("type", directory.getType().toString());
+        gen.writeStringField("type", Directory.typeToYAMLType(directory.getType().toString()).toString());
         gen.writeStringField("path", directory.getInternalMountPoint().getMountPoint());
 
         
