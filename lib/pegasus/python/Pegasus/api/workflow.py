@@ -593,7 +593,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
                         ))
 
         tc = (TransformationCatalog()
-                .add_transformation(preprocess, findrage, analyze))
+                .add_transformations(preprocess, findrage, analyze))
 
         # --- Workflow -----------------------------------------------------------------
         fb1 = File("f.b1")

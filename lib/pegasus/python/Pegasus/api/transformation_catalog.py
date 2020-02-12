@@ -372,7 +372,7 @@ class TransformationCatalog(Writable):
                         ))
 
         (TransformationCatalog()
-            .add_transformation(preprocess, findrage, analyze)
+            .add_transformations(preprocess, findrage, analyze)
             .write("TransformationCatalog.yml"))
 
     """
@@ -382,7 +382,7 @@ class TransformationCatalog(Writable):
         self.containers = dict()
 
     @_chained
-    def add_transformation(self, *transformations):
+    def add_transformations(self, *transformations):
         """Add one or more :py:class:`~Pegasus.api.transformation_catalog.Transformations` to this catalog
         
         :param transformations: the :py:class:`~Pegasus.api.transformation_catalog.Transformations` to be added
