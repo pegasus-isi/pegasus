@@ -1,6 +1,7 @@
 import os 
 import subprocess
 import re
+import shutil
 from collections import namedtuple
 from textwrap import dedent
 
@@ -9,9 +10,11 @@ import pytest
 from Pegasus.client._client import from_env
 from Pegasus.client._client import Client
 
-def test_from_env(pegasus_version_file):
+def test_from_env(mocker):
+    mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
     try:
         client = from_env()
+        shutil.which.assert_called_once_with("pegasus-version")
     except ValueError as e:
         pytest.fail("should not have thrown {}".format(e))
 

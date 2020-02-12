@@ -1,8 +1,8 @@
 import os
 import json
 import stat
+import shutil
 from tempfile import NamedTemporaryFile
-from shutil import which
 from pathlib import Path
 
 
@@ -915,17 +915,19 @@ def obj():
 
     return _obj()
 
-def test__needs_client(obj, pegasus_version_file):
+def test__needs_client(obj, mocker):
+    mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
     obj.func_that_requires_client()
+    shutil.which.assert_called_once_with("pegasus-version")
     assert isinstance(obj._client, Client)
 
-def test__needs_submit_dir(obj, pegasus_version_file):
+def test__needs_submit_dir(obj):
     obj._submit_dir = "/path"
     try:
         obj.func_that_requires_submit_dir()
     except ValueError:
         pytest.fail("should not have thrown")
 
-def test__needs_submit_dir_invalid(obj, pegasus_version_file):
+def test__needs_submit_dir_invalid(obj):
     with pytest.raises(ValueError):
         obj.func_that_requires_submit_dir()

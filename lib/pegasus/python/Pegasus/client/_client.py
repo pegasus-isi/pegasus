@@ -2,14 +2,15 @@
 
 import logging
 import re
+import shutil 
 import subprocess
 from functools import partial
 from os import path
-from shutil import which
+
 
 def from_env(pegasus_home: str = None):
     if not pegasus_home:
-        pegasus_version_path = which("pegasus-version")
+        pegasus_version_path = shutil.which("pegasus-version")
 
         if not pegasus_version_path:
             raise ValueError("PEGASUS_HOME not found")
