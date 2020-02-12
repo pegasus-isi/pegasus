@@ -18,14 +18,18 @@
 
 package edu.isi.pegasus.planner.catalog.site.classes;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
@@ -44,6 +48,7 @@ import java.util.logging.Logger;
  * @author Karan Vahi
  */
 @JsonDeserialize(using = GridGatewayDeserializer.class)
+@JsonSerialize(using = GridGatewaySerializer.class)
 public class GridGateway extends AbstractSiteData {
 
     /** An enumeration of valid types of grid gateway. */
@@ -482,8 +487,9 @@ public class GridGateway extends AbstractSiteData {
         try {
             GridGateway gateway = mapper.readValue(test, GridGateway.class);
             System.out.println(gateway);
+            System.out.println(mapper.writeValueAsString(gateway));
         } catch (IOException ex) {
-            Logger.getLogger(FileServer.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(GridGateway.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }
@@ -550,4 +556,31 @@ class GridGatewayDeserializer extends SiteDataJsonDeserializer<GridGateway> {
     }
 }
 
+/**
+ * Custom serializer for YAML representation of GridGateway
+ * 
+ * @author Karan Vahi
+ */
+class GridGatewaySerializer extends JsonSerializer<GridGateway> {
 
+    public GridGatewaySerializer() {
+    }
+
+    /**
+     * Serializes contents into  YAML representation
+     * 
+     * @param fs
+     * @param gen
+     * @param sp
+     * @throws IOException 
+     */
+    public void serialize(GridGateway gateway, JsonGenerator gen, SerializerProvider sp) throws IOException {
+       gen.writeStartObject();
+       gen.writeStringField(SiteCatalogKeywords.TYPE.getReservedName(), gateway.getType().toString());
+       gen.writeStringField(SiteCatalogKeywords.CONTACT.getReservedName(), gateway.getContact());
+       gen.writeStringField(SiteCatalogKeywords.SCHEDULER.getReservedName(), gateway.getScheduler().toString());
+       gen.writeStringField(SiteCatalogKeywords.JOB_TYPE.getReservedName(), gateway.getJobType().toString());
+       gen.writeEndObject();
+    }
+
+}
