@@ -323,17 +323,11 @@ public class Directory extends DirectoryLayout {
         String test = 
                 "  type: sharedScratch\n" +
                 "  path: /tmp/workflows/scratch\n" +
+                "  freeSize: 1GB\n" +
+                "  totalSize: 122GB\n" +
                 "  fileServers:\n" +
                 "    - operation: all\n" +
-                "      url: file:///tmp/workflows/scratch";
-        
-        test = "type: \"sharedScratch\"\n" +
-"path: \"/tmp/workflows/scratch\"\n" +
-"fileServers:\n" +
-" -\n" +
-"  operation: \"all\"\n" +
-"  url: \"file:///tmp/workflows/scratch\"";
-                
+                "      url: file:///tmp/workflows/scratch\n" ;
         Directory dir = null;
         try {
             dir = mapper.readValue(test, Directory.class);
@@ -389,7 +383,7 @@ class DirectoryDeserializer extends SiteDataJsonDeserializer<Directory> {
                     break;
                     
                 case PATH:
-                    directory.setInternalMountPoint(new InternalMountPoint(node.get(key).asText()));
+                    directory.getInternalMountPoint().setMountPoint(node.get(key).asText());
                     break;
 
                 case FILESERVERS:
@@ -404,7 +398,16 @@ class DirectoryDeserializer extends SiteDataJsonDeserializer<Directory> {
                         }
                     }
                     break;
-
+                    
+                //defined in schema but we don't do anything about it    
+                case FREE_SIZE:
+                    directory.getInternalMountPoint().setFreeSize(node.get(key).asText());
+                    break;
+                    
+                case TOTAL_SIZE:
+                    directory.getInternalMountPoint().setTotalSize(node.get(key).asText());
+                    break;
+                    
                 default:
                     this.complainForUnsupportedKey(SiteCatalogKeywords.DIRECTORIES.getReservedName(), key, node);
             }
@@ -434,10 +437,12 @@ class DirectorySerializer extends SiteDataJsonSerializer<Directory> {
      * @throws IOException 
      */
     public void serialize(Directory directory, JsonGenerator gen, SerializerProvider sp) throws IOException {
+        InternalMountPoint imp = directory.getInternalMountPoint();
         gen.writeStartObject();
         writeStringField(gen, SiteCatalogKeywords.TYPE.getReservedName(), Directory.typeToYAMLType(directory.getType().toString()).toString());
-        writeStringField(gen, SiteCatalogKeywords.PATH.getReservedName(), directory.getInternalMountPoint().getMountPoint());
-
+        writeStringField(gen, SiteCatalogKeywords.PATH.getReservedName(), imp.getMountPoint());
+        writeStringField(gen, SiteCatalogKeywords.FREE_SIZE.getReservedName(), imp.getFreeSize());
+        writeStringField(gen, SiteCatalogKeywords.TOTAL_SIZE.getReservedName(), imp.getTotalSize());
         
         /*gen.writeArrayFieldStart(SiteCatalogKeywords.FILESERVERS.getReservedName());
         // iterate through all the file servers

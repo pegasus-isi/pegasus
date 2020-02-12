@@ -32,6 +32,8 @@ public enum SiteCatalogKeywords {
     OS_VERSION("os.version"),
     TYPE("type"),
     DIRECTORIES("directories"),
+    FREE_SIZE("freeSize"),
+    TOTAL_SIZE("totalSize"),
     PATH("path"),
     FILESERVERS("fileServers"),
     OPERATION("operation"),
@@ -40,7 +42,16 @@ public enum SiteCatalogKeywords {
     GRIDS("grids"),
     CONTACT("contact"),
     SCHEDULER("scheduler"),
-    JOB_TYPE("jobtype");
+    JOB_TYPE("jobtype"),
+    //optional attributes for gridgateway
+    FREE_MEM("freeMem"),
+    TOTAL_MEM("totalMem"),
+    MAX_COUNT("maxCount"),
+    MAX_CPU_TIME("maxCPUTime"),
+    RUNNING_JOBS("runningJobs"),
+    JOBS_IN_QUEUE("jobsInQueue"),
+    IDLE_NODES("idleNodes"),
+    TOTAL_NODES("totalNodes");
 
     private String mName;
 

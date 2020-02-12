@@ -547,6 +547,23 @@ class GridGatewayDeserializer extends SiteDataJsonDeserializer<GridGateway> {
                     gateway.setScheduler(GridGateway.SCHEDULER_TYPE.valueOf(node.get(key).asText()));
                     break;
                     
+                case IDLE_NODES:
+                    gateway.setIdleNodes(node.get(key).asText());
+                    break;
+                    
+                case TOTAL_NODES:
+                    gateway.setTotalNodes(node.get(key).asText());
+                    break;
+                
+                //defined in schema but we don't do anything about it    
+                case FREE_MEM:
+                case TOTAL_MEM:
+                case MAX_COUNT:
+                case MAX_CPU_TIME:
+                case RUNNING_JOBS:
+                case JOBS_IN_QUEUE:
+                    break;
+                    
                 default:
                     this.complainForUnsupportedKey(SiteCatalogKeywords.GRIDS.getReservedName(), key, node);
             }
@@ -580,6 +597,8 @@ class GridGatewaySerializer extends SiteDataJsonSerializer<GridGateway> {
        writeStringField(gen, SiteCatalogKeywords.CONTACT.getReservedName(), gateway.getContact());
        writeStringField(gen, SiteCatalogKeywords.SCHEDULER.getReservedName(), gateway.getScheduler().toString());
        writeStringField(gen, SiteCatalogKeywords.JOB_TYPE.getReservedName(), gateway.getJobType().toString());
+       writeStringField(gen, SiteCatalogKeywords.IDLE_NODES.getReservedName(), Integer.toString(gateway.getIdleNodes()));
+       writeStringField(gen, SiteCatalogKeywords.TOTAL_NODES.getReservedName(), Integer.toString(gateway.getTotalNodes()));
        gen.writeEndObject();
     }
 
