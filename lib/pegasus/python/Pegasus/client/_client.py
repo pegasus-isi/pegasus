@@ -7,7 +7,7 @@ from functools import partial
 from os import path
 from shutil import which
 
-def from_env(pegasus_home=None):
+def from_env(pegasus_home: str = None):
     if not pegasus_home:
         pegasus_version_path = which("pegasus-version")
 
@@ -26,7 +26,7 @@ class Client(object):
     Pegasus workflow management client.
     """
 
-    def __init__(self, pegasus_home):
+    def __init__(self, pegasus_home: str):
         self._log = logging.getLogger(__name__)
         self._pegasus_home = pegasus_home
 
@@ -41,27 +41,24 @@ class Client(object):
 
     def plan(
         self,
-        dax,
-        conf=None,
-        sites="local",
-        output_site="local",
-        input_dir=None,
-        output_dir=None,
-        dir=None,
-        relative_dir=None,
-        cleanup="none",
-        verbose=None,
-        force=False,
-        submit=False,
+        dax: str,
+        conf: str = None,
+        sites: str = "local",
+        output_site: str = "local",
+        input_dir: str = None,
+        output_dir: str = None,
+        dir: str = None,
+        relative_dir: str = None,
+        cleanup: str = "none",
+        verbose: int = 0,
+        force: bool = False,
+        submit: bool = False,
         **kwargs
     ):
         cmd = [self._plan]
 
-        system_properties = []
-        for k, v in kwargs or {}:
-            system_properties.append("-D%s=%s" % (k, v))
-        else:
-            cmd.append(system_properties)
+        for k, v in kwargs.items():
+            cmd.append("-D%s=%s" % (k, v))
 
         if conf:
             cmd.extend(("--conf", conf))
@@ -101,15 +98,15 @@ class Client(object):
         rv = subprocess.run(cmd)
 
         if rv.returncode:
-            self._log.fatal("Plan: %s \n %s" % rv.stdout, rv.stderr)
+            self._log.fatal("Plan: %s \n %s" % (rv.stdout, rv.stderr))
 
-        self._log.info("Plan: %s \n %s" % rv.stdout, rv.stderr)
+        self._log.info("Plan: %s \n %s" % (rv.stdout, rv.stderr))
 
         submit_dir = self._get_submit_dir(rv.stdout)
         workflow = Workflow(submit_dir, self)
         return workflow
 
-    def run(self, submit_dir, verbose=None):
+    def run(self, submit_dir: str, verbose: int = 0):
         cmd = [self._run]
 
         if verbose:
@@ -120,11 +117,11 @@ class Client(object):
         rv = subprocess.run(cmd)
 
         if rv.returncode:
-            self._log.fatal("Run: %s \n %s" % rv.stdout, rv.stderr)
+            self._log.fatal("Run: %s \n %s" % (rv.stdout, rv.stderr))
 
-        self._log.info("Run: %s \n %s" % rv.stdout, rv.stderr)
+        self._log.info("Run: %s \n %s" % (rv.stdout, rv.stderr))
 
-    def status(self, submit_dir, long=False, verbose=None):
+    def status(self, submit_dir: str, long: bool = False, verbose: int = 0):
         cmd = [self._status]
 
         if long:
@@ -138,11 +135,11 @@ class Client(object):
         rv = subprocess.run(cmd)
 
         if rv.returncode:
-            self._log.fatal("Status: %s \n %s" % rv.stdout, rv.stderr)
+            self._log.fatal("Status: %s \n %s" % (rv.stdout, rv.stderr))
 
-        self._log.info("Status: %s \n %s" % rv.stdout, rv.stderr)
+        self._log.info("Status: %s \n %s" % (rv.stdout, rv.stderr))
 
-    def remove(self, submit_dir, verbose=None):
+    def remove(self, submit_dir: str, verbose: int = 0):
         cmd = [self._remove]
 
         if verbose:
@@ -153,11 +150,11 @@ class Client(object):
         rv = subprocess.run(cmd)
 
         if rv.returncode:
-            self._log.fatal("Remove: %s \n %s" % rv.stdout, rv.stderr)
+            self._log.fatal("Remove: %s \n %s" % (rv.stdout, rv.stderr))
 
-        self._log.info("Remove: %s \n %s" % rv.stdout, rv.stderr)
+        self._log.info("Remove: %s \n %s" % (rv.stdout, rv.stderr))
 
-    def analyzer(self, submit_dir, verbose=None):
+    def analyzer(self, submit_dir: str, verbose: int = 0):
         cmd = [self._analyzer]
 
         if verbose:
@@ -168,11 +165,11 @@ class Client(object):
         rv = subprocess.run(cmd)
 
         if rv.returncode:
-            self._log.fatal("Analyzer: %s \n %s" % rv.stdout, rv.stderr)
+            self._log.fatal("Analyzer: %s \n %s" % (rv.stdout, rv.stderr))
 
-        self._log.info("Analyzer: %s \n %s" % rv.stdout, rv.stderr)
+        self._log.info("Analyzer: %s \n %s" % (rv.stdout, rv.stderr))
 
-    def statistics(self, submit_dir, verbose=None):
+    def statistics(self, submit_dir: str, verbose: int = 0):
         cmd = [self._statistics]
 
         if verbose:
@@ -183,27 +180,30 @@ class Client(object):
         rv = subprocess.run(cmd)
 
         if rv.returncode:
-            self._log.fatal("Statistics: %s \n %s" % rv.stdout, rv.stderr)
+            self._log.fatal("Statistics: %s \n %s" % (rv.stdout, rv.stderr))
 
-        self._log.info("Statistics: %s \n %s" % rv.stdout, rv.stderr)
+        self._log.info("Statistics: %s \n %s" % (rv.stdout, rv.stderr))
 
     @staticmethod
-    def _get_submit_dir(output):
+    def _get_submit_dir(output: str):
         if not output:
             return
 
-        pattern = re.compile("pegasus-run\s*(.*)$")
+        # pegasus-plan produces slightly different output based on the presence
+        # of the --submit flag, therefore we need to search for 
+        # pegasus-(run|remove) to get the submit directory
+        pattern = re.compile(r"pegasus-(run|remove)\s*(.*)$")
 
         for line in output.splitlines():
             line = line.strip()
-            match = pattern.match(line)
+            match = pattern.search(line)
 
             if match:
-                return match.group(1)
+                return match.group(2)
 
 
 class Workflow(object):
-    def __init__(self, submit_dir, client=None):
+    def __init__(self, submit_dir: str, client: Client = None):
         self._log = logging.getLogger(__name__)
         self._client = None
         self._submit_dir = submit_dir
@@ -221,7 +221,7 @@ class Workflow(object):
         return self._client
 
     @client.setter
-    def client(self, client):
+    def client(self, client: Client):
         self._client = client
 
         self.run = partial(self._client.run, self._submit_dir)
