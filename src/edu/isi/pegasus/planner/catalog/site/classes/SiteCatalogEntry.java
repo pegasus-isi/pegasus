@@ -1005,41 +1005,11 @@ class SiteCatalogEntrySerializer extends SiteDataJsonSerializer<SiteCatalogEntry
 
         writeArray(gen, SiteCatalogKeywords.DIRECTORIES.getReservedName(), entry.getDirectories());
         writeArray(gen, SiteCatalogKeywords.GRIDS.getReservedName(), entry.getGridGateways());
-        /*
-        if (!fservers.isEmpty()) {
-            gen.writeFieldName(SiteCatalogKeywords.FILESERVERS.getReservedName());
-            gen.writeObject(fservers);
-        }
-        */
+        
+        gen.writeObject(entry.getProfiles());
+        
         gen.writeEndObject();
     }
-
-    /**
-     * Writes out only if value is not null and non empty
-     *
-     * @param gen
-     * @param key
-     * @param value
-     */
-    public void writeStringField(JsonGenerator gen, String key, String value) throws IOException{
-        if (value != null || value.length() > 0) {
-            gen.writeStringField(key, value);
-        }
-    }
-    
-    /**
-     * Writes out only if value is not null and non empty
-     *
-     * @param gen
-     * @param key
-     * @param value
-     */
-    public void writeArray(JsonGenerator gen, String key, Collection value) throws IOException{
-        if (value != null || !value.isEmpty()) {
-            gen.writeFieldName(key);
-            gen.writeObject(value);
-        }
-    }
-
+ 
 
 }
