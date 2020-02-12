@@ -60,6 +60,11 @@ import java.util.logging.Logger;
 @JsonDeserialize(using = SiteStoreDeserializer.class)
 public class SiteStore extends AbstractSiteData {
 
+    /**
+     * The default Site Catalog version to which this maps to
+     */
+    public static final String DEFAULT_SITE_CATALOG_VERSION = "5.0";
+    
     /** The internal map that maps a site catalog entry to the site handle. */
     private Map<String, SiteCatalogEntry> mStore;
 
@@ -91,7 +96,7 @@ public class SiteStore extends AbstractSiteData {
     /** The intialize method. */
     public final void initialize() {
         mStore = new HashMap<String, SiteCatalogEntry>();
-        mVersion = "";
+        mVersion = DEFAULT_SITE_CATALOG_VERSION;
     }
 
     /**
