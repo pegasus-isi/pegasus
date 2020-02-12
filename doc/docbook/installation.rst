@@ -100,32 +100,26 @@ RHEL / CentOS / Scientific Linux
 
 .. tabs::
 
-   .. tab:: CentOS 6
+   .. code-tab:: bash CentOS 6
 
-      .. code-block:: bash
+      curl --output /etc/yum.repos.d/pegasus.repo \
+            https://download.pegasus.isi.edu/wms/download/rhel/6/pegasus.repo
 
-         curl --output /etc/yum.repos.d/pegasus.repo \
-              https://download.pegasus.isi.edu/wms/download/rhel/6/pegasus.repo
+      yum install pegasus
 
-         yum install pegasus
+   .. code-tab:: bash CentOS 7
 
-   .. tab:: CentOS 7
+      curl --output /etc/yum.repos.d/pegasus.repo \
+            https://download.pegasus.isi.edu/wms/download/rhel/7/pegasus.repo
 
-      .. code-block:: bash
+      yum install pegasus
 
-         curl --output /etc/yum.repos.d/pegasus.repo \
-              https://download.pegasus.isi.edu/wms/download/rhel/7/pegasus.repo
+   .. code-tab:: bash CentOS 8
 
-         yum install pegasus
+      curl --output /etc/yum.repos.d/pegasus.repo \
+            https://download.pegasus.isi.edu/wms/download/rhel/8/pegasus.repo
 
-   .. tab:: CentOS 8
-
-      .. code-block:: bash
-
-         curl --output /etc/yum.repos.d/pegasus.repo \
-              https://download.pegasus.isi.edu/wms/download/rhel/8/pegasus.repo
-
-         yum install pegasus
+      yum install pegasus
 
 Binary packages provided for: RHEL 6 x86_64, RHEL 7 x86_64 (and OSes
 derived from RHEL: CentOS, SL)
