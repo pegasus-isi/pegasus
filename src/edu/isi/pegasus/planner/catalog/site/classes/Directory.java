@@ -435,8 +435,8 @@ class DirectorySerializer extends JsonSerializer<Directory> {
      */
     public void serialize(Directory directory, JsonGenerator gen, SerializerProvider sp) throws IOException {
         gen.writeStartObject();
-        gen.writeStringField("type", Directory.typeToYAMLType(directory.getType().toString()).toString());
-        gen.writeStringField("path", directory.getInternalMountPoint().getMountPoint());
+        gen.writeStringField(SiteCatalogKeywords.TYPE.getReservedName(), Directory.typeToYAMLType(directory.getType().toString()).toString());
+        gen.writeStringField(SiteCatalogKeywords.PATH.getReservedName(), directory.getInternalMountPoint().getMountPoint());
 
         
         /*gen.writeArrayFieldStart(SiteCatalogKeywords.FILESERVERS.getReservedName());
