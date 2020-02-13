@@ -597,9 +597,11 @@ class GridGatewaySerializer extends SiteDataJsonSerializer<GridGateway> {
        writeStringField(gen, SiteCatalogKeywords.CONTACT.getReservedName(), gateway.getContact());
        writeStringField(gen, SiteCatalogKeywords.SCHEDULER.getReservedName(), gateway.getScheduler().toString());
        writeStringField(gen, SiteCatalogKeywords.JOB_TYPE.getReservedName(), gateway.getJobType().toString());
-       writeStringField(gen, SiteCatalogKeywords.IDLE_NODES.getReservedName(), Integer.toString(gateway.getIdleNodes()));
-       writeStringField(gen, SiteCatalogKeywords.TOTAL_NODES.getReservedName(), Integer.toString(gateway.getTotalNodes()));
+       writeNumberField(gen, SiteCatalogKeywords.IDLE_NODES.getReservedName(), gateway.getIdleNodes());
+       writeNumberField(gen, SiteCatalogKeywords.TOTAL_NODES.getReservedName(),gateway.getTotalNodes());
        gen.writeEndObject();
     }
+
+    
 
 }

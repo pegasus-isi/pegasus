@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.Collection;
 
 /**
@@ -50,6 +51,17 @@ public abstract class SiteDataJsonSerializer<T> extends JsonSerializer<T> {
         }
     }
 
-
+    /**
+     * Writes out number field only value is not -1
+     * @param gen
+     * @param key
+     * @param value
+     * @throws IOException 
+     */
+    public void writeNumberField(JsonGenerator gen, String key, int value  ) throws IOException {
+        if ( value != -1 ){
+            gen.writeNumberField(key, value);
+        }
+    }
 }
 
