@@ -103,7 +103,7 @@ public class PegasusProperties implements Cloneable {
 
     public static final String TC_TEXT_FILE = "tc.txt";
 
-    public static final String DEFAULT_POOL_MODE = "XML";
+    public static final String DEFAULT_SITE_CATALOG_IMPLEMENTOR = "YAML";
 
     public static final String DEFAULT_CONDOR_BIN_DIR = "";
 
@@ -864,12 +864,11 @@ public class PegasusProperties implements Cloneable {
      * <p>Referred to by the "pegasus.catalog.site" property.
      *
      * @return the pool mode, that is used to load the appropriate implementing class if the
-     *     property is specified, else default pool mode specified by DEFAULT_POOL_MODE
-     * @see #DEFAULT_POOL_MODE
+     property is specified, else default pool mode specified by DEFAULT_SITE_CATALOG_IMPLEMENTOR
+     * @see #DEFAULT_SITE_CATALOG_IMPLEMENTOR
      */
     public String getPoolMode() {
-        return mProps.getProperty(
-                PegasusProperties.PEGASUS_SITE_CATALOG_PROPERTY, DEFAULT_POOL_MODE);
+        return mProps.getProperty(PegasusProperties.PEGASUS_SITE_CATALOG_PROPERTY, DEFAULT_SITE_CATALOG_IMPLEMENTOR);
     }
 
     /**
