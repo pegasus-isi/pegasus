@@ -127,7 +127,7 @@ sites:
   os.type: "${OS}"
   directories:
    -
-    type:"${DIRECTORY_TYPE}"
+    type: "${DIRECTORY_TYPE}"
     path: "${INTERNAL_MOUNT_POINT}"
     fileServers:
      -
