@@ -93,7 +93,7 @@ analyze = Transformation("analyze", namespace="pέgasuζ", version="4.0")\
                 )
 
 TransformationCatalog()\
-    .add_transformation(preprocess, findrage, analyze)\
+    .add_transformations(preprocess, findrage, analyze)\
     .write(TC_FILENAME)
 
 # --- Workflow -----------------------------------------------------------------
