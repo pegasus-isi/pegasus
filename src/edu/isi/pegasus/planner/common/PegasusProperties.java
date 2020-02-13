@@ -867,7 +867,7 @@ public class PegasusProperties implements Cloneable {
      property is specified, else default pool mode specified by DEFAULT_SITE_CATALOG_IMPLEMENTOR
      * @see #DEFAULT_SITE_CATALOG_IMPLEMENTOR
      */
-    public String getPoolMode() {
+    public String getSiteCatalogImplementor() {
         return mProps.getProperty(PegasusProperties.PEGASUS_SITE_CATALOG_PROPERTY, DEFAULT_SITE_CATALOG_IMPLEMENTOR);
     }
 

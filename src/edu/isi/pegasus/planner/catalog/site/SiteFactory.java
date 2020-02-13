@@ -139,7 +139,7 @@ public class SiteFactory {
         }
 
         /* get the implementor from properties */
-        String catalogImplementor = properties.getPoolMode().trim();
+        String catalogImplementor = properties.getSiteCatalogImplementor().trim();
 
         if (catalogImplementor.equals(SiteFactory.OLD_XML3_IMPLEMENTING_CLASS_BASENAME)
                 || catalogImplementor.equals(SiteFactory.XML4_IMPLEMENTING_CLASS_BASENAME)) {
