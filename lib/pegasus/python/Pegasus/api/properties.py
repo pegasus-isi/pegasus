@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 class Properties:
     """Write Pegasus properties to a file.
     
@@ -227,7 +229,7 @@ class Properties:
             print(*sorted(Properties._props), sep="\n")
 
     def __init__(self):
-        self.d = dict()
+        self.d = OrderedDict()
 
     def __setitem__(self, k, v):
         self.d[k] = v
