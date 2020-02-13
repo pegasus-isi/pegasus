@@ -221,7 +221,7 @@ public class TransformationCatalogYAMLParserTest {
 "      name: centos-pegasus\n" +
 "      type: docker\n" +
 "      image: docker:///rynge/montage:latest\n" +
-"      mount: \n" +
+"      mounts: \n" +
 "        - /Volumes/Work/lfs1:/shared-data/:ro\n" +
 "      profiles:\n" +
 "        env:\n" +

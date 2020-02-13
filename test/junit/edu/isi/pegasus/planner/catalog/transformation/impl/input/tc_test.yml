@@ -90,9 +90,9 @@ containers:
      type: "docker"
      image: "docker:///rynge/montage:latest"
      image.site: "optional site"
-#     mount: 
-#        - "/Volumes/Work/lfs1:/shared-data/:ro"
-#        - "/Volumes/Work/lfs1:/shared-data/:wo"
+     mounts: 
+        - "/Volumes/Work/lfs1:/shared-data/:ro"
+        - "/Volumes/Work/lfs1:/shared-data/:wo"
      profiles: 
        env: 
          "JAVA_HOME": "/opt/java/1.6"
@@ -101,8 +101,8 @@ containers:
      type: "docker"
      image: "docker:///will/montage:latest"
      image.site: "optional site"
-#     mount: 
-#        - "/Volumes/Work/lfs1:/shared-data/:ro"
+     mounts: 
+        - "/Volumes/Work/lfs1:/shared-data/:ro"
      profiles: 
        env: 
          "JAVA_HOME": "/opt/java/1.6"
