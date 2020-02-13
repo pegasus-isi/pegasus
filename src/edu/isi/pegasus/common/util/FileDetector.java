@@ -9,7 +9,7 @@
  * some other similar material which is provided with the Software (if
  * any).
  *
- * Copyright 1999-2004 University of Chicago and The University of
+ * Copyright 1999-2020 University of Chicago and The University of
  * Southern California. All rights reserved.
  */
 package edu.isi.pegasus.common.util;
