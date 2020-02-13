@@ -20,5 +20,7 @@ from .site_catalog import FileServer
 from .site_catalog import Site
 from .site_catalog import SiteCatalog
 
+from .properties import Properties
+
 from .mixins import Namespace
 from .mixins import EventType
