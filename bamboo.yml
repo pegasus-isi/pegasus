@@ -902,6 +902,7 @@ project:
 
                       /opt/docker/docker-bamboo-wrapper run \
                       --rm \
+                      --env "LANG=en_US.utf8" \
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       --entrypoint ant \
                       pegasus/pegasus:${TAG} \
