@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 Logging daemon process to update the jobstate.log file from DAGMan logs.

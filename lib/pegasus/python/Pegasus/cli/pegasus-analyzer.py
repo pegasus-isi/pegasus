@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 Pegasus utility for pasing jobstate.log and reporting succesful and failed jobs

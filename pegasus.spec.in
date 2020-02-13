@@ -70,8 +70,6 @@ rm -f %{buildroot}/%{_datadir}/%{name}/java/NOTICE.*
 %{_bindir}/*
 %{_libdir}/pegasus
 %{_libdir}/python*
-## %{_datadir}/doc/%{name} # Do not include doc in RPM
-## %{_datadir}/man/man1/* # Do not include doc in RPM
 %{_datadir}/%{name}
 
 
