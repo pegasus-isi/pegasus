@@ -64,7 +64,7 @@ public class YAMLTest {
     private static final String EXPANDED_SITE        = "bamboo";
     private static final String EXPANDED_ARCH        = "x86_64";
     private static final String EXPANDED_OS          = "linux";
-    private static final String EXPANDED_DIRECTORY_TYPE   = Directory.TYPE.shared_scratch.toString();
+    private static final String EXPANDED_DIRECTORY_TYPE   = Directory.YAML_TYPE.sharedScratch.toString();
     private static final String EXPANDED_INTERNAL_MOUNT_POINT        = "/bamboo/scratch";
     private static final String EXPANDED_EXTERNAL_MOUNT_POINT     = "gsiftp://cartman.isi.edu/bamboo/scratch";
     private static final String EXPANDED_PEGASUS_HOME    = "/usr/bin";
