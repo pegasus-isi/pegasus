@@ -11,7 +11,7 @@ Basic Usage::
     >>> print(Workflow.dumps( ... ))
     ' ... '
 
-.. moduleauthor:: Mats Rynge <rynge@isi.edu>
+.. moduleauthor:: Ryan Tanaka <tanaka@isi.edu>
 .. moduleauthor:: Rajiv Mayani <mayani@isi.edu>
 """
 
