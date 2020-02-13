@@ -103,8 +103,6 @@ public class PegasusProperties implements Cloneable {
 
     public static final String TC_TEXT_FILE = "tc.txt";
 
-    public static final String DEFAULT_SITE_CATALOG_IMPLEMENTOR = "YAML";
-
     public static final String DEFAULT_CONDOR_BIN_DIR = "";
 
     public static final String DEFAULT_CONDOR_CONFIG_DIR = "";
@@ -863,12 +861,11 @@ public class PegasusProperties implements Cloneable {
      *
      * <p>Referred to by the "pegasus.catalog.site" property.
      *
-     * @return the pool mode, that is used to load the appropriate implementing class if the
-     property is specified, else default pool mode specified by DEFAULT_SITE_CATALOG_IMPLEMENTOR
-     * @see #DEFAULT_SITE_CATALOG_IMPLEMENTOR
+     * @return the site catalog implementor, that is used to load the appropriate implementing class if the
+     property is specified, else NULL
      */
     public String getSiteCatalogImplementor() {
-        return mProps.getProperty(PegasusProperties.PEGASUS_SITE_CATALOG_PROPERTY, DEFAULT_SITE_CATALOG_IMPLEMENTOR);
+        return mProps.getProperty(PegasusProperties.PEGASUS_SITE_CATALOG_PROPERTY);
     }
 
     /**

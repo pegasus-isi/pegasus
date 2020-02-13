@@ -19,12 +19,17 @@
 package edu.isi.pegasus.planner.catalog.site;
 
 import edu.isi.pegasus.common.logging.LogManager;
+
 import edu.isi.pegasus.common.util.DynamicLoader;
+import edu.isi.pegasus.common.util.FileDetector;
+
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -60,6 +65,8 @@ public class SiteFactory {
 
     private static final String YAML_IMPLEMENTING_CLASS_BASENAME = "YAML";
 
+    public static final String DEFAULT_SITE_CATALOG_IMPLEMENTOR = "YAML";
+    
     /**
      * @param sites
      * @param bag the bag of pegasus objects
@@ -139,15 +146,26 @@ public class SiteFactory {
         }
 
         /* get the implementor from properties */
-        String catalogImplementor = properties.getSiteCatalogImplementor().trim();
+        String catalogImplementor = properties.getSiteCatalogImplementor();
+        String endpoint = null;
+        if (catalogImplementor == null) {
+            //PM-1448 check if pegasus.catalog.site.file property is specified
+            endpoint = properties.getProperty(PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY);
+            if (endpoint == null) {
+                //then just set to default implementor and let the implementing class load
+                catalogImplementor = SiteFactory.DEFAULT_SITE_CATALOG_IMPLEMENTOR;
+            }
+            else{
+                //detect type based on contents
+                catalogImplementor = detectType(endpoint);
+            }
+        }
 
         if (catalogImplementor.equals(SiteFactory.OLD_XML3_IMPLEMENTING_CLASS_BASENAME)
                 || catalogImplementor.equals(SiteFactory.XML4_IMPLEMENTING_CLASS_BASENAME)) {
             catalogImplementor = SiteFactory.XML_IMPLEMENTING_CLASS_BASENAME;
-        } else if (catalogImplementor.equals(SiteFactory.YAML_IMPLEMENTING_CLASS_BASENAME)) {
-            catalogImplementor = SiteFactory.YAML_IMPLEMENTING_CLASS_BASENAME;
-        }
-
+        } 
+        
         /* prepend the package name if required */
         catalogImplementor =
                 (catalogImplementor.indexOf('.') == -1)
@@ -212,4 +230,27 @@ public class SiteFactory {
 
         return catalog;
     }
+
+    /**
+     * Detect the type of endpoint usually a file
+     * 
+     * @param endpoint
+     * @return 
+     */
+    private static String detectType(String endpoint) {
+        String implementor = null;
+        File file = new File(endpoint);
+        if (file.exists() && file.canRead()) {
+            //detect type of file
+            implementor = FileDetector.isTypeXML(file)?
+                    XML_IMPLEMENTING_CLASS_BASENAME:
+                    YAML_IMPLEMENTING_CLASS_BASENAME;
+        }
+        else{
+            throw new SiteFactoryException("Unable to read file" + file);
+        }
+        return implementor;
+    }
+
+    
 }
