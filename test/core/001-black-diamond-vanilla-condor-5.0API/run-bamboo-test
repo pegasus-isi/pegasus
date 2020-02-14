@@ -10,6 +10,7 @@ mkdir -p $WORK_DIR
 export RUN_ID=001-black-diamond-vanilla-condor-5.0API-`date +'%s'`
 
 echo "Running black-diamond-setup.py"
+export PYTHONPATH=`pegasus-config --python`
 python3 black-diamond-setup.py $TOP_DIR $WORK_DIR $RUN_ID
 
 echo
