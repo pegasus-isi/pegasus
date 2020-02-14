@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
@@ -312,6 +313,29 @@ public class Directory extends DirectoryLayout {
         return obj;
     }
     
+    /**
+     * Matches two Directory objects
+     *
+     * @return true if directories match
+     */
+    @Override
+    public boolean equals(Object obj) {
+        // null check
+        if (obj == null) {
+            return false;
+        }
+
+        // see if type of objects match
+        if (!(obj instanceof Directory)) {
+            return false;
+        }
+        Directory dir = (Directory) obj;
+        
+        //short cut
+        return this.toString().equals(dir.toString());
+        
+    }
+    
     public static void main(String[] args){
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
@@ -466,4 +490,5 @@ class DirectorySerializer extends SiteDataJsonSerializer<Directory> {
         gen.writeEndObject();
     }
 
+    
 }

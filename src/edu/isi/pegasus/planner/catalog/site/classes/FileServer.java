@@ -120,6 +120,28 @@ public class FileServer extends FileServerType {
     }
 
     /**
+     * Matches two File Server Objects
+     *
+     * @return true if URL match
+     */
+    public boolean equals(Object obj) {
+        // null check
+        if (obj == null) {
+            return false;
+        }
+
+        // see if type of objects match
+        if (!(obj instanceof FileServer)) {
+            return false;
+        }
+        FileServer fs = (FileServer) obj;
+        
+        //short cut
+        return this.toString().equals(fs.toString());
+        
+    }
+    
+    /**
      * Returns the associated profiles
      *
      * @return
