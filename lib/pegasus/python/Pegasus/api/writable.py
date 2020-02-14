@@ -3,7 +3,7 @@ import warnings
 from enum import Enum
 from pathlib import Path
 
-import yaml
+from Pegasus import yaml
 
 __all__ = []
 
