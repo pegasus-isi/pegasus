@@ -284,7 +284,7 @@ project:
                     matchValue: macos
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
-            - key:  R6CUT
+            - key: R6CUT
               name: RHEL 6 Unit Tests
               enabled: false
               tasks:
