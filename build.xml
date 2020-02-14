@@ -30,6 +30,11 @@
     <fileset dir="share/pegasus/java" includes="*.jar"/>
   </path>
 
+  <!-- Dependencies needed for Java Unit Testing -->
+  <path id="java.test.classpath">
+    <fileset dir="release-tools/jars/target/dependency" includes="*.jar"/>
+  </path>
+
   <path id="build.aws.classpath">
     <fileset dir="share/pegasus/java/aws" includes="*.jar"/>
   </path>
@@ -212,6 +217,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
            includeantruntime="false">
       <classpath>
         <path refid="build.classpath"/>
+        <path refid="java.test.classpath"/>
         <path location="${build.src}"/>
       </classpath>
       <compilerarg value="${compile.lint}"/>
@@ -610,6 +616,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <classpath>
         <path refid="build.classpath"/>
         <path refid="build.aws.classpath"/>
+        <path refid="java.test.classpath"/>
         <path location="${dist.jars}/pegasus.jar"/>
         <path location="${dist.jars}/pegasus-test.jar"/>
         <path location="${dist.jars}/vdl.jar"/>

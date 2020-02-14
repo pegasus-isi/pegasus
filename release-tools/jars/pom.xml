@@ -9,11 +9,40 @@
     <name></name>
 
     <dependencies>
-        <!-- https://mvnrepository.com/artifact/com.google.googlejavaformat/google-java-format/ -->
+        <!--
+            Unit Testing
+            JUnit 5: https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-engine
+            Mockito: https://mvnrepository.com/artifact/org.mockito/mockito-core
+        -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.6.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>3.2.4</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- TODO: Remove after migration to JUnit 5 is completed -->
+        <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <version>5.6.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!--
+            Linting
+            Google Java Format: https://mvnrepository.com/artifact/com.google.googlejavaformat/google-java-format/
+        -->
         <dependency>
             <groupId>com.google.googlejavaformat</groupId>
             <artifactId>google-java-format</artifactId>
             <version>1.7</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
