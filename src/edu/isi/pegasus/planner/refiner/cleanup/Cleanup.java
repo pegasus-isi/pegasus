@@ -185,7 +185,7 @@ public class Cleanup implements CleanupImplementation {
                 if ((pfn.startsWith(PegasusURL.FILE_URL_SCHEME)
                                 || pfn.startsWith(PegasusURL.SYMLINK_URL_SCHEME))
                         && (!stagingSiteVisibleToLocalSite) // PM-1024 staging site is not visible
-                                                            // to the local site
+                // to the local site
                 ) {
                     // means the cleanup job should run on the staging site
                     mLogger.log(

@@ -643,6 +643,6 @@ public class TransformationCatalogEntry implements CatalogEntry {
     public void addProfiles(JsonNode get) {
         throw new UnsupportedOperationException(
                 "Not supported yet."); // To change body of generated methods, choose Tools |
-                                       // Templates.
+        // Templates.
     }
 }

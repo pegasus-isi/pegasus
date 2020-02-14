@@ -27,41 +27,38 @@ import java.util.regex.Pattern;
  * @author Karan Vahi
  */
 public class FileDetector {
-    
+
     /**
-     * Store the regular expressions necessary to parse the the xml header
-     * <?xml version="1.0" encoding="UTF-8"?>
-     * 
+     * Store the regular expressions necessary to parse the the xml header <?xml version="1.0"
+     * encoding="UTF-8"?>
+     *
      * <p>e.g. $CondorVersion: 7.1.0 Apr 1 2008 BuildID: 80895$
      */
     private static final String mXMLHeaderRegexExpression =
             "<\\?xml\\s*version=\\\"[\\d\\.\\d]*\\\"\\s*encoding=\\\"[\\w\\W]*\\\"\\?>";
-    
+
     /** Stores compiled patterns at first use, quasi-Singleton. */
     private static Pattern mPattern = null;
-    
-    static{
+
+    static {
         if (mPattern == null) {
             mPattern = Pattern.compile(mXMLHeaderRegexExpression);
         }
     }
-    
-     
-    
+
     /**
-     * Returns whether type of file is XML or not only by inspecting first line
-     * and looking for XML prefix
-     * <?xml version="1.0" encoding="UTF-8"?>
-     * 
+     * Returns whether type of file is XML or not only by inspecting first line and looking for XML
+     * prefix <?xml version="1.0" encoding="UTF-8"?>
+     *
      * @param file
-     * @return 
+     * @return
      */
     public static boolean isTypeXML(File file) {
         boolean isXML = false;
         if (!(file.exists() && file.canRead())) {
             return isXML;
         }
-        
+
         BufferedReader br = null;
         try {
             br = new BufferedReader(new FileReader(file));
@@ -75,7 +72,7 @@ public class FileDetector {
         } catch (IOException ex) {
             throw new RuntimeException("Unable to read from file " + file);
         }
-        //match against regex
+        // match against regex
         return mPattern.matcher(line).matches();
     }
 }

@@ -14,7 +14,6 @@
  */
 package org.griphyn.vdl.annotation;
 
-
 /**
  * This simple class defines the long values for the values at the heart of Yong's annotations.
  *

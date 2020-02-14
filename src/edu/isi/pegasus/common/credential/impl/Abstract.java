@@ -5,7 +5,6 @@
 
 package edu.isi.pegasus.common.credential.impl;
 
-
 import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;

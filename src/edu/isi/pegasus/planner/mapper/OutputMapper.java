@@ -28,58 +28,59 @@ public interface OutputMapper extends Mapper {
     /** The version of the API of the Output Mapper */
     public static final String VERSION = "1.0";
 
-  /**
-   * Initializes the mappers.
-   *
-   * @param bag the bag of objects that is useful for initialization.
-   * @param workflow the workflow refined so far.
-   * @throws edu.isi.pegasus.planner.mapper.MapperException if unable to construct URL for any
-   *     reason
-   */
-  public void initialize(PegasusBag bag, ADag workflow) throws MapperException;
+    /**
+     * Initializes the mappers.
+     *
+     * @param bag the bag of objects that is useful for initialization.
+     * @param workflow the workflow refined so far.
+     * @throws edu.isi.pegasus.planner.mapper.MapperException if unable to construct URL for any
+     *     reason
+     */
+    public void initialize(PegasusBag bag, ADag workflow) throws MapperException;
 
-  /**
-   * Maps a LFN to a location on the filsystem of a site and returns a single externally accessible
-   * URL corresponding to that location.
-   *
-   * @param lfn the lfn
-   * @param site the output site
-   * @param operation whether we want a GET or a PUT URL
-   * @return the URL to file that was mapped
-   * @throws edu.isi.pegasus.planner.mapper.MapperException if unable to construct URL for any
-   *     reason
-   */
-  public String map(String lfn, String site, FileServer.OPERATION operation) throws MapperException;
+    /**
+     * Maps a LFN to a location on the filsystem of a site and returns a single externally
+     * accessible URL corresponding to that location.
+     *
+     * @param lfn the lfn
+     * @param site the output site
+     * @param operation whether we want a GET or a PUT URL
+     * @return the URL to file that was mapped
+     * @throws edu.isi.pegasus.planner.mapper.MapperException if unable to construct URL for any
+     *     reason
+     */
+    public String map(String lfn, String site, FileServer.OPERATION operation)
+            throws MapperException;
 
-  /**
-   * Maps a LFN to a location on the filsystem of a site and returns a single externally accessible
-   * URL corresponding to that location.
-   *
-   * @param lfn the lfn
-   * @param site the output site
-   * @param operation whether we want a GET or a PUT URL
-   * @param existing indicates whether to create a new location/placement for a file, or rely on
-   *     existing placement on the site.
-   * @return externally accessible URL to the mapped file.
-   * @throws edu.isi.pegasus.planner.mapper.MapperException if unable to construct URL for any
-   *     reason
-   */
-  public String map(String lfn, String site, FileServer.OPERATION operation, boolean existing)
-      throws MapperException;
+    /**
+     * Maps a LFN to a location on the filsystem of a site and returns a single externally
+     * accessible URL corresponding to that location.
+     *
+     * @param lfn the lfn
+     * @param site the output site
+     * @param operation whether we want a GET or a PUT URL
+     * @param existing indicates whether to create a new location/placement for a file, or rely on
+     *     existing placement on the site.
+     * @return externally accessible URL to the mapped file.
+     * @throws edu.isi.pegasus.planner.mapper.MapperException if unable to construct URL for any
+     *     reason
+     */
+    public String map(String lfn, String site, FileServer.OPERATION operation, boolean existing)
+            throws MapperException;
 
-  /**
-   * Maps a LFN to a location on the filsystem of a site and returns all the possible equivalent
-   * externally accessible URL corresponding to that location. For example, if a file on the
-   * filesystem is accessible via multiple file servers it should return externally accessible URL's
-   * from all the File Servers on the site.
-   *
-   * @param lfn the lfn
-   * @param site the output site
-   * @param operation whether we want a GET or a PUT URL
-   * @return List<String> of externally accessible URLs to the mapped file.
-   * @throws edu.isi.pegasus.planner.mapper.MapperException if unable to construct URL for any
-   *     reason
-   */
-  public List<String> mapAll(String lfn, String site, FileServer.OPERATION operation)
-      throws MapperException;
+    /**
+     * Maps a LFN to a location on the filsystem of a site and returns all the possible equivalent
+     * externally accessible URL corresponding to that location. For example, if a file on the
+     * filesystem is accessible via multiple file servers it should return externally accessible
+     * URL's from all the File Servers on the site.
+     *
+     * @param lfn the lfn
+     * @param site the output site
+     * @param operation whether we want a GET or a PUT URL
+     * @return List<String> of externally accessible URLs to the mapped file.
+     * @throws edu.isi.pegasus.planner.mapper.MapperException if unable to construct URL for any
+     *     reason
+     */
+    public List<String> mapAll(String lfn, String site, FileServer.OPERATION operation)
+            throws MapperException;
 }

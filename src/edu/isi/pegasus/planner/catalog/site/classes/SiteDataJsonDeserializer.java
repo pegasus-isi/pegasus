@@ -23,55 +23,64 @@ import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 
 /**
  * Abstract Class for Deserializers for parsing Site Catalog YAML Spec
+ *
  * @author vahi
  */
 /**
  * Custom deserializer for YAML representation of Directory
- * 
+ *
  * @author Karan Vahi
  */
 public abstract class SiteDataJsonDeserializer<T> extends JsonDeserializer<T> {
     /**
      * Throw an exception for Illegal Key
-     * 
+     *
      * @param prefix
      * @param element
      * @param node
      * @param key
-     * @throws SiteCatalogException 
+     * @throws SiteCatalogException
      */
-    public void complainForIllegalKey( String element, String key, JsonNode node) throws SiteCatalogException {
+    public void complainForIllegalKey(String element, String key, JsonNode node)
+            throws SiteCatalogException {
         this.complain("Illegal key", element, key, node);
     }
-    
+
     /**
      * Throw an exception for Illegal Key
-     * 
+     *
      * @param prefix
      * @param element
      * @param key
      * @param node
-     * @throws SiteCatalogException 
+     * @throws SiteCatalogException
      */
-    public void complainForUnsupportedKey( String element, String key, JsonNode node) throws SiteCatalogException {
+    public void complainForUnsupportedKey(String element, String key, JsonNode node)
+            throws SiteCatalogException {
         this.complain("Unsupported key", element, key, node);
     }
-    
-    
+
     /**
-     * Throw an exception 
-     * 
+     * Throw an exception
+     *
      * @param prefix
      * @param element
      * @param key
      * @param node
-     * @throws SiteCatalogException 
+     * @throws SiteCatalogException
      */
-    public void complain(String prefix, String element, String key, JsonNode node) throws SiteCatalogException {
+    public void complain(String prefix, String element, String key, JsonNode node)
+            throws SiteCatalogException {
         StringBuilder sb = new StringBuilder();
-        sb.append(prefix).append(" ").append(key).append(" ").
-           append("for element").append(" ").append(element).append(" - ").append(node.toString());
+        sb.append(prefix)
+                .append(" ")
+                .append(key)
+                .append(" ")
+                .append("for element")
+                .append(" ")
+                .append(element)
+                .append(" - ")
+                .append(node.toString());
         throw new SiteCatalogException(sb.toString());
     }
-
-} 
+}

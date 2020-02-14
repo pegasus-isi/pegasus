@@ -26,17 +26,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
-import edu.isi.pegasus.planner.catalog.classes.SysInfo.Architecture;
-import edu.isi.pegasus.planner.catalog.classes.SysInfo.OS;
-import edu.isi.pegasus.planner.catalog.site.classes.Connection;
-import edu.isi.pegasus.planner.catalog.site.classes.Directory;
-import edu.isi.pegasus.planner.catalog.site.classes.Directory.TYPE;
-import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
-import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
-import edu.isi.pegasus.planner.catalog.site.classes.GridGateway.JOB_TYPE;
-import edu.isi.pegasus.planner.catalog.site.classes.GridGateway.SCHEDULER_TYPE;
-import edu.isi.pegasus.planner.catalog.site.classes.InternalMountPoint;
-import edu.isi.pegasus.planner.catalog.site.classes.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteDataVisitor;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
@@ -45,18 +34,13 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
-import java.io.Writer;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -66,10 +50,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * This class parses and validates Site Catalog in YAML format corresponding to
- * Site Catalog schema v5.0
+ * This class parses and validates Site Catalog in YAML format corresponding to Site Catalog schema
+ * v5.0
  *
- * 
  * @author Karan Vahi
  * @version $Revision$
  */
@@ -78,7 +61,6 @@ public class SiteCatalogYAMLParser {
     /** The "not-so-official" location URL of the Site Catalog Schema. */
     public static final String SCHEMA_URI = "http://pegasus.isi.edu/schema/sc-5.0.yml";
 
-    
     /** The final result constructed. */
     private SiteStore mResult;
 
@@ -151,15 +133,15 @@ public class SiteCatalogYAMLParser {
                 mParsingDone = true;
                 return;
             }
-            
-            //first attempt to validate
+
+            // first attempt to validate
             if (validate(f, SCHEMA_FILENAME)) {
-                //validation succeeded. load.
+                // validation succeeded. load.
                 Reader reader = new VariableExpansionReader(new FileReader(f));
                 ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
                 mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
                 SiteStore store = mapper.readValue(reader, SiteStore.class);
-                for (Iterator<SiteCatalogEntry> it= store.entryIterator(); it.hasNext(); ){
+                for (Iterator<SiteCatalogEntry> it = store.entryIterator(); it.hasNext(); ) {
                     SiteCatalogEntry entry = it.next();
                     if (loadSite(entry)) {
                         mResult.addEntry(entry);
@@ -273,7 +255,6 @@ public class SiteCatalogYAMLParser {
         return e.toString();
     }
 
-   
     /** @param args */
     public static void main(String[] args) {
         LogManager logger = LogManagerFactory.loadSingletonInstance();
@@ -320,22 +301,20 @@ public class SiteCatalogYAMLParser {
 
     /**
      * Validates a file against the Site Catalog Schema file
-     * 
+     *
      * @param f
      * @param schemaFile
-     * @return 
+     * @return
      */
     protected boolean validate(File f, File schemaFile) {
         boolean validate = true;
         Reader reader = null;
         try {
             reader = new VariableExpansionReader(new FileReader(f));
-        }
-        catch (IOException ioe) {
+        } catch (IOException ioe) {
             mLogger.log("IO Error :" + ioe.getMessage(), LogManager.ERROR_MESSAGE_LEVEL);
         }
-        
-        
+
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
         JsonNode root = null;
@@ -349,8 +328,7 @@ public class SiteCatalogYAMLParser {
         }
         if (root != null) {
             YAMLSchemaValidationResult result =
-                    YAMLSchemaValidator.getInstance()
-                            .validate(root, SCHEMA_FILENAME, "site");
+                    YAMLSchemaValidator.getInstance().validate(root, SCHEMA_FILENAME, "site");
 
             // schema validation is done here.. in case of any validation error we throw the
             // result..

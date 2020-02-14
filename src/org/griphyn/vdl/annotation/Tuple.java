@@ -14,7 +14,6 @@
  */
 package org.griphyn.vdl.annotation;
 
-
 /**
  * This abstract base class defines the key value tuple that define the heart of Yong's annotations.
  *

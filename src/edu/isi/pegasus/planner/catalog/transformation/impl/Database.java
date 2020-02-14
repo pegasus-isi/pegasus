@@ -1548,9 +1548,8 @@ public class Database extends DatabaseSchema implements TransformationCatalog {
         int updateCount = 0;
         try {
             for (int i = 0; i < ps.length; i++) {
-                if (i
-                        == 3) { // Gets the number of rows updates by stmt.delete.alllfns and stores
-                                // it in updateCount variable
+                if (i == 3) { // Gets the number of rows updates by stmt.delete.alllfns and stores
+                    // it in updateCount variable
                     updateCount = ps[i].executeUpdate();
                 } else {
                     ps[i].executeUpdate();

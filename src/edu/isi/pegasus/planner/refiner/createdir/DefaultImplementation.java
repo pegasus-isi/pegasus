@@ -376,7 +376,7 @@ public class DefaultImplementation implements Implementation {
         if (directoryURL != null
                 && directoryURL.startsWith(PegasusURL.FILE_URL_SCHEME)
                 && (!stagingSiteVisibleToLocalSite) // PM-1024 staging site is not visible to the
-                                                    // local site
+        // local site
         ) {
             result = site.getSiteHandle();
         }

@@ -14,7 +14,6 @@
  */
 package org.griphyn.vdl.annotation;
 
-
 /**
  * This simple class defines the double values for the values at the heart of Yong's annotations.
  *

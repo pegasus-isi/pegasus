@@ -201,6 +201,6 @@ public class ReplicaFactory {
     public static ReplicaCatalog loadInstance(CommonProperties props) {
         throw new UnsupportedOperationException(
                 "Not supported yet."); // To change body of generated methods, choose Tools |
-                                       // Templates.
+        // Templates.
     }
 }

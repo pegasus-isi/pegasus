@@ -13,7 +13,6 @@
  */
 package edu.isi.pegasus.planner.parser.dax;
 
-
 /**
  * An interface for all the DAX Parsers
  *

@@ -7,9 +7,7 @@ package edu.isi.pegasus.planner.catalog.site.classes;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.Collection;
 
 /**
@@ -20,7 +18,19 @@ import java.util.Collection;
  */
 public abstract class SiteDataJsonSerializer<T> extends JsonSerializer<T> {
 
-    
+    /**
+     * Writes out only if value is not null and non empty
+     *
+     * @param gen
+     * @param key
+     * @param value
+     * @throws java.io.IOException
+     */
+    public void writeStringField(JsonGenerator gen, String key, String value) throws IOException {
+        if (value != null && value.length() > 0) {
+            gen.writeStringField(key, value);
+        }
+    }
 
     /**
      * Writes out only if value is not null and non empty
@@ -30,21 +40,7 @@ public abstract class SiteDataJsonSerializer<T> extends JsonSerializer<T> {
      * @param value
      * @throws java.io.IOException
      */
-    public void writeStringField(JsonGenerator gen, String key, String value) throws IOException{
-        if (value != null && value.length() > 0) {
-            gen.writeStringField(key, value);
-        }
-    }
-    
-    /**
-     * Writes out only if value is not null and non empty
-     *
-     * @param gen
-     * @param key
-     * @param value
-     * @throws java.io.IOException
-     */
-    public void writeArray(JsonGenerator gen, String key, Collection value) throws IOException{
+    public void writeArray(JsonGenerator gen, String key, Collection value) throws IOException {
         if (value != null && !value.isEmpty()) {
             gen.writeFieldName(key);
             gen.writeObject(value);
@@ -53,15 +49,15 @@ public abstract class SiteDataJsonSerializer<T> extends JsonSerializer<T> {
 
     /**
      * Writes out number field only value is not -1
+     *
      * @param gen
      * @param key
      * @param value
-     * @throws IOException 
+     * @throws IOException
      */
-    public void writeNumberField(JsonGenerator gen, String key, int value  ) throws IOException {
-        if ( value != -1 ){
+    public void writeNumberField(JsonGenerator gen, String key, int value) throws IOException {
+        if (value != -1) {
             gen.writeNumberField(key, value);
         }
     }
 }
-

@@ -307,7 +307,7 @@ public class Kickstart implements GridStart {
                         aggregator.topologicalOrderingRequired()
                                 ? job.topologicalSortIterator()
                                 : // PM-817 we care about order, else -H option maynot be omitted
-                                  // always for first job
+                                // always for first job
                                 job.nodeIterator();
                 it.hasNext(); ) {
             // PM-817Job constituentJob = (Job)it.next();

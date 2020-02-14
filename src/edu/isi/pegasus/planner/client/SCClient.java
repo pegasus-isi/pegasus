@@ -26,7 +26,6 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteDataVisitor;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.site.classes.XML3PrintVisitor;
 import edu.isi.pegasus.planner.catalog.site.classes.XML4PrintVisitor;
-import edu.isi.pegasus.planner.parser.SiteCatalogYAMLParser;
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
 import java.io.BufferedWriter;
@@ -289,7 +288,12 @@ public class SCClient extends Executable {
                         if (outputFormat.equals("YAML")) {
                             // in case of yaml we write it directly to the output file so we are
                             // returning null..
-                            ObjectMapper mapper = new ObjectMapper(new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
+                            ObjectMapper mapper =
+                                    new ObjectMapper(
+                                            new YAMLFactory()
+                                                    .configure(
+                                                            YAMLGenerator.Feature.INDENT_ARRAYS,
+                                                            true));
                             mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
                             return mapper.writeValueAsString(result);
                         }

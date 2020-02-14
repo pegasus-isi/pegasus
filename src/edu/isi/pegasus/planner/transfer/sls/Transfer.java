@@ -171,9 +171,8 @@ public class Transfer implements SLS {
                 (entry == null)
                         ? this.getExecutableBasename()
                         : // nothing in the transformation catalog, rely on the executable basenmae
-                        entry
-                                .getPhysicalTransformation(); // rely on what is in the
-                                                              // transformation catalog
+                        entry.getPhysicalTransformation(); // rely on what is in the
+        // transformation catalog
 
         invocation.append(executable);
 
@@ -363,7 +362,7 @@ public class Transfer implements SLS {
                         && // specified in configuration
                         stagingSite.equals(
                                 computeSite)) { // source URL logically on the same site where job
-                                                // is to be run
+                    // is to be run
                     // we can symlink . construct the source URL as a file url
                     symlink = true;
                     url.append(PegasusURL.FILE_URL_SCHEME)
@@ -410,12 +409,11 @@ public class Transfer implements SLS {
                                     && // can only do symlinks for data files . not executables
                                     cacheLocation.getResourceHandle().equals(job.getSiteHandle())
                                     && // source URL logically on the same site where job is to be
-                                       // run
+                                    // run
                                     url.toString()
                                             .startsWith(
-                                                    PegasusURL
-                                                            .FILE_URL_SCHEME)); // source URL is a
-                                                                                // file URL
+                                                    PegasusURL.FILE_URL_SCHEME)); // source URL is a
+                    // file URL
                 }
             }
 

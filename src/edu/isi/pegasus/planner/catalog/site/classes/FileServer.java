@@ -24,18 +24,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-
 import edu.isi.pegasus.common.util.PegasusURL;
-
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
-
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Iterator;
@@ -135,12 +131,11 @@ public class FileServer extends FileServerType {
             return false;
         }
         FileServer fs = (FileServer) obj;
-        
-        //short cut
+
+        // short cut
         return this.toString().equals(fs.toString());
-        
     }
-    
+
     /**
      * Returns the associated profiles
      *
@@ -150,67 +145,67 @@ public class FileServer extends FileServerType {
         return this.mProfiles;
     }
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
         /*SimpleModule module = new SimpleModule();
         module.addDeserializer(FileServer.class, new FileServerDeserializer());
         mapper.registerModule(module);
         */
-        String test = 
-                "operation: all\n" +
-                "url: file:///tmp/workflows/scratch";
+        String test = "operation: all\n" + "url: file:///tmp/workflows/scratch";
         try {
             FileServer fs = mapper.readValue(test, FileServer.class);
             System.out.println(fs);
             System.out.println(mapper.writeValueAsString(fs));
-            
+
         } catch (IOException ex) {
             Logger.getLogger(FileServer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
 }
 
 /**
  * Custom deserializer for YAML representation of FileServer
- * 
+ *
  * @author vahi
  */
 class FileServerDeserializer extends SiteDataJsonDeserializer<FileServer> {
 
     /**
      * Deserializes a FileServer YAML description of the type
+     *
      * <pre>
-           operation: all
-           url: file:///tmp/workflows/scratch
+     * operation: all
+     * url: file:///tmp/workflows/scratch
      * </pre>
+     *
      * @param jp
      * @param dc
      * @return
      * @throws IOException
-     * @throws JsonProcessingException 
+     * @throws JsonProcessingException
      */
     @Override
-    public FileServer deserialize(JsonParser jp, DeserializationContext dc) throws IOException, JsonProcessingException {
+    public FileServer deserialize(JsonParser jp, DeserializationContext dc)
+            throws IOException, JsonProcessingException {
         ObjectCodec oc = jp.getCodec();
         JsonNode node = oc.readTree(jp);
         FileServer fs = new FileServer();
-        
+
         for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
             Map.Entry<String, JsonNode> e = it.next();
             String key = e.getKey();
-            SiteCatalogKeywords reservedKey =
-                    SiteCatalogKeywords.getReservedKey(key);
+            SiteCatalogKeywords reservedKey = SiteCatalogKeywords.getReservedKey(key);
             if (reservedKey == null) {
-                this.complainForIllegalKey(SiteCatalogKeywords.FILESERVERS.getReservedName(), key, node );
+                this.complainForIllegalKey(
+                        SiteCatalogKeywords.FILESERVERS.getReservedName(), key, node);
             }
 
             switch (reservedKey) {
                 case OPERATION:
                     fs.setSupportedOperation(node.get(key).asText());
                     break;
-                    
+
                 case URL:
                     String fullURL = node.get(key).asText();
                     PegasusURL url = new PegasusURL(fullURL);
@@ -218,38 +213,39 @@ class FileServerDeserializer extends SiteDataJsonDeserializer<FileServer> {
                     fs.setProtocol(url.getProtocol());
                     fs.setMountPoint(url.getPath());
                     break;
-                    
+
                 default:
-                    this.complainForUnsupportedKey(SiteCatalogKeywords.FILESERVERS.getReservedName(), key, node);
+                    this.complainForUnsupportedKey(
+                            SiteCatalogKeywords.FILESERVERS.getReservedName(), key, node);
             }
         }
-        
+
         return fs;
     }
 }
 /**
  * Custom serializer for YAML representation of FileServer
- * 
+ *
  * @author Karan Vahi
  */
 class FileServerSerializer extends SiteDataJsonSerializer<FileServer> {
 
-    public FileServerSerializer() {
-    }
+    public FileServerSerializer() {}
 
     /**
-     * Serializes contents into  YAML representation
-     * 
+     * Serializes contents into YAML representation
+     *
      * @param fs
      * @param gen
      * @param sp
-     * @throws IOException 
+     * @throws IOException
      */
-    public void serialize(FileServer fs, JsonGenerator gen, SerializerProvider sp) throws IOException {
-       gen.writeStartObject();
-       writeStringField(gen, SiteCatalogKeywords.OPERATION.getReservedName(), fs.mOperation.toString());
-       writeStringField(gen, SiteCatalogKeywords.URL.getReservedName(), fs.getURL());
-       gen.writeEndObject();
+    public void serialize(FileServer fs, JsonGenerator gen, SerializerProvider sp)
+            throws IOException {
+        gen.writeStartObject();
+        writeStringField(
+                gen, SiteCatalogKeywords.OPERATION.getReservedName(), fs.mOperation.toString());
+        writeStringField(gen, SiteCatalogKeywords.URL.getReservedName(), fs.getURL());
+        gen.writeEndObject();
     }
-
 }

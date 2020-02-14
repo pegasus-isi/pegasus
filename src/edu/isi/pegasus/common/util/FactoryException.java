@@ -13,7 +13,6 @@
  */
 package edu.isi.pegasus.common.util;
 
-
 /**
  * The base exception class to notify of errors, while instantiating classes via any of the
  * factories. Each factory, should throw an exception that is a subclass of this class.

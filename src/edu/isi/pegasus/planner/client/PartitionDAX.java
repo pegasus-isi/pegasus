@@ -13,7 +13,6 @@
  */
 package edu.isi.pegasus.planner.client;
 
-
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.planner.classes.PegasusBag;

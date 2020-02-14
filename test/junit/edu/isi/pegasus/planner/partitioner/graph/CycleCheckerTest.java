@@ -15,13 +15,14 @@
  */
 package edu.isi.pegasus.planner.partitioner.graph;
 
+import static org.junit.Assert.assertEquals;
+
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.util.LinkedList;
 import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -32,254 +33,267 @@ import org.junit.Test;
  * @author Karan Vahi
  */
 public class CycleCheckerTest {
-    
+
     private LogManager mLogger;
-    
+
     private TestSetup mTestSetup;
-    
-    private  int mTestNumber =1 ;
-    
+
+    private int mTestNumber = 1;
+
     @BeforeClass
-    public static void setUpClass() {
-    }
-    
+    public static void setUpClass() {}
+
     @AfterClass
-    public static void tearDownClass() {
-    }
-    
+    public static void tearDownClass() {}
+
     @Before
     public void setUp() {
         mTestSetup = new DefaultTestSetup();
-       
-        mTestSetup.setInputDirectory( this.getClass() );
-        mLogger  = mTestSetup.loadLogger( mTestSetup.loadPropertiesFromFile( ".properties", new LinkedList() )); 
-        mLogger.logEventStart( "test.planner.partitioner.graph.CycleChecker", "setup", "0" );
+
+        mTestSetup.setInputDirectory(this.getClass());
+        mLogger =
+                mTestSetup.loadLogger(
+                        mTestSetup.loadPropertiesFromFile(".properties", new LinkedList()));
+        mLogger.logEventStart("test.planner.partitioner.graph.CycleChecker", "setup", "0");
     }
-    
+
     @Test
     public void testSingleNode() {
-        
-        mLogger.logEventStart( "test.planner.partitioner.graph.CycleChecker", "set", Integer.toString(mTestNumber++) );
+
+        mLogger.logEventStart(
+                "test.planner.partitioner.graph.CycleChecker",
+                "set",
+                Integer.toString(mTestNumber++));
         Graph g = new MapGraph();
-        
-        g.addNode( new GraphNode("A", "A"));
-        
+
+        g.addNode(new GraphNode("A", "A"));
+
         CycleChecker c = new CycleChecker(g);
         boolean cyclic = c.hasCycles();
-        assertEquals( "Input Test Case should be determined cycle free", false, cyclic );
+        assertEquals("Input Test Case should be determined cycle free", false, cyclic);
         mLogger.logEventCompletion();
-        
     }
-    
-    @Test (expected=IllegalArgumentException.class)
+
+    @Test(expected = IllegalArgumentException.class)
     public void testSingleNodeCyclic() {
-        
-        mLogger.logEventStart( "test.planner.partitioner.graph.CycleChecker", "set", Integer.toString(mTestNumber++) );
+
+        mLogger.logEventStart(
+                "test.planner.partitioner.graph.CycleChecker",
+                "set",
+                Integer.toString(mTestNumber++));
         Graph g = new MapGraph();
-        
-        g.addNode( new GraphNode("A", "A"));
-        g.addEdge( "A", "A");
-        
+
+        g.addNode(new GraphNode("A", "A"));
+        g.addEdge("A", "A");
+
         CycleChecker c = new CycleChecker(g);
         boolean cyclic = c.hasCycles();
-        assertEquals( "Input Test Case should be determined to be cyclic", true, cyclic );
-        
-        if( cyclic ){
-            //cyclic edge is null since the whole workflow constitutes a cycle
+        assertEquals("Input Test Case should be determined to be cyclic", true, cyclic);
+
+        if (cyclic) {
+            // cyclic edge is null since the whole workflow constitutes a cycle
             NameValue cyclicEdge = c.getCyclicEdge();
-            assertEquals("Cyclic Edge does not match", null, cyclicEdge );
+            assertEquals("Cyclic Edge does not match", null, cyclicEdge);
         }
         mLogger.logEventCompletion();
-        
     }
-    
-    
+
     @Test
     public void testBlackDiamond() {
-        
-        mLogger.logEventStart( "test.planner.partitioner.graph.CycleChecker", "set", Integer.toString(mTestNumber++) );
+
+        mLogger.logEventStart(
+                "test.planner.partitioner.graph.CycleChecker",
+                "set",
+                Integer.toString(mTestNumber++));
         Graph g = new MapGraph();
-        
-        g.addNode( new GraphNode("A", "A"));
-        g.addNode( new GraphNode("B", "B"));
-        g.addNode( new GraphNode("C", "C"));
-        g.addNode( new GraphNode("D", "D"));
-        
-        g.addEdge( "A", "B");
-        g.addEdge( "A", "C");
-        g.addEdge( "B", "D");
-        g.addEdge( "C", "D");
-        
+
+        g.addNode(new GraphNode("A", "A"));
+        g.addNode(new GraphNode("B", "B"));
+        g.addNode(new GraphNode("C", "C"));
+        g.addNode(new GraphNode("D", "D"));
+
+        g.addEdge("A", "B");
+        g.addEdge("A", "C");
+        g.addEdge("B", "D");
+        g.addEdge("C", "D");
+
         CycleChecker c = new CycleChecker(g);
         boolean cyclic = c.hasCycles();
-        assertEquals( "Input Test Case should be determined cycle free", false, cyclic );
+        assertEquals("Input Test Case should be determined cycle free", false, cyclic);
         mLogger.logEventCompletion();
-        
     }
-    
+
     @Test
     public void testBlackDiamondWholeCyclic() {
-        
-        mLogger.logEventStart( "test.planner.partitioner.graph.CycleChecker", "set", Integer.toString(mTestNumber++) );
+
+        mLogger.logEventStart(
+                "test.planner.partitioner.graph.CycleChecker",
+                "set",
+                Integer.toString(mTestNumber++));
         Graph g = new MapGraph();
-        
-        g.addNode( new GraphNode("A", "A"));
-        g.addNode( new GraphNode("B", "B"));
-        g.addNode( new GraphNode("C", "C"));
-        g.addNode( new GraphNode("D", "D"));
-        
-        g.addEdge( "A", "B");
-        g.addEdge( "A", "C");
-        g.addEdge( "B", "D");
-        g.addEdge( "C", "D");
-        g.addEdge( "D", "A");
-        
+
+        g.addNode(new GraphNode("A", "A"));
+        g.addNode(new GraphNode("B", "B"));
+        g.addNode(new GraphNode("C", "C"));
+        g.addNode(new GraphNode("D", "D"));
+
+        g.addEdge("A", "B");
+        g.addEdge("A", "C");
+        g.addEdge("B", "D");
+        g.addEdge("C", "D");
+        g.addEdge("D", "A");
+
         CycleChecker c = new CycleChecker(g);
         boolean cyclic = c.hasCycles();
-        assertEquals( "Input Test Case should be determined to be cyclic", true, cyclic );
-        
-        if( cyclic ){
-            //cyclic edge is null since the whole workflow constitutes a cycle
+        assertEquals("Input Test Case should be determined to be cyclic", true, cyclic);
+
+        if (cyclic) {
+            // cyclic edge is null since the whole workflow constitutes a cycle
             NameValue cyclicEdge = c.getCyclicEdge();
-            assertEquals("Cyclic Edge does not match", null, cyclicEdge );
+            assertEquals("Cyclic Edge does not match", null, cyclicEdge);
         }
-        
+
         mLogger.logEventCompletion();
-        
     }
-    
+
     @Test
     public void testBlackDiamondCyclic() {
-        
-        mLogger.logEventStart( "test.planner.partitioner.graph.CycleChecker", "set", Integer.toString(mTestNumber++) );
+
+        mLogger.logEventStart(
+                "test.planner.partitioner.graph.CycleChecker",
+                "set",
+                Integer.toString(mTestNumber++));
         Graph g = new MapGraph();
-        
-        g.addNode( new GraphNode("A", "A"));
-        g.addNode( new GraphNode("B", "B"));
-        g.addNode( new GraphNode("C", "C"));
-        g.addNode( new GraphNode("D", "D"));
-        g.addNode( new GraphNode("E", "E"));
-        
-        g.addEdge( "A", "B");
-        g.addEdge( "A", "C");
-        g.addEdge( "B", "D");
-        g.addEdge( "C", "D");
-        g.addEdge( "D", "E");
-        g.addEdge( "E", "D");
-        
+
+        g.addNode(new GraphNode("A", "A"));
+        g.addNode(new GraphNode("B", "B"));
+        g.addNode(new GraphNode("C", "C"));
+        g.addNode(new GraphNode("D", "D"));
+        g.addNode(new GraphNode("E", "E"));
+
+        g.addEdge("A", "B");
+        g.addEdge("A", "C");
+        g.addEdge("B", "D");
+        g.addEdge("C", "D");
+        g.addEdge("D", "E");
+        g.addEdge("E", "D");
+
         CycleChecker c = new CycleChecker(g);
         boolean cyclic = c.hasCycles();
-        assertEquals( "Input Test Case should be determined to be cyclic", true, cyclic );
-        
-        if( cyclic ){
-            //cyclic edge is null since the whole workflow constitutes a cycle
+        assertEquals("Input Test Case should be determined to be cyclic", true, cyclic);
+
+        if (cyclic) {
+            // cyclic edge is null since the whole workflow constitutes a cycle
             NameValue cyclicEdge = c.getCyclicEdge();
-            assertEquals("Cyclic Edge does not match", new NameValue("E","D"), cyclicEdge );
+            assertEquals("Cyclic Edge does not match", new NameValue("E", "D"), cyclicEdge);
         }
-        
+
         mLogger.logEventCompletion();
-        
     }
-    
+
     @Test
     public void testPipeline() {
-        
-        mLogger.logEventStart( "test.planner.partitioner.graph.CycleChecker", "set", Integer.toString(mTestNumber++) );
+
+        mLogger.logEventStart(
+                "test.planner.partitioner.graph.CycleChecker",
+                "set",
+                Integer.toString(mTestNumber++));
         Graph g = new MapGraph();
-        
-        g.addNode( new GraphNode("A", "A"));
-        g.addNode( new GraphNode("B", "B"));
-        g.addNode( new GraphNode("C", "C"));
-        g.addNode( new GraphNode("D", "D"));
-        g.addNode( new GraphNode("E", "E"));
-        
-        g.addEdge( "A", "B");
-        g.addEdge( "B", "C");
-        g.addEdge( "C", "D");
-        g.addEdge( "D", "E");
-        
+
+        g.addNode(new GraphNode("A", "A"));
+        g.addNode(new GraphNode("B", "B"));
+        g.addNode(new GraphNode("C", "C"));
+        g.addNode(new GraphNode("D", "D"));
+        g.addNode(new GraphNode("E", "E"));
+
+        g.addEdge("A", "B");
+        g.addEdge("B", "C");
+        g.addEdge("C", "D");
+        g.addEdge("D", "E");
+
         CycleChecker c = new CycleChecker(g);
         boolean cyclic = c.hasCycles();
-        assertEquals( "Input Test Case should be determined cycle free", false, cyclic );
-      
+        assertEquals("Input Test Case should be determined cycle free", false, cyclic);
+
         mLogger.logEventCompletion();
-        
     }
-    
+
     @Test
     public void testPipelineCyclic() {
-        
-        mLogger.logEventStart( "test.planner.partitioner.graph.CycleChecker", "set", Integer.toString(mTestNumber++) );
+
+        mLogger.logEventStart(
+                "test.planner.partitioner.graph.CycleChecker",
+                "set",
+                Integer.toString(mTestNumber++));
         Graph g = new MapGraph();
-        
-        g.addNode( new GraphNode("A", "A"));
-        g.addNode( new GraphNode("B", "B"));
-        g.addNode( new GraphNode("C", "C"));
-        g.addNode( new GraphNode("D", "D"));
-        g.addNode( new GraphNode("E", "E"));
-        
-        g.addEdge( "A", "B");
-        g.addEdge( "B", "C");
-        g.addEdge( "C", "D");
-        g.addEdge( "D", "E");
-        g.addEdge( "E", "B");
-        
+
+        g.addNode(new GraphNode("A", "A"));
+        g.addNode(new GraphNode("B", "B"));
+        g.addNode(new GraphNode("C", "C"));
+        g.addNode(new GraphNode("D", "D"));
+        g.addNode(new GraphNode("E", "E"));
+
+        g.addEdge("A", "B");
+        g.addEdge("B", "C");
+        g.addEdge("C", "D");
+        g.addEdge("D", "E");
+        g.addEdge("E", "B");
+
         CycleChecker c = new CycleChecker(g);
         boolean cyclic = c.hasCycles();
-        assertEquals( "Input Test Case should be determined to be cyclic", true, cyclic );
-        
-        if( cyclic ){
-            //cyclic edge is null since the whole workflow constitutes a cycle
+        assertEquals("Input Test Case should be determined to be cyclic", true, cyclic);
+
+        if (cyclic) {
+            // cyclic edge is null since the whole workflow constitutes a cycle
             NameValue cyclicEdge = c.getCyclicEdge();
-            assertEquals("Cyclic Edge does not match", new NameValue("E","B"), cyclicEdge );
+            assertEquals("Cyclic Edge does not match", new NameValue("E", "B"), cyclicEdge);
         }
-        
+
         mLogger.logEventCompletion();
-        
     }
-    
+
     @Test
     public void testPipelineForest() {
-        
-        mLogger.logEventStart( "test.planner.partitioner.graph.CycleChecker", "set", Integer.toString(mTestNumber++) );
+
+        mLogger.logEventStart(
+                "test.planner.partitioner.graph.CycleChecker",
+                "set",
+                Integer.toString(mTestNumber++));
         Graph g = new MapGraph();
-        
-        g.addNode( new GraphNode("A", "A"));
-        g.addNode( new GraphNode("B", "B"));
-        g.addNode( new GraphNode("C", "C"));
-        g.addNode( new GraphNode("D", "D"));
-        g.addNode( new GraphNode("E", "E"));
-        
-        g.addEdge( "A", "B");
-        g.addEdge( "B", "C");
-        g.addEdge( "C", "D");
-        g.addEdge( "D", "E");
-        
-        g.addNode( new GraphNode("A'", "A'"));
-        g.addNode( new GraphNode("B'", "B'"));
-        g.addNode( new GraphNode("C'", "C'"));
-        g.addNode( new GraphNode("D'", "D'"));
-        g.addNode( new GraphNode("E'", "E'"));
-        
-        g.addEdge( "A'", "B'");
-        g.addEdge( "B'", "C'");
-        g.addEdge( "C'", "D'");
-        g.addEdge( "D'", "E'");
-        g.addEdge( "E'", "B'");
-        
+
+        g.addNode(new GraphNode("A", "A"));
+        g.addNode(new GraphNode("B", "B"));
+        g.addNode(new GraphNode("C", "C"));
+        g.addNode(new GraphNode("D", "D"));
+        g.addNode(new GraphNode("E", "E"));
+
+        g.addEdge("A", "B");
+        g.addEdge("B", "C");
+        g.addEdge("C", "D");
+        g.addEdge("D", "E");
+
+        g.addNode(new GraphNode("A'", "A'"));
+        g.addNode(new GraphNode("B'", "B'"));
+        g.addNode(new GraphNode("C'", "C'"));
+        g.addNode(new GraphNode("D'", "D'"));
+        g.addNode(new GraphNode("E'", "E'"));
+
+        g.addEdge("A'", "B'");
+        g.addEdge("B'", "C'");
+        g.addEdge("C'", "D'");
+        g.addEdge("D'", "E'");
+        g.addEdge("E'", "B'");
+
         CycleChecker c = new CycleChecker(g);
         boolean cyclic = c.hasCycles();
-        assertEquals( "Input Test Case should be determined to be cyclic", true, cyclic );
-        
-        if( cyclic ){
-            //cyclic edge is null since the whole workflow constitutes a cycle
+        assertEquals("Input Test Case should be determined to be cyclic", true, cyclic);
+
+        if (cyclic) {
+            // cyclic edge is null since the whole workflow constitutes a cycle
             NameValue cyclicEdge = c.getCyclicEdge();
-            assertEquals("Cyclic Edge does not match", new NameValue("E'","B'"), cyclicEdge );
+            assertEquals("Cyclic Edge does not match", new NameValue("E'", "B'"), cyclicEdge);
         }
-        
+
         mLogger.logEventCompletion();
-        
     }
-    
-    
 }

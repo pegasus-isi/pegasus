@@ -13,7 +13,6 @@
  */
 package edu.isi.pegasus.planner.partitioner;
 
-
 import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;

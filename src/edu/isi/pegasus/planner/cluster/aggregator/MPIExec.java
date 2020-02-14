@@ -192,11 +192,11 @@ public class MPIExec extends Abstract {
                                     isClustered
                                             ? constitutentJob.getLogicalID()
                                             : // for file generation for a clustered job we want the
-                                              // ID in the DAX
+                                            // ID in the DAX
                                             constitutentJob
                                                     .getID() // for file generation as part of PMC
-                                                             // code generator we want the pegasus
-                                                             // assigned job id
+                                    // code generator we want the pegasus
+                                    // assigned job id
                                     )
                             .append(" ");
 

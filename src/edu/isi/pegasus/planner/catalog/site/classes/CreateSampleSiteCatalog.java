@@ -18,7 +18,6 @@
 
 package edu.isi.pegasus.planner.catalog.site.classes;
 
-
 import edu.isi.pegasus.planner.classes.Profile;
 import java.io.FileWriter;
 import java.io.IOException;

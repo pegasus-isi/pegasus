@@ -20,7 +20,7 @@ import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize; 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteDataJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteDataJsonSerializer;
@@ -464,19 +464,18 @@ public class Profiles {
             Logger.getLogger(Profiles.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    
 }
 
 /**
  * Custom deserializer for YAML representation of Profiles
- * 
+ *
  * @author Karan Vahi
  */
 class ProfilesDeserializer extends SiteDataJsonDeserializer<Profiles> {
 
     /**
      * Deserializes a Profiles YAML description of the type
+     *
      * <pre>
      *    profiles:
      *     env:
@@ -485,14 +484,16 @@ class ProfilesDeserializer extends SiteDataJsonDeserializer<Profiles> {
      *         clusters.num: 1
      *         x-ext: true
      * </pre>
+     *
      * @param jp
      * @param dc
      * @return
      * @throws IOException
-     * @throws JsonProcessingException 
+     * @throws JsonProcessingException
      */
     @Override
-    public Profiles deserialize(JsonParser jp, DeserializationContext dc) throws IOException, JsonProcessingException {
+    public Profiles deserialize(JsonParser jp, DeserializationContext dc)
+            throws IOException, JsonProcessingException {
         ObjectCodec oc = jp.getCodec();
         JsonNode profilesNode = oc.readTree(jp);
         Profiles p = new Profiles();
@@ -502,7 +503,6 @@ class ProfilesDeserializer extends SiteDataJsonDeserializer<Profiles> {
                 Map.Entry<String, JsonNode> entry = it.next();
                 p.addProfilesDirectly(this.createProfiles(entry.getKey(), entry.getValue()));
             }
-            
         }
         return p;
     }
@@ -526,18 +526,15 @@ class ProfilesDeserializer extends SiteDataJsonDeserializer<Profiles> {
                 Map.Entry<String, JsonNode> entry = it.next();
                 profiles.add(new Profile(namespace, entry.getKey(), entry.getValue().asText()));
             }
-        }
-        else if( namespace.startsWith("x-") ){
-            //ignore any user defined extensions
-            //example x-ext: true
-        }
-        else {
+        } else if (namespace.startsWith("x-")) {
+            // ignore any user defined extensions
+            // example x-ext: true
+        } else {
             throw new RuntimeException(
                     "Invalid namespace specified " + namespace + " for profiles " + node);
         }
         return profiles;
     }
-
 }
 
 /**
@@ -547,8 +544,7 @@ class ProfilesDeserializer extends SiteDataJsonDeserializer<Profiles> {
  */
 class ProfilesSerializer extends SiteDataJsonSerializer<Profiles> {
 
-    public ProfilesSerializer() {
-    }
+    public ProfilesSerializer() {}
 
     /**
      * Serializes contents into YAML representation
@@ -558,27 +554,24 @@ class ProfilesSerializer extends SiteDataJsonSerializer<Profiles> {
      * @param sp
      * @throws IOException
      */
-    public void serialize(Profiles profiles, JsonGenerator gen, SerializerProvider sp) throws IOException {
+    public void serialize(Profiles profiles, JsonGenerator gen, SerializerProvider sp)
+            throws IOException {
         gen.writeStartObject();
         // traverse through all the enum keys
         for (Profiles.NAMESPACES n : Profiles.NAMESPACES.values()) {
             Namespace nm = profiles.get(n);
-            if(nm.isEmpty()){
+            if (nm.isEmpty()) {
                 continue;
             }
             gen.writeFieldName(nm.namespaceName());
-            gen.writeStartObject( );
+            gen.writeStartObject();
             for (Iterator it = nm.getProfileKeyIterator(); it.hasNext(); ) {
                 String key = (String) it.next();
-                String value = (String)nm.get(key);
+                String value = (String) nm.get(key);
                 gen.writeStringField(key, value);
             }
             gen.writeEndObject();
         }
         gen.writeEndObject();
     }
-
-    
-
-
 }

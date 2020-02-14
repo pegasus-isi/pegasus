@@ -1407,10 +1407,8 @@ public class CondorGenerator extends Abstract {
         if (args != null && args.length() > 0) {
             // PM-1037 consider both the profile value and default value
             // from properties to see if we need to quote arguments for the job
-            boolean quote =
-                    mProps
-                            .useCondorQuotingForArguments(); // default from properties if not
-                                                             // specified is true
+            boolean quote = mProps.useCondorQuotingForArguments(); // default from properties if not
+            // specified is true
             String profileKey = Pegasus.CONDOR_QUOTE_ARGUMENTS_KEY;
             if (job.vdsNS.containsKey(profileKey)) {
                 quote = quote && job.vdsNS.getBooleanValue(profileKey);
@@ -1826,7 +1824,7 @@ class GraphNodeGSONAdapter extends TypeAdapter<GraphNode> {
     public GraphNode read(JsonReader reader) throws IOException {
         throw new UnsupportedOperationException(
                 "Not supported yet."); // To change body of generated methods, choose Tools |
-                                       // Templates.
+        // Templates.
     }
 }
 
@@ -1850,6 +1848,6 @@ class ProfilesGSONAdapter extends TypeAdapter<Profiles> {
     public Profiles read(JsonReader reader) throws IOException {
         throw new UnsupportedOperationException(
                 "Not supported yet."); // To change body of generated methods, choose Tools |
-                                       // Templates.
+        // Templates.
     }
 }

@@ -24,16 +24,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
-
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Iterator;
@@ -474,16 +471,16 @@ public class GridGateway extends AbstractSiteData {
         visitor.visit(this);
         visitor.depart(this);
     }
-    
-    public static void main(String[] args){
+
+    public static void main(String[] args) {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
-       
-        String test = 
-                "type: gt5\n" +
-                "contact: smarty.isi.edu/jobmanager-pbs\n" +
-                "scheduler: pbs\n" +
-                "jobtype: auxillary";
+
+        String test =
+                "type: gt5\n"
+                        + "contact: smarty.isi.edu/jobmanager-pbs\n"
+                        + "scheduler: pbs\n"
+                        + "jobtype: auxillary";
         try {
             GridGateway gateway = mapper.readValue(test, GridGateway.class);
             System.out.println(gateway);
@@ -496,66 +493,70 @@ public class GridGateway extends AbstractSiteData {
 
 /**
  * Custom deserializer for YAML representation of GridGateway
- * 
+ *
  * @author Karan Vahi
  */
 class GridGatewayDeserializer extends SiteDataJsonDeserializer<GridGateway> {
 
     /**
      * Deserializes a GridGateway YAML description of the type
+     *
      * <pre>
-         type: gt5
-         contact: smarty.isi.edu/jobmanager-pbs
-         scheduler: pbs
-         jobtype: auxillary
+     * type: gt5
+     * contact: smarty.isi.edu/jobmanager-pbs
+     * scheduler: pbs
+     * jobtype: auxillary
      * </pre>
+     *
      * @param jp
      * @param dc
      * @return
      * @throws IOException
-     * @throws JsonProcessingException 
+     * @throws JsonProcessingException
      */
     @Override
-    public GridGateway deserialize(JsonParser jp, DeserializationContext dc) throws IOException, JsonProcessingException {
+    public GridGateway deserialize(JsonParser jp, DeserializationContext dc)
+            throws IOException, JsonProcessingException {
         ObjectCodec oc = jp.getCodec();
         JsonNode node = oc.readTree(jp);
         GridGateway gateway = new GridGateway();
-        
+
         for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
             Map.Entry<String, JsonNode> e = it.next();
             String key = e.getKey();
-            SiteCatalogKeywords reservedKey =
-                    SiteCatalogKeywords.getReservedKey(key);
+            SiteCatalogKeywords reservedKey = SiteCatalogKeywords.getReservedKey(key);
             if (reservedKey == null) {
-                this.complainForIllegalKey(SiteCatalogKeywords.FILESERVERS.getReservedName(), key, node );
+                this.complainForIllegalKey(
+                        SiteCatalogKeywords.FILESERVERS.getReservedName(), key, node);
             }
 
             switch (reservedKey) {
                 case TYPE:
                     gateway.setType(GridGateway.TYPE.valueOf(node.get(key).asText()));
                     break;
-                    
+
                 case JOB_TYPE:
                     gateway.setJobType(GridGateway.JOB_TYPE.valueOf(node.get(key).asText()));
                     break;
-                    
+
                 case CONTACT:
                     gateway.setContact(node.get(key).asText());
                     break;
-                 
+
                 case SCHEDULER:
-                    gateway.setScheduler(GridGateway.SCHEDULER_TYPE.valueOf(node.get(key).asText()));
+                    gateway.setScheduler(
+                            GridGateway.SCHEDULER_TYPE.valueOf(node.get(key).asText()));
                     break;
-                    
+
                 case IDLE_NODES:
                     gateway.setIdleNodes(node.get(key).asText());
                     break;
-                    
+
                 case TOTAL_NODES:
                     gateway.setTotalNodes(node.get(key).asText());
                     break;
-                
-                //defined in schema but we don't do anything about it    
+
+                    // defined in schema but we don't do anything about it
                 case FREE_MEM:
                 case TOTAL_MEM:
                 case MAX_COUNT:
@@ -563,45 +564,52 @@ class GridGatewayDeserializer extends SiteDataJsonDeserializer<GridGateway> {
                 case RUNNING_JOBS:
                 case JOBS_IN_QUEUE:
                     break;
-                    
+
                 default:
-                    this.complainForUnsupportedKey(SiteCatalogKeywords.GRIDS.getReservedName(), key, node);
+                    this.complainForUnsupportedKey(
+                            SiteCatalogKeywords.GRIDS.getReservedName(), key, node);
             }
         }
-        
+
         return gateway;
     }
 }
 
 /**
  * Custom serializer for YAML representation of GridGateway
- * 
+ *
  * @author Karan Vahi
  */
 class GridGatewaySerializer extends SiteDataJsonSerializer<GridGateway> {
 
-    public GridGatewaySerializer() {
-    }
+    public GridGatewaySerializer() {}
 
     /**
-     * Serializes contents into  YAML representation
-     * 
+     * Serializes contents into YAML representation
+     *
      * @param fs
      * @param gen
      * @param sp
-     * @throws IOException 
+     * @throws IOException
      */
-    public void serialize(GridGateway gateway, JsonGenerator gen, SerializerProvider sp) throws IOException {
-       gen.writeStartObject();
-       writeStringField(gen, SiteCatalogKeywords.TYPE.getReservedName(), gateway.getType().toString());
-       writeStringField(gen, SiteCatalogKeywords.CONTACT.getReservedName(), gateway.getContact());
-       writeStringField(gen, SiteCatalogKeywords.SCHEDULER.getReservedName(), gateway.getScheduler().toString());
-       writeStringField(gen, SiteCatalogKeywords.JOB_TYPE.getReservedName(), gateway.getJobType().toString());
-       writeNumberField(gen, SiteCatalogKeywords.IDLE_NODES.getReservedName(), gateway.getIdleNodes());
-       writeNumberField(gen, SiteCatalogKeywords.TOTAL_NODES.getReservedName(),gateway.getTotalNodes());
-       gen.writeEndObject();
+    public void serialize(GridGateway gateway, JsonGenerator gen, SerializerProvider sp)
+            throws IOException {
+        gen.writeStartObject();
+        writeStringField(
+                gen, SiteCatalogKeywords.TYPE.getReservedName(), gateway.getType().toString());
+        writeStringField(gen, SiteCatalogKeywords.CONTACT.getReservedName(), gateway.getContact());
+        writeStringField(
+                gen,
+                SiteCatalogKeywords.SCHEDULER.getReservedName(),
+                gateway.getScheduler().toString());
+        writeStringField(
+                gen,
+                SiteCatalogKeywords.JOB_TYPE.getReservedName(),
+                gateway.getJobType().toString());
+        writeNumberField(
+                gen, SiteCatalogKeywords.IDLE_NODES.getReservedName(), gateway.getIdleNodes());
+        writeNumberField(
+                gen, SiteCatalogKeywords.TOTAL_NODES.getReservedName(), gateway.getTotalNodes());
+        gen.writeEndObject();
     }
-
-    
-
 }

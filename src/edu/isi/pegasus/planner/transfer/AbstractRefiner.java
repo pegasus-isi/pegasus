@@ -13,7 +13,6 @@
  */
 package edu.isi.pegasus.planner.transfer;
 
-
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.FileTransfer;

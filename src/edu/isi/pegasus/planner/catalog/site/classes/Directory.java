@@ -31,11 +31,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
-import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
-
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
-
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Iterator;
@@ -52,7 +49,6 @@ import java.util.logging.Logger;
  * @author Karan Vahi
  * @version $Revision$
  */
-
 @JsonSerialize(using = DirectorySerializer.class)
 @JsonDeserialize(using = DirectoryDeserializer.class)
 public class Directory extends DirectoryLayout {
@@ -105,92 +101,91 @@ public class Directory extends DirectoryLayout {
         localScratch,
         localStorage;
     }
-    
+
     /**
      * Maps the values for yamlType key in yaml schema to old types
-     * 
+     *
      * @param yamlType
-     * @return 
+     * @return
      */
-    public static TYPE yamlTypeToType(String yamlType){
+    public static TYPE yamlTypeToType(String yamlType) {
         return yamlTypeToType(YAML_TYPE.valueOf(yamlType));
     }
-    
+
     /**
      * Maps the values for yamlType key in yaml schema to old types
-     * 
+     *
      * @param yamlType
-     * @return 
+     * @return
      */
-    public static TYPE yamlTypeToType(YAML_TYPE yamlType){
+    public static TYPE yamlTypeToType(YAML_TYPE yamlType) {
         TYPE type = TYPE.shared_scratch;
-        switch (yamlType){
+        switch (yamlType) {
             case sharedScratch:
                 type = TYPE.shared_scratch;
                 break;
-                
+
             case sharedStorage:
                 type = TYPE.shared_storage;
                 break;
-                
+
             case localScratch:
                 type = TYPE.local_scratch;
                 break;
-                
+
             case localStorage:
                 type = TYPE.local_storage;
                 break;
-                
+
             default:
                 throw new SiteCatalogException("Unkown type value " + yamlType);
         }
-                
+
         return type;
     }
-    
+
     /**
      * Maps the values for old types to camel case types in the YAML schema
-     * 
+     *
      * @param yamlType
-     * @return 
+     * @return
      */
-    public static YAML_TYPE typeToYAMLType(String type){
+    public static YAML_TYPE typeToYAMLType(String type) {
         return typeToYAMLType(TYPE.value(type));
     }
-    
+
     /**
      * Maps the values for old types to camel case types in the YAML schema
-     * 
+     *
      * @param yamlType
-     * @return 
+     * @return
      */
-    public static YAML_TYPE typeToYAMLType(TYPE type){
+    public static YAML_TYPE typeToYAMLType(TYPE type) {
         YAML_TYPE yamlType = YAML_TYPE.sharedScratch;
-        switch (type){
+        switch (type) {
             case shared_scratch:
                 yamlType = YAML_TYPE.sharedScratch;
                 break;
-                
+
             case shared_storage:
                 yamlType = YAML_TYPE.sharedStorage;
                 break;
-                
+
             case local_scratch:
                 yamlType = YAML_TYPE.localScratch;
                 break;
-                
+
             case local_storage:
                 yamlType = YAML_TYPE.localStorage;
                 break;
-                
+
             default:
                 throw new SiteCatalogException("Unkown type value " + yamlType);
         }
-                
+
         return yamlType;
     }
-    
-    
+
     /** Default constructor */
     public Directory() {
         super();
@@ -312,7 +307,7 @@ public class Directory extends DirectoryLayout {
 
         return obj;
     }
-    
+
     /**
      * Matches two Directory objects
      *
@@ -330,27 +325,28 @@ public class Directory extends DirectoryLayout {
             return false;
         }
         Directory dir = (Directory) obj;
-        
-        //short cut
+
+        // short cut
         return this.toString().equals(dir.toString());
-        
     }
-    
-    public static void main(String[] args){
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
+
+    public static void main(String[] args) {
+        ObjectMapper mapper =
+                new ObjectMapper(
+                        new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
         /*SimpleModule module = new SimpleModule();
         module.addDeserializer(FileServer.class, new FileServerDeserializer());
         mapper.registerModule(module);
         */
-        String test = 
-                "  type: sharedScratch\n" +
-                "  path: /tmp/workflows/scratch\n" +
-                "  freeSize: 1GB\n" +
-                "  totalSize: 122GB\n" +
-                "  fileServers:\n" +
-                "    - operation: all\n" +
-                "      url: file:///tmp/workflows/scratch\n" ;
+        String test =
+                "  type: sharedScratch\n"
+                        + "  path: /tmp/workflows/scratch\n"
+                        + "  freeSize: 1GB\n"
+                        + "  totalSize: 122GB\n"
+                        + "  fileServers:\n"
+                        + "    - operation: all\n"
+                        + "      url: file:///tmp/workflows/scratch\n";
         Directory dir = null;
         try {
             dir = mapper.readValue(test, Directory.class);
@@ -359,52 +355,54 @@ public class Directory extends DirectoryLayout {
         } catch (IOException ex) {
             Logger.getLogger(FileServer.class.getName()).log(Level.SEVERE, null, ex);
         }
-            
     }
 }
 
 /**
  * Custom deserializer for YAML representation of Directory
- * 
+ *
  * @author Karan Vahi
  */
 class DirectoryDeserializer extends SiteDataJsonDeserializer<Directory> {
 
     /**
      * Deserializes a Directory YAML description of the type
+     *
      * <pre>
-          yamlType: sharedScratch
-          path: /tmp/workflows/scratch
-          fileServers:
-            - operation: all
-              url: file:///tmp/workflows/scratch
- </pre>
+     * yamlType: sharedScratch
+     * path: /tmp/workflows/scratch
+     * fileServers:
+     * - operation: all
+     * url: file:///tmp/workflows/scratch
+     * </pre>
+     *
      * @param parser
      * @param dc
      * @return
      * @throws IOException
-     * @throws JsonProcessingException 
+     * @throws JsonProcessingException
      */
     @Override
-    public Directory deserialize(JsonParser parser, DeserializationContext dc) throws IOException, JsonProcessingException {
+    public Directory deserialize(JsonParser parser, DeserializationContext dc)
+            throws IOException, JsonProcessingException {
         ObjectCodec oc = parser.getCodec();
         JsonNode node = oc.readTree(parser);
         Directory directory = new Directory();
-        
+
         for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
             Map.Entry<String, JsonNode> e = it.next();
             String key = e.getKey();
-            SiteCatalogKeywords reservedKey =
-                    SiteCatalogKeywords.getReservedKey(key);
+            SiteCatalogKeywords reservedKey = SiteCatalogKeywords.getReservedKey(key);
             if (reservedKey == null) {
-                this.complainForIllegalKey(SiteCatalogKeywords.DIRECTORIES.getReservedName(), key, node );
+                this.complainForIllegalKey(
+                        SiteCatalogKeywords.DIRECTORIES.getReservedName(), key, node);
             }
 
             switch (reservedKey) {
                 case TYPE:
                     directory.setType(Directory.yamlTypeToType(node.get(key).asText()));
                     break;
-                    
+
                 case PATH:
                     directory.getInternalMountPoint().setMountPoint(node.get(key).asText());
                     break;
@@ -412,8 +410,8 @@ class DirectoryDeserializer extends SiteDataJsonDeserializer<Directory> {
                 case FILESERVERS:
                     JsonNode fileServersNodes = node.get(key);
                     if (fileServersNodes != null) {
-                        if( fileServersNodes.isArray() ){
-                            for( JsonNode fileServerNode: fileServersNodes ){
+                        if (fileServersNodes.isArray()) {
+                            for (JsonNode fileServerNode : fileServersNodes) {
                                 parser = fileServerNode.traverse(oc);
                                 FileServer fs = parser.readValueAs(FileServer.class);
                                 directory.addFileServer(fs);
@@ -421,52 +419,54 @@ class DirectoryDeserializer extends SiteDataJsonDeserializer<Directory> {
                         }
                     }
                     break;
-                    
-                //defined in schema but we don't do anything about it    
+
+                    // defined in schema but we don't do anything about it
                 case FREE_SIZE:
                     directory.getInternalMountPoint().setFreeSize(node.get(key).asText());
                     break;
-                    
+
                 case TOTAL_SIZE:
                     directory.getInternalMountPoint().setTotalSize(node.get(key).asText());
                     break;
-                    
-                default:
-                    this.complainForUnsupportedKey(SiteCatalogKeywords.DIRECTORIES.getReservedName(), key, node);
-            }
 
+                default:
+                    this.complainForUnsupportedKey(
+                            SiteCatalogKeywords.DIRECTORIES.getReservedName(), key, node);
+            }
         }
 
         return directory;
-        
     }
 }
 /**
  * Custom serializer for YAML representation of Directory
- * 
+ *
  * @author Karan Vahi
  */
 class DirectorySerializer extends SiteDataJsonSerializer<Directory> {
 
-    public DirectorySerializer() {
-    }
+    public DirectorySerializer() {}
 
     /**
-     * Serializes contents into  YAML representation
-     * 
+     * Serializes contents into YAML representation
+     *
      * @param directory
      * @param gen
      * @param sp
-     * @throws IOException 
+     * @throws IOException
      */
-    public void serialize(Directory directory, JsonGenerator gen, SerializerProvider sp) throws IOException {
+    public void serialize(Directory directory, JsonGenerator gen, SerializerProvider sp)
+            throws IOException {
         InternalMountPoint imp = directory.getInternalMountPoint();
         gen.writeStartObject();
-        writeStringField(gen, SiteCatalogKeywords.TYPE.getReservedName(), Directory.typeToYAMLType(directory.getType().toString()).toString());
+        writeStringField(
+                gen,
+                SiteCatalogKeywords.TYPE.getReservedName(),
+                Directory.typeToYAMLType(directory.getType().toString()).toString());
         writeStringField(gen, SiteCatalogKeywords.PATH.getReservedName(), imp.getMountPoint());
         writeStringField(gen, SiteCatalogKeywords.FREE_SIZE.getReservedName(), imp.getFreeSize());
         writeStringField(gen, SiteCatalogKeywords.TOTAL_SIZE.getReservedName(), imp.getTotalSize());
-        
+
         /*gen.writeArrayFieldStart(SiteCatalogKeywords.FILESERVERS.getReservedName());
         // iterate through all the file servers
         for (FileServer.OPERATION op : FileServer.OPERATION.values()) {
@@ -480,15 +480,13 @@ class DirectorySerializer extends SiteDataJsonSerializer<Directory> {
         List<FileServer> fservers = new LinkedList();
         // iterate through all the file servers
         for (FileServer.OPERATION op : FileServer.OPERATION.values()) {
-            for (Iterator<FileServer> it = directory.getFileServersIterator(op); it.hasNext();) {
+            for (Iterator<FileServer> it = directory.getFileServersIterator(op); it.hasNext(); ) {
                 FileServer fs = it.next();
                 fservers.add(fs);
             }
         }
         writeArray(gen, SiteCatalogKeywords.FILESERVERS.getReservedName(), fservers);
-        
+
         gen.writeEndObject();
     }
-
-    
 }

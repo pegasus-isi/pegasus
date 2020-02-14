@@ -244,7 +244,7 @@ public class PegasusConfiguration {
                             ? false
                             : // we use the path specified
                             true; // we need to append to path in site catalog on basis of site
-                                  // handle
+            // handle
 
             // update the internal mount point and external URL's
             InternalMountPoint imp = storageDirectory.getInternalMountPoint();

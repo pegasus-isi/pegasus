@@ -861,8 +861,8 @@ public class PegasusProperties implements Cloneable {
      *
      * <p>Referred to by the "pegasus.catalog.site" property.
      *
-     * @return the site catalog implementor, that is used to load the appropriate implementing class if the
-     property is specified, else NULL
+     * @return the site catalog implementor, that is used to load the appropriate implementing class
+     *     if the property is specified, else NULL
      */
     public String getSiteCatalogImplementor() {
         return mProps.getProperty(PegasusProperties.PEGASUS_SITE_CATALOG_PROPERTY);

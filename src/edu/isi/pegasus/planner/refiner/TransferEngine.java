@@ -1353,7 +1353,7 @@ public class TransferEngine extends Engine {
             boolean symLinkSelectedLocation = false;
             boolean bypassFirstLevelStagingPossible =
                     false; // PM-1327 tracks whether one of candidate locations can trigger bypass
-                           // for that file
+            // for that file
             int candidateNum = 0;
             // PM-1082 we want to select only one destination put URL
             // with preference for symlinks
@@ -1365,9 +1365,8 @@ public class TransferEngine extends Engine {
                 if (symLinkSelectedLocation =
                         (mUseSymLinks
                                 && selLoc.getResourceHandle().equals(job.getStagingSiteHandle())
-                                && !pf
-                                        .isExecutable() // PM-1086 symlink only data files as chmod
-                                                        // fails on symlinked file
+                                && !pf.isExecutable() // PM-1086 symlink only data files as chmod
+                        // fails on symlinked file
                         )) {
 
                     // resolve any srm url's that are specified
@@ -1409,7 +1408,7 @@ public class TransferEngine extends Engine {
 
                 if (destPutURL == null
                         || symLinkSelectedLocation) { // PM-1082 if a destination has to be
-                                                      // symlinked always recompute
+                    // symlinked always recompute
 
                     if (symLinkSelectedLocation) {
                         // we use the file URL location to dest dir
@@ -1534,7 +1533,7 @@ public class TransferEngine extends Engine {
                                 job,
                                 stagingSite,
                                 ft)) { // check on the basis of constructed source URL whether to
-                                       // run remotely
+                    // run remotely
 
                     if (removeFileURLFromSource(job, ft, stagingSiteHandle)) {
                         // PM-1082 remote transfers ft can still have file url's

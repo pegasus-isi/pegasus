@@ -15,71 +15,67 @@
  */
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
+import static org.junit.Assert.*;
+
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  * To test the Condor style class for condor code generator.
- * 
+ *
  * @author vahi
  */
 public class CondorTest {
     private Condor cs = null;
 
     private static final String REQUEST_CPUS_KEY =
-                    edu.isi.pegasus.planner.namespace.Condor.REQUEST_CPUS_KEY;
+            edu.isi.pegasus.planner.namespace.Condor.REQUEST_CPUS_KEY;
     private static final String REQUEST_MEMORY_KEY =
-                    edu.isi.pegasus.planner.namespace.Condor.REQUEST_MEMORY_KEY;
-    
-    public CondorTest() {
-    }
+            edu.isi.pegasus.planner.namespace.Condor.REQUEST_MEMORY_KEY;
+
+    public CondorTest() {}
 
     @Before
     public void setUp() {
         cs = new Condor();
     }
-    
+
     @Test
-    public void testPegasusProfileCores() throws CondorStyleException{
+    public void testPegasusProfileCores() throws CondorStyleException {
         Job j = new Job();
-        j.vdsNS.checkKeyInNS( Pegasus.CORES_KEY, "5" );
-        testForKey( j, REQUEST_CPUS_KEY, "5");
+        j.vdsNS.checkKeyInNS(Pegasus.CORES_KEY, "5");
+        testForKey(j, REQUEST_CPUS_KEY, "5");
     }
-    
-    
+
     @Test
-    public void testPegasusProfileCoresAndCondorKey() throws CondorStyleException{
+    public void testPegasusProfileCoresAndCondorKey() throws CondorStyleException {
         Job j = new Job();
-        j.vdsNS.checkKeyInNS(Pegasus.CORES_KEY, "5" );
-        j.condorVariables.checkKeyInNS( REQUEST_CPUS_KEY, "6" );
-        testForKey( j, REQUEST_CPUS_KEY, "6");
+        j.vdsNS.checkKeyInNS(Pegasus.CORES_KEY, "5");
+        j.condorVariables.checkKeyInNS(REQUEST_CPUS_KEY, "6");
+        testForKey(j, REQUEST_CPUS_KEY, "6");
     }
-    
+
     @Test
-    public void testPegasusProfileMemory() throws CondorStyleException{
+    public void testPegasusProfileMemory() throws CondorStyleException {
         Job j = new Job();
-        j.vdsNS.checkKeyInNS( Pegasus.MEMORY_KEY, "5" );
-        testForKey( j, REQUEST_MEMORY_KEY, "5");
+        j.vdsNS.checkKeyInNS(Pegasus.MEMORY_KEY, "5");
+        testForKey(j, REQUEST_MEMORY_KEY, "5");
     }
-    
-    
+
     @Test
-    public void testPegasusProfileMemoryAndCondorKey() throws CondorStyleException{
+    public void testPegasusProfileMemoryAndCondorKey() throws CondorStyleException {
         Job j = new Job();
-        j.vdsNS.checkKeyInNS( Pegasus.MEMORY_KEY, "5" );
-        j.condorVariables.checkKeyInNS( REQUEST_MEMORY_KEY, "6" );
-        testForKey( j, REQUEST_MEMORY_KEY, "6");
+        j.vdsNS.checkKeyInNS(Pegasus.MEMORY_KEY, "5");
+        j.condorVariables.checkKeyInNS(REQUEST_MEMORY_KEY, "6");
+        testForKey(j, REQUEST_MEMORY_KEY, "6");
     }
-    
-    
-    
-    private void testForKey(Job j, String key, String expectedValue ) throws CondorStyleException{
+
+    private void testForKey(Job j, String key, String expectedValue) throws CondorStyleException {
         cs.apply(j);
-        assertTrue( j.condorVariables.containsKey(  key ));
-        assertEquals( expectedValue, j.condorVariables.get(key ) );
+        assertTrue(j.condorVariables.containsKey(key));
+        assertEquals(expectedValue, j.condorVariables.get(key));
     }
 }

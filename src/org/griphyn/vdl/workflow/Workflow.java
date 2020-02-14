@@ -14,7 +14,6 @@
  */
 package org.griphyn.vdl.workflow;
 
-
 /**
  * This abstract class defines a common base for all workflow related Java objects. This class is
  * empty. It exists for grouping purposes.

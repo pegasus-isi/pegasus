@@ -13,7 +13,6 @@
  */
 package edu.isi.pegasus.planner.catalog;
 
-
 /**
  * Class to notify of failures. Exceptions are chained like the {@link java.sql.SQLException}
  * interface.

@@ -12,17 +12,16 @@
  * limitations under the License.
  */
 package edu.isi.pegasus.planner.catalog.site.classes;
-        
+
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Keywords used in the Site Catalog YAML Schema starting Pegasus 5.0 version
- * 
+ *
  * @author Karan Vahi
  */
 public enum SiteCatalogKeywords {
-    
     PROFILES("profiles"),
     SITES("sites"),
     NAME("name"),
@@ -43,7 +42,7 @@ public enum SiteCatalogKeywords {
     CONTACT("contact"),
     SCHEDULER("scheduler"),
     JOB_TYPE("jobtype"),
-    //optional attributes for gridgateway
+    // optional attributes for gridgateway
     FREE_MEM("freeMem"),
     TOTAL_MEM("totalMem"),
     MAX_COUNT("maxCount"),

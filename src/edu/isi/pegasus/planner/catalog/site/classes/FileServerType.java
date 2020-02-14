@@ -177,7 +177,7 @@ public abstract class FileServerType extends AbstractSiteData {
     public void setSupportedOperation(OPERATION operation) {
         mOperation = operation;
     }
-    
+
     /**
      * The operation supported by the file server
      *

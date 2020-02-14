@@ -523,12 +523,12 @@ public class Distribute implements GridStart {
     public void useFullPathToGridStarts(boolean fullPath) {
         throw new UnsupportedOperationException(
                 "Not supported yet."); // To change body of generated methods, choose Tools |
-                                       // Templates.
+        // Templates.
     }
 
     public String getWorkerNodeDirectory(Job job) {
         throw new UnsupportedOperationException(
                 "Not supported yet."); // To change body of generated methods, choose Tools |
-                                       // Templates.
+        // Templates.
     }
 }
