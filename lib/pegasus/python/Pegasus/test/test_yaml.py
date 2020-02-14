@@ -4,7 +4,13 @@ from Pegasus.yaml import dumps, loads
 
 
 @pytest.mark.parametrize(
-    "s, expected", [("key: 1", 1), ("key: 2018-10-10", "2018-10-10")]
+    "s, expected",
+    [
+        ("key: 1", 1),
+        ("key: 2018-10-10", "2018-10-10"),
+        ("key: yes", "yes"),
+        ("key: true", True),
+    ],
 )
 def test_loads(s, expected):
     """Test :meth:`Pegasus.yaml.loads`."""
@@ -15,7 +21,12 @@ def test_loads(s, expected):
 
 @pytest.mark.parametrize(
     "obj, expected",
-    [({"key": 1}, "key: 1\n"), ({"key": "2018-10-10"}, "key: '2018-10-10'\n")],
+    [
+        ({"key": 1}, "key: 1\n"),
+        ({"key": "2018-10-10"}, "key: '2018-10-10'\n"),
+        ({"key": "yes"}, "key: 'yes'\n"),
+        ({"key": True}, "key: true\n"),
+    ],
 )
 def test_dumps(obj, expected):
     """Test :meth:`Pegasus.yaml.dumps`."""

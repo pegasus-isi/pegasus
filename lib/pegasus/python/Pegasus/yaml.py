@@ -39,6 +39,27 @@ yaml.constructor.SafeConstructor.yaml_constructors[
 ] = yaml.constructor.SafeConstructor.yaml_constructors["tag:yaml.org,2002:str"]
 
 
+def _add_bool(self, node):
+    """
+    Ensure :mod:`yaml` handles booleans in the expected fashion.
+
+    Ensure :mod:`yaml` does not translate on, yes to True, and off, no to False.
+
+    .. notes::
+
+        In YAML 1.2 the usage of off/on/yes/no was dropped.
+    """
+    bool_values = {
+        "true": True,
+        "false": False,
+    }
+    v = self.construct_scalar(node)
+    return bool_values.get(v.lower(), v)
+
+
+yaml.constructor.SafeConstructor.yaml_constructors["tag:yaml.org,2002:bool"] = _add_bool
+
+
 def loads(s: str, *args, **kwargs) -> Dict:
     """
     Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance containing a YAML document) to a Python dictionary.
