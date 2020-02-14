@@ -2,8 +2,6 @@ import json
 from enum import Enum
 from collections import defaultdict
 
-import yaml
-
 from .mixins import ProfileMixin
 from .mixins import HookMixin
 from .mixins import MetadataMixin
