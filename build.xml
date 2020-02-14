@@ -152,12 +152,21 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
     <pathconvert refid="java.source" property="java.source" pathsep=" " />
 
-    <java jar="${basedir}/release-tools/jars/google-java-format-1.7-all-deps.jar" fork="true" failonerror="true" maxmemory="128m">
+    <java jar="${basedir}/release-tools/jars/google-java-format-1.7-all-deps.jar" fork="true" maxmemory="128m" resultproperty="java.format.error">
       <arg value="--aosp"/>
       <arg value="--replace" unless:true="${CI}" />
       <arg line="--set-exit-if-changed --dry-run" if:true="${CI}" />
       <arg line="${java.source}"/>
     </java>
+
+    <fail>
+      Invalid Java code format, run `ant code-format-java` and commit the changes to fix the issue.
+      <condition>
+        <not>
+          <equals arg1="${java.format.error}" arg2="0"></equals>
+        </not>
+      </condition>
+    </fail>
   </target>
 
   <target name="compile-common" depends="setup" description="Compile common java code">
