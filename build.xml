@@ -139,9 +139,10 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
   <!-- Java code format -->
   <target name="code-format-java" description="Java code format">
-    <fileset id="java.source" dir="src">
-      <include name="**/*.java"/>
-      <exclude name="**/aws/**/CloudWatchLog.java"/>
+    <fileset id="java.source" dir=".">
+      <include name="src/**/*.java"/>
+      <exclude name="src/**/aws/**/CloudWatchLog.java"/>
+      <include name="test/junit/**/*.java"/>
     </fileset>
 
     <pathconvert refid="java.source" property="java.source" pathsep=" " />
