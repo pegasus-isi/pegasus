@@ -735,6 +735,10 @@ project:
                   matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
+
+        - name: Lint
+          description: Lint source code
+          jobs:
             - key: JCF
               name: Java Code Format
               tasks:
