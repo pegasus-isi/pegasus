@@ -1,7 +1,5 @@
 import json
 
-import yaml
-
 from .writable import Writable
 from .writable import _filter_out_nones
 from .errors import DuplicateError
