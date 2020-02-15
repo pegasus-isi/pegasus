@@ -325,36 +325,6 @@ def pipe_out_cmd(cmd_string):
     return my_result
 
 
-def add_to_braindb(run, missing_keys, brain_alternate=None):
-    """
-    This function adds to the braindump database the missing
-    keys from missing_keys.
-    """
-    my_config = {}
-
-    if brain_alternate is None:
-        my_braindb = os.path.join(run, brainbase)
-    else:
-        my_braindb = os.path.join(run, brain_alternate)
-
-    try:
-        my_file = open(my_braindb, "a")
-    except IOError:
-        return
-
-    try:
-        for key in missing_keys:
-            my_file.write("%s %s\n" % (str(key), str(missing_keys[key])))
-    except IOError:
-        # Nothing to do...
-        pass
-
-    try:
-        my_file.close()
-    except IOError:
-        pass
-
-
 def write_braindump(filename, items):
     "This simply writes a dict to the file specified in braindump format"
     f = open(filename, "w")
