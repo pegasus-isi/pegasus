@@ -237,6 +237,7 @@ def epochdate(timestamp):
         return None
 
 
+# TODO: Remove, only used in pegasus-statistics
 def create_directory(dir_name, delete_if_exists=False):
     """
     Utility method for creating directory
@@ -260,6 +261,7 @@ def create_directory(dir_name, delete_if_exists=False):
             sys.exit(1)
 
 
+# TODO: Remove, only used in Pegasus/monitoring/workflow.py
 def find_exec(program, curdir=False, otherdirs=[]):
     """
     Determine logical location of a given binary in PATH
@@ -325,6 +327,7 @@ def pipe_out_cmd(cmd_string):
     return my_result
 
 
+# TODO: Remove, only used in pegasus-submitdir
 def write_braindump(filename, items):
     "This simply writes a dict to the file specified in braindump format"
     f = open(filename, "w")
@@ -333,6 +336,7 @@ def write_braindump(filename, items):
     f.close()
 
 
+# TODO: Remove, only used in pegasus-submitdir
 def read_braindump(filename):
     "This simply reads a braindump dict from the file specified"
     items = {}
@@ -992,50 +996,3 @@ class Tools(object):
                 return None
             finally:
                 self.lock.release()
-
-
-if __name__ == "__main__":
-    current_time = int(time.time())
-    print("Testing isodate() function from now=%lu" % (current_time))
-    print(" long local timestamp:", isodate(now=current_time))
-    print("   long utc timestamp:", isodate(now=current_time, utc=True))
-    print("short local timestamp:", isodate(now=current_time, short=True))
-    print("  short utc timestamp:", isodate(now=current_time, utc=True, short=True))
-    print()
-    print("Testing epochdate() function from above ISO dates")
-    print(" long local epochdate:", epochdate(isodate(now=current_time)))
-    print("   long utc epochdate:", epochdate(isodate(now=current_time, utc=True)))
-    print("short local timestamp:", epochdate(isodate(now=current_time, short=True)))
-    print(
-        "  short utc timestamp:",
-        epochdate(isodate(now=current_time, utc=True, short=True)),
-    )
-    print()
-    print("Testing find exec")
-    print("Looking for ls...", find_exec("ls"))
-    print("Looking for test.pl...", find_exec("test.pl", True))
-    print("Monitord 1", find_exec("pegasus-mointord"))
-    print(
-        "Monitord 2",
-        find_exec(
-            program="pegasus-monitord",
-            otherdirs=["/usr/local/pegasus/src/4.0-branch/bin", "/usr/local/pegasus"],
-        ),
-    )
-    print()
-    print("Testing parse_exit() function")
-    print("ec = 5   ==> ", parse_exit(5))
-    print("ec = 129 ==> ", parse_exit(129))
-    print()
-    print("Testing log10() function")
-    print("log10(10):", log10(10))
-    print("log10(100.2):", log10(100.2))
-    print(slurp_braindb("."))
-    print(pipe_out_cmd("ls -lR"))
-    print()
-    print("Testing quote/unquote functions...")
-    print(repr(str(bytearray(xrange(256)))))
-    print(quote(str(bytearray(xrange(256)))))
-    print(unquote("carriage return: %0Apercent: %25%0Aquote: %27%0Adouble quote: %22"))
-    print()
-    print()
