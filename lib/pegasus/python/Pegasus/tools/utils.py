@@ -531,6 +531,7 @@ def pid_running(filename):
     return False
 
 
+# TODO: Remove, only used in pegasus-statistics
 def monitoring_running(run_dir):
     """
     This function takes a run directory and returns true if it appears
@@ -553,6 +554,7 @@ def monitoring_running(run_dir):
     return False
 
 
+# TODO: Remove, only used in pegasus-statistics
 def loading_completed(run_dir):
     """
     This function examines a run directory and returns True if all
