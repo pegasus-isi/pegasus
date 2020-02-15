@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 ##
 #  Copyright 2007-2011 University Of Southern California
 #
@@ -35,10 +36,10 @@ import time
 import traceback
 
 import six
-from six.moves.builtins import int
 from six.moves import urllib
+from six.moves.builtins import int
 
-__all__ = ["quote", "unquote"]
+__all__ = ("quote", "unquote")
 
 # Compile our regular expressions
 
@@ -123,7 +124,7 @@ def quote(s):
 
     buf = []
     for byte in s:
-        c = chr(byte) 
+        c = chr(byte)
         if byte < 0x20 or byte >= 0x7F:
             # Any byte less than 0x20 is a control character
             # any byte >= 0x7F is either a control character
@@ -169,6 +170,7 @@ def unquote(s):
         s = s.encode("latin-1", "ignore")
 
     return urllib.parse.unquote_to_bytes(s)
+
 
 def isodate(now=int(time.time()), utc=False, short=False):
     """
@@ -741,17 +743,26 @@ def force_str(s):
 
 
 def backticks(cmd_line):
-    '''
+    """
     what would a python program be without some perl love?
-    '''
-    return force_str(subprocess.Popen(cmd_line, shell=True,
-                                      stdout=subprocess.PIPE).communicate()[0])
+    """
+    return force_str(
+        subprocess.Popen(cmd_line, shell=True, stdout=subprocess.PIPE).communicate()[0]
+    )
 
 
 class TimedCommand(object):
     """ Provides a shell callout with a timeout """
 
-    def __init__(self, cmd, env_overrides = {}, timeout_secs = 6*60*60, log_cmd = True, log_outerr = True, cwd=None):
+    def __init__(
+        self,
+        cmd,
+        env_overrides={},
+        timeout_secs=6 * 60 * 60,
+        log_cmd=True,
+        log_outerr=True,
+        cwd=None,
+    ):
         self._cmd = cmd
         self._env_overrides = env_overrides.copy()
         self._timeout_secs = timeout_secs
@@ -772,12 +783,18 @@ class TimedCommand(object):
             # custom environment for the subshell
             sub_env = os.environ.copy()
             for key, value in six.iteritems(self._env_overrides):
-                logger.debug("ENV override: %s = %s" %(key, value))
+                logger.debug("ENV override: %s = %s" % (key, value))
                 sub_env[key] = value
 
-            self._process = subprocess.Popen(self._cmd, shell=True, env=sub_env,
-                                             stdout=self._out_file, stderr=subprocess.STDOUT,
-                                             preexec_fn=os.setpgrp, cwd=self._cwd)
+            self._process = subprocess.Popen(
+                self._cmd,
+                shell=True,
+                env=sub_env,
+                stdout=self._out_file,
+                stderr=subprocess.STDOUT,
+                preexec_fn=os.setpgrp,
+                cwd=self._cwd,
+            )
             self._process.communicate()
 
         if self._log_cmd or logger.isEnabledFor(logging.DEBUG):
@@ -798,8 +815,8 @@ class TimedCommand(object):
             # do our best to kill the whole process group
             try:
                 # os.killpg did not work in all environments
-                #os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
-                kill_cmd = "kill -TERM -%d" %(os.getpgid(self._process.pid))
+                # os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
+                kill_cmd = "kill -TERM -%d" % (os.getpgid(self._process.pid))
                 kp = subprocess.Popen(kill_cmd, shell=True)
                 kp.communicate()
                 self._process.terminate()
@@ -812,7 +829,10 @@ class TimedCommand(object):
             if len(stdout) > 0:
                 logger.info(stdout)
             self._out_file.close()
-            raise RuntimeError("Command timed out after %d seconds: %s" %(self._timeout_secs, self._cmd_for_exc))
+            raise RuntimeError(
+                "Command timed out after %d seconds: %s"
+                % (self._timeout_secs, self._cmd_for_exc)
+            )
 
         self._duration = time.time() - ts_start
 
@@ -825,8 +845,10 @@ class TimedCommand(object):
 
         if self._process.returncode != 0:
             print(self.get_outerr())
-            raise RuntimeError("Command exited with non-zero exit code (%d): %s" \
-                               %(self._process.returncode, self._cmd_for_exc))
+            raise RuntimeError(
+                "Command exited with non-zero exit code (%d): %s"
+                % (self._process.returncode, self._cmd_for_exc)
+            )
 
     def get_outerr(self):
         """
@@ -862,14 +884,16 @@ class Tools(object):
     def __getattr__(self, name):
         return getattr(self.instance, name)
 
-    class __Tools():
+    class __Tools:
 
         _info = {}
 
         def __init__(self):
             self.lock = threading.Lock()
 
-        def find(self, executable, version_arg=None, version_regex=None, path_prepend=None):
+        def find(
+            self, executable, version_arg=None, version_regex=None, path_prepend=None
+        ):
 
             self.lock.acquire()
             try:
@@ -878,24 +902,25 @@ class Tools(object):
                         return None
                     return self._info[executable]
 
-                logger.debug("Trying to detect availability/location of tool: %s"
-                             %(executable))
+                logger.debug(
+                    "Trying to detect availability/location of tool: %s" % (executable)
+                )
 
                 # initialize the global tool info for this executable
                 self._info[executable] = {}
-                self._info[executable]['full_path'] = None
-                self._info[executable]['version'] = None
-                self._info[executable]['version_major'] = None
-                self._info[executable]['version_minor'] = None
-                self._info[executable]['version_patch'] = None
+                self._info[executable]["full_path"] = None
+                self._info[executable]["version"] = None
+                self._info[executable]["version_major"] = None
+                self._info[executable]["version_minor"] = None
+                self._info[executable]["version_patch"] = None
 
                 # figure out the full path to the executable
                 path_entries = os.environ["PATH"].split(":")
                 if "" in path_entries:
                     path_entries.remove("")
                 # if we have PEGASUS_HOME set, and try to invoke a Pegasus tool, prepend
-                if 'PEGASUS_HOME' in os.environ and executable.find("pegasus-") == 0:
-                    path_entries.insert(0, os.environ['PEGASUS_HOME'] + '/bin')
+                if "PEGASUS_HOME" in os.environ and executable.find("pegasus-") == 0:
+                    path_entries.insert(0, os.environ["PEGASUS_HOME"] + "/bin")
                 if path_prepend is not None:
                     for entry in path_prepend:
                         path_entries.insert(0, entry)
@@ -909,41 +934,48 @@ class Tools(object):
                     full_path = None
 
                 if full_path == None:
-                    logger.info("Command '%s' not found in the current environment"
-                                %(executable))
+                    logger.info(
+                        "Command '%s' not found in the current environment"
+                        % (executable)
+                    )
                     self._info[executable] = None
                     return self._info[executable]
-                self._info[executable]['full_path'] = full_path
+                self._info[executable]["full_path"] = full_path
 
                 # version
                 if version_regex is None:
                     version = "N/A"
                 else:
                     version = backticks(executable + " " + version_arg + " 2>&1")
-                    version = version.replace('\n', "")
+                    version = version.replace("\n", "")
                     re_version = re.compile(version_regex)
                     result = re_version.search(version)
                     if result:
                         version = result.group(1)
-                    self._info[executable]['version'] = version
+                    self._info[executable]["version"] = version
 
                 # if possible, break up version into major, minor, patch
                 re_version = re.compile("([0-9]+)\.([0-9]+)(\.([0-9]+)){0,1}")
                 result = re_version.search(version)
                 if result:
-                    self._info[executable]['version_major'] = int(result.group(1))
-                    self._info[executable]['version_minor'] = int(result.group(2))
-                    self._info[executable]['version_patch'] = result.group(4)
-                if self._info[executable]['version_patch'] is None or \
-                   self._info[executable]['version_patch'] == "":
-                    self._info[executable]['version_patch'] = None
+                    self._info[executable]["version_major"] = int(result.group(1))
+                    self._info[executable]["version_minor"] = int(result.group(2))
+                    self._info[executable]["version_patch"] = result.group(4)
+                if (
+                    self._info[executable]["version_patch"] is None
+                    or self._info[executable]["version_patch"] == ""
+                ):
+                    self._info[executable]["version_patch"] = None
                 else:
-                    self._info[executable]['version_patch'] = \
-                        int(self._info[executable]['version_patch'])
+                    self._info[executable]["version_patch"] = int(
+                        self._info[executable]["version_patch"]
+                    )
 
-                logger.info("Tool found: %s   Version: %s   Path: %s"
-                            % (executable, version, full_path))
-                return self._info[executable]['full_path']
+                logger.info(
+                    "Tool found: %s   Version: %s   Path: %s"
+                    % (executable, version, full_path)
+                )
+                return self._info[executable]["full_path"]
             finally:
                 self.lock.release()
 
@@ -952,7 +984,7 @@ class Tools(object):
             self.lock.acquire()
             try:
                 if executable in self._info and self._info[executable] is not None:
-                    return self._info[executable]['full_path']
+                    return self._info[executable]["full_path"]
                 return None
             finally:
                 self.lock.release()
@@ -962,7 +994,7 @@ class Tools(object):
             self.lock.acquire()
             try:
                 if executable in self._info and self._info[executable] is not None:
-                    return self._info[executable]['version_major']
+                    return self._info[executable]["version_major"]
                 return None
             finally:
                 self.lock.release()
@@ -972,23 +1004,24 @@ class Tools(object):
             self.lock.acquire()
             try:
                 if executable in self._info and self._info[executable] is not None:
-                    return self._info[executable]['version_minor']
+                    return self._info[executable]["version_minor"]
                 return None
             finally:
                 self.lock.release()
 
         def version_comparable(self, executable):
-            ''' Returns the detected comparable version given executable '''
+            """ Returns the detected comparable version given executable """
             self.lock.acquire()
             try:
                 if executable in self._info and self._info[executable] is not None:
-                    return '%03d%03d%03d' %(int(self._info[executable]['version_major']), \
-                                            int(self._info[executable]['version_minor']), \
-                                            int(self._info[executable]['version_patch']))
+                    return "%03d%03d%03d" % (
+                        int(self._info[executable]["version_major"]),
+                        int(self._info[executable]["version_minor"]),
+                        int(self._info[executable]["version_patch"]),
+                    )
                 return None
             finally:
                 self.lock.release()
-
 
 
 if __name__ == "__main__":
