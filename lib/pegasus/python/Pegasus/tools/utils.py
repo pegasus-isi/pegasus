@@ -289,44 +289,6 @@ def find_exec(program, curdir=False, otherdirs=[]):
     return None
 
 
-def pipe_out_cmd(cmd_string):
-    """
-    Runs a command and captures stderr and stdout.
-    Warning: Do not use shell meta characters
-    Params: argument string, executable first
-    Returns: All lines of output
-    """
-    my_result = []
-
-    # Launch process using the subprocess module interface
-    try:
-        proc = subprocess.Popen(
-            cmd_string.split(),
-            shell=False,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            bufsize=1,
-        )
-    except:
-        # Error running command
-        return None
-
-    # Wait for it to finish, capturing output
-    resp = proc.communicate()
-
-    # Capture stdout
-    for line in resp[0].split("\n"):
-        if len(line):
-            my_result.append(line)
-
-    # Capture stderr
-    for line in resp[1].split("\n"):
-        if len(line):
-            my_result.append(line)
-
-    return my_result
-
-
 # TODO: Remove, only used in pegasus-submitdir
 def write_braindump(filename, items):
     "This simply writes a dict to the file specified in braindump format"
