@@ -365,7 +365,7 @@ public class Braindump {
      * @throws IOException in case of error while writing out file.
      */
     protected File writeOutBraindumpFile(Map<String, String> entries) throws IOException {
-        File f = new File(mSubmitFileDir, BRAINDUMP_FILE + ".yaml");
+        File f = new File(mSubmitFileDir, BRAINDUMP_FILE);
         YAMLMapper mapper = new YAMLMapper();
         mapper.configure(Feature.WRITE_DOC_START_MARKER, false);
         SequenceWriter writer = mapper.writerWithDefaultPrettyPrinter().writeValues(f);
