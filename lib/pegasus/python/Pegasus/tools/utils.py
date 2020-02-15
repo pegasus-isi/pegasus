@@ -34,10 +34,14 @@ import tempfile
 import threading
 import time
 import traceback
+from pathlib import Path
 
+import attr
 import six
 from six.moves import urllib
 from six.moves.builtins import int
+
+from Pegasus import braindump
 
 __all__ = ("quote", "unquote")
 
@@ -312,7 +316,7 @@ def read_braindump(filename):
     return items
 
 
-def slurp_braindb(run, brain_alternate=None):
+def _slurp_braindb(run, brain_alternate=None):
     """
     Reads extra configuration from braindump database
     Param: run is the run directory
@@ -321,7 +325,7 @@ def slurp_braindb(run, brain_alternate=None):
     my_config = {}
 
     if brain_alternate is None:
-        my_braindb = os.path.join(run, brainbase)
+        my_braindb = os.path.join(run, "braindump.txt")
     else:
         my_braindb = os.path.join(run, brain_alternate)
 
@@ -351,6 +355,39 @@ def slurp_braindb(run, brain_alternate=None):
     # Done!
     logger.debug("# slurped %s" % (my_braindb))
     return my_config
+
+
+def slurp_braindb(run_dir, brain_alternate=None):
+    """
+    Consume braindump file and return it's content as a `dict`.
+
+    :param run_dir: [description]
+    :type run_dir: [type]
+    :param brain_alternate: [description], defaults to None
+    :type brain_alternate: [type], optional
+    :return: [description]
+    :rtype: [type]
+    """
+    if not run_dir:
+        raise ValueError("run_dir is required")
+
+    bdump = Path(run_dir) / (
+        "braindump.yml" if brain_alternate is None else brain_alternate
+    )
+
+    if bdump.exists() is False:
+        # TODO: Remove this except block one backwards compatibility for
+        # 4.9 is not needed.
+        cfg = _slurp_braindb(run_dir, brain_alternate)
+    else:
+        if bdump.is_file() is False:
+            raise TypeError("%s is not a valid file" % bdump.resolve())
+
+        with bdump.open("r") as fp:
+            cfg = braindump.load(fp)
+            cfg = attr.asdict(cfg)
+
+    return cfg
 
 
 def raw_to_regular(exitcode):

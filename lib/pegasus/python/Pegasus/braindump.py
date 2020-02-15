@@ -14,7 +14,10 @@ Basic Usage::
 .. moduleauthor:: Rajiv Mayani <mayani@isi.edu>
 """
 
+from pathlib import Path
 from typing import Dict, TextIO
+
+import attr
 
 from Pegasus import yaml
 
@@ -23,12 +26,52 @@ __all__ = (
     "loads",
     "dump",
     "dumps",
+    "Braindump",
 )
 
 
-def load(fp: TextIO, *args, **kwargs) -> Dict:
+@attr.s(slots=True, kw_only=True)
+class Braindump:
     """
-    Deserialize ``fp`` (a ``.read()``-supporting file-like object containing a JSON document) to a Python object.
+    Data class representing Braindump file.
+
+    .. todo::
+
+        Use :mod:`dataclasses` instead of :mod:`attr`
+    """
+
+    user = attr.ib(type=str, default=None)  # type: str
+    grid_dn = attr.ib(type=str, default=None)  # type: str
+    submit_hostname = attr.ib(type=str, default=None)  # type: str
+    root_wf_uuid = attr.ib(type=str, default=None)  # type: str
+    wf_uuid = attr.ib(type=str, default=None)  # type: str
+    dax = attr.ib(type=str, default=None)  # type: str
+    dax_label = attr.ib(type=str, default=None)  # type: str
+    dax_index = attr.ib(type=str, default=None)  # type: str
+    dax_version = attr.ib(type=str, default=None)  # type: str
+    pegasus_wf_name = attr.ib(type=str, default=None)  # type: str
+    timestamp = attr.ib(type=str, default=None)  # type: str
+    basedir = attr.ib(type=str, default=None)  # type: str
+    submit_dir = attr.ib(type=str, default=None)  # type: str
+    planner = attr.ib(type=str, default=None)  # type: str
+    planner_version = attr.ib(type=str, default=None)  # type: str
+    pegasus_build = attr.ib(type=str, default=None)  # type: str
+    planner_arguments = attr.ib(type=str, default=None)  # type: str
+    jsd = attr.ib(type=str, default=None)  # type: str
+    rundir = attr.ib(type=str, default=None)  # type: str
+    bindir = attr.ib(type=str, default=None)  # type: str
+    vogroup = attr.ib(type=str, default=None)  # type: str
+    uses_pmc = attr.ib(type=str, default=None)  # type: str
+    properties = attr.ib(type=str, default=None)  # type: str
+    condor_log = attr.ib(type=str, default=None)  # type: str
+    dag = attr.ib(type=str, default=None)  # type: str
+    type = attr.ib(type=str, default=None)  # type: str
+    notify = attr.ib(type=str, default=None)  # type: str
+
+
+def load(fp: TextIO, *args, **kwargs) -> Braindump:
+    """
+    Deserialize ``fp`` (a ``.read()``-supporting file-like object containing a Braindump document) to a Python object.
 
     [extended_summary]
 
@@ -37,12 +80,12 @@ def load(fp: TextIO, *args, **kwargs) -> Dict:
     :return: [description]
     :rtype: Dict
     """
-    return yaml.load(fp, *args, **kwargs)
+    return loads(fp.read())
 
 
-def loads(s: str, *args, **kwargs) -> Dict:
+def loads(s: str, *args, **kwargs) -> Braindump:
     """
-    Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance containing a JSON document) to a Python object.
+    Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance containing a Braindump document) to a Python object.
 
     [extended_summary]
 
@@ -51,12 +94,17 @@ def loads(s: str, *args, **kwargs) -> Dict:
     :return: [description]
     :rtype: Dict
     """
-    return yaml.loads(s, *args, **kwargs)
+    _dict = yaml.load(s, *args, **kwargs)
+
+    if not isinstance(_dict, dict):
+        raise ValueError("Invalid braindump file.")
+
+    return Braindump(**_dict)
 
 
 def dump(obj: Dict, fp: TextIO, *args, **kwargs) -> None:
     """
-    Serialize ``obj`` as a JSON formatted stream to ``fp`` (a ``.write()``-supporting file-like object).
+    Serialize ``obj`` as a Braindump formatted stream to ``fp`` (a ``.write()``-supporting file-like object).
 
     [extended_summary]
 
@@ -72,7 +120,7 @@ def dump(obj: Dict, fp: TextIO, *args, **kwargs) -> None:
 
 def dumps(obj: Dict, *args, **kwargs) -> str:
     """
-    Serialize ``obj`` to a JSON formatted ``str``.
+    Serialize ``obj`` to a Braindump formatted ``str``.
 
     [extended_summary]
 
