@@ -401,32 +401,6 @@ def parse_exit(ec):
     return my_result
 
 
-def check_rescue(directory, dag):
-    """
-    Check for the existence of (multiple levels of) rescue DAGs
-    Param: directory is the directory to check for the presence of rescue DAGs
-    Param: dag is the filename of a regular DAG file
-    Returns: List of rescue DAGs (which may be empty if none found)
-    """
-    my_base = os.path.basename(dag)
-    my_result = []
-
-    try:
-        my_files = os.listdir(directory)
-    except OSError:
-        return my_result
-
-    for my_file in my_files:
-        # Add file to the list if pegasus-planned DAGs that have a rescue DAG
-        if my_file.startswith(my_base) and my_file.endswith(".rescue"):
-            my_result.append(os.path.join(directory, my_file))
-
-    # Sort list
-    my_result.sort()
-
-    return my_result
-
-
 def out2log(rundir, outfile):
     """
     purpose: infer output symlink for Condor common user log
@@ -639,21 +613,6 @@ def rotate_log_file(source_file):
     return
 
 
-def log10(val):
-    """
-    Equivalent to ceil(log(val) / log(10))
-    """
-    result = 0
-    while val > 1:
-        result = result + 1
-        val = val / 10
-
-    if result:
-        return result
-
-    return 1
-
-
 def make_boolean(value):
     # purpose: convert an input string into something boolean
     # paramtr: $x (IN): a property value
@@ -689,6 +648,7 @@ def backticks(cmd_line):
     )
 
 
+# Used in pegasus-{integrity,transfer}
 class TimedCommand(object):
     """ Provides a shell callout with a timeout """
 
@@ -807,6 +767,7 @@ class TimedCommand(object):
         return self._duration
 
 
+# Used in pegasus-{integrity,transfer}
 class Tools(object):
     """
     Singleton for detecting and maintaining tools we depend on
