@@ -20,6 +20,7 @@ ifneq ($(shell python --version 2>&1 | grep " 2\.6"),)
 	PACKAGES+=argparse
 endif
 
+PACKAGES+=attrs
 PACKAGES+=click
 PACKAGES+=flask
 PACKAGES+=flask_cache
@@ -73,6 +74,7 @@ $(LIBDIR)/%:
 	touch $@
 
 $(LIBDIR)/argparse: argparse-1.4.0.tar.gz
+$(LIBDIR)/attrs:  attrs-19.3.0.tar.gz
 $(LIBDIR)/click: click-6.7.tar.gz
 $(LIBDIR)/sqlalchemy: SQLAlchemy-1.3.10.tar.gz
 $(LIBDIR)/flask: Flask-0.12.4.tar.gz
