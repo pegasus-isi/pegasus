@@ -46,3 +46,4 @@ Command Line Tools
     manpages/pegasus-init.rst
     manpages/pegasus-integrity.rst
     manpages/pegasus-metadata.rst
+    manpages/pegasus-cwl-converter.rst
