@@ -162,6 +162,10 @@ project:
                       --env "LANG=C.UTF-8" \
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-python
+                - !junitParser
+                  description: Pare Test Report
+                  testResultsDirectory: pegasus-source/lib/pegasus/python/test-reports/*.xml
+                  pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDependencies:
                 - name: pegasus-source
               requirements:
@@ -251,6 +255,10 @@ project:
                       --env "USER=bamboo" \
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-python
+                - !junitParser
+                  description: Pare Test Report
+                  testResultsDirectory: pegasus-source/lib/pegasus/python/test-reports/*.xml
+                  pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDependencies:
                 - name: pegasus-source
               requirements:
@@ -459,6 +467,10 @@ project:
                       --env "LANG=en_US.utf8" \
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-python
+                - !junitParser
+                  description: Pare Test Report
+                  testResultsDirectory: pegasus-source/lib/pegasus/python/test-reports/*.xml
+                  pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDependencies:
                 - name: pegasus-source
               requirements:
@@ -548,6 +560,10 @@ project:
                       --env "USER=bamboo" \
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-python
+                - !junitParser
+                  description: Pare Test Report
+                  testResultsDirectory: pegasus-source/lib/pegasus/python/test-reports/*.xml
+                  pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDependencies:
                 - name: pegasus-source
               requirements:
@@ -638,6 +654,10 @@ project:
                       --env "LANG=C.UTF-8" \
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-python
+                - !junitParser
+                  description: Pare Test Report
+                  testResultsDirectory: pegasus-source/lib/pegasus/python/test-reports/*.xml
+                  pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDependencies:
                 - name: pegasus-source
               requirements:
@@ -728,6 +748,10 @@ project:
                       --env "LANG=C.UTF-8" \
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-python
+                - !junitParser
+                  description: Pare Test Report
+                  testResultsDirectory: pegasus-source/lib/pegasus/python/test-reports/*.xml
+                  pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDependencies:
                 - name: pegasus-source
               requirements:
