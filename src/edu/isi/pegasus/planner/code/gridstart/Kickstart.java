@@ -736,39 +736,59 @@ public class Kickstart implements GridStart {
         }
 
 
+        job.setArguments(gridStartArgs.toString());
+        job.setRemoteExecutable(gridStartPath);
 
-
-
-
-        //the executable path and arguments are put
-        //in the Condor namespace and not printed to the
-        //file so that they can be overriden if desired
-        //later through profiles and key transfer_executable
-
-        // the arguments are no longer set as condor profiles
-        // they are now set to the corresponding profiles in
-        // the Condor Code Generator only.
-/*
-        construct(job, "executable", gridStartPath );
-        construct(job, "arguments", gridStartArgs.toString());
-*/
-        job.setArguments( gridStartArgs.toString() );
-        job.setRemoteExecutable( gridStartPath );
+        //PM-1461 wrap job with launcher if specified
+        wrapJobWithGridStartLauncher(job);
         
-        //all finished successfully
+        // all finished successfully
         return true;
     }
 
 
     /**
-     * It changes the paths to the executable depending on whether we want to
-     * transfer the executable or not.
-     *
-     * If the transfer_executable is set to true, then the executable needs to be
-     * shipped from the submit host meaning the local pool. This function changes
-     * the path of the executable to the one on the local pool, so that it can
-     *  be shipped.
-     *
+     * Wrap kickstart invocation with a launcher 
+     * 
+     * @param job 
+     */
+    protected void wrapJobWithGridStartLauncher(Job job) {
+        String launcher = job.vdsNS.getStringValue(Pegasus.GRIDSTART_LAUNCHER_KEY);
+        String launcherArguments = job.vdsNS.getStringValue(Pegasus.GRIDSTART_LAUNCHER_ARGUMENTS_KEY);
+        if (launcher == null){
+            return;
+        }
+        
+        String existingExecutable = job.getRemoteExecutable();
+        String existingArguments       = job.getArguments();
+        StringBuilder updatedArgs = new StringBuilder();
+        
+        if (launcherArguments != null ){
+            updatedArgs.append( launcherArguments ).append( " " );
+        }
+        
+        updatedArgs.append(existingExecutable);
+        
+        if (existingArguments != null ){
+            updatedArgs.append( existingArguments );
+        }
+        
+        //launcher is the new executable for the job
+        job.setRemoteExecutable(launcher);
+        job.setArguments(updatedArgs.toString());
+        
+        mLogger.log("Wrapped job " + job.getID() + " with launcher " +
+                    job.getRemoteExecutable() + " " + job.getArguments(),
+                    LogManager.DEBUG_MESSAGE_LEVEL);
+        
+        return;
+    }
+
+    /**
+     * It changes the paths to the executable depending on whether we want to transfer the
+     * executable or not.
+     * 
+>    *
      * If the worker package is being deployed dynamically, then the path is set
      * to the exectionSiteDirectory where the worker package is deployed.
      *

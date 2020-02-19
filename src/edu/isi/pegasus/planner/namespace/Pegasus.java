@@ -138,8 +138,16 @@ public class Pegasus extends Namespace {
     public static final String GRIDSTART_PATH_KEY = "gridstart.path";
 
     /**
-     * The message to look for while detecting failures condor job's stdout/stderr
+     * An optional executable or script to launch kickstart.
      */
+    public static final String GRIDSTART_LAUNCHER_KEY = "gridstart.launcher";
+
+    /**
+     * Any arguments to be passed to the kickstart launcher
+     */
+    public static final String GRIDSTART_LAUNCHER_ARGUMENTS_KEY = "gridstart.launcher.arguments";
+    
+    /** The message to look for while detecting failures condor job's stdout/stderr */
     public static final String EXITCODE_FAILURE_MESSAGE = "exitcode.failuremsg";
     
     /**
@@ -685,12 +693,14 @@ public class Pegasus extends Namespace {
                 break;
                 
             case 'g':
-                if (key.compareTo( GROUP_KEY ) == 0 ||
-                    key.compareTo( GRIDSTART_KEY ) == 0 ||
-                    key.compareTo( GRIDSTART_PATH_KEY ) == 0 ||
-                    key.compareTo( GRIDSTART_ARGUMENTS_KEY ) == 0 ||
-                    key.compareTo( GOOGLEP12 ) == 0 ||
-                    key.compareTo( GLITE_ARGUMENTS_KEY ) == 0 ) {
+                if (key.compareTo(GROUP_KEY) == 0
+                        || key.compareTo(GRIDSTART_KEY) == 0
+                        || key.compareTo(GRIDSTART_PATH_KEY) == 0
+                        || key.compareTo(GRIDSTART_ARGUMENTS_KEY) == 0
+                        || key.compareTo(GRIDSTART_LAUNCHER_KEY) == 0 
+                        || key.compareTo(GRIDSTART_LAUNCHER_ARGUMENTS_KEY) == 0 
+                        || key.compareTo(GOOGLEP12) == 0
+                        || key.compareTo(GLITE_ARGUMENTS_KEY) == 0) {
                     res = VALID_KEY;
                 }
                 else {
