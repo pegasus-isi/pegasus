@@ -2,21 +2,23 @@
 
 import json
 
+from io import StringIO
+
 from Pegasus import yaml
 from Pegasus.api.writable import _CustomEncoder
 from Pegasus.api.replica_catalog import ReplicaCatalog
 from Pegasus.api.errors import PegasusError
 
 """
-:mod:`workflow` exposes an API to serialize and deserialize Pegasus's workflow file.
+:mod:`replica_catalog` exposes an API to serialize and deserialize Pegasus's replica catalog file.
 
 Basic Usage::
 
-    >>> from Pegasus import Workflow
-    >>> Workflow.loads("... ")
+    >>> from Pegasus import replica_catalog
+    >>> replica_catalog.loads("... ")
     ...
 
-    >>> print(Workflow.dumps( ... ))
+    >>> print(replica_catalog.dumps( ... ))
     ' ... '
 
 .. moduleauthor:: Ryan Tanaka <tanaka@isi.edu>
@@ -53,7 +55,7 @@ def _to_rc(d: dict) -> ReplicaCatalog:
 
 def load(fp: TextIO, *args, **kwargs) -> ReplicaCatalog:
     """
-    Deserialize ``fp`` (a ``.read()``-supporting file-like object containing a Workflow document) to a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog` object.
+    Deserialize ``fp`` (a ``.read()``-supporting file-like object containing a ReplicaCatalog document) to a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog` object.
 
     :param fp: file like object to load from 
     :type fp: TextIO
@@ -62,10 +64,9 @@ def load(fp: TextIO, *args, **kwargs) -> ReplicaCatalog:
     """
     return _to_rc(yaml.load(fp))
 
-
 def loads(s: str, *args, **kwargs) -> ReplicaCatalog:
     """
-    Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance containing a Workflow document) to a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog` object.
+    Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance containing a ReplicaCatalog document) to a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog` object.
 
     :param s: string to load from 
     :type s: str
@@ -76,7 +77,7 @@ def loads(s: str, *args, **kwargs) -> ReplicaCatalog:
 
 
 
-def dump(obj: ReplicaCatalog, fp: TextIO, *args, **kwargs) -> None:
+def dump(obj: ReplicaCatalog, fp: TextIO, _format="yml", *args, **kwargs) -> None:
     """
     Serialize ``obj`` as a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog` formatted stream to ``fp`` (a ``.write()``-supporting file-like object).
 
@@ -84,18 +85,25 @@ def dump(obj: ReplicaCatalog, fp: TextIO, *args, **kwargs) -> None:
     :type obj: ReplicaCatalog
     :param fp: file like object to serialize to
     :type fp: TextIO
+    :param _format: format to write to if fp does not have an extension; can be one of ["yml" | "yaml" | "json"], defaults to "yml"
+    :type _format: str
     :rtype: NoReturn
     """
-    obj.write(fp)
+    obj.write(fp, _format=_format)
 
 
-def dumps(obj: ReplicaCatalog, *args, **kwargs) -> str:
+def dumps(obj: ReplicaCatalog, _format="yml", *args, **kwargs) -> str:
     """
     Serialize ``obj`` to a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog` formatted ``str``.
 
     :param obj: ReplicaCatalog to serialize
     :type obj: ReplicaCatalog
+    :param _format: format to write to if fp does not have an extension; can be one of ["yml" | "yaml" | "json"], defaults to "yml"
+    :type _format: str
     :return: ReplicaCatalog serialized as a string
     :rtype: str
     """
-    return json.dumps(obj, cls=_CustomEncoder)
+    with StringIO() as s:
+        obj.write(s, _format=_format)
+        s.seek(0)
+        return s.read()
