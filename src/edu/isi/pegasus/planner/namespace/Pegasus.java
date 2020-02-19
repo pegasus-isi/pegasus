@@ -113,6 +113,16 @@ public class Pegasus extends Namespace {
     /** The name of the profile key that designates the path to a gridstart. */
     public static final String GRIDSTART_PATH_KEY = "gridstart.path";
 
+    /**
+     * An optional executable or script to launch kickstart.
+     */
+    public static final String GRIDSTART_LAUNCHER_KEY = "gridstart.launcher";
+
+    /**
+     * Any arguments to be passed to the kickstart launcher
+     */
+    public static final String GRIDSTART_LAUNCHER_ARGUMENTS_KEY = "gridstart.launcher.arguments";
+    
     /** The message to look for while detecting failures condor job's stdout/stderr */
     public static final String EXITCODE_FAILURE_MESSAGE = "exitcode.failuremsg";
 
@@ -375,7 +385,8 @@ public class Pegasus extends Namespace {
      * eventual qsub file.
      */
     public static final String GLITE_ARGUMENTS_KEY = "glite.arguments";
-
+    
+    
     /** Profile key to determine condor quoting for a job. */
     public static final String CONDOR_QUOTE_ARGUMENTS_KEY = "condor.arguments.quote";
 
@@ -562,6 +573,8 @@ public class Pegasus extends Namespace {
                         || key.compareTo(GRIDSTART_KEY) == 0
                         || key.compareTo(GRIDSTART_PATH_KEY) == 0
                         || key.compareTo(GRIDSTART_ARGUMENTS_KEY) == 0
+                        || key.compareTo(GRIDSTART_LAUNCHER_KEY) == 0 
+                        || key.compareTo(GRIDSTART_LAUNCHER_ARGUMENTS_KEY) == 0 
                         || key.compareTo(GOOGLEP12) == 0
                         || key.compareTo(GLITE_ARGUMENTS_KEY) == 0) {
                     res = VALID_KEY;

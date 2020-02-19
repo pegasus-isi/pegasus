@@ -652,23 +652,52 @@ public class Kickstart implements GridStart {
             gridStartArgs.append(' ').append(job.strargs);
         }
 
-        // the executable path and arguments are put
-        // in the Condor namespace and not printed to the
-        // file so that they can be overriden if desired
-        // later through profiles and key transfer_executable
 
-        // the arguments are no longer set as condor profiles
-        // they are now set to the corresponding profiles in
-        // the Condor Code Generator only.
-        /*
-                construct(job, "executable", gridStartPath );
-                construct(job, "arguments", gridStartArgs.toString());
-        */
         job.setArguments(gridStartArgs.toString());
         job.setRemoteExecutable(gridStartPath);
 
+        //PM-1461 wrap job with launcher if specified
+        wrapJobWithGridStartLauncher(job);
+        
         // all finished successfully
         return true;
+    }
+
+    /**
+     * Wrap kickstart invocation with a launcher 
+     * 
+     * @param job 
+     */
+    protected void wrapJobWithGridStartLauncher(Job job) {
+        String launcher = job.vdsNS.getStringValue(Pegasus.GRIDSTART_LAUNCHER_KEY);
+        String launcherArguments = job.vdsNS.getStringValue(Pegasus.GRIDSTART_LAUNCHER_ARGUMENTS_KEY);
+        if (launcher == null){
+            return;
+        }
+        
+        String existingExecutable = job.getRemoteExecutable();
+        String existingArguments       = job.getArguments();
+        StringBuilder updatedArgs = new StringBuilder();
+        
+        if (launcherArguments != null ){
+            updatedArgs.append( launcherArguments ).append( " " );
+        }
+        
+        updatedArgs.append(existingExecutable);
+        
+        if (existingArguments != null ){
+            updatedArgs.append( existingArguments );
+        }
+        
+        //launcher is the new executable for the job
+        job.setRemoteExecutable(launcher);
+        job.setArguments(updatedArgs.toString());
+        
+        mLogger.log("Wrapped job " + job.getID() + " with launcher " +
+                    job.getRemoteExecutable() + " " + job.getArguments(),
+                    LogManager.DEBUG_MESSAGE_LEVEL);
+        
+        return;
     }
 
     /**
