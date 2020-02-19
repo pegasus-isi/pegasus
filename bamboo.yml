@@ -1342,6 +1342,13 @@ project:
                       if [ ! -e pegasus-$VERSION-1.el8.x86_64.rpm ]; then
                           cp pegasus-*el8.x86_64.rpm pegasus-$VERSION-1.el8.x86_64.rpm
                       fi
+                      # standard filesnames for DEBs
+                      for TIMESTAMPED in `ls *dev20*.deb`; do
+                          SIMPLE=`echo $TIMESTAMPED | sed -E 's/dev20[0-9]+/dev/'`
+                          if [ ! -e $SIMPLE ]; then
+                              cp $TIMESTAMPED $SIMPLE
+                          fi
+                      done
                       cd ../..
 
                       # no files should be left behind
