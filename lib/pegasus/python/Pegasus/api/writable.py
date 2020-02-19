@@ -109,13 +109,18 @@ class Writable:
                     self._write(f, _format)
 
         elif hasattr(file, "read"):
-            ext = Path(file.name).suffix[1:]
-
-            if ext in Writable.FORMATS:
-                self._write(file, ext)
-            else:
+            try:
+                ext = Path(str(file.name)).suffix[1:]
+            except AttributeError as e:
+                # writing to a stream such as StringIO or TemporaryFile with
+                # no attr "name"
                 self._write(file, _format)
-
+            else:
+                if ext in Writable.FORMATS:
+                    self._write(file, ext)
+                else:
+                    self._write(file, _format)
+            
         else:
             raise TypeError(
                 "{file} must be of type str or file object".format(file=file)

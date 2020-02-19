@@ -5,8 +5,6 @@ from functools import partial
 from functools import wraps
 from uuid import uuid4
 
-import yaml
-
 from .writable import _filter_out_nones
 from .writable import _CustomEncoder
 from .writable import Writable

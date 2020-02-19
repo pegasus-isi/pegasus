@@ -271,7 +271,6 @@ class Properties:
 
             # write without header 
             props = sio.getvalue()[Properties._cfg_header_len:]
-            print(props)
         
         if isinstance(file, str):
             with open(file, "w") as f:
