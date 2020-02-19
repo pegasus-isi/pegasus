@@ -368,6 +368,8 @@ public class Braindump {
         File f = new File(mSubmitFileDir, BRAINDUMP_FILE);
         YAMLMapper mapper = new YAMLMapper();
         mapper.configure(Feature.WRITE_DOC_START_MARKER, false);
+        // SPLIT_LINES feature needs to be disabled until Perl code is deprecated.
+        mapper.configure(Feature.SPLIT_LINES, false);
         SequenceWriter writer = mapper.writerWithDefaultPrettyPrinter().writeValues(f);
         writer.write(entries);
 
