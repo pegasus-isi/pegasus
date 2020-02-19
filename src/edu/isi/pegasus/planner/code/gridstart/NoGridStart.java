@@ -351,6 +351,9 @@ public class NoGridStart implements GridStart {
                 generateListofFilenamesFile(job.getOutputFiles(), job, ".out.lof");
             }
         } /// end of mGenerateLOF
+        
+        //PM-1461 wrap job with launcher if specified
+        wrapJobWithGridStartLauncher(job);
 
         return true;
     }
@@ -405,6 +408,44 @@ public class NoGridStart implements GridStart {
         return path;
     }
 
+    /**
+     * Wrap invocation with a user specified GridStart launcher 
+     * 
+     * @param job 
+     */
+    protected void wrapJobWithGridStartLauncher(Job job) {
+        String launcher = job.vdsNS.getStringValue(Pegasus.GRIDSTART_LAUNCHER_KEY);
+        String launcherArguments = job.vdsNS.getStringValue(Pegasus.GRIDSTART_LAUNCHER_ARGUMENTS_KEY);
+        if (launcher == null){
+            return;
+        }
+        
+        String existingExecutable = job.getRemoteExecutable();
+        String existingArguments       = job.getArguments();
+        StringBuilder updatedArgs = new StringBuilder();
+        
+        if (launcherArguments != null ){
+            updatedArgs.append( launcherArguments ).append( " " );
+        }
+        
+        updatedArgs.append(existingExecutable);
+        
+        if (existingArguments != null ){
+            updatedArgs.append(" ");
+            updatedArgs.append(existingArguments);
+        }
+        
+        //launcher is the new executable for the job
+        job.setRemoteExecutable(launcher);
+        job.setArguments(updatedArgs.toString());
+        
+        mLogger.log("Wrapped job " + job.getID() + " with launcher " +
+                    job.getRemoteExecutable() + " " + job.getArguments(),
+                    LogManager.DEBUG_MESSAGE_LEVEL);
+        
+        return;
+    }
+    
     /**
      * Indicates whether the enabling mechanism can set the X bit on the executable on the remote
      * grid site, in addition to launching it on the remote grid stie
