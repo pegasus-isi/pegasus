@@ -1,6 +1,7 @@
 import json
 import os
 from tempfile import TemporaryFile
+from io import StringIO
 
 import yaml
 import pytest
@@ -83,10 +84,9 @@ class TestWritable:
     def test_write_using_file_input(
         self, writable_obj, expected, file, _format, loader
     ):
-        with open(file, "w") as f:
+        with open(file, "w+") as f:
             writable_obj.write(f, _format=_format)
-
-        with open(file, "r") as f:
+            f.seek(0)
             assert loader(f) == expected
 
         os.remove(file)
@@ -94,3 +94,17 @@ class TestWritable:
     def test_write_invalid_format(self, writable_obj):
         with pytest.raises(ValueError):
             writable_obj.write("abc", _format="123")
+
+
+    @pytest.mark.parametrize(
+        "file, _format, loader",
+        [
+            (TemporaryFile, "yml", yaml.safe_load),
+            (TemporaryFile, "json", json.load)
+        ]
+    )
+    def test_write_stream_without_name(self, writable_obj, expected, file, _format, loader):
+        with file(mode="w+") as f:
+            writable_obj.write(f, _format=_format)
+            f.seek(0)
+            assert loader(f) == expected
