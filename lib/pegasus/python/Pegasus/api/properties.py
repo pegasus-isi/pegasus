@@ -1,4 +1,11 @@
 from collections import OrderedDict
+from configparser import ConfigParser
+from configparser import DEFAULTSECT
+from io import StringIO 
+
+__all__ = (
+    "Properties"
+)
 
 class Properties:
     """Write Pegasus properties to a file.
@@ -198,6 +205,8 @@ class Properties:
         "globus.*"
     )
 
+    _cfg_header_len = len("[{}]\n".format(DEFAULTSECT))
+
     @staticmethod
     def ls(prop=None):
         """List property keys. Refer to 
@@ -229,16 +238,17 @@ class Properties:
             print(*sorted(Properties._props), sep="\n")
 
     def __init__(self):
-        self.d = OrderedDict()
+        self._conf = ConfigParser()
+        self._conf[DEFAULTSECT] = {}
 
     def __setitem__(self, k, v):
-        self.d[k] = v
+        self._conf[DEFAULTSECT][k] = v
     
     def __getitem__(self, k):
-        return self.d[k]
+        return self._conf[DEFAULTSECT][k]
     
     def __delitem__(self, k):
-        del self.d[k]
+        self._conf.remove_option(DEFAULTSECT, k)
     
     def write(self, file):
         """Write these properties to a file.
@@ -256,17 +266,18 @@ class Properties:
         :type file: str or file like object
         :raises TypeError: file must be of type str or file like object
         """
-        def _write(f):
-            for k, v in self.d.items():
-                f.write("{k} = {v}\n".format(k=k, v=v))
+        with StringIO() as sio:
+            self._conf.write(sio)
 
+            # write without header 
+            props = sio.getvalue()[Properties._cfg_header_len:]
+        
         if isinstance(file, str):
             with open(file, "w") as f:
-                _write(f)
+                f.write(props)
         elif hasattr(file, "read"):
-                _write(file)
+                file.write(props)
         else:
             raise TypeError("invalid file: {}; file must be of type str or file like object".format(file))
-
         
         

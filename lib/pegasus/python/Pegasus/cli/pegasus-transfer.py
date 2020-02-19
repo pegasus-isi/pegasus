@@ -60,7 +60,7 @@ except ImportError:
     # Fall back to Python 2's urllib
     import urllib as urllib
 
-from Pegasus.tools import utils
+from Pegasus.tools import worker_utils as utils
 
 # see https://www.python.org/dev/peps/pep-0469/
 try:

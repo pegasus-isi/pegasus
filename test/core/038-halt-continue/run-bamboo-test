@@ -102,8 +102,8 @@ pegasus-halt $RUN_DIR
 
 # wait for all jobs to go away before restarting
 
-if [ ! -e braindump.txt ]; then
-    echo "braindump.txt was not found in this directory. Planner probably failed!" 1>&2
+if [ ! -e braindump.yml ]; then
+    echo "braindump.yml was not found in this directory. Planner probably failed!" 1>&2
     exit 1
 fi
 
@@ -115,7 +115,7 @@ MAX_TS=`echo "$START_TS + $TIMEOUT * 60" | bc`
 
 update_status
 show_state
-while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ] ; do 
+while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ] ; do
     NOW=`date +'%s'`
     if [ $NOW -gt $MAX_TS ]; then
         echo "Reached TIMEOUT of $TIMEOUT minutes. Calling pegasus-remove" 1>&2
@@ -137,7 +137,7 @@ pegasus-run
 sleep 30s
 update_status
 show_state
-while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ] ; do 
+while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ] ; do
     NOW=`date +'%s'`
     if [ $NOW -gt $MAX_TS ]; then
         echo "Reached TIMEOUT of $TIMEOUT minutes. Calling pegasus-remove" 1>&2

@@ -64,16 +64,6 @@ logger.info("pegasus-monitord starting - pid %d " % (os.getpid()))
 if sys.version_info < (2, 5):
     os.SEEK_CUR = 1
 
-# set up the environment - this is to control and provide a sane environment
-# when calling out to sub programs - for example notification scripts
-os.environ['PEGASUS_BIN_DIR'] = pegasus_bin_dir
-os.environ['PEGASUS_CONF_DIR'] = pegasus_conf_dir
-os.environ['PEGASUS_JAVA_DIR'] =  pegasus_java_dir
-os.environ['PEGASUS_PERL_DIR'] = pegasus_perl_dir
-os.environ['PEGASUS_PYTHON_DIR'] = pegasus_python_dir
-os.environ['PEGASUS_SHARE_DIR'] = pegasus_share_dir
-os.environ['PEGASUS_SCHEMA_DIR'] = pegasus_schema_dir
-
 re_parse_dag_name = re.compile(r"Parsing (.+) ...$")
 re_parse_timestamp = re.compile(r"\s*(\d{1,2})\/(\d{1,2})(\/(\d{1,2}))?\s+(\d{1,2}):(\d{2}):(\d{2})")
 re_parse_iso_stamp = re.compile(r"^\s*(\d{4}).?(\d{2}).?(\d{2}).(\d{2}).?(\d{2}).?(\d{2})([.,]\d+)?([Zz]|[-+](\d{2}).?(\d{2}))")

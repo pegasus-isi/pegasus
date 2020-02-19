@@ -32,8 +32,8 @@ use File::Basename qw(basename dirname);
 use Getopt::Long qw(:config bundling no_ignore_case);
 use File::Copy;
 
-# path to load our libs.. 
-BEGIN { 
+# path to load our libs..
+BEGIN {
     my $pegasus_config = File::Spec->catfile( dirname($0), 'pegasus-config' );
     eval `$pegasus_config --perl-dump`;
     die("Unable to eval pegasus-config output. $@") if $@;
@@ -44,8 +44,8 @@ use Pegasus::Common;
 use Pegasus::Properties qw(%initial); # parses -Dprop=val from @ARGV
 
 sub make_path($) {
-    my $p = File::Spec->catfile( Cwd::realpath( dirname($0) ), shift() ); 
-    warn "# make_path = $p\n" if $main::DEBUG; 
+    my $p = File::Spec->catfile( Cwd::realpath( dirname($0) ), shift() );
+    warn "# make_path = $p\n" if $main::DEBUG;
     $p;
 }
 
@@ -57,7 +57,7 @@ $main::DEBUG = 0;		# for now
 my $grid=0;                     # if set, enable grid checks, disabled by default
 
 my $dagman = make_path( 'pegasus-dagman' );
-my $conffile; 
+my $conffile;
 GetOptions( "help|h" => \&usage
 	  , "debug|d=o" => \$main::DEBUG
 	  , "verbose|v+" => \$main::DEBUG
@@ -67,16 +67,16 @@ GetOptions( "help|h" => \&usage
 
 my $run = shift;
 # NEW: Default to cwd if nothing was specified
-unless ( defined $run ) { 
+unless ( defined $run ) {
     $run = getcwd();
-    my $braindb = File::Spec->catfile( $run, $Pegasus::Common::brainbase ); 
-    usage("You need to provide a valid run directory. Cannot find pegasus brain file") 
-	unless -r $braindb; 
+    my $braindb = File::Spec->catfile( $run, $Pegasus::Common::brainbase );
+    usage("You need to provide a valid run directory. Cannot find pegasus brain file")
+	unless -r $braindb;
 }
 
 # extra sanity
 usage( "$run is not a directory." ) unless -d $run;
-usage( "$run is not accessible." ) unless -r _; 
+usage( "$run is not accessible." ) unless -r _;
 my %config = slurp_braindb( $run ) or die "ERROR: open braindb: $!\n";
 
 # pre-condition: The planner writes all properties per workflow into the DAG dir.
@@ -89,8 +89,8 @@ my $props = Pegasus::Properties->new( $conffile, File::Spec->catfile($run,$confi
 
 sub usage(;$) {
     my $msg = shift;
-    my $flag = ( defined $msg && lc($msg) ne 'help' ); 
-    if ( $flag ) { 
+    my $flag = ( defined $msg && lc($msg) ne 'help' );
+    if ( $flag ) {
 	my $tty = -t STDOUT;
 	print "\033[1m" if $tty;
 	print "ERROR: $msg\n";
@@ -111,10 +111,10 @@ Optional arguments:
  -c|--conf fn	    Use file fn as pegasus properties file. (only use for debugging purposes.
                     pegasus-run will pick the correct planned properties by default.
  -h|--help          Print this help message and exit.
- -d|--debug lvl     Sets the debug level (verbosity), default is $main::DEBUG. 
- -v|--verbose       Raises debug level by 1, see --debug. 
+ -d|--debug lvl     Sets the debug level (verbosity), default is $main::DEBUG.
+ -v|--verbose       Raises debug level by 1, see --debug.
  --nogrid           Disable checking for grids (default).
- --grid             Enable checking for grids. 
+ --grid             Enable checking for grids.
 
 EOF
     exit( $flag ? 1 : 0 );
@@ -161,7 +161,7 @@ sub salvage_logfile($) {
 		    last;
 		}
 		close SUB;
-		
+
 		print STDERR "# $subfn points to $logfile\n"
 		    if ( $main::DEBUG > 1 );
 
@@ -180,7 +180,7 @@ sub salvage_logfile($) {
 	# try to preserve log file
 	if ( defined $result && -s $result ) {
 	    my $newfn;
-	    print STDERR "# log $result exists, rescuing from DAGMan.\n" 
+	    print STDERR "# log $result exists, rescuing from DAGMan.\n"
 		if $main::DEBUG;
 	    for ( my $i=0; $i<1000; ++$i ) {
 		$newfn = sprintf "%s.%03d", $result, $i;
@@ -194,7 +194,7 @@ sub salvage_logfile($) {
 		    if ( -l $result ) {
 			$newresult=readlink($result);
 		    }
-		    print STDOUT "Rescued $result as $newfn\n" 
+		    print STDOUT "Rescued $result as $newfn\n"
 			if copy( $newresult, $newfn )  or warn "Could not rescue the log file $newresult to $newfn\n $! \nTrying to continue\n";
 		    last;
 		}
@@ -259,27 +259,22 @@ if ( $grid ) {
     die( "ERROR: Grid proxy not initialized, Please generate a new proxy\n" ) if $timeleft == -1;
     die( "ERROR: Grid proxy expired, please refresh\n" ) if $timeleft == 0;
     die( "ERROR: $gpi exited with status ", $?>>8 ) if ( $? != 0 );
-    warn( "ERROR: Too little time left ($timeleft s) on grid proxy. Please refresh your proxy\n" ) 
+    warn( "ERROR: Too little time left ($timeleft s) on grid proxy. Please refresh your proxy\n" )
 	if $timeleft < 7200;
     print STDERR "# grid proxy has $timeleft s left\n" if $main::DEBUG;
 } # end if($grid) checks only if grid option is enabled.
 
 if ( $config{dag} ) {
-    # find pegasus-submit-dag
-    my $psd = File::Spec->catfile( $config{bindir}, 'pegasus-submit-dag' );
-    die "ERROR: Unable to access $psd\n" unless -x $psd;
-    print STDERR "# found $psd\n" if $main::DEBUG;
-
     #PM-797 move away from using pegasus-submit-dag
     my $c_s = find_exec('condor_submit') || die "Unable to locate condor_submit\n";
     die "ERROR: Unable to access condor_submit $c_s\n" unless -x $c_s;
     print STDERR "# found $c_s\n" if $main::DEBUG;
-    
+
     # PM-870 we have already changed to the directory, don't prepend $run again
     my $dag_submit_file = "$config{dag}.condor.sub";
     print STDOUT "# dagman condor submit file is $dag_submit_file\n" if $main::DEBUG;
 
-    # sanity check: Is the DAG file there? 
+    # sanity check: Is the DAG file there?
     die "ERROR: Unable to locate $config{dag}\n" unless -r $config{dag};
     print STDERR "# found $config{dag}\n" if $main::DEBUG;
 
@@ -318,27 +313,15 @@ if ( $config{dag} ) {
 	push( @extra, "-D$k=$initial{$k}" );
     }
 
-    if( -r $dag_submit_file ){
-	#PM-797 do condor_submit on dagman.condor.sub file if it exists
-	salvage_logfile( $config{dag} );
-	print STDOUT "Submitting to condor $dag_submit_file\n";
-	my @args = ( $c_s );
-	push( @args, $dag_submit_file);
-	system(@args) == 0 
-	    or die( "ERROR: Running condor_submit @args failed with ", parse_exit($?));
-	print STDERR "# dagman is running\n" if $main::DEBUG;
-    }
-    else{
-	my @args = ( $psd );
-	push( @args, @extra ) if @extra > 0;
-	push( @args, '-d', 0+$main::DEBUG);
-	push( @args, '--grid' ) if $grid;
-	push( @args, '--dagman', $dagman, $config{dag} );
-	
-	print STDERR "# @args\n" if $main::DEBUG;
-	system(@args) == 0 
-	    or die( "ERROR: Running pegasus-submit-dag failed with ", parse_exit($?));
-	print STDERR "# dagman is running\n" if $main::DEBUG;
+    if( -r $dag_submit_file ) {
+        #PM-797 do condor_submit on dagman.condor.sub file if it exists
+        salvage_logfile( $config{dag} );
+        print STDOUT "Submitting to condor $dag_submit_file\n";
+        my @args = ( $c_s );
+        push( @args, $dag_submit_file);
+        system(@args) == 0
+            or die( "ERROR: Running condor_submit @args failed with ", parse_exit($?));
+        print STDERR "# dagman is running\n" if $main::DEBUG;
     }
 
     my $did=undef;
@@ -370,13 +353,13 @@ Your workflow has been started and is running in the base directory:
 EOF
 
 } elsif ( $config{type}=="shell" ) {
-    # sanity check: Is the SCRIPT file there? 
+    # sanity check: Is the SCRIPT file there?
     die "ERROR: Unable to execute $config{script}\n" unless -x $config{script};
     print STDERR "# found $config{script}\n" if $main::DEBUG;
 
     my @args=( "/bin/bash", $config{script} );
-    system(@args) == 0 
-	or die( "ERROR: Running $config{script} failed with ", 
+    system(@args) == 0
+	or die( "ERROR: Running $config{script} failed with ",
 		parse_exit($?) );
 }
 

@@ -17,7 +17,7 @@ function usage()
 RUN_DIR=$1
 
 # special case, no run dir given, but current dir is a run dir
-if [ "x$RUN_DIR" = "x" -a -e braindump.txt ]; then
+if [ "x$RUN_DIR" = "x" -a -e braindump.yml ]; then
     RUN_DIR=`pwd`
 fi
 
@@ -31,7 +31,7 @@ if [ ! -e $RUN_DIR ]; then
     usage
 fi
 
-if [ ! -e $RUN_DIR/braindump.txt ]; then
+if [ ! -e $RUN_DIR/braindump.yml ]; then
     echo "$RUN_DIR does contain a braindump file, and hence is not probably not a run directory." 1>&2
     usage
 fi

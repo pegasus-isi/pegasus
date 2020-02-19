@@ -7,10 +7,13 @@ $defs:
     enum:
       - x86
       - x86_64
+      - ppc
+      - ppc_64
+      - ppc64le
+      - ia64
       - sparcv7
       - sparcv9
-      - aix
-      - ppc
+      - amd64
 
   os.type:
     type: string

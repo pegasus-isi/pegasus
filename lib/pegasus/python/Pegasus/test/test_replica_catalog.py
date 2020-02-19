@@ -4,6 +4,7 @@ from tempfile import TemporaryFile, NamedTemporaryFile
 import pytest
 
 import Pegasus
+from Pegasus import yaml
 from Pegasus.replica_catalog import *
 from Pegasus.replica_catalog import _to_rc
 from Pegasus.api.replica_catalog import ReplicaCatalog
@@ -51,11 +52,10 @@ def test_dump(mocker):
     mocker.patch("Pegasus.api.writable.Writable.write")
     rc = ReplicaCatalog()
     with NamedTemporaryFile(mode="w") as f:
-        dump(rc, f)
-        Pegasus.api.writable.Writable.write.assert_called_once_with(f)
+        dump(rc, f, _format="yml")
+        Pegasus.api.writable.Writable.write.assert_called_once_with(f, _format="yml")
 
-def test_dumps(mocker):
-    mocker.patch("json.dumps")
+def test_dumps(rc_as_dict):
     rc = ReplicaCatalog().add_replica("a", "/a", "local", regex=False)
-    dumps(rc)
-    json.dumps.assert_called_once_with(rc, cls=_CustomEncoder)
+    assert yaml.load(dumps(rc)) == rc_as_dict
+    

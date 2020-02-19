@@ -30,6 +30,7 @@ class Arch(Enum):
     X86_64 = "x86_64"
     PPC = "ppc"
     PPC_64 = "ppc_64"
+    PPC_64LE = "ppc64le"
     IA64 = "ia64"
     SPARCV7 = "sparcv7"
     SPARCV9 = "sparcv9"

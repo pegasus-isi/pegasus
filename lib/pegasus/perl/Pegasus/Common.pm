@@ -35,16 +35,16 @@ sub parse_exit(;$);		# { }
 sub slurp_braindb($);		# { }
 sub version();                  # { }
 sub check_rescue($$);           # { }
-sub log10($);                   # { } 
+sub log10($);                   # { }
 our $jobbase = 'jobstate.log';	# basename of the job state logfile
-our $brainbase = 'braindump.txt'; # basename of brain dump file
+our $brainbase = 'braindump.yml'; # basename of brain dump file
 
 # Items to export into callers namespace by default. Note: do not export
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
 our $VERSION = '0.1';
 our @EXPORT_OK = qw($VERSION $brainbase $jobbase);
-our @EXPORT = qw(isodate isomsdate find_exec pipe_out_cmd parse_exit 
+our @EXPORT = qw(isodate isomsdate find_exec pipe_out_cmd parse_exit
 		 slurp_braindb version check_rescue log10);
 our %EXPORT_TAGS = ( all => [ @EXPORT ] );
 
@@ -62,7 +62,7 @@ sub isodate(;$$$) {
     # purpose: convert seconds since epoch into ISO timestamp
     # paramtr: $seconds (opt. IN): seconds since epoch, now is default
     #          $utc (opt. IN): if true, use a UTC timestamp
-    #          $short (opt. IN): if true, use extra short format 
+    #          $short (opt. IN): if true, use extra short format
     # warning: UTC short format omits the center 'T' separator
     # returns: string of ISO timestamp
     my $now = shift || time();
@@ -71,11 +71,11 @@ sub isodate(;$$$) {
 
     my $result;
     if ( $short ) {
-	$result = $utc ? 
+	$result = $utc ?
 	    strftime( "%Y%m%d%H%M%SZ", gmtime($now) ) :
 	    strftime( "%Y%m%dT%H%M%S%z", localtime($now) );
     } else {
-	$result = $utc ? 
+	$result = $utc ?
 	    strftime( "%Y-%m-%dT%H:%M:%SZ", gmtime($now) ) :
 	    strftime( "%Y-%m-%dT%H:%M:%S%z", localtime($now) );
     }
@@ -90,11 +90,11 @@ sub isomsdate(;$$$) {
     my $now = shift || time();
     my $utc = shift;
     my $short = shift;
-    my $result = isodate($now,$utc,$short); 
+    my $result = isodate($now,$utc,$short);
 
-    my $s = substr( sprintf( "%.3f", $now-int($now) ), 1 ); 
-    substr( $result, ( $utc ? -1 : -5 ), 0, $s ); 
-    $result; 
+    my $s = substr( sprintf( "%.3f", $now-int($now) ), 1 );
+    substr( $result, ( $utc ? -1 : -5 ), 0, $s );
+    $result;
 }
 
 sub find_exec($;@) {
@@ -118,10 +118,10 @@ sub pipe_out_cmd {
     #          scalar: first line of output
     #          vector: all lines of output
     local(*READ);               # must use type glob and local for FDs
-    
+
     my $pid = open( READ, '-|' );
     return undef unless defined $pid;
-    
+
     my @result;
     if ( $pid ) {
         # parent
@@ -145,7 +145,7 @@ sub pipe_out_cmd {
 sub slurp_braindb($) {
     # purpose: Read extra configuration from braindump database
     # paramtr: $run (IN): $run directory
-    # returns: a hash with the configuration, empty on error. 
+    # returns: a hash with the configuration, empty on error.
     my $run = shift;
     my $braindb = File::Spec->catfile( $run, $brainbase );
 
@@ -153,7 +153,9 @@ sub slurp_braindb($) {
     if ( open( DB, "<$braindb" ) ) {
 	while ( <DB> ) {
 	    s/[\r\n]*$//;
-	    my ($k,$v) = split /\s/, $_, 2;
+	    my ($k,$v) = split /: /, $_, 2;
+        $v =~ s/^"//;
+        $v =~ s/"$//g;
 	    if ( $k eq 'run' && $v ne $run && $run ne '.' ) {
 		warn "Warning: run directory mismatch, using $run\n";
 		$config{$k} = $run;
@@ -255,12 +257,12 @@ Pegasus::Common - generally useful collection of methods.
     $zulu = isodate( time(), 1 );
     $short = isodate( $then, 0, 1 );
 
-    $millis = isomsdate(); 
+    $millis = isomsdate();
 
     $version = version();
 
     my $app = find_exec( 'ls' );
-    my $gpi = find_exec( 'grid-proxy-info', 
+    my $gpi = find_exec( 'grid-proxy-info',
         File::Spec->catdir( $ENV{'GLOBUS_LOCATION'}, 'bin' ) );
 
     my @result = pipe_out_cmd( $app, '-lart' );
@@ -301,7 +303,7 @@ not use millisecond extensions (yet).
 The C<isomsdate> function works like the C<isodate> function. The difference
 is the milliseconds extension in the time stamp. In order to properly use
 the millisecond extension, and not have C<.000> appear, you need to import
-the L<Time::HiRes> module. 
+the L<Time::HiRes> module.
 
 =item find_exec( $basename );
 
@@ -309,7 +311,7 @@ the L<Time::HiRes> module.
 
 The C<find_exec> function searches the C<PATH> environment variable for
 the existence of the given base name. Please only use a base name for
-the first argument. 
+the first argument.
 
 If you need to search additional directories outside your C<PATH>
 directories, add as many as you need as additional optional arguments.
@@ -327,7 +329,7 @@ applications. Please refer to the C<$?> variable after execution.
 
 The C<parse_exit> function parses the C<$?> exit code from a program,
 and provides a concise string describing the exit scenario. There are
-generally three possibilities. 
+generally three possibilities.
 
 If the exit code indicated a signal, the signal number and possibly core
 file is retunred as string. If the exit code was not 0, the the exit
@@ -338,7 +340,7 @@ returned.
 
 The C<slurp_braindb> function reads the contents of the file
 C<braindb.txt> in the specified run directory. This is a workflow helper
-function of less general applicability. 
+function of less general applicability.
 
 =item %ver = version();
 

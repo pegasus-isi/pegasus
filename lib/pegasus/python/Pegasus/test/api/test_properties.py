@@ -29,7 +29,7 @@ class TestProperties:
         props.write(filename)
 
         with open(filename, "r") as f:
-            assert f.read() == "a = b\nc = d\n"
+            assert f.read() == "a = b\nc = d\n\n"
         
         os.remove(filename)
 
@@ -38,7 +38,7 @@ class TestProperties:
             props["a"] = "b"
             props.write(f)
             f.seek(0)
-            assert f.read() == "a = b\n"
+            assert f.read() == "a = b\n\n"
 
     def test_write_invalid_file(self, props):
         with pytest.raises(TypeError) as e:
