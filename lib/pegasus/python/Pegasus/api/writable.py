@@ -76,7 +76,6 @@ class Writable:
             yaml.dump(
                 json.loads(json.dumps(self, cls=_CustomEncoder)),
                 file,
-                sort_keys=False,
                 allow_unicode=True,
             )
         else:
