@@ -26,8 +26,8 @@ function show_state
 
 echo "CURRENT DIR is " `pwd`
 
-if [ ! -e braindump.txt ]; then
-    echo "braindump.txt was not found in this directory. Planner probably failed!" 1>&2
+if [ ! -e braindump.yml ]; then
+    echo "braindump.yml was not found in this directory. Planner probably failed!" 1>&2
     exit 1
 fi
 
@@ -41,7 +41,7 @@ sleep 30s
 update_status
 show_state
 
-while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ] ; do 
+while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ] ; do
     NOW=`date +'%s'`
     if [ $NOW -gt $MAX_TS ]; then
         echo "Reached TIMEOUT of $TIMEOUT minutes. Calling pegasus-remove" 1>&2

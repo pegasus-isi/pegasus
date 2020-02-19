@@ -13,7 +13,7 @@ cd test/core/$TEST
 echo "TEST is $TEST"
 pwd
 
-# the run-bamboo-test of the performance tests already 
+# the run-bamboo-test of the performance tests already
 # redirect output to plan.out. no double teeing
 PLANFILE=plan.out
 
@@ -26,14 +26,14 @@ else
 fi
 
 #Launch the test
-./run-bamboo-test "$@" 
+./run-bamboo-test "$@"
 
 STATUS=$?
 
 #Get RUNDIR from the planning output
 RUN_DIR=`grep pegasus-remove $PLANFILE | awk '{print $5}'`
 if [ "x$RUN_DIR" = "x" ]; then
-    
+
     # if the workflow was planned with out --submit, it only has a pegasus-run line
     RUN_DIR=`grep pegasus-run $PLANFILE | awk '{print $2}'`
 
@@ -48,7 +48,7 @@ echo "RUNDIR is $RUN_DIR"
 # Change in to the rundir
 cd $RUN_DIR
 
-SCRIPT_MODE=`grep script braindump.txt`
+SCRIPT_MODE=`grep script braindump.yml`
 if [ "x$SCRIPT_MODE" = "x" ]; then
     # check for metrics file consistency with submit files
     # only check for non shell code generator cases
