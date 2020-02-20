@@ -67,6 +67,7 @@ class Braindump:
     dag = attr.ib(type=str, default=None)  # type: str
     type = attr.ib(type=str, default=None)  # type: str
     notify = attr.ib(type=str, default=None)  # type: str
+    script = attr.ib(type=str, default=None)  # type: str
 
 
 def load(fp: TextIO, *args, **kwargs) -> Braindump:

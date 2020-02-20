@@ -113,10 +113,10 @@ if [ $LOG_COUNT -lt 1 -o $LOG_COUNT -gt 1 ]; then
     STATUS=$(($STATUS + 1))
 fi
 
-if cat monitord.log | grep -E '(ERR)|(CRITICAL)' >/dev/null 2>&1; then
+if cat monitord.log | grep -E '(:ERR:)|(:CRITICAL:)' >/dev/null 2>&1; then
     echo "monitord log contains errors:"
     echo
-    grep -E '(ERR)|(CRITICAL)' monitord.log
+    grep -E '(:ERR:)|(:CRITICAL:)' monitord.log
     echo
     STATUS=$(($STATUS + 1))
 fi

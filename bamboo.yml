@@ -809,6 +809,7 @@ project:
                       --entrypoint ant \
                       --env "USER=bamboo" \
                       --env "CI=true" \
+                      --env "bamboo_buildKey=${bamboo_buildKey}" \
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} code-format-java
               artifactDependencies:

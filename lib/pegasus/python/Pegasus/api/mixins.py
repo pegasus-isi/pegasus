@@ -380,6 +380,8 @@ class ProfileMixin:
         grid_start="gridstart",
         grid_start_path="gridstart.path",
         grid_start_arguments="gridstart.arguments",
+        grid_start_launcher="gridstart.launcher",
+        grid_start_launcher_arguments="gridstart.launcher.arguments",
         stagein_clusters="stagein.clusters",
         stagein_local_clusters="stagein.local.clusters",
         stagein_remote_clusters="stagein.remote.clusters",
@@ -419,6 +421,8 @@ class ProfileMixin:
         grid_start: int = None,
         grid_start_path: str = None,
         grid_start_arguments: str = None,
+        grid_start_launcher: str = None,
+        grid_start_launcher_arguments: str = None,
         stagein_clusters: int = None,
         stagein_local_clusters: int = None,
         stagein_remote_clusters: int = None,
@@ -463,6 +467,10 @@ class ProfileMixin:
         :type grid_start_path: str, optional
         :param grid_start_arguments: Sets the arguments with which GridStart is used to launch a job on the remote site, defaults to None
         :type grid_start_arguments: str, optional
+        :param grid_start_launcher: specifies the path to the executable to launch kickstart, defaults to None,
+        :type grid_start_launcher: str, optional
+        :param grid_start_launcher_arguments: the arguments to the launcher executable if any
+        :type grid_start_launcher_arguments: str, optional
         :param stagein_clusters: This key determines the maximum number of stage-in jobs that are can executed locally or remotely per compute site per workflow. This is used to configure the BalancedCluster Transfer Refiner, which is the Default Refiner used in Pegasus. This profile is best set in the Site Catalog or in the Properties file, defaults to None
         :type stagein_clusters: int, optional
         :param stagein_local_clusters: This key provides finer grained control in determining the number of stage-in jobs that are executed locally and are responsible for staging data to a particular remote site. This profile is best set in the Site Catalog or in the Properties file, defaults to None
