@@ -354,7 +354,6 @@ public class NoGridStart implements GridStart {
         
         //PM-1461 wrap job with launcher if specified
         wrapJobWithGridStartLauncher(job);
-
         return true;
     }
 
@@ -447,8 +446,9 @@ public class NoGridStart implements GridStart {
     }
     
     /**
-     * Indicates whether the enabling mechanism can set the X bit on the executable on the remote
-     * grid site, in addition to launching it on the remote grid stie
+     * Indicates whether the enabling mechanism can set the X bit
+     * on the executable on the remote grid site, in addition to launching
+     * it on the remote grid stie
      *
      * @return false, as no wrapper executable is being used.
      */

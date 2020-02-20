@@ -125,6 +125,7 @@ public class Pegasus extends Namespace {
     
     /** The message to look for while detecting failures condor job's stdout/stderr */
     public static final String EXITCODE_FAILURE_MESSAGE = "exitcode.failuremsg";
+    
 
     /** the message to look for while detecting success in condor job's stdout/stderr */
     public static final String EXITCODE_SUCCESS_MESSAGE = "exitcode.successmsg";

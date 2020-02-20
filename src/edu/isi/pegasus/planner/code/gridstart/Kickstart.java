@@ -700,16 +700,13 @@ public class Kickstart implements GridStart {
         return;
     }
 
+   
     /**
      * It changes the paths to the executable depending on whether we want to transfer the
      * executable or not.
-     *
-     * <p>If the transfer_executable is set to true, then the executable needs to be shipped from
-     * the submit host meaning the local pool. This function changes the path of the executable to
-     * the one on the local pool, so that it can be shipped.
-     *
-     * <p>If the worker package is being deployed dynamically, then the path is set to the
-     * exectionSiteDirectory where the worker package is deployed.
+     * 
+     * If the worker package is being deployed dynamically, then the path is set
+     * to the exectionSiteDirectory where the worker package is deployed.
      *
      * <p>Else, we pick up the path from the site catalog that is passed as input
      *
