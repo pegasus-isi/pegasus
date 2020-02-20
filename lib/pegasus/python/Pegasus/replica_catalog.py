@@ -5,7 +5,6 @@ import json
 from io import StringIO
 
 from Pegasus import yaml
-from Pegasus.api.writable import _CustomEncoder
 from Pegasus.api.replica_catalog import ReplicaCatalog
 from Pegasus.api.errors import PegasusError
 
