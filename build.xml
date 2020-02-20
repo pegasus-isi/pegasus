@@ -417,8 +417,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
           <include name="**/globus_sdk/**/*"/>
           <include name="six"/>
           <include name="six.py"/>
-          <include name="attr"/>
-          <include name="attrs"/>
       </fileset>
     </copy>
 
