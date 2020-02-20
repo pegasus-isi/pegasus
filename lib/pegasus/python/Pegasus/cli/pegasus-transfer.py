@@ -25,6 +25,7 @@ Usage: pegasus-transfer [options]
 import cmd
 import errno
 import hashlib
+import io
 import json
 import logging
 import math
@@ -1095,7 +1096,7 @@ class GridFtpHandler(TransferHandlerBase):
         try:
             tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-",
                                                 suffix=".lst")
-            tmp_file = os.fdopen(tmp_fd, "w+", encoding='utf8')
+            tmp_file = io.open(tmp_fd, "w+")
         except:
             raise RuntimeError("Unable to create tmp file for"
                                + " globus-url-copy transfers")
@@ -1513,7 +1514,7 @@ class HPSSHandler(TransferHandlerBase):
         try:
             tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-",
                                                 suffix=".lst")
-            tmp_file = os.fdopen(tmp_fd, "w+", encoding='utf8')
+            tmp_file = io.open(tmp_fd, "w+")
         except:
             raise RuntimeError("Unable to create tmp file for"
                                + " hpss transfers")
@@ -2085,7 +2086,7 @@ class S3Handler(TransferHandlerBase):
         
         try:
             tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".lst")
-            tmp_file = os.fdopen(tmp_fd, "w+", encoding='utf8')
+            tmp_file = io.open(tmp_fd, "w+")
         except:
             raise RuntimeError("Unable to create tmp file for pegasus-s3 cleanup")
 
@@ -2197,7 +2198,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
         logger.debug(json.dumps(spec, indent=2))
         try:
             tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".json")
-            tmp_file = os.fdopen(tmp_fd, "w+", encoding='utf8')
+            tmp_file = io.open(tmp_fd, "w+")
         except:
             raise RuntimeError("Unable to create tmp file for pegasus-globus-online")
         tmp_file.write(json.dumps(spec, indent=2))
@@ -2255,7 +2256,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
         logger.debug(json.dumps(spec, indent=2))
         try:
             tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".json")
-            tmp_file = os.fdopen(tmp_fd, "w+", encoding='utf8')
+            tmp_file = io.open(tmp_fd, "w+")
         except:
             raise RuntimeError("Unable to create tmp file for pegasus-globus-online")
         tmp_file.write(json.dumps(spec, indent=2))
@@ -2306,7 +2307,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
         logger.debug(json.dumps(spec, indent=2))
         try:
             tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".json")
-            tmp_file = os.fdopen(tmp_fd, "w+", encoding='utf8')
+            tmp_file = io.open(tmp_fd, "w+")
         except:
             raise RuntimeError("Unable to create tmp file for pegasus-globus-online")
         tmp_file.write(json.dumps(spec, indent=2))
@@ -2546,7 +2547,7 @@ class GSHandler(TransferHandlerBase):
         # path to the PKCS12 file
         try:
             tmp_fd, self._tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".lst")
-            tmp_file = os.fdopen(tmp_fd, "w+", encoding='utf8')
+            tmp_file = io.open(tmp_fd, "w+")
         except:
           raise RuntimeError("Unable to create tmp file for gs boto file")
         try:
