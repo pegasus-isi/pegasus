@@ -652,61 +652,65 @@ public class Kickstart implements GridStart {
             gridStartArgs.append(' ').append(job.strargs);
         }
 
-
         job.setArguments(gridStartArgs.toString());
         job.setRemoteExecutable(gridStartPath);
 
-        //PM-1461 wrap job with launcher if specified
+        // PM-1461 wrap job with launcher if specified
         wrapJobWithGridStartLauncher(job);
-        
+
         // all finished successfully
         return true;
     }
 
     /**
-     * Wrap kickstart invocation with a launcher 
-     * 
-     * @param job 
+     * Wrap kickstart invocation with a launcher
+     *
+     * @param job
      */
     protected void wrapJobWithGridStartLauncher(Job job) {
         String launcher = job.vdsNS.getStringValue(Pegasus.GRIDSTART_LAUNCHER_KEY);
-        String launcherArguments = job.vdsNS.getStringValue(Pegasus.GRIDSTART_LAUNCHER_ARGUMENTS_KEY);
-        if (launcher == null){
+        String launcherArguments =
+                job.vdsNS.getStringValue(Pegasus.GRIDSTART_LAUNCHER_ARGUMENTS_KEY);
+        if (launcher == null) {
             return;
         }
-        
+
         String existingExecutable = job.getRemoteExecutable();
-        String existingArguments       = job.getArguments();
+        String existingArguments = job.getArguments();
         StringBuilder updatedArgs = new StringBuilder();
-        
-        if (launcherArguments != null ){
-            updatedArgs.append( launcherArguments ).append( " " );
+
+        if (launcherArguments != null) {
+            updatedArgs.append(launcherArguments).append(" ");
         }
-        
+
         updatedArgs.append(existingExecutable);
-        
-        if (existingArguments != null ){
-            updatedArgs.append( existingArguments );
+
+        if (existingArguments != null) {
+            updatedArgs.append(existingArguments);
         }
-        
-        //launcher is the new executable for the job
+
+        // launcher is the new executable for the job
         job.setRemoteExecutable(launcher);
         job.setArguments(updatedArgs.toString());
-        
-        mLogger.log("Wrapped job " + job.getID() + " with launcher " +
-                    job.getRemoteExecutable() + " " + job.getArguments(),
-                    LogManager.DEBUG_MESSAGE_LEVEL);
-        
+
+        mLogger.log(
+                "Wrapped job "
+                        + job.getID()
+                        + " with launcher "
+                        + job.getRemoteExecutable()
+                        + " "
+                        + job.getArguments(),
+                LogManager.DEBUG_MESSAGE_LEVEL);
+
         return;
     }
 
-   
     /**
      * It changes the paths to the executable depending on whether we want to transfer the
      * executable or not.
-     * 
-     * If the worker package is being deployed dynamically, then the path is set
-     * to the exectionSiteDirectory where the worker package is deployed.
+     *
+     * <p>If the worker package is being deployed dynamically, then the path is set to the
+     * exectionSiteDirectory where the worker package is deployed.
      *
      * <p>Else, we pick up the path from the site catalog that is passed as input
      *

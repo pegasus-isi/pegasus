@@ -15,14 +15,14 @@
  */
 package edu.isi.pegasus.planner.code;
 
+import static org.junit.Assert.*;
+
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
-import edu.isi.pegasus.planner.catalog.site.SiteFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
@@ -31,15 +31,11 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-import java.io.File;
-import java.util.LinkedList;
-import java.util.List;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  * Unit test class for the various Gridstart implementations
@@ -69,16 +65,13 @@ public class GridStartTest {
     private Job mTestJob;
     private GridStartFactory mGSFactory;
 
-    public GridStartTest() {
-    }
+    public GridStartTest() {}
 
     @BeforeClass
-    public static void setUpClass() {
-    }
+    public static void setUpClass() {}
 
     @AfterClass
-    public static void tearDownClass() {
-    }
+    public static void tearDownClass() {}
 
     @Before
     public void setUp() {
@@ -133,7 +126,12 @@ public class GridStartTest {
 
         assertTrue(ks.enable(j, true));
         assertEquals(PEGASUS_KICKSTART_PATH, j.getRemoteExecutable());
-        assertEquals(" -n test -N null -R condor_pool  -L  -T  " + USER_JOB_EXECUTABLE + " " + USER_JOB_ARGS, j.getArguments());
+        assertEquals(
+                " -n test -N null -R condor_pool  -L  -T  "
+                        + USER_JOB_EXECUTABLE
+                        + " "
+                        + USER_JOB_ARGS,
+                j.getArguments());
         mLogger.logEventCompletion();
     }
 
@@ -141,7 +139,9 @@ public class GridStartTest {
     public void testKickStartEnabledJobWithJSRun() {
 
         mLogger.logEventStart(
-                "test.code.generator.GridStart", "js-run-kickstart", Integer.toString(mTestNumber++));
+                "test.code.generator.GridStart",
+                "js-run-kickstart",
+                Integer.toString(mTestNumber++));
         Job j = (Job) mTestJob.clone();
 
         j.addProfile(new Profile("pegasus", Pegasus.GRIDSTART_LAUNCHER_KEY, "jsrun"));
@@ -149,7 +149,13 @@ public class GridStartTest {
         GridStart ks = mGSFactory.loadGridStart(j, PROPERTIES_BASENAME);
         assertTrue(ks.enable(j, true));
         assertEquals("jsrun", j.getRemoteExecutable());
-        assertEquals(PEGASUS_KICKSTART_PATH + " -n test -N null -R condor_pool  -L  -T  " + USER_JOB_EXECUTABLE + " " + USER_JOB_ARGS, j.getArguments());
+        assertEquals(
+                PEGASUS_KICKSTART_PATH
+                        + " -n test -N null -R condor_pool  -L  -T  "
+                        + USER_JOB_EXECUTABLE
+                        + " "
+                        + USER_JOB_ARGS,
+                j.getArguments());
         mLogger.logEventCompletion();
     }
 
@@ -157,7 +163,9 @@ public class GridStartTest {
     public void testKickStartEnabledJobWithJSRunArgs() {
 
         mLogger.logEventStart(
-                "test.code.generator.GridStart", "js-run-kickstart", Integer.toString(mTestNumber++));
+                "test.code.generator.GridStart",
+                "js-run-kickstart",
+                Integer.toString(mTestNumber++));
         Job j = (Job) mTestJob.clone();
         String jsrunArgs = "-n 1 -a 1 -c 42 -g 0";
         j.addProfile(new Profile("pegasus", Pegasus.GRIDSTART_LAUNCHER_KEY, "jsrun"));
@@ -166,7 +174,15 @@ public class GridStartTest {
         GridStart ks = mGSFactory.loadGridStart(j, PROPERTIES_BASENAME);
         assertTrue(ks.enable(j, true));
         assertEquals("jsrun", j.getRemoteExecutable());
-        assertEquals(jsrunArgs + " " + PEGASUS_KICKSTART_PATH + " -n test -N null -R condor_pool  -L  -T  " + USER_JOB_EXECUTABLE + " " + USER_JOB_ARGS, j.getArguments());
+        assertEquals(
+                jsrunArgs
+                        + " "
+                        + PEGASUS_KICKSTART_PATH
+                        + " -n test -N null -R condor_pool  -L  -T  "
+                        + USER_JOB_EXECUTABLE
+                        + " "
+                        + USER_JOB_ARGS,
+                j.getArguments());
         mLogger.logEventCompletion();
     }
 
@@ -189,7 +205,9 @@ public class GridStartTest {
     public void testNoKickStartEnabledJobWithJSRun() {
 
         mLogger.logEventStart(
-                "test.code.generator.GridStart", "js-run-no-kickstart", Integer.toString(mTestNumber++));
+                "test.code.generator.GridStart",
+                "js-run-no-kickstart",
+                Integer.toString(mTestNumber++));
         Job j = (Job) mTestJob.clone();
         j.addProfile(new Profile("pegasus", Pegasus.GRIDSTART_KEY, "None"));
 
@@ -206,7 +224,9 @@ public class GridStartTest {
     public void testNoKickStartEnabledJobWithJSRunArgs() {
 
         mLogger.logEventStart(
-                "test.code.generator.GridStart", "js-run-args-no-kickstart", Integer.toString(mTestNumber++));
+                "test.code.generator.GridStart",
+                "js-run-args-no-kickstart",
+                Integer.toString(mTestNumber++));
         Job j = (Job) mTestJob.clone();
         String jsrunArgs = "-n 1 -a 1 -c 42 -g 0";
         j.addProfile(new Profile("pegasus", Pegasus.GRIDSTART_KEY, "None"));
@@ -222,7 +242,5 @@ public class GridStartTest {
     }
 
     @After
-    public void tearDown() {
-    }
-
+    public void tearDown() {}
 }
