@@ -16,8 +16,11 @@ python3 black-diamond-setup.py $TOP_DIR $WORK_DIR $RUN_ID
 echo
 echo "Creating pegasus configuration file"
 cat > pegasus.conf << EOF
+pegasus.catalog.site = YAML
 pegasus.catalog.site.file = SiteCatalog.yml
+pegasus.catalog.transformation = YAML
 pegasus.catalog.transformation.file = TransformationCatalog.yml
+pegasus.catalog.replica = YAML
 pegasus.catalog.replica.file = ReplicaCatalog.yml
 pegasus.data.configuration = condorio
 EOF
