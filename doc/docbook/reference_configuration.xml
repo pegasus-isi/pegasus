@@ -1472,6 +1472,35 @@ Scope       :</emphasis> TC, SC, DAX, Properties
 
             <row>
               <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.gridstart.launcher<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>gridstart.launcher<emphasis role="bold">
+Scope       :</emphasis> TC, SC, DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.9.4
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
+
+              <entry>Specifies the launcher executable to use to launch the
+              GridStart. Is useful, when we want the kickstart invocation for
+              the compute jobs to be submitted using jsrun, as in on sites
+              where originally the job lands on DTN node like OLCF
+              sites.</entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.gridstart.launcher.arguments<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>gridstart.launcher<emphasis role="bold">
+Scope       :</emphasis> TC, SC, DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.9.4
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
+
+              <entry>The arguments to the launcher executable for
+              GridStart</entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
                       role="bold">Property Key: </emphasis></emphasis>pegasus.stagein.clusters<emphasis
                     role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>stagein.clusters<emphasis role="bold">
@@ -1866,8 +1895,7 @@ Scope       :</emphasis> TC, SC, DAX, Properties
                   <entry><literallayout><emphasis role="bold"><emphasis
                           role="bold">Property Key: </emphasis></emphasis>pegasus.clusters.maxruntime<emphasis
                         role="bold"><emphasis role="bold">
-Profile  Key: </emphasis></emphasis>clusters.maxruntime<emphasis
-                        role="bold">
+Profile  Key: </emphasis></emphasis>clusters.maxruntime<emphasis role="bold">
 Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.0
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
@@ -5786,7 +5814,7 @@ Scope       :</emphasis> Properties
                     <term>nosymlink</term>
 
                     <listitem>
-                       No integrity checking is performed on input files that are symlinked.  You should consider turning this on, if you think that your input files at rest are at a low risk of data corruption, and want to save on the checksum computation overheads against the shared filesystem. 
+                       No integrity checking is performed on input files that are symlinked. You should consider turning this on, if you think that your input files at rest are at a low risk of data corruption, and want to save on the checksum computation overheads against the shared filesystem. 
                     </listitem>
                   </varlistentry>
 
