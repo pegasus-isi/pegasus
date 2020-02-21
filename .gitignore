@@ -1,5 +1,6 @@
-# Created by https://www.gitignore.io/api/linux,macos,windows,code,eclipse,emacs,intellij+all,vim,cvs,git,svn,c,c++,java,maven,node,perl,perl6,python,r,packer,terraform,vagrant
-# Edit at https://www.gitignore.io/?templates=linux,macos,windows,code,eclipse,emacs,intellij+all,vim,cvs,git,svn,c,c++,java,maven,node,perl,perl6,python,r,packer,terraform,vagrant
+
+# Created by https://www.gitignore.io/api/c,r,git,cvs,vim,c++,svn,node,code,perl,java,venv,linux,perl6,macos,emacs,maven,packer,dotenv,direnv,python,windows,eclipse,vagrant,terraform,virtualenv,intellij+all
+# Edit at https://www.gitignore.io/?templates=c,r,git,cvs,vim,c++,svn,node,code,perl,java,venv,linux,perl6,macos,emacs,maven,packer,dotenv,direnv,python,windows,eclipse,vagrant,terraform,virtualenv,intellij+all
 
 ### C ###
 # Prerequisites
@@ -87,8 +88,16 @@ dkms.conf
 .cvsignore
 */.cvsignore
 
+### direnv ###
+.direnv
+.envrc
+
+### dotenv ###
+.env
+
 ### Eclipse ###
 .metadata
+bin/
 tmp/
 *.tmp
 *.bak
@@ -452,7 +461,6 @@ typings/
 .yarn-integrity
 
 # dotenv environment variables file
-.env
 .env.test
 
 # parcel-bundler cache (https://parceljs.org/)
@@ -557,6 +565,7 @@ develop-eggs/
 downloads/
 eggs/
 .eggs/
+lib/
 lib64/
 parts/
 sdist/
@@ -726,6 +735,18 @@ override.tf.json
 
 ### Vagrant Patch ###
 
+### venv ###
+# Virtualenv
+# http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
+pyvenv.cfg
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+pip-selfcheck.json
+
 ### Vim ###
 # Swap
 [._]*.s[a-v][a-z]
@@ -749,6 +770,10 @@ tags
 
 # Coc configuration directory
 .vim
+
+### VirtualEnv ###
+# Virtualenv
+# http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
 
 ### Windows ###
 # Windows thumbnail cache files
@@ -776,4 +801,4 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.gitignore.io/api/linux,macos,windows,code,eclipse,emacs,intellij+all,vim,cvs,git,svn,c,c++,java,maven,node,perl,perl6,python,r,packer,terraform,vagrant
+# End of https://www.gitignore.io/api/c,r,git,cvs,vim,c++,svn,node,code,perl,java,venv,linux,perl6,macos,emacs,maven,packer,dotenv,direnv,python,windows,eclipse,vagrant,terraform,virtualenv,intellij+all
