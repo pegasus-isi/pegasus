@@ -7,6 +7,7 @@ Abstract :mod:`yaml` with Pegasus specific defaults.
 
 import io
 from functools import partial
+from pathlib import Path
 from typing import Dict
 
 import yaml as _yaml
@@ -26,20 +27,9 @@ __all__ = (
     "dump_all",
 )
 
-load = partial(_yaml.load, Loader=_Loader)
 
-load_all = partial(_yaml.load_all, Loader=_Loader)
-
-dump = partial(_yaml.dump, Dumper=_Dumper)
-
-dump_all = partial(_yaml.dump_all, Dumper=_Dumper)
-
-yaml.constructor.SafeConstructor.yaml_constructors[
-    "tag:yaml.org,2002:timestamp"
-] = yaml.constructor.SafeConstructor.yaml_constructors["tag:yaml.org,2002:str"]
-
-
-def _add_bool(self, node):
+# Loader extras
+def _construct_bool(self, node):
     """
     Ensure :mod:`yaml` handles booleans in the expected fashion.
 
@@ -57,7 +47,36 @@ def _add_bool(self, node):
     return bool_values.get(v.lower(), v)
 
 
-yaml.constructor.SafeConstructor.yaml_constructors["tag:yaml.org,2002:bool"] = _add_bool
+# Disable deserializing yes/no to boolean True/False
+_Loader.add_constructor("tag:yaml.org,2002:bool", _construct_bool)
+
+
+# Disable deserializing date, datetime strings to date, datetime object
+_Loader.add_constructor(
+    "tag:yaml.org,2002:timestamp", _Loader.yaml_constructors["tag:yaml.org,2002:str"],
+)
+
+
+# Dumper extras
+def _represent_path(self, data: Path):
+    """
+    Serialize a `Path` object to a string.
+
+    .. warning::
+        Path("./aaa") serializes to "aaa"
+
+    :param data: [description]
+    :type data: pathlib.Path
+    """
+    return self.represent_scalar("tag:yaml.org,2002:str", str(data))
+
+
+# Serializing Python `Path` objects to `str`
+# NOTE: Path("./aaa") serializes to "aaa"
+_Dumper.add_multi_representer(Path, _represent_path)
+
+
+load = partial(_yaml.load, Loader=_Loader)
 
 
 def loads(s: str, *args, **kwargs) -> Dict:
@@ -74,6 +93,12 @@ def loads(s: str, *args, **kwargs) -> Dict:
     return load(io.StringIO(s), *args, **kwargs)
 
 
+load_all = partial(_yaml.load_all, Loader=_Loader)
+
+
+dump = partial(_yaml.dump, Dumper=_Dumper)
+
+
 def dumps(obj: Dict, Dumper=_Dumper, *args, **kwargs) -> str:
     """
     Serialize ``obj`` to a YAML formatted ``str``.
@@ -86,3 +111,6 @@ def dumps(obj: Dict, Dumper=_Dumper, *args, **kwargs) -> str:
     :rtype: str
     """
     return dump(obj, *args, **kwargs)
+
+
+dump_all = partial(_yaml.dump_all, Dumper=_Dumper)
