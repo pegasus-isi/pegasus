@@ -15,7 +15,7 @@ Basic Usage::
 """
 
 from pathlib import Path
-from typing import Dict, TextIO
+from typing import Optional, TextIO
 
 import attr
 
@@ -57,7 +57,9 @@ class Braindump:
     wf_uuid = attr.ib(type=str, default=None)  # type: str
 
     #: The path to the dax file
-    dax = attr.ib(type=str, default=None)  # type: str
+    dax = attr.ib(
+        type=Path, default=None, converter=attr.converters.optional(Path)
+    )  # type: Path
 
     #: The label attribute in the adag element of the dax
     dax_label = attr.ib(type=str, default=None)  # type: str
@@ -75,13 +77,19 @@ class Braindump:
     timestamp = attr.ib(type=str, default=None)  # type: str
 
     #: The base submit directory
-    basedir = attr.ib(type=str, default=None)  # type: str
+    basedir = attr.ib(
+        type=Path, default=None, converter=attr.converters.optional(Path)
+    )  # type: Path
 
     #: The full path for the submit directory
-    submit_dir = attr.ib(type=str, default=None)  # type: str
+    submit_dir = attr.ib(
+        type=Path, default=None, converter=attr.converters.optional(Path)
+    )  # type: Path
 
     #: The planner used to construct the executable workflow. always pegasus
-    planner = attr.ib(type=str, default=None)  # type: str
+    planner = attr.ib(
+        type=Path, default=None, converter=attr.converters.optional(Path)
+    )  # type: Path
 
     #: The versions of the planner
     planner_version = attr.ib(type=str, default=None)  # type: str
@@ -99,13 +107,17 @@ class Braindump:
     rundir = attr.ib(type=str, default=None)  # type: str
 
     #: The bin directory of the pegasus installation
-    bindir = attr.ib(type=str, default=None)  # type: str
+    bindir = attr.ib(
+        type=Path, default=None, converter=attr.converters.optional(Path)
+    )  # type: Path
 
     #: The vo group to which the user belongs to. Defaults to pegasus
     vogroup = attr.ib(type=str, default=None)  # type: str
 
     #: Whether the workflow uses PMC
-    uses_pmc = attr.ib(type=str, default=None)  # type: str
+    uses_pmc = attr.ib(
+        type=bool, default=None, converter=attr.converters.optional(bool)
+    )  # type: Optional[bool]
 
     #: The full path to the properties file in the submit directory
     properties = attr.ib(type=str, default=None)  # type: str
@@ -160,7 +172,7 @@ def loads(s: str, *args, **kwargs) -> Braindump:
     return Braindump(**_dict)
 
 
-def dump(obj: Dict, fp: TextIO, *args, **kwargs) -> None:
+def dump(obj: Braindump, fp: TextIO, *args, **kwargs) -> None:
     """
     Serialize ``obj`` as a Braindump formatted stream to ``fp`` (a ``.write()``-supporting file-like object).
 
@@ -173,10 +185,10 @@ def dump(obj: Dict, fp: TextIO, *args, **kwargs) -> None:
     :return: [description]
     :rtype: NoReturn
     """
-    yaml.dump(obj, fp, *args, **kwargs)
+    yaml.dump(attr.asdict(obj), fp, *args, **kwargs)
 
 
-def dumps(obj: Dict, *args, **kwargs) -> str:
+def dumps(obj: Braindump, *args, **kwargs) -> str:
     """
     Serialize ``obj`` to a Braindump formatted ``str``.
 
@@ -187,4 +199,4 @@ def dumps(obj: Dict, *args, **kwargs) -> str:
     :return: [description]
     :rtype: str
     """
-    return yaml.dumps(obj, *args, **kwargs)
+    return yaml.dumps(attr.asdict(obj), *args, **kwargs)
