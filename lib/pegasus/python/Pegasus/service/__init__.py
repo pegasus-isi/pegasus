@@ -1,5 +1,7 @@
 import os
+
 from flask import Flask
+from Pegasus.service.base import BooleanConverter
 
 app = Flask(__name__)
 
@@ -45,8 +47,6 @@ cache = Cache(app)
 # Flask URL variables support int, float, and path converters.
 # Adding support for a boolean converter.
 #
-from Pegasus.service.base import BooleanConverter
-
 app.url_map.converters["boolean"] = BooleanConverter
 
 #
