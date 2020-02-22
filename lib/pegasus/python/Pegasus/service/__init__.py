@@ -19,8 +19,7 @@ def get_pegasus_home():
     if home is not None:
         if not os.path.isdir(home):
             raise ImportError(
-                "Invalid value for PEGASUS_HOME environment variable: %s" %
-                home
+                "Invalid value for PEGASUS_HOME environment variable: %s" % home
             )
         return home
 
@@ -28,8 +27,7 @@ def get_pegasus_home():
     if home is not None:
         if not os.path.isdir(home):
             raise ImportError(
-                "Invalid directory for PEGASUS_HOME in configuration file: %s"
-                % home
+                "Invalid directory for PEGASUS_HOME in configuration file: %s" % home
             )
         return home
 
@@ -48,11 +46,12 @@ cache = Cache(app)
 # Adding support for a boolean converter.
 #
 from Pegasus.service.base import BooleanConverter
-app.url_map.converters['boolean'] = BooleanConverter
+
+app.url_map.converters["boolean"] = BooleanConverter
 
 #
 # Relax trailing slash requirement
 #
 app.url_map.strict_slashes = False
 
-from Pegasus.service import auth, filters, dashboard, monitoring
+from Pegasus.service import auth, filters, dashboard, monitoring  # isort:skip
