@@ -22,6 +22,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
@@ -62,6 +63,7 @@ public class SiteCatalogXMLParserFactory {
      * Loads the appropriate DAXParser looking at the dax schema that is specified by the user.
      *
      * @param bag bag of Pegasus intialization objects
+     * @param connectProps  the connection properties without the site catalog prefix
      * @param file the site catalog file
      * @param sites the list of sites that need to be parsed. * means all
      * @return the SiteCatalogXMLParser class that is loaded.
@@ -70,7 +72,7 @@ public class SiteCatalogXMLParserFactory {
      * @see #DEFAULT_CALLBACK_PACKAGE_NAME
      */
     public static SiteCatalogXMLParser loadSiteCatalogXMLParser(
-            PegasusBag bag, String file, List<String> sites)
+            PegasusBag bag, Properties connectProps, String file, List<String> sites)
             throws SiteCatalogXMLParserFactoryException {
 
         String scClass = SiteCatalogXMLParserFactory.DEFAULT_SC_PARSER_CLASS;
@@ -155,7 +157,7 @@ public class SiteCatalogXMLParserFactory {
                 "Site Catalog Parser Class to be loaded is " + scClass,
                 LogManager.CONFIG_MESSAGE_LEVEL);
 
-        return loadSiteCatalogParser(scClass, bag, sites);
+        return loadSiteCatalogParser(scClass, bag, connectProps, sites);
     }
 
     /**
@@ -164,6 +166,7 @@ public class SiteCatalogXMLParserFactory {
      *
      * @param classname the classname of the parser class that needs to be loaded
      * @param bag bag of Pegasus intialization objects
+     * @param connectProps  the connection properties without the site catalog prefix
      * @param sites the list of sites that need to be parsed. * means all
      * @return the DAXParser loaded.
      * @exception SiteCatalogXMLParserFactoryException that nests any error that might occur during
@@ -171,7 +174,7 @@ public class SiteCatalogXMLParserFactory {
      * @see #DEFAULT_CALLBACK_PACKAGE_NAME
      */
     private static final SiteCatalogXMLParser loadSiteCatalogParser(
-            String classname, PegasusBag bag, List<String> sites) {
+            String classname, PegasusBag bag, Properties connectProps, List<String> sites) {
         SiteCatalogXMLParser parser = null;
         try {
             // load the DAX Parser class
@@ -187,13 +190,15 @@ public class SiteCatalogXMLParserFactory {
 
             DynamicLoader dl = new DynamicLoader(daxClass);
 
-            Object argList[] = new Object[2];
-            Class classList[] = new Class[2];
+            Object argList[] = new Object[3];
+            Class classList[] = new Class[3];
 
             classList[0] = bag.getClass();
-            classList[1] = Class.forName("java.util.List");
+            classList[1] = connectProps.getClass();
+            classList[2] = Class.forName("java.util.List");
             argList[0] = bag;
-            argList[1] = sites;
+            argList[1] = connectProps;
+            argList[2] = sites;
 
             parser = (SiteCatalogXMLParser) dl.instantiate(classList, argList);
 

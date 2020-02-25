@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 import java.util.Stack;
 import org.xml.sax.SAXException;
@@ -91,9 +92,10 @@ public class SiteCatalogXMLParser3 extends StackBasedXMLParser implements SiteCa
      * The overloaded constructor.
      *
      * @param bag the bag of initialization objects.
+     * @param connectProps  the connection properties without the site catalog prefix
      * @param sites the list of sites that need to be parsed. * means all.
      */
-    public SiteCatalogXMLParser3(PegasusBag bag, List<String> sites) {
+    public SiteCatalogXMLParser3(PegasusBag bag, Properties connectProps, List<String> sites) {
         super(bag);
         mStack = new Stack();
         mDepth = 0;

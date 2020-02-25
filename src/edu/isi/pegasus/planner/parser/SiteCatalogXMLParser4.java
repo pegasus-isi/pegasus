@@ -56,6 +56,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.Stack;
 import java.util.logging.Level;
@@ -102,9 +103,10 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
      * The overloaded constructor.
      *
      * @param bag the bag of initialization objects.
+     * @param connectProps  the connection properties without the site catalog prefix
      * @param sites the list of sites that need to be parsed. * means all.
      */
-    public SiteCatalogXMLParser4(PegasusBag bag, List<String> sites) {
+    public SiteCatalogXMLParser4(PegasusBag bag, Properties connectProps, List<String> sites) {
         super(bag);
         mStack = new Stack();
         mDepth = 0;
@@ -702,7 +704,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
         files.add("/lfs1/devel/Pegasus/pegasus/etc/sample-cloud-xml4.xml");
 
         for (String file : files) {
-            SiteCatalogXMLParser4 parser = new SiteCatalogXMLParser4(bag, s);
+            SiteCatalogXMLParser4 parser = new SiteCatalogXMLParser4(bag,new Properties(), s);
             System.out.println(" *********Parsing File *********" + file);
             parser.startParser(file);
             SiteStore store = parser.getSiteStore();

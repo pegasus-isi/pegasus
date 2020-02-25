@@ -72,6 +72,11 @@ public class XML implements SiteCatalog {
 
     /** The bag of Pegasus Initialization objects */
     private PegasusBag mBag;
+    
+    /**
+     * Connection properties to connect to the backend.
+     */
+    private Properties mConnectionProperties;
 
     /** The default constructor. */
     public XML() {
@@ -79,7 +84,7 @@ public class XML implements SiteCatalog {
         mBag = new PegasusBag();
         mBag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
         mBag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
-        // mSiteMap = new HashMap<String,SiteCatalogEntry>();
+        mConnectionProperties = new Properties();
     }
 
     /**
@@ -92,6 +97,7 @@ public class XML implements SiteCatalog {
      * @throws SiteCatalogException
      */
     public boolean connect(Properties props) throws SiteCatalogException {
+        mConnectionProperties = props;
         if (props.containsKey("file")) {
             return connect(props.getProperty("file"));
         }
@@ -161,7 +167,7 @@ public class XML implements SiteCatalog {
             throw new SiteCatalogException("Need to connect to site catalog before loading");
         }
 
-        mParser = SiteCatalogXMLParserFactory.loadSiteCatalogXMLParser(this.mBag, mFilename, sites);
+        mParser = SiteCatalogXMLParserFactory.loadSiteCatalogXMLParser(this.mBag, this.mConnectionProperties, mFilename, sites);
 
         mLogger.logEventStart(
                 LoggingKeys.EVENT_PEGASUS_PARSE_SITE_CATALOG,
