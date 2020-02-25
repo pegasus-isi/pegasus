@@ -21,6 +21,8 @@ $defs:
         type: array
         items:
           type: string
+          description: "Namespace::Name::Version"
+          examples: ["example::keg::1.0"]
       sites:
         type: array
         items:
