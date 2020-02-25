@@ -257,7 +257,8 @@ public class SCClient extends Executable {
                 try {
                     mProps.setProperty("pegasus.catalog.site.file", inputFile);
                     mProps.setProperty(SiteCatalog.c_prefix, mInputFormat);
-                    mProps.setProperty(SiteCatalog.VARIABLE_EXPANSION_KEY, Boolean.toString(mDoVariableExpansion));
+                    mProps.setProperty(SiteCatalog.c_prefix + '.' + SiteCatalog.VARIABLE_EXPANSION_KEY, 
+                                        Boolean.toString(mDoVariableExpansion));
                     catalog = SiteFactory.loadInstance(mProps);
 
                     /* load all sites in site catalog */
