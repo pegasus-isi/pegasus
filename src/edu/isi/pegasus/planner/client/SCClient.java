@@ -62,6 +62,11 @@ public class SCClient extends Executable {
 
     /** Denotes the logging level that is to be used for logging the messages. */
     private int mLoggingLevel;
+    
+    /**
+     * Boolean indicating whether to do variable expansion or not
+     */
+    private boolean mDoVariableExpansion;
 
     /** The default constructor. */
     public SCClient() {
@@ -75,7 +80,8 @@ public class SCClient extends Executable {
         mInputFormat = "XML";
         mLoggingLevel = LogManager.WARNING_MESSAGE_LEVEL;
         // mText = false;
-
+        //PM-1464 by default variable expansion is disabled.
+        mDoVariableExpansion = false;
         mInputFiles = null;
         mOutputFile = null;
     }
@@ -94,15 +100,15 @@ public class SCClient extends Executable {
 
     public LongOpt[] generateValidOptions() {
         LongOpt[] longopts = new LongOpt[9];
-        longopts[0] = new LongOpt("files", LongOpt.REQUIRED_ARGUMENT, null, 'f');
-        longopts[1] = new LongOpt("input", LongOpt.REQUIRED_ARGUMENT, null, 'i');
-        longopts[2] = new LongOpt("output", LongOpt.REQUIRED_ARGUMENT, null, 'o');
-        longopts[3] = new LongOpt("oformat", LongOpt.REQUIRED_ARGUMENT, null, 'O');
-        longopts[4] = new LongOpt("help", LongOpt.NO_ARGUMENT, null, 'h');
-        longopts[5] = new LongOpt("version", LongOpt.NO_ARGUMENT, null, 'V');
-        longopts[6] = new LongOpt("verbose", LongOpt.NO_ARGUMENT, null, 'v');
-        longopts[7] = new LongOpt("quiet", LongOpt.NO_ARGUMENT, null, 'q');
-        longopts[8] = new LongOpt("conf", LongOpt.REQUIRED_ARGUMENT, null, 'c');
+        longopts[0] = new LongOpt("input", LongOpt.REQUIRED_ARGUMENT, null, 'i');
+        longopts[1] = new LongOpt("output", LongOpt.REQUIRED_ARGUMENT, null, 'o');
+        longopts[2] = new LongOpt("oformat", LongOpt.REQUIRED_ARGUMENT, null, 'O');
+        longopts[3] = new LongOpt("help", LongOpt.NO_ARGUMENT, null, 'h');
+        longopts[4] = new LongOpt("version", LongOpt.NO_ARGUMENT, null, 'V');
+        longopts[5] = new LongOpt("verbose", LongOpt.NO_ARGUMENT, null, 'v');
+        longopts[6] = new LongOpt("quiet", LongOpt.NO_ARGUMENT, null, 'q');
+        longopts[7] = new LongOpt("conf", LongOpt.REQUIRED_ARGUMENT, null, 'c');
+        longopts[8] = new LongOpt("expand", LongOpt.NO_ARGUMENT, null, 'e');
         return longopts;
     }
 
@@ -116,19 +122,15 @@ public class SCClient extends Executable {
 
         Getopt g =
                 new Getopt(
-                        "SCClient", getCommandLineOptions(), "lhvqVi:o:O:f:c:", longOptions, false);
+                        "SCClient", getCommandLineOptions(), "elhvqVi:o:O:c:", longOptions, false);
 
         int option = 0;
         while ((option = g.getopt()) != -1) {
             switch (option) {
-                case 'f': // files
-                    StringTokenizer st = new StringTokenizer(g.getOptarg(), ",");
-                    mInputFiles = new ArrayList<String>(st.countTokens());
-                    while (st.hasMoreTokens()) {
-                        mInputFiles.add(st.nextToken());
-                    }
+                case 'e': // expand
+                    mDoVariableExpansion = true;
                     break;
-
+                
                 case 'i': // input
                     StringTokenizer str = new StringTokenizer(g.getOptarg(), ",");
                     mInputFiles = new ArrayList<String>(str.countTokens());
@@ -255,6 +257,7 @@ public class SCClient extends Executable {
                 try {
                     mProps.setProperty("pegasus.catalog.site.file", inputFile);
                     mProps.setProperty(SiteCatalog.c_prefix, mInputFormat);
+                    mProps.setProperty(SiteCatalog.VARIABLE_EXPANSION_KEY, Boolean.toString(mDoVariableExpansion));
                     catalog = SiteFactory.loadInstance(mProps);
 
                     /* load all sites in site catalog */
@@ -331,10 +334,12 @@ public class SCClient extends Executable {
                 "\n $Id$ "
                         + "\n "
                         + getGVDSVersion()
-                        + "\n pegasus-sc-converter - Parses the site catalogs in old format ( XML ) and generates site catalog in new format ( YAML )"
+                        + "\n pegasus-sc-converter - Parses the site catalogs in old format (XML and generates site catalog in " 
+                        + "\n new format (YAML)"
                         + "\n "
                         + "\n Usage: pegasus-sc-converter [-Dprop  [..]]  --input <list of input files> --output <output file to write> "
-                        + "\n        [--iformat input format] [--oformat <output format>] [--conf <path to property file>] [--verbose] [--quiet] [--Version] [--help]"
+                        + "\n          [--iformat input format] [--oformat <output format>] [--conf <path to property file>] [--verbose]"
+                        + "\n          [--quiet] [--Version] [--help]"
                         + "\n"
                         + "\n"
                         + "\n Mandatory Options "
@@ -344,27 +349,15 @@ public class SCClient extends Executable {
                         + "\n"
                         + "\n"
                         + "\n Other Options "
-                        + "\n"
-                        +
-                        // "\n -I |--iformat    the input format for the files . Can be [XML , Text]
-                        // "  +
-                        "\n -O |--oformat    the output format of the file. Usually [YAML] "
+                        + "\n -O |--oformat    the output format of the file. Usually [YAML] "
                         + "\n -c |--conf       path to  property file"
+                        + "\n -e |--expand     sets variable expansion on. Any variables in input files " 
+                        + "\n                  will be expanded and their values will be written out to " 
+                        + "\n                  output site catalog"
                         + "\n -v |--verbose    increases the verbosity of messages about what is going on"
                         + "\n -q |--quiet      decreases the verbosity of messages about what is going on"
                         + "\n -V |--version    displays the version of the Pegasus Workflow Planner"
                         + "\n -h |--help       generates this help."
-                        + "\n"
-                        + "\n"
-                        + "\n Deprecated Options "
-                        + "\n"
-                        +
-                        // "\n --text | -t        To convert an xml site catalog file to the
-                        // multiline site catalog file." +
-                        // "\n                    Use --iformat instead " +
-                        // "\n" +
-                        "\n --files | -f  The local text site catalog file|files to be converted to "
-                        + "\n                    YAML"
                         + "\n"
                         + "\n"
                         + "\n Example Usage "
