@@ -1,11 +1,15 @@
 import json
-from tempfile import TemporaryFile, NamedTemporaryFile
+from tempfile import TemporaryFile
+from tempfile import NamedTemporaryFile
 
 import pytest
 
 import Pegasus
 from Pegasus import yaml
-from Pegasus.replica_catalog import *
+from Pegasus.replica_catalog import load
+from Pegasus.replica_catalog import loads
+from Pegasus.replica_catalog import dump
+from Pegasus.replica_catalog import dumps
 from Pegasus.replica_catalog import _to_rc
 from Pegasus.api.replica_catalog import ReplicaCatalog
 from Pegasus.api.writable import _CustomEncoder
