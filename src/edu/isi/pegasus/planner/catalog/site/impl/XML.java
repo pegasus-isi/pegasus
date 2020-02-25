@@ -98,6 +98,7 @@ public class XML implements SiteCatalog {
      */
     public boolean connect(Properties props) throws SiteCatalogException {
         mConnectionProperties = props;
+        
         if (props.containsKey("file")) {
             return connect(props.getProperty("file"));
         }

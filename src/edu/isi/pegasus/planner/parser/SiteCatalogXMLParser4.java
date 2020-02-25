@@ -21,6 +21,7 @@ package edu.isi.pegasus.planner.parser;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.PegasusURL;
+import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.site.classes.Connection;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
@@ -46,6 +47,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -89,15 +91,12 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
 
     /** A boolean indicating whether to load all sites. */
     private boolean mLoadAll;
-
+    
     /**
-     * The default Constructor.
-     *
-     * @param sites the list of sites to be parsed. * means all.
+     * Boolean indicating whether to do variable expansion or not
      */
-    /* public SiteCatalogParser( List<String> sites ) {
-        this( PegasusProperties.nonSingletonInstance(), sites );
-    }*/
+    private boolean mDoVariableExpansion;
+ 
 
     /**
      * The overloaded constructor.
@@ -110,7 +109,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
         super(bag);
         mStack = new Stack();
         mDepth = 0;
-
+        mDoVariableExpansion = Boolean.parseBoolean(connectProps.getProperty(SiteCatalog.VARIABLE_EXPANSION_KEY, "true"));
         mSites = new HashSet<String>();
         for (Iterator<String> it = sites.iterator(); it.hasNext(); ) {
             mSites.add(it.next());
@@ -144,10 +143,12 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
 
             this.testForFile(file);
 
-            // PM-831 set up the parser with our own reader
+            // PM-831 , PM-1464 set up the parser with our own reader
             // that allows for parameter expansion before
             // doing any XML processing
-            InputSource is = new InputSource(new VariableExpansionReader(new FileReader(file)));
+            InputSource is = new InputSource( mDoVariableExpansion?
+                                              new VariableExpansionReader(new FileReader(file)):
+                                              new BufferedReader(new FileReader(file)));
             mParser.parse(is);
 
             // sanity check

@@ -36,7 +36,12 @@ public interface SiteCatalog extends Catalog {
 
     /** Prefix for the property subset to use with this catalog. */
     public static final String c_prefix = "pegasus.catalog.site";
-
+    
+    /**
+     * Key name of property to set variable expansion
+     */
+    public static final String VARIABLE_EXPANSION_KEY = "expand";
+            
     /**
      * Loads up the Site Catalog implementation with the sites whose site handles are specified.
      * This is a convenience method, that can allow the backend implementations to maintain soft
