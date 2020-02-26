@@ -80,8 +80,8 @@ public class SCClient extends Executable {
         mInputFormat = "XML";
         mLoggingLevel = LogManager.WARNING_MESSAGE_LEVEL;
         // mText = false;
-        //PM-1464 by default variable expansion is disabled.
-        mDoVariableExpansion = false;
+        //PM-1464 enable variable expansion, as disabling does not work
+        mDoVariableExpansion = true;
         mInputFiles = null;
         mOutputFile = null;
     }
@@ -99,7 +99,7 @@ public class SCClient extends Executable {
     public void loadProperties() {}
 
     public LongOpt[] generateValidOptions() {
-        LongOpt[] longopts = new LongOpt[9];
+        LongOpt[] longopts = new LongOpt[8];
         longopts[0] = new LongOpt("input", LongOpt.REQUIRED_ARGUMENT, null, 'i');
         longopts[1] = new LongOpt("output", LongOpt.REQUIRED_ARGUMENT, null, 'o');
         longopts[2] = new LongOpt("oformat", LongOpt.REQUIRED_ARGUMENT, null, 'O');
@@ -108,7 +108,7 @@ public class SCClient extends Executable {
         longopts[5] = new LongOpt("verbose", LongOpt.NO_ARGUMENT, null, 'v');
         longopts[6] = new LongOpt("quiet", LongOpt.NO_ARGUMENT, null, 'q');
         longopts[7] = new LongOpt("conf", LongOpt.REQUIRED_ARGUMENT, null, 'c');
-        longopts[8] = new LongOpt("expand", LongOpt.NO_ARGUMENT, null, 'e');
+        //longopts[8] = new LongOpt("expand", LongOpt.NO_ARGUMENT, null, 'e');
         return longopts;
     }
 
@@ -122,14 +122,15 @@ public class SCClient extends Executable {
 
         Getopt g =
                 new Getopt(
-                        "SCClient", getCommandLineOptions(), "elhvqVi:o:O:c:", longOptions, false);
+                        "SCClient", getCommandLineOptions(), "lhvqVi:o:O:c:", longOptions, false);
 
         int option = 0;
         while ((option = g.getopt()) != -1) {
             switch (option) {
-                case 'e': // expand
+                /*case 'e': // expand
                     mDoVariableExpansion = true;
                     break;
+                */
                 
                 case 'i': // input
                     StringTokenizer str = new StringTokenizer(g.getOptarg(), ",");
@@ -156,12 +157,6 @@ public class SCClient extends Executable {
                     System.out.println(getGVDSVersion());
                     System.exit(0);
                     break;
-
-                    /*
-                    case 'l': // Precedence for local or remote
-                        mLocalPrec = true;
-                        break;
-                         */
 
                 case 'v': // Verbose mode
                     incrementLogging();
@@ -352,9 +347,9 @@ public class SCClient extends Executable {
                         + "\n Other Options "
                         + "\n -O |--oformat    the output format of the file. Usually [YAML] "
                         + "\n -c |--conf       path to  property file"
-                        + "\n -e |--expand     sets variable expansion on. Any variables in input files " 
-                        + "\n                  will be expanded and their values will be written out to " 
-                        + "\n                  output site catalog"
+                        //+ "\n -e |--expand     sets variable expansion on. Any variables in input files " 
+                        //+ "\n                  will be expanded and their values will be written out to " 
+                        //+ "\n                  output site catalog"
                         + "\n -v |--verbose    increases the verbosity of messages about what is going on"
                         + "\n -q |--quiet      decreases the verbosity of messages about what is going on"
                         + "\n -V |--version    displays the version of the Pegasus Workflow Planner"
