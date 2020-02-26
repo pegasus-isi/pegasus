@@ -1,4 +1,5 @@
 import os
+
 from flask import Flask
 
 emapp = Flask(__name__)
@@ -12,5 +13,4 @@ if os.path.isfile(conf):
     emapp.config.from_pyfile(conf)
 del conf
 
-from Pegasus.service.ensembles import api, views, auth  # isort:skip
-
+from Pegasus.service.ensembles import api, views, auth  # noqa: E402,F401 isort:skip

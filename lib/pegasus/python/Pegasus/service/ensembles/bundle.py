@@ -5,7 +5,10 @@ from Pegasus.tools import properties
 
 PROPERTIES_NAME = "pegasus.properties"
 
-class BundleException(Exception): pass
+
+class BundleException(Exception):
+    pass
+
 
 class Bundle(object):
     def __init__(self, filename):
@@ -19,7 +22,7 @@ class Bundle(object):
             raise BundleException("Bundle is not a valid zip file")
 
         # open the bundle
-        self.zipfile = zipfile.ZipFile(filename, 'r')
+        self.zipfile = zipfile.ZipFile(filename, "r")
 
         # Verify that the bundle does not contain any harmful paths
         for name in self.zipfile.namelist():
@@ -30,8 +33,10 @@ class Bundle(object):
         if not self.contains(PROPERTIES_NAME):
             raise BundleException("Bundle does not contain %s" % PROPERTIES_NAME)
 
-        # Open the properties entry 
-        self.properties = properties.parse_properties(self.zipfile.open(PROPERTIES_NAME, "r"))
+        # Open the properties entry
+        self.properties = properties.parse_properties(
+            self.zipfile.open(PROPERTIES_NAME, "r")
+        )
 
     def contains(self, name):
         # getinfo raises a KeyError if the entry does not exist
@@ -67,4 +72,3 @@ class Bundle(object):
 
     def unpack(self, dirname):
         self.zipfile.extractall(dirname)
-

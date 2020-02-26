@@ -1,10 +1,9 @@
 import logging
 
-from flask import request, Response, g
 import pamela
+from flask import Response, g, request
 
 from Pegasus import user
-from Pegasus.service.ensembles import emapp
 
 log = logging.getLogger(__name__)
 

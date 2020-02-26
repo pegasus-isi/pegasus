@@ -1,37 +1,44 @@
-import os
 import logging
+import os
 import subprocess
 
-from flask import g, url_for, make_response, request, send_file, json
+from flask import g, make_response, request, url_for
 
 from Pegasus.db import connection
-from Pegasus.service.ensembles import emapp, api, auth
 from Pegasus.db.ensembles import EMError, Ensembles, EnsembleWorkflowStates
+from Pegasus.service.ensembles import api, auth, emapp
 
 log = logging.getLogger(__name__)
+
 
 def connect():
     log.debug("Connecting to database")
     g.session = connection.connect(g.master_db_url)
+
 
 def disconnect():
     if "conn" in g:
         log.debug("Disconnecting from database")
         g.session.close()
 
+
 @emapp.errorhandler(Exception)
 def handle_error(e):
     return api.json_api_error(e)
 
+
 @emapp.before_request
 def setup_request():
     resp = auth.authorize_request()
-    if resp: return resp
+    if resp:
+        return resp
     connect()
+
 
 @emapp.teardown_request
 def teardown_request(exception):
     disconnect()
+
 
 @emapp.route("/ensembles", methods=["GET"])
 def route_list_ensembles():
@@ -39,6 +46,7 @@ def route_list_ensembles():
     ensembles = dao.list_ensembles(g.user.username)
     result = [e.get_object() for e in ensembles]
     return api.json_response(result)
+
 
 @emapp.route("/ensembles", methods=["POST"])
 def route_create_ensemble():
@@ -55,6 +63,7 @@ def route_create_ensemble():
 
     return api.json_created(url_for("route_get_ensemble", name=name, _external=True))
 
+
 @emapp.route("/ensembles/<string:name>", methods=["GET"])
 def route_get_ensemble(name):
     dao = Ensembles(g.session)
@@ -62,7 +71,8 @@ def route_get_ensemble(name):
     result = e.get_object()
     return api.json_response(result)
 
-@emapp.route("/ensembles/<string:name>", methods=["PUT","POST"])
+
+@emapp.route("/ensembles/<string:name>", methods=["PUT", "POST"])
 def route_update_ensemble(name):
     dao = Ensembles(g.session)
     e = dao.get_ensemble(g.user.username, name)
@@ -87,12 +97,14 @@ def route_update_ensemble(name):
 
     return api.json_response(e.get_object())
 
+
 @emapp.route("/ensembles/<string:name>/workflows", methods=["GET"])
 def route_list_ensemble_workflows(name):
     dao = Ensembles(g.session)
     e = dao.get_ensemble(g.user.username, name)
     result = [w.get_object() for w in dao.list_ensemble_workflows(e.id)]
     return api.json_response(result)
+
 
 @emapp.route("/ensembles/<string:ensemble>/workflows", methods=["POST"])
 def route_create_ensemble_workflow(ensemble):
@@ -117,9 +129,14 @@ def route_create_ensemble_workflow(ensemble):
 
     g.session.commit()
 
-    return api.json_created(url_for("route_get_ensemble_workflow", ensemble=ensemble, workflow=name))
+    return api.json_created(
+        url_for("route_get_ensemble_workflow", ensemble=ensemble, workflow=name)
+    )
 
-@emapp.route("/ensembles/<string:ensemble>/workflows/<string:workflow>", methods=["GET"])
+
+@emapp.route(
+    "/ensembles/<string:ensemble>/workflows/<string:workflow>", methods=["GET"]
+)
 def route_get_ensemble_workflow(ensemble, workflow):
     dao = Ensembles(g.session)
     e = dao.get_ensemble(g.user.username, ensemble)
@@ -127,7 +144,10 @@ def route_get_ensemble_workflow(ensemble, workflow):
     result = w.get_detail_object()
     return api.json_response(result)
 
-@emapp.route("/ensembles/<string:ensemble>/workflows/<string:workflow>", methods=["PUT","POST"])
+
+@emapp.route(
+    "/ensembles/<string:ensemble>/workflows/<string:workflow>", methods=["PUT", "POST"]
+)
 def route_update_ensemble_workflow(ensemble, workflow):
     dao = Ensembles(g.session)
 
@@ -148,15 +168,19 @@ def route_update_ensemble_workflow(ensemble, workflow):
 
     return api.json_response(w.get_detail_object())
 
-@emapp.route("/ensembles/<string:ensemble>/workflows/<string:workflow>/analyze", methods=["GET"])
+
+@emapp.route(
+    "/ensembles/<string:ensemble>/workflows/<string:workflow>/analyze", methods=["GET"]
+)
 def route_analyze_ensemble_workflow(ensemble, workflow):
     dao = Ensembles(g.session)
     e = dao.get_ensemble(g.user.username, ensemble)
     w = dao.get_ensemble_workflow(e.id, workflow)
     report = "".join(analyze(w))
     resp = make_response(report, 200)
-    resp.headers['Content-Type'] = 'text/plain'
+    resp.headers["Content-Type"] = "text/plain"
     return resp
+
 
 def analyze(workflow):
     w = workflow
@@ -176,7 +200,11 @@ def analyze(workflow):
         yield "No submit directory available\n"
     else:
         yield "pegasus-analyzer output is:\n"
-        p = subprocess.Popen(["pegasus-analyzer", w.submitdir], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        p = subprocess.Popen(
+            ["pegasus-analyzer", w.submitdir],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
         out, err = p.communicate()
         for l in out.split("\n"):
             yield "ANALYZER: %s\n" % l
@@ -189,4 +217,3 @@ def analyze(workflow):
         yield "pegasus-run failure detected\n"
     elif w.state == EnsembleWorkflowStates.FAILED:
         yield "Workflow failure detected\n"
-

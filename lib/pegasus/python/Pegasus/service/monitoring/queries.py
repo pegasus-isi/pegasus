@@ -17,6 +17,9 @@ __author__ = "Rajiv Mayani"
 import hashlib
 import logging
 
+from sqlalchemy.orm import aliased, defer
+from sqlalchemy.orm.exc import NoResultFound
+
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.db.errors import StampedeDBNotFoundError
@@ -26,8 +29,6 @@ from Pegasus.service._query import InvalidQueryError, query_parse
 from Pegasus.service._sort import InvalidSortError, sort_parse
 from Pegasus.service.base import OrderedDict, OrderedSet, PagedResponse
 from Pegasus.service.monitoring.utils import csv_to_json
-from sqlalchemy.orm import aliased, defer
-from sqlalchemy.orm.exc import NoResultFound
 
 log = logging.getLogger(__name__)
 
@@ -37,7 +38,9 @@ class WorkflowQueries(object):
         if connection_string is None:
             raise ValueError("Connection string is required")
 
-        self._conn_string_csum = hashlib.md5(connection_string.encode("utf-8")).hexdigest()
+        self._conn_string_csum = hashlib.md5(
+            connection_string.encode("utf-8")
+        ).hexdigest()
 
         try:
             self.session = connection.connect(connection_string)
@@ -129,7 +132,7 @@ class WorkflowQueries(object):
         except NameError as e:
             log.exception("Invalid field %s" % e)
             raise InvalidQueryError("Invalid field %s" % e)
-        except Exception as e:
+        except Exception:
             log.exception("Invalid query %s" % query)
             raise InvalidQueryError("Invalid query %s" % query)
 
@@ -232,9 +235,7 @@ class MasterWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
-            q = self._evaluate_query(
-                q, query, r=DashboardWorkflow, ws=alias
-            )
+            q = self._evaluate_query(q, query, r=DashboardWorkflow, ws=alias)
             total_filtered = self._get_count(q, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):

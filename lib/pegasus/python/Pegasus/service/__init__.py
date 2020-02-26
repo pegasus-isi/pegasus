@@ -1,6 +1,7 @@
 import os
 
 from flask import Flask
+
 from Pegasus.service.base import BooleanConverter
 
 app = Flask(__name__)

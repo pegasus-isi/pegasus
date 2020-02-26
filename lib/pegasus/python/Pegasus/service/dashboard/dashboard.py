@@ -16,22 +16,23 @@ __author__ = "Rajiv Mayani"
 
 from time import localtime, strftime
 
+from sqlalchemy.orm.exc import NoResultFound
+
 from Pegasus.db.workflow import stampede_statistics
 from Pegasus.plots_stats import utils as stats_utils
 from Pegasus.service.dashboard import queries
 from Pegasus.tools import utils
-from sqlalchemy.orm.exc import NoResultFound
 
 
 class NoWorkflowsFoundError(Exception):
     def __init__(self, **args):
-        if 'count' in args:
-            self.count = args['count']
+        if "count" in args:
+            self.count = args["count"]
         else:
             self.count = 0
 
-        if 'filtered' in args:
-            self.filtered = args['filtered']
+        if "filtered" in args:
+            self.filtered = args["filtered"]
 
 
 class Dashboard(object):
@@ -60,7 +61,7 @@ class Dashboard(object):
 
     def __get_wf_db_url(self):
         if not self._wf_db_url:
-            raise ValueError('workflow database URL is not set')
+            raise ValueError("workflow database URL is not set")
 
         return self._wf_db_url
 
@@ -83,9 +84,7 @@ class Dashboard(object):
 
                 return counts
 
-            count, filtered, workflows = all_workflows.get_all_workflows(
-                **table_args
-            )
+            count, filtered, workflows = all_workflows.get_all_workflows(**table_args)
 
             if workflows:
                 self._workflows.extend(workflows)
@@ -107,14 +106,12 @@ class Dashboard(object):
             workflow.initialize(root_wf_id=self._wf_id)
             individual_stats = self._workflow_stats(workflow)
 
-            workflow2 = stampede_statistics.StampedeStatistics(
-                self.__get_wf_db_url()
-            )
+            workflow2 = stampede_statistics.StampedeStatistics(self.__get_wf_db_url())
             workflow2.initialize(self._root_wf_uuid)
 
             all_stats = self._workflow_stats(workflow2)
 
-            return {'individual': individual_stats, 'all': all_stats}
+            return {"individual": individual_stats, "all": all_stats}
 
         finally:
             Dashboard.close(workflow)
@@ -123,57 +120,53 @@ class Dashboard(object):
     def _workflow_stats(self, workflow):
         # tasks
         tasks = {}
-        workflow.set_job_filter('nonsub')
-        tasks['total_tasks'] = int(workflow.get_total_tasks_status())
-        tasks['total_succeeded_tasks'] = int(
+        workflow.set_job_filter("nonsub")
+        tasks["total_tasks"] = int(workflow.get_total_tasks_status())
+        tasks["total_succeeded_tasks"] = int(
             workflow.get_total_succeeded_tasks_status(False)
         )
-        tasks['total_failed_tasks'] = int(
-            workflow.get_total_failed_tasks_status()
+        tasks["total_failed_tasks"] = int(workflow.get_total_failed_tasks_status())
+        tasks["total_unsubmitted_tasks"] = tasks["total_tasks"] - (
+            tasks["total_succeeded_tasks"] + tasks["total_failed_tasks"]
         )
-        tasks['total_unsubmitted_tasks'] = tasks['total_tasks'] - (
-            tasks['total_succeeded_tasks'] + tasks['total_failed_tasks']
+        tasks["total_task_retries"] = int(workflow.get_total_tasks_retries())
+        tasks["total_task_invocations"] = (
+            tasks["total_succeeded_tasks"]
+            + tasks["total_failed_tasks"]
+            + tasks["total_task_retries"]
         )
-        tasks['total_task_retries'] = int(workflow.get_total_tasks_retries())
-        tasks['total_task_invocations'] = tasks[
-            'total_succeeded_tasks'
-        ] + tasks['total_failed_tasks'] + tasks['total_task_retries']
 
         # job status
         jobs = {}
-        workflow.set_job_filter('nonsub')
-        jobs['total_jobs'] = int(workflow.get_total_jobs_status())
-        jobs['total_succeeded_jobs'] = int(
-            workflow.get_total_succeeded_jobs_status()
+        workflow.set_job_filter("nonsub")
+        jobs["total_jobs"] = int(workflow.get_total_jobs_status())
+        jobs["total_succeeded_jobs"] = int(workflow.get_total_succeeded_jobs_status())
+        jobs["total_failed_jobs"] = int(workflow.get_total_failed_jobs_status())
+        jobs["total_unsubmitted_jobs"] = jobs["total_jobs"] - (
+            jobs["total_succeeded_jobs"] + jobs["total_failed_jobs"]
         )
-        jobs['total_failed_jobs'] = int(
-            workflow.get_total_failed_jobs_status()
+        jobs["total_job_retries"] = int(workflow.get_total_jobs_retries())
+        jobs["total_job_invocations"] = (
+            jobs["total_succeeded_jobs"]
+            + jobs["total_failed_jobs"]
+            + jobs["total_job_retries"]
         )
-        jobs['total_unsubmitted_jobs'] = jobs['total_jobs'] - (
-            jobs['total_succeeded_jobs'] + jobs['total_failed_jobs']
-        )
-        jobs['total_job_retries'] = int(workflow.get_total_jobs_retries())
-        jobs['total_job_invocations'
-             ] = jobs['total_succeeded_jobs'
-                      ] + jobs['total_failed_jobs'] + jobs['total_job_retries']
 
         # sub workflow
         wfs = {}
-        workflow.set_job_filter('subwf')
-        wfs['total_sub_wfs'] = int(workflow.get_total_jobs_status())
-        wfs['total_succeeded_sub_wfs'] = int(
-            workflow.get_total_succeeded_jobs_status()
+        workflow.set_job_filter("subwf")
+        wfs["total_sub_wfs"] = int(workflow.get_total_jobs_status())
+        wfs["total_succeeded_sub_wfs"] = int(workflow.get_total_succeeded_jobs_status())
+        wfs["total_failed_sub_wfs"] = int(workflow.get_total_failed_jobs_status())
+        wfs["total_unsubmitted_sub_wfs"] = wfs["total_sub_wfs"] - (
+            wfs["total_succeeded_sub_wfs"] + wfs["total_failed_sub_wfs"]
         )
-        wfs['total_failed_sub_wfs'] = int(
-            workflow.get_total_failed_jobs_status()
+        wfs["total_sub_wfs_retries"] = int(workflow.get_total_jobs_retries())
+        wfs["total_sub_wfs_invocations"] = (
+            wfs["total_succeeded_sub_wfs"]
+            + wfs["total_failed_sub_wfs"]
+            + wfs["total_sub_wfs_retries"]
         )
-        wfs['total_unsubmitted_sub_wfs'] = wfs['total_sub_wfs'] - (
-            wfs['total_succeeded_sub_wfs'] + wfs['total_failed_sub_wfs']
-        )
-        wfs['total_sub_wfs_retries'] = int(workflow.get_total_jobs_retries())
-        wfs['total_sub_wfs_invocations'] = wfs[
-            'total_succeeded_sub_wfs'
-        ] + wfs['total_failed_sub_wfs'] + wfs['total_sub_wfs_retries']
 
         return [tasks, jobs, wfs]
 
@@ -194,7 +187,7 @@ class Dashboard(object):
                         float(t.min),
                         float(t.max),
                         float(t.avg),
-                        float(t.sum)
+                        float(t.sum),
                     ]
                 )
 
@@ -209,40 +202,36 @@ class Dashboard(object):
                 self.__get_wf_db_url(), False
             )
             workflow.initialize(root_wf_id=self._wf_id)
-            workflow.set_job_filter('all')
+            workflow.set_job_filter("all")
 
             job_retry_count_dict = {}
             content = []
 
             for job in workflow.get_job_statistics():
 
-                kickstart = '0' if job.kickstart == None else float(
-                    job.kickstart
+                kickstart = "0" if job.kickstart == None else float(job.kickstart)
+                multiplier_factor = (
+                    "0" if job.multiplier_factor == None else int(job.multiplier_factor)
                 )
-                multiplier_factor = '0' if job.multiplier_factor == None else int(
-                    job.multiplier_factor
+                kickstart_multi = (
+                    "0" if job.kickstart_multi == None else float(job.kickstart_multi)
                 )
-                kickstart_multi = '0' if job.kickstart_multi == None else float(
-                    job.kickstart_multi
+                remote_cpu_time = (
+                    "0" if job.remote_cpu_time == None else float(job.remote_cpu_time)
                 )
-                remote_cpu_time = '0' if job.remote_cpu_time == None else float(
-                    job.remote_cpu_time
+                post_time = "0" if job.post_time == None else float(job.post_time)
+                condor_q_time = (
+                    "0" if job.condor_q_time == None else float(job.condor_q_time)
                 )
-                post_time = '0' if job.post_time == None else float(
-                    job.post_time
+                resource_delay = (
+                    "0" if job.resource_delay == None else float(job.resource_delay)
                 )
-                condor_q_time = '0' if job.condor_q_time == None else float(
-                    job.condor_q_time
-                )
-                resource_delay = '0' if job.resource_delay == None else float(
-                    job.resource_delay
-                )
-                runtime = '0' if job.runtime == None else float(job.runtime)
-                seqexec = '-' if job.seqexec == None else float(job.seqexec)
+                runtime = "0" if job.runtime == None else float(job.runtime)
+                seqexec = "-" if job.seqexec == None else float(job.seqexec)
 
-                seqexec_delay = '-'
+                seqexec_delay = "-"
                 if job.seqexec is not None and job.kickstart is not None:
-                    seqexec_delay = (float(job.seqexec) - float(job.kickstart))
+                    seqexec_delay = float(job.seqexec) - float(job.kickstart)
 
                 if job.job_name in job_retry_count_dict:
                     job_retry_count_dict[job.job_name] += 1
@@ -253,11 +242,21 @@ class Dashboard(object):
 
                 content.append(
                     [
-                        job.job_name, retry_count, job.site, kickstart,
-                        multiplier_factor, kickstart_multi, remote_cpu_time,
-                        post_time, condor_q_time, resource_delay, runtime,
-                        seqexec, seqexec_delay,
-                        utils.raw_to_regular(job.exit_code), job.host_name
+                        job.job_name,
+                        retry_count,
+                        job.site,
+                        kickstart,
+                        multiplier_factor,
+                        kickstart_multi,
+                        remote_cpu_time,
+                        post_time,
+                        condor_q_time,
+                        resource_delay,
+                        runtime,
+                        seqexec,
+                        seqexec_delay,
+                        utils.raw_to_regular(job.exit_code),
+                        job.host_name,
                     ]
                 )
 
@@ -274,13 +273,11 @@ class Dashboard(object):
             workflow.initialize(root_wf_id=self._wf_id)
             individual_stats = self._integrity_stats(workflow)
 
-            workflow2 = stampede_statistics.StampedeStatistics(
-                self.__get_wf_db_url()
-            )
+            workflow2 = stampede_statistics.StampedeStatistics(self.__get_wf_db_url())
             workflow2.initialize(self._root_wf_uuid)
             all_stats = self._integrity_stats(workflow2)
 
-            return {'individual': individual_stats, 'all': all_stats}
+            return {"individual": individual_stats, "all": all_stats}
 
         finally:
             Dashboard.close(workflow)
@@ -289,22 +286,24 @@ class Dashboard(object):
     def _integrity_stats(self, workflow):
         # tasks
         table = []
-        workflow.set_job_filter('nonsub')
+        workflow.set_job_filter("nonsub")
         stats = workflow.get_integrity_metrics()
 
         for s in stats:
-            table.append({
-                "type": s.type,
-                "file_type": s.file_type,
-                "count": int(s.count),
-                "duration": float(s.duration)
-            })
+            table.append(
+                {
+                    "type": s.type,
+                    "file_type": s.file_type,
+                    "count": int(s.count),
+                    "duration": float(s.duration),
+                }
+            )
 
         return table
 
     def plots_gantt_chart(self):
         try:
-            #Expand has to be set to false. The method does not provide information when expand set to True.
+            # Expand has to be set to false. The method does not provide information when expand set to True.
             workflow = stampede_statistics.StampedeStatistics(
                 self.__get_wf_db_url(), False
             )
@@ -315,7 +314,7 @@ class Dashboard(object):
         finally:
             Dashboard.close(workflow)
 
-    def plots_time_chart(self, wf_id, time_filter='hour'):
+    def plots_time_chart(self, wf_id, time_filter="hour"):
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
             details = workflow.get_workflow_information()
@@ -325,14 +324,14 @@ class Dashboard(object):
             )
             workflow_plots.initialize(details.wf_uuid)
 
-            workflow_plots.set_job_filter('nonsub')
+            workflow_plots.set_job_filter("nonsub")
             workflow_plots.set_time_filter(time_filter)
-            workflow_plots.set_transformation_filter(
-                exclude=['condor::dagman']
-            )
+            workflow_plots.set_transformation_filter(exclude=["condor::dagman"])
 
-            job, invocation = workflow_plots.get_jobs_run_by_time(
-            ), workflow_plots.get_invocation_by_time()
+            job, invocation = (
+                workflow_plots.get_jobs_run_by_time(),
+                workflow_plots.get_invocation_by_time(),
+            )
 
             for j in job:
                 j.date_format *= 3600
@@ -356,11 +355,9 @@ class Dashboard(object):
             )
             workflow_plots.initialize(details.wf_uuid)
 
-            workflow_plots.set_job_filter('nonsub')
-            workflow_plots.set_time_filter('hour')
-            workflow_plots.set_transformation_filter(
-                exclude=['condor::dagman']
-            )
+            workflow_plots.set_job_filter("nonsub")
+            workflow_plots.set_time_filter("hour")
+            workflow_plots.set_transformation_filter(exclude=["condor::dagman"])
 
             dist = workflow_plots.get_transformation_statistics()
 
@@ -377,7 +374,7 @@ class Dashboard(object):
         """
         try:
             if not wf_id and not wf_uuid:
-                raise ValueError('Workflow ID or Workflow UUID is required')
+                raise ValueError("Workflow ID or Workflow UUID is required")
 
             workflow = None
             workflow_statistics = None
@@ -388,7 +385,7 @@ class Dashboard(object):
             details = self._get_workflow_details(workflow)
             job_counts = self._get_workflow_job_counts(workflow)
 
-            #workflow_statistics = stampede_statistics.StampedeStatistics(self.__get_wf_db_url(), expand_workflow=(details.root_wf_id ==  details.wf_id))
+            # workflow_statistics = stampede_statistics.StampedeStatistics(self.__get_wf_db_url(), expand_workflow=(details.root_wf_id ==  details.wf_id))
             workflow_statistics = stampede_statistics.StampedeStatistics(
                 self.__get_wf_db_url(), expand_workflow=True
             )
@@ -396,14 +393,10 @@ class Dashboard(object):
 
             statistics = {}
 
-            statistics.update(
-                self._get_workflow_summary_times(workflow_statistics)
-            )
+            statistics.update(self._get_workflow_summary_times(workflow_statistics))
 
-            #if details.root_wf_id ==  details.wf_id:
-            statistics.update(
-                self._get_workflow_summary_counts(workflow_statistics)
-            )
+            # if details.root_wf_id ==  details.wf_id:
+            statistics.update(self._get_workflow_summary_counts(workflow_statistics))
 
             return job_counts, details, statistics
 
@@ -418,7 +411,7 @@ class Dashboard(object):
         """
         try:
             if not wf_id and not wf_uuid:
-                raise ValueError('Workflow ID or Workflow UUID is required')
+                raise ValueError("Workflow ID or Workflow UUID is required")
 
             workflow = None
             workflow = queries.WorkflowInfo(
@@ -440,7 +433,7 @@ class Dashboard(object):
             )
             workflow.initialize(root_wf_id=self._wf_id)
             dictionary = self._get_workflow_summary_times(workflow)
-            dictionary['retry-count'] = self._get_workflow_retries(workflow)
+            dictionary["retry-count"] = self._get_workflow_retries(workflow)
             return dictionary
         finally:
             Dashboard.close(workflow)
@@ -462,44 +455,46 @@ class Dashboard(object):
 
         cum_time = workflow.get_workflow_cum_job_wall_time()
         cum_time = [float(v) if v is not None else v for v in cum_time]
-        #if cum_time != None:
+        # if cum_time != None:
         #    cum_time = float(cum_time)
 
         job_cum_time = workflow.get_submit_side_job_wall_time()
         job_cum_time = [float(v) if v is not None else v for v in job_cum_time]
-        #if job_cum_time != None:
+        # if job_cum_time != None:
         #    job_cum_time = float(job_cum_time)
 
-        statistics['wall-time'] = wall_time
-        statistics['cum-time'] = cum_time[0]
-        statistics['cum-badput-time'] = cum_time[2]
-        statistics['job-cum-time'] = job_cum_time[0]
-        statistics['job-cum-badput-time'] = job_cum_time[2]
+        statistics["wall-time"] = wall_time
+        statistics["cum-time"] = cum_time[0]
+        statistics["cum-badput-time"] = cum_time[2]
+        statistics["job-cum-time"] = job_cum_time[0]
+        statistics["job-cum-badput-time"] = job_cum_time[2]
 
         return statistics
 
     def _get_workflow_retries(self, workflow):
-        workflow.set_job_filter('all')
+        workflow.set_job_filter("all")
         return int(workflow.get_workflow_retries())
 
     def _get_workflow_summary_counts(self, workflow):
         statistics = {}
 
-        workflow.set_job_filter('nonsub')
-        statistics['total-jobs'] = workflow.get_total_jobs_status()
+        workflow.set_job_filter("nonsub")
+        statistics["total-jobs"] = workflow.get_total_jobs_status()
 
-        statistics['successful-jobs'
-                   ] = workflow.get_total_succeeded_jobs_status()
-        statistics['failed-jobs'] = workflow.get_total_failed_jobs_status()
-        statistics['running-jobs'] = workflow.get_total_running_jobs_status()
-        statistics['unsubmitted-jobs'] = statistics['total-jobs'] - (
-            statistics['successful-jobs'] + statistics['failed-jobs'] +
-            statistics['running-jobs']
+        statistics["successful-jobs"] = workflow.get_total_succeeded_jobs_status()
+        statistics["failed-jobs"] = workflow.get_total_failed_jobs_status()
+        statistics["running-jobs"] = workflow.get_total_running_jobs_status()
+        statistics["unsubmitted-jobs"] = statistics["total-jobs"] - (
+            statistics["successful-jobs"]
+            + statistics["failed-jobs"]
+            + statistics["running-jobs"]
         )
-        statistics['job-retries'] = workflow.get_total_jobs_retries()
-        statistics['job-instance-retries'] = statistics[
-            'successful-jobs'
-        ] + statistics['failed-jobs'] + statistics['job-retries']
+        statistics["job-retries"] = workflow.get_total_jobs_retries()
+        statistics["job-instance-retries"] = (
+            statistics["successful-jobs"]
+            + statistics["failed-jobs"]
+            + statistics["job-retries"]
+        )
 
         return statistics
 
@@ -543,9 +538,7 @@ class Dashboard(object):
 
     def get_failed_jobs(self, wf_id, **table_args):
         try:
-            workflow = queries.WorkflowInfo(
-                self.__get_wf_db_url(), wf_id=wf_id
-            )
+            workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id=wf_id)
             total_count, filtered_count, failed_jobs = workflow.get_failed_jobs(
                 **table_args
             )
@@ -555,9 +548,7 @@ class Dashboard(object):
 
     def get_successful_jobs(self, wf_id, **table_args):
         try:
-            workflow = queries.WorkflowInfo(
-                self.__get_wf_db_url(), wf_id=wf_id
-            )
+            workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id=wf_id)
             total_count, filtered_count, successful_jobs = workflow.get_successful_jobs(
                 **table_args
             )
@@ -567,9 +558,7 @@ class Dashboard(object):
 
     def get_running_jobs(self, wf_id, **table_args):
         try:
-            workflow = queries.WorkflowInfo(
-                self.__get_wf_db_url(), wf_id=wf_id
-            )
+            workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id=wf_id)
             total_count, filtered_count, running_jobs = workflow.get_other_jobs(
                 **table_args
             )
@@ -579,9 +568,7 @@ class Dashboard(object):
 
     def get_failing_jobs(self, wf_id, **table_args):
         try:
-            workflow = queries.WorkflowInfo(
-                self.__get_wf_db_url(), wf_id=wf_id
-            )
+            workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id=wf_id)
             total_count, filtered_count, failed_jobs = workflow.get_failing_jobs(
                 **table_args
             )
@@ -591,9 +578,7 @@ class Dashboard(object):
 
     def get_sub_workflows(self, wf_id):
         try:
-            workflow = queries.WorkflowInfo(
-                self.__get_wf_db_url(), wf_id=wf_id
-            )
+            workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id=wf_id)
             sub_workflows = workflow.get_sub_workflows()
             return sub_workflows
         finally:
@@ -635,9 +620,7 @@ class Dashboard(object):
         finally:
             Dashboard.close(workflow)
 
-    def get_invocation_information(
-        self, wf_id, job_id, job_instance_id, invocation_id
-    ):
+    def get_invocation_information(self, wf_id, job_id, job_instance_id, invocation_id):
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
             invocation = workflow.get_invocation_information(

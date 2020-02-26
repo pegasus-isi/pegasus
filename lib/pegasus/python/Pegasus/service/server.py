@@ -2,7 +2,8 @@ import logging
 import os
 import random
 
-from OpenSSL import SSL, crypto
+from OpenSSL import crypto
+
 from Pegasus.command import LoggingCommand
 from Pegasus.service import app
 
@@ -31,17 +32,15 @@ def generate_self_signed_certificate(certfile, pkeyfile):
     sub.CN = "Pegasus Service"
 
     cert.set_version(1)
-    cert.set_serial_number(random.randint(0, 2**32))
+    cert.set_serial_number(random.randint(0, 2 ** 32))
     cert.gmtime_adj_notBefore(0)
     cert.gmtime_adj_notAfter(10 * 365 * 24 * 60 * 60)  # 10 years
     cert.set_issuer(sub)
     cert.set_pubkey(pkey)
-    cert.sign(pkey, 'sha1')
+    cert.sign(pkey, "sha1")
 
-    open(certfile,
-         "w").write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
-    open(pkeyfile,
-         "w").write(crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey))
+    open(certfile, "w").write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
+    open(pkeyfile, "w").write(crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey))
 
 
 class ServerCommand(LoggingCommand):
@@ -55,15 +54,15 @@ class ServerCommand(LoggingCommand):
             "--host",
             dest="host",
             default=app.config["SERVER_HOST"],
-            help="Network interface on which to listen for requests"
+            help="Network interface on which to listen for requests",
         )
         self.parser.add_option(
             "-p",
             "--port",
             dest="port",
-            type='int',
+            type="int",
             default=app.config["SERVER_PORT"],
-            help="Request listener port"
+            help="Request listener port",
         )
         self.parser.add_option(
             "-d",
@@ -71,7 +70,7 @@ class ServerCommand(LoggingCommand):
             action="store_true",
             dest="debug",
             default=None,
-            help="Enable debugging"
+            help="Enable debugging",
         )
 
     def run(self):
@@ -93,15 +92,13 @@ class ServerCommand(LoggingCommand):
         ssl_context = (cert, pkey)
 
         if os.getuid() != 0:
-            log.warning(
-                "Service not running as root: Will not be able to switch users"
-            )
+            log.warning("Service not running as root: Will not be able to switch users")
 
         app.run(
             host=self.options.host,
             port=self.options.port,
             processes=app.config["MAX_PROCESSES"],
-            ssl_context=ssl_context
+            ssl_context=ssl_context,
         )
 
         log.info("Exiting")

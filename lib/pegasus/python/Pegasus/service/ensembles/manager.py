@@ -1,28 +1,35 @@
-import os
-import sys
-import subprocess
-import logging
-import time
-import threading
 import datetime
+import logging
+import os
+import subprocess
+import threading
+import time
+
 from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus import user
 from Pegasus.db import connection
-from Pegasus.service import app
-from Pegasus.db.ensembles import Ensembles, EnsembleStates, EnsembleWorkflowStates, EMError
+from Pegasus.db.ensembles import (
+    EMError,
+    Ensembles,
+    EnsembleStates,
+    EnsembleWorkflowStates,
+)
 from Pegasus.db.schema import DashboardWorkflow, DashboardWorkflowstate
+from Pegasus.service import app
 
 log = logging.getLogger(__name__)
 
+
 def pathfind(exe):
-    PATH = os.getenv("PATH","/bin:/usr/bin:/usr/local/bin")
+    PATH = os.getenv("PATH", "/bin:/usr/bin:/usr/local/bin")
     PATH = PATH.split(":")
     for prefix in PATH:
         exepath = os.path.join(prefix, exe)
         if os.path.isfile(exepath):
             return exepath
     raise EMError("%s not found on PATH" % exe)
+
 
 def get_bin(name, exe):
     # Try to find NAME/bin using 1) NAME env var, 2) NAME config
@@ -48,17 +55,21 @@ def get_bin(name, exe):
 
     return BIN
 
+
 def get_pegasus_bin():
     return get_bin("PEGASUS_HOME", "pegasus-plan")
 
+
 def get_condor_bin():
     return get_bin("CONDOR_HOME", "condor_submit_dag")
+
 
 def check_environment():
     # Make sure Pegasus and Condor are on the PATH, or PEGASUS_HOME
     # and CONDOR_HOME are set in the environment or configuration
     get_pegasus_bin()
     get_condor_bin()
+
 
 def get_script_env():
     PEGASUS_BIN = get_pegasus_bin()
@@ -71,6 +82,7 @@ def get_script_env():
     env["PATH"] = PATH
 
     return env
+
 
 def runscript(script, cwd=None, env=None):
     # Make sure the cwd is OK
@@ -86,6 +98,7 @@ def runscript(script, cwd=None, env=None):
 
     if rc != 0:
         raise EMError("Script failed with exitcode %d" % rc)
+
 
 def forkscript(script, pidfile=None, cwd=None, env=None):
     # This does a double fork to detach the process from the python
@@ -113,7 +126,7 @@ def forkscript(script, pidfile=None, cwd=None, env=None):
 
         pid2 = os.fork()
         if pid2 == 0:
-            os.execve("/bin/sh", ["/bin/sh","-c",script], env)
+            os.execve("/bin/sh", ["/bin/sh", "-c", script], env)
             os._exit(255)
 
         if pidfile is not None:
@@ -126,6 +139,7 @@ def forkscript(script, pidfile=None, cwd=None, env=None):
     pid, exitcode = os.waitpid(pid1, 0)
     if exitcode != 0:
         raise EMError("Non-zero exitcode launching script: %d" % exitcode)
+
 
 class WorkflowProcessor:
     def __init__(self, dao, workflow):
@@ -148,16 +162,17 @@ class WorkflowProcessor:
         # When we re-plan, we need to remove all the old
         # files so that the ensemble manager doesn't get
         # confused.
-        files = [
-            runfile,
-            resultfile,
-            pidfile
-        ]
+        files = [runfile, resultfile, pidfile]
         for f in files:
             if os.path.isfile(f):
                 os.remove(f)
 
-        script = "(%s) 2>&1 | tee -a %s | grep pegasus-run >%s ; /bin/echo $? >%s" % (plan_command, logfile, runfile, resultfile)
+        script = "(%s) 2>&1 | tee -a %s | grep pegasus-run >%s ; /bin/echo $? >%s" % (
+            plan_command,
+            logfile,
+            runfile,
+            resultfile,
+        )
         forkscript(script, cwd=basedir, pidfile=pidfile, env=get_script_env())
 
     def planning(self):
@@ -167,7 +182,7 @@ class WorkflowProcessor:
         if not os.path.exists(pidfile):
             raise EMError("pidfile missing")
 
-        pid = int(open(pidfile,"r").read())
+        pid = int(open(pidfile, "r").read())
 
         try:
             os.kill(pid, 0)
@@ -258,7 +273,9 @@ class WorkflowProcessor:
 
         logfile = self.workflow.get_logfile()
 
-        runscript("pegasus-run %s >>%s 2>&1" % (submitdir, logfile), env=get_script_env())
+        runscript(
+            "pegasus-run %s >>%s 2>&1" % (submitdir, logfile), env=get_script_env()
+        )
 
     def get_dashboard(self):
         "Get the dashboard record for the workflow"
@@ -267,9 +284,11 @@ class WorkflowProcessor:
             raise EMError("wf_uuid is none")
 
         try:
-            w = self.dao.session.query(DashboardWorkflow)\
-                    .filter_by(wf_uuid=str(wf_uuid))\
-                    .one()
+            w = (
+                self.dao.session.query(DashboardWorkflow)
+                .filter_by(wf_uuid=str(wf_uuid))
+                .one()
+            )
             return w
         except NoResultFound:
             name = self.workflow.name
@@ -291,15 +310,19 @@ class WorkflowProcessor:
             raise EMError("Dashboard workflow not found")
 
         # Need to compute the unix ts for updated in this ugly way
-        updated = (self.workflow.updated - datetime.datetime(1970,1,1)).total_seconds()
+        updated = (
+            self.workflow.updated - datetime.datetime(1970, 1, 1)
+        ).total_seconds()
 
         # Get the last event for the workflow where the event timestamp is
         # greater than the last updated ts for the ensemble workflow
-        ws = self.dao.session.query(DashboardWorkflowstate)\
-                .filter_by(wf_id=w.wf_id)\
-                .filter(DashboardWorkflowstate.timestamp >= updated)\
-                .order_by("timestamp desc")\
-                .first()
+        ws = (
+            self.dao.session.query(DashboardWorkflowstate)
+            .filter_by(wf_id=w.wf_id)
+            .filter(DashboardWorkflowstate.timestamp >= updated)
+            .order_by("timestamp desc")
+            .first()
+        )
 
         if ws is None:
             name = self.workflow.name
@@ -326,6 +349,7 @@ class WorkflowProcessor:
             raise EMError("Workflow is running")
         return ws.status == 0
 
+
 class EnsembleProcessor:
     Processor = WorkflowProcessor
 
@@ -341,12 +365,14 @@ class EnsembleProcessor:
         # We are only interested in workflows that are in one
         # of the following states. The EM doesn't handle other
         # states.
-        active_states = set((
-            EnsembleWorkflowStates.READY,
-            EnsembleWorkflowStates.PLANNING,
-            EnsembleWorkflowStates.QUEUED,
-            EnsembleWorkflowStates.RUNNING
-        ))
+        active_states = set(
+            (
+                EnsembleWorkflowStates.READY,
+                EnsembleWorkflowStates.PLANNING,
+                EnsembleWorkflowStates.QUEUED,
+                EnsembleWorkflowStates.RUNNING,
+            )
+        )
 
         # We need a copy of the list so we can sort it
         self.workflows = [w for w in ensemble.workflows if w.state in active_states]
@@ -497,7 +523,10 @@ class EnsembleProcessor:
             try:
                 self.handle_workflow(w)
             except Exception as e:
-                log.error("Processing workflow %s of ensemble %s" % (w.name, self.ensemble.name))
+                log.error(
+                    "Processing workflow %s of ensemble %s"
+                    % (w.name, self.ensemble.name)
+                )
                 log.exception(e)
                 self.dao.session.rollback()
 
@@ -537,4 +566,3 @@ class EnsembleManager(threading.Thread):
             log.info("Processing ensemble %s", e.name)
             p = self.Processor(dao, e)
             p.run()
-

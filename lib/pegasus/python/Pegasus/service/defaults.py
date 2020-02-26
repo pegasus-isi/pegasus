@@ -24,8 +24,8 @@ AUTHENTICATION = "PAMAuthentication"
 PROCESS_SWITCHING = True
 
 # Flask cache configuration
-CACHE_TYPE = 'filesystem'
-CACHE_DIR = os.path.join(tempfile.gettempdir(), 'pegasus-service')
+CACHE_TYPE = "filesystem"
+CACHE_DIR = os.path.join(tempfile.gettempdir(), "pegasus-service")
 
 #
 # Authorization -
@@ -50,7 +50,7 @@ EM_INTERVAL = 60
 STORAGE_DIRECTORY = "/var/pegasus"
 
 # Path to Pegasus home directory
-#PEGASUS_HOME = "/usr"
+# PEGASUS_HOME = "/usr"
 
 # Path to Condor home directory
-#CONDOR_HOME = "/usr"
+# CONDOR_HOME = "/usr"

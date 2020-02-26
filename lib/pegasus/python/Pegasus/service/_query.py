@@ -131,8 +131,6 @@ class _QueryEvaluator(ast.NodeVisitor):
             op = COMPARE_OPERATORS[i.__class__]
             comparator = self.visit(v)
 
-            pass
-
             result = result and op(left, comparator)
             left = comparator
 

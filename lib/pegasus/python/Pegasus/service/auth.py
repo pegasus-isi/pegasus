@@ -3,6 +3,7 @@ import os
 
 import pamela
 from flask import Response, abort, g, make_response, request, url_for
+
 from Pegasus import user
 from Pegasus.service import app
 

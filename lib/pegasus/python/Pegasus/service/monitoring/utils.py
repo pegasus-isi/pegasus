@@ -12,12 +12,13 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-__author__ = 'Rajiv Mayani'
+__author__ = "Rajiv Mayani"
 
 import json
 import logging
 
 from flask import g
+
 from Pegasus.service.base import OrderedDict, OrderedSet
 from Pegasus.service.monitoring.serializer import PegasusServiceJSONEncoder
 
@@ -25,13 +26,9 @@ log = logging.getLogger(__name__)
 
 
 def jsonify(
-    obj,
-    indent=5,
-    separators=(',', ': '),
-    cls=PegasusServiceJSONEncoder,
-    **kwargs
+    obj, indent=5, separators=(",", ": "), cls=PegasusServiceJSONEncoder, **kwargs
 ):
-    if g.query_args.get('pretty_print', False):
+    if g.query_args.get("pretty_print", False):
         response_json = json.dumps(
             obj, indent=indent, separators=separators, cls=cls, **kwargs
         )
@@ -182,14 +179,14 @@ def csv_to_json(csv, schema, index):
         return None
 
     if not schema:
-        raise ValueError('schema is required')
+        raise ValueError("schema is required")
     elif not isinstance(schema, dict):
-        raise ValueError('schema must be of type dictionary')
+        raise ValueError("schema must be of type dictionary")
 
     if not index:
-        raise ValueError('index is required')
+        raise ValueError("index is required")
     elif not isinstance(index, dict):
-        raise ValueError('index must be of type dictionary')
+        raise ValueError("index must be of type dictionary")
 
     # Start
     root = [entity for entity in schema][0]
@@ -199,7 +196,7 @@ def csv_to_json(csv, schema, index):
     # Pass 1
     for row in csv:
         for entity, entity_def in schema.items():
-            if entity_def == 'root':
+            if entity_def == "root":
                 entity_dict = uniq_dict.setdefault(root, OrderedSet())
                 entity_dict.add(row[index[entity]])
 
@@ -215,17 +212,15 @@ def csv_to_json(csv, schema, index):
                     else:
                         obj = OrderedDict()
 
-                    entity_dict = entity_dict.setdefault(
-                        row[index[parent]], obj
-                    )
+                    entity_dict = entity_dict.setdefault(row[index[parent]], obj)
 
-                if row[index[entity]] and hasattr(entity_dict, 'add'):
+                if row[index[entity]] and hasattr(entity_dict, "add"):
                     entity_dict.add(row[index[entity]])
 
     # Pass 2
     for row in csv:
         for entity, entity_def in schema.items():
-            if entity_def == 'root':
+            if entity_def == "root":
                 continue
 
             elif isinstance(entity_def, tuple):
