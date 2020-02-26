@@ -1,5 +1,6 @@
+class RecordParseException(Exception):
+    pass
 
-class RecordParseException(Exception): pass
 
 class Token:
     START = "["
@@ -8,8 +9,8 @@ class Token:
     EQUALS = "="
     COMMA = ","
 
-class RecordParser(object):
 
+class RecordParser(object):
     def __init__(self, string):
         self.string = string
         self.index = 0
@@ -17,8 +18,7 @@ class RecordParser(object):
 
     def la(self):
         if self.index >= len(self.string):
-            raise RecordParseException(
-                    "Unexpected end of string", self.string)
+            raise RecordParseException("Unexpected end of string", self.string)
         return self.string[self.index]
 
     def consume(self):
@@ -74,8 +74,7 @@ class RecordParser(object):
                     self.consume()
                 return (Token.VALUE, "".join(chars))
 
-        raise RecordParseException(
-                "Unexpected end of record", self.string)
+        raise RecordParseException("Unexpected end of record", self.string)
 
     def lt(self):
         "Look ahead one token"
@@ -87,22 +86,18 @@ class RecordParser(object):
         token, value = self.nextToken()
         if token != item:
             raise RecordParseException(
-                    "Expected '%s', got '%s'" % (item, token), self.string)
+                "Expected '%s', got '%s'" % (item, token), self.string
+            )
         return value
 
     def parse(self):
         "Parse a cluster record"
-        VALID_TYPES = [
-            "cluster-summary",
-            "seqexec-summary",
-            "cluster-task"
-        ]
+        VALID_TYPES = ["cluster-summary", "seqexec-summary", "cluster-task"]
 
         self.expect(Token.START)
         rectype = self.expect(Token.VALUE)
         if rectype not in VALID_TYPES:
-            raise RecordParseException(
-                    "Invalid record type: %s" % rectype, self.string)
+            raise RecordParseException("Invalid record type: %s" % rectype, self.string)
         record = {}
 
         while True:
@@ -117,4 +112,3 @@ class RecordParser(object):
         self.expect(Token.END)
 
         return record
-

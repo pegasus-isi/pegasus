@@ -1,11 +1,11 @@
-import os
-import sys
 import logging
+import sys
 from optparse import OptionParser
 
 from Pegasus.tools import utils
 
 log = logging.getLogger(__name__)
+
 
 class Command(object):
     description = None
@@ -13,7 +13,9 @@ class Command(object):
     usage = "Usage: %prog [options] [args]"
 
     def __init__(self):
-        self.parser = OptionParser(usage=self.usage, description=self.description, epilog=self.epilog)
+        self.parser = OptionParser(
+            usage=self.usage, description=self.description, epilog=self.epilog
+        )
 
     def parse(self, args):
         self.options, self.args = self.parser.parse_args(args)
@@ -25,11 +27,18 @@ class Command(object):
         self.parse(args)
         self.run()
 
+
 class LoggingCommand(Command):
     def __init__(self):
         Command.__init__(self)
-        self.parser.add_option("-v", "--verbose", action="count", default=0, dest="verbosity",
-                               help="Increase logging verbosity, repeatable")
+        self.parser.add_option(
+            "-v",
+            "--verbose",
+            action="count",
+            default=0,
+            dest="verbosity",
+            help="Increase logging verbosity, repeatable",
+        )
 
     def main(self, args=None):
         self.parse(args)
@@ -55,6 +64,7 @@ class LoggingCommand(Command):
                 sys.stderr.write("%s\n" % e)
             exit(1)
 
+
 class CompoundCommand(Command):
     "A Command with multiple sub-commands"
     usage = "%prog COMMAND [options] [args]"
@@ -64,9 +74,7 @@ class CompoundCommand(Command):
     def __init__(self):
         Command.__init__(self)
 
-        lines = [
-            "\n\nCommands:"
-        ]
+        lines = ["\n\nCommands:"]
         for cmd, cmdclass in self.commands:
             lines.append("    %-10s %s" % (cmd, cmdclass.description))
 
@@ -103,4 +111,3 @@ class CompoundCommand(Command):
         cmdclass = commandmap[command]
         cmd = cmdclass()
         cmd.main(args)
-

@@ -1,13 +1,4 @@
 # -*- coding: utf-8 -*-
-
-import json
-
-from io import StringIO
-
-from Pegasus import yaml
-from Pegasus.api.replica_catalog import ReplicaCatalog
-from Pegasus.api.errors import PegasusError
-
 """
 :mod:`replica_catalog` exposes an API to serialize and deserialize Pegasus's replica catalog file.
 
@@ -24,7 +15,12 @@ Basic Usage::
 .. moduleauthor:: Rajiv Mayani <mayani@isi.edu>
 """
 
-from typing import Dict, TextIO
+from io import StringIO
+from typing import TextIO
+
+from Pegasus import yaml
+from Pegasus.api.errors import PegasusError
+from Pegasus.api.replica_catalog import ReplicaCatalog
 
 __all__ = (
     "load",
@@ -33,12 +29,13 @@ __all__ = (
     "dumps",
 )
 
+
 def _to_rc(d: dict) -> ReplicaCatalog:
     """Convert dict to ReplicaCatalog
-    
+
     :param d: ReplicaCatalog represented as a dict
     :type d: dict
-    :raises PegasusError: encountered error parsing 
+    :raises PegasusError: encountered error parsing
     :return: a ReplicaCatalog object based on d
     :rtype: ReplicaCatalog
     """
@@ -46,34 +43,35 @@ def _to_rc(d: dict) -> ReplicaCatalog:
 
     try:
         for r in d["replicas"]:
-            rc.add_replica(r["lfn"], r["pfn"], r["site"], r["regex"]) 
+            rc.add_replica(r["lfn"], r["pfn"], r["site"], r["regex"])
     except KeyError:
         raise PegasusError("error parsing {}".format(d))
 
     return rc
 
+
 def load(fp: TextIO, *args, **kwargs) -> ReplicaCatalog:
     """
     Deserialize ``fp`` (a ``.read()``-supporting file-like object containing a ReplicaCatalog document) to a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog` object.
 
-    :param fp: file like object to load from 
+    :param fp: file like object to load from
     :type fp: TextIO
     :return: deserialized ReplicaCatalog object
     :rtype: ReplicaCatalog
     """
     return _to_rc(yaml.load(fp))
 
+
 def loads(s: str, *args, **kwargs) -> ReplicaCatalog:
     """
     Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance containing a ReplicaCatalog document) to a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog` object.
 
-    :param s: string to load from 
+    :param s: string to load from
     :type s: str
     :return: deserialized ReplicaCatalog object
     :rtype: ReplicaCatalog
     """
     return _to_rc(yaml.load(s))
-
 
 
 def dump(obj: ReplicaCatalog, fp: TextIO, _format="yml", *args, **kwargs) -> None:

@@ -1,19 +1,22 @@
 from __future__ import print_function
-import os
-from os.path import expanduser
 
 import glob
-import tarfile
+import os
 import shutil
+import tarfile
+from os.path import expanduser
 
+from Pegasus.command import CompoundCommand, LoggingCommand
 from Pegasus.db import connection
-from Pegasus.tools import utils
-from Pegasus.command import LoggingCommand, CompoundCommand
 from Pegasus.db.schema import *
+from Pegasus.tools import utils
 
 log = logging.getLogger(__name__)
 
-class SubmitDirException(Exception): pass
+
+class SubmitDirException(Exception):
+    pass
+
 
 class MasterDatabase:
     def __init__(self, session):
@@ -54,6 +57,7 @@ class MasterDatabase:
         q = q.filter(DashboardWorkflow.wf_id == w.wf_id)
         q.delete()
 
+
 class WorkflowDatabase(object):
     def __init__(self, session):
         self.session = session
@@ -88,6 +92,7 @@ class WorkflowDatabase(object):
             log.info("Old submit dir: %s" % wf.submit_dir)
             wf.submit_dir = wf.submit_dir.replace(src, dest)
             log.info("New submit dir: %s" % wf.submit_dir)
+
 
 class SubmitDir(object):
     def __init__(self, submitdir, raise_err=True):
@@ -133,7 +138,9 @@ class SubmitDir(object):
             raise SubmitDirException("Submit dir not archived")
 
         # Update record in master db
-        mdbsession = connection.connect_by_submitdir(self.submitdir, connection.DBType.MASTER)
+        mdbsession = connection.connect_by_submitdir(
+            self.submitdir, connection.DBType.MASTER
+        )
         mdb = MasterDatabase(mdbsession)
         wf = mdb.get_master_workflow(self.wf_uuid)
         if wf is not None:
@@ -155,7 +162,9 @@ class SubmitDir(object):
         "Archive a submit dir by adding files to a compressed archive"
 
         # Update record in master db
-        mdbsession = connection.connect_by_submitdir(self.submitdir, connection.DBType.MASTER)
+        mdbsession = connection.connect_by_submitdir(
+            self.submitdir, connection.DBType.MASTER
+        )
         mdb = MasterDatabase(mdbsession)
         wf = mdb.get_master_workflow(self.wf_uuid)
         if wf is not None:
@@ -259,17 +268,23 @@ class SubmitDir(object):
 
         # Verify that we aren't trying to move a subworkflow
         if self.is_subworkflow():
-            raise SubmitDirException("Subworkflows cannot be moved independent of the root workflow")
+            raise SubmitDirException(
+                "Subworkflows cannot be moved independent of the root workflow"
+            )
 
         # Connect to master database
-        mdbsession = connection.connect_by_submitdir(self.submitdir, connection.DBType.MASTER)
+        mdbsession = connection.connect_by_submitdir(
+            self.submitdir, connection.DBType.MASTER
+        )
         mdb = MasterDatabase(mdbsession)
 
         # Get the workflow record from the master db
         db_url = None
         wf = mdb.get_master_workflow(self.wf_uuid)
         if wf is None:
-            db_url = connection.url_by_submitdir(self.submitdir, connection.DBType.WORKFLOW)
+            db_url = connection.url_by_submitdir(
+                self.submitdir, connection.DBType.WORKFLOW
+            )
         else:
             # We found an mdb record, so we need to update it
 
@@ -333,7 +348,9 @@ class SubmitDir(object):
 
         # Verify that we aren't trying to move a subworkflow
         if self.is_subworkflow():
-            raise SubmitDirException("Subworkflows cannot be deleted independent of the root workflow")
+            raise SubmitDirException(
+                "Subworkflows cannot be deleted independent of the root workflow"
+            )
 
         # Confirm that they want to delete the workflow
         while True:
@@ -341,14 +358,22 @@ class SubmitDir(object):
                 input = raw_input
             except NameError:
                 pass
-            answer = input("Are you sure you want to delete this workflow? This operation cannot be undone. [y/n]: ").strip().lower()
+            answer = (
+                input(
+                    "Are you sure you want to delete this workflow? This operation cannot be undone. [y/n]: "
+                )
+                .strip()
+                .lower()
+            )
             if answer == "y":
                 break
             if answer == "n":
                 return
 
         # Connect to master database
-        mdbsession = connection.connect_by_submitdir(self.submitdir, connection.DBType.MASTER)
+        mdbsession = connection.connect_by_submitdir(
+            self.submitdir, connection.DBType.MASTER
+        )
         mdb = MasterDatabase(mdbsession)
 
         # Delete all of the records from the workflow db if they are not using
@@ -376,10 +401,14 @@ class SubmitDir(object):
 
         # Verify that we aren't trying to attach a subworkflow
         if self.is_subworkflow():
-            raise SubmitDirException("Subworkflows cannot be attached independent of the root workflow")
+            raise SubmitDirException(
+                "Subworkflows cannot be attached independent of the root workflow"
+            )
 
         # Connect to master database
-        mdbsession = connection.connect_by_submitdir(self.submitdir, connection.DBType.MASTER)
+        mdbsession = connection.connect_by_submitdir(
+            self.submitdir, connection.DBType.MASTER
+        )
         mdb = MasterDatabase(mdbsession)
 
         # Check to see if it already exists and just update it
@@ -390,7 +419,9 @@ class SubmitDir(object):
             if old_submit_dir != self.submitdir:
                 print("Updating path...")
                 wf.submit_dir = self.submitdir
-                wf.db_url = connection.url_by_submitdir(self.submitdir, connection.DBType.WORKFLOW)
+                wf.db_url = connection.url_by_submitdir(
+                    self.submitdir, connection.DBType.WORKFLOW
+                )
                 mdbsession.commit()
             mdbsession.close()
             return
@@ -427,7 +458,7 @@ class SubmitDir(object):
         mwf.db_url = wf.db_url
         mwf.archived = self.is_archived()
         mdbsession.add(mwf)
-        mdbsession.flush() # We should have the new wf_id after this
+        mdbsession.flush()  # We should have the new wf_id after this
 
         # Query states from workflow database
         states = db.get_workflow_states(wf.wf_id)
@@ -454,10 +485,14 @@ class SubmitDir(object):
         if self.submitdir_exists:
             # Verify that we aren't trying to detach a subworkflow
             if self.is_subworkflow():
-                raise SubmitDirException("Subworkflows cannot be detached independent of the root workflow")
+                raise SubmitDirException(
+                    "Subworkflows cannot be detached independent of the root workflow"
+                )
 
             # Connect to master database
-            mdbsession = connection.connect_by_submitdir(self.submitdir, connection.DBType.MASTER)
+            mdbsession = connection.connect_by_submitdir(
+                self.submitdir, connection.DBType.MASTER
+            )
             mdb = MasterDatabase(mdbsession)
 
             # Check to see if it even exists
@@ -474,23 +509,37 @@ class SubmitDir(object):
 
         else:
             # Connect to master database
-            home = expanduser('~')
-            mdbsession = connection.connect('sqlite:///%s/.pegasus/workflow.db' % home,
-                                            db_type=connection.DBType.MASTER)
+            home = expanduser("~")
+            mdbsession = connection.connect(
+                "sqlite:///%s/.pegasus/workflow.db" % home,
+                db_type=connection.DBType.MASTER,
+            )
             mdb = MasterDatabase(mdbsession)
 
             try:
                 if wf_uuid is None:
                     wfs = mdb.get_master_workflow_for_submitdir(self.submitdir)
                     if wfs:
-                        msg = "Invalid submit dir: %s, Specify --wf-uuid <WF_UUID> to detach\n" % self.submitdir
-                        msg += "\tWorkflow UUID, DAX Label, Submit Hostname, Submit Dir.\n"
+                        msg = (
+                            "Invalid submit dir: %s, Specify --wf-uuid <WF_UUID> to detach\n"
+                            % self.submitdir
+                        )
+                        msg += (
+                            "\tWorkflow UUID, DAX Label, Submit Hostname, Submit Dir.\n"
+                        )
                         for wf in wfs:
-                            msg += '\t%s, %s, %s, %s\n' % (wf.wf_uuid, wf.dax_label, wf.submit_hostname, wf.submit_dir)
+                            msg += "\t%s, %s, %s, %s\n" % (
+                                wf.wf_uuid,
+                                wf.dax_label,
+                                wf.submit_hostname,
+                                wf.submit_dir,
+                            )
                         raise SubmitDirException(msg)
 
                     else:
-                        raise SubmitDirException("Invalid submit dir: %s" % self.submitdir)
+                        raise SubmitDirException(
+                            "Invalid submit dir: %s" % self.submitdir
+                        )
 
                 else:
                     # Delete
@@ -513,6 +562,7 @@ class ExtractCommand(LoggingCommand):
 
         SubmitDir(self.args[0]).extract()
 
+
 class ArchiveCommand(LoggingCommand):
     description = "Archive (compress) submit directory"
     usage = "Usage: %prog archive SUBMITDIR"
@@ -522,6 +572,7 @@ class ArchiveCommand(LoggingCommand):
             self.parser.error("Specify SUBMITDIR")
 
         SubmitDir(self.args[0]).archive()
+
 
 class MoveCommand(LoggingCommand):
     description = "Move a submit directory"
@@ -533,6 +584,7 @@ class MoveCommand(LoggingCommand):
 
         SubmitDir(self.args[0]).move(self.args[1])
 
+
 class DeleteCommand(LoggingCommand):
     description = "Delete a submit directory and the associated DB entries"
     usage = "Usage: %prog delete SUBMITDIR"
@@ -542,6 +594,7 @@ class DeleteCommand(LoggingCommand):
             self.parser.error("Specify SUBMITDIR")
 
         SubmitDir(self.args[0]).delete()
+
 
 class AttachCommand(LoggingCommand):
     description = "Attach a submit dir to the master db (dashboard)"
@@ -553,14 +606,19 @@ class AttachCommand(LoggingCommand):
 
         SubmitDir(self.args[0]).attach()
 
+
 class DetachCommand(LoggingCommand):
     description = "Detach a submit dir from the master db (dashboard)"
     usage = "Usage: %prog detach SUBMITDIR"
 
     def __init__(self):
         LoggingCommand.__init__(self)
-        self.parser.add_option("-i", "--wf-uuid", dest="wf_uuid",
-                               help="Specify wf_uuid of the workflow to be detached.")
+        self.parser.add_option(
+            "-i",
+            "--wf-uuid",
+            dest="wf_uuid",
+            help="Specify wf_uuid of the workflow to be detached.",
+        )
 
     def run(self):
         if len(self.args) != 1:
@@ -568,6 +626,7 @@ class DetachCommand(LoggingCommand):
 
         wf_uuid = self.options.wf_uuid
         SubmitDir(self.args[0], raise_err=False).detach(wf_uuid=wf_uuid)
+
 
 class SubmitDirCommand(CompoundCommand):
     description = "Manages submit directories"
@@ -577,7 +636,7 @@ class SubmitDirCommand(CompoundCommand):
         ("move", MoveCommand),
         ("delete", DeleteCommand),
         ("attach", AttachCommand),
-        ("detach", DetachCommand)
+        ("detach", DetachCommand),
     ]
     aliases = {
         "ar": "archive",
@@ -585,10 +644,10 @@ class SubmitDirCommand(CompoundCommand):
         "mv": "move",
         "rm": "delete",
         "at": "attach",
-        "dt": "detach"
+        "dt": "detach",
     }
+
 
 def main():
     "The entry point for pegasus-submitdir"
     SubmitDirCommand().main()
-

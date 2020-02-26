@@ -1,26 +1,32 @@
 from __future__ import print_function
+
 import atexit
 import datetime
 import io
 import json
+import os
 import re
 import sys
-import os
 import uuid
 from optparse import OptionParser
-from pprint import pprint
 
 from Pegasus.cluster import RecordParser
-from Pegasus.tools import kickstart_parser
 from Pegasus.monitoring.metadata import Metadata
-
+from Pegasus.tools import kickstart_parser
 
 # logging
-log = {'name': None, 'timestamp': None, 'exitcode': None, 'app_exitcode': None, 'retry': None}
+log = {
+    "name": None,
+    "timestamp": None,
+    "exitcode": None,
+    "app_exitcode": None,
+    "retry": None,
+}
 tmp_log_files = []
 
 
-class JobFailed(Exception): pass
+class JobFailed(Exception):
+    pass
 
 
 def rotate_file(outfile, errfile):
@@ -28,7 +34,7 @@ def rotate_file(outfile, errfile):
     is the next sequence number. Returns the new name, or fails with
     an error message and a non-zero exit code."""
 
-    # This is just to prevent the file from being accidentally renamed 
+    # This is just to prevent the file from being accidentally renamed
     # again in testing.
     if re.search("\.out\.[0-9]{3}$", outfile):
         return outfile, errfile
@@ -50,7 +56,7 @@ def rotate_file(outfile, errfile):
         raise JobFailed("%s has been renamed too many times!" % (outfile))
 
     basename = outfile[:-4]
-    log['retry'] = retry
+    log["retry"] = retry
 
     # rename .out to .out.000
     newout = "%s.out.%03d" % (basename, retry)
@@ -89,7 +95,7 @@ def find_cluster_summary(txt):
         if e < 0:
             raise JobFailed("Invalid cluster-summary record")
 
-        return RecordParser(txt[b:e + 1]).parse()
+        return RecordParser(txt[b : e + 1]).parse()
 
     # If we found a cluster-task, but no cluster-summary, then there is a problem
     b = txt.find("[cluster-task")
@@ -139,11 +145,11 @@ def check_kickstart_records(txt):
     regex = re.compile(r'raw="(-?[0-9]+)"')
     succeeded = 0
     e = 0
-   
+
     # yaml
     for m in re.finditer(r"raw: ([0-9]+)", txt):
         raw = int(m.group(1))
-        log['app_exitcode'] = raw
+        log["app_exitcode"] = raw
         if raw != 0:
             raise JobFailed("task exited with raw status %d" % raw)
         succeeded = succeeded + 1
@@ -151,14 +157,16 @@ def check_kickstart_records(txt):
     # xml
     while True:
         b = txt.find("<status", e)
-        if b < 0: break
+        if b < 0:
+            break
         e = txt.find("</status>", b)
-        if e < 0: raise JobFailed("mismatched <status>")
+        if e < 0:
+            raise JobFailed("mismatched <status>")
         e = e + len("</status>")
         m = regex.search(txt[b:e])
         if m:
             raw = int(m.group(1))
-            log['app_exitcode'] = raw
+            log["app_exitcode"] = raw
         else:
             raise JobFailed("<status> was missing valid 'raw' attribute")
         if raw != 0:
@@ -180,18 +188,18 @@ def unquote_message(message):
     chars = genchars()
     output = []
     for c in chars:
-        if c == '+':
-            output.append(' ')
-        elif c == '\\':
+        if c == "+":
+            output.append(" ")
+        elif c == "\\":
             try:
                 c = next(chars)
             except StopIteration:
                 output.append(c)
                 break
-            if c == '+':
-                output.append('+')
+            if c == "+":
+                output.append("+")
             else:
-                output.append('\\')
+                output.append("\\")
                 output.append(c)
         else:
             output.append(c)
@@ -244,9 +252,10 @@ def get_errfile(outfile):
     left = outfile[0:i]
     right = ""
     if i + 5 < len(outfile):
-        right = outfile[i + 4:]
+        right = outfile[i + 4 :]
     errfile = left + ".err" + right
     return errfile
+
 
 def append_to_wf_metadata_log(files_metadata, logfile):
     """
@@ -257,17 +266,21 @@ def append_to_wf_metadata_log(files_metadata, logfile):
     :return:
     """
     # writing to log file (concurrency safe)
-    with io.open(logfile, 'a', encoding='utf8') as outfile:
+    with io.open(logfile, "a", encoding="utf8") as outfile:
         for file_metadata in files_metadata:
             res = file_metadata.convert_to_rce()
-            outfile.write(res + '\n')
+            outfile.write(res + "\n")
 
 
-
-def exitcode(outfile, status=None, rename=True,
-             failure_messages=[], success_messages=[],
-             wf_metadata_log=None,
-             generate_meta=True):
+def exitcode(
+    outfile,
+    status=None,
+    rename=True,
+    failure_messages=[],
+    success_messages=[],
+    wf_metadata_log=None,
+    generate_meta=True,
+):
     if not os.path.isfile(outfile):
         raise JobFailed("%s does not exist" % outfile)
 
@@ -277,7 +290,7 @@ def exitcode(outfile, status=None, rename=True,
     if not outfile.endswith(".out"):
         raise JobFailed("%s does not look like a kickstart .out file" % outfile)
 
-    meta_file=outfile[:-3] + "meta"
+    meta_file = outfile[:-3] + "meta"
 
     # If we are renaming, then rename
     if rename:
@@ -285,7 +298,7 @@ def exitcode(outfile, status=None, rename=True,
 
     # First, check exitcode supplied by DAGMan, if any
     if status is not None:
-        log['app_exitcode'] = status
+        log["app_exitcode"] = status
         if status != 0:
             raise JobFailed("dagman reported non-zero exitcode: %d" % status)
 
@@ -323,15 +336,17 @@ def exitcode(outfile, status=None, rename=True,
         files_metadata = parse_metadata_from_kickstart(outfile)
         # always generate a meta file even if it is a zero byte file
         directory = os.path.dirname(meta_file)
-        basename  = os.path.basename(meta_file)
-        Metadata.write_to_jsonfile(files_metadata, directory,basename, prefix="pegasus-exitcode")
+        basename = os.path.basename(meta_file)
+        Metadata.write_to_jsonfile(
+            files_metadata, directory, basename, prefix="pegasus-exitcode"
+        )
 
         if wf_metadata_log and files_metadata:
             # PM-1257 write files metadata to workflow log
             append_to_wf_metadata_log(files_metadata, wf_metadata_log)
 
 
-def parse_metadata_from_kickstart( outfile ):
+def parse_metadata_from_kickstart(outfile):
     # First assume we will find rotated file
     parser = kickstart_parser.Parser(outfile)
     kickstart_output = parser.parse_stampede()
@@ -343,22 +358,21 @@ def parse_metadata_from_kickstart( outfile ):
             # Ok, we have an invocation record, extract the metadata information
             if "outputs" in record:
                 for lfn in record["outputs"].keys():
-                    files.append( record["outputs"][lfn] )
+                    files.append(record["outputs"][lfn])
 
     return files
 
 
-
 def _log_info(info_msg):
     if len(tmp_log_files) > 0:
-        tmp_log_files[0].write(info_msg + '\n')
+        tmp_log_files[0].write(info_msg + "\n")
     else:
         print(info_msg)
 
 
 def _log_error(err_msg):
     if len(tmp_log_files) > 0:
-        tmp_log_files[1].write(err_msg + '\n')
+        tmp_log_files[1].write(err_msg + "\n")
     else:
         print(err_msg)
 
@@ -371,15 +385,15 @@ def _write_logs(log_filename):
         std_out.close()
         std_err.close()
 
-        with open(std_out.name, 'r') as sout:
-            log['std_out'] = sout.read()
-        with open(std_err.name, 'r') as serr:
-            log['std_err'] = serr.read()
+        with open(std_out.name, "r") as sout:
+            log["std_out"] = sout.read()
+        with open(std_err.name, "r") as serr:
+            log["std_err"] = serr.read()
 
         # writing to log file (concurrency safe)
-        with io.open(log_filename, 'a', encoding='utf8') as outfile:
+        with io.open(log_filename, "a", encoding="utf8") as outfile:
             res = json.dumps(log, ensure_ascii=False)
-            outfile.write(res + '\n')
+            outfile.write(res + "\n")
 
     else:
         print(json.dumps(log))
@@ -389,41 +403,76 @@ def main(args):
     usage = "Usage: %prog [options] job.out"
     parser = OptionParser(usage)
 
-    parser.add_option("-r", "--return", action="store", type="int",
-                      dest="status", metavar="R",
-                      help="Return code reported by DAGMan. This can be specified in a "
-                           "DAG using the $RETURN variable.")
-    parser.add_option("-n", "--no-rename", action="store_false",
-                      dest="rename", default=True,
-                      help="Don't rename kickstart.out and .err to .out.XXX and .err.XXX. "
-                           "Useful for testing.")
-    parser.add_option("-N", "--no-metadata", action="store_false",
-                      dest="generate_meta", default=True,
-                      help="disable generation of metadata file after parsing of kickstart records")
-    parser.add_option("-f", "--failure-message", action="append",
-                      dest="failure_messages", default=[],
-                      help="Failure message to find in job stdout/stderr. If this "
-                           "message exists in the stdout/stderr of the job, then the "
-                           "job will be considered a failure no matter what other "
-                           "output exists. If multiple failure messages are provided, "
-                           "then none of them can exist in the output or the job is "
-                           "considered a failure.")
-    parser.add_option("-s", "--success-message", action="append",
-                      dest="success_messages", default=[],
-                      help="Success message to find in job stdout/stderr. If this "
-                           "message does not exist in the stdout/stderr of the job, "
-                           "then the job will be considered a failure no matter what "
-                           "other output exists. If multiple success messages are "
-                           "provided, then they must all exist in the output or "
-                           "the job is considered a failure.")
-    parser.add_option("-l", "--log", action="store", type="string",
-                      dest="log_filename",
-                      help="Name of the common log file in which stdout/stderr will"
-                           "be redirected.")
-    parser.add_option("-M", "--metadata-log", action="store", type="string",
-                      dest="wf_metadata_log",
-                      help="Name of the common log file in which the metadata parsed "
-                           "from .out file is placed in append mode for the workflow")
+    parser.add_option(
+        "-r",
+        "--return",
+        action="store",
+        type="int",
+        dest="status",
+        metavar="R",
+        help="Return code reported by DAGMan. This can be specified in a "
+        "DAG using the $RETURN variable.",
+    )
+    parser.add_option(
+        "-n",
+        "--no-rename",
+        action="store_false",
+        dest="rename",
+        default=True,
+        help="Don't rename kickstart.out and .err to .out.XXX and .err.XXX. "
+        "Useful for testing.",
+    )
+    parser.add_option(
+        "-N",
+        "--no-metadata",
+        action="store_false",
+        dest="generate_meta",
+        default=True,
+        help="disable generation of metadata file after parsing of kickstart records",
+    )
+    parser.add_option(
+        "-f",
+        "--failure-message",
+        action="append",
+        dest="failure_messages",
+        default=[],
+        help="Failure message to find in job stdout/stderr. If this "
+        "message exists in the stdout/stderr of the job, then the "
+        "job will be considered a failure no matter what other "
+        "output exists. If multiple failure messages are provided, "
+        "then none of them can exist in the output or the job is "
+        "considered a failure.",
+    )
+    parser.add_option(
+        "-s",
+        "--success-message",
+        action="append",
+        dest="success_messages",
+        default=[],
+        help="Success message to find in job stdout/stderr. If this "
+        "message does not exist in the stdout/stderr of the job, "
+        "then the job will be considered a failure no matter what "
+        "other output exists. If multiple success messages are "
+        "provided, then they must all exist in the output or "
+        "the job is considered a failure.",
+    )
+    parser.add_option(
+        "-l",
+        "--log",
+        action="store",
+        type="string",
+        dest="log_filename",
+        help="Name of the common log file in which stdout/stderr will" "be redirected.",
+    )
+    parser.add_option(
+        "-M",
+        "--metadata-log",
+        action="store",
+        type="string",
+        dest="wf_metadata_log",
+        help="Name of the common log file in which the metadata parsed "
+        "from .out file is placed in append mode for the workflow",
+    )
 
     (options, args) = parser.parse_args(args)
 
@@ -434,24 +483,28 @@ def main(args):
 
     if options.log_filename:
         # temporary log files
-        tmp_log_name = '_exit-code-' + str(uuid.uuid4())
-        tmp_log_files.append(open(tmp_log_name + '.out', 'w'))
-        tmp_log_files.append(open(tmp_log_name + '.err', 'w'))
+        tmp_log_name = "_exit-code-" + str(uuid.uuid4())
+        tmp_log_files.append(open(tmp_log_name + ".out", "w"))
+        tmp_log_files.append(open(tmp_log_name + ".err", "w"))
 
     try:
-        log['name'] = outfile
-        log['timestamp'] = datetime.datetime.now().isoformat()
-        exitcode(outfile, status=options.status, rename=options.rename,
-                 failure_messages=options.failure_messages,
-                 success_messages=options.success_messages,
-                 generate_meta=options.generate_meta,
-                 wf_metadata_log=options.wf_metadata_log)
-        log['exitcode'] = 0
+        log["name"] = outfile
+        log["timestamp"] = datetime.datetime.now().isoformat()
+        exitcode(
+            outfile,
+            status=options.status,
+            rename=options.rename,
+            failure_messages=options.failure_messages,
+            success_messages=options.success_messages,
+            generate_meta=options.generate_meta,
+            wf_metadata_log=options.wf_metadata_log,
+        )
+        log["exitcode"] = 0
         _write_logs(options.log_filename)
         sys.exit(0)
     except JobFailed as jf:
         _log_error(str(jf))
-        log['exitcode'] = 1
+        log["exitcode"] = 1
         _write_logs(options.log_filename)
         sys.exit(1)
 

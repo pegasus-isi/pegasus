@@ -1,19 +1,4 @@
 # -*- coding: utf-8 -*-
-
-import json
-
-from io import StringIO
-from collections import defaultdict
-
-from Pegasus import yaml
-from Pegasus.api.transformation_catalog import Container
-from Pegasus.api.transformation_catalog import Transformation
-from Pegasus.api.transformation_catalog import TransformationSite
-from Pegasus.api.transformation_catalog import TransformationCatalog
-from Pegasus.api.site_catalog import Arch
-from Pegasus.api.site_catalog import OS
-from Pegasus.api.errors import PegasusError
-
 """
 :mod:`transformation_catalog` exposes an API to serialize and deserialize Pegasus's transformation catalog file.
 
@@ -30,7 +15,19 @@ Basic Usage::
 .. moduleauthor:: Rajiv Mayani <mayani@isi.edu>
 """
 
-from typing import Dict, TextIO
+from collections import defaultdict
+from io import StringIO
+from typing import TextIO
+
+from Pegasus import yaml
+from Pegasus.api.errors import PegasusError
+from Pegasus.api.site_catalog import OS, Arch
+from Pegasus.api.transformation_catalog import (
+    Container,
+    Transformation,
+    TransformationCatalog,
+    TransformationSite,
+)
 
 __all__ = (
     "load",
@@ -39,22 +36,25 @@ __all__ = (
     "dumps",
 )
 
+
 def _to_tc(d: dict) -> TransformationCatalog:
     """Convert dict to TransformationCatalog
-    
+
     :param d: TransformationCatalog represented as a dict
     :type d: dict
-    :raises PegasusError: encountered error parsing 
+    :raises PegasusError: encountered error parsing
     :return: a TransformationCatalog object based on d
     :rtype: TransformationCatalog
     """
-    
+
     try:
         tc = TransformationCatalog()
 
         # add transformations
         for tr in d["transformations"]:
-            tr_to_add = Transformation(tr["name"], tr.get("namespace"), tr.get("version"))
+            tr_to_add = Transformation(
+                tr["name"], tr.get("namespace"), tr.get("version")
+            )
 
             # add transformation sites
             for s in tr["sites"]:
@@ -62,12 +62,16 @@ def _to_tc(d: dict) -> TransformationCatalog:
                     s["name"],
                     s["pfn"],
                     True if s["type"] == "stageable" else False,
-                    arch=getattr(Arch, s.get("arch").upper()) if s.get("arch") else None,
-                    os_type=getattr(OS, s.get("os.type").upper()) if s.get("os.type") else None,
+                    arch=getattr(Arch, s.get("arch").upper())
+                    if s.get("arch")
+                    else None,
+                    os_type=getattr(OS, s.get("os.type").upper())
+                    if s.get("os.type")
+                    else None,
                     os_release=s.get("os.release"),
                     os_version=s.get("os.version"),
                     glibc=s.get("glibc"),
-                    container=s.get("container")
+                    container=s.get("container"),
                 )
 
                 # add profiles
@@ -108,37 +112,39 @@ def _to_tc(d: dict) -> TransformationCatalog:
                     getattr(Container, cont["type"].upper()),
                     cont["image"],
                     mounts=cont.get("mounts"),
-                    image_site=cont.get("image.site")
+                    image_site=cont.get("image.site"),
                 )
 
                 # add profiles
                 if cont.get("profiles"):
                     cont_to_add.profiles = defaultdict(dict, cont.get("profiles"))
-                
+
                 # add cont to tc
                 tc.add_container(cont_to_add)
-        
+
         return tc
 
     except KeyError:
         raise PegasusError("error parsing {}".format(d))
 
+
 def load(fp: TextIO, *args, **kwargs) -> TransformationCatalog:
     """
     Deserialize ``fp`` (a ``.read()``-supporting file-like object containing a TransformationCatalog document) to a :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog` object.
 
-    :param fp: file like object to load from 
+    :param fp: file like object to load from
     :type fp: TextIO
     :return: deserialized TransformationCatalog object
     :rtype: TransformationCatalog
     """
     return _to_tc(yaml.load(fp))
 
+
 def loads(s: str, *args, **kwargs) -> TransformationCatalog:
     """
     Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance containing a TransformationCatalog document) to a :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog` object.
 
-    :param s: string to load from 
+    :param s: string to load from
     :type s: str
     :return: deserialized TransformationCatalog object
     :rtype: TransformationCatalog
@@ -146,8 +152,9 @@ def loads(s: str, *args, **kwargs) -> TransformationCatalog:
     return _to_tc(yaml.load(s))
 
 
-
-def dump(obj: TransformationCatalog, fp: TextIO, _format="yml", *args, **kwargs) -> None:
+def dump(
+    obj: TransformationCatalog, fp: TextIO, _format="yml", *args, **kwargs
+) -> None:
     """
     Serialize ``obj`` as a :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog` formatted stream to ``fp`` (a ``.write()``-supporting file-like object).
 

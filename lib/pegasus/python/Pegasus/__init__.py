@@ -13,6 +13,7 @@
 #  limitations under the License.
 import logging
 
+
 class Logger(logging.getLoggerClass()):
     "A custom logger for Pegasus with TRACE level"
     CRITICAL = logging.CRITICAL
@@ -30,9 +31,9 @@ class Logger(logging.getLoggerClass()):
         "Log a TRACE level message"
         self.log(Logger.TRACE, message, *args, **kwargs)
 
+
 # Add a TRACE level to logging
 logging.addLevelName(Logger.TRACE, "TRACE")
 
 # Use our own logger class, which has trace
 logging.setLoggerClass(Logger)
-

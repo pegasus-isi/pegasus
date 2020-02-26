@@ -1,16 +1,4 @@
 # -*- coding: utf-8 -*-
-
-import json
-import io
-
-from configparser import ConfigParser
-from configparser import DEFAULTSECT
-
-from Pegasus import yaml
-from Pegasus.api.writable import _CustomEncoder
-from Pegasus.api.properties import Properties
-from Pegasus.api.errors import PegasusError
-
 """
 :mod:`properties` exposes an API to serialize and deserialize Pegasus's properties file.
 
@@ -27,7 +15,11 @@ Basic Usage::
 .. moduleauthor:: Rajiv Mayani <mayani@isi.edu>
 """
 
-from typing import Dict, TextIO
+import io
+from configparser import DEFAULTSECT, ConfigParser
+from typing import TextIO
+
+from Pegasus.api.properties import Properties
 
 __all__ = (
     "load",
@@ -36,11 +28,12 @@ __all__ = (
     "dumps",
 )
 
+
 def load(fp: TextIO, *args, **kwargs) -> Properties:
     """
     Deserialize ``fp`` (a ``.read()``-supporting file-like object containing a Properties document) to a :py:class:`~Pegasus.api.properties.Properties` object.
 
-    :param fp: file like object to load from 
+    :param fp: file like object to load from
     :type fp: TextIO
     :return: deserialized Properties object
     :rtype: Properties
@@ -58,7 +51,7 @@ def loads(s: str, *args, **kwargs) -> Properties:
     """
     Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance containing a Properties document) to a :py:class:`~Pegasus.api.properties.Properties` object.
 
-    :param s: string to load from 
+    :param s: string to load from
     :type s: str
     :return: deserialized Properties object
     :rtype: Properties
@@ -68,7 +61,7 @@ def loads(s: str, *args, **kwargs) -> Properties:
     props = Properties()
     props._conf = conf
 
-    return props 
+    return props
 
 
 def dump(obj: Properties, fp: TextIO, *args, **kwargs) -> None:
@@ -96,4 +89,3 @@ def dumps(obj: Properties, *args, **kwargs) -> str:
     with io.StringIO() as s:
         obj.write(s)
         return s.getvalue()
-        

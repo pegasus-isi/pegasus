@@ -1,8 +1,11 @@
 from __future__ import print_function
-import sys
+
+import errno
 import os
 import pwd
-import shutil, errno
+import shutil
+import sys
+
 from jinja2 import Environment, FileSystemLoader
 
 
@@ -14,7 +17,10 @@ class TutorialEnv:
     BLUEWATERS_GLITE = ("Bluewaters, with Glite", "bw-glite")
     TACC_WRANGLER = ("TACC Wrangler with Glite", "wrangler-glite")
     OLCF_TITAN = ("OLCF TITAN with Glite", "titan-glite")
-    OLCF_SUMMIT_KUBERNETES_BOSCO = ("OLCF Summit from Kubernetes using BOSCO", "summit-kub-bosco")
+    OLCF_SUMMIT_KUBERNETES_BOSCO = (
+        "OLCF Summit from Kubernetes using BOSCO",
+        "summit-kub-bosco",
+    )
 
 
 class TutorialExample:
@@ -47,9 +53,9 @@ def yesno(question, default="y"):
         answer = sys.stdin.readline().strip().lower()
         if len(answer) == 0:
             answer = default
-        if answer == 'y':
+        if answer == "y":
             return True
-        elif answer == 'n':
+        elif answer == "n":
             return False
 
 
@@ -60,7 +66,7 @@ def query(question, default=None):
             sys.stdout.write("%s [%s]: " % (question, default))
         else:
             sys.stdout.write("%s: " % question)
-        answer = sys.stdin.readline().strip().replace(' ', '_')
+        answer = sys.stdin.readline().strip().replace(" ", "_")
         if answer == "":
             if default:
                 return default
@@ -100,7 +106,7 @@ class Workflow(object):
         self.compute_queue = "default"
         self.project = "MYPROJ123"
         sysname, _, _, _, machine = os.uname()
-        if sysname == 'Darwin':
+        if sysname == "Darwin":
             self.os = "MACOSX"
         else:
             # Probably Linux
@@ -115,9 +121,9 @@ class Workflow(object):
         os.chmod(path, mode)
 
     def copy_dir(self, src, dest):
-        #self.mkdir(dest)
+        # self.mkdir(dest)
         if not src.startswith("/"):
-            src = os.path.join(self.sharedir,src)
+            src = os.path.join(self.sharedir, src)
         try:
             dest = os.path.join(self.workflowdir, dest)
             shutil.copytree(src, dest)
@@ -141,16 +147,19 @@ class Workflow(object):
             self.generate_tutorial = True
 
             # determine the environment to setup tutorial for
-            self.tutorial_setup = optionlist("What environment is tutorial to be setup for?", [
-                TutorialEnv.LOCAL_MACHINE,
-                TutorialEnv.USC_HPCC_CLUSTER,
-                TutorialEnv.OSG_FROM_ISI,
-                TutorialEnv.XSEDE_BOSCO,
-                TutorialEnv.BLUEWATERS_GLITE,
-                TutorialEnv.TACC_WRANGLER,
-                TutorialEnv.OLCF_TITAN,
-                TutorialEnv.OLCF_SUMMIT_KUBERNETES_BOSCO
-            ])
+            self.tutorial_setup = optionlist(
+                "What environment is tutorial to be setup for?",
+                [
+                    TutorialEnv.LOCAL_MACHINE,
+                    TutorialEnv.USC_HPCC_CLUSTER,
+                    TutorialEnv.OSG_FROM_ISI,
+                    TutorialEnv.XSEDE_BOSCO,
+                    TutorialEnv.BLUEWATERS_GLITE,
+                    TutorialEnv.TACC_WRANGLER,
+                    TutorialEnv.OLCF_TITAN,
+                    TutorialEnv.OLCF_SUMMIT_KUBERNETES_BOSCO,
+                ],
+            )
 
             # figure out what example options to provide
             examples = [
@@ -164,9 +173,16 @@ class Workflow(object):
             if self.tutorial_setup != "osg":
                 examples.append(TutorialExample.DIAMOND)
 
-            if self.tutorial_setup in ["bw-glite", "wrangler-glite", "titan-glite", "summit-kub-bosco"]:
+            if self.tutorial_setup in [
+                "bw-glite",
+                "wrangler-glite",
+                "titan-glite",
+                "summit-kub-bosco",
+            ]:
                 examples.append(TutorialExample.MPI)
-                self.project = query("What project your jobs should run under. For example on TACC there are like : TG-DDM160003 ?")
+                self.project = query(
+                    "What project your jobs should run under. For example on TACC there are like : TG-DDM160003 ?"
+                )
 
             self.tutorial = optionlist("What tutorial workflow do you want?", examples)
 
@@ -174,21 +190,34 @@ class Workflow(object):
             return
 
         # Determine which DAX generator API to use
-        self.daxgen = choice("What DAX generator API do you want to use?", ["python", "perl", "java", "r"], "python")
+        self.daxgen = choice(
+            "What DAX generator API do you want to use?",
+            ["python", "perl", "java", "r"],
+            "python",
+        )
 
         # Determine what kind of site catalog we need to generate
-        self.config = optionlist("What does your computing infrastructure look like?", [
-            ("Local Machine Condor Pool", "condorpool"),
-            ("Remote Cluster using Globus GRAM", "globus"),
-            ("Remote Cluster using CREAMCE", "creamce"),
-            ("Local PBS Cluster with Glite", "glite"),
-            ("Remote PBS Cluster with BOSCO and SSH", "bosco")
-        ])
+        self.config = optionlist(
+            "What does your computing infrastructure look like?",
+            [
+                ("Local Machine Condor Pool", "condorpool"),
+                ("Remote Cluster using Globus GRAM", "globus"),
+                ("Remote Cluster using CREAMCE", "creamce"),
+                ("Local PBS Cluster with Glite", "glite"),
+                ("Remote PBS Cluster with BOSCO and SSH", "bosco"),
+            ],
+        )
 
         # Find out some information about the site
         self.sitename = query("What do you want to call your compute site?", "compute")
-        self.os = choice("What OS does your compute site have?", ["LINUX", "MACOSX"], self.os)
-        self.arch = choice("What architecture does your compute site have?", ["x86_64", "x86"], self.arch)
+        self.os = choice(
+            "What OS does your compute site have?", ["LINUX", "MACOSX"], self.os
+        )
+        self.arch = choice(
+            "What architecture does your compute site have?",
+            ["x86_64", "x86"],
+            self.arch,
+        )
 
     def setup_tutorial(self):
         """
@@ -228,7 +257,7 @@ class Workflow(object):
             self.compute_queue = "titan"
         elif self.tutorial_setup == "summit-kub-bosco":
             self.sitename = "summit"
-            self.config   = "bosco"
+            self.config = "bosco"
             self.compute_queue = "batch"
         return
 
@@ -250,9 +279,15 @@ class Workflow(object):
 
                 # Executables used by the diamond workflow
                 self.mkdir("bin")
-                self.copy_template("diamond/transformation.py", "bin/preprocess", mode=0o755)
-                self.copy_template("diamond/transformation.py", "bin/findrange", mode=0o755)
-                self.copy_template("diamond/transformation.py", "bin/analyze", mode=0o755)
+                self.copy_template(
+                    "diamond/transformation.py", "bin/preprocess", mode=0o755
+                )
+                self.copy_template(
+                    "diamond/transformation.py", "bin/findrange", mode=0o755
+                )
+                self.copy_template(
+                    "diamond/transformation.py", "bin/analyze", mode=0o755
+                )
 
                 # Diamond input file
                 self.copy_template("diamond/f.a", "input/f.a")
@@ -263,14 +298,24 @@ class Workflow(object):
             elif self.tutorial == "r-epa":
                 # Executables used by the R-EPA workflow
                 self.mkdir("bin")
-                self.copy_template("r-epa/epa-wrapper.sh", "bin/epa-wrapper.sh", mode=0o755)
+                self.copy_template(
+                    "r-epa/epa-wrapper.sh", "bin/epa-wrapper.sh", mode=0o755
+                )
                 self.copy_template("r-epa/setupvar.R", "bin/setupvar.R", mode=0o755)
-                self.copy_template("r-epa/weighted.average.R", "bin/weighted.average.R", mode=0o755)
-                self.copy_template("r-epa/cumulative.percentiles.R", "bin/cumulative.percentiles.R", mode=0o755)
+                self.copy_template(
+                    "r-epa/weighted.average.R", "bin/weighted.average.R", mode=0o755
+                )
+                self.copy_template(
+                    "r-epa/cumulative.percentiles.R",
+                    "bin/cumulative.percentiles.R",
+                    mode=0o755,
+                )
             elif self.tutorial == "population":
                 self.copy_template("%s/Dockerfile" % self.tutorial, "Dockerfile")
                 self.copy_template("%s/Singularity" % self.tutorial, "Singularity")
-                self.copy_template("%s/tc.txt.containers" % self.tutorial, "tc.txt.containers")
+                self.copy_template(
+                    "%s/tc.txt.containers" % self.tutorial, "tc.txt.containers"
+                )
                 self.copy_dir("%s/scripts" % self.tutorial, "scripts")
                 self.copy_dir("%s/data" % self.tutorial, "input")
                 # copy the mpi wrapper, c code and mpi
@@ -278,11 +323,16 @@ class Workflow(object):
                 # copy the mpi wrapper, c code and mpi example
                 # Executables used by the mpi-hw workflow
                 self.mkdir("bin")
-                self.copy_template("%s/pegasus-mpi-hw.c" % self.tutorial, "pegasus-mpi-hw.c")
+                self.copy_template(
+                    "%s/pegasus-mpi-hw.c" % self.tutorial, "pegasus-mpi-hw.c"
+                )
                 self.copy_template("%s/Makefile" % self.tutorial, "Makefile")
                 self.copy_template("%s/daxgen.py.template" % self.tutorial, "daxgen.py")
-                self.copy_template("%s/mpi-hello-world-wrapper" % self.tutorial, "bin/mpi-hello-world-wrapper",
-                                   mode=0o755)
+                self.copy_template(
+                    "%s/mpi-hello-world-wrapper" % self.tutorial,
+                    "bin/mpi-hello-world-wrapper",
+                    mode=0o755,
+                )
                 self.copy_template("split/pegasus.html", "input/f.in")
 
         else:
@@ -308,17 +358,23 @@ class Workflow(object):
 
         if self.tutorial == "diamond":
             if self.tutorial_setup == "wrangler-glite":
-                self.copy_template("pmc-wrapper.wrangler", "bin/pmc-wrapper", mode=0o755)
+                self.copy_template(
+                    "pmc-wrapper.wrangler", "bin/pmc-wrapper", mode=0o755
+                )
             elif self.tutorial_setup == "titan-glite":
                 self.copy_template("pmc-wrapper.titan", "bin/pmc-wrapper", mode=0o755)
             elif self.tutorial_setup == "wrangler-glite":
-                self.copy_template("pmc-wrapper.wrangler", "bin/pmc-wrapper", mode=0o755)
+                self.copy_template(
+                    "pmc-wrapper.wrangler", "bin/pmc-wrapper", mode=0o755
+                )
             elif self.tutorial_setup == "summit-kub-bosco":
                 self.copy_template("pmc-wrapper.summit", "bin/pmc-wrapper", mode=0o755)
 
         if self.generate_tutorial:
-            sys.stdout.write("Pegasus Tutorial setup for example workflow - %s for execution on %s in directory %s\n"
-                             % (self.tutorial, self.tutorial_setup, self.workflowdir))
+            sys.stdout.write(
+                "Pegasus Tutorial setup for example workflow - %s for execution on %s in directory %s\n"
+                % (self.tutorial, self.tutorial_setup, self.workflowdir)
+            )
 
 
 def usage():
