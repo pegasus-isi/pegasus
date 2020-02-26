@@ -1,27 +1,21 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ * Copyright 2007-2008 University Of Southern California
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing,
- *  software distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
-
 package edu.isi.pegasus.planner.provenance.pasoa.pps;
 
-import java.util.*;
-
-import edu.isi.pegasus.planner.refiner.Refiner;
-
 import edu.isi.pegasus.planner.provenance.pasoa.PPS;
+import edu.isi.pegasus.planner.refiner.Refiner;
+import java.util.*;
 
 /**
  * The default empty implementation to be used.
@@ -31,25 +25,21 @@ import edu.isi.pegasus.planner.provenance.pasoa.PPS;
  */
 public class Empty implements PPS {
 
-    public Empty() {
-    }
+    public Empty() {}
 
     /**
-     *
      * @return The ID used for the whole refinement process of this workflow
-     * @param refiner  workflow Refiner
+     * @param refiner workflow Refiner
      * @param refinementStepName String
      * @param firstStep boolean
      * @throws Exception
      */
-    public String beginWorkflowRefinementStep( Refiner refiner,
-                                               String refinementStepName,
-                                               boolean firstStep ) throws
-        Exception {
+    public String beginWorkflowRefinementStep(
+            Refiner refiner, String refinementStepName, boolean firstStep) throws Exception {
 
-//        System.out.println( "Start of Refiner- " + refinementStepName );
-//        System.out.println( "First Step " + firstStep );
-//        System.out.println( refiner.getXMLProducer().toXML() );
+        //        System.out.println( "Start of Refiner- " + refinementStepName );
+        //        System.out.println( "First Step " + firstStep );
+        //        System.out.println( refiner.getXMLProducer().toXML() );
 
         return "";
     }
@@ -61,22 +51,22 @@ public class Empty implements PPS {
      * @param jobs List
      * @throws Exception
      */
-    public void clusteringOf( String clusteredJob, List jobs ) throws Exception {
-//        System.out.println( "Clustered Job " + clusteredJob );
-//        System.out.println( " contains " + jobs );
+    public void clusteringOf(String clusteredJob, List jobs) throws Exception {
+        //        System.out.println( "Clustered Job " + clusteredJob );
+        //        System.out.println( " contains " + jobs );
 
     }
 
     /**
      * endWorkflowRefinementStep
      *
-     * @param refiner  workflow Refiner
+     * @param refiner workflow Refiner
      * @throws Exception
      */
-    public void endWorkflowRefinementStep( Refiner refiner ) throws Exception {
+    public void endWorkflowRefinementStep(Refiner refiner) throws Exception {
 
-//        System.out.println( "End of Refiner" );
-//        System.out.println( refiner.getXMLProducer().toXML() );
+        //        System.out.println( "End of Refiner" );
+        //        System.out.println( refiner.getXMLProducer().toXML() );
 
     }
 
@@ -87,9 +77,8 @@ public class Empty implements PPS {
      * @param beforeNode String
      * @throws Exception
      */
-    public void isIdenticalTo(String afterNode, String beforeNode) throws
-        Exception {
-//        System.out.println( beforeNode + " identical to " + afterNode );
+    public void isIdenticalTo(String afterNode, String beforeNode) throws Exception {
+        //        System.out.println( beforeNode + " identical to " + afterNode );
     }
 
     /**
@@ -99,9 +88,7 @@ public class Empty implements PPS {
      * @param beforeNode List
      * @throws Exception
      */
-    public void isPartitionOf(String afterNode, List beforeNode) throws
-        Exception {
-    }
+    public void isPartitionOf(String afterNode, List beforeNode) throws Exception {}
 
     /**
      * registrationIntroducedFor
@@ -110,10 +97,10 @@ public class Empty implements PPS {
      * @param dataStagingNode String
      * @throws Exception
      */
-    public void registrationIntroducedFor( String registrationNode,
-                                           String dataStagingNode ) throws
-        Exception {
-//        System.out.println( "registration node " + registrationNode + " for " + dataStagingNode );
+    public void registrationIntroducedFor(String registrationNode, String dataStagingNode)
+            throws Exception {
+        //        System.out.println( "registration node " + registrationNode + " for " +
+        // dataStagingNode );
     }
 
     /**
@@ -123,10 +110,9 @@ public class Empty implements PPS {
      * @param beforeNode String
      * @throws Exception
      */
-    public void siteSelectionFor(String afterNode, String beforeNode) throws
-        Exception {
-//        System.out.print( " Site Selection for " + beforeNode );
-//        System.out.println( " is " + afterNode );
+    public void siteSelectionFor(String afterNode, String beforeNode) throws Exception {
+        //        System.out.print( " Site Selection for " + beforeNode );
+        //        System.out.println( " is " + afterNode );
 
     }
 
@@ -137,8 +123,7 @@ public class Empty implements PPS {
      * @param appNode String
      * @throws Exception
      */
-    public void stagingIntroducedFor(List stagingNodes, String appNode) throws
-        Exception {
-//        System.out.println( "Staging done by " + stagingNodes + " for " + appNode);
+    public void stagingIntroducedFor(List stagingNodes, String appNode) throws Exception {
+        //        System.out.println( "Staging done by " + stagingNodes + " for " + appNode);
     }
 }

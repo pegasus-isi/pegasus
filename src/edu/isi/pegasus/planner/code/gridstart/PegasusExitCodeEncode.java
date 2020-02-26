@@ -1,77 +1,59 @@
 /**
  * Copyright 2007-2008 University Of Southern California
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package edu.isi.pegasus.planner.code.gridstart;
 
 /**
- * This class tries to define a mechanism to encode arguments for
- * pegasus-exitcode, as DAGMan does not handle whitespaces correctly for
- * postscript arguments.
- * 
- * The default rules are
- * single space gets encoded to +
- * + gets escaped to \+
- * non printing asci characters are flagged
- * 
- * here are some examples of this encoding rule
+ * This class tries to define a mechanism to encode arguments for pegasus-exitcode, as DAGMan does
+ * not handle whitespaces correctly for postscript arguments.
+ *
+ * <p>The default rules are single space gets encoded to + + gets escaped to \+ non printing asci
+ * characters are flagged
+ *
+ * <p>here are some examples of this encoding rule
+ *
  * <pre>
- * Error Message      is encoded to Error+Message 
+ * Error Message      is encoded to Error+Message
  * Error   Message    is encoded to Error+++Message
  * Error + Message    is encoded to Error+\++Message
  * Error + \Message   is encoded to Error+\++\Message
  * Error + Message\   is encoded to Error+\++Message\
  * Error + \\ Message is encoded to Error+\++\\+Message
  * </pre>
- * 
  *
  * @author Karan Vahi
  * @version $Revision$
  */
 public class PegasusExitCodeEncode {
 
-    /**
-     * Defines the character used to escape characters.
-     */
+    /** Defines the character used to escape characters. */
     private char mEscape;
-   
-    /**
-     * Defines the set of characters that require escaping.
-     */
+
+    /** Defines the set of characters that require escaping. */
     private String mEscapable;
-    
-    /**
-     * Defines the character that requires encoding
-     */
+
+    /** Defines the character that requires encoding */
     private char mEncodeable;
-    
-    /**
-     * The value to encode to 
-     */
+
+    /** The value to encode to */
     private char mEncode;
 
-    /**
-     * Defines the default encoding rules
-     * escape + with \+
-     * encode single whitespace with +
-     *
-     */
+    /** Defines the default encoding rules escape + with \+ encode single whitespace with + */
     public PegasusExitCodeEncode() {
         mEscapable = "+";
         mEscape = '\\';
         mEncodeable = ' ';
-        mEncode     =  '+';
+        mEncode = '+';
     }
 
     /**
@@ -115,35 +97,33 @@ public class PegasusExitCodeEncode {
             char ch = s.charAt(i);
 
             if (Character.isWhitespace(ch)) {
-                if ( ch == mEncodeable ) {
-                    result.append( mEncode );
+                if (ch == mEncodeable) {
+                    result.append(mEncode);
                 } else {
-                    throw new IllegalArgumentException("Invalid whitespace character \'" + ch + "\' passed for encoding " + s);
+                    throw new IllegalArgumentException(
+                            "Invalid whitespace character \'" + ch + "\' passed for encoding " + s);
                 }
                 continue;
             }
-            
-            //after whitespace check for other non printing characters
-            //to distinguish error between invalid whitespace and non printing character
-            if ( !this.isAsciiPrintable( ch ) ){
-                throw new IllegalArgumentException( "Invalid non printing character \'" + ch + "\' passed for encoding " + s);
-            }
-            
-            else if (mEscapable.indexOf(ch) != -1) {
-                //we need to escape the character
+
+            // after whitespace check for other non printing characters
+            // to distinguish error between invalid whitespace and non printing character
+            if (!this.isAsciiPrintable(ch)) {
+                throw new IllegalArgumentException(
+                        "Invalid non printing character \'" + ch + "\' passed for encoding " + s);
+            } else if (mEscapable.indexOf(ch) != -1) {
+                // we need to escape the character
                 result.append(mEscape);
                 result.append(ch);
-            }
-            else{
-                result.append( ch );
+            } else {
+                result.append(ch);
             }
         }
         return result.toString();
     }
 
     /**
-     * Transforms a given string by decoding all characters and unescaping where
-     * required.
+     * Transforms a given string by decoding all characters and unescaping where required.
      *
      * @param s is the string to remove escapes from.
      * @return the decoded string
@@ -160,21 +140,19 @@ public class PegasusExitCodeEncode {
             char ch = s.charAt(i);
             if (state == 0) {
                 // default state
-                if( ch == mEncode ){
-                    result.append( mEncodeable );
-                }
-                else if (ch == mEscape) {
+                if (ch == mEncode) {
+                    result.append(mEncodeable);
+                } else if (ch == mEscape) {
                     state = 1;
-                    
-                    //fix for \ as last character
-                    if( i == s.length() - 1 ){
-                        result.append( ch );
+
+                    // fix for \ as last character
+                    if (i == s.length() - 1) {
+                        result.append(ch);
                     }
                 } else {
                     result.append(ch);
                 }
-            } 
-            else {
+            } else {
                 // "found escape" state
                 if (mEscapable.indexOf(ch) == -1) {
                     result.append(mEscape);
@@ -186,9 +164,9 @@ public class PegasusExitCodeEncode {
 
         return result.toString();
     }
-    
+
     /**
-     * <p>Checks whether the character is ASCII 7 bit printable.</p>
+     * Checks whether the character is ASCII 7 bit printable.
      *
      * <pre>
      *   CharUtils.isAsciiPrintable('a')  = true
@@ -202,24 +180,23 @@ public class PegasusExitCodeEncode {
      * @param ch the character to check
      * @return true if between 32 and 126 inclusive
      */
-    public  boolean isAsciiPrintable(char ch) {
+    public boolean isAsciiPrintable(char ch) {
         return ch >= 32 && ch < 127;
     }
 
-    public void test( String s ){
+    public void test(String s) {
         String e = this.encode(s);
-        String s1 = this.decode( e );
-        System.out.println( s + " is encoded to " + e );
-        System.out.println( e + " is decoded to " + s1 );
-        if( s.equals( s1 )){
-            System.out.println( "[Success] Encoding and decoding is symmetric " );
-        }
-        else{
-            System.out.println( "[Error] Encoding and decoding is asymmetric " );
+        String s1 = this.decode(e);
+        System.out.println(s + " is encoded to " + e);
+        System.out.println(e + " is decoded to " + s1);
+        if (s.equals(s1)) {
+            System.out.println("[Success] Encoding and decoding is symmetric ");
+        } else {
+            System.out.println("[Error] Encoding and decoding is asymmetric ");
         }
         System.out.println();
     }
-    
+
     /**
      * Test program.
      *
@@ -228,29 +205,26 @@ public class PegasusExitCodeEncode {
     public static void main(String args[]) {
         PegasusExitCodeEncode me = new PegasusExitCodeEncode(); // defaults
 
-        me.test( "Error Message");
-        me.test( "Error   Message");
-        me.test( "Error + Message" );
-        me.test( "Error + \\Message" );
-        me.test( "Error + Message\\" );
-        me.test( "Error + \\\\ Message" );
-        me.test( "Error + Message\\\\" );
-        
-        //should throw errors
-        try{
-            me.test( "Error + " + "\t" + "Message" );
+        me.test("Error Message");
+        me.test("Error   Message");
+        me.test("Error + Message");
+        me.test("Error + \\Message");
+        me.test("Error + Message\\");
+        me.test("Error + \\\\ Message");
+        me.test("Error + Message\\\\");
+
+        // should throw errors
+        try {
+            me.test("Error + " + "\t" + "Message");
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
         }
-        catch ( IllegalArgumentException e ){
-            System.out.println( e.getMessage() );
+
+        try {
+            char ch = 163; // the pound sign
+            me.test("Error Message " + ch);
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
         }
-        
-        try{
-            char ch = 163; //the pound sign
-            me.test( "Error Message " + ch);
-        }
-        catch ( IllegalArgumentException e ){
-            System.out.println( e.getMessage() );
-        }
-        
     }
 }

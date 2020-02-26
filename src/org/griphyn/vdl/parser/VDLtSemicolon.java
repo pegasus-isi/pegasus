@@ -15,15 +15,12 @@
 package org.griphyn.vdl.parser;
 
 /**
- * Class to signal a semicolon from the scanner to the parser.
- * This class is module-local on purpose.
+ * Class to signal a semicolon from the scanner to the parser. This class is module-local on
+ * purpose.
  *
  * @author Jens-S. Vöckler
  * @version $Revision$
- *
  */
-class VDLtSemicolon
-  implements VDLtToken
-{
-  // empty
+class VDLtSemicolon implements VDLtToken {
+    // empty
 }

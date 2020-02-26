@@ -1,24 +1,21 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ * Copyright 2007-2008 University Of Southern California
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing,
- *  software distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package edu.isi.pegasus.planner.dax;
 
 import edu.isi.pegasus.common.util.XMLWriter;
 
 /**
- *
  * @author gmehta
  * @version $Revision$
  */
@@ -40,8 +37,7 @@ public class Job extends AbstractJob {
         super(j);
     }
 
-    public Job(String id, String namespace, String name, String version,
-            String label) {
+    public Job(String id, String namespace, String name, String version, String label) {
         super();
         checkID(id);
 
@@ -64,7 +60,8 @@ public class Job extends AbstractJob {
 
     /**
      * Is this Object a Job
-     * @return 
+     *
+     * @return
      */
     public boolean isJob() {
         return true;
@@ -72,16 +69,15 @@ public class Job extends AbstractJob {
 
     /**
      * Overrides Base TOXML method.
+     *
      * @param writer
      * @param indent
      */
     @Override
     public void toXML(XMLWriter writer, int indent) {
 
-        writer.startElement(
-                "job", indent);
-        writer.writeAttribute(
-                "id", mId);
+        writer.startElement("job", indent);
+        writer.writeAttribute("id", mId);
         if (mNamespace != null && !mNamespace.isEmpty()) {
             writer.writeAttribute("namespace", mNamespace);
         }

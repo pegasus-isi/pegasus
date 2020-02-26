@@ -14,61 +14,51 @@
  */
 package org.griphyn.vdl.dbschema;
 
+import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.parser.*;
 import org.griphyn.vdl.util.Logging;
-import org.griphyn.vdl.classes.*;
 
 /**
- * This class adds a given Definition from the parser's callback into
- * the fresh in-memory storage. It is a streamlined version of the more
- * versatile {@link MemoryStorage} handler. End-users should not use 
- * this class.
+ * This class adds a given Definition from the parser's callback into the fresh in-memory storage.
+ * It is a streamlined version of the more versatile {@link MemoryStorage} handler. End-users should
+ * not use this class.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
  */
-class MyCallbackHandler implements FinalizerHandler
-{
-  /**
-   * This is a reference to the already established in-memory storage.
-   */
-  private Definition m_memory;
+class MyCallbackHandler implements FinalizerHandler {
+    /** This is a reference to the already established in-memory storage. */
+    private Definition m_memory;
 
-  /**
-   * The c'tor initializes the references to a single Definition.
-   */
-  public MyCallbackHandler()
-  {
-    this.m_memory = null;
-  }
-
-  /**
-   * Returns the value stored by the XML reader's callback function.
-   *
-   * @return a single Definition that was read, or <code>null</code>.
-   */
-  public Definition getDefinition()
-  {
-    return this.m_memory;
-  }
-
-  /**
-   * This method adds the given Definition to whatever storage is
-   * implemented underneath.
-   *
-   * @param d is the Definition that is ready to be stored.
-   * @return true, if new version was stored and database modified
-   */
-  public boolean store( VDL d )
-  {
-    if ( d instanceof Definition ) {
-      this.m_memory = (Definition) d;
-      Logging.instance().log( "chunk", 0, "found " + m_memory.shortID() );
-      return true;
-    } else {
-      Logging.instance().log( "chunk", 0, "not a definition: " + d.toString() );
-      return false;
+    /** The c'tor initializes the references to a single Definition. */
+    public MyCallbackHandler() {
+        this.m_memory = null;
     }
-  }
+
+    /**
+     * Returns the value stored by the XML reader's callback function.
+     *
+     * @return a single Definition that was read, or <code>null</code>.
+     */
+    public Definition getDefinition() {
+        return this.m_memory;
+    }
+
+    /**
+     * This method adds the given Definition to whatever storage is implemented underneath.
+     *
+     * @param d is the Definition that is ready to be stored.
+     * @return true, if new version was stored and database modified
+     */
+    public boolean store(VDL d) {
+        if (d instanceof Definition) {
+            this.m_memory = (Definition) d;
+            Logging.instance().log("chunk", 0, "found " + m_memory.shortID());
+            return true;
+        } else {
+            Logging.instance().log("chunk", 0, "not a definition: " + d.toString());
+            return false;
+        }
+    }
 }

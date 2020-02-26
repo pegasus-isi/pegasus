@@ -15,15 +15,11 @@
 package org.griphyn.vdl.parser;
 
 /**
- * Class to signal a closing curly brace to the parser.
- * This class is module-local on purpose.
+ * Class to signal a closing curly brace to the parser. This class is module-local on purpose.
  *
  * @author Jens-S. Vöckler
  * @version $Revision$
- *
  */
-class VDLtCloseBrace
-  implements VDLtToken
-{
-  // empty
+class VDLtCloseBrace implements VDLtToken {
+    // empty
 }

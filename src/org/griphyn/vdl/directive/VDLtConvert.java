@@ -13,15 +13,13 @@
  * Southern California. All rights reserved.
  */
 package org.griphyn.vdl.directive;
-import edu.isi.pegasus.common.util.Currently;
-import org.griphyn.vdl.parser.*;
-import org.griphyn.vdl.classes.*;
-import org.griphyn.vdl.util.Logging;
 
+import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
-import java.io.IOException;
 import java.util.MissingResourceException;
+import org.griphyn.vdl.classes.*;
+import org.griphyn.vdl.parser.*;
 
 /**
  * The class converts VDLt syntax into VDLx syntax.
@@ -29,60 +27,52 @@ import java.util.MissingResourceException;
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
- *
  * @see org.griphyn.vdl.parser.VDLtParser
  */
-public class VDLtConvert extends Directive
-{
-  /**
-   * Constructor
-   */
-  public VDLtConvert()
-    throws IOException, MissingResourceException
-  {
-    super();
-  }
+public class VDLtConvert extends Directive {
+    /** Constructor */
+    public VDLtConvert() throws IOException, MissingResourceException {
+        super();
+    }
 
-  /**
-   * Reads VDLt specification and outputs VDLx specification
-   *
-   * @param reader   the vdlt source reader
-   * @param writer   the vdlx taget writer
-   */
-  public void VDLt2VDLx( Reader reader, Writer writer )
-      throws VDLtParserException, VDLtScannerException, IOException
-  {
-      VDLt2VDLx( reader, writer, null, null);
-  }
+    /**
+     * Reads VDLt specification and outputs VDLx specification
+     *
+     * @param reader the vdlt source reader
+     * @param writer the vdlx taget writer
+     */
+    public void VDLt2VDLx(Reader reader, Writer writer)
+            throws VDLtParserException, VDLtScannerException, IOException {
+        VDLt2VDLx(reader, writer, null, null);
+    }
 
-  /**
-   * Reads VDLt specification and outputs VDLx specification
-   *
-   * @param reader   the vdlt source reader
-   * @param writer   the vdlx taget writer
-   * @param namespace  the common vdl namespace for all the definitions included
-   * @param version    the common version number for all the definitions included
-   */
-  public void VDLt2VDLx( Reader reader, Writer writer, String namespace, String version ) 
-      throws VDLtParserException, VDLtScannerException, IOException
-  {
-      VDLtParser parser = new VDLtParser( reader );
+    /**
+     * Reads VDLt specification and outputs VDLx specification
+     *
+     * @param reader the vdlt source reader
+     * @param writer the vdlx taget writer
+     * @param namespace the common vdl namespace for all the definitions included
+     * @param version the common version number for all the definitions included
+     */
+    public void VDLt2VDLx(Reader reader, Writer writer, String namespace, String version)
+            throws VDLtParserException, VDLtScannerException, IOException {
+        VDLtParser parser = new VDLtParser(reader);
 
-      String newline = System.getProperty( "line.separator", "\r\n" );
+        String newline = System.getProperty("line.separator", "\r\n");
 
-      Definitions def = new Definitions();
-      def.setVdlns( namespace );
-      def.setVersion( version );
-      def.writeXMLHeader( writer, "", null );
+        Definitions def = new Definitions();
+        def.setVdlns(namespace);
+        def.setVersion(version);
+        def.writeXMLHeader(writer, "", null);
 
-      do {
-	  Definition d = parser.parseDefinition();
-	  d.toXML( writer, "  " );
-	  if ( m_verbose ) m_logger.log( "directive", 1, d.shortID() );
-      } while ( parser.hasMoreTokens() );
+        do {
+            Definition d = parser.parseDefinition();
+            d.toXML(writer, "  ");
+            if (m_verbose) m_logger.log("directive", 1, d.shortID());
+        } while (parser.hasMoreTokens());
 
-      writer.write( "</definitions>" );
-      writer.write( newline );
-      writer.flush();
-  }
+        writer.write("</definitions>");
+        writer.write(newline);
+        writer.flush();
+    }
 }

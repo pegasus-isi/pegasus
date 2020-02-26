@@ -1,13 +1,10 @@
 package edu.isi.pegasus.common.util;
 
-import java.util.Properties;
-
-import org.junit.Test;
-import org.junit.Before;
-import org.junit.Assert;
-
-import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+import java.util.Properties;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 public class VersionTest {
     private Properties props = new Properties();
@@ -57,23 +54,22 @@ public class VersionTest {
         String plat = ver.getPlatform();
         Assert.assertTrue(plat != null);
     }
-    
+
     @Test
     public void testArchitceture() {
         SysInfo.Architecture arch = ver.getArchitecture();
         Assert.assertTrue(arch != null);
     }
-    
+
     @Test
     public void testOS() {
-        SysInfo.OS  os = ver.getOS();
+        SysInfo.OS os = ver.getOS();
         Assert.assertTrue(os != null);
     }
-    
+
     @Test
     public void testOSReleaese() {
         SysInfo.OS_RELEASE release = ver.getOSRelease();
         Assert.assertTrue(release != null);
     }
 }
-

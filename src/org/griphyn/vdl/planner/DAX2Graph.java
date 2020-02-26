@@ -17,74 +17,66 @@ package org.griphyn.vdl.planner;
 
 import java.util.Iterator;
 import org.griphyn.vdl.dax.*;
-import org.griphyn.vdl.planner.Graph;
 
 /**
- * This class converts a given DAX into the internal representation of a
- * graph.
+ * This class converts a given DAX into the internal representation of a graph.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
- *
- * @see Graph
+ * @see org.griphyn.vdl.planner.Graph
  */
-public class DAX2Graph 
-{
-  /**
-   * Converts a DAX into the internal representation of a graph.
-   *
-   * @param adag is the parsed DAX's internal representation.
-   * @return our internal representation of a graph that we can sort on.
-   */
-  public static Graph DAG2Graph( ADAG adag ) 
-  {
-    Graph result = new Graph();
+public class DAX2Graph {
+    /**
+     * Converts a DAX into the internal representation of a graph.
+     *
+     * @param adag is the parsed DAX's internal representation.
+     * @return our internal representation of a graph that we can sort on.
+     */
+    public static Graph DAG2Graph(ADAG adag) {
+        Graph result = new Graph();
 
-    // add all nodes
-    for ( Iterator i=adag.iterateJob(); i.hasNext(); )
-      result.addVertex( ((Job)i.next()).getID() );
+        // add all nodes
+        for (Iterator i = adag.iterateJob(); i.hasNext(); )
+            result.addVertex(((Job) i.next()).getID());
 
-    // add all edges
-    for ( Iterator i=adag.iterateChild(); i.hasNext(); ) {
-      Child c = (Child) i.next();
-      String child = c.getChild();
-      for ( Iterator j=c.iterateParent(); j.hasNext(); ) {
-	String parent = (String) j.next();
-	result.addArc( parent, child );
-      }
+        // add all edges
+        for (Iterator i = adag.iterateChild(); i.hasNext(); ) {
+            Child c = (Child) i.next();
+            String child = c.getChild();
+            for (Iterator j = c.iterateParent(); j.hasNext(); ) {
+                String parent = (String) j.next();
+                result.addArc(parent, child);
+            }
+        }
+
+        return result;
     }
 
-    return result;
-  }
+    /** Simple test program. */
+    public static void main(String[] args) {
+        // construct a fake diamond DAG as DAX w/o any real transformations.
+        ADAG adag = new ADAG();
+        Job A = new Job();
+        Job B = new Job();
+        Job C = new Job();
+        Job D = new Job();
+        A.setID("A");
+        B.setID("B");
+        C.setID("C");
+        D.setID("D");
+        adag.addJob(A);
+        adag.addJob(B);
+        adag.addJob(C);
+        adag.addJob(D);
+        adag.addChild("C", "A");
+        adag.addChild("C", "B");
+        adag.addChild("D", "C");
 
-  /**
-   * Simple test program.
-   */
-  public static void main(String[] args) 
-  {
-    // construct a fake diamond DAG as DAX w/o any real transformations.
-    ADAG adag = new ADAG();
-    Job A = new Job();
-    Job B = new Job();
-    Job C = new Job();
-    Job D = new Job();
-    A.setID("A");
-    B.setID("B");
-    C.setID("C");
-    D.setID("D");
-    adag.addJob(A);
-    adag.addJob(B);
-    adag.addJob(C);
-    adag.addJob(D);
-    adag.addChild("C","A"); 
-    adag.addChild("C","B"); 
-    adag.addChild("D","C"); 
+        // convert DAX into graph
+        Graph g = DAG2Graph(adag);
 
-    // convert DAX into graph
-    Graph g = DAG2Graph(adag);
-
-    // show
-    System.out.println( g.toString() );
-  }
+        // show
+        System.out.println(g.toString());
+    }
 }

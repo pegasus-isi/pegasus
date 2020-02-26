@@ -21,14 +21,12 @@ package edu.isi.pegasus.planner.parser;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 /**
- *
  * An empty interface for Site Catalog XML parsers
  *
  * @author Karan Vahi
- * @version  $Revision$
+ * @version $Revision$
  */
 public interface SiteCatalogXMLParser {
-
 
     /**
      * Returns the constructed site store object
@@ -36,5 +34,4 @@ public interface SiteCatalogXMLParser {
      * @return <code>SiteStore<code> if parsing completed
      */
     public SiteStore getSiteStore();
-
 }

@@ -15,36 +15,31 @@
 package org.griphyn.vdl.parser;
 
 /**
- * Class to pass the name of a regular identifier from scanner to parser.
- * This class is module-local on purpose.
+ * Class to pass the name of a regular identifier from scanner to parser. This class is module-local
+ * on purpose.
  *
  * @author Jens-S. Vöckler
  * @version $Revision$
- *
  */
-class VDLtIdentifier
-  implements VDLtToken
-{
-  /**
-   * The name of the identifier
-   */
-  private String m_value;
-  
-  /**
-   * Contructs a new identifiert to pass.
-   * @param value is the name of the identifier
-   */
-  public VDLtIdentifier( String value )
-  {
-    this.m_value = value == null ? null : new String(value);
-  }
+class VDLtIdentifier implements VDLtToken {
+    /** The name of the identifier */
+    private String m_value;
 
-  /**
-   * Obtains the current name of the identifier passed.
-   * @return the name of the identifer
-   */
-  public String getValue()
-  {
-    return this.m_value;
-  }
+    /**
+     * Contructs a new identifiert to pass.
+     *
+     * @param value is the name of the identifier
+     */
+    public VDLtIdentifier(String value) {
+        this.m_value = value == null ? null : new String(value);
+    }
+
+    /**
+     * Obtains the current name of the identifier passed.
+     *
+     * @return the name of the identifer
+     */
+    public String getValue() {
+        return this.m_value;
+    }
 }

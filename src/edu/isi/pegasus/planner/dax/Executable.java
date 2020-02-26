@@ -1,92 +1,87 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ * Copyright 2007-2008 University Of Southern California
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing,
- *  software distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package edu.isi.pegasus.planner.dax;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.XMLWriter;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
  * The Transformation Catalog object the represent the entries in the DAX transformation section.
+ *
  * @author gmehta
  * @version $Revision$
  */
 public class Executable extends CatalogType {
 
-    /**
-     * ARCH Types
-     */
+    /** ARCH Types */
     public static enum ARCH {
-
-        X86, x86, X86_64, x86_64, PPC, ppc, PPC_64, ppc_64, IA64, ia64, SPARCV7, sparcv7, SPARCV9, sparcv9
+        X86,
+        x86,
+        X86_64,
+        x86_64,
+        PPC,
+        ppc,
+        PPC_64,
+        ppc_64,
+        IA64,
+        ia64,
+        SPARCV7,
+        sparcv7,
+        SPARCV9,
+        sparcv9
     }
 
-    /**
-     * OS Types
-     */
+    /** OS Types */
     public static enum OS {
-
-        LINUX, linux, SUNOS, sunos, AIX, aix, MACOSX, macosx, WINDOWS, windows
+        LINUX,
+        linux,
+        SUNOS,
+        sunos,
+        AIX,
+        aix,
+        MACOSX,
+        macosx,
+        WINDOWS,
+        windows
     }
-    /**
-     * Namespace of the executable
-     */
+    /** Namespace of the executable */
     protected String mNamespace;
-    /**
-     * Name of the executable
-     */
+    /** Name of the executable */
     protected String mName;
-    /**
-     * Version of the executable
-     */
+    /** Version of the executable */
     protected String mVersion;
-    /**
-     * Architecture the executable is compiled for
-     */
+    /** Architecture the executable is compiled for */
     protected ARCH mArch;
-    /**
-     * Os the executable is compiled for
-     */
+    /** Os the executable is compiled for */
     protected OS mOs;
-    /**
-     * Os release the executable is compiled for
-     */
+    /** Os release the executable is compiled for */
     protected String mOsRelease;
-    /**
-     * OS version the executable is compiled for
-     */
+    /** OS version the executable is compiled for */
     protected String mOsVersion;
-    /**
-     * Glibc the executable is compiled for
-     */
+    /** Glibc the executable is compiled for */
     protected String mGlibc;
-    /**
-     * Flag to mark if the executable is installed or can be staged.
-     */
+    /** Flag to mark if the executable is installed or can be staged. */
     protected boolean mInstalled = true;
-    
-    /**
-     * List of Notification objects
-     */
+
+    /** List of Notification objects */
     protected List<Invoke> mInvokes;
 
     /**
      * Create a new executable
+     *
      * @param name
      */
     public Executable(String name) {
@@ -95,7 +90,8 @@ public class Executable extends CatalogType {
 
     /**
      * Copy Constructor
-     * @param e 
+     *
+     * @param e
      */
     public Executable(Executable e) {
         super(e);
@@ -107,13 +103,13 @@ public class Executable extends CatalogType {
         this.mOsRelease = e.mOsRelease;
         this.mOsVersion = e.mOsVersion;
         this.mGlibc = e.mGlibc;
-	this.mInstalled=e.mInstalled;
+        this.mInstalled = e.mInstalled;
         this.mInvokes = new LinkedList<Invoke>(e.mInvokes);
     }
 
-    
     /**
      * Create a new Executable
+     *
      * @param namespace
      * @param name
      * @param version
@@ -123,11 +119,12 @@ public class Executable extends CatalogType {
         mNamespace = (namespace == null) ? "" : namespace;
         mName = (name == null) ? "" : name;
         mVersion = (version == null) ? "" : version;
-        mInvokes=new LinkedList<Invoke>();
+        mInvokes = new LinkedList<Invoke>();
     }
 
     /**
      * Get the name of the executable
+     *
      * @return
      */
     public String getName() {
@@ -136,6 +133,7 @@ public class Executable extends CatalogType {
 
     /**
      * Get the namespace of the executable
+     *
      * @return
      */
     public String getNamespace() {
@@ -144,6 +142,7 @@ public class Executable extends CatalogType {
 
     /**
      * Get the version of the executable
+     *
      * @return
      */
     public String getVersion() {
@@ -152,24 +151,25 @@ public class Executable extends CatalogType {
 
     /**
      * Return the list of Notification objects
+     *
      * @return List<Invoke>
      */
     public List<Invoke> getInvoke() {
         return mInvokes;
     }
-    
+
     /**
      * Return the list of Notification objects (same as getInvoke)
+     *
      * @return List<Invoke>
      */
     public List<Invoke> getNotification() {
         return getInvoke();
     }
-    
-    
+
     /**
-     * Add a Notification for this Executable
-     * same as addNotification
+     * Add a Notification for this Executable same as addNotification
+     *
      * @param when
      * @param what
      * @return Executable
@@ -181,20 +181,19 @@ public class Executable extends CatalogType {
     }
 
     /**
-     * Add a Notification for this Executable
-     * same as addInvoke
+     * Add a Notification for this Executable same as addInvoke
+     *
      * @param when
      * @param what
      * @return Executable
      */
     public Executable addNotification(Invoke.WHEN when, String what) {
-        return addInvoke(when,what);
+        return addInvoke(when, what);
     }
-    
-    
-   /**
-     * Add a Notification for this Executable
-    * Same as add Notification
+
+    /**
+     * Add a Notification for this Executable Same as add Notification
+     *
      * @param invoke
      * @return Executable
      */
@@ -204,31 +203,31 @@ public class Executable extends CatalogType {
     }
 
     /**
-     * Add a Notification for this Executable
-     * Same as addInvoke
+     * Add a Notification for this Executable Same as addInvoke
+     *
      * @param invoke
      * @return Executable
      */
     public Executable addNotification(Invoke invoke) {
-       return addInvoke(invoke);
+        return addInvoke(invoke);
     }
 
     /**
-     * Add a List of Notifications for this Executable
-     * Same as addNotifications
+     * Add a List of Notifications for this Executable Same as addNotifications
+     *
      * @param invokes
      * @return Executable
      */
     public Executable addInvokes(List<Invoke> invokes) {
-        for (Invoke invoke: invokes){
+        for (Invoke invoke : invokes) {
             this.addInvoke(invoke);
         }
         return this;
     }
 
     /**
-     * Add a List of Notifications for this Executable.
-     * Same as addInvokes
+     * Add a List of Notifications for this Executable. Same as addInvokes
+     *
      * @param invokes
      * @return Executable
      */
@@ -238,6 +237,7 @@ public class Executable extends CatalogType {
 
     /**
      * Set the architecture the executable is compiled for
+     *
      * @param arch
      * @return Executable
      */
@@ -248,6 +248,7 @@ public class Executable extends CatalogType {
 
     /**
      * Set the OS the executable is compiled for
+     *
      * @param os
      * @return
      */
@@ -258,6 +259,7 @@ public class Executable extends CatalogType {
 
     /**
      * Set the osrelease the executable is compiled for
+     *
      * @param osrelease
      * @return
      */
@@ -268,6 +270,7 @@ public class Executable extends CatalogType {
 
     /**
      * Set the osversion the executable is compiled for
+     *
      * @param osversion
      * @return
      */
@@ -278,6 +281,7 @@ public class Executable extends CatalogType {
 
     /**
      * Set the glibc this executable is compiled for
+     *
      * @param glibc
      * @return
      */
@@ -288,6 +292,7 @@ public class Executable extends CatalogType {
 
     /**
      * set the installed flag on the executable. Default is installed
+     *
      * @return
      */
     public Executable setInstalled() {
@@ -297,6 +302,7 @@ public class Executable extends CatalogType {
 
     /**
      * Unset the installed flag on the executable. Default is installed.
+     *
      * @return
      */
     public Executable unsetInstalled() {
@@ -304,9 +310,7 @@ public class Executable extends CatalogType {
         return this;
     }
 
-    /**
-     * Set the installed flag on the executable. Default is installed
-     */
+    /** Set the installed flag on the executable. Default is installed */
     public Executable setInstalled(boolean installed) {
         mInstalled = installed;
         return this;
@@ -314,6 +318,7 @@ public class Executable extends CatalogType {
 
     /**
      * Check if the executable is of type installed.
+     *
      * @return
      */
     public boolean getInstalled() {
@@ -322,6 +327,7 @@ public class Executable extends CatalogType {
 
     /**
      * Get the architecture the Executable is compiled for
+     *
      * @return
      */
     public ARCH getArchitecture() {
@@ -330,6 +336,7 @@ public class Executable extends CatalogType {
 
     /**
      * Get the OS the Executable is compiled for
+     *
      * @return
      */
     public OS getOS() {
@@ -338,6 +345,7 @@ public class Executable extends CatalogType {
 
     /**
      * Get the OS release set for this executable. Returns empty string if not set
+     *
      * @return
      */
     public String getOsRelease() {
@@ -346,6 +354,7 @@ public class Executable extends CatalogType {
 
     /**
      * Get the OS version set for this executable.
+     *
      * @return
      */
     public String getOsVersion() {
@@ -354,17 +363,17 @@ public class Executable extends CatalogType {
 
     /**
      * Get the Glibc version if any set for this file. Returns empty string if not set
+     *
      * @return
      */
     public String getGlibc() {
         return (mGlibc == null) ? "" : mGlibc;
     }
-       
 
-    public boolean isExecutable(){
-        return true;        
+    public boolean isExecutable() {
+        return true;
     }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {
@@ -374,13 +383,17 @@ public class Executable extends CatalogType {
             return false;
         }
         final Executable other = (Executable) obj;
-        if ((this.mNamespace == null) ? (other.mNamespace != null) : !this.mNamespace.equals(other.mNamespace)) {
+        if ((this.mNamespace == null)
+                ? (other.mNamespace != null)
+                : !this.mNamespace.equals(other.mNamespace)) {
             return false;
         }
         if ((this.mName == null) ? (other.mName != null) : !this.mName.equals(other.mName)) {
             return false;
         }
-        if ((this.mVersion == null) ? (other.mVersion != null) : !this.mVersion.equals(other.mVersion)) {
+        if ((this.mVersion == null)
+                ? (other.mVersion != null)
+                : !this.mVersion.equals(other.mVersion)) {
             return false;
         }
         if (this.mArch != other.mArch) {
@@ -389,10 +402,14 @@ public class Executable extends CatalogType {
         if (this.mOs != other.mOs) {
             return false;
         }
-        if ((this.mOsRelease == null) ? (other.mOsRelease != null) : !this.mOsRelease.equals(other.mOsRelease)) {
+        if ((this.mOsRelease == null)
+                ? (other.mOsRelease != null)
+                : !this.mOsRelease.equals(other.mOsRelease)) {
             return false;
         }
-        if ((this.mOsVersion == null) ? (other.mOsVersion != null) : !this.mOsVersion.equals(other.mOsVersion)) {
+        if ((this.mOsVersion == null)
+                ? (other.mOsVersion != null)
+                : !this.mOsVersion.equals(other.mOsVersion)) {
             return false;
         }
         if ((this.mGlibc == null) ? (other.mGlibc != null) : !this.mGlibc.equals(other.mGlibc)) {
@@ -419,11 +436,9 @@ public class Executable extends CatalogType {
         return hash;
     }
 
-        
-    
     @Override
-    public String toString(){
-        return mNamespace+"::"+mName+":"+mVersion;
+    public String toString() {
+        return mNamespace + "::" + mName + ":" + mVersion;
     }
 
     @Override
@@ -434,7 +449,11 @@ public class Executable extends CatalogType {
     @Override
     public void toXML(XMLWriter writer, int indent) {
         if (mProfiles.isEmpty() && mPFNs.isEmpty() && mMetadata.isEmpty()) {
-            mLogger.log("The executable element for " + mName + " must have atleast 1 profile, 1 pfn or 1 metadata entry. Skipping empty executable element", LogManager.WARNING_MESSAGE_LEVEL);
+            mLogger.log(
+                    "The executable element for "
+                            + mName
+                            + " must have atleast 1 profile, 1 pfn or 1 metadata entry. Skipping empty executable element",
+                    LogManager.WARNING_MESSAGE_LEVEL);
         } else {
             writer.startElement("executable", indent);
             if (mNamespace != null && !mNamespace.isEmpty()) {
@@ -466,10 +485,9 @@ public class Executable extends CatalogType {
             }
             super.toXML(writer, indent);
             for (Invoke i : mInvokes) {
-                i.toXML(writer, indent+1);
+                i.toXML(writer, indent + 1);
             }
             writer.endElement(indent);
         }
-
     }
 }

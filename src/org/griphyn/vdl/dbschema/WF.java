@@ -18,46 +18,39 @@ import java.sql.*;
 import org.griphyn.vdl.workflow.*;
 
 /**
- * This common schema interface defines the schemas in which the
- * abstraction layers access the WF database. This layer is independent
- * of the implementing database, and does so by going via the database
- * driver class API.
+ * This common schema interface defines the schemas in which the abstraction layers access the WF
+ * database. This layer is independent of the implementing database, and does so by going via the
+ * database driver class API.
  *
  * @author Jens-S. Vöckler
  * @author Mike Wilde
  * @version $Revision$
  * @see org.griphyn.vdl.dbschema.DatabaseSchema
- * @see org.griphyn.vdl.dbdriver 
+ * @see org.griphyn.vdl.dbdriver
  */
-public interface WF extends Catalog
-{
-  /**
-   * Names the property key prefix employed for schemas dealing with the VDC.
-   */
-  public static final String PROPERTY_PREFIX = "vds.db.wf.schema";
+public interface WF extends Catalog {
+    /** Names the property key prefix employed for schemas dealing with the VDC. */
+    public static final String PROPERTY_PREFIX = "vds.db.wf.schema";
 
-  /**
-   * Determines the primary key of a workflow from the provided tuple
-   * of secondary keys, and instantiates the corresponding workflow.
-   *
-   * @param basedir is the base directory
-   * @param vogroup is the VO group identifier
-   * @param label is the workflow label
-   * @param run is the workflow run directory 
-   * @return the workflow identifier, or -1 if not found.
-   */
-  public abstract WorkEntry
-    getWorkflow( String basedir, String vogroup, String label, String run )
-    throws SQLException;
+    /**
+     * Determines the primary key of a workflow from the provided tuple of secondary keys, and
+     * instantiates the corresponding workflow.
+     *
+     * @param basedir is the base directory
+     * @param vogroup is the VO group identifier
+     * @param label is the workflow label
+     * @param run is the workflow run directory
+     * @return the workflow identifier, or -1 if not found.
+     */
+    public abstract WorkEntry getWorkflow(String basedir, String vogroup, String label, String run)
+            throws SQLException;
 
-  /**
-   * Returns a set of all workflows that are younger than a cut-off time. 
-   * The result may be empty, if no matching workflows exist yet. 
-   *
-   * @param mtime is the oldest permissable last modification time
-   * @return a map of workflows, indexed by their primary key
-   */
-  public abstract java.util.Map
-    getWorkflows( java.util.Date mtime )
-    throws SQLException;
+    /**
+     * Returns a set of all workflows that are younger than a cut-off time. The result may be empty,
+     * if no matching workflows exist yet.
+     *
+     * @param mtime is the oldest permissable last modification time
+     * @return a map of workflows, indexed by their primary key
+     */
+    public abstract java.util.Map getWorkflows(java.util.Date mtime) throws SQLException;
 }

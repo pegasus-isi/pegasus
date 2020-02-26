@@ -15,6 +15,10 @@
  */
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
 import edu.isi.pegasus.common.util.FindExecutable;
@@ -22,32 +26,21 @@ import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-
 import java.io.File;
 import java.io.IOException;
-import java.lang.RuntimeException;
 import java.util.*;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.After;
 
-/**
- *
- * @author Rafael Ferreira da Silva
- */
+/** @author Rafael Ferreira da Silva */
 public class JDBCRCTest {
 
     private TestSetup mTestSetup;
     private LogManager mLogger;
     private JDBCRC jdbcrc = null;
 
-    public JDBCRCTest() {
-    }
+    public JDBCRCTest() {}
 
     @Before
     public void setUp() throws IOException {
@@ -61,31 +54,36 @@ public class JDBCRCTest {
 
         try {
             mTestSetup = new DefaultTestSetup();
-            mLogger = mTestSetup.loadLogger(mTestSetup.loadPropertiesFromFile(".properties", new LinkedList()));
+            mLogger =
+                    mTestSetup.loadLogger(
+                            mTestSetup.loadPropertiesFromFile(".properties", new LinkedList()));
             mLogger.logEventStart("test.pegasus.url", "setup", "0");
 
             Runtime r = Runtime.getRuntime();
             String[] envp = {"PYTHONPATH=" + System.getProperty("externals.python.path")};
             Process p = r.exec(command, envp);
 
-            //spawn off the gobblers with the already initialized default callback
-            StreamGobbler ips
-                    = new StreamGobbler(p.getInputStream(), new DefaultStreamGobblerCallback(
-                            LogManager.CONSOLE_MESSAGE_LEVEL));
-            StreamGobbler eps
-                    = new StreamGobbler(p.getErrorStream(), new DefaultStreamGobblerCallback(
-                            LogManager.ERROR_MESSAGE_LEVEL));
+            // spawn off the gobblers with the already initialized default callback
+            StreamGobbler ips =
+                    new StreamGobbler(
+                            p.getInputStream(),
+                            new DefaultStreamGobblerCallback(LogManager.CONSOLE_MESSAGE_LEVEL));
+            StreamGobbler eps =
+                    new StreamGobbler(
+                            p.getErrorStream(),
+                            new DefaultStreamGobblerCallback(LogManager.ERROR_MESSAGE_LEVEL));
 
             ips.start();
             eps.start();
 
-            //wait for the threads to finish off
+            // wait for the threads to finish off
             ips.join();
             eps.join();
 
             int status = p.waitFor();
             if (status != 0) {
-                throw new RuntimeException("Database creation failed with non zero exit status " + command);
+                throw new RuntimeException(
+                        "Database creation failed with non zero exit status " + command);
             }
 
             Properties props = new Properties();
@@ -96,8 +94,8 @@ public class JDBCRCTest {
             jdbcrc.connect(props);
 
         } catch (IOException ioe) {
-            mLogger.log("IOException while executing " + command, ioe,
-                    LogManager.ERROR_MESSAGE_LEVEL);
+            mLogger.log(
+                    "IOException while executing " + command, ioe, LogManager.ERROR_MESSAGE_LEVEL);
             throw new RuntimeException("IOException while executing " + command, ioe);
         } catch (InterruptedException ie) {
         }
@@ -148,30 +146,40 @@ public class JDBCRCTest {
 
     @Test
     public void deleteSpecificMapping() {
-        HashMap attr = new HashMap() {
-            {
-                put(ReplicaCatalogEntry.RESOURCE_HANDLE, "x");
-                put("name", "value");
-            }
-        };
-        HashMap attr2 = new HashMap() {
-            {
-                put(ReplicaCatalogEntry.RESOURCE_HANDLE, "y");
-                put("name", "value");
-            }
-        };
+        HashMap attr =
+                new HashMap() {
+                    {
+                        put(ReplicaCatalogEntry.RESOURCE_HANDLE, "x");
+                        put("name", "value");
+                    }
+                };
+        HashMap attr2 =
+                new HashMap() {
+                    {
+                        put(ReplicaCatalogEntry.RESOURCE_HANDLE, "y");
+                        put("name", "value");
+                    }
+                };
 
         jdbcrc.insert("a", new ReplicaCatalogEntry("b", attr));
-        jdbcrc.insert("a", new ReplicaCatalogEntry("b", new HashMap() {
-            {
-                put(ReplicaCatalogEntry.RESOURCE_HANDLE, "y");
-            }
-        }));
-        jdbcrc.delete("a", new ReplicaCatalogEntry("b", new HashMap() {
-            {
-                put(ReplicaCatalogEntry.RESOURCE_HANDLE, "x");
-            }
-        }));
+        jdbcrc.insert(
+                "a",
+                new ReplicaCatalogEntry(
+                        "b",
+                        new HashMap() {
+                            {
+                                put(ReplicaCatalogEntry.RESOURCE_HANDLE, "y");
+                            }
+                        }));
+        jdbcrc.delete(
+                "a",
+                new ReplicaCatalogEntry(
+                        "b",
+                        new HashMap() {
+                            {
+                                put(ReplicaCatalogEntry.RESOURCE_HANDLE, "x");
+                            }
+                        }));
 
         Collection<ReplicaCatalogEntry> c = jdbcrc.lookup("a");
         assertTrue(c.contains(new ReplicaCatalogEntry("b", attr)));
@@ -180,11 +188,15 @@ public class JDBCRCTest {
         jdbcrc.delete("a", new ReplicaCatalogEntry("b", attr));
         c = jdbcrc.lookup("a");
         assertFalse(c.contains(new ReplicaCatalogEntry("b", attr)));
-        assertFalse(c.contains(new ReplicaCatalogEntry("b", new HashMap() {
-            {
-                put(ReplicaCatalogEntry.RESOURCE_HANDLE, "x");
-            }
-        })));
+        assertFalse(
+                c.contains(
+                        new ReplicaCatalogEntry(
+                                "b",
+                                new HashMap() {
+                                    {
+                                        put(ReplicaCatalogEntry.RESOURCE_HANDLE, "x");
+                                    }
+                                })));
         assertTrue(c.contains(new ReplicaCatalogEntry("b", attr2)));
 
         jdbcrc.delete("a", new ReplicaCatalogEntry("b", attr2));
@@ -213,12 +225,13 @@ public class JDBCRCTest {
     public void updateToAttributesMap() {
         jdbcrc.insert("a", new ReplicaCatalogEntry("b", "z"));
 
-        HashMap attr = new HashMap() {
-            {
-                put(ReplicaCatalogEntry.RESOURCE_HANDLE, "z");
-                put("key", "value");
-            }
-        };
+        HashMap attr =
+                new HashMap() {
+                    {
+                        put(ReplicaCatalogEntry.RESOURCE_HANDLE, "z");
+                        put("key", "value");
+                    }
+                };
 
         Collection<ReplicaCatalogEntry> c = jdbcrc.lookup("a");
         assertFalse(c.contains(new ReplicaCatalogEntry("b", attr)));

@@ -16,16 +16,14 @@
 
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
-import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
-import edu.isi.pegasus.planner.catalog.replica.impl.Regex;
-import org.junit.*;
+import static org.junit.Assert.*;
 
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
-
-import static org.junit.Assert.*;
+import org.junit.*;
 
 /**
  * Test class to test Regex RC
@@ -37,8 +35,7 @@ public class RegexRCTest {
     private Regex mRegex = null;
     private File mRCFile = null;
 
-    public RegexRCTest() {
-    }
+    public RegexRCTest() {}
 
     @Before
     public void setUp() throws IOException {
@@ -58,7 +55,9 @@ public class RegexRCTest {
     public void lookupWithSubstitutionsTest() {
         HashMap attr = new HashMap();
         attr.put("regex", "true");
-        mRegex.insert("(\\w+)_f[xyz]_(\\d+)\\.sgt.*", new ReplicaCatalogEntry("file://test.isi.edu/scratch/[2]/[1]/[0]", attr));
+        mRegex.insert(
+                "(\\w+)_f[xyz]_(\\d+)\\.sgt.*",
+                new ReplicaCatalogEntry("file://test.isi.edu/scratch/[2]/[1]/[0]", attr));
         Collection<ReplicaCatalogEntry> c = mRegex.lookup("TEST_fy_3810.sgt.md5");
 
         for (ReplicaCatalogEntry x : c) {
@@ -68,23 +67,30 @@ public class RegexRCTest {
         c = mRegex.lookup("TEST_fz_33810.sgt.md5");
 
         for (ReplicaCatalogEntry x : c) {
-            assertEquals("file://test.isi.edu/scratch/33810/TEST/TEST_fz_33810.sgt.md5", x.getPFN());
+            assertEquals(
+                    "file://test.isi.edu/scratch/33810/TEST/TEST_fz_33810.sgt.md5", x.getPFN());
         }
 
         c = mRegex.lookup("TEST_fa_33810.sgt.md5");
         assertEquals(0, c.size());
     }
-    
+
     @Test
     public void lookupWithSubstitutionsTestSummit() {
         HashMap attr = new HashMap();
         attr.put("regex", "true");
         attr.put("pool", "summit");
-        mRegex.insert("(\\w+)_f[xyz]_(\\d+)\\.sgt.*", new ReplicaCatalogEntry("gsiftp://gridftp.ccs.ornl.gov/gpfs/alpine/scratch/callag/geo112/SGT_Storage/[1]/[0]", attr));
+        mRegex.insert(
+                "(\\w+)_f[xyz]_(\\d+)\\.sgt.*",
+                new ReplicaCatalogEntry(
+                        "gsiftp://gridftp.ccs.ornl.gov/gpfs/alpine/scratch/callag/geo112/SGT_Storage/[1]/[0]",
+                        attr));
         Collection<ReplicaCatalogEntry> c = mRegex.lookup("USC_fx_7056.sgt");
 
         for (ReplicaCatalogEntry x : c) {
-            assertEquals("gsiftp://gridftp.ccs.ornl.gov/gpfs/alpine/scratch/callag/geo112/SGT_Storage/USC/USC_fx_7056.sgt", x.getPFN());
+            assertEquals(
+                    "gsiftp://gridftp.ccs.ornl.gov/gpfs/alpine/scratch/callag/geo112/SGT_Storage/USC/USC_fx_7056.sgt",
+                    x.getPFN());
         }
     }
 

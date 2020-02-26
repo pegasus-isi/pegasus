@@ -15,40 +15,28 @@
 package org.griphyn.vdl.classes;
 
 /**
- * This exception is thrown if a <code>Transformation</code>
- * simultaneously displays child elements for a simple transformation
- * and child elements for a compound transformation. A method is not
- * required to declare in its throws clause any subclasses of
- * RuntimeException that might be thrown during the execution of the
- * method but not caught.
+ * This exception is thrown if a <code>Transformation</code> simultaneously displays child elements
+ * for a simple transformation and child elements for a compound transformation. A method is not
+ * required to declare in its throws clause any subclasses of RuntimeException that might be thrown
+ * during the execution of the method but not caught.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
- *
- * @see Transformation 
+ * @see Transformation
  */
-public class IllegalTransformationException
-  extends java.lang.RuntimeException 
-{
-  /**
-   * Constructs a <code>IllegalTransformationException</code> with no
-   * detail message.
-   */
-  public IllegalTransformationException()
-  {
-    super();
-  }
+public class IllegalTransformationException extends java.lang.RuntimeException {
+    /** Constructs a <code>IllegalTransformationException</code> with no detail message. */
+    public IllegalTransformationException() {
+        super();
+    }
 
-  /**
-   * Constructs a <code>IllegalTransformationException</code> with the
-   * specified detailed message.
-   *
-   * @param s is the detailled message.
-   */
-  public IllegalTransformationException( String s )
-  {
-    super(s);
-  }
+    /**
+     * Constructs a <code>IllegalTransformationException</code> with the specified detailed message.
+     *
+     * @param s is the detailled message.
+     */
+    public IllegalTransformationException(String s) {
+        super(s);
+    }
 }
-

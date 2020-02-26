@@ -15,26 +15,22 @@
  */
 package edu.isi.pegasus.planner.cluster;
 
+import static org.junit.Assert.*;
+
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.cluster.Horizontal;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-
-import java.lang.IllegalAccessException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 /**
  * Test class to test runtime clustering
@@ -43,22 +39,18 @@ import static org.junit.Assert.*;
  */
 public class RuntimeClusteringTest {
 
-
     private TestSetup mTestSetup;
     private LogManager mLogger;
     private Horizontal mCluster;
     private Method mBestFitMethod;
 
-    public RuntimeClusteringTest() {
-    }
+    public RuntimeClusteringTest() {}
 
     @BeforeClass
-    public static void setUpClass() {
-    }
+    public static void setUpClass() {}
 
     @AfterClass
-    public static void tearDownClass() {
-    }
+    public static void tearDownClass() {}
 
     @Before
     public void setUp() throws NoSuchMethodException {

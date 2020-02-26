@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<project name="pegasus" default="dist">
+<project name="pegasus" default="dist" xmlns:if="ant:if" xmlns:unless="ant:unless">
   <property environment="env"/>
   <property file="build.properties"/>
   <property file="build.git.properties"/>
@@ -23,6 +23,10 @@
   <property name="dist.doc" location="${dist.dir}/share/doc/pegasus"/>
   <property name="dist.man" location="${dist.data}/man"/>
 
+  <!-- Set property to identify if running in CI mode. -->
+  <property name="CI" value="true" if:set="env.bamboo_buildKey" />
+  <property name="CI" value="false" unless:set="env.bamboo_buildKey" />
+  
   <path id="build.classpath">
     <fileset dir="share/pegasus/java" includes="*.jar"/>
   </path>
@@ -133,6 +137,33 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
   </target>
 
 
+   <!-- Java code format -->
+  <target name="code-format-java" description="Java code format">
+    <fileset id="java.source" dir=".">
+      <include name="src/**/*.java"/>
+      <exclude name="src/**/aws/**/CloudWatchLog.java"/>
+      <include name="test/junit/**/*.java"/>
+    </fileset>
+
+    <pathconvert refid="java.source" property="java.source" pathsep=" " />
+
+    <java jar="${basedir}/release-tools/jars/google-java-format-1.7-all-deps.jar" fork="true" maxmemory="128m" resultproperty="java.format.error">
+      <arg value="--aosp"/>
+      <arg value="--replace" unless:true="${CI}" />
+      <arg line="--set-exit-if-changed --dry-run" if:true="${CI}" />
+      <arg line="${java.source}"/>
+    </java>
+
+    <fail>
+      Invalid Java code format, run `ant code-format-java` and commit the changes to fix the issue.
+      <condition>
+        <not>
+          <equals arg1="${java.format.error}" arg2="0"></equals>
+        </not>
+      </condition>
+    </fail>
+  </target>
+  
   <target name="compile-common" depends="setup" description="Compile common java code">
     <javac destdir="${build.src}" srcdir="src"
            encoding="UTF-8" deprecation="true" debug="true"

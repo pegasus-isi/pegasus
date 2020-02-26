@@ -18,15 +18,14 @@ package org.griphyn.vdl.dax;
 import org.griphyn.vdl.Chimera;
 
 /**
- * This abstract class defines a common base for all DAX JAPI objects.
- * Since all necessary functionality is described in {@link Chimera},
- * this class is empty. It exists for grouping purposes.
+ * This abstract class defines a common base for all DAX JAPI objects. Since all necessary
+ * functionality is described in {@link Chimera}, this class is empty. It exists for grouping
+ * purposes.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
  */
-public abstract class DAX extends Chimera
-{
-  // empty class, existence just for grouping purposes
+public abstract class DAX extends Chimera {
+    // empty class, existence just for grouping purposes
 }

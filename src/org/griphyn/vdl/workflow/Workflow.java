@@ -14,17 +14,14 @@
  */
 package org.griphyn.vdl.workflow;
 
-import org.griphyn.vdl.Chimera;
-
 /**
- * This abstract class defines a common base for all workflow related
- * Java objects. This class is empty. It exists for grouping purposes.
+ * This abstract class defines a common base for all workflow related Java objects. This class is
+ * empty. It exists for grouping purposes.
  *
  * @author Jens-S. Vöckler
  * @author Mike Wilde
  * @version $Revision$
  */
-public interface Workflow
-{
-  // empty class, existence just for grouping purposes
+public interface Workflow {
+    // empty class, existence just for grouping purposes
 }

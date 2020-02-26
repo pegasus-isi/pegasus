@@ -17,7 +17,6 @@ package edu.isi.pegasus.planner.test;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
-import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
@@ -44,8 +43,6 @@ import org.junit.runners.Suite.SuiteClasses;
     edu.isi.pegasus.common.util.VariableExpanderTest.class,
     edu.isi.pegasus.planner.partitioner.graph.CycleCheckerTest.class,
     edu.isi.pegasus.planner.catalog.transformation.classes.ContainerTest.class,
-    edu.isi.pegasus.planner.parser.dax.DAXParser3Test.class 
+    edu.isi.pegasus.planner.parser.dax.DAXParser3Test.class
 })
-public class AllTests {
-}
-
+public class AllTests {}

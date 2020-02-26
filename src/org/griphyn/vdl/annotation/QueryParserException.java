@@ -18,21 +18,19 @@ import java.io.*;
 
 /**
  * This class is used to signal errors while scanning only.
- * @see QueryScanner
  *
+ * @see QueryScanner
  * @author Jens-S. Vöckler
  * @version $Revision$
  */
-public class QueryParserException 
-  extends java.lang.RuntimeException
-{
-  /**
-   * Constructs an exception that will contain the line number.
-   * @param scanner is the lineno stream to obtain the line number from.
-   * @param message is the message to print for the failed parse.
-   */
-  public QueryParserException( QueryScanner scanner, String message )
-  {
-    super("line " + scanner.getLineNumber() + ": " +message);
-  }
+public class QueryParserException extends java.lang.RuntimeException {
+    /**
+     * Constructs an exception that will contain the line number.
+     *
+     * @param scanner is the lineno stream to obtain the line number from.
+     * @param message is the message to print for the failed parse.
+     */
+    public QueryParserException(QueryScanner scanner, String message) {
+        super("line " + scanner.getLineNumber() + ": " + message);
+    }
 }

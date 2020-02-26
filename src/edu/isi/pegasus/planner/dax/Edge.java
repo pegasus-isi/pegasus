@@ -1,47 +1,34 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ * Copyright 2007-2008 University Of Southern California
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing,
- *  software distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package edu.isi.pegasus.planner.dax;
 
 import edu.isi.pegasus.common.util.XMLWriter;
 
 /**
- *
  * @author gmehta
  * @version $Revision: 3009 $
  */
 public class Edge {
 
-    
-    /**
-     * The parent of the child
-     */
+    /** The parent of the child */
     private String mChild;
-    /**
-     * The parent of the parent
-     */
+    /** The parent of the parent */
     private String mParent;
-    /**
-     * The edge label for the parent child relationship. Optional.
-     */
+    /** The edge label for the parent child relationship. Optional. */
     private String mLabel;
 
-    /**
-     *
-     * @param parent
-     */
+    /** @param parent */
     public Edge(String parent, String child) {
         mParent = parent;
         mChild = child;
@@ -52,7 +39,6 @@ public class Edge {
     }
 
     /**
-     *
      * @param parent
      * @param label
      */
@@ -62,45 +48,32 @@ public class Edge {
         mLabel = label;
     }
 
-    /**
-     * @return the parent
-     */
+    /** @return the parent */
     public String getParent() {
         return mParent;
     }
 
-    /**
-     * @param parent the parent of the edge to set
-     */
+    /** @param parent the parent of the edge to set */
     public void setParent(String parent) {
         mParent = parent;
     }
 
-    
-    /**
-     * @return the child of the edge
-     */
+    /** @return the child of the edge */
     public String getChild() {
         return mChild;
     }
 
-    /**
-     * @param parent the child of the edge to set
-     */
+    /** @param parent the child of the edge to set */
     public void setChild(String child) {
         mChild = child;
     }
 
-    /**
-     * @return the label
-     */
+    /** @return the label */
     public String getLabel() {
         return mLabel;
     }
 
-    /**
-     * @param label the label to set
-     */
+    /** @param label the label to set */
     public void setLabel(String label) {
         mLabel = label;
     }
@@ -111,7 +84,9 @@ public class Edge {
 
     @Override
     public int hashCode() {
-        return 31 * mParent.hashCode() + 12 * mChild.hashCode() +  (mLabel==null ? 0 : 29 * mLabel.hashCode());
+        return 31 * mParent.hashCode()
+                + 12 * mChild.hashCode()
+                + (mLabel == null ? 0 : 29 * mLabel.hashCode());
     }
 
     @Override
@@ -122,25 +97,27 @@ public class Edge {
         if (this == o) {
             return true;
         }
-        return mParent.equals(((Edge) o).getParent()) && mChild.equals(((Edge)o).getChild())&& mLabel.equals(((Edge) o).getLabel());
+        return mParent.equals(((Edge) o).getParent())
+                && mChild.equals(((Edge) o).getChild())
+                && mLabel.equals(((Edge) o).getLabel());
     }
 
     @Override
     public String toString() {
-        return "(" + mParent + "->" +(mChild+mLabel == null ? "" : ":" +mLabel) + ')';
+        return "(" + mParent + "->" + (mChild + mLabel == null ? "" : ":" + mLabel) + ')';
     }
 
     public void toXML(XMLWriter writer) {
         toXML(writer, 0);
     }
-    
+
     public void toXMLParent(XMLWriter writer) {
         toXMLParent(writer, 0);
     }
-    
+
     public void toXML(XMLWriter writer, int indent) {
-        writer.startElement("child",indent);
-        writer.startElement("parent", indent+1);
+        writer.startElement("child", indent);
+        writer.startElement("parent", indent + 1);
         writer.writeAttribute("ref", mParent);
         if (mLabel != null && !mLabel.isEmpty()) {
             writer.writeAttribute("edge-label", mLabel);
@@ -148,9 +125,8 @@ public class Edge {
         writer.noLine();
         writer.endElement();
         writer.endElement(indent);
+    }
 
-    }    
-  
     public void toXMLParent(XMLWriter writer, int indent) {
         writer.startElement("parent", indent);
         writer.writeAttribute("ref", mParent);
@@ -158,6 +134,5 @@ public class Edge {
             writer.writeAttribute("edge-label", mLabel);
         }
         writer.endElement();
-
     }
 }

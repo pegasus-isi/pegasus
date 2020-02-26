@@ -15,100 +15,94 @@
  */
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
+import static org.junit.Assert.*;
+
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  * To test the Condor style class for condor code generator.
- * 
+ *
  * @author vahi
  */
 public class CondorGTest {
     private CondorG cs = null;
 
-    public CondorGTest() {
-    }
+    public CondorGTest() {}
 
     @Before
     public void setUp() {
         cs = new CondorG();
     }
-    
+
     @Test
-    public void testPegasusProfileCores() throws CondorStyleException{
+    public void testPegasusProfileCores() throws CondorStyleException {
         Job j = new Job();
-        j.vdsNS.checkKeyInNS(Pegasus.CORES_KEY, "5" );
-        testForKey( j, Globus.COUNT_KEY, "5");
+        j.vdsNS.checkKeyInNS(Pegasus.CORES_KEY, "5");
+        testForKey(j, Globus.COUNT_KEY, "5");
     }
-    
-    
+
     @Test
-    public void testPegasusProfileCoresAndGlobusKey() throws CondorStyleException{
+    public void testPegasusProfileCoresAndGlobusKey() throws CondorStyleException {
         Job j = new Job();
-        j.vdsNS.checkKeyInNS( Pegasus.CORES_KEY, "5" );
-        j.globusRSL.checkKeyInNS( Globus.COUNT_KEY, "6" );
-        testForKey( j, Globus.COUNT_KEY, "6");
+        j.vdsNS.checkKeyInNS(Pegasus.CORES_KEY, "5");
+        j.globusRSL.checkKeyInNS(Globus.COUNT_KEY, "6");
+        testForKey(j, Globus.COUNT_KEY, "6");
     }
-    
+
     @Test
-    public void testPegasusProfileHostCount() throws CondorStyleException{
+    public void testPegasusProfileHostCount() throws CondorStyleException {
         Job j = new Job();
-        j.vdsNS.checkKeyInNS(Pegasus.NODES_KEY, "5" );
-        testForKey( j, Globus.HOST_COUNT_KEY, "5");
+        j.vdsNS.checkKeyInNS(Pegasus.NODES_KEY, "5");
+        testForKey(j, Globus.HOST_COUNT_KEY, "5");
     }
-    
-    
+
     @Test
-    public void testPegasusProfileHostCountAndGlobusKey() throws CondorStyleException{
+    public void testPegasusProfileHostCountAndGlobusKey() throws CondorStyleException {
         Job j = new Job();
-        j.vdsNS.checkKeyInNS(Pegasus.NODES_KEY, "5" );
-        j.globusRSL.checkKeyInNS( Globus.HOST_COUNT_KEY, "6" );
-        testForKey( j, Globus.HOST_COUNT_KEY, "6");
+        j.vdsNS.checkKeyInNS(Pegasus.NODES_KEY, "5");
+        j.globusRSL.checkKeyInNS(Globus.HOST_COUNT_KEY, "6");
+        testForKey(j, Globus.HOST_COUNT_KEY, "6");
     }
-    
+
     @Test
-    public void testPegasusProfileRuntime() throws CondorStyleException{
+    public void testPegasusProfileRuntime() throws CondorStyleException {
         Job j = new Job();
-        //runtime in seconds. walltime in minutes
-        j.vdsNS.checkKeyInNS(Pegasus.RUNTIME_KEY, "5" );
-        testForKey( j, Globus.MAX_WALLTIME_KEY, "1");
+        // runtime in seconds. walltime in minutes
+        j.vdsNS.checkKeyInNS(Pegasus.RUNTIME_KEY, "5");
+        testForKey(j, Globus.MAX_WALLTIME_KEY, "1");
     }
-    
-    
+
     @Test
-    public void testPegasusProfileRuntimeAndGlobusKey() throws CondorStyleException{
+    public void testPegasusProfileRuntimeAndGlobusKey() throws CondorStyleException {
         Job j = new Job();
-        j.vdsNS.checkKeyInNS( Pegasus.RUNTIME_KEY, "5" );
-        j.globusRSL.checkKeyInNS( Globus.MAX_WALLTIME_KEY, "6" );
-        testForKey( j, Globus.MAX_WALLTIME_KEY, "6");
+        j.vdsNS.checkKeyInNS(Pegasus.RUNTIME_KEY, "5");
+        j.globusRSL.checkKeyInNS(Globus.MAX_WALLTIME_KEY, "6");
+        testForKey(j, Globus.MAX_WALLTIME_KEY, "6");
     }
-    
+
     @Test
-    public void testPegasusProfileMemory() throws CondorStyleException{
+    public void testPegasusProfileMemory() throws CondorStyleException {
         Job j = new Job();
-        j.vdsNS.checkKeyInNS( Pegasus.MEMORY_KEY, "5" );
-        testForKey( j, Globus.MAX_MEMORY_KEY, "5");
+        j.vdsNS.checkKeyInNS(Pegasus.MEMORY_KEY, "5");
+        testForKey(j, Globus.MAX_MEMORY_KEY, "5");
     }
-    
-    
+
     @Test
-    public void testPegasusProfileMemoryAndGlobusKey() throws CondorStyleException{
+    public void testPegasusProfileMemoryAndGlobusKey() throws CondorStyleException {
         Job j = new Job();
-        j.vdsNS.checkKeyInNS( Pegasus.MEMORY_KEY, "5" );
-        j.globusRSL.checkKeyInNS( Globus.MAX_MEMORY_KEY, "6" );
-        testForKey( j, Globus.MAX_MEMORY_KEY, "6");
+        j.vdsNS.checkKeyInNS(Pegasus.MEMORY_KEY, "5");
+        j.globusRSL.checkKeyInNS(Globus.MAX_MEMORY_KEY, "6");
+        testForKey(j, Globus.MAX_MEMORY_KEY, "6");
     }
-    
-    
-    
-    private void testForKey(Job j, String key, String expectedValue ) throws CondorStyleException{
+
+    private void testForKey(Job j, String key, String expectedValue) throws CondorStyleException {
         cs.handleResourceRequirements(j);
-        assertTrue( j.globusRSL.containsKey(  key ));
-        assertEquals( expectedValue, j.globusRSL.get(key ) );
+        assertTrue(j.globusRSL.containsKey(key));
+        assertEquals(expectedValue, j.globusRSL.get(key));
     }
 }

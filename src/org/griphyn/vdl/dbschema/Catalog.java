@@ -16,21 +16,18 @@ package org.griphyn.vdl.dbschema;
 
 /**
  * This interface groups different but related catalog subinterfaces.
- * <p>
- * The interface will require implementing classes to provide a constructor
- * that takes one String as only argument. The class may ignore the string
- * for now.
- * <p>
- * Subinterfaces are required to provide a constant PROPERTY_PREFIX. This
- * constant select the pieces of the <tt>vds.db.<i>catalog</i>.schema</tt>
- * property space that corresponds to the appropriate <i>catalog</i>.
- * 
+ *
+ * <p>The interface will require implementing classes to provide a constructor that takes one String
+ * as only argument. The class may ignore the string for now.
+ *
+ * <p>Subinterfaces are required to provide a constant PROPERTY_PREFIX. This constant select the
+ * pieces of the <tt>vds.db.<i>catalog</i>.schema</tt> property space that corresponds to the
+ * appropriate <i>catalog</i>.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
  */
-public interface Catalog
-{
-  // empty
+public interface Catalog {
+    // empty
 }

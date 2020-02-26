@@ -15,15 +15,11 @@
 package org.griphyn.vdl.parser;
 
 /**
- * Class to signal a vertical bar to the parser.
- * This class is module-local on purpose.
+ * Class to signal a vertical bar to the parser. This class is module-local on purpose.
  *
  * @author Jens-S. Vöckler
  * @version $Revision$
- *
  */
-class VDLtVBar
-  implements VDLtToken
-{
-  // empty
+class VDLtVBar implements VDLtToken {
+    // empty
 }

@@ -15,52 +15,50 @@
 
 package org.griphyn.vdl.parser;
 
+import java.io.*;
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.util.*;
-import java.io.*;
 
 /**
- * This class is used to test the <code>VDLxParser</code> class and 
- * the input file index. It parses all the XML documents specified
- * in the commandline, creates the corresponding java objects, and
- * generates an XML document from these objects. It also prints 
- * the input file list if the last definition in the document is 
- * a derivation.
+ * This class is used to test the <code>VDLxParser</code> class and the input file index. It parses
+ * all the XML documents specified in the commandline, creates the corresponding java objects, and
+ * generates an XML document from these objects. It also prints the input file list if the last
+ * definition in the document is a derivation.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
- *
  * @see VDLxParser
  * @see org.griphyn.vdl.classes.Definitions
  * @see org.griphyn.vdl.classes.Derivation
  */
-
 public class VDLxTest {
-  static public void main(String[] args) 
-    throws IOException
-  {
-    if (args.length == 0) {
-      System.err.println( "Usage: java VDLxTest [xmlURI] ..." );
-      return;
-    }
-    // connect debug stream
-    Logging.instance().register( "filler", System.out );
-    Logging.instance().register( "parser", System.out );
-    Logging.instance().register( "app", System.out );
+    public static void main(String[] args) throws IOException {
+        if (args.length == 0) {
+            System.err.println("Usage: java VDLxTest [xmlURI] ...");
+            return;
+        }
+        // connect debug stream
+        Logging.instance().register("filler", System.out);
+        Logging.instance().register("parser", System.out);
+        Logging.instance().register("app", System.out);
 
-    VDLxParser parser = new VDLxParser( System.getProperty("vds.schema.vdl") );
-    for (int i = 0; i < args.length; i++) {
-      Logging.instance().log( "app", 1, "starting to read from " + args[i] );
-      Definitions def = new Definitions();
-      parser.parse( new org.xml.sax.InputSource(new BufferedInputStream(new FileInputStream(args[i]))), 
-		    new MemoryStorage(def,true,true) );
-      Logging.instance().log( "app", 1, "read " + def.getDefinitionCount() + " definitions" );
+        VDLxParser parser = new VDLxParser(System.getProperty("vds.schema.vdl"));
+        for (int i = 0; i < args.length; i++) {
+            Logging.instance().log("app", 1, "starting to read from " + args[i]);
+            Definitions def = new Definitions();
+            parser.parse(
+                    new org.xml.sax.InputSource(
+                            new BufferedInputStream(new FileInputStream(args[i]))),
+                    new MemoryStorage(def, true, true));
+            Logging.instance().log("app", 1, "read " + def.getDefinitionCount() + " definitions");
 
-      String outfn = args[i] + ".xml";
-      Logging.instance().log( "app", 1, "dumping results to " + outfn );
-      def.toXML(new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(outfn))), "");
-      Logging.instance().log( "app", 1, "done dumping results" );
+            String outfn = args[i] + ".xml";
+            Logging.instance().log("app", 1, "dumping results to " + outfn);
+            def.toXML(
+                    new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(outfn))),
+                    "");
+            Logging.instance().log("app", 1, "done dumping results");
+        }
     }
-  }
 }

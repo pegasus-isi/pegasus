@@ -21,128 +21,107 @@ import java.io.IOException;
 import java.io.Writer;
 
 /**
- * The base class to be used by the various visitor implementors
- * for displaying the Site Catalog in different XML formats
+ * The base class to be used by the various visitor implementors for displaying the Site Catalog in
+ * different XML formats
  *
  * @author Karan Vahi
  * @version $Revision$
  */
-public abstract class  AbstractXMLPrintVisitor implements SiteDataVisitor {
+public abstract class AbstractXMLPrintVisitor implements SiteDataVisitor {
 
-
-    
-    /**
-     * The internal writer
-     */
+    /** The internal writer */
     protected Writer mWriter;
 
-    /**
-     * The new line character to be used
-     */
+    /** The new line character to be used */
     protected String mNewLine;
 
-    /**
-     * The number of tabs to use for current indent
-     */
+    /** The number of tabs to use for current indent */
     protected int mCurrentIndentIndex;
 
-   /**
+    /**
      * Initialize the visitor implementation
      *
-     * @param writer  the writer
+     * @param writer the writer
      */
-    public void initialize( Writer writer ){
+    public void initialize(Writer writer) {
         mWriter = writer;
-        mNewLine =  System.getProperty( "line.separator", "\r\n" );
+        mNewLine = System.getProperty("line.separator", "\r\n");
         mCurrentIndentIndex = 0;
     }
 
-  
     /**
-     * Writes an attribute to the stream. Wraps the value in quotes as required
-     * by XML.
+     * Writes an attribute to the stream. Wraps the value in quotes as required by XML.
      *
-     * @param key      the attribute key
-     * @param value    the attribute value
+     * @param key the attribute key
+     * @param value the attribute value
      */
-    public void writeAttribute( String key, String value ) throws IOException {
+    public void writeAttribute(String key, String value) throws IOException {
         this.writeAttribute(mWriter, key, value);
     }
 
-    
     /**
-     * Writes an attribute to the stream. Wraps the value in quotes as required
-     * by XML.
+     * Writes an attribute to the stream. Wraps the value in quotes as required by XML.
      *
-     * @param writer   the stream to write to
-     * @param key      the attribute key
-     * @param value    the attribute value
+     * @param writer the stream to write to
+     * @param key the attribute key
+     * @param value the attribute value
      */
-    public void writeAttribute( Writer writer, String key, String value ) throws IOException {
-        writer.write( " " );
-        writer.write( key );
-        writer.write( "=\"");
-        writer.write( value );
-        writer.write( "\"" );
+    public void writeAttribute(Writer writer, String key, String value) throws IOException {
+        writer.write(" ");
+        writer.write(key);
+        writer.write("=\"");
+        writer.write(value);
+        writer.write("\"");
     }
 
     /**
      * Returns the current indent to be used while writing out
-     * 
-     * @return  the current indent
+     *
+     * @return the current indent
      */
     public String getCurrentIndent() {
         StringBuffer indent = new StringBuffer();
-        for( int i = 0; i < this.mCurrentIndentIndex ; i++ ){
-            indent.append( "\t" );
+        for (int i = 0; i < this.mCurrentIndentIndex; i++) {
+            indent.append("\t");
         }
         return indent.toString();
     }
 
     /**
      * Returns the indent to be used for the nested element.
-     * 
+     *
      * @return the new indent
      */
     public String getNextIndent() {
         return this.getCurrentIndent() + "\t";
     }
 
-    /**
-     * Increments the indent index
-     */
+    /** Increments the indent index */
     public void incrementIndentIndex() {
         mCurrentIndentIndex++;
     }
 
-
-    /**
-     * Decrements the indent index
-     */
+    /** Decrements the indent index */
     public void decrementIndentIndex() {
         mCurrentIndentIndex--;
     }
 
-
     /**
      * Generates a closing tag for an element
      *
-     * @param element  the element tag name
-     *
+     * @param element the element tag name
      * @throws IOException
      */
-    public void closeElement( String element ) throws IOException{
-        //decrement the IndentIndex
+    public void closeElement(String element) throws IOException {
+        // decrement the IndentIndex
         decrementIndentIndex();
         String indent = getCurrentIndent();
-        mWriter.write( indent );
-        mWriter.write( "</" );
-        mWriter.write( element );
-        mWriter.write( ">" );
-        mWriter.write( mNewLine );
+        mWriter.write(indent);
+        mWriter.write("</");
+        mWriter.write(element);
+        mWriter.write(">");
+        mWriter.write(mNewLine);
     }
-
-        
 
     public void visit(SiteData data) throws IOException {
         throw new UnsupportedOperationException("Not supported yet.");
