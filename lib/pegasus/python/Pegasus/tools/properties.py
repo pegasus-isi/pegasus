@@ -10,6 +10,14 @@ before parsing other command-line arguments.
 """
 from __future__ import print_function
 
+import logging
+import os
+import pwd
+import re
+import sys
+import tempfile
+import time
+
 ##
 #  Copyright 2007-2010 University Of Southern California
 #
@@ -28,28 +36,21 @@ from __future__ import print_function
 
 # Revision : $Revision: 2012 $
 
-import os
-import re
-import sys
-import time
-import logging
-import tempfile
-import pwd
 
 # Regular expressions
 re_remove_escapes = re.compile(r"\\(.)")
 re_parse_property = re.compile(r"([^:= \t]+)\s*[:=]?\s*(.*)")
 re_find_subs = re.compile(r"(\$\{([A-Za-z0-9._]+)\})")
 
-re_inline_comments = re.compile("#(.*)$") # not using it right now...
+re_inline_comments = re.compile("#(.*)$")  # not using it right now...
 
-system = {} # System properties
-initial = {} # Command-line properties
+system = {}  # System properties
+initial = {}  # Command-line properties
 
 logger = logging.getLogger(__name__)
 
 # Assemble system properties
-system["file.separator"] = ','
+system["file.separator"] = ","
 if "JAVA_HOME" in os.environ:
     system["java.home"] = os.environ["JAVA_HOME"]
 if "CLASSPATH" in os.environ:
@@ -103,25 +104,30 @@ if len(sys.argv) > 0:
         else:
             # remove -D from this parameter before split
             my_arg = my_arg[2:]
-    
+
         try:
             k, v = my_arg.split("=", 1)
         except:
-            logger.warn("cannot parse command-line option %s... continuing..." % (my_arg))
+            logger.warn(
+                "cannot parse command-line option %s... continuing..." % (my_arg)
+            )
             k = ""
         if len(k):
             if k == "pegasus.properties" or k == "pegasus.user.properties":
-                logger.warn("%s is no longer supported, ignoring, please use --conf!" % (k))
+                logger.warn(
+                    "%s is no longer supported, ignoring, please use --conf!" % (k)
+                )
             else:
                 logger.debug("parsed property %s..." % (my_arg))
                 initial[k] = v
-            #print "key:value = %s:%s" % (k, v)
+            # print "key:value = %s:%s" % (k, v)
 
     # Re-insert program_name
     sys.argv.insert(0, program_name)
 
 # Merge the two, with command-line taking precedence over environmental variables
 system.update(initial)
+
 
 def parse_properties(my_file, hashref={}):
     """
@@ -132,30 +138,32 @@ def parse_properties(my_file, hashref={}):
     # global system contains yet more properties for substitution
     # returns a map of properties, possibly empty
     my_result = {}
-    my_save = ''
+    my_save = ""
 
     if isinstance(my_file, str):
-        my_file = open(my_file, 'r')
+        my_file = open(my_file, "r")
 
     logger.debug("# parsing properties in %s..." % (my_file))
 
     for line in my_file:
         # line will be of type bytes if my_file was opened from a zipfile
         line = line.decode() if isinstance(line, bytes) else line
-        line = line.strip(" \t") # Remove leading and trailing spaces, tabs
-        if line.startswith('!') or line.startswith('#'):
+        line = line.strip(" \t")  # Remove leading and trailing spaces, tabs
+        if line.startswith("!") or line.startswith("#"):
             # Skip comments
             continue
-        line = line.rstrip("\n\r") # Remove new lines, if any
+        line = line.rstrip("\n\r")  # Remove new lines, if any
         # line = re_inline_comments.sub('', line) # Remove inline comments using regular expressions
-        line = line.split('#')[0] # Remove inline comments
-        line = re_remove_escapes.sub(r"\1", line) # replace Java properties escaped special characters #!=:
-        line = line.strip() # Remove all starting and trailing whitespaces
+        line = line.split("#")[0]  # Remove inline comments
+        line = re_remove_escapes.sub(
+            r"\1", line
+        )  # replace Java properties escaped special characters #!=:
+        line = line.strip()  # Remove all starting and trailing whitespaces
         # Skip empty lines
         if len(line) == 0:
             continue
 
-        if line[-1] == '\\':
+        if line[-1] == "\\":
             # Continuation line
             line = line[:-1]
             my_save += line
@@ -163,7 +171,7 @@ def parse_properties(my_file, hashref={}):
             # Regular line
             if my_save != "":
                 # Append current line to previous line(s) and process
-                my_save+= line
+                my_save += line
                 line = my_save
                 my_save = ""
             logger.trace("#Property being parsed is # %s" % (line))
@@ -184,12 +192,12 @@ def parse_properties(my_file, hashref={}):
                     elif subs.group(1) in system:
                         my_newval = system[subs.group(1)]
                     else:
-                        my_newval = ''
+                        my_newval = ""
 
                     # Make substitution
-                    new_v = v[:subs.start(1)]
+                    new_v = v[: subs.start(1)]
                     new_v += my_newval
-                    new_v += v[subs.end(1):]
+                    new_v += v[subs.end(1) :]
                     v = new_v
                     # Search again, and loop
                     subs = re_find_subs.search(v)
@@ -203,12 +211,11 @@ def parse_properties(my_file, hashref={}):
     my_file.close()
     return my_result
 
-class Properties:
 
+class Properties:
     def __init__(self, props=None):
         # Initialize class variables
         self.m_config = props or {}
-
 
     def __delitem__(self, key):
         """
@@ -240,7 +247,9 @@ class Properties:
                 my_config.update(parse_properties(config_file))
                 my_already_loaded = True
             else:
-                logger.warn("cannot access properties file %s... continuing..." % (config_file))
+                logger.warn(
+                    "cannot access properties file %s... continuing..." % (config_file)
+                )
 
         # Second, try rundir_propfile
         if not my_already_loaded and rundir_propfile is not None:
@@ -249,14 +258,21 @@ class Properties:
                 my_config.update(parse_properties(rundir_propfile))
                 my_already_loaded = True
             else:
-                logger.warn("cannot access properties file %s... continuing..." % (rundir_propfile))
+                logger.warn(
+                    "cannot access properties file %s... continuing..."
+                    % (rundir_propfile)
+                )
 
         # Last chance, look for $(HOME)/.pegasusrc
         if not my_already_loaded:
             if "user.home" in system:
                 my_user_propfile = os.path.join(system["user.home"], ".pegasusrc")
-                if os.path.isfile(my_user_propfile) and os.access(my_user_propfile, os.R_OK):
-                    logger.debug("processing properties file %s... " % (my_user_propfile))
+                if os.path.isfile(my_user_propfile) and os.access(
+                    my_user_propfile, os.R_OK
+                ):
+                    logger.debug(
+                        "processing properties file %s... " % (my_user_propfile)
+                    )
                     my_config.update(parse_properties(my_user_propfile))
                     my_already_loaded = True
                 else:
@@ -330,7 +346,7 @@ class Properties:
             if my_key.startswith(prefix):
                 if remove:
                     # Remove prefix from my_key
-                    my_newkey = my_key[len(prefix):]
+                    my_newkey = my_key[len(prefix) :]
                 else:
                     # Keep my_key as it is
                     my_newkey = my_key
@@ -340,7 +356,7 @@ class Properties:
 
         return my_result
 
-    def dump(self, fn='-'):
+    def dump(self, fn="-"):
         """
         Prints the key set in property format
         Param: fn is the name of the file to print to, defaults to stdout
@@ -348,11 +364,11 @@ class Properties:
         """
         my_count = 0
 
-        if fn == '-':
+        if fn == "-":
             my_file = sys.stdout
         else:
             try:
-                my_file = open(fn, 'w')
+                my_file = open(fn, "w")
             except:
                 logger.warn("error opening %s !" % (fn))
                 return None
@@ -365,7 +381,7 @@ class Properties:
             my_count = my_count + 1
 
         # Close file if not stdout
-        if fn != '-':
+        if fn != "-":
             my_file.close()
 
         return my_count
@@ -376,7 +392,8 @@ class Properties:
         :return:
         """
         return self.m_config.__str__()
-    
+
+
 if __name__ == "__main__":
     a = Properties()
     a.new()

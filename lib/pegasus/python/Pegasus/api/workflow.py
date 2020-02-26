@@ -4,8 +4,6 @@ from enum import Enum
 from functools import wraps
 from uuid import uuid4
 
-from Pegasus.client._client import from_env
-
 from ._utils import _chained, _get_enum_str
 from .errors import DuplicateError, NotFoundError
 from .mixins import HookMixin, MetadataMixin, ProfileMixin
@@ -13,6 +11,8 @@ from .replica_catalog import File, ReplicaCatalog
 from .site_catalog import SiteCatalog
 from .transformation_catalog import Transformation, TransformationCatalog
 from .writable import Writable, _CustomEncoder, _filter_out_nones
+
+from Pegasus.client._client import from_env
 
 PEGASUS_VERSION = "5.0"
 

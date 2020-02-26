@@ -2,7 +2,7 @@
 
 import logging
 import re
-import shutil 
+import shutil
 import subprocess
 from functools import partial
 from os import path
@@ -191,7 +191,7 @@ class Client(object):
             return
 
         # pegasus-plan produces slightly different output based on the presence
-        # of the --submit flag, therefore we need to search for 
+        # of the --submit flag, therefore we need to search for
         # pegasus-(run|remove) to get the submit directory
         pattern = re.compile(r"pegasus-(run|remove)\s*(.*)$")
 
@@ -209,7 +209,6 @@ class Workflow(object):
         self._client = None
         self._submit_dir = submit_dir
         self.client = client or from_env()
-        
 
         self.run = None
         self.status = None

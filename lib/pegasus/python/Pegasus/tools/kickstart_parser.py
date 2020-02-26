@@ -6,6 +6,18 @@ Pegasus utility functions for pasing a kickstart output file and return wanted i
 """
 from __future__ import print_function
 
+import logging
+import re
+import sys
+import traceback
+from pprint import pprint
+from xml.parsers import expat
+
+import yaml
+import yaml.constructor
+
+from Pegasus.monitoring.metadata import FileMetadata
+
 ##
 #  Copyright 2007-2010 University Of Southern California
 #
@@ -24,21 +36,9 @@ from __future__ import print_function
 
 # Revision : $Revision: 2012 $
 
-# Import Python modules
-
-from xml.parsers import expat
-from Pegasus.monitoring.metadata import FileMetadata
-from pprint import pprint
-from datetime import datetime
-
-import re
-import sys
-import logging
-import traceback
-import yaml
-import yaml.constructor
-yaml.constructor.SafeConstructor.yaml_constructors[u'tag:yaml.org,2002:timestamp'] = \
-    yaml.constructor.SafeConstructor.yaml_constructors[u'tag:yaml.org,2002:str']
+yaml.constructor.SafeConstructor.yaml_constructors[
+    "tag:yaml.org,2002:timestamp"
+] = yaml.constructor.SafeConstructor.yaml_constructors["tag:yaml.org,2002:str"]
 
 # Regular expressions used in the kickstart parser
 re_parse_props = re.compile(r'(\S+)\s*=\s*([^",]+)')
@@ -64,7 +64,6 @@ class Parser(object):
         self._fh = None
         self._open_error = False
         self._parser = None
-
 
     def open(self):
         """
@@ -93,8 +92,7 @@ class Parser(object):
 
         return True
 
-
-    def is_invocation_record(self, buffer=''):
+    def is_invocation_record(self, buffer=""):
         """
         Returns True if buffer contains an invocation record either xml or invocation
         """
@@ -105,32 +103,35 @@ class Parser(object):
                 return False
         return True
 
-    def is_multipart_record(self, buffer=''):
+    def is_multipart_record(self, buffer=""):
         """
         Returns True if buffer contains an invocation record either xml or invocation
         """
         if self.is_invocation_record(buffer):
             return False
         else:
-            return buffer.find( "- " ) == 0
+            return buffer.find("- ") == 0
 
-    def is_task_record(self, buffer=''):
+    def is_task_record(self, buffer=""):
         """
         Returns True if buffer contains a task record.
         """
-        if ( buffer.find("[seqexec-task") != -1 or buffer.find( "[cluster-task" ) != -1 ):
+        if buffer.find("[seqexec-task") != -1 or buffer.find("[cluster-task") != -1:
             return True
         return False
 
-    def is_clustered_record(self, buffer=''):
+    def is_clustered_record(self, buffer=""):
         """
         Returns True if buffer contains a clustered record.
         """
-        if ( buffer.find("[seqexec-summary") != -1 or buffer.find( "[cluster-summary" ) != -1):
+        if (
+            buffer.find("[seqexec-summary") != -1
+            or buffer.find("[cluster-summary") != -1
+        ):
             return True
         return False
 
-    def parse_clustered_record(self, buffer=''):
+    def parse_clustered_record(self, buffer=""):
         """
         Parses the clustered record in buffer, returning all found keys
         """
@@ -153,7 +154,7 @@ class Parser(object):
 
         return self._keys
 
-    def parse_task_record(self, buffer=''):
+    def parse_task_record(self, buffer=""):
         """
         Parses the task record in buffer, returning all found keys
         """
@@ -176,7 +177,6 @@ class Parser(object):
 
         return self._keys
 
-
     def parse(self, keys_dict, tasks=True, clustered=True):
         """
         This function parses the kickstart output file, looking for
@@ -195,7 +195,10 @@ class Parser(object):
         if self.open() == False:
             return my_reply
 
-        logger.debug( "Started reading records from kickstart file %s" %(self._kickstart_output_file))
+        logger.debug(
+            "Started reading records from kickstart file %s"
+            % (self._kickstart_output_file)
+        )
 
         # load the appropriate parser by checking for first instance of xml header or invocation
         yaml_parser = True
@@ -208,10 +211,13 @@ class Parser(object):
                 break
 
         self.close()
-        self._parser = YAMLParser(self._kickstart_output_file) if yaml_parser else  XMLParser(self._kickstart_output_file)
+        self._parser = (
+            YAMLParser(self._kickstart_output_file)
+            if yaml_parser
+            else XMLParser(self._kickstart_output_file)
+        )
 
         return self._parser.parse(keys_dict, tasks, clustered)
-
 
     def parse_stampede(self):
         """
@@ -221,23 +227,36 @@ class Parser(object):
         schema.
         """
 
-        stampede_elements = {"invocation": ["hostname", "resource", "user", "hostaddr", "transformation", "derivation"],
-                             "mainjob": ["duration", "start"],
-                             "usage": ["utime", "stime"],
-                             "ram": ["total"],
-                             "uname": ["system", "release", "machine"],
-                             "file": ["name"],
-                             "status": ["raw"],
-                             "signalled": ["signal", "corefile", "action"], #action is the char data in signalled element
-                             "regular": ["exitcode"],
-                             "argument-vector": [],
-                             "cwd": [],
-                             "stdout": [],
-                             "stderr": [],
-                             "statinfo": ["lfn", "size", "ctime", "user" ],
-                             "checksum": ["type", "value", "timing"],
-                             "type": ["type", "value"],
-                             "cpu": ["count", "speed", "vendor"]}
+        stampede_elements = {
+            "invocation": [
+                "hostname",
+                "resource",
+                "user",
+                "hostaddr",
+                "transformation",
+                "derivation",
+            ],
+            "mainjob": ["duration", "start"],
+            "usage": ["utime", "stime"],
+            "ram": ["total"],
+            "uname": ["system", "release", "machine"],
+            "file": ["name"],
+            "status": ["raw"],
+            "signalled": [
+                "signal",
+                "corefile",
+                "action",
+            ],  # action is the char data in signalled element
+            "regular": ["exitcode"],
+            "argument-vector": [],
+            "cwd": [],
+            "stdout": [],
+            "stderr": [],
+            "statinfo": ["lfn", "size", "ctime", "user"],
+            "checksum": ["type", "value", "timing"],
+            "type": ["type", "value"],
+            "cpu": ["count", "speed", "vendor"],
+        }
 
         return self.parse(stampede_elements, tasks=True, clustered=True)
 
@@ -247,19 +266,21 @@ class Parser(object):
         It returns an array containing the output for each task in a job.
         """
 
-        stdout_stderr_elements = {"invocation": ["hostname", "resource", "derivation", "transformation"],
-                                  "file": ["name"],
-                                  "regular": ["exitcode"],
-                                  "failure": ["error"],
-                                  "argument-vector": [],
-                                  "cwd": [],
-                                  "stdout": [],
-                                  "stderr": []}
+        stdout_stderr_elements = {
+            "invocation": ["hostname", "resource", "derivation", "transformation"],
+            "file": ["name"],
+            "regular": ["exitcode"],
+            "failure": ["error"],
+            "argument-vector": [],
+            "cwd": [],
+            "stdout": [],
+            "stderr": [],
+        }
 
         return self.parse(stdout_stderr_elements, tasks=False, clustered=False)
 
 
-class YAMLParser( Parser ):
+class YAMLParser(Parser):
     """
     Represents the parser that parses the kickstart xml records
     """
@@ -286,7 +307,10 @@ class YAMLParser( Parser ):
         if self.open() == False:
             return my_reply
 
-        logger.debug("Started reading records from kickstart file %s" % (self._kickstart_output_file))
+        logger.debug(
+            "Started reading records from kickstart file %s"
+            % (self._kickstart_output_file)
+        )
 
         self._record_number = 0
         # Read first record
@@ -294,14 +318,16 @@ class YAMLParser( Parser ):
 
         # Loop while we still have record to read
         while record is not None:
-            logger.trace( "Record is \n%s" %record)
+            logger.trace("Record is \n%s" % record)
             if self.is_invocation_record(record) == True:
                 # We have an invocation record, parse it!
                 try:
                     my_record = self.parse_invocation_record(record)
                 except:
-                    logger.warning("KICKSTART-PARSE-ERROR --> error parsing YAML invocation record in file %s"
-                                   % (self._kickstart_output_file))
+                    logger.warning(
+                        "KICKSTART-PARSE-ERROR --> error parsing YAML invocation record in file %s"
+                        % (self._kickstart_output_file)
+                    )
                     logger.warning(traceback.format_exc())
                     # Found error parsing this file, return empty reply
                     my_reply = []
@@ -320,7 +346,9 @@ class YAMLParser( Parser ):
                     # We have a clustered record, parse it!
                     my_reply.append(self.parse_task_record(record))
             elif self.is_multipart_record(record) == True:
-                logger.debug("Multipart Record in file %s" %( self._kickstart_output_file))
+                logger.debug(
+                    "Multipart Record in file %s" % (self._kickstart_output_file)
+                )
                 # can return multiple yaml snippets
                 my_records = self.parse_multipart_record(record)
                 for record in my_records:
@@ -356,7 +384,10 @@ class YAMLParser( Parser ):
         if self.open() == False:
             return my_reply
 
-        logger.debug("Started reading records from kickstart file %s" % (self._kickstart_output_file))
+        logger.debug(
+            "Started reading records from kickstart file %s"
+            % (self._kickstart_output_file)
+        )
 
         # read the whole file
         raw = self._fh.read()
@@ -369,7 +400,7 @@ class YAMLParser( Parser ):
 
         buffer = ""
         for line in raw.splitlines(True):
-            if (line.find("[cluster-task") == 0):
+            if line.find("[cluster-task") == 0:
                 # parse the current kickstart record
                 payload = self.parse_invocation_record(buffer)
                 if payload:
@@ -379,13 +410,15 @@ class YAMLParser( Parser ):
                 if tasks:
                     # We have a clustered record, parse it!
                     data.append(self.parse_task_record(line))
-            elif (line.find("[cluster-summary") == 0):
+            elif line.find("[cluster-summary") == 0:
                 # Check if we want clustered records too
                 if clustered:
                     # Clustered records are seqexec summary records for clustered jobs
                     # We have a clustered record, parse it!
                     data.append(self.parse_clustered_record(line))
-            elif line.find("---------------pegasus-multipart") == 0 : #or line[0] not in [" ", "-", "\n"]:
+            elif (
+                line.find("---------------pegasus-multipart") == 0
+            ):  # or line[0] not in [" ", "-", "\n"]:
                 # we have a buffer we want to parse
                 if buffer.count("\n") < 3:
                     # ignore "short" buffers
@@ -394,7 +427,10 @@ class YAMLParser( Parser ):
 
                 # FIXME
                 if buffer.find("- invocation:") != 0:
-                    logger.error("I don't know how to handle the following in file %s:\n%s" %(self._kickstart_output_file, buffer))
+                    logger.error(
+                        "I don't know how to handle the following in file %s:\n%s"
+                        % (self._kickstart_output_file, buffer)
+                    )
                     buffer = ""
                     continue
 
@@ -410,10 +446,13 @@ class YAMLParser( Parser ):
         if buffer.count("\n") > 3:
             # ignore "short" buffers
             # parse the current kickstart record
-               
+
             # FIXME
             if buffer.find("- invocation:") != 0:
-                logger.error("I don't know how to handle the following in file %s:\n%s" %(self._kickstart_output_file, buffer))
+                logger.error(
+                    "I don't know how to handle the following in file %s:\n%s"
+                    % (self._kickstart_output_file, buffer)
+                )
                 buffer = ""
             else:
                 payload = self.parse_invocation_record(buffer)
@@ -432,42 +471,45 @@ class YAMLParser( Parser ):
         """
         buffer = ""
 
-        #valid token that is parsed
+        # valid token that is parsed
         token = ""
 
         self._record_number += 1
-        logger.trace("Started reading record number %d from kickstart file %s" %( self._record_number, self._kickstart_output_file))
+        logger.trace(
+            "Started reading record number %d from kickstart file %s"
+            % (self._record_number, self._kickstart_output_file)
+        )
 
         # First, we find the beginning <invocation xmlns....
         while True:
             line = self._fh.readline()
-            if line == '':
+            if line == "":
                 # End of file, record not found
                 return None
             if line.find("- invocation:") != -1:
                 token = "- invocation:"
                 break
-            if ( line.find("[cluster-task") != -1 ):
+            if line.find("[cluster-task") != -1:
                 token = "[cluster-task"
                 break
-            if ( line.find("[cluster-summary") != -1 ):
+            if line.find("[cluster-summary") != -1:
                 token = "[cluster-summary"
                 break
-            if ( line.find("[seqexec-task") != -1 ):
-                #deprecated token
+            if line.find("[seqexec-task") != -1:
+                # deprecated token
                 token = "[seqexec-task"
                 break
-            if ( line.find("[seqexec-summary") != -1 ):
-                #deprecated token
+            if line.find("[seqexec-summary") != -1:
+                # deprecated token
                 token = "[seqexec-summary"
                 break
-            if line.find("---------------pegasus-multipart") == 0 :
+            if line.find("---------------pegasus-multipart") == 0:
                 # token
                 token = "pegasus-multipart"
-                break;
+                break
 
         # Found something!
-        if token == "- invocation:" :
+        if token == "- invocation:":
             # Found invocation record
             start = line.find("- invocation:")
             buffer = line[start:]
@@ -486,11 +528,14 @@ class YAMLParser( Parser ):
                 return buffer[:end]
 
             # clustered record should be in a single line!
-            logger.warning("%s: %s line is malformed... ignoring it..." % (self._kickstart_output_file, token ))
+            logger.warning(
+                "%s: %s line is malformed... ignoring it..."
+                % (self._kickstart_output_file, token)
+            )
             return ""
         elif token == "[cluster-task" or token == "[seqexec-task":
             # Found line with task information
-            start = line.find( token )
+            start = line.find(token)
             buffer = line[start:]
             end = buffer.find("]")
 
@@ -499,7 +544,10 @@ class YAMLParser( Parser ):
                 return buffer[:end]
 
             # task record should be in a single line!
-            logger.warning("%s: %s line is malformed... ignoring it..." % (self._kickstart_output_file, token))
+            logger.warning(
+                "%s: %s line is malformed... ignoring it..."
+                % (self._kickstart_output_file, token)
+            )
             return ""
         else:
             return ""
@@ -510,21 +558,30 @@ class YAMLParser( Parser ):
         while True:
             file_ptr = self._fh.tell()
             line = self._fh.readline()
-            if line == '':
+            if line == "":
                 # End of file
                 break
 
-            if line.find("[cluster-") == 0 or line.find("---------------pegasus-multipart") == 0:
+            if (
+                line.find("[cluster-") == 0
+                or line.find("---------------pegasus-multipart") == 0
+            ):
                 # this is to trigger end of parsing of a single kickstart record
-                logger.debug( "Hit end of invocation record in file %s: " %self._kickstart_output_file)
+                logger.debug(
+                    "Hit end of invocation record in file %s: "
+                    % self._kickstart_output_file
+                )
                 # back track file pointer
                 self._fh.seek(file_ptr)
                 break
             elif line[0] in [" ", "-", "\n"]:
-                buffer.append( line )
+                buffer.append(line)
 
         record = "".join(buffer)
-        logger.trace("Finished reading record number %d from kickstart file %s" %( self._record_number, self._kickstart_output_file))
+        logger.trace(
+            "Finished reading record number %d from kickstart file %s"
+            % (self._record_number, self._kickstart_output_file)
+        )
         return record
 
     def dicts_remap(self, src, src_keys, dst, dst_keys):
@@ -558,30 +615,31 @@ class YAMLParser( Parser ):
         #  "file": ["name"]
 
         # new format -> old format
-        my_map = [ [ ["hostname"],                               ["hostname"] ],
-                   [ ["resource"],                               ["resource"] ],
-                   [ ["user"],                                   ["user"] ],
-                   [ ["hostaddr"],                               ["hostaddr"] ],
-                   [ ["transformation"],                         ["transformation"] ],
-                   [ ["derivation"],                             ["derivation"] ],
-                   [ ["mainjob", "duration"],                    ["duration"] ] ,
-                   [ ["mainjob", "start"],                       ["start"] ] ,
-                   [ ["usage", "utime"],                         ["utime"] ] ,
-                   [ ["usage", "stime"],                         ["stime"] ] ,
-                   [ ["machine", "ram_total"],                   ["ram"] ] ,
-                   [ ["machine", "uname_system"],                ["system"] ] ,
-                   [ ["machine", "uname_release"],               ["release"] ] ,
-                   [ ["machine", "uname_machine"],               ["machine"] ] ,
-                   [ ["mainjob", "executable", "file_name"],     ["name"] ] ,
-                   [ ["mainjob", "status", "raw"],               ["raw"] ] ,
-                   [ ["mainjob", "status", "signalled_signal"],  ["signal"] ] ,
-                   [ ["mainjob", "status", "signalled_name"],    ["action"] ] ,
-                   [ ["mainjob", "status", "corefile"],          ["corefile"] ] ,
-                   [ ["mainjob", "status", "regular_exitcode"],  ["exitcode"] ] ,
-                   [ ["cwd"],                                    ["cwd"] ] ,
-                   [ ["files", "stdout", "data"],                ["stdout"] ] ,
-                   [ ["files", "stderr", "data"],                ["stderr"] ] ]
-
+        my_map = [
+            [["hostname"], ["hostname"]],
+            [["resource"], ["resource"]],
+            [["user"], ["user"]],
+            [["hostaddr"], ["hostaddr"]],
+            [["transformation"], ["transformation"]],
+            [["derivation"], ["derivation"]],
+            [["mainjob", "duration"], ["duration"]],
+            [["mainjob", "start"], ["start"]],
+            [["usage", "utime"], ["utime"]],
+            [["usage", "stime"], ["stime"]],
+            [["machine", "ram_total"], ["ram"]],
+            [["machine", "uname_system"], ["system"]],
+            [["machine", "uname_release"], ["release"]],
+            [["machine", "uname_machine"], ["machine"]],
+            [["mainjob", "executable", "file_name"], ["name"]],
+            [["mainjob", "status", "raw"], ["raw"]],
+            [["mainjob", "status", "signalled_signal"], ["signal"]],
+            [["mainjob", "status", "signalled_name"], ["action"]],
+            [["mainjob", "status", "corefile"], ["corefile"]],
+            [["mainjob", "status", "regular_exitcode"], ["exitcode"]],
+            [["cwd"], ["cwd"]],
+            [["files", "stdout", "data"], ["stdout"]],
+            [["files", "stderr", "data"], ["stderr"]],
+        ]
 
         #        stampede_elements = {"invocation": ["hostname", "resource", "user", "hostaddr", "transformation", "derivation"],
         #                             "mainjob": ["duration", "start"],
@@ -601,7 +659,7 @@ class YAMLParser( Parser ):
         #                             "type": ["type", "value"]}
 
         new_data = {}
-        new_data['invocation'] = True
+        new_data["invocation"] = True
         new_data["checksum"] = {}
         new_data["outputs"] = {}
         for mapping in my_map:
@@ -620,36 +678,38 @@ class YAMLParser( Parser ):
                 """
                 add whatever 4.9 attributes are
                   {
-                    "_type": "file", 
-                    "_id": "f.b2", 
+                    "_type": "file",
+                    "_id": "f.b2",
                     "_attributes": {
-                      "ctime": "2019-02-19T16:42:52-08:00", 
-                      "checksum.timing": "0.144", 
-                      "user": "vahi", 
-                      "checksum.type": "sha256", 
-                      "checksum.value": "4a77bee20a28a446506ef7531ffc038053f52e5211d93a95fe5193746af8d23a", 
+                      "ctime": "2019-02-19T16:42:52-08:00",
+                      "checksum.timing": "0.144",
+                      "user": "vahi",
+                      "checksum.type": "sha256",
+                      "checksum.value": "4a77bee20a28a446506ef7531ffc038053f52e5211d93a95fe5193746af8d23a",
                       "size": "123"
                     }
-                  }, 
+                  },
                 """
                 if "user" in data["files"][lfn]:
-                    meta.add_attribute("user",str(file_data["user"]))
+                    meta.add_attribute("user", str(file_data["user"]))
                 if "size" in data["files"][lfn]:
-                    meta.add_attribute("size",str(file_data["size"]))
+                    meta.add_attribute("size", str(file_data["size"]))
                 if "ctime" in data["files"][lfn]:
                     meta.add_attribute("ctime", file_data["ctime"])
                 if "sha256" in data["files"][lfn]:
                     meta.add_attribute("checksum.type", "sha256")
                     meta.add_attribute("checksum.value", file_data["sha256"])
                     if "checksum_timing" in data["files"][lfn]:
-                        meta.add_attribute("checksum.timing", str(file_data["checksum_timing"]))
+                        meta.add_attribute(
+                            "checksum.timing", str(file_data["checksum_timing"])
+                        )
                 # what else?
 
                 new_data["outputs"][lfn] = meta
 
         return new_data
 
-    def parse_invocation_record(self, buffer=''):
+    def parse_invocation_record(self, buffer=""):
         """
         Parses the YAML record in buffer returning an invocation record
         :param buffer:
@@ -664,13 +724,15 @@ class YAMLParser( Parser ):
         try:
             entry = yaml.safe_load(buffer)[0]
         except Exception as e:
-            logger.warning("KICKSTART-PARSE-ERROR --> yaml error in %s : %s"
-                           % (self._kickstart_output_file, str(e)))
+            logger.warning(
+                "KICKSTART-PARSE-ERROR --> yaml error in %s : %s"
+                % (self._kickstart_output_file, str(e))
+            )
 
         # translate from the yaml dict structure to what we want using the keys-dict
         return self.map_yaml_to_ver2_format(entry)
 
-    def parse_multipart_record(self, buffer=''):
+    def parse_multipart_record(self, buffer=""):
         """
         Parses the YAML record in buffer returning a multipart record in the job.out file
         Sample buffer
@@ -692,17 +754,17 @@ class YAMLParser( Parser ):
         try:
             entries = yaml.safe_load(buffer)
         except Exception as e:
-            logger.warning("KICKSTART-PARSE-ERROR --> yaml error in multipart record %s : %s"
-                           % (self._kickstart_output_file, str(e)))
+            logger.warning(
+                "KICKSTART-PARSE-ERROR --> yaml error in multipart record %s : %s"
+                % (self._kickstart_output_file, str(e))
+            )
 
         for index, entry in enumerate(entries):
             entries[index]["multipart"] = True
         return entries
 
 
-
-
-class XMLParser( Parser ):
+class XMLParser(Parser):
     """
     Represents the parser that parses the kickstart xml records
     """
@@ -726,7 +788,6 @@ class XMLParser( Parser ):
         self._cwd = ""
         self._lfn = ""  # filename parsed from statcall record
 
-
     def parse(self, keys_dict, tasks=True, clustered=True):
         """
         This function parses the previous XML based ks records,
@@ -746,7 +807,10 @@ class XMLParser( Parser ):
         if self.open() == False:
             return my_reply
 
-        logger.debug( "Started reading records from kickstart file %s" %(self._kickstart_output_file))
+        logger.debug(
+            "Started reading records from kickstart file %s"
+            % (self._kickstart_output_file)
+        )
 
         self._record_number = 0
         # Read first record
@@ -759,8 +823,10 @@ class XMLParser( Parser ):
                 try:
                     my_record = self.parse_invocation_record(my_buffer)
                 except:
-                    logger.warning("KICKSTART-PARSE-ERROR --> error parsing invocation record in file %s"
-                                   % (self._kickstart_output_file))
+                    logger.warning(
+                        "KICKSTART-PARSE-ERROR --> error parsing invocation record in file %s"
+                        % (self._kickstart_output_file)
+                    )
                     logger.warning(traceback.format_exc())
                     # Found error parsing this file, return empty reply
                     my_reply = []
@@ -791,7 +857,7 @@ class XMLParser( Parser ):
 
         return my_reply
 
-    def parse_invocation_record(self, buffer=''):
+    def parse_invocation_record(self, buffer=""):
         """
         Parses the xml record in buffer, returning the desired keys.
         """
@@ -828,7 +894,7 @@ class XMLParser( Parser ):
         self._my_parser.CharacterDataHandler = self.char_data
 
         # Parse everything!
-        output = self._my_parser.Parse(buffer)
+        self._my_parser.Parse(buffer)
 
         # Add cwd, arguments, stdout, and stderr to keys
         if "cwd" in self._ks_elements:
@@ -854,39 +920,42 @@ class XMLParser( Parser ):
         """
         buffer = ""
 
-        #valid token that is parsed
+        # valid token that is parsed
         token = ""
 
         self._record_number += 1
-        logger.trace("Started reading record number %d from kickstart file %s" %( self._record_number, self._kickstart_output_file))
+        logger.trace(
+            "Started reading record number %d from kickstart file %s"
+            % (self._record_number, self._kickstart_output_file)
+        )
 
         # First, we find the beginning <invocation xmlns....
         while True:
             line = self._fh.readline()
-            if line == '':
+            if line == "":
                 # End of file, record not found
                 return None
             if line.find("<invocation") != -1:
                 token = "<invocation"
                 break
-            if ( line.find("[cluster-task") != -1 ):
+            if line.find("[cluster-task") != -1:
                 token = "[cluster-task"
                 break
-            if ( line.find("[cluster-summary") != -1 ):
+            if line.find("[cluster-summary") != -1:
                 token = "[cluster-summary"
                 break
-            if ( line.find("[seqexec-task") != -1 ):
-                #deprecated token
+            if line.find("[seqexec-task") != -1:
+                # deprecated token
                 token = "[seqexec-task"
                 break
-            if ( line.find("[seqexec-summary") != -1 ):
-                #deprecated token
+            if line.find("[seqexec-summary") != -1:
+                # deprecated token
                 token = "[seqexec-summary"
                 break
 
         # Found something!
-        #if line.find("<invocation") >= 0:
-        if token == "<invocation" :
+        # if line.find("<invocation") >= 0:
+        if token == "<invocation":
             # Found invocation record
             start = line.find("<invocation")
             buffer = line[start:]
@@ -896,8 +965,8 @@ class XMLParser( Parser ):
             if end >= 0:
                 end = end + len("</invocation>")
                 return buffer[:end]
-        #elif line.find("[seqexec-summary") >= 0:
-        elif ( token == "[cluster-summary" or token == "[seqexec-summary" ):
+        # elif line.find("[seqexec-summary") >= 0:
+        elif token == "[cluster-summary" or token == "[seqexec-summary":
             # Found line with cluster jobs summary
             start = line.find(token)
             buffer = line[start:]
@@ -908,12 +977,15 @@ class XMLParser( Parser ):
                 return buffer[:end]
 
             # clustered record should be in a single line!
-            logger.warning("%s: %s line is malformed... ignoring it..." % (self._kickstart_output_file, token ))
+            logger.warning(
+                "%s: %s line is malformed... ignoring it..."
+                % (self._kickstart_output_file, token)
+            )
             return ""
-        #elif line.find("[seqexec-task") >= 0:
-        elif ( token == "[cluster-task" or token == "[seqexec-task" ):
+        # elif line.find("[seqexec-task") >= 0:
+        elif token == "[cluster-task" or token == "[seqexec-task":
             # Found line with task information
-            start = line.find( token )
+            start = line.find(token)
             buffer = line[start:]
             end = buffer.find("]")
 
@@ -922,7 +994,10 @@ class XMLParser( Parser ):
                 return buffer[:end]
 
             # task record should be in a single line!
-            logger.warning("%s: %s line is malformed... ignoring it..." % (self._kickstart_output_file, token))
+            logger.warning(
+                "%s: %s line is malformed... ignoring it..."
+                % (self._kickstart_output_file, token)
+            )
             return ""
         else:
             return ""
@@ -932,11 +1007,11 @@ class XMLParser( Parser ):
 
         while True:
             line = self._fh.readline()
-            if line == '':
+            if line == "":
                 # End of file, record not found
                 return None
-            #buffer = buffer + line
-            buffer.append( line )
+            # buffer = buffer + line
+            buffer.append(line)
             if line.find("</invocation>") >= 0:
                 break
 
@@ -945,13 +1020,14 @@ class XMLParser( Parser ):
         if end == -1:
             return ""
 
-
-        #end = end + len("</invocation>")
+        # end = end + len("</invocation>")
         invocation = "".join(buffer)
-        logger.trace("Finished reading record number %d from kickstart file %s" %( self._record_number, self._kickstart_output_file))
+        logger.trace(
+            "Finished reading record number %d from kickstart file %s"
+            % (self._record_number, self._kickstart_output_file)
+        )
         return invocation
-        #return buffer[:end]
-
+        # return buffer[:end]
 
     def start_element(self, name, attrs):
         """
@@ -963,9 +1039,14 @@ class XMLParser( Parser ):
         if name == "machine":
             self._parsing_machine = True
         # Keep track if we are inside one of the job elements
-        if (name == "setup" or name == "prejob" or
-            name == "mainjob" or name == "postjob" or name == "cleanup"):
-                self._parsing_job_element = True
+        if (
+            name == "setup"
+            or name == "prejob"
+            or name == "mainjob"
+            or name == "postjob"
+            or name == "cleanup"
+        ):
+            self._parsing_job_element = True
         if name == "argument-vector" and name in self._ks_elements:
             # Start parsing arguments
             self._parsing_arguments = True
@@ -977,9 +1058,9 @@ class XMLParser( Parser ):
             self._keys[name] = {}
             for attr_name in self._ks_elements[name]:
                 if attr_name in attrs:
-                    self._keys[ name ] [attr_name] = attrs[attr_name]
+                    self._keys[name][attr_name] = attrs[attr_name]
         elif name == "cpu" and name in self._ks_elements:
-            #PM-1398 <cpu count="4" speed="2600" vendor="GenuineIntel">Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz</cpu>
+            # PM-1398 <cpu count="4" speed="2600" vendor="GenuineIntel">Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz</cpu>
             self._parsing_cpu = True
             self._keys[name] = {}
             for attr_name in self._ks_elements[name]:
@@ -990,7 +1071,7 @@ class XMLParser( Parser ):
             # Start parsing data for stdout and stderr output
             self._parsing_data = True
         elif name == "file" and name in self._ks_elements:
-            if self._parsing_main_job == True :
+            if self._parsing_main_job == True:
                 # Special case for name inside the mainjob element (will change this later)
                 for my_element in self._ks_elements[name]:
                     if my_element in attrs:
@@ -1009,9 +1090,9 @@ class XMLParser( Parser ):
                         self._keys[my_element] = attrs[my_element]
         elif name == "signalled":
             # PM-1109 grab the attributes we are interested in
-            self._keys[ name ] = {} #a dictionary indexed by attributes
+            self._keys[name] = {}  # a dictionary indexed by attributes
             self._parsing_signalled = True
-            self._keys[ name ]["action"] = "" #grabbed later in char data
+            self._keys[name]["action"] = ""  # grabbed later in char data
             for attr in attrs:
                 if attr in self._ks_elements[name]:
                     self._keys[name][attr] = attrs[attr]
@@ -1021,7 +1102,7 @@ class XMLParser( Parser ):
                     self._parsing_stdout = True
                 elif attrs["id"] == "stderr" and "stderr" in self._ks_elements:
                     self._parsing_stderr = True
-                elif attrs["id"] == "final" :
+                elif attrs["id"] == "final":
                     self._parsing_final_statcall = True
                     self._lfn = attrs["lfn"]
         elif name == "statinfo":
@@ -1029,13 +1110,16 @@ class XMLParser( Parser ):
                 statinfo = FileMetadata()
                 for my_element in self._ks_elements[name]:
                     if my_element in attrs:
-                        statinfo.add_attribute( my_element, attrs[my_element])
+                        statinfo.add_attribute(my_element, attrs[my_element])
                 if "outputs" not in self._keys:
-                    self._keys[ "outputs" ] = {} #a dictionary indexed by lfn
+                    self._keys["outputs"] = {}  # a dictionary indexed by lfn
                 lfn = self._lfn
-                statinfo.set_id( lfn )
+                statinfo.set_id(lfn)
                 if lfn is None or not statinfo:
-                    logger.warning( "Malformed/Empty stat record for output lfn %s %s"  %(lfn, statinfo))
+                    logger.warning(
+                        "Malformed/Empty stat record for output lfn %s %s"
+                        % (lfn, statinfo)
+                    )
                 self._keys["outputs"][lfn] = statinfo
         elif name == "usage" and name in self._ks_elements:
             if self._parsing_job_element:
@@ -1044,14 +1128,20 @@ class XMLParser( Parser ):
                     if my_element in attrs:
                         if my_element in self._keys:
                             try:
-                                self._keys[my_element] = self._keys[my_element] + float(attrs[my_element])
+                                self._keys[my_element] = self._keys[my_element] + float(
+                                    attrs[my_element]
+                                )
                             except ValueError:
-                                logger.warning("cannot convert element %s to float!" % (my_element))
+                                logger.warning(
+                                    "cannot convert element %s to float!" % (my_element)
+                                )
                         else:
                             try:
                                 self._keys[my_element] = float(attrs[my_element])
                             except ValueError:
-                                logger.warning("cannot convert element %s to float!" % (my_element))
+                                logger.warning(
+                                    "cannot convert element %s to float!" % (my_element)
+                                )
         else:
             # For all other elements, check if we want them
             if name in self._ks_elements:
@@ -1089,17 +1179,24 @@ class XMLParser( Parser ):
                     statinfo = self._keys["outputs"][self._lfn]
                     if "checksum" in self._keys:
                         for key in self._keys["checksum"]:
-                            statinfo.add_attribute( "checksum." + key, self._keys["checksum"][key])
-                        self._keys[ "checksum" ] = {}
+                            statinfo.add_attribute(
+                                "checksum." + key, self._keys["checksum"][key]
+                            )
+                        self._keys["checksum"] = {}
 
         elif name == "data":
             self._parsing_data = False
         # Now, see if we left one of the job elements
-        if (name == "setup" or name == "prejob" or
-            name == "mainjob" or name == "postjob" or name == "cleanup"):
-                self._parsing_job_element = False
+        if (
+            name == "setup"
+            or name == "prejob"
+            or name == "mainjob"
+            or name == "postjob"
+            or name == "cleanup"
+        ):
+            self._parsing_job_element = False
 
-    def char_data(self, data=''):
+    def char_data(self, data=""):
         """
         Function called by the parser whenever there's character data in an element
         """
@@ -1108,7 +1205,7 @@ class XMLParser( Parser ):
 
         if self._parsing_cpu == True:
             if "cpu_model" not in self._keys["cpu"]:
-                self._keys["cpu"]["cpu_model"] = ''
+                self._keys["cpu"]["cpu_model"] = ""
             self._keys["cpu"]["cpu_model"] += data
 
         elif self._parsing_arguments == True:
@@ -1122,7 +1219,6 @@ class XMLParser( Parser ):
 
         elif self._parsing_signalled == True:
             self._keys["signalled"]["action"] += data
-
 
 
 if __name__ == "__main__":
@@ -1150,4 +1246,3 @@ if __name__ == "__main__":
     # Print output
     for record in output:
         pprint(record)
-

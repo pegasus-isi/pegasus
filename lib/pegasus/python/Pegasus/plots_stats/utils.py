@@ -171,7 +171,7 @@ def format_seconds(duration, max_comp=2):
     comp = 0
     if duration is None:
         return "-"
-    milliseconds = math.modf(duration)[0]
+    math.modf(duration)[0]
     sec = int(duration)
     formatted_duration = ""
     years = sec // 31536000
@@ -241,7 +241,6 @@ def get_workflow_wall_time(workflow_states_list):
     workflow_wall_time = None
     workflow_start_event_count = 0
     workflow_end_event_count = 0
-    is_end = False
     workflow_start_cum = 0
     workflow_end_cum = 0
     for workflow_state in workflow_states_list:
