@@ -231,7 +231,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         self.metadata = dict()
 
     def _get_key(self):
-        return (self.name, self.namespace, self.version)
+        return "{}::{}::{}".format(self.namespace, self.name, self.version)
 
     @_chained
     def add_site(self, transformation_site):
@@ -277,7 +277,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         if isinstance(required_transformation, Transformation):
             key = required_transformation._get_key()
         elif isinstance(required_transformation, str):
-            key = (required_transformation, namespace, version)
+            key = "{}::{}::{}".format(namespace, required_transformation, version)
         else:
             raise TypeError(
                 "invalid required_transformation: {required_transformation}; required_transformation must be of type Transformation or str".format(
@@ -301,7 +301,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
                 "namespace": self.namespace,
                 "name": self.name,
                 "version": self.version,
-                "requires": [req[0] for req in self.requires]
+                "requires": [req for req in self.requires]
                 if len(self.requires) > 0
                 else None,
                 "sites": [site for _, site in self.sites.items()],

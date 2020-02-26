@@ -12,16 +12,14 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-__author__ = 'Rajiv Mayani'
+__author__ = "Rajiv Mayani"
 
 from flask import Blueprint
 
-monitoring_routes = Blueprint('monitoring_routes', __name__)
+monitoring_routes = Blueprint("monitoring_routes", __name__)
 
-from Pegasus.service.monitoring import views, errors
+from Pegasus.service.monitoring import views, errors  # isort:skip
 
 from Pegasus.service import app
 
-app.register_blueprint(
-    monitoring_routes, url_prefix='/api/v1/user/<string:username>'
-)
+app.register_blueprint(monitoring_routes, url_prefix="/api/v1/user/<string:username>")

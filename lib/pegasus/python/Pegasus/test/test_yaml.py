@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+
+from pathlib import Path
+
 import pytest
 
 from Pegasus.yaml import dumps, loads
@@ -26,6 +30,8 @@ def test_loads(s, expected):
         ({"key": "2018-10-10"}, "key: '2018-10-10'\n"),
         ({"key": "yes"}, "key: 'yes'\n"),
         ({"key": True}, "key: true\n"),
+        ({"key": Path("./aaa")}, "key: aaa\n"),
+        ({"key": Path("../aaa")}, "key: ../aaa\n"),
     ],
 )
 def test_dumps(obj, expected):

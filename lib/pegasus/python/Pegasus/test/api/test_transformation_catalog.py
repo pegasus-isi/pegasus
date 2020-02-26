@@ -209,10 +209,10 @@ class TestTransformation:
         ],
     )
     def test_get_key(self, transformation):
-        assert transformation._get_key() == (
-            transformation.name,
+        assert transformation._get_key() == "{}::{}::{}".format(
             transformation.namespace,
-            transformation.version,
+            transformation.name,
+            transformation.version
         )
 
     def test_add_site(self):
@@ -242,7 +242,7 @@ class TestTransformation:
         required_transformation_name = "required"
         t.add_requirement(required_transformation_name)
 
-        assert (required_transformation_name, None, None) in t.requires
+        assert "None::required::None" in t.requires
 
     def test_add_requirement_as_transformation_object(self):
         t = Transformation("test")
@@ -266,7 +266,7 @@ class TestTransformation:
         with pytest.raises(DuplicateError) as e:
             t.add_requirement(required)
 
-        assert "transformation: ('required', None, None)" in str(e)
+        assert "transformation: None::required::None" in str(e)
 
     def test_add_duplicate_requirement_as_transformation_object(self):
         t = Transformation("test")
@@ -276,9 +276,7 @@ class TestTransformation:
         with pytest.raises(DuplicateError) as e:
             t.add_requirement(required)
 
-        assert "transformation: {r}".format(
-            r=(required.name, required.namespace, required.version)
-        ) in str(e)
+        assert "transformation: None::required::None" in str(e)
 
     def test_chaining(self):
         t = (
@@ -293,7 +291,7 @@ class TestTransformation:
 
         assert "local" in t.sites
         assert t.sites["local"].profiles["env"]["JAVA_HOME"] == "/java/home"
-        assert ("required", None, None) in t.requires
+        assert "None::required::None" in t.requires
 
     def test_tojson_without_profiles_hooks_metadata(
         self, convert_yaml_schemas_to_json, load_schema
@@ -306,7 +304,7 @@ class TestTransformation:
         expected = {
             "name": "test",
             "namespace": "pegasus",
-            "requires": ["required"],
+            "requires": ["None::required::None"],
             "sites": [{"name": "local", "pfn": "/pfn", "type": "stageable"}],
         }
 
@@ -333,7 +331,7 @@ class TestTransformation:
         expected = {
             "name": "test",
             "namespace": "pegasus",
-            "requires": ["required"],
+            "requires": ["None::required::None"],
             "sites": [
                 {
                     "name": "local",
@@ -403,7 +401,7 @@ class TestTransformationCatalog:
         tc = TransformationCatalog()
         tc.add_transformations(Transformation("test"))
 
-        assert ("test", None, None) in tc.transformations
+        assert "None::test::None" in tc.transformations
         assert len(tc.transformations) == 1
 
     def test_add_multiple_transformations(self):
@@ -415,9 +413,9 @@ class TestTransformationCatalog:
 
         tc.add_transformations(t1, t2, t3)
 
-        assert ("name", None, None) in tc.transformations
-        assert ("name", "namespace", None) in tc.transformations
-        assert ("name", "namespace", "version") in tc.transformations
+        assert "None::name::None" in tc.transformations
+        assert "namespace::name::None" in tc.transformations
+        assert "namespace::name::version" in tc.transformations
         assert len(tc.transformations) == 3
 
     def test_add_duplicate_transformation(self):
@@ -469,8 +467,8 @@ class TestTransformationCatalog:
             )
         )
 
-        assert ("t1", None, None) in tc.transformations
-        assert ("t2", None, None) in tc.transformations
+        assert "None::t1::None" in tc.transformations
+        assert "None::t2::None" in tc.transformations
         assert "container1" in tc.containers
         assert "container2" in tc.containers
 

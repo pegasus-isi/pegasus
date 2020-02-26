@@ -12,5 +12,5 @@ if os.path.isfile(conf):
     emapp.config.from_pyfile(conf)
 del conf
 
-from Pegasus.service.ensembles import api, views, auth
+from Pegasus.service.ensembles import api, views, auth  # isort:skip
 
