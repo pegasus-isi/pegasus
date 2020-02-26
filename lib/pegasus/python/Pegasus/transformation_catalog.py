@@ -121,7 +121,7 @@ def _to_tc(d: dict) -> TransformationCatalog:
         return tc
 
     except KeyError:
-        raise PegasusError("error parsing {}".format(tc))
+        raise PegasusError("error parsing {}".format(d))
 
 def load(fp: TextIO, *args, **kwargs) -> TransformationCatalog:
     """
@@ -130,7 +130,7 @@ def load(fp: TextIO, *args, **kwargs) -> TransformationCatalog:
     :param fp: file like object to load from 
     :type fp: TextIO
     :return: deserialized TransformationCatalog object
-    :rtype: ReplicaCTransformationCatalogatalog
+    :rtype: TransformationCatalog
     """
     return _to_tc(yaml.load(fp))
 
