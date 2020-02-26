@@ -170,6 +170,11 @@ project:
                   description: Pare Test Report
                   testResultsDirectory: pegasus-source/lib/pegasus/python/test-reports/*.xml
                   pickUpTestResultsCreatedOutsideOfBuild: false
+              artifactDefinitions:
+                - name: HTML Coverage Report
+                  copyPattern: '*'
+                  location: pegasus-source/lib/pegasus/python/htmlcov/
+                  isShared: false
               artifactDependencies:
                 - name: pegasus-source
               requirements:
@@ -267,6 +272,11 @@ project:
                   description: Pare Test Report
                   testResultsDirectory: pegasus-source/lib/pegasus/python/test-reports/*.xml
                   pickUpTestResultsCreatedOutsideOfBuild: false
+              artifactDefinitions:
+                - name: HTML Coverage Report
+                  copyPattern: '*'
+                  location: pegasus-source/lib/pegasus/python/htmlcov/
+                  isShared: false
               artifactDependencies:
                 - name: pegasus-source
               requirements:
@@ -483,6 +493,11 @@ project:
                   description: Pare Test Report
                   testResultsDirectory: pegasus-source/lib/pegasus/python/test-reports/*.xml
                   pickUpTestResultsCreatedOutsideOfBuild: false
+              artifactDefinitions:
+                - name: HTML Coverage Report
+                  copyPattern: '*'
+                  location: pegasus-source/lib/pegasus/python/htmlcov/
+                  isShared: false
               artifactDependencies:
                 - name: pegasus-source
               requirements:
@@ -580,6 +595,11 @@ project:
                   description: Pare Test Report
                   testResultsDirectory: pegasus-source/lib/pegasus/python/test-reports/*.xml
                   pickUpTestResultsCreatedOutsideOfBuild: false
+              artifactDefinitions:
+                - name: HTML Coverage Report
+                  copyPattern: '*'
+                  location: pegasus-source/lib/pegasus/python/htmlcov/
+                  isShared: false
               artifactDependencies:
                 - name: pegasus-source
               requirements:
@@ -678,6 +698,11 @@ project:
                   description: Pare Test Report
                   testResultsDirectory: pegasus-source/lib/pegasus/python/test-reports/*.xml
                   pickUpTestResultsCreatedOutsideOfBuild: false
+              artifactDefinitions:
+                - name: HTML Coverage Report
+                  copyPattern: '*'
+                  location: pegasus-source/lib/pegasus/python/htmlcov/
+                  isShared: false
               artifactDependencies:
                 - name: pegasus-source
               requirements:
@@ -776,6 +801,11 @@ project:
                   description: Pare Test Report
                   testResultsDirectory: pegasus-source/lib/pegasus/python/test-reports/*.xml
                   pickUpTestResultsCreatedOutsideOfBuild: false
+              artifactDefinitions:
+                - name: HTML Coverage Report
+                  copyPattern: '*'
+                  location: pegasus-source/lib/pegasus/python/htmlcov/
+                  isShared: false
               artifactDependencies:
                 - name: pegasus-source
               requirements:
