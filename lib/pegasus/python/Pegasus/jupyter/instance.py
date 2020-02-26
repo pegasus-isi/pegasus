@@ -18,9 +18,10 @@ from __future__ import print_function
 
 import os
 import subprocess
-import sys
 import time
 from datetime import datetime
+
+from future import standard_library
 
 from Pegasus.catalogs.replica_catalog import *
 from Pegasus.catalogs.sites_catalog import *
@@ -28,18 +29,18 @@ from Pegasus.catalogs.transformation_catalog import *
 from Pegasus.DAX3 import *
 from Pegasus.init import *
 
-from future import standard_library
 standard_library.install_aliases()
 
-__author__ = 'Rafael Ferreira da Silva'
+__author__ = "Rafael Ferreira da Silva"
 
 
 class Cleanup:
     """
     """
-    LEAF = 'leaf'
-    INPLACE = 'inplace'
-    CONSTRAINT = 'constraint'
+
+    LEAF = "leaf"
+    INPLACE = "inplace"
+    CONSTRAINT = "constraint"
 
 
 class Instance:
@@ -50,7 +51,7 @@ class Instance:
         replica_catalog=None,
         transformation_catalog=None,
         workflow_dir=None,
-        input_dir=None
+        input_dir=None,
     ):
         """
         Create an object of the Instance class to run a Pegasus workflow.
@@ -77,14 +78,14 @@ class Instance:
         self._transformation_catalog = transformation_catalog
         self._properties = {
             # basic pegasus properties
-            'pegasus.data.configuration': 'condorio'
+            "pegasus.data.configuration": "condorio"
         }
 
     def tutorial(
         self,
         env=TutorialEnv.LOCAL_MACHINE,
         example=TutorialExample.SPLIT,
-        workflow_dir=None
+        workflow_dir=None,
     ):
         """
         Generate a Pegasus tutorial workflow.
@@ -94,20 +95,20 @@ class Instance:
         """
         if not env:
             raise Exception(
-                'An environment option should be provided (e.g., TutorialEnv.LOCAL_MACHINE).'
+                "An environment option should be provided (e.g., TutorialEnv.LOCAL_MACHINE)."
             )
         if not example:
             raise Exception(
-                'A tutorial workflow should be provided (e.g., TutorialExample.SPLIT).'
+                "A tutorial workflow should be provided (e.g., TutorialExample.SPLIT)."
             )
 
         shared_dir = None
         try:
-            out = subprocess.getoutput('pegasus-config --python-dump')
-            for line in out.split('\n'):
-                if 'pegasus_share_dir' in line:
-                    pegasus_shared_dir = line.split('=')[1].strip()[1:-1]
-                    shared_dir = os.path.join(pegasus_shared_dir, 'init')
+            out = subprocess.getoutput("pegasus-config --python-dump")
+            for line in out.split("\n"):
+                if "pegasus_share_dir" in line:
+                    pegasus_shared_dir = line.split("=")[1].strip()[1:-1]
+                    shared_dir = os.path.join(pegasus_shared_dir, "init")
                     break
 
         except subprocess.CalledProcessError as grepexc:
@@ -116,9 +117,8 @@ class Instance:
         # generate workflow folder
         if not workflow_dir:
             d = datetime.now()
-            workflow_dir = '-'.join(
-                [example[1], env[1],
-                 d.replace(microsecond=0).isoformat()]
+            workflow_dir = "-".join(
+                [example[1], env[1], d.replace(microsecond=0).isoformat()]
             )
         workflow_dir = os.path.abspath(workflow_dir)
 
@@ -132,9 +132,7 @@ class Instance:
 
         # checks
         if example == TutorialExample.DIAMOND and env != TutorialEnv.OSG_FROM_ISI:
-            raise Exception(
-                'The "diamond" workflow can only run on OSG sites.'
-            )
+            raise Exception('The "diamond" workflow can only run on OSG sites.')
         if example == TutorialExample.MPI and env != TutorialEnv.BLUEWATERS_GLITE:
             raise Exception(
                 'The "MPI Hello World" workflow can only run on Bluewaters.'
@@ -146,11 +144,11 @@ class Instance:
 
         # generate DAX
         out, err = subprocess.Popen(
-            './generate_dax.sh %s.dax' % self.workflow.tutorial,
+            "./generate_dax.sh %s.dax" % self.workflow.tutorial,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             shell=True,
-            cwd=self.base_dir
+            cwd=self.base_dir,
         ).communicate()
         if err:
             raise Exception(err)
@@ -165,14 +163,12 @@ class Instance:
         :param value: Property value
         """
         if not key:
-            raise Exception('A key should be provided.')
+            raise Exception("A key should be provided.")
         if not value:
-            raise Exception('A value should be provided.')
+            raise Exception("A value should be provided.")
         self._properties[key] = value
 
-    def run(
-        self, submit=True, cleanup=Cleanup.INPLACE, site='local', force=False
-    ):
+    def run(self, submit=True, cleanup=Cleanup.INPLACE, site="local", force=False):
         """
         The main method, which is used to run a Pegasus workflow.
         :param submit: Plan and submit the executable workflow generated (default: True)
@@ -180,25 +176,23 @@ class Instance:
         :param site: The sitename of the workflow 
         :param force: Skip reduction of the workflow, resulting in build style dag (default: False)
         """
-        if not self._is_tutorial and (
-            not self.dax or not isinstance(self.dax, ADAG)
-        ):
-            raise Exception('Invalid DAX object')
+        if not self._is_tutorial and (not self.dax or not isinstance(self.dax, ADAG)):
+            raise Exception("Invalid DAX object")
 
         if not self.base_dir:
-            self.base_dir = os.path.abspath('./' + self.dax.name)
+            self.base_dir = os.path.abspath("./" + self.dax.name)
         if not os.path.exists(self.base_dir):
             os.makedirs(self.base_dir)
         if not self.input_dir:
-            self.input_dir = self.base_dir + '/input'
+            self.input_dir = self.base_dir + "/input"
             if not os.path.exists(self.input_dir):
                 os.makedirs(self.input_dir)
 
         self._submit = submit
-        properties_file = self.base_dir + '/pegasus.properties'
-        submit_dir = self.base_dir + '/submit'
-        self.output_dir = self.base_dir + '/output'
-        dax_name = self.base_dir + '/' + self.dax.name + '.dax'
+        properties_file = self.base_dir + "/pegasus.properties"
+        submit_dir = self.base_dir + "/submit"
+        self.output_dir = self.base_dir + "/output"
+        dax_name = self.base_dir + "/" + self.dax.name + ".dax"
 
         if not self._is_tutorial:
             # write the sites catalog
@@ -213,76 +207,85 @@ class Instance:
 
             # write the transformation catalog
             if not self._transformation_catalog:
-                self._transformation_catalog = TransformationCatalog(
-                    self.base_dir
-                )
+                self._transformation_catalog = TransformationCatalog(self.base_dir)
             self._transformation_catalog.write(force=force)
 
             # write properties file
+            self.set_property("pegasus.catalog.site.file", self._sites_catalog.filename)
+            self.set_property("pegasus.catalog.replica", "File")
             self.set_property(
-                'pegasus.catalog.site.file', self._sites_catalog.filename
+                "pegasus.catalog.replica.file", self._replica_catalog.filename
             )
-            self.set_property('pegasus.catalog.replica', 'File')
+            self.set_property("pegasus.catalog.transformation", "Text")
             self.set_property(
-                'pegasus.catalog.replica.file', self._replica_catalog.filename
+                "pegasus.catalog.transformation.file",
+                self._transformation_catalog.filename,
             )
-            self.set_property('pegasus.catalog.transformation', 'Text')
-            self.set_property(
-                'pegasus.catalog.transformation.file',
-                self._transformation_catalog.filename
-            )
-            self.set_property('pegasus.metrics.app', self.dax.name)
+            self.set_property("pegasus.metrics.app", self.dax.name)
 
-            with open(properties_file, 'w') as ppf:
+            with open(properties_file, "w") as ppf:
                 for key in self._properties:
-                    ppf.write('%s=%s\n' % (key, self._properties[key]))
+                    ppf.write("%s=%s\n" % (key, self._properties[key]))
 
             # write DAX file
-            f = open(dax_name, 'w')
+            f = open(dax_name, "w")
             self.dax.writeXML(f)
             f.close()
 
         # prepare for submission
         cmd = [
-            'pegasus-plan', '--conf', properties_file, '--dax', dax_name,
-            '--dir', submit_dir, '--input-dir', self.input_dir, '--output-dir',
-            self.output_dir, '--sites', site
+            "pegasus-plan",
+            "--conf",
+            properties_file,
+            "--dax",
+            dax_name,
+            "--dir",
+            submit_dir,
+            "--input-dir",
+            self.input_dir,
+            "--output-dir",
+            self.output_dir,
+            "--sites",
+            site,
         ]
 
         if cleanup:
-            cmd.append('--cleanup %s' % cleanup)
+            cmd.append("--cleanup %s" % cleanup)
         else:
-            cmd.append('--nocleanup')
+            cmd.append("--nocleanup")
         if force:
-            cmd.append('--force')
+            cmd.append("--force")
         if submit:
-            cmd.append('--submit')
+            cmd.append("--submit")
 
         # plan the workflow
         out, err = subprocess.Popen(
-            ' '.join(cmd),
+            " ".join(cmd),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             shell=True,
-            cwd=self.base_dir
+            cwd=self.base_dir,
         ).communicate()
         if err:
             raise Exception(err)
 
-        for line in out.decode('utf8').split('\n'):
-            if 'pegasus-run' in line:
-                self.submit_dir = line.split('pegasus-run')[1].strip()
-                print('The pegasus workflow has been successfully planned.\n' \
-                      'Please, use the ```submit()``` method to start the workflow execution.\n\n'
-                      '\x1b[1;34mPegasus submit dir: %s\x1b[0m' % self.submit_dir)
+        for line in out.decode("utf8").split("\n"):
+            if "pegasus-run" in line:
+                self.submit_dir = line.split("pegasus-run")[1].strip()
+                print(
+                    "The pegasus workflow has been successfully planned.\n"
+                    "Please, use the ```submit()``` method to start the workflow execution.\n\n"
+                    "\x1b[1;34mPegasus submit dir: %s\x1b[0m" % self.submit_dir
+                )
 
                 break
-            elif 'pegasus-status -l' in line:
-                self.submit_dir = line.split('pegasus-status -l')[1
-                                                                  ].strip()
-                print('The pegasus workflow has been successfully planned and started to run.\n' \
-                      'Please, use the status() method to follow the progress of the workflow execution.\n\n'
-                      '\x1b[1;34mPegasus submit dir: %s\x1b[0m' % self.submit_dir)
+            elif "pegasus-status -l" in line:
+                self.submit_dir = line.split("pegasus-status -l")[1].strip()
+                print(
+                    "The pegasus workflow has been successfully planned and started to run.\n"
+                    "Please, use the status() method to follow the progress of the workflow execution.\n\n"
+                    "\x1b[1;34mPegasus submit dir: %s\x1b[0m" % self.submit_dir
+                )
                 break
 
     def submit(self):
@@ -290,22 +293,22 @@ class Instance:
         Run the workflow in case it has only been planned. 
         """
         if self._submit:
-            raise Exception('The workfow execution has already been started.')
+            raise Exception("The workfow execution has already been started.")
 
         out, err = subprocess.Popen(
-            'pegasus-run %s' % self.submit_dir,
+            "pegasus-run %s" % self.submit_dir,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             shell=True,
-            cwd=self.base_dir
+            cwd=self.base_dir,
         ).communicate()
         if err:
             raise Exception(err)
 
         self._submit = True
         print(
-            'The pegasus workflow has started its execution.\n'
-            'Please, use the status() method to follow the progress of the workflow execution.'
+            "The pegasus workflow has started its execution.\n"
+            "Please, use the status() method to follow the progress of the workflow execution."
         )
 
     def status(self, loop=False, delay=10):
@@ -316,56 +319,67 @@ class Instance:
         """
         if not self._submit:
             raise Exception(
-                'The workfow has not started its execution yet.\n'
-                'Please, check if the workflow is planned and submitted for execution.'
+                "The workfow has not started its execution yet.\n"
+                "Please, check if the workflow is planned and submitted for execution."
             )
         seq = False
 
         while True:
             out, err = subprocess.Popen(
-                'pegasus-status -l %s' % self.submit_dir,
+                "pegasus-status -l %s" % self.submit_dir,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 shell=True,
-                cwd=self.base_dir
+                cwd=self.base_dir,
             ).communicate()
             if err:
                 raise Exception(err)
 
-            for line in out.decode('utf8').split('\n'):
-                if 'UNRDY' in line:
+            for line in out.decode("utf8").split("\n"):
+                if "UNRDY" in line:
                     seq = True
                 elif seq:
                     seq = False
                     v = line.split()
 
                     state = v[8]
-                    if state == 'Success':
-                        state = '\x1b[1;32m' + state + '\x1b[0m'
-                    elif state == 'Failure':
-                        state = '\x1b[1;31m' + state + '\x1b[0m'
+                    if state == "Success":
+                        state = "\x1b[1;32m" + state + "\x1b[0m"
+                    elif state == "Failure":
+                        state = "\x1b[1;31m" + state + "\x1b[0m"
 
-                    progress = '\x1b[1;34m' + 'Progress: ' + v[
-                        7
-                    ] + '%\x1b[0m (' + state + ')'
-                    completed = '\x1b[1;32mCompleted: ' + v[5] + '\x1b[0m'
-                    queued = '\x1b[1;33mQueued: ' + v[1] + '\x1b[0m'
-                    running = '\x1b[1;36mRunning: ' + v[3] + '\x1b[0m'
-                    fail = '\x1b[1;31mFailed: ' + v[6] + '\x1b[0m'
+                    progress = (
+                        "\x1b[1;34m" + "Progress: " + v[7] + "%\x1b[0m (" + state + ")"
+                    )
+                    completed = "\x1b[1;32mCompleted: " + v[5] + "\x1b[0m"
+                    queued = "\x1b[1;33mQueued: " + v[1] + "\x1b[0m"
+                    running = "\x1b[1;36mRunning: " + v[3] + "\x1b[0m"
+                    fail = "\x1b[1;31mFailed: " + v[6] + "\x1b[0m"
 
-                    st = progress + '\t(' + completed + ', ' + queued + ', ' + running + ', ' + fail + ')'
-                    print('%s\r' % st, end='')
+                    st = (
+                        progress
+                        + "\t("
+                        + completed
+                        + ", "
+                        + queued
+                        + ", "
+                        + running
+                        + ", "
+                        + fail
+                        + ")"
+                    )
+                    print("%s\r" % st, end="")
                     break
 
-            if not loop or 'Success' in out.decode(
-                'utf8'
-            ) or 'Failure' in out.decode('utf8'):
+            if (
+                not loop
+                or "Success" in out.decode("utf8")
+                or "Failure" in out.decode("utf8")
+            ):
                 break
             time.sleep(delay)
 
-    def statistics(
-        self, workflow=False, jobs=False, breakdown=False, time=False
-    ):
+    def statistics(self, workflow=False, jobs=False, breakdown=False, time=False):
         """
         Print the workflow statistics.
         :param workflow:
@@ -375,27 +389,25 @@ class Instance:
         """
         if not self._submit:
             raise Exception(
-                'The workfow has not started its execution yet.\n'
-                'Please, check if the workflow is planned and submitted for execution.'
+                "The workfow has not started its execution yet.\n"
+                "Please, check if the workflow is planned and submitted for execution."
             )
 
         out, err = subprocess.Popen(
-            'pegasus-statistics -s all %s' % self.submit_dir,
+            "pegasus-statistics -s all %s" % self.submit_dir,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             shell=True,
-            cwd=self.base_dir
+            cwd=self.base_dir,
         ).communicate()
 
         if err:
             raise Exception(err)
 
-        for line in out.decode('utf8').split('\n'):
-            if line.startswith('Workflow wall time'):
-                v = line.split(':')
-                print(
-                    'Workflow Wall Time: \x1b[1;34m' + v[1].strip() + '\x1b[0m'
-                )
+        for line in out.decode("utf8").split("\n"):
+            if line.startswith("Workflow wall time"):
+                v = line.split(":")
+                print("Workflow Wall Time: \x1b[1;34m" + v[1].strip() + "\x1b[0m")
                 break
 
     def outputs(self):
@@ -403,15 +415,16 @@ class Instance:
         Print a list of output files.
         """
         if not self.output_dir:
-            raise Exception('No output directory is configured.')
+            raise Exception("No output directory is configured.")
 
         outputs = [
             os.path.join(root, name)
-            for root, dirs, files in os.walk(self.output_dir) for name in files
+            for root, dirs, files in os.walk(self.output_dir)
+            for name in files
         ]
 
         for f in outputs:
-            print(f.replace(self.output_dir + '/', ''))
+            print(f.replace(self.output_dir + "/", ""))
 
     def inspect(self, path):
         """
@@ -420,11 +433,11 @@ class Instance:
         """
         if not path:
             raise Exception(
-                'A path to an output file should be provided. '
-                'Use outputs() to obtain a list of output files.'
+                "A path to an output file should be provided. "
+                "Use outputs() to obtain a list of output files."
             )
 
-        with open(self.output_dir + '/' + path) as file:
+        with open(self.output_dir + "/" + path) as file:
             for line in file:
                 print(line)
 
@@ -441,27 +454,25 @@ class Instance:
         if not abstract and self.wf_image_exe and not force:
             return self.wf_image_exe
 
-        if not self._is_tutorial and (
-            not self.dax or not isinstance(self.dax, ADAG)
-        ):
-            raise Exception('Invalid DAX object')
+        if not self._is_tutorial and (not self.dax or not isinstance(self.dax, ADAG)):
+            raise Exception("Invalid DAX object")
 
         if abstract:
-            basename = self.base_dir + '/' + self.dax.name + '.dax'
+            basename = self.base_dir + "/" + self.dax.name + ".dax"
         else:
             if not self.submit_dir:
                 raise Exception(
-                    'The workfow has not started its execution yet.\n'
-                    'Please, check if the workflow is planned and submitted for execution.'
+                    "The workfow has not started its execution yet.\n"
+                    "Please, check if the workflow is planned and submitted for execution."
                 )
-            basename = self.submit_dir + '/' + self.dax.name + '-0.dag'
+            basename = self.submit_dir + "/" + self.dax.name + "-0.dag"
 
         sp = subprocess.Popen(
-            'pegasus-graphviz -o %s.dot %s' % (basename, basename),
+            "pegasus-graphviz -o %s.dot %s" % (basename, basename),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             shell=True,
-            cwd=self.base_dir
+            cwd=self.base_dir,
         )
         out, err = sp.communicate()
 
@@ -469,18 +480,18 @@ class Instance:
             raise Exception(err)
 
         out, err = subprocess.Popen(
-            'dot -Tpng %s.dot -o %s.png' % (basename, basename),
+            "dot -Tpng %s.dot -o %s.png" % (basename, basename),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             shell=True,
-            cwd=self.base_dir
+            cwd=self.base_dir,
         ).communicate()
         if err:
             raise Exception(err)
 
         if abstract:
-            self.wf_image_abs = '%s.png' % basename
+            self.wf_image_abs = "%s.png" % basename
             return self.wf_image_abs
         else:
-            self.wf_image_exe = '%s.png' % basename
+            self.wf_image_exe = "%s.png" % basename
             return self.wf_image_exe

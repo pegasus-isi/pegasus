@@ -1,1 +1,1 @@
-__all__ = ['instance']
+__all__ = ["instance"]

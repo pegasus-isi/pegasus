@@ -21,59 +21,59 @@ import platform
 
 from Pegasus.DAX3 import *
 
-__author__ = 'Rafael Ferreira da Silva'
+__author__ = "Rafael Ferreira da Silva"
 
 
 class OSType:
-    LINUX = 'LINUX'
-    SUNOS = 'SUNOS'
-    AIX = 'AIX'
-    MACOSX = 'MACOSX'
-    WINDOWS = 'WINDOWS'
+    LINUX = "LINUX"
+    SUNOS = "SUNOS"
+    AIX = "AIX"
+    MACOSX = "MACOSX"
+    WINDOWS = "WINDOWS"
 
 
 class DirectoryType:
-    SHARED_SCRATCH = 'shared-scratch'
-    SHARED_STORAGE = 'shared-storage'
-    LOCAL_SCRATCH = 'local-scratch'
-    LOCAL_STORAGE = 'local-storage'
+    SHARED_SCRATCH = "shared-scratch"
+    SHARED_STORAGE = "shared-storage"
+    LOCAL_SCRATCH = "local-scratch"
+    LOCAL_STORAGE = "local-storage"
 
 
 class JobType:
-    COMPUTE = 'compute'
-    AUXILLARY = 'auxillary'
-    TRANSFER = 'transfer'
-    REGISTER = 'register'
-    CLEANUP = 'cleanup'
+    COMPUTE = "compute"
+    AUXILLARY = "auxillary"
+    TRANSFER = "transfer"
+    REGISTER = "register"
+    CLEANUP = "cleanup"
 
 
 class GridType:
-    GT2 = 'gt2'
-    GT4 = 'gt4'
-    GT5 = 'gt5'
-    CONDOR = 'condor'
-    CREAM = 'cream'
-    BATCH = 'batch'
-    PBS = 'pbs'
-    LSF = 'lsf'
-    SGE = 'sge'
-    NORDUGRID = 'nordugrid'
-    UNICORE = 'unicore'
-    EC2 = 'ec2'
-    DELTACLOUD = 'deltacloud'
+    GT2 = "gt2"
+    GT4 = "gt4"
+    GT5 = "gt5"
+    CONDOR = "condor"
+    CREAM = "cream"
+    BATCH = "batch"
+    PBS = "pbs"
+    LSF = "lsf"
+    SGE = "sge"
+    NORDUGRID = "nordugrid"
+    UNICORE = "unicore"
+    EC2 = "ec2"
+    DELTACLOUD = "deltacloud"
 
 
 class SchedulerType:
-    FORK = 'Fork'
-    PBS = 'PBS'
-    LSF = 'LSF'
-    CONDOR = 'Condor'
-    SGE = 'SGE'
-    UNKNOWN = 'unknown'
+    FORK = "Fork"
+    PBS = "PBS"
+    LSF = "LSF"
+    CONDOR = "Condor"
+    SGE = "SGE"
+    UNKNOWN = "unknown"
 
 
 class SitesCatalog:
-    def __init__(self, workflow_dir, filename='sites.xml'):
+    def __init__(self, workflow_dir, filename="sites.xml"):
         """
         Create a Pegasus site catalog.
         :param workflow_dir: Path to the workflow directory
@@ -91,13 +91,13 @@ class SitesCatalog:
         :param os: Site OS (default: LINUX)
         """
         if not handle:
-            raise Exception('A site handle should be provided.')
+            raise Exception("A site handle should be provided.")
         if handle in self._sites:
             raise Exception('Site "%s" already exists.' % handle)
 
         self._sites.update(self._create_site(handle, arch, os))
 
-    def add_site_profile(self, handle, namespace, key, value=''):
+    def add_site_profile(self, handle, namespace, key, value=""):
         """
         Add a profile to a specific site.
         :param handle: Site name
@@ -106,15 +106,13 @@ class SitesCatalog:
         :param value: Profile value (default: '')
         """
         if not handle or not namespace or not key:
-            raise Exception(
-                'A site handle, a namespace, and a key should be provided.'
-            )
+            raise Exception("A site handle, a namespace, and a key should be provided.")
 
         if handle not in self._sites:
             raise Exception('There are no entries for site "%s".' % handle)
 
-        profile = {'namespace': namespace, 'key': key, 'value': value}
-        self._sites[handle]['profiles'].append(profile)
+        profile = {"namespace": namespace, "key": key, "value": value}
+        self._sites[handle]["profiles"].append(profile)
 
     def add_job_manager(self, handle, type, contact, scheduler, jobtype=None):
         """
@@ -127,28 +125,28 @@ class SitesCatalog:
         """
         if not handle or not type or not contact or not scheduler:
             raise Exception(
-                'A site handle, and a jobmanager type, contact, and scheduler should be provided.'
+                "A site handle, and a jobmanager type, contact, and scheduler should be provided."
             )
 
         if handle not in self._sites:
             raise Exception('There are no entries for site "%s".' % handle)
 
-        grid = {'type': type, 'contact': contact, 'scheduler': scheduler}
+        grid = {"type": type, "contact": contact, "scheduler": scheduler}
 
         if jobtype:
-            grid['jobtype'] = jobtype
+            grid["jobtype"] = jobtype
 
-        self._sites[handle]['grids'].append(grid)
+        self._sites[handle]["grids"].append(grid)
 
     def write(self, force=False):
         """
         Write the sites catalog to a file.
         :param force: whether to overwrite the catalog file
         """
-        sites_catalog_file = self.workflow_dir + '/' + self.filename
+        sites_catalog_file = self.workflow_dir + "/" + self.filename
 
         if not os.path.isfile(sites_catalog_file) or force:
-            with open(sites_catalog_file, 'w') as ppf:
+            with open(sites_catalog_file, "w") as ppf:
                 ppf.write('<?xml version="1.0" encoding="UTF-8"?>\n')
                 ppf.write(
                     '<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" '
@@ -160,51 +158,52 @@ class SitesCatalog:
                 # writing sites
                 for handle in self._sites:
                     ppf.write(
-                        '\t<site handle="%s" arch="%s" os="%s">\n' % (
-                            handle, self._sites[handle]['arch'],
-                            self._sites[handle]['os']
+                        '\t<site handle="%s" arch="%s" os="%s">\n'
+                        % (
+                            handle,
+                            self._sites[handle]["arch"],
+                            self._sites[handle]["os"],
                         )
                     )
 
                     # directories
-                    dirs = self._sites[handle]['directories']
+                    dirs = self._sites[handle]["directories"]
                     for dir in dirs:
                         ppf.write(
-                            '\t\t<directory type="%s" path="%s">\n' %
-                            (dir, dirs[dir]['path'])
+                            '\t\t<directory type="%s" path="%s">\n'
+                            % (dir, dirs[dir]["path"])
                         )
                         ppf.write(
                             '\t\t\t<file-server operation="all" url="file://%s"/>\n'
-                            % dirs[dir]['path']
+                            % dirs[dir]["path"]
                         )
-                        ppf.write('\t\t</directory>\n')
+                        ppf.write("\t\t</directory>\n")
 
                     # grids
-                    for grid in self._sites[handle]['grids']:
+                    for grid in self._sites[handle]["grids"]:
                         ppf.write(
                             '\t\t<grid type="%s" contact="%s" scheduler="%s" '
-                            %
-                            (grid['type'], grid['contact'], grid['scheduler'])
+                            % (grid["type"], grid["contact"], grid["scheduler"])
                         )
 
-                        if 'jobtype' in grid:
-                            ppf.write('jobtype="%s" ' % grid['jobtype'])
-                        ppf.write('/>\n')
+                        if "jobtype" in grid:
+                            ppf.write('jobtype="%s" ' % grid["jobtype"])
+                        ppf.write("/>\n")
 
                     # site profiles
-                    for p in self._sites[handle]['profiles']:
+                    for p in self._sites[handle]["profiles"]:
                         ppf.write(
                             '\t\t<profile namespace="%s" key="%s">%s</profile>\n'
-                            % (p['namespace'], p['key'], p['value'])
+                            % (p["namespace"], p["key"], p["value"])
                         )
 
-                    ppf.write('\t</site>\n')
-                ppf.write('</sitecatalog>\n')
+                    ppf.write("\t</site>\n")
+                ppf.write("</sitecatalog>\n")
 
         else:
             print(
                 '\x1b[0;35mWARNING: Sites Catalog (%s) already exists. Use "force=True" '
-                'to overwrite it.\n\x1b[0m' % sites_catalog_file
+                "to overwrite it.\n\x1b[0m" % sites_catalog_file
             )
 
     def _create_local_site(self):
@@ -212,24 +211,18 @@ class SitesCatalog:
         Create a local site for the workflow
         """
         os = platform.system()
-        if os.lower() == 'linux':
+        if os.lower() == "linux":
             os = OSType.LINUX
-        elif os.lower() == 'windows':
+        elif os.lower() == "windows":
             os = OSType.WINDOWS
         else:
             os = OSType.MACOSX
 
         # create local site
-        self._sites = self._create_site('local', platform.machine(), os)
-        self._sites['local']['directories'] = {
-            DirectoryType.SHARED_SCRATCH:
-                {
-                    'path': self.workflow_dir + '/scratch'
-                },
-            DirectoryType.SHARED_STORAGE:
-                {
-                    'path': self.workflow_dir + '/output'
-                }
+        self._sites = self._create_site("local", platform.machine(), os)
+        self._sites["local"]["directories"] = {
+            DirectoryType.SHARED_SCRATCH: {"path": self.workflow_dir + "/scratch"},
+            DirectoryType.SHARED_STORAGE: {"path": self.workflow_dir + "/output"},
         }
 
     def _create_site(self, handle, arch, os):
@@ -241,12 +234,11 @@ class SitesCatalog:
         :return: The dictionary object of the site
         """
         return {
-            handle:
-                {
-                    'arch': arch,
-                    'os': os,
-                    'directories': {},
-                    'grids': [],
-                    'profiles': []
-                }
+            handle: {
+                "arch": arch,
+                "os": os,
+                "directories": {},
+                "grids": [],
+                "profiles": [],
+            }
         }

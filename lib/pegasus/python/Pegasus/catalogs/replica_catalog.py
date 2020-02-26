@@ -18,11 +18,11 @@ from __future__ import print_function
 
 import os
 
-__author__ = 'Rafael Ferreira da Silva'
+__author__ = "Rafael Ferreira da Silva"
 
 
 class ReplicaCatalog:
-    def __init__(self, workflow_dir, filename='rc.txt'):
+    def __init__(self, workflow_dir, filename="rc.txt"):
         """
         Create a Pegasus replica catalog.
         :param workflow_dir: Path to the workflow directory
@@ -41,17 +41,17 @@ class ReplicaCatalog:
         :param metadata: Additional metadata provided as a set (optional)
         """
         if not name or not path:
-            raise Exception('A replica name and path should be provided.')
+            raise Exception("A replica name and path should be provided.")
 
         if name not in self._replicas:
             self._replicas[name] = {path: []}
 
         if site:
             for m in self._replicas[name][path]:
-                if m[0] == 'site':
+                if m[0] == "site":
                     self._replicas[name][path].remove(m)
                     break
-            self._replicas[name][path].append(('site', site))
+            self._replicas[name][path].append(("site", site))
 
         if metadata:
             for md in metadata:
@@ -66,19 +66,19 @@ class ReplicaCatalog:
         Write the catalog to a file.
         :param force: whether to overwrite the catalog file
         """
-        catalog_file = self.workflow_dir + '/' + self.filename
+        catalog_file = self.workflow_dir + "/" + self.filename
 
         if not os.path.isfile(catalog_file) or force:
-            with open(catalog_file, 'w') as ppf:
+            with open(catalog_file, "w") as ppf:
                 for name in self._replicas:
                     for path in self._replicas[name]:
-                        ppf.write('%s %s ' % (name, path))
+                        ppf.write("%s %s " % (name, path))
                         for m in self._replicas[name][path]:
                             ppf.write('%s="%s" ' % (m[0], m[1]))
-                        ppf.write('\n')
+                        ppf.write("\n")
 
         else:
             print(
                 '\x1b[0;35mWARNING: Replica Catalog (%s) already exists. Use "force=True" '
-                'to overwrite it.\n\x1b[0m' % catalog_file
+                "to overwrite it.\n\x1b[0m" % catalog_file
             )
