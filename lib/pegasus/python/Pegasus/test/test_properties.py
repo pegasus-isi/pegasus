@@ -1,12 +1,9 @@
-from tempfile import TemporaryFile
-from collections import OrderedDict
 from configparser import DEFAULTSECT
+from tempfile import TemporaryFile
 
-import pytest
-
-import Pegasus
-from Pegasus.properties import *
 from Pegasus.api.properties import Properties
+from Pegasus.properties import *
+
 
 def test_load():
     with TemporaryFile(mode="w+") as f:
@@ -16,11 +13,13 @@ def test_load():
 
     assert props._conf[DEFAULTSECT] == {"a": "b", "c": "d"}
 
+
 def test_loads():
     s = "a = b\nc = d\n\n"
     props = loads(s)
 
     assert props._conf[DEFAULTSECT] == {"a": "b", "c": "d"}
+
 
 def test_dump():
     props = Properties()
@@ -31,6 +30,7 @@ def test_dump():
         dump(props, f)
         f.seek(0)
         assert f.read() == "a = b\nc = d\n\n"
+
 
 def test_dumps():
     props = Properties()

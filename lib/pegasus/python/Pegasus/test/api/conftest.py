@@ -1,12 +1,9 @@
+import json
 import os
 import re
-import json
-import stat
-
-from pathlib import Path
-
 
 import pytest
+
 import yaml
 
 
@@ -81,4 +78,3 @@ def load_schema():
             return json.load(f)
 
     return _load_schema
-

@@ -12,34 +12,22 @@ from Pegasus.db.schema import *
 class TestConnection(unittest.TestCase):
     def test_non_existent_url(self):
         dburi = "jdbc:mysql://localhost/unknown-db"
-        self.assertRaises(
-            connection.ConnectionError, connection.connect, dburi
-        )
+        self.assertRaises(connection.ConnectionError, connection.connect, dburi)
 
         dburi = "jdbc:mysql://root@localhost/unknown-db"
-        self.assertRaises(
-            connection.ConnectionError, connection.connect, dburi
-        )
+        self.assertRaises(connection.ConnectionError, connection.connect, dburi)
 
         dburi = "jdbc:mysql://localhost:1111/unknown-db"
-        self.assertRaises(
-            connection.ConnectionError, connection.connect, dburi
-        )
+        self.assertRaises(connection.ConnectionError, connection.connect, dburi)
 
         dburi = "sqlite:test-url.db"
-        self.assertRaises(
-            connection.ConnectionError, connection.connect, dburi
-        )
+        self.assertRaises(connection.ConnectionError, connection.connect, dburi)
 
         dburi = "test.db"
-        self.assertRaises(
-            connection.ConnectionError, connection.connect, dburi
-        )
+        self.assertRaises(connection.ConnectionError, connection.connect, dburi)
 
         dburi = "jdbc:invalid://localhost/testdb"
-        self.assertRaises(
-            connection.ConnectionError, connection.connect, dburi
-        )
+        self.assertRaises(connection.ConnectionError, connection.connect, dburi)
 
     def test_jdbc_sqlite(self):
         filename = str(uuid.uuid4())
@@ -90,5 +78,5 @@ def _remove(filename):
     _silentremove(filename)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

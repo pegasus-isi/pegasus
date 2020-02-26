@@ -1,18 +1,13 @@
-import os
-import sys
 import json
 from tempfile import NamedTemporaryFile
 
 import pytest
+
 import yaml
 from jsonschema import validate
 
-from Pegasus.api.replica_catalog import File
-from Pegasus.api.replica_catalog import ReplicaCatalog
-from Pegasus.api.replica_catalog import PEGASUS_VERSION
-from Pegasus.api.errors import NotFoundError
 from Pegasus.api.errors import DuplicateError
-from Pegasus.api.mixins import Namespace
+from Pegasus.api.replica_catalog import PEGASUS_VERSION, File, ReplicaCatalog
 
 
 class TestFile:
@@ -99,7 +94,9 @@ class TestReplicaCatalog:
     )
     def test_write(self, _format, loader):
         rc = ReplicaCatalog()
-        rc.add_replica("lfn1", "pfn1", "site1", True).add_replica("lfn2", "pfn2", "site2", True)
+        rc.add_replica("lfn1", "pfn1", "site1", True).add_replica(
+            "lfn2", "pfn2", "site2", True
+        )
 
         expected = {
             "pegasus": PEGASUS_VERSION,
@@ -118,4 +115,3 @@ class TestReplicaCatalog:
         result["replicas"] = sorted(result["replicas"], key=lambda d: d["lfn"])
 
         assert result == expected
-

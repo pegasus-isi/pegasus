@@ -1,40 +1,35 @@
-import os
 import json
-import stat
 import shutil
 from tempfile import NamedTemporaryFile
-from pathlib import Path
-
 
 import pytest
+
 import yaml
 from jsonschema import validate
 
-from Pegasus.api.workflow import AbstractJob
-from Pegasus.api.workflow import Job
-from Pegasus.api.workflow import SubWorkflow
-from Pegasus.api.workflow import _LinkType
-from Pegasus.api.workflow import _Use
-from Pegasus.api.workflow import _JobDependency
-from Pegasus.api.workflow import Workflow
-from Pegasus.api.workflow import _needs_client
-from Pegasus.api.workflow import _needs_submit_dir
-from Pegasus.client._client import Client
-from Pegasus.api.workflow import PEGASUS_VERSION
-from Pegasus.api.replica_catalog import File
-from Pegasus.api.replica_catalog import ReplicaCatalog
-from Pegasus.api.errors import DuplicateError
-from Pegasus.api.errors import NotFoundError
-from Pegasus.api.transformation_catalog import Transformation
-from Pegasus.api.transformation_catalog import TransformationSite
-from Pegasus.api.transformation_catalog import TransformationCatalog
-from Pegasus.api.mixins import ProfileMixin
-from Pegasus.api.mixins import HookMixin
-from Pegasus.api.mixins import MetadataMixin
-from Pegasus.api.mixins import Namespace
-from Pegasus.api.mixins import EventType
+from Pegasus.api.errors import DuplicateError, NotFoundError
+from Pegasus.api.mixins import EventType, Namespace
+from Pegasus.api.replica_catalog import File, ReplicaCatalog
 from Pegasus.api.site_catalog import SiteCatalog
+from Pegasus.api.transformation_catalog import (
+    Transformation,
+    TransformationCatalog,
+    TransformationSite,
+)
+from Pegasus.api.workflow import (
+    PEGASUS_VERSION,
+    AbstractJob,
+    Job,
+    SubWorkflow,
+    Workflow,
+    _JobDependency,
+    _LinkType,
+    _needs_client,
+    _needs_submit_dir,
+    _Use,
+)
 from Pegasus.api.writable import _CustomEncoder
+from Pegasus.client._client import Client
 
 
 class Test_Use:
@@ -503,7 +498,9 @@ class Test_JobDependency:
 
 
 class TestSubWorkflow:
-    @pytest.mark.parametrize("file, is_planned", [(File("wf-file"), False), ("wf-file", True)])
+    @pytest.mark.parametrize(
+        "file, is_planned", [(File("wf-file"), False), ("wf-file", True)]
+    )
     def test_valid_subworkflow(self, file, is_planned):
         assert SubWorkflow(file, is_planned)
 
@@ -516,9 +513,10 @@ class TestSubWorkflow:
     @pytest.mark.parametrize(
         "subworkflow, expected",
         [
-            ( 
-                SubWorkflow("file", False, _id="test-subworkflow", node_label="label").add_args(
-                "--sites", "condorpool"),
+            (
+                SubWorkflow(
+                    "file", False, _id="test-subworkflow", node_label="label"
+                ).add_args("--sites", "condorpool"),
                 {
                     "type": "dax",
                     "file": "file",
@@ -533,7 +531,7 @@ class TestSubWorkflow:
                             "registerReplica": False,
                         }
                     ],
-                }
+                },
             ),
             (
                 SubWorkflow("file", True, _id="test-subworkflow", node_label="label"),
@@ -551,13 +549,14 @@ class TestSubWorkflow:
                             "registerReplica": False,
                         }
                     ],
-                }
-            )
-        ]
+                },
+            ),
+        ],
     )
     def test_tojson(self, subworkflow, expected):
         result = json.loads(json.dumps(subworkflow, cls=_CustomEncoder))
         assert result == expected
+
 
 @pytest.fixture
 def expected_json():
@@ -653,7 +652,7 @@ def expected_json():
                         "registerReplica": False,
                     }
                 ],
-            }
+            },
         ],
         "jobDependencies": [{"id": "a", "children": ["b"]}],
         "profiles": {Namespace.ENV.value: {"JAVA_HOME": "/java/home"}},
@@ -668,7 +667,9 @@ def expected_json():
     expected["jobs"][1]["uses"] = sorted(
         expected["jobs"][1]["uses"], key=lambda u: u["file"]["lfn"]
     )
-    expected["transformationCatalog"]["transformations"] = sorted(expected["transformationCatalog"]["transformations"], key=lambda t: t["name"]) 
+    expected["transformationCatalog"]["transformations"] = sorted(
+        expected["transformationCatalog"]["transformations"], key=lambda t: t["name"]
+    )
 
     return expected
 
@@ -689,7 +690,11 @@ def wf():
     wf.add_replica_catalog(rc)
 
     j1 = Job("t1", _id="a").add_outputs(File("f1"), File("f2"))
-    j2 = Job("t1", _id="b").add_inputs(File("f1"), File("f2")).add_checkpoint(File("checkpoint"))
+    j2 = (
+        Job("t1", _id="b")
+        .add_inputs(File("f1"), File("f2"))
+        .add_checkpoint(File("checkpoint"))
+    )
     j3 = SubWorkflow("subworkflow.dag", True, _id="c").add_args("--sites", "condorpool")
     j4 = SubWorkflow(File("subworkflow.dax"), False, _id="d")
 
@@ -707,7 +712,11 @@ def wf():
 class TestWorkflow:
     @pytest.mark.parametrize(
         "job",
-        [(Job("t1", _id="job")), (SubWorkflow(File("f1"), False, _id="job")), (SubWorkflow("f1", True, _id="job"))],
+        [
+            (Job("t1", _id="job")),
+            (SubWorkflow(File("f1"), False, _id="job")),
+            (SubWorkflow("f1", True, _id="job")),
+        ],
     )
     def test_add_job(self, job):
         wf = Workflow("wf")
@@ -758,7 +767,7 @@ class TestWorkflow:
         wf = Workflow("wf")
         with pytest.raises(TypeError) as e:
             wf.add_site_catalog(123)
-        
+
         assert "invalid catalog: 123" in str(e)
 
     def test_add_duplicate_site_catalog(self):
@@ -768,7 +777,7 @@ class TestWorkflow:
 
         with pytest.raises(DuplicateError) as e:
             wf.add_site_catalog(sc)
-        
+
         assert "a SiteCatalog has already" in str(e)
 
     def test_add_replica_catalog(self):
@@ -784,7 +793,7 @@ class TestWorkflow:
         wf = Workflow("wf")
         with pytest.raises(TypeError) as e:
             wf.add_replica_catalog(123)
-        
+
         assert "invalid catalog: 123" in str(e)
 
     def test_add_duplicate_replica_catalog(self):
@@ -794,7 +803,7 @@ class TestWorkflow:
 
         with pytest.raises(DuplicateError) as e:
             wf.add_replica_catalog(rc)
-        
+
         assert "a ReplicaCatalog has already" in str(e)
 
     def test_add_transformation_catalog(self):
@@ -810,7 +819,7 @@ class TestWorkflow:
         wf = Workflow("wf")
         with pytest.raises(TypeError) as e:
             wf.add_transformation_catalog(123)
-        
+
         assert "invalid catalog: 123" in str(e)
 
     def test_add_duplicate_transformation_catalog(self):
@@ -820,9 +829,9 @@ class TestWorkflow:
 
         with pytest.raises(DuplicateError) as e:
             wf.add_transformation_catalog(tc)
-        
+
         assert "a TransformationCatalog has already" in str(e)
-    
+
     def test_add_dependency(self):
         wf = Workflow("wf")
         parent = Job("t1", _id="parent")
@@ -907,7 +916,9 @@ class TestWorkflow:
             result["jobs"][1]["uses"], key=lambda u: u["file"]["lfn"]
         )
 
-        result["transformationCatalog"]["transformations"] = sorted(result["transformationCatalog"]["transformations"], key=lambda t: t["name"]) 
+        result["transformationCatalog"]["transformations"] = sorted(
+            result["transformationCatalog"]["transformations"], key=lambda t: t["name"]
+        )
 
         assert result == expected_json
 
@@ -939,7 +950,9 @@ class TestWorkflow:
             result["jobs"][1]["uses"], key=lambda u: u["file"]["lfn"]
         )
 
-        result["transformationCatalog"]["transformations"] = sorted(result["transformationCatalog"]["transformations"], key=lambda t: t["name"]) 
+        result["transformationCatalog"]["transformations"] = sorted(
+            result["transformationCatalog"]["transformations"], key=lambda t: t["name"]
+        )
 
         assert result == expected_json
 
@@ -951,17 +964,19 @@ def obj():
             def __init__(self):
                 self._client = None
                 self._submit_dir = None
-            
+
             @_needs_client
             def func_that_requires_client(self):
                 ...
+
             @_needs_submit_dir
             def func_that_requires_submit_dir(self):
                 ...
-        
+
         return Obj()
 
     return _obj()
+
 
 def test__needs_client(obj, mocker):
     mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
@@ -969,12 +984,14 @@ def test__needs_client(obj, mocker):
     shutil.which.assert_called_once_with("pegasus-version")
     assert isinstance(obj._client, Client)
 
+
 def test__needs_submit_dir(obj):
     obj._submit_dir = "/path"
     try:
         obj.func_that_requires_submit_dir()
     except ValueError:
         pytest.fail("should not have thrown")
+
 
 def test__needs_submit_dir_invalid(obj):
     with pytest.raises(ValueError):

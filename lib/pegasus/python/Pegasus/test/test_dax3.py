@@ -1206,7 +1206,7 @@ class TestADAG(unittest.TestCase):
         self.assertTrue(input_file1 in j_input_files)
         self.assertTrue(input_file2 in j_input_files)
 
-        # check for the single output file 
+        # check for the single output file
         j_output_files = a.getJobOutputFiles(j.id)
         self.assertEqual(1, len(j_output_files))
         self.assertTrue(output_file in j_output_files)
@@ -1570,12 +1570,12 @@ class TestParse(unittest.TestCase):
 
     def testParse(self):
         """Should be able to parse a file using parse()"""
-        adag = parse(DAX3TEST_DAX)
+        parse(DAX3TEST_DAX)
 
     def testParseString(self):
         """Should be able to parse a string using parseString()"""
         txt = open(DAX3TEST_DAX).read()
-        adag = parseString(txt)
+        parseString(txt)
 
 
 if __name__ == "__main__":

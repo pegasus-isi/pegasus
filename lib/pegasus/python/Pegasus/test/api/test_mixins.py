@@ -1,17 +1,17 @@
-import pytest
-
 from collections import defaultdict
 
-from Pegasus.api.mixins import MetadataMixin
-from Pegasus.api.mixins import _Hook
-from Pegasus.api.mixins import EventType
-from Pegasus.api.mixins import _ShellHook
-from Pegasus.api.mixins import HookMixin
-from Pegasus.api.mixins import Namespace
-from Pegasus.api.mixins import ProfileMixin
-from Pegasus.api.mixins import to_mb
-from Pegasus.api.errors import DuplicateError
-from Pegasus.api.errors import NotFoundError
+import pytest
+
+from Pegasus.api.mixins import (
+    EventType,
+    HookMixin,
+    MetadataMixin,
+    Namespace,
+    ProfileMixin,
+    _Hook,
+    _ShellHook,
+    to_mb,
+)
 
 
 @pytest.fixture(scope="function")

@@ -1,43 +1,43 @@
-import os 
-import subprocess
-import re
 import shutil
+import subprocess
 from collections import namedtuple
 from textwrap import dedent
 
 import pytest
 
-from Pegasus.client._client import from_env
-from Pegasus.client._client import Client
+from Pegasus.client._client import Client, from_env
+
 
 def test_from_env(mocker):
     mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
     try:
-        client = from_env()
+        from_env()
         shutil.which.assert_called_once_with("pegasus-version")
     except ValueError as e:
         pytest.fail("should not have thrown {}".format(e))
+
 
 def test_from_env_no_pegasus_home(monkeypatch):
     monkeypatch.setenv("PATH", "/tmp")
     with pytest.raises(ValueError) as e:
         from_env()
-    
+
     assert "PEGASUS_HOME not found" in str(e)
+
 
 @pytest.fixture(scope="function")
 def mock_subprocess(mocker):
-    CompletedProcess = namedtuple("CompletedProcess", ["returncode", "stdout", "stderr"])
-    cp = CompletedProcess(
-        returncode=0,
-        stdout=" ",
-        stderr=" "
+    CompletedProcess = namedtuple(
+        "CompletedProcess", ["returncode", "stdout", "stderr"]
     )
+    cp = CompletedProcess(returncode=0, stdout=" ", stderr=" ")
     mocker.patch("subprocess.run", return_value=cp)
+
 
 @pytest.fixture(scope="function")
 def client():
     return Client("/path")
+
 
 class TestClient:
     def test_plan(self, mock_subprocess, client):
@@ -54,15 +54,15 @@ class TestClient:
             verbose=3,
             force=True,
             submit=True,
-            env=123
+            env=123,
         )
         subprocess.run.assert_called_once_with(
             [
                 "/path/bin/pegasus-plan",
                 "-Denv=123",
-                "--conf", 
+                "--conf",
                 "pegasus.conf",
-                "--sites", 
+                "--sites",
                 "local",
                 "--output-site",
                 "local",
@@ -74,69 +74,49 @@ class TestClient:
                 "/dir",
                 "--relative-dir",
                 "/relative_dir",
-                "--cleanup", 
+                "--cleanup",
                 "leaf",
                 "-vvv",
                 "--force",
                 "--submit",
-                "--dax", 
-                "dax.yml"
+                "--dax",
+                "dax.yml",
             ]
         )
 
     def test_run(self, mock_subprocess, client):
         client.run("submit_dir", verbose=3)
         subprocess.run.assert_called_once_with(
-            [
-                "/path/bin/pegasus-run", 
-                "-vvv", 
-                "submit_dir"
-            ]
+            ["/path/bin/pegasus-run", "-vvv", "submit_dir"]
         )
 
     def test_status(self, mock_subprocess, client):
         client.status("submit_dir", long=True, verbose=3)
         subprocess.run.assert_called_once_with(
-            [
-                "/path/bin/pegasus-status",
-                "--long",
-                "-vvv",
-                "submit_dir"
-            ]
+            ["/path/bin/pegasus-status", "--long", "-vvv", "submit_dir"]
         )
 
     def test_remove(self, mock_subprocess, client):
         client.remove("submit_dir", verbose=3)
         subprocess.run.assert_called_once_with(
-            [
-                "/path/bin/pegasus-remove",
-                "-vvv",
-                "submit_dir"
-            ]
+            ["/path/bin/pegasus-remove", "-vvv", "submit_dir"]
         )
 
     def test_analyzer(self, mock_subprocess, client):
         client.analyzer("submit_dir", verbose=3)
         subprocess.run.assert_called_once_with(
-            [
-                "/path/bin/pegasus-analyzer",
-                "-vvv",
-                "submit_dir"
-            ]
+            ["/path/bin/pegasus-analyzer", "-vvv", "submit_dir"]
         )
 
     def test_statistics(self, mock_subprocess, client):
         client.statistics("submit_dir", verbose=3)
         subprocess.run.assert_called_once_with(
-            [
-                "/path/bin/pegasus-statistics",
-                "-vvv",
-                "submit_dir"
-            ]
+            ["/path/bin/pegasus-statistics", "-vvv", "submit_dir"]
         )
 
     def test__get_submit_dir(self):
-        plan_output_with_direct_submit = dedent("""
+        plan_output_with_direct_submit = dedent(
+            """
             2020.02.11 15:39:42.958 PST:
             2020.02.11 15:39:42.963 PST:   -----------------------------------------------------------------------
             2020.02.11 15:39:42.969 PST:   File for submitting this DAG to HTCondor           : appends-0.dag.condor.sub
@@ -165,11 +145,16 @@ class TestClient:
             2020.02.11 15:39:44.008 PST:     pegasus-remove /local-scratch/tanaka/workflows/test-workflow-THIS-SHOULD-BE-FOUND-BY-Client._get_submit_dir()
             2020.02.11 15:39:44.013 PST:
             2020.02.11 15:39:44.069 PST:   Time taken to execute is 2.117 seconds
-        """)
+        """
+        )
 
-        assert Client._get_submit_dir(plan_output_with_direct_submit) == "/local-scratch/tanaka/workflows/test-workflow-THIS-SHOULD-BE-FOUND-BY-Client._get_submit_dir()"
-        
-        plan_output_without_direct_submit = dedent("""
+        assert (
+            Client._get_submit_dir(plan_output_with_direct_submit)
+            == "/local-scratch/tanaka/workflows/test-workflow-THIS-SHOULD-BE-FOUND-BY-Client._get_submit_dir()"
+        )
+
+        plan_output_without_direct_submit = dedent(
+            """
             2020.02.11 15:42:04.236 PST:
             2020.02.11 15:42:04.242 PST:   -----------------------------------------------------------------------
             2020.02.11 15:42:04.247 PST:   File for submitting this DAG to HTCondor           : appends-0.dag.condor.sub
@@ -193,5 +178,7 @@ class TestClient:
         """
         )
 
-        assert Client._get_submit_dir(plan_output_without_direct_submit) == "/local-scratch/tanaka/workflows/test-workflow-THIS-SHOULD-BE-FOUND-BY-Client._get_submit_dir()"
-        
+        assert (
+            Client._get_submit_dir(plan_output_without_direct_submit)
+            == "/local-scratch/tanaka/workflows/test-workflow-THIS-SHOULD-BE-FOUND-BY-Client._get_submit_dir()"
+        )

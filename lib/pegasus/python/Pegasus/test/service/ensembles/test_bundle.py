@@ -1,15 +1,16 @@
 import os
-import unittest
-import tempfile
-import zipfile
 import shutil
+import tempfile
+import unittest
+import zipfile
 
 from Pegasus.service.ensembles.bundle import *
+
 
 class TestBundle(unittest.TestCase):
     def setUp(self):
         self.fd, self.filename = tempfile.mkstemp()
-        self.zipfile = zipfile.ZipFile(self.filename, 'w')
+        self.zipfile = zipfile.ZipFile(self.filename, "w")
 
     def tearDown(self):
         self.zipfile.close()
@@ -71,19 +72,30 @@ class TestBundle(unittest.TestCase):
         self.assertRaises(BundleException, b.verify)
 
     def test_bad_rc(self):
-        self.zipfile.writestr(PROPERTIES_NAME, "pegasus.dax.file=%s\npegasus.catalog.replica.file=/doesnotexits" % __file__)
+        self.zipfile.writestr(
+            PROPERTIES_NAME,
+            "pegasus.dax.file=%s\npegasus.catalog.replica.file=/doesnotexits"
+            % __file__,
+        )
         self.zipfile.close()
         bundle = Bundle(self.filename)
         self.assertRaises(BundleException, bundle.verify)
 
     def test_bad_tc(self):
-        self.zipfile.writestr(PROPERTIES_NAME, "pegasus.dax.file=%s\npegasus.catalog.transformation.file=/doesnotexits" % __file__)
+        self.zipfile.writestr(
+            PROPERTIES_NAME,
+            "pegasus.dax.file=%s\npegasus.catalog.transformation.file=/doesnotexits"
+            % __file__,
+        )
         self.zipfile.close()
         bundle = Bundle(self.filename)
         self.assertRaises(BundleException, bundle.verify)
 
     def test_bad_sc(self):
-        self.zipfile.writestr(PROPERTIES_NAME, "pegasus.dax.file=%s\npegasus.catalog.site.file=/doesnotexits" % __file__)
+        self.zipfile.writestr(
+            PROPERTIES_NAME,
+            "pegasus.dax.file=%s\npegasus.catalog.site.file=/doesnotexits" % __file__,
+        )
         self.zipfile.close()
         bundle = Bundle(self.filename)
         self.assertRaises(BundleException, bundle.verify)
@@ -93,11 +105,10 @@ class TestBundle(unittest.TestCase):
         self.zipfile.close()
         bundle = Bundle(self.filename)
         dirname = tempfile.mkdtemp()
-        filename =os.path.join(dirname, PROPERTIES_NAME)
+        filename = os.path.join(dirname, PROPERTIES_NAME)
         try:
             bundle.unpack(dirname)
             self.assertTrue(os.path.isfile(filename))
             self.assertEqual(open(filename).read(), "hello=world")
         finally:
             shutil.rmtree(dirname)
-

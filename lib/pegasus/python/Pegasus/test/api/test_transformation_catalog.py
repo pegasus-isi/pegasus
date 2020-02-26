@@ -1,22 +1,21 @@
-import os
 import json
 from tempfile import NamedTemporaryFile
 
 import pytest
+
 import yaml
 from jsonschema import validate
 
-from Pegasus.api.transformation_catalog import TransformationSite
-from Pegasus.api.transformation_catalog import Container
-from Pegasus.api.transformation_catalog import Transformation
-from Pegasus.api.transformation_catalog import TransformationCatalog
-from Pegasus.api.transformation_catalog import PEGASUS_VERSION
-from Pegasus.api.site_catalog import OS
-from Pegasus.api.site_catalog import Arch
-from Pegasus.api.mixins import Namespace
-from Pegasus.api.mixins import EventType
 from Pegasus.api.errors import DuplicateError
-from Pegasus.api.errors import NotFoundError
+from Pegasus.api.mixins import EventType, Namespace
+from Pegasus.api.site_catalog import OS, Arch
+from Pegasus.api.transformation_catalog import (
+    PEGASUS_VERSION,
+    Container,
+    Transformation,
+    TransformationCatalog,
+    TransformationSite,
+)
 from Pegasus.api.writable import _CustomEncoder
 
 
@@ -210,9 +209,7 @@ class TestTransformation:
     )
     def test_get_key(self, transformation):
         assert transformation._get_key() == "{}::{}::{}".format(
-            transformation.namespace,
-            transformation.name,
-            transformation.version
+            transformation.namespace, transformation.name, transformation.version
         )
 
     def test_add_site(self):
@@ -605,8 +602,10 @@ class TestTransformationCatalog:
             tc.write(f, _format="json")
             f.seek(0)
             result = json.load(f)
-        
-        result["transformations"] = sorted(expected["transformations"], key=lambda t: t["name"])
+
+        result["transformations"] = sorted(
+            expected["transformations"], key=lambda t: t["name"]
+        )
 
         assert result == expected
 
@@ -665,4 +664,3 @@ class TestTransformationCatalog:
 
         tc_schema = load_schema("tc-5.0.json")
         validate(instance=tc_json, schema=tc_schema)
-

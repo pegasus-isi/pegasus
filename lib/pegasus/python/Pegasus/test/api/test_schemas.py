@@ -1,4 +1,5 @@
 import pytest
+
 from jsonschema import Draft7Validator
 
 # Validating the actual format of the schemas against the Draft 7 meta-schema

@@ -22,8 +22,8 @@ import unittest
 from six import StringIO
 
 from flask import g
+
 from Pegasus.service import app
-from Pegasus.service.monitoring.resources import *
 
 
 class JSONResponseMixin(object):

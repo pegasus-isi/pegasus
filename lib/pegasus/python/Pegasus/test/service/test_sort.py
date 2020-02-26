@@ -16,6 +16,7 @@
 __author__ = "Rajiv Mayani"
 
 import pytest
+
 from Pegasus.service._sort import InvalidSortError, sort_parse
 
 

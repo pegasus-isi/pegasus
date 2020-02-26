@@ -1,13 +1,12 @@
 import json
 import os
 from tempfile import TemporaryFile
-from io import StringIO
 
-import yaml
 import pytest
 
-from Pegasus.api.writable import _CustomEncoder
-from Pegasus.api.writable import Writable
+import yaml
+
+from Pegasus.api.writable import Writable, _CustomEncoder
 
 
 @pytest.fixture(scope="function")
@@ -95,15 +94,13 @@ class TestWritable:
         with pytest.raises(ValueError):
             writable_obj.write("abc", _format="123")
 
-
     @pytest.mark.parametrize(
         "file, _format, loader",
-        [
-            (TemporaryFile, "yml", yaml.safe_load),
-            (TemporaryFile, "json", json.load)
-        ]
+        [(TemporaryFile, "yml", yaml.safe_load), (TemporaryFile, "json", json.load)],
     )
-    def test_write_stream_without_name(self, writable_obj, expected, file, _format, loader):
+    def test_write_stream_without_name(
+        self, writable_obj, expected, file, _format, loader
+    ):
         with file(mode="w+") as f:
             writable_obj.write(f, _format=_format)
             f.seek(0)

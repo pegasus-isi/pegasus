@@ -3,6 +3,7 @@
 import logging
 
 import pytest
+
 from flask import _request_ctx_stack
 
 log = logging.getLogger(__name__)

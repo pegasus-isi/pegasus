@@ -1,20 +1,25 @@
 import os
-import pytest
-
 from tempfile import TemporaryFile
 
+import pytest
+
 from Pegasus.api.properties import Properties
+
 
 @pytest.fixture(scope="function")
 def props():
     return Properties()
+
 
 class TestProperties:
     def test_ls(self, capsys, props):
         try:
             Properties.ls("pegasus.pmc")
             captured = capsys.readouterr().out
-            assert captured == "pegasus.pmc_priority\npegasus.pmc_request_cpus\npegasus.pmc_request_memory\npegasus.pmc_task_arguments\n"
+            assert (
+                captured
+                == "pegasus.pmc_priority\npegasus.pmc_request_cpus\npegasus.pmc_request_memory\npegasus.pmc_task_arguments\n"
+            )
 
             Properties.ls()
             Properties.ls("nothing")
@@ -30,7 +35,7 @@ class TestProperties:
 
         with open(filename, "r") as f:
             assert f.read() == "a = b\nc = d\n\n"
-        
+
         os.remove(filename)
 
     def test_write_file(self, props):
@@ -43,5 +48,5 @@ class TestProperties:
     def test_write_invalid_file(self, props):
         with pytest.raises(TypeError) as e:
             props.write(123)
-        
+
         assert "invalid file: 123" in str(e)

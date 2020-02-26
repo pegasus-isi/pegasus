@@ -1,14 +1,12 @@
 import os
 import sys
 import time
-import subprocess
-import logging
 from StringIO import StringIO
 
 from Pegasus.db import schema as dash
-
-from Pegasus.service import app, db, em, catalogs, ensembles
+from Pegasus.service import catalogs, db, em, ensembles
 from Pegasus.test.service import *
+
 
 class TestWorkflowProcessor:
     def __init__(self, workflow):
@@ -41,6 +39,7 @@ class TestWorkflowProcessor:
     def running_successful(self):
         return True
 
+
 class EnsembleManagerTest(UserTestCase):
     def setUp(self):
         UserTestCase.setUp(self)
@@ -72,28 +71,63 @@ class EnsembleManagerTest(UserTestCase):
         db.session.flush()
 
         mgr.loop_once()
-        self.assertEqual(w.state, ensembles.EnsembleWorkflowStates.READY, "State should still be READY")
-        self.assertEqual(w2.state, ensembles.EnsembleWorkflowStates.READY, "State should still be READY")
+        self.assertEqual(
+            w.state,
+            ensembles.EnsembleWorkflowStates.READY,
+            "State should still be READY",
+        )
+        self.assertEqual(
+            w2.state,
+            ensembles.EnsembleWorkflowStates.READY,
+            "State should still be READY",
+        )
 
         e.set_state(ensembles.EnsembleStates.ACTIVE)
         db.session.flush()
 
         mgr.loop_once()
-        self.assertEqual(w.state, ensembles.EnsembleWorkflowStates.PLANNING, "State should be PLANNING")
-        self.assertEqual(w2.state, ensembles.EnsembleWorkflowStates.READY, "State should be READY")
+        self.assertEqual(
+            w.state,
+            ensembles.EnsembleWorkflowStates.PLANNING,
+            "State should be PLANNING",
+        )
+        self.assertEqual(
+            w2.state, ensembles.EnsembleWorkflowStates.READY, "State should be READY"
+        )
 
         mgr.loop_once()
-        self.assertEqual(w.state, ensembles.EnsembleWorkflowStates.RUNNING, "State should be RUNNING")
+        self.assertEqual(
+            w.state, ensembles.EnsembleWorkflowStates.RUNNING, "State should be RUNNING"
+        )
         self.assertEqual(w.submitdir, "submitdir", "Submitdir should be set")
-        self.assertEqual(w.wf_uuid, "d8f8e15c-a55f-4ca0-8474-62bdb3310083", "UUID should be set")
-        self.assertEqual(w2.state, ensembles.EnsembleWorkflowStates.PLANNING, "State should be PLANNING")
+        self.assertEqual(
+            w.wf_uuid, "d8f8e15c-a55f-4ca0-8474-62bdb3310083", "UUID should be set"
+        )
+        self.assertEqual(
+            w2.state,
+            ensembles.EnsembleWorkflowStates.PLANNING,
+            "State should be PLANNING",
+        )
 
         mgr.loop_once()
-        self.assertEqual(w.state, ensembles.EnsembleWorkflowStates.SUCCESSFUL, "State should be SUCCESSFUL")
-        self.assertEqual(w2.state, ensembles.EnsembleWorkflowStates.RUNNING, "State should be RUNNING")
+        self.assertEqual(
+            w.state,
+            ensembles.EnsembleWorkflowStates.SUCCESSFUL,
+            "State should be SUCCESSFUL",
+        )
+        self.assertEqual(
+            w2.state,
+            ensembles.EnsembleWorkflowStates.RUNNING,
+            "State should be RUNNING",
+        )
 
         mgr.loop_once()
-        self.assertEqual(w2.state, ensembles.EnsembleWorkflowStates.SUCCESSFUL, "State should be SUCCESSFUL")
+        self.assertEqual(
+            w2.state,
+            ensembles.EnsembleWorkflowStates.SUCCESSFUL,
+            "State should be SUCCESSFUL",
+        )
+
 
 def RequiresPegasus(f):
     def wrapper(*args, **kwargs):
@@ -107,6 +141,7 @@ def RequiresPegasus(f):
 
     return wrapper
 
+
 def RequiresCondor(f):
     def wrapper(*args, **kwargs):
         try:
@@ -118,6 +153,7 @@ def RequiresCondor(f):
         return f(*args, **kwargs)
 
     return wrapper
+
 
 class ScriptTest(TestCase):
     @IntegrationTest
@@ -138,7 +174,7 @@ class ScriptTest(TestCase):
         if os.path.isfile(cwdfile):
             os.remove(cwdfile)
         em.forkscript("echo $PWD > %s" % cwdfile, cwd="/")
-        time.sleep(1) # This just gives the script time to finish
+        time.sleep(1)  # This just gives the script time to finish
         cwd = open(cwdfile, "r").read().strip()
         self.assertEqual(cwd, "/")
         os.remove(cwdfile)
@@ -148,12 +184,16 @@ class ScriptTest(TestCase):
             os.remove(pidfile)
         em.forkscript("true", cwd="/tmp", pidfile="/tmp/forkscript.pid")
         self.assertTrue(os.path.isfile(pidfile))
-        pid = int(open(pidfile,"r").read())
+        pid = int(open(pidfile, "r").read())
         self.assertTrue(pid > 0)
         os.remove(pidfile)
 
-        self.assertRaises(em.EMException, em.forkscript, "true", cwd="/some/path/not/existing")
-        self.assertRaises(em.EMException, em.forkscript, "true", pidfile="/some/path/not/existing.pid")
+        self.assertRaises(
+            em.EMException, em.forkscript, "true", cwd="/some/path/not/existing"
+        )
+        self.assertRaises(
+            em.EMException, em.forkscript, "true", pidfile="/some/path/not/existing.pid"
+        )
 
     def testRunScript(self):
         em.runscript("true")
@@ -166,15 +206,20 @@ class ScriptTest(TestCase):
         self.assertEqual(cwd, "/")
         os.remove(cwdfile)
 
-        self.assertRaises(em.EMException, em.runscript, "true", cwd="/some/path/not/existing")
+        self.assertRaises(
+            em.EMException, em.runscript, "true", cwd="/some/path/not/existing"
+        )
+
 
 class WorkflowTest(UserTestCase):
-    endstates = set([
-        ensembles.EnsembleWorkflowStates.SUCCESSFUL,
-        ensembles.EnsembleWorkflowStates.PLAN_FAILED,
-        ensembles.EnsembleWorkflowStates.RUN_FAILED,
-        ensembles.EnsembleWorkflowStates.FAILED
-    ])
+    endstates = set(
+        [
+            ensembles.EnsembleWorkflowStates.SUCCESSFUL,
+            ensembles.EnsembleWorkflowStates.PLAN_FAILED,
+            ensembles.EnsembleWorkflowStates.RUN_FAILED,
+            ensembles.EnsembleWorkflowStates.FAILED,
+        ]
+    )
 
     def test_workflow_processor(self):
         "Simple tests to make sure the WorkflowProcessor works"
@@ -209,7 +254,7 @@ class WorkflowTest(UserTestCase):
 
         ws = dash.DashboardWorkflowstate()
         ws.wf_id = dw.wf_id
-        ws.state = 'WORKFLOW_STARTED'
+        ws.state = "WORKFLOW_STARTED"
         ws.restart_count = 0
         ws.status = 0
         db.session.add(ws)
@@ -219,7 +264,7 @@ class WorkflowTest(UserTestCase):
         self.assertTrue(p.running())
         self.assertRaises(em.EMException, p.running_successful)
 
-        ws.state = 'WORKFLOW_TERMINATED'
+        ws.state = "WORKFLOW_TERMINATED"
         ws.status = 0
         db.session.flush()
 
@@ -236,7 +281,8 @@ class WorkflowTest(UserTestCase):
         rcfile = StringIO("")
 
         # Just one transformation in the tc
-        tcfile = StringIO("""
+        tcfile = StringIO(
+            """
             tr ls {
               site local {
                 pfn "/bin/ls"
@@ -245,10 +291,12 @@ class WorkflowTest(UserTestCase):
                 type "INSTALLED"
               }
             }
-        """)
+        """
+        )
 
         # Only the local site in the SC
-        scfile = StringIO("""<?xml version="1.0" encoding="UTF-8"?>
+        scfile = StringIO(
+            """<?xml version="1.0" encoding="UTF-8"?>
             <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
                          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                          xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
@@ -262,17 +310,33 @@ class WorkflowTest(UserTestCase):
                     </directory>
                 </site>
             </sitecatalog>
-        """ % {"tmpdir": self.tmpdir})
+        """
+            % {"tmpdir": self.tmpdir}
+        )
 
         rc = catalogs.save_catalog("replica", self.username, "replica", "File", rcfile)
         sc = catalogs.save_catalog("site", self.username, "sites", "XML", scfile)
-        tc = catalogs.save_catalog("transformation", self.username, "transformations", "text", tcfile)
+        tc = catalogs.save_catalog(
+            "transformation", self.username, "transformations", "text", tcfile
+        )
 
         conf = StringIO("pegasus.register=false")
 
         e = ensembles.create_ensemble(self.username, "process", 1, 1)
-        ew = ensembles.create_ensemble_workflow(e.id, "process", 0, rc, tc, sc, daxfile, conf,
-                sites=["local"], output_site="local", force=True, cleanup=False)
+        ew = ensembles.create_ensemble_workflow(
+            e.id,
+            "process",
+            0,
+            rc,
+            tc,
+            sc,
+            daxfile,
+            conf,
+            sites=["local"],
+            output_site="local",
+            force=True,
+            cleanup=False,
+        )
 
         return e, ew
 
@@ -280,7 +344,8 @@ class WorkflowTest(UserTestCase):
     @RequiresPegasus
     def test_planner_fails(self):
         # This should fail to plan because the dax has an unknown transformation
-        dax = StringIO("""<?xml version="1.0" encoding="UTF-8"?>
+        dax = StringIO(
+            """<?xml version="1.0" encoding="UTF-8"?>
             <adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.4.xsd"
                   version="3.4" name="process">
@@ -290,7 +355,8 @@ class WorkflowTest(UserTestCase):
                     <uses name="listing.txt" link="output" register="false" transfer="true"/>
                 </job>
             </adag>
-        """)
+        """
+        )
 
         e, ew = self.create_test_workflow(dax)
 
@@ -307,7 +373,8 @@ class WorkflowTest(UserTestCase):
     @RequiresCondor
     def test_failed_workflow(self):
         # This workflow should fail because the argument to the ls job is invalid
-        dax = StringIO("""<?xml version="1.0" encoding="UTF-8"?>
+        dax = StringIO(
+            """<?xml version="1.0" encoding="UTF-8"?>
             <adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.4.xsd"
                   version="3.4" name="process">
@@ -317,7 +384,8 @@ class WorkflowTest(UserTestCase):
                     <uses name="listing.txt" link="output" register="false" transfer="true"/>
                 </job>
             </adag>
-        """)
+        """
+        )
 
         e, ew = self.create_test_workflow(dax)
 
@@ -353,7 +421,8 @@ class WorkflowTest(UserTestCase):
     @RequiresCondor
     def test_successful_workflow(self):
         # This workflow should succeed
-        dax = StringIO("""<?xml version="1.0" encoding="UTF-8"?>
+        dax = StringIO(
+            """<?xml version="1.0" encoding="UTF-8"?>
             <adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.4.xsd"
                   version="3.4" name="process">
@@ -363,7 +432,8 @@ class WorkflowTest(UserTestCase):
                     <uses name="listing.txt" link="output" register="false" transfer="true"/>
                 </job>
             </adag>
-        """)
+        """
+        )
 
         e, ew = self.create_test_workflow(dax)
 
@@ -399,7 +469,8 @@ class WorkflowTest(UserTestCase):
     @RequiresCondor
     def test_ensemble_end_to_end(self):
         # This workflow should succeed
-        dax = StringIO("""<?xml version="1.0" encoding="UTF-8"?>
+        dax = StringIO(
+            """<?xml version="1.0" encoding="UTF-8"?>
             <adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.4.xsd"
                   version="3.4" name="process">
@@ -409,7 +480,8 @@ class WorkflowTest(UserTestCase):
                     <uses name="listing.txt" link="output" register="false" transfer="true"/>
                 </job>
             </adag>
-        """)
+        """
+        )
 
         e, ew = self.create_test_workflow(dax)
 
@@ -426,7 +498,8 @@ class WorkflowTest(UserTestCase):
     @RequiresCondor
     def test_ensemble_failure_end_to_end(self):
         # This workflow should fail because of the argument to ls
-        dax = StringIO("""<?xml version="1.0" encoding="UTF-8"?>
+        dax = StringIO(
+            """<?xml version="1.0" encoding="UTF-8"?>
             <adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.4.xsd"
                   version="3.4" name="process">
@@ -436,7 +509,8 @@ class WorkflowTest(UserTestCase):
                     <uses name="listing.txt" link="output" register="false" transfer="true"/>
                 </job>
             </adag>
-        """)
+        """
+        )
 
         e, ew = self.create_test_workflow(dax)
 
@@ -469,7 +543,8 @@ class WorkflowTest(UserTestCase):
         f.write(subdax)
         f.close()
 
-        dax = StringIO("""<?xml version="1.0" encoding="UTF-8"?>
+        dax = StringIO(
+            """<?xml version="1.0" encoding="UTF-8"?>
             <adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.4.xsd"
                   version="3.4" name="process">
@@ -479,7 +554,9 @@ class WorkflowTest(UserTestCase):
                 <dax id="ID0000001" file="subdax.xml">
                 </dax>
             </adag>
-        """ % subdaxfile)
+        """
+            % subdaxfile
+        )
 
         e, ew = self.create_test_workflow(dax)
 
@@ -490,4 +567,3 @@ class WorkflowTest(UserTestCase):
             time.sleep(5)
 
         self.assertEqual(ew.state, ensembles.EnsembleWorkflowStates.SUCCESSFUL)
-

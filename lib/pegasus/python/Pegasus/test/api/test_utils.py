@@ -1,9 +1,8 @@
-import pytest
 from enum import Enum
 
-from Pegasus.api._utils import _get_class_enum_member_str
-from Pegasus.api._utils import _get_enum_str
-from Pegasus.api._utils import _chained
+import pytest
+
+from Pegasus.api._utils import _chained, _get_class_enum_member_str, _get_enum_str
 
 
 def test__get_class_enum_member_str():
@@ -46,26 +45,30 @@ def test_invalid__get_enum_str():
 
     assert "invalid enum_cls: {_type}".format(_type=int) in str(e)
 
+
 @pytest.fixture(scope="function")
 def obj():
     def _obj():
         class Obj:
             def __init__(self):
                 ...
-            
+
             @_chained
             def returnNone(self):
                 ...
-            
+
             @_chained
             def return_1(self):
                 return 1
-        
+
         return Obj()
+
     return _obj()
+
 
 def test__chained(obj):
     assert id(obj) == id(obj.returnNone())
+
 
 def test__chained_invalid(obj):
     with pytest.raises(AssertionError):

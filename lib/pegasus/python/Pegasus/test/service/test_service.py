@@ -16,4 +16,4 @@ __author__ = "Rajiv Mayani"
 
 
 def test_imports():
-    from Pegasus.service.server import main
+    pass

@@ -1,24 +1,25 @@
-import os
 import json
 from tempfile import NamedTemporaryFile
 
 import pytest
+
 import yaml
 from jsonschema import validate
 
-from Pegasus.api.site_catalog import Arch
-from Pegasus.api.site_catalog import OS
-from Pegasus.api.site_catalog import Operation
-from Pegasus.api.site_catalog import FileServer
-from Pegasus.api.site_catalog import Directory
-from Pegasus.api.site_catalog import Grid
-from Pegasus.api.site_catalog import SupportedJobs
-from Pegasus.api.site_catalog import Scheduler
-from Pegasus.api.site_catalog import Site
-from Pegasus.api.site_catalog import SiteCatalog
-from Pegasus.api.site_catalog import PEGASUS_VERSION
-from Pegasus.api.mixins import Namespace
 from Pegasus.api.errors import DuplicateError
+from Pegasus.api.site_catalog import (
+    OS,
+    PEGASUS_VERSION,
+    Arch,
+    Directory,
+    FileServer,
+    Grid,
+    Operation,
+    Scheduler,
+    Site,
+    SiteCatalog,
+    SupportedJobs,
+)
 from Pegasus.api.writable import _CustomEncoder
 
 
@@ -397,12 +398,15 @@ def expected_json():
         expected["sites"][i]["directories"].sort(key=lambda d: d["path"])
 
         for j in range(len(expected["sites"][i]["directories"])):
-            expected["sites"][i]["directories"][j]["fileServers"].sort(key=lambda fs: fs["url"])
-        
+            expected["sites"][i]["directories"][j]["fileServers"].sort(
+                key=lambda fs: fs["url"]
+            )
+
         if "grids" in expected["sites"][i]:
             expected["sites"][i]["grids"].sort(key=lambda g: g["jobtype"])
-    
+
     return expected
+
 
 class TestSiteCatalog:
     def test_add_valid_site(self):
@@ -497,8 +501,10 @@ class TestSiteCatalog:
             result["sites"][i]["directories"].sort(key=lambda d: d["path"])
 
             for j in range(len(result["sites"][i]["directories"])):
-                result["sites"][i]["directories"][j]["fileServers"].sort(key=lambda fs: fs["url"])
-            
+                result["sites"][i]["directories"][j]["fileServers"].sort(
+                    key=lambda fs: fs["url"]
+                )
+
             if "grids" in result["sites"][i]:
                 result["sites"][i]["grids"].sort(key=lambda g: g["jobtype"])
 
@@ -575,10 +581,11 @@ class TestSiteCatalog:
             result["sites"][i]["directories"].sort(key=lambda d: d["path"])
 
             for j in range(len(result["sites"][i]["directories"])):
-                result["sites"][i]["directories"][j]["fileServers"].sort(key=lambda fs: fs["url"])
-            
+                result["sites"][i]["directories"][j]["fileServers"].sort(
+                    key=lambda fs: fs["url"]
+                )
+
             if "grids" in result["sites"][i]:
                 result["sites"][i]["grids"].sort(key=lambda g: g["jobtype"])
 
         assert result == expected_json
-

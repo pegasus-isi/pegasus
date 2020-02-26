@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-__author__ = 'Rafael Ferreira da Silva'
+__author__ = "Rafael Ferreira da Silva"
 
 import unittest
 
@@ -24,18 +24,18 @@ from Pegasus.DAX3 import *
 
 class TestTransformationCatalog(unittest.TestCase):
     def test_tc(self):
-        tc = TransformationCatalog('/home/test')
-        self.assertEqual('tc.txt', tc.filename)
+        tc = TransformationCatalog("/home/test")
+        self.assertEqual("tc.txt", tc.filename)
 
-        tc = TransformationCatalog('/home/test', 'tc')
-        self.assertEqual('tc', tc.filename)
+        tc = TransformationCatalog("/home/test", "tc")
+        self.assertEqual("tc", tc.filename)
 
     def test_tc_add_executable(self):
-        tc = TransformationCatalog('/home/test')
+        tc = TransformationCatalog("/home/test")
         self.assertRaises(Exception, tc.add)
         self.assertEqual(len(tc._executables), 0)
 
-        e = Executable('my-exec')
+        e = Executable("my-exec")
         tc.add(e)
         self.assertEqual(len(tc._executables), 1)
         self.assertEqual(tc._executables[0].name, e.name)
@@ -44,15 +44,17 @@ class TestTransformationCatalog(unittest.TestCase):
         self.assertEqual(len(tc._executables), 1)
 
     def test_tc_add_container(self):
-        tc = TransformationCatalog('/home/test')
+        tc = TransformationCatalog("/home/test")
         self.assertRaises(Exception, tc.add)
         self.assertEqual(len(tc._containers), 0)
 
         c = Container(
-            'cont-pegasus', ContainerType.DOCKER,
-            'docker:///rynge/montage:latest',
-            'local', '/URL',
-            ['/Volumes/Work/lfs1:/shared-data/:ro', '/data1:/shared-data1']
+            "cont-pegasus",
+            ContainerType.DOCKER,
+            "docker:///rynge/montage:latest",
+            "local",
+            "/URL",
+            ["/Volumes/Work/lfs1:/shared-data/:ro", "/data1:/shared-data1"],
         )
         tc.add_container(c)
         self.assertEqual(len(tc._containers), 1)
@@ -62,5 +64,5 @@ class TestTransformationCatalog(unittest.TestCase):
         self.assertEqual(len(tc._containers), 1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

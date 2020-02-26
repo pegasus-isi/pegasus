@@ -1,73 +1,88 @@
 import json
-from tempfile import TemporaryFile
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, TemporaryFile
 
 import pytest
 
 import Pegasus
 from Pegasus import yaml
-from Pegasus.transformation_catalog import load
-from Pegasus.transformation_catalog import loads
-from Pegasus.transformation_catalog import dump
-from Pegasus.transformation_catalog import dumps
-from Pegasus.transformation_catalog import _to_tc
-from Pegasus.api.site_catalog import OS
-from Pegasus.api.site_catalog import Arch
+from Pegasus.api.site_catalog import OS, Arch
+from Pegasus.api.transformation_catalog import (
+    Container,
+    Transformation,
+    TransformationCatalog,
+    TransformationSite,
+)
 from Pegasus.api.writable import _CustomEncoder
-from Pegasus.api.transformation_catalog import Container
-from Pegasus.api.transformation_catalog import Transformation
-from Pegasus.api.transformation_catalog import TransformationSite
-from Pegasus.api.transformation_catalog import TransformationCatalog
+from Pegasus.transformation_catalog import _to_tc, dump, dumps, load, loads
+
 
 @pytest.fixture(scope="module")
 def tc1():
-    return TransformationCatalog()\
+    return (
+        TransformationCatalog()
         .add_transformations(
             Transformation("t1", namespace="test", version="1.0")
-                .add_site(
-                    TransformationSite(
-                        "local",
-                        "/pfn",
-                        True,
-                        arch=Arch.X86_64,
-                        os_type=OS.LINUX,
-                        os_release="1",
-                        os_version="1",
-                        glibc="1",
-                        container="cont"
-                    ).add_dagman(retry="3")
-                    .add_metadata(JAVA_HOME="/usr/bin/java")
-                ).add_requirement("t2", namespace="test", version="1.0")
-        ).add_container(
-            Container("cont", Container.DOCKER, "docker:///ryan/centos-pegasus:latest", mounts= ["/Volumes/Work/lfs1:/shared-data/:ro"], image_site="local")
-                .add_env(JAVA_HOME="/usr/bin/java")
+            .add_site(
+                TransformationSite(
+                    "local",
+                    "/pfn",
+                    True,
+                    arch=Arch.X86_64,
+                    os_type=OS.LINUX,
+                    os_release="1",
+                    os_version="1",
+                    glibc="1",
+                    container="cont",
+                )
+                .add_dagman(retry="3")
+                .add_metadata(JAVA_HOME="/usr/bin/java")
+            )
+            .add_requirement("t2", namespace="test", version="1.0")
         )
+        .add_container(
+            Container(
+                "cont",
+                Container.DOCKER,
+                "docker:///ryan/centos-pegasus:latest",
+                mounts=["/Volumes/Work/lfs1:/shared-data/:ro"],
+                image_site="local",
+            ).add_env(JAVA_HOME="/usr/bin/java")
+        )
+    )
+
 
 @pytest.fixture(scope="module")
 def tc2():
-    return TransformationCatalog()\
+    return (
+        TransformationCatalog()
         .add_transformations(
-            Transformation("t1", namespace="test", version="1.0")
-                .add_site(
-                    TransformationSite(
-                        "local",
-                        "/pfn",
-                        True,
-                    )
-                )
-        ).add_container(
-            Container("cont", Container.DOCKER, "docker:///ryan/centos-pegasus:latest", mounts= ["/Volumes/Work/lfs1:/shared-data/:ro"], image_site="local")
+            Transformation("t1", namespace="test", version="1.0").add_site(
+                TransformationSite("local", "/pfn", True,)
+            )
         )
+        .add_container(
+            Container(
+                "cont",
+                Container.DOCKER,
+                "docker:///ryan/centos-pegasus:latest",
+                mounts=["/Volumes/Work/lfs1:/shared-data/:ro"],
+                image_site="local",
+            )
+        )
+    )
 
-def test_to_tc_with_optional_args_set(tc1): 
+
+def test_to_tc_with_optional_args_set(tc1):
     expected = json.loads(json.dumps(tc1, cls=_CustomEncoder))
     result = json.loads(json.dumps(_to_tc(expected), cls=_CustomEncoder))
     assert result == expected
 
-def test_to_tc_without_optional_args(tc2): 
+
+def test_to_tc_without_optional_args(tc2):
     expected = json.loads(json.dumps(tc2, cls=_CustomEncoder))
     result = json.loads(json.dumps(_to_tc(expected), cls=_CustomEncoder))
     assert result == expected
+
 
 @pytest.mark.parametrize("_format", [("yml"), ("json")])
 def test_load(mocker, tc1, _format):
@@ -79,12 +94,12 @@ def test_load(mocker, tc1, _format):
         # load into new tc object
         new_tc = load(f)
 
-
     # assert that what was loaded is equal to original
     result = json.loads(json.dumps(new_tc, cls=_CustomEncoder))
     expected = json.loads(json.dumps(tc1, cls=_CustomEncoder))
 
     assert result == expected
+
 
 def test_loads(tc1):
     # dump tc1 to str, then load into new tc
@@ -96,11 +111,13 @@ def test_loads(tc1):
 
     assert result == expected
 
+
 def test_dump(mocker, tc1):
     mocker.patch("Pegasus.api.writable.Writable.write")
     with NamedTemporaryFile(mode="w") as f:
         dump(tc1, f, _format="yml")
         Pegasus.api.writable.Writable.write.assert_called_once_with(f, _format="yml")
+
 
 def test_dumps(tc1):
     assert yaml.load(dumps(tc1)) == json.loads(json.dumps(tc1, cls=_CustomEncoder))

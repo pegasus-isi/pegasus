@@ -2,7 +2,6 @@
 # the API produces valid XML for all elements according to the
 # new DAX 3.3 schema. It tries to generate XML to cover every part
 # of the schema.
-import sys
 
 from Pegasus.DAX3 import *
 
@@ -35,7 +34,7 @@ def main():
         glibc="3.3",
         arch="x86_64",
         installed=True,
-        osversion="2.6"
+        osversion="2.6",
     )
     e_preprocess.profile("pegasus", "barfoo", "false")
     e_preprocess.metadata("size", 100)
@@ -46,21 +45,13 @@ def main():
     diamond.addExecutable(e_preprocess)
 
     e_findrange = Executable(
-        namespace="diamond",
-        name="findrange",
-        version="4.0",
-        os="linux",
-        arch="x86_64"
+        namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64"
     )
     e_findrange.addPFN(PFN("gsiftp://site.com/bin/findrange", "site"))
     diamond.addExecutable(e_findrange)
 
     e_analyze = Executable(
-        namespace="diamond",
-        name="analyze",
-        version="4.0",
-        os="linux",
-        arch="x86_64"
+        namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64"
     )
     e_analyze.addPFN(PFN("gsiftp://site.com/bin/analyze", "site"))
     diamond.addExecutable(e_analyze)
@@ -158,8 +149,9 @@ def main():
 
     # Get generated diamond dax
     import sys
+
     diamond.writeXML(sys.stdout)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

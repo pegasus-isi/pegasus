@@ -10,8 +10,9 @@ import unittest
 from six import StringIO
 
 from flask import json
+from werkzeug.serving import make_server
+
 from Pegasus.service import app
-from werkzeug.serving import BaseWSGIServer, make_server
 
 
 class TestCase(unittest.TestCase):

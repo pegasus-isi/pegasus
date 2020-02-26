@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-__author__ = 'Rafael Ferreira da Silva'
+__author__ = "Rafael Ferreira da Silva"
 
 import unittest
 
@@ -24,44 +24,42 @@ from Pegasus.DAX3 import *
 
 class TestReplicaCatalog(unittest.TestCase):
     def test_rc(self):
-        rc = ReplicaCatalog('/home/test')
-        self.assertEqual('rc.txt', rc.filename)
+        rc = ReplicaCatalog("/home/test")
+        self.assertEqual("rc.txt", rc.filename)
 
-        rc = ReplicaCatalog('/home/test', 'rc')
-        self.assertEqual('rc', rc.filename)
+        rc = ReplicaCatalog("/home/test", "rc")
+        self.assertEqual("rc", rc.filename)
 
     def test_rc_add(self):
-        rc = ReplicaCatalog('/home/test')
+        rc = ReplicaCatalog("/home/test")
         self.assertRaises(Exception, rc.add)
-        self.assertRaises(Exception, rc.add, 'name')
+        self.assertRaises(Exception, rc.add, "name")
 
         self.assertEqual(len(rc._replicas), 0)
 
-        name = 'myfile'
-        path = 'file://mypath'
+        name = "myfile"
+        path = "file://mypath"
         rc.add(name, path)
         self.assertEqual(len(rc._replicas), 1)
         self.assertEqual(len(rc._replicas[name][path]), 0)
 
-        rc.add(name, path, site='site-A')
+        rc.add(name, path, site="site-A")
         self.assertEqual(len(rc._replicas), 1)
         self.assertEqual(len(rc._replicas[name][path]), 1)
-        self.assertEqual(rc._replicas[name][path][0], ('site', 'site-A'))
+        self.assertEqual(rc._replicas[name][path][0], ("site", "site-A"))
 
         meta_set = set()
-        meta_set.add(Metadata('meta-name', 'meta-content'))
+        meta_set.add(Metadata("meta-name", "meta-content"))
 
-        rc.add(name, path, site='site-A', metadata=meta_set)
+        rc.add(name, path, site="site-A", metadata=meta_set)
         self.assertEqual(len(rc._replicas), 1)
         self.assertEqual(len(rc._replicas[name][path]), 2)
-        self.assertEqual(rc._replicas[name][path][0], ('site', 'site-A'))
-        self.assertEqual(
-            rc._replicas[name][path][1], ('meta-name', 'meta-content')
-        )
+        self.assertEqual(rc._replicas[name][path][0], ("site", "site-A"))
+        self.assertEqual(rc._replicas[name][path][1], ("meta-name", "meta-content"))
 
-        rc.add(name, path, site='site-A', metadata=meta_set)
+        rc.add(name, path, site="site-A", metadata=meta_set)
         self.assertEqual(len(rc._replicas[name][path]), 2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
