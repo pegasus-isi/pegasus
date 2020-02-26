@@ -1,22 +1,24 @@
 # -*- coding: utf-8 -*-
 
 import json
-
-from io import StringIO
 from collections import defaultdict
+from io import StringIO
+from typing import Dict, TextIO
 
 from Pegasus import yaml
-from Pegasus.api.site_catalog import Arch
-from Pegasus.api.site_catalog import OS
-from Pegasus.api.site_catalog import Site
-from Pegasus.api.site_catalog import Directory
-from Pegasus.api.site_catalog import FileServer
-from Pegasus.api.site_catalog import Operation
-from Pegasus.api.site_catalog import Scheduler
-from Pegasus.api.site_catalog import SupportedJobs
-from Pegasus.api.site_catalog import Grid
-from Pegasus.api.site_catalog import SiteCatalog
 from Pegasus.api.errors import PegasusError
+from Pegasus.api.site_catalog import (
+    OS,
+    Arch,
+    Directory,
+    FileServer,
+    Grid,
+    Operation,
+    Scheduler,
+    Site,
+    SiteCatalog,
+    SupportedJobs,
+)
 
 """
 :mod:`site_catalog` exposes an API to serialize and deserialize Pegasus's site catalog file.
@@ -34,7 +36,6 @@ Basic Usage::
 .. moduleauthor:: Rajiv Mayani <mayani@isi.edu>
 """
 
-from typing import Dict, TextIO
 
 __all__ = (
     "load",
