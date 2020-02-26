@@ -51,7 +51,7 @@ class TestFileServer:
 
 class TestDirectory:
     def test_valid_directory(self):
-        assert Directory(Directory.LOCAL_SCRATCH, "/path")
+        assert Directory(Directory.LOCALSCRATCH, "/path")
 
     def test_invalid_directory(self):
         with pytest.raises(TypeError) as e:
@@ -60,18 +60,18 @@ class TestDirectory:
         assert "invalid directory_type: invalid type" in str(e)
 
     def test_add_valid_file_server(self):
-        d = Directory(Directory.LOCAL_SCRATCH, "/path")
+        d = Directory(Directory.LOCALSCRATCH, "/path")
         assert d.add_file_server(FileServer("url", Operation.PUT))
 
     def test_add_invalid_file_server(self):
         with pytest.raises(TypeError) as e:
-            d = Directory(Directory.LOCAL_SCRATCH, "/path")
+            d = Directory(Directory.LOCALSCRATCH, "/path")
             d.add_file_server(123)
 
             assert "invalid file_server: 123" in str(e)
 
     def test_chaining(self):
-        a = Directory(Directory.LOCAL_SCRATCH, "/path")
+        a = Directory(Directory.LOCALSCRATCH, "/path")
         b = a.add_file_server(FileServer("url", Operation.PUT)).add_file_server(
             FileServer("url", Operation.GET)
         )
@@ -79,7 +79,7 @@ class TestDirectory:
         assert id(a) == id(b)
 
     def test_tojson(self):
-        directory = Directory(Directory.LOCAL_SCRATCH, "/path").add_file_server(
+        directory = Directory(Directory.LOCALSCRATCH, "/path").add_file_server(
             FileServer("url", Operation.PUT)
         )
 
@@ -202,8 +202,8 @@ class TestSite:
 
     def test_add_valid_directory(self):
         site = Site("s")
-        site.add_directory(Directory(Directory.LOCAL_SCRATCH, "/path"))
-        site.add_directory(Directory(Directory.LOCAL_STORAGE, "/path"))
+        site.add_directory(Directory(Directory.LOCALSCRATCH, "/path"))
+        site.add_directory(Directory(Directory.LOCALSTORAGE, "/path"))
 
         assert len(site.directories) == 2
 
@@ -244,7 +244,7 @@ class TestSite:
 
     def test_chaining(self):
         site = Site("s")
-        a = site.add_directory(Directory(Directory.LOCAL_SCRATCH, "/path"))
+        a = site.add_directory(Directory(Directory.LOCALSCRATCH, "/path"))
         b = site.add_grid(
             Grid(
                 Grid.GT5,
@@ -266,7 +266,7 @@ class TestSite:
             glibc="1",
         )
         site.add_directory(
-            Directory(Directory.LOCAL_SCRATCH, "/path").add_file_server(
+            Directory(Directory.LOCALSCRATCH, "/path").add_file_server(
                 FileServer("url", Operation.GET)
             )
         )
@@ -436,14 +436,14 @@ class TestSiteCatalog:
                 Site("local", arch=Arch.X86_64, os_type=OS.LINUX)
                 .add_directory(
                     Directory(
-                        Directory.SHARED_SCRATCH, "/tmp/workflows/scratch"
+                        Directory.SHAREDSCRATCH, "/tmp/workflows/scratch"
                     ).add_file_server(
                         FileServer("file:///tmp/workflows/scratch", Operation.ALL)
                     )
                 )
                 .add_directory(
                     Directory(
-                        Directory.LOCAL_STORAGE, "/tmp/workflows/outputs"
+                        Directory.LOCALSTORAGE, "/tmp/workflows/outputs"
                     ).add_file_server(
                         FileServer("file:///tmp/workflows/outputs", Operation.ALL)
                     )
@@ -452,7 +452,7 @@ class TestSiteCatalog:
             .add_site(
                 Site("condor_pool", arch=Arch.X86_64, os_type=OS.LINUX)
                 .add_directory(
-                    Directory(Directory.SHARED_SCRATCH, "/lustre").add_file_server(
+                    Directory(Directory.SHAREDSCRATCH, "/lustre").add_file_server(
                         FileServer("gsiftp://smarty.isi.edu/lustre", Operation.ALL)
                     )
                 )
@@ -476,7 +476,7 @@ class TestSiteCatalog:
             )
             .add_site(
                 Site("staging_site", arch=Arch.X86_64, os_type=OS.LINUX).add_directory(
-                    Directory(Directory.SHARED_SCRATCH, "/data")
+                    Directory(Directory.SHAREDSCRATCH, "/data")
                     .add_file_server(
                         FileServer("scp://obelix.isi.edu/data", Operation.PUT)
                     )
@@ -514,14 +514,14 @@ class TestSiteCatalog:
                 Site("local", arch=Arch.X86_64, os_type=OS.LINUX)
                 .add_directory(
                     Directory(
-                        Directory.SHARED_SCRATCH, "/tmp/workflows/scratch"
+                        Directory.SHAREDSCRATCH, "/tmp/workflows/scratch"
                     ).add_file_server(
                         FileServer("file:///tmp/workflows/scratch", Operation.ALL)
                     )
                 )
                 .add_directory(
                     Directory(
-                        Directory.LOCAL_STORAGE, "/tmp/workflows/outputs"
+                        Directory.LOCALSTORAGE, "/tmp/workflows/outputs"
                     ).add_file_server(
                         FileServer("file:///tmp/workflows/outputs", Operation.ALL)
                     )
@@ -530,7 +530,7 @@ class TestSiteCatalog:
             .add_site(
                 Site("condor_pool", arch=Arch.X86_64, os_type=OS.LINUX)
                 .add_directory(
-                    Directory(Directory.SHARED_SCRATCH, "/lustre").add_file_server(
+                    Directory(Directory.SHAREDSCRATCH, "/lustre").add_file_server(
                         FileServer("gsiftp://smarty.isi.edu/lustre", Operation.ALL)
                     )
                 )
@@ -554,7 +554,7 @@ class TestSiteCatalog:
             )
             .add_site(
                 Site("staging_site", arch=Arch.X86_64, os_type=OS.LINUX).add_directory(
-                    Directory(Directory.SHARED_SCRATCH, "/data")
+                    Directory(Directory.SHAREDSCRATCH, "/data")
                     .add_file_server(
                         FileServer("scp://obelix.isi.edu/data", Operation.PUT)
                     )

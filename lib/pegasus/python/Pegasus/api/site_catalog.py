@@ -30,7 +30,7 @@ class Arch(Enum):
     X86_64 = "x86_64"
     PPC = "ppc"
     PPC_64 = "ppc_64"
-    PPC_64LE = "ppc64le"
+    PPC64LE = "ppc64le"
     IA64 = "ia64"
     SPARCV7 = "sparcv7"
     SPARCV9 = "sparcv9"
@@ -60,17 +60,17 @@ class _DirectoryType(Enum):
 
     #: Describes a scratch file systems. Pegasus will use this to store
     #: intermediate `da`ta between jobs and other temporary files.
-    SHARED_SCRATCH = "sharedScratch"
+    SHAREDSCRATCH = "sharedScratch"
 
     # TODO: where is this documented? the others were in user guide
-    SHARED_STORAGE = "sharedStorage"
+    SHAREDSTORAGE = "sharedStorage"
 
     #: Describes the scratch file systems available locally on a compute node.
-    LOCAL_SCRATCH = "localScratch"
+    LOCALSCRATCH = "localScratch"
 
     #: Describes a long term storage file system. This is the directory
     #: Pegasus will stage output files to.
-    LOCAL_STORAGE = "localStorage"
+    LOCALSTORAGE = "localStorage"
 
 
 class _GridType(Enum):
@@ -146,17 +146,17 @@ class Directory:
 
     #: Describes a scratch file systems. Pegasus will use this to store
     #: intermediate data between jobs and other temporary files.
-    SHARED_SCRATCH = _DirectoryType.SHARED_SCRATCH
+    SHAREDSCRATCH = _DirectoryType.SHAREDSCRATCH
 
     # TODO: where is this documented? the others were in user guide
-    SHARED_STORAGE = _DirectoryType.SHARED_STORAGE
+    SHAREDSTORAGE = _DirectoryType.SHAREDSTORAGE
 
     #: Describes the scratch file systems available locally on a compute node.
-    LOCAL_SCRATCH = _DirectoryType.LOCAL_SCRATCH
+    LOCALSCRATCH = _DirectoryType.LOCALSCRATCH
 
     #: Describes a long term storage file system. This is the directory
     #: Pegasus will stage output files to.
-    LOCAL_STORAGE = _DirectoryType.LOCAL_STORAGE
+    LOCALSTORAGE = _DirectoryType.LOCALSTORAGE
 
     # the site catalog schema lists freeSize and totalSize as an attribute
     # however this appears to not be used; removing it as a parameter
