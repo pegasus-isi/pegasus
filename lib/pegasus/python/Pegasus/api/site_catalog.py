@@ -200,7 +200,6 @@ class Directory:
 
         self.file_servers.append(file_server)
 
-
     def __json__(self):
         return _filter_out_nones(
             {

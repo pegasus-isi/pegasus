@@ -71,7 +71,6 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
 
             self.uses.add(_input)
 
-
     def get_inputs(self):
         """Get this job's input files
         
@@ -163,7 +162,6 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
 
         self.uses.add(checkpoint)
 
-
     @_chained
     def add_args(self, *args):
         """Add arguments to this job. Each argument will be separated by a space.
@@ -200,7 +198,6 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         self.add_inputs(file)
         self.stdin = file
 
-
     def get_stdin(self):
         """Get the :py:class:`~Pegasus.api.replica_catalog.File` being used for stdin
         
@@ -234,7 +231,6 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
 
         self.add_outputs(file)
         self.stdout = file
-
 
     def get_stdout(self):
         """Get the :py:class:`~Pegasus.api.replica_catalog.File` being used for stdout
@@ -478,25 +474,32 @@ class _JobDependency:
     def __json__(self):
         return {"id": self.parent_id, "children": list(self.children_ids)}
 
+
 def _needs_client(f):
     @wraps(f)
     def wrapper(self, *args, **kwargs):
         if not self._client:
             self._client = from_env()
-        
+
         f(self, *args, **kwargs)
-    
+
     return wrapper
+
 
 def _needs_submit_dir(f):
     @wraps(f)
     def wrapper(self, *args, **kwargs):
         if not self._submit_dir:
-            raise ValueError("{f} requires a submit directory to be set; Workflow.plan() must be called prior to {f}".format(f=f))
+            raise ValueError(
+                "{f} requires a submit directory to be set; Workflow.plan() must be called prior to {f}".format(
+                    f=f
+                )
+            )
 
         f(self, *args, **kwargs)
-    
+
     return wrapper
+
 
 class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     """Represents multi-step computational steps as a directed
@@ -659,8 +662,8 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         input_dir: str = None,
         output_dir: str = None,
         dir: str = None,
-        relative_dir: str= None,
-        cleanup:str = "none",
+        relative_dir: str = None,
+        cleanup: str = "none",
         verbose: int = 0,
         force: bool = False,
         submit: bool = False,
@@ -695,7 +698,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             self.write(self._path)
         else:
             self.write(str(uuid4()))
-        
+
         self._submit_dir = self._client.plan(
             self._path,
             conf=conf,
@@ -709,7 +712,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             verbose=verbose,
             force=force,
             submit=submit,
-            **kwargs
+            **kwargs,
         )._submit_dir
 
     @_chained
@@ -725,11 +728,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     @_needs_submit_dir
     @_needs_client
-    def status(
-        self,
-        long: bool = False,
-        verbose: int = 0
-    ):
+    def status(self, long: bool = False, verbose: int = 0):
         """Monitor the workflow by quering Condor and directories.
         
         :param long: Show all DAG states, including sub-DAGs, default only totals. defaults to False
@@ -750,7 +749,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :type verbose: int, optional
         """
         self._client.remove(self._submit_dir, verbose=verbose)
-    
+
     @_chained
     @_needs_submit_dir
     @_needs_client
@@ -821,7 +820,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             self.sequence += 1
 
         return next_id
-    
+
     @_chained
     def add_site_catalog(self, sc):
         """Add a site catalog to this workflow. The contents fo the site catalog
@@ -837,9 +836,11 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             raise TypeError(
                 "invalid catalog: {}; sc must be of type SiteCatalog".format(sc)
             )
-        
+
         if self.site_catalog is not None:
-            raise DuplicateError("a SiteCatalog has already been added to this workflow")
+            raise DuplicateError(
+                "a SiteCatalog has already been added to this workflow"
+            )
 
         self.site_catalog = sc
 
@@ -858,9 +859,11 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             raise TypeError(
                 "invalid catalog: {}; rc must be of type ReplicaCatalog".format(rc)
             )
-        
+
         if self.replica_catalog is not None:
-            raise DuplicateError("a ReplicaCatalog has already been added to this workflow")
+            raise DuplicateError(
+                "a ReplicaCatalog has already been added to this workflow"
+            )
 
         self.replica_catalog = rc
 
@@ -877,12 +880,16 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         """
         if not isinstance(tc, TransformationCatalog):
             raise TypeError(
-                "invalid catalog: {}; rc must be of type TransformationCatalog".format(tc)
+                "invalid catalog: {}; rc must be of type TransformationCatalog".format(
+                    tc
+                )
             )
-        
+
         if self.transformation_catalog is not None:
-            raise DuplicateError("a TransformationCatalog has already been added to this workflow")
-    
+            raise DuplicateError(
+                "a TransformationCatalog has already been added to this workflow"
+            )
+
         self.transformation_catalog = tc
 
     @_chained
@@ -908,7 +915,6 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             self.dependencies[parent_id].children_ids.update(children_ids)
         else:
             self.dependencies[parent_id] = _JobDependency(parent_id, children_ids)
-
 
     def _infer_dependencies(self):
         """Internal function for automatically computing dependencies based on

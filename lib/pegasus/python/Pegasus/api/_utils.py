@@ -75,12 +75,14 @@ def _get_enum_str(enum_cls):
         members=" | ".join(sorted(enum_cls._member_names_))
     )
 
+
 def _chained(f):
     """Method decorator to allow chaining. Methods decorated by this should
     not return anything. If they do an exception will be thrown."""
+
     @wraps(f)
     def wrapper(self, *args, **kwargs):
         assert f(self, *args, **kwargs) == None
-        return self 
+        return self
 
     return wrapper

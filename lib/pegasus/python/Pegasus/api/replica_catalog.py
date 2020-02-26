@@ -1,4 +1,3 @@
-
 from ._utils import _chained
 from .errors import DuplicateError
 from .mixins import MetadataMixin

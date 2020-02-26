@@ -1,9 +1,8 @@
 from configparser import DEFAULTSECT, ConfigParser
 from io import StringIO
 
-__all__ = (
-    "Properties"
-)
+__all__ = "Properties"
+
 
 class Properties:
     """Write Pegasus properties to a file.
@@ -183,7 +182,6 @@ class Properties:
         "selector.execution.site",
         "selector.pfn",
         "selector.grid.jobtype",
-
         # variable property keys
         "pegasus.file.cleanup.constraint.*.maxspace",
         "pegasus.log.*",
@@ -200,11 +198,9 @@ class Properties:
         "pegasus.catalog.*.db.user",
         "pegasus.catalog.*.db.url",
         "pegasus.catalog.*.db.driver",
-        "dagman.*.maxjobs"
-        "env.*"
-        "dagman.*",
+        "dagman.*.maxjobs" "env.*" "dagman.*",
         "condor.*",
-        "globus.*"
+        "globus.*",
     )
 
     _cfg_header_len = len("[{}]\n".format(DEFAULTSECT))
@@ -233,7 +229,7 @@ class Properties:
             for p in Properties._props:
                 if p.startswith(prop):
                     to_print.append(p)
-            
+
             to_print.sort()
             print(*to_print, sep="\n")
         else:
@@ -245,13 +241,13 @@ class Properties:
 
     def __setitem__(self, k, v):
         self._conf[DEFAULTSECT][k] = v
-    
+
     def __getitem__(self, k):
         return self._conf[DEFAULTSECT][k]
-    
+
     def __delitem__(self, k):
         self._conf.remove_option(DEFAULTSECT, k)
-    
+
     def write(self, file):
         """Write these properties to a file.
 
@@ -271,13 +267,17 @@ class Properties:
         with StringIO() as sio:
             self._conf.write(sio)
 
-            # write without header 
-            props = sio.getvalue()[Properties._cfg_header_len:]
-        
+            # write without header
+            props = sio.getvalue()[Properties._cfg_header_len :]
+
         if isinstance(file, str):
             with open(file, "w") as f:
                 f.write(props)
         elif hasattr(file, "read"):
-                file.write(props)
+            file.write(props)
         else:
-            raise TypeError("invalid file: {}; file must be of type str or file like object".format(file))
+            raise TypeError(
+                "invalid file: {}; file must be of type str or file like object".format(
+                    file
+                )
+            )

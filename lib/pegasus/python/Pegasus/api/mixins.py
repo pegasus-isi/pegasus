@@ -80,7 +80,6 @@ class HookMixin:
         self.hooks[_ShellHook.__hook_type__].append(_ShellHook(event_type, cmd))
 
 
-
 class _Hook:
     """Base class that specific hook types will inherit from"""
 

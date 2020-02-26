@@ -117,7 +117,7 @@ class Writable:
                     self._write(file, ext)
                 else:
                     self._write(file, _format)
-            
+
         else:
             raise TypeError(
                 "{file} must be of type str or file object".format(file=file)

@@ -287,7 +287,6 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
 
         self.requires.add(key)
 
-
     def __json__(self):
         return _filter_out_nones(
             {
@@ -424,7 +423,6 @@ class TransformationCatalog(Writable):
             )
 
         self.containers[container.name] = container
-
 
     def __json__(self):
         return _filter_out_nones(
