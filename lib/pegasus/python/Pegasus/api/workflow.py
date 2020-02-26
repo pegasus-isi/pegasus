@@ -1,7 +1,6 @@
 import json
 from collections import defaultdict
 from enum import Enum
-from functools import partial 
 from functools import wraps
 from uuid import uuid4
 
@@ -21,7 +20,6 @@ from .mixins import ProfileMixin
 from ._utils import _get_enum_str
 from ._utils import _chained
 from Pegasus.client._client import from_env
-from Pegasus.client._client import Client
 
 PEGASUS_VERSION = "5.0"
 

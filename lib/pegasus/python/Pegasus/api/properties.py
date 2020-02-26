@@ -1,4 +1,3 @@
-from collections import OrderedDict
 from configparser import ConfigParser
 from configparser import DEFAULTSECT
 from io import StringIO 

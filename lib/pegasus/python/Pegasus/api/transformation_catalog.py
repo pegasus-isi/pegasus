@@ -1,4 +1,3 @@
-import json
 from enum import Enum
 from collections import defaultdict
 
@@ -10,7 +9,6 @@ from .site_catalog import OS
 from .writable import _filter_out_nones
 from .writable import Writable
 from .errors import DuplicateError
-from .errors import NotFoundError
 from Pegasus.api._utils import _get_enum_str
 from Pegasus.api._utils import _get_class_enum_member_str
 from Pegasus.api._utils import _chained

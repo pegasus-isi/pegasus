@@ -1,9 +1,7 @@
-import json
 
 from .writable import Writable
 from .writable import _filter_out_nones
 from .errors import DuplicateError
-from .errors import NotFoundError
 from .mixins import MetadataMixin
 from ._utils import _chained
 

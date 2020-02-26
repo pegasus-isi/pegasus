@@ -1,6 +1,4 @@
 import json
-import warnings
-from enum import Enum
 from pathlib import Path
 
 from Pegasus import yaml
@@ -110,7 +108,7 @@ class Writable:
         elif hasattr(file, "read"):
             try:
                 ext = Path(str(file.name)).suffix[1:]
-            except AttributeError as e:
+            except AttributeError:
                 # writing to a stream such as StringIO or TemporaryFile with
                 # no attr "name"
                 self._write(file, _format)
