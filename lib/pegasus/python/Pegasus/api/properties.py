@@ -1,6 +1,5 @@
-from configparser import ConfigParser
-from configparser import DEFAULTSECT
-from io import StringIO 
+from configparser import DEFAULTSECT, ConfigParser
+from io import StringIO
 
 __all__ = (
     "Properties"
@@ -282,5 +281,3 @@ class Properties:
                 file.write(props)
         else:
             raise TypeError("invalid file: {}; file must be of type str or file like object".format(file))
-        
-        

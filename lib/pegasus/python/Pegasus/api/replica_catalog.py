@@ -1,9 +1,8 @@
 
-from .writable import Writable
-from .writable import _filter_out_nones
+from ._utils import _chained
 from .errors import DuplicateError
 from .mixins import MetadataMixin
-from ._utils import _chained
+from .writable import Writable, _filter_out_nones
 
 PEGASUS_VERSION = "5.0"
 

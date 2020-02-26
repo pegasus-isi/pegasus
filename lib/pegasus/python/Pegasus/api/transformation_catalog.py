@@ -1,17 +1,12 @@
-from enum import Enum
 from collections import defaultdict
+from enum import Enum
 
-from .mixins import ProfileMixin
-from .mixins import HookMixin
-from .mixins import MetadataMixin
-from .site_catalog import Arch
-from .site_catalog import OS
-from .writable import _filter_out_nones
-from .writable import Writable
+from Pegasus.api._utils import _chained, _get_class_enum_member_str, _get_enum_str
+
 from .errors import DuplicateError
-from Pegasus.api._utils import _get_enum_str
-from Pegasus.api._utils import _get_class_enum_member_str
-from Pegasus.api._utils import _chained
+from .mixins import HookMixin, MetadataMixin, ProfileMixin
+from .site_catalog import OS, Arch
+from .writable import Writable, _filter_out_nones
 
 PEGASUS_VERSION = "5.0"
 

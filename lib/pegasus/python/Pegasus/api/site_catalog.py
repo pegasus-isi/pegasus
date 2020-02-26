@@ -1,13 +1,10 @@
-from enum import Enum
 from collections import defaultdict
+from enum import Enum
 
-from Pegasus.api.mixins import ProfileMixin
-from Pegasus.api.writable import _filter_out_nones
-from Pegasus.api.writable import Writable
+from Pegasus.api._utils import _chained, _get_class_enum_member_str, _get_enum_str
 from Pegasus.api.errors import DuplicateError
-from Pegasus.api._utils import _get_enum_str
-from Pegasus.api._utils import _get_class_enum_member_str
-from Pegasus.api._utils import _chained
+from Pegasus.api.mixins import ProfileMixin
+from Pegasus.api.writable import Writable, _filter_out_nones
 
 PEGASUS_VERSION = "5.0"
 
@@ -536,4 +533,3 @@ class SiteCatalog(Writable):
             "pegasus": PEGASUS_VERSION,
             "sites": [site for _, site in self.sites.items()],
         }
-

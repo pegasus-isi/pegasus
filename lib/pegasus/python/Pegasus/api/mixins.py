@@ -1,9 +1,8 @@
 from enum import Enum
-from functools import partialmethod
-from functools import wraps
+from functools import partialmethod, wraps
 
-from ._utils import _get_enum_str
-from ._utils import _chained
+from ._utils import _chained, _get_enum_str
+
 
 # --- metadata -----------------------------------------------------------------
 class MetadataMixin:

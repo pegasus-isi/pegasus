@@ -122,4 +122,3 @@ class Writable:
             raise TypeError(
                 "{file} must be of type str or file object".format(file=file)
             )
-
