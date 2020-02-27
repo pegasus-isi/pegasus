@@ -88,7 +88,7 @@ def test_load(sc1, _format):
         sc1.write(f, _format=_format)
         f.seek(0)
 
-        # load into new tc object
+        # load into new sc object
         new_sc = load(f)
 
     # assert that what was loaded is equal to original
@@ -99,7 +99,7 @@ def test_load(sc1, _format):
 
 
 def test_loads_json(sc1):
-    # dump tc1 to str, then load into new tc
+    # dump sc1 to str, then load into new sc
     new_sc = loads(json.dumps(sc1, cls=_CustomEncoder))
 
     # assert that what was loaded is equal to the original
@@ -110,7 +110,7 @@ def test_loads_json(sc1):
 
 
 def test_loads_yaml(sc1):
-    # dump tc1 to str, then load into new tc
+    # dump sc1 to str, then load into new sc
     new_sc = loads(yaml.dump(json.loads(json.dumps(sc1, cls=_CustomEncoder))))
 
     # assert that what was loaded is equal to the original
