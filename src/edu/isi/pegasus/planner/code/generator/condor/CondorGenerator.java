@@ -389,12 +389,12 @@ public class CondorGenerator extends Abstract {
 
             if (this.mAssignDefaultJobPriorities) {
                 int priority = 0;
-                if (job.condorVariables.containsKey(Condor.PRIORITY_KEY) && job.getJobType() == Job.STAGE_IN_JOB){
-                    //PM-1385 we add the precomputed priority to default priority
+                if (job.condorVariables.containsKey(Condor.PRIORITY_KEY)
+                        && job.getJobType() == Job.STAGE_IN_JOB) {
+                    // PM-1385 we add the precomputed priority to default priority
                     int existing = job.condorVariables.getIntValue(Condor.PRIORITY_KEY, 0);
                     priority = getJobPriority(job, node.getDepth()) + existing;
-                }
-                else{
+                } else {
                     // only apply priority if job is not associated with a priority
                     // beforehand and assign priorities by default is true
                     priority = getJobPriority(job, node.getDepth());
@@ -410,7 +410,6 @@ public class CondorGenerator extends Abstract {
                         .append(" to ")
                         .append(job.getID());
                 mLogger.log(sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL);
-                
             }
 
             // HTCondor ticket 5749 . We can assign DAG priorities only if
