@@ -12,6 +12,7 @@ from Pegasus.api.transformation_catalog import (
     TransformationCatalog,
     TransformationSite,
 )
+from Pegasus.api.mixins import EventType
 from Pegasus.api.writable import _CustomEncoder
 from Pegasus.transformation_catalog import _to_tc, dump, dumps, load, loads
 
@@ -38,6 +39,7 @@ def tc1():
                 .add_metadata(JAVA_HOME="/usr/bin/java")
             )
             .add_requirement("t2", namespace="test", version="1.0")
+            .add_shell_hook(EventType.START, "echo hello")
         )
         .add_container(
             Container(

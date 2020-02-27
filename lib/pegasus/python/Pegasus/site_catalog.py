@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import json
 from collections import defaultdict
 from io import StringIO
-from typing import Dict, TextIO
+from typing import TextIO
 
 from Pegasus import yaml
 from Pegasus.api.errors import PegasusError

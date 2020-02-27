@@ -82,7 +82,7 @@ def test_to_sc_without_optional_args(sc2):
 
 
 @pytest.mark.parametrize("_format", [("yml"), ("json")])
-def test_load(mocker, sc1, _format):
+def test_load(sc1, _format):
     # write to tempfile as _format
     with TemporaryFile(mode="w+") as f:
         sc1.write(f, _format=_format)

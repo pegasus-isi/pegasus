@@ -5,11 +5,6 @@ from Pegasus import yaml
 
 __all__ = []
 
-# TODO: if we need to deserialize a class
-def todict(_dict, cls):
-    # https://pypi.org/project/dataclasses-fromdict/
-    raise NotImplementedError()
-
 
 class _CustomEncoder(json.JSONEncoder):
     def default(self, obj):
