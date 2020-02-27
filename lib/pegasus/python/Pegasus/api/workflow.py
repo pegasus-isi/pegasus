@@ -1004,7 +1004,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         if isinstance(file, str):
             self._path = file
         elif hasattr(file, "read"):
-            self._path = file.name
+            self._path = file.name if hasattr(file, "name") else None
 
     def __json__(self):
         # remove 'pegasus' from tc, rc, sc as it is not needed when they
