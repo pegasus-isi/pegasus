@@ -1,21 +1,40 @@
 # -*- coding: utf-8 -*-
+
+from collections import defaultdict
+from io import StringIO
+from typing import TextIO
+
+from Pegasus import yaml
+from Pegasus.api.errors import PegasusError
+from Pegasus.api.replica_catalog import File
+from Pegasus.api.workflow import (
+    Job,
+    SubWorkflow,
+    Workflow,
+    _JobDependency,
+    _LinkType,
+    _Use,
+)
+from Pegasus.replica_catalog import _to_rc
+from Pegasus.site_catalog import _to_sc
+from Pegasus.transformation_catalog import _to_tc
+
 """
 :mod:`workflow` exposes an API to serialize and deserialize Pegasus's workflow file.
 
 Basic Usage::
 
-    >>> from Pegasus import Workflow
-    >>> Workflow.loads("... ")
+    >>> from Pegasus import workflow
+    >>> workflow.loads("... ")
     ...
 
-    >>> print(Workflow.dumps( ... ))
+    >>> print(workflow.dumps( ... ))
     ' ... '
 
 .. moduleauthor:: Ryan Tanaka <tanaka@isi.edu>
 .. moduleauthor:: Rajiv Mayani <mayani@isi.edu>
 """
 
-from typing import Dict, TextIO
 
 __all__ = (
     "load",
@@ -25,55 +44,205 @@ __all__ = (
 )
 
 
-def load(fp: TextIO, *args, **kwargs) -> Dict:
+def _to_wf(d: dict) -> Workflow:
+    """Convert dict to Workflow
+    
+    :param d: Workflow represented as a dict
+    :type d: dict
+    :raises PegasusError: encountered error parsing 
+    :return: a Workflow object based on d
+    :rtype: Workflow
     """
-    Deserialize ``fp`` (a ``.read()``-supporting file-like object containing a Workflow document) to a Python object.
 
-    [extended_summary]
+    try:
+        #
+        wf = Workflow(d["name"], infer_dependencies=False)
 
-    :param fp: [description]
+        # add rc
+        if "replicaCatalog" in d:
+            wf.replica_catalog = _to_rc(d["replicaCatalog"])
+
+        # add tc
+        if "transformationCatalog" in d:
+            wf.transformation_catalog = _to_tc(d["transformationCatalog"])
+
+        # add sc
+        if "siteCatalog" in d:
+            wf.site_catalog = _to_sc(d["siteCatalog"])
+
+        # add jobs
+        for j in d["jobs"]:
+            # create appropriate job based on type
+            if j["type"] == "job":
+                job = Job(
+                    j["name"],
+                    _id=j["id"],
+                    node_label=j.get("nodeLabel"),
+                    namespace=j.get("namespace"),
+                    version=j.get("version"),
+                )
+            elif j["type"] in {"dax", "dag"}:
+                f = File(j["file"])
+
+                is_planned = False if j["type"] == "dax" else True
+
+                job = SubWorkflow(
+                    f, is_planned, _id=j["id"], node_label=j.get("nodeLabel")
+                )
+
+            else:
+                raise ValueError
+
+            # add stdin
+            if "stdin" in j:
+                f = File(j["stdin"]["lfn"])
+                if "metadata" in j["stdin"]:
+                    f.metadata = j["stdin"]["metadata"]
+
+                job.stdin = f
+
+            # add stdout
+            if "stdout" in j:
+                f = File(j["stdout"]["lfn"])
+                if "metadata" in j["stdout"]:
+                    f.metadata = j["stdout"]["metadata"]
+
+                job.stdout = f
+
+            # add stderr
+            if "stderr" in j:
+                f = File(j["stderr"]["lfn"])
+                if "metadata" in j["stderr"]:
+                    f.metadata = j["stderr"]["metadata"]
+
+                job.stderr = f
+
+            # add args
+            args = list()
+            for a in j["arguments"]:
+                # file
+                if isinstance(a, dict):
+                    f = File(a["lfn"])
+                    if a.get("metadata"):
+                        f.metadata = a.get("metadata")
+
+                    args.append(f)
+                else:
+                    args.append(a)
+
+            job.args = args
+
+            # add uses
+            uses = set()
+            for u in j["uses"]:
+                f = File(u["file"]["lfn"])
+                if "metadata" in u["file"]:
+                    f.metadata = u["file"]["metadata"]
+
+                uses.add(
+                    _Use(
+                        f,
+                        getattr(_LinkType, u["type"].upper()),
+                        u["stageOut"],
+                        u["registerReplica"],
+                    )
+                )
+
+            job.uses = uses
+
+            # add profiles
+            if j.get("profiles"):
+                job.profiles = defaultdict(dict, j.get("profiles"))
+
+            # add metadata
+            if j.get("metadata"):
+                job.metadata = j.get("metadata")
+
+            # add hooks
+            if j.get("hooks"):
+                job.hooks = defaultdict(list, j.get("hooks"))
+
+            # add job to wf
+            wf.add_jobs(job)
+
+        # add dependencies
+        if d.get("jobDependencies"):
+            dependencies = defaultdict(_JobDependency)
+            for item in d.get("jobDependencies"):
+                dependencies[item["id"]] = _JobDependency(
+                    item["id"], {child for child in item["children"]}
+                )
+
+            wf.dependencies = dependencies
+
+        # add profiles
+        if d.get("profiles"):
+            wf.profiles = defaultdict(dict, d.get("profiles"))
+
+        # add metadata
+        if d.get("metadata"):
+            wf.metadata = d.get("metadata")
+
+        # add hooks
+        if d.get("hooks"):
+            wf.hooks = defaultdict(list, d.get("hooks"))
+
+        return wf
+    except (KeyError, ValueError):
+        raise PegasusError("error parsing {}".format(d))
+
+
+def load(fp: TextIO, *args, **kwargs) -> Workflow:
+    """
+    Deserialize ``fp`` (a ``.read()``-supporting file-like object containing a Workflow document) to a :py:class:`~Pegasus.api.workflow.Workflow` object.
+
+    :param fp: file like object to load from 
     :type fp: TextIO
-    :return: [description]
-    :rtype: Dict
+    :return: deserialized Workflow object
+    :rtype: Workflow
     """
+    return _to_wf(yaml.load(fp))
 
 
-def loads(s: str, *args, **kwargs) -> Dict:
+def loads(s: str, *args, **kwargs) -> Workflow:
     """
-    Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance containing a Workflow document) to a Python object.
+    Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance containing a Workflow document) to a :py:class:`~Pegasus.api.workflow.Workflow` object.
 
-    [extended_summary]
-
-    :param s: [description]
+    :param s: string to load from 
     :type s: str
-    :return: [description]
-    :rtype: Dict
+    :return: deserialized Workflow object
+    :rtype: Workflow
     """
+    return _to_wf(yaml.load(s))
 
 
-def dump(obj: Dict, fp: TextIO, *args, **kwargs) -> None:
+def dump(obj: Workflow, fp: TextIO, _format="yml", *args, **kwargs) -> None:
     """
-    Serialize ``obj`` as a Workflow formatted stream to ``fp`` (a ``.write()``-supporting file-like object).
+    Serialize ``obj`` as a :py:class:`~Pegasus.api.worklfow.Workflow` formatted stream to ``fp`` (a ``.write()``-supporting file-like object).
 
-    [extended_summary]
-
-    :param obj: [description]
-    :type obj: Dict
-    :param fp: [description]
+    :param obj: Workflow to serialize
+    :type obj: Workflow
+    :param fp: file like object to serialize to
     :type fp: TextIO
-    :return: [description]
+    :param _format: format to write to if fp does not have an extension; can be one of ["yml" | "yaml" | "json"], defaults to "yml"
+    :type _format: str
     :rtype: NoReturn
     """
+    obj.write(fp, _format=_format)
 
 
-def dumps(obj: Dict, *args, **kwargs) -> str:
+def dumps(obj: Workflow, _format="yml", *args, **kwargs) -> str:
     """
-    Serialize ``obj`` to a Workflow formatted ``str``.
+    Serialize ``obj`` to a :py:class:`~Pegasus.api.workflow.Workflow` formatted ``str``.
 
-    [extended_summary]
-
-    :param obj: [description]
-    :type obj: Dict
-    :return: [description]
+    :param obj: Workflow to serialize
+    :type obj: Workflow
+    :param _format: format to write to if fp does not have an extension; can be one of ["yml" | "yaml" | "json"], defaults to "yml"
+    :type _format: str
+    :return: Workflow serialized as a string
     :rtype: str
     """
+    with StringIO() as s:
+        obj.write(s, _format=_format)
+        s.seek(0)
+        return s.read()
