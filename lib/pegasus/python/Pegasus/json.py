@@ -104,6 +104,6 @@ def dump_all(objs: List, fp=None, *args, **kwargs) -> Optional[str]:
     kwargs.update({"indent": None, "separators": None})
 
     for d in objs:
-        fp.write(dumps(d, *args, **kwargs))
+        fp.write(dumps(d, *args, **kwargs) + "\n")
 
     return fp.getvalue() if isinstance(fp, io.StringIO) else None

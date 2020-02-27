@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from Pegasus.json import dumps, loads
+from Pegasus.json import dump_all, dumps, loads
 
 
 @pytest.mark.parametrize(
@@ -37,3 +37,19 @@ def test_loads(s, expected):
 def test_dumps(obj, expected):
     """Test :meth:`Pegasus.json.dumps`."""
     assert dumps(obj) == expected
+
+
+@pytest.mark.parametrize(
+    "obj, expected",
+    [
+        ({"key": 1}, '{"key": 1}\n'),
+        ({"key": "2018-10-10"}, '{"key": "2018-10-10"}\n'),
+        ({"key": "yes"}, '{"key": "yes"}\n'),
+        ({"key": True}, '{"key": true}\n'),
+        ({"key": Path("./aaa")}, '{"key": "aaa"}\n'),
+        ({"key": Path("../aaa")}, '{"key": "../aaa"}\n'),
+    ],
+)
+def test_dump_all(obj, expected):
+    """Test :meth:`Pegasus.json.dumps`."""
+    assert dump_all([obj]) == expected
