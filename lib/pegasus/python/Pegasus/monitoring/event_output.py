@@ -21,7 +21,6 @@ Functions for output pegasus-monitord events to various destinations.
 import socket
 import logging
 import traceback
-import json
 import re
 import ssl
 import queue
@@ -29,6 +28,7 @@ import time
 
 import urllib.parse
 
+from Pegasus import json
 from Pegasus.tools import utils
 from Pegasus.tools import properties
 from Pegasus.netlogger import nlapi
