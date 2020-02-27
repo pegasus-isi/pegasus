@@ -31,10 +31,10 @@ SiteCatalog()\
     .add_site(
         Site(LOCAL, arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7")
             .add_directory(
-                Directory(Directory.SHARED_SCRATCH, shared_scratch_dir)
+                Directory(Directory.SHAREDSCRATCH, shared_scratch_dir)
                     .add_file_server(FileServer("file://" + shared_scratch_dir, Operation.ALL))
             ).add_directory(
-                Directory(Directory.LOCAL_STORAGE, local_storage_dir)
+                Directory(Directory.LOCALSTORAGE, local_storage_dir)
                     .add_file_server(FileServer("file://" + local_storage_dir, Operation.ALL))
             )
     ).add_site(
