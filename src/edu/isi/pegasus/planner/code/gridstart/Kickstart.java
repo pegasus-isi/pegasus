@@ -709,8 +709,12 @@ public class Kickstart implements GridStart {
      * It changes the paths to the executable depending on whether we want to transfer the
      * executable or not.
      *
-     * <p>If the worker package is being deployed dynamically, then the path is set to the
-     * exectionSiteDirectory where the worker package is deployed.
+     * <p><<<<<<< HEAD
+     *
+     * <p>If the worker package is being deployed dynamically, then the path is set to the =======
+     *
+     * <p>> * If the worker package is being deployed dynamically, then the path is set to the
+     * >>>>>>> 4.9 exectionSiteDirectory where the worker package is deployed.
      *
      * <p>Else, we pick up the path from the site catalog that is passed as input
      *

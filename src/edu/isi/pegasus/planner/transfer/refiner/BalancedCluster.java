@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
+import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
@@ -30,6 +31,7 @@ import edu.isi.pegasus.planner.transfer.Implementation;
 import edu.isi.pegasus.planner.transfer.Refiner;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -438,6 +440,8 @@ public class BalancedCluster extends Basic {
         // if there were any staged files
         // add the setXBitJobs for them
 
+        // if there were any staged files
+        // add the setXBitJobs for them
         int index = 0;
 
         // stageInExecJobs has corresponding list of transfer
@@ -663,6 +667,7 @@ public class BalancedCluster extends Basic {
             Implementation implementation,
             int stageInJobType,
             boolean localTransfer) {
+        List<Job> txJobs = new LinkedList();
 
         if (stageInMap != null) {
             // traverse through the stagein map and
@@ -679,7 +684,7 @@ public class BalancedCluster extends Basic {
                 key = (String) entry.getKey();
                 pt = (PoolTransfer) entry.getValue();
                 mLogger.log(
-                        "Adding stage in transfer nodes for pool " + key,
+                        "Adding stage in transfer nodes for site " + key,
                         LogManager.DEBUG_MESSAGE_LEVEL);
 
                 for (Iterator pIt = pt.getTransferContainerIterator(); pIt.hasNext(); ) {
@@ -710,10 +715,49 @@ public class BalancedCluster extends Basic {
                     // always set the type to stagein after it is created
                     tJob.setJobType(stageInJobType);
                     addJob(tJob);
+                    txJobs.add(tJob);
                 }
             }
         }
+        // PM-1385 assign priorties for the transfer job
+        assignPriority(txJobs);
         return new HashMap<String, PoolTransfer>();
+    }
+
+    /**
+     * Assigns priority to the jobs based on the fanout (number of child jobs) a job has
+     *
+     * @param txJobs
+     */
+    protected void assignPriority(List<Job> txJobs) {
+        txJobs.sort(
+                new Comparator<Job>() {
+
+                    private int getNumberOfChildren(Job j1) {
+                        GraphNode node = j1.getGraphNodeReference();
+                        return node.getChildren().size();
+                    }
+
+                    @Override
+                    public int compare(Job j1, Job j2) {
+                        return getNumberOfChildren(j1) - getNumberOfChildren(j2);
+                    }
+                });
+
+        int priority = 1;
+        for (Job j : txJobs) {
+            j.condorVariables.checkKeyInNS(Condor.PRIORITY_KEY, Integer.toString(priority++));
+            GraphNode node = j.getGraphNodeReference();
+            int children = node.getChildren().size();
+            mLogger.log(
+                    "Assigned priority of "
+                            + priority
+                            + " to transfer job "
+                            + j.getID()
+                            + " with children - "
+                            + children,
+                    LogManager.DEBUG_MESSAGE_LEVEL);
+        }
     }
 
     /**

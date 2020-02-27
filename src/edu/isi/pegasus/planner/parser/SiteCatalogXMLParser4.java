@@ -91,25 +91,24 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
 
     /** A boolean indicating whether to load all sites. */
     private boolean mLoadAll;
-    
-    /**
-     * Boolean indicating whether to do variable expansion or not
-     */
+
+    /** Boolean indicating whether to do variable expansion or not */
     private boolean mDoVariableExpansion;
- 
 
     /**
      * The overloaded constructor.
      *
      * @param bag the bag of initialization objects.
-     * @param connectProps  the connection properties without the site catalog prefix
+     * @param connectProps the connection properties without the site catalog prefix
      * @param sites the list of sites that need to be parsed. * means all.
      */
     public SiteCatalogXMLParser4(PegasusBag bag, Properties connectProps, List<String> sites) {
         super(bag);
         mStack = new Stack();
         mDepth = 0;
-        mDoVariableExpansion = Boolean.parseBoolean(connectProps.getProperty(SiteCatalog.VARIABLE_EXPANSION_KEY, "true"));
+        mDoVariableExpansion =
+                Boolean.parseBoolean(
+                        connectProps.getProperty(SiteCatalog.VARIABLE_EXPANSION_KEY, "true"));
         mSites = new HashSet<String>();
         for (Iterator<String> it = sites.iterator(); it.hasNext(); ) {
             mSites.add(it.next());
@@ -146,9 +145,11 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
             // PM-831 , PM-1464 set up the parser with our own reader
             // that allows for parameter expansion before
             // doing any XML processing
-            InputSource is = new InputSource( mDoVariableExpansion?
-                                              new VariableExpansionReader(new FileReader(file)):
-                                              new BufferedReader(new FileReader(file)));
+            InputSource is =
+                    new InputSource(
+                            mDoVariableExpansion
+                                    ? new VariableExpansionReader(new FileReader(file))
+                                    : new BufferedReader(new FileReader(file)));
             mParser.parse(is);
 
             // sanity check
@@ -705,7 +706,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
         files.add("/lfs1/devel/Pegasus/pegasus/etc/sample-cloud-xml4.xml");
 
         for (String file : files) {
-            SiteCatalogXMLParser4 parser = new SiteCatalogXMLParser4(bag,new Properties(), s);
+            SiteCatalogXMLParser4 parser = new SiteCatalogXMLParser4(bag, new Properties(), s);
             System.out.println(" *********Parsing File *********" + file);
             parser.startParser(file);
             SiteStore store = parser.getSiteStore();

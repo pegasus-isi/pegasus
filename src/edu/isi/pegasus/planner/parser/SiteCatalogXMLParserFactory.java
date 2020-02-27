@@ -63,7 +63,7 @@ public class SiteCatalogXMLParserFactory {
      * Loads the appropriate DAXParser looking at the dax schema that is specified by the user.
      *
      * @param bag bag of Pegasus intialization objects
-     * @param connectProps  the connection properties without the site catalog prefix
+     * @param connectProps the connection properties without the site catalog prefix
      * @param file the site catalog file
      * @param sites the list of sites that need to be parsed. * means all
      * @return the SiteCatalogXMLParser class that is loaded.
@@ -166,7 +166,7 @@ public class SiteCatalogXMLParserFactory {
      *
      * @param classname the classname of the parser class that needs to be loaded
      * @param bag bag of Pegasus intialization objects
-     * @param connectProps  the connection properties without the site catalog prefix
+     * @param connectProps the connection properties without the site catalog prefix
      * @param sites the list of sites that need to be parsed. * means all
      * @return the DAXParser loaded.
      * @exception SiteCatalogXMLParserFactoryException that nests any error that might occur during

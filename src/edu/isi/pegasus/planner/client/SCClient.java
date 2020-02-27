@@ -62,10 +62,8 @@ public class SCClient extends Executable {
 
     /** Denotes the logging level that is to be used for logging the messages. */
     private int mLoggingLevel;
-    
-    /**
-     * Boolean indicating whether to do variable expansion or not
-     */
+
+    /** Boolean indicating whether to do variable expansion or not */
     private boolean mDoVariableExpansion;
 
     /** The default constructor. */
@@ -80,7 +78,7 @@ public class SCClient extends Executable {
         mInputFormat = "XML";
         mLoggingLevel = LogManager.WARNING_MESSAGE_LEVEL;
         // mText = false;
-        //PM-1464 by default have variable expansion disabled
+        // PM-1464 by default have variable expansion disabled
         mDoVariableExpansion = false;
         mInputFiles = null;
         mOutputFile = null;
@@ -130,7 +128,7 @@ public class SCClient extends Executable {
                 case 'e': // expand
                     mDoVariableExpansion = true;
                     break;
-                
+
                 case 'i': // input
                     StringTokenizer str = new StringTokenizer(g.getOptarg(), ",");
                     mInputFiles = new ArrayList<String>(str.countTokens());
@@ -196,16 +194,15 @@ public class SCClient extends Executable {
             System.exit(1);
         }
         String result = null;
-        try{
+        try {
             result = this.parseInputFiles(mInputFiles, mInputFormat, mOutputFormat);
-        }
-        catch(IllegalArgumentException e){
-            if(e.getMessage().contains( "No enum constant")){
-                mLogger.log( "Consider using the -e option. Conversion fails if you use variables for specifying enum values in the input site catalog.",
-                             e,
-                             LogManager.ERROR_MESSAGE_LEVEL);
-            }    
-            else{
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage().contains("No enum constant")) {
+                mLogger.log(
+                        "Consider using the -e option. Conversion fails if you use variables for specifying enum values in the input site catalog.",
+                        e,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            } else {
                 throw e;
             }
         }
@@ -264,8 +261,9 @@ public class SCClient extends Executable {
                 try {
                     mProps.setProperty("pegasus.catalog.site.file", inputFile);
                     mProps.setProperty(SiteCatalog.c_prefix, mInputFormat);
-                    mProps.setProperty(SiteCatalog.c_prefix + '.' + SiteCatalog.VARIABLE_EXPANSION_KEY, 
-                                        Boolean.toString(mDoVariableExpansion));
+                    mProps.setProperty(
+                            SiteCatalog.c_prefix + '.' + SiteCatalog.VARIABLE_EXPANSION_KEY,
+                            Boolean.toString(mDoVariableExpansion));
                     catalog = SiteFactory.loadInstance(mProps);
 
                     /* load all sites in site catalog */
@@ -342,7 +340,7 @@ public class SCClient extends Executable {
                 "\n $Id$ "
                         + "\n "
                         + getGVDSVersion()
-                        + "\n pegasus-sc-converter - Parses the site catalogs in old format (XML and generates site catalog in " 
+                        + "\n pegasus-sc-converter - Parses the site catalogs in old format (XML and generates site catalog in "
                         + "\n new format (YAML)"
                         + "\n "
                         + "\n Usage: pegasus-sc-converter [-Dprop  [..]]  --input <list of input files> --output <output file to write> "
@@ -359,8 +357,8 @@ public class SCClient extends Executable {
                         + "\n Other Options "
                         + "\n -O |--oformat    the output format of the file. Usually [YAML] "
                         + "\n -c |--conf       path to  property file"
-                        + "\n -e |--expand     sets variable expansion on. Any variables in input files " 
-                        + "\n                  will be expanded and their values will be written out to " 
+                        + "\n -e |--expand     sets variable expansion on. Any variables in input files "
+                        + "\n                  will be expanded and their values will be written out to "
                         + "\n                  output site catalog. "
                         + "\n -v |--verbose    increases the verbosity of messages about what is going on"
                         + "\n -q |--quiet      decreases the verbosity of messages about what is going on"

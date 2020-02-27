@@ -408,7 +408,10 @@ public class NoGridStart implements GridStart {
     }
 
     /**
-     * Wrap invocation with a user specified GridStart launcher
+     * <<<<<<< HEAD Wrap invocation with a user specified GridStart launcher ======= <<<<<<< HEAD
+     * Indicates whether the enabling mechanism can set the X bit on the executable on the remote
+     * grid site, in addition to launching it on the remote grid stie ======= Wrap invocation with a
+     * user specified GridStart launcher >>>>>>> 4.9
      *
      * @param job
      */
@@ -453,7 +456,9 @@ public class NoGridStart implements GridStart {
 
     /**
      * Indicates whether the enabling mechanism can set the X bit on the executable on the remote
-     * grid site, in addition to launching it on the remote grid stie
+     * <<<<<<< HEAD grid site, in addition to launching it on the remote grid stie ======= grid
+     * site, in addition to launching it on the remote grid stie >>>>>>> 51aae3938... PM-1461 added
+     * support for gridstart launcher when we run jobs without kickstart. >>>>>>> 4.9
      *
      * @return false, as no wrapper executable is being used.
      */

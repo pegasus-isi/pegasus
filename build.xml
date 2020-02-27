@@ -25,7 +25,7 @@
   <!-- Set property to identify if running in CI mode. -->
   <property name="CI" value="true" if:set="env.bamboo_buildKey" />
   <property name="CI" value="false" unless:set="env.bamboo_buildKey" />
-
+  
   <path id="build.classpath">
     <fileset dir="share/pegasus/java" includes="*.jar"/>
   </path>
@@ -142,7 +142,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </exec>
   </target>
 
-  <!-- Java code format -->
+   <!-- Java code format -->
   <target name="code-format-java" description="Java code format">
     <fileset id="java.source" dir=".">
       <include name="src/**/*.java"/>
@@ -168,7 +168,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       </condition>
     </fail>
   </target>
-
+  
   <target name="compile-common" depends="setup" description="Compile common java code">
     <javac destdir="${build.src}" srcdir="src"
            encoding="UTF-8" deprecation="true" debug="true"

@@ -83,24 +83,24 @@ public class SiteCatalogXMLParser3 extends StackBasedXMLParser implements SiteCa
 
     /** A boolean indicating whether to load all sites. */
     private boolean mLoadAll;
-    
-    /**
-     * Boolean indicating whether to do variable expansion or not
-     */
+
+    /** Boolean indicating whether to do variable expansion or not */
     private boolean mDoVariableExpansion;
 
     /**
      * The overloaded constructor.
      *
      * @param bag the bag of initialization objects.
-     * @param connectProps  the connection properties without the site catalog prefix
+     * @param connectProps the connection properties without the site catalog prefix
      * @param sites the list of sites that need to be parsed. * means all.
      */
     public SiteCatalogXMLParser3(PegasusBag bag, Properties connectProps, List<String> sites) {
         super(bag);
         mStack = new Stack();
         mDepth = 0;
-        mDoVariableExpansion = Boolean.parseBoolean(connectProps.getProperty(SiteCatalog.VARIABLE_EXPANSION_KEY, "true"));
+        mDoVariableExpansion =
+                Boolean.parseBoolean(
+                        connectProps.getProperty(SiteCatalog.VARIABLE_EXPANSION_KEY, "true"));
         mSites = new HashSet<String>();
         for (Iterator<String> it = sites.iterator(); it.hasNext(); ) {
             mSites.add(it.next());
@@ -133,13 +133,15 @@ public class SiteCatalogXMLParser3 extends StackBasedXMLParser implements SiteCa
             this.setSchemaLocations();
 
             this.testForFile(file);
-            
+
             // PM-831 , PM-1464 set up the parser with our own reader
             // that allows for parameter expansion before
             // doing any XML processing
-            InputSource is = new InputSource( mDoVariableExpansion?
-                                              new VariableExpansionReader(new FileReader(file)):
-                                              new BufferedReader(new FileReader(file)));
+            InputSource is =
+                    new InputSource(
+                            mDoVariableExpansion
+                                    ? new VariableExpansionReader(new FileReader(file))
+                                    : new BufferedReader(new FileReader(file)));
             mParser.parse(is);
 
             // sanity check
