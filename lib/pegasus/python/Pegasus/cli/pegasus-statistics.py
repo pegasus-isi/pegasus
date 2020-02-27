@@ -1978,11 +1978,7 @@ def main():
 
     def use_pmc(dir):
         braindb = utils.slurp_braindb(dir)
-        if "uses_pmc" in braindb:
-            if "true" == braindb["uses_pmc"].lower():
-                return True
-
-        return False
+        return braindb["uses_pmc"] is True
 
     if options.is_pmc:
         logger.info("Calculating statistics with use of PMC clustering")
