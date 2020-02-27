@@ -380,7 +380,10 @@ def slurp_braindb(run_dir, brain_alternate=None):
 
         with bdump.open("r") as fp:
             cfg = braindump.load(fp)
-            cfg = attr.asdict(cfg)
+            cfg = {
+                k: str(v) if isinstance(v, Path) else v
+                for k, v in attr.asdict(cfg).items()
+            }
 
     return cfg
 
