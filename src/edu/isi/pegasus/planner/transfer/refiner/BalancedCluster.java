@@ -610,18 +610,18 @@ public class BalancedCluster extends Basic {
 
         // adding relations that tie in the stagin
         // jobs to the compute jobs.
-/*        for (Iterator it = mRelationsParentMap.entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry entry = (Map.Entry) it.next();
-            String key = (String) entry.getKey();
-            mLogger.log("Adding relations for job " + key, LogManager.DEBUG_MESSAGE_LEVEL);
-            for (Iterator pIt = ((Collection) entry.getValue()).iterator(); pIt.hasNext(); ) {
-                String value = (String) pIt.next();
+        /*        for (Iterator it = mRelationsParentMap.entrySet().iterator(); it.hasNext(); ) {
+                    Map.Entry entry = (Map.Entry) it.next();
+                    String key = (String) entry.getKey();
+                    mLogger.log("Adding relations for job " + key, LogManager.DEBUG_MESSAGE_LEVEL);
+                    for (Iterator pIt = ((Collection) entry.getValue()).iterator(); pIt.hasNext(); ) {
+                        String value = (String) pIt.next();
 
-                mLogger.log("Adding Edge " + value + " -> " + key, LogManager.DEBUG_MESSAGE_LEVEL);
-                this.mDAG.addEdge(value, key);
-            }
-        }
-*/
+                        mLogger.log("Adding Edge " + value + " -> " + key, LogManager.DEBUG_MESSAGE_LEVEL);
+                        this.mDAG.addEdge(value, key);
+                    }
+                }
+        */
         // reset the stageout map too
         this.resetStageOutMaps();
 
@@ -636,21 +636,22 @@ public class BalancedCluster extends Basic {
 
     /** Resets the local and remote stage out maps. */
     protected void resetStageInMaps() {
-        List localTXJobs = addStageinJobs(
-                this.mStageInLocalMapPerLevel,
-                this.mTXStageInImplementation,
-                Job.STAGE_IN_JOB,
-                true);
+        List localTXJobs =
+                addStageinJobs(
+                        this.mStageInLocalMapPerLevel,
+                        this.mTXStageInImplementation,
+                        Job.STAGE_IN_JOB,
+                        true);
         mStageInLocalMapPerLevel = new HashMap<String, PoolTransfer>();
 
-        List remoteTXJobs = addStageinJobs(
-                this.mStageInRemoteMapPerLevel,
-                this.mTXStageInImplementation,
-                Job.STAGE_IN_JOB,
-                false);
+        List remoteTXJobs =
+                addStageinJobs(
+                        this.mStageInRemoteMapPerLevel,
+                        this.mTXStageInImplementation,
+                        Job.STAGE_IN_JOB,
+                        false);
         mStageInRemoteMapPerLevel = new HashMap<String, PoolTransfer>();
-        
-        
+
         // adding relations that tie in the stagin
         // jobs to the compute jobs.
         for (Iterator it = mRelationsParentMap.entrySet().iterator(); it.hasNext(); ) {
@@ -665,7 +666,7 @@ public class BalancedCluster extends Basic {
             }
         }
         mRelationsParentMap = new HashMap();
-        
+
         // PM-1385 assign priorties for the transfer job
         assignPriority(localTXJobs);
         assignPriority(remoteTXJobs);
@@ -680,8 +681,6 @@ public class BalancedCluster extends Basic {
      * @param implementation the transfer implementation to use
      * @param stageInJobType whether a stagein or symlink stagein job
      * @param localTransfer indicates whether transfer job needs to run on local site or not.
-     * 
-     * 
      * @return List of jobs added to the workflow
      */
     public List<Job> addStageinJobs(
