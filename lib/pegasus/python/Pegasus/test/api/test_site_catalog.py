@@ -62,25 +62,25 @@ class TestDirectory:
 
     def test_add_valid_file_server(self):
         d = Directory(Directory.LOCALSCRATCH, "/path")
-        assert d.add_file_server(FileServer("url", Operation.PUT))
+        assert d.add_file_servers(FileServer("url", Operation.PUT))
 
     def test_add_invalid_file_server(self):
         with pytest.raises(TypeError) as e:
             d = Directory(Directory.LOCALSCRATCH, "/path")
-            d.add_file_server(123)
+            d.add_file_servers(123)
 
             assert "invalid file_server: 123" in str(e)
 
     def test_chaining(self):
         a = Directory(Directory.LOCALSCRATCH, "/path")
-        b = a.add_file_server(FileServer("url", Operation.PUT)).add_file_server(
+        b = a.add_file_servers(FileServer("url", Operation.PUT)).add_file_servers(
             FileServer("url", Operation.GET)
         )
 
         assert id(a) == id(b)
 
     def test_tojson(self):
-        directory = Directory(Directory.LOCALSCRATCH, "/path").add_file_server(
+        directory = Directory(Directory.LOCALSCRATCH, "/path").add_file_servers(
             FileServer("url", Operation.PUT)
         )
 
@@ -203,21 +203,21 @@ class TestSite:
 
     def test_add_valid_directory(self):
         site = Site("s")
-        site.add_directory(Directory(Directory.LOCALSCRATCH, "/path"))
-        site.add_directory(Directory(Directory.LOCALSTORAGE, "/path"))
+        site.add_directories(Directory(Directory.LOCALSCRATCH, "/path"))
+        site.add_directories(Directory(Directory.LOCALSTORAGE, "/path"))
 
         assert len(site.directories) == 2
 
     def test_add_invalid_directory(self):
         with pytest.raises(TypeError) as e:
             site = Site("s")
-            site.add_directory("baddirectory")
+            site.add_directories("baddirectory")
 
         assert "invalid directory: baddirectory" in str(e)
 
     def test_add_valid_grid(self):
         site = Site("s")
-        site.add_grid(
+        site.add_grids(
             Grid(
                 Grid.GT5,
                 "smarty.isi.edu/jobmanager-pbs",
@@ -225,7 +225,7 @@ class TestSite:
                 job_type=SupportedJobs.AUXILLARY,
             )
         )
-        site.add_grid(
+        site.add_grids(
             Grid(
                 Grid.GT5,
                 "smarty.isi.edu/jobmanager-pbs",
@@ -239,14 +239,14 @@ class TestSite:
     def test_add_invalid_grid(self):
         with pytest.raises(TypeError) as e:
             site = Site("s")
-            site.add_grid("badgrid")
+            site.add_grids("badgrid")
 
         assert "invalid grid: badgrid" in str(e)
 
     def test_chaining(self):
         site = Site("s")
-        a = site.add_directory(Directory(Directory.LOCALSCRATCH, "/path"))
-        b = site.add_grid(
+        a = site.add_directories(Directory(Directory.LOCALSCRATCH, "/path"))
+        b = site.add_grids(
             Grid(
                 Grid.GT5,
                 "smarty.isi.edu/jobmanager-pbs",
@@ -266,12 +266,12 @@ class TestSite:
             os_version="1.2.3",
             glibc="1",
         )
-        site.add_directory(
-            Directory(Directory.LOCALSCRATCH, "/path").add_file_server(
+        site.add_directories(
+            Directory(Directory.LOCALSCRATCH, "/path").add_file_servers(
                 FileServer("url", Operation.GET)
             )
         )
-        site.add_grid(
+        site.add_grids(
             Grid(
                 Grid.GT5,
                 "smarty.isi.edu/jobmanager-pbs",
@@ -411,84 +411,72 @@ def expected_json():
 class TestSiteCatalog:
     def test_add_valid_site(self):
         sc = SiteCatalog()
-        assert sc.add_site(Site("local"))
+        assert sc.add_sites(Site("local"))
 
     def test_add_invalid_site(self):
         with pytest.raises(TypeError) as e:
             sc = SiteCatalog()
-            sc.add_site("badsite")
+            sc.add_sites("badsite")
 
         assert "invalid site: badsite" in str(e)
 
     def test_add_duplicate_site(self):
         sc = SiteCatalog()
-        sc.add_site(Site("local"))
+        sc.add_sites(Site("local"))
         with pytest.raises(DuplicateError):
-            sc.add_site(Site("local"))
+            sc.add_sites(Site("local"))
 
     def test_chaining(self):
         sc = SiteCatalog()
-        a = sc.add_site(Site("local"))
-        b = sc.add_site(Site("condor_pool"))
+        a = sc.add_sites(Site("local"))
+        b = sc.add_sites(Site("condor_pool"))
 
         assert id(a) == id(b)
 
     def test_tojson(self, convert_yaml_schemas_to_json, load_schema, expected_json):
-        sc = (
-            SiteCatalog()
-            .add_site(
-                Site("local", arch=Arch.X86_64, os_type=OS.LINUX)
-                .add_directory(
-                    Directory(
-                        Directory.SHAREDSCRATCH, "/tmp/workflows/scratch"
-                    ).add_file_server(
-                        FileServer("file:///tmp/workflows/scratch", Operation.ALL)
-                    )
-                )
-                .add_directory(
-                    Directory(
-                        Directory.LOCALSTORAGE, "/tmp/workflows/outputs"
-                    ).add_file_server(
-                        FileServer("file:///tmp/workflows/outputs", Operation.ALL)
-                    )
-                )
-            )
-            .add_site(
-                Site("condor_pool", arch=Arch.X86_64, os_type=OS.LINUX)
-                .add_directory(
-                    Directory(Directory.SHAREDSCRATCH, "/lustre").add_file_server(
-                        FileServer("gsiftp://smarty.isi.edu/lustre", Operation.ALL)
-                    )
-                )
-                .add_grid(
-                    Grid(
-                        Grid.GT5,
-                        "smarty.isi.edu/jobmanager-pbs",
-                        Scheduler.PBS,
-                        job_type=SupportedJobs.AUXILLARY,
-                    )
-                )
-                .add_grid(
-                    Grid(
-                        Grid.GT5,
-                        "smarty.isi.edu/jobmanager-pbs",
-                        Scheduler.PBS,
-                        job_type=SupportedJobs.COMPUTE,
-                    )
-                )
-                .add_env(JAVA_HOME="/usr/bin/java")
-            )
-            .add_site(
-                Site("staging_site", arch=Arch.X86_64, os_type=OS.LINUX).add_directory(
-                    Directory(Directory.SHAREDSCRATCH, "/data")
-                    .add_file_server(
-                        FileServer("scp://obelix.isi.edu/data", Operation.PUT)
-                    )
-                    .add_file_server(
-                        FileServer("http://obelix.isi.edu/data", Operation.GET)
-                    )
+        sc = SiteCatalog().add_sites(
+            Site("local", arch=Arch.X86_64, os_type=OS.LINUX).add_directories(
+                Directory(
+                    Directory.SHAREDSCRATCH, "/tmp/workflows/scratch"
+                ).add_file_servers(
+                    FileServer("file:///tmp/workflows/scratch", Operation.ALL)
+                ),
+                Directory(
+                    Directory.LOCALSTORAGE, "/tmp/workflows/outputs"
+                ).add_file_servers(
+                    FileServer("file:///tmp/workflows/outputs", Operation.ALL)
+                ),
+            ),
+            Site("condor_pool", arch=Arch.X86_64, os_type=OS.LINUX)
+            .add_directories(
+                Directory(Directory.SHAREDSCRATCH, "/lustre").add_file_servers(
+                    FileServer("gsiftp://smarty.isi.edu/lustre", Operation.ALL)
                 )
             )
+            .add_grids(
+                Grid(
+                    Grid.GT5,
+                    "smarty.isi.edu/jobmanager-pbs",
+                    Scheduler.PBS,
+                    job_type=SupportedJobs.AUXILLARY,
+                ),
+                Grid(
+                    Grid.GT5,
+                    "smarty.isi.edu/jobmanager-pbs",
+                    Scheduler.PBS,
+                    job_type=SupportedJobs.COMPUTE,
+                ),
+            )
+            .add_env(JAVA_HOME="/usr/bin/java"),
+            Site("staging_site", arch=Arch.X86_64, os_type=OS.LINUX).add_directories(
+                Directory(Directory.SHAREDSCRATCH, "/data")
+                .add_file_servers(
+                    FileServer("scp://obelix.isi.edu/data", Operation.PUT)
+                )
+                .add_file_servers(
+                    FileServer("http://obelix.isi.edu/data", Operation.GET)
+                )
+            ),
         )
 
         result = json.loads(json.dumps(sc, cls=_CustomEncoder))
@@ -516,58 +504,50 @@ class TestSiteCatalog:
     def test_write(self, expected_json, _format, loader):
         sc = (
             SiteCatalog()
-            .add_site(
-                Site("local", arch=Arch.X86_64, os_type=OS.LINUX)
-                .add_directory(
+            .add_sites(
+                Site("local", arch=Arch.X86_64, os_type=OS.LINUX).add_directories(
                     Directory(
                         Directory.SHAREDSCRATCH, "/tmp/workflows/scratch"
-                    ).add_file_server(
+                    ).add_file_servers(
                         FileServer("file:///tmp/workflows/scratch", Operation.ALL)
-                    )
-                )
-                .add_directory(
+                    ),
                     Directory(
                         Directory.LOCALSTORAGE, "/tmp/workflows/outputs"
-                    ).add_file_server(
+                    ).add_file_servers(
                         FileServer("file:///tmp/workflows/outputs", Operation.ALL)
-                    )
+                    ),
                 )
             )
-            .add_site(
+            .add_sites(
                 Site("condor_pool", arch=Arch.X86_64, os_type=OS.LINUX)
-                .add_directory(
-                    Directory(Directory.SHAREDSCRATCH, "/lustre").add_file_server(
+                .add_directories(
+                    Directory(Directory.SHAREDSCRATCH, "/lustre").add_file_servers(
                         FileServer("gsiftp://smarty.isi.edu/lustre", Operation.ALL)
                     )
                 )
-                .add_grid(
+                .add_grids(
                     Grid(
                         Grid.GT5,
                         "smarty.isi.edu/jobmanager-pbs",
                         Scheduler.PBS,
                         job_type=SupportedJobs.AUXILLARY,
-                    )
-                )
-                .add_grid(
+                    ),
                     Grid(
                         Grid.GT5,
                         "smarty.isi.edu/jobmanager-pbs",
                         Scheduler.PBS,
                         job_type=SupportedJobs.COMPUTE,
-                    )
+                    ),
                 )
-                .add_env(JAVA_HOME="/usr/bin/java")
-            )
-            .add_site(
-                Site("staging_site", arch=Arch.X86_64, os_type=OS.LINUX).add_directory(
-                    Directory(Directory.SHAREDSCRATCH, "/data")
-                    .add_file_server(
-                        FileServer("scp://obelix.isi.edu/data", Operation.PUT)
+                .add_env(JAVA_HOME="/usr/bin/java"),
+                Site(
+                    "staging_site", arch=Arch.X86_64, os_type=OS.LINUX
+                ).add_directories(
+                    Directory(Directory.SHAREDSCRATCH, "/data").add_file_servers(
+                        FileServer("scp://obelix.isi.edu/data", Operation.PUT),
+                        FileServer("http://obelix.isi.edu/data", Operation.GET),
                     )
-                    .add_file_server(
-                        FileServer("http://obelix.isi.edu/data", Operation.GET)
-                    )
-                )
+                ),
             )
         )
 

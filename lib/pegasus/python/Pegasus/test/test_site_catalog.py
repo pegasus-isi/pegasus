@@ -22,7 +22,7 @@ from Pegasus.site_catalog import _to_sc, dump, dumps, load, loads
 
 @pytest.fixture(scope="module")
 def sc1():
-    return SiteCatalog().add_site(
+    return SiteCatalog().add_sites(
         Site(
             "local",
             arch=Arch.X86_64,
@@ -31,13 +31,13 @@ def sc1():
             os_version="1",
             glibc="1",
         )
-        .add_directory(
-            Directory(Directory.LOCALSCRATCH, "/path").add_file_server(
+        .add_directories(
+            Directory(Directory.LOCALSCRATCH, "/path").add_file_servers(
                 FileServer("url", Operation.ALL).add_dagman(retry=1)
             )
         )
         .add_dagman(retry=1)
-        .add_grid(
+        .add_grids(
             Grid(
                 Grid.CONDOR,
                 "contact",
@@ -58,14 +58,14 @@ def sc1():
 
 @pytest.fixture(scope="module")
 def sc2():
-    return SiteCatalog().add_site(
+    return SiteCatalog().add_sites(
         Site("local",)
-        .add_directory(
-            Directory(Directory.LOCALSCRATCH, "/path").add_file_server(
+        .add_directories(
+            Directory(Directory.LOCALSCRATCH, "/path").add_file_servers(
                 FileServer("url", Operation.ALL)
             )
         )
-        .add_grid(Grid(Grid.CONDOR, "contact", Scheduler.CONDOR,))
+        .add_grids(Grid(Grid.CONDOR, "contact", Scheduler.CONDOR,))
     )
 
 

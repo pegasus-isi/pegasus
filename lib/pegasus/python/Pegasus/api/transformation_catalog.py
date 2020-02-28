@@ -227,31 +227,31 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         return "{}::{}::{}".format(self.namespace, self.name, self.version)
 
     @_chained
-    def add_site(self, transformation_site):
-        """Add a :py:class:`~Pegasus.api.transformation_catalog.TransformationSite` to this
+    def add_sites(self, *transformation_sites):
+        """Add one or more :py:class:`~Pegasus.api.transformation_catalog.TransformationSite` to this
         transformation
 
-        :param transformation_site: the transformation site to be added
-        :type transformation_site: TransformationSite
-        :raises TypeError: transformation_site must be of type TransformationSite
+        :param transformation_sites: the transformation site(s) to be added
+        :raises TypeError: argument(s) must be of type :py:class:`~Pegasus.api.transformation_catalog.TransformationSite`
         :raises DuplicateError: a transformation site with the same name as the one you are attempting to add already exists
         :return: self
         """
-        if not isinstance(transformation_site, TransformationSite):
-            raise TypeError(
-                "invalid transformation_site: {transformation_site}; transformation_site must be of type TransformationSite".format(
-                    transformation_site=transformation_site
+        for ts in transformation_sites:
+            if not isinstance(ts, TransformationSite):
+                raise TypeError(
+                    "invalid transformation_site: {transformation_site}; transformation_site must be of type TransformationSite".format(
+                        transformation_site=ts
+                    )
                 )
-            )
 
-        if transformation_site.name in self.sites:
-            raise DuplicateError(
-                "transformation site: {name} has already been added to {transformation}".format(
-                    name=transformation_site.name, transformation=self
+            if ts.name in self.sites:
+                raise DuplicateError(
+                    "transformation site: {name} has already been added to {transformation}".format(
+                        name=ts.name, transformation=self
+                    )
                 )
-            )
 
-        self.sites[transformation_site.name] = transformation_site
+            self.sites[ts.name] = ts
 
     @_chained
     def add_requirement(self, required_transformation, namespace=None, version=None):
@@ -332,7 +332,7 @@ class TransformationCatalog(Writable):
 
         # Example
         preprocess = (Transformation("preprocess", namespace="pegasus", version="4.0")
-                .add_site(
+                .add_sites(
                     TransformationSite(
                         CONDOR_POOL, 
                         PEGASUS_LOCATION, 
@@ -342,7 +342,7 @@ class TransformationCatalog(Writable):
                 ))
 
         findrage = (Transformation("findrange", namespace="pegasus", version="4.0")
-                        .add_site(
+                        .add_sites(
                             TransformationSite(
                                 CONDOR_POOL, 
                                 PEGASUS_LOCATION, 
@@ -352,7 +352,7 @@ class TransformationCatalog(Writable):
                         ))
 
         analyze = (Transformation("analyze", namespace="pegasus", version="4.0")
-                        .add_site(
+                        .add_sites(
                             TransformationSite(
                                 CONDOR_POOL, 
                                 PEGASUS_LOCATION, 
@@ -373,10 +373,10 @@ class TransformationCatalog(Writable):
 
     @_chained
     def add_transformations(self, *transformations):
-        """Add one or more :py:class:`~Pegasus.api.transformation_catalog.Transformations` to this catalog
+        """Add one or more :py:class:`~Pegasus.api.transformation_catalog.Transformation` to this catalog
         
-        :param transformations: the :py:class:`~Pegasus.api.transformation_catalog.Transformations` to be added
-        :raises ValueError: argument(s) must be of type :py:class:`~Pegasus.api.transformation_catalog.Transformations`
+        :param transformations: the :py:class:`~Pegasus.api.transformation_catalog.Transformation` to be added
+        :raises TypeError: argument(s) must be of type :py:class:`~Pegasus.api.transformation_catalog.Transformation`
         :raises DuplicateError: Transformation already exists in this catalog
         :return: self 
         """
@@ -398,31 +398,30 @@ class TransformationCatalog(Writable):
             self.transformations[tr._get_key()] = tr
 
     @_chained
-    def add_container(self, container):
-        """Add a :py:class:`~Pegasus.api.transformation_catalog.Container` to this catalog
+    def add_containers(self, *containers):
+        """Add one or more :py:class:`~Pegasus.api.transformation_catalog.Container` to this catalog
         
         :param container: the :py:class:`~Pegasus.api.transformation_catalog.Container` to be added
-        :type container: Container
-        :raises ValueError: container must be of type :py:class:`~Pegasus.api.transformation_catalog.Container`
+        :raises TypeError: argument(s) must be of type :py:class:`~Pegasus.api.transformation_catalog.Container`
         :raises DuplicateError: a container with the same name already exists in this catalog
         :return: self
         """
-
-        if not isinstance(container, Container):
-            raise TypeError(
-                "invalid container: {container}; container must be of type Container".format(
-                    container=container
+        for c in containers:
+            if not isinstance(c, Container):
+                raise TypeError(
+                    "invalid container: {container}; container must be of type Container".format(
+                        container=c
+                    )
                 )
-            )
 
-        if container.name in self.containers:
-            raise DuplicateError(
-                "container: {0} has already been added to this TransformationCatalog".format(
-                    container.name
+            if c.name in self.containers:
+                raise DuplicateError(
+                    "container: {0} has already been added to this TransformationCatalog".format(
+                        c.name
+                    )
                 )
-            )
 
-        self.containers[container.name] = container
+            self.containers[c.name] = c
 
     def __json__(self):
         return _filter_out_nones(

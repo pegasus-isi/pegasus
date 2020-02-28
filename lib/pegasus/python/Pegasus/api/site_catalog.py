@@ -183,22 +183,22 @@ class Directory:
         self.file_servers = list()
 
     @_chained
-    def add_file_server(self, file_server):
-        """Add access methods to this directory
+    def add_file_servers(self, *file_servers):
+        """Add one or more access methods to this directory
         
         :param file_server: a :py:class:`~Pegasus.api.site_catalog.FileServer`
-        :type file_server: FileServer
         :raises ValueError: file_server must be of type :py:class:`~Pegasus.api.site_catalog.FileServer`
         :return: self
         """
-        if not isinstance(file_server, FileServer):
-            raise TypeError(
-                "invalid file_server: {file_server}; file_server must be of type FileServer".format(
-                    file_server=file_server
+        for fs in file_servers:
+            if not isinstance(fs, FileServer):
+                raise TypeError(
+                    "invalid file_server: {file_server}; file_server must be of type FileServer".format(
+                        file_server=fs
+                    )
                 )
-            )
 
-        self.file_servers.append(file_server)
+            self.file_servers.append(fs)
 
     def __json__(self):
         return _filter_out_nones(
@@ -357,12 +357,12 @@ class Site(ProfileMixin):
 
         # Example
         (Site(LOCAL, arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7")
-            .add_directory(
+            .add_directories(
                 Directory(Directory.SHARED_SCRATCH, shared_scratch_dir)
-                    .add_file_server(FileServer("file://" + shared_scratch_dir, Operation.ALL))
-            ).add_directory(
+                    .add_file_servers(FileServer("file://" + shared_scratch_dir, Operation.ALL)),
+
                 Directory(Directory.LOCAL_STORAGE, local_storage_dir)
-                    .add_file_server(FileServer("file://" + local_storage_dir, Operation.ALL))
+                    .add_file_servers(FileServer("file://" + local_storage_dir, Operation.ALL))
             ))
     """
 
@@ -426,38 +426,38 @@ class Site(ProfileMixin):
         self.profiles = defaultdict(dict)
 
     @_chained
-    def add_directory(self, directory):
-        """Add a :py:class:`~Pegasus.api.site_catalog.Directory` to this :py:class:`~Pegasus.api.site_catalog.Site`
+    def add_directories(self, *directories):
+        """Add one or more :py:class:`~Pegasus.api.site_catalog.Directory` to this :py:class:`~Pegasus.api.site_catalog.Site`
         
         :param directory: the :py:class:`~Pegasus.api.site_catalog.Directory` to be added
-        :type directory: Directory
-        :raises ValueError: directory must be of type :py:class:`~Pegasus.api.site_catalog.Directory`
+        :raises TypeError: directory must be of type :py:class:`~Pegasus.api.site_catalog.Directory`
         :return: self
         """
-        if not isinstance(directory, Directory):
-            raise TypeError(
-                "invalid directory: {directory}; directory is not of type Directory".format(
-                    directory=directory
+        for d in directories:
+            if not isinstance(d, Directory):
+                raise TypeError(
+                    "invalid directory: {directory}; directory is not of type Directory".format(
+                        directory=d
+                    )
                 )
-            )
 
-        self.directories.append(directory)
+            self.directories.append(d)
 
     @_chained
-    def add_grid(self, grid):
-        """Add a :py:class:`~Pegasus.api.site_catalog.Grid` to this :py:class:`~Pegasus.api.site_catalog.Site`
+    def add_grids(self, *grids):
+        """Add one or more :py:class:`~Pegasus.api.site_catalog.Grid` to this :py:class:`~Pegasus.api.site_catalog.Site`
         
         :param grid: the :py:class:`~Pegasus.api.site_catalog.Grid` to be added
-        :type grid: Grid
-        :raises ValueError: grid must be of type :py:class:`~Pegasus.api.site_catalog.Grid`
+        :raises TypeError: grid must be of type :py:class:`~Pegasus.api.site_catalog.Grid`
         :return: self
         """
-        if not isinstance(grid, Grid):
-            raise TypeError(
-                "invalid grid: {grid}; grid must be of type Grid".format(grid=grid)
-            )
+        for g in grids:
+            if not isinstance(g, Grid):
+                raise TypeError(
+                    "invalid grid: {grid}; grid must be of type Grid".format(grid=g)
+                )
 
-        self.grids.append(grid)
+            self.grids.append(g)
 
     def __json__(self):
         return _filter_out_nones(
@@ -483,19 +483,20 @@ class SiteCatalog(Writable):
 
         # Example 
         (SiteCatalog()
-            .add_site(
+            .add_sites(
                 Site(LOCAL, arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7")
-                    .add_directory(
+                    .add_directories(
                         Directory(Directory.SHARED_SCRATCH, shared_scratch_dir)
-                            .add_file_server(FileServer("file://" + shared_scratch_dir, Operation.ALL))
-                    ).add_directory(
+                            .add_file_servers(FileServer("file://" + shared_scratch_dir, Operation.ALL)),
+
                         Directory(Directory.LOCAL_STORAGE, local_storage_dir)
-                            .add_file_server(FileServer("file://" + local_storage_dir, Operation.ALL))
-                    )
-            ).add_site(
+                            .add_file_servers(FileServer("file://" + local_storage_dir, Operation.ALL))
+                    ),
+
                 Site(CONDOR_POOL, arch=Arch.X86_64, os_type=OS.LINUX)
                     .add_pegasus(style="condor")
                     .add_condor(universe="vanilla")
+
             ).write("SiteCatalog.yml"))
             
     """
@@ -504,28 +505,28 @@ class SiteCatalog(Writable):
         self.sites = dict()
 
     @_chained
-    def add_site(self, site):
-        """Add a site to this catalog
+    def add_sites(self, *sites):
+        """Add one or more sites to this catalog
         
         :param site: the site to be added
-        :type site: Site
-        :raises ValueError: site must be of type :py:class:`~Pegasus.api.site_catalog.Site`
+        :raises TypeError: site must be of type :py:class:`~Pegasus.api.site_catalog.Site`
         :raises DuplicateError: a site with the same name already exists in this catalog
         :return: self
         """
-        if not isinstance(site, Site):
-            raise TypeError(
-                "invalid site: {site}; site must be of type Site".format(site=site)
-            )
-
-        if site.name in self.sites:
-            raise DuplicateError(
-                "site with name: {0} already exists in this SiteCatalog".format(
-                    site.name
+        for s in sites:
+            if not isinstance(s, Site):
+                raise TypeError(
+                    "invalid site: {site}; site must be of type Site".format(site=s)
                 )
-            )
 
-        self.sites[site.name] = site
+            if s.name in self.sites:
+                raise DuplicateError(
+                    "site with name: {0} already exists in this SiteCatalog".format(
+                        s.name
+                    )
+                )
+
+            self.sites[s.name] = s
 
     def __json__(self):
         return {

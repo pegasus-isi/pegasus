@@ -214,23 +214,23 @@ class TestTransformation:
 
     def test_add_site(self):
         t = Transformation("test")
-        t.add_site(TransformationSite("local", "/pfn", True))
+        t.add_sites(TransformationSite("local", "/pfn", True))
         assert "local" in t.sites
 
     def test_add_duplicate_site(self):
         with pytest.raises(DuplicateError) as e:
             t = Transformation("test")
-            t.add_site(TransformationSite("local", "/pfn", True))
-            t.add_site(TransformationSite("isi", "/pfn", True))
+            t.add_sites(TransformationSite("local", "/pfn", True))
+            t.add_sites(TransformationSite("isi", "/pfn", True))
 
-            t.add_site(TransformationSite("local", "/pfn", True))
+            t.add_sites(TransformationSite("local", "/pfn", True))
 
         assert "local" in str(e)
 
     def test_add_invalid_site(self):
         with pytest.raises(TypeError) as e:
             t = Transformation("test")
-            t.add_site("badsite")
+            t.add_sites("badsite")
 
         assert "badsite" in str(e)
 
@@ -278,7 +278,7 @@ class TestTransformation:
     def test_chaining(self):
         t = (
             Transformation("test")
-            .add_site(
+            .add_sites(
                 TransformationSite("local", "/pfn", True).add_env(
                     JAVA_HOME="/java/home"
                 )
@@ -294,7 +294,7 @@ class TestTransformation:
         self, convert_yaml_schemas_to_json, load_schema
     ):
         t = Transformation("test", namespace="pegasus")
-        t.add_site(TransformationSite("local", "/pfn", True))
+        t.add_sites(TransformationSite("local", "/pfn", True))
         t.add_requirement("required")
 
         result = json.loads(json.dumps(t, cls=_CustomEncoder))
@@ -315,7 +315,7 @@ class TestTransformation:
         self, convert_yaml_schemas_to_json, load_schema
     ):
         t = Transformation("test", namespace="pegasus")
-        t.add_site(
+        t.add_sites(
             TransformationSite("local", "/pfn", True).add_env(JAVA_HOME="/java/home")
         )
         t.add_requirement("required")
@@ -430,23 +430,23 @@ class TestTransformationCatalog:
 
     def test_add_container(self):
         tc = TransformationCatalog()
-        tc.add_container(Container("container", Container.DOCKER, "image", ["mount"]))
+        tc.add_containers(Container("container", Container.DOCKER, "image", ["mount"]))
 
         assert len(tc.containers) == 1
         assert "container" in tc.containers
 
     def test_add_duplicate_container(self):
         tc = TransformationCatalog()
-        tc.add_container(Container("container", Container.DOCKER, "image", ["mount"]))
+        tc.add_containers(Container("container", Container.DOCKER, "image", ["mount"]))
         with pytest.raises(DuplicateError):
-            tc.add_container(
+            tc.add_containers(
                 Container("container", Container.DOCKER, "image", ["mount"])
             )
 
     def test_add_invalid_container(self):
         tc = TransformationCatalog()
         with pytest.raises(TypeError) as e:
-            tc.add_container("container")
+            tc.add_containers("container")
 
         assert "invalid container: container" in str(e)
 
@@ -456,10 +456,10 @@ class TestTransformationCatalog:
         (
             tc.add_transformations(Transformation("t1"))
             .add_transformations(Transformation("t2"))
-            .add_container(
+            .add_containers(
                 Container("container1", Container.DOCKER, "image", ["mount1", "mount2"])
             )
-            .add_container(
+            .add_containers(
                 Container("container2", Container.DOCKER, "image", ["mount1", "mount2"])
             )
         )
@@ -473,19 +473,19 @@ class TestTransformationCatalog:
         tc = TransformationCatalog()
         (
             tc.add_transformations(
-                Transformation("t1").add_site(
+                Transformation("t1").add_sites(
                     TransformationSite("local", "/pfn", False)
                 )
             )
             .add_transformations(
-                Transformation("t2").add_site(
+                Transformation("t2").add_sites(
                     TransformationSite("local", "/pfn", False)
                 )
             )
-            .add_container(
+            .add_containers(
                 Container("container1", Container.DOCKER, "image", ["mount1"])
             )
-            .add_container(
+            .add_containers(
                 Container("container2", Container.DOCKER, "image", ["mount1"])
             )
         )
@@ -539,11 +539,11 @@ class TestTransformationCatalog:
         tc = TransformationCatalog()
         (
             tc.add_transformations(
-                Transformation("t1").add_site(
+                Transformation("t1").add_sites(
                     TransformationSite("local", "/pfn", False)
                 )
             ).add_transformations(
-                Transformation("t2").add_site(
+                Transformation("t2").add_sites(
                     TransformationSite("local2", "/pfn", True)
                 )
             )
@@ -623,7 +623,7 @@ class TestTransformationCatalog:
             .add_globus(max_time=2)
             .add_dagman(retry=2)
             .add_metadata(size=2048)
-            .add_site(
+            .add_sites(
                 TransformationSite(
                     "local",
                     "/nfs/u2/ryan/bin/foo",
@@ -638,7 +638,7 @@ class TestTransformationCatalog:
             .add_shell_hook(EventType.START, "/bin/echo 'starting'")
         )
 
-        bar = Transformation("bar").add_site(
+        bar = Transformation("bar").add_sites(
             TransformationSite(
                 "local",
                 "/nfs/u2/ryan/bin/bar",
@@ -655,7 +655,7 @@ class TestTransformationCatalog:
             ["/Volumes/Work/lfs1:/shared-data/:ro"],
         ).add_env(JAVA_HOME="/usr/bin/java")
 
-        (tc.add_transformations(foo, bar).add_container(centos_pegasus_container))
+        (tc.add_transformations(foo, bar).add_containers(centos_pegasus_container))
 
         with NamedTemporaryFile(mode="r+") as f:
             tc.write(f, _format=_format)

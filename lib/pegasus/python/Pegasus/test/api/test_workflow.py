@@ -678,8 +678,8 @@ def expected_json():
 def wf():
     tc = TransformationCatalog()
     tc.add_transformations(
-        Transformation("t1").add_site(TransformationSite("local", "/pfn", False)),
-        Transformation("t2").add_site(TransformationSite("local2", "/pfn", True)),
+        Transformation("t1").add_sites(TransformationSite("local", "/pfn", False)),
+        Transformation("t2").add_sites(TransformationSite("local2", "/pfn", True)),
     )
 
     rc = ReplicaCatalog()

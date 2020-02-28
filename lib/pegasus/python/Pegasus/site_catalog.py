@@ -86,10 +86,10 @@ def _to_sc(d: dict) -> SiteCatalog:
                         file_server.profiles = defaultdict(dict, fs.get("profiles"))
 
                     # add file server to this directory
-                    directory.add_file_server(file_server)
+                    directory.add_file_servers(file_server)
 
                 # add directory to this site
-                site.add_directory(directory)
+                site.add_directories(directory)
 
             # add grids
             if s.get("grids"):
@@ -112,14 +112,14 @@ def _to_sc(d: dict) -> SiteCatalog:
                     )
 
                     # add grid to this site
-                    site.add_grid(grid)
+                    site.add_grids(grid)
 
             # add profiles
             if s.get("profiles"):
                 site.profiles = defaultdict(dict, s.get("profiles"))
 
             # add site to sc
-            sc.add_site(site)
+            sc.add_sites(site)
 
         return sc
 

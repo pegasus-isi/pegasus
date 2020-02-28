@@ -23,7 +23,7 @@ def tc1():
         TransformationCatalog()
         .add_transformations(
             Transformation("t1", namespace="test", version="1.0")
-            .add_site(
+            .add_sites(
                 TransformationSite(
                     "local",
                     "/pfn",
@@ -41,7 +41,7 @@ def tc1():
             .add_requirement("t2", namespace="test", version="1.0")
             .add_shell_hook(EventType.START, "echo hello")
         )
-        .add_container(
+        .add_containers(
             Container(
                 "cont",
                 Container.DOCKER,
@@ -58,11 +58,11 @@ def tc2():
     return (
         TransformationCatalog()
         .add_transformations(
-            Transformation("t1", namespace="test", version="1.0").add_site(
+            Transformation("t1", namespace="test", version="1.0").add_sites(
                 TransformationSite("local", "/pfn", True,)
             )
         )
-        .add_container(
+        .add_containers(
             Container(
                 "cont",
                 Container.DOCKER,

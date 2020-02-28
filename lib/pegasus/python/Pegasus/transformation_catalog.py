@@ -83,7 +83,7 @@ def _to_tc(d: dict) -> TransformationCatalog:
                     site_to_add.metadata = s.get("metadata")
 
                 # add site to this tr
-                tr_to_add.add_site(site_to_add)
+                tr_to_add.add_sites(site_to_add)
 
             # add requires
             if tr.get("requires"):
@@ -120,7 +120,7 @@ def _to_tc(d: dict) -> TransformationCatalog:
                     cont_to_add.profiles = defaultdict(dict, cont.get("profiles"))
 
                 # add cont to tc
-                tc.add_container(cont_to_add)
+                tc.add_containers(cont_to_add)
 
         return tc
 
