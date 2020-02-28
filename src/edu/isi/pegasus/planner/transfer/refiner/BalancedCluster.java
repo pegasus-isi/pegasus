@@ -755,17 +755,21 @@ public class BalancedCluster extends Basic {
 
                     @Override
                     public int compare(Job j1, Job j2) {
-                        return getNumberOfChildren(j1) - getNumberOfChildren(j2);
+                        // want the largest number of children first
+                        return getNumberOfChildren(j2) - getNumberOfChildren(j1);
                     }
                 });
 
-        int priority = 1;
+        int priority = 0;
         for (Job j : txJobs) {
-            j.condorVariables.checkKeyInNS(Condor.PRIORITY_KEY, Integer.toString(priority++));
+            // negative priorities here as we will later add them to a base priority - the idea
+            // being that the most important job will have base priority, the next one
+            // base priority - 1, and so on
+            j.condorVariables.checkKeyInNS(Condor.PRIORITY_KEY, Integer.toString(priority--));
             GraphNode node = j.getGraphNodeReference();
             int children = node.getChildren().size();
             mLogger.log(
-                    "Assigned priority of "
+                    "Assigned priority adjustment of "
                             + priority
                             + " to transfer job "
                             + j.getID()
