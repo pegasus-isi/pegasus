@@ -207,11 +207,15 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         return self.stdin
 
     @_chained
-    def set_stdout(self, file):
+    def set_stdout(self, file, stage_out=True, register_replica=False):
         """Set stdout to a :py:class:`~Pegasus.api.replica_catalog.File`
         
         :param file: a file that stdout will be written to
-        :type file: File or
+        :type file: File or str
+        :param stage_out: whether or not to send files back to an output directory, defaults to True
+        :type stage_out: bool, optional
+        :param register_replica: whether or not to register replica with a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog`, defaults to False
+        :type register_replica: bool, optional
         :raises ValueError: file must be of type :py:class:`~Pegasus.api.replica_catalog.File` or str
         :raises DuplicateError: stdout is already set or the given file has already been added as an output to this job 
         :return: self
@@ -229,7 +233,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         if isinstance(file, str):
             file = File(file)
 
-        self.add_outputs(file)
+        self.add_outputs(file, stage_out=stage_out, register_replica=register_replica)
         self.stdout = file
 
     def get_stdout(self):
@@ -241,11 +245,15 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         return self.stdout
 
     @_chained
-    def set_stderr(self, file):
+    def set_stderr(self, file, stage_out=True, register_replica=False):
         """Set stderr to a :py:class:`~Pegasus.api.replica_catalog.File` 
         
         :param file: a file that stderr will be written to
         :type file: File or str
+        :param stage_out: whether or not to send files back to an output directory, defaults to True
+        :type stage_out: bool, optional
+        :param register_replica: whether or not to register replica with a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog`, defaults to False
+        :type register_replica: bool, optional
         :raises ValueError: file must be of type File or str
         :raises DuplicateError: stderr is already set or the given file has already been added as an output to this job 
         :return: self
@@ -263,7 +271,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         if isinstance(file, str):
             file = File(file)
 
-        self.add_outputs(file)
+        self.add_outputs(file, stage_out=stage_out, register_replica=register_replica)
         self.stderr = file
 
     def get_stderr(self):
