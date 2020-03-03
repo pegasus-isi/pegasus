@@ -17,8 +17,10 @@ log = logging.getLogger("logger")
 # --- script setup -------------------------------------------------------------------
 class ColoredFormatter(logging.Formatter):
     # printing debug level logs in yellow
-    debug_format = "\u001b[33m%(asctime)s %(levelname)7s:  " \
-                    "%(message)s at line %(lineno)d: \u001b[0m"
+    debug_format = (
+        "\u001b[33m%(asctime)s %(levelname)7s:  "
+        "%(message)s at line %(lineno)d: \u001b[0m"
+    )
 
     def __init__(self):
         super().__init__("%(asctime)s %(levelname)7s:  %(message)s")
@@ -39,41 +41,55 @@ class ColoredFormatter(logging.Formatter):
 
         return result
 
+
 def setup_logger(debug_flag):
 
-   # log to the console
-   console = logging.StreamHandler()
+    # log to the console
+    console = logging.StreamHandler()
 
-   # default log level - make logger/console match
-   log.setLevel(logging.INFO)
-   console.setLevel(logging.INFO)
+    # default log level - make logger/console match
+    log.setLevel(logging.INFO)
+    console.setLevel(logging.INFO)
 
-   # debug - from command line
-   if debug_flag:
-       log.setLevel(logging.DEBUG)
-       console.setLevel(logging.DEBUG)
+    # debug - from command line
+    if debug_flag:
+        log.setLevel(logging.DEBUG)
+        console.setLevel(logging.DEBUG)
 
-   # formatter
-   console.setFormatter(ColoredFormatter())
-   log.addHandler(console)
-   log.debug("Logger has been configured")
+    # formatter
+    console.setFormatter(ColoredFormatter())
+    log.addHandler(console)
+    log.debug("Logger has been configured")
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
-            description="Converts a cwl workflow into the Pegasus DAX format.")
-    parser.add_argument("cwl_workflow_file_path",
-                        help="Path to the file containing the CWL Workflow class.")
-    parser.add_argument("input_file_spec_path",
-                        help="YAML file describing the workflow inputs.")
-    parser.add_argument("output_file_path",
-                        help="Desired path of the generated DAX file.")
+        description="Converts a cwl workflow into the Pegasus DAX format."
+    )
+    parser.add_argument(
+        "cwl_workflow_file_path",
+        help="Path to the file containing the CWL Workflow class.",
+    )
+    parser.add_argument(
+        "input_file_spec_path", help="YAML file describing the workflow inputs."
+    )
+    parser.add_argument(
+        "output_file_path", help="Desired path of the generated DAX file."
+    )
 
-    parser.add_argument("-d", "--debug", action="store_true",
-                        dest="debug", help="Enables debugging output.")
+    parser.add_argument(
+        "-d",
+        "--debug",
+        action="store_true",
+        dest="debug",
+        help="Enables debugging output.",
+    )
 
     return parser.parse_args()
 
+
 # --- utility functions --------------------------------------------------------------
+
 
 def get_basename(name):
     """
@@ -89,6 +105,7 @@ def get_basename(name):
     """
     basename = name.split("#")[1]
     return basename
+
 
 def get_name(namespace_id, field_id):
     """
@@ -132,7 +149,9 @@ def get_name(namespace_id, field_id):
     """
     return get_basename(namespace_id) + "/" + get_basename(field_id)
 
+
 # --- pegasus catalog classes --------------------------------------------------------
+
 
 class ReplicaCatalog:
     """Pegasus Replica Catalog"""
@@ -180,20 +199,26 @@ class TransformationCatalog:
         site = ""
 
         if is_stageable:
-            log.warning(("CommandLineTool.baseName: '{}', is an absolute path, "
-                        "assuming to be NOT stageable.").format(base_command))
+            log.warning(
+                (
+                    "CommandLineTool.baseName: '{}' with pfn: '{}' is assumed "
+                    "to be stageable"
+                ).format(base_command, pfn)
+            )
 
             site = "local"
             pfn = "file://" + os.path.join(
-                        os.path.abspath(self.stageables_directory),
-                        pfn
-                     )
+                os.path.abspath(self.stageables_directory), pfn
+            )
 
         else:
             site = "condorpool"
-            log.warning(("CommandLineTool.baseName: '{}', is not an absolute path, "
-                        "assuming to be stageable.").format(base_command))
-
+            log.warning(
+                (
+                    "CommandLineTool.baseName: '{}' with pfn: '{}' is assumed "
+                    "to NOT be stageable"
+                ).format(base_command, pfn)
+            )
 
         entry = TransformationCatalog.Entry(base_command, is_stageable, site, pfn)
         log.debug("Adding to TC: {}".format(entry))
@@ -207,18 +232,19 @@ class TransformationCatalog:
                 tc.write("tr {} {{\n".format(entry.base_command))
                 # TODO: handle different sites
                 tc.write("    site {} {{\n".format(entry.site))
-                tc.write("        pfn \"{}\"\n".format(entry.pfn))
+                tc.write('        pfn "{}"\n'.format(entry.pfn))
                 if entry.is_stageable:
-                    tc.write("        type \"STAGEABLE\"\n")
+                    tc.write('        type "STAGEABLE"\n')
                 tc.write("    }\n")
                 tc.write("}\n")
 
+
 # --- cwl -> dax conversion  ---------------------------------------------------------
+
 
 def main():
     args = parse_args()
     setup_logger(args.debug)
-
 
     # TODO: handle execeptions for bad file paths
     workflow_file_path = args.cwl_workflow_file_path
@@ -247,31 +273,39 @@ def main():
             if input_type == "File":
                 workflow_files[get_basename(input.id)] = get_basename(input.id)
                 # TODO: account for non-local sites
-                rc.add_item(get_basename(input.id), input_file_specs[get_basename(input.id)]["path"], "local")
+                rc.add_item(
+                    get_basename(input.id),
+                    input_file_specs[get_basename(input.id)]["path"],
+                    "local",
+                )
             elif input_type == "string":
-                workflow_input_strings[get_basename(input.id)] = \
-                                        input_file_specs[get_basename(input.id)]
+                workflow_input_strings[get_basename(input.id)] = input_file_specs[
+                    get_basename(input.id)
+                ]
             elif isinstance(input_type, cwl.InputArraySchema):
                 if input_type.items == "File":
                     # TODO: account for workflow inputs of type File[]
                     pass
                 elif input_type.items == "string":
-                    workflow_input_strings[get_basename(input.id)] = \
-                                        input_file_specs[get_basename(input.id)]
+                    workflow_input_strings[get_basename(input.id)] = input_file_specs[
+                        get_basename(input.id)
+                    ]
 
     log.info("Collecting output files")
     for step in workflow.steps:
-        cwl_command_line_tool = cwl.load_document(step.run) if isinstance(step.run, str) \
-                                                                    else step.run
+        cwl_command_line_tool = (
+            cwl.load_document(step.run) if isinstance(step.run, str) else step.run
+        )
 
         for output in cwl_command_line_tool.outputs:
             # TODO: account for outputs that are not files
             output_name = get_name(step.id, output.id)
 
-            log.debug("Adding (key: {0}, value: {1}) to workflow_files".format(
-                output_name,
-                output.outputBinding.glob
-            ))
+            log.debug(
+                "Adding (key: {0}, value: {1}) to workflow_files".format(
+                    output_name, output.outputBinding.glob
+                )
+            )
 
             # TODO: throw error when glob contains javascript expression
             #       or pattern as we cannot support anything that is dynamic
@@ -280,11 +314,15 @@ def main():
     log.info("Building workflow steps into dax jobs")
     for step in workflow.steps:
         # convert cwl:CommandLineTool -> pegasus:Executable
-        cwl_command_line_tool = cwl.load_document(step.run) if isinstance(step.run, str) \
-                                                                    else step.run
+        cwl_command_line_tool = (
+            cwl.load_document(step.run) if isinstance(step.run, str) else step.run
+        )
 
-        executable_name = os.path.basename(cwl_command_line_tool.baseCommand) if \
-            os.path.isabs(cwl_command_line_tool.baseCommand) else cwl_command_line_tool.baseCommand
+        executable_name = (
+            os.path.basename(cwl_command_line_tool.baseCommand)
+            if os.path.isabs(cwl_command_line_tool.baseCommand)
+            else cwl_command_line_tool.baseCommand
+        )
 
         dax_executable = dax.Executable(executable_name)
 
@@ -307,16 +345,9 @@ def main():
             if input.type == "File":
                 file_id = step_inputs[get_name(step.id, input.id)]
                 file = dax.File(workflow_files[file_id])
-                log.debug("Adding link ({0} -> {1})".format(
-                                file_id,
-                                dax_job.name
-                                )
-                )
+                log.debug("Adding link ({0} -> {1})".format(file_id, dax_job.name))
 
-                dax_job.uses(
-                    file,
-                    link=dax.Link.INPUT
-                )
+                dax_job.uses(file, link=dax.Link.INPUT)
 
             # TODO: better type checking for string[] and File[] ?
             elif isinstance(input.type, cwl.CommandInputArraySchema):
@@ -324,44 +355,36 @@ def main():
                     file_ids = step_inputs[get_name(step.id, input.id)]
                     for file_id in file_ids:
                         file = dax.File(workflow_files[file_id])
-                        log.debug("Adding link ({0} -> {1})".format(
-                                        file_id,
-                                        dax_job.name
-                                        )
+                        log.debug(
+                            "Adding link ({0} -> {1})".format(file_id, dax_job.name)
                         )
 
-                        dax_job.uses(
-                            file,
-                            link=dax.Link.INPUT
-                        )
-
+                        dax_job.uses(file, link=dax.Link.INPUT)
 
         # add output uses to job
         # TODO: ensure that these are of type File or File[]
         for output in step.out:
             file_id = get_basename(output)
             file = dax.File(workflow_files[file_id])
-            log.debug("Adding link ({0} -> {1})".format(
-                dax_job.name,
-                file_id
-            ))
+            log.debug("Adding link ({0} -> {1})".format(dax_job.name, file_id))
 
-            dax_job.uses(
-                    file,
-                    link=dax.Link.OUTPUT,
-                    transfer=True,
-                    register=True
-                )
+            dax_job.uses(file, link=dax.Link.OUTPUT, transfer=True, register=True)
 
         # add arguments to job
         # TODO: place argument building up in a function
-        dax_job_args = cwl_command_line_tool.arguments if \
-            cwl_command_line_tool.arguments is not None else []
+        dax_job_args = (
+            cwl_command_line_tool.arguments
+            if cwl_command_line_tool.arguments is not None
+            else []
+        )
 
         # process cwl inputBindings if they exist and build up job argument list
-        cwl_command_line_tool_inputs = sorted(cwl_command_line_tool.inputs,
-            key=lambda input : input.inputBinding.position if input.inputBinding.position \
-                is not None else 0 )
+        cwl_command_line_tool_inputs = sorted(
+            cwl_command_line_tool.inputs,
+            key=lambda input: input.inputBinding.position
+            if input.inputBinding.position is not None
+            else 0,
+        )
 
         for input in cwl_command_line_tool_inputs:
             # process args
@@ -371,15 +394,15 @@ def main():
                     dax_job_args.append(input.inputBinding.prefix)
 
                 if input.type == "File":
-                    dax_job_args.append(dax.File(
+                    dax_job_args.append(
+                        dax.File(
                             workflow_files[step_inputs[get_name(step.id, input.id)]]
                         )
                     )
 
                 if input.type == "string":
-                    dax_job_args.append(workflow_input_strings[
-                            step_inputs[get_name(step.id, input.id)]
-                        ]
+                    dax_job_args.append(
+                        workflow_input_strings[step_inputs[get_name(step.id, input.id)]]
                     )
 
                 # handle array type inputs
@@ -390,21 +413,19 @@ def main():
                     elif input.type.items == "string":
                         input_string_arr_id = step_inputs[get_name(step.id, input.id)]
 
-                        separator = " " if input.inputBinding.itemSeparator is None \
-                                        else input.inputBinding.itemSeparator
+                        separator = (
+                            " "
+                            if input.inputBinding.itemSeparator is None
+                            else input.inputBinding.itemSeparator
+                        )
 
                         dax_job_args.append(
                             # TODO: currently only accounting for input strings that
                             #       are inputs to the entire workflow
-                            separator.join(workflow_input_strings[
-                                input_string_arr_id
-                            ])
+                            separator.join(workflow_input_strings[input_string_arr_id])
                         )
 
-        log.debug("Adding job: {0}, with args: {1}".format(
-            dax_job.name,
-            dax_job_args
-        ))
+        log.debug("Adding job: {0}, with args: {1}".format(dax_job.name, dax_job_args))
         dax_job.addArguments(*dax_job_args)
 
         # add job to DAG
@@ -417,5 +438,6 @@ def main():
         log.info("Writing DAX to {}".format(args.output_file_path))
         adag.writeXML(f)
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     sys.exit(main())
