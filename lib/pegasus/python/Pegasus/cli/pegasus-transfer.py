@@ -1438,10 +1438,10 @@ class HPSSHandler(TransferHandlerBase):
         """
         if not os.path.exists(path):
             raise Exception("HPSS Credential file %s does not exist" % (path))
-        if oct(os.stat(path).st_mode & 0o0777) != '0600':
-            logger.warning("%s found to have weak permissions. chmod to 0x600."
+        if (os.stat(path).st_mode & 0o777) != 0o600:
+            logger.warning("%s found to have weak permissions. chmod to 0600."
                            % (path))
-            os.chmod(path, 0o0600)
+            os.chmod(path, 0o600)
 
     def do_transfers(self, transfers):
 
@@ -4353,10 +4353,10 @@ def check_cred_fs_permissions(path):
     """
     if not os.path.exists(path):
         raise Exception("Credential file %s does not exist" %(path))
-    if oct(os.stat(path).st_mode & 0o0777) != '0600':
+    if (os.stat(path).st_mode & 0o777) != 0o600:
         logger.warning("%s found to have weak permissions. chmod to 0600."
                        %(path))
-        os.chmod(path, 0o0600)
+        os.chmod(path, 0o600)
 
 
 
