@@ -1,39 +1,7 @@
 #!/bin/bash
 
-set -e
-
-echo
-echo "Setting up work directory"
-TOP_DIR=`pwd`
-WORK_DIR=$TOP_DIR/work
-mkdir -p $WORK_DIR
-export RUN_ID=001-black-diamond-vanilla-condor-5.0API-`date +'%s'`
+set -e 
 
 echo "Running black-diamond-setup.py"
 export PYTHONPATH=`pegasus-config --python`
-python3 black-diamond-setup.py $TOP_DIR $WORK_DIR $RUN_ID
-
-echo
-echo "Creating pegasus configuration file"
-cat > pegasus.conf << EOF
-pegasus.catalog.site = YAML
-pegasus.catalog.site.file = SiteCatalog.yml
-pegasus.catalog.transformation = YAML
-pegasus.catalog.transformation.file = TransformationCatalog.yml
-pegasus.catalog.replica = YAML
-pegasus.catalog.replica.file = ReplicaCatalog.yml
-pegasus.data.configuration = condorio
-EOF
-
-echo
-echo "Planning and submitting the converted workflow"
-pegasus-plan \
-    --conf pegasus.conf \
-    --force \
-    --dir $WORK_DIR \
-    --relative-dir $RUN_ID \
-    --sites condorpool \
-    --output-site local \
-    --dax Workflow.yml \
-    --cluster horizontal \
-    --submit
+python3 black-diamond-setup.py

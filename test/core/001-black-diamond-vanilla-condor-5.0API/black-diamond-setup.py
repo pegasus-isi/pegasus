@@ -1,21 +1,37 @@
 
-import argparse
 from pathlib import Path
+from datetime import date
 
 from Pegasus.api import *
 
-parser = argparse.ArgumentParser("Generates SC, TC, RC, and WF")
-parser.add_argument("top_dir")
-parser.add_argument("work_dir")
-parser.add_argument("run_id")
-
-args = parser.parse_args()
-
 PEGASUS_LOCATION = "file:///usr/bin/pegasus-keg"
 
-RUN_ID = args.run_id
-TOP_DIR = Path(args.top_dir)
-WORK_DIR = Path(args.work_dir)
+# --- Work Dir Setup -----------------------------------------------------------
+RUN_ID = "black-diamond-5.0api-" + date.today().strftime("%s")
+TOP_DIR = Path(Path.cwd())
+WORK_DIR = TOP_DIR / "work"
+
+try:
+    Path.mkdir(WORK_DIR)
+except FileExistsError:
+    pass
+
+# --- Configuration ------------------------------------------------------------
+CONF_FILENAME = "pegasus.conf"
+
+print("Generating pegasus.conf at: {}".format(TOP_DIR / CONF_FILENAME))
+
+conf = Properties()
+conf["pegasus.catalog.site"] = "YAML"
+conf["pegasus.catalog.site.file"] = "SiteCatalog.yml"
+conf["pegasus.catalog.transformation"] = "YAML"
+conf["pegasus.catalog.transformation.file"] = "TransformationCatalog.yml"
+conf["pegasus.catalog.replica"] = "YAML"
+conf["pegasus.catalog.replica.file"] = "ReplicaCatalog.yml"
+conf["pegasus.data.configuration"] = "condorio"
+
+with open(CONF_FILENAME, "w") as f:
+    conf.write(f)
 
 # --- Sites --------------------------------------------------------------------
 LOCAL = "locäl"
@@ -28,16 +44,16 @@ SC_FILENAME = "SiteCatalog.yml"
 print("Generating site catalog at: {}".format(TOP_DIR / SC_FILENAME))
 
 SiteCatalog()\
-    .add_site(
+    .add_sites(
         Site(LOCAL, arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7")
-            .add_directory(
+            .add_directories(
                 Directory(Directory.SHAREDSCRATCH, shared_scratch_dir)
-                    .add_file_server(FileServer("file://" + shared_scratch_dir, Operation.ALL))
-            ).add_directory(
+                    .add_file_servers(FileServer("file://" + shared_scratch_dir, Operation.ALL)),
+
                 Directory(Directory.LOCALSTORAGE, local_storage_dir)
-                    .add_file_server(FileServer("file://" + local_storage_dir, Operation.ALL))
-            )
-    ).add_site(
+                    .add_file_servers(FileServer("file://" + local_storage_dir, Operation.ALL))
+            ),
+
         Site(CONDOR_POOL, arch=Arch.X86_64, os_type=OS.LINUX)
             .add_pegasus(style="condor")
             .add_condor(universe="vanilla")
@@ -63,7 +79,7 @@ TC_FILENAME = "TransformationCatalog.yml"
 print("Generating transformation catalog at: {}".format(TOP_DIR / TC_FILENAME))
 
 preprocess = Transformation("pЯёprocess", namespace="pέgasuζ", version="4.0")\
-                .add_site(
+                .add_sites(
                     TransformationSite(
                         CONDOR_POOL, 
                         PEGASUS_LOCATION, 
@@ -73,7 +89,7 @@ preprocess = Transformation("pЯёprocess", namespace="pέgasuζ", version="4.0"
                 )
 
 findrage = Transformation("findrange", namespace="pέgasuζ", version="4.0")\
-                .add_site(
+                .add_sites(
                     TransformationSite(
                         CONDOR_POOL, 
                         PEGASUS_LOCATION, 
@@ -83,7 +99,7 @@ findrage = Transformation("findrange", namespace="pέgasuζ", version="4.0")\
                 )
 
 analyze = Transformation("analyze", namespace="pέgasuζ", version="4.0")\
-                .add_site(
+                .add_sites(
                     TransformationSite(
                         CONDOR_POOL, 
                         PEGASUS_LOCATION, 
@@ -97,9 +113,7 @@ TransformationCatalog()\
     .write(TC_FILENAME)
 
 # --- Workflow -----------------------------------------------------------------
-WF_FILENAME = "Workflow.yml"
-
-print("Generating workflow at: {}".format(TOP_DIR / WF_FILENAME))
+print("Generating workflow")
 
 fb1 = File("f.ƀ1")
 fb2 = File("f.β2")
@@ -128,4 +142,12 @@ Workflow("blÅckƊiamond㒀㑖", infer_dependencies=True)\
             .add_args("-a", "analyze", "-T", "60", "-i", fc1, fc2, "-o", fd)
             .add_inputs(fc1, fc2)
             .add_outputs(fd)
-    ).write(WF_FILENAME)
+    ).plan(
+        dir=str(WORK_DIR),
+        relative_dir=RUN_ID,
+        conf=CONF_FILENAME,
+        sites=CONDOR_POOL,
+        output_site=LOCAL,
+        force=True,
+        submit=True
+    )
