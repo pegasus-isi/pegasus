@@ -1,4 +1,5 @@
 import os
+from configparser import DEFAULTSECT
 from tempfile import TemporaryFile
 
 import pytest
@@ -26,6 +27,16 @@ class TestProperties:
             props.ls()
         except:
             pytest.raises("should not have failed")
+
+    def test_get_item(self, props, mocker):
+        props["a"] = "b" 
+        assert props["a"] == "b"
+
+    def test_del_item(self, props):
+        props["a"] = "b"
+        del props["a"]
+
+        assert "a" not in props._conf[DEFAULTSECT]
 
     def test_write_str_filename(self, props):
         filename = "props"
