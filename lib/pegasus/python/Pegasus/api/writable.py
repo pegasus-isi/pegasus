@@ -35,8 +35,8 @@ def _filter_out_nones(_dict):
     :rtype: dict
     """
     if not isinstance(_dict, dict):
-        raise ValueError(
-            "a dict must be passed to this function, not {}".format(type(_dict))
+        raise TypeError(
+            "invalid _dict: {}; _dict must be of type {}".format(_dict, type(dict))
         )
 
     return {key: value for key, value in _dict.items() if value is not None}
