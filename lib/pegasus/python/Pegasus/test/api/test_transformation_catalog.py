@@ -212,6 +212,26 @@ class TestTransformation:
             transformation.namespace, transformation.name, transformation.version
         )
 
+    def test_hash(self):
+        assert hash(Transformation("name")) == hash("None::name::None")
+
+    @pytest.mark.parametrize(
+            "t1, t2, is_eq",
+            [
+                (Transformation("name"), Transformation("name"), True),
+                (Transformation("name", namespace="namespace"), Transformation("name"), False)
+            ]
+    )
+    def test_eq(self, t1, t2, is_eq):
+        assert (t1 == t2) == is_eq
+
+    def test_eq_invalid(self):
+        with pytest.raises(ValueError) as e:
+            Transformation("name") == "tr"
+
+        assert "Transformation cannot be compared with" in str(e)
+
+
     def test_add_site(self):
         t = Transformation("test")
         t.add_sites(TransformationSite("local", "/pfn", True))
