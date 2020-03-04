@@ -6,7 +6,7 @@ import pytest
 
 import yaml
 
-from Pegasus.api.writable import Writable, _CustomEncoder
+from Pegasus.api.writable import Writable, _CustomEncoder, _filter_out_nones
 
 
 @pytest.fixture(scope="function")
@@ -94,6 +94,12 @@ class TestWritable:
         with pytest.raises(ValueError):
             writable_obj.write("abc", _format="123")
 
+    def test_write_invalid_file_type(self, writable_obj):
+        with pytest.raises(TypeError) as e:
+            writable_obj.write(1)
+
+        assert "1 must be of type str or file object" in str(e)
+
     @pytest.mark.parametrize(
         "file, _format, loader",
         [(TemporaryFile, "yml", yaml.safe_load), (TemporaryFile, "json", json.load)],
@@ -105,3 +111,14 @@ class TestWritable:
             writable_obj.write(f, _format=_format)
             f.seek(0)
             assert loader(f) == expected
+
+
+def test_filter_out_nones():
+    d = {"a": 1, "b": None}
+
+    assert _filter_out_nones(d) == {"a": 1}
+
+
+def test_filter_out_nones_invalid_type():
+    with pytest.raises(TypeError) as e:
+        _filter_out_nones(123)
