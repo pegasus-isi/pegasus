@@ -1,3 +1,4 @@
+import os
 import json
 import shutil
 from tempfile import NamedTemporaryFile
@@ -7,6 +8,7 @@ import pytest
 import yaml
 from jsonschema import validate
 
+import Pegasus
 from Pegasus.api.errors import DuplicateError, NotFoundError
 from Pegasus.api.mixins import EventType, Namespace
 from Pegasus.api.replica_catalog import File, ReplicaCatalog
@@ -33,9 +35,30 @@ from Pegasus.client._client import Client
 
 
 class Test_Use:
+    def test_valid_use(self):
+        assert _Use(File("a"), _LinkType.INPUT)
+
+    def test_invalid_use_bad_file(self):
+        with pytest.raises(TypeError) as e:
+            _Use(123, _LinkType.INPUT)
+
+        assert "invalid file: 123; file must be of type File" in str(e)
+
+    def test_invalid_use_bad_link_type(self):
+        with pytest.raises(TypeError) as e:
+            _Use(File("a"), "link")
+
+        assert "invalid link_type: link;" in str(e)
+
     def test_eq(self):
         assert _Use(File("a"), _LinkType.INPUT) == _Use(File("a"), _LinkType.OUTPUT)
         assert _Use(File("a"), _LinkType.INPUT) != _Use(File("b"), _LinkType.INPUT)
+
+    def test_eq_invalid(self):
+        with pytest.raises(ValueError) as e:
+            _Use(File("a"), _LinkType.INPUT) == "use"
+
+        assert "_Use cannot be compared with" in str(e)
 
     @pytest.mark.parametrize(
         "use, expected",
@@ -489,6 +512,15 @@ class TestJob:
 
 
 class Test_JobDependency:
+    def test_eq(self):
+        assert _JobDependency("1", {"2", "3"}) == _JobDependency("1", {"2", "3"})
+
+    def test_eq_invalid(self):
+        with pytest.raises(ValueError) as e:
+            _JobDependency("1", {"2", "3"}) == 123
+
+        assert "_JobDependency cannot be compared with" in str(e)
+
     def test_tojson(self):
         jd = _JobDependency("parent_id", {"child_id1"})
         assert jd.__json__() == {
@@ -925,7 +957,7 @@ class TestWorkflow:
     @pytest.mark.parametrize(
         "_format, loader", [("json", json.load), ("yml", yaml.safe_load)]
     )
-    def test_write(
+    def test_write_file_obj(
         self,
         convert_yaml_schemas_to_json,
         load_schema,
@@ -936,6 +968,10 @@ class TestWorkflow:
     ):
         with NamedTemporaryFile("r+") as f:
             wf.write(f, _format=_format)
+
+            # _path should be set by the call to write
+            assert wf._path == f.name
+
             f.seek(0)
             result = loader(f)
 
@@ -955,6 +991,141 @@ class TestWorkflow:
         )
 
         assert result == expected_json
+
+    def test_write_str_filename(self, wf, load_schema, expected_json):
+        path = "wf.yml"
+        wf.write(path)
+
+        # _path should be set by the call to write
+        assert wf._path == path
+
+        with open(path, "r") as f:
+            result = yaml.safe_load(f)
+
+        workflow_schema = load_schema("wf-5.0.json")
+        validate(instance=result, schema=workflow_schema)
+
+        result["jobs"] = sorted(result["jobs"], key=lambda j: j["id"])
+        result["jobs"][0]["uses"] = sorted(
+            result["jobs"][0]["uses"], key=lambda u: u["file"]["lfn"]
+        )
+        result["jobs"][1]["uses"] = sorted(
+            result["jobs"][1]["uses"], key=lambda u: u["file"]["lfn"]
+        )
+
+        result["transformationCatalog"]["transformations"] = sorted(
+            result["transformationCatalog"]["transformations"], key=lambda t: t["name"]
+        )
+
+        assert result == expected_json
+
+        os.remove(path)
+
+    def test_plan_workflow_already_written(self, wf, mocker):
+        mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
+        mocker.patch("Pegasus.client._client.Client.plan")
+
+        path = "wf.yml"
+        wf.write(path).plan()
+
+        assert wf._path == path
+
+        Pegasus.client._client.Client.plan.assert_called_once_with(
+            path,
+            cleanup="none",
+            conf=None,
+            dir=None,
+            force=False,
+            input_dir=None,
+            output_dir=None,
+            output_site="local",
+            relative_dir=None,
+            sites="local",
+            submit=False,
+            verbose=0,
+        )
+
+        os.remove(path)
+
+    def test_plan_workflow_not_written(self, wf, mocker):
+        path = "12345"
+
+        mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
+        mocker.patch("uuid.uuid4", return_value=path)
+        mocker.patch("Pegasus.client._client.Client.plan")
+
+        wf.plan()
+
+        assert wf._path == path
+
+        Pegasus.client._client.Client.plan.assert_called_once_with(
+            path,
+            cleanup="none",
+            conf=None,
+            dir=None,
+            force=False,
+            input_dir=None,
+            output_dir=None,
+            output_site="local",
+            relative_dir=None,
+            sites="local",
+            submit=False,
+            verbose=0,
+        )
+
+        os.remove(path)
+
+    def test_run(self, wf, mocker):
+        mocker.patch("Pegasus.client._client.Client.run")
+        mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
+
+        wf.run()
+
+        Pegasus.client._client.Client.run.assert_called_once_with(None, verbose=0)
+
+    def test_status(self, wf, mocker):
+        mocker.patch("Pegasus.client._client.Client.status")
+        mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
+
+        wf._submit_dir = "submit_dir"
+        wf.status()
+
+        Pegasus.client._client.Client.status.assert_called_once_with(
+            wf._submit_dir, long=0, verbose=0
+        )
+
+    def test_remove(self, wf, mocker):
+        mocker.patch("Pegasus.client._client.Client.remove")
+        mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
+
+        wf._submit_dir = "submit_dir"
+        wf.remove()
+
+        Pegasus.client._client.Client.remove.assert_called_once_with(
+            wf._submit_dir, verbose=0
+        )
+
+    def test_analyze(self, wf, mocker):
+        mocker.patch("Pegasus.client._client.Client.analyzer")
+        mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
+
+        wf._submit_dir = "submit_dir"
+        wf.analyze()
+
+        Pegasus.client._client.Client.analyzer.assert_called_once_with(
+            wf._submit_dir, verbose=0
+        )
+
+    def test_statistics(self, wf, mocker):
+        mocker.patch("Pegasus.client._client.Client.statistics")
+        mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
+
+        wf._submit_dir = "submit_dir"
+        wf.statistics()
+
+        Pegasus.client._client.Client.statistics.assert_called_once_with(
+            wf._submit_dir, verbose=0
+        )
 
 
 @pytest.fixture(scope="function")
