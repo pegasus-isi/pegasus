@@ -1,8 +1,8 @@
 import json
+import uuid
 from collections import defaultdict
 from enum import Enum
 from functools import wraps
-from uuid import uuid4
 
 from ._utils import _chained, _get_enum_str
 from .errors import DuplicateError, NotFoundError
@@ -426,9 +426,7 @@ class _Use:
     def __init__(self, file, link_type, stage_out=True, register_replica=True):
         if not isinstance(file, File):
             raise TypeError(
-                "invalid file: {file}; file must be of type File or str".format(
-                    file=file
-                )
+                "invalid file: {file}; file must be of type File".format(file=file)
             )
 
         self.file = file
@@ -702,10 +700,11 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :param submit: submit the executable workflow generated, defaults to False
         :type submit: bool, optional
         """
-        if self._path:
-            self.write(self._path)
-        else:
-            self.write(str(uuid4()))
+        # if the workflow has not yet been written to a file and plan is
+        # called, write the file to some uuid
+        if not self._path:
+            # self._path is set by write
+            self.write(str(uuid.uuid4()))
 
         self._submit_dir = self._client.plan(
             self._path,
