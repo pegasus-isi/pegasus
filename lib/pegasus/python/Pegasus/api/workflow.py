@@ -1,3 +1,5 @@
+import re
+import time
 import json
 import uuid
 from collections import defaultdict
@@ -5,7 +7,7 @@ from enum import Enum
 from functools import wraps
 
 from ._utils import _chained, _get_enum_str
-from .errors import DuplicateError, NotFoundError
+from .errors import DuplicateError, NotFoundError, PegasusError
 from .mixins import HookMixin, MetadataMixin, ProfileMixin
 from .replica_catalog import File, ReplicaCatalog
 from .site_catalog import SiteCatalog
@@ -745,6 +747,19 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         """
 
         self._client.status(self._submit_dir, long=long, verbose=verbose)
+
+    @_chained
+    @_needs_submit_dir
+    @_needs_client
+    def wait(self, delay: int = 2):
+        """Displays progress bar to stdout and blocks until the workflow either
+        completes or fails.
+        
+        :param delay: refresh rate in seconds of the progress bar, defaults to 2
+        :type delay: int, optional
+        """
+
+        self._client.wait(self._submit_dir, delay=delay)
 
     @_chained
     @_needs_submit_dir
