@@ -5,6 +5,7 @@ import re
 import shutil
 import subprocess
 from functools import partial
+import time
 from os import path
 
 
@@ -139,6 +140,96 @@ class Client(object):
             self._log.fatal("Status: %s \n %s" % (rv.stdout, rv.stderr))
 
         self._log.info("Status: %s \n %s" % (rv.stdout, rv.stderr))
+
+    def wait(self, submit_dir: str, delay: int = 2):
+        """Prints progress bar and blocks until workflow completes or fails"""
+
+        # match output from pegasus-status
+        # for example, given the following output:
+        #
+        # UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME
+        #     0     0     0     0     0     8     0 100.0 Success *appends-0.dag
+        #
+        # the pattern would match the second line
+        p = re.compile(r"\s*((\d+\s+){7})(\d+\.\d+\s+)(\w+\s+)(.*)")
+
+        # indexes for info provided from status
+        UNRDY = 0
+        READY = 1
+        PRE = 2
+        IN_Q = 3
+        POST = 4
+        DONE = 5
+        FAIL = 6
+        PCNT_DONE = 7
+        STATE = 8
+
+        # color strings for terminal output
+        green = lambda s: "\x1b[1;32m" + s + "\x1b[0m"
+        yellow = lambda s: "\x1b[1;33m" + s + "\x1b[0m"
+        blue = lambda s: "\x1b[1;36m" + s + "\x1b[0m"
+        red = lambda s: "\x1b[1;31m" + s + "\x1b[0m"
+
+        while True:
+            rv = subprocess.run(
+                ["pegasus-status", "-l", submit_dir],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+
+            if rv.returncode != 0:
+                raise Exception(rv.stderr)
+
+            for line in rv.stdout.decode("utf8").split("\n"):
+                matched = p.match(line)
+
+                if matched:
+                    v = matched.group(1).split()
+                    v.append(float(matched.group(3).strip()))
+                    v.append(matched.group(4).strip())
+
+                    completed = green("Completed: " + v[DONE])
+                    queued = yellow("Queued: " + v[READY])
+                    running = blue("Running: " + v[IN_Q])
+                    fail = red("Failed: " + v[FAIL])
+
+                    stats = (
+                        "("
+                        + completed
+                        + ", "
+                        + queued
+                        + ", "
+                        + running
+                        + ", "
+                        + fail
+                        + ")"
+                    )
+
+                    # progress bar
+                    bar_len = 50
+                    filled_len = int(round(bar_len * (v[PCNT_DONE] * 0.01)))
+
+                    bar = (
+                        "\r["
+                        + green("#" * filled_len)
+                        + ("-" * (bar_len - filled_len))
+                        + "] {percent:>5}% ..{state} {stats}".format(
+                            percent=v[PCNT_DONE], state=v[STATE], stats=stats
+                        )
+                    )
+
+                    if v[PCNT_DONE] < 100:
+                        print(bar, end=("" if v[STATE] != "Failure" else "\n"))
+                    else:
+                        print(bar)
+
+                    # skip the rest of the lines
+                    break
+
+            if v[STATE] in {"Success", "Failure"}:
+                break
+
+            time.sleep(delay)
 
     def remove(self, submit_dir: str, verbose: int = 0):
         cmd = [self._remove]
