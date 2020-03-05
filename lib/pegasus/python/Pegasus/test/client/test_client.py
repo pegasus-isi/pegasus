@@ -7,6 +7,9 @@ import pytest
 
 from Pegasus.client._client import Client, from_env
 
+# for creating mock subprocess.run return values
+CompletedProcess = namedtuple("CompletedProcess", ["returncode", "stdout", "stderr"])
+
 
 def test_from_env(mocker):
     mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
@@ -27,9 +30,6 @@ def test_from_env_no_pegasus_home(monkeypatch):
 
 @pytest.fixture(scope="function")
 def mock_subprocess(mocker):
-    CompletedProcess = namedtuple(
-        "CompletedProcess", ["returncode", "stdout", "stderr"]
-    )
     cp = CompletedProcess(returncode=0, stdout=" ", stderr=" ")
     mocker.patch("subprocess.run", return_value=cp)
 
@@ -95,6 +95,47 @@ class TestClient:
         subprocess.run.assert_called_once_with(
             ["/path/bin/pegasus-status", "--long", "-vvv", "submit_dir"]
         )
+
+    @pytest.mark.parametrize(
+        "pegasus_status_out, expected_wait_out",
+        [
+            (
+                dedent(
+                    """
+                (no matching jobs found in Condor Q)
+                UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME
+                    0     0     0     0     0     8     0 100.0 Success *appends-0.dag
+                Summary: 1 DAG total (Success:1)
+                """
+                ).encode("utf8"),
+                "\r[\x1b[1;32m##################################################\x1b[0m] 100.0% ..Success (\x1b[1;32mCompleted: 8\x1b[0m, \x1b[1;33mQueued: 0\x1b[0m, \x1b[1;36mRunning: 0\x1b[0m, \x1b[1;31mFailed: 0\x1b[0m)\n",
+            ),
+            (
+                dedent(
+                    """
+                STAT  IN_STATE  JOB
+                Run      01:10  appends-0 ( /nas/home/tanaka/workflows/test-workflow-1583372721 )
+                Summary: 1 Condor job total (R:1)
+
+                UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME
+                    4     0     0     0     0     3     1  37.5 Failure *appends-0.dag
+                Summary: 1 DAG total (Failure:1)
+                """
+                ).encode("utf8"),
+                "\r[\x1b[1;32m###################\x1b[0m-------------------------------]  37.5% ..Failure (\x1b[1;32mCompleted: 3\x1b[0m, \x1b[1;33mQueued: 0\x1b[0m, \x1b[1;36mRunning: 0\x1b[0m, \x1b[1;31mFailed: 1\x1b[0m)\n",
+            ),
+        ],
+    )
+    def test_wait(self, mocker, capsys, client, pegasus_status_out, expected_wait_out):
+        mocker.patch(
+            "subprocess.run",
+            return_value=CompletedProcess(
+                returncode=0, stdout=pegasus_status_out, stderr=""
+            ),
+        )
+        client.wait("submit_dir")
+        out, _ = capsys.readouterr()
+        assert out == expected_wait_out
 
     def test_remove(self, mock_subprocess, client):
         client.remove("submit_dir", verbose=3)
