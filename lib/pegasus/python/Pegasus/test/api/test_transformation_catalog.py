@@ -199,6 +199,22 @@ class TestTransformationSite:
 
 
 class TestTransformation:
+    def test_add_single_tranformation_site_constructor(self):
+        t1 = Transformation("t1")
+        assert len(t1.sites) == 0
+
+        # pfn, and is_stageable is not provided, TransformationSite should not be added
+        t2 = Transformation("t2", site="local")
+        assert len(t2.sites) == 0
+
+        # is_stageable is not provided, TransformationSite should not be added
+        t3 = Transformation("t3", site="local", pfn="/t3")
+        assert len(t3.sites) == 0
+
+        # site, pfn, is_stageable provided, TransformationSite should be added
+        t4 = Transformation("t4", site="local", pfn="/t4", is_stageable=False)
+        assert len(t4.sites) == 1
+
     @pytest.mark.parametrize(
         "transformation",
         [
@@ -216,11 +232,15 @@ class TestTransformation:
         assert hash(Transformation("name")) == hash("None::name::None")
 
     @pytest.mark.parametrize(
-            "t1, t2, is_eq",
-            [
-                (Transformation("name"), Transformation("name"), True),
-                (Transformation("name", namespace="namespace"), Transformation("name"), False)
-            ]
+        "t1, t2, is_eq",
+        [
+            (Transformation("name"), Transformation("name"), True),
+            (
+                Transformation("name", namespace="namespace"),
+                Transformation("name"),
+                False,
+            ),
+        ],
     )
     def test_eq(self, t1, t2, is_eq):
         assert (t1 == t2) == is_eq
@@ -230,7 +250,6 @@ class TestTransformation:
             Transformation("name") == "tr"
 
         assert "Transformation cannot be compared with" in str(e)
-
 
     def test_add_site(self):
         t = Transformation("test")

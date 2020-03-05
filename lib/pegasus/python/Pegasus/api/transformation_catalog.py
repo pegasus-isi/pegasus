@@ -182,36 +182,56 @@ class Container(ProfileMixin):
 
 class Transformation(ProfileMixin, HookMixin, MetadataMixin):
     """A transformation, which can be a standalone executable, or one that
-    requires other executables. Transformations can reside on one or
-    more sites where they are either **STAGEABLE** (a binary that can be shipped
-    around) or **INSTALLED**.
+    requires other executables. When a transformation resides on a single site, the
+    syntax in Example 1 can be used where the args: site, pfn, and is_stageable is
+    provided to the constructor. If site, pfn, and is_stageable is specified, then
+    the args: arch, os_type, os_release, os_version, glibc, and container, are
+    applied to the site, else they are ignored. When a transformation resides 
+    multiple sites, the syntax in Example 2 can be used where multiple 
+    TransformationSite objects can be added. 
 
     .. code-block:: python
 
-        # Example
+        # Example 1: transformation that resides on a single site
+        preprocess = Transformation(
+                "preprocess", 
+                namespace="pegasus", 
+                version="4.0", 
+                site=CONDOR_POOL, 
+                pfn=PEGASUS_LOCATION, 
+                is_stageable=False
+            )
+
+        # Example 2: transformation that resides on multiple sites
         preprocess = (Transformation("preprocess", namespace="pegasus", version="4.0")
-                        .add_site(
+                        .add_sites(
                             TransformationSite(
                                 CONDOR_POOL, 
                                 PEGASUS_LOCATION, 
                                 is_stageable=False, 
                                 arch=Arch.X86_64, 
-                                os_type=OS.LINUX)
+                                os_type=OS.LINUX),
+                            
+                            ...
                         ))
 
     """
 
     def __init__(
-        self, name, namespace=None, version=None,
+        self,
+        name,
+        namespace=None,
+        version=None,
+        site=None,
+        pfn=None,
+        is_stageable=None,
+        arch=None,
+        os_type=None,
+        os_release=None,
+        os_version=None,
+        glibc=None,
+        container=None,
     ):
-        """
-        :param name: logical name of the transformation
-        :type name: str
-        :param namespace: transformation namespace
-        :type namespace: str, optional
-        :param version: transformation version, defaults to None
-        :type version: str, optional
-        """
         self.name = name
         self.namespace = namespace
         self.version = version
@@ -222,6 +242,22 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         self.hooks = defaultdict(list)
         self.profiles = defaultdict(dict)
         self.metadata = dict()
+
+        # add site if site if given
+        if site != None and pfn != None and is_stageable != None:
+            self.add_sites(
+                TransformationSite(
+                    site,
+                    pfn,
+                    is_stageable,
+                    arch=arch,
+                    os_type=os_type,
+                    os_release=os_release,
+                    os_version=os_version,
+                    glibc=glibc,
+                    container=container,
+                )
+            )
 
     def _get_key(self):
         return "{}::{}::{}".format(self.namespace, self.name, self.version)
