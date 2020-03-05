@@ -57,8 +57,8 @@ class ReplicaCatalog(Writable):
             if2 = File("if2")
 
             (ReplicaCatalog()
-                .add_replica(if1, "/nfs/u2/ryan/data.csv", "local")
-                .add_replica("if2", "/nfs/u2/ryan/data2.csv", "local")
+                .add_replica("local", if1, "/nfs/u2/ryan/data.csv")
+                .add_replica("local", "if2", "/nfs/u2/ryan/data2.csv")
                 .write("ReplicaCatalog.yml"))
     """
 
@@ -66,15 +66,15 @@ class ReplicaCatalog(Writable):
         self.replicas = set()
 
     @_chained
-    def add_replica(self, lfn, pfn, site, regex=False):
+    def add_replica(self, site, lfn, pfn, regex=False):
         """Add an entry to the replica catalog
         
+        :param site: site at which this file resides
+        :type site: str
         :param lfn: logical filename or :py:class:`~Pegasus.api.replica_catalog.File`
         :type lfn: str or File
         :param pfn: physical file name 
         :type pfn: str
-        :param site: site at which this file resides
-        :type site: str
         :param regex: whether or not the lfn is a regex pattern, defaults to False
         :type regex: bool, optional
         :raises DuplicateError: an entry with the same parameters already exists in the catalog
@@ -89,7 +89,7 @@ class ReplicaCatalog(Writable):
         if isinstance(lfn, File):
             lfn = lfn.lfn
 
-        replica = (lfn, pfn, site, regex)
+        replica = (site, lfn, pfn, regex)
         if replica in self.replicas:
             raise DuplicateError(
                 "entry: {replica} already exists in this ReplicaCatalog".format(
@@ -103,7 +103,7 @@ class ReplicaCatalog(Writable):
         return {
             "pegasus": PEGASUS_VERSION,
             "replicas": [
-                {"lfn": r[0], "pfn": r[1], "site": r[2], "regex": r[3]}
+                {"site": r[0], "lfn": r[1], "pfn": r[2], "regex": r[3]}
                 for r in self.replicas
             ],
         }

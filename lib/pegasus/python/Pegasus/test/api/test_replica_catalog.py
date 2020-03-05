@@ -55,22 +55,22 @@ class TestReplicaCatalog:
     def test_add_duplicate_replica(self):
         rc = ReplicaCatalog()
         with pytest.raises(DuplicateError) as e:
-            rc.add_replica("lfn", "pfn", "site", True)
-            rc.add_replica(File("lfn"), "pfn", "site", True)
+            rc.add_replica("site", "lfn", "pfn", True)
+            rc.add_replica("site", File("lfn"), "pfn", True)
 
-        assert "entry: {replica}".format(replica=("lfn", "pfn", "site", True)) in str(e)
+        assert "entry: {replica}".format(replica=("site", "lfn", "pfn", True)) in str(e)
 
     def test_add_invalid_replica(self):
         rc = ReplicaCatalog()
         with pytest.raises(TypeError) as e:
-            rc.add_replica(set(), "pfn", "site")
+            rc.add_replica("site", set(), "pfn")
 
         assert "invalid lfn: {lfn}".format(lfn=set()) in str(e)
 
     def test_tojson(self, convert_yaml_schemas_to_json, load_schema):
         rc = ReplicaCatalog()
-        rc.add_replica("lfn1", "pfn1", "site1", True)
-        rc.add_replica("lfn2", "pfn2", "site2", True)
+        rc.add_replica("site1", "lfn1", "pfn1", True)
+        rc.add_replica("site2", "lfn2", "pfn2", True)
 
         expected = {
             "pegasus": PEGASUS_VERSION,
@@ -94,8 +94,8 @@ class TestReplicaCatalog:
     )
     def test_write(self, _format, loader):
         rc = ReplicaCatalog()
-        rc.add_replica("lfn1", "pfn1", "site1", True).add_replica(
-            "lfn2", "pfn2", "site2", True
+        rc.add_replica("site1", "lfn1", "pfn1", True).add_replica(
+            "site2", "lfn2", "pfn2", True
         )
 
         expected = {

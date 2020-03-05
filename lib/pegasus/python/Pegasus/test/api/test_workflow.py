@@ -715,7 +715,7 @@ def wf():
     )
 
     rc = ReplicaCatalog()
-    rc.add_replica("lfn", "pfn", "site")
+    rc.add_replica("site", "lfn", "pfn")
 
     wf = Workflow("wf", infer_dependencies=True)
     wf.add_transformation_catalog(tc)

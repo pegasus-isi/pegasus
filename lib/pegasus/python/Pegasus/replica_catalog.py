@@ -43,7 +43,7 @@ def _to_rc(d: dict) -> ReplicaCatalog:
 
     try:
         for r in d["replicas"]:
-            rc.add_replica(r["lfn"], r["pfn"], r["site"], r["regex"])
+            rc.add_replica(r["site"], r["lfn"], r["pfn"], r["regex"])
     except KeyError:
         raise PegasusError("error parsing {}".format(d))
 

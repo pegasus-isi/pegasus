@@ -19,7 +19,7 @@ def rc_as_dict():
 
 def test_to_rc(rc_as_dict):
 
-    expected = ReplicaCatalog().add_replica("a", "/a", "local", regex=False)
+    expected = ReplicaCatalog().add_replica("local", "a", "/a", regex=False)
     result = _to_rc(rc_as_dict)
 
     assert result.replicas == expected.replicas
@@ -32,7 +32,7 @@ def test_load(mocker, rc_as_dict):
         Pegasus.yaml.load.assert_called_once_with(f)
 
         assert len(rc.replicas) == 1
-        assert ("a", "/a", "local", False) in rc.replicas
+        assert ("local", "a", "/a", False) in rc.replicas
 
 
 def test_loads(mocker, rc_as_dict):
@@ -40,7 +40,7 @@ def test_loads(mocker, rc_as_dict):
     rc = loads(json.dumps(rc_as_dict))
 
     assert len(rc.replicas) == 1
-    assert ("a", "/a", "local", False) in rc.replicas
+    assert ("local", "a", "/a", False) in rc.replicas
 
 
 def test_dump(mocker):
@@ -52,5 +52,5 @@ def test_dump(mocker):
 
 
 def test_dumps(rc_as_dict):
-    rc = ReplicaCatalog().add_replica("a", "/a", "local", regex=False)
+    rc = ReplicaCatalog().add_replica("local", "a", "/a", regex=False)
     assert yaml.load(dumps(rc)) == rc_as_dict

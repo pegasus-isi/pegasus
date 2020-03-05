@@ -559,7 +559,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
         fa = File("f.a")
         rc = (ReplicaCatalog()
-            .add_replica(fa, "file://" + str(TOP_DIR / fa.lfn), LOCAL))
+            .add_replica(LOCAL, fa, "file://" + str(TOP_DIR / fa.lfn)))
 
         # --- Transformations ----------------------------------------------------------
         preprocess = (Transformation("preprocess", namespace="pegasus", version="4.0")
