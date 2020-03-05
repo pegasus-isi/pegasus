@@ -57,13 +57,13 @@ you want to use. To specify the container, that needs to be setup you
 instead specify the following Condor profiles
 
 .. table:: Condor Profiles For Specifying Singularity Container for Jobs
-
-=================
-Key
-=================
-requirements
-+SingularityImage
-=================
+   
+   ================= =
+   Key               
+   ================= =
+   requirements      
+   +SingularityImage  
+   ================= =
 
 For example you can specify the following in the site catalog for OSG
 site
@@ -355,7 +355,3 @@ worker nodes of that cluster. In order to do this, you need to be
 running the nonsharedfs data configuration mode with the staging site
 set to be the same as the compute site.
 
-.. _containers-example:
-
-Container Example - Montage Workflow
-====================================

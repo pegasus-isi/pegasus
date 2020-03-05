@@ -287,6 +287,16 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <copy preservelastmodified="true" todir="${dist.data}/man/man1">
       <fileset dir="doc/sphinx/_build/man" includes="*"/>
     </copy>
+
+    <!-- ensure the python docs where created -->
+    <fail message="Python documentation was not generated correctly!">
+        <condition>
+            <not>
+                <available file="doc/sphinx/_build/html/python/Pegasus.api.html" />
+            </not>
+        </condition>
+    </fail>
+
   </target>
 
   <target name="doc-java" depends="setup,doc-user-guide" description="Generate java documentation">
@@ -528,14 +538,10 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <package-binary name="pegasus-nodocs-${pegasus.version}-${dist.arch}"/>
   </target>
 
-  <!-- This target should clean everything _except_ things we want in the
-       source tarball, such as documentation. -->
-  <target name="dist-clean" depends="clean">
+  <!-- This target should clean everything _except_ the dist directory
+       as we need it in multistep builds in bamboo -->
+  <target name="dist-clean">
     <delete dir="${dist.dir}"/>
-  </target>
-
-  <target name="clean" description="Delete all build artifacts">
-    <delete dir="dist"/>
     <delete dir="build"/>
     <exec executable="${make}" dir="src/tools" failonerror="false">
       <arg line="distclean"/>
@@ -568,6 +574,11 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <delete dir="doc/sphinx/python/"/>
     <delete dir="doc/sphinx/java/"/>
     <delete dir="doc/sphinx/_build/"/>
+  </target>
+
+  <!-- really clean everything -->
+  <target name="clean" depends="dist-clean" description="Delete all build artifacts">
+    <delete dir="dist"/>
   </target>
 
   <target name="dist-source" depends="dist-clean,doc" description="Build source tarball">

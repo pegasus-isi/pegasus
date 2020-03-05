@@ -739,11 +739,7 @@ workflow. The figure below illustrates the behavior of this transfer
 refiner.
 
 .. figure:: images/balanced-cluster-transfer-refiner.png
-   :alt: BalancedCluster Transfer Refiner : Input Data To Workflow
-   Specific Directory on Shared File System
-
-   BalancedCluster Transfer Refiner : Input Data To Workflow Specific
-   Directory on Shared File System
+   :alt: BalancedCluster Transfer Refiner : Input Data To Workflow Specific Directory on Shared File System
 
 Cluster
 ~~~~~~~
@@ -757,11 +753,7 @@ transfer job. In contrast, for the BalancedCluster a compute job maybe
 associated with multiple data stagein jobs.
 
 .. figure:: images/cluster-transfer-refiner.png
-   :alt: Cluster Transfer Refiner : Input Data To Workflow Specific
-   Directory on Shared File System
-
-   Cluster Transfer Refiner : Input Data To Workflow Specific Directory
-   on Shared File System
+   :alt: Cluster Transfer Refiner : Input Data To Workflow Specific Directory on Shared File System
 
 Basic
 ~~~~~
