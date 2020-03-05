@@ -1,4 +1,4 @@
-.. _containers
+.. _containers:
 
 ==========
 Containers
@@ -58,12 +58,12 @@ instead specify the following Condor profiles
 
 .. table:: Condor Profiles For Specifying Singularity Container for Jobs
 
-   =================
-   Key
-   =================
-   requirements
-   +SingularityImage
-   =================
+=================
+Key
+=================
+requirements
++SingularityImage
+=================
 
 For example you can specify the following in the site catalog for OSG
 site

@@ -1,4 +1,4 @@
-![Pegasus](doc/docbook/images/pegasusfront-black-reduced.png)
+![Pegasus](doc/sphinx/images/pegasusfront-black-reduced.png)
 
 Pegasus Workflow Management System
 ----------------------------------

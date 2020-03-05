@@ -9,32 +9,6 @@ Tutorial
 Introduction
 ============
 
-This tutorial will take you through the steps of running simple
-workflows using Pegasus Workflow Management System. Pegasus allows
-scientists to
-
-1. **Automate** their scientific computational work, as portable
-   workflows. Pegasus enables scientists to construct workflows in
-   abstract terms without worrying about the details of the underlying
-   execution environment or the particulars of the low-level
-   specifications required by the middleware (Condor, Globus, or Amazon
-   EC2). It automatically locates the necessary input data and
-   computational resources necessary for workflow execution. It cleans
-   up storage as the workflow is executed so that data-intensive
-   workflows have enough space to execute on storage-constrained
-   resources.
-
-2. **Recover** from failures at runtime. When errors occur, Pegasus
-   tries to recover when possible by retrying tasks, and when all else
-   fails, provides a rescue workflow containing a description of only
-   the work that remains to be done. It also enables users to move
-   computations from one resource to another. Pegasus keeps track of
-   what has been done (provenance) including the locations of data used
-   and produced, and which software was used with which parameters.
-
-3. **Debug** failures in their computations using a set of system
-   provided debugging tools and an online workflow monitoring dashboard.
-
 This tutorial is intended for new users who want to get a quick overview
 of Pegasus concepts and usage. The accompanying tutorial VM comes
 pre-configured to run the example workflows. The instructions listed

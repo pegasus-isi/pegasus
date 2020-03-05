@@ -160,13 +160,3 @@ with the components on a deeper level to understand how to integrate
 Pegasus with your own data resources to resolve your individual
 computational challenges.
 
-.. _document-formats:
-
-Document Formats (Web, PDF)
-===========================
-
-The main version of this document is intended to be viewed online at the
-`Pegasus website <https://pegasus.isi.edu/documentation/>`__. For
-offline viewing, a `PDF
-version <https://pegasus.isi.edu/documentation/pegasus-user-guide.pdf>`__
-is also provided.
