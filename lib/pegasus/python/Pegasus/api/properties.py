@@ -250,7 +250,7 @@ class Properties:
 
     def write(self, file=None):
         """Write these properties to a file. If file is not given, these 
-        properties are written to 'pegasus.conf'
+        properties are written to 'pegasus.properties'
 
         .. code-block:: python
 
@@ -258,7 +258,7 @@ class Properties:
             props.write()
 
             # Example 2
-            with open("pegasus.conf", "w") as f:
+            with open("conf", "w") as f:
                 props.write(f)
 
         :param file: file path or file object where properties will be written to, defaults to None
@@ -273,7 +273,7 @@ class Properties:
 
         # default file
         if file == None:
-            file = "pegasus.conf"
+            file = "pegasus.properties"
 
         if isinstance(file, str):
             with open(file, "w") as f:
