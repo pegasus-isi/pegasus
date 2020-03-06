@@ -524,7 +524,7 @@ class Job:
         self._kickstart_parsed = True
 
         # PM-1157 we construct run dir from job submit dir
-        run_dir = self._job_submit_dir
+        self._job_submit_dir
 
         # Let's try to find an invocation record...
         my_invocation_found = False

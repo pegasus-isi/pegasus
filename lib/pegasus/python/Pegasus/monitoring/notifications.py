@@ -90,8 +90,8 @@ class Notifications:
         my_notification = my_entry["notification"]
         my_out_fn = my_entry["out_fn"]
         my_err_fn = my_entry["err_fn"]
-        my_out_fd = my_entry["out_fd"]
-        my_err_fd = my_entry["err_fd"]
+        my_entry["out_fd"]
+        my_entry["err_fd"]
         my_action = my_entry["action"]
         my_p.poll()
         # If process hasn't finished...
@@ -260,7 +260,7 @@ class Notifications:
                         )
 
                     # Delete this notification from our list
-                    my_deleted_entry = self._active_notifications.pop(my_notif_index)
+                    self._active_notifications.pop(my_notif_index)
                 else:
                     # Process still going... leave it...
                     my_notif_index = my_notif_index + 1
@@ -421,7 +421,7 @@ class Notifications:
                     logger.warning("notification expired... terminating it...")
                     self.terminate_notification(my_entry)
                     # Delete this notification from our list
-                    my_deleted_entry = self._active_notifications.pop(my_index)
+                    self._active_notifications.pop(my_index)
                 else:
                     # Notification hasn't expired yet, move to next one...
                     my_index = my_index + 1

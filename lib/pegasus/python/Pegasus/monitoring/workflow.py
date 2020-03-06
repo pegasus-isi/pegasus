@@ -27,7 +27,6 @@ import time
 import traceback
 
 from Pegasus.monitoring.job import IntegrityMetric, Job
-from Pegasus.monitoring.metadata import Metadata
 from Pegasus.tools import kickstart_parser, utils
 
 logger = logging.getLogger(__name__)
@@ -1353,7 +1352,6 @@ class Workflow:
         """
         if self._finished:
             return
-        self_finished = True
 
         my_workflow_end = int(time.time())
 
@@ -2211,7 +2209,6 @@ class Workflow:
 
         # a boolean to track if the job has rotated stdout/stderr files
         # used to track the case where we have rotated files for non kickstart jobs
-        my_job_has_rotated_stdout_err_files = False
 
         # Check if this is a subdag job
         if (
