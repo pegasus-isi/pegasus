@@ -7,7 +7,7 @@ use_parentheses        = true
 line_length            = 88
 known_first_party      = "Pegasus"
 forced_separate        = "Pegasus"
-skip                   = "Pegasus/netlogger"
+skip                   = "Pegasus/cli"
 
 
 [tool.black]
@@ -26,9 +26,10 @@ exclude       = '''
   | buck-out
   | build
   | dist
-  | Pegasus/netlogger
+  | Pegasus/cli
 )/
 '''
+
 
 [build-system]
 
