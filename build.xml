@@ -25,7 +25,7 @@
   <!-- Set property to identify if running in CI mode. -->
   <property name="CI" value="true" if:set="env.bamboo_buildKey" />
   <property name="CI" value="false" unless:set="env.bamboo_buildKey" />
-  
+
   <path id="build.classpath">
     <fileset dir="share/pegasus/java" includes="*.jar"/>
   </path>
@@ -160,7 +160,10 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </java>
 
     <fail>
+      Lint Error
+      # -- NOTE -- #
       Invalid Java code format, run `ant code-format-java` and commit the changes to fix the issue.
+      # -- NOTE -- #
       <condition>
         <not>
           <equals arg1="${java.format.error}" arg2="0"></equals>
@@ -168,7 +171,29 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       </condition>
     </fail>
   </target>
-  
+
+   <!-- Python code format -->
+  <target name="code-format-python" description="Python code format">
+    <exec executable="tox" dir="lib/pegasus/python" resultproperty="python.format.error">
+      <env key="CI" value="${CI}"/>
+      <arg line="--recreate"/>
+      <arg line="-e lint"/>
+    </exec>
+
+    <fail>
+      Lint Error
+      # -- NOTE -- #
+      Invalid Python code format, run `ant code-format-python`, review the changes and commit them to fix the issue.
+      Ignore changes to lib/pegasus/python/Pegasus/cli/*
+      # -- NOTE -- #
+      <condition>
+        <not>
+          <equals arg1="${python.format.error}" arg2="0"></equals>
+        </not>
+      </condition>
+    </fail>
+  </target>
+
   <target name="compile-common" depends="setup" description="Compile common java code">
     <javac destdir="${build.src}" srcdir="src"
            encoding="UTF-8" deprecation="true" debug="true"
