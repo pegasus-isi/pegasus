@@ -2,7 +2,6 @@ import json
 from tempfile import NamedTemporaryFile
 
 import pytest
-
 import yaml
 from jsonschema import validate
 

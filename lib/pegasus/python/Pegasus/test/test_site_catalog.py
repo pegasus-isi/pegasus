@@ -1,8 +1,9 @@
 import json
 from tempfile import NamedTemporaryFile, TemporaryFile
 
-import Pegasus
 import pytest
+
+import Pegasus
 from Pegasus import yaml
 from Pegasus.api.site_catalog import (
     OS,

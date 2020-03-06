@@ -3,7 +3,6 @@ import os
 from tempfile import TemporaryFile
 
 import pytest
-
 import yaml
 
 import Pegasus

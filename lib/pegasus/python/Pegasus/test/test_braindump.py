@@ -4,6 +4,7 @@ import io
 from typing import Dict
 
 import attr
+
 import pytest
 
 from Pegasus.braindump import Braindump, dump, dumps, load, loads

@@ -91,7 +91,7 @@ LOCATIONS = {
     "s3-ap-northeast-2.amazonaws.com": "ap-northeast-2",
     "s3-ap-northeast-3.amazonaws.com": "ap-northeast-3",
     "s3-ap-south-1.amazonaws.com": "ap-south-1",
-    "s3-sa-east-1.amazonaws.com": "sa-east-1"
+    "s3-sa-east-1.amazonaws.com": "sa-east-1",
 }
 
 DEFAULT_CONFIG = {

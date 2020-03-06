@@ -19,9 +19,8 @@ import logging
 import os
 import unittest
 
-from six import StringIO
-
 from flask import g
+from six import StringIO
 
 from Pegasus.service import app
 

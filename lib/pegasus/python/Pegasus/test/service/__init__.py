@@ -7,9 +7,8 @@ import tempfile
 import threading
 import unittest
 
-from six import StringIO
-
 from flask import json
+from six import StringIO
 from werkzeug.serving import make_server
 
 from Pegasus.service import app

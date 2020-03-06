@@ -4,8 +4,8 @@ import logging
 import re
 import shutil
 import subprocess
-from functools import partial
 import time
+from functools import partial
 from os import path
 
 

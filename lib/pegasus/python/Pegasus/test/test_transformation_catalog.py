@@ -5,6 +5,7 @@ import pytest
 
 import Pegasus
 from Pegasus import yaml
+from Pegasus.api.mixins import EventType
 from Pegasus.api.site_catalog import OS, Arch
 from Pegasus.api.transformation_catalog import (
     Container,
@@ -12,7 +13,6 @@ from Pegasus.api.transformation_catalog import (
     TransformationCatalog,
     TransformationSite,
 )
-from Pegasus.api.mixins import EventType
 from Pegasus.api.writable import _CustomEncoder
 from Pegasus.transformation_catalog import _to_tc, dump, dumps, load, loads
 
