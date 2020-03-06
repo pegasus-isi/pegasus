@@ -17,14 +17,12 @@ __rcsid__ = "$Id: nlapi.py 27037 2011-02-04 20:16:27Z dang $"
 
 import calendar
 import datetime
-import math
 import os
 import socket
-import string
 import sys
 import time
-import types
 import urllib.parse
+
 from Pegasus.netlogger.nldate import utcFormatISO
 from Pegasus.netlogger.util import uuid1
 
@@ -416,7 +414,7 @@ for scheme in 'x-netlog','x-netlog-udp':
     urllib.parse.uses_netloc.append(scheme)
     try:
         urllib.parse.uses_query.append(scheme)
-    except AttributeError as errorstring:
+    except AttributeError:
         pass
 
 def urlfile(url):
@@ -500,4 +498,3 @@ def get_host():
         ip = '127.0.0.1'
     _g_hostip = ip
     return ip
-

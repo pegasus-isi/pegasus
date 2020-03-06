@@ -1,8 +1,8 @@
-import re
-import datetime
 import calendar
-from optparse import Option, OptionValueError
+import datetime
+import re
 from copy import copy
+from optparse import Option, OptionValueError
 
 
 def check_magicdate(option, opt, value):

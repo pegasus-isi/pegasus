@@ -1,8 +1,10 @@
 from __future__ import absolute_import
+
 import calendar
-from . import magicdate
 import re
 import time
+
+from . import magicdate
 
 ISO_DATE_PARTS = re.compile( "(\d\d\d\d)(?:-(\d\d)(?:-(\d\d)(?:T(\d\d)(?::(\d\d)(?::(\d\d)(?:\.(\d+))?)?)?)?)?)?(Z|[+-]\d\d:\d\d)?" )
 ISO_DATE_ZEROES = (None, '01', '01', '00', '00', '00', '0')
@@ -175,7 +177,7 @@ def makeISO(value, is_gmt=False, set_gmt=False):
     else:
         try:
             d = magicdate.magicdate(value)
-        except Exception as E:
+        except Exception:
             raise ValueError("magicdate cannot parse '%s'" % value)
         partial_iso = d.isoformat()
         iso = completeISO(partial_iso, is_gmt=is_gmt, set_gmt=set_gmt)
@@ -225,7 +227,7 @@ def guess(s, parse=True, is_gmt=False, set_gmt=False,
     if try_en:
         try:
             d = magicdate.magicdate(s)
-        except Exception as E:
+        except Exception:
             d = None
         if d is not None:
             if parse:

@@ -18,12 +18,15 @@
 
 from __future__ import generators
 
+import os
+import re
 import sys
+from warnings import warn
+
 INTP_VER = sys.version_info[:2]
 if INTP_VER < (2, 2):
     raise RuntimeError("Python v.2.2 or later needed")
 
-import os, re
 compiler = None
 try:
     import compiler
@@ -34,7 +37,6 @@ except ImportError:
 # PM-1407 for python3 use isinstance() directly
 #from types import StringTypes
 
-from warnings import warn
 try:
     from codecs import BOM_UTF8, BOM_UTF16, BOM_UTF16_BE, BOM_UTF16_LE
 except ImportError:

@@ -4,34 +4,27 @@ Common code for NetLogger parsers
 __author__ = 'Dan Gunter <dkgunter@lbl.gov>'
 __rcsid__ = '$Id: base.py 28287 2011-08-18 03:42:53Z dang $'
 
-import calendar 
-from Pegasus.netlogger.configobj import ConfigObj, Section
-import glob
-import imp
-from itertools import starmap
-import os
-from queue import Queue, Empty
+import calendar
 import re
-from select import select
-import sys
 import time
+from select import select
+
+#
+from Pegasus.netlogger import nlapi, nldate
+from Pegasus.netlogger.nlapi import EVENT_FIELD, HASH_FIELD, TS_FIELD, Level
+from Pegasus.netlogger.nllog import DoesLogging
+from Pegasus.netlogger.parsers import nlreadline
+from Pegasus.netlogger.util import hash_event
+
 #
 try:
     from pyparsing import Word, alphanums, CharsNotIn, ZeroOrMore
     from pyparsing import Group, Literal
     from pyparsing import StringEnd, White, QuotedString, ParseException
-    from pyparsing import Each, OneOrMore, Optional, oneOf
+    from pyparsing import Each, OneOrMore, oneOf
     HAVE_PYPARSING = True
 except ImportError:
     HAVE_PYPARSING = False
-#
-from Pegasus.netlogger import nldate
-from Pegasus.netlogger.nllog import DoesLogging
-from Pegasus.netlogger import nlapi
-from Pegasus.netlogger.nlapi import Log, Level
-from Pegasus.netlogger.nlapi import TS_FIELD, EVENT_FIELD, HASH_FIELD
-from Pegasus.netlogger.parsers import nlreadline
-from Pegasus.netlogger.util import hash_event
 
 # Special result code for parsers to return
 # when they 'on purpose' skip a line
@@ -223,7 +216,6 @@ class ProcessInterface:
         To cause the caller to stop parsing this log, i.e. nothing will
         ever be ready, return None.
         """
-        pass
 
 
 class BaseParser(ProcessInterface, DoesLogging):
@@ -352,7 +344,6 @@ class BaseParser(ProcessInterface, DoesLogging):
         """Subclasses should override this method to update their
         state with the contents of the arg 'param', a dictionary.
         """
-        pass
 
     def setHeaderValues(self, value_dict):
         """Set a dictionary of header keyword, value pairs.
@@ -549,7 +540,6 @@ class NLBaseParser(BaseParser):
         in the input 'line'.
         Raises ValueError if the format is incorrect.
         """
-        pass
 
     def parseStream(self):
         """Parse input stream, calling parseLine() for each line.

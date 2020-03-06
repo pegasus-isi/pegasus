@@ -4,29 +4,28 @@ Utility functions for NetLogger modules and command-line programs
 __rcsid__ = "$Id: util.py 27069 2011-02-08 20:09:10Z dang $"
 __author__ = "Dan Gunter (dkgunter (at) lbl.gov)"
 
+import glob
+import os
+import queue
+import re
+import signal
+import sys
+import time
+import traceback
 from asyncore import compact_traceback
 from copy import copy
-import glob
-import imp
-import logging
+from optparse import Option, OptionParser, OptionValueError, make_option
+
+#
+import Pegasus.netlogger
+from Pegasus.netlogger import configobj
+
 try:
     from hashlib import md5
     md5_new = md5
 except ImportError:
     import md5
     md5_new = md5.new
-from optparse import OptionParser, Option, OptionValueError, make_option
-import os
-import queue
-import re
-import signal
-import sys
-import tempfile
-import time
-import traceback
-#
-import Pegasus.netlogger
-from Pegasus.netlogger import configobj
 
 ## Globals
 
@@ -56,12 +55,10 @@ DATA_DIR = os.path.join(os.path.dirname(Pegasus.netlogger.__file__), 'data')
 class ConfigError(Exception):
     """Use this exception for configuration-time error handling.
     """
-    pass
 
 class DBConnectError(Exception):
     """Used for failed database connections.
     """
-    pass
 
 ## Classes
 
@@ -614,7 +611,6 @@ def sizeToBytes(s):
     """Convert a size to a number of bytes
     Return number of bytes or raise ValueError if not parseable.
     """    
-    bytes = None
     m = re.match("(\d+)\s*(\S+)", s.lower())
     if not m:
         raise ValueError("Not of form: <num> <units>")
@@ -631,7 +627,6 @@ class ScriptOption(Option):
 def noop(*args, **kwargs):
     """Handy no-operation function.
     """
-    pass
 
 def as_bool(x):
     """Convert value (possibly a string) into a boolean.
