@@ -127,8 +127,7 @@ class Container(ProfileMixin):
     .. code-block:: python
 
         # Example
-        (Container("centos-pegasus", Container.DOCKER, "docker:///ryan/centos-pegasus:latest", ["/Volumes/Work/lfs1:/shared-data/:ro"])
-            .add_profile(Namespace.ENV, "JAVA_HOME", "/usr/bin/java"))
+        c = Container("centos-pegasus", Container.DOCKER, "docker:///ryan/centos-pegasus:latest", ["/Volumes/Work/lfs1:/shared-data/:ro"])
             
     """
 
@@ -399,7 +398,7 @@ class TransformationCatalog(Writable):
 
         (TransformationCatalog()
             .add_transformations(preprocess, findrage, analyze)
-            .write("TransformationCatalog.yml"))
+            .write())
 
     """
 
@@ -436,11 +435,24 @@ class TransformationCatalog(Writable):
     @_chained
     def add_containers(self, *containers):
         """Add one or more :py:class:`~Pegasus.api.transformation_catalog.Container` to this catalog
-        
+
+        .. code-block:: python
+
+            # Example
+            tc.add_containers(
+                Container(
+                    "centos-pegasus", 
+                    Container.DOCKER, 
+                    "docker:///ryan/centos-pegasus:latest", 
+                    ["/Volumes/Work/lfs1:/shared-data/:ro"]
+                )
+            )
+
         :param container: the :py:class:`~Pegasus.api.transformation_catalog.Container` to be added
         :raises TypeError: argument(s) must be of type :py:class:`~Pegasus.api.transformation_catalog.Container`
         :raises DuplicateError: a container with the same name already exists in this catalog
         :return: self
+
         """
         for c in containers:
             if not isinstance(c, Container):

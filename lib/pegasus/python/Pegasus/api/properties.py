@@ -15,7 +15,7 @@ class Properties:
         props["globus.maxwalltime"] = 1000
         props["dagman.retry"] = 4
 
-        props.write("pegasus.conf")
+        props.write()
 
     """
 
@@ -209,7 +209,7 @@ class Properties:
     def ls(prop=None):
         """List property keys. Refer to 
         `Configuration docs <https://pegasus.isi.edu/documentation/configuration.php>`_
-        for additional information. If prop is given, all properties begining with
+        for additional information. If prop is given, all properties beginning with
         prop will be printed else all properties will be printed.
 
         .. code-block:: python
@@ -221,7 +221,7 @@ class Properties:
             pegasus.pmc_request_memory
             pegasus.pmc_task_arguments
         
-        :param prop: properties begining with "prop" will be listed in alphabetical order, defaults to None
+        :param prop: properties beginning with "prop" will be listed in alphabetical order, defaults to None
         :type prop: str, optional
         """
         if prop:
