@@ -701,10 +701,10 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :type submit: bool, optional
         """
         # if the workflow has not yet been written to a file and plan is
-        # called, write the file to some uuid
+        # called, write the file to default
         if not self._path:
             # self._path is set by write
-            self.write(str(uuid.uuid4()))
+            self.write()
 
         self._submit_dir = self._client.plan(
             self._path,

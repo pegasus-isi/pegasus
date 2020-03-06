@@ -1070,18 +1070,16 @@ class TestWorkflow:
         os.remove(path)
 
     def test_plan_workflow_not_written(self, wf, mocker):
-        path = "12345"
-
         mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
-        mocker.patch("uuid.uuid4", return_value=path)
         mocker.patch("Pegasus.client._client.Client.plan")
 
+        DEFAULT_WF_PATH = "Workflow.yml"
         wf.plan()
 
-        assert wf._path == path
+        assert wf._path == DEFAULT_WF_PATH
 
         Pegasus.client._client.Client.plan.assert_called_once_with(
-            path,
+            DEFAULT_WF_PATH,
             cleanup="none",
             conf=None,
             dir=None,
@@ -1095,7 +1093,7 @@ class TestWorkflow:
             verbose=0,
         )
 
-        os.remove(path)
+        os.remove(DEFAULT_WF_PATH)
 
     def test_run(self, wf, mocker):
         mocker.patch("Pegasus.client._client.Client.run")
