@@ -226,7 +226,7 @@ class Client(object):
                     # skip the rest of the lines
                     break
 
-            if v[STATE] in {"Success", "Failure"}:
+            if v[PCNT_DONE] >= 100 or v[STATE] in {"Success", "Failure"}:
                 break
 
             time.sleep(delay)
