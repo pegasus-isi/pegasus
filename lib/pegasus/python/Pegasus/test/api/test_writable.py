@@ -5,7 +5,6 @@ from tempfile import TemporaryFile
 import pytest
 import yaml
 
-import Pegasus
 from Pegasus.api.writable import Writable, _CustomEncoder, _filter_out_nones
 
 

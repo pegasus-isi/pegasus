@@ -154,11 +154,11 @@ class Client(object):
         p = re.compile(r"\s*((\d+\s+){7})(\d+\.\d+\s+)(\w+\s+)(.*)")
 
         # indexes for info provided from status
-        UNRDY = 0
+        # UNRDY = 0
         READY = 1
-        PRE = 2
+        # PRE = 2
         IN_Q = 3
-        POST = 4
+        # POST = 4
         DONE = 5
         FAIL = 6
         PCNT_DONE = 7

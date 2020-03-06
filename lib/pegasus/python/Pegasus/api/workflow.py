@@ -1,13 +1,11 @@
 import json
-import re
-import time
 import uuid
 from collections import defaultdict
 from enum import Enum
 from functools import wraps
 
 from ._utils import _chained, _get_enum_str
-from .errors import DuplicateError, NotFoundError, PegasusError
+from .errors import DuplicateError, NotFoundError
 from .mixins import HookMixin, MetadataMixin, ProfileMixin
 from .replica_catalog import File, ReplicaCatalog
 from .site_catalog import SiteCatalog
