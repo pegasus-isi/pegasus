@@ -37,7 +37,7 @@ class Version(BaseVersion):
                     log.info("Updating foreign key constraint.")
                     try:
                         self.db.execute("DROP INDEX UNIQUE_MASTER_WORKFLOWSTATE")
-                    except Exception as e:
+                    except Exception:
                         pass
                     if self.db.get_bind().driver == "mysqldb":
                         self.db.execute(
@@ -60,7 +60,6 @@ class Version(BaseVersion):
 
     def downgrade(self, force=False):
         "No need for downgrade"
-        pass
 
     def _drop_table(self, table_name):
         """
@@ -70,5 +69,5 @@ class Version(BaseVersion):
         """
         try:
             self.db.execute("DROP TABLE %s" % table_name)
-        except Exception as e:
+        except Exception:
             pass

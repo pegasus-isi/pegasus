@@ -23,7 +23,7 @@ class Version(BaseVersion):
             res = self.db.query(EnsembleWorkflow.id).limit(1).first()
             if not res:
                 self.db.execute("DROP TABLE ensemble_workflow")
-        except (OperationalError, ProgrammingError) as e:
+        except (OperationalError, ProgrammingError):
             pass
         except Exception as e:
             self.db.rollback()
@@ -32,7 +32,7 @@ class Version(BaseVersion):
             res = self.db.query(Ensemble.id).limit(1).first()
             if not res:
                 self.db.execute("DROP TABLE ensemble")
-        except (OperationalError, ProgrammingError) as e:
+        except (OperationalError, ProgrammingError):
             pass
         except Exception as e:
             self.db.rollback()

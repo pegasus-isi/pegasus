@@ -57,7 +57,6 @@ class BaseLoader(object):
         """Override with logic; 'data' is a dictionary with timestamp,
         event, and other values.
         """
-        pass
 
     def flush(self):
         "Try to flush the batch"
@@ -86,7 +85,6 @@ class BaseLoader(object):
 
     def hard_flush(self, batch_flush=True, retry=0):
         "Subclasses override this with flushing logic"
-        pass
 
     def reset_flush_state(self):
         "Reset the internal flust state if batching"
@@ -99,7 +97,6 @@ class BaseLoader(object):
         """Override with logic if subclass needs a cleanup method,
         ie: threading or whatnot
         """
-        pass
 
     def disconnect(self):
         self.session.close()

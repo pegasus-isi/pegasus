@@ -64,7 +64,6 @@ class Version(BaseVersion):
 
     def downgrade(self, force=False):
         """ Downgrade to this version will not be allowed."""
-        pass
 
     def execute(self, query):
         try:

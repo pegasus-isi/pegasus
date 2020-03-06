@@ -321,7 +321,7 @@ class StampedeWorkflowStatistics(object):
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-TotalJobRetries
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-TotalJobRetries
         """
-        d_or_d = self._dax_or_dag_cond()
+        self._dax_or_dag_cond()
 
         sq_1 = self.session.query(func.count(Job.job_id))
 

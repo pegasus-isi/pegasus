@@ -46,7 +46,7 @@ class Version(BaseVersion):
         try:
             if not interrupted:
                 self.db.execute("SELECT site FROM rc_lfn LIMIT 0,1")
-        except (OperationalError, ProgrammingError) as e:
+        except (OperationalError, ProgrammingError):
             return
         except Exception as e:
             raise DBAdminError(e)
@@ -208,7 +208,7 @@ class Version(BaseVersion):
         """
         try:
             table_obj.create(self.db.get_bind(), checkfirst=True)
-        except (OperationalError, ProgrammingError) as e:
+        except (OperationalError, ProgrammingError):
             pass
         except Exception as e:
             self.db.rollback()
@@ -222,7 +222,7 @@ class Version(BaseVersion):
         """
         try:
             self.db.execute("DROP TABLE %s" % table_name)
-        except Exception as e:
+        except Exception:
             pass
 
     def _drop_index(self, index_name):
@@ -233,5 +233,5 @@ class Version(BaseVersion):
         """
         try:
             self.db.execute("DROP INDEX %s" % index_name)
-        except Exception as e:
+        except Exception:
             pass

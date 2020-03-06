@@ -36,4 +36,3 @@ class Version(BaseVersion):
 
     def downgrade(self, force=False):
         "Downgrade is not necessary as reason accepts NULL values"
-        pass

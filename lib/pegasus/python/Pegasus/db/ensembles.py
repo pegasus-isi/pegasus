@@ -2,11 +2,11 @@ import os
 import re
 from datetime import datetime
 
-from flask import g, url_for
+from flask import url_for
 from sqlalchemy import sql
 from sqlalchemy.orm.exc import NoResultFound
 
-from Pegasus import db, user
+from Pegasus import user
 
 
 def timestamp(dt):

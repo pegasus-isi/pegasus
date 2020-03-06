@@ -1,7 +1,6 @@
 __author__ = "Monte Goode"
 
 import logging
-import os
 import time
 
 from Pegasus.db import connection

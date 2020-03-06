@@ -1017,7 +1017,6 @@ class Discovery(object):
         will be defined as appropriate in a subclass (string, dict, etc),
         and connect to the appropriate back end.
         """
-        pass
 
     def fetch_all(self):
         """

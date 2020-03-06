@@ -476,7 +476,7 @@ def _get_version(db):
             db.query(DBVersion.version).order_by(DBVersion.id.desc()).first()
         )
 
-    except OperationalError as e:
+    except OperationalError:
         # update dbversion table
         # Temporary migration. Should be removed in future releases
         try:
@@ -496,7 +496,7 @@ def _get_version(db):
                 db.query(DBVersion.version).order_by(DBVersion.id.desc()).first()
             )
 
-        except (OperationalError, ProgrammingError) as e:
+        except (OperationalError, ProgrammingError):
             pass
         except Exception as e:
             db.rollback()

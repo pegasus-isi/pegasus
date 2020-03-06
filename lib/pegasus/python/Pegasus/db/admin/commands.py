@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 import logging
-import sys
 
 from Pegasus.command import CompoundCommand, LoggingCommand
 from Pegasus.db import connection
@@ -248,7 +247,7 @@ class CheckCommand(LoggingCommand):
             )
             db_verify(db, self.options.pegasus_version)
 
-            version = parse_pegasus_version(self.options.pegasus_version)
+            parse_pegasus_version(self.options.pegasus_version)
             current_version = db_current_version(db, self.options.version_value)
             _print_version(current_version)
             db.close()

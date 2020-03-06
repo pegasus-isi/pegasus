@@ -30,4 +30,3 @@ class Version(BaseVersion):
 
     def downgrade(self, force=False):
         "Downgrade is not necessary as archived is added with a default that works for old versions"
-        pass

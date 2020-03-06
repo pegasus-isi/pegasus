@@ -517,7 +517,7 @@ class WorkflowLoader(BaseLoader):
                 # explicit insert
                 job_instance.commit_to_db(self.session)
                 # seed the cache
-                noop = self.get_job_instance_id(job_instance)
+                self.get_job_instance_id(job_instance)
 
             if job_instance.event == "stampede.job_inst.pre.start":
                 self.jobstate(linedata)

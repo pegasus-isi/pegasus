@@ -40,4 +40,3 @@ class Version(BaseVersion):
         """
         Downgrade is not necessary as integrity_meta table does not affect the system"
         """
-        pass
