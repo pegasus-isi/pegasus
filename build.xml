@@ -606,7 +606,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <delete dir="dist"/>
   </target>
 
-  <target name="dist-source" depends="dist-clean,doc" description="Build source tarball">
+  <target name="dist-source" depends="dist-clean" description="Build source tarball">
     <exec executable="release-tools/create-source-tar" failonerror="true">
       <arg line="${pegasus.version}"/>
     </exec>
