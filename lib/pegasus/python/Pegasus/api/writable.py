@@ -74,9 +74,9 @@ class Writable:
         else:
             json.dump(self, file, cls=_CustomEncoder, indent=4, ensure_ascii=False)
 
-    def write(self, file, _format="yml"):
+    def write(self, file=None, _format="yml"):
         """Serialize this class as either yaml or json and write to the given
-        file.
+        file. If file=None, this class will be written to <class name>.yml.
         
         :param file: path or file object (opened in "w" mode) to write to, defaults to None
         :type file: str or file, optional
@@ -89,6 +89,10 @@ class Writable:
             raise ValueError(
                 "invalid file format: {_format}, format should be one of 'yml', 'yaml', or 'json'"
             )
+
+        # default file name
+        if file == None:
+            file = self.__class__.__name__ + ".yml"
 
         if isinstance(file, str):
             path = Path(file)

@@ -1021,6 +1021,29 @@ class TestWorkflow:
 
         os.remove(path)
 
+    def test_write_default_filename(self, wf, expected_json):
+        wf.write()
+        EXPECTED_FILE = "Workflow.yml"
+
+        with open(EXPECTED_FILE, "r") as f:
+            result = yaml.safe_load(f)
+
+        result["jobs"] = sorted(result["jobs"], key=lambda j: j["id"])
+        result["jobs"][0]["uses"] = sorted(
+            result["jobs"][0]["uses"], key=lambda u: u["file"]["lfn"]
+        )
+        result["jobs"][1]["uses"] = sorted(
+            result["jobs"][1]["uses"], key=lambda u: u["file"]["lfn"]
+        )
+
+        result["transformationCatalog"]["transformations"] = sorted(
+            result["transformationCatalog"]["transformations"], key=lambda t: t["name"]
+        )
+
+        assert result == expected_json
+
+        os.remove(EXPECTED_FILE)
+
     def test_plan_workflow_already_written(self, wf, mocker):
         mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
         mocker.patch("Pegasus.client._client.Client.plan")

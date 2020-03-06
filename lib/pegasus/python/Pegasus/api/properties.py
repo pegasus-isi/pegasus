@@ -248,19 +248,20 @@ class Properties:
     def __delitem__(self, k):
         self._conf.remove_option(DEFAULTSECT, k)
 
-    def write(self, file):
-        """Write these properties to a file.
+    def write(self, file=None):
+        """Write these properties to a file. If file is not given, these 
+        properties are written to 'pegasus.conf'
 
         .. code-block:: python
 
             # Example 1
-            props.write("pegasus.conf")
+            props.write()
 
             # Example 2
             with open("pegasus.conf", "w") as f:
                 props.write(f)
 
-        :param file: file path or file object where properties will be written to
+        :param file: file path or file object where properties will be written to, defaults to None
         :type file: str or file like object
         :raises TypeError: file must be of type str or file like object
         """
@@ -269,6 +270,10 @@ class Properties:
 
             # write without header
             props = sio.getvalue()[Properties._cfg_header_len :]
+
+        # default file
+        if file == None:
+            file = "pegasus.conf"
 
         if isinstance(file, str):
             with open(file, "w") as f:

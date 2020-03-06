@@ -1013,12 +1013,18 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
                             pass
 
     @_chained
-    def write(self, file, _format="yml"):
-        """Write this catalog, formatted in YAML, to a file
+    def write(self, file=None, _format="yml"):
+        """Write this workflow to a file. If no file is given,
+        it will written to Workflow.yml
         
-        :param file: path to which this catalog will be written, defaults to self.filepath if filepath is "" or None
-        :type filepath: str, optional
+        :param file: path or file object (opened in "w" mode) to write to, defaults to None
+        :type file: str or file, optional
         """
+
+        # default file name
+        if file == None:
+            file = self.__class__.__name__ + ".yml"
+
         self._infer_dependencies()
         Writable.write(self, file, _format=_format)
 

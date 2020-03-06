@@ -29,7 +29,7 @@ class TestProperties:
             pytest.raises("should not have failed")
 
     def test_get_item(self, props, mocker):
-        props["a"] = "b" 
+        props["a"] = "b"
         assert props["a"] == "b"
 
     def test_del_item(self, props):
@@ -61,3 +61,13 @@ class TestProperties:
             props.write(123)
 
         assert "invalid file: 123" in str(e)
+
+    def test_write_default_file(self, props):
+        props["a"] = "b"
+        props.write()
+
+        EXPECTED_DEFAULT_FILE = "pegasus.conf"
+        with open(EXPECTED_DEFAULT_FILE, "r") as f:
+            assert f.read() == "a = b\n\n"
+
+        os.remove(EXPECTED_DEFAULT_FILE)

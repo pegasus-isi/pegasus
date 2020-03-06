@@ -6,6 +6,7 @@ import pytest
 
 import yaml
 
+import Pegasus
 from Pegasus.api.writable import Writable, _CustomEncoder, _filter_out_nones
 
 
@@ -47,6 +48,13 @@ class Test_CustomEncoder:
 
 
 class TestWritable:
+    def test_write_using_defaults(self, writable_obj, expected, mocker):
+        writable_obj.write()
+        with open("Container.yml", "r") as f:
+            assert expected == yaml.safe_load(f)
+
+        os.remove("Container.yml")
+
     @pytest.mark.parametrize(
         "file, _format, loader",
         [
