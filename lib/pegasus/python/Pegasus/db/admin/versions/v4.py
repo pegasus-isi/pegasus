@@ -1,7 +1,8 @@
 import logging
 
-from Pegasus.db.admin.versions.base_version import BaseVersion
 from sqlalchemy.exc import *
+
+from Pegasus.db.admin.versions.base_version import BaseVersion
 
 DB_VERSION = 4
 

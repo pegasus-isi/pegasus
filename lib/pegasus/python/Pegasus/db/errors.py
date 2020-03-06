@@ -18,6 +18,6 @@
 
 __author__ = "Rajiv Mayani"
 
-class StampedeDBNotFoundError (Exception):
-    pass
 
+class StampedeDBNotFoundError(Exception):
+    pass

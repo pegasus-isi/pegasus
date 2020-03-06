@@ -4,9 +4,10 @@ DB_VERSION = 1
 
 import logging
 
+from sqlalchemy.exc import *
+
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions.base_version import *
-from sqlalchemy.exc import *
 
 log = logging.getLogger(__name__)
 
@@ -30,9 +31,7 @@ class Version(BaseVersion):
             log.debug("  Updating database schema...")
             log.debug("    Creating new table...")
             self.db.execute("CREATE TABLE rc_lfn_new ( LIKE rc_lfn )")
-            self.db.execute(
-                "ALTER TABLE rc_lfn_new ADD COLUMN site VARCHAR(245)"
-            )
+            self.db.execute("ALTER TABLE rc_lfn_new ADD COLUMN site VARCHAR(245)")
             log.debug("    Removing index...")
             self.db.execute("ALTER TABLE rc_lfn_new DROP INDEX sk_rc_lfn")
             log.debug("    Adding new constraint...")
@@ -40,9 +39,7 @@ class Version(BaseVersion):
                 "ALTER TABLE rc_lfn_new ADD CONSTRAINT sk_rc_lfn UNIQUE(lfn,pfn,site)"
             )
             log.debug("    Copying data...")
-            self.db.execute(
-                "INSERT INTO rc_lfn_new(id, lfn, pfn) SELECT * FROM rc_lfn"
-            )
+            self.db.execute("INSERT INTO rc_lfn_new(id, lfn, pfn) SELECT * FROM rc_lfn")
 
             log.debug("    Renaming table...")
             if self.db.get_bind().driver == "mysqldb":
@@ -130,9 +127,7 @@ class Version(BaseVersion):
                 "DELETE FROM rc_attr WHERE NOT EXISTS (SELECT id FROM rc_lfn_new WHERE rc_lfn_new.id = rc_attr.id)"
             )
             log.debug("    Renaming table...")
-            self.db.execute(
-                "RENAME TABLE rc_lfn TO rc_lfn_old, rc_lfn_new TO rc_lfn"
-            )
+            self.db.execute("RENAME TABLE rc_lfn TO rc_lfn_old, rc_lfn_new TO rc_lfn")
             log.debug("    Droping old table...")
             self.db.execute("ALTER TABLE rc_attr DROP FOREIGN KEY fk_rc_attr")
             self.db.execute("DROP TABLE rc_lfn_old")

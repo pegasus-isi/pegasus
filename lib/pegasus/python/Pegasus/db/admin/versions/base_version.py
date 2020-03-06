@@ -1,6 +1,7 @@
 __author__ = "Rafael Ferreira da Silva"
 
 import abc
+
 from six import with_metaclass
 
 

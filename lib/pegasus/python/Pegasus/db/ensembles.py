@@ -2,19 +2,22 @@ import os
 import re
 from datetime import datetime
 
-from flask import url_for, g
-from sqlalchemy.orm.exc import NoResultFound
+from flask import g, url_for
 from sqlalchemy import sql
+from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus import db, user
 
+
 def timestamp(dt):
     return (dt - datetime(1970, 1, 1)).total_seconds()
+
 
 class EMError(Exception):
     def __init__(self, message, status_code=500):
         Exception.__init__(self, message)
         self.status_code = status_code
+
 
 def validate_ensemble_name(name):
     if name is None:
@@ -25,11 +28,13 @@ def validate_ensemble_name(name):
         raise EMError("Invalid ensemble name: %s" % name)
     return name
 
+
 def validate_priority(priority):
     try:
         return int(priority)
     except ValueError:
         raise EMError("Invalid priority: %s" % priority)
+
 
 class EnsembleBase(object):
     def set_name(self, name):
@@ -41,15 +46,29 @@ class EnsembleBase(object):
     def set_updated(self):
         self.updated = datetime.utcnow()
 
+
 class States(set):
     def __getattr__(self, name):
         if name in self:
             return name
         raise AttributeError
 
-EnsembleStates = States(["ACTIVE","HELD","PAUSED"])
-EnsembleWorkflowStates = States(["READY","PLANNING","PLAN_FAILED","QUEUED","RUN_FAILED","RUNNING",
-                                 "FAILED","SUCCESSFUL","ABORTED"])
+
+EnsembleStates = States(["ACTIVE", "HELD", "PAUSED"])
+EnsembleWorkflowStates = States(
+    [
+        "READY",
+        "PLANNING",
+        "PLAN_FAILED",
+        "QUEUED",
+        "RUN_FAILED",
+        "RUNNING",
+        "FAILED",
+        "SUCCESSFUL",
+        "ABORTED",
+    ]
+)
+
 
 class Ensemble(EnsembleBase):
     def __init__(self, username, name):
@@ -99,9 +118,12 @@ class Ensemble(EnsembleBase):
             "state": self.state,
             "max_running": self.max_running,
             "max_planning": self.max_planning,
-            "workflows": url_for("route_list_ensemble_workflows", name=self.name, _external=True),
-            "href": url_for("route_get_ensemble", name=self.name, _external=True)
+            "workflows": url_for(
+                "route_list_ensemble_workflows", name=self.name, _external=True
+            ),
+            "href": url_for("route_get_ensemble", name=self.name, _external=True),
         }
+
 
 class EnsembleWorkflow(EnsembleBase):
     def __init__(self, ensemble_id, name, basedir, plan_command):
@@ -133,10 +155,16 @@ class EnsembleWorkflow(EnsembleBase):
             if state != EnsembleWorkflowStates.READY:
                 raise EMError("Can only replan workflows in PLAN_FAILED state")
         elif self.state == EnsembleWorkflowStates.RUN_FAILED:
-            if state not in (EnsembleWorkflowStates.READY, EnsembleWorkflowStates.QUEUED):
+            if state not in (
+                EnsembleWorkflowStates.READY,
+                EnsembleWorkflowStates.QUEUED,
+            ):
                 raise EMError("Can only replan or rerun workflows in RUN_FAILED state")
         elif self.state == EnsembleWorkflowStates.FAILED:
-            if state not in (EnsembleWorkflowStates.READY, EnsembleWorkflowStates.QUEUED):
+            if state not in (
+                EnsembleWorkflowStates.READY,
+                EnsembleWorkflowStates.QUEUED,
+            ):
                 raise EMError("Can only replan or rerun workflows in FAILED state")
         else:
             raise EMError("Invalid state change: %s -> %s" % (self.state, state))
@@ -193,7 +221,12 @@ class EnsembleWorkflow(EnsembleBase):
             "state": self.state,
             "priority": self.priority,
             "wf_uuid": self.wf_uuid,
-            "href": url_for("route_get_ensemble_workflow", ensemble=self.ensemble.name, workflow=self.name, _external=True)
+            "href": url_for(
+                "route_get_ensemble_workflow",
+                ensemble=self.ensemble.name,
+                workflow=self.name,
+                _external=True,
+            ),
         }
 
     def get_detail_object(self):
@@ -204,13 +237,14 @@ class EnsembleWorkflow(EnsembleBase):
         o["submitdir"] = self.submitdir
         return o
 
+
 class Ensembles:
     def __init__(self, session):
         self.session = session
 
     def list_ensembles(self, username):
         q = self.session.query(Ensemble)
-        q = q.filter(Ensemble.username==username)
+        q = q.filter(Ensemble.username == username)
         q = q.order_by(Ensemble.created)
         return q.all()
 
@@ -219,19 +253,32 @@ class Ensembles:
             EnsembleWorkflowStates.READY,
             EnsembleWorkflowStates.PLANNING,
             EnsembleWorkflowStates.QUEUED,
-            EnsembleWorkflowStates.RUNNING
+            EnsembleWorkflowStates.RUNNING,
         )
-        stmt = sql.exists().where(Ensemble.id==EnsembleWorkflow.ensemble_id).where(EnsembleWorkflow.state.in_(states))
+        stmt = (
+            sql.exists()
+            .where(Ensemble.id == EnsembleWorkflow.ensemble_id)
+            .where(EnsembleWorkflow.state.in_(states))
+        )
         return self.session.query(Ensemble).filter(stmt).all()
 
     def get_ensemble(self, username, name):
         try:
-            return self.session.query(Ensemble).filter(Ensemble.username==username, Ensemble.name==name).one()
+            return (
+                self.session.query(Ensemble)
+                .filter(Ensemble.username == username, Ensemble.name == name)
+                .one()
+            )
         except NoResultFound:
             raise EMError("No such ensemble: %s" % name, 404)
 
     def create_ensemble(self, username, name, max_running, max_planning):
-        if self.session.query(Ensemble).filter(Ensemble.username==username, Ensemble.name==name).count() > 0:
+        if (
+            self.session.query(Ensemble)
+            .filter(Ensemble.username == username, Ensemble.name == name)
+            .count()
+            > 0
+        ):
             raise EMError("Ensemble %s already exists" % name, 400)
 
         ensemble = Ensemble(username, name)
@@ -243,25 +290,30 @@ class Ensembles:
 
     def list_ensemble_workflows(self, ensemble_id):
         q = self.session.query(EnsembleWorkflow)
-        q = q.filter(EnsembleWorkflow.ensemble_id==ensemble_id)
+        q = q.filter(EnsembleWorkflow.ensemble_id == ensemble_id)
         q = q.order_by(EnsembleWorkflow.created)
         return q.all()
 
     def get_ensemble_workflow(self, ensemble_id, name):
         try:
             q = self.session.query(EnsembleWorkflow)
-            q = q.filter(EnsembleWorkflow.ensemble_id==ensemble_id,
-                         EnsembleWorkflow.name==name)
+            q = q.filter(
+                EnsembleWorkflow.ensemble_id == ensemble_id,
+                EnsembleWorkflow.name == name,
+            )
             return q.one()
         except NoResultFound:
             raise EMError("No such ensemble workflow: %s" % name, 404)
 
-    def create_ensemble_workflow(self, ensemble_id, name, basedir, priority, plan_command):
+    def create_ensemble_workflow(
+        self, ensemble_id, name, basedir, priority, plan_command
+    ):
 
         # Verify that the workflow doesn't already exist
         q = self.session.query(EnsembleWorkflow)
-        q = q.filter(EnsembleWorkflow.ensemble_id==ensemble_id,
-                     EnsembleWorkflow.name==name)
+        q = q.filter(
+            EnsembleWorkflow.ensemble_id == ensemble_id, EnsembleWorkflow.name == name
+        )
         if q.count() > 0:
             raise EMError("Ensemble workflow %s already exists" % name, 400)
 
@@ -273,8 +325,19 @@ class Ensembles:
 
         return w
 
-    def write_planning_script(self, f, basedir, bundledir, dax, sites, output_site,
-            staging_sites=None, clustering=None, force=False, cleanup=None):
+    def write_planning_script(
+        self,
+        f,
+        basedir,
+        bundledir,
+        dax,
+        sites,
+        output_site,
+        staging_sites=None,
+        clustering=None,
+        force=False,
+        cleanup=None,
+    ):
 
         f.write("#!/bin/bash\n")
         f.write("pegasus-plan \\\n")
@@ -288,7 +351,7 @@ class Ensembles:
         f.write("--output-site %s \\\n" % output_site)
 
         if staging_sites is not None and len(staging_sites) > 0:
-            pairs = ["%s=%s" % (k,v) for k,v in staging_sites.items()]
+            pairs = ["%s=%s" % (k, v) for k, v in staging_sites.items()]
             f.write("--staging-site %s \\\n" % ",".join(pairs))
 
         if clustering is not None and len(clustering) > 0:
@@ -305,4 +368,3 @@ class Ensembles:
         f.write("--input-dir %s \n" % bundledir)
 
         f.write("exit $?")
-

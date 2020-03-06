@@ -4,10 +4,11 @@ DB_VERSION = 2
 
 import logging
 
+from sqlalchemy.exc import *
+
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions.base_version import *
 from Pegasus.db.schema import *
-from sqlalchemy.exc import *
 
 log = logging.getLogger(__name__)
 
@@ -71,8 +72,7 @@ class Version(BaseVersion):
         data = None
         data2 = None
         try:
-            data = self.db.execute("SELECT COUNT(wf_id) FROM master_workflow"
-                                   ).first()
+            data = self.db.execute("SELECT COUNT(wf_id) FROM master_workflow").first()
         except (OperationalError, ProgrammingError):
             pass
         except Exception as e:
@@ -104,9 +104,7 @@ class Version(BaseVersion):
             else:
                 self._execute("DROP TABLE master_workflow")
 
-        self._execute(
-            "ALTER TABLE workflowstate RENAME TO master_workflowstate"
-        )
+        self._execute("ALTER TABLE workflowstate RENAME TO master_workflowstate")
         self._execute("DROP INDEX UNIQUE_WORKFLOWSTATE")
         self._execute(
             "CREATE INDEX UNIQUE_MASTER_WORKFLOWSTATE ON master_workflowstate (wf_id, state, timestamp)"
@@ -114,9 +112,7 @@ class Version(BaseVersion):
         self._execute("ALTER TABLE workflow RENAME TO master_workflow")
         self._execute("DROP INDEX wf_id_KEY")
         self._execute("DROP INDEX wf_uuid_UNIQUE")
-        self._execute(
-            "CREATE INDEX UNIQUE_MASTER_WF_UUID ON master_workflow (wf_uuid)"
-        )
+        self._execute("CREATE INDEX UNIQUE_MASTER_WF_UUID ON master_workflow (wf_uuid)")
 
         self.db.commit()
 

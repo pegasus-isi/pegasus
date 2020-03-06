@@ -1,2 +1,1 @@
-__all__ = ['admin', 'workflow']
-
+__all__ = ["admin", "workflow"]

@@ -26,10 +26,11 @@ import sys
 import time
 import warnings
 
-from Pegasus.db import connection
-from Pegasus.db.schema import *
 from sqlalchemy import func
 from sqlalchemy.orm.exc import *
+
+from Pegasus.db import connection
+from Pegasus.db.schema import *
 
 __author__ = "Rafael Ferreira da Silva"
 

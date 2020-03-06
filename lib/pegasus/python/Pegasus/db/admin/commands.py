@@ -1,13 +1,15 @@
 from __future__ import print_function
-__author__ = "Rafael Ferreira da Silva"
 
 import logging
 import sys
 
-from Pegasus.command import LoggingCommand, CompoundCommand
+from Pegasus.command import CompoundCommand, LoggingCommand
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions import *
+
+__author__ = "Rafael Ferreira da Silva"
+
 
 log = logging.getLogger(__name__)
 
@@ -30,8 +32,11 @@ class CreateCommand(LoggingCommand):
 
         try:
             _validate_conf_type_options(
-                dburi, self.options.properties, self.options.config_properties,
-                self.options.submit_dir, self.options.db_type
+                dburi,
+                self.options.properties,
+                self.options.config_properties,
+                self.options.submit_dir,
+                self.options.db_type,
             )
             db = _get_connection(
                 dburi,
@@ -40,7 +45,7 @@ class CreateCommand(LoggingCommand):
                 self.options.submit_dir,
                 self.options.db_type,
                 create=True,
-                force=self.options.force
+                force=self.options.force,
             )
             version = db_current_version(db, parse=True)
             _print_version(version)
@@ -66,7 +71,7 @@ class UpdateCommand(LoggingCommand):
             type="string",
             dest="pegasus_version",
             default=None,
-            help="Pegasus version"
+            help="Pegasus version",
         )
         self.parser.add_option(
             "-a",
@@ -74,7 +79,7 @@ class UpdateCommand(LoggingCommand):
             action="store_true",
             dest="all",
             default=False,
-            help="Update all databases of completed workflows in MASTER."
+            help="Update all databases of completed workflows in MASTER.",
         )
 
     def run(self):
@@ -86,8 +91,11 @@ class UpdateCommand(LoggingCommand):
 
         try:
             _validate_conf_type_options(
-                dburi, self.options.properties, self.options.config_properties,
-                self.options.submit_dir, self.options.db_type
+                dburi,
+                self.options.properties,
+                self.options.config_properties,
+                self.options.submit_dir,
+                self.options.db_type,
             )
             db = _get_connection(
                 dburi,
@@ -97,7 +105,7 @@ class UpdateCommand(LoggingCommand):
                 self.options.db_type,
                 pegasus_version=self.options.pegasus_version,
                 create=True,
-                force=self.options.force
+                force=self.options.force,
             )
             version = db_current_version(db, parse=True)
             _print_version(version)
@@ -106,7 +114,7 @@ class UpdateCommand(LoggingCommand):
                 all_workflows_db(
                     db,
                     pegasus_version=self.options.pegasus_version,
-                    force=self.options.force
+                    force=self.options.force,
                 )
 
             db.close()
@@ -131,7 +139,7 @@ class DowngradeCommand(LoggingCommand):
             type="string",
             dest="pegasus_version",
             default=None,
-            help="Pegasus version."
+            help="Pegasus version.",
         )
         self.parser.add_option(
             "-a",
@@ -139,7 +147,7 @@ class DowngradeCommand(LoggingCommand):
             action="store_true",
             dest="all",
             default=False,
-            help="Downgrade all databases of completed workflows in MASTER."
+            help="Downgrade all databases of completed workflows in MASTER.",
         )
 
     def run(self):
@@ -151,8 +159,11 @@ class DowngradeCommand(LoggingCommand):
 
         try:
             _validate_conf_type_options(
-                dburi, self.options.properties, self.options.config_properties,
-                self.options.submit_dir, self.options.db_type
+                dburi,
+                self.options.properties,
+                self.options.config_properties,
+                self.options.submit_dir,
+                self.options.db_type,
             )
             db = _get_connection(
                 dburi,
@@ -163,7 +174,7 @@ class DowngradeCommand(LoggingCommand):
                 pegasus_version=self.options.pegasus_version,
                 create=False,
                 schema_check=False,
-                force=self.options.force
+                force=self.options.force,
             )
             db_downgrade(db, self.options.pegasus_version, self.options.force)
             version = db_current_version(db, parse=True)
@@ -175,7 +186,7 @@ class DowngradeCommand(LoggingCommand):
                     update=False,
                     pegasus_version=self.options.pegasus_version,
                     schema_check=False,
-                    force=self.options.force
+                    force=self.options.force,
                 )
 
             db.close()
@@ -200,7 +211,7 @@ class CheckCommand(LoggingCommand):
             type="string",
             dest="pegasus_version",
             default=None,
-            help="Pegasus version"
+            help="Pegasus version",
         )
         self.parser.add_option(
             "-e",
@@ -208,7 +219,7 @@ class CheckCommand(LoggingCommand):
             action="store_false",
             dest="version_value",
             default=True,
-            help="Show actual version values"
+            help="Show actual version values",
         )
 
     def run(self):
@@ -220,8 +231,11 @@ class CheckCommand(LoggingCommand):
 
         try:
             _validate_conf_type_options(
-                dburi, self.options.properties, self.options.config_properties,
-                self.options.submit_dir, self.options.db_type
+                dburi,
+                self.options.properties,
+                self.options.config_properties,
+                self.options.submit_dir,
+                self.options.db_type,
             )
             db = _get_connection(
                 dburi,
@@ -230,14 +244,12 @@ class CheckCommand(LoggingCommand):
                 self.options.submit_dir,
                 self.options.db_type,
                 pegasus_version=self.options.pegasus_version,
-                force=self.options.force
+                force=self.options.force,
             )
             db_verify(db, self.options.pegasus_version)
 
             version = parse_pegasus_version(self.options.pegasus_version)
-            current_version = db_current_version(
-                db, self.options.version_value
-            )
+            current_version = db_current_version(db, self.options.version_value)
             _print_version(current_version)
             db.close()
 
@@ -260,7 +272,7 @@ class VersionCommand(LoggingCommand):
             action="store_false",
             dest="version_value",
             default=True,
-            help="Show actual version values."
+            help="Show actual version values.",
         )
 
     def run(self):
@@ -272,8 +284,11 @@ class VersionCommand(LoggingCommand):
 
         try:
             _validate_conf_type_options(
-                dburi, self.options.properties, self.options.config_properties,
-                self.options.submit_dir, self.options.db_type
+                dburi,
+                self.options.properties,
+                self.options.config_properties,
+                self.options.submit_dir,
+                self.options.db_type,
             )
             db = _get_connection(
                 dburi,
@@ -282,7 +297,7 @@ class VersionCommand(LoggingCommand):
                 self.options.submit_dir,
                 self.options.db_type,
                 schema_check=False,
-                force=self.options.force
+                force=self.options.force,
             )
             version = db_current_version(db, self.options.version_value)
             _print_version(version)
@@ -318,13 +333,12 @@ def _validate_conf_type_options(
         return
 
     if (config_properties or submit_dir) and not db_type:
-        log.error(
-            "A type should be provided with the property file/submit directory."
-        )
+        log.error("A type should be provided with the property file/submit directory.")
         exit(1)
 
     if (
-        not config_properties and not submit_dir
+        not config_properties
+        and not submit_dir
         and not _has_connection_properties(properties)
     ) and db_type:
         log.error(
@@ -342,8 +356,7 @@ def _add_common_options(object):
         type="string",
         dest="config_properties",
         default=None,
-        help=
-        "Specify properties file. This overrides all other property files. Should be used with '-t'"
+        help="Specify properties file. This overrides all other property files. Should be used with '-t'",
     )
     object.parser.add_option(
         "-s",
@@ -352,7 +365,7 @@ def _add_common_options(object):
         type="string",
         dest="submit_dir",
         default=None,
-        help="Specify submit directory. Should be used with '-t'"
+        help="Specify submit directory. Should be used with '-t'",
     )
     object.parser.add_option(
         "-t",
@@ -361,8 +374,7 @@ def _add_common_options(object):
         type="string",
         dest="db_type",
         default=None,
-        help=
-        "Type of the database (JDBCRC, MASTER, or WORKFLOW). Should be used with '-c' or '-s'"
+        help="Type of the database (JDBCRC, MASTER, or WORKFLOW). Should be used with '-c' or '-s'",
     )
     object.parser.add_option(
         "-D",
@@ -371,8 +383,7 @@ def _add_common_options(object):
         type="string",
         dest="properties",
         default=[],
-        help=
-        "Commandline overwrite for properties. Must be in the 'prop=val' format"
+        help="Commandline overwrite for properties. Must be in the 'prop=val' format",
     )
     object.parser.add_option(
         "-d",
@@ -380,7 +391,7 @@ def _add_common_options(object):
         action="store_true",
         dest="debug",
         default=None,
-        help="Enable debugging"
+        help="Enable debugging",
     )
     object.parser.add_option(
         "-f",
@@ -388,7 +399,7 @@ def _add_common_options(object):
         action="store_true",
         dest="force",
         default=None,
-        help="Ignore conflicts or data loss."
+        help="Ignore conflicts or data loss.",
     )
 
 
@@ -401,7 +412,7 @@ def _get_connection(
     pegasus_version=None,
     schema_check=True,
     create=False,
-    force=False
+    force=False,
 ):
     """ Get connection to the database based on the parameters"""
     if dburi:
@@ -411,7 +422,7 @@ def _get_connection(
             schema_check=schema_check,
             create=create,
             force=force,
-            db_type=db_type
+            db_type=db_type,
         )
     elif submit_dir:
         return connection.connect_by_submitdir(
@@ -422,7 +433,7 @@ def _get_connection(
             schema_check=schema_check,
             create=create,
             force=force,
-            cl_properties=cl_properties
+            cl_properties=cl_properties,
         )
 
     elif config_properties or _has_connection_properties(cl_properties):
@@ -433,7 +444,7 @@ def _get_connection(
             pegasus_version=pegasus_version,
             schema_check=schema_check,
             create=create,
-            force=force
+            force=force,
         )
 
     if not db_type:
@@ -444,7 +455,7 @@ def _get_connection(
             schema_check=schema_check,
             create=create,
             force=force,
-            db_type=db_type
+            db_type=db_type,
         )
     return None
 
@@ -464,19 +475,20 @@ def _has_connection_properties(cl_properties):
 # ------------------------------------------------------
 class DBAdminCommand(CompoundCommand):
     commands = [
-        ("create", CreateCommand), ('downgrade', DowngradeCommand),
-        ('update', UpdateCommand), ('check',
-                                    CheckCommand), ('version', VersionCommand)
+        ("create", CreateCommand),
+        ("downgrade", DowngradeCommand),
+        ("update", UpdateCommand),
+        ("check", CheckCommand),
+        ("version", VersionCommand),
     ]
     aliases = {
         "c": "create",
         "d": "downgrade",
         "u": "update",
         "k": "check",
-        "v": "version"
+        "v": "version",
     }
-    epilog = \
-        """The pegasus-db-admin tool should always be followed by a COMMAND listed
+    epilog = """The pegasus-db-admin tool should always be followed by a COMMAND listed
         below. To see the available options for each command, please use the -h option
         after the command. For example: pegasus-db-admin update -h"""
 

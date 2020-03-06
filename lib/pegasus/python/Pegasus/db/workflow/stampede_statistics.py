@@ -156,14 +156,17 @@ https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Ver
 __author__ = "Monte Goode"
 
 from Pegasus.db import connection
-from Pegasus.db.schema import *
 from Pegasus.db.errors import StampedeDBNotFoundError
+from Pegasus.db.schema import *
 
 # Main stats class.
 
+
 class StampedeStatistics(object):
     def __init__(self, connString, expand_workflow=True):
-        self.log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
+        self.log = logging.getLogger(
+            "%s.%s" % (self.__module__, self.__class__.__name__)
+        )
         try:
             self.session = connection.connect(connString)
         except connection.ConnectionError as e:
@@ -177,14 +180,14 @@ class StampedeStatistics(object):
         self._job_filter_mode = None
         self._time_filter_mode = None
         self._host_filter = None
-        self._xform_filter = {'include':None, 'exclude':None}
+        self._xform_filter = {"include": None, "exclude": None}
 
         self._wfs = []
 
-    def initialize(self, root_wf_uuid = None, root_wf_id = None):
+    def initialize(self, root_wf_uuid=None, root_wf_id=None):
         if root_wf_uuid == None and root_wf_id == None:
-            self.log.error('Either root_wf_uuid or root_wf_id is required')
-            raise ValueError('Either root_wf_uuid or root_wf_id is required')
+            self.log.error("Either root_wf_uuid or root_wf_id is required")
+            raise ValueError("Either root_wf_uuid or root_wf_id is required")
 
         q = self.session.query(Workflow.root_wf_id, Workflow.wf_id, Workflow.wf_uuid)
 
@@ -194,27 +197,33 @@ class StampedeStatistics(object):
             q = q.filter(Workflow.wf_id == root_wf_id)
 
         try:
-            result = q.one ()
+            result = q.one()
             self._root_wf_id = result.wf_id
             self._root_wf_uuid = result.wf_uuid
             self._is_root_wf = result.root_wf_id == result.wf_id
         except orm.exc.MultipleResultsFound as e:
-            self.log.error('Multiple results found for wf_uuid: %s', root_wf_uuid)
+            self.log.error("Multiple results found for wf_uuid: %s", root_wf_uuid)
             raise
         except orm.exc.NoResultFound as e:
-            self.log.error('No results found for wf_uuid: %s', root_wf_uuid)
+            self.log.error("No results found for wf_uuid: %s", root_wf_uuid)
             raise
 
         self._wfs.insert(0, self._root_wf_id)
 
         if self._expand:
-            '''
+            """
             select parent_wf_id, wf_id from workflow where root_wf_id =
             (select root_wf_id from workflow where wf_id=self._root_wf_id);
-            '''
-            sub_q = self.session.query(Workflow.root_wf_id).filter(Workflow.wf_id == self._root_wf_id).subquery('root_wf')
+            """
+            sub_q = (
+                self.session.query(Workflow.root_wf_id)
+                .filter(Workflow.wf_id == self._root_wf_id)
+                .subquery("root_wf")
+            )
 
-            q = self.session.query(Workflow.parent_wf_id, Workflow.wf_id).filter(Workflow.root_wf_id == sub_q.c.root_wf_id)
+            q = self.session.query(Workflow.parent_wf_id, Workflow.wf_id).filter(
+                Workflow.root_wf_id == sub_q.c.root_wf_id
+            )
 
             # @tree will hold the entire sub-work-flow dependency structure.
             tree = {}
@@ -222,17 +231,17 @@ class StampedeStatistics(object):
             for row in q.all():
                 parent_node = row.parent_wf_id
                 if parent_node in tree:
-                    tree [parent_node].append (row.wf_id)
+                    tree[parent_node].append(row.wf_id)
                 else:
-                    tree [parent_node] = [row.wf_id]
+                    tree[parent_node] = [row.wf_id]
 
-            self._get_descendants (tree, self._root_wf_id)
+            self._get_descendants(tree, self._root_wf_id)
 
-        self.log.debug('Descendant workflow ids %s', self._wfs)
+        self.log.debug("Descendant workflow ids %s", self._wfs)
 
         if not len(self._wfs):
-            self.log.error('No results found for wf_uuid: %s', root_wf_uuid)
-            raise ValueError('No results found for wf_uuid: %s', root_wf_uuid)
+            self.log.error("No results found for wf_uuid: %s", root_wf_uuid)
+            raise ValueError("No results found for wf_uuid: %s", root_wf_uuid)
 
         # Initialize filters with default value
         self.set_job_filter()
@@ -241,50 +250,62 @@ class StampedeStatistics(object):
         self.set_transformation_filter()
         return True
 
-    def _get_descendants (self, tree, wf_node):
-        '''
+    def _get_descendants(self, tree, wf_node):
+        """
         If the root_wf_uuid given to initialize function is not the UUID of the root work-flow, and
         expand_workflow was set to True, then this recursive function determines all child work-flows.
         @tree A dictionary when key is the parent_wf_id and value is a list of its child wf_id's.
         @wf_node The node for which to determine descendants.
-        '''
+        """
 
         if tree == None or wf_node == None:
-            raise ValueError('Tree, or node cannot be None')
+            raise ValueError("Tree, or node cannot be None")
 
         if wf_node in tree:
 
-            self._wfs.extend (tree [wf_node])
+            self._wfs.extend(tree[wf_node])
 
-            for wf in tree [wf_node]:
-                self._get_descendants (tree, wf)
+            for wf in tree[wf_node]:
+                self._get_descendants(tree, wf)
 
     def close(self):
-        self.log.debug('close')
+        self.log.debug("close")
         self.session.close()
 
-    def set_job_filter(self, filter='all'):
-        modes = ['all', 'nonsub', 'subwf', 'dax', 'dag', 'compute', 'stage-in-tx',
-                'stage-out-tx', 'registration', 'inter-site-tx', 'create-dir',
-                'staged-compute', 'cleanup', 'chmod']
+    def set_job_filter(self, filter="all"):
+        modes = [
+            "all",
+            "nonsub",
+            "subwf",
+            "dax",
+            "dag",
+            "compute",
+            "stage-in-tx",
+            "stage-out-tx",
+            "registration",
+            "inter-site-tx",
+            "create-dir",
+            "staged-compute",
+            "cleanup",
+            "chmod",
+        ]
         try:
             modes.index(filter)
             self._job_filter_mode = filter
-            self.log.debug('Setting filter to: %s', filter)
+            self.log.debug("Setting filter to: %s", filter)
         except:
-            self._job_filter_mode = 'all'
-            self.log.error('Unknown job filter %s - setting to all', filter)
+            self._job_filter_mode = "all"
+            self.log.error("Unknown job filter %s - setting to all", filter)
 
-
-    def set_time_filter(self, filter='month'):
-        modes = ['month', 'week', 'day', 'hour']
+    def set_time_filter(self, filter="month"):
+        modes = ["month", "week", "day", "hour"]
         try:
             modes.index(filter)
             self._time_filter_mode = filter
-            self.log.debug('Setting filter to: %s', filter)
+            self.log.debug("Setting filter to: %s", filter)
         except:
-            self._time_filter_mode = 'month'
-            self.log.error('Unknown time filter %s - setting to month', filter)
+            self._time_filter_mode = "month"
+            self.log.error("Unknown time filter %s - setting to month", filter)
 
     def set_host_filter(self, host=None):
         """
@@ -301,8 +322,8 @@ class StampedeStatistics(object):
         Both arguments can not be set at the same time.  If they are,
         the program will log an error and not do any filtering.
         """
-        self._xform_filter['include'] = include
-        self._xform_filter['exclude'] = exclude
+        self._xform_filter["include"] = include
+        self._xform_filter["exclude"] = exclude
 
     #
     # Pulls information about sub workflows
@@ -337,24 +358,24 @@ class StampedeStatistics(object):
     #
 
     def _dax_or_dag_cond(self, JobO=Job):
-        return or_(JobO.type_desc == 'dax', JobO.type_desc == 'dag')
+        return or_(JobO.type_desc == "dax", JobO.type_desc == "dag")
 
     def _get_job_filter(self, JobO=Job):
         filters = {
-            'all': None,
-            'nonsub': not_(self._dax_or_dag_cond(JobO)),
-            'subwf': self._dax_or_dag_cond(JobO),
-            'dax': JobO.type_desc == 'dax',
-            'dag': JobO.type_desc == 'dag',
-            'compute': JobO.type_desc == 'compute',
-            'stage-in-tx': JobO.type_desc == 'stage-in-tx',
-            'stage-out-tx': JobO.type_desc == 'stage-out-tx',
-            'registration': JobO.type_desc == 'registration',
-            'inter-site-tx': JobO.type_desc == 'inter-site-tx',
-            'create-dir': JobO.type_desc == 'create-dir',
-            'staged-compute': JobO.type_desc == 'staged-compute',
-            'cleanup': JobO.type_desc == 'cleanup',
-            'chmod': JobO.type_desc == 'chmod',
+            "all": None,
+            "nonsub": not_(self._dax_or_dag_cond(JobO)),
+            "subwf": self._dax_or_dag_cond(JobO),
+            "dax": JobO.type_desc == "dax",
+            "dag": JobO.type_desc == "dag",
+            "compute": JobO.type_desc == "compute",
+            "stage-in-tx": JobO.type_desc == "stage-in-tx",
+            "stage-out-tx": JobO.type_desc == "stage-out-tx",
+            "registration": JobO.type_desc == "registration",
+            "inter-site-tx": JobO.type_desc == "inter-site-tx",
+            "create-dir": JobO.type_desc == "create-dir",
+            "staged-compute": JobO.type_desc == "staged-compute",
+            "cleanup": JobO.type_desc == "cleanup",
+            "chmod": JobO.type_desc == "chmod",
         }
         return filters[self._job_filter_mode]
 
@@ -367,8 +388,12 @@ class StampedeStatistics(object):
             )
         """
         JobInstanceSubMax = orm.aliased(JobInstance)
-        sub_q = self.session.query(func.max(JobInstanceSubMax.job_submit_seq).label('max_id'))
-        sub_q = sub_q.filter(JobInstanceSubMax.job_id == JobInstance.job_id).correlate(JobInstance)
+        sub_q = self.session.query(
+            func.max(JobInstanceSubMax.job_submit_seq).label("max_id")
+        )
+        sub_q = sub_q.filter(JobInstanceSubMax.job_id == JobInstance.job_id).correlate(
+            JobInstance
+        )
         sub_q = sub_q.group_by(JobInstanceSubMax.job_id).subquery()
         return sub_q
 
@@ -381,7 +406,7 @@ class StampedeStatistics(object):
         if self._expand and self._is_root_wf:
             q = q.filter(Workflow.root_wf_id == self._root_wf_id)
         elif self._expand and not self._is_root_wf:
-            q = q.filter(Workflow.wf_id.in_ (self._wfs))
+            q = q.filter(Workflow.wf_id.in_(self._wfs))
         else:
             q = q.filter(Workflow.wf_id == self._wfs[0])
         q = q.filter(Job.wf_id == Workflow.wf_id)
@@ -395,13 +420,16 @@ class StampedeStatistics(object):
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totalsucceeded_failed_jobs
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totalsucceededfailedjobs
         """
-        JobInstanceSub = orm.aliased(JobInstance, name='JobInstanceSub')
-        sq_1 = self.session.query(func.max(JobInstanceSub.job_submit_seq).label('jss'), JobInstanceSub.job_id.label('jobid'))
+        JobInstanceSub = orm.aliased(JobInstance, name="JobInstanceSub")
+        sq_1 = self.session.query(
+            func.max(JobInstanceSub.job_submit_seq).label("jss"),
+            JobInstanceSub.job_id.label("jobid"),
+        )
 
         if self._expand and self._is_root_wf:
             sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
         elif self._expand and not self._is_root_wf:
-            sq_1 = sq_1.filter(Workflow.wf_id.in_ (self._wfs))
+            sq_1 = sq_1.filter(Workflow.wf_id.in_(self._wfs))
         else:
             sq_1 = sq_1.filter(Workflow.wf_id == self._wfs[0])
         sq_1 = sq_1.filter(Workflow.wf_id == Job.wf_id)
@@ -411,14 +439,17 @@ class StampedeStatistics(object):
         sq_1 = sq_1.group_by(JobInstanceSub.job_id).subquery()
 
         q = self.session.query(
-            func.sum (case([(JobInstance.exitcode == 0, 1)], else_=0)).label ("succeeded"),
-            func.sum (case([(JobInstance.exitcode != 0, 1)], else_=0)).label ("failed"))
+            func.sum(case([(JobInstance.exitcode == 0, 1)], else_=0)).label(
+                "succeeded"
+            ),
+            func.sum(case([(JobInstance.exitcode != 0, 1)], else_=0)).label("failed"),
+        )
         q = q.filter(JobInstance.job_id == sq_1.c.jobid)
         q = q.filter(JobInstance.job_submit_seq == sq_1.c.jss)
 
         if classify_error:
             if tag is None:
-                self.log.error( "for error classification you need to specify tag")
+                self.log.error("for error classification you need to specify tag")
                 return None
 
             q = q.filter(JobInstance.job_instance_id == Tag.job_instance_id)
@@ -434,12 +465,16 @@ class StampedeStatistics(object):
                                 WHERE j.state = 'JOB_HELD';
         """
 
-        sq_1 = self.session.query(func.max(JobInstance.job_instance_id).label('max_ji_id'), JobInstance.job_id.label('jobid'), Job.exec_job_id.label('jobname'))
+        sq_1 = self.session.query(
+            func.max(JobInstance.job_instance_id).label("max_ji_id"),
+            JobInstance.job_id.label("jobid"),
+            Job.exec_job_id.label("jobname"),
+        )
 
         if self._expand and self._is_root_wf:
             sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
         elif self._expand and not self._is_root_wf:
-            sq_1 = sq_1.filter(Workflow.wf_id.in_ (self._wfs))
+            sq_1 = sq_1.filter(Workflow.wf_id.in_(self._wfs))
         else:
             sq_1 = sq_1.filter(Workflow.wf_id == self._wfs[0])
 
@@ -447,10 +482,15 @@ class StampedeStatistics(object):
         sq_1 = sq_1.filter(Job.job_id == JobInstance.job_id)
         sq_1 = sq_1.group_by(JobInstance.job_id).subquery()
 
-        q = self.session.query(distinct(Jobstate.job_instance_id.label('last_job_instance')), sq_1.c.jobid, sq_1.c.jobname, Jobstate.reason)
+        q = self.session.query(
+            distinct(Jobstate.job_instance_id.label("last_job_instance")),
+            sq_1.c.jobid,
+            sq_1.c.jobname,
+            Jobstate.reason,
+        )
 
-        q = q.filter( Jobstate.state == 'JOB_HELD')
-        q = q.join( sq_1, Jobstate.job_instance_id == sq_1.c.max_ji_id)
+        q = q.filter(Jobstate.state == "JOB_HELD")
+        q = q.join(sq_1, Jobstate.job_instance_id == sq_1.c.max_ji_id)
 
         return q.all()
 
@@ -459,12 +499,15 @@ class StampedeStatistics(object):
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totalsucceededjobs
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totalsucceededjobs
         """
-        JobInstanceSub = orm.aliased(JobInstance, name='JobInstanceSub')
-        sq_1 = self.session.query(func.max(JobInstanceSub.job_submit_seq).label('jss'), JobInstanceSub.job_id.label('jobid'))
+        JobInstanceSub = orm.aliased(JobInstance, name="JobInstanceSub")
+        sq_1 = self.session.query(
+            func.max(JobInstanceSub.job_submit_seq).label("jss"),
+            JobInstanceSub.job_id.label("jobid"),
+        )
         if self._expand and self._is_root_wf:
             sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
         elif self._expand and not self._is_root_wf:
-            sq_1 = sq_1.filter(Workflow.wf_id.in_ (self._wfs))
+            sq_1 = sq_1.filter(Workflow.wf_id.in_(self._wfs))
         else:
             sq_1 = sq_1.filter(Workflow.wf_id == self._wfs[0])
         sq_1 = sq_1.filter(Workflow.wf_id == Job.wf_id)
@@ -473,7 +516,7 @@ class StampedeStatistics(object):
             sq_1 = sq_1.filter(self._get_job_filter())
         sq_1 = sq_1.group_by(JobInstanceSub.job_id).subquery()
 
-        q = self.session.query(JobInstance.job_instance_id.label('last_job_instance'))
+        q = self.session.query(JobInstance.job_instance_id.label("last_job_instance"))
         q = q.filter(JobInstance.job_id == sq_1.c.jobid)
         q = q.filter(JobInstance.job_submit_seq == sq_1.c.jss)
         q = q.filter(JobInstance.exitcode == 0).filter(JobInstance.exitcode != None)
@@ -484,12 +527,15 @@ class StampedeStatistics(object):
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totalfailedjobs
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totalfailedjobs
         """
-        JobInstanceSub = orm.aliased(JobInstance, name='JobInstanceSub')
-        sq_1 = self.session.query(func.max(JobInstanceSub.job_submit_seq).label('jss'), JobInstanceSub.job_id.label('jobid'))
+        JobInstanceSub = orm.aliased(JobInstance, name="JobInstanceSub")
+        sq_1 = self.session.query(
+            func.max(JobInstanceSub.job_submit_seq).label("jss"),
+            JobInstanceSub.job_id.label("jobid"),
+        )
         if self._expand and self._is_root_wf:
             sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
         elif self._expand and not self._is_root_wf:
-            sq_1 = sq_1.filter(Workflow.wf_id.in_ (self._wfs))
+            sq_1 = sq_1.filter(Workflow.wf_id.in_(self._wfs))
         else:
             sq_1 = sq_1.filter(Workflow.wf_id == self._wfs[0])
         sq_1 = sq_1.filter(Workflow.wf_id == Job.wf_id)
@@ -498,7 +544,7 @@ class StampedeStatistics(object):
             sq_1 = sq_1.filter(self._get_job_filter())
         sq_1 = sq_1.group_by(JobInstanceSub.job_id).subquery()
 
-        q = self.session.query(JobInstance.job_instance_id.label('last_job_instance'))
+        q = self.session.query(JobInstance.job_instance_id.label("last_job_instance"))
         q = q.filter(JobInstance.job_id == sq_1.c.jobid)
         q = q.filter(JobInstance.job_submit_seq == sq_1.c.jss)
         q = q.filter(JobInstance.exitcode != 0).filter(JobInstance.exitcode != None)
@@ -506,12 +552,15 @@ class StampedeStatistics(object):
         return q
 
     def get_total_running_jobs_status(self):
-        JobInstanceSub = orm.aliased(JobInstance, name='JobInstanceSub')
-        sq_1 = self.session.query(func.max(JobInstanceSub.job_submit_seq).label('jss'), JobInstanceSub.job_id.label('jobid'))
+        JobInstanceSub = orm.aliased(JobInstance, name="JobInstanceSub")
+        sq_1 = self.session.query(
+            func.max(JobInstanceSub.job_submit_seq).label("jss"),
+            JobInstanceSub.job_id.label("jobid"),
+        )
         if self._expand and self._is_root_wf:
             sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
         elif self._expand and not self._is_root_wf:
-            sq_1 = sq_1.filter(Workflow.wf_id.in_ (self._wfs))
+            sq_1 = sq_1.filter(Workflow.wf_id.in_(self._wfs))
         else:
             sq_1 = sq_1.filter(Workflow.wf_id == self._wfs[0])
         sq_1 = sq_1.filter(Workflow.wf_id == Job.wf_id)
@@ -520,7 +569,7 @@ class StampedeStatistics(object):
             sq_1 = sq_1.filter(self._get_job_filter())
         sq_1 = sq_1.group_by(JobInstanceSub.job_id).subquery()
 
-        q = self.session.query(JobInstance.job_instance_id.label('last_job_instance'))
+        q = self.session.query(JobInstance.job_instance_id.label("last_job_instance"))
         q = q.filter(JobInstance.job_id == sq_1.c.jobid)
         q = q.filter(JobInstance.job_submit_seq == sq_1.c.jss)
         q = q.filter(JobInstance.exitcode == None)
@@ -537,7 +586,9 @@ class StampedeStatistics(object):
         Returns an appropriate subquery.
         """
         q = self.session.query(Jobstate.job_instance_id)
-        q = q.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        q = q.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(
+            JobInstance
+        )
         q = q.filter(Jobstate.state.in_(states)).subquery()
         return q
 
@@ -552,7 +603,7 @@ class StampedeStatistics(object):
         if self._expand and self._is_root_wf:
             sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
         elif self._expand and not self._is_root_wf:
-            sq_1 = sq_1.filter(Workflow.wf_id.in_ (self._wfs))
+            sq_1 = sq_1.filter(Workflow.wf_id.in_(self._wfs))
         else:
             sq_1 = sq_1.filter(Workflow.wf_id == self._wfs[0])
         sq_1 = sq_1.filter(Job.wf_id == Workflow.wf_id)
@@ -562,12 +613,11 @@ class StampedeStatistics(object):
 
         sq_1 = sq_1.subquery()
 
-
         sq_2 = self.session.query(func.count(distinct(JobInstance.job_id)))
         if self._expand and self._is_root_wf:
             sq_2 = sq_2.filter(Workflow.root_wf_id == self._root_wf_id)
         elif self._expand and not self._is_root_wf:
-            sq_2 = sq_2.filter(Workflow.wf_id.in_ (self._wfs))
+            sq_2 = sq_2.filter(Workflow.wf_id.in_(self._wfs))
         else:
             sq_2 = sq_2.filter(Workflow.wf_id == self._wfs[0])
         sq_2 = sq_2.filter(Job.wf_id == Workflow.wf_id)
@@ -577,7 +627,9 @@ class StampedeStatistics(object):
 
         sq_2 = sq_2.subquery()
 
-        q = self.session.query((sq_1.as_scalar() - sq_2.as_scalar()).label('total_job_retries'))
+        q = self.session.query(
+            (sq_1.as_scalar() - sq_2.as_scalar()).label("total_job_retries")
+        )
 
         return q.all()[0].total_job_retries
 
@@ -590,7 +642,7 @@ class StampedeStatistics(object):
         if self._expand and self._is_root_wf:
             q = q.filter(Workflow.root_wf_id == self._root_wf_id)
         elif self._expand and not self._is_root_wf:
-            q = q.filter(Workflow.wf_id.in_ (self._wfs))
+            q = q.filter(Workflow.wf_id.in_(self._wfs))
         else:
             q = q.filter(Workflow.wf_id == self._wfs[0])
         q = q.filter(Task.wf_id == Workflow.wf_id)
@@ -598,7 +650,6 @@ class StampedeStatistics(object):
         if self._get_job_filter(Task) is not None:
             q = q.filter(self._get_job_filter(Task))
         return q.count()
-
 
     def _base_task_status_query_old(self):
         """
@@ -608,18 +659,19 @@ class StampedeStatistics(object):
         # This query generation method is obsolete and is only being
         # kept for optimization reference.
 
-        WorkflowSub1 = orm.aliased(Workflow, name='WorkflowSub1')
-        JobInstanceSub1 = orm.aliased(JobInstance, name='JobInstanceSub1')
-        JobSub1 = orm.aliased(Job, name='JobSub1')
+        WorkflowSub1 = orm.aliased(Workflow, name="WorkflowSub1")
+        JobInstanceSub1 = orm.aliased(JobInstance, name="JobInstanceSub1")
+        JobSub1 = orm.aliased(Job, name="JobSub1")
 
-        sq_1 = self.session.query(WorkflowSub1.wf_id.label('wid'),
-                func.max(JobInstanceSub1.job_submit_seq).label('jss'),
-                JobInstanceSub1.job_id.label('jobid')
+        sq_1 = self.session.query(
+            WorkflowSub1.wf_id.label("wid"),
+            func.max(JobInstanceSub1.job_submit_seq).label("jss"),
+            JobInstanceSub1.job_id.label("jobid"),
         )
         if self._expand and self._is_root_wf:
             sq_1 = sq_1.filter(WorkflowSub1.root_wf_id == self._root_wf_id)
         elif self._expand and not self._is_root_wf:
-            sq_1 = sq_1.filter(WorkflowSub1.wf_id.in_ (self._wfs))
+            sq_1 = sq_1.filter(WorkflowSub1.wf_id.in_(self._wfs))
         else:
             sq_1 = sq_1.filter(WorkflowSub1.wf_id == self._wfs[0])
         sq_1 = sq_1.filter(WorkflowSub1.wf_id == JobSub1.wf_id)
@@ -629,8 +681,11 @@ class StampedeStatistics(object):
             sq_1 = sq_1.filter(self._get_job_filter(JobSub1))
         sq_1 = sq_1.subquery()
 
-        JobInstanceSub2 = orm.aliased(JobInstance, name='JobInstanceSub2')
-        sq_2 = self.session.query(sq_1.c.wid.label('wf_id'), JobInstanceSub2.job_instance_id.label('last_job_instance_id'))
+        JobInstanceSub2 = orm.aliased(JobInstance, name="JobInstanceSub2")
+        sq_2 = self.session.query(
+            sq_1.c.wid.label("wf_id"),
+            JobInstanceSub2.job_instance_id.label("last_job_instance_id"),
+        )
         sq_2 = sq_2.filter(JobInstanceSub2.job_id == sq_1.c.jobid)
         sq_2 = sq_2.filter(JobInstanceSub2.job_submit_seq == sq_1.c.jss)
         sq_2 = sq_2.subquery()
@@ -647,42 +702,49 @@ class StampedeStatistics(object):
 
         return q
 
-
     def _base_task_statistics_query(self, success=True, pmc=False):
-        w = orm.aliased(Workflow, name='w')
-        j = orm.aliased(Job, name='j')
-        ji = orm.aliased(JobInstance, name='ji')
+        w = orm.aliased(Workflow, name="w")
+        j = orm.aliased(Job, name="j")
+        ji = orm.aliased(JobInstance, name="ji")
 
-        sq_1 = self.session.query(w.wf_id,
+        sq_1 = self.session.query(
+            w.wf_id,
+            j.job_id,
+            ji.job_instance_id.label("jiid"),
+            ji.job_submit_seq.label("jss"),
+            func.max(ji.job_submit_seq).label("maxjss"),
+        )
+        if pmc:
+            sq_1 = self.session.query(
+                w.wf_id,
                 j.job_id,
-                ji.job_instance_id.label('jiid'),
-                ji.job_submit_seq.label('jss'),
-                func.max(ji.job_submit_seq).label('maxjss'))
-        if pmc :
-            sq_1 = self.session.query(w.wf_id,
-                j.job_id,
-                ji.job_instance_id.label('jiid'),
-                ji.job_submit_seq.label('jss'))
+                ji.job_instance_id.label("jiid"),
+                ji.job_submit_seq.label("jss"),
+            )
 
         sq_1 = sq_1.join(j, w.wf_id == j.wf_id)
         sq_1 = sq_1.join(ji, j.job_id == ji.job_id)
         if self._expand and self._is_root_wf:
             sq_1 = sq_1.filter(w.root_wf_id == self._root_wf_id)
         elif self._expand and not self._is_root_wf:
-            sq_1 = sq_1.filter(w.wf_id.in_ (self._wfs))
+            sq_1 = sq_1.filter(w.wf_id.in_(self._wfs))
         else:
             sq_1 = sq_1.filter(w.wf_id == self._wfs[0])
         if not pmc:
             sq_1 = sq_1.group_by(j.job_id)
         if self._get_job_filter(j) is not None:
             sq_1 = sq_1.filter(self._get_job_filter(j))
-        sq_1 = sq_1.subquery('t')
+        sq_1 = sq_1.subquery("t")
 
         # PM-713 - Change to func.count(distinct(Invocation.abs_task_id)) from func.count(Invocation.exitcode)
-        sq_2 = self.session.query(sq_1.c.wf_id, func.count(distinct(Invocation.abs_task_id)).label('count'))
-        sq_2 = sq_2.select_from(orm.join(sq_1, Invocation, sq_1.c.jiid == Invocation.job_instance_id))
+        sq_2 = self.session.query(
+            sq_1.c.wf_id, func.count(distinct(Invocation.abs_task_id)).label("count")
+        )
+        sq_2 = sq_2.select_from(
+            orm.join(sq_1, Invocation, sq_1.c.jiid == Invocation.job_instance_id)
+        )
         if not pmc:
-           sq_2 = sq_2.filter(sq_1.c.jss == sq_1.c.maxjss)
+            sq_2 = sq_2.filter(sq_1.c.jss == sq_1.c.maxjss)
 
         sq_2 = sq_2.filter(Invocation.abs_task_id != None)
         if success:
@@ -693,32 +755,34 @@ class StampedeStatistics(object):
         return sq_2
 
     def _task_statistics_query_sum(self, success=True, pmc=False):
-        s = self._base_task_statistics_query(success,pmc).subquery('tt')
-        q = self.session.query(func.sum(s.c.count).label('task_count'))
+        s = self._base_task_statistics_query(success, pmc).subquery("tt")
+        q = self.session.query(func.sum(s.c.count).label("task_count"))
         return q.one()[0] or 0
 
-    def get_total_succeeded_tasks_status(self,pmc=False):
-        return self._task_statistics_query_sum(True,pmc)
+    def get_total_succeeded_tasks_status(self, pmc=False):
+        return self._task_statistics_query_sum(True, pmc)
 
     def get_total_failed_tasks_status(self):
-        return self._task_statistics_query_sum(False,False)
+        return self._task_statistics_query_sum(False, False)
 
-    def get_task_success_report(self,pmc=False):
-        return self._base_task_statistics_query(True,pmc).all()
+    def get_task_success_report(self, pmc=False):
+        return self._base_task_statistics_query(True, pmc).all()
 
     def get_task_failure_report(self):
-        return self._base_task_statistics_query(False,False).all()
+        return self._base_task_statistics_query(False, False).all()
 
     def get_total_tasks_retries(self):
         """
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totaltaskretries
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totaltaskretries
         """
-        sq_1 = self.session.query(Workflow.wf_id.label('wid'), Invocation.abs_task_id.label('tid'))
+        sq_1 = self.session.query(
+            Workflow.wf_id.label("wid"), Invocation.abs_task_id.label("tid")
+        )
         if self._expand and self._is_root_wf:
             sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
         elif self._expand and not self._is_root_wf:
-            sq_1 = sq_1.filter(Workflow.wf_id.in_ (self._wfs))
+            sq_1 = sq_1.filter(Workflow.wf_id.in_(self._wfs))
         else:
             sq_1 = sq_1.filter(Workflow.wf_id == self._wfs[0])
         sq_1 = sq_1.filter(Job.wf_id == Workflow.wf_id)
@@ -747,9 +811,16 @@ class StampedeStatistics(object):
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Workflowwalltime
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Workflowwalltime
         """
-        q = self.session.query(Workflowstate.wf_id, Workflowstate.state, Workflowstate.timestamp,
-            Workflowstate.restart_count, Workflowstate.status)
-        q = q.filter(Workflowstate.wf_id == self._root_wf_id).order_by(Workflowstate.restart_count)
+        q = self.session.query(
+            Workflowstate.wf_id,
+            Workflowstate.state,
+            Workflowstate.timestamp,
+            Workflowstate.restart_count,
+            Workflowstate.status,
+        )
+        q = q.filter(Workflowstate.wf_id == self._root_wf_id).order_by(
+            Workflowstate.restart_count
+        )
 
         return q.all()
 
@@ -765,13 +836,42 @@ class StampedeStatistics(object):
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Workflowcumulativejobwalltime
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Workflowcumulativejobwalltime
         """
-        q = self.session.query(cast(func.sum(Invocation.remote_duration * JobInstance.multiplier_factor), Float),
-                               cast(func.sum(case([(
-                                   Invocation.exitcode == 0, Invocation.remote_duration * JobInstance.multiplier_factor
-                               )], else_=0)).label("goodput"), Float),
-                               cast(func.sum(case([(
-                                   Invocation.exitcode > 0, Invocation.remote_duration * JobInstance.multiplier_factor
-                               )], else_=0)).label("badput"), Float))
+        q = self.session.query(
+            cast(
+                func.sum(Invocation.remote_duration * JobInstance.multiplier_factor),
+                Float,
+            ),
+            cast(
+                func.sum(
+                    case(
+                        [
+                            (
+                                Invocation.exitcode == 0,
+                                Invocation.remote_duration
+                                * JobInstance.multiplier_factor,
+                            )
+                        ],
+                        else_=0,
+                    )
+                ).label("goodput"),
+                Float,
+            ),
+            cast(
+                func.sum(
+                    case(
+                        [
+                            (
+                                Invocation.exitcode > 0,
+                                Invocation.remote_duration
+                                * JobInstance.multiplier_factor,
+                            )
+                        ],
+                        else_=0,
+                    )
+                ).label("badput"),
+                Float,
+            ),
+        )
 
         q = q.filter(Invocation.task_submit_seq >= 0)
         q = q.filter(Invocation.job_instance_id == JobInstance.job_instance_id)
@@ -783,7 +883,7 @@ class StampedeStatistics(object):
         else:
             q = q.filter(Invocation.wf_id.in_(self._wfs))
 
-        q = q.filter(Invocation.transformation != 'condor::dagman')
+        q = q.filter(Invocation.transformation != "condor::dagman")
 
         return q.first()
 
@@ -794,9 +894,11 @@ class StampedeStatistics(object):
         :param file_type: file type input or output
         :return:
         """
-        q = self.session.query(IntegrityMetrics.type,
-                                func.sum(IntegrityMetrics.duration).label("duration"),
-                                func.sum(IntegrityMetrics.count).label("count"))
+        q = self.session.query(
+            IntegrityMetrics.type,
+            func.sum(IntegrityMetrics.duration).label("duration"),
+            func.sum(IntegrityMetrics.count).label("count"),
+        )
 
         q = q.group_by(IntegrityMetrics.type)
 
@@ -815,18 +917,16 @@ class StampedeStatistics(object):
         :param name:    what type of tag to aggregate on
         :return:
         """
-        q = self.session.query(Tag.name,
-                                func.sum(Tag.count).label("count"))
+        q = self.session.query(Tag.name, func.sum(Tag.count).label("count"))
 
         q = q.group_by(Tag.name)
-        q = q.filter(Tag.name == name )
+        q = q.filter(Tag.name == name)
 
         if self._expand:
             q = q.filter(Tag.wf_id == Workflow.wf_id)
             q = q.filter(Workflow.root_wf_id == self._root_wf_id)
         else:
             q = q.filter(Tag.wf_id.in_(self._wfs))
-
 
         return q.all()
 
@@ -837,15 +937,15 @@ class StampedeStatistics(object):
         :param file_type: file type input or output
         :return:
         """
-        q = self.session.query( IntegrityMetrics.type,
-                                IntegrityMetrics.file_type,
-                                func.sum(IntegrityMetrics.duration).label("duration"),
-                                func.sum(IntegrityMetrics.count).label("count"))
-
+        q = self.session.query(
+            IntegrityMetrics.type,
+            IntegrityMetrics.file_type,
+            func.sum(IntegrityMetrics.duration).label("duration"),
+            func.sum(IntegrityMetrics.count).label("count"),
+        )
 
         q = q.group_by(IntegrityMetrics.type)
         q = q.group_by(IntegrityMetrics.file_type)
-
 
         if self._expand:
             q = q.filter(IntegrityMetrics.wf_id == Workflow.wf_id)
@@ -875,14 +975,42 @@ class StampedeStatistics(object):
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Cumulativejobwalltimeasseenfromsubmitside
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Cumulativejobwalltimeasseenfromsubmitside
         """
-        q = self.session.query(cast(func.sum(JobInstance.local_duration * JobInstance.multiplier_factor), Float).label('wall_time'),
-                               cast(func.sum(case([(
-                                   JobInstance.exitcode == 0, JobInstance.local_duration * JobInstance.multiplier_factor
-                               )], else_=0)).label("goodput"), Float),
-                               cast(func.sum(case([(
-                                   JobInstance.exitcode > 0, JobInstance.local_duration * JobInstance.multiplier_factor
-                               )], else_=0)).label("badput"), Float)
-                               )
+        q = self.session.query(
+            cast(
+                func.sum(JobInstance.local_duration * JobInstance.multiplier_factor),
+                Float,
+            ).label("wall_time"),
+            cast(
+                func.sum(
+                    case(
+                        [
+                            (
+                                JobInstance.exitcode == 0,
+                                JobInstance.local_duration
+                                * JobInstance.multiplier_factor,
+                            )
+                        ],
+                        else_=0,
+                    )
+                ).label("goodput"),
+                Float,
+            ),
+            cast(
+                func.sum(
+                    case(
+                        [
+                            (
+                                JobInstance.exitcode > 0,
+                                JobInstance.local_duration
+                                * JobInstance.multiplier_factor,
+                            )
+                        ],
+                        else_=0,
+                    )
+                ).label("badput"),
+                Float,
+            ),
+        )
 
         q = q.filter(JobInstance.job_id == Job.job_id)
 
@@ -903,11 +1031,21 @@ class StampedeStatistics(object):
         """
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Workflowdetails
         """
-        q = self.session.query(Workflow.wf_id, Workflow.wf_uuid,
-            Workflow.parent_wf_id, Workflow.root_wf_id, Workflow.dag_file_name,
-            Workflow.submit_hostname, Workflow.submit_dir, Workflow.planner_arguments,
-            Workflow.user, Workflow.grid_dn, Workflow.planner_version,
-            Workflow.dax_label, Workflow.dax_version)
+        q = self.session.query(
+            Workflow.wf_id,
+            Workflow.wf_uuid,
+            Workflow.parent_wf_id,
+            Workflow.root_wf_id,
+            Workflow.dag_file_name,
+            Workflow.submit_hostname,
+            Workflow.submit_dir,
+            Workflow.planner_arguments,
+            Workflow.user,
+            Workflow.grid_dn,
+            Workflow.planner_version,
+            Workflow.dax_label,
+            Workflow.dax_version,
+        )
         q = q.filter(Workflow.wf_id.in_(self._wfs))
         return q.all()
 
@@ -915,7 +1053,7 @@ class StampedeStatistics(object):
         """
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Workflowretries
         """
-        sq_1 = self.session.query(func.max(Workflowstate.restart_count).label('retry'))
+        sq_1 = self.session.query(func.max(Workflowstate.restart_count).label("retry"))
         if self._expand and self._is_root_wf:
             sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
         else:
@@ -924,7 +1062,7 @@ class StampedeStatistics(object):
         sq_1 = sq_1.group_by(Workflowstate.wf_id)
         sq_1 = sq_1.subquery()
 
-        q = self.session.query(func.sum(sq_1.c.retry).label('total_retry'))
+        q = self.session.query(func.sum(sq_1.c.retry).label("total_retry"))
         return q.one().total_retry
 
     #
@@ -940,84 +1078,124 @@ class StampedeStatistics(object):
         if self._expand:
             return []
         sq_1 = self.session.query(func.min(Jobstate.timestamp))
-        sq_1 = sq_1.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
-        sq_1 = sq_1.filter(or_(Jobstate.state == 'GRID_SUBMIT', Jobstate.state == 'GLOBUS_SUBMIT',
-                                Jobstate.state == 'EXECUTE'))
+        sq_1 = sq_1.filter(
+            Jobstate.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
+        sq_1 = sq_1.filter(
+            or_(
+                Jobstate.state == "GRID_SUBMIT",
+                Jobstate.state == "GLOBUS_SUBMIT",
+                Jobstate.state == "EXECUTE",
+            )
+        )
         sq_1 = sq_1.subquery()
 
         sq_2 = self.session.query(Jobstate.timestamp)
-        sq_2 = sq_2.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
-        sq_2 = sq_2.filter(Jobstate.state == 'SUBMIT')
+        sq_2 = sq_2.filter(
+            Jobstate.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
+        sq_2 = sq_2.filter(Jobstate.state == "SUBMIT")
         sq_2 = sq_2.subquery()
 
         sq_3 = self.session.query(func.min(Jobstate.timestamp))
-        sq_3 = sq_3.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
-        sq_3 = sq_3.filter(Jobstate.state == 'EXECUTE')
+        sq_3 = sq_3.filter(
+            Jobstate.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
+        sq_3 = sq_3.filter(Jobstate.state == "EXECUTE")
         sq_3 = sq_3.subquery()
 
         sq_4 = self.session.query(func.min(Jobstate.timestamp))
-        sq_4 = sq_4.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
-        sq_4 = sq_4.filter(or_(Jobstate.state == 'GRID_SUBMIT', Jobstate.state == 'GLOBUS_SUBMIT'))
+        sq_4 = sq_4.filter(
+            Jobstate.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
+        sq_4 = sq_4.filter(
+            or_(Jobstate.state == "GRID_SUBMIT", Jobstate.state == "GLOBUS_SUBMIT")
+        )
         sq_4 = sq_4.subquery()
 
         sq_5 = self.session.query(func.sum(Invocation.remote_duration))
-        sq_5 = sq_5.filter(Invocation.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_5 = sq_5.filter(
+            Invocation.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
         sq_5 = sq_5.filter(Invocation.wf_id == Job.wf_id).correlate(Job)
         sq_5 = sq_5.filter(Invocation.task_submit_seq >= 0)
         sq_5 = sq_5.group_by().subquery()
 
         sq_6 = self.session.query(Jobstate.timestamp)
-        sq_6 = sq_6.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
-        sq_6 = sq_6.filter(Jobstate.state == 'POST_SCRIPT_TERMINATED')
+        sq_6 = sq_6.filter(
+            Jobstate.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
+        sq_6 = sq_6.filter(Jobstate.state == "POST_SCRIPT_TERMINATED")
         sq_6 = sq_6.subquery()
 
         sq_7 = self.session.query(func.max(Jobstate.timestamp))
-        sq_7 = sq_7.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
-        sq_7 = sq_7.filter(or_(Jobstate.state == 'POST_SCRIPT_STARTED', Jobstate.state == 'JOB_TERMINATED'))
+        sq_7 = sq_7.filter(
+            Jobstate.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
+        sq_7 = sq_7.filter(
+            or_(
+                Jobstate.state == "POST_SCRIPT_STARTED",
+                Jobstate.state == "JOB_TERMINATED",
+            )
+        )
         sq_7 = sq_7.subquery()
 
         sq_8 = self.session.query(func.max(Invocation.exitcode))
-        sq_8 = sq_8.filter(Invocation.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_8 = sq_8.filter(
+            Invocation.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
         sq_8 = sq_8.filter(Invocation.wf_id == Job.wf_id).correlate(Job)
-        #PM-704 the task submit sequence needs to be >= -1 to include prescript status
+        # PM-704 the task submit sequence needs to be >= -1 to include prescript status
         sq_8 = sq_8.filter(Invocation.task_submit_seq >= -1)
         sq_8 = sq_8.group_by().subquery()
 
         JobInstanceSub = orm.aliased(JobInstance)
 
         sq_9 = self.session.query(Host.hostname)
-        sq_9 = sq_9.filter(JobInstanceSub.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_9 = sq_9.filter(
+            JobInstanceSub.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
         sq_9 = sq_9.filter(Host.host_id == JobInstanceSub.host_id)
         sq_9 = sq_9.subquery()
 
         JI = orm.aliased(JobInstance)
-        sq_10 = self.session.query(func.sum(Invocation.remote_duration * JI.multiplier_factor))
-        sq_10 = sq_10.filter(Invocation.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_10 = self.session.query(
+            func.sum(Invocation.remote_duration * JI.multiplier_factor)
+        )
+        sq_10 = sq_10.filter(
+            Invocation.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
         sq_10 = sq_10.filter(Invocation.job_instance_id == JI.job_instance_id)
         sq_10 = sq_10.filter(Invocation.wf_id == Job.wf_id).correlate(Job)
         sq_10 = sq_10.filter(Invocation.task_submit_seq >= 0)
         sq_10 = sq_10.group_by().subquery()
 
         sq_11 = self.session.query(func.sum(Invocation.remote_cpu_time))
-        sq_11 = sq_11.filter(Invocation.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_11 = sq_11.filter(
+            Invocation.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
         sq_11 = sq_11.filter(Invocation.wf_id == Job.wf_id).correlate(Job)
         sq_11 = sq_11.filter(Invocation.task_submit_seq >= 0)
         sq_11 = sq_11.group_by().subquery()
 
-
-        q = self.session.query(Job.job_id, JobInstance.job_instance_id, JobInstance.job_submit_seq,
-            Job.exec_job_id.label('job_name'), JobInstance.site,
-            cast(sq_1.as_scalar() - sq_2.as_scalar(), Float).label('condor_q_time'),
-            cast(sq_3.as_scalar() - sq_4.as_scalar(), Float).label('resource_delay'),
-            cast(JobInstance.local_duration, Float).label('runtime'),
-            cast(sq_5.as_scalar(), Float).label('kickstart'),
-            cast(sq_6.as_scalar() - sq_7.as_scalar(), Float).label('post_time'),
-            cast(JobInstance.cluster_duration, Float).label('seqexec'),
-            sq_8.as_scalar().label('exit_code'),
-            sq_9.as_scalar().label('host_name'),
+        q = self.session.query(
+            Job.job_id,
+            JobInstance.job_instance_id,
+            JobInstance.job_submit_seq,
+            Job.exec_job_id.label("job_name"),
+            JobInstance.site,
+            cast(sq_1.as_scalar() - sq_2.as_scalar(), Float).label("condor_q_time"),
+            cast(sq_3.as_scalar() - sq_4.as_scalar(), Float).label("resource_delay"),
+            cast(JobInstance.local_duration, Float).label("runtime"),
+            cast(sq_5.as_scalar(), Float).label("kickstart"),
+            cast(sq_6.as_scalar() - sq_7.as_scalar(), Float).label("post_time"),
+            cast(JobInstance.cluster_duration, Float).label("seqexec"),
+            sq_8.as_scalar().label("exit_code"),
+            sq_9.as_scalar().label("host_name"),
             JobInstance.multiplier_factor,
-            cast(sq_10.as_scalar(), Float).label('kickstart_multi'),
-            sq_11.as_scalar().label('remote_cpu_time'))
+            cast(sq_10.as_scalar(), Float).label("kickstart_multi"),
+            sq_11.as_scalar().label("remote_cpu_time"),
+        )
         q = q.filter(JobInstance.job_id == Job.job_id)
         q = q.filter(Job.wf_id.in_(self._wfs))
         q = q.order_by(JobInstance.job_submit_seq)
@@ -1028,11 +1206,13 @@ class StampedeStatistics(object):
         sq = None
         if not function:
             sq = self.session.query(Jobstate.timestamp)
-        elif function == 'max':
+        elif function == "max":
             sq = self.session.query(func.max(Jobstate.timestamp))
-        elif function == 'min':
+        elif function == "min":
             sq = self.session.query(func.min(Jobstate.timestamp))
-        sq = sq.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq = sq.filter(
+            Jobstate.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
         sq = sq.filter(Jobstate.state.in_(states)).subquery()
         return sq
 
@@ -1042,70 +1222,97 @@ class StampedeStatistics(object):
         """
         if self._expand:
             return []
-        sq_1 = self.session.query(Host.hostname).filter(Host.host_id == JobInstance.host_id).correlate(JobInstance).subquery()
-        #select min(timestamp) from jobstate where job_instance_id = jb_inst.job_instance_id
+        sq_1 = (
+            self.session.query(Host.hostname)
+            .filter(Host.host_id == JobInstance.host_id)
+            .correlate(JobInstance)
+            .subquery()
+        )
+        # select min(timestamp) from jobstate where job_instance_id = jb_inst.job_instance_id
         # ) as jobS ,
-        #(
-        #select max(timestamp)-min(timestamp) from jobstate where job_instance_id = jb_inst.job_instance_id
+        # (
+        # select max(timestamp)-min(timestamp) from jobstate where job_instance_id = jb_inst.job_instance_id
         # ) as jobDuration,
 
         sq_jobS = self.session.query(func.min(Jobstate.timestamp))
-        sq_jobS = sq_jobS.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance).subquery()
+        sq_jobS = (
+            sq_jobS.filter(Jobstate.job_instance_id == JobInstance.job_instance_id)
+            .correlate(JobInstance)
+            .subquery()
+        )
 
-        sq_jobD = self.session.query(func.max(Jobstate.timestamp) - func.min(Jobstate.timestamp))
-        sq_jobD = sq_jobD.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance).subquery()
+        sq_jobD = self.session.query(
+            func.max(Jobstate.timestamp) - func.min(Jobstate.timestamp)
+        )
+        sq_jobD = (
+            sq_jobD.filter(Jobstate.job_instance_id == JobInstance.job_instance_id)
+            .correlate(JobInstance)
+            .subquery()
+        )
 
-        sq_2 = self._state_sub_q(['PRE_SCRIPT_STARTED'])
-        sq_3 = self._state_sub_q(['PRE_SCRIPT_TERMINATED'])
-        sq_4 = self._state_sub_q(['PRE_SCRIPT_STARTED'])
-        sq_5 = self._state_sub_q(['SUBMIT'])
-        sq_6 = self._state_sub_q(['JOB_TERMINATED'])
-        sq_7 = self._state_sub_q(['GRID_SUBMIT', 'GLOBUS_SUBMIT'], 'max')
-        sq_8 = self._state_sub_q(['EXECUTE'], 'min')
-        sq_9 = self._state_sub_q(['EXECUTE', 'SUBMIT'], 'max')
-        sq_10 = self._state_sub_q(['JOB_TERMINATED'])
+        sq_2 = self._state_sub_q(["PRE_SCRIPT_STARTED"])
+        sq_3 = self._state_sub_q(["PRE_SCRIPT_TERMINATED"])
+        sq_4 = self._state_sub_q(["PRE_SCRIPT_STARTED"])
+        sq_5 = self._state_sub_q(["SUBMIT"])
+        sq_6 = self._state_sub_q(["JOB_TERMINATED"])
+        sq_7 = self._state_sub_q(["GRID_SUBMIT", "GLOBUS_SUBMIT"], "max")
+        sq_8 = self._state_sub_q(["EXECUTE"], "min")
+        sq_9 = self._state_sub_q(["EXECUTE", "SUBMIT"], "max")
+        sq_10 = self._state_sub_q(["JOB_TERMINATED"])
 
         sq_11 = self.session.query(func.min(Invocation.start_time))
-        sq_11 = sq_11.filter(Invocation.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_11 = sq_11.filter(
+            Invocation.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
         sq_11 = sq_11.filter(Invocation.wf_id == Job.wf_id).correlate(Job)
         sq_11 = sq_11.filter(Invocation.task_submit_seq >= 0)
         sq_11 = sq_11.group_by(Invocation.job_instance_id).subquery()
 
         sq_12 = self.session.query(func.sum(Invocation.remote_duration))
-        sq_12 = sq_12.filter(Invocation.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_12 = sq_12.filter(
+            Invocation.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
         sq_12 = sq_12.filter(Invocation.wf_id == Job.wf_id).correlate(Job)
         sq_12 = sq_12.filter(Invocation.task_submit_seq >= 0)
         sq_12 = sq_12.group_by(Invocation.job_instance_id).subquery()
 
-        sq_13 = self._state_sub_q(['POST_SCRIPT_STARTED', 'JOB_TERMINATED'], 'max')
-        sq_14 = self._state_sub_q(['POST_SCRIPT_TERMINATED'])
+        sq_13 = self._state_sub_q(["POST_SCRIPT_STARTED", "JOB_TERMINATED"], "max")
+        sq_14 = self._state_sub_q(["POST_SCRIPT_TERMINATED"])
 
-        sq_15 = self.session.query(func.group_concat(func.distinct(Invocation.transformation)))
+        sq_15 = self.session.query(
+            func.group_concat(func.distinct(Invocation.transformation))
+        )
         sq_15 = sq_15.filter(Invocation.wf_id.in_(self._wfs))
-        sq_15 = sq_15.filter(Invocation.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
-        sq_15 = sq_15.filter(Invocation.transformation != 'dagman::post')
-        sq_15 = sq_15.filter(Invocation.transformation != 'dagman::pre')
+        sq_15 = sq_15.filter(
+            Invocation.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
+        sq_15 = sq_15.filter(Invocation.transformation != "dagman::post")
+        sq_15 = sq_15.filter(Invocation.transformation != "dagman::pre")
         sq_15 = sq_15.subquery()
 
-        q = self.session.query(Job.job_id, JobInstance.job_instance_id, JobInstance.job_submit_seq,
-                Job.exec_job_id.label('job_name'), JobInstance.site,
-                sq_1.as_scalar().label('host_name'),
-                cast(sq_jobS.as_scalar(), Float).label('jobS'),
-                cast(sq_jobD.as_scalar(), Float).label('jobDuration'),
-                cast(sq_2.as_scalar(), Float).label('pre_start'),
-                cast(sq_3.as_scalar() - sq_4.as_scalar(), Float).label('pre_duration'),
-                cast(sq_5.as_scalar(), Float).label('condor_start'),
-                cast(sq_6.as_scalar() - sq_5.as_scalar(), Float).label('condor_duration'),
-                cast(sq_7.as_scalar(), Float).label('grid_start'),
-                cast(sq_8.as_scalar() - sq_7.as_scalar(), Float).label('grid_duration'),
-                cast(sq_9.as_scalar(), Float).label('exec_start'),
-                cast(sq_10.as_scalar() - sq_9.as_scalar(), Float).label('exec_duration'),
-                cast(sq_11.as_scalar(), Float).label('kickstart_start'),
-                cast(sq_12.as_scalar(), Float).label('kickstart_duration'),
-                cast(sq_13.as_scalar(), Float).label('post_start'),
-                cast(sq_14.as_scalar() - sq_13.as_scalar(), Float).label('post_duration'),
-                sq_15.as_scalar().label('transformation')
-                )
+        q = self.session.query(
+            Job.job_id,
+            JobInstance.job_instance_id,
+            JobInstance.job_submit_seq,
+            Job.exec_job_id.label("job_name"),
+            JobInstance.site,
+            sq_1.as_scalar().label("host_name"),
+            cast(sq_jobS.as_scalar(), Float).label("jobS"),
+            cast(sq_jobD.as_scalar(), Float).label("jobDuration"),
+            cast(sq_2.as_scalar(), Float).label("pre_start"),
+            cast(sq_3.as_scalar() - sq_4.as_scalar(), Float).label("pre_duration"),
+            cast(sq_5.as_scalar(), Float).label("condor_start"),
+            cast(sq_6.as_scalar() - sq_5.as_scalar(), Float).label("condor_duration"),
+            cast(sq_7.as_scalar(), Float).label("grid_start"),
+            cast(sq_8.as_scalar() - sq_7.as_scalar(), Float).label("grid_duration"),
+            cast(sq_9.as_scalar(), Float).label("exec_start"),
+            cast(sq_10.as_scalar() - sq_9.as_scalar(), Float).label("exec_duration"),
+            cast(sq_11.as_scalar(), Float).label("kickstart_start"),
+            cast(sq_12.as_scalar(), Float).label("kickstart_duration"),
+            cast(sq_13.as_scalar(), Float).label("post_start"),
+            cast(sq_14.as_scalar() - sq_13.as_scalar(), Float).label("post_duration"),
+            sq_15.as_scalar().label("transformation"),
+        )
         q = q.filter(JobInstance.job_id == Job.job_id)
         q = q.filter(Job.wf_id.in_(self._wfs))
         q = q.order_by(JobInstance.job_submit_seq)
@@ -1123,7 +1330,6 @@ class StampedeStatistics(object):
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(self._dax_or_dag_cond())
         return q.all()
-
 
     def get_failed_job_instances(self):
         """
@@ -1144,9 +1350,13 @@ class StampedeStatistics(object):
         d_or_d = self._dax_or_dag_cond()
 
         if not final:
-            q = self.session.query(JobInstance.job_instance_id, JobInstance.job_submit_seq)
+            q = self.session.query(
+                JobInstance.job_instance_id, JobInstance.job_submit_seq
+            )
         else:
-            q = self.session.query(JobInstance.job_instance_id, func.max(JobInstance.job_submit_seq))
+            q = self.session.query(
+                JobInstance.job_instance_id, func.max(JobInstance.job_submit_seq)
+            )
         q = q.filter(Job.wf_id.in_(self._wfs))
         q = q.filter(Job.job_id == JobInstance.job_id)
         if not all_jobs:
@@ -1167,7 +1377,9 @@ class StampedeStatistics(object):
             return []
 
         sq_0 = self.session.query(Workflow.submit_dir)
-        sq_0 = sq_0.filter(Workflow.wf_id == JobInstance.subwf_id).correlate(JobInstance)
+        sq_0 = sq_0.filter(Workflow.wf_id == JobInstance.subwf_id).correlate(
+            JobInstance
+        )
         sq_0 = sq_0.subquery()
 
         sq_1 = self.session.query(Job.exec_job_id)
@@ -1189,22 +1401,30 @@ class StampedeStatistics(object):
         sq_5 = self.session.query(Workflow.submit_dir)
         sq_5 = sq_5.filter(Workflow.wf_id == self._root_wf_id).subquery()
 
-        sq_6 = self.session.query(func.max(Jobstate.jobstate_submit_seq).label('max_job_submit_seq'))
+        sq_6 = self.session.query(
+            func.max(Jobstate.jobstate_submit_seq).label("max_job_submit_seq")
+        )
         sq_6 = sq_6.filter(Jobstate.job_instance_id == job_instance_id)
         sq_6 = sq_6.subquery()
 
         sq_7 = self.session.query(Jobstate.state)
-        sq_7 = sq_7.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_7 = sq_7.filter(
+            Jobstate.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
         sq_7 = sq_7.filter(Jobstate.jobstate_submit_seq == sq_6.as_scalar())
         sq_7 = sq_7.subquery()
 
         sq_8 = self.session.query(Invocation.executable)
-        sq_8 = sq_8.filter(Invocation.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_8 = sq_8.filter(
+            Invocation.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
         sq_8 = sq_8.filter(Invocation.task_submit_seq == -1)
         sq_8 = sq_8.subquery()
 
         sq_9 = self.session.query(Invocation.argv)
-        sq_9 = sq_9.filter(Invocation.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_9 = sq_9.filter(
+            Invocation.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
         sq_9 = sq_9.filter(Invocation.task_submit_seq == -1)
         sq_9 = sq_9.subquery()
 
@@ -1212,19 +1432,25 @@ class StampedeStatistics(object):
         sq_10 = sq_10.filter(Host.host_id == JobInstance.host_id).correlate(JobInstance)
         sq_10 = sq_10.subquery()
 
-        q = self.session.query(JobInstance.job_instance_id, JobInstance.site, JobInstance.stdout_file, JobInstance.stderr_file,
-                JobInstance.stdout_text, JobInstance.stderr_text, JobInstance.work_dir,
-                sq_0.as_scalar().label('subwf_dir'),
-                sq_1.as_scalar().label('job_name'),
-                sq_2.as_scalar().label('submit_file'),
-                sq_3.as_scalar().label('executable'),
-                sq_4.as_scalar().label('argv'),
-                sq_5.as_scalar().label('submit_dir'),
-                sq_7.as_scalar().label('state'),
-                sq_8.as_scalar().label('pre_executable'),
-                sq_9.as_scalar().label('pre_argv'),
-                sq_10.as_scalar().label('hostname')
-                )
+        q = self.session.query(
+            JobInstance.job_instance_id,
+            JobInstance.site,
+            JobInstance.stdout_file,
+            JobInstance.stderr_file,
+            JobInstance.stdout_text,
+            JobInstance.stderr_text,
+            JobInstance.work_dir,
+            sq_0.as_scalar().label("subwf_dir"),
+            sq_1.as_scalar().label("job_name"),
+            sq_2.as_scalar().label("submit_file"),
+            sq_3.as_scalar().label("executable"),
+            sq_4.as_scalar().label("argv"),
+            sq_5.as_scalar().label("submit_dir"),
+            sq_7.as_scalar().label("state"),
+            sq_8.as_scalar().label("pre_executable"),
+            sq_9.as_scalar().label("pre_argv"),
+            sq_10.as_scalar().label("hostname"),
+        )
 
         if job_instance_id:
             q = q.filter(JobInstance.job_instance_id == job_instance_id)
@@ -1239,8 +1465,14 @@ class StampedeStatistics(object):
         if self._expand or not ji_id:
             return []
 
-        q = self.session.query(Invocation.task_submit_seq, Invocation.exitcode,
-                Invocation.executable, Invocation.argv, Invocation.transformation, Invocation.abs_task_id)
+        q = self.session.query(
+            Invocation.task_submit_seq,
+            Invocation.exitcode,
+            Invocation.executable,
+            Invocation.argv,
+            Invocation.transformation,
+            Invocation.abs_task_id,
+        )
         q = q.filter(Invocation.job_instance_id == ji_id)
         q = q.filter(Invocation.wf_id.in_(self._wfs))
 
@@ -1252,8 +1484,12 @@ class StampedeStatistics(object):
         """
         if self._expand:
             return []
-        q = self.session.query(Job.job_id, JobInstance.job_instance_id, JobInstance.job_submit_seq,
-            Job.exec_job_id.label('job_name'))
+        q = self.session.query(
+            Job.job_id,
+            JobInstance.job_instance_id,
+            JobInstance.job_submit_seq,
+            Job.exec_job_id.label("job_name"),
+        )
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(Job.wf_id.in_(self._wfs)).order_by(JobInstance.job_submit_seq)
         return q.all()
@@ -1264,8 +1500,12 @@ class StampedeStatistics(object):
         """
         if self._expand:
             return []
-        q = self.session.query(Job.job_id, JobInstance.job_instance_id, JobInstance.job_submit_seq,
-            JobInstance.site)
+        q = self.session.query(
+            Job.job_id,
+            JobInstance.job_instance_id,
+            JobInstance.job_submit_seq,
+            JobInstance.site,
+        )
         q = q.filter(Job.wf_id.in_(self._wfs))
         q = q.filter(Job.job_id == JobInstance.job_id).group_by(Job.job_id)
         q = q.order_by(JobInstance.job_submit_seq)
@@ -1278,16 +1518,23 @@ class StampedeStatistics(object):
         if self._expand:
             return []
 
-
-        sq_1 = self.session.query(func.sum(Invocation.remote_duration * JobInstance.multiplier_factor))
-        sq_1 = sq_1.filter(Invocation.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_1 = self.session.query(
+            func.sum(Invocation.remote_duration * JobInstance.multiplier_factor)
+        )
+        sq_1 = sq_1.filter(
+            Invocation.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
         sq_1 = sq_1.filter(Invocation.wf_id == Job.wf_id).correlate(Job)
         sq_1 = sq_1.filter(Invocation.task_submit_seq >= 0)
         sq_1 = sq_1.group_by(Invocation.job_instance_id)
         sq_1 = sq_1.subquery()
 
-        q = self.session.query(Job.job_id, JobInstance.job_instance_id, JobInstance.job_submit_seq,
-            cast(sq_1.as_scalar(), Float).label('kickstart'))
+        q = self.session.query(
+            Job.job_id,
+            JobInstance.job_instance_id,
+            JobInstance.job_submit_seq,
+            cast(sq_1.as_scalar(), Float).label("kickstart"),
+        )
         q = q.filter(JobInstance.job_id == Job.job_id)
         q = q.filter(Job.wf_id.in_(self._wfs))
         q = q.order_by(JobInstance.job_submit_seq)
@@ -1300,8 +1547,12 @@ class StampedeStatistics(object):
         if self._expand:
             return []
 
-        q = self.session.query(Job.job_id, JobInstance.job_instance_id, JobInstance.job_submit_seq,
-            JobInstance.local_duration.label('runtime'))
+        q = self.session.query(
+            Job.job_id,
+            JobInstance.job_instance_id,
+            JobInstance.job_submit_seq,
+            JobInstance.local_duration.label("runtime"),
+        )
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(Job.wf_id.in_(self._wfs))
         q = q.group_by(Job.job_id).order_by(JobInstance.job_submit_seq)
@@ -1314,8 +1565,12 @@ class StampedeStatistics(object):
         """
         if self._expand:
             return []
-        q = self.session.query(Job.job_id, JobInstance.job_instance_id, JobInstance.job_submit_seq,
-            JobInstance.cluster_duration)
+        q = self.session.query(
+            Job.job_id,
+            JobInstance.job_instance_id,
+            JobInstance.job_submit_seq,
+            JobInstance.cluster_duration,
+        )
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(Job.wf_id.in_(self._wfs))
         q = q.filter(Job.clustered != 0)
@@ -1331,18 +1586,31 @@ class StampedeStatistics(object):
             return []
 
         sq_1 = self.session.query(func.min(Jobstate.timestamp))
-        sq_1 = sq_1.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
-        sq_1 = sq_1.filter(or_(Jobstate.state == 'GRID_SUBMIT', Jobstate.state == 'GLOBUS_SUBMIT',
-                                Jobstate.state == 'EXECUTE'))
+        sq_1 = sq_1.filter(
+            Jobstate.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
+        sq_1 = sq_1.filter(
+            or_(
+                Jobstate.state == "GRID_SUBMIT",
+                Jobstate.state == "GLOBUS_SUBMIT",
+                Jobstate.state == "EXECUTE",
+            )
+        )
         sq_1 = sq_1.subquery()
 
         sq_2 = self.session.query(Jobstate.timestamp)
-        sq_2 = sq_2.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
-        sq_2 = sq_2.filter(Jobstate.state == 'SUBMIT')
+        sq_2 = sq_2.filter(
+            Jobstate.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
+        sq_2 = sq_2.filter(Jobstate.state == "SUBMIT")
         sq_2 = sq_2.subquery()
 
-        q = self.session.query(Job.job_id, JobInstance.job_instance_id, JobInstance.job_submit_seq,
-                cast(sq_1.as_scalar() - sq_2.as_scalar(), Float).label('condor_q_time'))
+        q = self.session.query(
+            Job.job_id,
+            JobInstance.job_instance_id,
+            JobInstance.job_submit_seq,
+            cast(sq_1.as_scalar() - sq_2.as_scalar(), Float).label("condor_q_time"),
+        )
         q = q.filter(JobInstance.job_id == Job.job_id)
         q = q.filter(Job.wf_id.in_(self._wfs))
         q = q.order_by(JobInstance.job_submit_seq)
@@ -1357,17 +1625,27 @@ class StampedeStatistics(object):
             return []
 
         sq_1 = self.session.query(func.min(Jobstate.timestamp))
-        sq_1 = sq_1.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
-        sq_1 = sq_1.filter(Jobstate.state == 'EXECUTE')
+        sq_1 = sq_1.filter(
+            Jobstate.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
+        sq_1 = sq_1.filter(Jobstate.state == "EXECUTE")
         sq_1 = sq_1.subquery()
 
         sq_2 = self.session.query(Jobstate.timestamp)
-        sq_2 = sq_2.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
-        sq_2 = sq_2.filter(or_(Jobstate.state == 'GRID_SUBMIT', Jobstate.state == 'GLOBUS_SUBMIT'))
+        sq_2 = sq_2.filter(
+            Jobstate.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
+        sq_2 = sq_2.filter(
+            or_(Jobstate.state == "GRID_SUBMIT", Jobstate.state == "GLOBUS_SUBMIT")
+        )
         sq_2 = sq_2.subquery()
 
-        q = self.session.query(Job.job_id, JobInstance.job_instance_id, JobInstance.job_submit_seq,
-                cast(sq_1.as_scalar() - sq_2.as_scalar(), Float).label('resource_delay'))
+        q = self.session.query(
+            Job.job_id,
+            JobInstance.job_instance_id,
+            JobInstance.job_submit_seq,
+            cast(sq_1.as_scalar() - sq_2.as_scalar(), Float).label("resource_delay"),
+        )
         q = q.filter(JobInstance.job_id == Job.job_id)
         q = q.filter(Job.wf_id.in_(self._wfs))
         q = q.order_by(JobInstance.job_submit_seq)
@@ -1382,23 +1660,35 @@ class StampedeStatistics(object):
             return []
 
         sq_1 = self.session.query(Jobstate.timestamp)
-        sq_1 = sq_1.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
-        sq_1 = sq_1.filter(Jobstate.state == 'POST_SCRIPT_TERMINATED')
+        sq_1 = sq_1.filter(
+            Jobstate.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
+        sq_1 = sq_1.filter(Jobstate.state == "POST_SCRIPT_TERMINATED")
         sq_1 = sq_1.subquery()
 
         sq_2 = self.session.query(func.max(Jobstate.timestamp))
-        sq_2 = sq_2.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
-        sq_2 = sq_2.filter(or_(Jobstate.state == 'POST_SCRIPT_STARTED', Jobstate.state == 'JOB_TERMINATED'))
+        sq_2 = sq_2.filter(
+            Jobstate.job_instance_id == JobInstance.job_instance_id
+        ).correlate(JobInstance)
+        sq_2 = sq_2.filter(
+            or_(
+                Jobstate.state == "POST_SCRIPT_STARTED",
+                Jobstate.state == "JOB_TERMINATED",
+            )
+        )
         sq_2 = sq_2.subquery()
 
-        q = self.session.query(Job.job_id, JobInstance.job_instance_id, JobInstance.job_submit_seq,
-                cast(sq_1.as_scalar() - sq_2.as_scalar(), Float).label('post_time'))
+        q = self.session.query(
+            Job.job_id,
+            JobInstance.job_instance_id,
+            JobInstance.job_submit_seq,
+            cast(sq_1.as_scalar() - sq_2.as_scalar(), Float).label("post_time"),
+        )
         q = q.filter(JobInstance.job_id == Job.job_id)
         q = q.filter(Job.wf_id.in_(self._wfs))
         q = q.order_by(JobInstance.job_submit_seq)
 
         return q.all()
-
 
     #
     # This query documented:
@@ -1419,14 +1709,32 @@ class StampedeStatistics(object):
         invoc.job_instance_id = ji.job_instance_id and
         invoc.wf_id IN (1,2,3) GROUP BY transformation
         """
-        q = self.session.query(Invocation.transformation,
-                func.count(Invocation.invocation_id).label('count'),
-                cast(func.min(Invocation.remote_duration * JobInstance.multiplier_factor), Float).label('min'),
-                func.count(case([(Invocation.exitcode == 0, Invocation.exitcode)])).label('success'),
-                func.count(case([(Invocation.exitcode != 0, Invocation.exitcode)])).label('failure'),
-                cast(func.max(Invocation.remote_duration * JobInstance.multiplier_factor), Float).label('max'),
-                cast(func.avg(Invocation.remote_duration * JobInstance.multiplier_factor), Float).label('avg'),
-                cast(func.sum(Invocation.remote_duration * JobInstance.multiplier_factor), Float).label('sum'))
+        q = self.session.query(
+            Invocation.transformation,
+            func.count(Invocation.invocation_id).label("count"),
+            cast(
+                func.min(Invocation.remote_duration * JobInstance.multiplier_factor),
+                Float,
+            ).label("min"),
+            func.count(case([(Invocation.exitcode == 0, Invocation.exitcode)])).label(
+                "success"
+            ),
+            func.count(case([(Invocation.exitcode != 0, Invocation.exitcode)])).label(
+                "failure"
+            ),
+            cast(
+                func.max(Invocation.remote_duration * JobInstance.multiplier_factor),
+                Float,
+            ).label("max"),
+            cast(
+                func.avg(Invocation.remote_duration * JobInstance.multiplier_factor),
+                Float,
+            ).label("avg"),
+            cast(
+                func.sum(Invocation.remote_duration * JobInstance.multiplier_factor),
+                Float,
+            ).label("sum"),
+        )
         q = q.filter(Invocation.job_instance_id == JobInstance.job_instance_id)
         q = q.filter(Invocation.wf_id.in_(self._wfs))
         q = q.group_by(Invocation.transformation)
@@ -1439,18 +1747,13 @@ class StampedeStatistics(object):
     #
 
     def _get_date_divisors(self):
-        vals = {
-        'month': 2629743,
-        'week': 604800,
-        'day': 86400,
-        'hour': 3600
-        }
+        vals = {"month": 2629743, "week": 604800, "day": 86400, "hour": 3600}
         return vals[self._time_filter_mode]
 
     def _get_host_filter(self):
         if self._host_filter == None:
             return None
-        elif isinstance(self._host_filter, type('str')):
+        elif isinstance(self._host_filter, type("str")):
             return Host.hostname == self._host_filter
         elif isinstance(self._host_filter, type([])):
             return Host.hostname.in_(self._host_filter)
@@ -1458,25 +1761,33 @@ class StampedeStatistics(object):
             return None
 
     def _get_xform_filter(self):
-        if self._xform_filter['include'] != None and \
-            self._xform_filter['exclude'] != None:
-            self.log.error('Can\'t set both transform include and exclude - reset s.set_transformation_filter()')
+        if (
+            self._xform_filter["include"] != None
+            and self._xform_filter["exclude"] != None
+        ):
+            self.log.error(
+                "Can't set both transform include and exclude - reset s.set_transformation_filter()"
+            )
             return None
-        elif self._xform_filter['include'] == None and \
-            self._xform_filter['exclude'] == None:
+        elif (
+            self._xform_filter["include"] == None
+            and self._xform_filter["exclude"] == None
+        ):
             return None
-        elif self._xform_filter['include'] != None:
-            if isinstance(self._xform_filter['include'], type('str')):
-                return Invocation.transformation == self._xform_filter['include']
-            elif isinstance(self._xform_filter['include'], type([])):
-                return Invocation.transformation.in_(self._xform_filter['include'])
+        elif self._xform_filter["include"] != None:
+            if isinstance(self._xform_filter["include"], type("str")):
+                return Invocation.transformation == self._xform_filter["include"]
+            elif isinstance(self._xform_filter["include"], type([])):
+                return Invocation.transformation.in_(self._xform_filter["include"])
             else:
                 return None
-        elif self._xform_filter['exclude'] != None:
-            if isinstance(self._xform_filter['exclude'], type('str')):
-                return Invocation.transformation != self._xform_filter['exclude']
-            elif isinstance(self._xform_filter['exclude'], type([])):
-                return not_(Invocation.transformation.in_(self._xform_filter['exclude']))
+        elif self._xform_filter["exclude"] != None:
+            if isinstance(self._xform_filter["exclude"], type("str")):
+                return Invocation.transformation != self._xform_filter["exclude"]
+            elif isinstance(self._xform_filter["exclude"], type([])):
+                return not_(
+                    Invocation.transformation.in_(self._xform_filter["exclude"])
+                )
             else:
                 return None
         else:
@@ -1487,15 +1798,17 @@ class StampedeStatistics(object):
         https://confluence.pegasus.isi.edu/display/pegasus/Additional+queries
         """
         q = self.session.query(
-                (cast(Invocation.start_time / self._get_date_divisors(), Integer)).label('date_format'),
-                func.count(Invocation.invocation_id).label('count'),
-                cast(func.sum(Invocation.remote_duration), Float).label('total_runtime')
+            (cast(Invocation.start_time / self._get_date_divisors(), Integer)).label(
+                "date_format"
+            ),
+            func.count(Invocation.invocation_id).label("count"),
+            cast(func.sum(Invocation.remote_duration), Float).label("total_runtime"),
         )
         q = q.filter(Workflow.root_wf_id == self._root_wf_id)
         q = q.filter(Invocation.wf_id == Workflow.wf_id)
         if self._get_xform_filter() is not None:
             q = q.filter(self._get_xform_filter())
-        q = q.group_by('date_format').order_by('date_format')
+        q = q.group_by("date_format").order_by("date_format")
 
         return q.all()
 
@@ -1504,33 +1817,36 @@ class StampedeStatistics(object):
         https://confluence.pegasus.isi.edu/display/pegasus/Additional+queries
         """
         q = self.session.query(
-                (cast(Jobstate.timestamp / self._get_date_divisors(), Integer)).label('date_format'),
-                func.count(JobInstance.job_instance_id).label('count'),
-                cast(func.sum(JobInstance.local_duration), Float).label('total_runtime')
+            (cast(Jobstate.timestamp / self._get_date_divisors(), Integer)).label(
+                "date_format"
+            ),
+            func.count(JobInstance.job_instance_id).label("count"),
+            cast(func.sum(JobInstance.local_duration), Float).label("total_runtime"),
         )
         q = q.filter(Workflow.root_wf_id == self._root_wf_id)
         q = q.filter(Workflow.wf_id == Job.wf_id)
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(Jobstate.job_instance_id == JobInstance.job_instance_id)
-        q = q.filter(Jobstate.state == 'EXECUTE')
+        q = q.filter(Jobstate.state == "EXECUTE")
         q = q.filter(JobInstance.local_duration != None)
 
         if self._get_job_filter() is not None:
             q = q.filter(self._get_job_filter())
-        q = q.group_by('date_format').order_by('date_format')
+        q = q.group_by("date_format").order_by("date_format")
 
         return q.all()
-
 
     def get_invocation_by_time_per_host(self, host=None):
         """
         https://confluence.pegasus.isi.edu/display/pegasus/Additional+queries
         """
         q = self.session.query(
-            (cast(Invocation.start_time / self._get_date_divisors(), Integer)).label('date_format'),
-            Host.hostname.label('host_name'),
-            func.count(Invocation.invocation_id).label('count'),
-            cast(func.sum(Invocation.remote_duration), Float).label('total_runtime')
+            (cast(Invocation.start_time / self._get_date_divisors(), Integer)).label(
+                "date_format"
+            ),
+            Host.hostname.label("host_name"),
+            func.count(Invocation.invocation_id).label("count"),
+            cast(func.sum(Invocation.remote_duration), Float).label("total_runtime"),
         )
         q = q.filter(Workflow.root_wf_id == self._root_wf_id)
         q = q.filter(Invocation.wf_id == Workflow.wf_id)
@@ -1540,7 +1856,7 @@ class StampedeStatistics(object):
             q = q.filter(self._get_host_filter())
         if self._get_xform_filter() is not None:
             q = q.filter(self._get_xform_filter())
-        q = q.group_by('date_format', 'host_name').order_by('date_format')
+        q = q.group_by("date_format", "host_name").order_by("date_format")
 
         return q.all()
 
@@ -1549,22 +1865,23 @@ class StampedeStatistics(object):
         https://confluence.pegasus.isi.edu/display/pegasus/Additional+queries
         """
         q = self.session.query(
-                (cast(Jobstate.timestamp / self._get_date_divisors(), Integer)).label('date_format'),
-                Host.hostname.label('host_name'),
-                func.count(JobInstance.job_instance_id).label('count'),
-                cast(func.sum(JobInstance.local_duration), Float).label('total_runtime')
+            (cast(Jobstate.timestamp / self._get_date_divisors(), Integer)).label(
+                "date_format"
+            ),
+            Host.hostname.label("host_name"),
+            func.count(JobInstance.job_instance_id).label("count"),
+            cast(func.sum(JobInstance.local_duration), Float).label("total_runtime"),
         )
         q = q.filter(Workflow.root_wf_id == self._root_wf_id)
         q = q.filter(Workflow.wf_id == Job.wf_id)
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(Jobstate.job_instance_id == JobInstance.job_instance_id)
-        q = q.filter(Jobstate.state == 'EXECUTE')
+        q = q.filter(Jobstate.state == "EXECUTE")
         q = q.filter(JobInstance.host_id == Host.host_id)
         if self._get_host_filter() is not None:
             q = q.filter(self._get_host_filter())
         if self._get_job_filter() is not None:
             q = q.filter(self._get_job_filter())
-        q = q.group_by('date_format', 'host_name').order_by('date_format')
+        q = q.group_by("date_format", "host_name").order_by("date_format")
 
         return q.all()
-

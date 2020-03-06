@@ -1,9 +1,10 @@
 import logging
 
+from sqlalchemy.exc import *
+
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions.base_version import BaseVersion
 from Pegasus.db.schema import *
-from sqlalchemy.exc import *
 
 DB_VERSION = 6
 
@@ -119,51 +120,59 @@ class Version(BaseVersion):
         self._drop_index("v4_rc_attr")
         metadata.remove(rc_lfn)
         v4_rc_lfn = Table(
-            'rc_lfn', metadata,
-            Column('id', KeyInteger, primary_key=True, nullable=False),
-            Column('lfn', VARCHAR(245), nullable=False),
-            Column('pfn', VARCHAR(245), nullable=False),
-            Column('site', VARCHAR(245)), **table_keywords
+            "rc_lfn",
+            metadata,
+            Column("id", KeyInteger, primary_key=True, nullable=False),
+            Column("lfn", VARCHAR(245), nullable=False),
+            Column("pfn", VARCHAR(245), nullable=False),
+            Column("site", VARCHAR(245)),
+            **table_keywords,
         )
         Index(
-            'UNIQUE_RC_LFN',
+            "UNIQUE_RC_LFN",
             v4_rc_lfn.c.lfn,
             v4_rc_lfn.c.pfn,
             v4_rc_lfn.c.site,
-            unique=True
+            unique=True,
         )
-        Index('v4_rc_lfn', v4_rc_lfn.c.lfn)
+        Index("v4_rc_lfn", v4_rc_lfn.c.lfn)
         v4_rc_lfn.create(self.db.get_bind(), checkfirst=True)
 
         v4_rc_attr = Table(
-            'rc_attr', metadata,
+            "rc_attr",
+            metadata,
             Column(
-                'id',
+                "id",
                 KeyInteger,
-                ForeignKey('rc_lfn.id', ondelete='CASCADE'),
+                ForeignKey("rc_lfn.id", ondelete="CASCADE"),
                 primary_key=True,
-                nullable=False
-            ), Column('name', VARCHAR(245), primary_key=True, nullable=False),
-            Column('value', VARCHAR(245), nullable=False), **table_keywords
+                nullable=False,
+            ),
+            Column("name", VARCHAR(245), primary_key=True, nullable=False),
+            Column("value", VARCHAR(245), nullable=False),
+            **table_keywords,
         )
-        Index('v4_rc_attr', v4_rc_attr.c.name)
+        Index("v4_rc_attr", v4_rc_attr.c.name)
         v4_rc_attr.create(self.db.get_bind(), checkfirst=True)
         v4_st_file = Table(
-            'file', metadata,
-            Column('file_id', KeyInteger, primary_key=True, nullable=False),
+            "file",
+            metadata,
+            Column("file_id", KeyInteger, primary_key=True, nullable=False),
             Column(
-                'task_id',
+                "task_id",
                 KeyInteger,
-                ForeignKey('task.task_id', ondelete='CASCADE'),
-                nullable=True
-            ), Column('lfn', VARCHAR(255), nullable=True),
-            Column('estimated_size', INT, nullable=True),
-            Column('md_checksum', VARCHAR(255), nullable=True),
-            Column('type', VARCHAR(255), nullable=True), **table_keywords
+                ForeignKey("task.task_id", ondelete="CASCADE"),
+                nullable=True,
+            ),
+            Column("lfn", VARCHAR(255), nullable=True),
+            Column("estimated_size", INT, nullable=True),
+            Column("md_checksum", VARCHAR(255), nullable=True),
+            Column("type", VARCHAR(255), nullable=True),
+            **table_keywords,
         )
 
-        Index('file_id_UNIQUE', v4_st_file.c.file_id, unique=True)
-        Index('FK_FILE_TASK_ID', st_task.c.task_id, unique=False)
+        Index("file_id_UNIQUE", v4_st_file.c.file_id, unique=True)
+        Index("FK_FILE_TASK_ID", st_task.c.task_id, unique=False)
         v4_st_file.create(self.db.get_bind(), checkfirst=True)
 
         # Migrate entries

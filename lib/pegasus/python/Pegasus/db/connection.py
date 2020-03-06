@@ -25,11 +25,11 @@ from sqlite3 import Connection as SQLite3Connection
 from stat import ST_MODE
 
 from six.moves.urllib.parse import urlparse
+from sqlalchemy import create_engine, event, exc, orm
+from sqlalchemy.engine import Engine
 
 from Pegasus import user as users
 from Pegasus.tools import properties, utils
-from sqlalchemy import create_engine, event, exc, orm
-from sqlalchemy.engine import Engine
 
 __all__ = ["connect"]
 
