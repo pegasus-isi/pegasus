@@ -207,7 +207,7 @@ def parseDatetime(d, utc=False):
     if "T" not in iso:
         iso += "T00:00:00"
     # only append timezone if none is there already
-    if not iso.endswith("Z") and not re.match(".*[+-]\d\d:\d\d$", iso):
+    if not iso.endswith("Z") and not re.match(r".*[+-]\d\d:\d\d$", iso):
         if utc:
             iso += "Z"
         else:
@@ -579,7 +579,7 @@ class IncConfigObj(configobj.ConfigObj):
         for line in f:
             # look for include directive
             s = line.strip()
-            m = re.match("@include (\"(.*)\"|'(.*)'|(\S+))", s)
+            m = re.match("@include (\"(.*)\"|'(.*)'|(\\S+))", s)
             if m:
                 # This line is an @include.
                 # Pick out the group that matched.
@@ -589,8 +589,8 @@ class IncConfigObj(configobj.ConfigObj):
                     inc_path = os.path.join(dir_, inc_path)
                 try:
                     inc_file = file(inc_path)
-                except IOError:
-                    raise IOError(
+                except OSError:
+                    raise OSError(
                         "Cannot read file '%s' "
                         "included from '%s'" % (inc_path, f.name)
                     )
@@ -610,17 +610,15 @@ class IncConfigObj(configobj.ConfigObj):
             configobj.ConfigObj.__init__(self, lines, **kw)
         except configobj.ParseError as E:
             # Report correct file and line on parse error
-            m = re.search('line "(\d+)"', str(E))
+            m = re.search(r'line "(\d+)"', str(E))
             if m is None:
                 raise
             else:
                 # print file_lines
                 n = int(m.group(1)) - 1
                 filename, lineno = file_lines[n]
-                msg = 'Invalid line %s in %s: "%s"' % (
-                    lineno,
-                    filename,
-                    lines[n].strip(),
+                msg = 'Invalid line {} in {}: "{}"'.format(
+                    lineno, filename, lines[n].strip(),
                 )
                 raise configobj.ParseError(msg)
 
@@ -651,7 +649,7 @@ def handleSignals(*siglist):
                 signal.signal(signo, action)
 
 
-_TPAT = re.compile("(\d+)\s*([mhds]|minutes?|hours?|days?|seconds?)?$")
+_TPAT = re.compile(r"(\d+)\s*([mhds]|minutes?|hours?|days?|seconds?)?$")
 _TFAC = {
     None: 1,
     "s": 1,
@@ -689,11 +687,11 @@ def check_timeperiod(option, opt, value):
         return timeToSec(value)
     except ValueError:
         raise OptionValueError(
-            "option %s: invalid time period value: %r" % (opt, value)
+            "option {}: invalid time period value: {!r}".format(opt, value)
         )
 
 
-_BPAT = re.compile("(\d+)\s*(\S+)")
+_BPAT = re.compile(r"(\d+)\s*(\S+)")
 _BFAC = {
     None: 1,
     "b": 1,
@@ -709,7 +707,7 @@ def sizeToBytes(s):
     """Convert a size to a number of bytes
     Return number of bytes or raise ValueError if not parseable.
     """
-    m = re.match("(\d+)\s*(\S+)", s.lower())
+    m = re.match(r"(\d+)\s*(\S+)", s.lower())
     if not m:
         raise ValueError("Not of form: <num> <units>")
     value, units = m.groups()
@@ -821,12 +819,8 @@ except ImportError:
             a = random.random() * 100000000000000000
         data = str(t) + " " + str(r) + " " + str(a)
         data = md5.md5(data).hexdigest()
-        return "%s-%s-%s-%s-%s" % (
-            data[0:8],
-            data[8:12],
-            data[12:16],
-            data[16:20],
-            data[20:32],
+        return "{}-{}-{}-{}-{}".format(
+            data[0:8], data[8:12], data[12:16], data[16:20], data[20:32],
         )
 
 
@@ -887,7 +881,7 @@ def process_kvp(option, all={}, _bool={}, type="AMQP"):
         raise ValueError("argument '%s' not in form name=value" % option)
     key, value = parts
     if all and (key not in all):
-        raise ValueError("unknown %s option '%s'." % (type, key))
+        raise ValueError("unknown {} option '{}'.".format(type, key))
     if key in _bool:
         value = as_bool(value)
     return key, value

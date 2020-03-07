@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #  Copyright 2007-2014 University Of Southern California
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");

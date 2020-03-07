@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 :mod:`braindump` exposes an API to serialize and deserialize Pegasus's braindump file.
 

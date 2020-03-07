@@ -162,7 +162,7 @@ class ReplicaCatalog:
     # TODO: account for more complex entries into the catalog
     def add_item(self, lfn, pfn, site):
         """ Adds an entry into the replica catalog. """
-        entry = "{0} file://{1} site={2}".format(lfn, pfn, site)
+        entry = "{} file://{} site={}".format(lfn, pfn, site)
         log.debug("Adding to RC: '{}'".format(entry))
         self.entries.add(entry)
 
@@ -264,7 +264,7 @@ def main():
     workflow_files = dict()
 
     log.info("Collecting inputs in {}".format(args.input_file_spec_path))
-    with open(args.input_file_spec_path, "r") as yaml_file:
+    with open(args.input_file_spec_path) as yaml_file:
         input_file_specs = load(yaml_file, Loader=Loader)
 
         for input in workflow.inputs:
@@ -302,7 +302,7 @@ def main():
             output_name = get_name(step.id, output.id)
 
             log.debug(
-                "Adding (key: {0}, value: {1}) to workflow_files".format(
+                "Adding (key: {}, value: {}) to workflow_files".format(
                     output_name, output.outputBinding.glob
                 )
             )
@@ -345,7 +345,7 @@ def main():
             if input.type == "File":
                 file_id = step_inputs[get_name(step.id, input.id)]
                 file = dax.File(workflow_files[file_id])
-                log.debug("Adding link ({0} -> {1})".format(file_id, dax_job.name))
+                log.debug("Adding link ({} -> {})".format(file_id, dax_job.name))
 
                 dax_job.uses(file, link=dax.Link.INPUT)
 
@@ -356,7 +356,7 @@ def main():
                     for file_id in file_ids:
                         file = dax.File(workflow_files[file_id])
                         log.debug(
-                            "Adding link ({0} -> {1})".format(file_id, dax_job.name)
+                            "Adding link ({} -> {})".format(file_id, dax_job.name)
                         )
 
                         dax_job.uses(file, link=dax.Link.INPUT)
@@ -366,7 +366,7 @@ def main():
         for output in step.out:
             file_id = get_basename(output)
             file = dax.File(workflow_files[file_id])
-            log.debug("Adding link ({0} -> {1})".format(dax_job.name, file_id))
+            log.debug("Adding link ({} -> {})".format(dax_job.name, file_id))
 
             dax_job.uses(file, link=dax.Link.OUTPUT, transfer=True, register=True)
 
@@ -425,7 +425,7 @@ def main():
                             separator.join(workflow_input_strings[input_string_arr_id])
                         )
 
-        log.debug("Adding job: {0}, with args: {1}".format(dax_job.name, dax_job_args))
+        log.debug("Adding job: {}, with args: {}".format(dax_job.name, dax_job_args))
         dax_job.addArguments(*dax_job_args)
 
         # add job to DAG

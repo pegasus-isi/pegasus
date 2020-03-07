@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 ##
 #  Copyright 2007-2011 University Of Southern California
 #
@@ -33,7 +31,6 @@ from pathlib import Path
 
 import attr
 
-import six
 from six.moves import urllib
 from six.moves.builtins import int
 
@@ -115,8 +112,8 @@ def quote(s):
     then it will be utf-8 encoded before being quoted.
     """
 
-    if not isinstance(s, six.binary_type):
-        if isinstance(s, six.text_type):
+    if not isinstance(s, bytes):
+        if isinstance(s, str):
             # We need to utf-8 encode unicode strings
             s = s.encode("utf-8")
         else:
@@ -156,10 +153,10 @@ def unquote(s):
     way of knowing what encoding was used for the original string that was
     passed to quote().
     """
-    if not isinstance(s, six.string_types):
+    if not isinstance(s, str):
         raise TypeError("Not a string: %s" % str(s))
 
-    if isinstance(s, six.text_type):
+    if isinstance(s, str):
         # Technically, this should not happen because
         # quote always returns a byte string, but if it was
         # passed through a database or something then it might happen
@@ -294,7 +291,7 @@ def write_braindump(filename, items):
     "This simply writes a dict to the file specified in braindump format"
     f = open(filename, "w")
     for k in items:
-        f.write("%s %s\n" % (k, items[k]))
+        f.write("{} {}\n".format(k, items[k]))
     f.close()
 
 
@@ -302,7 +299,7 @@ def write_braindump(filename, items):
 def read_braindump(filename):
     "This simply reads a braindump dict from the file specified"
     items = {}
-    f = open(filename, "r")
+    f = open(filename)
     for l in f:
         k, v = l.strip().split(" ", 1)
         k = k.strip()
@@ -326,8 +323,8 @@ def _slurp_braindb(run, brain_alternate=None):
         my_braindb = os.path.join(run, brain_alternate)
 
     try:
-        my_file = open(my_braindb, "r")
-    except IOError:
+        my_file = open(my_braindb)
+    except OSError:
         # Error opening file
         return my_config
 
@@ -428,9 +425,9 @@ def parse_exit(ec):
         my_core = ""
         if (ec & 128) == 128:
             my_core = " (core)"
-        my_result = "died on signal %s%s" % (my_signo, my_core)
+        my_result = "died on signal {}{}".format(my_signo, my_core)
     elif (ec >> 8) > 0:
-        my_result = "exit code %d" % ((ec >> 8))
+        my_result = "exit code %d" % (ec >> 8)
     else:
         my_result = "OK"
 
@@ -467,7 +464,7 @@ def write_pid_file(pid_filename, ts=int(time.time())):
         PIDFILE = open(pid_filename, "w")
         PIDFILE.write("pid %s\n" % (os.getpid()))
         PIDFILE.write("timestamp %s\n" % (isodate(ts)))
-    except IOError:
+    except OSError:
         logger.error("cannot write PID file %s" % (pid_filename))
     else:
         PIDFILE.close()
@@ -484,7 +481,7 @@ def pid_running(filename):
     if os.access(filename, os.F_OK):
         try:
             # Open pid file
-            PIDFILE = open(filename, "r")
+            PIDFILE = open(filename)
 
             # Look for pid line
             for line in PIDFILE:
@@ -585,7 +582,7 @@ def loading_completed(run_dir):
     # Check monitord.log for loading errors...
     if os.access(log_file, os.F_OK):
         try:
-            LOG = open(log_file, "r")
+            LOG = open(log_file)
             for line in LOG:
                 if line.find("NL-LOAD-ERROR -->") > 0:
                     # Found loading error... event processing was not completed
@@ -603,7 +600,7 @@ def loading_completed(run_dir):
                     LOG.close()
                     return False
             LOG.close()
-        except IOError:
+        except OSError:
             logger.warning("could not process log file: %s" % (log_file))
 
     # Otherwise, return true
@@ -642,7 +639,7 @@ def rotate_log_file(source_file):
     try:
         os.rename(source_file, dest_file)
     except OSError:
-        logger.error("cannot rename %s to %s" % (source_file, dest_file))
+        logger.error("cannot rename {} to {}".format(source_file, dest_file))
         sys.exit(1)
 
     # Done!

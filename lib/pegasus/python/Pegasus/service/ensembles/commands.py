@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import logging
 import os
 import sys
@@ -317,7 +315,7 @@ class StatusCommand(EnsembleClientCommand):
 
         ensemble, workflow = self.splitew(self.args[0])
 
-        response = self.get("/ensembles/%s/workflows/%s" % (ensemble, workflow))
+        response = self.get("/ensembles/{}/workflows/{}".format(ensemble, workflow))
 
         result = response.json()
 
@@ -346,7 +344,9 @@ class AnalyzeCommand(EnsembleClientCommand):
 
         ensemble, workflow = self.splitew(self.args[0])
 
-        response = self.get("/ensembles/%s/workflows/%s/analyze" % (ensemble, workflow))
+        response = self.get(
+            "/ensembles/{}/workflows/{}/analyze".format(ensemble, workflow)
+        )
 
         sys.stdout.write(response.text)
 
@@ -447,7 +447,7 @@ class WorkflowStateChangeCommand(EnsembleClientCommand):
         request = {"state": self.newstate}
 
         response = self.post(
-            "/ensembles/%s/workflows/%s" % (ensemble, workflow), data=request
+            "/ensembles/{}/workflows/{}".format(ensemble, workflow), data=request
         )
 
         result = response.json()
@@ -502,7 +502,7 @@ class PriorityCommand(EnsembleClientCommand):
         request = {"priority": self.options.priority}
 
         response = self.post(
-            "/ensembles/%s/workflows/%s" % (ensemble, workflow), data=request
+            "/ensembles/{}/workflows/{}".format(ensemble, workflow), data=request
         )
 
         result = response.json()

@@ -75,7 +75,7 @@ def render_metas(metas, indent=""):
     max_key_len += 1
 
     for meta in metas:
-        print("%s%s: %s" % (indent, meta.key.ljust(max_key_len), meta.value))
+        print("{}{}: {}".format(indent, meta.key.ljust(max_key_len), meta.value))
 
 
 def workflow_metadata(recursive=False, submit_dir=".", *args, **kwargs):

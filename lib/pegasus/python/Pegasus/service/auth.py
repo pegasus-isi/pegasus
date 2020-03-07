@@ -10,7 +10,7 @@ from Pegasus.service import app
 log = logging.getLogger(__name__)
 
 
-class BaseAuthentication(object):
+class BaseAuthentication:
     def __init__(self, username, password):
         self.username = username
         self.password = password
@@ -171,7 +171,9 @@ def before():
         # Is user (g.user.username) allowed to view user (g.username) runs?
         if not is_user_an_admin(g.user.username):
             log.error(
-                "User %s is accessing user %s's runs" % (g.user.username, g.username)
+                "User {} is accessing user {}'s runs".format(
+                    g.user.username, g.username
+                )
             )
             abort(403)
 

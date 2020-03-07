@@ -521,7 +521,7 @@ class SiteCatalog(Writable):
 
             if s.name in self.sites:
                 raise DuplicateError(
-                    "site with name: {0} already exists in this SiteCatalog".format(
+                    "site with name: {} already exists in this SiteCatalog".format(
                         s.name
                     )
                 )

@@ -30,7 +30,7 @@ class MasterDBNotFoundError(Exception):
     pass
 
 
-class MasterDatabase(object):
+class MasterDatabase:
     def __init__(self, conn_string, debug=False):
         self._dbg = debug
 
@@ -254,7 +254,7 @@ class MasterDatabase(object):
         return q.one()
 
 
-class WorkflowInfo(object):
+class WorkflowInfo:
     def __init__(self, conn_string=None, wf_id=None, wf_uuid=None, debug=False):
         self._dbg = debug
 

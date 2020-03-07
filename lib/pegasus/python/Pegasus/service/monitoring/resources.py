@@ -99,13 +99,13 @@ class CombinationResource(BaseResource):
     @property
     def prefixed_fields(self):
         if self._prefixed_fields is None:
-            collisions = set([])
+            collisions = set()
             self._prefixed_fields = set()
             self._field_prefix_map = {}
 
             for resource in self._resources:
                 for field in resource.fields:
-                    prefixed_field = "%s.%s" % (resource.prefix, field)
+                    prefixed_field = "{}.{}".format(resource.prefix, field)
                     self._prefixed_fields.add(prefixed_field)
                     self._field_prefix_map[prefixed_field] = resource.prefix
                     if field in self._prefixed_fields:
@@ -154,9 +154,7 @@ class CombinationResource(BaseResource):
 
 class RootWorkflowResource(BaseResource):
     def __init__(self, alias=None):
-        super(RootWorkflowResource, self).__init__(
-            alias if alias else DashboardWorkflow
-        )
+        super().__init__(alias if alias else DashboardWorkflow)
 
         self._prefix = "r"
 
@@ -179,9 +177,7 @@ class RootWorkflowResource(BaseResource):
 
 class RootWorkflowstateResource(BaseResource):
     def __init__(self, alias=None):
-        super(RootWorkflowstateResource, self).__init__(
-            alias if alias else DashboardWorkflowstate
-        )
+        super().__init__(alias if alias else DashboardWorkflowstate)
 
         self._prefix = "ws"
 
@@ -190,7 +186,7 @@ class RootWorkflowstateResource(BaseResource):
 
 class WorkflowResource(BaseResource):
     def __init__(self, alias=None):
-        super(WorkflowResource, self).__init__(alias if alias else Workflow)
+        super().__init__(alias if alias else Workflow)
 
         self._prefix = "w"
 
@@ -215,7 +211,7 @@ class WorkflowResource(BaseResource):
 
 class WorkflowMetaResource(BaseResource):
     def __init__(self, alias=None):
-        super(WorkflowMetaResource, self).__init__(alias if alias else WorkflowMeta)
+        super().__init__(alias if alias else WorkflowMeta)
 
         self._prefix = "wm"
 
@@ -224,7 +220,7 @@ class WorkflowMetaResource(BaseResource):
 
 class WorkflowFilesResource(BaseResource):
     def __init__(self, alias=None):
-        super(WorkflowFilesResource, self).__init__(alias if alias else WorkflowFiles)
+        super().__init__(alias if alias else WorkflowFiles)
 
         self._prefix = "wf"
 
@@ -233,12 +229,12 @@ class WorkflowFilesResource(BaseResource):
 
 class WorkflowstateResource(RootWorkflowstateResource):
     def __init__(self, alias=None):
-        super(WorkflowstateResource, self).__init__(alias if alias else Workflowstate)
+        super().__init__(alias if alias else Workflowstate)
 
 
 class JobResource(BaseResource):
     def __init__(self, alias=None):
-        super(JobResource, self).__init__(alias if alias else Job)
+        super().__init__(alias if alias else Job)
 
         self._prefix = "j"
 
@@ -258,7 +254,7 @@ class JobResource(BaseResource):
 
 class HostResource(BaseResource):
     def __init__(self, alias=None):
-        super(HostResource, self).__init__(alias if alias else Host)
+        super().__init__(alias if alias else Host)
 
         self._prefix = "h"
 
@@ -267,7 +263,7 @@ class HostResource(BaseResource):
 
 class JobstateResource(BaseResource):
     def __init__(self, alias=None):
-        super(JobstateResource, self).__init__(alias if alias else Jobstate)
+        super().__init__(alias if alias else Jobstate)
 
         self._prefix = "js"
 
@@ -276,7 +272,7 @@ class JobstateResource(BaseResource):
 
 class TaskResource(BaseResource):
     def __init__(self, alias=None):
-        super(TaskResource, self).__init__(alias if alias else Task)
+        super().__init__(alias if alias else Task)
 
         self._prefix = "t"
 
@@ -285,7 +281,7 @@ class TaskResource(BaseResource):
 
 class TaskMetaResource(BaseResource):
     def __init__(self, alias=None):
-        super(TaskMetaResource, self).__init__(alias if alias else TaskMeta)
+        super().__init__(alias if alias else TaskMeta)
 
         self._prefix = "tm"
 
@@ -294,7 +290,7 @@ class TaskMetaResource(BaseResource):
 
 class JobInstanceResource(BaseResource):
     def __init__(self, alias=None):
-        super(JobInstanceResource, self).__init__(alias if alias else JobInstance)
+        super().__init__(alias if alias else JobInstance)
 
         self._prefix = "ji"
 
@@ -322,7 +318,7 @@ class JobInstanceResource(BaseResource):
 
 class InvocationResource(BaseResource):
     def __init__(self, alias=None):
-        super(InvocationResource, self).__init__(alias if alias else Invocation)
+        super().__init__(alias if alias else Invocation)
 
         self._prefix = "i"
 
@@ -343,7 +339,7 @@ class InvocationResource(BaseResource):
 
 class RCLFNResource(BaseResource):
     def __init__(self, alias=None):
-        super(RCLFNResource, self).__init__(alias if alias else RCLFN)
+        super().__init__(alias if alias else RCLFN)
 
         self._prefix = "l"
 
@@ -352,7 +348,7 @@ class RCLFNResource(BaseResource):
 
 class RCPFNResource(BaseResource):
     def __init__(self, alias=None):
-        super(RCPFNResource, self).__init__(alias if alias else RCPFN)
+        super().__init__(alias if alias else RCPFN)
 
         self._prefix = "p"
 
@@ -361,7 +357,7 @@ class RCPFNResource(BaseResource):
 
 class RCMetaResource(BaseResource):
     def __init__(self, alias=None):
-        super(RCMetaResource, self).__init__(alias if alias else RCMeta)
+        super().__init__(alias if alias else RCMeta)
 
         self._prefix = "rm"
 

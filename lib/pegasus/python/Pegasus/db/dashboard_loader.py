@@ -41,7 +41,7 @@ class DashboardLoader(BaseLoader):
         @type   connString: string
         @param  connString: SQLAlchemy connection string - REQUIRED
         """
-        super(DashboardLoader, self).__init__(
+        super().__init__(
             connString,
             batch=batch,
             props=props,

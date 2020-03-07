@@ -68,7 +68,7 @@ def purge_wf_uuid_from_database(rundir, output_db):
     wfparams = utils.slurp_braindb(rundir)
 
     wf_uuid = wfparams.get("wf_uuid", None)
-    if "wf_uuid" is None:
+    if "wf_uuid" == None:
         return
 
     expunge.delete_workflow(output_db, wf_uuid)
@@ -83,7 +83,7 @@ def purge_wf_uuid_from_dashboard_database(rundir, output_db):
     wfparams = utils.slurp_braindb(rundir)
 
     wf_uuid = wfparams.get("wf_uuid", None)
-    if "wf_uuid" is None:
+    if "wf_uuid" == None:
         return
 
     expunge.delete_dashboard_workflow(output_db, wf_uuid)
@@ -123,14 +123,14 @@ class OutputURL:
             self.user, self.password = user_pass.split(":", 1)
 
 
-class EventSink(object):
+class EventSink:
     """
     Base class for an Event Sink.
     """
 
     def __init__(self):
         self._log = logging.getLogger(
-            "%s.%s" % (self.__module__, self.__class__.__name__)
+            "{}.{}".format(self.__module__, self.__class__.__name__)
         )
         # Set listing events handled to be kept consistent with dict in workflow loader
         self._acceptedEvents = (
@@ -232,7 +232,7 @@ class DBEventSink(EventSink):
         else:
             raise ValueError("Unknown namespace specified '%s'" % (namespace))
 
-        super(DBEventSink, self).__init__()
+        super().__init__()
 
     def send(self, event, kw):
         self._log.trace("send.start event=%s", event)
@@ -257,7 +257,7 @@ class FileEventSink(EventSink):
     """
 
     def __init__(self, path, restart=False, encoder=None, **kw):
-        super(FileEventSink, self).__init__()
+        super().__init__()
         if restart:
             self._output = open(path, "w", 1)
         else:
@@ -283,7 +283,7 @@ class TCPEventSink(EventSink):
     """
 
     def __init__(self, host, port, encoder=None, **kw):
-        super(TCPEventSink, self).__init__()
+        super().__init__()
         self._encoder = encoder
         self._sock = socket.socket()
         self._sock.connect((host, port))
@@ -321,8 +321,8 @@ class AMQPEventSink(EventSink):
         connect_timeout=None,
         **kw
     ):
-        super(AMQPEventSink, self).__init__()
-        self._log.info("Encoder used %s Properties received %s" % (encoder, props))
+        super().__init__()
+        self._log.info("Encoder used {} Properties received {}".format(encoder, props))
         self._encoder = encoder
         self._handled_events = set()
         self._handle_all_events = False
@@ -503,7 +503,7 @@ class MultiplexEventSink(EventSink):
     """
 
     def __init__(self, dest, enc, prefix=STAMPEDE_NS, props=None, **kw):
-        super(MultiplexEventSink, self).__init__()
+        super().__init__()
         self._endpoints = {}
         self._log.info("Multiplexed Event Sink Connection Properties  %s", props)
         for key in props.keyset():
@@ -658,7 +658,7 @@ def create_wf_event_sink(
         if url.port is None:
             url.port = 14380
         sink = TCPEventSink(url.host, url.port, encoder=pick_encfn(enc, prefix), **kw)
-        _type, _name = "network", "%s:%s" % (url.host, url.port)
+        _type, _name = "network", "{}:{}".format(url.host, url.port)
     elif url.scheme in ["amqp", "amqps"]:
         # amqp://[USERNAME:PASSWORD@]<hostname>[:port]/[<virtualhost>]/<exchange_name>
         if amqp is None:
@@ -694,13 +694,13 @@ def create_wf_event_sink(
             props=sink_props,
             **kw,
         )
-        _type, _name = "AMQP", "%s:%s/%s" % (url.host, url.port, url.path)
+        _type, _name = "AMQP", "{}:{}/{}".format(url.host, url.port, url.path)
     else:
         # load the appropriate DBEvent on basis of prefix passed
         sink = DBEventSink(dest, namespace=prefix, props=sink_props, **kw)
         _type, _name = "DB", dest
 
-    log.info("output type=%s namespace=%s name=%s" % (_type, prefix, _name))
+    log.info("output type={} namespace={} name={}".format(_type, prefix, _name))
 
     return sink
 

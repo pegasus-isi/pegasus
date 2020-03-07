@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 class Version(BaseVersion):
     def __init__(self, connection):
-        super(Version, self).__init__(connection)
+        super().__init__(connection)
 
     def update(self, force=False):
         "Add archived field to master_workflow table"

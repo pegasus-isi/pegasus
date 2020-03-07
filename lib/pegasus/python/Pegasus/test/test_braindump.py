@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import io
 from typing import Dict
 
@@ -87,7 +85,7 @@ def test_dump(obj: Dict):
 
     fp = fp.getvalue()
     for attr_name, attr_val in obj.items():
-        assert "%s: %s" % (attr_name, attr_val) in fp
+        assert "{}: {}".format(attr_name, attr_val) in fp
 
 
 @pytest.mark.parametrize(
@@ -113,4 +111,4 @@ def test_dumps(obj: Dict):
 
     rv = dumps(b)
     for attr_name, attr_val in obj.items():
-        assert "%s: %s" % (attr_name, attr_val) in rv
+        assert "{}: {}".format(attr_name, attr_val) in rv

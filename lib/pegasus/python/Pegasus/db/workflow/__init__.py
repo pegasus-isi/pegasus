@@ -23,7 +23,7 @@ __author__ = "Monte Goode MMGoode@lbl.gov"
 import logging
 
 
-class WorkflowBase(object):
+class WorkflowBase:
     # indent level for pretty printing = override in subclasses
     # if you want different indent levels for your various
     # objects.
@@ -31,14 +31,14 @@ class WorkflowBase(object):
 
     def __init__(self):
         self.log = logging.getLogger(
-            "%s.%s" % (self.__module__, self.__class__.__name__)
+            "{}.{}".format(self.__module__, self.__class__.__name__)
         )
 
     def __repr__(self):
         spacer = "  "
         retval = "%s:" % self.__class__
         if self._indent > 1:
-            retval = "\n%s+++ %s:" % (spacer * self._indent, self.__class__)
+            retval = "\n{}+++ {}:".format(spacer * self._indent, self.__class__)
         for i in dir(self):
             if (
                 i.startswith("_")
@@ -50,13 +50,11 @@ class WorkflowBase(object):
             ):
                 continue
             try:
-                retval += "\n%s* %s : %s" % (
-                    spacer * self._indent,
-                    i,
-                    eval("self.%s" % i),
+                retval += "\n{}* {} : {}".format(
+                    spacer * self._indent, i, eval("self.%s" % i),
                 )
             except NotImplementedError as e:
-                retval += "\n%s* %s : WARNING: %s" % (spacer * self._indent, i, e)
+                retval += "\n{}* {} : WARNING: {}".format(spacer * self._indent, i, e)
         return retval
 
 
@@ -1010,7 +1008,7 @@ class Task(WorkflowBase):
 # Base class for discovery/wf_uuid querying.
 
 
-class Discovery(object):
+class Discovery:
     def __init__(self, connectionInfo=None):
         """
         Initialization method.  The manditory argument connectionInfo

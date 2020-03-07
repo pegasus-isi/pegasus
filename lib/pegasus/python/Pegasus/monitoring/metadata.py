@@ -17,7 +17,6 @@
 This file implements the metadata related classes for pegasus-monitord.
 """
 
-from __future__ import print_function
 
 # Import Python modules
 import json
@@ -32,7 +31,7 @@ __author__ = "Karan Vahi <vahi@isi.edu>"
 logger = logging.getLogger(__name__)
 
 
-class Metadata(object):
+class Metadata:
     """
     Base class for for different types of metadata
     """
@@ -91,7 +90,7 @@ class FileMetadata(Metadata):
     """
 
     def __init__(self):
-        super(FileMetadata, self).__init__()
+        super().__init__()
         self._type = "file"
 
     def convert_to_rce(self):

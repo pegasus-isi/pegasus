@@ -70,7 +70,7 @@ class ConnectionError(Exception):
         :param given_version: Provided pegasus version
         :param db_type: Database type (JDBCRC, MASTER, WORKFLOW)
         """
-        super(ConnectionError, self).__init__(message)
+        super().__init__(message)
 
         self.given_version = given_version
         self.db_type = db_type
@@ -124,7 +124,7 @@ def connect(
 
     try:
         log.debug(
-            "Connecting to: %s with connection params as %s" % (dburi, connect_args)
+            "Connecting to: {} with connection params as {}".format(dburi, connect_args)
         )
         # parse connection properties
         # PM-898 monitord sends props as None and connect_args has the
@@ -141,16 +141,16 @@ def connect(
     except exc.OperationalError as e:
         if "mysql" in dburi and "unknown database" in str(e).lower():
             raise ConnectionError(
-                "MySQL database should be previously created: %s (%s)" % (e, dburi),
+                "MySQL database should be previously created: {} ({})".format(e, dburi),
                 given_version=pegasus_version,
                 db_type=db_type,
             )
         raise ConnectionError(
-            "%s (%s)" % (e, dburi), given_version=pegasus_version, db_type=db_type
+            "{} ({})".format(e, dburi), given_version=pegasus_version, db_type=db_type
         )
     except Exception as e:
         raise ConnectionError(
-            "%s (%s)" % (e, dburi), given_version=pegasus_version, db_type=db_type
+            "{} ({})".format(e, dburi), given_version=pegasus_version, db_type=db_type
         )
 
     Session = orm.sessionmaker(
@@ -203,13 +203,13 @@ def connect(
                 output = out.decode("utf8").strip()
                 output = output[output.find("\n") + 1 :]
                 raise ConnectionError(
-                    "Database is locked (%s):\n%s" % (dburi, output),
+                    "Database is locked ({}):\n{}".format(dburi, output),
                     given_version=pegasus_version,
                     db_type=db_type,
                 )
             else:
                 raise ConnectionError(
-                    "%s (%s)" % (e, dburi),
+                    "{} ({})".format(e, dburi),
                     given_version=pegasus_version,
                     db_type=db_type,
                 )
@@ -589,7 +589,7 @@ def _validate(dburi):
                 imp.find_module("MySQLdb")
 
     except ImportError as e:
-        raise ConnectionError("Missing Python module: %s (%s)" % (e, dburi))
+        raise ConnectionError("Missing Python module: {} ({})".format(e, dburi))
 
 
 def _check_db_permissions(dburi, db_type, mask=None):
@@ -648,7 +648,9 @@ def _parse_props(dburi, props, db_type=None, connect_args=None):
 
             except ValueError as e:
                 raise ConnectionError(
-                    "Timeout properties should be set in seconds: %s (%s)" % (e, dburi),
+                    "Timeout properties should be set in seconds: {} ({})".format(
+                        e, dburi
+                    ),
                     db_type=db_type,
                 )
 

@@ -175,7 +175,7 @@ class ScriptTest(TestCase):
             os.remove(cwdfile)
         em.forkscript("echo $PWD > %s" % cwdfile, cwd="/")
         time.sleep(1)  # This just gives the script time to finish
-        cwd = open(cwdfile, "r").read().strip()
+        cwd = open(cwdfile).read().strip()
         self.assertEqual(cwd, "/")
         os.remove(cwdfile)
 
@@ -184,7 +184,7 @@ class ScriptTest(TestCase):
             os.remove(pidfile)
         em.forkscript("true", cwd="/tmp", pidfile="/tmp/forkscript.pid")
         self.assertTrue(os.path.isfile(pidfile))
-        pid = int(open(pidfile, "r").read())
+        pid = int(open(pidfile).read())
         self.assertTrue(pid > 0)
         os.remove(pidfile)
 
@@ -202,7 +202,7 @@ class ScriptTest(TestCase):
         if os.path.isfile(cwdfile):
             os.remove(cwdfile)
         em.runscript("echo $PWD > %s" % cwdfile, cwd="/")
-        cwd = open(cwdfile, "r").read().strip()
+        cwd = open(cwdfile).read().strip()
         self.assertEqual(cwd, "/")
         os.remove(cwdfile)
 
@@ -212,14 +212,12 @@ class ScriptTest(TestCase):
 
 
 class WorkflowTest(UserTestCase):
-    endstates = set(
-        [
-            ensembles.EnsembleWorkflowStates.SUCCESSFUL,
-            ensembles.EnsembleWorkflowStates.PLAN_FAILED,
-            ensembles.EnsembleWorkflowStates.RUN_FAILED,
-            ensembles.EnsembleWorkflowStates.FAILED,
-        ]
-    )
+    endstates = {
+        ensembles.EnsembleWorkflowStates.SUCCESSFUL,
+        ensembles.EnsembleWorkflowStates.PLAN_FAILED,
+        ensembles.EnsembleWorkflowStates.RUN_FAILED,
+        ensembles.EnsembleWorkflowStates.FAILED,
+    }
 
     def test_workflow_processor(self):
         "Simple tests to make sure the WorkflowProcessor works"

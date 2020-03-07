@@ -182,7 +182,7 @@ if __name__ == "__main__":
             old_dagman_bin=dagman_bin
             dagman_bin=os.path.join(os.getcwd(),"condor_scheduniv_exec."+os.getenv("CONDOR_ID"))
             shutil.copy2(old_dagman_bin,dagman_bin)
-            logger.info("Copied condor_dagman from %s to %s" % (old_dagman_bin, dagman_bin))
+            logger.info("Copied condor_dagman from {} to {}".format(old_dagman_bin, dagman_bin))
 
 
     # Launch DAGMAN

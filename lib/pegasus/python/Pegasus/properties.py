@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 :mod:`properties` exposes an API to serialize and deserialize Pegasus's properties file.
 

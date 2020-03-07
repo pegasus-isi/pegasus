@@ -14,7 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-from __future__ import print_function
 
 import os
 import subprocess
@@ -225,7 +224,7 @@ class Instance:
 
             with open(properties_file, "w") as ppf:
                 for key in self._properties:
-                    ppf.write("%s=%s\n" % (key, self._properties[key]))
+                    ppf.write("{}={}\n".format(key, self._properties[key]))
 
             # write DAX file
             f = open(dax_name, "w")
@@ -468,7 +467,7 @@ class Instance:
             basename = self.submit_dir + "/" + self.dax.name + "-0.dag"
 
         sp = subprocess.Popen(
-            "pegasus-graphviz -o %s.dot %s" % (basename, basename),
+            "pegasus-graphviz -o {}.dot {}".format(basename, basename),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             shell=True,
@@ -480,7 +479,7 @@ class Instance:
             raise Exception(err)
 
         out, err = subprocess.Popen(
-            "dot -Tpng %s.dot -o %s.png" % (basename, basename),
+            "dot -Tpng {}.dot -o {}.png".format(basename, basename),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             shell=True,

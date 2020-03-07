@@ -10,7 +10,7 @@ class Token:
     COMMA = ","
 
 
-class RecordParser(object):
+class RecordParser:
     def __init__(self, string):
         self.string = string
         self.index = 0
@@ -86,7 +86,7 @@ class RecordParser(object):
         token, value = self.nextToken()
         if token != item:
             raise RecordParseException(
-                "Expected '%s', got '%s'" % (item, token), self.string
+                "Expected '{}', got '{}'".format(item, token), self.string
             )
         return value
 

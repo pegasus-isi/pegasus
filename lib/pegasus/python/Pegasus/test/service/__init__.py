@@ -117,7 +117,7 @@ class ClientTestCase(APITestCase):
         APITestCase.setUp(self)
         self.host = "127.0.0.1"
         self.port = 4999
-        app.config["ENDPOINT"] = "http://%s:%s/" % (self.host, self.port)
+        app.config["ENDPOINT"] = "http://{}:{}/".format(self.host, self.port)
         app.config["USERNAME"] = self.username
         app.config["PASSWORD"] = self.password
         self.server = TestWSGIServer(host=self.host, port=self.port)

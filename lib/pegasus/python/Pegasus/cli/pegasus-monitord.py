@@ -41,7 +41,6 @@ import subprocess
 # Save our own basename
 prog_base = os.path.split(sys.argv[0])[1]
 
-from builtins import object
 
 from Pegasus.db import connection
 from Pegasus.tools import utils
@@ -180,7 +179,7 @@ def finish_stampede_loader():
     logger.info("DB flushing ended")
 
 
-class WorkflowEntry(object):
+class WorkflowEntry:
     """
     Class used to store one workflow entry
     """
@@ -489,7 +488,7 @@ def add(wf, jobid, event, sched_id=None, status=None, reason=None):
 
         # Remember the run-site
         if my_site is not None:
-            logger.debug("job %s is planned for site %s" % (jobid, my_site))
+            logger.debug("job {} is planned for site {}".format(jobid, my_site))
             wf._job_site[jobid] = my_site
         else:
             logger.debug("job %s does not have a site information!" % (jobid))
@@ -521,7 +520,7 @@ def add(wf, jobid, event, sched_id=None, status=None, reason=None):
 
         # Remember the run-site
         if my_site is not None:
-            logger.debug("job %s is planned for site %s" % (jobid, my_site))
+            logger.debug("job {} is planned for site {}".format(jobid, my_site))
             wf._job_site[jobid] = my_site
         else:
             logger.debug("job %s does not have a site information!" % (jobid))
@@ -733,7 +732,7 @@ def process_dagman_out(wf, log_line):
                 logger.warning("cannot convert DAGMan's exit code to integer!")
                 wf._dagman_exit_code = 0
                 wf._monitord_exit_code = 1
-            logger.info("DAGMan %s finished with exit code %s" % (wf._dag_file_name , wf._dagman_exit_code))
+            logger.info("DAGMan {} finished with exit code {}".format(wf._dag_file_name , wf._dagman_exit_code))
             # Send info to database
             wf.change_wf_state("end")
         elif re_parse_dagman_condor_id.search(log_line) is not None:
@@ -801,13 +800,13 @@ def process_dagman_out(wf, log_line):
                         try:
                             os.rename(my_log, "%s.bak" % (my_log))
                         except OSError:
-                            logger.warning("error renaming %s to %s.bak" % (my_log, my_log))
+                            logger.warning("error renaming {} to {}.bak".format(my_log, my_log))
                     try:
                         os.symlink(wf._condorlog, my_log)
                     except OSError:
                         logger.info("unable to symlink %s" % (wf._condorlog))
                     else:
-                        logger.info("symlink %s -> %s" % (wf._condorlog, my_log))
+                        logger.info("symlink {} -> {}".format(wf._condorlog, my_log))
                 else:
                     logger.info("%s exists but is not readable!" % (wf._condorlog))
             # We only expect one of such files
@@ -1140,9 +1139,9 @@ while (len(wfs) > 0):
             else:
                 # Found it, open dagman.out file
                 try:
-                    workflow_entry.DMOF = open(workflow_entry.dagman_out, "r")
+                    workflow_entry.DMOF = open(workflow_entry.dagman_out)
                     workflow_entry.dagman_out_appeared = True
-                except IOError:
+                except OSError:
                     logger.critical("opening %s" % (workflow_entry.dagman_out))
                     workflow_entry.delete_workflow = True
                     # Close jobstate.log, if any

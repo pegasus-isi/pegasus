@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 :mod:`replica_catalog` exposes an API to serialize and deserialize Pegasus's replica catalog file.
 

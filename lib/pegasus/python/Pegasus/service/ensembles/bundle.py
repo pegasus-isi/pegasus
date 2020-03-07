@@ -10,7 +10,7 @@ class BundleException(Exception):
     pass
 
 
-class Bundle(object):
+class Bundle:
     def __init__(self, filename):
         self.filename = filename
 
@@ -52,7 +52,9 @@ class Bundle(object):
             return
 
         if not self.contains(filename) and not os.path.isfile(filename):
-            raise BundleException("Invalid %s: No such file: %s" % (propname, filename))
+            raise BundleException(
+                "Invalid {}: No such file: {}".format(propname, filename)
+            )
 
     def verify(self):
         # Make sure the dax property is set

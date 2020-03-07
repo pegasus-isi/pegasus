@@ -89,7 +89,9 @@ def __delete_workflow_files__(session, wf_uuid, wf_id):
     session.flush()
     session.commit()
     log.info("Flush took: %f seconds", time.time() - i)
-    log.info("Deleted  %s files from rc_file table for workflow %s " % (count, wf_uuid))
+    log.info(
+        "Deleted  {} files from rc_file table for workflow {} ".format(count, wf_uuid)
+    )
 
 
 def delete_dashboard_workflow(dburi, wf_uuid):

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from __future__ import print_function
 
 import os
 import re
@@ -12,7 +11,6 @@ import traceback
 root_logger = logging.getLogger()
 logger = logging.getLogger("pegasus-statistics")
 
-from builtins import object
 
 from Pegasus.tools import utils
 from Pegasus.plots_stats import utils as stats_utils
@@ -180,7 +178,7 @@ time_host_stats_col_name_text = ["Date", "Host", "Count", "Runtime (sec)"]
 time_host_stats_col_size = [23, 25, 10, 20]
 
 
-class JobStatistics(object):
+class JobStatistics:
     def __init__(self):
         self.name = None
         self.site = None
@@ -432,7 +430,7 @@ def write_to_file(file_path, mode, content):
     try:
         fh = open(file_path, mode)
         fh.write(content)
-    except IOError:
+    except OSError:
         logger.error("Unable to write to file " + file_path)
         sys.exit(1)
     else:
@@ -503,7 +501,7 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
         wf_found = expanded_workflow_stats.initialize(wf_uuid)
 
         if wf_found is False:
-            print("Workflow %r not found in database %r" % (wf_uuid, output_db_url))
+            print("Workflow {!r} not found in database {!r}".format(wf_uuid, output_db_url))
             sys.exit(1)
     except Exception:
         logger.error("Failed to load the database." + output_db_url)
@@ -834,7 +832,7 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
                 write_to_file(wf_summary_file_txt, "w", summary_output)
 
                 stats_output += summary_output + "\n"
-                stats_output += "%-30s: %s\n" % ("Summary", wf_summary_file_txt)
+                stats_output += "{:<30}: {}\n".format("Summary", wf_summary_file_txt)
 
             if file_type == FILE_TYPE_CSV:
                 # Generate the first csv summary file
@@ -852,7 +850,7 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
                 )
                 write_to_file(wf_summary_file_csv, "w", summary_output)
 
-                stats_output += "%-30s: %s\n" % ("Summary:", wf_summary_file_csv)
+                stats_output += "{:<30}: {}\n".format("Summary:", wf_summary_file_csv)
 
                 # Generate the second csv summary file
                 summary_output = formatted_wf_summary_legends_csv2()
@@ -869,7 +867,7 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
                 )
                 write_to_file(wf_summary_file2_csv, "w", summary_output)
 
-                stats_output += "%-30s: %s\n" % ("Summary Time:", wf_summary_file2_csv)
+                stats_output += "{:<30}: {}\n".format("Summary Time:", wf_summary_file2_csv)
         except Exception:
             logger.warn("summary statistics generation failed")
             logger.debug("summary statistics generation failed", exc_info=1)
@@ -1147,17 +1145,17 @@ def print_workflow_summary(
                     return format_seconds(val)
 
             if not multiple_wf:
-                summary_str += "%-57s: %s\n" % ("Workflow wall time", myfmt(wwt))
-            summary_str += "%-57s: %s\n" % ("Cumulative job wall time", myfmt(wcjwt))
-            summary_str += "%-57s: %s\n" % (
+                summary_str += "{:<57}: {}\n".format("Workflow wall time", myfmt(wwt))
+            summary_str += "{:<57}: {}\n".format("Cumulative job wall time", myfmt(wcjwt))
+            summary_str += "{:<57}: {}\n".format(
                 "Cumulative job wall time as seen from submit side",
                 myfmt(ssjwt),
             )
-            summary_str += "%-57s: %s\n" % (
+            summary_str += "{:<57}: {}\n".format(
                 "Cumulative job badput wall time",
                 myfmt(wcbpt),
             )
-            summary_str += "%-57s: %s\n" % (
+            summary_str += "{:<57}: {}\n".format(
                 "Cumulative job badput wall time as seen from submit side",
                 myfmt(ssbpt),
             )
@@ -1202,7 +1200,7 @@ def print_workflow_summary(
                     type = "compared"
                 if result.type == "compute":
                     type = "generated"
-                summary_str += "%s files checksums %s with total duration of %s\n" % (
+                summary_str += "{} files checksums {} with total duration of {}\n".format(
                     result.count,
                     type,
                     myfmt(result.duration),
@@ -1518,7 +1516,7 @@ def print_wf_transformation_stats(stats, workflow_id, dax_label, fmt):
 
     if fmt == "text":
         # In text file, we need a line with the workflow id first
-        report.append("# %s (%s)" % (workflow_id, dax_label or "All"))
+        report.append("# {} ({})".format(workflow_id, dax_label or "All"))
 
     col_names = transformation_stats_col_name_text
     if fmt == "csv":
@@ -1590,7 +1588,7 @@ def print_wf_integrity_stats(stats, workflow_id, dax_label, fmt):
 
     if fmt == "text":
         # In text file, we need a line with the workflow id first
-        report.append("# %s (%s)" % (workflow_id, dax_label or "All"))
+        report.append("# {} ({})".format(workflow_id, dax_label or "All"))
 
     col_names = integrity_stats_col_name_text
     if fmt == "csv":
@@ -1816,16 +1814,16 @@ def main():
     # Parse command line options
     (options, args) = parser.parse_args()
 
-    options.statistics_level = set(
-        [t.lower().strip() for t in options.statistics_level.split(",")]
-    )
+    options.statistics_level = {
+        t.lower().strip() for t in options.statistics_level.split(",")
+    }
 
     if not options.statistics_level:
-        options.statistics_level = set(["summary"])
+        options.statistics_level = {"summary"}
 
-    sl = options.statistics_level - set(
-        ["all", "summary", "wf_stats", "jb_stats", "tf_stats", "ti_stats", "int_stats"]
-    )
+    sl = options.statistics_level - {
+        "all", "summary", "wf_stats", "jb_stats", "tf_stats", "ti_stats", "int_stats"
+    }
     if sl:
         sys.stderr.write(
             "Invalid value(s) for statistics_level, ignoring %s\n" % ",".join(sl)

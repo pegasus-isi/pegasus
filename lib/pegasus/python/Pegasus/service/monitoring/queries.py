@@ -33,7 +33,7 @@ from Pegasus.service.monitoring.utils import csv_to_json
 log = logging.getLogger(__name__)
 
 
-class WorkflowQueries(object):
+class WorkflowQueries:
     def __init__(self, connection_string, use_cache=True):
         if connection_string is None:
             raise ValueError("Connection string is required")
@@ -149,7 +149,7 @@ class WorkflowQueries(object):
             try:
                 field = getattr(resource[prefix], identifier)
             except (KeyError, AttributeError):
-                log.exception("Invalid field %s.%s" % (prefix, identifier))
+                log.exception("Invalid field {}.{}".format(prefix, identifier))
                 raise InvalidSortError("Invalid field %r" % identifier)
 
             if sort_dir == "ASC":

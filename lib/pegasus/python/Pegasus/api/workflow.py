@@ -449,7 +449,7 @@ class _Use:
     def __eq__(self, other):
         if isinstance(other, _Use):
             return self.file.lfn == other.file.lfn
-        raise ValueError("_Use cannot be compared with {0}".format(type(other)))
+        raise ValueError("_Use cannot be compared with {}".format(type(other)))
 
     def __json__(self):
         return {
@@ -474,7 +474,7 @@ class _JobDependency:
                 and self.children_ids == other.children_ids
             )
         raise ValueError(
-            "_JobDependency cannot be compared with {0}".format(type(other))
+            "_JobDependency cannot be compared with {}".format(type(other))
         )
 
     def __json__(self):
@@ -807,7 +807,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
             if job._id in self.jobs:
                 raise DuplicateError(
-                    "Job with id {0} already added to this workflow".format(job._id)
+                    "Job with id {} already added to this workflow".format(job._id)
                 )
 
             self.jobs[job._id] = job
@@ -823,7 +823,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         """
         if _id not in self.jobs:
             raise NotFoundError(
-                "job with _id={0} not found in this workflow".format(_id)
+                "job with _id={} not found in this workflow".format(_id)
             )
 
         return self.jobs[_id]
@@ -927,7 +927,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         if parent_id in self.dependencies:
             if not self.dependencies[parent_id].children_ids.isdisjoint(children_ids):
                 raise DuplicateError(
-                    "A dependency already exists between parent_id: {0} and children_ids: {1}".format(
+                    "A dependency already exists between parent_id: {} and children_ids: {}".format(
                         parent_id, children_ids
                     )
                 )

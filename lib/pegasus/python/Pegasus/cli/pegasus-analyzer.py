@@ -25,7 +25,6 @@ Usage: pegasus-analyzer [options]
 
 # Revision : $Revision: 2012 $
 
-from __future__ import print_function
 
 import errno
 import logging
@@ -37,7 +36,6 @@ import sys
 import tempfile
 import time
 import traceback
-from builtins import object
 from subprocess import getoutput, getstatusoutput
 
 from Pegasus.db import connection
@@ -289,7 +287,7 @@ def get_pegasus_lite_wrapper(my_job):
     if os.access(pegasus_lite_wrapper, os.R_OK):
         # Open submit file
         try:
-            SUB = open(pegasus_lite_wrapper, "r")
+            SUB = open(pegasus_lite_wrapper)
         except:
             # print "error opening submit file: %s" % (my_job.sub_file)
             # fail silently for now...
@@ -313,7 +311,7 @@ def generate_pegasus_lite_debug_wrapper(pegasus_lite_wrapper):
     )
     try:
         DEBUG_WRAPPER = open(debug_wrapper, "w")
-        WRAPPER = open(pegasus_lite_wrapper, "r")
+        WRAPPER = open(pegasus_lite_wrapper)
         for line in WRAPPER:
             if line.startswith("# stage out"):
                 # we only continue till we hit the stage out part
@@ -377,7 +375,7 @@ def parse_submit_file(my_job):
     if os.access(my_job.sub_file, os.R_OK):
         # Open submit file
         try:
-            SUB = open(my_job.sub_file, "r")
+            SUB = open(my_job.sub_file)
         except:
             # print "error opening submit file: %s" % (my_job.sub_file)
             # fail silently for now...
@@ -544,7 +542,7 @@ def find_file(input_dir, file_type):
         if file.endswith(file_type):
             return os.path.join(input_dir, file)
 
-    logger.error("could not find any %s file in %s" % (file_type, input_dir))
+    logger.error("could not find any {} file in {}".format(file_type, input_dir))
     sys.exit(1)
 
 
@@ -555,7 +553,7 @@ def parse_dag_file(dag_fn):
     """
     # Open dag file
     try:
-        DAG = open(dag_fn, "r")
+        DAG = open(dag_fn)
     except:
         logger.error("could not open dag file %s: exiting..." % (dag_fn))
         sys.exit(1)
@@ -641,7 +639,7 @@ def parse_jobstate_log(jobstate_fn):
     """
     # Open log file
     try:
-        JSDL = open(jobstate_fn, "r")
+        JSDL = open(jobstate_fn)
     except:
         logger.error("could not open file %s: exiting..." % (jobstate_fn))
         sys.exit(1)
@@ -733,7 +731,7 @@ def dump_file(file):
     """
     if file is not None:
         try:
-            OUT = open(file, "r")
+            OUT = open(file)
         except:
             logger.warn("*** Cannot access: %s" % (file))
             print_console()
@@ -863,7 +861,7 @@ def print_job_info(job):
         user_cmd = " %s -s " % (prog_base)
         if output_dir is not None:
             user_cmd = user_cmd + " --output-dir %s" % (output_dir)
-        print_console("%s -f %s" % (user_cmd, jobs[job].dag_path))
+        print_console("{} -f {}".format(user_cmd, jobs[job].dag_path))
         print_console()
         return
 
@@ -895,7 +893,7 @@ def print_job_info(job):
 
         # get any options that need to be invoked for the sub workflow
         extraOptions = addon(options)
-        sub_wf_cmd = "%s %s -d %s" % (
+        sub_wf_cmd = "{} {} -d {}".format(
             user_cmd,
             extraOptions,
             os.path.split(jobs[job].dagman_out)[0],
@@ -1281,7 +1279,7 @@ def analyze_db(config_properties):
                         % ((my_info.executable or "-"), (my_info.argv or "-"))
                     )
                     print_console()
-                if print_pre_script and len((my_info.pre_executable or "")) > 0:
+                if print_pre_script and len(my_info.pre_executable or "") > 0:
                     print_console()
                     print_console("SCRIPT PRE:")
                     print_console(
@@ -1302,7 +1300,7 @@ def analyze_db(config_properties):
 
                     # get any options that need to be invoked for the sub workflow
                     extraOptions = addon(options)
-                    sub_wf_cmd = "%s %s -d %s --top-dir %s" % (
+                    sub_wf_cmd = "{} {} -d {} --top-dir {}".format(
                         user_cmd,
                         extraOptions,
                         my_wfdir,
@@ -1568,7 +1566,7 @@ fi
                 if len(my_job.initial_dir):
                     # Add the initial dir to all files to be copied
                     my_file = os.path.join(my_job.initial_dir, my_file)
-                debug_script.write("cp %s %s\n" % (my_file, debug_dir))
+                debug_script.write("cp {} {}\n".format(my_file, debug_dir))
 
         # Extra newline before executing the job
         debug_script.write("\n")

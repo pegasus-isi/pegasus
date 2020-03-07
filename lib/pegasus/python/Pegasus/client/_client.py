@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import logging
 import re
 import shutil
@@ -21,7 +19,7 @@ def from_env(pegasus_home: str = None):
     return Client(pegasus_home)
 
 
-class Client(object):
+class Client:
     """
     Pegasus client.
 
@@ -60,7 +58,7 @@ class Client(object):
         cmd = [self._plan]
 
         for k, v in kwargs.items():
-            cmd.append("-D%s=%s" % (k, v))
+            cmd.append("-D{}={}".format(k, v))
 
         if conf:
             cmd.extend(("--conf", conf))
@@ -100,9 +98,9 @@ class Client(object):
         rv = subprocess.run(cmd)
 
         if rv.returncode:
-            self._log.fatal("Plan: %s \n %s" % (rv.stdout, rv.stderr))
+            self._log.fatal("Plan: {} \n {}".format(rv.stdout, rv.stderr))
 
-        self._log.info("Plan: %s \n %s" % (rv.stdout, rv.stderr))
+        self._log.info("Plan: {} \n {}".format(rv.stdout, rv.stderr))
 
         submit_dir = self._get_submit_dir(rv.stdout)
         workflow = Workflow(submit_dir, self)
@@ -119,9 +117,9 @@ class Client(object):
         rv = subprocess.run(cmd)
 
         if rv.returncode:
-            self._log.fatal("Run: %s \n %s" % (rv.stdout, rv.stderr))
+            self._log.fatal("Run: {} \n {}".format(rv.stdout, rv.stderr))
 
-        self._log.info("Run: %s \n %s" % (rv.stdout, rv.stderr))
+        self._log.info("Run: {} \n {}".format(rv.stdout, rv.stderr))
 
     def status(self, submit_dir: str, long: bool = False, verbose: int = 0):
         cmd = [self._status]
@@ -137,9 +135,9 @@ class Client(object):
         rv = subprocess.run(cmd)
 
         if rv.returncode:
-            self._log.fatal("Status: %s \n %s" % (rv.stdout, rv.stderr))
+            self._log.fatal("Status: {} \n {}".format(rv.stdout, rv.stderr))
 
-        self._log.info("Status: %s \n %s" % (rv.stdout, rv.stderr))
+        self._log.info("Status: {} \n {}".format(rv.stdout, rv.stderr))
 
     def wait(self, submit_dir: str, delay: int = 2):
         """Prints progress bar and blocks until workflow completes or fails"""
@@ -242,9 +240,9 @@ class Client(object):
         rv = subprocess.run(cmd)
 
         if rv.returncode:
-            self._log.fatal("Remove: %s \n %s" % (rv.stdout, rv.stderr))
+            self._log.fatal("Remove: {} \n {}".format(rv.stdout, rv.stderr))
 
-        self._log.info("Remove: %s \n %s" % (rv.stdout, rv.stderr))
+        self._log.info("Remove: {} \n {}".format(rv.stdout, rv.stderr))
 
     def analyzer(self, submit_dir: str, verbose: int = 0):
         cmd = [self._analyzer]
@@ -257,9 +255,9 @@ class Client(object):
         rv = subprocess.run(cmd)
 
         if rv.returncode:
-            self._log.fatal("Analyzer: %s \n %s" % (rv.stdout, rv.stderr))
+            self._log.fatal("Analyzer: {} \n {}".format(rv.stdout, rv.stderr))
 
-        self._log.info("Analyzer: %s \n %s" % (rv.stdout, rv.stderr))
+        self._log.info("Analyzer: {} \n {}".format(rv.stdout, rv.stderr))
 
     def statistics(self, submit_dir: str, verbose: int = 0):
         cmd = [self._statistics]
@@ -272,9 +270,9 @@ class Client(object):
         rv = subprocess.run(cmd)
 
         if rv.returncode:
-            self._log.fatal("Statistics: %s \n %s" % (rv.stdout, rv.stderr))
+            self._log.fatal("Statistics: {} \n {}".format(rv.stdout, rv.stderr))
 
-        self._log.info("Statistics: %s \n %s" % (rv.stdout, rv.stderr))
+        self._log.info("Statistics: {} \n {}".format(rv.stdout, rv.stderr))
 
     @staticmethod
     def _get_submit_dir(output: str):
@@ -294,7 +292,7 @@ class Client(object):
                 return match.group(2)
 
 
-class Workflow(object):
+class Workflow:
     def __init__(self, submit_dir: str, client: Client = None):
         self._log = logging.getLogger(__name__)
         self._client = None

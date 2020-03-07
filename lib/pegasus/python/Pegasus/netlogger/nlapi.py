@@ -202,7 +202,7 @@ class LevelConfig:
                 line = f.readline()
                 i = int(line.strip())
                 self._level = i
-            except IOError:
+            except OSError:
                 pass
             except ValueError:
                 pass
@@ -261,7 +261,7 @@ class Log:
         if isinstance(logfile, str):
             try:
                 self._logfile = urlfile(logfile)
-            except (socket.gaierror, socket.error, IOError) as E:
+            except (socket.gaierror, OSError) as E:
                 raise self.OpenError(E)
         else:
             self._logfile = logfile
@@ -351,16 +351,16 @@ class Log:
             k = k.replace("__", ".")
             if isinstance(v, str):
                 v = quotestr(v)
-                fields.append("%s=%s" % (k, v))
+                fields.append("{}={}".format(k, v))
             elif isinstance(v, float):
-                fields.append("%s=%lf" % (k, v))
+                fields.append("{}={:f}".format(k, v))
             elif isinstance(v, int):
                 fields.append("%s=%d" % (k, v))
             else:
                 s = str(v)
                 if " " in s or "\t" in s:
                     s = '"%s"' % s
-                fields.append("%s=%s" % (k, s))
+                fields.append("{}={}".format(k, s))
 
     def format(self, event, ts, level, kw):
         if not self._pretty:
@@ -410,11 +410,13 @@ class Log:
                 del kw["msg"]
             else:
                 msg = None
-            remainder = ",".join(["%s=%s" % (key, value) for key, value in kw.items()])
+            remainder = ",".join(
+                ["{}={}".format(key, value) for key, value in kw.items()]
+            )
             if msg:
-                buf = "%s %-6s %s | %s. %s" % (ts, level, event, msg, remainder)
+                buf = "{} {:<6} {} | {}. {}".format(ts, level, event, msg, remainder)
             else:
-                buf = "%s %-6s %s | %s" % (ts, level, event, remainder)
+                buf = "{} {:<6} {} | {}".format(ts, level, event, remainder)
             # add traceback
             if tbstr:
                 buf += "\n" + tbstr

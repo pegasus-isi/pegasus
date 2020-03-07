@@ -98,7 +98,7 @@ def compute_stampede_db_url():
     m_wf_id = g.m_wf_id
 
     def _get_cache_key(key_suffix):
-        return "%s.%s" % (md5sum.hexdigest(), key_suffix)
+        return "{}.{}".format(md5sum.hexdigest(), key_suffix)
 
     cache_key = _get_cache_key(m_wf_id)
 
@@ -128,9 +128,13 @@ def get_query_args():
         try:
             return int(value)
         except ValueError as e:
-            log.exception("Query Argument %s = %s is not a valid int" % (q_arg, value))
+            log.exception(
+                "Query Argument {} = {} is not a valid int".format(q_arg, value)
+            )
             e = ValueError(
-                "Expecting integer for argument %s, found %r" % (q_arg, str(value))
+                "Expecting integer for argument {}, found {!r}".format(
+                    q_arg, str(value)
+                )
             )
             e.codes = ("INVALID_QUERY_ARGUMENT", 400)
             raise e from None
@@ -141,18 +145,20 @@ def get_query_args():
     def to_bool(q_arg, value):
         value = value.strip().lower()
 
-        if value in set(["1", "true"]):
+        if value in {"1", "true"}:
             return True
 
-        elif value in set(["0", "false"]):
+        elif value in {"0", "false"}:
             return False
 
         else:
             log.exception(
-                "Query Argument %s = %s is not a valid boolean" % (q_arg, value)
+                "Query Argument {} = {} is not a valid boolean".format(q_arg, value)
             )
             e = ValueError(
-                "Expecting boolean for argument %s, found %r" % (q_arg, str(value))
+                "Expecting boolean for argument {}, found {!r}".format(
+                    q_arg, str(value)
+                )
             )
             e.codes = ("INVALID_QUERY_ARGUMENT", 400)
             raise e

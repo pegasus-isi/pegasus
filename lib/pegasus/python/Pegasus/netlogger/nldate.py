@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import calendar
 import re
 import time
@@ -7,11 +5,11 @@ import time
 from . import magicdate
 
 ISO_DATE_PARTS = re.compile(
-    "(\d\d\d\d)(?:-(\d\d)(?:-(\d\d)(?:T(\d\d)(?::(\d\d)(?::(\d\d)(?:\.(\d+))?)?)?)?)?)?(Z|[+-]\d\d:\d\d)?"
+    r"(\d\d\d\d)(?:-(\d\d)(?:-(\d\d)(?:T(\d\d)(?::(\d\d)(?::(\d\d)(?:\.(\d+))?)?)?)?)?)?(Z|[+-]\d\d:\d\d)?"
 )
 ISO_DATE_ZEROES = (None, "01", "01", "00", "00", "00", "0")
 
-NUMBER_DATE = re.compile("(\d+)(?:\.(\d+))?")
+NUMBER_DATE = re.compile(r"(\d+)(?:\.(\d+))?")
 
 # Date format constants
 UNKNOWN = "Unknown"
@@ -291,7 +289,7 @@ def localtimeFormatISO(sec):
 
 # Syslog-style dates (always in localtime)
 SYSLOG_DATE_RE = re.compile(
-    "\s*(...)\s+(...)\s+(\d\d?) " + "(\d\d):(\d\d):(\d\d)\s+(\d\d\d\d)\s*"
+    r"\s*(...)\s+(...)\s+(\d\d?) " + r"(\d\d):(\d\d):(\d\d)\s+(\d\d\d\d)\s*"
 )
 MONTHS = {
     "Jan": 1,

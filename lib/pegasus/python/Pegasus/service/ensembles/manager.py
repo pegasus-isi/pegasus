@@ -40,16 +40,16 @@ def get_bin(name, exe):
 
     if HOME is not None:
         if not os.path.isdir(HOME):
-            raise EMError("%s is not a directory: %s" % (name, HOME))
+            raise EMError("{} is not a directory: {}".format(name, HOME))
         BIN = os.path.join(HOME, "bin")
         if not os.path.isdir(BIN):
-            raise EMError("%s/bin is not a directory: %s" % (name, BIN))
+            raise EMError("{}/bin is not a directory: {}".format(name, BIN))
         exepath = os.path.join(BIN, exe)
 
     exepath = exepath or pathfind(exe)
 
     if not os.path.isfile(exepath):
-        raise EMError("%s not found: %s" % (exe, exepath))
+        raise EMError("{} not found: {}".format(exe, exepath))
 
     BIN = os.path.dirname(exepath)
 
@@ -167,11 +167,8 @@ class WorkflowProcessor:
             if os.path.isfile(f):
                 os.remove(f)
 
-        script = "(%s) 2>&1 | tee -a %s | grep pegasus-run >%s ; /bin/echo $? >%s" % (
-            plan_command,
-            logfile,
-            runfile,
-            resultfile,
+        script = "({}) 2>&1 | tee -a {} | grep pegasus-run >{} ; /bin/echo $? >{}".format(
+            plan_command, logfile, runfile, resultfile,
         )
         forkscript(script, cwd=basedir, pidfile=pidfile, env=get_script_env())
 
@@ -182,7 +179,7 @@ class WorkflowProcessor:
         if not os.path.exists(pidfile):
             raise EMError("pidfile missing")
 
-        pid = int(open(pidfile, "r").read())
+        pid = int(open(pidfile).read())
 
         try:
             os.kill(pid, 0)
@@ -202,7 +199,7 @@ class WorkflowProcessor:
         if not os.path.exists(resultfile):
             raise EMError("Result file not found: %s" % resultfile)
 
-        exitcode = int(open(resultfile, "r").read())
+        exitcode = int(open(resultfile).read())
 
         if exitcode != 0:
             return False
@@ -224,7 +221,7 @@ class WorkflowProcessor:
 
         submitdir = None
 
-        f = open(logfile, "r")
+        f = open(logfile)
         try:
             for l in f:
                 if l.startswith("pegasus-run"):
@@ -248,7 +245,7 @@ class WorkflowProcessor:
 
         wf_uuid = None
 
-        f = open(braindump, "r")
+        f = open(braindump)
         try:
             for l in f:
                 if l.startswith("wf_uuid"):
@@ -274,7 +271,7 @@ class WorkflowProcessor:
         logfile = self.workflow.get_logfile()
 
         runscript(
-            "pegasus-run %s >>%s 2>&1" % (submitdir, logfile), env=get_script_env()
+            "pegasus-run {} >>{} 2>&1".format(submitdir, logfile), env=get_script_env()
         )
 
     def get_dashboard(self):
@@ -365,14 +362,12 @@ class EnsembleProcessor:
         # We are only interested in workflows that are in one
         # of the following states. The EM doesn't handle other
         # states.
-        active_states = set(
-            (
-                EnsembleWorkflowStates.READY,
-                EnsembleWorkflowStates.PLANNING,
-                EnsembleWorkflowStates.QUEUED,
-                EnsembleWorkflowStates.RUNNING,
-            )
-        )
+        active_states = {
+            EnsembleWorkflowStates.READY,
+            EnsembleWorkflowStates.PLANNING,
+            EnsembleWorkflowStates.QUEUED,
+            EnsembleWorkflowStates.RUNNING,
+        }
 
         # We need a copy of the list so we can sort it
         self.workflows = [w for w in ensemble.workflows if w.state in active_states]

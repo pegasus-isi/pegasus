@@ -85,7 +85,7 @@ class IntegrityMetric:
         return hash(self.key())
 
     def __str__(self):
-        return "(%s,%s,%s, %s, %s , %s)" % (
+        return "({},{},{}, {}, {} , {})".format(
             self.type,
             self.file_type,
             self.count,
@@ -104,7 +104,7 @@ class IntegrityMetric:
             self.failed += other.failed
             self.duration += other.duration
             return
-        raise KeyError("Objects not compatible %s %s" % (self, other))
+        raise KeyError("Objects not compatible {} {}".format(self, other))
 
 
 class Job:
@@ -369,8 +369,8 @@ class Job:
             parse_environment = True
 
         try:
-            SUB = open(submit_file, "r")
-        except IOError:
+            SUB = open(submit_file)
+        except OSError:
             logger.error("unable to parse %s" % (submit_file))
             return my_result, my_site
 
@@ -711,7 +711,7 @@ class Job:
         my_err_file = os.path.join(run_dir, basename)
 
         try:
-            ERR = open(my_err_file, "r")
+            ERR = open(my_err_file)
             # PM-1274 parse any monitoring events such as integrity related
             # from PegasusLite .err file
             job_stderr = self.split_task_output(ERR.read())
@@ -730,7 +730,7 @@ class Job:
                 # a match yes it is a PegasusLite job . gleam the hostname
                 self._host_id = hostname_match.group(1)
 
-        except IOError:
+        except OSError:
             self._stderr_text = None
             if not self.is_noop_job():
                 logger.warning(
@@ -763,7 +763,7 @@ class Job:
             out_file = os.path.join(run_dir, basename)
 
         try:
-            OUT = open(out_file, "r")
+            OUT = open(out_file)
             job_stdout = self.split_task_output(OUT.read())
             buf = job_stdout.user_data
             if len(buf) > my_max_encoded_length:
@@ -772,7 +772,7 @@ class Job:
 
             if store_monitoring_events:
                 self._add_additional_monitoring_events(job_stdout.events)
-        except IOError:
+        except OSError:
             self._stdout_text = None
             if not self.is_noop_job():
                 logger.warning(
@@ -940,7 +940,9 @@ class Job:
 
         # sanity check
         if job_type == "unknown" or job_type == "unassigned":
-            logger.warning("Job %s has unknown type %s" % (self._exec_job_id, job_type))
+            logger.warning(
+                "Job {} has unknown type {}".format(self._exec_job_id, job_type)
+            )
 
         # if error_count > 0:
         #  print kwargs

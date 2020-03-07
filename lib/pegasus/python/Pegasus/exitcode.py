@@ -1,8 +1,5 @@
-from __future__ import print_function
-
 import atexit
 import datetime
-import io
 import json
 import os
 import re
@@ -36,7 +33,7 @@ def rotate_file(outfile, errfile):
 
     # This is just to prevent the file from being accidentally renamed
     # again in testing.
-    if re.search("\.out\.[0-9]{3}$", outfile):
+    if re.search(r"\.out\.[0-9]{3}$", outfile):
         return outfile, errfile
 
     # Must end in .out
@@ -76,7 +73,7 @@ def readfile(filename):
     if filename is None or not os.path.isfile(filename):
         return ""
 
-    f = open(filename, "r")
+    f = open(filename)
     try:
         return f.read()
     finally:
@@ -182,8 +179,7 @@ def check_kickstart_records(txt):
 
 def unquote_message(message):
     def genchars():
-        for c in message:
-            yield c
+        yield from message
 
     chars = genchars()
     output = []
@@ -266,7 +262,7 @@ def append_to_wf_metadata_log(files_metadata, logfile):
     :return:
     """
     # writing to log file (concurrency safe)
-    with io.open(logfile, "a", encoding="utf8") as outfile:
+    with open(logfile, "a", encoding="utf8") as outfile:
         for file_metadata in files_metadata:
             res = file_metadata.convert_to_rce()
             outfile.write(res + "\n")
@@ -385,13 +381,13 @@ def _write_logs(log_filename):
         std_out.close()
         std_err.close()
 
-        with open(std_out.name, "r") as sout:
+        with open(std_out.name) as sout:
             log["std_out"] = sout.read()
-        with open(std_err.name, "r") as serr:
+        with open(std_err.name) as serr:
             log["std_err"] = serr.read()
 
         # writing to log file (concurrency safe)
-        with io.open(log_filename, "a", encoding="utf8") as outfile:
+        with open(log_filename, "a", encoding="utf8") as outfile:
             res = json.dumps(log, ensure_ascii=False)
             outfile.write(res + "\n")
 

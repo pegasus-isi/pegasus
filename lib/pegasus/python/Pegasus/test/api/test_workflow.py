@@ -998,7 +998,7 @@ class TestWorkflow:
         # _path should be set by the call to write
         assert wf._path == path
 
-        with open(path, "r") as f:
+        with open(path) as f:
             result = yaml.safe_load(f)
 
         workflow_schema = load_schema("wf-5.0.json")
@@ -1024,7 +1024,7 @@ class TestWorkflow:
         wf.write()
         EXPECTED_FILE = "Workflow.yml"
 
-        with open(EXPECTED_FILE, "r") as f:
+        with open(EXPECTED_FILE) as f:
             result = yaml.safe_load(f)
 
         result["jobs"] = sorted(result["jobs"], key=lambda j: j["id"])

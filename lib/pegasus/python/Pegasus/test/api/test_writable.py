@@ -48,7 +48,7 @@ class Test_CustomEncoder:
 class TestWritable:
     def test_write_using_defaults(self, writable_obj, expected, mocker):
         writable_obj.write()
-        with open("Container.yml", "r") as f:
+        with open("Container.yml") as f:
             assert expected == yaml.safe_load(f)
 
         os.remove("Container.yml")
@@ -68,7 +68,7 @@ class TestWritable:
     )
     def test_write_using_str_input(self, writable_obj, expected, file, _format, loader):
         writable_obj.write(file, _format=_format)
-        with open(file, "r") as f:
+        with open(file) as f:
             assert loader(f) == expected
 
         os.remove(file)

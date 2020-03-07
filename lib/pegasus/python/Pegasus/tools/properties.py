@@ -8,7 +8,6 @@ definitions from sys.argv during the module
 initialization. Therefore, it is recommended to use this module
 before parsing other command-line arguments.
 """
-from __future__ import print_function
 
 import logging
 import os
@@ -141,7 +140,7 @@ def parse_properties(my_file, hashref={}):
     my_save = ""
 
     if isinstance(my_file, str):
-        my_file = open(my_file, "r")
+        my_file = open(my_file)
 
     logger.debug("# parsing properties in %s..." % (my_file))
 
@@ -182,7 +181,7 @@ def parse_properties(my_file, hashref={}):
                 # Parse successful
                 k = my_res.group(1)
                 v = my_res.group(2)
-                logger.trace("#Property being stored is # %s ==> %s" % (k, v))
+                logger.trace("#Property being stored is # {} ==> {}".format(k, v))
 
                 # Substitutions
                 subs = re_find_subs.search(v)
@@ -205,7 +204,7 @@ def parse_properties(my_file, hashref={}):
                 # Insert key, value into my_result
                 my_result[k] = v
             else:
-                logger.fatal("Illegal content in %s: %s" % (my_file, line))
+                logger.fatal("Illegal content in {}: {}".format(my_file, line))
                 sys.exit(1)
 
     my_file.close()
@@ -377,7 +376,7 @@ class Properties:
         my_file.write("# generated %s\n" % (time.asctime()))
         for my_key in self.m_config:
             # Write entry
-            my_file.write("%s=%s\n" % (my_key, self.m_config[my_key]))
+            my_file.write("{}={}\n".format(my_key, self.m_config[my_key]))
             my_count = my_count + 1
 
         # Close file if not stdout

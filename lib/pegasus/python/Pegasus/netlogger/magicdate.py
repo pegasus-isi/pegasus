@@ -9,7 +9,7 @@ def check_magicdate(option, opt, value):
     try:
         return magicdate(value)
     except:
-        raise OptionValueError("option %s: invalid date value: %r" % (opt, value))
+        raise OptionValueError("option {}: invalid date value: {!r}".format(opt, value))
 
 
 class MagicDateOption(Option):

@@ -345,7 +345,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         )
 
     def __str__(self):
-        return "<Transformation {0}::{1}:{2}>".format(
+        return "<Transformation {}::{}:{}>".format(
             self.namespace, self.name, self.version
         )
 
@@ -356,7 +356,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         if isinstance(other, Transformation):
             return self._get_key() == other._get_key()
         raise ValueError(
-            "Transformation cannot be compared with {0}".format(type(other))
+            "Transformation cannot be compared with {}".format(type(other))
         )
 
 
@@ -452,7 +452,7 @@ class TransformationCatalog(Writable):
 
             if c.name in self.containers:
                 raise DuplicateError(
-                    "container: {0} has already been added to this TransformationCatalog".format(
+                    "container: {} has already been added to this TransformationCatalog".format(
                         c.name
                     )
                 )

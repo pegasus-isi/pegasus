@@ -162,10 +162,10 @@ from Pegasus.db.schema import *
 # Main stats class.
 
 
-class StampedeStatistics(object):
+class StampedeStatistics:
     def __init__(self, connString, expand_workflow=True):
         self.log = logging.getLogger(
-            "%s.%s" % (self.__module__, self.__class__.__name__)
+            "{}.{}".format(self.__module__, self.__class__.__name__)
         )
         try:
             self.session = connection.connect(connString)

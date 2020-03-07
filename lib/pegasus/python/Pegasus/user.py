@@ -6,7 +6,7 @@ class NoSuchUser(Exception):
     pass
 
 
-class User(object):
+class User:
     def __init__(self, uid, gid, username, homedir):
         self.uid = uid
         self.gid = gid

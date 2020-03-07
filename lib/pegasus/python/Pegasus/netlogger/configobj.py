@@ -16,7 +16,6 @@
 # http://lists.sourceforge.net/lists/listinfo/configobj-develop
 # Comments, suggestions and bug reports welcome.
 
-from __future__ import generators
 
 import os
 import re
@@ -186,7 +185,7 @@ class UnknownType(Exception):
     pass
 
 
-class Builder(object):
+class Builder:
     def build(self, o):
         m = getattr(self, "build_" + o.__class__.__name__, None)
         if m is None:
@@ -332,7 +331,7 @@ class UnreprError(ConfigObjError):
     """An error parsing in unrepr mode."""
 
 
-class InterpolationEngine(object):
+class InterpolationEngine:
     """
     A helper class to help perform string interpolation.
 
@@ -729,7 +728,7 @@ class Section(dict):
 
     def iterkeys(self):
         """D.iterkeys() -> an iterator over the keys of D"""
-        return iter((self.scalars + self.sections))
+        return iter(self.scalars + self.sections)
 
     __iter__ = iterkeys
 
@@ -741,7 +740,7 @@ class Section(dict):
         """x.__repr__() <==> repr(x)"""
         return "{%s}" % ", ".join(
             [
-                ("%s: %s" % (repr(key), repr(self[key])))
+                ("{}: {}".format(repr(key), repr(self[key])))
                 for key in (self.scalars + self.sections)
             ]
         )
@@ -1271,7 +1270,7 @@ class ConfigObj(Section):
                 h.close()
             elif self.file_error:
                 # raise an error if the file doesn't exist
-                raise IOError('Config file not found: "%s".' % self.filename)
+                raise OSError('Config file not found: "%s".' % self.filename)
             else:
                 # file doesn't already exist
                 if self.create_empty:
@@ -1384,7 +1383,7 @@ class ConfigObj(Section):
     def __repr__(self):
         return "ConfigObj({%s})" % ", ".join(
             [
-                ("%s: %s" % (repr(key), repr(self[key])))
+                ("{}: {}".format(repr(key), repr(self[key])))
                 for key in (self.scalars + self.sections)
             ]
         )
@@ -1950,8 +1949,8 @@ class ConfigObj(Section):
                 # FIXME: Should these errors have a reference
                 #        to the already parsed ConfigObj ?
                 raise ConfigspecError("Parsing configspec failed: %s" % e)
-            except IOError as e:
-                raise IOError("Reading configspec failed: %s" % e)
+            except OSError as e:
+                raise OSError("Reading configspec failed: %s" % e)
 
         self._set_configspec_value(configspec, self)
 
@@ -2033,7 +2032,7 @@ class ConfigObj(Section):
             val = self._decode_element(self._quote(this_entry))
         else:
             val = repr(this_entry)
-        return "%s%s%s%s%s" % (
+        return "{}{}{}{}{}".format(
             indent_string,
             self._decode_element(self._quote(entry, multiline=False)),
             self._a_to_u(" = "),
@@ -2043,7 +2042,7 @@ class ConfigObj(Section):
 
     def _write_marker(self, indent_string, depth, entry, comment):
         """Write a section marker line"""
-        return "%s%s%s%s%s" % (
+        return "{}{}{}{}{}".format(
             indent_string,
             self._a_to_u("[" * depth),
             self._quote(self._decode_element(entry), multiline=False),
@@ -2362,7 +2361,7 @@ class ConfigObj(Section):
         self._load(filename, configspec)
 
 
-class SimpleVal(object):
+class SimpleVal:
     """
     A simple validator.
     Can be used to check that all members expected are present.

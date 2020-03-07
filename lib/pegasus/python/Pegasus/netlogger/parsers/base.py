@@ -46,7 +46,7 @@ def getGuid(*strings):
     for s in strings:
         m5.update(s)
     t = m5.hexdigest()
-    guid = "%s-%s-%s-%s-%s" % (t[:8], t[8:12], t[12:16], t[16:20], t[20:])
+    guid = "{}-{}-{}-{}-{}".format(t[:8], t[8:12], t[12:16], t[16:20], t[20:])
     return guid
 
 
@@ -193,7 +193,7 @@ def _bp_extract(s, as_dict=True, validate=False):
         for n, v, vq in BP_EXPR.findall(s):
             # check input
             if not n:
-                raise BPParseError("Bad key: '{0}'".format(n))
+                raise BPParseError("Bad key: '{}'".format(n))
             # add to result
             if vq:
                 v = vq.replace('\\"', '"')
@@ -207,7 +207,7 @@ def _bp_extract(s, as_dict=True, validate=False):
             # print(",".join(["<"+x+">" for x in (ws1, n, v, q1, vq, q2, ws2)]))
             # check input
             if not n:
-                raise BPParseError("Bad key: '{0}'".format(n))
+                raise BPParseError("Bad key: '{}'".format(n))
             valid_data_len += (
                 sum(map(len, (ws1, n, v, q1, vq, q2, ws2))) + 1
             )  # 1 for '='
@@ -221,7 +221,7 @@ def _bp_extract(s, as_dict=True, validate=False):
         # check overall input
         junk_chars = len(s) - valid_data_len
         if junk_chars != 0:
-            raise BPValidationError("{0:d} junk chars in '{1}'".format(junk_chars, s))
+            raise BPValidationError("{:d} junk chars in '{}'".format(junk_chars, s))
     return result
 
 
@@ -308,7 +308,7 @@ class BaseParser(ProcessInterface, DoesLogging):
             self._infile_rlist = ()
         try:
             self._offs = self._infile.tell()
-        except IOError:
+        except OSError:
             self._offs = 0
         self._prev_len, self._saved_len = 0, 0
         self._saved = []
@@ -326,7 +326,7 @@ class BaseParser(ProcessInterface, DoesLogging):
         self._const_nvp.update(kw)
         # cache string-valued version, will be empty string if kw == {}
         self._const_nvp_str = " ".join(
-            ["%s=%s" % (k, v) for k, v in self._const_nvp.items()]
+            ["{}={}".format(k, v) for k, v in self._const_nvp.items()]
         )
         self.parse_date = parse_date
 
@@ -538,7 +538,7 @@ class BaseParser(ProcessInterface, DoesLogging):
         return bool(s)
 
     def __str__(self):
-        return "%s(%s)" % (self._name, self._infile)
+        return "{}({})".format(self._name, self._infile)
 
 
 class NLBaseParser(BaseParser):
@@ -617,7 +617,7 @@ class NLSimpleParser(DoesLogging):
         # higher-level verification
         for key in TS_FIELD, EVENT_FIELD:
             if key not in fields:
-                raise BPParseError("missing required key '{0}'".format(key))
+                raise BPParseError("missing required key '{}'".format(key))
         # Pre-process date, if requested
         if self.parse_date:
             fields[TS_FIELD] = parse_ts(fields[TS_FIELD])

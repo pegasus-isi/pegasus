@@ -26,7 +26,9 @@ class BufferedReadline:
                 return self.__dict__[x]
             except KeyError:
                 raise AttributeError(
-                    "'%s' object has no attribute '%s'" % (self.__class__.__name__, x)
+                    "'{}' object has no attribute '{}'".format(
+                        self.__class__.__name__, x
+                    )
                 )
         return getattr(self._f, x)
 

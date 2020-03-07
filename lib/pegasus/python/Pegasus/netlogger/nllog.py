@@ -122,7 +122,7 @@ class DoesLogging:
     def __init__(self, name=None):
         if name is None:
             if self.__module__ != "__main__":
-                name = "%s.%s" % (self.__module__, self.__class__.__name__)
+                name = "{}.{}".format(self.__module__, self.__class__.__name__)
             else:
                 name = self.__class__.__name__
         self.log = _logger(name)
@@ -167,9 +167,7 @@ class BPLogger(logging.Logger):
         if self._qualname:
             event = self._qualname + "." + event
         # replace '__' with '.'
-        kwargs = dict(
-            [(key.replace("__", "."), value) for key, value in kwargs.iteritems()]
-        )
+        kwargs = {key.replace("__", "."): value for key, value in kwargs.iteritems()}
         # format as BP
         msg = self._format(event, ts, nl_level, **kwargs)
         logging.Logger.log(self, level, msg, exc_info=exc_info)
@@ -285,9 +283,7 @@ class RawBPLogger(logging.Logger):
         if self._qualname:
             event = self._qualname + "." + event
         # replace '__' with '.'
-        kwargs = dict(
-            [(key.replace("__", "."), value) for key, value in kwargs.iteritems()]
-        )
+        kwargs = {key.replace("__", "."): value for key, value in kwargs.iteritems()}
         # build msg dictionary
         msg = {"event": event, "ts": ts, "level": nl_level}
         msg.update(kwargs)
@@ -438,11 +434,13 @@ class Profiler(type):
     def __new__(cls, classname, bases, classdict):
         if os.getenv("NETLOGGER_ON", False) in ("off", "0", "no", "false", "", False):
             setLoggerClass(FakeBPLogger)
-            classdict["_log"] = _logger("%s.%s" % (classdict["__module__"], classname))
+            classdict["_log"] = _logger(
+                "{}.{}".format(classdict["__module__"], classname)
+            )
             return type.__new__(cls, classname, bases, classdict)
 
         classdict["_log"] = log = _logger(
-            "%s.%s" % (classdict["__module__"], classname)
+            "{}.{}".format(classdict["__module__"], classname)
         )
         log.set_meta(pid=os.getpid(), ppid=os.getppid(), gpid=os.getgid())
         keys = []
@@ -568,9 +566,8 @@ class OptionParser(optparse.OptionParser):
                      version
         """
         if "version" not in kwargs:
-            version_str = "%%prog, NetLogger Toolkit version: %s\n  %s" % (
-                NL_VERSION,
-                NL_CREATE_DATE,
+            version_str = "%prog, NetLogger Toolkit version: {}\n  {}".format(
+                NL_VERSION, NL_CREATE_DATE,
             )
             version_str += "\n\n" + NL_COPYRIGHT
             kwargs["version"] = version_str
@@ -693,8 +690,8 @@ class OptionParser(optparse.OptionParser):
                         handler = _tfrh(logfile, when=tm_unit, interval=tm_interval)
                     else:
                         handler = logging.FileHandler(logfile)
-                except IOError as err:
-                    self.error("Cannot open log file '%s': %s" % (logfile, err))
+                except OSError as err:
+                    self.error("Cannot open log file '{}': {}".format(logfile, err))
                 sys.stderr = handler.stream
                 handler.setFormatter(logging.Formatter("%(message)s"))
         else:
@@ -715,8 +712,8 @@ class OptionParser(optparse.OptionParser):
                         handler = _tfrh(logfile, when=tm_unit, interval=tm_interval)
                     else:
                         handler = logging.FileHandler(logfile)
-                except IOError as err:
-                    self.error("Cannot open log file '%s': %s" % (logfile, err))
+                except OSError as err:
+                    self.error("Cannot open log file '{}': {}".format(logfile, err))
                 handler.setFormatter(logging.Formatter("%(message)s"))
         if handler:
             log.addHandler(handler)

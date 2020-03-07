@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import ast
 import logging
 
@@ -117,7 +115,7 @@ def query_parse(clause, **symbols):
 
 class _QueryEvaluator(ast.NodeVisitor):
     def __init__(self, **symbols):
-        super(_QueryEvaluator, self).__init__()
+        super().__init__()
         self._symbols = symbols
         self._log = logging.getLogger(__name__)
 
@@ -206,7 +204,7 @@ class _QueryEvaluator(ast.NodeVisitor):
         return tuple([self.visit(e) for e in n.elts])
 
     def visit_Set(self, n):
-        return set([self.visit(n) for n in n.elts])
+        return {self.visit(n) for n in n.elts}
 
     def visit_Call(self, n):
         args = []

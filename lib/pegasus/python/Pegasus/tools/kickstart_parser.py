@@ -4,7 +4,6 @@
 Pegasus utility functions for pasing a kickstart output file and return wanted information
 
 """
-from __future__ import print_function
 
 import logging
 import re
@@ -47,7 +46,7 @@ re_parse_quoted_props = re.compile(r'(\S+)\s*=\s*"([^"]+)"')
 logger = logging.getLogger(__name__)
 
 
-class Parser(object):
+class Parser:
     """
     This class is used to parse a kickstart output file, and return
     requested information.
@@ -286,7 +285,7 @@ class YAMLParser(Parser):
     """
 
     def __init__(self, filename):
-        super(YAMLParser, self).__init__(filename)
+        super().__init__(filename)
 
     def parse(self, keys_dict, tasks=True, clustered=True):
         """
@@ -770,7 +769,7 @@ class XMLParser(Parser):
     """
 
     def __init__(self, filename):
-        super(XMLParser, self).__init__(filename)
+        super().__init__(filename)
         self._parsing_job_element = False
         self._parsing_arguments = False
         self._parsing_main_job = False

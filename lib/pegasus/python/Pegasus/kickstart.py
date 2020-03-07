@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 :mod:`kickstart` exposes an API to serialize and deserialize Pegasus's kickstart file.
 

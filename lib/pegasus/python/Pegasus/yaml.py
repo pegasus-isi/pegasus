@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Abstract :mod:`yaml` with Pegasus specific defaults.
 

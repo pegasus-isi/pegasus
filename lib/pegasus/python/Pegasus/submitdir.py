@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import glob
 import os
 import shutil
@@ -58,7 +56,7 @@ class MasterDatabase:
         q.delete()
 
 
-class WorkflowDatabase(object):
+class WorkflowDatabase:
     def __init__(self, session):
         self.session = session
 
@@ -94,7 +92,7 @@ class WorkflowDatabase(object):
             log.info("New submit dir: %s" % wf.submit_dir)
 
 
-class SubmitDir(object):
+class SubmitDir:
     def __init__(self, submitdir, raise_err=True):
         self.submitdir = os.path.abspath(submitdir)
         self.submitdir_exists = True
@@ -528,7 +526,7 @@ class SubmitDir(object):
                             "\tWorkflow UUID, DAX Label, Submit Hostname, Submit Dir.\n"
                         )
                         for wf in wfs:
-                            msg += "\t%s, %s, %s, %s\n" % (
+                            msg += "\t{}, {}, {}, {}\n".format(
                                 wf.wf_uuid,
                                 wf.dax_label,
                                 wf.submit_hostname,

@@ -14,7 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-from __future__ import print_function
 
 import datetime
 import glob
@@ -82,7 +81,7 @@ class DBAdminError(Exception):
         :param pegasus_version: Pegasus DB version (integer)
         :param pegasus_compatible_version: Pegasus DB version (integer)
         """
-        super(DBAdminError, self).__init__(message)
+        super().__init__(message)
 
         self.db = db
         self.db_version = db_version
@@ -323,15 +322,15 @@ def db_downgrade(db, pegasus_version=None, force=False, verbose=True):
             max_range = _get_max_minor_version(i)
 
         for j in range(max_range, 0, -1):
-            k = get_class("%s-%s" % (i, j), db)
+            k = get_class("{}-{}".format(i, j), db)
             k.downgrade(force)
-            actual_version = float("%s.%s" % (i, j - 1))
+            actual_version = float("{}.{}".format(i, j - 1))
             _update_version(db, actual_version)
 
         if i > version:
             k = get_class(i, db)
             k.downgrade(force)
-            actual_version = float("%s.%s" % (i - 1, _get_max_minor_version(i - 1)))
+            actual_version = float("{}.{}".format(i - 1, _get_max_minor_version(i - 1)))
             _update_version(db, actual_version)
 
         if actual_version == version:
@@ -410,7 +409,7 @@ def all_workflows_db(
     print("Verifying and %s workflow databases:" % msg[0])
     i = counts["running"]
     for dburi in db_urls:
-        log.debug("%s '%s'..." % (msg[0], dburi))
+        log.debug("{} '{}'...".format(msg[0], dburi))
         i += 1
         sys.stdout.write("\r%d/%d" % (i, counts["total"]))
         sys.stdout.flush()
@@ -455,9 +454,13 @@ def all_workflows_db(
     f_err.close()
 
     print("\n\nSummary:")
-    print("  Verified/%s: %s/%s" % (msg[1], counts["success"], counts["total"]))
-    print("  Failed: %s/%s" % (counts["failed"], counts["total"]))
-    print("  Unable to connect: %s/%s" % (counts["unable_to_connect"], counts["total"]))
+    print("  Verified/{}: {}/{}".format(msg[1], counts["success"], counts["total"]))
+    print("  Failed: {}/{}".format(counts["failed"], counts["total"]))
+    print(
+        "  Unable to connect: {}/{}".format(
+            counts["unable_to_connect"], counts["total"]
+        )
+    )
     print(
         "  Unable to update (active workflows): %s/%s"
         % (counts["running"], counts["total"])
@@ -554,9 +557,9 @@ def _discover_version(db, pegasus_version=None, force=False, verbose=True):
 
         for j in range(1, max_range + 1):
             try:
-                k = get_class("%s-%s" % (i, j), db)
+                k = get_class("{}-{}".format(i, j), db)
                 k.update(force=force)
-                v = float("%s.%s" % (i, j))
+                v = float("{}.{}".format(i, j))
             except ImportError:
                 break
 
@@ -600,7 +603,7 @@ def _backup_db(db):
     # Backup MySQL databases
     elif url.drivername == "mysql":
         log.info("Backing up MySQL database. This operation may take a while.")
-        dest_file = "%s-%s.sql" % (url.database, time.strftime("%Y%m%d-%H%M%S"))
+        dest_file = "{}-{}.sql".format(url.database, time.strftime("%Y%m%d-%H%M%S"))
         # mysqldump command preparation
         command = "mysqldump"
         if url.username:
@@ -609,7 +612,7 @@ def _backup_db(db):
             command += " -h %s" % url.host
         if url.password:
             command += " --password=%s" % url.password
-        command += " %s > %s" % (url.database, dest_file)
+        command += " {} > {}".format(url.database, dest_file)
         out, err = subprocess.Popen(
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
         ).communicate()

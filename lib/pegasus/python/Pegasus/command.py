@@ -7,7 +7,7 @@ from Pegasus.tools import utils
 log = logging.getLogger(__name__)
 
 
-class Command(object):
+class Command:
     description = None
     epilog = None
     usage = "Usage: %prog [options] [args]"
@@ -76,7 +76,7 @@ class CompoundCommand(Command):
 
         lines = ["\n\nCommands:"]
         for cmd, cmdclass in self.commands:
-            lines.append("    %-10s %s" % (cmd, cmdclass.description))
+            lines.append("    {:<10} {}".format(cmd, cmdclass.description))
 
         self.parser.usage += "\n".join(lines)
 

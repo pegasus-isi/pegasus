@@ -41,7 +41,7 @@ log = logging.getLogger(__name__)
 metadata = MetaData()
 
 # for SQLite
-warnings.filterwarnings("ignore", ".*does \*not\* support Decimal*.")
+warnings.filterwarnings("ignore", r".*does \*not\* support Decimal*.")
 
 # These are keywords that all tables should have
 table_keywords = {}
@@ -117,7 +117,7 @@ def check_table_exists(engine, table):
 # --------------------------------------------------------------------
 
 
-class SABase(object):
+class SABase:
     """
     Base class for all the DB mapper objects.
     """
@@ -159,7 +159,7 @@ class SABase(object):
         for k, v in self.__dict__.items():
             if k == "_sa_instance_state":
                 continue
-            retval += "  * %s : %s\n" % (k, v)
+            retval += "  * {} : {}\n".format(k, v)
         return retval
 
 

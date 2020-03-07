@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 :mod:`transformation_catalog` exposes an API to serialize and deserialize Pegasus's transformation catalog file.
 

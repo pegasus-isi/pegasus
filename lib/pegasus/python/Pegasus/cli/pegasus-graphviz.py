@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from __future__ import print_function
 
 import sys
 import os
@@ -36,7 +35,7 @@ COLORS = [
 ]
 
 def rgb2hex(r,g,b):
-    return "#%02x%02x%02x" % (r*255,g*255,b*255)
+    return "#{:02x}{:02x}{:02x}".format(r*255,g*255,b*255)
 
 # Generate some colors to add to the list
 s = .7
@@ -46,11 +45,11 @@ for l in [.70, .55]:
         rgb = colorsys.hls_to_rgb(h/100.0, l, s)
         COLORS.append(rgb2hex(*rgb))
 
-class DAG(object):
+class DAG:
     def __init__(self):
         self.nodes = {}
 
-class Node(object):
+class Node:
     def __init__(self):
         self.id = None
         self.label = None
@@ -67,7 +66,7 @@ class Node(object):
         renderer.renderEdge(parent.id, self.id)
 
     def __repr__(self):
-        return "(%s, %s)" % (self.id, self.label)
+        return "({}, {})".format(self.id, self.label)
 
 class Job(Node):
     def __init__(self):
@@ -80,11 +79,11 @@ class Job(Node):
         elif renderer.label_type == 'id':
             label = "%s" % self.id
         elif renderer.label_type == 'xform-id':
-            label = "%s\\n%s" % (self.xform, self.id)
+            label = "{}\\n{}".format(self.xform, self.id)
         elif renderer.label_type == 'label-xform':
-            label = "%s\\n%s" % (self.label, self.xform)
+            label = "{}\\n{}".format(self.label, self.xform)
         elif renderer.label_type == 'label-id':
-            label = "%s\\n%s" % (self.label, self.id)
+            label = "{}\\n{}".format(self.label, self.id)
         else:
             label = self.label
         color = renderer.getcolor(self.xform)
@@ -97,7 +96,7 @@ class File(Node):
     def renderNode(self, renderer):
         renderer.renderNode(self.id, self.label, fillcolor="#ffed6f", shape="rect")
 
-class Stack(object):
+class Stack:
     def __init__(self):
         self.items = []
 
@@ -192,7 +191,7 @@ class DAXHandler(xml.sax.handler.ContentHandler):
                 f.parents.append(self.last_job)
                 self.last_job.children.append(f)
             elif link == "inout":
-                print("WARNING: inout file %s of %s creates a cycle." % (f.id, self.last_job))
+                print("WARNING: inout file {} of {} creates a cycle.".format(f.id, self.last_job))
                 f.children.append(self.last_job)
                 f.parents.append(self.last_job)
                 self.last_job.parents.append(f)
@@ -224,7 +223,7 @@ def parse_daxfile(fname, files=False):
     handler = DAXHandler(files)
     parser = xml.sax.make_parser()
     parser.setContentHandler(handler)
-    f = open(fname,"r")
+    f = open(fname)
     parser.parse(f)
     f.close()
     return handler.dag
@@ -247,7 +246,7 @@ def parse_xform_name(path):
 
     # Get it from the submit file
     if os.path.isfile(path):
-        f = open(path,'r')
+        f = open(path)
         for line in f.readlines():
             if '+pegasus_wf_xformation' in line:
                 return line.split('"')[1]
@@ -264,7 +263,7 @@ def parse_dagfile(fname):
     dag = DAG()
     jobs = dag.nodes
     lastchild = None
-    f = open(fname,'r')
+    f = open(fname)
     for line in f.readlines():
         line = line.strip()
         if line.startswith("JOB"):
@@ -359,7 +358,7 @@ def transitivereduction(dag):
         # number of parents the node has, then we can remove the closure
         v.mark = 0
 
-        v.closure = set([v])
+        v.closure = {v}
 
         # We need to sort the children in topological order, otherwise the
         # reduction won't work properly. Sorting by level should produce
@@ -374,7 +373,7 @@ def transitivereduction(dag):
 
             if w in v.closure:
                 # If it is already in the closure, then it is not needed
-                sys.stderr.write("Removing %s -> %s\n" % (v.label, w.label))
+                sys.stderr.write("Removing {} -> {}\n".format(v.label, w.label))
             else:
                 v.closure = v.closure.union(w.closure)
                 reduced.append(w)
@@ -396,7 +395,7 @@ def transitivereduction(dag):
 
 
 
-class emit_dot(object):
+class emit_dot:
     """Write a DOT-formatted diagram.
     Options:
         label_type: What attribute to use for labels
@@ -415,7 +414,7 @@ class emit_dot(object):
         # Render the header
         self.out.write("digraph dag {\n")
         if width and height:
-            self.out.write('    size="%0.1f,%0.1f"\n' % (width, height))
+            self.out.write('    size="{:0.1f},{:0.1f}"\n'.format(width, height))
         self.out.write('    ratio=fill\n')
         self.out.write('    node [style=filled,color="#444444",fillcolor="#ffed6f"]\n')
         self.out.write('    edge [arrowhead=normal,arrowsize=1.0]\n\n')
@@ -445,7 +444,7 @@ class emit_dot(object):
                        (id, shape, color, fillcolor, label))
 
     def renderEdge(self, parentid, childid, color="#000000"):
-        self.out.write('    "%s" -> "%s" [color="%s"]\n' % (parentid, childid, color))
+        self.out.write('    "{}" -> "{}" [color="{}"]\n'.format(parentid, childid, color))
 
 def main():
     labeloptions = ["label","xform","id","xform-id","label-xform","label-id"]

@@ -36,7 +36,7 @@ def validate_priority(priority):
         raise EMError("Invalid priority: %s" % priority)
 
 
-class EnsembleBase(object):
+class EnsembleBase:
     def set_name(self, name):
         self.name = validate_ensemble_name(name)
 
@@ -167,7 +167,7 @@ class EnsembleWorkflow(EnsembleBase):
             ):
                 raise EMError("Can only replan or rerun workflows in FAILED state")
         else:
-            raise EMError("Invalid state change: %s -> %s" % (self.state, state))
+            raise EMError("Invalid state change: {} -> {}".format(self.state, state))
 
         self.set_state(state)
 
@@ -191,7 +191,7 @@ class EnsembleWorkflow(EnsembleBase):
     def _get_file(self, suffix):
         edir = self.ensemble.get_localdir()
         wf = self.name
-        filename = "%s.%s" % (wf, suffix)
+        filename = "{}.{}".format(wf, suffix)
         return os.path.join(edir, filename)
 
     def get_basedir(self):
@@ -351,7 +351,7 @@ class Ensembles:
         f.write("--output-site %s \\\n" % output_site)
 
         if staging_sites is not None and len(staging_sites) > 0:
-            pairs = ["%s=%s" % (k, v) for k, v in staging_sites.items()]
+            pairs = ["{}={}".format(k, v) for k, v in staging_sites.items()]
             f.write("--staging-site %s \\\n" % ",".join(pairs))
 
         if clustering is not None and len(clustering) > 0:

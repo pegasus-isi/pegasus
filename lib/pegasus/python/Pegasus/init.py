@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import errno
 import os
 import pwd
@@ -37,7 +35,7 @@ class TutorialExample:
 def choice(question, options, default):
     "Ask the user to choose from a short list of named options"
     while True:
-        sys.stdout.write("%s (%s) [%s]: " % (question, "/".join(options), default))
+        sys.stdout.write("{} ({}) [{}]: ".format(question, "/".join(options), default))
         answer = sys.stdin.readline().strip()
         if len(answer) == 0:
             return default
@@ -49,7 +47,7 @@ def choice(question, options, default):
 def yesno(question, default="y"):
     "Ask the user a yes/no question"
     while True:
-        sys.stdout.write("%s (y/n) [%s]: " % (question, default))
+        sys.stdout.write("{} (y/n) [{}]: ".format(question, default))
         answer = sys.stdin.readline().strip().lower()
         if len(answer) == 0:
             answer = default
@@ -63,7 +61,7 @@ def query(question, default=None):
     "Ask the user a question and return the response"
     while True:
         if default:
-            sys.stdout.write("%s [%s]: " % (question, default))
+            sys.stdout.write("{} [{}]: ".format(question, default))
         else:
             sys.stdout.write("%s: " % question)
         answer = sys.stdin.readline().strip().replace(" ", "_")
@@ -91,7 +89,7 @@ def optionlist(question, options, default=0):
             pass
 
 
-class Workflow(object):
+class Workflow:
     def __init__(self, workflowdir, sharedir):
         self.jinja = Environment(loader=FileSystemLoader(sharedir), trim_blocks=True)
         self.name = os.path.basename(workflowdir)

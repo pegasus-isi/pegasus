@@ -35,14 +35,14 @@ def convert_yaml_schemas_to_json():
 
     # convert each of the yml schemas to json
     for yml_filename, json_filename in json_schemas.items():
-        with open(yml_filename, "r") as yml_file, open(json_filename, "w") as json_file:
+        with open(yml_filename) as yml_file, open(json_filename, "w") as json_file:
 
             json_str = json.dumps(yaml.safe_load(yml_file))
 
             # for references pointing to '*.yml' files, convert them to point
             # to '.json' files instead
             json_str = re.sub(
-                "([a-z0-9\-\.]+)(.yml)",
+                r"([a-z0-9\-\.]+)(.yml)",
                 os.path.join("file://" + path, r"\1.json"),
                 json_str,
             )
@@ -73,7 +73,7 @@ def load_schema():
         )
         path = os.path.join(path, name)
 
-        with open(path, "r") as f:
+        with open(path) as f:
             return json.load(f)
 
     return _load_schema

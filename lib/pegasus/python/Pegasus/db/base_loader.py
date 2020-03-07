@@ -6,7 +6,7 @@ from sqlalchemy import exc
 from Pegasus.db import connection
 
 
-class BaseLoader(object):
+class BaseLoader:
     "Base loader class. Has a database session and a log handle."
 
     def __init__(
@@ -22,7 +22,7 @@ class BaseLoader(object):
         parameters specific to their function.
         """
         self.log = logging.getLogger(
-            "%s.%s" % (self.__module__, self.__class__.__name__)
+            "{}.{}".format(self.__module__, self.__class__.__name__)
         )
         self.dburi = dburi
 

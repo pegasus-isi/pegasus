@@ -25,7 +25,7 @@ from six import StringIO
 from Pegasus.service import app
 
 
-class JSONResponseMixin(object):
+class JSONResponseMixin:
     @staticmethod
     def read_response(response):
         output = StringIO()
@@ -358,7 +358,7 @@ class TestStampedeWorkflowQueries(NoAuthFlaskTestCase):
     def test_get_workflow_uuids(self):
         uuid = "7193de8c-a28d-4eca-b576-1b1c3c4f668b"
         rv = self.get_context(
-            "/api/v1/user/%s/root/%s/workflow/%s" % (self.user, uuid, uuid),
+            "/api/v1/user/{}/root/{}/workflow/{}".format(self.user, uuid, uuid),
             pre_callable=self.pre_callable,
         )
 

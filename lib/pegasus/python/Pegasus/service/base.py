@@ -17,7 +17,7 @@ from collections import OrderedDict
 from werkzeug.routing import BaseConverter
 
 
-class PagedResponse(object):
+class PagedResponse:
     def __init__(self, records, total, filtered):
         self._records = records
         self._total = total
@@ -36,7 +36,7 @@ class PagedResponse(object):
         return self._filtered
 
 
-class ErrorResponse(object):
+class ErrorResponse:
     def __init__(self, code, message, errors=None):
         self._code = code
         self._message = message
@@ -75,7 +75,7 @@ class InvalidJSONError(Exception):
     pass
 
 
-class BaseResource(object):
+class BaseResource:
     """
     Purpose of Resource is to centralize field definitions in one place, and to aid in Query, Order Parsing and
     Query, Order evaluation
@@ -98,10 +98,10 @@ class BaseResource(object):
     @property
     def prefixed_fields(self):
         if self._prefixed_fields is None:
-            self._prefixed_fields = set([field for field in self.fields])
-            self._prefixed_fields |= set(
-                ["%s.%s" % (self.prefix, field) for field in self.fields]
-            )
+            self._prefixed_fields = {field for field in self.fields}
+            self._prefixed_fields |= {
+                "{}.{}".format(self.prefix, field) for field in self.fields
+            }
 
         return self._prefixed_fields
 
@@ -148,7 +148,7 @@ class BooleanConverter(BaseConverter):
     def to_python(self, value):
         value = value.strip().lower()
 
-        if value in set(["1", "0", "true", "false"]):
+        if value in {"1", "0", "true", "false"}:
             return bool(value)
 
         else:
@@ -196,8 +196,7 @@ class OrderedSet(set):
 
     def __iter__(self):
         """ x.__iter__() <==> iter(x) """
-        for element in self.__data:
-            yield element
+        yield from self.__data
 
     def __len__(self):
         """ x.__len__() <==> len(x) """

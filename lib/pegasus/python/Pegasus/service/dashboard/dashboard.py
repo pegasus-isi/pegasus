@@ -35,7 +35,7 @@ class NoWorkflowsFoundError(Exception):
             self.filtered = args["filtered"]
 
 
-class Dashboard(object):
+class Dashboard:
     def __init__(self, master_db_url, root_wf_id=None, wf_id=None):
         self._master_db_url = master_db_url
 
