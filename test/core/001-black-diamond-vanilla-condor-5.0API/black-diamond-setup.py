@@ -54,8 +54,8 @@ SiteCatalog().add_sites(
         ),
     ),
     Site(CONDOR_POOL, arch=Arch.X86_64, os_type=OS.LINUX)
-    .add_profile_pegasus(style="condor")
-    .add_profile_condor(universe="vanilla"),
+    .add_pegasus_profile(style="condor")
+    .add_condor_profile(universe="vanilla"),
 ).write(SC_FILENAME)
 
 # --- Replicas -----------------------------------------------------------------

@@ -35,7 +35,7 @@ def tc1():
                     glibc="1",
                     container="cont",
                 )
-                .add_profile_dagman(retry="3")
+                .add_dagman_profile(retry="3")
                 .add_metadata(JAVA_HOME="/usr/bin/java")
             )
             .add_requirement("t2", namespace="test", version="1.0")

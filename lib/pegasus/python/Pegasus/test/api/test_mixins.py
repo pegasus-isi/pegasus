@@ -156,9 +156,9 @@ class TestProfileMixin:
         assert id(obj.add_env(ENV1="env1", ENV2="env2")) == id(obj)
         assert dict(obj.profiles) == {"env": {"ENV1": "env1", "ENV2": "env2"}}
 
-    def test_add_profile_globus(self, obj):
+    def test_add_globus_profile(self, obj):
         assert id(
-            obj.add_profile_globus(
+            obj.add_globus_profile(
                 count=1,
                 job_type="single",
                 max_cpu_time=2,
@@ -185,15 +185,15 @@ class TestProfileMixin:
             }
         }
 
-    def test_add_profile_globus_invalid_profile(self, obj):
+    def test_add_globus_profile_invalid_profile(self, obj):
         with pytest.raises(TypeError) as e:
-            obj.add_profile_globus(aa=1)
+            obj.add_globus_profile(aa=1)
 
-        assert "add_profile_globus() got an unexpected" in str(e)
+        assert "add_globus_profile() got an unexpected" in str(e)
 
-    def test_add_profile_dagman(self, obj):
+    def test_add_dagman_profile(self, obj):
         assert id(
-            obj.add_profile_dagman(
+            obj.add_dagman_profile(
                 pre="pre",
                 pre_arguments="pre_args",
                 post="post",
@@ -228,15 +228,15 @@ class TestProfileMixin:
             }
         }
 
-    def test_add_profile_dagman_invalid_profile(self, obj):
+    def test_add_dagman_profile_invalid_profile(self, obj):
         with pytest.raises(TypeError) as e:
-            obj.add_profile_dagman(aa=1)
+            obj.add_dagman_profile(aa=1)
 
-        assert "add_profile_dagman() got an unexpected" in str(e)
+        assert "add_dagman_profile() got an unexpected" in str(e)
 
-    def test_add_profile_condor(self, obj):
+    def test_add_condor_profile(self, obj):
         assert id(
-            obj.add_profile_condor(
+            obj.add_condor_profile(
                 universe="un",
                 periodic_release="pr",
                 periodic_remove="pr",
@@ -267,15 +267,15 @@ class TestProfileMixin:
             }
         }
 
-    def test_add_profile_condor_invalid_profile(self, obj):
+    def test_add_condor_profile_invalid_profile(self, obj):
         with pytest.raises(TypeError) as e:
-            obj.add_profile_condor(aa=1)
+            obj.add_condor_profile(aa=1)
 
-        assert "add_profile_condor() got an unexpected" in str(e)
+        assert "add_condor_profile() got an unexpected" in str(e)
 
-    def test_add_profile_pegasus(self, obj):
+    def test_add_pegasus_profile(self, obj):
         assert id(
-            obj.add_profile_pegasus(
+            obj.add_pegasus_profile(
                 clusters_num="clusters.num",
                 clusters_size="clusters.size",
                 job_aggregator="job.aggregator",
@@ -354,15 +354,15 @@ class TestProfileMixin:
             }
         }
 
-    def test_add_profile_pegasus_invalid_profile(self, obj):
+    def test_add_pegasus_profile_invalid_profile(self, obj):
         with pytest.raises(TypeError) as e:
-            obj.add_profile_pegasus(aa=1)
+            obj.add_pegasus_profile(aa=1)
 
-        assert "add_profile_pegasus() got an unexpected" in str(e)
+        assert "add_pegasus_profile() got an unexpected" in str(e)
 
-    def test_add_profile_selector(self, obj):
+    def test_add_selector_profile(self, obj):
         assert id(
-            obj.add_profile_selector(
+            obj.add_selector_profile(
                 execution_site="condor-pool", pfn="/tmp", grid_job_type="compute"
             )
         ) == id(obj)
@@ -375,11 +375,11 @@ class TestProfileMixin:
             }
         }
 
-    def test_add_profile_selector_invalid_profile(self, obj):
+    def test_add_selector_profile_invalid_profile(self, obj):
         with pytest.raises(TypeError) as e:
-            obj.add_profile_selector(aa=1)
+            obj.add_selector_profile(aa=1)
 
-        assert "add_profile_selector() got an unexpected" in str(e)
+        assert "add_selector_profile() got an unexpected" in str(e)
 
 
 @pytest.mark.parametrize(

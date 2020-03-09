@@ -134,7 +134,7 @@ class Namespace(Enum):
 
 def _profiles(ns, **map_p):
     """Internal decorator that enables the use of kw args in functions like
-    ProfileMixin.add_profile_condor() and ProfileMixin.add_profile_dagman(). 
+    ProfileMixin.add_condor_profile() and ProfileMixin.add_dagman_profile(). 
     A handful of profile keys contain "." or "-", and so those profile keys cannot 
     be used for kw args. By providing a mapping of legal key names to actual key names, 
     adding profiles becomes more natural. For example we can have the following:
@@ -146,7 +146,7 @@ def _profiles(ns, **map_p):
             Namespace.DAGMAN,
             pre_args="PRE.ARGUMENTS"
         )
-        def add_profile_dagman(self, pre_args: str = None):
+        def add_dagman_profile(self, pre_args: str = None):
             ...
 
     This way, available Profile keys will appear in an IDE and we can use kw args
@@ -227,8 +227,8 @@ class ProfileMixin:
             # Example 2
             job.add_profiles(Namespace.ENV, JAVA_HOME="/usr/bin/java", USER="ryan")
 
-        For add_profile_globus(), add_profile_condor(), add_profile_dagman(), 
-        add_profile_selector(), and add_profile_pegasus(), if a profile key that 
+        For add_globus_profile(), add_condor_profile(), add_dagman_profile(), 
+        add_selector_profile(), and add_pegasus_profile(), if a profile key that 
         you are trying to use is not listed as a key word argument, use this 
         function to add the profile.
 
@@ -266,7 +266,7 @@ class ProfileMixin:
         project="project",
         queue="queue",
     )
-    def add_profile_globus(
+    def add_globus_profile(
         self,
         *,
         count: int = None,
@@ -321,7 +321,7 @@ class ProfileMixin:
         request_memory=("request_memory", to_mb),
         request_disk=("request_disk", to_mb),
     )
-    def add_profile_condor(
+    def add_condor_profile(
         self,
         *,
         universe: str = None,
@@ -406,7 +406,7 @@ class ProfileMixin:
         memory=("memory", to_mb),
         diskspace=("diskspace", to_mb),
     )
-    def add_profile_pegasus(
+    def add_pegasus_profile(
         self,
         *,
         clusters_num: int = None,
@@ -532,7 +532,7 @@ class ProfileMixin:
         pfn="pfn",
         grid_job_type="grid.jobtype",
     )
-    def add_profile_selector(
+    def add_selector_profile(
         self, *, execution_site: str = None, pfn: str = None, grid_job_type: str = None
     ):
         """Add Selector(s).
@@ -567,7 +567,7 @@ class ProfileMixin:
         max_idle="MAXIDLE",
         post_scope="POST.SCOPE",
     )
-    def add_profile_dagman(
+    def add_dagman_profile(
         self,
         *,
         pre: str = None,
