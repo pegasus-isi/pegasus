@@ -34,10 +34,10 @@ def sc1():
         )
         .add_directories(
             Directory(Directory.LOCALSCRATCH, "/path").add_file_servers(
-                FileServer("url", Operation.ALL).add_dagman(retry=1)
+                FileServer("url", Operation.ALL).add_profile_dagman(retry=1)
             )
         )
-        .add_dagman(retry=1)
+        .add_profile_dagman(retry=1)
         .add_grids(
             Grid(
                 Grid.CONDOR,

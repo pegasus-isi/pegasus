@@ -134,10 +134,10 @@ class Namespace(Enum):
 
 def _profiles(ns, **map_p):
     """Internal decorator that enables the use of kw args in functions like
-    ProfileMixin.add_condor() and ProfileMixin.add_dagman(). A handful of profile
-    keys contain "." or "-", and so those profile keys cannot be used for kw args.
-    By providing a mapping of legal key names to actual key names, adding profiles
-    becomes more natural. For example we can have the following:
+    ProfileMixin.add_profile_condor() and ProfileMixin.add_profile_dagman(). 
+    A handful of profile keys contain "." or "-", and so those profile keys cannot 
+    be used for kw args. By providing a mapping of legal key names to actual key names, 
+    adding profiles becomes more natural. For example we can have the following:
 
     .. code-block:: python
 
@@ -146,7 +146,7 @@ def _profiles(ns, **map_p):
             Namespace.DAGMAN,
             pre_args="PRE.ARGUMENTS"
         )
-        def add_dagman(self, pre_args: str = None):
+        def add_profile_dagman(self, pre_args: str = None):
             ...
 
     This way, available Profile keys will appear in an IDE and we can use kw args
@@ -227,9 +227,10 @@ class ProfileMixin:
             # Example 2
             job.add_profiles(Namespace.ENV, JAVA_HOME="/usr/bin/java", USER="ryan")
 
-        For add_globus(), add_condor(), add_dagman(), add_selector(), and add_pegasus(),
-        if a profile key that you are trying to use is not listed as a key word argument,
-        use this function to add the profile.
+        For add_profile_globus(), add_profile_condor(), add_profile_dagman(), 
+        add_profile_selector(), and add_profile_pegasus(), if a profile key that 
+        you are trying to use is not listed as a key word argument, use this 
+        function to add the profile.
 
         :raises TypeError: namespace must be one of Namespace
         :return: self
@@ -253,9 +254,6 @@ class ProfileMixin:
     #: Add environment variable(s)
     add_env = partialmethod(add_profiles, Namespace.ENV)
 
-    #: Add stat profile(s)
-    add_stat = partialmethod(add_profiles, Namespace.STAT)
-
     @_profiles(
         Namespace.GLOBUS,
         count="count",
@@ -268,7 +266,7 @@ class ProfileMixin:
         project="project",
         queue="queue",
     )
-    def add_globus(
+    def add_profile_globus(
         self,
         *,
         count: int = None,
@@ -323,7 +321,7 @@ class ProfileMixin:
         request_memory=("request_memory", to_mb),
         request_disk=("request_disk", to_mb),
     )
-    def add_condor(
+    def add_profile_condor(
         self,
         *,
         universe: str = None,
@@ -408,7 +406,7 @@ class ProfileMixin:
         memory=("memory", to_mb),
         diskspace=("diskspace", to_mb),
     )
-    def add_pegasus(
+    def add_profile_pegasus(
         self,
         *,
         clusters_num: int = None,
@@ -534,7 +532,7 @@ class ProfileMixin:
         pfn="pfn",
         grid_job_type="grid.jobtype",
     )
-    def add_selector(
+    def add_profile_selector(
         self, *, execution_site: str = None, pfn: str = None, grid_job_type: str = None
     ):
         """Add Selector(s).
@@ -569,7 +567,7 @@ class ProfileMixin:
         max_idle="MAXIDLE",
         post_scope="POST.SCOPE",
     )
-    def add_dagman(
+    def add_profile_dagman(
         self,
         *,
         pre: str = None,

@@ -658,8 +658,8 @@ class TestTransformationCatalog:
 
         foo = (
             Transformation("foo")
-            .add_globus(max_time=2)
-            .add_dagman(retry=2)
+            .add_profile_globus(max_time=2)
+            .add_profile_dagman(retry=2)
             .add_metadata(size=2048)
             .add_sites(
                 TransformationSite(

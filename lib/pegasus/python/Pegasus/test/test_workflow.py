@@ -55,7 +55,7 @@ def wf1():
     return (
         Workflow("test", infer_dependencies=False)
         .add_shell_hook(EventType.START, "/cmd")
-        .add_dagman(retry=1)
+        .add_profile_dagman(retry=1)
         .add_metadata(author="ryan")
         .add_jobs(j1, j2, sbwf_dax, sbwf_dag)
         .add_dependency(j1, j2)

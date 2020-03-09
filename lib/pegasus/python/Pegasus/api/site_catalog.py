@@ -494,8 +494,8 @@ class SiteCatalog(Writable):
                     ),
 
                 Site(CONDOR_POOL, arch=Arch.X86_64, os_type=OS.LINUX)
-                    .add_pegasus(style="condor")
-                    .add_condor(universe="vanilla")
+                    .add_profile_pegasus(style="condor")
+                    .add_profile_condor(universe="vanilla")
 
             ).write("SiteCatalog.yml"))
             

@@ -1,4 +1,3 @@
-
 from pathlib import Path
 from datetime import date
 
@@ -43,74 +42,74 @@ SC_FILENAME = "SiteCatalog.yml"
 
 print("Generating site catalog at: {}".format(TOP_DIR / SC_FILENAME))
 
-SiteCatalog()\
-    .add_sites(
-        Site(LOCAL, arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7")
-            .add_directories(
-                Directory(Directory.SHAREDSCRATCH, shared_scratch_dir)
-                    .add_file_servers(FileServer("file://" + shared_scratch_dir, Operation.ALL)),
-
-                Directory(Directory.LOCALSTORAGE, local_storage_dir)
-                    .add_file_servers(FileServer("file://" + local_storage_dir, Operation.ALL))
-            ),
-
-        Site(CONDOR_POOL, arch=Arch.X86_64, os_type=OS.LINUX)
-            .add_pegasus(style="condor")
-            .add_condor(universe="vanilla")
-    ).write(SC_FILENAME)
+SiteCatalog().add_sites(
+    Site(
+        LOCAL, arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7"
+    ).add_directories(
+        Directory(Directory.SHAREDSCRATCH, shared_scratch_dir).add_file_servers(
+            FileServer("file://" + shared_scratch_dir, Operation.ALL)
+        ),
+        Directory(Directory.LOCALSTORAGE, local_storage_dir).add_file_servers(
+            FileServer("file://" + local_storage_dir, Operation.ALL)
+        ),
+    ),
+    Site(CONDOR_POOL, arch=Arch.X86_64, os_type=OS.LINUX)
+    .add_profile_pegasus(style="condor")
+    .add_profile_condor(universe="vanilla"),
+).write(SC_FILENAME)
 
 # --- Replicas -----------------------------------------------------------------
 RC_FILENAME = "ReplicaCatalog.yml"
 
 print("Generating replica catalog at: {}".format(TOP_DIR / RC_FILENAME))
 
-# create initial input file 
+# create initial input file
 with open("f.å", "w") as f:
     f.write("This is sample input to KEG\n")
 
 fa = File("f.å").add_metadata({"㐦": "㒦"})
-ReplicaCatalog()\
-    .add_replica(fa, "file://" + str(TOP_DIR / fa.lfn), LOCAL)\
-    .write(RC_FILENAME)
+ReplicaCatalog().add_replica(fa, "file://" + str(TOP_DIR / fa.lfn), LOCAL).write(
+    RC_FILENAME
+)
 
 # --- Transformations ----------------------------------------------------------
 TC_FILENAME = "TransformationCatalog.yml"
 
 print("Generating transformation catalog at: {}".format(TOP_DIR / TC_FILENAME))
 
-preprocess = Transformation("pЯёprocess", namespace="pέgasuζ", version="4.0")\
-                .add_sites(
-                    TransformationSite(
-                        CONDOR_POOL, 
-                        PEGASUS_LOCATION, 
-                        is_stageable=False, 
-                        arch=Arch.X86_64, 
-                        os_type=OS.LINUX)
-                )
+preprocess = Transformation("pЯёprocess", namespace="pέgasuζ", version="4.0").add_sites(
+    TransformationSite(
+        CONDOR_POOL,
+        PEGASUS_LOCATION,
+        is_stageable=False,
+        arch=Arch.X86_64,
+        os_type=OS.LINUX,
+    )
+)
 
-findrage = Transformation("findrange", namespace="pέgasuζ", version="4.0")\
-                .add_sites(
-                    TransformationSite(
-                        CONDOR_POOL, 
-                        PEGASUS_LOCATION, 
-                        is_stageable=False, 
-                        arch=Arch.X86_64, 
-                        os_type=OS.LINUX)
-                )
+findrage = Transformation("findrange", namespace="pέgasuζ", version="4.0").add_sites(
+    TransformationSite(
+        CONDOR_POOL,
+        PEGASUS_LOCATION,
+        is_stageable=False,
+        arch=Arch.X86_64,
+        os_type=OS.LINUX,
+    )
+)
 
-analyze = Transformation("analyze", namespace="pέgasuζ", version="4.0")\
-                .add_sites(
-                    TransformationSite(
-                        CONDOR_POOL, 
-                        PEGASUS_LOCATION, 
-                        is_stageable=False, 
-                        arch=Arch.X86_64, 
-                        os_type=OS.LINUX)
-                )
+analyze = Transformation("analyze", namespace="pέgasuζ", version="4.0").add_sites(
+    TransformationSite(
+        CONDOR_POOL,
+        PEGASUS_LOCATION,
+        is_stageable=False,
+        arch=Arch.X86_64,
+        os_type=OS.LINUX,
+    )
+)
 
-TransformationCatalog()\
-    .add_transformations(preprocess, findrage, analyze)\
-    .write(TC_FILENAME)
+TransformationCatalog().add_transformations(preprocess, findrage, analyze).write(
+    TC_FILENAME
+)
 
 # --- Workflow -----------------------------------------------------------------
 print("Generating workflow")
@@ -121,33 +120,29 @@ fc1 = File("f.Ҫ1")
 fc2 = File("f.Ͻ2")
 fd = File("f.Ɗ")
 
-Workflow("blÅckƊiamond㒀㑖", infer_dependencies=True)\
-    .add_jobs(
-        Job(preprocess)
-            .add_args("-a", "preprocess", "-T", "60", "-i", fa, "-o", fb1, fb2)
-            .add_inputs(fa)
-            .add_outputs(fb1, fb2),
-        
-        Job(findrage)
-            .add_args("-a", "findrange", "-T", "60", "-i", fb1, "-o", fc1)
-            .add_inputs(fb1)
-            .add_outputs(fc1),
-        
-        Job(findrage)
-            .add_args("-a", "findrange", "-T", "60", "-i", fb2, "-o", fc2)
-            .add_inputs(fb2)
-            .add_outputs(fc2),
-        
-        Job(analyze)
-            .add_args("-a", "analyze", "-T", "60", "-i", fc1, fc2, "-o", fd)
-            .add_inputs(fc1, fc2)
-            .add_outputs(fd)
-    ).plan(
-        dir=str(WORK_DIR),
-        relative_dir=RUN_ID,
-        conf=CONF_FILENAME,
-        sites=CONDOR_POOL,
-        output_site=LOCAL,
-        force=True,
-        submit=True
-    )
+Workflow("blÅckƊiamond㒀㑖", infer_dependencies=True).add_jobs(
+    Job(preprocess)
+    .add_args("-a", "preprocess", "-T", "60", "-i", fa, "-o", fb1, fb2)
+    .add_inputs(fa)
+    .add_outputs(fb1, fb2),
+    Job(findrage)
+    .add_args("-a", "findrange", "-T", "60", "-i", fb1, "-o", fc1)
+    .add_inputs(fb1)
+    .add_outputs(fc1),
+    Job(findrage)
+    .add_args("-a", "findrange", "-T", "60", "-i", fb2, "-o", fc2)
+    .add_inputs(fb2)
+    .add_outputs(fc2),
+    Job(analyze)
+    .add_args("-a", "analyze", "-T", "60", "-i", fc1, fc2, "-o", fd)
+    .add_inputs(fc1, fc2)
+    .add_outputs(fd),
+).plan(
+    dir=str(WORK_DIR),
+    relative_dir=RUN_ID,
+    conf=CONF_FILENAME,
+    sites=CONDOR_POOL,
+    output_site=LOCAL,
+    force=True,
+    submit=True,
+)
