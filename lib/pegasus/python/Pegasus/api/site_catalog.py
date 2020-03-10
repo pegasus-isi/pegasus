@@ -497,9 +497,11 @@ class SiteCatalog(Writable):
                     .add_pegasus_profile(style="condor")
                     .add_condor_profile(universe="vanilla")
 
-            ).write("SiteCatalog.yml"))
+            ).write())
             
     """
+
+    _DEFAULT_FILENAME = "sites.yml"
 
     def __init__(self):
         self.sites = dict()

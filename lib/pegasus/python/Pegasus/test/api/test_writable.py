@@ -19,6 +19,8 @@ def writable_obj():
                 return {"name": self.name}
 
         class Container(Writable):
+            _DEFAULT_FILENAME = "container.yml"
+
             def __init__(self):
                 self.name = "container⽷"
                 self.items = [Item(i) for i in range(3)]
@@ -48,10 +50,10 @@ class Test_CustomEncoder:
 class TestWritable:
     def test_write_using_defaults(self, writable_obj, expected, mocker):
         writable_obj.write()
-        with open("Container.yml") as f:
+        with open("container.yml", "r") as f:
             assert expected == yaml.safe_load(f)
 
-        os.remove("Container.yml")
+        os.remove("container.yml")
 
     @pytest.mark.parametrize(
         "file, _format, loader",

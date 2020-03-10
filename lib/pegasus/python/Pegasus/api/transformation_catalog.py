@@ -402,6 +402,8 @@ class TransformationCatalog(Writable):
 
     """
 
+    _DEFAULT_FILENAME = "transformations.yml"
+
     def __init__(self):
         self.transformations = dict()
         self.containers = dict()

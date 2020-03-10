@@ -3,7 +3,7 @@ from pathlib import Path
 
 from Pegasus import yaml
 
-__all__ = []
+__all__ = ["Writable"]
 
 
 class _CustomEncoder(json.JSONEncoder):
@@ -45,7 +45,7 @@ def _filter_out_nones(_dict):
 class Writable:
     """Derived class can be serialized to a json or yaml file"""
 
-    FORMATS = {"yml", "yaml", "json"}
+    _FORMATS = {"yml", "yaml", "json"}
 
     def _write(self, file, _format):
         """Internal function to dump to file in either yaml or json formats
@@ -56,10 +56,10 @@ class Writable:
         :type _ext: str
         :raises ValueError: _format must be one of "yml", "yaml" or "json"
         """
-        if _format.lower() not in Writable.FORMATS:
+        if _format.lower() not in Writable._FORMATS:
             raise ValueError(
                 "invalid _ext: {_format}, extension must be one of {formats}".format(
-                    _format=_format, formats=Writable.FORMATS
+                    _format=_format, formats=Writable._FORMATS
                 )
             )
 
@@ -76,8 +76,21 @@ class Writable:
 
     def write(self, file=None, _format="yml"):
         """Serialize this class as either yaml or json and write to the given
-        file. If file=None, this class will be written to <class name>.yml.
+        file. If file==None, this class will be written to a default file. The
+        following classes have these defaults:
         
+        .. table:: Default Files
+            :widths: auto
+
+            =====================  ===================
+            Class                  Default Filename
+            =====================  ===================
+            SiteCatalog            sites.yml
+            ReplicaCatalog         replicas.yml
+            TransformationCatalog  transformations.yml
+            Workflow               workflow.yml
+            =====================  ===================
+                    
         :param file: path or file object (opened in "w" mode) to write to, defaults to None
         :type file: str or file, optional
         :param _format: can be either "yml", "yaml" or "json", defaults to "yml"
@@ -85,21 +98,21 @@ class Writable:
         :raises ValueError: _format must be one of "yml", "yaml" or "json"
         :raises TypeError: file must be a str or file object
         """
-        if _format.lower() not in Writable.FORMATS:
+        if _format.lower() not in Writable._FORMATS:
             raise ValueError(
                 "invalid file format: {_format}, format should be one of 'yml', 'yaml', or 'json'"
             )
 
         # default file name
         if file == None:
-            file = self.__class__.__name__ + ".yml"
+            file = self._DEFAULT_FILENAME
 
         if isinstance(file, str):
             path = Path(file)
             ext = path.suffix[1:].lower()
 
             with open(file, "w") as f:
-                if ext in Writable.FORMATS:
+                if ext in Writable._FORMATS:
                     self._write(f, ext)
                 else:
                     self._write(f, _format)
@@ -112,7 +125,7 @@ class Writable:
                 # no attr "name"
                 self._write(file, _format)
             else:
-                if ext in Writable.FORMATS:
+                if ext in Writable._FORMATS:
                     self._write(file, ext)
                 else:
                     self._write(file, _format)

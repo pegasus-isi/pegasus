@@ -624,9 +624,11 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             ).add_site_catalog(sc)
             .add_replica_catalog(rc)
             .add_transformation_catalog(tc)
-            .write("Workflow.yml"))
+            .write())
             
     """
+
+    _DEFAULT_FILENAME = "workflow.yml"
 
     def __init__(self, name, infer_dependencies=False):
         """

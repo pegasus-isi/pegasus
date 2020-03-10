@@ -1022,7 +1022,7 @@ class TestWorkflow:
 
     def test_write_default_filename(self, wf, expected_json):
         wf.write()
-        EXPECTED_FILE = "Workflow.yml"
+        EXPECTED_FILE = "workflow.yml"
 
         with open(EXPECTED_FILE) as f:
             result = yaml.safe_load(f)

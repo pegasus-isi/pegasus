@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 import pytest
@@ -114,3 +115,12 @@ class TestReplicaCatalog:
         result["replicas"] = sorted(result["replicas"], key=lambda d: d["lfn"])
 
         assert result == expected
+
+    def test_write_default(self):
+        expected_file = Path("replicas.yml")
+        ReplicaCatalog().write()
+
+        try:
+            expected_file.unlink()
+        except FileNotFoundError:
+            pytest.fail("could not find {}".format(expected_file))

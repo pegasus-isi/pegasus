@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 import pytest
@@ -568,3 +569,12 @@ class TestSiteCatalog:
                 result["sites"][i]["grids"].sort(key=lambda g: g["jobtype"])
 
         assert result == expected_json
+
+    def test_write_default(self):
+        expected_file = Path("sites.yml")
+        SiteCatalog().write()
+
+        try:
+            expected_file.unlink()
+        except FileNotFoundError:
+            pytest.fail("could not find {}".format(expected_file))

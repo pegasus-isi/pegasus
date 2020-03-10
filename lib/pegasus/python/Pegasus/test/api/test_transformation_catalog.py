@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 import pytest
@@ -384,6 +385,15 @@ class TestTransformation:
         validate(instance=result, schema=transformation_schema)
 
         assert result == expected
+
+    def test_write_default(self):
+        expected_file = Path("transformations.yml")
+        TransformationCatalog().write()
+
+        try:
+            expected_file.unlink()
+        except FileNotFoundError:
+            pytest.fail("could not find {}".format(expected_file))
 
 
 class TestContainer:

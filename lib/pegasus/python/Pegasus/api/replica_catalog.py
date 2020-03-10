@@ -59,8 +59,10 @@ class ReplicaCatalog(Writable):
             (ReplicaCatalog()
                 .add_replica("local", if1, "/nfs/u2/ryan/data.csv")
                 .add_replica("local", "if2", "/nfs/u2/ryan/data2.csv")
-                .write("ReplicaCatalog.yml"))
+                .write())
     """
+
+    _DEFAULT_FILENAME = "replicas.yml"
 
     def __init__(self):
         self.replicas = set()
