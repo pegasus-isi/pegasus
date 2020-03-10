@@ -1015,7 +1015,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     def write(self, file=None, _format="yml"):
         """Write this workflow to a file. If no file is given,
-        it will written to Workflow.yml
+        it will written to workflow.yml
         
         :param file: path or file object (opened in "w" mode) to write to, defaults to None
         :type file: str or file, optional
@@ -1023,7 +1023,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
         # default file name
         if file == None:
-            file = self.__class__.__name__ + ".yml"
+            file = self._DEFAULT_FILENAME
 
         self._infer_dependencies()
         Writable.write(self, file, _format=_format)

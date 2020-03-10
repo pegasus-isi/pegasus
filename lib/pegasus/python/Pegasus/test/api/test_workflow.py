@@ -1073,7 +1073,7 @@ class TestWorkflow:
         mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
         mocker.patch("Pegasus.client._client.Client.plan")
 
-        DEFAULT_WF_PATH = "Workflow.yml"
+        DEFAULT_WF_PATH = "workflow.yml"
         wf.plan()
 
         assert wf._path == DEFAULT_WF_PATH
