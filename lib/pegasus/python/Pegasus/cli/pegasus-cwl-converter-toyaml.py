@@ -169,7 +169,14 @@ def build_pegasus_tc(tr_specs: dict, cwl_wf: cwl.Workflow) -> TransformationCata
             cwl.load_document(step.run) if isinstance(step.run, str) else step.run
         )
 
+        if not hasattr(cwl_cmd_ln_tool, "baseCommand"):
+            raise ValueError("{} requires a 'baseCommand'".format(cwl_cmd_ln_tool.id))
+
         tool_path = PurePath(cwl_cmd_ln_tool.baseCommand)
+
+        if not tool_path.is_absolute():
+            raise ValueError("{}.baseCommand: {} must be an absolute path")
+
         log.debug("baseCommand: {}".format(tool_path))
 
         # TODO: handle containers (adding to the list of containers in tc and referencing in tr)
@@ -317,7 +324,10 @@ def collect_input_strings(wf_inputs: dict, cwl_wf: cwl.Workflow) -> dict:
     wf_input_str = dict()
 
     for _input in cwl_wf.inputs:
-        if _input.type == "string" or _input.type == "string[]":
+        if _input.type == "string" or (
+            isinstance(_input.type, cwl.InputArraySchema)
+            and _input.type.items == "string"
+        ):
             input_name = get_basename(_input.id)
 
             try:
