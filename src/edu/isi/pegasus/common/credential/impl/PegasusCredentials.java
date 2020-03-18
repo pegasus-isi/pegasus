@@ -60,8 +60,8 @@ public class PegasusCredentials extends Abstract implements CredentialHandler {
     /**
      * Returns the path to the PKCS12 file . The order of preference is as follows
      *
-     * <p>- If a CREDENTIALS is specified as a Pegasus Profile in the site catalog - Else the path on
-     * the local site
+     * <p>- If a CREDENTIALS is specified as a Pegasus Profile in the site catalog - Else the path
+     * on the local site
      *
      * @param site the site handle
      * @return the path to PegasusCredentials.CREDENTIALS_FILE for the site.

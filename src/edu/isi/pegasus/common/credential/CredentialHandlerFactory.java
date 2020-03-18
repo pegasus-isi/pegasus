@@ -35,7 +35,6 @@ public class CredentialHandlerFactory {
     //
 
     /** The name of the class implementing the credentials */
-
     private static final String CREDENTIALS_IMPLEMENTING_CLASS = "PegasusCredentials";
 
     private static final String X509_IMPLEMENTING_CLASS = "Proxy";
@@ -58,7 +57,8 @@ public class CredentialHandlerFactory {
     private static Map<CredentialHandler.TYPE, String> implementingClassNameTable() {
         if (mImplementingClassNameTable == null) {
             mImplementingClassNameTable = new HashMap(3);
-            mImplementingClassNameTable.put(CredentialHandler.TYPE.credentials, CREDENTIALS_IMPLEMENTING_CLASS);
+            mImplementingClassNameTable.put(
+                    CredentialHandler.TYPE.credentials, CREDENTIALS_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put(CredentialHandler.TYPE.x509, X509_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put(CredentialHandler.TYPE.irods, IRODS_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put(CredentialHandler.TYPE.s3, S3_IMPLEMENTING_CLASS);

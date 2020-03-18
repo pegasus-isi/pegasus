@@ -13,8 +13,8 @@
  */
 package edu.isi.pegasus.planner.transfer.implementation;
 
-import edu.isi.pegasus.common.credential.impl.PegasusCredentials;
 import edu.isi.pegasus.common.credential.impl.Irods;
+import edu.isi.pegasus.common.credential.impl.PegasusCredentials;
 import edu.isi.pegasus.common.credential.impl.Proxy;
 import edu.isi.pegasus.common.credential.impl.S3CFG;
 import edu.isi.pegasus.common.logging.LogManager;
@@ -86,7 +86,7 @@ public abstract class Abstract implements Implementation {
 
     /** The prefix for the NoOP jobs that are created. */
     public static final String NOOP_PREFIX = "noop_";
-    
+
     /** The path to the credentials file on the submit host (local pool). */
     protected String mLocalCredentials;
 
@@ -182,7 +182,7 @@ public abstract class Abstract implements Implementation {
         // PM-810 it is now per job instead of global.
         mPegasusConfiguration = new PegasusConfiguration(mLogger);
         // mAddNodesForSettingXBit = !mProps.executeOnWorkerNode();
-        
+
         // Pegasus credentials
         PegasusCredentials creds = new PegasusCredentials();
         creds.initialize(bag);
@@ -252,16 +252,16 @@ public abstract class Abstract implements Implementation {
             job.condorVariables.construct(Condor.PRIORITY_KEY, priority);
         }
     }
-    
-   /**
+
+    /**
      * Determines if there is a need to transfer the Pegasus credentials for the transfer job or
      * not. If there is a need to transfert the file, then the job is modified to create the correct
      * condor commands to transfer the file. The file is transferred from the submit host (i.e site
      * local).
      *
      * @param job the transfer job .
-     * @return boolean true job was modified to transfer the Pegasus credentials file, else false when
-     *     job is not modified.
+     * @return boolean true job was modified to transfer the Pegasus credentials file, else false
+     *     when job is not modified.
      * @deprecated
      */
     public boolean checkAndTransferPegasusCredentials(TransferJob job) {
@@ -272,7 +272,8 @@ public abstract class Abstract implements Implementation {
                 && !job.envVariables.containsKey(PegasusCredentials.CREDENTIALS_FILE)) {
             job.condorVariables.addIPFileForTransfer(mLocalCredentials);
             // just the basename
-            job.envVariables.checkKeyInNS(PegasusCredentials.CREDENTIALS_FILE, mLocalCredentialsBasename);
+            job.envVariables.checkKeyInNS(
+                    PegasusCredentials.CREDENTIALS_FILE, mLocalCredentialsBasename);
         }
 
         return true;

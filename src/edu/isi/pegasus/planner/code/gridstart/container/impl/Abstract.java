@@ -353,7 +353,7 @@ public abstract class Abstract implements ContainerShellWrapper {
             }
             sb.append('\n');
         }
-            
+
         return sb;
     }
 
