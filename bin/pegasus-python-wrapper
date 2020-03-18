@@ -53,7 +53,7 @@ if [ "x$PEXE" = "x" ]; then
 fi
 
 # warn if it is not the system python
-if ! (echo "$PEXE" | grep "^/usr/bin/") >/dev/null 2>&1; then
+if ! (echo "$PEXE" | egrep "^(/bin/|/usr/bin/)") >/dev/null 2>&1; then
     echo "Warning: Using a non-system Python ($PEXE)" 1>&2
 fi
 

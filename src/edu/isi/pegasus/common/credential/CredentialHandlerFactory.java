@@ -34,7 +34,10 @@ public class CredentialHandlerFactory {
     public static final String DEFAULT_PACKAGE_NAME = "edu.isi.pegasus.common.credential.impl";
     //
 
-    /** The name of the class implementing the x509 credentials */
+    /** The name of the class implementing the credentials */
+
+    private static final String CREDENTIALS_IMPLEMENTING_CLASS = "PegasusCredentials";
+
     private static final String X509_IMPLEMENTING_CLASS = "Proxy";
 
     private static final String IRODS_IMPLEMENTING_CLASS = "Irods";
@@ -55,6 +58,7 @@ public class CredentialHandlerFactory {
     private static Map<CredentialHandler.TYPE, String> implementingClassNameTable() {
         if (mImplementingClassNameTable == null) {
             mImplementingClassNameTable = new HashMap(3);
+            mImplementingClassNameTable.put(CredentialHandler.TYPE.credentials, CREDENTIALS_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put(CredentialHandler.TYPE.x509, X509_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put(CredentialHandler.TYPE.irods, IRODS_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put(CredentialHandler.TYPE.s3, S3_IMPLEMENTING_CLASS);

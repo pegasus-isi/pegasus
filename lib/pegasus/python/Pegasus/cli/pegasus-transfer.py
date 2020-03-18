@@ -61,6 +61,10 @@ except ImportError:
     # Fall back to Python 2's urllib
     import urllib as urllib
 
+# only load yaml if necessary
+if 'PEGASUS_CREDENTIALS' in os.environ:
+    import yaml
+
 from Pegasus.tools import worker_utils as utils
 
 # see https://www.python.org/dev/peps/pep-0469/
@@ -1300,19 +1304,18 @@ class GridFtpHandler(TransferHandlerBase):
         return chunks
   
 
-class TransferProtocolHandler(TransferHandlerBase):
+class HttpHandler(TransferHandlerBase):
     """
     pulls from http/https/ftp using wget or curl
     """
 
-    _name = "TransferProtocolHandler"
+    _name = "HttpHandler"
     _mkdir_cleanup_protocols = []
     _protocol_map = [
                     "http->file", 
                     "https->file",
                     "ftp->file"
                     ]
-
 
     def do_transfers(self, transfers):
         
@@ -3562,6 +3565,195 @@ class SingularityHandler(TransferHandlerBase):
         return [successful_l, failed_l]  
 
 
+class WebdavHandler(TransferHandlerBase):
+    """
+    Uses curl to do webdav transfers
+    """
+
+    _name = 'WebdavHandler'
+    _mkdir_cleanup_protocols = [
+                                'webdav',
+                                'webdavs'
+                               ]
+    _protocol_map = [
+                     'webdav->file',
+                     'webdavs->file',
+                     'file->webdav',
+                     'file->webdavs'
+                    ]
+    
+    def do_mkdirs(self, mkdir_list):    
+        successful_l = []
+        failed_l = []
+
+        if tools.find("curl", "--version", " ([0-9]+\.[0-9]+)") is None:
+            logger.error("Unable to do webdav transfers because curl could not be found")
+            return [[], mkdir_list]
+            
+        username, password = self._creds(mkdir_list[0].get_host())
+
+        for t in mkdir_list:
+            if not self._create_dir(t.get_url(), username, password):
+                failed_l.append(t)
+                continue
+            successful_l.append(t)
+            
+        return [successful_l, failed_l]
+
+    def do_transfers(self, transfers):
+        successful_l = []
+        failed_l = []
+        
+        if tools.find("curl", "--version", " ([0-9]+\.[0-9]+)") is None:
+            logger.error("Unable to do webdav transfers because curl could not be found")
+            return [[], mkdir_list]
+
+        # disable http proxies
+        env_overrides = { 'http_proxy': '' }
+
+        if transfers[0].get_dst_proto() == 'file':
+            username, password = self._creds(transfers[0].get_src_host())
+        else:
+            username, password = self._creds(transfers[0].get_dst_host())
+
+        for t in transfers:
+        
+            if t.get_dst_proto() == 'file':
+                # webdav -> file
+                prepare_local_dir(os.path.dirname(t.get_dst_path()))
+                url = re.sub('^webdav', 'http', t.src_url())
+                cmd = tools.full_path('curl')
+                #if not logger.isEnabledFor(logging.DEBUG):
+                #    cmd += ' --silent'
+                cmd += ' --fail --show-error --location' + \
+                       ' --user \'' + username + ':' + password + '\'' + \
+                       ' --anyauth' + \
+                       ' -o \'' + t.get_dst_path() + '\'' + \
+                       ' \'' + url + '\''
+            else:
+                # file -> webdav
+                url = re.sub('^webdav', 'http', t.dst_url())
+
+                # might have to create dir first
+                self._create_dir(os.path.dirname(url), username, password)
+
+                cmd = tools.full_path('curl')
+                #if not logger.isEnabledFor(logging.DEBUG):
+                #    cmd += ' --silent'
+                cmd += ' --fail --show-error --location' + \
+                       ' --user \'' + username + ':' + password + '\'' + \
+                       ' --anyauth' + \
+                       ' -T \'' + t.get_src_path() + '\'' + \
+                       ' \'' + url + '\''
+            
+            logger.info(cmd)    
+
+            try:
+                t_start = time.time()
+                tc = utils.TimedCommand(cmd, env_overrides=env_overrides)
+                tc.run()    
+            except RuntimeError as err:
+                logger.error(err)
+                self._post_transfer_attempt(t, False, t_start)
+                failed_l.append(t)
+                continue
+
+            # also make sure the file was actually downloaded
+            if t.get_dst_proto() == 'file' and \
+               not os.path.exists(t.get_dst_path()):
+                logger.error('Expected local file is missing - marking transfer as failed')
+                failed_l.append(t)
+                continue
+
+            # success
+            self._post_transfer_attempt(t, True, t_start)
+            successful_l.append(t)
+        
+        return [successful_l, failed_l]    
+
+    def do_removes(self, transfers_l):
+        successful_l = []
+        failed_l = []
+        
+        if tools.find("curl", "--version", " ([0-9]+\.[0-9]+)") is None:
+            logger.error("Unable to do webdav transfers because curl could not be found")
+            return [[], transfers_l]
+
+        username, password = self._creds(transfers_l[0].get_host())
+
+        for t in transfers_l:
+            url = re.sub('^webdav', 'http', t.get_url())
+            cmd = tools.full_path('curl')
+            if not logger.isEnabledFor(logging.DEBUG):
+                cmd += ' --silent'
+            cmd += ' --fail --show-error --location' + \
+                   ' --user \'' + username + ':' + password + '\'' + \
+                   ' --anyauth' + \
+                   ' -X DELETE \'' + url + '\''
+
+            tc = utils.TimedCommand(cmd, log_outerr=False)
+            try:
+                tc.run()
+            except Exception as err:
+                logger.error(err)
+                failed_l.append(t)
+                break
+            successful_l.append(t)
+            
+        return [successful_l, failed_l]
+
+    def _creds(self, host):
+        username = credentials['hosts'][host]['username']
+        password = credentials['hosts'][host]['password']
+        return username, password
+
+    def _create_dir(self, url, username, password):
+        global remote_dirs_created
+
+	# early short-circuit
+        if url in remote_dirs_created:
+            return True
+        
+        # split the URL
+        r = re_parse_url.search(url)
+        if not r:
+            raise RuntimeError("Unable to parse URL: %s" % (url))
+        
+        # Parse successful
+        proto = re.sub('^webdav', 'http', r.group(1))
+        host = r.group(2)
+        path = r.group(3)
+
+        # walk the path
+        cur_path = ''
+        for entry in self._split_path(path):
+            if entry == '/':
+                continue
+            cur_path += '/' + entry
+            url = proto + '://' + host + cur_path
+            logger.debug('Creating dir for ' + url)
+            cmd = tools.full_path('curl')
+            if not logger.isEnabledFor(logging.DEBUG):
+                cmd += ' --silent'
+            cmd += ' --user \'' + username + ':' + password + '\'' + \
+                   ' --anyauth' + \
+                   ' -X MKCOL \'' + url + '\''
+            tc = utils.TimedCommand(cmd)
+            try:
+                tc.run()
+            except Exception as err:
+                logger.error(err)
+                return False
+            remote_dirs_created[url] = True
+        return True
+
+    def _split_path(self, path):
+        (head, tail) = os.path.split(path)
+        return self._split_path(head) + [tail] \
+               if head and head != path \
+               else [head or tail]
+
+
 class Stats:
     """
     Keeps global stats for transfers
@@ -3760,7 +3952,7 @@ class Panorama:
     def __getattr__(self, name):
         return getattr(self.instance, name)
     
-    class __Panorama():   	 
+    class __Panorama():
     
         def one_transfer(self, transfer, was_successful, t_start, t_end, filesize):
             
@@ -3828,7 +4020,7 @@ class SimilarWorkSet:
         # load all the handlers - does the order matter?
         self._available_handlers.append( FileHandler() )
         self._available_handlers.append( GridFtpHandler() )
-        self._available_handlers.append( TransferProtocolHandler() )
+        self._available_handlers.append( HttpHandler() )
         self._available_handlers.append( IRodsHandler() )
         self._available_handlers.append( S3Handler() )
         self._available_handlers.append( GlobusOnlineHandler() )
@@ -3841,6 +4033,7 @@ class SimilarWorkSet:
         self._available_handlers.append( DockerHandler() )
         self._available_handlers.append( SingularityHandler() )
         self._available_handlers.append( HPSSHandler() )
+        self._available_handlers.append( WebdavHandler() )
 
         # mkdirs and removes
         if isinstance(transfers_l[0], Mkdir) or isinstance(transfers_l[0], Remove):
@@ -3911,7 +4104,7 @@ class SimilarWorkSet:
                 self._secondary_handler = h
                 break
         if self._primary_handler is None or self._secondary_handler is None:
-            raise RuntimeError("Unable to find handlers for '%s' to '%s'"
+            raise RuntimeError("Unable to find handlers for '%s' to '%s' transfers"
                                %(src_proto, dst_proto))
 
         logger.debug("Selected %s and %s for handling these transfers"
@@ -4192,6 +4385,9 @@ logger = logging.getLogger("my_logger")
 
 # threads we have currently running
 threads = []
+
+# common credentials
+credentials = {}
 
 # should file transfers symlink rather than copy
 symlink_file_transfer = False
@@ -4596,6 +4792,7 @@ def myexit(rc):
 
 def main():
     global threads
+    global credentials
     global stats_start
     global stats_end
     global symlink_file_transfer
@@ -4694,6 +4891,16 @@ def main():
     except Exception as err:
         logger.critical(err)
         myexit(1)
+
+    # load common credentials, if available
+    if 'PEGASUS_CREDENTIALS' in os.environ:
+        logger.debug('Loading credentials from ' + os.environ['PEGASUS_CREDENTIALS'])
+        with open(os.environ['PEGASUS_CREDENTIALS'], 'r') as stream:
+            try:
+                credentials = yaml.safe_load(stream)
+            except Exception as err:
+                logger.critical('Unable to load credentials: ' + str(err))
+                myexit(1)
     
     # start the stats time
     stats_start = time.time()

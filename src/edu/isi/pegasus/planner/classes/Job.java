@@ -706,7 +706,9 @@ public class Job extends Data implements GraphNodeContent {
             return;
         }
 
-        if (url.startsWith("gsiftp")
+        if (url.startsWith("webdav")) {
+            this.addCredentialType(site, CredentialHandler.TYPE.credentials);
+        } else if (url.startsWith("gsiftp")
                 || url.startsWith("xroot")
                 || url.startsWith("root")
                 || url.startsWith("srm")

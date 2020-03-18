@@ -188,6 +188,7 @@ public abstract class Abstract implements CondorStyle {
 
                         break;
 
+                    case credentials:
                     case irods:
                     case s3:
                     case boto:
@@ -238,6 +239,7 @@ public abstract class Abstract implements CondorStyle {
                 CredentialHandler handler = mCredentialFactory.loadInstance(credType);
 
                 switch (credType) {
+                    case credentials:
                     case x509:
                     case irods:
                     case s3:

@@ -13,6 +13,7 @@
  */
 package edu.isi.pegasus.planner.transfer.implementation;
 
+import edu.isi.pegasus.common.credential.impl.PegasusCredentials;
 import edu.isi.pegasus.common.credential.impl.Irods;
 import edu.isi.pegasus.common.credential.impl.Proxy;
 import edu.isi.pegasus.common.credential.impl.S3CFG;
@@ -85,6 +86,12 @@ public abstract class Abstract implements Implementation {
 
     /** The prefix for the NoOP jobs that are created. */
     public static final String NOOP_PREFIX = "noop_";
+    
+    /** The path to the credentials file on the submit host (local pool). */
+    protected String mLocalCredentials;
+
+    /** The basename of the user credentials file */
+    protected String mLocalCredentialsBasename;
 
     /**
      * The path to the user proxy on the submit host (local pool), that is picked up for use in
@@ -175,6 +182,21 @@ public abstract class Abstract implements Implementation {
         // PM-810 it is now per job instead of global.
         mPegasusConfiguration = new PegasusConfiguration(mLogger);
         // mAddNodesForSettingXBit = !mProps.executeOnWorkerNode();
+        
+        // Pegasus credentials
+        PegasusCredentials creds = new PegasusCredentials();
+        creds.initialize(bag);
+        mLocalCredentials = creds.getPath();
+        // set the path to credentials file only if the file exists
+        if (mLocalCredentials != null && !new File(mLocalCredentials).exists()) {
+            mLogger.log(
+                    "The Pegasus credentials file does not exist - " + mLocalCredentials,
+                    LogManager.ERROR_MESSAGE_LEVEL);
+            mLocalCredentials = null;
+        }
+
+        mLocalCredentialsBasename =
+                (mLocalCredentials == null) ? null : new File(mLocalCredentials).getName();
 
         Proxy p = new Proxy();
         p.initialize(bag);
@@ -229,6 +251,31 @@ public abstract class Abstract implements Implementation {
         if (priority != null) {
             job.condorVariables.construct(Condor.PRIORITY_KEY, priority);
         }
+    }
+    
+   /**
+     * Determines if there is a need to transfer the Pegasus credentials for the transfer job or
+     * not. If there is a need to transfert the file, then the job is modified to create the correct
+     * condor commands to transfer the file. The file is transferred from the submit host (i.e site
+     * local).
+     *
+     * @param job the transfer job .
+     * @return boolean true job was modified to transfer the Pegasus credentials file, else false when
+     *     job is not modified.
+     * @deprecated
+     */
+    public boolean checkAndTransferPegasusCredentials(TransferJob job) {
+
+        // for remote execution, transfer credentials file
+        if (!job.getSiteHandle().equalsIgnoreCase("local")
+                && mLocalIrodsEnv != null
+                && !job.envVariables.containsKey(PegasusCredentials.CREDENTIALS_FILE)) {
+            job.condorVariables.addIPFileForTransfer(mLocalCredentials);
+            // just the basename
+            job.envVariables.checkKeyInNS(PegasusCredentials.CREDENTIALS_FILE, mLocalCredentialsBasename);
+        }
+
+        return true;
     }
 
     /**

@@ -28,6 +28,7 @@ public interface CredentialHandler {
     // type of credentials associated
     /** An enumeration of valid types of credentials that are supported. */
     public static enum TYPE {
+        credentials,
         x509,
         s3,
         boto,

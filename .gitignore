@@ -97,7 +97,6 @@ dkms.conf
 
 ### Eclipse ###
 .metadata
-bin/
 tmp/
 *.tmp
 *.bak
