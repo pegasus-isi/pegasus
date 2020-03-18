@@ -33,7 +33,7 @@ import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.namespace.Namespace;
-import edu.isi.pegasus.planner.parser.tokens.TransformationCatalogKeywords;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationCatalogKeywords;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;

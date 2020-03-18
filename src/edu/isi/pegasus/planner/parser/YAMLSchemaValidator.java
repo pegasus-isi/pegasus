@@ -22,7 +22,7 @@ import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
 import com.networknt.schema.ValidationMessage;
-import edu.isi.pegasus.planner.parser.tokens.TransformationCatalogKeywords;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationCatalogKeywords;
 import java.io.File;
 import java.net.URI;
 import java.util.LinkedList;
