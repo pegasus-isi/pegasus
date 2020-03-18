@@ -141,7 +141,7 @@ public class PegasusCredentials extends Abstract implements CredentialHandler {
 
             if (cred == null) {
                 // default
-                cred = envs.get("HOME") + "/.pegasus/credentials.yml";
+                cred = envs.get("HOME") + "/.pegasus/credentials.conf";
                 File cfg = new File(cred);
             }
         }

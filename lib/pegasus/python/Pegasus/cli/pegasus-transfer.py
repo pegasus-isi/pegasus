@@ -61,10 +61,6 @@ except ImportError:
     # Fall back to Python 2's urllib
     import urllib as urllib
 
-# only load yaml if necessary
-if 'PEGASUS_CREDENTIALS' in os.environ:
-    import yaml
-
 from Pegasus.tools import worker_utils as utils
 
 # see https://www.python.org/dev/peps/pep-0469/
@@ -3648,6 +3644,7 @@ class WebdavHandler(TransferHandlerBase):
             
             logger.info(cmd)    
 
+            self._pre_transfer_attempt(t)
             try:
                 t_start = time.time()
                 tc = utils.TimedCommand(cmd, env_overrides=env_overrides)
@@ -3703,8 +3700,8 @@ class WebdavHandler(TransferHandlerBase):
         return [successful_l, failed_l]
 
     def _creds(self, host):
-        username = credentials['hosts'][host]['username']
-        password = credentials['hosts'][host]['password']
+        username = credentials.get(host, 'username')
+        password = credentials.get(host, 'password')
         return username, password
 
     def _create_dir(self, url, username, password):
@@ -4387,7 +4384,7 @@ logger = logging.getLogger("my_logger")
 threads = []
 
 # common credentials
-credentials = {}
+credentials = configparser.ConfigParser()
 
 # should file transfers symlink rather than copy
 symlink_file_transfer = False
@@ -4895,12 +4892,19 @@ def main():
     # load common credentials, if available
     if 'PEGASUS_CREDENTIALS' in os.environ:
         logger.debug('Loading credentials from ' + os.environ['PEGASUS_CREDENTIALS'])
-        with open(os.environ['PEGASUS_CREDENTIALS'], 'r') as stream:
-            try:
-                credentials = yaml.safe_load(stream)
-            except Exception as err:
-                logger.critical('Unable to load credentials: ' + str(err))
-                myexit(1)
+        if not os.path.isfile(os.environ['PEGASUS_CREDENTIALS']):
+            logger.critical('Credentials file does not exist: ' + os.environ['PEGASUS_CREDENTIALS'])
+            myexit(1)
+        mode = os.stat(os.environ['PEGASUS_CREDENTIALS']).st_mode
+        if mode & (stat.S_IRWXG | stat.S_IRWXO):
+            logger.critical('Permissions of credentials file %s are too liberal' % cfg)
+            myexit(1)
+        credentials = configparser.ConfigParser()
+        try:
+            credentials.read(os.environ['PEGASUS_CREDENTIALS'])
+        except Exception as err:
+            logger.critical('Unable to load credentials: ' + str(err))
+            myexit(1)
     
     # start the stats time
     stats_start = time.time()
