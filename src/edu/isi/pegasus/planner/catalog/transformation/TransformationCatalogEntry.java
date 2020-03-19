@@ -13,27 +13,13 @@
  */
 package edu.isi.pegasus.planner.catalog.transformation;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.ObjectCodec;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
 import edu.isi.pegasus.common.util.ProfileParser;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntry;
-import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
-import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonSerializer;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.classes.VDSSysInfo2NMI;
-import edu.isi.pegasus.planner.catalog.site.classes.Directory;
-import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogKeywords; 
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2VDSSysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
@@ -43,12 +29,9 @@ import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
-import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationCatalogKeywords;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 /**
  * An object of this class corresponds to a tuple in the Transformation Catalog.
@@ -56,8 +39,6 @@ import java.util.Map;
  * @author Gaurang Mehta @$Revision$
  * @author Karan Vahi
  */
-@JsonDeserialize(using = TransformationCatalogEntryDeserializer.class)
-@JsonSerialize(using = TransformationCatalogEntrySerializer.class)
 public class TransformationCatalogEntry implements CatalogEntry {
 
     /** The logical mNamespace of the transformation */
@@ -664,161 +645,5 @@ public class TransformationCatalogEntry implements CatalogEntry {
         throw new UnsupportedOperationException(
                 "Not supported yet."); // To change body of generated methods, choose Tools |
         // Templates.
-    }
-}
-
-/**
- * Custom deserializer for YAML representation of TransformationCatalogEntry
- *
- * @author Karan Vahi
- */
-class TransformationCatalogEntryDeSerializer extends  CatalogEntryJsonDeserializer<TransformationCatalogEntry> {
-
-    /**
-     * Deserializes a SiteCatalogEntry YAML description of the type
-     *
-     * <pre>
-     * name: "isi"
-     * type: "installed"
-     * pfn: "/path/to/keg"
-     * arch: "x86_64"
-     * os.type: "linux"
-     * os.release: "fc"
-     * os.version: "1.0"
-     * profiles:
-     *   env:
-     *       Hello: World
-     *       JAVA_HOME: /bin/java.1.6
-     *   condor:
-     *       FOO: bar
-     * container: centos-pegasus
-     * </pre>
-     *
-     * @param parser
-     * @param dc
-     * @return
-     * @throws IOException
-     * @throws JsonProcessingException
-     */
-    @Override
-    public TransformationCatalogEntry deserialize(JsonParser parser, DeserializationContext dc)
-            throws IOException, JsonProcessingException {
-        ObjectCodec oc = parser.getCodec();
-        JsonNode node = oc.readTree(parser);
-        SiteCatalogEntry siteEntry = new SiteCatalogEntry();
-
-        for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
-            Map.Entry<String, JsonNode> e = it.next();
-            String key = e.getKey();
-            TransformationCatalogKeywords reservedKey = TransformationCatalogKeywords.getReservedKey(key);
-            if (reservedKey == null) {
-                this.complainForIllegalKey(TransformationCatalogKeywords.SITES.getReservedName(), key, node);
-            }
-
-            switch (reservedKey) {
-                case NAME:
-                    siteEntry.setSiteHandle(node.get(key).asText());
-                    break;
-
-                case ARCH:
-                    siteEntry.setArchitecture(SysInfo.Architecture.valueOf(node.get(key).asText()));
-                    break;
-
-                case OS_TYPE:
-                    siteEntry.setOS(SysInfo.OS.valueOf(node.get(key).asText()));
-                    break;
-
-                case OS_RELEASE:
-                    siteEntry.setOSRelease(node.get(key).asText());
-                    break;
-
-                case OS_VERSION:
-                    siteEntry.setOSVersion(node.get(key).asText());
-                    break;
-
-                case DIRECTORIES:
-                    JsonNode directoriesNodes = node.get(key);
-                    if (directoriesNodes != null) {
-                        if (directoriesNodes.isArray()) {
-                            for (JsonNode directoryNode : directoriesNodes) {
-                                parser = directoryNode.traverse(oc);
-                                Directory directory = parser.readValueAs(Directory.class);
-                                siteEntry.addDirectory(directory);
-                            }
-                        }
-                    }
-                    break;
-
-                case GRIDS:
-                    JsonNode gridGatewayNodes = node.get(key);
-                    if (gridGatewayNodes != null) {
-                        if (gridGatewayNodes.isArray()) {
-                            for (JsonNode gridGatewayNode : gridGatewayNodes) {
-                                parser = gridGatewayNode.traverse(oc);
-                                GridGateway gridGateway = parser.readValueAs(GridGateway.class);
-                                siteEntry.addGridGateway(gridGateway);
-                            }
-                        }
-                    }
-                    break;
-
-                case PROFILES:
-                    JsonNode profilesNode = node.get(key);
-                    if (profilesNode != null) {
-                        parser = profilesNode.traverse(oc);
-                        Profiles profiles = parser.readValueAs(Profiles.class);
-                        siteEntry.setProfiles(profiles);
-                    }
-                    break;
-
-                default:
-                    this.complainForUnsupportedKey(
-                            SiteCatalogKeywords.SITES.getReservedName(), key, node);
-            }
-        }
-
-        return siteEntry;
-    }
-}
-
-
-
-/**
- * Custom serializer for YAML representation of TransformationCatalogEntry
- *
- * @author Karan Vahi
- */
-class TransformationCatalogEntrySerializer extends  CatalogEntryJsonSerializer<TransformationCatalogEntry> {
-
-    public TransformationCatalogEntrySerializer() {}
-
-    /**
-     * Serializes contents into YAML representation
-     *
-     * @param entry
-     * @param gen
-     * @param sp
-     * @throws IOException
-     */
-    public void serialize(TransformationCatalogEntry entry, JsonGenerator gen, SerializerProvider sp)
-            throws IOException {
-        gen.writeStartObject();
-        writeStringField(gen, SiteCatalogKeywords.NAME.getReservedName(), entry.getSiteHandle());
-        writeStringField(
-                gen,
-                SiteCatalogKeywords.ARCH.getReservedName(),
-                entry.getArchitecture().toString());
-        writeStringField(
-                gen, SiteCatalogKeywords.OS_TYPE.getReservedName(), entry.getOS().toString());
-
-        writeArray(gen, SiteCatalogKeywords.DIRECTORIES.getReservedName(), entry.getDirectories());
-        writeArray(gen, SiteCatalogKeywords.GRIDS.getReservedName(), entry.getGridGateways());
-
-        if (!entry.getProfiles().isEmpty()) {
-            gen.writeFieldName(SiteCatalogKeywords.PROFILES.getReservedName());
-            gen.writeObject(entry.getProfiles());
-        }
-
-        gen.writeEndObject();
     }
 }
