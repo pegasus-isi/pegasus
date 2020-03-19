@@ -52,7 +52,7 @@ public class Transformation {
     }
 
     public void setBaseTCEntry(TransformationCatalogEntry entry) {
-        mBaseEntry = mBaseEntry;
+        mBaseEntry = entry;
     }
 
     public void addSiteTCEntry(TransformationCatalogEntry entry) {
@@ -205,7 +205,7 @@ class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transforma
                             node);
             }
         }
-
+        tx.setBaseTCEntry(base);
         return tx;
     }
 
