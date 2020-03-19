@@ -747,7 +747,7 @@ def test_build_pegasus_wf():
                 ],
             },
         ],
-        "name": "converted-from-file:///Users/ryantanaka/ISI/pegasus/lib/pegasus/python/Pegasus/test/cli/",
+        "name": "cwl-converted-pegasus-workflow",
         "pegasus": "5.0",
     }
 
@@ -759,7 +759,6 @@ def test_build_pegasus_wf():
     assert result == expected
 
 
-"""
 def test_build_pegasus_wf_job_contains_non_file_output():
     wf = cwl.load_document(
         {
@@ -787,7 +786,6 @@ def test_build_pegasus_wf_job_contains_non_file_output():
         build_pegasus_wf(wf, {}, {})
 
     assert "Support for output types other than File" in str(e)
-"""
 
 
 def test_main(mocker):
@@ -893,7 +891,7 @@ def test_main(mocker):
                 ],
             }
         ],
-        "name": "converted-from-file://" + cwl_wf_file_path,
+        "name": "cwl-converted-pegasus-workflow",
         "pegasus": "5.0",
         "replicaCatalog": {
             "replicas": [
