@@ -13,9 +13,19 @@
  */
 package edu.isi.pegasus.planner.catalog.transformation.classes;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonNode;
 import edu.isi.pegasus.common.util.Separator;
+import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
+import edu.isi.pegasus.planner.catalog.classes.Transformation;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogKeywords;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +50,9 @@ public class TransformationStore {
 
     /** Containers indexed by their LFN */
     private Map<String, Container> mContainers;
+    
+     /** The version for the Transformation Catalog */
+    private String mVersion;
 
     /** The default constructor. */
     public TransformationStore() {
@@ -57,6 +70,24 @@ public class TransformationStore {
         // more efficient to create a new object rather than relying on
         // the underlying map clear method
         initialize();
+    }
+    
+    /**
+     * Set the Catalog version
+     *
+     * @param version
+     */
+    public void setVersion(String version) {
+        this.mVersion = version;
+    }
+
+    /**
+     * Get the Catalog version
+     *
+     * @return version
+     */
+    public String getVersion() {
+        return this.mVersion;
     }
 
     /**
@@ -349,3 +380,121 @@ public class TransformationStore {
         return this.mContainers.get(name);
     }
 }
+
+
+
+/**
+ * Custom deserializer for YAML representation of TransformationCatalog
+ *
+ * @author Karan Vahi
+ */
+class TransformationStoreDeserializer extends CatalogEntryJsonDeserializer<TransformationStore> {
+
+    /**
+     * Deserializes a Transformation Catalog YAML description of the type
+     *
+     * <pre>
+     * pegasus: "5.0"
+     * transformations:
+     *    - namespace: "example"
+     *      name: "keg"
+     *      version: "1.0"
+     *      profiles:
+     *          env:
+     *              APP_HOME: "/tmp/myscratch"
+     *              JAVA_HOME: "/opt/java/1.6"
+     *          pegasus:
+     *              clusters.num: "1"
+     *
+     *      requires:
+     *          - anotherTr
+     *
+     *      sites:
+     *       - name: "isi"
+     *          type: "installed"
+     *          pfn: "/path/to/keg"
+     *          arch: "x86_64"
+     *          os.type: "linux"
+     *          os.release: "fc"
+     *          os.version: "1.0"
+     *          profiles:
+     *            env:
+     *                Hello: World
+     *                JAVA_HOME: /bin/java.1.6
+     *            condor:
+     *                FOO: bar
+     *          container: centos-pegasus
+     *
+     *    - namespace: example
+     *      name: anotherTr
+     *      version: "1.2.3"
+     *
+     *      sites:
+     *          - name: isi
+     *            type: installed
+     *            pfn: /path/to/anotherTr
+     *
+     * containers:
+     *    - name: centos-pegasus
+     *      type: docker
+     *      image: docker:///rynge/montage:latest
+     *      mount: /Volumes/Work/lfs1:/shared-data/:ro
+     *      mount: /Volumes/Work/lfs12:/shared-data1/:ro
+     *      profiles:
+     *          env:
+     *              JAVA_HOME: /opt/java/1.6
+     * </pre>
+     *
+     *
+     * @param parser
+     * @param dc
+     * @return
+     * @throws IOException
+     * @throws JsonProcessingException
+     */
+    @Override
+    public TransformationStore deserialize(JsonParser parser, DeserializationContext dc)
+            throws IOException, JsonProcessingException {
+        ObjectCodec oc = parser.getCodec();
+        JsonNode node = oc.readTree(parser);
+        TransformationStore store = new TransformationStore();
+
+        for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
+            Map.Entry<String, JsonNode> e = it.next();
+            String key = e.getKey();
+            TransformationCatalogKeywords reservedKey = TransformationCatalogKeywords.getReservedKey(key);
+            if (reservedKey == null) {
+                this.complainForIllegalKey(TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName(), key, node);
+            }
+
+            switch (reservedKey) {
+                case PEGASUS:
+                    store.setVersion(e.getValue().asText());
+                    break;
+
+                case TRANSFORMATIONS:
+                    JsonNode transformationNodes = node.get(key);
+                    if (transformationNodes != null) {
+                        if (transformationNodes.isArray()) {
+                            for (JsonNode siteNode : transformationNodes) {
+                                parser = siteNode.traverse(oc);
+                                Transformation tx = parser.readValueAs(Transformation.class);
+                                for(TransformationCatalogEntry entry: tx.getTransformationCatalogEntries()){
+                                    store.addEntry(entry);
+                                }
+                            }
+                        }
+                    }
+                    break;
+
+
+                default:
+                    this.complainForUnsupportedKey(
+                            SiteCatalogKeywords.SITES.getReservedName(), key, node);
+            }
+        }
+
+        return store;
+    }
+}
+

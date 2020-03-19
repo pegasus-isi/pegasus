@@ -18,6 +18,7 @@ import java.util.Map;
 
 /** @author Mukund Murrali */
 public enum TransformationCatalogKeywords {
+    PEGASUS("pegasus"),
     NAMESPACE("namespace"),
     VERSION("version"),
     PROFILES("profiles"),
