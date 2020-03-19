@@ -59,8 +59,13 @@ public class Transformation {
         this.mSiteEntries.add(entry);
     }
 
-    public Iterable<TransformationCatalogEntry> getTransformationCatalogEntries() {
+    public List<TransformationCatalogEntry> getTransformationCatalogEntries() {
         List<TransformationCatalogEntry> entries = new LinkedList();
+        if( this.mSiteEntries.isEmpty()){
+            entries.add(mBaseEntry);
+            return entries;
+        }
+        
         for (TransformationCatalogEntry siteEntry : mSiteEntries) {
             entries.add(this.addSiteInformation(mBaseEntry, siteEntry));
         }
