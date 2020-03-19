@@ -19,7 +19,7 @@ package edu.isi.pegasus.planner.catalog.classes;
 
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
-import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
+import edu.isi.pegasus.planner.catalog.CatalogException;
 
 /**
  * Abstract Class for Deserializers for parsing Catalog Data Objects
@@ -30,14 +30,13 @@ public abstract class CatalogEntryJsonDeserializer<T> extends JsonDeserializer<T
     /**
      * Throw an exception for Illegal Key
      *
-     * @param prefix
      * @param element
      * @param node
      * @param key
      * @throws SiteCatalogException
      */
     public void complainForIllegalKey(String element, String key, JsonNode node)
-            throws SiteCatalogException {
+            throws CatalogException {
         this.complain("Illegal key", element, key, node);
     }
 
@@ -51,7 +50,7 @@ public abstract class CatalogEntryJsonDeserializer<T> extends JsonDeserializer<T
      * @throws SiteCatalogException
      */
     public void complainForUnsupportedKey(String element, String key, JsonNode node)
-            throws SiteCatalogException {
+            throws CatalogException {
         this.complain("Unsupported key", element, key, node);
     }
 
@@ -65,7 +64,7 @@ public abstract class CatalogEntryJsonDeserializer<T> extends JsonDeserializer<T
      * @throws SiteCatalogException
      */
     public void complain(String prefix, String element, String key, JsonNode node)
-            throws SiteCatalogException {
+            throws CatalogException {
         StringBuilder sb = new StringBuilder();
         sb.append(prefix)
                 .append(" ")
@@ -76,6 +75,6 @@ public abstract class CatalogEntryJsonDeserializer<T> extends JsonDeserializer<T
                 .append(element)
                 .append(" - ")
                 .append(node.toString());
-        throw new SiteCatalogException(sb.toString());
+        throw new CatalogException(sb.toString());
     }
 }

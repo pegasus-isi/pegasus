@@ -19,16 +19,16 @@ import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import edu.isi.pegasus.planner.catalog.CatalogException;
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
-import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationCatalogKeywords;
+import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.Profile;
+import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.namespace.Namespace;
-import edu.isi.pegasus.planner.parser.ScannerException;
+
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -178,7 +178,13 @@ class TransformationDeserializer extends  CatalogEntryJsonDeserializer<Transform
                         base.addProfiles(profiles); 
                     }
                     break;
-
+                  
+                case HOOKS:
+                    JsonNode hooksNode = node.get(key);
+                    base.addNotifications(this.createNotifications(hooksNode));
+                    break;
+            
+                    
                 case SITES:
                     JsonNode sitesNode = node.get(key);
                     if (sitesNode.isArray()) {
@@ -187,7 +193,7 @@ class TransformationDeserializer extends  CatalogEntryJsonDeserializer<Transform
                             tx.addSiteTCEntry(entry);
                         }
                     } else {
-                        throw new ScannerException("sites: value should be of type array ");
+                        throw new CatalogException("sites: value should be of type array ");
                     }
                     
                 default:
@@ -262,7 +268,6 @@ class TransformationDeserializer extends  CatalogEntryJsonDeserializer<Transform
 
                 case TYPE:
                     String type = node.get(key).asText();
-                    ;
                     entry.setType(TCType.valueOf(type.toUpperCase()));
                     break;
 
@@ -346,12 +351,60 @@ class TransformationDeserializer extends  CatalogEntryJsonDeserializer<Transform
                 profiles.add(new Profile(namespace, entry.getKey(), entry.getValue().asText()));
             }
         } else {
-            throw new ScannerException(
+            throw new CatalogException(
                     "Invalid namespace specified " + namespace + " for profiles " + node);
         }
         return profiles;
     }
 
+    /**
+     * Creates a notifications object
+     *
+     * <pre>
+     *   shell:
+     *        - on: start
+     *          cmd: /bin/date
+     * </pre>
+     *
+     * @param node
+     * @return
+     */
+    protected Notifications createNotifications(JsonNode node) {
+        Notifications n = new Notifications();
+        for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
+            Map.Entry<String, JsonNode> entry = it.next();
+            n.addAll(this.createNotifications(entry.getKey(), entry.getValue()));
+        }
+        return n;
+    }
+
+    /**
+     * Parses an array of notifications of same type
+     *
+     * <p>- on: start cmd: /bin/date
+     *
+     * @param key
+     * @param value
+     * @return
+     */
+    protected Notifications createNotifications(String type, JsonNode node) {
+        Notifications notifications = new Notifications();
+        if (type.equals("shell")) {
+            if (node.isArray()) {
+                for (JsonNode hook : node) {
+                    notifications.add(
+                            new Invoke(
+                                    Invoke.WHEN.valueOf(hook.get("_on").asText()),
+                                    hook.get("cmd").asText()));
+                }
+            } else {
+                throw new CatalogException("Expected an array of hooks " + node);
+            }
+        } else {
+            throw new CatalogException("Unsupported notifications of type " + type + " - " + node);
+        }
+        return notifications;
+    }
 }
 
 
