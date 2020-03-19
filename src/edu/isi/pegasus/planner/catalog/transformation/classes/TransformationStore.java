@@ -476,8 +476,8 @@ class TransformationStoreDeserializer extends CatalogEntryJsonDeserializer<Trans
                     JsonNode transformationNodes = node.get(key);
                     if (transformationNodes != null) {
                         if (transformationNodes.isArray()) {
-                            for (JsonNode siteNode : transformationNodes) {
-                                parser = siteNode.traverse(oc);
+                            for (JsonNode transformationNode : transformationNodes) {
+                                parser = transformationNode.traverse(oc);
                                 Transformation tx = parser.readValueAs(Transformation.class);
                                 for(TransformationCatalogEntry entry: tx.getTransformationCatalogEntries()){
                                     store.addEntry(entry);
