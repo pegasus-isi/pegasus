@@ -47,7 +47,9 @@ public class Transformation {
 
     private List<TransformationCatalogEntry> mSiteEntries;
 
-    public Transformation() {}
+    public Transformation() {
+        mSiteEntries = new LinkedList();
+    }
 
     public void setBaseTCEntry(TransformationCatalogEntry entry) {
         mBaseEntry = mBaseEntry;
