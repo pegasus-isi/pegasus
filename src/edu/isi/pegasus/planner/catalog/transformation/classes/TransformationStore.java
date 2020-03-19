@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
-import edu.isi.pegasus.planner.catalog.classes.Transformation;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import java.io.IOException;
 import java.util.HashMap;
