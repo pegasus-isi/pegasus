@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import PurePath
 
-import cwl_utils.parser_v1_0 as cwl
+import cwl_utils.parser_v1_1 as cwl
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 
@@ -76,7 +76,11 @@ def setup_logger(debug_flag):
 # --- args ---------------------------------------------------------------------
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Converts a cwl workflow into the Pegasus DAX format."
+        description=(
+            "Converts a cwl workflow into Pegasus's native format.\n"
+            "Note that this is a best-effort conversion and minor adjustments may\n"
+            "be needed for proper execution."
+        )
     )
     parser.add_argument(
         "cwl_workflow_file_path",
@@ -88,7 +92,10 @@ def parse_args():
 
     parser.add_argument(
         "transformation_spec_file_path",
-        help="YAML file describing pegasus specific transformation properties",
+        help=(
+            "YAML file describing pegasus specific transformation properties.\n"
+            "Given in the following format: {<tr name>: {site: <site name>, is_stageable: <bool>}, ...}"
+        ),
     )
 
     parser.add_argument(
@@ -115,6 +122,19 @@ def get_basename(name):
 
 def get_name(parent_id: str, _id: str) -> str:
     return get_basename(parent_id) + "/" + get_basename(_id)
+
+
+def load_wf_inputs(input_spec_file_path: str) -> dict:
+    try:
+        with open(input_spec_file_path, "r") as f:
+            wf_inputs = yaml.load(f)
+
+        log.info("Loaded workflow inputs file: {}".format(input_spec_file_path))
+    except FileNotFoundError:
+        log.exception("Unable to find {}".format(input_spec_file_path))
+        sys.exit(1)
+
+    return wf_inputs
 
 
 def load_tr_specs(tr_specs_file_path: str) -> dict:
@@ -152,8 +172,12 @@ def load_tr_specs(tr_specs_file_path: str) -> dict:
                 "\t\t\t...\n"
             )
         )
+        sys.exit(1)
     except FileNotFoundError:
-        log.exception("Unable to find {}".format(tr_specs_file_path))
+        log.exception(
+            "Unable to find transformation spec file: {}".format(tr_specs_file_path)
+        )
+        sys.exit(1)
 
     log.info("Successfully loaded {}".format(tr_specs_file_path))
 
@@ -169,7 +193,7 @@ def build_pegasus_tc(tr_specs: dict, cwl_wf: cwl.Workflow) -> TransformationCata
             cwl.load_document(step.run) if isinstance(step.run, str) else step.run
         )
 
-        if not hasattr(cwl_cmd_ln_tool, "baseCommand"):
+        if cwl_cmd_ln_tool.baseCommand is None:
             raise ValueError("{} requires a 'baseCommand'".format(cwl_cmd_ln_tool.id))
 
         tool_path = PurePath(cwl_cmd_ln_tool.baseCommand)
@@ -237,6 +261,7 @@ def build_pegasus_rc(wf_inputs: dict, cwl_wf: cwl.Workflow) -> ReplicaCatalog:
                 log.exception(
                     "Unable to obtain input: {} from input spec file".format(input_name)
                 )
+                sys.exit(1)
 
             try:
                 log.info(
@@ -252,6 +277,7 @@ def build_pegasus_rc(wf_inputs: dict, cwl_wf: cwl.Workflow) -> ReplicaCatalog:
                         input_name
                     )
                 )
+                sys.exit(1)
 
     log.info(
         "Building replica catalog complete. {} entries added".format(len(rc.replicas))
@@ -260,11 +286,11 @@ def build_pegasus_rc(wf_inputs: dict, cwl_wf: cwl.Workflow) -> ReplicaCatalog:
     return rc
 
 
-def collect_files(wf_inputs: dict, cwl_wf: cwl.Workflow) -> dict:
+def collect_files(cwl_wf: cwl.Workflow) -> dict:
     log.info("Collecting workflow files")
     wf_files = dict()
 
-    log.info("Parsing files referenced in input spec file")
+    log.info("Parsing input files from workflow inputs")
     for _input in cwl_wf.inputs:
         if _input.type == "File":
             f = get_basename(_input.id)
@@ -276,6 +302,7 @@ def collect_files(wf_inputs: dict, cwl_wf: cwl.Workflow) -> dict:
             isinstance(_input.type, cwl.InputArraySchema)
             and _input.type.items == "File"
         ):
+
             raise NotImplementedError(
                 "Support for File[] workflow input type in development"
             )
@@ -293,14 +320,19 @@ def collect_files(wf_inputs: dict, cwl_wf: cwl.Workflow) -> dict:
                 try:
                     v = output.outputBinding.glob
                 except AttributeError:
-                    log.exception(
-                        "outputBinding.glob must be specified (e.g. file1.txt) for {}".format(
-                            step.run
+                    v = None
+                finally:
+                    if not v:
+                        raise ValueError(
+                            "outputBinding.glob must be specified (e.g. file1.txt) for {}".format(
+                                step.run
+                            )
                         )
-                    )
 
-                if any(c in "*" for c in v):
-                    raise NotImplementedError("Unable to  wildcards in ")
+                if any(c in "*$" for c in v):
+                    raise NotImplementedError(
+                        "Unable to resolve wildcards in {}".format(v)
+                    )
 
                 wf_files[k] = v
                 log.info("Collected output file: {}".format(k))
@@ -340,6 +372,7 @@ def collect_input_strings(wf_inputs: dict, cwl_wf: cwl.Workflow) -> dict:
                 log.exception(
                     "Unable to obtain input: {} from input spec file".format(input_name)
                 )
+                sys.exit(1)
 
     log.info(
         "Collection of workflow input strings complete. {} string/string[] inputs collected".format(
@@ -364,7 +397,7 @@ def build_pegasus_wf(
             cwl.load_document(step.run) if isinstance(step.run, str) else step.run
         )
 
-        job = Job(PurePath(cwl_cmd_ln_tool.baseCommand).name)
+        job = Job(PurePath(cwl_cmd_ln_tool.baseCommand).name, _id=get_basename(step.id))
 
         # collect current step inputs
         log.info("Collecting step inputs from {}".format(step_name))
@@ -372,16 +405,8 @@ def build_pegasus_wf(
         for _input in step.in_:
             input_id = get_basename(_input.id)
 
-            if isinstance(_input.source, str):
-                step_inputs[input_id] = get_basename(_input.source)
-                log.debug(
-                    "step_inputs[{}] = {}".format(input_id, step_inputs[input_id])
-                )
-            elif isinstance(_input.source, list):
-                step_inputs[input_id] = [get_basename(item) for item in _input.source]
-                log.debug(
-                    "step_inputs[{}] = {}".format(input_id, step_inputs[input_id])
-                )
+            step_inputs[input_id] = get_basename(_input.source)
+            log.debug("step_inputs[{}] = {}".format(input_id, step_inputs[input_id]))
 
         # add inputs that are of type File
         for _input in cwl_cmd_ln_tool.inputs:
@@ -390,6 +415,8 @@ def build_pegasus_wf(
 
                 job.add_inputs(wf_file)
                 log.info("Step: {} added input file: {}".format(step_name, wf_file.lfn))
+            """
+            # TODO: handle File[] inputs
             elif isinstance(_input.type, cwl.CommandInputArraySchema):
                 if _input.type.items == "File":
                     for f in step_inputs[get_name(step.id, _input.id)]:
@@ -401,7 +428,7 @@ def build_pegasus_wf(
                                 step_name, wf_file.lfn
                             )
                         )
-
+            """
         # add job outputs that are of type File
         log.info("Collecting step outputs from {}".format(step_name))
         for output in cwl_cmd_ln_tool.outputs:
@@ -425,15 +452,16 @@ def build_pegasus_wf(
         )
 
         # args will be added in the order of their assigned inputBinding
-        cwl_cmd_ln_tool_inputs = sorted(
-            cwl_cmd_ln_tool.inputs,
-            key=lambda _input: _input.inputBinding.position
-            if (
-                hasattr(_input, "inputBinding")
-                and hasattr(_input.inputBinding, "position")
-            )
-            else 0,
-        )
+        def get_input_binding(_input):
+            key = 0
+            if hasattr(_input, "inputBinding") and hasattr(
+                _input.inputBinding, "position"
+            ):
+                key = _input.inputBinding.position
+
+            return key if key else 0
+
+        cwl_cmd_ln_tool_inputs = sorted(cwl_cmd_ln_tool.inputs, key=get_input_binding)
 
         for _input in cwl_cmd_ln_tool_inputs:
             # indicates whether or not input will appear in args
@@ -497,22 +525,13 @@ def main():
     cwl_wf = cwl.load_document(args.cwl_workflow_file_path)
     log.info("Loaded cwl workflow: {}".format(args.cwl_workflow_file_path))
 
-    try:
-        with open(args.workflow_inputs_file_path, "r") as f:
-            wf_inputs = yaml.load(f)
-
-        log.info(
-            "Loaded workflow inputs file: {}".format(args.workflow_inputs_file_path)
-        )
-    except FileNotFoundError:
-        log.exception("Unable to find {}".format(args.input_spec_file_path))
-
+    wf_inputs = load_wf_inputs(args.workflow_inputs_file_path)
     tr_specs = load_tr_specs(args.transformation_spec_file_path)
 
     tc = build_pegasus_tc(tr_specs, cwl_wf)
     rc = build_pegasus_rc(wf_inputs, cwl_wf)
 
-    wf_files = collect_files(wf_inputs, cwl_wf)
+    wf_files = collect_files(cwl_wf)
     wf_input_strings = collect_input_strings(wf_inputs, cwl_wf)
     wf = build_pegasus_wf(cwl_wf, wf_files, wf_input_strings)
 
