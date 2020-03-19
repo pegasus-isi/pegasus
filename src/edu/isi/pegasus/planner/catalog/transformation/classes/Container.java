@@ -661,7 +661,7 @@ public class Container implements Cloneable {
             }
             return result;
         }
-        
+
         /**
          * Calculate a hash code value for the object to support hash tables.
          *
@@ -695,16 +695,15 @@ public class Container implements Cloneable {
     }
 }
 
-
 /**
- * Custom deserializer for YAML representation of Container 
+ * Custom deserializer for YAML representation of Container
  *
  * @author Karan Vahi
  */
-class ContainerDeserializer extends  CatalogEntryJsonDeserializer<Container> {
+class ContainerDeserializer extends CatalogEntryJsonDeserializer<Container> {
 
     /**
-     * Deserializes a Transformation  YAML description of the type
+     * Deserializes a Transformation YAML description of the type
      *
      * <pre>
      * - name: centos-pegasus
@@ -718,7 +717,7 @@ class ContainerDeserializer extends  CatalogEntryJsonDeserializer<Container> {
      *     env:
      *       JAVA_HOME: /opt/java/1.6
      * </pre>
-     * 
+     *
      * @param parser
      * @param dc
      * @return
@@ -726,7 +725,7 @@ class ContainerDeserializer extends  CatalogEntryJsonDeserializer<Container> {
      * @throws JsonProcessingException
      */
     @Override
-    public Container  deserialize(JsonParser parser, DeserializationContext dc)
+    public Container deserialize(JsonParser parser, DeserializationContext dc)
             throws IOException, JsonProcessingException {
         ObjectCodec oc = parser.getCodec();
         JsonNode node = oc.readTree(parser);
@@ -734,9 +733,11 @@ class ContainerDeserializer extends  CatalogEntryJsonDeserializer<Container> {
         for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
             Map.Entry<String, JsonNode> e = it.next();
             String key = e.getKey();
-            TransformationCatalogKeywords reservedKey = TransformationCatalogKeywords.getReservedKey(key);
+            TransformationCatalogKeywords reservedKey =
+                    TransformationCatalogKeywords.getReservedKey(key);
             if (reservedKey == null) {
-                this.complainForIllegalKey(TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName(), key, node);
+                this.complainForIllegalKey(
+                        TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName(), key, node);
             }
 
             switch (reservedKey) {
@@ -776,17 +777,15 @@ class ContainerDeserializer extends  CatalogEntryJsonDeserializer<Container> {
                     }
                     break;
 
-                 
                 case PROFILES:
                     JsonNode profilesNode = node.get(key);
                     if (profilesNode != null) {
                         parser = profilesNode.traverse(oc);
                         Profiles profiles = parser.readValueAs(Profiles.class);
-                        container.addProfiles(profiles); 
+                        container.addProfiles(profiles);
                     }
                     break;
 
-                 
                 default:
                     this.complainForUnsupportedKey(
                             TransformationCatalogKeywords.CONTAINERS.getReservedName(), key, node);
@@ -795,7 +794,7 @@ class ContainerDeserializer extends  CatalogEntryJsonDeserializer<Container> {
 
         return container;
     }
-    
+
     /**
      * Creates a list of mount points for the container
      *
@@ -818,8 +817,4 @@ class ContainerDeserializer extends  CatalogEntryJsonDeserializer<Container> {
         }
         return mps;
     }
-    
-    
 }
-
-

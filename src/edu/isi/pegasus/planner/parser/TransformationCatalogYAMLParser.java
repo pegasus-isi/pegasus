@@ -26,6 +26,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container.TYPE;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationCatalogKeywords;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.catalog.transformation.impl.Abstract;
 import edu.isi.pegasus.planner.classes.Notifications;
@@ -33,7 +34,6 @@ import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.namespace.Namespace;
-import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationCatalogKeywords;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;

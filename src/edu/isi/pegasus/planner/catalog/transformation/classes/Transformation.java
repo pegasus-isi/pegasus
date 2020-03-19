@@ -28,7 +28,6 @@ import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.namespace.Namespace;
-
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -36,53 +35,48 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A convenience class for yaml serialization / deserialization of transformation
- * catalog. Should not be used for anything else
- * 
+ * A convenience class for yaml serialization / deserialization of transformation catalog. Should
+ * not be used for anything else
+ *
  * @author Karan Vahi
  */
 @JsonDeserialize(using = TransformationDeserializer.class)
-public class Transformation{
-    
+public class Transformation {
+
     private TransformationCatalogEntry mBaseEntry;
-    
+
     private List<TransformationCatalogEntry> mSiteEntries;
-    
-    public Transformation(){
-        
-    }
-    
-    public void setBaseTCEntry(TransformationCatalogEntry entry){
+
+    public Transformation() {}
+
+    public void setBaseTCEntry(TransformationCatalogEntry entry) {
         mBaseEntry = mBaseEntry;
     }
-    
-    public void addSiteTCEntry(TransformationCatalogEntry entry){
+
+    public void addSiteTCEntry(TransformationCatalogEntry entry) {
         this.mSiteEntries.add(entry);
     }
 
     public Iterable<TransformationCatalogEntry> getTransformationCatalogEntries() {
-        List<TransformationCatalogEntry>entries = new LinkedList();
-        for(TransformationCatalogEntry siteEntry: mSiteEntries){
+        List<TransformationCatalogEntry> entries = new LinkedList();
+        for (TransformationCatalogEntry siteEntry : mSiteEntries) {
             entries.add(this.addSiteInformation(mBaseEntry, siteEntry));
-           
         }
         return entries;
     }
-    
+
     /**
-     * Adds site specific information from to the base tx, and returns a new
-     * merged tx
-     * 
+     * Adds site specific information from to the base tx, and returns a new merged tx
+     *
      * @param base
-     * @param from 
-     * 
-     * @return 
+     * @param from
+     * @return
      */
-    protected TransformationCatalogEntry addSiteInformation(TransformationCatalogEntry base, TransformationCatalogEntry from) {
+    protected TransformationCatalogEntry addSiteInformation(
+            TransformationCatalogEntry base, TransformationCatalogEntry from) {
         TransformationCatalogEntry entry = (TransformationCatalogEntry) base.clone();
         SysInfo sysInfo = new SysInfo();
-        
-        
+
         entry.setResourceId(from.getResourceId());
         entry.setSysInfo(from.getSysInfo());
         entry.setType(from.getType());
@@ -91,21 +85,19 @@ public class Transformation{
         entry.setContainer(from.getContainer());
         return entry;
     }
-   
 }
 
-
 /**
- * Custom deserializer for YAML representation of Transformation 
+ * Custom deserializer for YAML representation of Transformation
  *
  * @author Karan Vahi
  */
-class TransformationDeserializer extends  CatalogEntryJsonDeserializer<Transformation> {
+class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transformation> {
 
     /**
-     * Deserializes a Transformation  YAML description of the type
+     * Deserializes a Transformation YAML description of the type
      *
-     * <pre> 
+     * <pre>
      * namespace: "example"
      * name: "keg"
      * version: "1.0"
@@ -134,7 +126,7 @@ class TransformationDeserializer extends  CatalogEntryJsonDeserializer<Transform
      *     condor:
      *       FOO: bar
      *   container: centos-pegasus
-     * </pre> 
+     * </pre>
      *
      * @param parser
      * @param dc
@@ -143,7 +135,7 @@ class TransformationDeserializer extends  CatalogEntryJsonDeserializer<Transform
      * @throws JsonProcessingException
      */
     @Override
-    public Transformation  deserialize(JsonParser parser, DeserializationContext dc)
+    public Transformation deserialize(JsonParser parser, DeserializationContext dc)
             throws IOException, JsonProcessingException {
         ObjectCodec oc = parser.getCodec();
         JsonNode node = oc.readTree(parser);
@@ -152,20 +144,22 @@ class TransformationDeserializer extends  CatalogEntryJsonDeserializer<Transform
         for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
             Map.Entry<String, JsonNode> e = it.next();
             String key = e.getKey();
-            TransformationCatalogKeywords reservedKey = TransformationCatalogKeywords.getReservedKey(key);
+            TransformationCatalogKeywords reservedKey =
+                    TransformationCatalogKeywords.getReservedKey(key);
             if (reservedKey == null) {
-                this.complainForIllegalKey(TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName(), key, node);
+                this.complainForIllegalKey(
+                        TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName(), key, node);
             }
 
             switch (reservedKey) {
                 case NAMESPACE:
                     base.setLogicalNamespace(node.get(key).asText());
                     break;
-                    
+
                 case NAME:
                     base.setLogicalName(node.get(key).asText());
                     break;
-                    
+
                 case VERSION:
                     base.setLogicalVersion(node.get(key).asText());
                     break;
@@ -175,40 +169,43 @@ class TransformationDeserializer extends  CatalogEntryJsonDeserializer<Transform
                     if (profilesNode != null) {
                         parser = profilesNode.traverse(oc);
                         Profiles profiles = parser.readValueAs(Profiles.class);
-                        base.addProfiles(profiles); 
+                        base.addProfiles(profiles);
                     }
                     break;
-                  
+
                 case HOOKS:
                     JsonNode hooksNode = node.get(key);
                     base.addNotifications(this.createNotifications(hooksNode));
                     break;
-            
+
                 case REQUIRES:
-                    throw new CatalogException("Compound transformations are not yet supported. Specified in tx "
-                            + base.getLogicalName() );
-            
+                    throw new CatalogException(
+                            "Compound transformations are not yet supported. Specified in tx "
+                                    + base.getLogicalName());
+
                 case SITES:
                     JsonNode sitesNode = node.get(key);
                     if (sitesNode.isArray()) {
                         for (JsonNode siteNode : sitesNode) {
-                            TransformationCatalogEntry entry = getSiteSpecificEntry(parser, siteNode);
+                            TransformationCatalogEntry entry =
+                                    getSiteSpecificEntry(parser, siteNode);
                             tx.addSiteTCEntry(entry);
                         }
                     } else {
                         throw new CatalogException("sites: value should be of type array ");
                     }
-                    
+
                 default:
                     this.complainForUnsupportedKey(
-                            TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName(), key, node);
+                            TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName(),
+                            key,
+                            node);
             }
         }
 
         return tx;
     }
-    
-    
+
     /**
      * Parses site information from JsonNode and adds it to the transformation catalog entry.
      *
@@ -228,20 +225,20 @@ class TransformationDeserializer extends  CatalogEntryJsonDeserializer<Transform
      *       FOO: bar
      * container: centos-pegasus
      * </pre>
-      
+     *
      * @param node
      */
-    protected TransformationCatalogEntry getSiteSpecificEntry( JsonParser parser, JsonNode node) throws IOException {
+    protected TransformationCatalogEntry getSiteSpecificEntry(JsonParser parser, JsonNode node)
+            throws IOException {
         TransformationCatalogEntry entry = new TransformationCatalogEntry();
         SysInfo sysInfo = new SysInfo();
         ObjectCodec oc = parser.getCodec();
-        
+
         for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
             Map.Entry<String, JsonNode> e = it.next();
             String key = e.getKey();
             TransformationCatalogKeywords reservedKey =
                     TransformationCatalogKeywords.getReservedKey(key);
-            
 
             switch (reservedKey) {
                 case NAME:
@@ -274,13 +271,13 @@ class TransformationDeserializer extends  CatalogEntryJsonDeserializer<Transform
                     entry.setType(TCType.valueOf(type.toUpperCase()));
                     break;
 
-                case PROFILES: 
+                case PROFILES:
                     JsonNode profilesNode = node.get(key);
                     if (profilesNode != null) {
                         parser = profilesNode.traverse(oc);
                         Profiles profiles = parser.readValueAs(Profiles.class);
-                        entry.addProfiles(profiles); 
-                    } 
+                        entry.addProfiles(profiles);
+                    }
                     break;
 
                 case METADATA:
@@ -310,7 +307,6 @@ class TransformationDeserializer extends  CatalogEntryJsonDeserializer<Transform
         return entry;
     }
 
-    
     /**
      * Creates a profile from a JSON node representing
      *
@@ -409,5 +405,3 @@ class TransformationDeserializer extends  CatalogEntryJsonDeserializer<Transform
         return notifications;
     }
 }
-
-

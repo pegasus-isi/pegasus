@@ -50,8 +50,8 @@ public class TransformationStore {
 
     /** Containers indexed by their LFN */
     private Map<String, Container> mContainers;
-    
-     /** The version for the Transformation Catalog */
+
+    /** The version for the Transformation Catalog */
     private String mVersion;
 
     /** The default constructor. */
@@ -71,7 +71,7 @@ public class TransformationStore {
         // the underlying map clear method
         initialize();
     }
-    
+
     /**
      * Set the Catalog version
      *
@@ -381,8 +381,6 @@ public class TransformationStore {
     }
 }
 
-
-
 /**
  * Custom deserializer for YAML representation of TransformationCatalog
  *
@@ -445,7 +443,6 @@ class TransformationStoreDeserializer extends CatalogEntryJsonDeserializer<Trans
      *              JAVA_HOME: /opt/java/1.6
      * </pre>
      *
-     *
      * @param parser
      * @param dc
      * @return
@@ -462,9 +459,11 @@ class TransformationStoreDeserializer extends CatalogEntryJsonDeserializer<Trans
         for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
             Map.Entry<String, JsonNode> e = it.next();
             String key = e.getKey();
-            TransformationCatalogKeywords reservedKey = TransformationCatalogKeywords.getReservedKey(key);
+            TransformationCatalogKeywords reservedKey =
+                    TransformationCatalogKeywords.getReservedKey(key);
             if (reservedKey == null) {
-                this.complainForIllegalKey(TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName(), key, node);
+                this.complainForIllegalKey(
+                        TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName(), key, node);
             }
 
             switch (reservedKey) {
@@ -479,7 +478,8 @@ class TransformationStoreDeserializer extends CatalogEntryJsonDeserializer<Trans
                             for (JsonNode transformationNode : transformationNodes) {
                                 parser = transformationNode.traverse(oc);
                                 Transformation tx = parser.readValueAs(Transformation.class);
-                                for(TransformationCatalogEntry entry: tx.getTransformationCatalogEntries()){
+                                for (TransformationCatalogEntry entry :
+                                        tx.getTransformationCatalogEntries()) {
                                     store.addEntry(entry);
                                 }
                             }
@@ -499,7 +499,7 @@ class TransformationStoreDeserializer extends CatalogEntryJsonDeserializer<Trans
                         }
                     }
                     break;
-                    
+
                 default:
                     this.complainForUnsupportedKey(
                             TransformationCatalogKeywords.SITES.getReservedName(), key, node);
@@ -509,4 +509,3 @@ class TransformationStoreDeserializer extends CatalogEntryJsonDeserializer<Trans
         return store;
     }
 }
-

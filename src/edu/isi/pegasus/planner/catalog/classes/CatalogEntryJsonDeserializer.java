@@ -23,7 +23,7 @@ import edu.isi.pegasus.planner.catalog.CatalogException;
 
 /**
  * Abstract Class for Deserializers for parsing Catalog Data Objects
- * 
+ *
  * @author Karan Vahi
  */
 public abstract class CatalogEntryJsonDeserializer<T> extends JsonDeserializer<T> {
