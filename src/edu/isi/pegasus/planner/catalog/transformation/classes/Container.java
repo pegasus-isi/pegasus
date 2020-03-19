@@ -13,14 +13,25 @@
  */
 package edu.isi.pegasus.planner.catalog.transformation.classes;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonNode;
 import edu.isi.pegasus.common.util.PegasusURL;
+import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.parser.ScannerException;
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -681,3 +692,132 @@ public class Container implements Cloneable {
         }
     }
 }
+
+
+/**
+ * Custom deserializer for YAML representation of Container 
+ *
+ * @author Karan Vahi
+ */
+class ContainerDeserializer extends  CatalogEntryJsonDeserializer<Container> {
+
+    /**
+     * Deserializes a Transformation  YAML description of the type
+     *
+     * <pre>
+     * - name: centos-pegasus
+     *   type: docker
+     *   image: docker:///rynge/montage:latest
+     *   mounts:
+     *      - /Volumes/Work/lfs1:/shared-data/:ro
+     *      - /Volumes/Work/lfs2:/shared-data2/:ro
+     *
+     *   profiles:
+     *     env:
+     *       JAVA_HOME: /opt/java/1.6
+     * </pre>
+     * 
+     * @param parser
+     * @param dc
+     * @return
+     * @throws IOException
+     * @throws JsonProcessingException
+     */
+    @Override
+    public Container  deserialize(JsonParser parser, DeserializationContext dc)
+            throws IOException, JsonProcessingException {
+        ObjectCodec oc = parser.getCodec();
+        JsonNode node = oc.readTree(parser);
+        Container container = new Container();
+        for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
+            Map.Entry<String, JsonNode> e = it.next();
+            String key = e.getKey();
+            TransformationCatalogKeywords reservedKey = TransformationCatalogKeywords.getReservedKey(key);
+            if (reservedKey == null) {
+                this.complainForIllegalKey(TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName(), key, node);
+            }
+
+            switch (reservedKey) {
+                case NAME:
+                    String containerName = node.get(key).asText();
+                    container.setName(containerName);
+                    break;
+
+                case TYPE:
+                    String type = node.get(key).asText();
+                    container.setType(Container.TYPE.valueOf(type));
+                    break;
+
+                case CONTAINER_IMAGE:
+                    String url = node.get(key).asText();
+                    container.setImageURL(url);
+                    break;
+
+                case CONTAINER_IMAGE_SITE:
+                    String imageSite = node.get(key).asText();
+                    container.setImageSite(imageSite);
+                    break;
+
+                case CONTAINER_DOCKERFILE:
+                    String dockerFile = node.get(key).asText();
+                    container.setImageDefinitionURL(dockerFile);
+                    break;
+
+                case CONTAINER_MOUNT:
+                    List<String> mps =
+                            this.createMountPoints(
+                                    node.get(
+                                            TransformationCatalogKeywords.CONTAINER_MOUNT
+                                                    .getReservedName()));
+                    for (String mountPoint : mps) {
+                        container.addMountPoint(mountPoint);
+                    }
+                    break;
+
+                 
+                case PROFILES:
+                    JsonNode profilesNode = node.get(key);
+                    if (profilesNode != null) {
+                        parser = profilesNode.traverse(oc);
+                        Profiles profiles = parser.readValueAs(Profiles.class);
+                        container.addProfiles(profiles); 
+                    }
+                    break;
+
+                 
+                default:
+                    this.complainForUnsupportedKey(
+                            TransformationCatalogKeywords.CONTAINERS.getReservedName(), key, node);
+            }
+        }
+
+        return container;
+    }
+    
+    /**
+     * Creates a list of mount points for the container
+     *
+     * <pre>
+     *    - /Volumes/Work/lfs1:/shared-data/:ro
+     *    - /Volumes/Work/lfs2:/shared-data2/:ro
+     * </pre>
+     *
+     * @param node
+     * @return
+     */
+    protected List<String> createMountPoints(JsonNode node) {
+        List<String> mps = new LinkedList();
+        if (node.isArray()) {
+            for (JsonNode mpNode : node) {
+                mps.add(mpNode.asText());
+            }
+        } else {
+            throw new ScannerException("containers.mount: value should be of type array ");
+        }
+        return mps;
+    }
+    
+    
+}
+
+

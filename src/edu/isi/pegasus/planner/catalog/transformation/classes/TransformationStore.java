@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.classes.Transformation;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogKeywords;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import java.io.IOException;
 import java.util.HashMap;
@@ -487,13 +486,25 @@ class TransformationStoreDeserializer extends CatalogEntryJsonDeserializer<Trans
                     }
                     break;
 
-
+                case CONTAINERS:
+                    JsonNode containerNodes = node.get(key);
+                    if (containerNodes != null) {
+                        if (containerNodes.isArray()) {
+                            for (JsonNode containerNode : containerNodes) {
+                                parser = containerNode.traverse(oc);
+                                Container cont = parser.readValueAs(Container.class);
+                                store.addContainer(cont);
+                            }
+                        }
+                    }
+                    break;
+                    
                 default:
                     this.complainForUnsupportedKey(
-                            SiteCatalogKeywords.SITES.getReservedName(), key, node);
+                            TransformationCatalogKeywords.SITES.getReservedName(), key, node);
             }
         }
-
+        store.resolveContainerReferences();
         return store;
     }
 }
