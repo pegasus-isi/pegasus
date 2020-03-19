@@ -18,6 +18,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
@@ -41,6 +42,7 @@ import java.util.regex.Pattern;
  *
  * @author Karan Vahi
  */
+@JsonDeserialize(using = ContainerDeserializer.class)
 public class Container implements Cloneable {
 
     /** The types of container supported. */
@@ -342,7 +344,7 @@ public class Container implements Cloneable {
     /**
      * Adds a mount point
      *
-     * @param mount point string as src-dir:dest-dir:options
+     * @param mount point string as src-mp:dest-mp:options
      */
     public void addMountPoint(MountPoint mount) {
         this.mMountPoints.add(mount);
@@ -351,7 +353,7 @@ public class Container implements Cloneable {
     /**
      * Adds a mount point
      *
-     * @param mount point string as src-dir:dest-dir:options
+     * @param mount point string as src-mp:dest-mp:options
      */
     public void addMountPoint(String mount) {
         this.mMountPoints.add(new MountPoint(mount));
@@ -375,8 +377,8 @@ public class Container implements Cloneable {
         for (Container.MountPoint mp : this.getMountPoints()) {
             String hostSourceDir = mp.getSourceDirectory();
             if (sourcePath.startsWith(hostSourceDir)) {
-                // replace the source mount point part of source dir
-                // with the destination dir
+                // replace the source mount point part of source mp
+                // with the destination mp
                 sourcePath = sourcePath.replaceFirst(hostSourceDir, mp.getDestinationDirectory());
                 // construct the source file url back
                 replacedURL.append(PegasusURL.FILE_URL_SCHEME).append("//").append(sourcePath);
@@ -529,7 +531,7 @@ public class Container implements Cloneable {
         /**
          * The constructor
          *
-         * @param mount point string as src-dir:dest-dir:options
+         * @param mount point string as src-mp:dest-mp:options
          */
         public MountPoint(String mount) {
             if (mPattern == null) {
@@ -542,7 +544,7 @@ public class Container implements Cloneable {
          * Parses the mount and populates the internal member variables that can be accessed via the
          * appropriate accessor methods
          *
-         * @param mount point string as src-dir:dest-dir:options
+         * @param mount point string as src-mp:dest-mp:options
          */
         public final void parse(String mount) {
             Matcher m = mPattern.matcher(mount);
@@ -659,7 +661,7 @@ public class Container implements Cloneable {
             }
             return result;
         }
-
+        
         /**
          * Calculate a hash code value for the object to support hash tables.
          *

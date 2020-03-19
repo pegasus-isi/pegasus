@@ -5,11 +5,19 @@
  */
 package edu.isi.pegasus.planner.catalog.transformation.classes;
 
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import static org.junit.Assert.*;
 
 import edu.isi.pegasus.common.util.PegasusURL;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container.MountPoint;
+import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
+import java.io.IOException;
+import java.util.List;
+import static org.hamcrest.CoreMatchers.hasItem;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -131,5 +139,36 @@ public class ContainerTest {
         c.setType(Container.TYPE.singularity);
         String lfn = c.computeLFN(new PegasusURL(url));
         assertEquals(expectedLFN, lfn);
+    }
+    
+    @Test
+    public void testContainerDeserialization() throws IOException {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+
+        String test
+                = "name: centos-pegasus\n"
+                + "type: docker\n"
+                + "image: docker:///rynge/montage:latest\n"
+                + "mounts: \n"
+                + "  - /Volumes/Work/lfs1:/shared-data/:ro\n"
+                + "  - /Volumes/Work/lfs12:/shared-data1/:ro\n"
+                + "profiles:\n"
+                + "  env:\n"
+                + "    JAVA_HOME: /opt/java/1.6";
+
+        Container c = mapper.readValue(test, Container.class);
+        assertNotNull(c);
+        assertEquals(Container.TYPE.docker, c.getType());
+        assertEquals("docker:///rynge/montage:latest", c.getImageURL().getURL());
+         
+        assertEquals(2, c.getMountPoints().size());
+        assertThat(c.getMountPoints(), hasItem(new MountPoint("/Volumes/Work/lfs1:/shared-data/:ro")));
+        assertThat(c.getMountPoints(), hasItem(new MountPoint("/Volumes/Work/lfs1:/shared-data/:ro")));
+        
+        List<Profile> profiles =  c.getProfiles("env");
+        assertThat(profiles, hasItem(new Profile("env", "JAVA_HOME","/opt/java/1.6")));
+        
+        
     }
 }
