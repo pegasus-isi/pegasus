@@ -632,6 +632,26 @@ public class TransformationCatalogEntry implements CatalogEntry {
     }
 
     /**
+     * Matches two Mount Point objects. The primary key in this case is the
+     * source directory and the destination directory
+     *
+     * @return true if directories combo match
+     */
+    public boolean equals(Object obj) {
+        // null check
+        if (obj == null) {
+            return false;
+        }
+
+        // see if type of objects match
+        if (!(obj instanceof TransformationCatalogEntry)) {
+            return false;
+        }
+        TransformationCatalogEntry entry = (TransformationCatalogEntry) obj;
+        return this.toTCString().equalsIgnoreCase(entry.toTCString());
+    }
+    
+    /**
      * Compares two catalog entries for equality.
      *
      * @param entry is the entry to compare with
