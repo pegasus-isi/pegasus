@@ -184,7 +184,10 @@ class TransformationDeserializer extends  CatalogEntryJsonDeserializer<Transform
                     base.addNotifications(this.createNotifications(hooksNode));
                     break;
             
-                    
+                case REQUIRES:
+                    throw new CatalogException("Compound transformations are not yet supported. Specified in tx "
+                            + base.getLogicalName() );
+            
                 case SITES:
                     JsonNode sitesNode = node.get(key);
                     if (sitesNode.isArray()) {
