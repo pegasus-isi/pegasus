@@ -80,7 +80,7 @@ public class TransformationCatalogEntry implements CatalogEntry {
         mPFN = null;
         mProfiles = null;
         //        sysinfo = null;
-        mSysInfo = null;
+        mSysInfo = new SysInfo();
         mNotifications = new Notifications();
         mContainer = null;
     }
