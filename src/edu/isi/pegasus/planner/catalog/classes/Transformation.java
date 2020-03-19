@@ -18,6 +18,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
@@ -37,6 +38,7 @@ import java.util.Map;
  * 
  * @author Karan Vahi
  */
+@JsonDeserialize(using = TransformationDeserializer.class)
 public class Transformation{
     
     private TransformationCatalogEntry mBaseEntry;

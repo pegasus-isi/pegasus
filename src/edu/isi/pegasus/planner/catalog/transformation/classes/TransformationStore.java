@@ -18,6 +18,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.classes.Transformation;
@@ -37,6 +38,7 @@ import java.util.TreeMap;
  * @author Karan Vahi
  * @version $Revision$
  */
+@JsonDeserialize(using = TransformationStoreDeserializer.class)
 public class TransformationStore {
 
     /**
