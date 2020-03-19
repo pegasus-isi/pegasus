@@ -196,6 +196,7 @@ class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transforma
                     } else {
                         throw new CatalogException("sites: value should be of type array ");
                     }
+                    break;
 
                 default:
                     this.complainForUnsupportedKey(
