@@ -334,24 +334,26 @@ class ReplicaStoreDeserializer extends CatalogEntryJsonDeserializer<ReplicaStore
 
             String lfn = null;
             ReplicaCatalogEntry rce = new ReplicaCatalogEntry();
+            String keyValue = node.get(key).asText();
             switch (reservedKey) {
                 case LFN:
-                    lfn = node.get(key).asText();
+                    lfn = keyValue;
                     break;
 
                 case PFN:
-                    rce.setPFN(node.get(key).asText());
+                    rce.setPFN(keyValue);
                     break;
 
                 case SITE:
-                    rce.setResourceHandle(node.get(key).asText());
+                    rce.setResourceHandle(keyValue);
                     break;
 
                 case REGEX:
-                    rce.addAttribute(key, node.get(key).asText());
+                case CHECKSUM_TYPE:
+                case CHECKSUM_VALUE:
+                    rce.addAttribute(key, keyValue);
                     break;
-
-                
+                    
                 default:
                     this.complainForUnsupportedKey(
                             ReplicaCatalogKeywords.REPLICAS.getReservedName(), key, node);
