@@ -7,13 +7,13 @@ import yaml
 from jsonschema import validate
 
 from Pegasus.api.errors import DuplicateError
-from Pegasus.api.writable import _CustomEncoder
 from Pegasus.api.replica_catalog import (
     PEGASUS_VERSION,
     File,
     ReplicaCatalog,
     _ReplicaCatalogEntry,
 )
+from Pegasus.api.writable import _CustomEncoder
 
 
 class TestFile:
