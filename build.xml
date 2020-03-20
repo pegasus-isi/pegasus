@@ -693,7 +693,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <env key="SKIP_INSTALL" value="True"/>
       -->
       <arg line="--recreate"/>
-      <arg line="-e py"/>
     </exec>
   </target>
 </project>
