@@ -22,7 +22,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
-import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaCatalogKeywords;
 import edu.isi.pegasus.planner.classes.Data;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import java.io.IOException;
@@ -47,6 +46,10 @@ public class ReplicaStore extends Data implements Cloneable {
 
     /** The replica store. */
     private Map<String, ReplicaLocation>mStore;
+    
+    
+    /** The version for the Replica Catalog */
+    private String mVersion;
 
     /** Default constructor. */
     public ReplicaStore() {
@@ -62,6 +65,24 @@ public class ReplicaStore extends Data implements Cloneable {
     public ReplicaStore(Map<String,Collection<ReplicaCatalogEntry>> rces) {
         mStore = new HashMap(rces.size());
         store(rces);
+    }
+    
+    /**
+     * Set the Catalog version
+     *
+     * @param version
+     */
+    public void setVersion(String version) {
+        this.mVersion = version;
+    }
+
+    /**
+     * Get the Catalog version
+     *
+     * @return version
+     */
+    public String getVersion() {
+        return this.mVersion;
     }
 
     /**
@@ -305,8 +326,15 @@ class ReplicaStoreDeserializer extends CatalogEntryJsonDeserializer<ReplicaStore
      * Deserializes a Transformation YAML description of the type
      *
      * <pre>
-     *  # matches faa, f.a, f0a, etc.
-     *  - lfn: "f.a"
+     *  pegasus: 5.0
+     *  replicas:
+     *    # matches "f.a"
+     *    - lfn: "f.a"
+     *      pfn: "file:///Volumes/data/input/f.a"
+     *      site: "local"
+     *
+     *    # matches faa, f.a, f0a, etc.
+     *    - lfn: "f.a"
      *    pfn: "file:///Volumes/data/input/f.a"
      *    site: "local"
      *    regex: true
@@ -334,8 +362,61 @@ class ReplicaStoreDeserializer extends CatalogEntryJsonDeserializer<ReplicaStore
                         ReplicaCatalogKeywords.REPLICAS.getReservedName(), key, node);
             }
 
-            String lfn = null;
-            ReplicaCatalogEntry rce = new ReplicaCatalogEntry();
+            String keyValue = node.get(key).asText();
+            switch (reservedKey) {
+                case PEGASUS:
+                    store.setVersion(keyValue);
+                    break;
+
+                case REPLICAS:
+                    JsonNode replicaNodes = node.get(key);
+                    if (replicaNodes != null) {
+                        if (replicaNodes.isArray()) {
+                            for (JsonNode replicaNode : replicaNodes) {
+                                store.add(this.createReplicaLocation(replicaNode));
+                            }
+                        }
+                    }
+                    break;
+
+                default:
+                    this.complainForUnsupportedKey(
+                            ReplicaCatalogKeywords.REPLICAS.getReservedName(), key, node);
+            }
+        }
+
+        
+        return store;
+    }
+    
+    /** 
+     * Deserializes a Replica YAML description of the type
+     *
+     * <pre>
+     *  # matches faa, f.a, f0a, etc.
+     *  - lfn: "f.a"
+     *    pfn: "file:///Volumes/data/input/f.a"
+     *    site: "local"
+     *    regex: true
+     * </pre>
+     *
+     * @param node  the json node
+     * @return ReplicaLocation
+     */
+    private ReplicaLocation createReplicaLocation(JsonNode node) {
+        
+        String lfn = null;
+        ReplicaCatalogEntry rce = new ReplicaCatalogEntry();
+        for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
+            Map.Entry<String, JsonNode> e = it.next();
+            String key = e.getKey();
+            ReplicaCatalogKeywords reservedKey =
+                    ReplicaCatalogKeywords.getReservedKey(key);
+            if (reservedKey == null) {
+                this.complainForIllegalKey(
+                        ReplicaCatalogKeywords.REPLICAS.getReservedName(), key, node);
+            }
+            
             String keyValue = node.get(key).asText();
             switch (reservedKey) {
                 case LFN:
@@ -366,11 +447,12 @@ class ReplicaStoreDeserializer extends CatalogEntryJsonDeserializer<ReplicaStore
             if (rce.getPFN() == null) {
                 throw new ReplicaCatalogException("Replica needs to be defined with a pfn for replica " + lfn + " " + rce);
             }
-            store.add(lfn, rce);
         }
-
+        ReplicaLocation rl = new ReplicaLocation();
+        rl.setLFN(lfn);
+        rl.addPFN(rce);
+        return rl;
         
-        return store;
     }
 
     
