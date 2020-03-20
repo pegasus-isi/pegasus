@@ -22,7 +22,7 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
-import edu.isi.pegasus.planner.classes.ReplicaStore;
+import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
 import edu.isi.pegasus.planner.code.CodeGenerator;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.common.PegasusProperties;

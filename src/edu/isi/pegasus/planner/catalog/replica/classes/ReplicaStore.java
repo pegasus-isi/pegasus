@@ -11,7 +11,7 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.isi.pegasus.planner.classes;
+package edu.isi.pegasus.planner.catalog.replica.classes;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -23,6 +23,8 @@ import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaCatalogKeywords;
+import edu.isi.pegasus.planner.classes.Data;
+import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;

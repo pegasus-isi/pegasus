@@ -142,7 +142,7 @@ public class ReplicaLocation extends Data implements Cloneable {
      * @param tuples the <code>List</code> object of <code>ReplicaCatalogEntry</code> objects, each
      *     containing the PFN and the attributes.
      */
-    protected void addPFNs(List<ReplicaCatalogEntry> tuples) {
+    public void addPFNs(List<ReplicaCatalogEntry> tuples) {
         for (Iterator it = tuples.iterator(); it.hasNext(); ) {
             addPFN((ReplicaCatalogEntry) it.next());
         }

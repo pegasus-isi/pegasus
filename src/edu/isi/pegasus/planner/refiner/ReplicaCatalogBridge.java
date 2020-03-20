@@ -32,7 +32,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
-import edu.isi.pegasus.planner.classes.ReplicaStore;
+import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Metadata;
