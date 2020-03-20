@@ -1,5 +1,4 @@
 import json
-import uuid
 from collections import defaultdict
 from enum import Enum
 from functools import wraps

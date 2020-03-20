@@ -1,34 +1,28 @@
-import logging
 import json
-import pprint
-from tempfile import NamedTemporaryFile
+import logging
 from collections import namedtuple
 from pathlib import Path
-
-import pytest
+from tempfile import NamedTemporaryFile
 
 import cwl_utils.parser_v1_1 as cwl
-from jsonschema.exceptions import ValidationError
+import pytest
 
-import Pegasus
 from Pegasus import yaml
 from Pegasus.api.errors import DuplicateError
 from Pegasus.api.writable import _CustomEncoder
 from Pegasus.cli.pegasus_cwl_converter_toyaml import (
-    parse_args,
-    get_basename,
-    get_name,
-    load_wf_inputs,
-    load_tr_specs,
-    build_pegasus_tc,
     build_pegasus_rc,
+    build_pegasus_tc,
+    build_pegasus_wf,
     collect_files,
     collect_input_strings,
-    build_pegasus_wf,
+    get_basename,
+    get_name,
+    load_tr_specs,
+    load_wf_inputs,
     main,
+    parse_args,
 )
-
-pp = pprint.PrettyPrinter(indent=4)
 
 
 def test_get_basename():
@@ -805,7 +799,7 @@ def test_main(mocker):
     ) as wf_input_spec_file, NamedTemporaryFile("w+") as tr_spec_file:
 
         # saving path to be used in pegasus wf id
-        cwl_wf_file_path = cwl_wf_file.name
+        cwl_wf_file.name
 
         # return value of patched parse_args()
         converted_wf_file_path = Path.cwd() / "wf.yml"

@@ -236,7 +236,6 @@ def build_pegasus_tc(tr_specs: dict, cwl_wf: cwl.Workflow) -> TransformationCata
                     tr.name
                 )
             )
-            pass
 
     log.info(
         "Building transformation catalog complete. {} transformations, {} containers added.".format(
