@@ -13,6 +13,17 @@
  */
 package edu.isi.pegasus.planner.classes;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
+import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaCatalogKeywords;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,12 +38,13 @@ import java.util.Set;
  * @author Karan Vahi
  * @author Gaurang Mehta
  * @version $Revision$
- * @see org.griphyn.common.catalog.ReplicaCatalogEntry
+ *  
  */
+@JsonDeserialize(using = ReplicaStoreDeserializer.class)
 public class ReplicaStore extends Data implements Cloneable {
 
     /** The replica store. */
-    private Map mStore;
+    private Map<String, ReplicaLocation>mStore;
 
     /** Default constructor. */
     public ReplicaStore() {
@@ -45,7 +57,7 @@ public class ReplicaStore extends Data implements Cloneable {
      * @param rces map indexed by LFN's and each value is a collection of replica catalog entries
      *     for the LFN.
      */
-    public ReplicaStore(Map rces) {
+    public ReplicaStore(Map<String,Collection<ReplicaCatalogEntry>> rces) {
         mStore = new HashMap(rces.size());
         store(rces);
     }
@@ -109,12 +121,31 @@ public class ReplicaStore extends Data implements Cloneable {
      * @param tuples  list of <code>ReplicaCatalogEntry<code> containing the PFN and the
      *                attributes.
      */
-    public void add(String lfn, Collection tuples) {
+    public void add(String lfn, Collection<ReplicaCatalogEntry> tuples) {
         // add only if tuples is not empty
         if (tuples.isEmpty()) {
             return;
         }
         this.add(new ReplicaLocation(lfn, tuples));
+    }
+    
+    /**
+     * Adds replica catalog entry into the store. Any existing
+     * mapping of the same LFN and PFN will be replaced, including all its
+     * attributes.
+     *
+     * @param lfn     the lfn.
+     * @param rce  the replica catalog entry
+     */
+    public void add(String lfn, ReplicaCatalogEntry rce) {
+        // add only if tuples is not empty
+        if (rce == null) {
+            return;
+        }
+        ReplicaLocation rl = new ReplicaLocation();
+        rl.setLFN(lfn);
+        rl.addPFN(rce);
+        this.add(rl);
     }
 
     /**
@@ -259,4 +290,84 @@ public class ReplicaStore extends Data implements Cloneable {
         Object result = mStore.get(key);
         return (result == null) ? null : (ReplicaLocation) result;
     }
+}
+
+/**
+ * Custom deserializer for YAML representation of ReplicaStore
+ *
+ * @author Karan Vahi
+ */
+class ReplicaStoreDeserializer extends CatalogEntryJsonDeserializer<ReplicaStore> {
+
+    /**
+     * Deserializes a Transformation YAML description of the type
+     *
+     * <pre>
+     *  # matches faa, f.a, f0a, etc.
+     *  - lfn: "f.a"
+     *    pfn: "file:///Volumes/data/input/f.a"
+     *    site: "local"
+     *    regex: true
+     * </pre>
+     *
+     * @param parser
+     * @param dc
+     * @return
+     * @throws IOException
+     * @throws JsonProcessingException
+     */
+    @Override
+    public ReplicaStore deserialize(JsonParser parser, DeserializationContext dc)
+            throws IOException, JsonProcessingException {
+        ObjectCodec oc = parser.getCodec();
+        JsonNode node = oc.readTree(parser);
+        ReplicaStore store = new ReplicaStore();
+        for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
+            Map.Entry<String, JsonNode> e = it.next();
+            String key = e.getKey();
+            ReplicaCatalogKeywords reservedKey =
+                    ReplicaCatalogKeywords.getReservedKey(key);
+            if (reservedKey == null) {
+                this.complainForIllegalKey(
+                        ReplicaCatalogKeywords.REPLICAS.getReservedName(), key, node);
+            }
+
+            String lfn = null;
+            ReplicaCatalogEntry rce = new ReplicaCatalogEntry();
+            switch (reservedKey) {
+                case LFN:
+                    lfn = node.get(key).asText();
+                    break;
+
+                case PFN:
+                    rce.setPFN(node.get(key).asText());
+                    break;
+
+                case SITE:
+                    rce.setResourceHandle(node.get(key).asText());
+                    break;
+
+                case REGEX:
+                    rce.addAttribute(key, node.get(key).asText());
+                    break;
+
+                
+                default:
+                    this.complainForUnsupportedKey(
+                            ReplicaCatalogKeywords.REPLICAS.getReservedName(), key, node);
+            }
+            if (lfn == null) {
+                throw new ReplicaCatalogException("Replica needs to be defined with a lfn " + rce);
+            }
+            if (rce.getPFN() == null) {
+                throw new ReplicaCatalogException("Replica needs to be defined with a pfn for replica " + lfn + " " + rce);
+            }
+            store.add(lfn, rce);
+        }
+
+        
+        return store;
+    }
+
+    
 }
