@@ -594,9 +594,7 @@ def expected_json():
     expected = {
         "pegasus": PEGASUS_VERSION,
         "name": "wf",
-        "replicaCatalog": {
-            "replicas": [{"lfn": "lfn", "pfn": "pfn", "site": "site", "regex": False}]
-        },
+        "replicaCatalog": {"replicas": [{"lfn": "lfn", "pfn": "pfn", "site": "site"}]},
         "transformationCatalog": {
             "transformations": [
                 {

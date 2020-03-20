@@ -28,6 +28,17 @@ $defs:
         type: string
       regex:
         type: boolean
+      checksum:
+        type: object
+        properties:
+          type:
+            type: string
+          value:
+            type: string
+        required:
+          - type
+          - value
+        additionalProperties: false
     required:
       - lfn
       - pfn
