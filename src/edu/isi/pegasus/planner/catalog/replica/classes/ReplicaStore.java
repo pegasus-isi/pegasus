@@ -441,12 +441,12 @@ class ReplicaStoreDeserializer extends CatalogEntryJsonDeserializer<ReplicaStore
                     this.complainForUnsupportedKey(
                             ReplicaCatalogKeywords.REPLICAS.getReservedName(), key, node);
             }
-            if (lfn == null) {
-                throw new ReplicaCatalogException("Replica needs to be defined with a lfn " + rce);
-            }
-            if (rce.getPFN() == null) {
-                throw new ReplicaCatalogException("Replica needs to be defined with a pfn for replica " + lfn + " " + rce);
-            }
+        }
+        if (lfn == null) {
+            throw new ReplicaCatalogException("Replica needs to be defined with a lfn " + rce);
+        }
+        if (rce.getPFN() == null) {
+            throw new ReplicaCatalogException("Replica needs to be defined with a pfn for replica " + lfn + " " + rce);
         }
         ReplicaLocation rl = new ReplicaLocation();
         rl.setLFN(lfn);
