@@ -301,6 +301,19 @@ your file.
 
 .. _rc-directory:
 
+Checksum
+--------
+
+In this mode, checksums for raw input files to your workflow can be specified.
+Pegasus will check against these checksums to ensure data integrity. An example
+of this is shown below. More information in integrity checking can be found in the
+section of this guide on `Integrity Checking <#integrity-checking>`__. 
+
+::
+
+   # file-based replica catalog: 2018-10-25T02:10:02.293-07:00
+   f.a file:///lfs1/input-data/f.a checksum.type="sha256" checksum.value="ca8ed5988cb4ca0b67c45fd80fd17423aba2a066ca8a63a4e1c6adab067a3e92" site="condorpool"
+
 Directory
 ---------
 
