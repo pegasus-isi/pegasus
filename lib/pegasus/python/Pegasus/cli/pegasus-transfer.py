@@ -3620,7 +3620,7 @@ class WebdavHandler(TransferHandlerBase):
                 url = re.sub('^webdav', 'http', t.src_url())
                 cmd = tools.full_path('curl')
                 #if not logger.isEnabledFor(logging.DEBUG):
-                #    cmd += ' --silent'
+                    cmd += ' --silent'
                 cmd += ' --fail --show-error --location' + \
                        ' --user \'' + username + ':' + password + '\'' + \
                        ' --anyauth' + \
@@ -3635,7 +3635,7 @@ class WebdavHandler(TransferHandlerBase):
 
                 cmd = tools.full_path('curl')
                 #if not logger.isEnabledFor(logging.DEBUG):
-                #    cmd += ' --silent'
+                    cmd += ' --silent'
                 cmd += ' --fail --show-error --location' + \
                        ' --user \'' + username + ':' + password + '\'' + \
                        ' --anyauth' + \
