@@ -4,7 +4,7 @@ import subprocess
 from setuptools import find_namespace_packages, setup
 
 src_dir = os.path.dirname(__file__)
-home_dir = os.path.abspath(os.path.join(src_dir, "../../.."))
+home_dir = os.path.abspath(os.path.join(src_dir, "../.."))
 
 install_requires = [
     # Utils
