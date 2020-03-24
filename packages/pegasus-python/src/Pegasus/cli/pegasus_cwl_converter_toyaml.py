@@ -2,7 +2,8 @@
 import logging
 import argparse
 import sys
-from pathlib import PurePath
+from pathlib import Path, PurePath
+from urllib.parse import urlparse
 
 import cwl_utils.parser_v1_1 as cwl
 from jsonschema import validate
@@ -10,6 +11,7 @@ from jsonschema.exceptions import ValidationError
 
 from Pegasus import yaml
 from Pegasus.api import Transformation
+from Pegasus.api import Container
 from Pegasus.api import TransformationCatalog
 from Pegasus.api import ReplicaCatalog
 from Pegasus.api import Workflow
@@ -203,8 +205,7 @@ def build_pegasus_tc(tr_specs: dict, cwl_wf: cwl.Workflow) -> TransformationCata
 
         log.debug("baseCommand: {}".format(tool_path))
 
-        # TODO: handle containers (adding to the list of containers in tc and referencing in tr)
-        # TODO: handle requirements
+        # TODO: handle requirements (may not be needed or can manually add them in)
         site = "local"
         is_stageable = True
 
@@ -218,8 +219,62 @@ def build_pegasus_tc(tr_specs: dict, cwl_wf: cwl.Workflow) -> TransformationCata
                 )
             )
 
+        container_name = None
+        if cwl_cmd_ln_tool.requirements:
+            for req in cwl_cmd_ln_tool.requirements:
+                if isinstance(req, cwl.DockerRequirement):
+                    """
+                    Currently not supported in DockerRequirement:
+                    - dockerFile
+                    - dockerImport
+                    - dockerImageId
+                    - dockerOutputDirectory
+                    """
+
+                    # assume to be docker because we can't distinguish between
+                    # docker and singularity just by image name or url of zipped
+                    # file
+                    if req.dockerPull:
+                        container_name = req.dockerPull
+                        image = "docker://" + req.dockerPull
+                    elif req.dockerLoad:
+                        image = req.dockerLoad
+                        container_name = Path(req.dockerLoad).name
+                    else:
+                        raise NotImplementedError(
+                            "Only DockerRequirement.dockerPull and DockerRequirement.dockerLoad currently supported"
+                        )
+
+                    try:
+                        tc.add_containers(
+                            Container(
+                                container_name,
+                                Container.DOCKER,
+                                image,
+                                image_site="local",
+                            )
+                        )
+                    except DuplicateError:
+                        pass
+
+                    log.info(
+                        "Added <Container name={}, container_type='docker', image={}, image_site='local'> from CommandLineTool: {}".format(
+                            container_name, image, cwl_cmd_ln_tool.id
+                        )
+                    )
+                    log.warning(
+                        "Container types in the transformation catalog will need to be modified if containers are not of type: docker or if image file exists on a site other than 'local'"
+                    )
+
+                    #
+                    break
+
         tr = Transformation(
-            tool_path.name, site=site, pfn=str(tool_path), is_stageable=is_stageable
+            tool_path.name,
+            site=site,
+            pfn=str(tool_path),
+            is_stageable=is_stageable,
+            container=container_name,
         )
         log.debug(
             "tr = Transformation({}, site={}, pfn={}, is_stageable={})".format(
