@@ -1,5 +1,5 @@
 /**
- * Copyright 2007-2008 University Of Southern California
+ * Copyright 2007-2020 University Of Southern California
  *
  * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -19,12 +19,14 @@ import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.common.PegasusDBAdmin;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.*;
 import java.util.*;
+
 import org.sqlite.SQLiteConfig;
 
 /**
@@ -64,7 +66,7 @@ import org.sqlite.SQLiteConfig;
  *
  * create index idx_rc_attr on rc_attr(name);
  * </pre>
- *
+ * <p>
  * In case of databases that do not support sequences (e.g. MySQL), do not specify the <code>
  * create sequence</code>, and use an auto-increment column for the primary key instead, e.g.:
  *
@@ -92,7 +94,7 @@ import org.sqlite.SQLiteConfig;
  *
  * create index idx_rc_attr on rc_attr(name);
  * </pre>
- *
+ * <p>
  * The site attribute should be specified whenever possible. For the shell planner, it will always
  * be of value "local".
  *
@@ -107,62 +109,74 @@ public class JDBCRC implements ReplicaCatalog {
      */
     private static final String c_error = "The database connection is not established";
 
-    /** Maintains the connection to the database over the lifetime of this instance. */
+    /**
+     * Maintains the connection to the database over the lifetime of this instance.
+     */
     protected Connection mConnection = null;
 
-    /** Maintains an essential set of prepared statement, ready to use. */
+    /**
+     * Maintains an essential set of prepared statement, ready to use.
+     */
     protected PreparedStatement mStatements[] = null;
 
-    /** The handle to the logging object. */
+    /**
+     * The handle to the logging object.
+     */
     protected LogManager mLogger;
 
-    /** Boolean to flag whether we are operating against a SQLite backend or not. */
+    /**
+     * Boolean to flag whether we are operating against a SQLite backend or not.
+     */
     protected boolean mUsingSQLiteBackend;
 
-    /** The statement to prepare to slurp attributes. */
+    /**
+     * The statement to prepare to slurp attributes.
+     */
     private static final String mCStatements[] = { // 0:
-        "SELECT m.key,m.value FROM rc_meta m WHERE lfn_id=?",
-        // 1:
-        "SELECT l.lfn_id,p.pfn,p.site FROM rc_lfn l LEFT JOIN rc_pfn p ON l.lfn_id=p.lfn_id WHERE l.lfn=?",
-        // 2:
-        "SELECT l.lfn_id,p.pfn,p.site FROM rc_lfn l LEFT JOIN rc_pfn p ON l.lfn_id=p.lfn_id WHERE l.lfn=? AND p.site=?",
-        // 3:
-        "DELETE l FROM rc_lfn l INNER JOIN rc_pfn p ON l.lfn_id=p.lfn_id AND l.lfn=? AND p.pfn=?",
-        // 4:
-        "INSERT INTO rc_meta(lfn_id,`key`,value) VALUES(?,?,?)",
-        // 5:
-        "DELETE FROM rc_lfn WHERE lfn=?",
-        // 6:
-        "DELETE FROM rc_lfn WHERE lfn_id IN"
-                + " ( SELECT lfn_id FROM rc_meta m WHERE m.key=? AND m.value=? )",
-        // 7:
-        "DELETE FROM rc_lfn WHERE lfn_id IN"
-                + " ( SELECT lfn_id FROM rc_meta m WHERE m.key=? AND m.value IS NULL )",
-        // 8:
-        "DELETE FROM rc_lfn WHERE lfn=? AND id IN"
-                + " ( SELECT id FROM rc_meta m WHERE m.key=? AND m.value=? )",
-        // 9:
-        "DELETE FROM rc_lfn WHERE lfn=? AND id IN"
-                + " ( SELECT id FROM rc_meta m WHERE m.key=? AND m.value IS NULL )",
-        // 10:
-        "DELETE l FROM rc_lfn l INNER JOIN rc_pfn p ON l.lfn_id=p.lfn_id WHERE p.site=?",
-        // 11:
-        "DELETE FROM rc_lfn WHERE lfn_id IN (SELECT l.lfn_id FROM rc_lfn l INNER JOIN rc_pfn p ON l.lfn_id=p.lfn_id AND l.lfn=? AND p.pfn=?)",
-        // 12:
-        "INSERT INTO rc_lfn(lfn) VALUES(?)",
-        // 13:
-        "INSERT INTO rc_pfn(lfn_id, pfn, site) VALUES(?, ?, ?)",
-        // 14:
-        "SELECT lfn_id,lfn FROM rc_lfn WHERE lfn=?",
-        // 15:
-        "SELECT lfn_id FROM rc_lfn WHERE lfn=?",
-        // 16:
-        "INSERT INTO rc_pfn(lfn_id, pfn, site) VALUES(?,?,?)",
-        // 17:
-        "INSERT INTO rc_meta(lfn_id,`key`,value) VALUES(?,?,?)"
+            "SELECT m.key,m.value FROM rc_meta m WHERE lfn_id=?",
+            // 1:
+            "SELECT l.lfn_id,p.pfn,p.site FROM rc_lfn l LEFT JOIN rc_pfn p ON l.lfn_id=p.lfn_id WHERE l.lfn=?",
+            // 2:
+            "SELECT l.lfn_id,p.pfn,p.site FROM rc_lfn l LEFT JOIN rc_pfn p ON l.lfn_id=p.lfn_id WHERE l.lfn=? AND p.site=?",
+            // 3:
+            "DELETE l FROM rc_lfn l INNER JOIN rc_pfn p ON l.lfn_id=p.lfn_id AND l.lfn=? AND p.pfn=?",
+            // 4:
+            "INSERT INTO rc_meta(lfn_id,`key`,value) VALUES(?,?,?)",
+            // 5:
+            "DELETE FROM rc_lfn WHERE lfn=?",
+            // 6:
+            "DELETE FROM rc_lfn WHERE lfn_id IN"
+                    + " ( SELECT lfn_id FROM rc_meta m WHERE m.key=? AND m.value=? )",
+            // 7:
+            "DELETE FROM rc_lfn WHERE lfn_id IN"
+                    + " ( SELECT lfn_id FROM rc_meta m WHERE m.key=? AND m.value IS NULL )",
+            // 8:
+            "DELETE FROM rc_lfn WHERE lfn=? AND id IN"
+                    + " ( SELECT id FROM rc_meta m WHERE m.key=? AND m.value=? )",
+            // 9:
+            "DELETE FROM rc_lfn WHERE lfn=? AND id IN"
+                    + " ( SELECT id FROM rc_meta m WHERE m.key=? AND m.value IS NULL )",
+            // 10:
+            "DELETE l FROM rc_lfn l INNER JOIN rc_pfn p ON l.lfn_id=p.lfn_id WHERE p.site=?",
+            // 11:
+            "DELETE FROM rc_lfn WHERE lfn_id IN (SELECT l.lfn_id FROM rc_lfn l INNER JOIN rc_pfn p ON l.lfn_id=p.lfn_id AND l.lfn=? AND p.pfn=?)",
+            // 12:
+            "INSERT INTO rc_lfn(lfn) VALUES(?)",
+            // 13:
+            "INSERT INTO rc_pfn(lfn_id, pfn, site) VALUES(?, ?, ?)",
+            // 14:
+            "SELECT lfn_id,lfn FROM rc_lfn WHERE lfn=?",
+            // 15:
+            "SELECT lfn_id FROM rc_lfn WHERE lfn=?",
+            // 16:
+            "INSERT INTO rc_pfn(lfn_id, pfn, site) VALUES(?,?,?)",
+            // 17:
+            "INSERT INTO rc_meta(lfn_id,`key`,value) VALUES(?,?,?)"
     };
 
-    /** Remembers if obtaining generated keys will work or not. */
+    /**
+     * Remembers if obtaining generated keys will work or not.
+     */
     private boolean m_autoinc = false;
 
     /**
@@ -177,23 +191,23 @@ public class JDBCRC implements ReplicaCatalog {
      * sun.jdbc.odbc.JdbcOdbcDriver
      * </pre>
      *
-     * @param jdbc is a string containing the full name of the java class that must be dynamically
-     *     loaded. This is usually an external jar file which contains the Java database driver.
-     * @param url is the database driving URL. This string is database specific, and tell the JDBC
-     *     driver, at which host and port the database listens, permits additional arguments, and
-     *     selects the database inside the rDBMS to connect to. Please refer to your JDBC driver
-     *     documentation for the format and permitted values.
+     * @param jdbc     is a string containing the full name of the java class that must be dynamically
+     *                 loaded. This is usually an external jar file which contains the Java database driver.
+     * @param url      is the database driving URL. This string is database specific, and tell the JDBC
+     *                 driver, at which host and port the database listens, permits additional arguments, and
+     *                 selects the database inside the rDBMS to connect to. Please refer to your JDBC driver
+     *                 documentation for the format and permitted values.
      * @param username is the database user account name to connect with.
      * @param password is the database account password to use.
-     * @throws LinkageError if linking the dynamically loaded driver fails. This is a run-time
-     *     error, and does not need to be caught.
+     * @throws LinkageError                if linking the dynamically loaded driver fails. This is a run-time
+     *                                     error, and does not need to be caught.
      * @throws ExceptionInInitializerError if the initialization function of the driver's
-     *     instantiation threw an exception itself. This is a run-time error, and does not need to
-     *     be caught.
-     * @throws ClassNotFoundException if the class in your jdbc parameter cannot be found in your
-     *     given CLASSPATH environment. Callers must catch this exception.
-     * @throws SQLException if something goes awry with the database. Callers must catch this
-     *     exception.
+     *                                     instantiation threw an exception itself. This is a run-time error, and does not need to
+     *                                     be caught.
+     * @throws ClassNotFoundException      if the class in your jdbc parameter cannot be found in your
+     *                                     given CLASSPATH environment. Callers must catch this exception.
+     * @throws SQLException                if something goes awry with the database. Callers must catch this
+     *                                     exception.
      */
     public JDBCRC(String jdbc, String url, String username, String password)
             throws LinkageError, ExceptionInInitializerError, ClassNotFoundException, SQLException {
@@ -213,7 +227,7 @@ public class JDBCRC implements ReplicaCatalog {
      * Default empty constructor creates an object that is not yet connected to any database. You
      * must use support methods to connect before this instance becomes usable.
      *
-     * @see #connect( String, String, String )
+     * @see #connect(String, String, String)
      */
     public JDBCRC() {
         // make connection defunc
@@ -225,18 +239,18 @@ public class JDBCRC implements ReplicaCatalog {
     /**
      * Connects to the database. This is effectively an accessor to initialize the internal
      * connection instance variable. <b>Warning! You must call {@link java.lang.Class#forName(
-     * String )} yourself to load the database JDBC driver jar!</b>
+     *String)} yourself to load the database JDBC driver jar!</b>
      *
-     * @param url is the database driving URL. This string is database specific, and tell the JDBC
-     *     driver, at which host and port the database listens, permits additional arguments, and
-     *     selects the database inside the rDBMS to connect to. Please refer to your JDBC driver
-     *     documentation for the format and permitted values.
+     * @param url      is the database driving URL. This string is database specific, and tell the JDBC
+     *                 driver, at which host and port the database listens, permits additional arguments, and
+     *                 selects the database inside the rDBMS to connect to. Please refer to your JDBC driver
+     *                 documentation for the format and permitted values.
      * @param username is the database user account name to connect with.
      * @param password is the database account password to use.
      * @throws SQLException if something goes awry with the database. Callers must catch this
-     *     exception.
-     * @see #JDBCRC( String, String, String, String )
-     * @see java.sql.DriverManager#getConnection( String, String, String )
+     *                      exception.
+     * @see #JDBCRC(String, String, String, String)
+     * @see java.sql.DriverManager#getConnection(String, String, String)
      */
     private void connect(String url, String username, String password) throws SQLException {
         // establish connection to database generically
@@ -262,11 +276,11 @@ public class JDBCRC implements ReplicaCatalog {
      * property to describe the connection. It will be removed before attempting to connect.
      *
      * @param props is the property table with sufficient settings to establish a link with the
-     *     database. The minimum key required key is "url", and possibly "driver". Any other keys
-     *     depend on the database driver.
+     *              database. The minimum key required key is "url", and possibly "driver". Any other keys
+     *              depend on the database driver.
      * @return true if connected, false if failed to connect.
-     * @see java.sql.DriverManager#getConnection( String, Properties )
      * @throws Error subclasses for runtime errors in the class loader.
+     * @see java.sql.DriverManager#getConnection(String, Properties)
      */
     public boolean connect(Properties props) {
 
@@ -354,7 +368,9 @@ public class JDBCRC implements ReplicaCatalog {
         return result;
     }
 
-    /** Explicitely free resources before the garbage collection hits. */
+    /**
+     * Explicitely free resources before the garbage collection hits.
+     */
     public void close() {
 
         if (mConnection != null) {
@@ -441,7 +457,7 @@ public class JDBCRC implements ReplicaCatalog {
     /**
      * Retrieves the entry for a given filename and site handle from the replica catalog.
      *
-     * @param lfn is the logical filename to obtain information for.
+     * @param lfn    is the logical filename to obtain information for.
      * @param handle is the resource handle to obtain entries for.
      * @return the (first) matching physical filename, or <code>null</code> if no match was found.
      */
@@ -475,8 +491,8 @@ public class JDBCRC implements ReplicaCatalog {
      * Slurps all attributes from related to a mapping into a map.
      *
      * @param id is the reference id to slurp from as string. Especially Postgres's indexing
-     *     mechanism goes from tables scans to btrees, if the numeric key is represented as a
-     *     string. Strings should be safe for other databases, too.
+     *           mechanism goes from tables scans to btrees, if the numeric key is represented as a
+     *           string. Strings should be safe for other databases, too.
      * @return a Map with the attributes, which may be empty.
      */
     private Map attributes(String id, String handle) throws SQLException {
@@ -584,7 +600,7 @@ public class JDBCRC implements ReplicaCatalog {
      *
      * @param lfns is a set of logical filename strings to look up.
      * @return a map indexed by the LFN. Each value is a collection of replica catalog entries for
-     *     the LFN.
+     * the LFN.
      * @see org.griphyn.common.catalog.ReplicaCatalogEntry
      */
     public Map lookup(Set lfns) {
@@ -662,10 +678,10 @@ public class JDBCRC implements ReplicaCatalog {
      *
      * <p>
      *
-     * @param lfns is a set of logical filename strings to look up.
+     * @param lfns   is a set of logical filename strings to look up.
      * @param handle is the resource handle, restricting the LFNs.
      * @return a map indexed by the LFN. Each value is a collection of replica catalog entries (all
-     *     attributes).
+     * attributes).
      * @see ReplicaCatalogEntry
      */
     public Map lookup(Set lfns, String handle) {
@@ -709,7 +725,7 @@ public class JDBCRC implements ReplicaCatalog {
      *
      * <p>
      *
-     * @param lfns is a set of logical filename strings to look up.
+     * @param lfns   is a set of logical filename strings to look up.
      * @param handle is the resource handle, restricting the LFNs.
      * @return a map indexed by the LFN. Each value is a set of physical filenames.
      */
@@ -750,9 +766,9 @@ public class JDBCRC implements ReplicaCatalog {
      * Retrieving full catalogs should be harmful, but may be helpful in online display or portal.
      *
      * @param constraints is mapping of keys 'lfn', 'pfn', or any attribute name, e.g. the resource
-     *     handle 'site', to a string that has some meaning to the implementing system. This can be
-     *     a SQL wildcard for queries, or a regular expression for Java-based memory collections.
-     *     Unknown keys are ignored. Using an empty map requests the complete catalog.
+     *                    handle 'site', to a string that has some meaning to the implementing system. This can be
+     *                    a SQL wildcard for queries, or a regular expression for Java-based memory collections.
+     *                    Unknown keys are ignored. Using an empty map requests the complete catalog.
      * @return a map indexed by the LFN. Each value is a collection of replica catalog entries.
      * @see ReplicaCatalogEntry
      */
@@ -837,8 +853,8 @@ public class JDBCRC implements ReplicaCatalog {
      * Lists a subset of all logical filenames in the catalog.
      *
      * @param constraint is a constraint for the logical filename only. It is a string that has some
-     *     meaning to the implementing system. This can be a SQL wildcard for queries, or a regular
-     *     expression for Java-based memory collections.
+     *                   meaning to the implementing system. This can be a SQL wildcard for queries, or a regular
+     *                   expression for Java-based memory collections.
      * @return A set of logical filenames that match. The set may be empty
      */
     public Set list(String constraint) {
@@ -894,16 +910,14 @@ public class JDBCRC implements ReplicaCatalog {
                 String id = rs.getString("lfn_id");
                 st.close();
                 rs.close();
-                query =
-                        "SELECT lfn_id FROM rc_pfn WHERE lfn_id="
-                                + id
-                                + " AND pfn='"
-                                + quote(tuple.getPFN())
-                                + "' AND site";
-                query +=
-                        tuple.getResourceHandle() == null
-                                ? " IS NULL"
-                                : "='" + quote(tuple.getResourceHandle()) + "'";
+                query = "SELECT lfn_id FROM rc_pfn WHERE lfn_id="
+                        + id
+                        + " AND pfn='"
+                        + quote(tuple.getPFN())
+                        + "' AND site";
+                query += tuple.getResourceHandle() == null
+                        ? " IS NULL"
+                        : "='" + quote(tuple.getResourceHandle()) + "'";
                 st = mConnection.createStatement();
                 rs = st.executeQuery(query);
                 if (!rs.next()) {
@@ -918,7 +932,7 @@ public class JDBCRC implements ReplicaCatalog {
                     String value = rs.getString("value");
                     if (key != null
                             && (!tuple.hasAttribute(key)
-                                    || (value != null && !tuple.getAttribute(key).equals(value)))) {
+                            || (value != null && !tuple.getAttribute(key).equals(value)))) {
                         st.close();
                         rs.close();
                         return 0;
@@ -943,10 +957,10 @@ public class JDBCRC implements ReplicaCatalog {
     /**
      * Inserts a new mapping into the replica catalog.
      *
-     * @param lfn is the logical filename under which to book the entry.
+     * @param lfn   is the logical filename under which to book the entry.
      * @param tuple is the physical filename and associated PFN attributes.
      * @return number of insertions, should always be 1. On failure, throw an exception, don't use
-     *     zero.
+     * zero.
      */
     @Override
     public int insert(String lfn, ReplicaCatalogEntry tuple) {
@@ -984,7 +998,7 @@ public class JDBCRC implements ReplicaCatalog {
                         this.mUsingSQLiteBackend
                                 ? mConnection.prepareStatement(query)
                                 : mConnection.prepareStatement(
-                                        query, Statement.RETURN_GENERATED_KEYS);
+                                query, Statement.RETURN_GENERATED_KEYS);
                 ps.setString(1, quote(lfn));
                 // sqlite driver complains if Statement.RETURN_GENERATED_KEYS is set, even though
                 // the id's are set in the ResultSet
@@ -1070,12 +1084,12 @@ public class JDBCRC implements ReplicaCatalog {
      * resource handle. Internally, the <code>ReplicaCatalogEntry</code> element will be contructed,
      * and passed to the appropriate insert function.
      *
-     * @param lfn is the logical filename under which to book the entry.
-     * @param pfn is the physical filename associated with it.
+     * @param lfn    is the logical filename under which to book the entry.
+     * @param pfn    is the physical filename associated with it.
      * @param handle is a resource handle where the PFN resides.
      * @return number of insertions, should always be 1. On failure, throw an exception, don't use
-     *     zero.
-     * @see #insert( String, ReplicaCatalogEntry )
+     * zero.
+     * @see #insert(String, ReplicaCatalogEntry)
      * @see ReplicaCatalogEntry
      */
     public int insert(String lfn, String pfn, String handle) {
@@ -1096,18 +1110,149 @@ public class JDBCRC implements ReplicaCatalog {
         // sanity checks
         if (x == null || x.size() == 0) return result;
         if (mConnection == null) throw new RuntimeException(c_error);
+        String query = "";
 
-        // FIXME: Create a true bulk mode. This is inefficient, but will
-        // get the job done (for now).
-        Set lfns = x.keySet();
-        for (Iterator i = lfns.iterator(); i.hasNext(); ) {
-            String lfn = (String) i.next();
-            List value = (List) x.get(lfn);
-            if (value != null && value.size() > 0) {
-                for (Iterator j = value.iterator(); j.hasNext(); ) {
-                    result += insert(lfn, (ReplicaCatalogEntry) j.next());
+        try {
+            Statement st = mConnection.createStatement();
+            List<String> lfns = new ArrayList<String>((Set<String>) x.keySet());
+
+            // check if the lfn already exists
+            for (String lfn : lfns) {
+                query += query.isEmpty() ? "SELECT lfn_id, lfn FROM rc_lfn WHERE lfn='"
+                        + lfn + "'" : " OR lfn='" + lfn + "'";
+            }
+            if (!query.isEmpty()) {
+                ResultSet rs = st.executeQuery(query);
+                Map<String, List<ReplicaCatalogEntry>> ids = new HashMap<String, List<ReplicaCatalogEntry>>();
+                Map<String, String> lfnToID = new HashMap<String, String>();
+                while (rs.next()) {
+                    ids.put(rs.getString(1), (List<ReplicaCatalogEntry>) x.get(rs.getString(2)));
+                    lfnToID.put(rs.getString(2), rs.getString(1));
+                }
+                rs.close();
+
+                // delete previous mappings associated to the lfns
+                st = mConnection.createStatement();
+                query = "";
+
+                for (String lfn : lfns) {
+                    List<ReplicaCatalogEntry> value = (List<ReplicaCatalogEntry>) x.get(lfn);
+
+                    if (value != null) {
+                        for (ReplicaCatalogEntry tuple : value) {
+                            // sanity checks
+                            if (lfn == null || tuple == null) return 0;
+                            if (mConnection == null) throw new RuntimeException(c_error);
+
+                            String rh = tuple.getResourceHandle() == null ? " IS NULL" : "='"
+                                    + quote(tuple.getResourceHandle());
+                            query += query.isEmpty() ? "SELECT lfn_id FROM rc_pfn WHERE " : " OR ";
+                            query += "(lfn_id=" + lfnToID.get(lfn) + " AND pfn='" + quote(tuple.getPFN()) + "' AND site"
+                                    + rh + "')";
+                        }
+                    }
+                }
+                List<String> lfnsToDelete = new ArrayList<String>();
+                if (!query.isEmpty()) {
+                    rs = st.executeQuery(query);
+                    while (rs.next()) {
+                        lfnsToDelete.add(rs.getString(1));
+                    }
+                    rs.close();
+
+                    // check meta table
+                    st = mConnection.createStatement();
+                    query = "";
+
+                    for (String lfnID : lfnsToDelete) {
+                        query += query.isEmpty() ? "SELECT lfn_id, `key`, value FROM rc_meta WHERE " : " OR ";
+                        query += "lfn_id=" + lfnID;
+                    }
+                    if (!query.isEmpty()) {
+                        rs = st.executeQuery(query);
+                        while (rs.next()) {
+                            String id = rs.getString(1);
+                            String key = rs.getString(2);
+                            String val = rs.getString(3);
+                            List<ReplicaCatalogEntry> value = (List<ReplicaCatalogEntry>) x.get(id);
+
+                            if (value != null) {
+                                for (ReplicaCatalogEntry tuple : value) {
+                                    if (key != null && (!tuple.hasAttribute(key)
+                                            || (val != null && !tuple.getAttribute(key).equals(val)))) {
+                                        lfnsToDelete.remove(id);
+                                    }
+                                }
+                            }
+                        }
+                        rs.close();
+                    }
+                }
+
+                // delete LFNs
+                query = "";
+                for (String lfnID : lfnsToDelete) {
+                    query += query.isEmpty() ? "DELETE FROM rc_lfn WHERE " : " OR ";
+                    query += "lfn_id=" + lfnID;
+                }
+                if (!query.isEmpty()) {
+                    st.executeUpdate(query);
                 }
             }
+            mConnection.setAutoCommit(false);
+
+            // insert LFNs
+            for (String lfn : lfns) {
+                List<ReplicaCatalogEntry> value = (List<ReplicaCatalogEntry>) x.get(lfn);
+                if (value != null) {
+                    for (ReplicaCatalogEntry tuple : value) {
+                        st.addBatch("INSERT INTO rc_lfn(lfn) VALUES('" + lfn + "')");
+                    }
+                }
+            }
+            st.executeBatch();
+            ResultSet rs = st.getGeneratedKeys();
+            List<String> generatedKeys = new ArrayList<String>();
+            while (rs.next()) {
+                generatedKeys.add(rs.getString(1));
+            }
+            rs.close();
+
+            // Add PFN and site attributes
+            st = mConnection.createStatement();
+            int index = 0;
+            for (String lfn : lfns) {
+                List<ReplicaCatalogEntry> value = (List<ReplicaCatalogEntry>) x.get(lfn);
+                if (value != null) {
+                    for (ReplicaCatalogEntry tuple : value) {
+                        String rh = tuple.getResourceHandle() == null ? "NULL" : tuple.getResourceHandle();
+                        st.addBatch("INSERT INTO rc_pfn(lfn_id, pfn, site) VALUES('"
+                                + generatedKeys.get(index) + "','" + quote(tuple.getPFN()) + "','" + rh + "')");
+
+                        // Add metadata
+                        for (Iterator i = tuple.getAttributeIterator(); i.hasNext(); ) {
+                            String name = (String) i.next();
+                            if (name.equals(ReplicaCatalogEntry.RESOURCE_HANDLE)) {
+                                continue;
+                            }
+                            String val = tuple.getAttribute(name) == null ? "NULL"
+                                    : tuple.getAttribute(name) instanceof String
+                                    ? (String) tuple.getAttribute(name) : tuple.getAttribute(name).toString();
+                            st.addBatch("INSERT INTO rc_meta(lfn_id,`key`,value) VALUES('"
+                                    + generatedKeys.get(index) + "','" + name + "','" + val + "')");
+                        }
+                    }
+                }
+                index++;
+            }
+            st.executeBatch();
+            result = generatedKeys.size();
+            mConnection.setAutoCommit(true);
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Unable to tell database: "
+                            + e.getMessage());
         }
 
         // done
@@ -1121,7 +1266,7 @@ public class JDBCRC implements ReplicaCatalog {
      * are deleted. However, upon removal of an entry, all attributes associated with the pfn also
      * evaporate (cascaded deletion).
      *
-     * @param x is a map from logical filename string to list of replica catalog entries.
+     * @param x               is a map from logical filename string to list of replica catalog entries.
      * @param matchAttributes whether mapping should be deleted only if all attributes match.
      * @return the number of deletions.
      * @see ReplicaCatalogEntry
@@ -1194,7 +1339,7 @@ public class JDBCRC implements ReplicaCatalog {
      * theoretically be removed. Upon removal of an entry, all attributes associated with the PFN
      * also evaporate (cascading deletion).
      *
-     * @param lfn is the logical filename in the tuple.
+     * @param lfn   is the logical filename in the tuple.
      * @param tuple is a description of the PFN and its attributes.
      * @return the number of removed entries, either 0 or 1.
      */
@@ -1231,7 +1376,7 @@ public class JDBCRC implements ReplicaCatalog {
                 String value = rs.getString("value");
                 if (key != null
                         && (!tuple.hasAttribute(key)
-                                || (value != null && !tuple.getAttribute(key).equals(value)))) {
+                        || (value != null && !tuple.getAttribute(key).equals(value)))) {
                     st.close();
                     rs.close();
                     return result;
@@ -1282,8 +1427,8 @@ public class JDBCRC implements ReplicaCatalog {
      * found, and matches exactly the object value. This method may be useful to remove all replica
      * entries that have a certain MD5 sum associated with them. It may also be harmful overkill.
      *
-     * @param lfn is the logical filename to look for.
-     * @param name is the PFN attribute name to look for.
+     * @param lfn   is the logical filename to look for.
+     * @param name  is the PFN attribute name to look for.
      * @param value is an exact match of the attribute value to match.
      * @return the number of removed entries.
      */
@@ -1301,7 +1446,7 @@ public class JDBCRC implements ReplicaCatalog {
      *  delete( lfn, RESOURCE_HANDLE, handle )
      * </pre>
      *
-     * @param lfn is the logical filename to look for.
+     * @param lfn    is the logical filename to look for.
      * @param handle is the resource handle
      * @return the number of entries removed.
      */
@@ -1367,7 +1512,7 @@ public class JDBCRC implements ReplicaCatalog {
      * Removes all entries from the replica catalog where the PFN attribute is found, and matches
      * exactly the object value.
      *
-     * @param name is the PFN attribute name to look for.
+     * @param name  is the PFN attribute name to look for.
      * @param value is an exact match of the attribute value to match.
      * @return the number of removed entries.
      */
@@ -1416,7 +1561,7 @@ public class JDBCRC implements ReplicaCatalog {
      *
      * @param handle is the site handle to remove all entries for.
      * @return the number of removed entries.
-     * @see #removeByAttribute( String, Object )
+     * @see #removeByAttribute(String, Object)
      */
     public int removeByAttribute(String handle) {
         return removeByAttribute(ReplicaCatalogEntry.RESOURCE_HANDLE, handle);
