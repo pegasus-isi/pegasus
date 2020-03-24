@@ -174,7 +174,22 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
    <!-- Python code format -->
   <target name="code-format-python" description="Python code format">
-    <exec executable="tox" dir="lib/pegasus/python" resultproperty="python.format.error">
+    <exec executable="tox" dir="packages/pegasus-common" resultproperty="python-common.format.error">
+      <env key="CI" value="${CI}"/>
+      <arg line="--recreate"/>
+      <arg line="-e lint"/>
+    </exec>
+    <exec executable="tox" dir="packages/pegasus-api" resultproperty="python-api.format.error">
+      <env key="CI" value="${CI}"/>
+      <arg line="--recreate"/>
+      <arg line="-e lint"/>
+    </exec>
+    <exec executable="tox" dir="packages/pegasus-dax-python" resultproperty="python-dax.format.error">
+      <env key="CI" value="${CI}"/>
+      <arg line="--recreate"/>
+      <arg line="-e lint"/>
+    </exec>
+    <exec executable="tox" dir="packages/pegasus-python" resultproperty="python.format.error">
       <env key="CI" value="${CI}"/>
       <arg line="--recreate"/>
       <arg line="-e lint"/>
@@ -183,13 +198,23 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <fail>
       Lint Error
       # -- NOTE -- #
-      Invalid Python code format, run `ant code-format-python`, review the changes and commit them to fix the issue.
-      Ignore changes to lib/pegasus/python/Pegasus/cli/*
+      Invalid Python code format, run `ant code-format-python`.
       # -- NOTE -- #
       <condition>
-        <not>
-          <equals arg1="${python.format.error}" arg2="0"></equals>
-        </not>
+        <or>
+          <not>
+            <equals arg1="${python-common.format.error}" arg2="0"></equals>
+          </not>
+          <not>
+            <equals arg1="${python-api.format.error}" arg2="0"></equals>
+          </not>
+          <not>
+            <equals arg1="${python-dax.format.error}" arg2="0"></equals>
+          </not>
+          <not>
+            <equals arg1="${python.format.error}" arg2="0"></equals>
+          </not>
+        </or>
       </condition>
     </fail>
   </target>
@@ -298,7 +323,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
   <target name="doc-user-guide" depends="setup" description="Generate user guide from sphinx source">
     <mkdir dir="${dist.doc}"/>
 
-    <exec executable="tox" dir="lib/pegasus/python" failonerror="true">
+    <exec executable="tox" dir="packages/pegasus-python" failonerror="true">
       <arg line="--recreate"/>
       <arg line="-e docs"/>
     </exec>
@@ -401,9 +426,22 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
   <target name="compile-python" depends="dist-clean,setup">
     <mkdir dir="${dist.python-lib}"/>
-    <exec executable="${dist.python}" dir="lib/pegasus/python" failonerror="true">
+    <exec executable="${dist.python}" dir="packages/pegasus-common" failonerror="true">
       <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
     </exec>
+    <exec executable="${dist.python}" dir="packages/pegasus-api" failonerror="true">
+      <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
+    </exec>
+    <exec executable="${dist.python}" dir="packages/pegasus-dax-python" failonerror="true">
+      <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
+    </exec>
+    <exec executable="${dist.python}" dir="packages/pegasus-worker" failonerror="true">
+      <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
+    </exec>
+    <exec executable="${dist.python}" dir="packages/pegasus-python" failonerror="true">
+      <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
+    </exec>
+
     <chmod perm="0755" type="file">
       <fileset dir="${dist.python-lib}">
         <include name="Pegasus/cli/*"/>
@@ -580,21 +618,87 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <exec executable="${make}" dir="doc/sphinx" failonerror="false">
       <arg line="clean"/>
     </exec>
-    <exec executable="${dist.python}" dir="lib/pegasus/python" failonerror="false">
+    <exec executable="${dist.python}" dir="packages/pegasus-common" failonerror="false">
       <arg line="setup.py clean --all"/>
     </exec>
-    <delete dir="lib/pegasus/python/.tox" followsymlinks="false" removenotfollowedsymlinks="true"/>
-    <delete dir="lib/pegasus/python/.cache"/>
-    <delete dir="lib/pegasus/python/.coverage"/>
-    <delete dir="lib/pegasus/python/.pytest_cache"/>
-    <delete dir="lib/pegasus/python/test-reports"/>
-    <delete dir="lib/pegasus/python/htmlcov"/>
+    <exec executable="${dist.python}" dir="packages/pegasus-api" failonerror="false">
+      <arg line="setup.py clean --all"/>
+    </exec>
+    <exec executable="${dist.python}" dir="packages/pegasus-dax-python" failonerror="false">
+      <arg line="setup.py clean --all"/>
+    </exec>
+    <exec executable="${dist.python}" dir="packages/pegasus-python" failonerror="false">
+      <arg line="setup.py clean --all"/>
+    </exec>
+    <exec executable="${dist.python}" dir="packages/pegasus-worker" failonerror="false">
+      <arg line="setup.py clean --all"/>
+    </exec>
+
+    <delete dir="packages/pegasus-common/.tox" followsymlinks="false" removenotfollowedsymlinks="true"/>
+    <delete dir="packages/pegasus-common/.cache"/>
+    <delete dir="packages/pegasus-common/.coverage"/>
+    <delete dir="packages/pegasus-common/.pytest_cache"/>
+    <delete dir="packages/pegasus-common/test-reports"/>
+    <delete dir="packages/pegasus-common/htmlcov"/>
     <delete>
-      <fileset dir="lib/pegasus/python" includes="**/*.pyc"/>
+      <fileset dir="packages/pegasus-common" includes="**/*.pyc"/>
     </delete>
     <delete>
-      <dirset dir="lib/pegasus/python" includes="**/__pycache__"/>
+      <dirset dir="packages/pegasus-common" includes="**/__pycache__"/>
     </delete>
+
+    <delete dir="packages/pegasus-api/.tox" followsymlinks="false" removenotfollowedsymlinks="true"/>
+    <delete dir="packages/pegasus-api/.cache"/>
+    <delete dir="packages/pegasus-api/.coverage"/>
+    <delete dir="packages/pegasus-api/.pytest_cache"/>
+    <delete dir="packages/pegasus-api/test-reports"/>
+    <delete dir="packages/pegasus-api/htmlcov"/>
+    <delete>
+      <fileset dir="packages/pegasus-api" includes="**/*.pyc"/>
+    </delete>
+    <delete>
+      <dirset dir="packages/pegasus-api" includes="**/__pycache__"/>
+    </delete>
+
+    <delete dir="packages/pegasus-dax-python/.tox" followsymlinks="false" removenotfollowedsymlinks="true"/>
+    <delete dir="packages/pegasus-dax-python/.cache"/>
+    <delete dir="packages/pegasus-dax-python/.coverage"/>
+    <delete dir="packages/pegasus-dax-python/.pytest_cache"/>
+    <delete dir="packages/pegasus-dax-python/test-reports"/>
+    <delete dir="packages/pegasus-dax-python/htmlcov"/>
+    <delete>
+      <fileset dir="packages/pegasus-dax-python" includes="**/*.pyc"/>
+    </delete>
+    <delete>
+      <dirset dir="packages/pegasus-dax-python" includes="**/__pycache__"/>
+    </delete>
+
+    <delete dir="packages/pegasus-worker/.tox" followsymlinks="false" removenotfollowedsymlinks="true"/>
+    <delete dir="packages/pegasus-worker/.cache"/>
+    <delete dir="packages/pegasus-worker/.coverage"/>
+    <delete dir="packages/pegasus-worker/.pytest_cache"/>
+    <delete dir="packages/pegasus-worker/test-reports"/>
+    <delete dir="packages/pegasus-worker/htmlcov"/>
+    <delete>
+      <fileset dir="packages/pegasus-worker" includes="**/*.pyc"/>
+    </delete>
+    <delete>
+      <dirset dir="packages/pegasus-worker" includes="**/__pycache__"/>
+    </delete>
+
+    <delete dir="packages/pegasus-python/.tox" followsymlinks="false" removenotfollowedsymlinks="true"/>
+    <delete dir="packages/pegasus-python/.cache"/>
+    <delete dir="packages/pegasus-python/.coverage"/>
+    <delete dir="packages/pegasus-python/.pytest_cache"/>
+    <delete dir="packages/pegasus-python/test-reports"/>
+    <delete dir="packages/pegasus-python/htmlcov"/>
+    <delete>
+      <fileset dir="packages/pegasus-python" includes="**/*.pyc"/>
+    </delete>
+    <delete>
+      <dirset dir="packages/pegasus-python" includes="**/__pycache__"/>
+    </delete>
+
     <!-- Clean auto-generated doc -->
     <delete dir="doc/sphinx/python/"/>
     <delete dir="doc/sphinx/java/"/>
@@ -686,12 +790,19 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
   <target name="test" depends="dist,test-python,test-kickstart,test-pmc,test-transfer,test-integrity,test-java" description="Run all unit tests"/>
 
   <target name="test-python" description="Execute python unit tests">
-    <exec executable="tox" dir="lib/pegasus/python" failonerror="true">
-      <!--
-      <env key="PYTHONPATH" value="${basedir}/lib/pegasus/externals/python"/>
-      <env key="TOX_TESTENV_PASSENV" value="PYTHONPATH"/>
-      <env key="SKIP_INSTALL" value="True"/>
-      -->
+    <exec executable="tox" dir="packages/pegasus-common" failonerror="true">
+      <arg line="--recreate"/>
+    </exec>
+    <exec executable="tox" dir="packages/pegasus-api" failonerror="true">
+      <arg line="--recreate"/>
+    </exec>
+    <exec executable="tox" dir="packages/pegasus-dax-python" failonerror="true">
+      <arg line="--recreate"/>
+    </exec>
+    <exec executable="tox" dir="packages/pegasus-worker" failonerror="true">
+      <arg line="--recreate"/>
+    </exec>
+    <exec executable="tox" dir="packages/pegasus-python" failonerror="true">
       <arg line="--recreate"/>
     </exec>
   </target>

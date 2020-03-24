@@ -22,21 +22,17 @@ import shlex
 import string
 import sphinx_rtd_theme
 
-sys.path.insert(
-    0, os.path.abspath(os.path.dirname(__file__) + "/../../lib/pegasus/python")
-)
-
 
 # -- Project information -----------------------------------------------------
 
-project = u"Pegasus WMS"
-copyright = u"2019, Pegasus Team"
-author = u"Pegasus Team"
+project = "Pegasus WMS"
+copyright = "2019, Pegasus Team"
+author = "Pegasus Team"
 
 # The short X.Y version
-version = u"5.0.0dev"
+version = "5.0.0dev"
 # The full version, including alpha/beta/rc tags
-release = u"5.0.0dev"
+release = "5.0.0dev"
 
 
 # -- General configuration ---------------------------------------------------
@@ -82,7 +78,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = [u"_build", "Thumbs.db", ".DS_Store", "_*.rst"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "_*.rst"]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
@@ -150,8 +146,8 @@ latex_documents = [
     (
         master_doc,
         "PegasusWMS.tex",
-        u"Pegasus WMS Documentation",
-        u"Pegasus Team",
+        "Pegasus WMS Documentation",
+        "Pegasus Team",
         "manual",
     )
 ]
@@ -184,7 +180,7 @@ texinfo_documents = [
     (
         master_doc,
         "PegasusWMS",
-        u"Pegasus WMS Documentation",
+        "Pegasus WMS Documentation",
         author,
         "PegasusWMS",
         "One line description of project.",
