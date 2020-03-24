@@ -15,7 +15,7 @@ TOP_DIR=$PWD
 
 
 # create the dist package
-for pkg in `find packages -type d -depth 1`; do
+for pkg in `find packages -maxdepth 1 -type d`; do
     if [ ! -f ${pkg}/setup.py ]; then
         continue
     fi
