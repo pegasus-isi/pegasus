@@ -295,6 +295,239 @@ def test_build_pegasus_tc_duplicate_tr():
         pytest.fail("Duplicate error should not have been raised")
 
 
+def test_build_pegasus_tc_with_containers_using_dockerPull():
+    wf = cwl.load_document(
+        {
+            "cwlVersion": "v1.1",
+            "class": "Workflow",
+            "inputs": [],
+            "outputs": [],
+            "steps": {
+                "untar": {
+                    "run": {
+                        "cwlVersion": "v1.1",
+                        "class": "CommandLineTool",
+                        "baseCommand": "/usr/bin/tar",
+                        "inputs": [],
+                        "outputs": [],
+                        "requirements": {
+                            "DockerRequirement": {"dockerPull": "node:slim"}
+                        },
+                    },
+                    "in": [],
+                    "out": [],
+                },
+            },
+        }
+    )
+
+    tr_specs = {"tar": {"site": "local", "is_stageable": False}}
+
+    result = json.loads(json.dumps(build_pegasus_tc(tr_specs, wf), cls=_CustomEncoder))
+
+    assert result == {
+        "pegasus": "5.0",
+        "transformations": [
+            {
+                "name": "tar",
+                "sites": [
+                    {
+                        "name": "local",
+                        "pfn": "/usr/bin/tar",
+                        "type": "installed",
+                        "container": "node:slim",
+                    }
+                ],
+            }
+        ],
+        "containers": [
+            {
+                "name": "node:slim",
+                "type": "docker",
+                "image": "docker://node:slim",
+                "image.site": "local",
+            }
+        ],
+    }
+
+
+def test_build_pegasus_tc_with_containers_using_dockerLoad():
+    wf = cwl.load_document(
+        {
+            "cwlVersion": "v1.1",
+            "class": "Workflow",
+            "inputs": [],
+            "outputs": [],
+            "steps": {
+                "untar": {
+                    "run": {
+                        "cwlVersion": "v1.1",
+                        "class": "CommandLineTool",
+                        "baseCommand": "/usr/bin/tar",
+                        "inputs": [],
+                        "outputs": [],
+                        "requirements": {
+                            "DockerRequirement": {
+                                "dockerLoad": "file:///Users/ryan/docker-image.tar.gz"
+                            }
+                        },
+                    },
+                    "in": [],
+                    "out": [],
+                },
+            },
+        }
+    )
+
+    tr_specs = {"tar": {"site": "local", "is_stageable": False}}
+
+    result = json.loads(json.dumps(build_pegasus_tc(tr_specs, wf), cls=_CustomEncoder))
+
+    assert result == {
+        "pegasus": "5.0",
+        "transformations": [
+            {
+                "name": "tar",
+                "sites": [
+                    {
+                        "name": "local",
+                        "pfn": "/usr/bin/tar",
+                        "type": "installed",
+                        "container": "docker-image.tar.gz",
+                    }
+                ],
+            }
+        ],
+        "containers": [
+            {
+                "name": "docker-image.tar.gz",
+                "type": "docker",
+                "image": "file:///Users/ryan/docker-image.tar.gz",
+                "image.site": "local",
+            }
+        ],
+    }
+
+
+def test_build_pegasus_tc_with_duplicate_containers():
+    wf = cwl.load_document(
+        {
+            "cwlVersion": "v1.1",
+            "class": "Workflow",
+            "inputs": [],
+            "outputs": [],
+            "steps": {
+                "untar": {
+                    "run": {
+                        "cwlVersion": "v1.1",
+                        "class": "CommandLineTool",
+                        "baseCommand": "/usr/bin/tar",
+                        "inputs": [],
+                        "outputs": [],
+                        "requirements": {
+                            "DockerRequirement": {
+                                "dockerLoad": "file:///Users/ryan/docker-image.tar.gz"
+                            }
+                        },
+                    },
+                    "in": [],
+                    "out": [],
+                },
+                "untar2": {
+                    "run": {
+                        "cwlVersion": "v1.1",
+                        "class": "CommandLineTool",
+                        "baseCommand": "/usr/bin/tar",
+                        "inputs": [],
+                        "outputs": [],
+                        "requirements": {
+                            "DockerRequirement": {
+                                "dockerLoad": "file:///Users/ryan/docker-image.tar.gz"
+                            }
+                        },
+                    },
+                    "in": [],
+                    "out": [],
+                },
+            },
+        }
+    )
+
+    tr_specs = {"tar": {"site": "local", "is_stageable": False}}
+    try:
+        result = json.loads(
+            json.dumps(build_pegasus_tc(tr_specs, wf), cls=_CustomEncoder)
+        )
+    except DuplicateError:
+        pytest.fail("Duplicate error should have been caught.")
+
+    assert result == {
+        "pegasus": "5.0",
+        "transformations": [
+            {
+                "name": "tar",
+                "sites": [
+                    {
+                        "name": "local",
+                        "pfn": "/usr/bin/tar",
+                        "type": "installed",
+                        "container": "docker-image.tar.gz",
+                    }
+                ],
+            }
+        ],
+        "containers": [
+            {
+                "name": "docker-image.tar.gz",
+                "type": "docker",
+                "image": "file:///Users/ryan/docker-image.tar.gz",
+                "image.site": "local",
+            }
+        ],
+    }
+
+
+@pytest.mark.parametrize(
+    "invalid_field",
+    [
+        ({"dockerFile": "abc"}),
+        ({"dockerImport": "abc"}),
+        ({"dockerImageId": "abc"}),
+        ({"dockerOutputDirectory": "abc"}),
+    ],
+)
+def test_build_pegasus_tc_with_unsupported_cwl_DockerRequirement_fields(invalid_field):
+    wf = cwl.load_document(
+        {
+            "cwlVersion": "v1.1",
+            "class": "Workflow",
+            "inputs": [],
+            "outputs": [],
+            "steps": {
+                "untar": {
+                    "run": {
+                        "cwlVersion": "v1.1",
+                        "class": "CommandLineTool",
+                        "baseCommand": "/usr/bin/tar",
+                        "inputs": [],
+                        "outputs": [],
+                        "requirements": {"DockerRequirement": invalid_field},
+                    },
+                    "in": [],
+                    "out": [],
+                },
+            },
+        }
+    )
+
+    tr_specs = {"tar": {"site": "local", "is_stageable": False}}
+
+    with pytest.raises(NotImplementedError) as e:
+        build_pegasus_tc(tr_specs, wf)
+
+    assert "Only DockerRequirement." in str(e)
+
+
 def test_build_pegasus_rc():
     wf = cwl.load_document(
         {
