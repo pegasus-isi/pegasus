@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from setuptools import find_packages, setup
+from setuptools import find_namespace_packages, setup
 
 src_dir = os.path.dirname(__file__)
 home_dir = os.path.abspath(os.path.join(src_dir, "../../.."))
@@ -10,6 +10,7 @@ install_requires = [
     # Utils
     # TODO: Replace attrs with the dataclasses module, when min Python version is >= 3.6
     "attrs",
+    # 'dataclasses;python_version=="3.6"',
     # DAX/Workflow
     "PyYAML",
     # Python 2 compatibility
@@ -21,27 +22,15 @@ install_requires = [
     "pamela==1.0.0",
     "globus-sdk==1.4.1",
     "pika==1.1.0",
-    # Python 2.6
-    'Flask==0.12.4;python_version<="2.6"',
-    'Flask-Cache==0.13.1;python_version<="2.6"',
-    'requests==2.18.4;python_version<="2.6"',
-    'ordereddict==1.1;python_version<="2.6"',
-    'argparse==1.4.0;python_version<="2.6"',
-    'sqlalchemy==1.1.15;python_version<="2.6"',
-    # Python 2.7+
-    'Flask==1.0.2;python_version>"2.6"',
-    'Flask-Caching;python_version>"2.6"',
-    'requests==2.21.0;python_version>"2.6"',
-    'sqlalchemy==1.2.1;python_version>"2.6"',
-    # Python 3 Backport
-    'pathlib2;python_version<"3.0"',
-    'functools32;python_version<"3.0"',
-    # 'dataclasses;python_version=="3.6"',
+    "Flask",
+    "Flask-Caching",
+    "requests",
+    "sqlalchemy",
+    "pegasus-wms.api",
+    "pegasus-wms.dax",
+    "pegasus-wms.common",
+    "pegasus-wms.worker",
 ]
-
-
-excludes = ["Pegasus.test*"]
-
 
 #
 # Install conditional dependencies
@@ -98,10 +87,11 @@ setup(
     author="Pegasus Team",
     author_email="pegasus@isi.edu",
     description="Pegasus Workflow Management System Python API",
-    long_description=read("README"),
+    long_description=read("README.md"),
+    long_description_content_type="text/markdown",
     license="Apache2",
     url="http://pegasus.isi.edu",
-    python_requires=">=2.6,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*",
+    python_requires=">=3.5",
     keywords=["scientific workflows"],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
@@ -109,19 +99,19 @@ setup(
         "Intended Audience :: Science/Research",
         "Operating System :: Unix",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.6",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "Topic :: Scientific/Engineering",
         "Topic :: Utilities",
         "License :: OSI Approved :: Apache Software License",
     ],
-    packages=find_packages(exclude=excludes),
-    package_data={"Pegasus.service": find_package_data("Pegasus/service/")},
+    namespace_packages=["Pegasus", "Pegasus.cli"],
+    package_dir={"": "src"},
+    packages=find_namespace_packages(where="src"),
+    package_data={"Pegasus.service": find_package_data("src/Pegasus/service/")},
     include_package_data=True,
     zip_safe=False,
     install_requires=install_requires,
