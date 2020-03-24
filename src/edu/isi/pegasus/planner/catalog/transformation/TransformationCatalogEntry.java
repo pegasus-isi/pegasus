@@ -632,8 +632,8 @@ public class TransformationCatalogEntry implements CatalogEntry {
     }
 
     /**
-     * Matches two Mount Point objects. The primary key in this case is the
-     * source directory and the destination directory
+     * Matches two Mount Point objects. The primary key in this case is the source directory and the
+     * destination directory
      *
      * @return true if directories combo match
      */
@@ -650,7 +650,7 @@ public class TransformationCatalogEntry implements CatalogEntry {
         TransformationCatalogEntry entry = (TransformationCatalogEntry) obj;
         return this.toTCString().equalsIgnoreCase(entry.toTCString());
     }
-    
+
     /**
      * Compares two catalog entries for equality.
      *

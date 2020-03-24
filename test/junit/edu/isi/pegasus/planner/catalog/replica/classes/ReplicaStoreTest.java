@@ -28,7 +28,6 @@ import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.IOException;
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -43,8 +42,7 @@ public class ReplicaStoreTest {
 
     private TestSetup mTestSetup;
 
-    public ReplicaStoreTest() {
-    }
+    public ReplicaStoreTest() {}
 
     @Before
     public void setUp() {
@@ -54,30 +52,29 @@ public class ReplicaStoreTest {
     }
 
     @AfterClass
-    public static void tearDownClass() {
-    }
+    public static void tearDownClass() {}
 
     @After
-    public void tearDown() {
-    }
+    public void tearDown() {}
 
     @Test
     public void testSingleReplica() throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
 
-        String test
-                = "pegasus: \"5.0\"\n"
-                + "replicas:\n"
-                + "  # matches \"f.a\"\n"
-                + "  - lfn: \"f.a\"\n"
-                + "    pfn: \"file:///Volumes/data/input/f.a\"\n"
-                + "    site: \"local\"";
+        String test =
+                "pegasus: \"5.0\"\n"
+                        + "replicas:\n"
+                        + "  # matches \"f.a\"\n"
+                        + "  - lfn: \"f.a\"\n"
+                        + "    pfn: \"file:///Volumes/data/input/f.a\"\n"
+                        + "    site: \"local\"";
 
         ReplicaStore store = mapper.readValue(test, ReplicaStore.class);
         assertNotNull(store);
         assertEquals(1, store.getLFNCount());
-        testBasicReplicaLocation(store.get("f.a"), "f.a", "file:///Volumes/data/input/f.a", "local");
+        testBasicReplicaLocation(
+                store.get("f.a"), "f.a", "file:///Volumes/data/input/f.a", "local");
     }
 
     @Test
@@ -85,22 +82,23 @@ public class ReplicaStoreTest {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
 
-        String test
-                = "pegasus: \"5.0\"\n"
-                + "replicas:\n"
-                + "  # matches \"f.a\"\n"
-                + "  - lfn: \"f.a\"\n"
-                + "    pfn: \"file:///Volumes/data/input/f.a\"\n"
-                + "    site: \"local\"\n"
-                + "  # matches \"f.b\"\n"
-                + "  - lfn: \"f.b\"\n"
-                + "    pfn: \"file:///Volumes/data/input/f.b\"\n"
-                + "    site: \"isi\"";
+        String test =
+                "pegasus: \"5.0\"\n"
+                        + "replicas:\n"
+                        + "  # matches \"f.a\"\n"
+                        + "  - lfn: \"f.a\"\n"
+                        + "    pfn: \"file:///Volumes/data/input/f.a\"\n"
+                        + "    site: \"local\"\n"
+                        + "  # matches \"f.b\"\n"
+                        + "  - lfn: \"f.b\"\n"
+                        + "    pfn: \"file:///Volumes/data/input/f.b\"\n"
+                        + "    site: \"isi\"";
 
         ReplicaStore store = mapper.readValue(test, ReplicaStore.class);
         assertNotNull(store);
         assertEquals(2, store.getLFNCount());
-        testBasicReplicaLocation(store.get("f.a"), "f.a", "file:///Volumes/data/input/f.a", "local");
+        testBasicReplicaLocation(
+                store.get("f.a"), "f.a", "file:///Volumes/data/input/f.a", "local");
         testBasicReplicaLocation(store.get("f.b"), "f.b", "file:///Volumes/data/input/f.b", "isi");
     }
 
@@ -109,15 +107,15 @@ public class ReplicaStoreTest {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
 
-        String test
-                = "pegasus: \"5.0\"\n"
-                + "replicas:\n"
-                + "  # matches \"f.a\"\n"
-                + "  - lfn: \"f.a\"\n"
-                + "    pfn: \"file:///Volumes/data/input/f.a\"\n"
-                + "    site: \"local\"\n"
-                + "    checksum.type: \"sha256\"\n"
-                + "    checksum.value: \"a08d9d7769cffb96a910a4b6c2be7bfd85d461c9\"";
+        String test =
+                "pegasus: \"5.0\"\n"
+                        + "replicas:\n"
+                        + "  # matches \"f.a\"\n"
+                        + "  - lfn: \"f.a\"\n"
+                        + "    pfn: \"file:///Volumes/data/input/f.a\"\n"
+                        + "    site: \"local\"\n"
+                        + "    checksum.type: \"sha256\"\n"
+                        + "    checksum.value: \"a08d9d7769cffb96a910a4b6c2be7bfd85d461c9\"";
 
         ReplicaStore store = mapper.readValue(test, ReplicaStore.class);
         assertNotNull(store);
@@ -138,14 +136,13 @@ public class ReplicaStoreTest {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
 
-        String test
-                = "pegasus: \"5.0\"\n"
-                + "replicas:\n"
-                + "  - pfn: \"file:///Volumes/data/input/f.a\"\n"
-                + "    site: \"local\"";
+        String test =
+                "pegasus: \"5.0\"\n"
+                        + "replicas:\n"
+                        + "  - pfn: \"file:///Volumes/data/input/f.a\"\n"
+                        + "    site: \"local\"";
 
         ReplicaStore store = mapper.readValue(test, ReplicaStore.class);
-
     }
 
     @Test(expected = ReplicaCatalogException.class)
@@ -153,17 +150,14 @@ public class ReplicaStoreTest {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
 
-        String test
-                = "pegasus: \"5.0\"\n"
-                + "replicas:\n"
-                + "  - lfn: \"f.a\"\n"
-                + "    site: \"local\"";
+        String test =
+                "pegasus: \"5.0\"\n" + "replicas:\n" + "  - lfn: \"f.a\"\n" + "    site: \"local\"";
 
         ReplicaStore store = mapper.readValue(test, ReplicaStore.class);
-
     }
 
-    private void testBasicReplicaLocation(ReplicaLocation actual, String lfn, String pfn, String site) {
+    private void testBasicReplicaLocation(
+            ReplicaLocation actual, String lfn, String pfn, String site) {
         assertNotNull(actual);
         assertEquals(lfn, actual.getLFN());
         ReplicaCatalogEntry rce = actual.getPFN(0);

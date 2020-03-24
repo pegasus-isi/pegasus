@@ -61,11 +61,11 @@ public class Transformation {
 
     public List<TransformationCatalogEntry> getTransformationCatalogEntries() {
         List<TransformationCatalogEntry> entries = new LinkedList();
-        if( this.mSiteEntries.isEmpty()){
+        if (this.mSiteEntries.isEmpty()) {
             entries.add(mBaseEntry);
             return entries;
         }
-        
+
         for (TransformationCatalogEntry siteEntry : mSiteEntries) {
             entries.add(this.addSiteInformation(mBaseEntry, siteEntry));
         }

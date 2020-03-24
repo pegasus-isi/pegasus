@@ -26,11 +26,11 @@ public enum ReplicaCatalogKeywords {
     REPLICAS("replicas"),
     LFN("lfn"),
     PFN("pfn"),
-    SITE("site"), 
+    SITE("site"),
     REGEX("regex"),
     CHECKSUM_TYPE("checksum.type"),
     CHECKSUM_VALUE("checksum.value");
-    
+
     private String mName;
 
     private static Map<String, ReplicaCatalogKeywords> mKeywordsVsType = new HashMap<>();
