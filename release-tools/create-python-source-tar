@@ -22,7 +22,7 @@ for pkg in `find packages -maxdepth 1 -type d`; do
 
     rm -rf ${pkg}/dist
 
-    ( cd ${pkg} && /usr/bin/env python setup.py sdist)
+    ( cd ${pkg} && /usr/bin/env python3 setup.py sdist)
 
     # python is now normalizing the version (see PEP 440)
     cd ${pkg}/dist
