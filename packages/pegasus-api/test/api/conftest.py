@@ -17,7 +17,7 @@ def convert_yaml_schemas_to_json():
     # get the path of the schema file with the given name
     path = os.path.dirname(os.path.realpath(__file__))
     path = path.replace(
-        "lib/pegasus/python/Pegasus/test/api", "share/pegasus/schema/yaml"
+        "packages/pegasus-api/test/api", "share/pegasus/schema/yaml"
     )
 
     json_schemas = {
@@ -69,7 +69,7 @@ def load_schema():
         # get the path of the schema file with the given name
         path = os.path.dirname(os.path.realpath(__file__))
         path = path.replace(
-            "lib/pegasus/python/Pegasus/test/api", "share/pegasus/schema/yaml"
+            "packages/pegasus-api/test/api", "share/pegasus/schema/yaml"
         )
         path = os.path.join(path, name)
 
