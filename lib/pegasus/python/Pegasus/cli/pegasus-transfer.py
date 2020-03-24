@@ -3619,7 +3619,7 @@ class WebdavHandler(TransferHandlerBase):
                 prepare_local_dir(os.path.dirname(t.get_dst_path()))
                 url = re.sub('^webdav', 'http', t.src_url())
                 cmd = tools.full_path('curl')
-                #if not logger.isEnabledFor(logging.DEBUG):
+                if not logger.isEnabledFor(logging.DEBUG):
                     cmd += ' --silent'
                 cmd += ' --fail --show-error --location' + \
                        ' --user \'' + username + ':' + password + '\'' + \
@@ -3634,7 +3634,7 @@ class WebdavHandler(TransferHandlerBase):
                 self._create_dir(os.path.dirname(url), username, password)
 
                 cmd = tools.full_path('curl')
-                #if not logger.isEnabledFor(logging.DEBUG):
+                if not logger.isEnabledFor(logging.DEBUG):
                     cmd += ' --silent'
                 cmd += ' --fail --show-error --location' + \
                        ' --user \'' + username + ':' + password + '\'' + \
@@ -3659,6 +3659,13 @@ class WebdavHandler(TransferHandlerBase):
             if t.get_dst_proto() == 'file' and \
                not os.path.exists(t.get_dst_path()):
                 logger.error('Expected local file is missing - marking transfer as failed')
+                failed_l.append(t)
+                continue
+
+            # also make sure the file was actually downloaded
+            if t.get_dst_proto() == 'file' and \
+               os.path.getsize(t.get_dst_path()) == 0:
+                logger.error('Downloaded file is 0 bytes - marking transfer as failed')
                 failed_l.append(t)
                 continue
 
