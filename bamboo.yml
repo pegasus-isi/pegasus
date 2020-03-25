@@ -132,7 +132,7 @@ project:
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-java
                 - !junitParser
-                  description: Pare Test Report
+                  description: Parse Test Report
                   testResultsDirectory: pegasus-source/build/tests/classes/junitreport/*.xml
                   pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDependencies:
@@ -167,7 +167,7 @@ project:
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-python
                 - !junitParser
-                  description: Pare Test Report
+                  description: Parse Test Report
                   testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
                   pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDefinitions:
@@ -255,7 +255,7 @@ project:
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-java
                 - !junitParser
-                  description: Pare Test Report
+                  description: Parse Test Report
                   testResultsDirectory: pegasus-source/build/tests/classes/junitreport/*.xml
                   pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDependencies:
@@ -289,7 +289,7 @@ project:
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-python
                 - !junitParser
-                  description: Pare Test Report
+                  description: Parse Test Report
                   testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
                   pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDefinitions:
@@ -495,7 +495,7 @@ project:
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-java
                 - !junitParser
-                  description: Pare Test Report
+                  description: Parse Test Report
                   testResultsDirectory: pegasus-source/build/tests/classes/junitreport/*.xml
                   pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDependencies:
@@ -530,7 +530,7 @@ project:
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-python
                 - !junitParser
-                  description: Pare Test Report
+                  description: Parse Test Report
                   testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
                   pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDefinitions:
@@ -618,7 +618,7 @@ project:
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-java
                 - !junitParser
-                  description: Pare Test Report
+                  description: Parse Test Report
                   testResultsDirectory: pegasus-source/build/tests/classes/junitreport/*.xml
                   pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDependencies:
@@ -652,7 +652,7 @@ project:
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-python
                 - !junitParser
-                  description: Pare Test Report
+                  description: Parse Test Report
                   testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
                   pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDefinitions:
@@ -740,7 +740,7 @@ project:
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-java
                 - !junitParser
-                  description: Pare Test Report
+                  description: Parse Test Report
                   testResultsDirectory: pegasus-source/build/tests/classes/junitreport/*.xml
                   pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDependencies:
@@ -775,7 +775,7 @@ project:
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-python
                 - !junitParser
-                  description: Pare Test Report
+                  description: Parse Test Report
                   testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
                   pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDefinitions:
@@ -863,7 +863,7 @@ project:
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-java
                 - !junitParser
-                  description: Pare Test Report
+                  description: Parse Test Report
                   testResultsDirectory: pegasus-source/build/tests/classes/junitreport/*.xml
                   pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDependencies:
@@ -898,7 +898,7 @@ project:
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
                       pegasus/pegasus:${TAG} test-python
                 - !junitParser
-                  description: Pare Test Report
+                  description: Parse Test Report
                   testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
                   pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDefinitions:
