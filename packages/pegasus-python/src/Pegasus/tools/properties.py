@@ -173,7 +173,7 @@ def parse_properties(my_file, hashref={}):
                 my_save += line
                 line = my_save
                 my_save = ""
-            logger.trace("#Property being parsed is # %s" % (line))
+            logger.debug("#Property being parsed is # %s" % (line))
 
             # Try to parse property
             my_res = re_parse_property.search(line)
@@ -181,7 +181,7 @@ def parse_properties(my_file, hashref={}):
                 # Parse successful
                 k = my_res.group(1)
                 v = my_res.group(2)
-                logger.trace("#Property being stored is # {} ==> {}".format(k, v))
+                logger.debug("#Property being stored is # {} ==> {}".format(k, v))
 
                 # Substitutions
                 subs = re_find_subs.search(v)

@@ -83,7 +83,7 @@ class DashboardLoader(BaseLoader):
         Get the BP dict from the controlling process and dispatch
         to the appropriate method per-event.
         """
-        self.log.trace("process: %s", linedata)
+        self.log.debug("process: %s", linedata)
 
         if not self._batch:
             self.check_connection()
@@ -255,7 +255,7 @@ class DashboardLoader(BaseLoader):
         Handles a workflow insert event.
         """
         wf = self.linedataToObject(linedata, DashboardWorkflow())
-        self.log.trace("workflow: %s", wf)
+        self.log.debug("workflow: %s", wf)
 
         wf.timestamp = wf.ts
 
@@ -286,7 +286,7 @@ class DashboardLoader(BaseLoader):
         Handles a workflowstate insert event.
         """
         wfs = self.linedataToObject(linedata, DashboardWorkflowstate())
-        self.log.trace("workflowstate: %s", wfs)
+        self.log.debug("workflowstate: %s", wfs)
 
         state = {
             "dashboard.xwf.start": "WORKFLOW_STARTED",

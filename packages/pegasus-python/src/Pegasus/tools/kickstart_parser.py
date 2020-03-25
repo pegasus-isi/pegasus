@@ -317,7 +317,7 @@ class YAMLParser(Parser):
 
         # Loop while we still have record to read
         while record is not None:
-            logger.trace("Record is \n%s" % record)
+            logger.debug("Record is \n%s" % record)
             if self.is_invocation_record(record) == True:
                 # We have an invocation record, parse it!
                 try:
@@ -474,7 +474,7 @@ class YAMLParser(Parser):
         token = ""
 
         self._record_number += 1
-        logger.trace(
+        logger.debug(
             "Started reading record number %d from kickstart file %s"
             % (self._record_number, self._kickstart_output_file)
         )
@@ -577,7 +577,7 @@ class YAMLParser(Parser):
                 buffer.append(line)
 
         record = "".join(buffer)
-        logger.trace(
+        logger.debug(
             "Finished reading record number %d from kickstart file %s"
             % (self._record_number, self._kickstart_output_file)
         )
@@ -923,7 +923,7 @@ class XMLParser(Parser):
         token = ""
 
         self._record_number += 1
-        logger.trace(
+        logger.debug(
             "Started reading record number %d from kickstart file %s"
             % (self._record_number, self._kickstart_output_file)
         )
@@ -1021,7 +1021,7 @@ class XMLParser(Parser):
 
         # end = end + len("</invocation>")
         invocation = "".join(buffer)
-        logger.trace(
+        logger.debug(
             "Finished reading record number %d from kickstart file %s"
             % (self._record_number, self._kickstart_output_file)
         )

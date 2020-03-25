@@ -89,6 +89,16 @@ class ConsoleHandler(logging.StreamHandler):
 
 
 def configureLogging(level=logging.INFO):
+    cls = logging.getLoggerClass()
+    cls.TRACE = cls.DEBUG - 1
+
+    def trace(self, message, *args, **kwargs):
+        """Log a TRACE level message"""
+        self.log(cls.TRACE, message, *args, **kwargs)
+
+    logging.addLevelName(cls.TRACE, "TRACE")
+    cls.trace = trace
+
     root = logging.getLogger()
     root.setLevel(level)
     cl = ConsoleHandler()

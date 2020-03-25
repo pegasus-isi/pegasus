@@ -131,7 +131,7 @@ class WorkflowLoader(BaseLoader):
         Get the BP dict from the controlling process and dispatch
         to the appropriate method per-event.
         """
-        self.log.trace("Process: %s", linedata)
+        self.log.debug("Process: %s", linedata)
 
         for retry in range(1, self.MAX_RETRIES + 1):
             if not self._batch:
@@ -379,7 +379,7 @@ class WorkflowLoader(BaseLoader):
         Handles a workflow insert event.
         """
         wf = self.linedataToObject(linedata, Workflow())
-        self.log.trace("Workflow: %s", wf)
+        self.log.debug("Workflow: %s", wf)
 
         wf.timestamp = wf.ts
         wf.planner_arguments = wf.argv
@@ -409,7 +409,7 @@ class WorkflowLoader(BaseLoader):
         Handles a workflowstate insert event.
         """
         wfs = self.linedataToObject(linedata, Workflowstate())
-        self.log.trace("workflowstate: %s", wfs)
+        self.log.debug("workflowstate: %s", wfs)
 
         state = {
             "stampede.xwf.start": "WORKFLOW_STARTED",
@@ -438,7 +438,7 @@ class WorkflowLoader(BaseLoader):
         wf_meta = self.linedataToObject(linedata, WorkflowMeta())
         wf_meta.wf_id = self.wf_uuid_to_id(wf_meta.wf_uuid)
 
-        self.log.trace("workflowmeta: %s", wf_meta)
+        self.log.debug("workflowmeta: %s", wf_meta)
 
         if self._batch:
             self._batch_cache["batch_events"].append(wf_meta)
@@ -455,7 +455,7 @@ class WorkflowLoader(BaseLoader):
         job = self.linedataToObject(linedata, Job())
         job.wf_id = self.wf_uuid_to_id(job.wf_uuid)
         job.clustered = util.as_bool(job.clustered)
-        self.log.trace("job: %s", job)
+        self.log.debug("job: %s", job)
 
         if self._batch:
             self._batch_cache["batch_events"].append(job)
@@ -471,7 +471,7 @@ class WorkflowLoader(BaseLoader):
         """
         je = self.linedataToObject(linedata, JobEdge())
         je.wf_id = self.wf_uuid_to_id(je.wf_uuid)
-        self.log.trace("job_edge: %s", je)
+        self.log.debug("job_edge: %s", je)
 
         if self._batch:
             self._batch_cache["batch_events"].append(je)
@@ -486,7 +486,7 @@ class WorkflowLoader(BaseLoader):
         Handles a job instance insert event.
         """
         job_instance = self.linedataToObject(linedata, JobInstance())
-        self.log.trace("job_instance: %s", job_instance)
+        self.log.debug("job_instance: %s", job_instance)
 
         job_instance.wf_id = self.wf_uuid_to_id(job_instance.wf_uuid)
         if job_instance.wf_id == None:
@@ -544,7 +544,7 @@ class WorkflowLoader(BaseLoader):
         Handles a jobstate insert event.
         """
         js = self.linedataToObject(linedata, Jobstate())
-        self.log.trace("jobstate: %s", js)
+        self.log.debug("jobstate: %s", js)
 
         states = {
             # array maps to status [-1, 0]
@@ -610,7 +610,7 @@ class WorkflowLoader(BaseLoader):
         Handles a invocation insert event.
         """
         invocation = self.linedataToObject(linedata, Invocation())
-        self.log.trace("invocation: %s", invocation)
+        self.log.debug("invocation: %s", invocation)
 
         invocation.wf_id = self.wf_uuid_to_id(invocation.wf_uuid)
 
@@ -634,7 +634,7 @@ class WorkflowLoader(BaseLoader):
         Handles a task insert event
         """
         task = self.linedataToObject(linedata, Task())
-        self.log.trace("task: %s", task)
+        self.log.debug("task: %s", task)
         task.wf_id = self.wf_uuid_to_id(task.wf_uuid)
 
         if self._batch:
@@ -655,7 +655,7 @@ class WorkflowLoader(BaseLoader):
             self._task_edge_flush[linedata["xwf.id"]] = True
 
         te = self.linedataToObject(linedata, TaskEdge())
-        self.log.trace("task_event: %s", te)
+        self.log.debug("task_event: %s", te)
         te.wf_id = self.wf_uuid_to_id(te.wf_uuid)
 
         if self._batch:
@@ -718,7 +718,7 @@ class WorkflowLoader(BaseLoader):
         task_meta.wf_id = self.wf_uuid_to_id(task_meta.wf_uuid)
         task_meta.task_id = self.get_task_id(task_meta.wf_id, task_meta.abs_task_id)
 
-        self.log.trace("task_meta: %s", task_meta)
+        self.log.debug("task_meta: %s", task_meta)
 
         if self._batch:
             self._batch_cache["batch_events"].append(task_meta)
@@ -739,7 +739,7 @@ class WorkflowLoader(BaseLoader):
         rc_meta.wf_id = self.wf_uuid_to_id(rc_meta.wf_uuid)
         rc_meta.lfn_id = self.get_lfn_id(rc_meta.wf_id, lfn)
 
-        self.log.trace("rc_meta: %s", rc_meta)
+        self.log.debug("rc_meta: %s", rc_meta)
 
         # we have to do the merge individually to prevent integrity constraint
         # errors that happen if we put them in the batch cache update_events
@@ -753,7 +753,7 @@ class WorkflowLoader(BaseLoader):
         Handles a integrity metric event
         """
         int_meta = self.linedataToObject(linedata, IntegrityMetrics())
-        self.log.trace("int_meta: %s", int_meta)
+        self.log.debug("int_meta: %s", int_meta)
 
         int_meta.wf_id = self.wf_uuid_to_id(int_meta.wf_uuid)
 
@@ -777,7 +777,7 @@ class WorkflowLoader(BaseLoader):
         Handles a job_instance tag event
         """
         tag = self.linedataToObject(linedata, Tag())
-        self.log.trace("job_inst.tag: %s", tag)
+        self.log.debug("job_inst.tag: %s", tag)
 
         tag.wf_id = self.wf_uuid_to_id(tag.wf_uuid)
 
@@ -805,7 +805,7 @@ class WorkflowLoader(BaseLoader):
         rc_pfn.wf_id = self.wf_uuid_to_id(rc_pfn.wf_uuid)
         rc_pfn.lfn_id = self.get_lfn_id(rc_pfn.wf_id, lfn)
 
-        self.log.trace("rc_pfn: %s", rc_pfn)
+        self.log.debug("rc_pfn: %s", rc_pfn)
 
         if self._batch:
             self._batch_cache["batch_events"].append(rc_pfn)
@@ -828,7 +828,7 @@ class WorkflowLoader(BaseLoader):
         wf_files.task_id = self.get_task_id(wf_files.wf_id, wf_files.abs_task_id)
         wf_files.lfn_id = self.get_lfn_id(wf_files.wf_id, lfn)
 
-        self.log.trace("wf_files: %s", wf_files)
+        self.log.debug("wf_files: %s", wf_files)
 
         if self._batch:
             self._batch_cache["batch_events"].append(wf_files)
@@ -842,7 +842,7 @@ class WorkflowLoader(BaseLoader):
 
         Handles a subworkflow job map event.
         """
-        self.log.trace("subwf_map: %s", linedata)
+        self.log.debug("subwf_map: %s", linedata)
 
         wf_id = self.wf_uuid_to_id(linedata["xwf.id"])
         subwf_id = self.wf_uuid_to_id(linedata["subwf.id"])
@@ -880,7 +880,7 @@ class WorkflowLoader(BaseLoader):
         """
         host = self.linedataToObject(linedata, Host())
 
-        self.log.trace("host: %s", host)
+        self.log.debug("host: %s", host)
 
         if self.hosts_written_cache == None:
             self.hosts_written_cache = {}
@@ -921,7 +921,7 @@ class WorkflowLoader(BaseLoader):
         This forces a flush after all of the static events
         have been processed.
         """
-        self.log.trace("static_end: %s", linedata)
+        self.log.debug("static_end: %s", linedata)
         if self._batch:
             self.hard_flush()
 
@@ -934,7 +934,7 @@ class WorkflowLoader(BaseLoader):
         so that the task id's can be retrieved for metadata population
         of tasks.
         """
-        self.log.trace("static_meta_start: %s", linedata)
+        self.log.debug("static_meta_start: %s", linedata)
         if self._batch:
             self.hard_flush()
 
@@ -945,7 +945,7 @@ class WorkflowLoader(BaseLoader):
 
         A NOOP method for events that are being ignored.
         """
-        self.log.trace("noop: %s", linedata)
+        self.log.debug("noop: %s", linedata)
 
     ####################################
     # DB helper/lookup/caching functions
@@ -1161,7 +1161,7 @@ class WorkflowLoader(BaseLoader):
         checks the cache to see if a job had already had its host_id,
         and if not, do the proper update and note it in the cache.
         """
-        self.log.trace("map_host_to_job_instance: %s", host)
+        self.log.debug("map_host_to_job_instance: %s", host)
 
         wf_id = self.wf_uuid_to_id(host.wf_uuid)
         cached_job_id = self.get_job_id(wf_id, host.exec_job_id)

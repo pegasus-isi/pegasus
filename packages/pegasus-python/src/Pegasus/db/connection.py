@@ -399,7 +399,7 @@ def connect_to_master_db(user=None):
 @event.listens_for(Engine, "connect")
 def _set_sqlite_pragma(conn, record):
     if isinstance(conn, SQLite3Connection):
-        log.trace("Turning on foreign keys")
+        log.debug("Turning on foreign keys")
         cursor = conn.cursor()
         cursor.execute("PRAGMA foreign_keys=ON;")
         cursor.close()

@@ -102,7 +102,7 @@ class BaseLoader:
         self.session.close()
 
     def check_connection(self, sub=False):
-        self.log.trace("Checking connection")
+        self.log.debug("Checking connection")
         try:
             self.session.connection().closed
         except exc.OperationalError as e:
