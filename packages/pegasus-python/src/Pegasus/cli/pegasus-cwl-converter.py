@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 
-import logging
 import argparse
-import sys
+import logging
 import os
-import shutil
+import sys
 from collections import namedtuple
 
+import cwl_utils.parser_v1_0 as cwl
 from yaml import Loader, load
 
 import Pegasus.DAX3 as dax
-import cwl_utils.parser_v1_0 as cwl
 
 log = logging.getLogger("logger")
 

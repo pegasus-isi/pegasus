@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-import sys
-import os
-import xml.sax.handler
-import xml.sax
-from optparse import OptionParser
 import colorsys
+import os
+import sys
+import xml.sax
+import xml.sax.handler
+from optparse import OptionParser
 
 COLORS = [
     "#1b9e77",
@@ -262,7 +262,6 @@ def parse_dagfile(fname):
     dagdir = os.path.dirname(fname)
     dag = DAG()
     jobs = dag.nodes
-    lastchild = None
     f = open(fname)
     for line in f.readlines():
         line = line.strip()
@@ -506,4 +505,3 @@ DAGMan file, or a Pegasus DAX file."""
 
 if __name__ == '__main__':
     main()
-

@@ -26,7 +26,6 @@ Usage: pegasus-analyzer [options]
 # Revision : $Revision: 2012 $
 
 
-import errno
 import logging
 import optparse
 import os
@@ -34,9 +33,7 @@ import re
 import subprocess
 import sys
 import tempfile
-import time
 import traceback
-from subprocess import getoutput, getstatusoutput
 
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import DBAdminError

@@ -17,9 +17,6 @@
 
 __author__ = "Rafael Ferreira da Silva"
 
-import os
-import subprocess
-import sys
 
 from Pegasus.db.admin import main
 

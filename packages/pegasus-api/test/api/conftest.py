@@ -16,9 +16,7 @@ def convert_yaml_schemas_to_json():
     """
     # get the path of the schema file with the given name
     path = os.path.dirname(os.path.realpath(__file__))
-    path = path.replace(
-        "packages/pegasus-api/test/api", "share/pegasus/schema/yaml"
-    )
+    path = path.replace("packages/pegasus-api/test/api", "share/pegasus/schema/yaml")
 
     json_schemas = {
         os.path.join(path, filename): os.path.join(

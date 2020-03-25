@@ -23,31 +23,30 @@ Usage: pegasus-monitord [options] dagoutfile
 #  limitations under the License.
 ##
 
-import os
-import re
-import sys
-import time
-import errno
 import atexit
-import shelve
-import signal
-import logging
 import calendar
 import datetime
+import errno
+import logging
 import optparse
+import os
+import re
+import shelve
+import signal
+import sys
+import time
 import traceback
-import subprocess
+
+from Pegasus.db import connection
+from Pegasus.monitoring import event_output as eo
+from Pegasus.monitoring import notifications
+from Pegasus.monitoring.workflow import MONITORD_RECOVER_FILE, Workflow
+from Pegasus.tools import properties, utils
 
 # Save our own basename
 prog_base = os.path.split(sys.argv[0])[1]
 
 
-from Pegasus.db import connection
-from Pegasus.tools import utils
-from Pegasus.tools import properties
-from Pegasus.monitoring.workflow import Workflow, MONITORD_RECOVER_FILE
-from Pegasus.monitoring import notifications
-from Pegasus.monitoring import event_output as eo
 
 utils.configureLogging()
 
@@ -705,7 +704,7 @@ def process_dagman_out(wf, log_line):
             # groups = jobid, schedid, jobstatus
             my_jobid = my_expr.group(1)
             my_sched_id = my_expr.group(2)
-            my_failure_type = my_expr.group(3)
+            my_expr.group(3)
             try:
                 my_jobstatus = int(my_expr.group(4))
             except ValueError:

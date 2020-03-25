@@ -22,22 +22,19 @@ Usage: pegasus-metadata [-h] [-v] [-c] {task,file,workflow} ... submit_dir
 #  limitations under the License.
 ##
 
-import subprocess
 
+import argparse
+import logging
+import os
 import sys
 
-import os
-
-import logging
-import argparse
-
-from Pegasus.tools import utils
 from Pegasus.db import connection
 from Pegasus.db.connection import ConnectionError, DBType
 from Pegasus.service.monitoring.queries import (
-    StampedeWorkflowQueries,
     StampedeDBNotFoundError,
+    StampedeWorkflowQueries,
 )
+from Pegasus.tools import utils
 
 
 def configure_logging(verbosity=0):

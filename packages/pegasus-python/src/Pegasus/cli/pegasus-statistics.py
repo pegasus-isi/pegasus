@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 
+import logging
+import optparse
 import os
 import re
 import sys
-import logging
-import optparse
-import subprocess
 import traceback
+
+from Pegasus.db import connection
+from Pegasus.db.workflow.stampede_statistics import StampedeStatistics
+from Pegasus.db.workflow.stampede_wf_statistics import StampedeWorkflowStatistics
+from Pegasus.plots_stats import utils as stats_utils
+from Pegasus.tools import utils
 
 root_logger = logging.getLogger()
 logger = logging.getLogger("pegasus-statistics")
 
 
-from Pegasus.tools import utils
-from Pegasus.plots_stats import utils as stats_utils
-from Pegasus.db import connection
-from Pegasus.db.workflow.stampede_statistics import StampedeStatistics
-from Pegasus.db.workflow.stampede_wf_statistics import StampedeWorkflowStatistics
 
 utils.configureLogging(level=logging.WARNING)
 
@@ -1401,7 +1401,6 @@ def print_individual_wf_job_stats(
     @param workflow_stats :  workflow statistics object reference
     @param workflow_id : workflow_id (title for the table)
     """
-    job_stats_dict = {}
     job_stats_list = []
     job_retry_count_dict = {}
 
@@ -1479,7 +1478,6 @@ def print_individual_wf_job_stats(
     job_status_str += "\n"
 
     # printing
-    content_list = []
     # find the pretty print length
     for job_stat in job_stats_list:
         job_det = job_stat.getFormattedJobStatistics()
@@ -2076,4 +2074,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

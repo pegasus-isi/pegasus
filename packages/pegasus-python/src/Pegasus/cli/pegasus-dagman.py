@@ -30,11 +30,17 @@ Usage: pegasus-dagman [options]
 __author__ = "Gaurang Mehta"
 __author__ = "Mats Rynge"
 
-import os, sys, signal, subprocess
 import logging
-import time
 import math
+import os
 import shutil
+import signal
+import subprocess
+import sys
+import time
+
+from Pegasus.tools import utils
+
 
 def find_prog(prog,dir=[]):
     def is_prog(fpath):
@@ -56,7 +62,6 @@ logger = logging.getLogger("pegasus-dagman")
 # Use pegasus-config to find our lib path
 print("Pegasus DAGMAN is %s" % sys.argv[0])
 
-from Pegasus.tools import utils
 utils.configureLogging()
 
 SLEEP_TIME = 15

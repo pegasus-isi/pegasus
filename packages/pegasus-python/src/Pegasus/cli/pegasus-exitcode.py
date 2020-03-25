@@ -27,8 +27,6 @@ the program is run with the same filename.out argument.
 #  limitations under the License.
 ##
 
-import os
-import subprocess
 import sys
 
 from Pegasus import exitcode

@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
-import logging
 import argparse
+import logging
 import sys
 from pathlib import Path, PurePath
-from urllib.parse import urlparse
 
 import cwl_utils.parser_v1_1 as cwl
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 
 from Pegasus import yaml
-from Pegasus.api import Transformation
-from Pegasus.api import Container
-from Pegasus.api import TransformationCatalog
-from Pegasus.api import ReplicaCatalog
-from Pegasus.api import Workflow
-from Pegasus.api import Job
-from Pegasus.api import File
+from Pegasus.api import (
+    Container,
+    File,
+    Job,
+    ReplicaCatalog,
+    Transformation,
+    TransformationCatalog,
+    Workflow,
+)
 from Pegasus.api.errors import DuplicateError
 
 log = logging.getLogger("logger")
