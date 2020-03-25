@@ -175,22 +175,18 @@ project:
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-common/htmlcov/
                   isShared: false
-              artifactDefinitions:
                 - name: Coverage Report - Pegasus API
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-api/htmlcov/
                   isShared: false
-              artifactDefinitions:
                 - name: Coverage Report - Pegasus DAX
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-dax-python/htmlcov/
                   isShared: false
-              artifactDefinitions:
                 - name: Coverage Report - Pegasus Worker
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-worker/htmlcov/
                   isShared: false
-              artifactDefinitions:
                 - name: Coverage Report - Pegasus WMS
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-python/htmlcov/
@@ -297,22 +293,18 @@ project:
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-common/htmlcov/
                   isShared: false
-              artifactDefinitions:
                 - name: Coverage Report - Pegasus API
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-api/htmlcov/
                   isShared: false
-              artifactDefinitions:
                 - name: Coverage Report - Pegasus DAX
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-dax-python/htmlcov/
                   isShared: false
-              artifactDefinitions:
                 - name: Coverage Report - Pegasus Worker
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-worker/htmlcov/
                   isShared: false
-              artifactDefinitions:
                 - name: Coverage Report - Pegasus WMS
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-python/htmlcov/
@@ -538,22 +530,18 @@ project:
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-common/htmlcov/
                   isShared: false
-              artifactDefinitions:
                 - name: Coverage Report - Pegasus API
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-api/htmlcov/
                   isShared: false
-              artifactDefinitions:
                 - name: Coverage Report - Pegasus DAX
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-dax-python/htmlcov/
                   isShared: false
-              artifactDefinitions:
                 - name: Coverage Report - Pegasus Worker
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-worker/htmlcov/
                   isShared: false
-              artifactDefinitions:
                 - name: Coverage Report - Pegasus WMS
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-python/htmlcov/
@@ -660,22 +648,18 @@ project:
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-common/htmlcov/
                   isShared: false
-              artifactDefinitions:
                 - name: Coverage Report - Pegasus API
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-api/htmlcov/
                   isShared: false
-              artifactDefinitions:
                 - name: Coverage Report - Pegasus DAX
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-dax-python/htmlcov/
                   isShared: false
-              artifactDefinitions:
                 - name: Coverage Report - Pegasus Worker
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-worker/htmlcov/
                   isShared: false
-              artifactDefinitions:
                 - name: Coverage Report - Pegasus WMS
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-python/htmlcov/
@@ -783,22 +767,18 @@ project:
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-common/htmlcov/
                   isShared: false
-              artifactDefinitions:
                 - name: Coverage Report - Pegasus API
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-api/htmlcov/
                   isShared: false
-              artifactDefinitions:
                 - name: Coverage Report - Pegasus DAX
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-dax-python/htmlcov/
                   isShared: false
-              artifactDefinitions:
                 - name: Coverage Report - Pegasus Worker
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-worker/htmlcov/
                   isShared: false
-              artifactDefinitions:
                 - name: Coverage Report - Pegasus WMS
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-python/htmlcov/
@@ -906,22 +886,18 @@ project:
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-common/htmlcov/
                   isShared: false
-              artifactDefinitions:
                 - name: Coverage Report - Pegasus API
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-api/htmlcov/
                   isShared: false
-              artifactDefinitions:
                 - name: Coverage Report - Pegasus DAX
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-dax-python/htmlcov/
                   isShared: false
-              artifactDefinitions:
                 - name: Coverage Report - Pegasus Worker
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-worker/htmlcov/
                   isShared: false
-              artifactDefinitions:
                 - name: Coverage Report - Pegasus WMS
                   copyPattern: '*'
                   location: pegasus-source/packages/pegasus-python/htmlcov/
