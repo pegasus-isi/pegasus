@@ -202,7 +202,11 @@ def build_pegasus_tc(tr_specs: dict, cwl_wf: cwl.Workflow) -> TransformationCata
         tool_path = PurePath(cwl_cmd_ln_tool.baseCommand)
 
         if not tool_path.is_absolute():
-            raise ValueError("{}.baseCommand: {} must be an absolute path")
+            raise ValueError(
+                "{}.baseCommand: {} must be an absolute path".format(
+                    cwl_cmd_ln_tool.id, cwl_cmd_ln_tool.baseCommand
+                )
+            )
 
         log.debug("baseCommand: {}".format(tool_path))
 
