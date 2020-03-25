@@ -33,7 +33,8 @@ steps:
     get_sizes:
         run: get_file_sizes.cwl
         in:
-            files: [compile_1/object_file, compile_2/object_file]
+            file1: compile_1/object_file
+            file2: compile_2/object_file
         out: [file_sizes]
 
 requirements:

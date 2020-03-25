@@ -1,12 +1,17 @@
 #!/usr/bin/env cwl-runner
 cwlVersion: v1.0
 class: CommandLineTool
-baseCommand: get_file_sizes.sh
+baseCommand: $INPUT_DIR/get_file_sizes.sh
 inputs:
-    files:
-        type: File[]
+    file1:
+        type: File
         inputBinding:
             position: 0
+    
+    file2:
+        type: File
+        inputBinding:
+            position: 1
 
 outputs:
     file_sizes:
