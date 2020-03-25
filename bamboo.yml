@@ -168,7 +168,7 @@ project:
                       pegasus/pegasus:${TAG} test-python
                 - !junitParser
                   description: Pare Test Report
-                  testResultsDirectory: pegasus-source/lib/pegasus/python/test-reports/*.xml
+                  testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
                   pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDefinitions:
                 - name: HTML Coverage Report
@@ -270,7 +270,7 @@ project:
                       pegasus/pegasus:${TAG} test-python
                 - !junitParser
                   description: Pare Test Report
-                  testResultsDirectory: pegasus-source/lib/pegasus/python/test-reports/*.xml
+                  testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
                   pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDefinitions:
                 - name: HTML Coverage Report
@@ -491,7 +491,7 @@ project:
                       pegasus/pegasus:${TAG} test-python
                 - !junitParser
                   description: Pare Test Report
-                  testResultsDirectory: pegasus-source/lib/pegasus/python/test-reports/*.xml
+                  testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
                   pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDefinitions:
                 - name: HTML Coverage Report
@@ -593,7 +593,7 @@ project:
                       pegasus/pegasus:${TAG} test-python
                 - !junitParser
                   description: Pare Test Report
-                  testResultsDirectory: pegasus-source/lib/pegasus/python/test-reports/*.xml
+                  testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
                   pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDefinitions:
                 - name: HTML Coverage Report
@@ -696,7 +696,7 @@ project:
                       pegasus/pegasus:${TAG} test-python
                 - !junitParser
                   description: Pare Test Report
-                  testResultsDirectory: pegasus-source/lib/pegasus/python/test-reports/*.xml
+                  testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
                   pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDefinitions:
                 - name: HTML Coverage Report
@@ -799,7 +799,7 @@ project:
                       pegasus/pegasus:${TAG} test-python
                 - !junitParser
                   description: Pare Test Report
-                  testResultsDirectory: pegasus-source/lib/pegasus/python/test-reports/*.xml
+                  testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
                   pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDefinitions:
                 - name: HTML Coverage Report
