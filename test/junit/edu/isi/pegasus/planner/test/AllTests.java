@@ -23,6 +23,7 @@ import org.junit.runners.Suite;
     edu.isi.pegasus.common.util.VersionTest.class,
     edu.isi.pegasus.common.util.PegasusURLTest.class,
     edu.isi.pegasus.planner.namespace.PegasusTest.class,
+    edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStoreTest.class,
     edu.isi.pegasus.planner.catalog.replica.impl.RegexRCTest.class,
     edu.isi.pegasus.planner.catalog.replica.impl.JDBCRCTest.class,
     edu.isi.pegasus.planner.catalog.replica.impl.SimpleFileTest.class,
