@@ -452,7 +452,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
   <target name="compile-r" description="Compile R DAX API">
       <mkdir dir="${dist.share}/r"/>
-      <exec executable="./setup.sh" dir="lib/pegasus/r/Pegasus" failonerror="true">
+      <exec executable="./setup.sh" dir="packages/pegasus-dax-r/Pegasus" failonerror="true">
         <arg line="${dist.share}/r" />
       </exec>
   </target>
