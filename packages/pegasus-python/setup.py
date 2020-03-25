@@ -115,5 +115,9 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=install_requires,
-    extras_require={"postgresql": ["psycopg2"], "mysql": [], "cwl": ["cwl-utils"]},
+    extras_require={
+        "postgresql": ["psycopg2"],
+        "mysql": [],
+        "cwl": ["cwl-utils==0.3", "jsonschema==3.2.0"],
+    },
 )
