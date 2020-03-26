@@ -86,30 +86,23 @@ public abstract class PegasusJsonDeserializer<T> extends JsonDeserializer<T> {
                 .append(node.toString());
         throw getException(sb.toString());
     }
-
+    
     /**
-     * Creates a profile from a JSON node representing
+     * Creates a metadata key value pairs as profiles
      *
      * <pre>
-     *  env:
-     *      APP_HOME: "/tmp/myscratch"
-     *      JAVA_HOME: "/opt/java/1.6"
-     *  pegasus:
-     *      clusters.num: "1"
+     * APP_HOME: "/tmp/myscratch"
+     * JAVA_HOME: "/opt/java/1.6"
      * </pre>
      *
+     * @param namespace
      * @param node
      * @return Profiles
      */
-    protected Profiles createProfiles(JsonNode node) {
-        Profiles profiles = new Profiles();
-        for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
-            Map.Entry<String, JsonNode> entry = it.next();
-            profiles.addProfilesDirectly(this.createProfiles(entry.getKey(), entry.getValue()));
-        }
-        return profiles;
+    protected List<Profile> createMetadata(JsonNode node) {
+        return this.createProfiles("metadata", node);
     }
-
+    
     /**
      * Creates a profile from a JSON node representing
      *
@@ -135,7 +128,7 @@ public abstract class PegasusJsonDeserializer<T> extends JsonDeserializer<T> {
         }
         return profiles;
     }
-
+    
     /**
      * Creates a notifications object
      *
@@ -162,8 +155,8 @@ public abstract class PegasusJsonDeserializer<T> extends JsonDeserializer<T> {
      *
      * <p>- on: start cmd: /bin/date
      *
-     * @param key
-     * @param value
+     * @param type
+     * @param node
      * @return
      */
     protected Notifications createNotifications(String type, JsonNode node) {

@@ -202,6 +202,10 @@ class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transforma
                         throw new CatalogException("sites: value should be of type array ");
                     }
                     break;
+                    
+                case METADATA:
+                    base.addProfiles(this.createMetadata(node.get(key)));
+                    break;
 
                 default:
                     this.complainForUnsupportedKey(
@@ -290,11 +294,7 @@ class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transforma
 
                 case METADATA:
                     entry.addProfiles(
-                            this.createProfiles(
-                                    "metadata",
-                                    node.get(
-                                            TransformationCatalogKeywords.METADATA
-                                                    .getReservedName())));
+                            this.createMetadata(node.get(key)));
                     break;
 
                 case SITE_PFN:

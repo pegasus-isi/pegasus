@@ -97,6 +97,37 @@ public class TransformationTest {
         expected.addProfile(new Profile("pegasus", "clusters.num", "1"));
         assertEquals(expected, actual);
     }
+    
+    @Test
+    public void testBaseTransformationWithProfilesandMetadData() throws IOException {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+
+        String test =
+                "namespace: \"example\"\n"
+                        + "name: \"keg\"\n"
+                        + "version: \"1.0\"\n"
+                        + "metadata:\n"
+                        + "  user: \"karan\"\n"
+                        + "profiles:\n"
+                        + "  env:\n"
+                        + "    APP_HOME: \"/tmp/myscratch\"\n"
+                        + "    JAVA_HOME: \"/opt/java/1.6\"\n"
+                        + "  pegasus:\n"
+                        + "    clusters.num: \"1\"\n";
+
+        Transformation tx = mapper.readValue(test, Transformation.class);
+        assertNotNull(tx);
+        assertEquals(1, tx.getTransformationCatalogEntries().size());
+        TransformationCatalogEntry actual = tx.getTransformationCatalogEntries().get(0);
+        TransformationCatalogEntry expected =
+                new TransformationCatalogEntry("example", "keg", "1.0");
+        expected.addProfile(new Profile("env", "APP_HOME", "/tmp/myscratch"));
+        expected.addProfile(new Profile("env", "JAVA_HOME", "/opt/java/1.6"));
+        expected.addProfile(new Profile("pegasus", "clusters.num", "1"));
+        expected.addProfile(new Profile("metadata", "user", "karan"));
+        assertEquals(expected, actual);
+    }
 
     @Test
     public void testBaseTransformationWithHooks() throws IOException {
