@@ -20,6 +20,15 @@ package edu.isi.pegasus.planner.common;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import edu.isi.pegasus.planner.catalog.CatalogException;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
+import edu.isi.pegasus.planner.classes.Notifications;
+import edu.isi.pegasus.planner.classes.Profile;
+import edu.isi.pegasus.planner.dax.Invoke;
+import edu.isi.pegasus.planner.namespace.Namespace;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Abstract Class for Deserializers for parsing YAML objects with convenient
@@ -78,6 +87,104 @@ public abstract class PegasusJsonDeserializer<T> extends JsonDeserializer<T> {
         throw getException(sb.toString());
     }
 
+    /**
+     * Creates a profile from a JSON node representing
+     *
+     * <pre>
+     *  env:
+     *      APP_HOME: "/tmp/myscratch"
+     *      JAVA_HOME: "/opt/java/1.6"
+     *  pegasus:
+     *      clusters.num: "1"
+     * </pre>
+     *
+     * @param node
+     * @return Profiles
+     */
+    protected Profiles createProfiles(JsonNode node) {
+        Profiles profiles = new Profiles();
+        for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
+            Map.Entry<String, JsonNode> entry = it.next();
+            profiles.addProfilesDirectly(this.createProfiles(entry.getKey(), entry.getValue()));
+        }
+        return profiles;
+    }
+
+    /**
+     * Creates a profile from a JSON node representing
+     *
+     * <pre>
+     * APP_HOME: "/tmp/myscratch"
+     * JAVA_HOME: "/opt/java/1.6"
+     * </pre>
+     *
+     * @param namespace
+     * @param node
+     * @return Profiles
+     */
+    protected List<Profile> createProfiles(String namespace, JsonNode node) {
+        List<Profile> profiles = new LinkedList();
+        if (Namespace.isNamespaceValid(namespace)) {
+            for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
+                Map.Entry<String, JsonNode> entry = it.next();
+                profiles.add(new Profile(namespace, entry.getKey(), entry.getValue().asText()));
+            }
+        } else {
+            throw new CatalogException(
+                    "Invalid namespace specified " + namespace + " for profiles " + node);
+        }
+        return profiles;
+    }
+
+    /**
+     * Creates a notifications object
+     *
+     * <pre>
+     *   shell:
+     *        - on: start
+     *          cmd: /bin/date
+     * </pre>
+     *
+     * @param node
+     * @return
+     */
+    protected Notifications createNotifications(JsonNode node) {
+        Notifications n = new Notifications();
+        for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
+            Map.Entry<String, JsonNode> entry = it.next();
+            n.addAll(this.createNotifications(entry.getKey(), entry.getValue()));
+        }
+        return n;
+    }
+
+    /**
+     * Parses an array of notifications of same type
+     *
+     * <p>- on: start cmd: /bin/date
+     *
+     * @param key
+     * @param value
+     * @return
+     */
+    protected Notifications createNotifications(String type, JsonNode node) {
+        Notifications notifications = new Notifications();
+        if (type.equals("shell")) {
+            if (node.isArray()) {
+                for (JsonNode hook : node) {
+                    notifications.add(
+                            new Invoke(
+                                    Invoke.WHEN.valueOf(hook.get("_on").asText()),
+                                    hook.get("cmd").asText()));
+                }
+            } else {
+                throw new CatalogException("Expected an array of hooks " + node);
+            }
+        } else {
+            throw new CatalogException("Unsupported notifications of type " + type + " - " + node);
+        }
+        return notifications;
+    }
+    
     /**
      * The exception to be thrown while deserializing on error
      *
