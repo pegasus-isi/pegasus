@@ -23,8 +23,8 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteDataJsonDeserializer;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteDataJsonSerializer;
 import edu.isi.pegasus.planner.classes.Profile;
+import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.ENV;
@@ -542,7 +542,7 @@ class ProfilesDeserializer extends SiteDataJsonDeserializer<Profiles> {
  *
  * @author Karan Vahi
  */
-class ProfilesSerializer extends SiteDataJsonSerializer<Profiles> {
+class ProfilesSerializer extends PegasusJsonSerializer<Profiles> {
 
     public ProfilesSerializer() {}
 

@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
+import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Iterator;
@@ -228,7 +229,7 @@ class FileServerDeserializer extends SiteDataJsonDeserializer<FileServer> {
  *
  * @author Karan Vahi
  */
-class FileServerSerializer extends SiteDataJsonSerializer<FileServer> {
+class FileServerSerializer extends PegasusJsonSerializer<FileServer> {
 
     public FileServerSerializer() {}
 

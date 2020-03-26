@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.isi.pegasus.planner.catalog.classes;
+package edu.isi.pegasus.planner.common;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
@@ -11,12 +11,13 @@ import java.io.IOException;
 import java.util.Collection;
 
 /**
- * Base class from which all Catalog Data objects serializers extend
+ * Abstract Class for Serializers for serializing YAML objects with convenient
+ * helper methods
  *
  * @author Karan Vahi
  * @param <T>
  */
-public abstract class CatalogEntryJsonSerializer<T> extends JsonSerializer<T> {
+public abstract class PegasusJsonSerializer<T> extends JsonSerializer<T> {
 
     /**
      * Writes out only if value is not null and non empty
@@ -60,4 +61,5 @@ public abstract class CatalogEntryJsonSerializer<T> extends JsonSerializer<T> {
             gen.writeNumberField(key, value);
         }
     }
+    
 }

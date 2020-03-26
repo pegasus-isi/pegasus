@@ -37,6 +37,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2VDSSysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegRandom;
+import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
@@ -945,7 +946,7 @@ class SiteCatalogEntryDeserializer extends SiteDataJsonDeserializer<SiteCatalogE
  *
  * @author Karan Vahi
  */
-class SiteCatalogEntrySerializer extends SiteDataJsonSerializer<SiteCatalogEntry> {
+class SiteCatalogEntrySerializer extends PegasusJsonSerializer<SiteCatalogEntry> {
 
     public SiteCatalogEntrySerializer() {}
 

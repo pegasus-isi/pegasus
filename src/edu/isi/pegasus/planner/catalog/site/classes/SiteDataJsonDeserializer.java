@@ -17,9 +17,8 @@
  */
 package edu.isi.pegasus.planner.catalog.site.classes;
 
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
+import edu.isi.pegasus.planner.common.PegasusJsonDeserializer;
 
 /**
  * Abstract Class for Deserializers for parsing Site Catalog YAML Spec
@@ -31,56 +30,17 @@ import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
  *
  * @author Karan Vahi
  */
-public abstract class SiteDataJsonDeserializer<T> extends JsonDeserializer<T> {
+public abstract class SiteDataJsonDeserializer<T> extends PegasusJsonDeserializer<T> {
+ 
     /**
-     * Throw an exception for Illegal Key
+     * The exception to be thrown while deserializing on error
      *
-     * @param prefix
-     * @param element
-     * @param node
-     * @param key
-     * @throws SiteCatalogException
-     */
-    public void complainForIllegalKey(String element, String key, JsonNode node)
-            throws SiteCatalogException {
-        this.complain("Illegal key", element, key, node);
-    }
-
-    /**
-     * Throw an exception for Illegal Key
+     * @param message the error message
      *
-     * @param prefix
-     * @param element
-     * @param key
-     * @param node
-     * @throws SiteCatalogException
+     * @return
      */
-    public void complainForUnsupportedKey(String element, String key, JsonNode node)
-            throws SiteCatalogException {
-        this.complain("Unsupported key", element, key, node);
-    }
-
-    /**
-     * Throw an exception
-     *
-     * @param prefix
-     * @param element
-     * @param key
-     * @param node
-     * @throws SiteCatalogException
-     */
-    public void complain(String prefix, String element, String key, JsonNode node)
-            throws SiteCatalogException {
-        StringBuilder sb = new StringBuilder();
-        sb.append(prefix)
-                .append(" ")
-                .append(key)
-                .append(" ")
-                .append("for element")
-                .append(" ")
-                .append(element)
-                .append(" - ")
-                .append(node.toString());
-        throw new SiteCatalogException(sb.toString());
+    @Override
+    public RuntimeException getException(String message){
+        return new SiteCatalogException(message);
     }
 }

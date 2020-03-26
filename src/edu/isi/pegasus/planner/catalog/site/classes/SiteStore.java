@@ -35,6 +35,7 @@ import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.OutputMapperFactory;
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -922,7 +923,7 @@ class SiteStoreDeserializer extends SiteDataJsonDeserializer<SiteStore> {
  *
  * @author Karan Vahi
  */
-class SiteStoreSerializer extends SiteDataJsonSerializer<SiteStore> {
+class SiteStoreSerializer extends PegasusJsonSerializer<SiteStore> {
 
     public SiteStoreSerializer() {}
 

@@ -33,6 +33,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
+import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Iterator;
@@ -443,7 +444,7 @@ class DirectoryDeserializer extends SiteDataJsonDeserializer<Directory> {
  *
  * @author Karan Vahi
  */
-class DirectorySerializer extends SiteDataJsonSerializer<Directory> {
+class DirectorySerializer extends PegasusJsonSerializer<Directory> {
 
     public DirectorySerializer() {}
 

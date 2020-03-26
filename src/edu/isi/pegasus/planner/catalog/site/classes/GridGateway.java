@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Iterator;
@@ -580,7 +581,7 @@ class GridGatewayDeserializer extends SiteDataJsonDeserializer<GridGateway> {
  *
  * @author Karan Vahi
  */
-class GridGatewaySerializer extends SiteDataJsonSerializer<GridGateway> {
+class GridGatewaySerializer extends PegasusJsonSerializer<GridGateway> {
 
     public GridGatewaySerializer() {}
 
