@@ -1,6 +1,10 @@
 import os
 import subprocess
 
+# need the externals for the correct version of setuptools
+import sys
+sys.path.insert(0, '../../lib/pegasus/externals/python')
+
 from setuptools import find_namespace_packages, setup
 
 src_dir = os.path.dirname(__file__)
@@ -116,4 +120,6 @@ setup(
     zip_safe=False,
     install_requires=install_requires,
     extras_require={"postgresql": ["psycopg2"], "mysql": [], "cwl": ["cwl-utils"]},
+    use_2to3=False,
+    convert_2to3_doctests=[]
 )
