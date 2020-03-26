@@ -1,20 +1,15 @@
 /**
  * Copyright 2007-2008 University Of Southern California
  *
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package edu.isi.pegasus.planner.parser.dax;
 
@@ -29,7 +24,6 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
 import edu.isi.pegasus.planner.classes.WorkflowKeywords;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
@@ -41,16 +35,11 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author Karan Vahi
- */
+/** @author Karan Vahi */
 @JsonDeserialize(using = DAXParser5.YAMLStreamingDeserializer.class)
 public class DAXParser5 implements DAXParser {
 
-    /**
-     * Handle to the callback
-     */
+    /** Handle to the callback */
     protected Callback mCallback;
 
     /**
@@ -85,27 +74,25 @@ public class DAXParser5 implements DAXParser {
     }
 
     /**
-     * Set the Callback as an injectable value to insert into the Deserializer
-     * via Jackson.
+     * Set the Callback as an injectable value to insert into the Deserializer via Jackson.
      *
      * @return
      */
     private InjectableValues injectCallback() {
-        return new InjectableValues.Std()
-                .addValue("callback", this.mCallback);
+        return new InjectableValues.Std().addValue("callback", this.mCallback);
     }
 
     /**
-     * Deserializer class that preserves the callback interface used for parsing
-     * the XML parsers. Invokes callback functions during deserialization of the 
-     * document.
+     * Deserializer class that preserves the callback interface used for parsing the XML parsers.
+     * Invokes callback functions during deserialization of the document.
      *
      * @author Karan Vahi
      */
     static class YAMLStreamingDeserializer extends JsonDeserializer<DAXParser5> {
 
         @Override
-        public DAXParser5 deserialize(JsonParser parser, DeserializationContext dc) throws IOException, JsonProcessingException {
+        public DAXParser5 deserialize(JsonParser parser, DeserializationContext dc)
+                throws IOException, JsonProcessingException {
             Callback c = (Callback) dc.findInjectableValue("callback", null, null);
             if (c == null) {
                 throw new RuntimeException("Callback not initialized when parsing inititated");
@@ -113,7 +100,7 @@ public class DAXParser5 implements DAXParser {
             ObjectCodec oc = parser.getCodec();
             JsonNode node = oc.readTree(parser);
 
-            for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext();) {
+            for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
                 Map.Entry<String, JsonNode> e = it.next();
                 String key = e.getKey();
                 WorkflowKeywords reservedKey = WorkflowKeywords.getReservedKey(key);
@@ -134,11 +121,10 @@ public class DAXParser5 implements DAXParser {
                             System.err.println(store);
                         }
                         break;
-                    
-                    default:
-                    this.complainForUnsupportedKey(
-                            WorkflowKeywords.WORKFLOW.getReservedName(), key, node);
 
+                    default:
+                        this.complainForUnsupportedKey(
+                                WorkflowKeywords.WORKFLOW.getReservedName(), key, node);
                 }
             }
             return null;
@@ -194,7 +180,6 @@ public class DAXParser5 implements DAXParser {
                     .append(node.toString());
             throw new RuntimeException(sb.toString());
         }
-
     }
 
     public static void main(String[] args) {
@@ -207,5 +192,4 @@ public class DAXParser5 implements DAXParser {
             Logger.getLogger(DAXParser5.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
 }
