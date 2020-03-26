@@ -1,7 +1,7 @@
+import importlib
 import json
 import logging
 from collections import namedtuple
-import importlib
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 

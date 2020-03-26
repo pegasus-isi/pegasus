@@ -70,7 +70,7 @@ def find_namespace_packages(where):
     for root, dirs, _ in os.walk(where):
         root = root[len(where) + 1 :]
         for pkg in dirs:
-            if pkg == where or pkg.endswith(".egg-info"):
+            if pkg == where or pkg.endswith(".egg-info") or pkg == "__pycache__":
                 continue
 
             pkgs.append(os.path.join(root, pkg).replace("/", "."))
