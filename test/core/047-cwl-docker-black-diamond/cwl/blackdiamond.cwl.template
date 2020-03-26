@@ -1,0 +1,123 @@
+cwlVersion: v1.1
+class: Workflow
+inputs:
+    f.a: File
+outputs:
+    final_output:
+        type: File
+        outputSource: analyze/of
+steps:
+    preprocess:
+        run:
+            cwlVersion: v1.1
+            class: CommandLineTool
+            baseCommand: $PEGASUS_LOCAL_BIN_DIR/pegasus-keg
+            arguments: ["-a", "preprocess", "-T60", "-o", "f.b1", "-o", "f.b2"]
+            requirements:
+                DockerRequirement:
+                    dockerPull: opensciencegrid/osgvo-el7
+            inputs:
+                if:
+                    type: File
+                    inputBinding:
+                        prefix: -i
+                        separate: true
+                        position: 0
+            outputs:
+                of1:
+                    type: File
+                    outputBinding:
+                        glob: f.b1
+                
+                of2:
+                    type: File
+                    outputBinding:
+                        glob: f.b2
+
+        in:
+            if: f.a
+        out: [of1, of2]
+
+    findrange1:
+        run:
+            cwlVersion: v1.1
+            class: CommandLineTool
+            baseCommand: $PEGASUS_LOCAL_BIN_DIR/pegasus-keg
+            arguments: ["-a", "findrange", "-T60", "-o", "f.c1"]
+            requirements:
+                DockerRequirement:
+                    dockerPull: opensciencegrid/osgvo-el7
+            inputs:
+                if:
+                    type: File
+                    inputBinding:
+                        prefix: -i
+                        separate: true
+                        position: 0
+
+            outputs:
+                of:
+                    type: File
+                    outputBinding:
+                        glob: f.c1
+        in:
+            if: preprocess/of1
+        out: [of]
+
+    findrange2:
+        run:
+            cwlVersion: v1.1
+            class: CommandLineTool
+            baseCommand: $PEGASUS_LOCAL_BIN_DIR/pegasus-keg
+            arguments: ["-a", "findrange", "-T60", "-o", "f.c2"]
+            requirements:
+                DockerRequirement:
+                    dockerPull: opensciencegrid/osgvo-el7
+            inputs:
+                if:
+                    type: File
+                    inputBinding:
+                        prefix: -i
+                        separate: true
+                        position: 0
+
+            outputs:
+                of:
+                    type: File
+                    outputBinding:
+                        glob: f.c2
+        in:
+            if: preprocess/of2
+        out: [of]
+
+    analyze:
+        run:
+            cwlVersion: v1.1
+            class: CommandLineTool
+            baseCommand: $PEGASUS_LOCAL_BIN_DIR/pegasus-keg
+            arguments: ["-a", "analyze", "-T60", "-o", "f.d"]
+            requirements:
+                DockerRequirement:
+                    dockerPull: opensciencegrid/osgvo-el7
+            inputs:
+                if1:
+                    type: File
+                    inputBinding:
+                        prefix: -i
+                        separate: true
+                        position: 0
+                
+                if2:
+                    type: File
+                    inputBinding:
+                        position: 1
+
+            outputs:
+                of:
+                    type: File
+                    outputBinding:
+                        glob: f.d  
+        in:
+            if1: findrange1/of
+            if2: findrange2/of
+        out: [of]
