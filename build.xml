@@ -424,7 +424,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
          includes="pegasus-${pegasus.version}/share/man/**,pegasus-${pegasus.version}/share/doc/**"/>
   </target>
 
-  <target name="compile-python" depends="dist-clean,setup,compile-externals">
+  <target name="compile-python" depends="dist-clean,setup">
     <mkdir dir="${dist.python-lib}"/>
     <exec executable="${dist.python}" dir="packages/pegasus-common" failonerror="true">
       <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
