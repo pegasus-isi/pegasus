@@ -120,7 +120,7 @@ setup(
     zip_safe=False,
     install_requires=install_requires,
     use_2to3=False,
-    convert_2to3_doctests=[]
+    convert_2to3_doctests=[],
     extras_require={
         "postgresql": ["psycopg2"],
         "mysql": [],
