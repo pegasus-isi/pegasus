@@ -1,11 +1,8 @@
 import os
 import subprocess
 
-# need the externals for the correct version of setuptools
-import sys
-sys.path.insert(0, '../../lib/pegasus/externals/python')
 
-from setuptools import find_namespace_packages, setup
+from setuptools import setup
 
 src_dir = os.path.dirname(__file__)
 home_dir = os.path.abspath(os.path.join(src_dir, "../.."))
@@ -34,6 +31,20 @@ def read_version():
 #
 def read(fname):
     return open(os.path.join(src_dir, fname)).read()
+
+
+# TODO: Someday remove this method and replace with setuptools.find_namespace_packages
+def find_namespace_packages(where):
+    pkgs = []
+    for root, dirs, _ in os.walk(where):
+        root = root[len(where) + 1 :]
+        for pkg in dirs:
+            if pkg == where or pkg.endswith(".egg-info"):
+                continue
+
+            pkgs.append(os.path.join(root, pkg).replace("/", "."))
+
+    return pkgs
 
 
 setup(

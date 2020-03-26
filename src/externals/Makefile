@@ -10,7 +10,6 @@ OSID:=$(shell $(CURDIR)/../../release-tools/getosid)
 EXTDIR=$(prefix)/lib/pegasus/externals
 LIBDIR=$(EXTDIR)/python
 
-PACKAGES=setuptools
 PACKAGES+=sqlalchemy
 PACKAGES+=attrs
 PACKAGES+=click
@@ -76,7 +75,6 @@ $(LIBDIR)/pamela: pamela-1.0.0.tar.gz
 $(LIBDIR)/pika: pika-1.1.0.tar.gz
 $(LIBDIR)/pyjwt: pyjwt-1.5.3.tar.gz
 $(LIBDIR)/requests: requests-2.18.4.tar.gz
-$(LIBDIR)/setuptools: setuptools-45.3.0.zip
 $(LIBDIR)/six: six-1.12.0.tar.gz
 $(LIBDIR)/sqlalchemy: SQLAlchemy-1.3.10.tar.gz
 $(LIBDIR)/urllib3: urllib3-1.22.tar.gz
