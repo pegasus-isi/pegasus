@@ -1,24 +1,37 @@
 #!/usr/bin/env python3
-
 import argparse
 import logging
-import os
 import sys
-from collections import namedtuple
+from pathlib import Path, PurePath
 
-import cwl_utils.parser_v1_0 as cwl
-from yaml import Loader, load
+import cwl_utils.parser_v1_1 as cwl
+from jsonschema import validate
+from jsonschema.exceptions import ValidationError
 
-import Pegasus.DAX3 as dax
+from Pegasus import yaml
+from Pegasus.api import (
+    Container,
+    File,
+    Job,
+    ReplicaCatalog,
+    Transformation,
+    TransformationCatalog,
+    Workflow,
+)
+from Pegasus.api.errors import DuplicateError
 
 log = logging.getLogger("logger")
 
-# --- script setup -------------------------------------------------------------------
+# --- logging ------------------------------------------------------------------
 class ColoredFormatter(logging.Formatter):
     # printing debug level logs in yellow
+    debug_format_colored = (
+        "\u001b[33m%(asctime)s %(levelname)7s:  [%(funcName)s:%(lineno)d] "
+        "%(message)s \u001b[0m"
+    )
+
     debug_format = (
-        "\u001b[33m%(asctime)s %(levelname)7s:  "
-        "%(message)s at line %(lineno)d: \u001b[0m"
+        "%(asctime)s %(levelname)7s:  [%(funcName)s:%(lineno)d] " "%(message)s"
     )
 
     def __init__(self):
@@ -30,6 +43,8 @@ class ColoredFormatter(logging.Formatter):
         fmt_orig = self._style._fmt
 
         if record.levelno == logging.DEBUG:
+            self._style._fmt = ColoredFormatter.debug_format_colored
+        else:
             self._style._fmt = ColoredFormatter.debug_format
 
         # Call the original formatter class to do the grunt work
@@ -61,17 +76,31 @@ def setup_logger(debug_flag):
     log.debug("Logger has been configured")
 
 
+# --- args ---------------------------------------------------------------------
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Converts a cwl workflow into the Pegasus DAX format."
+        description=(
+            "Converts a cwl workflow into Pegasus's native format.\n"
+            "Note that this is a best-effort conversion and minor adjustments may\n"
+            "be needed for proper execution."
+        )
     )
     parser.add_argument(
         "cwl_workflow_file_path",
         help="Path to the file containing the CWL Workflow class.",
     )
     parser.add_argument(
-        "input_file_spec_path", help="YAML file describing the workflow inputs."
+        "workflow_inputs_file_path", help="YAML file describing the workflow inputs."
     )
+
+    parser.add_argument(
+        "transformation_spec_file_path",
+        help=(
+            "YAML file describing pegasus specific transformation properties.\n"
+            "Given in the following format: {<tr name>: {site: <site name>, is_stageable: <bool>}, ...}"
+        ),
+    )
+
     parser.add_argument(
         "output_file_path", help="Desired path of the generated DAX file."
     )
@@ -87,355 +116,491 @@ def parse_args():
     return parser.parse_args()
 
 
-# --- utility functions --------------------------------------------------------------
+# --- cwl -> pegasus conversion functions --------------------------------------
 
 
 def get_basename(name):
-    """
-    Get the basename of a cwl object. The id of a cwl object using cwl_utils
-    is in the format <file URI>#<field name> where <field name> could be the
-    name of the object itself or "<parent object>/<field name>". For example,
-    name could be one of the following:
-
-    file:///Users/ryantanaka/ISI/cwl-to-dax-reference/compile-multipart-workflow/workflow.cwl#tarball
-    file:///Users/ryantanaka/ISI/cwl-to-dax-reference/compile-multipart-workflow/workflow.cwl#untar/to_extract
-
-    As such, basename would return "tarball" and "untar/to_exctract" respectively.
-    """
-    basename = name.split("#")[1]
-    return basename
+    return name.split("#")[1]
 
 
-def get_name(namespace_id, field_id):
-    """
-    Helper function to get names of cwl objects when they are referenced in
-    separate files. For example, say we have the following step in the "steps"
-    field of a cwl document of class "Workflow":
-
-    --------------------------------------
-    compile_1:
-        run: compile_1.cwl
-        in:
-            src: untar/source_file_1
-        out: [object_file]
-    --------------------------------------
-
-    Also, say that "tar.cwl" has the following contents:
-
-    --------------------------------------
-    class: CommandLineTool
-    baseCommand: /usr/bin/gcc
-    arguments: ["-std=c++11", "-o", "source_1.o"]
-
-    inputs:
-        src:
-            type: File
-            inputBinding:
-                prefix: -c
-                separate: true
-                position: 1
-
-    outputs:
-        object_file:
-            type: File
-            outputBinding:
-                glob: "source_1.o"
-    --------------------------------------
-
-    When iterating over the workflow step "compile_1", and then into
-    "compile_1.cwl", the names that we will use for everything in
-    "compile_1.cwl" should be prefixed with "compile_1/".
-    """
-    return get_basename(namespace_id) + "/" + get_basename(field_id)
+def get_name(parent_id: str, _id: str) -> str:
+    return get_basename(parent_id) + "/" + get_basename(_id)
 
 
-# --- pegasus catalog classes --------------------------------------------------------
+def load_wf_inputs(input_spec_file_path: str) -> dict:
+    try:
+        with open(input_spec_file_path, "r") as f:
+            wf_inputs = yaml.load(f)
+
+        log.info("Loaded workflow inputs file: {}".format(input_spec_file_path))
+    except FileNotFoundError:
+        log.exception("Unable to find {}".format(input_spec_file_path))
+        sys.exit(1)
+
+    return wf_inputs
 
 
-class ReplicaCatalog:
-    """Pegasus Replica Catalog"""
+def load_tr_specs(tr_specs_file_path: str) -> dict:
+    log.info("Validating {}".format(tr_specs_file_path))
+    schema = {
+        "type": "object",
+        "patternProperties": {
+            ".+": {
+                "type": "object",
+                "properties": {
+                    "site": {"type": "string"},
+                    "is_stageable": {"type": "boolean"},
+                },
+                "required": ["site", "is_stageable"],
+                "additionalPropertes": False,
+            }
+        },
+    }
 
-    def __init__(self):
-        self.entries = set()
+    try:
+        with open(tr_specs_file_path) as f:
+            specs = yaml.load(f)
 
-    # TODO: account for more complex entries into the catalog
-    def add_item(self, lfn, pfn, site):
-        """ Adds an entry into the replica catalog. """
-        entry = "{} file://{} site={}".format(lfn, pfn, site)
-        log.debug("Adding to RC: '{}'".format(entry))
-        self.entries.add(entry)
+        validate(instance=specs, schema=schema)
+    except ValidationError:
+        log.exception(
+            (
+                "Invalid transformation spec file. File should be in the following format:\n"
+                "\t\t\t<tr name1>:\n"
+                "\t\t\t    site: <site name>\n"
+                "\t\t\t    is_stageable: <boolean>\n"
+                "\t\t\t<tr name2>:\n"
+                "\t\t\t    site: <site name>\n"
+                "\t\t\t    is_stageable: <boolean>\n"
+                "\t\t\t...\n"
+            )
+        )
+        sys.exit(1)
+    except FileNotFoundError:
+        log.exception(
+            "Unable to find transformation spec file: {}".format(tr_specs_file_path)
+        )
+        sys.exit(1)
 
-    def write_catalog(self, filename):
-        """ Writes all entries to "filename" """
-        log.info("Writing replica catalog to {}".format(filename))
-        with open(filename, "w") as rc:
-            for entry in self.entries:
-                rc.write(entry + "\n")
+    log.info("Successfully loaded {}".format(tr_specs_file_path))
+
+    return specs
 
 
-class TransformationCatalog:
-    """Pegasus Transformation Catalog"""
+def build_pegasus_tc(tr_specs: dict, cwl_wf: cwl.Workflow) -> TransformationCatalog:
+    log.info("Building transformation catalog")
+    tc = TransformationCatalog()
 
-    Entry = namedtuple("Entry", ["base_command", "is_stageable", "site", "pfn"])
+    for step in cwl_wf.steps:
+        cwl_cmd_ln_tool = (
+            cwl.load_document(step.run) if isinstance(step.run, str) else step.run
+        )
 
-    # TODO: make this more comprehensive
-    def __init__(self, stageables_directory):
-        self.entries = set()
-        self.stageables_directory = stageables_directory
+        if cwl_cmd_ln_tool.baseCommand is None:
+            raise ValueError("{} requires a 'baseCommand'".format(cwl_cmd_ln_tool.id))
 
-    # TODO: account for more complex entries into the catalog
-    # TODO: this will need to write to YAML file in 5.0
-    # TODO: if pfn is relative, then assume stageable,
-    #       else assume it isn't. Need to see if there is a
-    #       field in command line tool that specifies
-    #       whether or not this tool is stageable (possibly place this
-    #       information in a separate yaml file)
-    def add_item(self, base_command, pfn):
-        """ Adds an entry into the transformation catalog. """
-        is_stageable = not os.path.isabs(pfn)
+        tool_path = PurePath(cwl_cmd_ln_tool.baseCommand)
 
-        # TODO: site should be specified in another yaml file
-        site = ""
+        if not tool_path.is_absolute():
+            raise ValueError(
+                "{}.baseCommand: {} must be an absolute path".format(
+                    cwl_cmd_ln_tool.id, cwl_cmd_ln_tool.baseCommand
+                )
+            )
 
-        if is_stageable:
+        log.debug("baseCommand: {}".format(tool_path))
+
+        # TODO: handle requirements (may not be needed or can manually add them in)
+        site = "local"
+        is_stageable = True
+
+        try:
+            site = tr_specs[tool_path.name]["site"]
+            is_stageable = tr_specs[tool_path.name]["is_stageable"]
+        except KeyError:
             log.warning(
-                (
-                    "CommandLineTool.baseName: '{}' with pfn: '{}' is assumed "
-                    "to be stageable"
-                ).format(base_command, pfn)
+                "Unable to look up transformation: {0} in transformation spec file. Using defaults: site='local', is_stageable=True".format(
+                    tool_path.name
+                )
             )
 
-            site = "local"
-            pfn = "file://" + os.path.join(
-                os.path.abspath(self.stageables_directory), pfn
-            )
+        container_name = None
+        if cwl_cmd_ln_tool.requirements:
+            for req in cwl_cmd_ln_tool.requirements:
+                if isinstance(req, cwl.DockerRequirement):
+                    """
+                    Currently not supported in DockerRequirement:
+                    - dockerFile
+                    - dockerImport
+                    - dockerImageId
+                    - dockerOutputDirectory
+                    """
 
-        else:
-            site = "condorpool"
+                    # assume to be docker because we can't distinguish between
+                    # docker and singularity just by image name or url of zipped
+                    # file
+                    if req.dockerPull:
+                        container_name = req.dockerPull
+                        image = "docker://" + req.dockerPull
+                    elif req.dockerLoad:
+                        image = req.dockerLoad
+                        container_name = Path(req.dockerLoad).name
+                    else:
+                        raise NotImplementedError(
+                            "Only DockerRequirement.dockerPull and DockerRequirement.dockerLoad currently supported"
+                        )
+
+                    try:
+                        tc.add_containers(
+                            Container(
+                                container_name,
+                                Container.DOCKER,
+                                image,
+                                image_site="local",
+                            )
+                        )
+                    except DuplicateError:
+                        pass
+
+                    log.info(
+                        "Added <Container name={}, container_type='docker', image={}, image_site='local'> from CommandLineTool: {}".format(
+                            container_name, image, cwl_cmd_ln_tool.id
+                        )
+                    )
+                    log.warning(
+                        "Container types in the transformation catalog will need to be modified if containers are not of type: docker or if image file exists on a site other than 'local'"
+                    )
+
+                    #
+                    break
+
+        tr = Transformation(
+            tool_path.name,
+            site=site,
+            pfn=str(tool_path),
+            is_stageable=is_stageable,
+            container=container_name,
+        )
+        log.debug(
+            "tr = Transformation({}, site={}, pfn={}, is_stageable={})".format(
+                tool_path.name, site, str(tool_path), is_stageable
+            )
+        )
+        log.info("Adding <Transformation {}>".format(tr.name))
+
+        try:
+            tc.add_transformations(tr)
+        except DuplicateError:
             log.warning(
-                (
-                    "CommandLineTool.baseName: '{}' with pfn: '{}' is assumed "
-                    "to NOT be stageable"
-                ).format(base_command, pfn)
+                "<Transformation {}> is a duplicate and has already been added.".format(
+                    tr.name
+                )
             )
 
-        entry = TransformationCatalog.Entry(base_command, is_stageable, site, pfn)
-        log.debug("Adding to TC: {}".format(entry))
-        self.entries.add(entry)
+    log.info(
+        "Building transformation catalog complete. {} transformations, {} containers added.".format(
+            len(tc.transformations), len(tc.containers)
+        )
+    )
 
-    def write_catalog(self, filename):
-        """ Writes all entries to "filename" """
-        log.info("Writing tranformation catalog to {}".format(filename))
-        with open(filename, "w") as tc:
-            for entry in self.entries:
-                tc.write("tr {} {{\n".format(entry.base_command))
-                # TODO: handle different sites
-                tc.write("    site {} {{\n".format(entry.site))
-                tc.write('        pfn "{}"\n'.format(entry.pfn))
-                if entry.is_stageable:
-                    tc.write('        type "STAGEABLE"\n')
-                tc.write("    }\n")
-                tc.write("}\n")
+    return tc
 
 
-# --- cwl -> dax conversion  ---------------------------------------------------------
+def build_pegasus_rc(wf_inputs: dict, cwl_wf: cwl.Workflow) -> ReplicaCatalog:
+    log.info("Building replica catalog")
+    rc = ReplicaCatalog()
+
+    for _input in cwl_wf.inputs:
+        if _input.type == "File":
+            input_name = get_basename(_input.id)
+
+            try:
+                current_wf_inputs = wf_inputs[input_name]
+            except KeyError:
+                log.exception(
+                    "Unable to obtain input: {} from input spec file".format(input_name)
+                )
+                sys.exit(1)
+
+            try:
+                log.info(
+                    "Adding replica: site={}, lfn={}, pfn={}".format(
+                        "local", input_name, current_wf_inputs["path"]
+                    )
+                )
+                # TODO: what about other sites?
+                rc.add_replica("local", input_name, current_wf_inputs["path"])
+            except KeyError:
+                log.exception(
+                    "Unable to obtain a path (pfn) for input file: {} from input spec file".format(
+                        input_name
+                    )
+                )
+                sys.exit(1)
+
+    log.info(
+        "Building replica catalog complete. {} entries added".format(len(rc.replicas))
+    )
+
+    return rc
+
+
+def collect_files(cwl_wf: cwl.Workflow) -> dict:
+    log.info("Collecting workflow files")
+    wf_files = dict()
+
+    log.info("Parsing input files from workflow inputs")
+    for _input in cwl_wf.inputs:
+        if _input.type == "File":
+            f = get_basename(_input.id)
+            wf_files[f] = f
+            log.info("Collected input file: {}".format(f))
+            log.debug("wf_files[{0}] = {0}".format(f))
+
+        elif (
+            isinstance(_input.type, cwl.InputArraySchema)
+            and _input.type.items == "File"
+        ):
+
+            raise NotImplementedError(
+                "Support for File[] workflow input type in development"
+            )
+
+    log.info("Parsing output files from each workflow step")
+    for step in cwl_wf.steps:
+        cwl_cmd_ln_tool = (
+            cwl.load_document(step.run) if isinstance(step.run, str) else step.run
+        )
+
+        for output in cwl_cmd_ln_tool.outputs:
+            if output.type == "File":
+                k = get_name(step.id, output.id)
+
+                try:
+                    v = output.outputBinding.glob
+                except AttributeError:
+                    v = None
+                finally:
+                    if not v:
+                        raise ValueError(
+                            "outputBinding.glob must be specified (e.g. file1.txt) for {}".format(
+                                step.run
+                            )
+                        )
+
+                if any(c in "*$" for c in v):
+                    raise NotImplementedError(
+                        "Unable to resolve wildcards in {}".format(v)
+                    )
+
+                wf_files[k] = v
+                log.info("Collected output file: {}".format(k))
+                log.debug("wf_files[{}] = {}".format(k, v))
+            else:
+                raise NotImplementedError(
+                    "Support for output types other than File is in development"
+                )
+
+    log.info(
+        "Collection of workflow files complete. {} files collected".format(
+            len(wf_files)
+        )
+    )
+
+    return wf_files
+
+
+def collect_input_strings(wf_inputs: dict, cwl_wf: cwl.Workflow) -> dict:
+    log.info("Collecting workflow input strings and string[] from input spec file")
+    wf_input_str = dict()
+
+    for _input in cwl_wf.inputs:
+        if _input.type == "string" or (
+            isinstance(_input.type, cwl.InputArraySchema)
+            and _input.type.items == "string"
+        ):
+            input_name = get_basename(_input.id)
+
+            try:
+                wf_input_str[input_name] = wf_inputs[input_name]
+                log.info("Collected input string: {}".format(input_name))
+                log.debug(
+                    "wf_input_str[{}] = {}".format(input_name, wf_inputs[input_name])
+                )
+            except KeyError:
+                log.exception(
+                    "Unable to obtain input: {} from input spec file".format(input_name)
+                )
+                sys.exit(1)
+
+    log.info(
+        "Collection of workflow input strings complete. {} string/string[] inputs collected".format(
+            len(wf_input_str)
+        )
+    )
+
+    return wf_input_str
+
+
+def build_pegasus_wf(
+    cwl_wf: cwl.Workflow, wf_files: dict, wf_input_str: dict
+) -> Workflow:
+    log.info("Building Pegasus workflow")
+
+    wf = Workflow("cwl-converted-pegasus-workflow")
+
+    for step in cwl_wf.steps:
+        step_name = get_basename(step.id)
+        log.info("Processing step: {}".format(step_name))
+        cwl_cmd_ln_tool = (
+            cwl.load_document(step.run) if isinstance(step.run, str) else step.run
+        )
+
+        job = Job(PurePath(cwl_cmd_ln_tool.baseCommand).name, _id=get_basename(step.id))
+
+        # collect current step inputs
+        log.info("Collecting step inputs from {}".format(step_name))
+        step_inputs = dict()
+        for _input in step.in_:
+            input_id = get_basename(_input.id)
+
+            step_inputs[input_id] = get_basename(_input.source)
+            log.debug("step_inputs[{}] = {}".format(input_id, step_inputs[input_id]))
+
+        # add inputs that are of type File
+        for _input in cwl_cmd_ln_tool.inputs:
+            if _input.type == "File":
+                wf_file = File(wf_files[step_inputs[get_name(step.id, _input.id)]])
+
+                job.add_inputs(wf_file)
+                log.info("Step: {} added input file: {}".format(step_name, wf_file.lfn))
+            """
+            # TODO: handle File[] inputs
+            elif isinstance(_input.type, cwl.CommandInputArraySchema):
+                if _input.type.items == "File":
+                    for f in step_inputs[get_name(step.id, _input.id)]:
+                        wf_file = File(wf_files[f])
+
+                        job.add_inputs(wf_file)
+                        log.info(
+                            "Step: {} added input file: {}".format(
+                                step_name, wf_file.lfn
+                            )
+                        )
+            """
+        # add job outputs that are of type File
+        log.info("Collecting step outputs from {}".format(step_name))
+        for output in cwl_cmd_ln_tool.outputs:
+            if output.type == "File":
+                wf_file = File(wf_files[get_name(step.id, output.id)])
+
+                job.add_outputs(wf_file)
+                log.info(
+                    "Step: {} added output file: {}".format(step_name, wf_file.lfn)
+                )
+            else:
+                raise NotImplementedError(
+                    "Support for output types other than File is in development"
+                )
+
+        # add job args
+        args = (
+            cwl_cmd_ln_tool.arguments
+            if cwl_cmd_ln_tool.arguments is not None
+            else list()
+        )
+
+        # args will be added in the order of their assigned inputBinding
+        def get_input_binding(_input):
+            key = 0
+            if hasattr(_input, "inputBinding") and hasattr(
+                _input.inputBinding, "position"
+            ):
+                key = _input.inputBinding.position
+
+            return key if key else 0
+
+        cwl_cmd_ln_tool_inputs = sorted(cwl_cmd_ln_tool.inputs, key=get_input_binding)
+
+        for _input in cwl_cmd_ln_tool_inputs:
+            # indicates whether or not input will appear in args
+            if _input.inputBinding is not None:
+                prefix = _input.inputBinding.prefix
+                separate = _input.inputBinding.separate
+
+                current_arg = ""
+                if prefix:
+                    current_arg += prefix
+
+                if separate:
+                    current_arg += " "
+
+                if _input.type == "File":
+                    current_arg += wf_files[step_inputs[get_name(step.id, _input.id)]]
+                elif _input.type == "string":
+                    current_arg += wf_input_str[
+                        step_inputs[get_name(step.id, _input.id)]
+                    ]
+
+                # TODO: provide better support for array inputs being used in args (see https://www.commonwl.org/user_guide/09-array-inputs/index.html)
+                elif isinstance(_input.type, cwl.CommandInputArraySchema):
+                    separator = (
+                        " "
+                        if _input.inputBinding.itemSeparator is None
+                        else _input.inputBinding.itemSeparator
+                    )
+
+                    if _input.type.items == "File":
+                        current_arg += separator.join(
+                            wf_files[f]
+                            for f in step_inputs[get_name(step.id, _input.id)]
+                        )
+                    elif _input.type.items == "string":
+
+                        current_arg += separator.join(
+                            wf_input_str[step_inputs[get_name(step.id, _input.id)]]
+                        )
+
+                args.append(current_arg)
+
+        job.add_args(*args)
+        wf.add_jobs(job)
+
+        log.info("Added job: {}".format(step.run))
+        log.info("\tcmd: {}".format(job.transformation))
+        log.info("\targs: {}".format(job.args))
+        log.info("\tinputs: {}".format([f.lfn for f in job.get_inputs()]))
+        log.info("\toutputs: {}".format([f.lfn for f in job.get_outputs()]))
+
+    log.info("Building workflow complete. {} jobs added".format(len(wf.jobs)))
+
+    return wf
 
 
 def main():
     args = parse_args()
     setup_logger(args.debug)
 
-    # TODO: handle execeptions for bad file paths
-    workflow_file_path = args.cwl_workflow_file_path
-    workflow_file_dir = os.path.dirname(workflow_file_path)
+    cwl_wf = cwl.load_document(args.cwl_workflow_file_path)
+    log.info("Loaded cwl workflow: {}".format(args.cwl_workflow_file_path))
 
-    log.info("Loading {}".format(workflow_file_path))
-    workflow = cwl.load_document(workflow_file_path)
+    wf_inputs = load_wf_inputs(args.workflow_inputs_file_path)
+    tr_specs = load_tr_specs(args.transformation_spec_file_path)
 
-    adag = dax.ADAG("dag-generated-from-cwl", auto=True)
-    rc = ReplicaCatalog()
-    tc = TransformationCatalog(workflow_file_dir)
+    tc = build_pegasus_tc(tr_specs, cwl_wf)
+    rc = build_pegasus_rc(wf_inputs, cwl_wf)
 
-    # process initial input file(s)
-    # TODO: need to account for the different fields for a file class
-    # TODO: log warning for the fields that we are skipping
-    workflow_input_strings = dict()
-    workflow_files = dict()
+    wf_files = collect_files(cwl_wf)
+    wf_input_strings = collect_input_strings(wf_inputs, cwl_wf)
+    wf = build_pegasus_wf(cwl_wf, wf_files, wf_input_strings)
 
-    log.info("Collecting inputs in {}".format(args.input_file_spec_path))
-    with open(args.input_file_spec_path) as yaml_file:
-        input_file_specs = load(yaml_file, Loader=Loader)
+    wf.add_transformation_catalog(tc)
+    wf.add_replica_catalog(rc)
 
-        for input in workflow.inputs:
-            input_type = input.type
+    wf.write(file=args.output_file_path)
+    log.info("Workflow written to {}".format(args.output_file_path))
 
-            if input_type == "File":
-                workflow_files[get_basename(input.id)] = get_basename(input.id)
-                # TODO: account for non-local sites
-                rc.add_item(
-                    get_basename(input.id),
-                    input_file_specs[get_basename(input.id)]["path"],
-                    "local",
-                )
-            elif input_type == "string":
-                workflow_input_strings[get_basename(input.id)] = input_file_specs[
-                    get_basename(input.id)
-                ]
-            elif isinstance(input_type, cwl.InputArraySchema):
-                if input_type.items == "File":
-                    # TODO: account for workflow inputs of type File[]
-                    pass
-                elif input_type.items == "string":
-                    workflow_input_strings[get_basename(input.id)] = input_file_specs[
-                        get_basename(input.id)
-                    ]
-
-    log.info("Collecting output files")
-    for step in workflow.steps:
-        cwl_command_line_tool = (
-            cwl.load_document(step.run) if isinstance(step.run, str) else step.run
-        )
-
-        for output in cwl_command_line_tool.outputs:
-            # TODO: account for outputs that are not files
-            output_name = get_name(step.id, output.id)
-
-            log.debug(
-                "Adding (key: {}, value: {}) to workflow_files".format(
-                    output_name, output.outputBinding.glob
-                )
-            )
-
-            # TODO: throw error when glob contains javascript expression
-            #       or pattern as we cannot support anything that is dynamic
-            workflow_files[output_name] = output.outputBinding.glob
-
-    log.info("Building workflow steps into dax jobs")
-    for step in workflow.steps:
-        # convert cwl:CommandLineTool -> pegasus:Executable
-        cwl_command_line_tool = (
-            cwl.load_document(step.run) if isinstance(step.run, str) else step.run
-        )
-
-        executable_name = (
-            os.path.basename(cwl_command_line_tool.baseCommand)
-            if os.path.isabs(cwl_command_line_tool.baseCommand)
-            else cwl_command_line_tool.baseCommand
-        )
-
-        dax_executable = dax.Executable(executable_name)
-
-        # add executable to transformation catalog
-        tc.add_item(executable_name, cwl_command_line_tool.baseCommand)
-
-        # create job with executable
-        dax_job = dax.Job(dax_executable)
-
-        step_inputs = dict()
-        for input in step.in_:
-            input_id = get_basename(input.id)
-            if isinstance(input.source, str):
-                step_inputs[input_id] = get_basename(input.source)
-            elif isinstance(input.source, list):
-                step_inputs[input_id] = [get_basename(file) for file in input.source]
-
-        # add input uses to job
-        for input in cwl_command_line_tool.inputs:
-            if input.type == "File":
-                file_id = step_inputs[get_name(step.id, input.id)]
-                file = dax.File(workflow_files[file_id])
-                log.debug("Adding link ({} -> {})".format(file_id, dax_job.name))
-
-                dax_job.uses(file, link=dax.Link.INPUT)
-
-            # TODO: better type checking for string[] and File[] ?
-            elif isinstance(input.type, cwl.CommandInputArraySchema):
-                if input.type.items == "File":
-                    file_ids = step_inputs[get_name(step.id, input.id)]
-                    for file_id in file_ids:
-                        file = dax.File(workflow_files[file_id])
-                        log.debug(
-                            "Adding link ({} -> {})".format(file_id, dax_job.name)
-                        )
-
-                        dax_job.uses(file, link=dax.Link.INPUT)
-
-        # add output uses to job
-        # TODO: ensure that these are of type File or File[]
-        for output in step.out:
-            file_id = get_basename(output)
-            file = dax.File(workflow_files[file_id])
-            log.debug("Adding link ({} -> {})".format(dax_job.name, file_id))
-
-            dax_job.uses(file, link=dax.Link.OUTPUT, transfer=True, register=True)
-
-        # add arguments to job
-        # TODO: place argument building up in a function
-        dax_job_args = (
-            cwl_command_line_tool.arguments
-            if cwl_command_line_tool.arguments is not None
-            else []
-        )
-
-        # process cwl inputBindings if they exist and build up job argument list
-        cwl_command_line_tool_inputs = sorted(
-            cwl_command_line_tool.inputs,
-            key=lambda input: input.inputBinding.position
-            if input.inputBinding.position is not None
-            else 0,
-        )
-
-        for input in cwl_command_line_tool_inputs:
-            # process args
-            if input.inputBinding is not None:
-                # TODO: account for inputBinding separation
-                if input.inputBinding.prefix is not None:
-                    dax_job_args.append(input.inputBinding.prefix)
-
-                if input.type == "File":
-                    dax_job_args.append(
-                        dax.File(
-                            workflow_files[step_inputs[get_name(step.id, input.id)]]
-                        )
-                    )
-
-                if input.type == "string":
-                    dax_job_args.append(
-                        workflow_input_strings[step_inputs[get_name(step.id, input.id)]]
-                    )
-
-                # handle array type inputs
-                if isinstance(input.type, cwl.CommandInputArraySchema):
-                    if input.type.items == "File":
-                        for file in step_inputs[get_name(step.id, input.id)]:
-                            dax_job_args.append(dax.File(workflow_files[file]))
-                    elif input.type.items == "string":
-                        input_string_arr_id = step_inputs[get_name(step.id, input.id)]
-
-                        separator = (
-                            " "
-                            if input.inputBinding.itemSeparator is None
-                            else input.inputBinding.itemSeparator
-                        )
-
-                        dax_job_args.append(
-                            # TODO: currently only accounting for input strings that
-                            #       are inputs to the entire workflow
-                            separator.join(workflow_input_strings[input_string_arr_id])
-                        )
-
-        log.debug("Adding job: {}, with args: {}".format(dax_job.name, dax_job_args))
-        dax_job.addArguments(*dax_job_args)
-
-        # add job to DAG
-        adag.addJob(dax_job)
-
-    rc.write_catalog("rc.txt")
-    tc.write_catalog("tc.txt")
-
-    with open(args.output_file_path, "w") as f:
-        log.info("Writing DAX to {}".format(args.output_file_path))
-        adag.writeXML(f)
+    return 0
 
 
 if __name__ == "__main__":

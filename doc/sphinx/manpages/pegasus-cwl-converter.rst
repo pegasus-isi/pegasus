@@ -19,8 +19,9 @@ into Pegasus workflows.
 
 Additional Python Dependencies
 ==============================
-Pegasus does not ship with the **cwl-utils** package used by this utility,
-and must be installed prior: ``pip install cwl-utils``
+Pegasus does not ship with the **cwl-utils v0.3** and **jsonschema v3.2.0** 
+packages used by this utility, and must be installed prior: 
+``pip install pegasus-wms[cwl]``
 
 Positional Arguments
 ====================
