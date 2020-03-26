@@ -13,7 +13,7 @@ virtualenv -p python3.6 $VIRTUAL_ENV_DIR
 
 source cwl_venv/bin/activate
 
-pip install -r requirements.txt
+pip install pegasus-wms[cwl]
 
 echo
 echo "Creating input.yml from input.yml.template"
@@ -21,8 +21,26 @@ export INPUT_DIR=`pwd`/cwl
 envsubst < ./cwl/input.yml.template > ./cwl/input.yml
 
 echo
+echo "Setting baseCommand in get_file_sizes.cwl"
+envsubst < ./cwl/get_file_sizes.cwl.template > ./cwl/get_file_sizes.cwl
+
+echo
+echo "Creating transformation spec file as tr_spec.yml"
+cat << EOT >> tr_spec.yml
+tar:
+    site: condorpool
+    is_stageable: False
+gcc:
+    site: condorpool
+    is_stageable: False
+get_file_sizes.sh:
+    site: local
+    is_stageable: True 
+EOT
+
+echo
 echo "Converting the cwl workflow to dax"
-pegasus-cwl-converter ./cwl/workflow.cwl ./cwl/input.yml ./workflow.xml
+pegasus-cwl-converter --debug ./cwl/workflow.cwl ./cwl/input.yml tr_spec.yml ./workflow.yml
 
 echo
 echo "Cleaning up virtual environment"
@@ -62,8 +80,6 @@ echo
 echo "Creating pegasus configuration file"
 cat > pegasus.conf << EOF
 pegasus.catalog.site.file = sites.xml
-pegasus.catalog.transformation.file = tc.txt
-pegasus.catalog.replica.file = rc.txt
 pegasus.data.configuration = condorio
 EOF
 
@@ -76,6 +92,6 @@ pegasus-plan \
     --relative-dir $RUN_ID \
     --sites condorpool \
     --output-site local \
-    --dax workflow.xml \
+    --dax workflow.yml \
     --cluster horizontal \
     --submit

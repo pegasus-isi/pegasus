@@ -1,6 +1,10 @@
 import os
 import subprocess
 
+# need the externals for the correct version of setuptools
+import sys
+sys.path.insert(0, '../../lib/pegasus/externals/python')
+
 from setuptools import find_namespace_packages, setup
 
 src_dir = os.path.dirname(__file__)

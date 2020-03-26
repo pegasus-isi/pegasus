@@ -1,6 +1,7 @@
 import json
 import logging
 from collections import namedtuple
+import importlib
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
@@ -11,19 +12,20 @@ from Pegasus import yaml
 from Pegasus.api.errors import DuplicateError
 from Pegasus.api.replica_catalog import _ReplicaCatalogEntry
 from Pegasus.api.writable import _CustomEncoder
-from Pegasus.cli.pegasus_cwl_converter_toyaml import (
-    build_pegasus_rc,
-    build_pegasus_tc,
-    build_pegasus_wf,
-    collect_files,
-    collect_input_strings,
-    get_basename,
-    get_name,
-    load_tr_specs,
-    load_wf_inputs,
-    main,
-    parse_args,
-)
+
+# Using import_module because of dashes in pegasus-cwl-converter.py
+cwl_converter = importlib.import_module("Pegasus.cli.pegasus-cwl-converter")
+build_pegasus_rc = cwl_converter.build_pegasus_rc
+build_pegasus_tc = cwl_converter.build_pegasus_tc
+build_pegasus_wf = cwl_converter.build_pegasus_wf
+collect_files = cwl_converter.collect_files
+collect_input_strings = cwl_converter.collect_input_strings
+get_basename = cwl_converter.get_basename
+get_name = cwl_converter.get_name
+load_tr_specs = cwl_converter.load_tr_specs
+load_wf_inputs = cwl_converter.load_wf_inputs
+main = cwl_converter.main
+parse_args = cwl_converter.parse_args
 
 
 def test_get_basename():
@@ -1084,9 +1086,7 @@ def test_main(mocker):
             {"command": {"site": "condorpool", "is_stageable": False}}, tr_spec_file
         )
 
-        mocker.patch(
-            "Pegasus.cli.pegasus_cwl_converter_toyaml.parse_args", return_value=args
-        )
+        mocker.patch("Pegasus.cli.pegasus-cwl-converter.parse_args", return_value=args)
 
         assert main() == 0
 
