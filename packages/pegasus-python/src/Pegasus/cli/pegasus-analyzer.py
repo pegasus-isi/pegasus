@@ -939,6 +939,10 @@ def check_for_wf_start():
                 nfs_error_string = backticks(
                     'grep -i ".*Error.*NFS$" ' + dagman_out + " 2>/dev/null"
                 )
+
+                if nfs_error_string:
+                    nfs_error_string = nfs_error_string.decode()
+
                 if nfs_error_string is not None and nfs_error_string != "":
                     header = " Error detected in *.dag.dagman.out "
                     print_console(header.center(80, "="))
