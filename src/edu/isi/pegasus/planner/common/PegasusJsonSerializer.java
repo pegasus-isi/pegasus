@@ -11,8 +11,7 @@ import java.io.IOException;
 import java.util.Collection;
 
 /**
- * Abstract Class for Serializers for serializing YAML objects with convenient
- * helper methods
+ * Abstract Class for Serializers for serializing YAML objects with convenient helper methods
  *
  * @author Karan Vahi
  * @param <T>
@@ -61,5 +60,4 @@ public abstract class PegasusJsonSerializer<T> extends JsonSerializer<T> {
             gen.writeNumberField(key, value);
         }
     }
-    
 }

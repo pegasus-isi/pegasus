@@ -20,7 +20,6 @@ package edu.isi.pegasus.planner.common;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import edu.isi.pegasus.planner.catalog.CatalogException;
-import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.dax.Invoke;
@@ -31,8 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Abstract Class for Deserializers for parsing YAML objects with convenient
- * helper methods
+ * Abstract Class for Deserializers for parsing YAML objects with convenient helper methods
  *
  * @author Karan Vahi
  * @param <T>
@@ -86,7 +84,7 @@ public abstract class PegasusJsonDeserializer<T> extends JsonDeserializer<T> {
                 .append(node.toString());
         throw getException(sb.toString());
     }
-    
+
     /**
      * Creates a metadata key value pairs as profiles
      *
@@ -102,7 +100,7 @@ public abstract class PegasusJsonDeserializer<T> extends JsonDeserializer<T> {
     protected List<Profile> createMetadata(JsonNode node) {
         return this.createProfiles("metadata", node);
     }
-    
+
     /**
      * Creates a profile from a JSON node representing
      *
@@ -128,7 +126,7 @@ public abstract class PegasusJsonDeserializer<T> extends JsonDeserializer<T> {
         }
         return profiles;
     }
-    
+
     /**
      * Creates a notifications object
      *
@@ -177,12 +175,11 @@ public abstract class PegasusJsonDeserializer<T> extends JsonDeserializer<T> {
         }
         return notifications;
     }
-    
+
     /**
      * The exception to be thrown while deserializing on error
      *
      * @param message the error message
-     *
      * @return
      */
     public abstract RuntimeException getException(String message);

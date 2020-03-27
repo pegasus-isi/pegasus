@@ -97,7 +97,7 @@ public class TransformationTest {
         expected.addProfile(new Profile("pegasus", "clusters.num", "1"));
         assertEquals(expected, actual);
     }
-    
+
     @Test
     public void testBaseTransformationWithProfilesandMetadData() throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());

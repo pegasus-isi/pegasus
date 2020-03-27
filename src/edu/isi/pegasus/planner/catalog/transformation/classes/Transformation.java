@@ -24,10 +24,6 @@ import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-import edu.isi.pegasus.planner.classes.Notifications;
-import edu.isi.pegasus.planner.classes.Profile;
-import edu.isi.pegasus.planner.dax.Invoke;
-import edu.isi.pegasus.planner.namespace.Namespace;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -202,7 +198,7 @@ class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transforma
                         throw new CatalogException("sites: value should be of type array ");
                     }
                     break;
-                    
+
                 case METADATA:
                     base.addProfiles(this.createMetadata(node.get(key)));
                     break;
@@ -293,8 +289,7 @@ class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transforma
                     break;
 
                 case METADATA:
-                    entry.addProfiles(
-                            this.createMetadata(node.get(key)));
+                    entry.addProfiles(this.createMetadata(node.get(key)));
                     break;
 
                 case SITE_PFN:
@@ -314,6 +309,4 @@ class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transforma
         entry.setSysInfo(sysInfo);
         return entry;
     }
-
-    
 }

@@ -121,12 +121,12 @@ public class DAXParser5 implements DAXParser {
                     case PEGASUS:
                         attrs.put("version", node.get(key).asText());
                         break;
-                        
+
                     case NAME:
                         attrs.put("name", node.get(key).asText());
                         c.cbDocument(attrs);
                         break;
-                        
+
                     case REPLICA_CATALOG:
                         JsonNode rcNode = node.get(key);
                         if (rcNode != null) {
@@ -135,7 +135,7 @@ public class DAXParser5 implements DAXParser {
                             System.err.println(store);
                         }
                         break;
-                        
+
                     case SITE_CATALOG:
                         JsonNode scNode = node.get(key);
                         if (scNode != null) {
@@ -148,31 +148,29 @@ public class DAXParser5 implements DAXParser {
                         JsonNode tcNode = node.get(key);
                         if (tcNode != null) {
                             parser = tcNode.traverse(oc);
-                            TransformationStore store = parser.readValueAs(TransformationStore.class);
+                            TransformationStore store =
+                                    parser.readValueAs(TransformationStore.class);
                             System.err.println(store);
                         }
                         break;
 
-                        
                     case HOOKS:
                         JsonNode hooksNode = node.get(key);
                         Notifications notifications = this.createNotifications(hooksNode);
                         for (Invoke.WHEN when : Invoke.WHEN.values()) {
-                            for (Invoke i: notifications.getNotifications(when)){
+                            for (Invoke i : notifications.getNotifications(when)) {
                                 c.cbWfInvoke(i);
                             }
                         }
                         break;
 
                     default:
-                        //this.complainForUnsupportedKey(
+                        // this.complainForUnsupportedKey(
                         //        WorkflowKeywords.WORKFLOW.getReservedName(), key, node);
                 }
             }
             return null;
         }
-
-        
 
         @Override
         public RuntimeException getException(String message) {
@@ -184,7 +182,7 @@ public class DAXParser5 implements DAXParser {
         DAXParser5 parser = new DAXParser5();
         Callback c = new DAX2CDAG();
         String dax = "/Users/vahi/Pegasus/work/yaml-tc/workflow.yml";
-        PegasusBag bag =  new PegasusBag();
+        PegasusBag bag = new PegasusBag();
         bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
         c.initialize(bag, dax);
         parser.setDAXCallback(c);

@@ -31,16 +31,15 @@ import edu.isi.pegasus.planner.common.PegasusJsonDeserializer;
  * @author Karan Vahi
  */
 public abstract class SiteDataJsonDeserializer<T> extends PegasusJsonDeserializer<T> {
- 
+
     /**
      * The exception to be thrown while deserializing on error
      *
      * @param message the error message
-     *
      * @return
      */
     @Override
-    public RuntimeException getException(String message){
+    public RuntimeException getException(String message) {
         return new SiteCatalogException(message);
     }
 }
