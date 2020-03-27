@@ -8,7 +8,7 @@ home_dir = os.path.abspath(os.path.join(src_dir, "../.."))
 
 install_requires = [
     "six>=1.9.0",
-    "boto==2.48.0",
+    "boto==2.49.0",
     "globus-sdk==1.4.1",
 ]
 
