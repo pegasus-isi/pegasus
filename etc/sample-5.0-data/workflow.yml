@@ -58,7 +58,8 @@ transformationCatalog:
         - name: centos-pegasus
           type: docker
           image: docker:///rynge/montage:latest
-          mount: /Volumes/Work/lfs1:/shared-data/:ro
+          mounts:
+            - /Volumes/Work/lfs1:/shared-data/:ro
           profiles:
             env:
                 JAVA_HOME: /opt/java/1.6
