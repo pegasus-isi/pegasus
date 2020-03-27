@@ -36,6 +36,7 @@ import edu.isi.pegasus.planner.dax.Invoke;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Level;
@@ -115,9 +116,15 @@ public class DAXParser5 implements DAXParser {
                     this.complainForIllegalKey(
                             WorkflowKeywords.WORKFLOW.getReservedName(), key, node);
                 }
-
+                Map attrs = new HashMap();
                 switch (reservedKey) {
                     case PEGASUS:
+                        attrs.put("version", node.get(key).asText());
+                        break;
+                        
+                    case NAME:
+                        attrs.put("name", node.get(key).asText());
+                        c.cbDocument(attrs);
                         break;
                         
                     case REPLICA_CATALOG:
