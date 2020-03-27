@@ -13,6 +13,13 @@ BuildRequires:  ant-apache-regexp, gcc, gcc-c++, jpackage-utils, make, openssl-d
 Requires:       java >= 1:1.8.0, python3, condor >= 8.8, graphviz, python36-PyYAML
 
 %if 0%{?rhel} <= 7
+# Jinja2 v2.11 has async code, which uses py36 syntax, and is never imported in < py36, but
+# byte compiling in RPM fails as py27 interpreter tries to compile all files.
+# To resolve the above we set default interpreter to py3.
+# Alternatively, we can set % global _python_bytecompile_errors_terminate_build to 0, to ignore
+# byte compile errors
+%global __python %{python3}
+
 BuildRequires:  java-devel = 1:1.8.0, python36-pyOpenSSL, python36-PyYAML, python3-devel, python3-setuptools
 Requires:       java >= 1:1.8.0, python3, condor >= 8.8, graphviz, python36-pika, python36-PyYAML
 %endif
