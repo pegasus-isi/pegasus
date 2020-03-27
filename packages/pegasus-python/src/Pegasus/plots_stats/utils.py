@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 def isSubWfJob(job_name):
     """
         Returns whether the given job is a sub workflow or not
-	"""
+    """
     if (
         job_name.lstrip().startswith("subdax_")
         or job_name.lstrip().startswith("pegasus-plan_")
@@ -43,21 +43,21 @@ def isSubWfJob(job_name):
 
 def rlb(file_path, parent_wf_braindb_submit_dir, parent_submit_dir):
     """
-	This function converts the path relative to base path
-	param file_path : file path for which the relative path needs to be calculated.
-	param parent_wf_braindb_submit_dir : submit directory obtained from the braindump file
-	param parent_submit_dir : submit directory given by the user
-	Returns : path relative to the base
-	"""
+    This function converts the path relative to base path
+    param file_path : file path for which the relative path needs to be calculated.
+    param parent_wf_braindb_submit_dir : submit directory obtained from the braindump file
+    param parent_submit_dir : submit directory given by the user
+    Returns : path relative to the base
+    """
     file_path = file_path.replace(parent_wf_braindb_submit_dir, parent_submit_dir)
     return file_path
 
 
 def parse_workflow_environment(wf_det):
     """
-	Parses the workflow detail to get the workflow environment details
-	@param wf_det the workflow detail list.
-	"""
+    Parses the workflow detail to get the workflow environment details
+    @param wf_det the workflow detail list.
+    """
     config = {}
     config["wf_uuid"] = wf_det.wf_uuid
     config["dag_file_name"] = wf_det.dag_file_name
@@ -74,11 +74,11 @@ def parse_workflow_environment(wf_det):
 
 def print_property_table(props, border=True, separator=""):
     """
-	Utility method for printing a property table
-	@props dictionary of the property key and value.
-	@border boolean indication whether to draw a border or not.
-	@separator string to separate key value pair.
-	"""
+    Utility method for printing a property table
+    @props dictionary of the property key and value.
+    @border boolean indication whether to draw a border or not.
+    @separator string to separate key value pair.
+    """
     html_content = ""
     if border:
         html_content = "\n<table border = 1 style='color:#600000;'>"
@@ -101,9 +101,9 @@ def print_property_table(props, border=True, separator=""):
 
 def print_sub_wf_links(wf_id_uuid_list, extn="html"):
     """
-	Utility method for printing the link to sub workflow pages
-	@param wf_id_uuid_list list of wf_id and wf_uuid
-	"""
+    Utility method for printing the link to sub workflow pages
+    @param wf_id_uuid_list list of wf_id and wf_uuid
+    """
     html_content = ""
     if len(wf_id_uuid_list) == 0:
         return html_content
@@ -127,19 +127,19 @@ def print_sub_wf_links(wf_id_uuid_list, extn="html"):
 
 def create_home_button():
     """
-	Utility method for creating a home button
-	"""
+    Utility method for creating a home button
+    """
     html_content = """
 <a href="../index.html" target="_self"><img src="images/home.png" width =72 height =72 border =0 title ="Home" alt ="Home"></a>
-	"""
+    """
     return html_content
 
 
 def convert_to_seconds(time):
     """
-	Converts the timedelta to seconds format
-	Param: time delta reference
-	"""
+    Converts the timedelta to seconds format
+    Param: time delta reference
+    """
     return (
         time.microseconds + (time.seconds + time.days * 24 * 3600) * pow(10, 6)
     ) / pow(10, 6)
@@ -147,10 +147,10 @@ def convert_to_seconds(time):
 
 def copy_files(src, dest):
     """
-	Utility method for recursively copying from a directory to another
-	@src source directory path
-	@dst destination directory path
-	"""
+    Utility method for recursively copying from a directory to another
+    @src source directory path
+    @dst destination directory path
+    """
     for file in os.listdir(src):
         if os.path.isfile(os.path.join(src, file)):
             try:
@@ -163,11 +163,11 @@ def copy_files(src, dest):
 
 def format_seconds(duration, max_comp=2):
     """
-	Utility for converting time to a readable format
-	@param duration :  time in seconds and miliseconds
-	@param max_comp :  number of components of the returned time
-	@return time in n component format
-	"""
+    Utility for converting time to a readable format
+    @param duration :  time in seconds and miliseconds
+    @param max_comp :  number of components of the returned time
+    @return time in n component format
+    """
     comp = 0
     if duration is None:
         return "-"
@@ -191,7 +191,7 @@ def format_seconds(duration, max_comp=2):
         else:
             formatted_duration += str(years) + " years, "
 
-            # days
+    # days
     if comp < max_comp and (days >= 1 or comp > 0):
         comp += 1
         if days == 1:
@@ -221,7 +221,8 @@ def format_seconds(duration, max_comp=2):
         if formatted_duration == "":
             # we only have a value < 1 minute
             # takes care of rounding down to 0
-            sec = duration
+            sec = round(duration, 2)
+
         if sec == 1:
             formatted_duration += str(sec) + " sec, "
         else:
@@ -235,9 +236,9 @@ def format_seconds(duration, max_comp=2):
 
 def get_workflow_wall_time(workflow_states_list):
     """
-	Utility method for returning the workflow wall time given all the workflow states
-	@worklow_states_list list of all workflow states.
-	"""
+    Utility method for returning the workflow wall time given all the workflow states
+    @worklow_states_list list of all workflow states.
+    """
     workflow_wall_time = None
     workflow_start_event_count = 0
     workflow_end_event_count = 0
@@ -258,41 +259,41 @@ def get_workflow_wall_time(workflow_states_list):
 
 def get_date_multiplier(date_filter):
     """
-	Utility for returning the multiplier for a given date filter
-	@param date filter :  the given date filter
-	@return multiplier for a given filter
-	"""
+    Utility for returning the multiplier for a given date filter
+    @param date filter :  the given date filter
+    @return multiplier for a given filter
+    """
     vals = {"day": 86400, "hour": 3600}
     return vals[date_filter]
 
 
 def get_date_format(date_filter):
     """
-	Utility for returning the date format for a given date filter
-	@param date filter :  the given date filter
-	@return the date format for a given filter
-	"""
+    Utility for returning the date format for a given date filter
+    @param date filter :  the given date filter
+    @return the date format for a given filter
+    """
     vals = {"day": "%Y-%m-%d", "hour": "%Y-%m-%d : %H"}
     return vals[date_filter]
 
 
 def get_date_print_format(date_filter):
     """
-	Utility for returning the date format for a given date filter in human readable format
-	@param date filter :  the given date filter
-	@return the date format for a given filter
-	"""
+    Utility for returning the date format for a given date filter in human readable format
+    @param date filter :  the given date filter
+    @return the date format for a given filter
+    """
     vals = {"day": "[YYYY-MM-DD]", "hour": "[YYYY-MM-DD : HH]"}
     return vals[date_filter]
 
 
 def convert_datetime_to_printable_format(timestamp, date_time_filter="hour"):
     """
-	Utility for returning the date format  in human readable format
-	@param timestamp :  the unix timestamp
-	@param date filter :  the given date filter
-	@return the date format in human readable format
-	"""
+    Utility for returning the date format  in human readable format
+    @param timestamp :  the unix timestamp
+    @param date filter :  the given date filter
+    @return the date format in human readable format
+    """
 
     local_date_time = convert_utc_to_local_datetime(timestamp)
     date_formatted = local_date_time.strftime(get_date_format(date_time_filter))
@@ -301,22 +302,22 @@ def convert_datetime_to_printable_format(timestamp, date_time_filter="hour"):
 
 def convert_utc_to_local_datetime(utc_timestamp):
     """
-	Utility for converting the timestamp  to local time
-	@param timestamp :  the unix timestamp
-	@return the date format in human readable format
-	"""
+    Utility for converting the timestamp  to local time
+    @param timestamp :  the unix timestamp
+    @return the date format in human readable format
+    """
     local_datetime = datetime.fromtimestamp(utc_timestamp)
     return local_datetime
 
 
 def convert_stats_to_base_time(stats_by_time, date_time_filter="hour", isHost=False):
     """
-	Converts the time grouped by hour into local time.Converts the time grouped by hours into day based on the date_time_filter
-	@param stats_by_time : ime grouped by hou
-	@param date filter :  the given date filter
-	@param isHost : true if it is grouped by host
-	@return the stats list after doing conversion
-	"""
+    Converts the time grouped by hour into local time.Converts the time grouped by hours into day based on the date_time_filter
+    @param stats_by_time : ime grouped by hou
+    @param date filter :  the given date filter
+    @param isHost : true if it is grouped by host
+    @return the stats list after doing conversion
+    """
     formatted_stats_by_hour_list = []
     for stats in stats_by_time:
         timestamp = stats.date_format * get_date_multiplier("hour")
@@ -364,7 +365,7 @@ def round_decimal_to_str(value, to=3):
         Utility method for rounding the decimal value to string to given digits
         @param value :  value to round
         @param to    :  how many decimal points to round to
-	"""
+    """
     rounded_value = "-"
     if value is None:
         return rounded_value

@@ -17,7 +17,6 @@ root_logger = logging.getLogger()
 logger = logging.getLogger("pegasus-statistics")
 
 
-
 utils.configureLogging(level=logging.WARNING)
 
 # Regular expressions
@@ -501,7 +500,11 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
         wf_found = expanded_workflow_stats.initialize(wf_uuid)
 
         if wf_found is False:
-            print("Workflow {!r} not found in database {!r}".format(wf_uuid, output_db_url))
+            print(
+                "Workflow {!r} not found in database {!r}".format(
+                    wf_uuid, output_db_url
+                )
+            )
             sys.exit(1)
     except Exception:
         logger.error("Failed to load the database." + output_db_url)
@@ -867,7 +870,9 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
                 )
                 write_to_file(wf_summary_file2_csv, "w", summary_output)
 
-                stats_output += "{:<30}: {}\n".format("Summary Time:", wf_summary_file2_csv)
+                stats_output += "{:<30}: {}\n".format(
+                    "Summary Time:", wf_summary_file2_csv
+                )
         except Exception:
             logger.warn("summary statistics generation failed")
             logger.debug("summary statistics generation failed", exc_info=1)
@@ -1146,14 +1151,14 @@ def print_workflow_summary(
 
             if not multiple_wf:
                 summary_str += "{:<57}: {}\n".format("Workflow wall time", myfmt(wwt))
-            summary_str += "{:<57}: {}\n".format("Cumulative job wall time", myfmt(wcjwt))
             summary_str += "{:<57}: {}\n".format(
-                "Cumulative job wall time as seen from submit side",
-                myfmt(ssjwt),
+                "Cumulative job wall time", myfmt(wcjwt)
             )
             summary_str += "{:<57}: {}\n".format(
-                "Cumulative job badput wall time",
-                myfmt(wcbpt),
+                "Cumulative job wall time as seen from submit side", myfmt(ssjwt),
+            )
+            summary_str += "{:<57}: {}\n".format(
+                "Cumulative job badput wall time", myfmt(wcbpt),
             )
             summary_str += "{:<57}: {}\n".format(
                 "Cumulative job badput wall time as seen from submit side",
@@ -1201,9 +1206,7 @@ def print_workflow_summary(
                 if result.type == "compute":
                     type = "generated"
                 summary_str += "{} files checksums {} with total duration of {}\n".format(
-                    result.count,
-                    type,
-                    myfmt(result.duration),
+                    result.count, type, myfmt(result.duration),
                 )
 
             summary_str += """
@@ -1820,7 +1823,13 @@ def main():
         options.statistics_level = {"summary"}
 
     sl = options.statistics_level - {
-        "all", "summary", "wf_stats", "jb_stats", "tf_stats", "ti_stats", "int_stats"
+        "all",
+        "summary",
+        "wf_stats",
+        "jb_stats",
+        "tf_stats",
+        "ti_stats",
+        "int_stats",
     }
     if sl:
         sys.stderr.write(
