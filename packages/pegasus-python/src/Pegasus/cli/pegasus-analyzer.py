@@ -931,18 +931,10 @@ def check_for_wf_start():
                 "ls " + input_dir + "/*.dag.dagman.out" + " 2>/dev/null"
             )
 
-            if dagman_out:
-                # Convert from byte to str
-                dagman_out = dagman_out.decode()
-
             if dagman_out is not None and dagman_out != "":
                 nfs_error_string = backticks(
                     'grep -i ".*Error.*NFS$" ' + dagman_out + " 2>/dev/null"
                 )
-
-                if nfs_error_string:
-                    nfs_error_string = nfs_error_string.decode()
-
                 if nfs_error_string is not None and nfs_error_string != "":
                     header = " Error detected in *.dag.dagman.out "
                     print_console(header.center(80, "="))
@@ -983,9 +975,9 @@ def backticks(cmd_line):
     """
     what would a python program be without some perl love?
     """
-    return subprocess.Popen(cmd_line, shell=True, stdout=subprocess.PIPE).communicate()[
-        0
-    ]
+    o = subprocess.Popen(cmd_line, shell=True, stdout=subprocess.PIPE).communicate()[0]
+    if o:
+        o = o.decode()
 
 
 def print_top_summary():
