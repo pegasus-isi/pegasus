@@ -30,6 +30,14 @@ public enum WorkflowKeywords {
     TRANSFORMATION_CATALOG("transformationCatalog"),
     HOOKS("hooks"),
     JOBS("jobs"),
+    USES("uses"),
+    LFN("lfn"),
+    METADATA("metadata"),
+    TYPE("type"),
+    STAGE_OUT("stageOut"),
+    REGISTER_REPLICA("registerReplica"),
+    OPTIONAL("optional"),
+    SIZE("size"),
     DEPENDENCIES("jobDependencies");
 
     private String mName;
