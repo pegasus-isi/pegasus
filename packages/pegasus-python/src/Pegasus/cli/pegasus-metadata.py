@@ -25,8 +25,8 @@ Usage: pegasus-metadata [-h] [-v] [-c] {task,file,workflow} ... submit_dir
 
 import argparse
 import logging
-import os
 import sys
+from pathlib import Path
 
 from Pegasus.db import connection
 from Pegasus.db.connection import ConnectionError, DBType
@@ -46,9 +46,10 @@ def configure_logging(verbosity=0):
 
 
 def get_workflow_uuid(submit_dir):
-    braindump = os.path.join(submit_dir, "braindump.txt")
+    bdump_yml = Path(submit_dir) / "braindump.yml"
+    bdump_txt = Path(submit_dir) / "braindump.txt"
 
-    if not os.path.isfile(braindump):
+    if bdump_yml.exists() is False and bdump_txt.exists() is False:
         raise ValueError("Not a valid workflow submit directory: %r" % submit_dir)
 
     braindump = utils.slurp_braindb(submit_dir)
