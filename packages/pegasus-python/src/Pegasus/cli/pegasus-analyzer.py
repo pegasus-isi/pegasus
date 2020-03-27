@@ -891,9 +891,7 @@ def print_job_info(job):
         # get any options that need to be invoked for the sub workflow
         extraOptions = addon(options)
         sub_wf_cmd = "{} {} -d {}".format(
-            user_cmd,
-            extraOptions,
-            os.path.split(jobs[job].dagman_out)[0],
+            user_cmd, extraOptions, os.path.split(jobs[job].dagman_out)[0],
         )
 
         if not recurse_mode:
@@ -1298,10 +1296,7 @@ def analyze_db(config_properties):
                     # get any options that need to be invoked for the sub workflow
                     extraOptions = addon(options)
                     sub_wf_cmd = "{} {} -d {} --top-dir {}".format(
-                        user_cmd,
-                        extraOptions,
-                        my_wfdir,
-                        (top_dir or input_dir),
+                        user_cmd, extraOptions, my_wfdir, (top_dir or input_dir),
                     )
 
                     if not recurse_mode:
