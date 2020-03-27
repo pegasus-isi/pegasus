@@ -18,15 +18,21 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.InjectableValues;
-import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
+import edu.isi.pegasus.planner.classes.Notifications;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.WorkflowKeywords;
+import edu.isi.pegasus.planner.common.PegasusJsonDeserializer;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
+import edu.isi.pegasus.planner.dax.Invoke;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -88,7 +94,7 @@ public class DAXParser5 implements DAXParser {
      *
      * @author Karan Vahi
      */
-    static class YAMLStreamingDeserializer extends JsonDeserializer<DAXParser5> {
+    static class YAMLStreamingDeserializer extends PegasusJsonDeserializer<DAXParser5> {
 
         @Override
         public DAXParser5 deserialize(JsonParser parser, DeserializationContext dc)
@@ -113,6 +119,7 @@ public class DAXParser5 implements DAXParser {
                 switch (reservedKey) {
                     case PEGASUS:
                         break;
+                        
                     case REPLICA_CATALOG:
                         JsonNode rcNode = node.get(key);
                         if (rcNode != null) {
@@ -121,73 +128,61 @@ public class DAXParser5 implements DAXParser {
                             System.err.println(store);
                         }
                         break;
+                        
+                    case SITE_CATALOG:
+                        JsonNode scNode = node.get(key);
+                        if (scNode != null) {
+                            parser = scNode.traverse(oc);
+                            SiteStore store = parser.readValueAs(SiteStore.class);
+                        }
+                        break;
+
+                    case TRANSFORMATION_CATALOG:
+                        JsonNode tcNode = node.get(key);
+                        if (tcNode != null) {
+                            parser = tcNode.traverse(oc);
+                            TransformationStore store = parser.readValueAs(TransformationStore.class);
+                            System.err.println(store);
+                        }
+                        break;
+
+                        
+                    case HOOKS:
+                        JsonNode hooksNode = node.get(key);
+                        Notifications notifications = this.createNotifications(hooksNode);
+                        for (Invoke.WHEN when : Invoke.WHEN.values()) {
+                            for (Invoke i: notifications.getNotifications(when)){
+                                c.cbWfInvoke(i);
+                            }
+                        }
+                        break;
 
                     default:
-                        this.complainForUnsupportedKey(
-                                WorkflowKeywords.WORKFLOW.getReservedName(), key, node);
+                        //this.complainForUnsupportedKey(
+                        //        WorkflowKeywords.WORKFLOW.getReservedName(), key, node);
                 }
             }
             return null;
         }
 
-        /**
-         * Throw an exception for Illegal Key
-         *
-         * @param element
-         * @param node
-         * @param key
-         * @throws RuntimeException
-         */
-        public void complainForIllegalKey(String element, String key, JsonNode node)
-                throws RuntimeException {
-            this.complain("Illegal key", element, key, node);
-        }
+        
 
-        /**
-         * Throw an exception for Illegal Key
-         *
-         * @param prefix
-         * @param element
-         * @param key
-         * @param node
-         * @throws RuntimeException
-         */
-        public void complainForUnsupportedKey(String element, String key, JsonNode node)
-                throws RuntimeException {
-            this.complain("Unsupported key", element, key, node);
-        }
-
-        /**
-         * Throw an exception
-         *
-         * @param prefix
-         * @param element
-         * @param key
-         * @param node
-         * @throws RuntimeException
-         */
-        public void complain(String prefix, String element, String key, JsonNode node)
-                throws RuntimeException {
-            StringBuilder sb = new StringBuilder();
-            sb.append(prefix)
-                    .append(" ")
-                    .append(key)
-                    .append(" ")
-                    .append("for element")
-                    .append(" ")
-                    .append(element)
-                    .append(" - ")
-                    .append(node.toString());
-            throw new RuntimeException(sb.toString());
+        @Override
+        public RuntimeException getException(String message) {
+            return new RuntimeException(message);
         }
     }
 
     public static void main(String[] args) {
         DAXParser5 parser = new DAXParser5();
         Callback c = new DAX2CDAG();
+        String dax = "/Users/vahi/Pegasus/work/yaml-tc/workflow.yml";
+        PegasusBag bag =  new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
+        c.initialize(bag, dax);
         parser.setDAXCallback(c);
         try {
-            parser.startParser("/Users/vahi/Pegasus/work/yaml-tc/workflow.yml");
+            parser.startParser(dax);
         } catch (IOException ex) {
             Logger.getLogger(DAXParser5.class.getName()).log(Level.SEVERE, null, ex);
         }
