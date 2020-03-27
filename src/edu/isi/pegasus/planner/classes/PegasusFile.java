@@ -483,6 +483,26 @@ public class PegasusFile extends Data {
     }
 
     /**
+     * Sets the transient transfer flag corresponding to the boolean value. True
+     * maps to TRANSFER_MANDATORY while false maps to TRANSFER_NOT
+     * TRANSFER_OPTIONAL designation not supported in this method
+     *
+     * @param value
+     * @exception IllegalArgumentException if the transfer mode is outside its
+     * legal range.
+     * @see #TRANSFER_MANDATORY
+     * @see #TRANSFER_NOT
+     * @see #TRANSFER_OPTIONAL
+     */
+    public void setTransferFlag(boolean value) throws IllegalArgumentException {
+        int flag = TRANSFER_MANDATORY;
+        if (!value) {
+            flag = TRANSFER_NOT;
+        }
+        this.setTransferFlag(flag);
+    }
+
+    /**
      * Sets the transient transfer flag to value passed.
      *
      * @param transfer valid transfer value.
@@ -1009,7 +1029,7 @@ public class PegasusFile extends Data {
                         break;
 
                     case STAGE_OUT:
-                        //pf.setTransferFlag(Boolean.valueOf(node.get(key).asText()));
+                        pf.setTransferFlag(node.get(key).asBoolean());
                         break;
 
                     case REGISTER_REPLICA:
