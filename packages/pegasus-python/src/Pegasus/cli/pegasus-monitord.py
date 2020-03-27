@@ -53,7 +53,7 @@ root_logger = logging.getLogger()
 logger = logging.getLogger("pegasus-monitord")
 
 # Ordered logging levels
-_LEVELS = [logger.ERROR, logger.WARNING, logger.INFO, logger.DEBUG, logger.TRACE]
+_LEVELS = [logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG, logging.TRACE]
 
 logger.info("pegasus-monitord starting - pid %d " % (os.getpid()))
 
