@@ -931,6 +931,10 @@ def check_for_wf_start():
                 "ls " + input_dir + "/*.dag.dagman.out" + " 2>/dev/null"
             )
 
+            if dagman_out:
+                # Convert from byte to str
+                dagman_out = dagman_out.decode()
+
             if dagman_out is not None and dagman_out != "":
                 nfs_error_string = backticks(
                     'grep -i ".*Error.*NFS$" ' + dagman_out + " 2>/dev/null"
