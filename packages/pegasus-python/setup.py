@@ -16,11 +16,9 @@ install_requires = [
     # Python 2 compatibility
     "six>=1.9.0",
     # pegasus-init
-    "Jinja2==2.10.3",
-    "Flask-SQLAlchemy==2.3.2",
-    "boto==2.48.0",
-    "pamela==1.0.0",
-    "globus-sdk==1.4.1",
+    "Jinja2",
+    "Flask-SQLAlchemy",
+    "pamela",
     "pika==1.1.0",
     "Flask",
     "Flask-Caching",
@@ -39,8 +37,7 @@ def setup_installer_dependencies():
     global install_requires
 
     if subprocess.call(["which", "mysql_config"]) == 0:
-        install_requires.append('MySQL-Python;python_version<="2.6"')
-        install_requires.append('mysqlclient;python_version>"2.6"')
+        install_requires.append("mysqlclient")
 
 
 #
@@ -133,7 +130,7 @@ setup(
     convert_2to3_doctests=[],
     extras_require={
         "postgresql": ["psycopg2"],
-        "mysql": [],
+        "mysql": ["mysqlclient"],
         "cwl": ["cwl-utils==0.3", "jsonschema==3.2.0"],
     },
 )
