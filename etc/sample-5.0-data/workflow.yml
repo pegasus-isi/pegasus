@@ -1,5 +1,5 @@
-name: diamond
 pegasus: "5.0"
+name: diamond
 
 hooks:
     shell:
