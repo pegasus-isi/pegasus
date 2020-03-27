@@ -457,11 +457,11 @@ logger.info("Final Command line options are: %s" % cmd_options)
 
 # Set logging level
 if options.vb <= 0:
-    lvl = logger.INFO
+    lvl = logging.INFO
 elif options.vb == 1:
-    lvl = logger.DEBUG
+    lvl = logging.DEBUG
 else:
-    lvl = logger.TRACE
+    lvl = logging.TRACE
 root_logger.setLevel(lvl)
 
 # Resolve command-line options conflicts
