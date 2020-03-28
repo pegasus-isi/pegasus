@@ -1,20 +1,15 @@
 /**
  * Copyright 2007-2008 University Of Southern California
  *
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package edu.isi.pegasus.planner.classes;
 
@@ -34,11 +29,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The logical file object that contains the logical filename which is got from
- * the DAX, and the associated set of flags specifying the transient
- * characteristics. It ends up associating the following information with a lfn
- * -type of the file (data or executable) -optionality of a file -transient
- * attributes of a file (dontTransfer and dontRegister)
+ * The logical file object that contains the logical filename which is got from the DAX, and the
+ * associated set of flags specifying the transient characteristics. It ends up associating the
+ * following information with a lfn -type of the file (data or executable) -optionality of a file
+ * -transient attributes of a file (dontTransfer and dontRegister)
  *
  * @author Gaurang Mehta
  * @author Karan Vahi
@@ -47,9 +41,7 @@ import java.util.Map;
 @JsonDeserialize(using = PegasusFile.JsonDeserializer.class)
 public class PegasusFile extends Data {
 
-    /**
-     * Enumeration for denoting type of linkage
-     */
+    /** Enumeration for denoting type of linkage */
     public static enum LINKAGE {
         input,
         output,
@@ -58,50 +50,41 @@ public class PegasusFile extends Data {
     };
 
     /**
-     * The index of the flags field which when set indicates that the file is to
-     * be considered optional.
+     * The index of the flags field which when set indicates that the file is to be considered
+     * optional.
      */
     public static final int OPTIONAL_BIT_FLAG = 0;
 
     /**
-     * The index of the flags field which when set indicates that the file is
-     * not to be registered in the RLS/ RC.
+     * The index of the flags field which when set indicates that the file is not to be registered
+     * in the RLS/ RC.
      */
     public static final int DO_NOT_REGISTER_BIT_FLAG = 1;
 
-    /**
-     * If set, means can be considered for cleanup
-     */
+    /** If set, means can be considered for cleanup */
     public static final int CLEANUP_BIT_FLAG = 2;
 
-    /**
-     * If set, means can be considered for integrity checking
-     */
+    /** If set, means can be considered for integrity checking */
     public static final int INTEGRITY_BIT_FLAG = 3;
 
-    /**
-     * The number of transient flags. This is the length of the BitSet in the
-     * flags fields.
-     */
+    /** The number of transient flags. This is the length of the BitSet in the flags fields. */
     public static final int NO_OF_TRANSIENT_FLAGS = 3;
 
     /**
-     * The mode where the transfer for this file to the pool is constructed and
-     * the transfer job fails if the transfer fails. The corresponding dT
-     * (dontTransfer) value is false.
+     * The mode where the transfer for this file to the pool is constructed and the transfer job
+     * fails if the transfer fails. The corresponding dT (dontTransfer) value is false.
      */
     public static final int TRANSFER_MANDATORY = 0;
 
     /**
-     * The mode where the transfer for this file to the pool is constructed, but
-     * the transfer job should not fail if the transfer fails. The corresponding
-     * dT (dontTransfer) value is optional.
+     * The mode where the transfer for this file to the pool is constructed, but the transfer job
+     * should not fail if the transfer fails. The corresponding dT (dontTransfer) value is optional.
      */
     public static final int TRANSFER_OPTIONAL = 1;
 
     /**
-     * The mode where the transfer for this file is not constructed. The
-     * corresponding dT (dontTransfer) value is true.
+     * The mode where the transfer for this file is not constructed. The corresponding dT
+     * (dontTransfer) value is true.
      */
     public static final int TRANSFER_NOT = 2;
 
@@ -154,49 +137,32 @@ public class PegasusFile extends Data {
      */
     public static final String OTHER_TYPE = "other";
 
-    /**
-     * The type denoting that a logical file is a data file.
-     */
+    /** The type denoting that a logical file is a data file. */
     public static final int DATA_FILE = 0;
 
-    /**
-     * The type denoting that a logical file is a executable file.
-     */
+    /** The type denoting that a logical file is a executable file. */
     public static final int EXECUTABLE_FILE = 1;
 
-    /**
-     * The type denoting that a logical file is a checkpoint file.
-     */
+    /** The type denoting that a logical file is a checkpoint file. */
     public static final int CHECKPOINT_FILE = 2;
 
-    /**
-     * The type denoting that a logical file is a docker container file.
-     */
+    /** The type denoting that a logical file is a docker container file. */
     public static final int DOCKER_CONTAINER_FILE = 3;
 
-    /**
-     * The type denoting that a logical file is a singularity container file.
-     */
+    /** The type denoting that a logical file is a singularity container file. */
     public static final int SINGULARITY_CONTAINER_FILE = 4;
 
-    /**
-     * The type denoting that a logical file is a shifter container file.
-     */
+    /** The type denoting that a logical file is a shifter container file. */
     public static final int SHIFTER_CONTAINER_FILE = 5;
 
-    /**
-     * The type denoting that a logical file is an other file.
-     */
+    /** The type denoting that a logical file is an other file. */
     public static final int OTHER_FILE = 6;
 
-    /**
-     * The logical name of the file.
-     */
+    /** The logical name of the file. */
     protected String mLogicalFile;
 
     /**
-     * The type associated with the file. It can either be a data file or an
-     * executable file.
+     * The type associated with the file. It can either be a data file or an executable file.
      *
      * @see #DATA_FILE
      * @see #EXECUTABLE_FILE
@@ -205,14 +171,12 @@ public class PegasusFile extends Data {
      */
     protected int mType;
 
-    /**
-     * Linkage of the file. Only used for parsers
-     */
+    /** Linkage of the file. Only used for parsers */
     protected LINKAGE mLink;
 
     /**
-     * The transfer flag associated with the file containing tristate of
-     * transfer,dontTransfer and optional.
+     * The transfer flag associated with the file containing tristate of transfer,dontTransfer and
+     * optional.
      *
      * @see #TRANSFER_MANDATORY
      * @see #TRANSFER_OPTIONAL
@@ -221,37 +185,27 @@ public class PegasusFile extends Data {
     protected int mTransferFlag;
 
     /**
-     * The transient flags field which is kept as a bit field. It keeps track of
-     * the dontRegister and optional attributes associated with the filename in
-     * the dax.
+     * The transient flags field which is kept as a bit field. It keeps track of the dontRegister
+     * and optional attributes associated with the filename in the dax.
      */
     protected BitSet mFlags;
 
-    /**
-     * The size of the file.
-     */
+    /** The size of the file. */
     protected double mSize;
 
-    /**
-     * Metadata attributes associated with the file.
-     */
+    /** Metadata attributes associated with the file. */
     protected Metadata mMetadata;
 
-    /**
-     * Boolean indicating whether a file is raw input for the wf/fetched from
-     * the RC.
-     */
+    /** Boolean indicating whether a file is raw input for the wf/fetched from the RC. */
     protected boolean mIsRawInput;
 
     /**
-     * Boolean indicating whether file checksum is computed during workflow
-     * execution either by pegasus-transfer or by some jobs.
+     * Boolean indicating whether file checksum is computed during workflow execution either by
+     * pegasus-transfer or by some jobs.
      */
     protected boolean mChecksumComputedInWF;
 
-    /**
-     * The default constructor.
-     */
+    /** The default constructor. */
     public PegasusFile() {
         super();
         mFlags = new BitSet(NO_OF_TRANSIENT_FLAGS);
@@ -313,8 +267,7 @@ public class PegasusFile extends Data {
     /**
      * It sets the logical filename of the file that is being transferred.
      *
-     * @param lfn the logical name of the file that this transfer is associated
-     * with.
+     * @param lfn the logical name of the file that this transfer is associated with.
      */
     public void setLFN(String lfn) {
         mLogicalFile = lfn;
@@ -355,8 +308,7 @@ public class PegasusFile extends Data {
      * Returns whether the type of file value is valid or not.
      *
      * @param type the value for the type of file.
-     * @return true if the value is in range. false if the value is not in
-     * range.
+     * @return true if the value is in range. false if the value is not in range.
      */
     public boolean typeValid(int type) {
         return (type >= PegasusFile.DATA_FILE && type <= PegasusFile.OTHER_FILE);
@@ -366,8 +318,7 @@ public class PegasusFile extends Data {
      * Returns whether the transfer value for the mode is in range or not.
      *
      * @param transfer the value for the transfer.
-     * @return true if the value is in range. false if the value is not in
-     * range.
+     * @return true if the value is in range. false if the value is not in range.
      */
     public boolean transferInRange(int transfer) {
         return (transfer >= PegasusFile.TRANSFER_MANDATORY && transfer <= PegasusFile.TRANSFER_NOT);
@@ -377,8 +328,7 @@ public class PegasusFile extends Data {
      * Sets the type flag to value passed.
      *
      * @param type valid transfer value.
-     * @exception IllegalArgumentException if the transfer mode is outside its
-     * legal range.
+     * @exception IllegalArgumentException if the transfer mode is outside its legal range.
      * @see #DATA_FILE
      * @see #EXECUTABLE_FILE
      * @see #CHECKPOINT_FILE
@@ -401,8 +351,7 @@ public class PegasusFile extends Data {
      * Sets the transient transfer flag to value passed.
      *
      * @param type valid transfer value.
-     * @exception IllegalArgumentException if the transfer mode is outside its
-     * legal range.
+     * @exception IllegalArgumentException if the transfer mode is outside its legal range.
      * @see #DATA_FILE
      * @see #EXECUTABLE_FILE
      */
@@ -435,8 +384,7 @@ public class PegasusFile extends Data {
      * Sets the type flag to value passed.
      *
      * @param type valid type of container file
-     * @exception IllegalArgumentException if the transfer mode is outside its
-     * legal range.
+     * @exception IllegalArgumentException if the transfer mode is outside its legal range.
      * @see #DOCKER_CONTAINER_FILE
      * @see #SINGULARITY_CONTAINER_FILE
      */
@@ -461,8 +409,7 @@ public class PegasusFile extends Data {
     }
 
     /**
-     * Sets the flag denoting that file is a raw input file that is fetched from
-     * the RC
+     * Sets the flag denoting that file is a raw input file that is fetched from the RC
      *
      * @param raw boolean parameter indicating whether file is raw input or not.
      */
@@ -471,8 +418,7 @@ public class PegasusFile extends Data {
     }
 
     /**
-     * Sets the flag denoting that file needs to be checksummed during workflow
-     * execution or not.
+     * Sets the flag denoting that file needs to be checksummed during workflow execution or not.
      *
      * @param checksum whether to generate checksum or not
      */
@@ -481,13 +427,12 @@ public class PegasusFile extends Data {
     }
 
     /**
-     * Sets the transient transfer flag corresponding to the boolean value. True
-     * maps to TRANSFER_MANDATORY while false maps to TRANSFER_NOT
-     * TRANSFER_OPTIONAL designation not supported in this method
+     * Sets the transient transfer flag corresponding to the boolean value. True maps to
+     * TRANSFER_MANDATORY while false maps to TRANSFER_NOT TRANSFER_OPTIONAL designation not
+     * supported in this method
      *
      * @param value
-     * @exception IllegalArgumentException if the transfer mode is outside its
-     * legal range.
+     * @exception IllegalArgumentException if the transfer mode is outside its legal range.
      * @see #TRANSFER_MANDATORY
      * @see #TRANSFER_NOT
      * @see #TRANSFER_OPTIONAL
@@ -504,8 +449,7 @@ public class PegasusFile extends Data {
      * Sets the transient transfer flag to value passed.
      *
      * @param transfer valid transfer value.
-     * @exception IllegalArgumentException if the transfer mode is outside its
-     * legal range.
+     * @exception IllegalArgumentException if the transfer mode is outside its legal range.
      * @see #TRANSFER_MANDATORY
      * @see #TRANSFER_NOT
      * @see #TRANSFER_OPTIONAL
@@ -520,13 +464,11 @@ public class PegasusFile extends Data {
     }
 
     /**
-     * Sets the transient transfer flag corresponding to the string value of
-     * transfer mode passed. The legal range of transfer values is
-     * true|false|optional.
+     * Sets the transient transfer flag corresponding to the string value of transfer mode passed.
+     * The legal range of transfer values is true|false|optional.
      *
      * @param flag tri-state transfer value as got from dontTransfer flag.
-     * @exception IllegalArgumentException if the transfer mode is outside its
-     * legal range.
+     * @exception IllegalArgumentException if the transfer mode is outside its legal range.
      * @see #TRANSFER_MANDATORY
      * @see #TRANSFER_NOT
      * @see #TRANSFER_OPTIONAL
@@ -536,14 +478,12 @@ public class PegasusFile extends Data {
     }
 
     /**
-     * Sets the transient transfer flag corresponding to the string value of
-     * transfer mode passed. The legal range of transfer values is
-     * true|false|optional.
+     * Sets the transient transfer flag corresponding to the string value of transfer mode passed.
+     * The legal range of transfer values is true|false|optional.
      *
      * @param flag tri-state transfer value as got from dontTransfer flag.
      * @param doubleNegative indicates whether a double negative or not.
-     * @exception IllegalArgumentException if the transfer mode is outside its
-     * legal range.
+     * @exception IllegalArgumentException if the transfer mode is outside its legal range.
      * @see #TRANSFER_MANDATORY
      * @see #TRANSFER_NOT
      * @see #TRANSFER_OPTIONAL
@@ -569,11 +509,9 @@ public class PegasusFile extends Data {
     }
 
     /**
-     * Returns whether the transfer is transient or not. By transient we mean no
-     * transfer.
+     * Returns whether the transfer is transient or not. By transient we mean no transfer.
      *
-     * @return true if transfer mode is TRANSFER_NOT false if transfer mandatory
-     * or optional.
+     * @return true if transfer mode is TRANSFER_NOT false if transfer mandatory or optional.
      */
     public boolean getTransientTransferFlag() {
         return (mTransferFlag == this.TRANSFER_NOT);
@@ -607,9 +545,7 @@ public class PegasusFile extends Data {
         mFlags.set(OPTIONAL_BIT_FLAG, value);
     }
 
-    /**
-     * Sets the optional flag denoting the file to be optional to true.
-     */
+    /** Sets the optional flag denoting the file to be optional to true. */
     public void setFileOptional() {
         mFlags.set(OPTIONAL_BIT_FLAG);
     }
@@ -617,16 +553,13 @@ public class PegasusFile extends Data {
     /**
      * Returns optional flag denoting the file to be optional or not.
      *
-     * @return true denoting the file is optional. false denoting that file is
-     * not optional.
+     * @return true denoting the file is optional. false denoting that file is not optional.
      */
     public boolean fileOptional() {
         return mFlags.get(OPTIONAL_BIT_FLAG);
     }
 
-    /**
-     * Sets the cleanup flag denoting the file can be cleaned up to true.
-     */
+    /** Sets the cleanup flag denoting the file can be cleaned up to true. */
     public void setForCleanup() {
         mFlags.set(CLEANUP_BIT_FLAG);
     }
@@ -649,9 +582,7 @@ public class PegasusFile extends Data {
         return mFlags.get(CLEANUP_BIT_FLAG);
     }
 
-    /**
-     * Sets the integrity flag denoting the file should be integrity checked
-     */
+    /** Sets the integrity flag denoting the file should be integrity checked */
     public void setForIntegrityChecking() {
         mFlags.set(INTEGRITY_BIT_FLAG);
     }
@@ -701,8 +632,8 @@ public class PegasusFile extends Data {
     /**
      * Returns the value of the register flag
      *
-     * @return true denoting the file needs be registered into the replica
-     * catalog. false denoting that file does not need to be registered.
+     * @return true denoting the file needs be registered into the replica catalog. false denoting
+     *     that file does not need to be registered.
      */
     public boolean getRegisterFlag() {
         return !mFlags.get(DO_NOT_REGISTER_BIT_FLAG);
@@ -711,16 +642,15 @@ public class PegasusFile extends Data {
     /**
      * Returns the transient registration flag (the value of dontRegister).
      *
-     * @return true denoting the file need not be registered into the replica
-     * catalog. false denoting that file needs to be registered.
+     * @return true denoting the file need not be registered into the replica catalog. false
+     *     denoting that file needs to be registered.
      */
     public boolean getTransientRegFlag() {
         return mFlags.get(DO_NOT_REGISTER_BIT_FLAG);
     }
 
     /**
-     * Returns the bit fields that contain the transient flags (dR and
-     * optional).
+     * Returns the bit fields that contain the transient flags (dR and optional).
      *
      * @see #NO_OF_TRANSIENT_FLAGS
      * @see #OPTIONAL_BIT_FLAG
@@ -737,7 +667,7 @@ public class PegasusFile extends Data {
      */
     public void addMetadata(Metadata m) {
         if (!m.isEmpty()) {
-            for (Iterator<String> mit = m.getProfileKeyIterator(); mit.hasNext();) {
+            for (Iterator<String> mit = m.getProfileKeyIterator(); mit.hasNext(); ) {
                 String key = mit.next();
                 this.addMetadata(key, (String) m.get(key));
             }
@@ -773,10 +703,7 @@ public class PegasusFile extends Data {
         return this.mMetadata;
     }
 
-    /**
-     * Sets metadata attributes for the file
-     *
-     */
+    /** Sets metadata attributes for the file */
     private void setMetadata(List<Profile> profiles) {
         Metadata m = new Metadata();
         for (Profile p : profiles) {
@@ -795,8 +722,8 @@ public class PegasusFile extends Data {
     }
 
     /**
-     * Checks if an object is similar to the one referred to by this class. We
-     * compare the primary key to determine if it is the same or not.
+     * Checks if an object is similar to the one referred to by this class. We compare the primary
+     * key to determine if it is the same or not.
      *
      * @return true if the primary key (lfn) matches. else false.
      */
@@ -819,8 +746,8 @@ public class PegasusFile extends Data {
     }
 
     /**
-     * Returns a boolean indicating if a file that is being staged is an
-     * executable or not (i.e is a data file).
+     * Returns a boolean indicating if a file that is being staged is an executable or not (i.e is a
+     * data file).
      *
      * @return boolean indicating whether a file is executable or not.
      */
@@ -829,8 +756,7 @@ public class PegasusFile extends Data {
     }
 
     /**
-     * Returns a boolean indicating if a file that is being staged is a
-     * checkpoint file or not.
+     * Returns a boolean indicating if a file that is being staged is a checkpoint file or not.
      *
      * @return boolean indicating whether a file is a checkpoint file or not.
      */
@@ -839,8 +765,7 @@ public class PegasusFile extends Data {
     }
 
     /**
-     * Returns a boolean indicating if a file that is being staged is an is a
-     * data file
+     * Returns a boolean indicating if a file that is being staged is an is a data file
      *
      * @return boolean indicating whether a file is a data file or not.
      */
@@ -849,8 +774,7 @@ public class PegasusFile extends Data {
     }
 
     /**
-     * Returns a boolean indicating if a file that is being staged is an is a
-     * container or not
+     * Returns a boolean indicating if a file that is being staged is an is a container or not
      *
      * @return boolean indicating whether a file is a container file or not.
      */
@@ -861,8 +785,7 @@ public class PegasusFile extends Data {
     }
 
     /**
-     * Returns a boolean indicating if a file that is being staged is a RAW
-     * input file
+     * Returns a boolean indicating if a file that is being staged is a RAW input file
      *
      * @return boolean
      */
@@ -871,8 +794,7 @@ public class PegasusFile extends Data {
     }
 
     /**
-     * Returns a boolean indicating if a file checksum is generated by
-     * pegasus-transfer
+     * Returns a boolean indicating if a file checksum is generated by pegasus-transfer
      *
      * @return boolean
      */
@@ -881,8 +803,8 @@ public class PegasusFile extends Data {
     }
 
     /**
-     * Returns a boolean indicating whether there is a checksum associated with
-     * the file or not in the Replica Catalog or not beforehand.
+     * Returns a boolean indicating whether there is a checksum associated with the file or not in
+     * the Replica Catalog or not beforehand.
      *
      * @return
      */
@@ -949,8 +871,7 @@ public class PegasusFile extends Data {
     }
 
     /**
-     * Returns the String version of the data object, which is in human readable
-     * form.
+     * Returns the String version of the data object, which is in human readable form.
      *
      * @return the dump of the data object into a string.
      */
@@ -981,17 +902,14 @@ public class PegasusFile extends Data {
     }
 
     /**
-     * Custom deserializer for YAML representation of uses section that
-     * designates a file
-     *
+     * Custom deserializer for YAML representation of uses section that designates a file
      *
      * @author Karan Vahi
      */
     static class JsonDeserializer extends PegasusJsonDeserializer<PegasusFile> {
 
         /**
-         * Deserializes a YAML representation of a single entry in the uses
-         * section of a job
+         * Deserializes a YAML representation of a single entry in the uses section of a job
          *
          * <pre>
          *  - file:
@@ -1017,13 +935,12 @@ public class PegasusFile extends Data {
             JsonNode node = oc.readTree(parser);
             PegasusFile pf = new PegasusFile();
 
-            for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext();) {
+            for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
                 Map.Entry<String, JsonNode> e = it.next();
                 String key = e.getKey();
                 WorkflowKeywords reservedKey = WorkflowKeywords.getReservedKey(key);
                 if (reservedKey == null) {
-                    this.complainForIllegalKey(
-                            WorkflowKeywords.USES.getReservedName(), key, node);
+                    this.complainForIllegalKey(WorkflowKeywords.USES.getReservedName(), key, node);
                 }
                 switch (reservedKey) {
                     case LFN:
