@@ -1018,7 +1018,8 @@ public class PegasusFile extends Data {
 
             ObjectCodec oc = parser.getCodec();
             JsonNode node = oc.readTree(parser);
-
+            PegasusFile pf = new PegasusFile();
+            
             for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext();) {
                 Map.Entry<String, JsonNode> e = it.next();
                 String key = e.getKey();
@@ -1027,7 +1028,6 @@ public class PegasusFile extends Data {
                     this.complainForIllegalKey(
                             WorkflowKeywords.USES.getReservedName(), key, node);
                 }
-                PegasusFile pf = new PegasusFile();
                 switch (reservedKey) {
                     case LFN:
                         pf.setLFN(node.get(key).asText());
@@ -1062,7 +1062,7 @@ public class PegasusFile extends Data {
                                 WorkflowKeywords.USES.getReservedName(), key, node);
                 }
             }
-            return null;
+            return pf;
         }
 
         @Override
