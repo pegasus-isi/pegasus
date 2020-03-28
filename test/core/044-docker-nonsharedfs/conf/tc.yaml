@@ -1,51 +1,52 @@
----
-- transformations:
-  - namespace: "diamond"
-    name: "analyze"
+pegasus: "5.0"
+transformations:
+  - namespace: diamond
+    name: analyze
     version: 4.0
-    site:
-    - name: "local"
-      arch: "x86_64"
-      os: "linux"
-      container: "centos-osgvo-el7"
-      pfn: "${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg"
-      type: "STAGEABLE"
-      profile:
-      - condor:
-          foo: "bar"
-  - namespace: "diamond"
-    name: "findrange"
+    sites:
+      - name: local
+        arch: x86_64
+        os.type: linux
+        container: centos-osgvo-el7
+        pfn: ${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg
+        type: stageable
+        profile:
+          condor:
+            foo: bar
+  - namespace: diamond
+    name: findrange
     version: 4.0
-    site:
-    - name: "local"
-      arch: "x86_64"
-      os: "linux"
-      container: "centos-osgvo-el7"
-      pfn: "${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg"
-      type: "STAGEABLE"
-      profile:
-      - condor:
-          foo: "bar"
-  - namespace: "diamond"
-    name: "preprocess"
+    sites:
+      - name: local
+        arch: x86_64
+        os.type: linux
+        container: centos-osgvo-el7
+        pfn: ${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg
+        type: stageable
+        profile:
+          condor:
+            foo: bar
+  - namespace: diamond
+    name: preprocess
     version: 4.0
-    site:
-    - name: "local"
-      arch: "x86_64"
-      os: "linux"
-      container: "centos-osgvo-el7"
-      pfn: "${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg"
-      type: "STAGEABLE"
-      profile:
-      - condor:
-          foo: "bar"
-- cont:
-  - image: "docker:///opensciencegrid/osgvo-el7"
+    sites:
+      - name: local
+        arch: x86_64
+        os.type: linux
+        container: centos-osgvo-el7
+        pfn: ${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg
+        type: stageable
+        profile:
+          condor:
+            foo: bar
+
+containers:
+  - image: docker:///opensciencegrid/osgvo-el7
     profile:
-    - env:
-        APP_HOME: "/tmp/myscratch"
-        HELLo: "WORLD"
-        JAVA_HOME: "/bin/java.1.6"
-    name: "centos-osgvo-el7"
-    image_site: "local"
-    type: "docker"
+      env:
+        APP_HOME: /tmp/myscratch
+        HELLo: WORLD
+        JAVA_HOME: /bin/java.1.6
+    name: centos-osgvo-el7
+    image_sites: local
+    type: docker
