@@ -2,7 +2,7 @@ pegasus: "5.0"
 transformations:
   - namespace: diamond
     name: analyze
-    version: 4.0
+    version: "4.0"
     sites:
       - name: local
         arch: x86_64
@@ -10,12 +10,12 @@ transformations:
         container: python3-minimal
         pfn: ${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg
         type: stageable
-        profile:
+        profiles:
           condor:
             foo: bar
   - namespace: diamond
     name: findrange
-    version: 4.0
+    version: "4.0"
     sites:
       - name: local
         arch: x86_64
@@ -23,12 +23,12 @@ transformations:
         container: python3-minimal
         pfn: ${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg
         type: stageable
-        profile:
+        profiles:
           condor:
             foo: bar
   - namespace: diamond
     name: preprocess
-    version: 4.0
+    version: "4.0"
     sites:
       - name: local
         arch: x86_64
@@ -36,16 +36,15 @@ transformations:
         container: python3-minimal
         pfn: ${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg
         type: stageable
-        profile:
+        profiles:
           condor:
             foo: bar
 
 containers:
   - image: gsiftp://bamboo.isi.edu/lfs1/bamboo-tests/data/python3-minimal.img
-    profile:
+    profiles:
       env:
         APP_HOME: /tmp/myscratch
         HELLo: WORLD
     name: python3-minimal
-    image_sites: local
     type: singularity

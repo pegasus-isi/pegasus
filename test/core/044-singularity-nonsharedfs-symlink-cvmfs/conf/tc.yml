@@ -2,7 +2,7 @@ pegasus: "5.0"
 transformations:
   - namespace: diamond
     name: analyze
-    version: 4.0
+    version: "4.0"
     sites:
       - name: local
         arch: x86_64
@@ -10,12 +10,12 @@ transformations:
         container: centos-pycbc
         pfn: ${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg
         type: stageable
-        profile:
+        profiles:
           condor:
             foo: bar
   - namespace: diamond
     name: findrange
-    version: 4.0
+    version: "4.0"
     sites:
       - name: local
         arch: x86_64
@@ -23,12 +23,12 @@ transformations:
         container: centos-pycbc
         pfn: ${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg
         type: stageable
-        profile:
+        profiles:
           condor:
             foo: bar
   - namespace: diamond
     name: preprocess
-    version: 4.0
+    version: "4.0"
     sites:
       - name: local
         arch: x86_64
@@ -36,19 +36,18 @@ transformations:
         container: centos-pycbc
         pfn: ${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg
         type: stageable
-        profile:
+        profiles:
           condor:
             foo: bar
 
 containers:
   - image: file:///cvmfs/singularity.opensciencegrid.org/pycbc/pycbc-el7:latest
-    profile:
+    profiles:
       env:
         APP_HOME: /tmp/myscratch
         HELLo: WORLD
         JAVA_HOME: /bin/java.1.6
     name: centos-pycbc
-    image_sites: condorpool
     type: singularity
     mount:
       - /lizard:/lizard
