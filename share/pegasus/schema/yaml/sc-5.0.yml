@@ -1,5 +1,5 @@
-$schema: 'http://json-schema.org/draft-07/schema#'
-$id: 'file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/sc-5.0.yml'
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/sc-5.0.yml"
 $defs:
   # --- pre-defined site related properties ------------------------------------
   arch:
@@ -37,13 +37,13 @@ $defs:
           - put
           - get
       profiles:
-        $ref: 'common.yml#/$defs/profiles'
+        $ref: "common.yml#/$defs/profiles"
     required:
       - url
     additionalProperties: false
     patternProperties:
       ^x-:
-        $ref: 'common.yml#/$defs/vendorExtension'
+        $ref: "common.yml#/$defs/vendorExtension"
 
   # --- a directory entry ------------------------------------------------------
   directory:
@@ -65,7 +65,7 @@ $defs:
       fileServers:
         type: array
         items:
-          $ref: '#/$defs/fileServer'
+          $ref: "#/$defs/fileServer"
         minItems: 1
     required:
       - type
@@ -73,7 +73,7 @@ $defs:
     additionalProperties: false
     patternProperties:
       ^x-:
-        $ref: 'common.yml#/$defs/vendorExtension'
+        $ref: "common.yml#/$defs/vendorExtension"
 
   # --- a grid entry -----------------------------------------------------------
   grid:
@@ -141,7 +141,7 @@ $defs:
     additionalProperties: false
     patternProperties:
       ^x-:
-        $ref: 'common.yml#/$defs/vendorExtension'
+        $ref: "common.yml#/$defs/vendorExtension"
 
   # --- a site entry -----------------------------------------------------------
   site:
@@ -150,52 +150,52 @@ $defs:
       name:
         type: string
       arch:
-        $ref: '#/$defs/arch'
+        $ref: "#/$defs/arch"
       os.type:
-        $ref: '#/$defs/os.type'
+        $ref: "#/$defs/os.type"
       os.release:
         type: string
       os.version:
-        $ref: 'common.yml#/$defs/versionString'
+        $ref: "common.yml#/$defs/versionString"
       glibc:
-        $ref: 'common.yml#/$defs/versionString'
+        $ref: "common.yml#/$defs/versionString"
       directories:
         type: array
         items:
-          $ref: '#/$defs/directory'
+          $ref: "#/$defs/directory"
       grids:
         type: array
         items:
-          $ref: '#/$defs/grid'
+          $ref: "#/$defs/grid"
       profiles:
-        $ref: 'common.yml#/$defs/profiles'
+        $ref: "common.yml#/$defs/profiles"
     required:
       - name
     additionalProperties: false
     patternProperties:
       ^x-:
-        $ref: 'common.yml#/$defs/vendorExtension'
+        $ref: "common.yml#/$defs/vendorExtension"
 
   # --- schema when inlined in dax ---------------------------------------------
   inlineSiteCatalog:
     type: object
     properties:
       pegasus:
-        $ref: 'common.yml#/$defs/versionString'
+        $ref: "common.yml#/$defs/versionString"
       sites:
         type: array
         items:
-          $ref: '#/$defs/site'
+          $ref: "#/$defs/site"
         minItems: 1
     required:
       - sites
     patternProperties:
       ^x-:
-        $ref: 'common.yml#/$defs/vendorExtension'
+        $ref: "common.yml#/$defs/vendorExtension"
 
 # --- schema for standalone file -----------------------------------------------
 allOf:
-  - $ref: '#/$defs/inlineSiteCatalog'
+  - $ref: "#/$defs/inlineSiteCatalog"
   - type: object
     required:
       - pegasus

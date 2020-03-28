@@ -1,22 +1,22 @@
 pegasus: "5.0"
 transformations:
-   - name: "keg"
-     namespace: "example"
-     version: "1.0"         
-     profiles:
-       env: 
-         "APP_HOME": "/tmp/karan"
-         "JAVA_HOME": "/bin/java.1.5"
-     metadata:
-       "size": "3"
-                
-     sites:
+  - name: "keg"
+    namespace: "example"
+    version: "1.0"
+    profiles:
+      env:
+        "APP_HOME": "/tmp/karan"
+        "JAVA_HOME": "/bin/java.1.5"
+    metadata:
+      "size": "3"
+
+    sites:
       - name: "isi"
-        profiles: 
-          env: 
+        profiles:
+          env:
             "me": "with"
             "JAVA_HOME": "/bin/java.1.6"
-          condor: 
+          condor:
             "more": "test"
         pfn: "/path/to/keg"
         arch: x86
@@ -24,12 +24,12 @@ transformations:
         os.release: fc
         os.version: "4"
         type: installed
-     
+
       - name: "wind"
-        profiles: 
-          env: 
+        profiles:
+          env:
             "me": "with"
-          condor: 
+          condor:
             "more": "test"
         pfn: "/path/to/keg"
         arch: x86
@@ -38,20 +38,20 @@ transformations:
         os.version: "4"
         type: stageable
 
-   - name: "myxform"   
-              
-     sites:
+  - name: "myxform"
+
+    sites:
       - name: "condorpool"
-        profiles: 
-          env: 
+        profiles:
+          env:
             "HELLo": "WORLD"
             "JAVA_HOME": "/opt/java/1.6"
-          condor: 
+          condor:
             "FOO": "bar"
-        metadata: 
-           "key": "value"
-           "appmodel": "myxform.aspen"
-           "version": "2.0" 
+        metadata:
+          "key": "value"
+          "appmodel": "myxform.aspen"
+          "version": "2.0"
         arch: x86_64
         os.type: "linux"
         os.release: fc
@@ -59,50 +59,49 @@ transformations:
         os.version: "4"
         type: installed
         container: "centos-pegasus"
-        
-   - name: ${NAME} 
-     namespace: ${NAMESPACE}
-     version: ${VERSION}
-              
-     sites:
+
+  - name: ${NAME}
+    namespace: ${NAMESPACE}
+    version: ${VERSION}
+
+    sites:
       - name: ${SITE}
-        profiles: 
-          env: 
+        profiles:
+          env:
             "HELLo": "WORLD"
             "JAVA_HOME": "/opt/java/1.6"
-          condor: 
+          condor:
             "FOO": "bar"
-        metadata: 
-           "key": "value"
-           "appmodel": "myxform.aspen"
-           "version": "2.0" 
+        metadata:
+          "key": "value"
+          "appmodel": "myxform.aspen"
+          "version": "2.0"
         arch: ${ARCH}
         os.type: ${OS}
         os.release: fc
         pfn: ${KEGPATH}
         os.version: "4"
         type: stageable
-        container: "centos-pegasus" 
-                    
+        container: "centos-pegasus"
 
 containers:
-   - name: "centos-pegasus"
-     type: "docker"
-     image: "docker:///rynge/montage:latest"
-     image.site: "optional site"
-     mounts: 
-        - "/Volumes/Work/lfs1:/shared-data/:ro"
-        - "/Volumes/Work/lfs1:/shared-data/:wo"
-     profiles: 
-       env: 
-         "JAVA_HOME": "/opt/java/1.6"
-       
-   - name: "centos-pegasus_1"
-     type: "docker"
-     image: "docker:///will/montage:latest"
-     image.site: "optional site"
-     mounts: 
-        - "/Volumes/Work/lfs1:/shared-data/:ro"
-     profiles: 
-       env: 
-         "JAVA_HOME": "/opt/java/1.6"
+  - name: "centos-pegasus"
+    type: "docker"
+    image: "docker:///rynge/montage:latest"
+    image.site: "optional site"
+    mounts:
+      - "/Volumes/Work/lfs1:/shared-data/:ro"
+      - "/Volumes/Work/lfs1:/shared-data/:wo"
+    profiles:
+      env:
+        "JAVA_HOME": "/opt/java/1.6"
+
+  - name: "centos-pegasus_1"
+    type: "docker"
+    image: "docker:///will/montage:latest"
+    image.site: "optional site"
+    mounts:
+      - "/Volumes/Work/lfs1:/shared-data/:ro"
+    profiles:
+      env:
+        "JAVA_HOME": "/opt/java/1.6"

@@ -1,135 +1,105 @@
 ---
 pegasus: "5.0"
 sites:
- -
-  name: "s3"
-  arch: "x86"
-  os.type: "linux"
-  directories:
-   -
-    type: "sharedScratch"
-    path: "dartwfforobjectstore"
-    fileServers:
-     -
-      operation: "all"
-      url: "s3://user@amazon/dartwfforobjectstore"
- -
-  name: "osg"
-  arch: "x86"
-  os.type: "linux"
-  directories:
-   -
-    type: "localScratch"
-    path: "/tmp"
-    fileServers:
-     -
-      operation: "all"
-      url: "file:///tmp"
-  profiles:
-    condor:
-      universe: "vanilla"
-    pegasus:
-      style: "condor"
- -
-  name: "unl"
-  arch: "x86"
-  os.type: "linux"
-  directories:
-   -
-    type: "sharedScratch"
-    path: "/internal-mnt/panfs/CMS/data/engage/scratch"
-    fileServers:
-     -
-      operation: "get"
-      url: "http://ff-se.unl.edu:8443/panfs/panasas/CMS/data/engage/scratch"
-     -
-      operation: "put"
-      url: "srm://ff-se.unl.edu:8443/panfs/panasas/CMS/data/engage/scratch"
- -
-  name: "ec2"
-  arch: "x86"
-  os.type: "linux"
-  directories:
-   -
-    type: "localScratch"
-    path: "/tmp"
-    fileServers:
-     -
-      operation: "all"
-      url: "file:///tmp"
-  profiles:
-    condor:
-      universe: "vanilla"
-    pegasus:
-      style: "condor"
- -
-  name: "local"
-  arch: "x86"
-  os.type: "linux"
-  directories:
-   -
-    type: "localStorage"
-    path: "/data/local-storage/user"
-    fileServers:
-     -
-      operation: "all"
-      url: "file:///data/local-storage/user"
-   -
-    type: "sharedScratch"
-    path: "/data/local-scratch/user"
-    fileServers:
-     -
-      operation: "all"
-      url: "file:///data/local-scratch/user"
- -
-  name: "isi"
-  arch: "x86_64"
-  os.type: "linux"
-  directories:
-   -
-    type: "sharedScratch"
-    path: "/nfs/scratch01"
-    fileServers:
-     -
-      operation: "get"
-      url: "http://skynet-data.isi.edu/nfs/scratch01"
-     -
-      operation: "put"
-      url: "gsiftp://skynet-data.isi.edu/scratch01"
-   -
-    type: "sharedStorage"
-    path: "/internal/shared-storage"
-    fileServers:
-     -
-      operation: "all"
-      url: "gsiftp://skynet-data.isi.edu/exports/shared-storage"
-  grids:
-   -
-    type: "gt2"
-    contact: "smarty.isi.edu/jobmanager-pbs"
-    scheduler: "pbs"
-    jobtype: "compute"
-    idleNodes: "4"
-    totalNodes: 5
-   -
-    type: "gt2"
-    contact: "smarty.isi.edu/jobmanager-fork"
-    scheduler: "pbs"
-    jobtype: "auxillary"
+  - name: "s3"
+    arch: "x86"
+    os.type: "linux"
+    directories:
+      - type: "sharedScratch"
+        path: "dartwfforobjectstore"
+        fileServers:
+          - operation: "all"
+            url: "s3://user@amazon/dartwfforobjectstore"
+  - name: "osg"
+    arch: "x86"
+    os.type: "linux"
+    directories:
+      - type: "localScratch"
+        path: "/tmp"
+        fileServers:
+          - operation: "all"
+            url: "file:///tmp"
+    profiles:
+      condor:
+        universe: "vanilla"
+      pegasus:
+        style: "condor"
+  - name: "unl"
+    arch: "x86"
+    os.type: "linux"
+    directories:
+      - type: "sharedScratch"
+        path: "/internal-mnt/panfs/CMS/data/engage/scratch"
+        fileServers:
+          - operation: "get"
+            url: "http://ff-se.unl.edu:8443/panfs/panasas/CMS/data/engage/scratch"
+          - operation: "put"
+            url: "srm://ff-se.unl.edu:8443/panfs/panasas/CMS/data/engage/scratch"
+  - name: "ec2"
+    arch: "x86"
+    os.type: "linux"
+    directories:
+      - type: "localScratch"
+        path: "/tmp"
+        fileServers:
+          - operation: "all"
+            url: "file:///tmp"
+    profiles:
+      condor:
+        universe: "vanilla"
+      pegasus:
+        style: "condor"
+  - name: "local"
+    arch: "x86"
+    os.type: "linux"
+    directories:
+      - type: "localStorage"
+        path: "/data/local-storage/user"
+        fileServers:
+          - operation: "all"
+            url: "file:///data/local-storage/user"
+      - type: "sharedScratch"
+        path: "/data/local-scratch/user"
+        fileServers:
+          - operation: "all"
+            url: "file:///data/local-scratch/user"
+  - name: "isi"
+    arch: "x86_64"
+    os.type: "linux"
+    directories:
+      - type: "sharedScratch"
+        path: "/nfs/scratch01"
+        fileServers:
+          - operation: "get"
+            url: "http://skynet-data.isi.edu/nfs/scratch01"
+          - operation: "put"
+            url: "gsiftp://skynet-data.isi.edu/scratch01"
+      - type: "sharedStorage"
+        path: "/internal/shared-storage"
+        fileServers:
+          - operation: "all"
+            url: "gsiftp://skynet-data.isi.edu/exports/shared-storage"
+    grids:
+      - type: "gt2"
+        contact: "smarty.isi.edu/jobmanager-pbs"
+        scheduler: "pbs"
+        jobtype: "compute"
+        idleNodes: "4"
+        totalNodes: 5
+      - type: "gt2"
+        contact: "smarty.isi.edu/jobmanager-fork"
+        scheduler: "pbs"
+        jobtype: "auxillary"
 
-
- -
-  name: "${SITE}"
-  arch: "${ARCH}"
-  os.type: "${OS}"
-  directories:
-   -
-    type: "${DIRECTORY_TYPE}"
-    path: "${INTERNAL_MOUNT_POINT}"
-    fileServers:
-     -
-      operation: "all"
-      url: "${EXTERNAL_MOUNT_POINT}"
-  profiles:
-    env:
-      PEGASUS_HOME: ${PEGASUS_HOME}
+  - name: "${SITE}"
+    arch: "${ARCH}"
+    os.type: "${OS}"
+    directories:
+      - type: "${DIRECTORY_TYPE}"
+        path: "${INTERNAL_MOUNT_POINT}"
+        fileServers:
+          - operation: "all"
+            url: "${EXTERNAL_MOUNT_POINT}"
+    profiles:
+      env:
+        PEGASUS_HOME: ${PEGASUS_HOME}

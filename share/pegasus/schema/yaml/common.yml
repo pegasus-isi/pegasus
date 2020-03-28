@@ -1,7 +1,7 @@
 # Defined here are schemas reused throughout.
 
-$schema: 'http://json-schema.org/draft-07/schema#'
-$id: 'file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/common.yml'
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/common.yml"
 $defs:
   # --- string formats ---------------------------------------------------------
   versionString:
@@ -23,7 +23,7 @@ $defs:
       '[a-zA-Z0-9\._]+':
         type: string
       ^x-:
-        $ref: '#/$defs/vendorExtension'
+        $ref: "#/$defs/vendorExtension"
     minProperties: 1
     additionalProperties: false
 
@@ -36,7 +36,7 @@ $defs:
           - type: string
           - type: number
       ^x-:
-        $ref: '#/$defs/vendorExtension'
+        $ref: "#/$defs/vendorExtension"
     additionalProperties: false
 
   profiles:
@@ -50,22 +50,22 @@ $defs:
               - type: string
               - type: number
           ^x-:
-            $ref: '#/$defs/vendorExtension'
+            $ref: "#/$defs/vendorExtension"
         additionalProperties: false
       condor:
-        $ref: '#/$defs/genericProfilePropertyType'
+        $ref: "#/$defs/genericProfilePropertyType"
       globus:
-        $ref: '#/$defs/genericProfilePropertyType'
+        $ref: "#/$defs/genericProfilePropertyType"
       dagman:
-        $ref: '#/$defs/genericProfilePropertyType'
+        $ref: "#/$defs/genericProfilePropertyType"
       pegasus:
-        $ref: '#/$defs/genericProfilePropertyType'
+        $ref: "#/$defs/genericProfilePropertyType"
       hints:
-        $ref: '#/$defs/genericProfilePropertyType'
+        $ref: "#/$defs/genericProfilePropertyType"
     additionalProperties: false
     patternProperties:
       ^x-:
-        $ref: '#/$defs/vendorExtension'
+        $ref: "#/$defs/vendorExtension"
 
   # --- hooks (notifications) --------------------------------------------------
   eventType:
@@ -81,7 +81,7 @@ $defs:
     type: object
     properties:
       _on:
-        $ref: '#/$defs/eventType'
+        $ref: "#/$defs/eventType"
       cmd:
         type: string
     additionalProperties: false
@@ -106,7 +106,7 @@ $defs:
       shell:
         type: array
         items:
-          $ref: '#/$defs/shellHook'
+          $ref: "#/$defs/shellHook"
         minItems: 0
     # adding more hooks
     # newHandler:
@@ -117,10 +117,10 @@ $defs:
     additionalProperties: false
     patternProperties:
       ^x-:
-        $ref: '#/$defs/vendorExtension'
+        $ref: "#/$defs/vendorExtension"
 
   # --- any vendor specific properties that may need to be added ---------------
   vendorExtension:
-    description: 'Any property starting with x- is valid.'
+    description: "Any property starting with x- is valid."
     additionalProperties: true
     additionalItems: true

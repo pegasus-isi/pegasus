@@ -1,12 +1,12 @@
-$schema: 'http://json-schema.org/draft-07/schema#'
-$id: 'file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/tc-5.0.yml'
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/tc-5.0.yml"
 $defs:
   # --- a transformation entry -------------------------------------------------
   transformation:
     type: object
     properties:
       metadata:
-        $ref: 'common.yml#/$defs/metadata'
+        $ref: "common.yml#/$defs/metadata"
       namespace:
         type: string
       name:
@@ -14,9 +14,9 @@ $defs:
       version:
         type: string
       hooks:
-        $ref: 'common.yml#/$defs/hooks'
+        $ref: "common.yml#/$defs/hooks"
       profiles:
-        $ref: 'common.yml#/$defs/profiles'
+        $ref: "common.yml#/$defs/profiles"
       requires:
         type: array
         items:
@@ -31,21 +31,21 @@ $defs:
             name:
               type: string
             arch:
-              $ref: 'sc-5.0.yml#/$defs/arch'
+              $ref: "sc-5.0.yml#/$defs/arch"
             os.type:
-              $ref: 'sc-5.0.yml#/$defs/os.type'
+              $ref: "sc-5.0.yml#/$defs/os.type"
             os.release:
               type: string
             os.version:
-              $ref: 'common.yml#/$defs/versionString'
+              $ref: "common.yml#/$defs/versionString"
             glibc:
-              $ref: 'common.yml#/$defs/versionString'
+              $ref: "common.yml#/$defs/versionString"
             pfn:
               type: string
             profiles:
-              $ref: 'common.yml#/$defs/profiles'
+              $ref: "common.yml#/$defs/profiles"
             metadata:
-              $ref: 'common.yml#/$defs/metadata'
+              $ref: "common.yml#/$defs/metadata"
             type:
               type: string
               enum:
@@ -60,7 +60,7 @@ $defs:
           additionalProperties: false
           patternProperties:
             ^x-:
-              $ref: 'common.yml#/$defs/vendorExtension'
+              $ref: "common.yml#/$defs/vendorExtension"
         minItems: 1
     required:
       - name
@@ -68,7 +68,7 @@ $defs:
     additionalProperties: false
     patternProperties:
       ^x-:
-        $ref: 'common.yml#/$defs/vendorExtension'
+        $ref: "common.yml#/$defs/vendorExtension"
 
   # --- a container entry ------------------------------------------------------
   container:
@@ -88,10 +88,10 @@ $defs:
         type: string
       mounts:
         type: array
-        items: 
+        items:
           type: string
       profiles:
-        $ref: 'common.yml#/$defs/profiles'
+        $ref: "common.yml#/$defs/profiles"
     required:
       - name
       - type
@@ -99,33 +99,33 @@ $defs:
     additionalProperties: false
     patternProperties:
       ^x-:
-        $ref: 'common.yml#/$defs/vendorExtension'
+        $ref: "common.yml#/$defs/vendorExtension"
 
   # --- schema when inlined in dax ---------------------------------------------
   inlineTransformationCatalog:
     type: object
     properties:
       pegasus:
-        $ref: 'common.yml#/$defs/versionString'
+        $ref: "common.yml#/$defs/versionString"
       transformations:
         type: array
         items:
-          $ref: '#/$defs/transformation'
+          $ref: "#/$defs/transformation"
         minItems: 1
       containers:
         type: array
         items:
-          $ref: '#/$defs/container'
+          $ref: "#/$defs/container"
         minItems: 0
     required:
       - transformations
     patternProperties:
       ^x-:
-        $ref: 'common.yml#/$defs/vendorExtension'
+        $ref: "common.yml#/$defs/vendorExtension"
 
 # --- schema for standalone file -----------------------------------------------
 allOf:
-  - $ref: '#/$defs/inlineTransformationCatalog'
+  - $ref: "#/$defs/inlineTransformationCatalog"
   - type: object
     required:
       - pegasus
