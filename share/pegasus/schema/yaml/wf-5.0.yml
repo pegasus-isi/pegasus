@@ -1,5 +1,5 @@
-$schema: 'http://json-schema.org/draft-07/schema#'
-$id: 'file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/dax-5.0.yml'
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/dax-5.0.yml"
 $defs:
   # --- abstractJob 'use' types ------------------------------------------------
   linkType:
@@ -9,15 +9,15 @@ $defs:
       - output
       - inout
       - checkpoint
-  
+
   # --- abstractJob's 'use' ----------------------------------------------------
   use:
     type: object
     properties:
       file:
-        $ref: 'rc-5.0.yml#/$defs/file'
+        $ref: "rc-5.0.yml#/$defs/file"
       type:
-        $ref: '#/$defs/linkType'
+        $ref: "#/$defs/linkType"
       stageOut:
         type: boolean
       registerReplica:
@@ -29,7 +29,7 @@ $defs:
       namespace:
         type: string
       version:
-        $ref: 'common.yml#/$defs/versionString'
+        $ref: "common.yml#/$defs/versionString"
       executable:
         type: boolean
     additionalProperties: false
@@ -42,40 +42,40 @@ $defs:
     type: object
     properties:
       id:
-        $ref: 'common.yml#/$defs/nodeIdString'
+        $ref: "common.yml#/$defs/nodeIdString"
       nodeLabel:
         type: string
       metadata:
-        $ref: 'common.yml#/$defs/metadata'
+        $ref: "common.yml#/$defs/metadata"
       arguments:
         type: array
         items:
           oneOf:
-              - type: string
-              - type: object
-                properties:
-                    lfn:
-                        type: string
-                required:
-                  - lfn
-                additionalProperties: false
+            - type: string
+            - type: object
+              properties:
+                lfn:
+                  type: string
+              required:
+                - lfn
+              additionalProperties: false
         minItems: 0
       stdin:
-        $ref: 'rc-5.0.yml#/$defs/file'
+        $ref: "rc-5.0.yml#/$defs/file"
       stdout:
-        $ref: 'rc-5.0.yml#/$defs/file'
+        $ref: "rc-5.0.yml#/$defs/file"
       stderr:
-        $ref: 'rc-5.0.yml#/$defs/file'
+        $ref: "rc-5.0.yml#/$defs/file"
       uses:
         type: array
         items:
-          $ref: '#/$defs/use'
+          $ref: "#/$defs/use"
         minItems: 0
 
       profiles:
-        $ref: 'common.yml#/$defs/profiles'
+        $ref: "common.yml#/$defs/profiles"
       hooks:
-        $ref: 'common.yml#/$defs/hooks'
+        $ref: "common.yml#/$defs/hooks"
     required:
       - id
       - arguments
@@ -83,7 +83,7 @@ $defs:
 
   job:
     allOf:
-      - $ref: '#/$defs/abstractJob'
+      - $ref: "#/$defs/abstractJob"
       - properties:
           type:
             const: job
@@ -92,14 +92,14 @@ $defs:
           namespace:
             type: string
           version:
-            $ref: 'common.yml#/$defs/versionString'
+            $ref: "common.yml#/$defs/versionString"
         required:
           - type
           - name
 
   dag:
     allOf:
-      - $ref: '#/$defs/abstractJob'
+      - $ref: "#/$defs/abstractJob"
       - properties:
           type:
             const: dag
@@ -111,7 +111,7 @@ $defs:
 
   dax:
     allOf:
-      - $ref: '#/$defs/abstractJob'
+      - $ref: "#/$defs/abstractJob"
       - properties:
           type:
             const: dax
@@ -126,11 +126,11 @@ $defs:
     type: object
     properties:
       id:
-        ref: 'common.yml#/$defs/nodeIdString'
+        ref: "common.yml#/$defs/nodeIdString"
       children:
         type: array
         items:
-          $ref: 'common.yml#/$defs/nodeIdString'
+          $ref: "common.yml#/$defs/nodeIdString"
         minItems: 1
     required:
       - id
@@ -138,16 +138,12 @@ $defs:
 # --- dax schema ---------------------------------------------------------------
 type: object
 properties:
-  metadata:
-    $ref: 'common.yml#/$defs/metadata'
   pegasus:
-    $ref: 'common.yml#/$defs/versionString'
+    $ref: "common.yml#/$defs/versionString"
   name:
-    $ref: 'common.yml#/$defs/filenameSafeString'
+    $ref: "common.yml#/$defs/filenameSafeString"
   version:
-    $ref: 'common.yml#/$defs/versionString'
-  hooks:
-    $ref: 'common.yml#/$defs/hooks'
+    $ref: "common.yml#/$defs/versionString"
   siteCatalog:
     oneOf:
       - $ref: sc-5.0.yml
@@ -159,41 +155,41 @@ properties:
           - $ref
   replicaCatalog:
     oneOf:
-      - $ref: 'rc-5.0.yml#/$defs/inlineReplicaCatalog'
-# for future work if rc becomes reuseable
-#      - properties:
-#           $ref:
-#             type: string
-#             format: iri
-#        required: [$ref]
+      - $ref: "rc-5.0.yml#/$defs/inlineReplicaCatalog"
+  # for future work if rc becomes reuseable
+  #      - properties:
+  #           $ref:
+  #             type: string
+  #             format: iri
+  #        required: [$ref]
   transformationCatalog:
     oneOf:
-      - $ref: 'tc-5.0.yml#/$defs/inlineTransformationCatalog'
-# for future work if tc becomes reuseable
-#      - properties:
-#          $ref:
-#            type: string
-#            format: iri
-#        required: [$ref]
+      - $ref: "tc-5.0.yml#/$defs/inlineTransformationCatalog"
+  # for future work if tc becomes reuseable
+  #      - properties:
+  #          $ref:
+  #            type: string
+  #            format: iri
+  #        required: [$ref]
   jobs:
     type: array
     items:
       anyOf:
-        - $ref: '#/$defs/job'
-        - $ref: '#/$defs/dag'
-        - $ref: '#/$defs/dax'
+        - $ref: "#/$defs/job"
+        - $ref: "#/$defs/dag"
+        - $ref: "#/$defs/dax"
     minItems: 1
   jobDependencies:
     type: array
     items:
-      $ref: '#/$defs/parent'
+      $ref: "#/$defs/parent"
     minItems: 0
   profiles:
-    $ref: 'common.yml#/$defs/profiles'
+    $ref: "common.yml#/$defs/profiles"
   hooks:
-    $ref: 'common.yml#/$defs/hooks'
+    $ref: "common.yml#/$defs/hooks"
   metadata:
-    $ref: 'common.yml#/$defs/metadata'
+    $ref: "common.yml#/$defs/metadata"
 required:
   - pegasus
   - name
@@ -201,4 +197,5 @@ required:
 additionalProperties: false
 patternProperties:
   ^x-:
-    $ref: 'common.yml#/$defs/vendorExtension'
+    $ref: "common.yml#/$defs/vendorExtension"
+  
