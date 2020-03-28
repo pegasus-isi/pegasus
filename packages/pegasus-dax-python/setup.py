@@ -62,7 +62,6 @@ setup(
         "Topic :: Utilities",
         "License :: OSI Approved :: Apache Software License",
     ],
-    namespace_packages=["Pegasus"],
     package_dir={"": "src"},
     packages=find_packages(where="src"),
     include_package_data=True,
