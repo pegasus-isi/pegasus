@@ -49,5 +49,5 @@ containers:
         JAVA_HOME: /bin/java.1.6
     name: centos-base
     type: docker
-    mount:
+    mounts:
       - /lizard:/lizard
