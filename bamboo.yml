@@ -52,22 +52,22 @@ project:
 
               artifactDefinitions:
                 - name: pegasus-python-source-versioned
-                  copyPattern: 'pegasus-python-source-*.tar.gz'
+                  copyPattern: "pegasus-python-source-*.tar.gz"
                   isShared: true
                 - name: pegasus-source-versioned
-                  copyPattern: 'pegasus-?.*.tar.gz'
+                  copyPattern: "pegasus-?.*.tar.gz"
                   isShared: true
                 - name: pegasus-source-versioned-swamp-c
-                  copyPattern: 'pegasus-swamp-c-?.*.tar.gz'
+                  copyPattern: "pegasus-swamp-c-?.*.tar.gz"
                   isShared: true
                 - name: pegasus-source-versioned-swamp-java
-                  copyPattern: 'pegasus-swamp-java-?.*.tar.gz'
+                  copyPattern: "pegasus-swamp-java-?.*.tar.gz"
                   isShared: true
                 - name: pegasus-source-versioned-swamp-python
-                  copyPattern: 'pegasus-swamp-python-?.*.tar.gz'
+                  copyPattern: "pegasus-swamp-python-?.*.tar.gz"
                   isShared: true
                 - name: pegasus-source
-                  copyPattern: 'pegasus-source.tar.gz'
+                  copyPattern: "pegasus-source.tar.gz"
                   isShared: true
               requirements:
                 - capabilityKey: docbuild
@@ -172,23 +172,23 @@ project:
                   pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDefinitions:
                 - name: Coverage Report - Pegasus Common
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-common/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus API
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-api/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus DAX
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-dax-python/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus Worker
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-worker/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus WMS
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-python/htmlcov/
                   isShared: false
               artifactDependencies:
@@ -290,23 +290,23 @@ project:
                   pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDefinitions:
                 - name: Coverage Report - Pegasus Common
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-common/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus API
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-api/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus DAX
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-dax-python/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus Worker
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-worker/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus WMS
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-python/htmlcov/
                   isShared: false
               artifactDependencies:
@@ -527,23 +527,23 @@ project:
                   pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDefinitions:
                 - name: Coverage Report - Pegasus Common
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-common/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus API
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-api/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus DAX
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-dax-python/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus Worker
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-worker/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus WMS
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-python/htmlcov/
                   isShared: false
               artifactDependencies:
@@ -645,23 +645,23 @@ project:
                   pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDefinitions:
                 - name: Coverage Report - Pegasus Common
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-common/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus API
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-api/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus DAX
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-dax-python/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus Worker
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-worker/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus WMS
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-python/htmlcov/
                   isShared: false
               artifactDependencies:
@@ -764,23 +764,23 @@ project:
                   pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDefinitions:
                 - name: Coverage Report - Pegasus Common
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-common/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus API
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-api/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus DAX
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-dax-python/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus Worker
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-worker/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus WMS
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-python/htmlcov/
                   isShared: false
               artifactDependencies:
@@ -883,23 +883,23 @@ project:
                   pickUpTestResultsCreatedOutsideOfBuild: false
               artifactDefinitions:
                 - name: Coverage Report - Pegasus Common
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-common/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus API
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-api/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus DAX
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-dax-python/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus Worker
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-worker/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus WMS
-                  copyPattern: '*'
+                  copyPattern: "*"
                   location: pegasus-source/packages/pegasus-python/htmlcov/
                   isShared: false
               artifactDependencies:
@@ -998,7 +998,7 @@ project:
                     workingSubDirectory: pegasus-source
               artifactDefinitions:
                 - name: pegasus-doc
-                  copyPattern: 'pegasus-doc-*.tar.gz'
+                  copyPattern: "pegasus-doc-*.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
               artifactDependencies:
@@ -1026,7 +1026,7 @@ project:
                     workingSubDirectory: pegasus-source
               artifactDefinitions:
                 - name: pegasus-r-dax3
-                  copyPattern: 'pegasus-r-dax3*.tar.gz'
+                  copyPattern: "pegasus-r-dax3*.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
               artifactDependencies:
@@ -1055,15 +1055,15 @@ project:
                     workingSubDirectory: pegasus-source
               artifactDefinitions:
                 - name: pegasus-binary-x86_rhel_6
-                  copyPattern: 'pegasus-binary-*-x86_rhel_6.tar.gz'
+                  copyPattern: "pegasus-binary-*-x86_rhel_6.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
                 - name: pegasus-rpm-x86_rhel_6
-                  copyPattern: 'pegasus-*i?86.rpm'
+                  copyPattern: "pegasus-*i?86.rpm"
                   location: pegasus-source/dist
                   isShared: true
                 - name: pegasus-worker-x86_rhel_6
-                  copyPattern: 'pegasus-worker-*-x86_rhel_6.tar.gz'
+                  copyPattern: "pegasus-worker-*-x86_rhel_6.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
               artifactDependencies:
@@ -1106,15 +1106,15 @@ project:
                       dist-rpm dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_rhel_6
-                  copyPattern: 'pegasus-binary-*-x86_64_rhel_6.tar.gz'
+                  copyPattern: "pegasus-binary-*-x86_64_rhel_6.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
                 - name: pegasus-rpm-x86_64_rhel_6
-                  copyPattern: '*x86_64.rpm'
+                  copyPattern: "*x86_64.rpm"
                   location: pegasus-source/dist
                   isShared: true
                 - name: pegasus-worker-x86_64_rhel_6
-                  copyPattern: 'pegasus-worker-*-x86_64_rhel_6.tar.gz'
+                  copyPattern: "pegasus-worker-*-x86_64_rhel_6.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
               artifactDependencies:
@@ -1150,15 +1150,15 @@ project:
                       dist-rpm dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_rhel_7
-                  copyPattern: 'pegasus-binary-*-x86_64_rhel_7.tar.gz'
+                  copyPattern: "pegasus-binary-*-x86_64_rhel_7.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
                 - name: pegasus-rpm-x86_64_rhel_7
-                  copyPattern: '*x86_64.rpm'
+                  copyPattern: "*x86_64.rpm"
                   location: pegasus-source/dist
                   isShared: true
                 - name: pegasus-worker-x86_64_rhel_7
-                  copyPattern: 'pegasus-worker-*-x86_64_rhel_7.tar.gz'
+                  copyPattern: "pegasus-worker-*-x86_64_rhel_7.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
               artifactDependencies:
@@ -1193,19 +1193,19 @@ project:
                       dist-rpm dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_rhel_8
-                  copyPattern: 'pegasus-binary-*-x86_64_rhel_8.tar.gz'
+                  copyPattern: "pegasus-binary-*-x86_64_rhel_8.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
                 - name: pegasus-rpm-x86_64_rhel_8
-                  copyPattern: '*x86_64.rpm'
+                  copyPattern: "*x86_64.rpm"
                   location: pegasus-source/dist
                   isShared: true
                 - name: pegasus-worker-x86_64_rhel_8
-                  copyPattern: 'pegasus-worker-*-x86_64_rhel_8.tar.gz'
+                  copyPattern: "pegasus-worker-*-x86_64_rhel_8.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
                 - name: pegasus-srcrpm
-                  copyPattern: '*.src.rpm'
+                  copyPattern: "*.src.rpm"
                   location: pegasus-source/dist
                   isShared: true
               artifactDependencies:
@@ -1240,15 +1240,15 @@ project:
                       clean dist-deb dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_deb_9
-                  copyPattern: 'pegasus-binary-*-x86_64_deb_9.tar.gz'
+                  copyPattern: "pegasus-binary-*-x86_64_deb_9.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
                 - name: pegasus-deb-x86_64_deb_9
-                  copyPattern: '*.deb'
+                  copyPattern: "*.deb"
                   location: pegasus-source/dist
                   isShared: true
                 - name: pegasus-worker-x86_64_deb_9
-                  copyPattern: 'pegasus-worker-*-x86_64_deb_9.tar.gz'
+                  copyPattern: "pegasus-worker-*-x86_64_deb_9.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
               artifactDependencies:
@@ -1284,15 +1284,15 @@ project:
                       clean dist-deb dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_deb_10
-                  copyPattern: 'pegasus-binary-*-x86_64_deb_10.tar.gz'
+                  copyPattern: "pegasus-binary-*-x86_64_deb_10.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
                 - name: pegasus-deb-x86_64_deb_10
-                  copyPattern: '*.deb'
+                  copyPattern: "*.deb"
                   location: pegasus-source/dist
                   isShared: true
                 - name: pegasus-worker-x86_64_deb_10
-                  copyPattern: 'pegasus-worker-*-x86_64_deb_10.tar.gz'
+                  copyPattern: "pegasus-worker-*-x86_64_deb_10.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
               artifactDependencies:
@@ -1321,11 +1321,11 @@ project:
                     workingSubDirectory: pegasus-source
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_macos
-                  copyPattern: 'pegasus-binary-*.tar.gz'
+                  copyPattern: "pegasus-binary-*.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
                 - name: pegasus-worker-x86_64_macos
-                  copyPattern: 'pegasus-worker-*.tar.gz'
+                  copyPattern: "pegasus-worker-*.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
               artifactDependencies:
@@ -1367,15 +1367,15 @@ project:
                       clean dist-deb dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_ubuntu_16
-                  copyPattern: 'pegasus-binary-*-x86_64_ubuntu_16.tar.gz'
+                  copyPattern: "pegasus-binary-*-x86_64_ubuntu_16.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
                 - name: pegasus-deb-x86_64_ubuntu_16
-                  copyPattern: '*.deb'
+                  copyPattern: "*.deb"
                   location: pegasus-source/dist
                   isShared: true
                 - name: pegasus-worker-x86_64_ubuntu_16
-                  copyPattern: 'pegasus-worker-*-x86_64_ubuntu_16.tar.gz'
+                  copyPattern: "pegasus-worker-*-x86_64_ubuntu_16.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
               artifactDependencies:
@@ -1410,15 +1410,15 @@ project:
                       clean dist-deb dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_ubuntu_18
-                  copyPattern: 'pegasus-binary-*-x86_64_ubuntu_18.tar.gz'
+                  copyPattern: "pegasus-binary-*-x86_64_ubuntu_18.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
                 - name: pegasus-deb-x86_64_ubuntu_18
-                  copyPattern: '*.deb'
+                  copyPattern: "*.deb"
                   location: pegasus-source/dist
                   isShared: true
                 - name: pegasus-worker-x86_64_ubuntu_18
-                  copyPattern: 'pegasus-worker-*-x86_64_ubuntu_18.tar.gz'
+                  copyPattern: "pegasus-worker-*-x86_64_ubuntu_18.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
               artifactDependencies:
@@ -1565,16 +1565,16 @@ project:
       permissions:
         user:
           mayani:
-            -  !permission ADMIN
+            - !permission ADMIN
         group:
           ccg-users:
-            -  !permission VIEW
-            -  !permission BUILD
+            - !permission VIEW
+            - !permission BUILD
         other:
           !userType ANONYMOUS_USERS:
-            -  !permission VIEW
+            - !permission VIEW
           !userType LOGGED_IN_USERS:
-            -  !permission VIEW
+            - !permission VIEW
       triggers:
         - !scheduled
           description: Nightly Build
@@ -1591,22 +1591,20 @@ project:
           event: !event JOB_HUNG
         - !customNotification
           event: !event JOB_HUNG
-          notificationRecipientType: 'com.atlassian.bamboo.plugins.bamboo-slack:recipient.slack'
+          notificationRecipientType: "com.atlassian.bamboo.plugins.bamboo-slack:recipient.slack"
           config:
-            webhookUrl: ['${bamboo.PEGASUS_SLACK_WEBHOOK}']
-            channel: ['#github-notifications']
-            botName: null
+            webhookUrl: ["${bamboo.PEGASUS_SLACK_WEBHOOK}"]
+            channel: ["#github-notifications"]
             botName: [Bamboo]
         - !email
           address: pegasus-svn@isi.edu
           event: !event FAILED_BUILDS_AND_FIRST_SUCCESSFUL
         - !customNotification
           event: !event FAILED_BUILDS_AND_FIRST_SUCCESSFUL
-          notificationRecipientType: 'com.atlassian.bamboo.plugins.bamboo-slack:recipient.slack'
+          notificationRecipientType: "com.atlassian.bamboo.plugins.bamboo-slack:recipient.slack"
           config:
-            webhookUrl: ['${bamboo.PEGASUS_SLACK_WEBHOOK}']
-            channel: ['#github-notifications']
-            botName: null
+            webhookUrl: ["${bamboo.PEGASUS_SLACK_WEBHOOK}"]
+            channel: ["#github-notifications"]
             botName: [Bamboo]
       variables:
         - key: TAG_CENTOS_6
@@ -1694,27 +1692,27 @@ project:
               requirements:
                 - capabilityKey: awscli.installed
                   matchType: !equals
-                    matchValue: 'true'
+                    matchValue: "true"
                 - capabilityKey: system.builder.command.packer
                   matchType: !exists exists
                 - capabilityKey: virtualbox.installed
                   matchType: !equals
-                    matchValue: 'true'
+                    matchValue: "true"
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
       permissions:
         user:
           mayani:
-            -  !permission ADMIN
+            - !permission ADMIN
         group:
           ccg-users:
-            -  !permission VIEW
-            -  !permission BUILD
+            - !permission VIEW
+            - !permission BUILD
         other:
           !userType ANONYMOUS_USERS:
-            -  !permission VIEW
+            - !permission VIEW
           !userType LOGGED_IN_USERS:
-            -  !permission VIEW
+            - !permission VIEW
       triggers:
         - !scheduled
           description: Nightly Build
@@ -1795,7 +1793,7 @@ project:
                   matchType: !exists exists
               artifactDefinitions:
                 - name: tests
-                  copyPattern: 'tests.tar'
+                  copyPattern: "tests.tar"
                   isShared: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: false
@@ -3694,13 +3692,6 @@ project:
                 - name: tests
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: false
-              requirements:
-                - capabilityKey: condor
-                  matchType: !exists exists
-              artifactDependencies:
-                - name: tests
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: false
             - key: T042B
               name: 042-kswrapper-nonsharedfs
               description: TODO
@@ -4110,58 +4101,58 @@ project:
               name: 044-singularity-nonsharedfs-symlink-cvmfs
               description: Singularity in nonsharedfs with a shared filesystem and symlinking of container image from cvmfs
               tasks:
-              - !script
-                description: Cleanup
-                enabled: true
-                inlineScript:
-                  interpreter: !scriptInterpreter LEGACY_SH_BAT
-                  scriptBody: "rm -rf pegasus/ test/"
-              - !script
-                description: Untar source
-                inlineScript:
-                  interpreter: !scriptInterpreter LEGACY_SH_BAT
-                  scriptBody: "tar xf tests.tar"
-              - !script
-                description: Run Test
-                inlineScript:
-                  interpreter: !scriptInterpreter LEGACY_SH_BAT
-                  scriptBody: |
-                    export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
-                    test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+                - !script
+                  description: Cleanup
+                  enabled: true
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "rm -rf pegasus/ test/"
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xf tests.tar"
+                - !script
+                  description: Run Test
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+                      test/scripts/launch-bamboo-test ${bamboo_shortJobName}
               requirements:
-              - capabilityKey: condor
-                matchType: !exists exists
+                - capabilityKey: condor
+                  matchType: !exists exists
               artifactDependencies:
-              - name: tests
+                - name: tests
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: false
             - key: T044I
               name: 044-singularity-nonsharedfs-minimal
               description: Singularity in nonsharedfs, with a minimal image
               tasks:
-              - !script
-                description: Cleanup
-                enabled: true
-                inlineScript:
-                  interpreter: !scriptInterpreter LEGACY_SH_BAT
-                  scriptBody: "rm -rf pegasus/ test/"
-              - !script
-                description: Untar source
-                inlineScript:
-                  interpreter: !scriptInterpreter LEGACY_SH_BAT
-                  scriptBody: "tar xf tests.tar"
-              - !script
-                description: Run Test
-                inlineScript:
-                  interpreter: !scriptInterpreter LEGACY_SH_BAT
-                  scriptBody: |
-                    export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
-                    test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+                - !script
+                  description: Cleanup
+                  enabled: true
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "rm -rf pegasus/ test/"
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xf tests.tar"
+                - !script
+                  description: Run Test
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+                      test/scripts/launch-bamboo-test ${bamboo_shortJobName}
               requirements:
-              - capabilityKey: condor
-                matchType: !exists exists
+                - capabilityKey: condor
+                  matchType: !exists exists
               artifactDependencies:
-              - name: tests
+                - name: tests
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: false
             - key: T045A
@@ -4674,16 +4665,16 @@ project:
       permissions:
         user:
           mayani:
-            -  !permission ADMIN
+            - !permission ADMIN
         group:
           ccg-users:
-            -  !permission VIEW
-            -  !permission BUILD
+            - !permission VIEW
+            - !permission BUILD
         other:
           !userType ANONYMOUS_USERS:
-            -  !permission VIEW
+            - !permission VIEW
           !userType LOGGED_IN_USERS:
-            -  !permission VIEW
+            - !permission VIEW
       triggers:
         - !scheduled
           description: Nightly Build
