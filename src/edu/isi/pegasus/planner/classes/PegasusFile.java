@@ -781,7 +781,7 @@ public class PegasusFile extends Data {
     private void setMetadata(List<Profile> profiles) {
         Metadata m = new Metadata();
         for (Profile p : profiles) {
-            m.checkKey(p.getProfileKey(), p.getProfileValue());
+            m.checkKeyInNS(p);
         }
         this.mMetadata = m;
     }
