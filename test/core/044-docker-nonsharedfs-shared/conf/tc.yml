@@ -42,6 +42,7 @@ transformations:
 
 containers:
   - image: docker:///centos.type:7
+    image.site: local
     profiles:
       env:
         APP_HOME: /tmp/myscratch
