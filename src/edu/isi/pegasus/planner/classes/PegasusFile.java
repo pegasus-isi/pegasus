@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -778,6 +779,18 @@ public class PegasusFile extends Data {
     /**
      * Sets metadata attributes for the file
      *
+     */
+    private void setMetadata(List<Profile> profiles) {
+        Metadata m = new Metadata();
+        for (Profile p : profiles) {
+            m.checkKey(p.getProfileKey(), p.getProfileValue());
+        }
+        this.mMetadata = m;
+    }
+
+    /**
+     * Sets metadata attributes for the file
+     *
      * @param m Metadata
      */
     public void setMetadata(Metadata m) {
@@ -1021,7 +1034,7 @@ public class PegasusFile extends Data {
                         break;
 
                     case METADATA:
-                        //pf.setMetadata(this.createMetadata(node.get(key));
+                        pf.setMetadata(this.createMetadata(node.get(key)));
                         break;
 
                     case TYPE:
