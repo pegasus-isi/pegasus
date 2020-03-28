@@ -23,16 +23,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
-import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
-import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.common.PegasusJsonDeserializer;
-import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import java.io.IOException;
 import java.util.BitSet;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +44,8 @@ import java.util.Map;
  * @author Karan Vahi
  * @version $Revision$
  */
+
+@JsonDeserialize(using = PegasusFile.JsonDeserializer.class)
 public class PegasusFile extends Data {
 
     /**
