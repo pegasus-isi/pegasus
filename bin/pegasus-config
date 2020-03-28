@@ -3,18 +3,18 @@
 # prototype for a tool like pkg-config that tells us all kinds of
 # interesting things about Pegasus. This is mainly destined to be
 # used inside scripts to determine various configuration options,
-# locations and directories. 
+# locations and directories.
 #
 # $Id$
 #
 use 5.006;
 use strict;
-use Cwd; 
+use Cwd;
 use File::Spec;
 use File::Basename;
 use Getopt::Long qw(:config bundling no_ignore_case);
-use POSIX (); 
-use Sys::Hostname; 
+use POSIX ();
+use Sys::Hostname;
 
 my $tmpdir = $ENV{'MY_TMP'} ||  # MY_TMP to override standard settings
     $ENV{TMP} ||                # standard
@@ -43,8 +43,6 @@ my $java_dir	= File::Spec->catdir( $share_dir, 'java' );
 my $perl_dir	= File::Spec->catdir( $base_dir, $lib, 'pegasus', 'perl' );
 my $python_dir	= File::Spec->catdir( $base_dir, $python_lib );
 my $python_externals_dir = File::Spec->catdir( $base_dir, $lib, 'pegasus', 'externals', 'python' );
-my $php_dir	= File::Spec->catdir( $base_dir, $lib, 'pegasus', 'php' );
-my $js_dir	= File::Spec->catdir( $base_dir, $lib, 'pegasus', 'javascript' );
 my $schema_dir	= File::Spec->catdir( $share_dir, 'schema' );
 my $r_dir       = join("", sort(<$share_dir/r/*.tar.gz>));
 my $extra_classpath = '';
@@ -75,7 +73,7 @@ my $aws_classpath = join(":", @aws_jars);
 $classpath = $classpath . ":" . $aws_classpath;
 
 sub usage {
-    my $app = basename($0); 
+    my $app = basename($0);
     print << "EOF";
 Usage: $app [argument]
 
@@ -84,7 +82,7 @@ to query the current Pegasus installation.
 
 Arguments:
  -h|--help            Print this help and exit.
- -V|--version         Print Pegasus version information and exit. 
+ -V|--version         Print Pegasus version information and exit.
 
  --perl-dump          Dumps all settings in perl format as separate variables.
  --perl-hash          Dumps all settings in perl format as single perl hash.
@@ -133,19 +131,19 @@ sub find_exec($;@) {
 
 sub site_snippet($) {
     my $home = shift;
-    my @u = POSIX::uname(); 
+    my @u = POSIX::uname();
     $u[2] =~ s/^(\d+(\.\d+(\.\d+)?)?).*/$1/;
     $u[4] =~ s/i.86/x86/;
 
     # check for presence of Globus
     my $g_l = $ENV{'GLOBUS_LOCATION'};
-    unless ( defined $g_l ) { 
-        my $gr = find_exec( 'globusrun' ); 
-        if ( defined $gr && -x $gr ) { 
+    unless ( defined $g_l ) {
+        my $gr = find_exec( 'globusrun' );
+        if ( defined $gr && -x $gr ) {
             # OK, so we got Globus. Guess the globus location
-            $g_l = dirname( Cwd::abs_path(dirname($gr)) ); 
+            $g_l = dirname( Cwd::abs_path(dirname($gr)) );
         }
-        undef $g_l unless -d $g_l; 
+        undef $g_l unless -d $g_l;
     }
 
     print "  <!-- site: local -->\n";
@@ -153,31 +151,31 @@ sub site_snippet($) {
 
     # so we got Globus installed. Let's check, if there are any
     # services associated with this Globus on this site
-    if ( defined $g_l ) { 
-	my $g_v = `globus-version`; 
-	chomp($g_v); 
-	my @g_v = split /\./, $g_v; 
-	my $type = $g_v[0] >= 5 ? 'gt5' : 'gt2'; 
+    if ( defined $g_l ) {
+	my $g_v = `globus-version`;
+	chomp($g_v);
+	my @g_v = split /\./, $g_v;
+	my $type = $g_v[0] >= 5 ? 'gt5' : 'gt2';
 
-	my $dir = File::Spec->catdir( $g_l, 'etc', 'grid-services' ); 
-	my $glob = File::Spec->catfile( $dir, 'jobmanager-*' ); 
-	my $fqdn = Sys::Hostname::hostname(); 
+	my $dir = File::Spec->catdir( $g_l, 'etc', 'grid-services' );
+	my $glob = File::Spec->catfile( $dir, 'jobmanager-*' );
+	my $fqdn = Sys::Hostname::hostname();
 	foreach my $jm ( CORE::glob($glob) ) {
 	    if ( open( J, "<$jm" ) ) {
 		my %grmblftz = ( 'fork' => 'Fork',
 				 'condor' => 'Condor',
 				 'pbs' => 'PBS',
-				 'lsf' => 'LSF' ); 
+				 'lsf' => 'LSF' );
 		chomp( $_ = <J> );
-		close J; 
-		my $basejm = basename($jm); 
-		my $jobtype = ( $jm =~ /-fork$/ ? 'auxillary' : 'compute' ); 
-		if ( /-type (\S+)/ ) { 
-		    my $t = lc($1); 
-		    print( '    <grid type="', $type, 
-			   '" contact="', $fqdn, '/', $basejm, 
-			   '" scheduler="', ( $grmblftz{$t} || ucfirst($t) ), 
-			   '" jobtype="', $jobtype, "\" />\n" ); 
+		close J;
+		my $basejm = basename($jm);
+		my $jobtype = ( $jm =~ /-fork$/ ? 'auxillary' : 'compute' );
+		if ( /-type (\S+)/ ) {
+		    my $t = lc($1);
+		    print( '    <grid type="', $type,
+			   '" contact="', $fqdn, '/', $basejm,
+			   '" scheduler="', ( $grmblftz{$t} || ucfirst($t) ),
+			   '" jobtype="', $jobtype, "\" />\n" );
 		}
 	    }
 	}
@@ -185,74 +183,70 @@ sub site_snippet($) {
 
     print "    <head-fs>\n";
     print "      <scratch>\n";
-    print "\t<shared>\n"; 
+    print "\t<shared>\n";
     print "\t  <file-server protocol=\"file\" url=\"file://\"\n\t\tmount-point=\"$home\" />\n";
     print "\t  <internal-mount-point\n\t\tmount-point=\"$home\" />\n";
-    print "\t</shared>\n"; 
-    print "      </scratch>\n"; 
+    print "\t</shared>\n";
+    print "      </scratch>\n";
     print "      <storage>\n";
     print "\t<shared>\n";
     print "\t  <file-server protocol=\"file\" url=\"file://\"\n\t\tmount-point=\"$home\" />\n";
     print "\t  <internal-mount-point\n\t\tmount-point=\"$home\" />\n";
     print "\t</shared>\n";
     print "      </storage>\n";
-    print "    </head-fs>\n"; 
+    print "    </head-fs>\n";
     print "    <replica-catalog type=\"LRC\" url=\"dummyValue.url.edu\" />\n";
-    print "    <profile namespace=\"env\" key=\"HOME\">$userdir</profile>\n"; 
+    print "    <profile namespace=\"env\" key=\"HOME\">$userdir</profile>\n";
     if ( defined $g_l ) {
-        print "    <profile namespace=\"env\" key=\"GLOBUS_LOCATION\">$g_l</profile>\n"; 
+        print "    <profile namespace=\"env\" key=\"GLOBUS_LOCATION\">$g_l</profile>\n";
     }
-    if ( exists $ENV{'LD_LIBRARY_PATH'} ) { 
-        print( "    <profile namespace=\"env\" key=\"LD_LIBRARY_PATH\">", 
-            $ENV{LD_LIBRARY_PATH}, "</profile>\n" ); 
+    if ( exists $ENV{'LD_LIBRARY_PATH'} ) {
+        print( "    <profile namespace=\"env\" key=\"LD_LIBRARY_PATH\">",
+            $ENV{LD_LIBRARY_PATH}, "</profile>\n" );
     }
     print "  </site>\n";
 }
 
 # Parse command-line options.
 usage() unless @ARGV;
-my $eoln = 1; 
+my $eoln = 1;
 GetOptions( "help|h" => \&usage
     , 'eoln|crlf!' => \$eoln
     , 'version|V' => sub {
         print $version;
-        print "\n" if $eoln; 
-        exit 0; 
+        print "\n" if $eoln;
+        exit 0;
     }
     , 'perl-hash' => sub {
 	print << "EOF";
 use vars qw(\%pegasus);
-\%pegasus = 
+\%pegasus =
 	( bin => \"$bin_dir\"
 	, conf => \"$conf_dir\"
 	, java => \"$java_dir\"
 	, perl => \"$perl_dir\"
 	, python => \"$python_dir\"
 	, pyexts => \"$python_externals_dir\"
-	, php => \"$php_dir\"
-	, js => \"$js_dir\"
 	, share => \"$share_dir\"
 	, schema => \"$schema_dir\"
-	); 
+	);
 unshift( \@INC, \$pegasus{perl} );
 EOF
-    exit 0; 
+    exit 0;
     }
     , 'perl-dump' => sub {
 	# This won't work, because the "my" variables inside a BEGIN/eval block
-	# won't make it outside the BEGIN (i.e. not available to main program). 
+	# won't make it outside the BEGIN (i.e. not available to main program).
         print "my \$pegasus_bin_dir = \"$bin_dir\";\n";
         print "my \$pegasus_conf_dir = \"$conf_dir\";\n";
         print "my \$pegasus_java_dir = \"$java_dir\";\n";
         print "my \$pegasus_perl_dir = \"$perl_dir\";\n";
         print "my \$pegasus_python_dir = \"$python_dir\";\n";
         print "my \$pegasus_python_externals_dir = \"$python_externals_dir\";\n";
-        print "my \$pegasus_php_dir = \"$php_dir\";\n";
-        print "my \$pegasus_javascript_dir = \"$js_dir\";\n";
         print "my \$pegasus_share_dir = \"$share_dir\";\n";
         print "my \$pegasus_schema_dir = \"$schema_dir\";\n";
         print "unshift(\@INC, \$pegasus_perl_dir);\n";
-        exit 0; 
+        exit 0;
     }
     , 'python-dump' => sub {
         print "pegasus_bin_dir = \"$bin_dir\"\n";
@@ -261,8 +255,6 @@ EOF
         print "pegasus_perl_dir = \"$perl_dir\"\n";
         print "pegasus_python_dir = \"$python_dir\"\n";
         print "pegasus_python_externals_dir = \"$python_externals_dir\"\n";
-        print "pegasus_php_dir = \"$php_dir\"\n";
-        print "pegasus_javascript_dir = \"$js_dir\"\n";
         print "pegasus_share_dir = \"$share_dir\"\n";
         print "pegasus_schema_dir = \"$schema_dir\"\n";
         exit 0;
@@ -286,42 +278,42 @@ EOF
         print "export PEGASUS_SCHEMA_DIR\n";
         print "CLASSPATH=\"$classpath\"\n";
         print "export CLASSPATH\n";
-        exit 0; 
+        exit 0;
     }
     , 'bin' => sub {
         print $bin_dir;
-        print "\n" if $eoln; 
-        exit 0; 
+        print "\n" if $eoln;
+        exit 0;
     }
     , 'conf' => sub {
         print $conf_dir;
-        print "\n" if $eoln; 
-        exit 0; 
+        print "\n" if $eoln;
+        exit 0;
     }
     , 'classpath' => sub {
         print $classpath;
-        print "\n" if $eoln; 
-        exit 0; 
+        print "\n" if $eoln;
+        exit 0;
     }
     , 'java' => sub {
         print $java_dir;
-        print "\n" if $eoln; 
-        exit 0; 
+        print "\n" if $eoln;
+        exit 0;
     }
     , 'perl' => sub {
         print $perl_dir;
-        print "\n" if $eoln; 
-        exit 0; 
+        print "\n" if $eoln;
+        exit 0;
     }
     , 'python' => sub {
         print $python_dir;
-        print "\n" if $eoln; 
-        exit 0; 
+        print "\n" if $eoln;
+        exit 0;
     }
     , 'python-externals' => sub {
         print $python_externals_dir;
-        print "\n" if $eoln; 
-        exit 0; 
+        print "\n" if $eoln;
+        exit 0;
     }
     , 'r' => sub {
         print $r_dir;
@@ -330,23 +322,23 @@ EOF
     }
     , 'schema' => sub {
         print $schema_dir;
-        print "\n" if $eoln; 
-        exit 0; 
+        print "\n" if $eoln;
+        exit 0;
     }
     , 'local-site:s' => sub {
-        site_snippet( ($_[1] || $userdir) ); 
-        exit 0; 
+        site_snippet( ($_[1] || $userdir) );
+        exit 0;
     }
     , 'full-local:s' => sub {
         print "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-        #print '<!-- generated: ', isodate, " -->\n"; 
+        #print '<!-- generated: ', isodate, " -->\n";
         print('<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"',
               ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
               ' xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog',
-              ' http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">', "\n" ); 
-        site_snippet( ($_[1] || $userdir) ); 
+              ' http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">', "\n" );
+        site_snippet( ($_[1] || $userdir) );
         print "</sitecatalog>\n";
         exit 0;
     }
 );
-usage(); 
+usage();

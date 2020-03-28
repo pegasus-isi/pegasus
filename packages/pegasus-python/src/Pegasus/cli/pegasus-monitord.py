@@ -47,14 +47,13 @@ from Pegasus.tools import properties, utils
 prog_base = os.path.split(sys.argv[0])[1]
 
 
-
 utils.configureLogging()
 
 root_logger = logging.getLogger()
 logger = logging.getLogger("pegasus-monitord")
 
 # Ordered logging levels
-_LEVELS = [logger.ERROR, logger.WARNING, logger.INFO, logger.DEBUG, logger.TRACE]
+_LEVELS = [logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG, logging.TRACE]
 
 logger.info("pegasus-monitord starting - pid %d " % (os.getpid()))
 
@@ -63,72 +62,103 @@ if sys.version_info < (2, 5):
     os.SEEK_CUR = 1
 
 re_parse_dag_name = re.compile(r"Parsing (.+) ...$")
-re_parse_timestamp = re.compile(r"\s*(\d{1,2})\/(\d{1,2})(\/(\d{1,2}))?\s+(\d{1,2}):(\d{2}):(\d{2})")
-re_parse_iso_stamp = re.compile(r"^\s*(\d{4}).?(\d{2}).?(\d{2}).(\d{2}).?(\d{2}).?(\d{2})([.,]\d+)?([Zz]|[-+](\d{2}).?(\d{2}))")
-re_parse_event = re.compile(r"Event:\s+ULOG_(\S+) for (?:HT|)Condor (?:Job|Node) (\S+)\s+\((-?[0-9]+\.[0-9]+)(\.[0-9]+)?\).*")
-re_parse_script_running = re.compile(r"\d{2}\s(?:\(D_\w*\)\s)?Running (PRE|POST) script of (?:Job|Node) (.+)\.{3}")
-re_parse_script_done = re.compile(r"\d{2}\s(?:\(D_\w*\)\s)?(PRE|POST) Script of (?:Job|[nN]ode) (\S+)")
+re_parse_timestamp = re.compile(
+    r"\s*(\d{1,2})\/(\d{1,2})(\/(\d{1,2}))?\s+(\d{1,2}):(\d{2}):(\d{2})"
+)
+re_parse_iso_stamp = re.compile(
+    r"^\s*(\d{4}).?(\d{2}).?(\d{2}).(\d{2}).?(\d{2}).?(\d{2})([.,]\d+)?([Zz]|[-+](\d{2}).?(\d{2}))"
+)
+re_parse_event = re.compile(
+    r"Event:\s+ULOG_(\S+) for (?:HT|)Condor (?:Job|Node) (\S+)\s+\((-?[0-9]+\.[0-9]+)(\.[0-9]+)?\).*"
+)
+re_parse_script_running = re.compile(
+    r"\d{2}\s(?:\(D_\w*\)\s)?Running (PRE|POST) script of (?:Job|Node) (.+)\.{3}"
+)
+re_parse_script_done = re.compile(
+    r"\d{2}\s(?:\(D_\w*\)\s)?(PRE|POST) Script of (?:Job|[nN]ode) (\S+)"
+)
 re_parse_script_successful = re.compile(r"completed successfully\.$")
 re_parse_script_failed = re.compile(r"failed with status\s+(-?\d+)\.?$")
 re_parse_job_submit = re.compile(r"Submitting (?:HT|)Condor Node (.+) job")
 re_parse_job_submit_error = re.compile(r"ERROR: submit attempt failed")
-re_parse_job_failed = re.compile(r"\d{2}\s(?:\(D_\w*\)\s)?Node (\S+) job proc \(([0-9\.]+)\) failed with (status|signal)\s+(-?\d+)\.$")
-re_parse_job_successful = re.compile(r"\d{2}\s(?:\(D_\w*\)\s)?Node (\S+) job proc \(([0-9\.]+)\) completed successfully\.$")
+re_parse_job_failed = re.compile(
+    r"\d{2}\s(?:\(D_\w*\)\s)?Node (\S+) job proc \(([0-9\.]+)\) failed with (status|signal)\s+(-?\d+)\.$"
+)
+re_parse_job_successful = re.compile(
+    r"\d{2}\s(?:\(D_\w*\)\s)?Node (\S+) job proc \(([0-9\.]+)\) completed successfully\.$"
+)
 re_parse_retry = re.compile(r"Retrying node (\S+) \(retry \#(\d+) of (\d+)\)")
-re_parse_dagman_condor_id = re.compile(r"\*\* condor_scheduniv_exec\.([0-9\.]+) \(CONDOR_DAGMAN\) STARTING UP")
-re_parse_dagman_finished = re.compile(r"\(condor_DAGMAN\)[\w\s]+EXITING WITH STATUS (\d+)$")
+re_parse_dagman_condor_id = re.compile(
+    r"\*\* condor_scheduniv_exec\.([0-9\.]+) \(CONDOR_DAGMAN\) STARTING UP"
+)
+re_parse_dagman_finished = re.compile(
+    r"\(condor_DAGMAN\)[\w\s]+EXITING WITH STATUS (\d+)$"
+)
 re_parse_dagman_pid = re.compile(r"\*\* PID = (\d+)$")
 re_parse_condor_version = re.compile(r"\*\* \$CondorVersion: ((\d+)\.(\d+)\.(\d+))")
 re_parse_condor_logfile = re.compile(r"Condor log will be written to ([^,]+)")
 re_parse_condor_logfile_insane = re.compile(r"\d{2}\s{3,}(\S+)")
 re_parse_multiline_files = re.compile(r"All DAG node user log files:")
-re_parse_dagman_aborted  = re.compile(r"Received SIGUSR1")
-re_parse_job_held        = re.compile(r"\s*Hold reason:(.*)")
+re_parse_dagman_aborted = re.compile(r"Received SIGUSR1")
+re_parse_job_held = re.compile(r"\s*Hold reason:(.*)")
 
 # Constants
-MONITORD_WF_RETRY_FILE = "monitord.subwf" # filename for writing persistent sub-workflow retry information
-MAX_SLEEP_TIME = 10                       # in seconds
-SLEEP_WAIT_NOTIFICATION = 5               # in seconds
-DAGMAN_OUT_MAX_READ_SIZE = 32768          # at most the maximum bytes to read while parsing dagman.out file
-DEFAULT_ENCODING = "bp"                   # default way of encoding events generated
+MONITORD_WF_RETRY_FILE = (
+    "monitord.subwf"  # filename for writing persistent sub-workflow retry information
+)
+MAX_SLEEP_TIME = 10  # in seconds
+SLEEP_WAIT_NOTIFICATION = 5  # in seconds
+DAGMAN_OUT_MAX_READ_SIZE = (
+    32768  # at most the maximum bytes to read while parsing dagman.out file
+)
+DEFAULT_ENCODING = "bp"  # default way of encoding events generated
 
-unsubmitted_events = {"UN_READY": 1,
-                      "PRE_SCRIPT_STARTED": 1,
-                      "PRE_SCRIPT_SUCCESS": 1,
-                      "PRE_SCRIPT_FAILURE": 1}
+unsubmitted_events = {
+    "UN_READY": 1,
+    "PRE_SCRIPT_STARTED": 1,
+    "PRE_SCRIPT_SUCCESS": 1,
+    "PRE_SCRIPT_FAILURE": 1,
+}
 
 # Global variables
-wfs = []                        # list of workflow entries monitord is tracking
-tracked_workflows = []          # list of workflows we have started tracking
-wf_retry_dict = None            # File-based dictionary keeping track of sub-workflows retries, opened later...
-follow_subworkflows = True      # Flag for tracking sub-workflows
-root_wf_id = None               # Workflow id of the root workflow
-replay_mode = 0                 # disable checking if DAGMan's pid is gone
-keep_state = 0                  # Flag for keeping a Workflow's state across several DAGMan start/stop cycles
-db_stats = False                # collect and print database stats at the end of execution
-no_events = False               # Flag for disabling event output altogether
-event_dest = None               # URL containing the destination of the events
-dashboard_event_dest = None     # URL containing the destination of events for the dashboard
-encoding = None                 # Way to encode the data
-monitord_exit_code = 0          # Exit code for pegasus-monitord
-do_notifications = True         # Flag to enable notifications
-skip_pid_check = False          # Flag to skip checking if a previous monitord is still running using the pid file
-monitord_notifications = None   # Notifications' manager class
-max_parallel_notifications = 10 # Maximum number of notifications we can do in parallel
-notifications_timeout = 0       # Time to wait for notification scripts to finish (0 means wait forever)
-store_stdout_stderr = True      # Flag for storing jobs' stdout and stderr in our output
-fast_start_mode     = True     # Flag to indicate that only sleep once monitord has caught up with the dagman.out file
-wf_event_sink = None            # Where wf events go
-out = None                      # .dag.dagman.out file from command-line
-run = None                      # run directory from command-line dagman.out file
-output_dir = None               # output_dir for all files written by monitord
-jsd = None                      # location of jobstate.log file
-millisleep = None               # emulated run mode delay
-adjustment = 0                  # time zone adjustment (@#~! Condor)
+wfs = []  # list of workflow entries monitord is tracking
+tracked_workflows = []  # list of workflows we have started tracking
+wf_retry_dict = None  # File-based dictionary keeping track of sub-workflows retries, opened later...
+follow_subworkflows = True  # Flag for tracking sub-workflows
+root_wf_id = None  # Workflow id of the root workflow
+replay_mode = 0  # disable checking if DAGMan's pid is gone
+keep_state = (
+    0  # Flag for keeping a Workflow's state across several DAGMan start/stop cycles
+)
+db_stats = False  # collect and print database stats at the end of execution
+no_events = False  # Flag for disabling event output altogether
+event_dest = None  # URL containing the destination of the events
+dashboard_event_dest = (
+    None  # URL containing the destination of events for the dashboard
+)
+encoding = None  # Way to encode the data
+monitord_exit_code = 0  # Exit code for pegasus-monitord
+do_notifications = True  # Flag to enable notifications
+skip_pid_check = False  # Flag to skip checking if a previous monitord is still running using the pid file
+monitord_notifications = None  # Notifications' manager class
+max_parallel_notifications = 10  # Maximum number of notifications we can do in parallel
+notifications_timeout = (
+    0  # Time to wait for notification scripts to finish (0 means wait forever)
+)
+store_stdout_stderr = True  # Flag for storing jobs' stdout and stderr in our output
+fast_start_mode = True  # Flag to indicate that only sleep once monitord has caught up with the dagman.out file
+wf_event_sink = None  # Where wf events go
+out = None  # .dag.dagman.out file from command-line
+run = None  # run directory from command-line dagman.out file
+output_dir = None  # output_dir for all files written by monitord
+jsd = None  # location of jobstate.log file
+millisleep = None  # emulated run mode delay
+adjustment = 0  # time zone adjustment (@#~! Condor)
 
 #
 # --- at exit handlers -------------------------------------------------------------------
 #
+
 
 def delete_pid_file():
     """
@@ -139,12 +169,14 @@ def delete_pid_file():
     except OSError:
         logger.error("cannot delete pid file %s" % (pid_filename))
 
+
 def close_wf_retry_file():
     """
     This function closes the persistent storage file containing sub-workflow retry information.
     """
     if wf_retry_dict is not None:
         wf_retry_dict.close()
+
 
 def finish_notifications():
     """
@@ -154,6 +186,7 @@ def finish_notifications():
     """
     if monitord_notifications is not None:
         monitord_notifications.finish_notifications()
+
 
 def finish_stampede_loader():
     """
@@ -172,8 +205,10 @@ def finish_stampede_loader():
                     root_logger.setLevel(logging.INFO)
                 sink.close()
             except:
-                logger.warning("could not call the finish method "+\
-                                   "in the nl loader class... exiting anyway")
+                logger.warning(
+                    "could not call the finish method "
+                    + "in the nl loader class... exiting anyway"
+                )
                 logger.warning(traceback.format_exc())
     logger.info("DB flushing ended")
 
@@ -182,18 +217,22 @@ class WorkflowEntry:
     """
     Class used to store one workflow entry
     """
-    run_dir = None			# Run directory for the workflow
-    dagman_out = None			# Location of the dagman.out file
-    n_retries = 0			# Number of retries for looking for the dagman.out file
-    wf = None				# Pointer to the Workflow class for this Workflow
-    DMOF = None				# File pointer once we open the dagman.out file
-    ml_buffer = ''			# Buffer for reading the dagman.out file
-    ml_retries = 0			# Keep track of how many times we have looked for new content
-    ml_current = 0			# Keep track of where we are in the dagman.out file
-    delete_workflow = False		# Flag for dropping this workflow
-    sleep_time = None			# Time to sleep for this workflow
-    caught_up_with_dagman_out = False # indicates monitord has caught up with the dagman.out file
-    dagman_out_appeared       = False # indicates whether dagman.out file has appeared or not
+
+    run_dir = None  # Run directory for the workflow
+    dagman_out = None  # Location of the dagman.out file
+    n_retries = 0  # Number of retries for looking for the dagman.out file
+    wf = None  # Pointer to the Workflow class for this Workflow
+    DMOF = None  # File pointer once we open the dagman.out file
+    ml_buffer = ""  # Buffer for reading the dagman.out file
+    ml_retries = 0  # Keep track of how many times we have looked for new content
+    ml_current = 0  # Keep track of where we are in the dagman.out file
+    delete_workflow = False  # Flag for dropping this workflow
+    sleep_time = None  # Time to sleep for this workflow
+    caught_up_with_dagman_out = (
+        False  # indicates monitord has caught up with the dagman.out file
+    )
+    dagman_out_appeared = False  # indicates whether dagman.out file has appeared or not
+
 
 # Parse command line options
 prog_usage = "usage: %s [options] workflow.dag.dagman.out" % (prog_base)
@@ -201,53 +240,166 @@ prog_desc = """Mandatory arguments: outfile is the log file produced by Condor D
 
 parser = optparse.OptionParser(usage=prog_usage, description=prog_desc)
 
-parser.add_option("-a", "--adjust", action = "store", type = "int", dest = "adjustment",
-		  help = "adjust for time zone differences by i seconds, default 0")
-parser.add_option("-N", "--condor-daemon", action="store_const", default=False, dest="condor_daemon",
-		  help = "Condor daemon mode. Used by pegasus-dagman.")
-parser.add_option("-j", "--job", action = "store", type = "string", dest = "jsd",
-		  help = "Alternative job state file to write, default is %s in the workflow's directory"
-		  % (utils.jobbase))
-parser.add_option("-o", "--output-dir", action = "store", type = "string", dest = "output_dir",
-                  help = "provides an output directory for all monitord log files")
-parser.add_option("--conf", action = "store", type = "string", dest = "config_properties",
-		  help = "specifies the properties' file to use. This option overrides all other property files.")
-parser.add_option("--no-recursive", action = "store_const", const = 1, dest = "disable_subworkflows",
-		  help = "disables pegasus-monitord to automatic follow any sub-workflows that are found")
-parser.add_option("--no-database", "--nodatabase", "--no-events", action = "store_const", const = 0, dest = "no_events",
-		  help = "turn off event generation completely, and overrides the URL in the -d option")
-parser.add_option("--no-notifications", "--no-notification", action = "store_const", const = 0, dest = "no_notify",
-                  help = "turn off notifications completely")
-parser.add_option("--notifications-max", action = "store", type = "int", dest = "notifications_max",
-                  help = "maximum number of concurrent notification concurrent notification scripts, 0 disable notifications, default is %d" % (max_parallel_notifications))
-parser.add_option("--notifications-timeout", action = "store", type = "int", dest = "notifications_timeout",
-                  help = "time to wait for notification scripts to finish before terminating them, 0 allows scripts to run indefinitely")
-parser.add_option("-S", "--sim", action = "store", type = "int", dest = "millisleep",
-		  help = "Developer: simulate delays between reads by sleeping ms milliseconds")
-parser.add_option("-r", "--replay", action = "store_const", const = 1, dest = "replay_mode",
-		  help = "disables checking for DAGMan's pid while running %s" % (prog_base))
-parser.add_option("--db-stats", action = "store_true", dest = "db_stats",
-                  help = "collect and print database stats at the end")
-parser.add_option("--keep-state", action = "store_const", const = 1, dest = "keep_state",
-                  help = "keep state across several DAGMan start/stop cycles (development option)")
-parser.add_option("--skip-stdout", action = "store_const", const = 0, dest = "skip_stdout",
-                  help = "disables storing both stdout and stderr in our output")
-parser.add_option("-f", "--force", action = "store_const", const = 1, dest = "skip_pid_check",
-                  help = "runs pegasus-monitord even if it detects a previous instance running")
-parser.add_option("-v", "--verbose", action="count", default=0, dest="vb",
-                  help="Increase verbosity, repeatable")
-parser.add_option("--fast-start", action="store_true", dest="fast_start",
-                  help="catch up with all dagman.out files before sleeping intermittently" )
+parser.add_option(
+    "-a",
+    "--adjust",
+    action="store",
+    type="int",
+    dest="adjustment",
+    help="adjust for time zone differences by i seconds, default 0",
+)
+parser.add_option(
+    "-N",
+    "--condor-daemon",
+    action="store_const",
+    default=False,
+    dest="condor_daemon",
+    help="Condor daemon mode. Used by pegasus-dagman.",
+)
+parser.add_option(
+    "-j",
+    "--job",
+    action="store",
+    type="string",
+    dest="jsd",
+    help="Alternative job state file to write, default is %s in the workflow's directory"
+    % (utils.jobbase),
+)
+parser.add_option(
+    "-o",
+    "--output-dir",
+    action="store",
+    type="string",
+    dest="output_dir",
+    help="provides an output directory for all monitord log files",
+)
+parser.add_option(
+    "--conf",
+    action="store",
+    type="string",
+    dest="config_properties",
+    help="specifies the properties' file to use. This option overrides all other property files.",
+)
+parser.add_option(
+    "--no-recursive",
+    action="store_const",
+    const=1,
+    dest="disable_subworkflows",
+    help="disables pegasus-monitord to automatic follow any sub-workflows that are found",
+)
+parser.add_option(
+    "--no-database",
+    "--nodatabase",
+    "--no-events",
+    action="store_const",
+    const=0,
+    dest="no_events",
+    help="turn off event generation completely, and overrides the URL in the -d option",
+)
+parser.add_option(
+    "--no-notifications",
+    "--no-notification",
+    action="store_const",
+    const=0,
+    dest="no_notify",
+    help="turn off notifications completely",
+)
+parser.add_option(
+    "--notifications-max",
+    action="store",
+    type="int",
+    dest="notifications_max",
+    help="maximum number of concurrent notification concurrent notification scripts, 0 disable notifications, default is %d"
+    % (max_parallel_notifications),
+)
+parser.add_option(
+    "--notifications-timeout",
+    action="store",
+    type="int",
+    dest="notifications_timeout",
+    help="time to wait for notification scripts to finish before terminating them, 0 allows scripts to run indefinitely",
+)
+parser.add_option(
+    "-S",
+    "--sim",
+    action="store",
+    type="int",
+    dest="millisleep",
+    help="Developer: simulate delays between reads by sleeping ms milliseconds",
+)
+parser.add_option(
+    "-r",
+    "--replay",
+    action="store_const",
+    const=1,
+    dest="replay_mode",
+    help="disables checking for DAGMan's pid while running %s" % (prog_base),
+)
+parser.add_option(
+    "--db-stats",
+    action="store_true",
+    dest="db_stats",
+    help="collect and print database stats at the end",
+)
+parser.add_option(
+    "--keep-state",
+    action="store_const",
+    const=1,
+    dest="keep_state",
+    help="keep state across several DAGMan start/stop cycles (development option)",
+)
+parser.add_option(
+    "--skip-stdout",
+    action="store_const",
+    const=0,
+    dest="skip_stdout",
+    help="disables storing both stdout and stderr in our output",
+)
+parser.add_option(
+    "-f",
+    "--force",
+    action="store_const",
+    const=1,
+    dest="skip_pid_check",
+    help="runs pegasus-monitord even if it detects a previous instance running",
+)
+parser.add_option(
+    "-v",
+    "--verbose",
+    action="count",
+    default=0,
+    dest="vb",
+    help="Increase verbosity, repeatable",
+)
+parser.add_option(
+    "--fast-start",
+    action="store_true",
+    dest="fast_start",
+    help="catch up with all dagman.out files before sleeping intermittently",
+)
 grp = optparse.OptionGroup(parser, "Output options")
-grp.add_option("-d", "--dest", action="store", dest="event_dest", metavar="PATH or URL",
-               help="Output destination URL [<scheme>]<params>, where "
-               "scheme = [empty] | x-tcp:// | DB-dialect+driver://. "
-               "For empty scheme, params are a file path with '-' meaning standard output. "
-               "For x-tcp scheme, params are TCP host[:port=14380]. "
-               "For DB, use SQLAlchemy engine URL. "
-               "(default=sqlite:///<dagman-output-file>.stampede.db)",   default=None)
-grp.add_option("-e", "--encoding", action='store', dest='enc', metavar='FORMAT',
-                help="How to encode log events: bson | json| bp (default=bp)")
+grp.add_option(
+    "-d",
+    "--dest",
+    action="store",
+    dest="event_dest",
+    metavar="PATH or URL",
+    help="Output destination URL [<scheme>]<params>, where "
+    "scheme = [empty] | x-tcp:// | DB-dialect+driver://. "
+    "For empty scheme, params are a file path with '-' meaning standard output. "
+    "For x-tcp scheme, params are TCP host[:port=14380]. "
+    "For DB, use SQLAlchemy engine URL. "
+    "(default=sqlite:///<dagman-output-file>.stampede.db)",
+    default=None,
+)
+grp.add_option(
+    "-e",
+    "--encoding",
+    action="store",
+    dest="enc",
+    metavar="FORMAT",
+    help="How to encode log events: bson | json| bp (default=bp)",
+)
 parser.add_option_group(grp)
 
 # Parse command-line options
@@ -270,7 +422,7 @@ out = os.path.abspath(out)
 # Infer run directory
 run = os.path.dirname(out)
 if not os.path.isdir(run):
-    logger.critical("Run directory %s does not exist" %run)
+    logger.critical("Run directory %s does not exist" % run)
     exit(1)
 os.chdir(run)
 
@@ -281,7 +433,9 @@ if "properties" in top_level_wf_params:
     top_level_prop_file = top_level_wf_params["properties"]
     # Create the full path by using the submit_dir key from braindump
     if "submit_dir" in top_level_wf_params:
-        top_level_prop_file = os.path.join(top_level_wf_params["submit_dir"], top_level_prop_file)
+        top_level_prop_file = os.path.join(
+            top_level_wf_params["submit_dir"], top_level_prop_file
+        )
 
 # Parse, and process properties
 props = properties.Properties()
@@ -303,16 +457,18 @@ logger.info("Final Command line options are: %s" % cmd_options)
 
 # Set logging level
 if options.vb <= 0:
-    lvl = logger.INFO
+    lvl = logging.INFO
 elif options.vb == 1:
-    lvl = logger.DEBUG
+    lvl = logging.DEBUG
 else:
-    lvl = logger.TRACE
+    lvl = logging.TRACE
 root_logger.setLevel(lvl)
 
 # Resolve command-line options conflicts
 if options.event_dest is not None and options.no_events is not None:
-    logger.critical("the --no-events and --dest options conflict, please use only one of them")
+    logger.critical(
+        "the --no-events and --dest options conflict, please use only one of them"
+    )
     sys.exit(1)
 
 # Check if user wants to override pid checking
@@ -322,24 +478,34 @@ if options.skip_pid_check is not None:
 # Make sure no other pegasus-monitord instances are running...
 pid_filename = os.path.join(run, "monitord.pid")
 if not skip_pid_check and utils.pid_running(pid_filename):
-    logger.critical("it appears that pegasus-monitord is still running on this workflow... exiting")
+    logger.critical(
+        "it appears that pegasus-monitord is still running on this workflow... exiting"
+    )
     sys.exit(43)
 utils.write_pid_file(pid_filename)
 atexit.register(delete_pid_file)
 
 # Parse notification-related properties
 if int(props.property("pegasus.monitord.notifications.timeout") or -1) >= 0:
-    notifications_timeout = int(props.property("pegasus.monitord.notifications.timeout"))
+    notifications_timeout = int(
+        props.property("pegasus.monitord.notifications.timeout")
+    )
 if int(props.property("pegasus.monitord.notifications.max") or -1) >= 0:
-    max_parallel_notifications = int(props.property("pegasus.monitord.notifications.max"))
+    max_parallel_notifications = int(
+        props.property("pegasus.monitord.notifications.max")
+    )
 if max_parallel_notifications == 0:
-    logger.warning("maximum parallel notifications set to 0, disabling notifications...")
+    logger.warning(
+        "maximum parallel notifications set to 0, disabling notifications..."
+    )
     do_notifications = False
-if not utils.make_boolean(props.property("pegasus.monitord.notifications") or 'true'):
+if not utils.make_boolean(props.property("pegasus.monitord.notifications") or "true"):
     do_notifications = False
 
 # Parse stdout/stderr disable parsing property
-if utils.make_boolean(props.property("pegasus.monitord.stdout.disable.parsing") or 'false'):
+if utils.make_boolean(
+    props.property("pegasus.monitord.stdout.disable.parsing") or "false"
+):
     store_stdout_stderr = False
 
 if options.adjustment is not None:
@@ -370,7 +536,9 @@ if options.notifications_timeout is not None:
         logger.critical("notifications-timeout must be integer >= 0")
         sys.exit(1)
     if notifications_timeout > 0 and notifications_timeout < 5:
-        logger.warning("notifications-timeout set too low... notification scripts may not have enough time to complete... continuing anyway...")
+        logger.warning(
+            "notifications-timeout set too low... notification scripts may not have enough time to complete... continuing anyway..."
+        )
 if options.disable_subworkflows is not None:
     follow_subworkflows = False
 if options.db_stats is not None:
@@ -394,12 +562,19 @@ if options.event_dest is None:
     else:
         if props.property("pegasus.monitord.events") is not None:
             # Set event generation according to properties (default is True)
-            no_events = not utils.make_boolean(props.property("pegasus.monitord.events"))
+            no_events = not utils.make_boolean(
+                props.property("pegasus.monitord.events")
+            )
         else:
             # Default is to generate events
             no_events = False
 
-    event_dest = connection.url_by_properties(options.config_properties, connection.DBType.WORKFLOW, run, rundir_properties=top_level_prop_file)
+    event_dest = connection.url_by_properties(
+        options.config_properties,
+        connection.DBType.WORKFLOW,
+        run,
+        rundir_properties=top_level_prop_file,
+    )
 else:
     # Use command-line option
     event_dest = options.event_dest
@@ -407,15 +582,16 @@ else:
 if options.fast_start is False:
     fast_start_mode = False
 
-#check if specified in properties and override from options
+# check if specified in properties and override from options
 fast_start_property = props.property("pegasus.monitord.fast_start")
 if fast_start_property is not None:
     fast_start_mode = utils.make_boolean(fast_start_property)
 
 dashboard_event_dest = connection.url_by_properties(
-        options.config_properties,
-        connection.DBType.MASTER,
-        rundir_properties=top_level_prop_file)
+    options.config_properties,
+    connection.DBType.MASTER,
+    rundir_properties=top_level_prop_file,
+)
 
 if options.enc is not None:
     # Get encoding from command-line options
@@ -434,11 +610,14 @@ if jsd is not None:
     if os.path.isabs(jsd):
         # Yes, this is an absolute path
         follow_subworkflows = False
-        logger.warning("jsd file is an absolute filename, disabling sub-workflow tracking")
+        logger.warning(
+            "jsd file is an absolute filename, disabling sub-workflow tracking"
+        )
 
 #
 # --- functions ---------------------------------------------------------------------------
 #
+
 
 def add(wf, jobid, event, sched_id=None, status=None, reason=None):
     """
@@ -500,7 +679,7 @@ def add(wf, jobid, event, sched_id=None, status=None, reason=None):
         wf._last_submitted_job = jobid
         my_job_submit_seq = wf.add_job(jobid, event)
 
-        #PM-1068 parse the job submit file on DAGMAN_SUBMIT event instead of SUBMIT or SUBMIT_FAILED
+        # PM-1068 parse the job submit file on DAGMAN_SUBMIT event instead of SUBMIT or SUBMIT_FAILED
 
         # Obtain planning information from the submit file when entering Condor,
         # Figure out how long the job _intends_ to run maximum
@@ -543,9 +722,12 @@ def add(wf, jobid, event, sched_id=None, status=None, reason=None):
         return None
 
     # Make sure job has the updated state
-    wf.update_job_state(jobid, sched_id, my_job_submit_seq, event, status, my_time, reason)
+    wf.update_job_state(
+        jobid, sched_id, my_job_submit_seq, event, status, my_time, reason
+    )
 
     return my_job_submit_seq
+
 
 def process_dagman_out(wf, log_line):
     """
@@ -576,23 +758,23 @@ def process_dagman_out(wf, log_line):
     my_expr = None
     # PM-1030 there should be only at max two timestamps recorded
     # and we prefer the second one if present.
-    for my_expr in re_parse_timestamp.finditer( log_line ):
+    for my_expr in re_parse_timestamp.finditer(log_line):
         pass
 
     if my_expr is not None:
         # Found time stamp, let's assume valid log line
         curr_time = time.localtime()
         adj_time = list(curr_time)
-        adj_time[1] = int(my_expr.group(1)) # Month
-        adj_time[2] = int(my_expr.group(2)) # Day
-        adj_time[3] = int(my_expr.group(5)) # Hours
-        adj_time[4] = int(my_expr.group(6)) # Minutes
-        adj_time[5] = int(my_expr.group(7)) # Seconds
-        adj_time[8] = -1 # DST, let Python figure it out
+        adj_time[1] = int(my_expr.group(1))  # Month
+        adj_time[2] = int(my_expr.group(2))  # Day
+        adj_time[3] = int(my_expr.group(5))  # Hours
+        adj_time[4] = int(my_expr.group(6))  # Minutes
+        adj_time[5] = int(my_expr.group(7))  # Seconds
+        adj_time[8] = -1  # DST, let Python figure it out
 
         if my_expr.group(3) is not None:
             # New timestamp format
-            adj_time[0] = int(my_expr.group(4)) + 2000 # Year
+            adj_time[0] = int(my_expr.group(4)) + 2000  # Year
 
         wf._current_timestamp = time.mktime(tuple(adj_time)) + adjustment
         timestamp_found = True
@@ -602,28 +784,33 @@ def process_dagman_out(wf, log_line):
         my_expr = re_parse_iso_stamp.search(log_line)
         if my_expr is not None:
             # /^\s*(\d{4}).?(\d{2}).?(\d{2}).(\d{2}).?(\d{2}).?(\d{2})([.,]\d+)?([Zz]|[-+](\d{2}).?(\d{2}))/
-            dt = "%04d-%02d-%02d %02d:%02d:%02d" % (int(my_expr.group(1)),
-                                                    int(my_expr.group(2)),
-                                                    int(my_expr.group(3)),
-                                                    int(my_expr.group(4)),
-                                                    int(my_expr.group(5)),
-                                                    int(my_expr.group(6)))
+            dt = "%04d-%02d-%02d %02d:%02d:%02d" % (
+                int(my_expr.group(1)),
+                int(my_expr.group(2)),
+                int(my_expr.group(3)),
+                int(my_expr.group(4)),
+                int(my_expr.group(5)),
+                int(my_expr.group(6)),
+            )
             my_time = datetime.datetime(*(time.strptime(dt, "%Y-%m-%d %H:%M:%S")[0:6]))
 
             tz = my_expr.group(8)
-            if tz.upper() != 'Z':
+            if tz.upper() != "Z":
                 # no zulu time, has zone offset
-                my_offset = datetime.timedelta(hours=int(my_expr.group(9)),
-                                               minutes=int(my_expr.group(10)))
+                my_offset = datetime.timedelta(
+                    hours=int(my_expr.group(9)), minutes=int(my_expr.group(10))
+                )
 
                 # adjust for time zone offset
-                if tz[0] == '-':
+                if tz[0] == "-":
                     my_time = my_time + my_offset
                 else:
                     my_time = my_time - my_offset
 
             # Turn my_time into Epoch format
-            wf._current_timestamp = int(calendar.timegm(my_time.timetuple())) + adjustment
+            wf._current_timestamp = (
+                int(calendar.timegm(my_time.timetuple())) + adjustment
+            )
             timestamp_found = True
 
     if timestamp_found:
@@ -635,7 +822,7 @@ def process_dagman_out(wf, log_line):
         # This is the DAGMan recovery mode . Not monitord recovery mode! Karan
         if wf._skipping_recovery_lines:
             if log_line.find("...done with RECOVERY mode") >= 0:
-                logger.info( "DONE with DAGMAN RECOVERY MODE")
+                logger.info("DONE with DAGMAN RECOVERY MODE")
                 wf._skipping_recovery_lines = False
             return
 
@@ -663,7 +850,9 @@ def process_dagman_out(wf, log_line):
             if wf._last_submitted_job is not None:
                 add(wf, wf._last_submitted_job, "SUBMIT_FAILED")
             else:
-                logger.warning("found submit error in dagman.out, but last job is not set")
+                logger.warning(
+                    "found submit error in dagman.out, but last job is not set"
+                )
         elif re_parse_script_running.search(log_line) is not None:
             # Pre scripts are not regular Condor event
             # Starting of scripts is not a regular Condor event
@@ -694,7 +883,9 @@ def process_dagman_out(wf, log_line):
                     # Unable to convert exit code to integer -- should not happen
                     logger.warning("unable to convert exit code to integer!")
                     my_exit_code = 1
-                add(wf, my_jobid, "%s_SCRIPT_FAILURE" % (my_script), status=my_exit_code)
+                add(
+                    wf, my_jobid, "%s_SCRIPT_FAILURE" % (my_script), status=my_exit_code
+                )
             else:
                 # Ignore
                 logger.warning("unknown pscript state: %s" % (log_line[-14:]))
@@ -731,7 +922,11 @@ def process_dagman_out(wf, log_line):
                 logger.warning("cannot convert DAGMan's exit code to integer!")
                 wf._dagman_exit_code = 0
                 wf._monitord_exit_code = 1
-            logger.info("DAGMan {} finished with exit code {}".format(wf._dag_file_name , wf._dagman_exit_code))
+            logger.info(
+                "DAGMan {} finished with exit code {}".format(
+                    wf._dag_file_name, wf._dagman_exit_code
+                )
+            )
             # Send info to database
             wf.change_wf_state("end")
         elif re_parse_dagman_condor_id.search(log_line) is not None:
@@ -773,11 +968,16 @@ def process_dagman_out(wf, log_line):
             my_condor_major = int(my_expr.group(2))
             my_condor_minor = int(my_expr.group(3))
             my_condor_patch = int(my_expr.group(4))
-            wf.set_dagman_version( my_condor_major, my_condor_minor, my_condor_patch)
-            logger.info("Using DAGMan version %s %d" % (my_condor_version,
-                                                        wf.get_dagman_version() ))
-        elif (re_parse_condor_logfile.search(log_line) is not None or
-              wf._multiline_file_flag == True and re_parse_condor_logfile_insane.search(log_line) is not None):
+            wf.set_dagman_version(my_condor_major, my_condor_minor, my_condor_patch)
+            logger.info(
+                "Using DAGMan version %s %d"
+                % (my_condor_version, wf.get_dagman_version())
+            )
+        elif (
+            re_parse_condor_logfile.search(log_line) is not None
+            or wf._multiline_file_flag == True
+            and re_parse_condor_logfile_insane.search(log_line) is not None
+        ):
             # Condor common log file location, DAGMan 6.6
             if re_parse_condor_logfile.search(log_line) is not None:
                 my_expr = re_parse_condor_logfile.search(log_line)
@@ -794,12 +994,16 @@ def process_dagman_out(wf, log_line):
                 logger.info("%s is a regular file, not touching" % (my_base))
             else:
                 logger.info("trying to create local symlink to common log")
-                if os.access(wf._condorlog, os.R_OK) or not os.access(wf._condorlog, os.F_OK):
+                if os.access(wf._condorlog, os.R_OK) or not os.access(
+                    wf._condorlog, os.F_OK
+                ):
                     if os.access(my_log, os.R_OK):
                         try:
                             os.rename(my_log, "%s.bak" % (my_log))
                         except OSError:
-                            logger.warning("error renaming {} to {}.bak".format(my_log, my_log))
+                            logger.warning(
+                                "error renaming {} to {}.bak".format(my_log, my_log)
+                            )
                     try:
                         os.symlink(wf._condorlog, my_log)
                     except OSError:
@@ -815,13 +1019,15 @@ def process_dagman_out(wf, log_line):
             wf._multiline_file_flag = True
         elif log_line.find("Running in RECOVERY mode...") >= 0:
             # Entering recovery mode, skip lines until we reach the end
-            logger.info( "Enabling DAGMAN RECOVERY MODE")
+            logger.info("Enabling DAGMAN RECOVERY MODE")
             wf._skipping_recovery_lines = True
             return
         elif re_parse_dagman_aborted.search(log_line) is not None:
             # PM-767 dagman was aborted. just log in monitord log
             # eventually the dagman exit line will trigger failure in the DB
-            logger.warning("DAGMan was aborted for workflow running in directory %s" %wf._run_dir )
+            logger.warning(
+                "DAGMan was aborted for workflow running in directory %s" % wf._run_dir
+            )
             wf._current_state_reason = "DAGMan aborted as it received SIGUSR1 signal."
             return
         elif re_parse_job_held.search(log_line) is not None:
@@ -832,17 +1038,23 @@ def process_dagman_out(wf, log_line):
             # figure out which job  was held
             # the log line has no info. so try to fallback on last job
             last_job = wf._last_known_job
-            if( last_job is None or last_job._job_state != "JOB_HELD"):
-                logger.error( "Last known job %s is not held. Parsed  held job with reason %s " %( last_job,my_held_reason ))
+            if last_job is None or last_job._job_state != "JOB_HELD":
+                logger.error(
+                    "Last known job %s is not held. Parsed  held job with reason %s "
+                    % (last_job, my_held_reason)
+                )
 
             # PM-749 insert a new JOB_HELD_REASON event that connects to held job
             my_event = "JOB_HELD_REASON"
             my_jobid = last_job._exec_job_id
             my_sched_id = last_job._sched_id
-            my_job_submit_seq = add(wf, my_jobid, my_event, sched_id=my_sched_id, reason=my_held_reason)
+            my_job_submit_seq = add(
+                wf, my_jobid, my_event, sched_id=my_sched_id, reason=my_held_reason
+            )
     else:
         # Could not parse timestamp
-        logger.info( "time stamp format not recognized" )
+        logger.info("time stamp format not recognized")
+
 
 def sleeptime(retries):
     """
@@ -861,15 +1073,18 @@ def sleeptime(retries):
 
     return my_y
 
+
 #
 # --- signal handlers -------------------------------------------------------------------
 #
+
 
 def prog_sighup_handler(signum, frame):
     """
     This function catches SIGHUP.
     """
     logger.info("ignoring signal %d" % (signum))
+
 
 def prog_sigint_handler(signum, frame):
     """
@@ -887,6 +1102,7 @@ def prog_sigint_handler(signum, frame):
     # All done!
     sys.exit(1)
 
+
 def prog_sigusr1_handler(signum, frame):
     """
     This function increases the log level to the next one.
@@ -900,6 +1116,7 @@ def prog_sigusr1_handler(signum, frame):
     except ValueError:
         root_logger.setLevel(logging.INFO)
         logger.error("Unknown current level = %s, setting to INFO" % (cur_level))
+
 
 def prog_sigusr2_handler(signum, frame):
     """
@@ -937,33 +1154,41 @@ signal.signal(signal.SIGUSR2, prog_sigusr2_handler)
 
 # Log recover mode
 if os.access(os.path.join(run, MONITORD_RECOVER_FILE), os.F_OK):
-    logger.warning("monitord entering it's own recovery mode. Population will start again for the workflow..")
+    logger.warning(
+        "monitord entering it's own recovery mode. Population will start again for the workflow.."
+    )
 
 # Create wf_event_sink object
 restart_logging = False
 if no_events:
-    wf_event_sink = None # Avoid parsing kickstart output if not
-                         # generating bp file or database events
+    wf_event_sink = None  # Avoid parsing kickstart output if not
+    # generating bp file or database events
     dashboard_event_sink = None
 else:
     if replay_mode or os.access(os.path.join(run, MONITORD_RECOVER_FILE), os.F_OK):
         restart_logging = True
 
-
-    #PM-652 if there is sqlite db then just take a backup
-    #by rotating the db file. possible as we have only one root workflow per sqlitedb
-    #PM-689 rotation happens both in replay and monitord recovery mode ( where recover file exists)
+    # PM-652 if there is sqlite db then just take a backup
+    # by rotating the db file. possible as we have only one root workflow per sqlitedb
+    # PM-689 rotation happens both in replay and monitord recovery mode ( where recover file exists)
     backup = False
-    if restart_logging and event_dest.startswith( "sqlite:" ):
+    if restart_logging and event_dest.startswith("sqlite:"):
         try:
-            event_dest.index( "sqlite:///" )
+            event_dest.index("sqlite:///")
         except ValueError:
-            logger.error( 'Invalid sqlite connection string passed %s ' %event_dest )
+            logger.error("Invalid sqlite connection string passed %s " % event_dest)
         backup = True
 
     try:
-        wf_event_sink = eo.create_wf_event_sink(event_dest, db_stats=db_stats, restart=restart_logging, enc=encoding,
-                                                props=props, db_type=connection.DBType.WORKFLOW, backup = backup)
+        wf_event_sink = eo.create_wf_event_sink(
+            event_dest,
+            db_stats=db_stats,
+            restart=restart_logging,
+            enc=encoding,
+            props=props,
+            db_type=connection.DBType.WORKFLOW,
+            backup=backup,
+        )
         atexit.register(finish_stampede_loader)
     except:
         logger.error(traceback.format_exc())
@@ -977,15 +1202,22 @@ else:
                 eo.purge_wf_uuid_from_database(run, event_dest)
         except Exception as e:
             logger.exception(e)
-            logger.error("error flushing previous wf_uuid from database... continuing...")
+            logger.error(
+                "error flushing previous wf_uuid from database... continuing..."
+            )
             logger.error("cannot create events output... disabling event output!")
             wf_event_sink = None
 
-    #create the stampede_dashboard_loader
+    # create the stampede_dashboard_loader
     try:
-        dashboard_event_sink= eo.create_wf_event_sink(dashboard_event_dest, restart=restart_logging,
-                                                      prefix=eo.DASHBOARD_NS, db_stats=db_stats, props=props,
-                                                      db_type=connection.DBType.MASTER)
+        dashboard_event_sink = eo.create_wf_event_sink(
+            dashboard_event_dest,
+            restart=restart_logging,
+            prefix=eo.DASHBOARD_NS,
+            db_stats=db_stats,
+            props=props,
+            db_type=connection.DBType.MASTER,
+        )
     except:
         logger.error(traceback.format_exc())
         dashboard_event_sink = None
@@ -997,12 +1229,16 @@ else:
                 eo.purge_wf_uuid_from_dashboard_database(run, dashboard_event_dest)
         except Exception as e:
             logger.exception(e)
-            logger.error("error flushing previous wf_uuid from dashboard database... continuing...")
+            logger.error(
+                "error flushing previous wf_uuid from dashboard database... continuing..."
+            )
             logger.error("cannot create events output... disabling event output!")
             dashboard_event_dest = None
 
     if dashboard_event_dest is None:
-        logger.error("cannot create dashboard events output... disabling dashboard event output!")
+        logger.error(
+            "cannot create dashboard events output... disabling dashboard event output!"
+        )
 
 if millisleep is not None:
     logger.info("using simulation delay of %d ms" % (millisleep))
@@ -1024,10 +1260,10 @@ else:
 # retries workflow.has_subworkflow() function where it tries to determine
 # submit directory for the sub workflow
 if restart_logging:
-    subworkflow_db_file = wf_retry_fn +  ".db"
+    subworkflow_db_file = wf_retry_fn + ".db"
     if os.path.isfile(subworkflow_db_file):
-        logger.info( 'Rotating sub workflow db file %s' %subworkflow_db_file)
-        utils.rotate_log_file( subworkflow_db_file )
+        logger.info("Rotating sub workflow db file %s" % subworkflow_db_file)
+        utils.rotate_log_file(subworkflow_db_file)
 
 
 # Link wf_retry_dict to persistent storage
@@ -1035,27 +1271,38 @@ try:
     wf_retry_dict = shelve.open(wf_retry_fn)
     atexit.register(close_wf_retry_file)
 except:
-    logger.critical("cannot create persistent storage file for sub-workflow retry information... exiting... %s" %wf_retry_fn)
+    logger.critical(
+        "cannot create persistent storage file for sub-workflow retry information... exiting... %s"
+        % wf_retry_fn
+    )
     logger.error(traceback.format_exc())
     sys.exit(1)
 
 # Open notifications' log file
 if do_notifications == True:
-    monitord_notifications = notifications.Notifications(wf_notification_fn_prefix,
-                                                         max_parallel_notifications=max_parallel_notifications,
-                                                         notifications_timeout=notifications_timeout)
+    monitord_notifications = notifications.Notifications(
+        wf_notification_fn_prefix,
+        max_parallel_notifications=max_parallel_notifications,
+        notifications_timeout=notifications_timeout,
+    )
     atexit.register(finish_notifications)
 
 # Ok! Let's start now...
 
 # Instantiate workflow class
-wf = Workflow(run, out, database=wf_event_sink,
-              dashboard_database=dashboard_event_sink, database_url=event_dest, jsd=jsd,
-              enable_notifications=do_notifications,
-              replay_mode=replay_mode,
-              output_dir=output_dir,
-              store_stdout_stderr=store_stdout_stderr,
-              notifications_manager=monitord_notifications)
+wf = Workflow(
+    run,
+    out,
+    database=wf_event_sink,
+    dashboard_database=dashboard_event_sink,
+    database_url=event_dest,
+    jsd=jsd,
+    enable_notifications=do_notifications,
+    replay_mode=replay_mode,
+    output_dir=output_dir,
+    store_stdout_stderr=store_stdout_stderr,
+    notifications_manager=monitord_notifications,
+)
 # If everything went well, create a workflow entry for this workflow
 if wf._monitord_exit_code == 0:
     workflow_entry = WorkflowEntry()
@@ -1077,7 +1324,7 @@ if wf._monitord_exit_code == 0:
 #
 
 # Loop while we have workflows to follow...
-while (len(wfs) > 0):
+while len(wfs) > 0:
     # Go through each of our workflows
     for workflow_entry in wfs:
 
@@ -1091,7 +1338,10 @@ while (len(wfs) > 0):
                 try:
                     f_stat = os.stat(workflow_entry.dagman_out)
                 except OSError:
-                    logger.critical("error: workflow not started, %s does not exist, dropping this workflow..." % (workflow_entry.dagman_out))
+                    logger.critical(
+                        "error: workflow not started, %s does not exist, dropping this workflow..."
+                        % (workflow_entry.dagman_out)
+                    )
                     workflow_entry.delete_workflow = True
                     # Close jobstate.log, if any
                     if workflow_entry.wf is not None:
@@ -1102,12 +1352,14 @@ while (len(wfs) > 0):
             try:
                 f_stat = os.stat(workflow_entry.dagman_out)
             except OSError as e:
-                if errno.errorcode[e.errno] == 'ENOENT':
+                if errno.errorcode[e.errno] == "ENOENT":
                     # File doesn't exist yet, keep looking
                     workflow_entry.n_retries = workflow_entry.n_retries + 1
                     if workflow_entry.n_retries > 100:
                         # We tried too long, just exit
-                        logger.critical("%s never made an appearance" % (workflow_entry.dagman_out))
+                        logger.critical(
+                            "%s never made an appearance" % (workflow_entry.dagman_out)
+                        )
                         workflow_entry.delete_workflow = True
                         # Close jobstate.log, if any
                         if workflow_entry.wf is not None:
@@ -1115,8 +1367,13 @@ while (len(wfs) > 0):
                         # Go to the next workflow_entry in the for loop
                         continue
                     # Continue waiting
-                    logger.info("waiting for dagman.out file, retry %d" % (workflow_entry.n_retries))
-                    workflow_entry.sleep_time = time.time() + sleeptime(workflow_entry.n_retries)
+                    logger.info(
+                        "waiting for dagman.out file, retry %d"
+                        % (workflow_entry.n_retries)
+                    )
+                    workflow_entry.sleep_time = time.time() + sleeptime(
+                        workflow_entry.n_retries
+                    )
                 else:
                     # Another error
                     logger.critical("stat %s" % (workflow_entry.dagman.out))
@@ -1181,7 +1438,9 @@ while (len(wfs) > 0):
                     try:
                         os.kill(int(workflow_entry.wf._dagman_pid), 0)
                     except OSError:
-                        logger.critical("DAGMan is gone! Sudden death syndrome detected!")
+                        logger.critical(
+                            "DAGMan is gone! Sudden death syndrome detected!"
+                        )
                         workflow_entry.wf._monitord_exit_code = 42
                         workflow_entry.delete_workflow = True
                         # Close jobstate.log, if any
@@ -1194,7 +1453,10 @@ while (len(wfs) > 0):
                 workflow_entry.ml_retries = workflow_entry.ml_retries + 1
                 if workflow_entry.ml_retries > 17280:
                     # Too long without change
-                    logger.critical("too long without action, stopping workflow %s" % (workflow_entry.dagman_out))
+                    logger.critical(
+                        "too long without action, stopping workflow %s"
+                        % (workflow_entry.dagman_out)
+                    )
                     workflow_entry.delete_workflow = True
                     # Close jobstate.log, if any
                     if workflow_entry.wf is not None:
@@ -1206,7 +1468,10 @@ while (len(wfs) > 0):
                 # FIXME Why would you have to wait for 5 tries in replay mode?
                 if replay_mode and workflow_entry.ml_retries > 5:
                     # We are in replay mode, so we should have everything here
-                    logger.info("no more action, stopping workflow %s" % (workflow_entry.dagman_out))
+                    logger.info(
+                        "no more action, stopping workflow %s"
+                        % (workflow_entry.dagman_out)
+                    )
                     workflow_entry.delete_workflow = True
                     # Close jobstate.log, if any
                     if workflow_entry.wf is not None:
@@ -1216,7 +1481,9 @@ while (len(wfs) > 0):
 
             elif f_stat[6] < workflow_entry.ml_current:
                 # Truncated file, booh!
-                logger.critical("%s file truncated, time to exit" % (workflow_entry.dagman_out))
+                logger.critical(
+                    "%s file truncated, time to exit" % (workflow_entry.dagman_out)
+                )
                 workflow_entry.delete_workflow = True
                 # Close jobstate.log, if any
                 if workflow_entry.wf is not None:
@@ -1241,26 +1508,40 @@ while (len(wfs) > 0):
 
                 if len(ml_rbuffer) < DAGMAN_OUT_MAX_READ_SIZE:
                     # PM-947 we have caught up with the workflow
-                    logger.debug("monitord has caught up with dagman out file %s" %(workflow_entry.dagman_out))
+                    logger.debug(
+                        "monitord has caught up with dagman out file %s"
+                        % (workflow_entry.dagman_out)
+                    )
                     workflow_entry.caught_up_with_dagman_out = True
 
                 if len(ml_rbuffer) == 0:
                     # Detected EOF
-                    logger.critical("detected EOF, resetting position to %d" % (workflow_entry.ml_current))
+                    logger.critical(
+                        "detected EOF, resetting position to %d"
+                        % (workflow_entry.ml_current)
+                    )
                     workflow_entry.DMOF.seek(workflow_entry.ml_current)
                 else:
                     # Something in the read buffer, merge it with our buffer
                     workflow_entry.ml_buffer = workflow_entry.ml_buffer + ml_rbuffer
                     # Look for end of line
-                    ml_pos = workflow_entry.ml_buffer.find('\n')
-                    while (ml_pos >= 0):
+                    ml_pos = workflow_entry.ml_buffer.find("\n")
+                    while ml_pos >= 0:
                         # Take out 1 line, and adjust buffer
-                        process_output = process_dagman_out(workflow_entry.wf, workflow_entry.ml_buffer[0:ml_pos])
-                        workflow_entry.ml_buffer = workflow_entry.ml_buffer[ml_pos+1:]
-                        ml_pos = workflow_entry.ml_buffer.find('\n')
+                        process_output = process_dagman_out(
+                            workflow_entry.wf, workflow_entry.ml_buffer[0:ml_pos]
+                        )
+                        workflow_entry.ml_buffer = workflow_entry.ml_buffer[
+                            ml_pos + 1 :
+                        ]
+                        ml_pos = workflow_entry.ml_buffer.find("\n")
 
                         # Do we need to start following another workflow?
-                        if type(process_output) is tuple and len(process_output) == 3 and process_output[0] is not None:
+                        if (
+                            type(process_output) is tuple
+                            and len(process_output) == 3
+                            and process_output[0] is not None
+                        ):
                             # Unpack the output tuple
                             new_dagman_out = process_output[0]
                             parent_jobid = process_output[1]
@@ -1269,34 +1550,54 @@ while (len(wfs) > 0):
                             tracking_already = False
                             new_dagman_out = os.path.abspath(new_dagman_out)
                             # Add the current run directory in case this is a relative path
-                            new_dagman_out = os.path.join(workflow_entry.run_dir, new_dagman_out)
+                            new_dagman_out = os.path.join(
+                                workflow_entry.run_dir, new_dagman_out
+                            )
                             if replay_mode:
                                 # Check if we started tracking this subworkflow in the past
                                 if new_dagman_out in tracked_workflows:
                                     # Yes, no need to do it again...
-                                    logger.info("already tracking workflow: %s, not adding" % (new_dagman_out))
+                                    logger.info(
+                                        "already tracking workflow: %s, not adding"
+                                        % (new_dagman_out)
+                                    )
                                     tracking_already = True
                             else:
                                 # Not in replay mode, let's check if we are currently tracking this subworkflow
                                 for my_wf in wfs:
-                                    if my_wf.dagman_out == new_dagman_out and not my_wf.delete_workflow:
+                                    if (
+                                        my_wf.dagman_out == new_dagman_out
+                                        and not my_wf.delete_workflow
+                                    ):
                                         # Found it, exit loop
                                         tracking_already = True
-                                        logger.info("already tracking workflow: %s, not adding" % (new_dagman_out))
+                                        logger.info(
+                                            "already tracking workflow: %s, not adding"
+                                            % (new_dagman_out)
+                                        )
                                         break
                             if not tracking_already:
-                                logger.info("found new workflow to track: %s" % (new_dagman_out))
+                                logger.info(
+                                    "found new workflow to track: %s" % (new_dagman_out)
+                                )
                                 # Not tracking this workflow, let's try to add it to our list
                                 new_run_dir = os.path.dirname(new_dagman_out)
                                 parent_wf_id = workflow_entry.wf._wf_uuid
-                                new_wf = Workflow(new_run_dir, new_dagman_out, database=wf_event_sink,
-                                                  parent_id=parent_wf_id, parent_jobid=parent_jobid,
-                                                  parent_jobseq=parent_jobseq, root_id=root_wf_id,
-                                                  jsd=jsd, replay_mode=replay_mode,
-                                                  enable_notifications=do_notifications,
-                                                  output_dir=output_dir,
-                                                  store_stdout_stderr=store_stdout_stderr,
-                                                  notifications_manager=monitord_notifications)
+                                new_wf = Workflow(
+                                    new_run_dir,
+                                    new_dagman_out,
+                                    database=wf_event_sink,
+                                    parent_id=parent_wf_id,
+                                    parent_jobid=parent_jobid,
+                                    parent_jobseq=parent_jobseq,
+                                    root_id=root_wf_id,
+                                    jsd=jsd,
+                                    replay_mode=replay_mode,
+                                    enable_notifications=do_notifications,
+                                    output_dir=output_dir,
+                                    store_stdout_stderr=store_stdout_stderr,
+                                    notifications_manager=monitord_notifications,
+                                )
 
                                 if new_wf._monitord_exit_code == 0:
                                     new_workflow_entry = WorkflowEntry()
@@ -1314,23 +1615,43 @@ while (len(wfs) > 0):
                                 # Just make sure we link the workflow to its parent job,
                                 # which in this case is a job retry...
                                 if os.path.dirname(new_dagman_out) in Workflow.wf_list:
-                                    workflow_entry.wf.map_subwf(parent_jobid, parent_jobseq,
-                                                                Workflow.wf_list[os.path.dirname(new_dagman_out)])
+                                    workflow_entry.wf.map_subwf(
+                                        parent_jobid,
+                                        parent_jobseq,
+                                        Workflow.wf_list[
+                                            os.path.dirname(new_dagman_out)
+                                        ],
+                                    )
                                 else:
-                                    logger.warning("cannot link job %s:%s to its subwf because we don't have info for dir: %s" %
-                                                   (parent_jobid, parent_jobseq, os.path.dirname(new_dagman_out)))
+                                    logger.warning(
+                                        "cannot link job %s:%s to its subwf because we don't have info for dir: %s"
+                                        % (
+                                            parent_jobid,
+                                            parent_jobseq,
+                                            os.path.dirname(new_dagman_out),
+                                        )
+                                    )
 
                         if millisleep is not None:
                             time.sleep(millisleep / 1000.0)
 
                     ml_pos = workflow_entry.DMOF.tell()
-                    logger.debug("processed chunk of %d bytes" % (ml_pos - workflow_entry.ml_current -len(workflow_entry.ml_buffer)))
+                    logger.debug(
+                        "processed chunk of %d bytes"
+                        % (
+                            ml_pos
+                            - workflow_entry.ml_current
+                            - len(workflow_entry.ml_buffer)
+                        )
+                    )
                     workflow_entry.ml_current = ml_pos
                     workflow_entry.ml_retries = 0
                     # Write workflow progress for recovery mode
                     workflow_entry.wf.write_workflow_progress()
 
-            workflow_entry.sleep_time = time.time() + sleeptime(workflow_entry.ml_retries)
+            workflow_entry.sleep_time = time.time() + sleeptime(
+                workflow_entry.ml_retries
+            )
 
     # End of main for loop, still in the while loop...
 
@@ -1345,9 +1666,9 @@ while (len(wfs) > 0):
             # Close dagman.out file, if any
             if workflow_entry.DMOF is not None:
                 workflow_entry.DMOF.close()
-#            # Close jobstate.log, if any
-#            if workflow_entry.wf is not None:
-#                workflow_entry.wf.end_workflow()
+            #            # Close jobstate.log, if any
+            #            if workflow_entry.wf is not None:
+            #                workflow_entry.wf.end_workflow()
             # Delete this workflow from our list
             deleted_entry = wfs.pop(wf_index)
             # Don't move index to next one
@@ -1375,8 +1696,10 @@ while (len(wfs) > 0):
 
     for workflow_entry in wfs:
         # PM-947 we want to sleep if either dagman out has not appeared or we have caught up with the dagman.out
-        sleep_for_some_time = sleep_for_some_time and \
-                              ( workflow_entry.caught_up_with_dagman_out or not workflow_entry.dagman_out_appeared )
+        sleep_for_some_time = sleep_for_some_time and (
+            workflow_entry.caught_up_with_dagman_out
+            or not workflow_entry.dagman_out_appeared
+        )
         # Figure out if we have anything more urgent to do
         if workflow_entry.sleep_time < time_to_sleep:
             time_to_sleep = workflow_entry.sleep_time
@@ -1394,7 +1717,10 @@ while (len(wfs) > 0):
 
 if do_notifications == True and monitord_notifications is not None:
     logger.info("finishing notifications...")
-    while monitord_notifications.has_active_notifications() or monitord_notifications.has_pending_notifications():
+    while (
+        monitord_notifications.has_active_notifications()
+        or monitord_notifications.has_pending_notifications()
+    ):
         monitord_notifications.service_notifications()
         time.sleep(SLEEP_WAIT_NOTIFICATION)
 

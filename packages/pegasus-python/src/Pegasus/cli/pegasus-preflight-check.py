@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-'''
+"""
 Pegasus utility for checking that prereqs are installed
-'''
+"""
 
 import sys
 

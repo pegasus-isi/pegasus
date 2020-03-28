@@ -527,10 +527,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <copy preservelastmodified="true" todir="${dist.lib}/pegasus/perl">
       <fileset dir="packages/pegasus-perl" includes="**/*.pm"/>
     </copy>
-    <mkdir dir="${dist.lib}/pegasus/php"/>
-    <copy preservelastmodified="true" todir="${dist.lib}/pegasus/php">
-      <fileset dir="lib/pegasus/php" includes="**/*.php"/>
-    </copy>
     <copy preservelastmodified="true" todir="${dist.lib}/pegasus/externals/python">
       <fileset dir="lib/pegasus/externals/python" includes="**/*"/>
     </copy>
