@@ -1,4 +1,4 @@
-spegasus: "5.0"
+pegasus: "5.0"
 transformations:
   - namespace: diamond
     name: analyze
