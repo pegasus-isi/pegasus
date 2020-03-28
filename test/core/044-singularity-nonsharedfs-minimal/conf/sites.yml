@@ -1,0 +1,49 @@
+pegasus: "5.0"
+sites:
+  - name: local
+    arch: x86_64
+    os.type: linux
+    directories:
+      - type: sharedScratch
+        path: ${TOPDIR}/LOCAL/shared-scratch
+        fileServers:
+          - operation: all
+            url: file:///${TOPDIR}/LOCAL/shared-scratch
+      - type: sharedStorage
+        path: ${TOPDIR}/LOCAL/shared-storage
+        fileServers:
+          - operation: all
+            url: file:///${TOPDIR}/LOCAL/shared-storage
+    profiles:
+      pegasus:
+        s3cfg: "/localhome/bamboo/.s3cfg"
+
+  - name: condorpool
+    arch: x86_64
+    os.type: linux
+    directories:
+      - type: sharedScratch
+        path: /lizard/scratch-90-days/${TEST_NAME}
+        fileServers:
+          - operation: all
+            url: gsiftp://bamboo.isi.edu/lizard/scratch-90-days/${TEST_NAME}
+    profiles:
+      condor:
+        universe: vanilla
+      pegasus:
+        clusters.num: 1
+
+  - name: staging_site
+    arch: x86_64
+    os.type: linux
+    directories:
+      - type: localStorage
+        path: /044-singularity-nonsharedfs-minimal/outputs
+        fileServers:
+          - operation: all
+            url: "s3://test@amazon/044-singularity-nonsharedfs-minimal/outputs"
+      - type: sharedScratch
+        path: /044-singularity-nonsharedfs-minimal/scratch
+        fileServers:
+          - operation: all
+            url: "s3s://test@amazon/044-singularity-nonsharedfs-minimal/scratch"

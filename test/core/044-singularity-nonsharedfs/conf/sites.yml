@@ -1,0 +1,47 @@
+pegasus: "5.0"
+sites:
+  - name: local
+    arch: x86_64
+    os.type: linux
+    directories:
+      - type: sharedScratch
+        path: ${TOPDIR}/LOCAL/shared-scratch
+        fileServers:
+          - operation: all
+            url: file:///${TOPDIR}/LOCAL/shared-scratch
+      - type: sharedStorage
+        path: ${TOPDIR}/LOCAL/shared-storage
+        fileServers:
+          - operation: all
+            url: file:///${TOPDIR}/LOCAL/shared-storage
+    profiles:
+      env:
+        PEGASUS_HOME: "${PEGASUS_BIN_DIR}/.."
+      pegasus:
+        clusters.num: 1
+
+  - name: cartman-data
+    arch: x86_64
+    os.type: linux
+    directories:
+      - type: sharedScratch
+        path: ${TOPDIR}/staging-site/scratch/${TEST_NAME}
+        fileServers:
+          - operation: all
+            url: gsiftp://bamboo.isi.edu/${TOPDIR}/staging-site/scratch/${TEST_NAME}
+
+  - name: condorpool
+    arch: x86_64
+    os.type: linux
+    directories:
+      - type: sharedScratch
+        path: /lizard/scratch-90-days/${TEST_NAME}
+        fileServers:
+          - operation: all
+            url: gsiftp://bamboo.isi.edu/lizard/scratch-90-days/${TEST_NAME}
+    profiles:
+      condor:
+        universe: vanilla
+      pegasus:
+        style: condor
+        clusters.num: 1
