@@ -94,7 +94,7 @@ public class PegasusFileTest {
         assertTrue(!pf.getTransientTransferFlag());
         assertEquals("output", pf.getLinkage().toString());
     }
-    
+
     @Test
     public void testUsesRegistration() throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
@@ -127,10 +127,10 @@ public class PegasusFileTest {
         assertNotNull(pf);
         assertEquals("f.b2", pf.getLFN());
         assertEquals(true, !pf.getTransientTransferFlag());
-        
+
         Metadata m = pf.getAllMetadata();
         assertTrue(m.containsKey("createdBy"));
-        assertEquals("vahi", (String)m.get("createdBy"));
-        
+        assertEquals("vahi", (String) m.get("createdBy"));
+
     }
 }

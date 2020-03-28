@@ -44,7 +44,6 @@ import java.util.Map;
  * @author Karan Vahi
  * @version $Revision$
  */
-
 @JsonDeserialize(using = PegasusFile.JsonDeserializer.class)
 public class PegasusFile extends Data {
 
@@ -1017,7 +1016,7 @@ public class PegasusFile extends Data {
             ObjectCodec oc = parser.getCodec();
             JsonNode node = oc.readTree(parser);
             PegasusFile pf = new PegasusFile();
-            
+
             for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext();) {
                 Map.Entry<String, JsonNode> e = it.next();
                 String key = e.getKey();
