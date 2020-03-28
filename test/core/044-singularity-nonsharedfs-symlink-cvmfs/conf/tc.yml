@@ -42,6 +42,7 @@ transformations:
 
 containers:
   - image: file:///cvmfs/singularity.opensciencegrid.org/pycbc/pycbc-el7:latest
+    image.site: condorpool
     profiles:
       env:
         APP_HOME: /tmp/myscratch

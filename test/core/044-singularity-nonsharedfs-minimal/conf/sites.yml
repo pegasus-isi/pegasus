@@ -31,6 +31,7 @@ sites:
       condor:
         universe: vanilla
       pegasus:
+        style: condor
         clusters.num: 1
 
   - name: staging_site
