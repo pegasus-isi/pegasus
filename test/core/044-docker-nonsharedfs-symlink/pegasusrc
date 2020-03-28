@@ -1,4 +1,4 @@
-pegasus.catalog.site.file=./conf/sites.yaml
+pegasus.catalog.site.file=./conf/sites.yml
 pegasus.catalog.site YAML
 pegasus.data.configuration = nonsharedfs
 
