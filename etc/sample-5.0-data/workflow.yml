@@ -71,20 +71,17 @@ jobs:
     arguments:
       ["-a", "preprocess", "-T60", "-i", lfn: f.a, "-o", "f.b1", "f.b2"]
     uses:
-      - file:
-          lfn: f.b2
+      - lfn: f.b2
         type: output
         registerReplica: false
         stageOut: true
-      - file:
-          lfn: f.b1
-          metadata:
-            size: "2048"
+      - lfn: f.b1
+        metadata:
+          size: "2048"
         type: output
         registerReplica: false
         stageOut: true
-      - file:
-          lfn: f.a
+      - lfn: f.a
         type: input
 
   - id: ID000002
@@ -93,11 +90,9 @@ jobs:
     version: "2.0"
     arguments: ["-a", "findrange", "-T60", "-i", "f.b1", "-o", "f.c1"]
     uses:
-      - file:
-          lfn: f.b1
+      - lfn: f.b1
         type: input
-      - file:
-          lfn: f.c1
+      - lfn: f.c1
         type: output
         registerReplica: false
         stageOut: true
@@ -108,11 +103,9 @@ jobs:
     version: "2.0"
     arguments: ["-a", "findrange", "-T60", "-i", "f.b2", "-o", "f.c2"]
     uses:
-      - file:
-          lfn: f.b2
+      - lfn: f.b2
         type: input
-      - file:
-          lfn: f.c2
+      - lfn: f.c2
         type: output
         registerReplica: false
         stageOut: true
@@ -123,14 +116,11 @@ jobs:
     version: "2.0"
     arguments: ["-a", "analyze", "-T60", "-i", "f.c1", "f.c2", "-o", "f.d"]
     uses:
-      - file:
-          lfn: f.c2
+      - lfn: f.c2
         type: input
-      - file:
-          lfn: f.c1
+      - lfn: f.c1
         type: input
-      - file:
-          lfn: f.d
+      - lfn: f.d
         type: output
         registerReplica: false
         stageOut: true
