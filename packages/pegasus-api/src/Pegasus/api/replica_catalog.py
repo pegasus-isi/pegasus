@@ -14,10 +14,12 @@ class File(MetadataMixin):
     :py:class:`~Pegasus.api.workflow.Job` inputs and outputs.
     """
 
-    def __init__(self, lfn):
+    def __init__(self, lfn, size=None):
         """
         :param lfn: a unique logical filename 
         :type lfn: str
+        :param size: size in bytes, defaults to None
+        :type size: int
         """
         if not isinstance(lfn, str):
             raise TypeError(
@@ -26,6 +28,7 @@ class File(MetadataMixin):
 
         self.metadata = dict()
         self.lfn = lfn
+        self.size = size
 
     def __str__(self):
         return self.lfn
@@ -43,6 +46,7 @@ class File(MetadataMixin):
             {
                 "lfn": self.lfn,
                 "metadata": dict(self.metadata) if len(self.metadata) > 0 else None,
+                "size": self.size,
             }
         )
 

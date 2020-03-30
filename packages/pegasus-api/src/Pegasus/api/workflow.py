@@ -451,12 +451,16 @@ class _Use:
         raise ValueError("_Use cannot be compared with {}".format(type(other)))
 
     def __json__(self):
-        return {
-            "file": self.file,
-            "type": self._type,
-            "stageOut": self.stage_out,
-            "registerReplica": self.register_replica,
-        }
+        return _filter_out_nones(
+            {
+                "lfn": self.file.lfn,
+                "metadata": self.file.metadata if len(self.file.metadata) > 0 else None,
+                "size": self.file.size,
+                "type": self._type,
+                "stageOut": self.stage_out,
+                "registerReplica": self.register_replica,
+            }
+        )
 
 
 class _JobDependency:

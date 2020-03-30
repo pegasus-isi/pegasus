@@ -133,9 +133,11 @@ def _to_wf(d: dict) -> Workflow:
             # add uses
             uses = set()
             for u in j["uses"]:
-                f = File(u["file"]["lfn"])
-                if "metadata" in u["file"]:
-                    f.metadata = u["file"]["metadata"]
+                f = File(u["lfn"], size=u.get("size"))
+                try:
+                    f.metadata = u["metadata"]
+                except KeyError:
+                    pass
 
                 uses.add(
                     _Use(
