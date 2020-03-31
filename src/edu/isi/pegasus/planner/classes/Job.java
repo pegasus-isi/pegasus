@@ -2245,7 +2245,7 @@ public class Job extends Data implements GraphNodeContent {
                         j.setTXNamespace(node.get(key).asText());
                         break;
                         
-                    case JOB_NAME:
+                    case NAME:
                         j.setTXName(node.get(key).asText());
                         break;
                         

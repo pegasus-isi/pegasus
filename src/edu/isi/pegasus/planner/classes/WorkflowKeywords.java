@@ -30,7 +30,6 @@ public enum WorkflowKeywords {
     TRANSFORMATION_CATALOG("transformationCatalog"),
     HOOKS("hooks"),
     JOBS("jobs"),
-    JOB_NAME("name"),
     JOB_NAMESPACE("namespace"),
     JOB_VERSION("version"),
     JOB_ID("id"),
@@ -45,6 +44,7 @@ public enum WorkflowKeywords {
     OPTIONAL("optional"),
     SIZE("size"),
     DEPENDENCIES("jobDependencies");
+
 
     private String mName;
 

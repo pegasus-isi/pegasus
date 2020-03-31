@@ -180,8 +180,8 @@ public class DAXParser5 implements DAXParser {
                         break;
 
                     default:
-                        // this.complainForUnsupportedKey(
-                        //        WorkflowKeywords.WORKFLOW.getReservedName(), key, node);
+                         this.complainForUnsupportedKey(
+                                WorkflowKeywords.WORKFLOW.getReservedName(), key, node);
                 }
             }
             return null;
