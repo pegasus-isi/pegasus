@@ -67,7 +67,7 @@ public class FileDetector {
     public static boolean isTypeXML(File file) {
         boolean isXML = false;
         if (!(file.exists() && file.canRead())) {
-            return isXML;
+            throw new RuntimeException( "File does not exist or with read bit set to false " + file.getAbsolutePath());
         }
 
         BufferedReader br = null;
