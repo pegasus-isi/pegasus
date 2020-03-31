@@ -973,7 +973,9 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
                 if job.stderr:
                     if job.stderr.lfn not in mapping:
-                        mapping[job.stderr.lfn][1].add(job)
+                        mapping[job.stderr.lfn] = (set(), set())
+
+                    mapping[job.stderr.lfn][1].add(job)
 
                 """
                 for _input in job.inputs:
