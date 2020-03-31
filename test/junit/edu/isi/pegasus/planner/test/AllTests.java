@@ -37,6 +37,7 @@ import org.junit.runners.Suite;
     edu.isi.pegasus.planner.catalog.transformation.impl.TextTest.class,
     edu.isi.pegasus.planner.catalog.transformation.impl.YAMLTest.class,
     edu.isi.pegasus.planner.classes.PegasusFileTest.class,
+    edu.isi.pegasus.planner.classes.JobTest.class,
     edu.isi.pegasus.planner.cluster.RuntimeClusteringTest.class,
     edu.isi.pegasus.planner.code.GridStartTest.class,
     edu.isi.pegasus.planner.code.generator.condor.CondorEnvironmentEscapeTest.class,
