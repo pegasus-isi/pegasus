@@ -2234,7 +2234,7 @@ public class Job extends Data implements GraphNodeContent {
             JsonNode node = oc.readTree(parser);
             Job j = new Job();
             JOB_TYPE type = JOB_TYPE.job;
-
+            String file = null;
             for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
                 Map.Entry<String, JsonNode> e = it.next();
                 String key = e.getKey();
@@ -2275,6 +2275,10 @@ public class Job extends Data implements GraphNodeContent {
                         }
                         break;
 
+                    case JOB_FILE:
+                        file = node.get(key).asText();
+                        break;
+                        
                     case METADATA:
                         j.addMetadata(this.createMetadata(node.get(key)));
                         break;
@@ -2337,10 +2341,18 @@ public class Job extends Data implements GraphNodeContent {
                 
                 case condorWorkflow:
                     j = new DAGJob(j);
+                    if (file == null){
+                        throw new RuntimeException( "condorWorkflow job has to have file specified" + node);
+                    }
+                    ((DAGJob)j).setDAGFile(file);
                     break;
                     
                 case pegasusWorkflow:
                     j = new DAXJob(j);
+                    if (file == null){
+                        throw new RuntimeException( "pegasusWorkflow job has to have file specified" + node);
+                    }
+                    ((DAXJob)j).setDAXFile(file);
                     break;
             }
             return j;

@@ -37,6 +37,7 @@ public enum WorkflowKeywords {
     JOB_STDIN("stdin"),
     JOB_STDOUT("stdout"),
     JOB_STDERR("stderr"),
+    JOB_FILE("file"), //to designate dax or dag file only
     PROFILES("profiles"),
     USES("uses"),
     LFN("lfn"),
