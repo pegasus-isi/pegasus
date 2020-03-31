@@ -119,9 +119,6 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
     /** Handle to the callback */
     protected Callback mCallback;
 
-    /** A job prefix specifed at command line. */
-    protected String mJobPrefix;
-
     /** Schema version of the DAX as detected in the factory. */
     protected String mSchemaVersion;
 
@@ -134,10 +131,6 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
     public DAXParser3(PegasusBag bag, String schemaVersion) {
         super(bag);
         mSchemaVersion = schemaVersion;
-        mJobPrefix =
-                (bag.getPlannerOptions() == null)
-                        ? null
-                        : bag.getPlannerOptions().getJobnamePrefix();
     }
 
     /**
@@ -365,8 +358,6 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
                         // set the internal primary id for job
                         // dagJob.setName( constructJobID( dagJob ) );
-                        dagJob.setName(
-                                Parser.makeDAGManCompliant(dagJob.generateName(this.mJobPrefix)));
                         return dagJob;
                     } else if (element.equals("dax")) {
                         DAXJob daxJob = new DAXJob(j);
@@ -396,11 +387,6 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                                 "pegasus", "pegasus-plan", Version.instance().toString());
 
                         daxJob.level = -1;
-
-                        // set the internal primary id for job
-                        // daxJob.setName( constructJobID( daxJob ) );
-                        daxJob.setName(
-                                Parser.makeDAGManCompliant(daxJob.generateName(this.mJobPrefix)));
                         return daxJob;
                     }
                 } // end of element job
@@ -538,8 +524,6 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         }
                     }
 
-                    // set the internal primary id for job
-                    j.setName(constructJobID(j));
                     return j;
                 } // end of element job
                 return null; // end of j
@@ -1129,30 +1113,6 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
         }
 
         return tceList;
-    }
-
-    /**
-     * Returns the id for a job
-     *
-     * @param j the job
-     * @return the id.
-     */
-    protected String constructJobID(Job j) {
-        // construct the jobname/primary key for job
-        StringBuilder name = new StringBuilder();
-
-        // prepend a job prefix to job if required
-        if (mJobPrefix != null) {
-            name.append(mJobPrefix);
-        }
-
-        // append the name and id recevied from dax
-        name.append(j.getTXName());
-        name.append("_");
-        name.append(j.getLogicalID());
-
-        // PM-1222 strip out any . from transformation name
-        return Parser.makeDAGManCompliant(name.toString());
     }
 
     /**

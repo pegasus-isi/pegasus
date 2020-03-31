@@ -20,6 +20,8 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.CompoundTransformation;
+import edu.isi.pegasus.planner.classes.DAGJob;
+import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.DagInfo;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.Notifications;
@@ -31,6 +33,7 @@ import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.classes.WorkflowMetrics;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.dax.Invoke;
+import edu.isi.pegasus.planner.parser.Parser;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -85,6 +88,9 @@ public class DAX2CDAG implements Callback {
     /** The handle to the logger */
     private LogManager mLogger;
 
+    /** A job prefix specifed at command line. */
+    protected String mJobPrefix;
+    
     /**
      * The overloaded constructor.
      *
@@ -97,6 +103,10 @@ public class DAX2CDAG implements Callback {
         mProps = bag.getPegasusProperties();
         mLogger = bag.getLogger();
         mDone = false;
+        this.mJobPrefix =
+                (bag.getPlannerOptions() == null)
+                        ? null
+                        : bag.getPlannerOptions().getJobnamePrefix();
         this.mReplicaStore = new ReplicaStore();
         this.mTransformationStore = new TransformationStore();
         this.mCompoundTransformations = new HashMap<String, CompoundTransformation>();
@@ -145,7 +155,20 @@ public class DAX2CDAG implements Callback {
      * @param job the <code>Job</code> object storing the job information gotten from parser.
      */
     public void cbJob(Job job) {
-
+        //PM-1501 first compute derived attributes
+        // set the internal primary id for job
+        if (job instanceof DAXJob) {
+            // set the internal primary id for job
+            // daxJob.setName( constructJobID( daxJob ) );
+            job.setName(
+                    Parser.makeDAGManCompliant(((DAXJob)job).generateName(this.mJobPrefix)));
+        } else if (job instanceof DAGJob ){
+            job.setName(
+                    Parser.makeDAGManCompliant(((DAGJob)job).generateName(this.mJobPrefix)));
+        }
+        job.setName(constructJobID(job));
+        
+        
         mJobMap.put(job.logicalId, job.jobName);
         mDag.add(job);
 
@@ -355,5 +378,29 @@ public class DAX2CDAG implements Callback {
             }
         }
         mLogger.logEventCompletion();
+    }
+    
+    /**
+     * Returns the id for a job
+     *
+     * @param j the job
+     * @return the id.
+     */
+    protected String constructJobID(Job j) {
+        // construct the jobname/primary key for job
+        StringBuilder name = new StringBuilder();
+
+        // prepend a job prefix to job if required
+        if (mJobPrefix != null) {
+            name.append(mJobPrefix);
+        }
+
+        // append the name and id recevied from dax
+        name.append(j.getTXName());
+        name.append("_");
+        name.append(j.getLogicalID());
+
+        // PM-1222 strip out any . from transformation name
+        return Parser.makeDAGManCompliant(name.toString());
     }
 }
