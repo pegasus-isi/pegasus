@@ -26,6 +26,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.WorkflowKeywords;
@@ -161,6 +162,19 @@ public class DAXParser5 implements DAXParser {
                             for (Invoke i : notifications.getNotifications(when)) {
                                 c.cbWfInvoke(i);
                             }
+                        }
+                        break;
+                        
+                    case JOBS:
+                        JsonNode jobsNode = node.get(key);
+                        if (jobsNode.isArray()) {
+                            for (JsonNode jobNode : jobsNode) {
+                                parser = jobNode.traverse(oc);
+                                Job job = parser.readValueAs(Job.class);
+                                c.cbJob(job);
+                            }
+                        } else {
+                            throw new RuntimeException("jobs: value should be of type array ");
                         }
                         break;
 

@@ -13,6 +13,12 @@
  */
 package edu.isi.pegasus.planner.classes;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import edu.isi.pegasus.common.credential.CredentialHandler;
@@ -23,6 +29,7 @@ import edu.isi.pegasus.planner.catalog.classes.Profiles.NAMESPACES;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
+import edu.isi.pegasus.planner.common.PegasusJsonDeserializer;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.namespace.Condor;
@@ -55,6 +62,7 @@ import java.util.Set;
  * @author Gaurang Mehta
  * @version $Revision$
  */
+@JsonDeserialize(using = Job.JsonDeserializer.class)
 public class Job extends Data implements GraphNodeContent {
 
     /**
@@ -606,6 +614,32 @@ public class Job extends Data implements GraphNodeContent {
         return mJobExecutablesStaged;
     }
 
+    /**
+     * Adds a file to the underlying collection of  files associated with the job.
+     *
+     * @param file the <code>PegasusFile</code> containing the input file.
+     */
+    public void addFile(PegasusFile file) {
+        PegasusFile.LINKAGE link = file.getLinkage();
+        switch(link){
+            case input:
+                this.inputFiles.add(file);
+                break;
+
+            case output:
+                this.outputFiles.add(file);
+                break;
+
+            case inout:
+                this.inputFiles.add(file);
+                this.outputFiles.add(file);
+                break;
+                
+            default:
+                throw new RuntimeException("Unsupported linkage " + link + " for file " + file );
+        }
+    }
+    
     /**
      * Adds an input file to the underlying collection of input files associated with the job.
      *
@@ -1976,6 +2010,36 @@ public class Job extends Data implements GraphNodeContent {
     }
 
     /**
+     * Adds metadata attributes for the job
+     *
+     * @param profiles
+     */
+    public void addMetadata(List<Profile> profiles) {
+        Metadata m = new Metadata();
+        for (Profile p : profiles) {
+            this.addProfile(p);
+        }
+    }
+    
+    /**
+     * Allows you to add one profile at a time to the transformation.
+     *
+     * @param profiles profiles to be added.
+     */
+    public void addProfiles(Profiles profiles) {
+        if (profiles != null) {
+            // traverse through all the enum keys
+            for (NAMESPACES n : NAMESPACES.values()) {
+                Namespace nm = profiles.get(n);
+                for (Iterator it = nm.getProfileKeyIterator(); it.hasNext(); ) {
+                    String key = (String) it.next();
+                    this.addProfile(new Profile(n.toString(), key, (String) nm.get(key)));
+                }
+            }
+        }
+    }
+    
+    /**
      * Adds a profile to the job object
      *
      * @param p the profile to be added
@@ -2120,5 +2184,138 @@ public class Job extends Data implements GraphNodeContent {
      */
     public GraphNode getGraphNodeReference() {
         return this.mGraphNode;
+    }
+    
+    
+    /**
+     * Custom deserializer for YAML representation of uses section that designates a job
+     *
+     * @author Karan Vahi
+     */
+    static class JsonDeserializer extends PegasusJsonDeserializer<Job> {
+
+        /**
+         * Deserializes a YAML representation of a single entry in the uses section of a job
+         *
+         * <pre>
+         * - id: ID000001
+         *   name: preprocess
+         *   namespace: diamond
+         *   version: "2.0"
+         *   arguments:
+         *     ["-a", "preprocess", "-T60", "-i", lfn: f.a, "-o", "f.b1", "f.b2"]
+         *   uses:
+         *     - lfn: f.b2
+         *       type: output
+         *       registerReplica: false
+         *       stageOut: true
+         *     - lfn: f.b1
+         *       metadata:
+         *         size: "2048"
+         *       type: output
+         *       registerReplica: false
+         *       stageOut: true
+         *     - lfn: f.a
+         *       type: input
+         * </pre>
+         *
+         * @param parser
+         * @param dc
+         * @return
+         * @throws IOException
+         * @throws JsonProcessingException
+         */
+        @Override
+        public Job deserialize(JsonParser parser, DeserializationContext dc)
+                throws IOException, JsonProcessingException {
+
+            ObjectCodec oc = parser.getCodec();
+            JsonNode node = oc.readTree(parser);
+            Job j = new Job();
+
+            for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
+                Map.Entry<String, JsonNode> e = it.next();
+                String key = e.getKey();
+                WorkflowKeywords reservedKey = WorkflowKeywords.getReservedKey(key);
+                if (reservedKey == null) {
+                    this.complainForIllegalKey(WorkflowKeywords.JOBS.getReservedName(), key, node);
+                }
+                switch (reservedKey) {
+                    case JOB_NAMESPACE:
+                        j.setTXNamespace(node.get(key).asText());
+                        break;
+                        
+                    case JOB_NAME:
+                        j.setTXName(node.get(key).asText());
+                        break;
+                        
+                    case JOB_VERSION:
+                        j.setTXVersion(node.get(key).asText());
+                        break;
+                        
+                    case JOB_ID:
+                        j.setLogicalID(node.get(key).asText());
+                        break;
+                        
+                    case JOB_ARGUMENTS:
+                        JsonNode argsNode = node.get(key);
+                        if (argsNode.isArray()) {
+                            StringBuilder args = new StringBuilder();
+                            for (JsonNode argNode : argsNode) {
+                                args.append(argNode.asText()).append(" ");
+                            }
+                            j.setArguments(args.toString());
+                        } else {
+                            throw new RuntimeException( WorkflowKeywords.JOB_ARGUMENTS 
+                                    + ": value should be of type array ");
+                        }
+                        break;
+                        
+                    case METADATA:
+                        j.addMetadata(this.createMetadata(node.get(key)));
+                        break;
+                        
+                    case PROFILES:
+                        JsonNode profilesNode = node.get(key);
+                        if (profilesNode != null) {
+                            parser = profilesNode.traverse(oc);
+                            Profiles profiles = parser.readValueAs(Profiles.class);
+                            j.addProfiles(profiles);
+                        }
+                        break;
+                        
+                    case USES:
+                        JsonNode usesNode = node.get(key);
+                        if (usesNode.isArray()) {
+                            StringBuilder args = new StringBuilder();
+                            for (JsonNode useNode : usesNode) {
+                                parser = useNode.traverse(oc);
+                                PegasusFile pf = parser.readValueAs(PegasusFile.class);
+                                j.addFile(pf);
+                            }
+                            j.setArguments(args.toString());
+                        } else {
+                            throw new RuntimeException( WorkflowKeywords.JOB_ARGUMENTS 
+                                    + ": value should be of type array ");
+                        }
+
+
+                    case HOOKS:
+                        JsonNode hooksNode = node.get(key);
+                        j.addNotifications(this.createNotifications(hooksNode));
+                        break;
+
+                    default:
+                        this.complainForUnsupportedKey(
+                                WorkflowKeywords.JOBS.getReservedName(), key, node);
+                }
+            }
+            return j;
+        }
+
+        @Override
+        public RuntimeException getException(String message) {
+            return new RuntimeException(message);
+        }
     }
 }
