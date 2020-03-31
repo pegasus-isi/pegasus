@@ -172,6 +172,7 @@ public class DAXParser5 implements DAXParser {
                                 parser = jobNode.traverse(oc);
                                 Job job = parser.readValueAs(Job.class);
                                 c.cbJob(job);
+                                System.err.println(job);
                             }
                         } else {
                             throw new RuntimeException("jobs: value should be of type array ");
