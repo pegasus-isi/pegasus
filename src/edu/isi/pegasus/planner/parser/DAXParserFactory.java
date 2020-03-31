@@ -16,8 +16,11 @@ package edu.isi.pegasus.planner.parser;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.CondorVersion;
 import edu.isi.pegasus.common.util.DynamicLoader;
+import edu.isi.pegasus.common.util.FileDetector;
+
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import edu.isi.pegasus.planner.parser.dax.*;
 import java.io.File;
 import java.util.HashMap;
@@ -75,9 +78,13 @@ public class DAXParserFactory {
         if (properties == null) {
             throw new RuntimeException("Invalid properties passed");
         }
-
         // load the callback
         Callback c = DAXParserFactory.loadDAXParserCallback(bag, daxFile, callbackClass);
+
+        // PM-1511
+        if( FileDetector.isTypeXML(daxFile)){
+            
+        }
         return DAXParserFactory.loadXMLDAXParser(bag, c, daxFile);
     }
 

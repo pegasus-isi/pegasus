@@ -53,6 +53,17 @@ public class FileDetector {
      * @param file
      * @return
      */
+    public static boolean isTypeXML(String file) {
+        return FileDetector.isTypeXML(new File(file));
+    }
+    
+    /**
+     * Returns whether type of file is XML or not only by inspecting first line and looking for XML
+     * prefix <?xml version="1.0" encoding="UTF-8"?>
+     *
+     * @param file
+     * @return
+     */
     public static boolean isTypeXML(File file) {
         boolean isXML = false;
         if (!(file.exists() && file.canRead())) {
