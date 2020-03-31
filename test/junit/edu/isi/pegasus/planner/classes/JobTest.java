@@ -10,7 +10,6 @@ import static org.junit.Assert.*;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import edu.isi.pegasus.planner.namespace.Metadata;
 import java.io.IOException;
 import java.util.Collection;
 import org.junit.After;
