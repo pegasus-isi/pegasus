@@ -39,6 +39,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -179,17 +181,50 @@ public class DAXParser5 implements DAXParser {
                         }
                         break;
 
+                    case JOB_DEPENDENCIES:
+                        JsonNode dependenciesNode = node.get(key);
+                        if (dependenciesNode.isArray()) {
+                            for (JsonNode dependencyNode : dependenciesNode) {
+                                String jobID = dependencyNode.get(WorkflowKeywords.JOB_ID.getReservedName()).asText();
+                                List<String> children = this.createChildren(dependencyNode.get(WorkflowKeywords.CHILDREN.getReservedName()));
+                                System.err.println(jobID + " -> " + children);
+                                
+                            }
+                        } else {
+                            throw new RuntimeException( WorkflowKeywords.JOB_DEPENDENCIES + ": value should be of type array ");
+                        }
+                        break;
+                        
                     default:
                          this.complainForUnsupportedKey(
                                 WorkflowKeywords.WORKFLOW.getReservedName(), key, node);
                 }
             }
+            c.cbDone();
             return null;
         }
 
         @Override
         public RuntimeException getException(String message) {
             return new RuntimeException(message);
+        }
+
+        /**
+         * Returns a list of children id
+         * 
+         * @param node
+         * @return 
+         */
+        private List<String> createChildren(JsonNode node) {
+            List<String> ids = new LinkedList();
+            if (node.isArray()) {
+                for (JsonNode idNode : node) {
+                    ids.add(idNode.asText());
+                }
+            } else {
+                throw new RuntimeException(WorkflowKeywords.CHILDREN + ": value should be of type array ");
+            }
+            return ids;
         }
     }
 

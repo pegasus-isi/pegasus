@@ -43,7 +43,8 @@ public enum WorkflowKeywords {
     REGISTER_REPLICA("registerReplica"),
     OPTIONAL("optional"),
     SIZE("size"),
-    DEPENDENCIES("jobDependencies");
+    JOB_DEPENDENCIES("jobDependencies"),
+    CHILDREN("children");
 
 
     private String mName;
