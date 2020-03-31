@@ -46,7 +46,6 @@ public enum WorkflowKeywords {
     JOB_DEPENDENCIES("jobDependencies"),
     CHILDREN("children");
 
-
     private String mName;
 
     private static Map<String, WorkflowKeywords> mKeywordsVsType = new HashMap<>();

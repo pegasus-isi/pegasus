@@ -167,7 +167,7 @@ public class DAXParser5 implements DAXParser {
                             }
                         }
                         break;
-                        
+
                     case JOBS:
                         JsonNode jobsNode = node.get(key);
                         if (jobsNode.isArray()) {
@@ -186,17 +186,26 @@ public class DAXParser5 implements DAXParser {
                         JsonNode dependenciesNode = node.get(key);
                         if (dependenciesNode.isArray()) {
                             for (JsonNode dependencyNode : dependenciesNode) {
-                                String jobID = dependencyNode.get(WorkflowKeywords.JOB_ID.getReservedName()).asText();
-                                List<String> children = this.createChildren(dependencyNode.get(WorkflowKeywords.CHILDREN.getReservedName()));
+                                String jobID =
+                                        dependencyNode
+                                                .get(WorkflowKeywords.JOB_ID.getReservedName())
+                                                .asText();
+                                List<String> children =
+                                        this.createChildren(
+                                                dependencyNode.get(
+                                                        WorkflowKeywords.CHILDREN
+                                                                .getReservedName()));
                                 c.cbChildren(jobID, children);
                             }
                         } else {
-                            throw new RuntimeException( WorkflowKeywords.JOB_DEPENDENCIES + ": value should be of type array ");
+                            throw new RuntimeException(
+                                    WorkflowKeywords.JOB_DEPENDENCIES
+                                            + ": value should be of type array ");
                         }
                         break;
-                        
+
                     default:
-                         this.complainForUnsupportedKey(
+                        this.complainForUnsupportedKey(
                                 WorkflowKeywords.WORKFLOW.getReservedName(), key, node);
                 }
             }
@@ -211,9 +220,9 @@ public class DAXParser5 implements DAXParser {
 
         /**
          * Returns a list of children id
-         * 
+         *
          * @param node
-         * @return 
+         * @return
          */
         private List<String> createChildren(JsonNode node) {
             List<String> ids = new LinkedList();
@@ -222,7 +231,8 @@ public class DAXParser5 implements DAXParser {
                     ids.add(idNode.asText());
                 }
             } else {
-                throw new RuntimeException(WorkflowKeywords.CHILDREN + ": value should be of type array ");
+                throw new RuntimeException(
+                        WorkflowKeywords.CHILDREN + ": value should be of type array ");
             }
             return ids;
         }
@@ -234,7 +244,7 @@ public class DAXParser5 implements DAXParser {
         String dax = "/Users/vahi/Pegasus/work/yaml-tc/workflow.yml";
         PegasusBag bag = new PegasusBag();
         bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
-        bag.add(PegasusBag.PEGASUS_LOGMANAGER, LogManager.getInstance("",""));
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, LogManager.getInstance("", ""));
         c.initialize(bag, dax);
         parser.setDAXCallback(c);
         try {

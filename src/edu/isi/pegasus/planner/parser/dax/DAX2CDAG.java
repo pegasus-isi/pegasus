@@ -90,7 +90,7 @@ public class DAX2CDAG implements Callback {
 
     /** A job prefix specifed at command line. */
     protected String mJobPrefix;
-    
+
     /**
      * The overloaded constructor.
      *
@@ -155,21 +155,19 @@ public class DAX2CDAG implements Callback {
      * @param job the <code>Job</code> object storing the job information gotten from parser.
      */
     public void cbJob(Job job) {
-        //PM-1501 first compute derived attributes
+        // PM-1501 first compute derived attributes
         // set the internal primary id for job
         if (job instanceof DAXJob) {
             // set the internal primary id for job
             // daxJob.setName( constructJobID( daxJob ) );
-            job.setName(
-                    Parser.makeDAGManCompliant(((DAXJob)job).generateName(this.mJobPrefix)));
-        } else if (job instanceof DAGJob ){
-            job.setName(
-                    Parser.makeDAGManCompliant(((DAGJob)job).generateName(this.mJobPrefix)));
+            job.setName(Parser.makeDAGManCompliant(((DAXJob) job).generateName(this.mJobPrefix)));
+        } else if (job instanceof DAGJob) {
+            job.setName(Parser.makeDAGManCompliant(((DAGJob) job).generateName(this.mJobPrefix)));
         }
         job.setName(constructJobID(job));
-        //all jobs deserialized are of type compute
+        // all jobs deserialized are of type compute
         job.setJobType(Job.COMPUTE_JOB);
-        
+
         mJobMap.put(job.logicalId, job.jobName);
         mDag.add(job);
 
@@ -254,7 +252,7 @@ public class DAX2CDAG implements Callback {
             mDag.addEdge(parentID, childID);
         }
     }
-    
+
     /**
      * Callback for child and parent relationships from Section 5: Dependencies that lists Parent
      * Child relationships (can be empty)
@@ -262,7 +260,7 @@ public class DAX2CDAG implements Callback {
      * @param parent is the IDREF of the child element.
      * @param children is a list of id's of children nodes.
      */
-    public void cbChildren(String parent, List<String> children){
+    public void cbChildren(String parent, List<String> children) {
         String parentID = (String) mJobMap.get(parent);
         String childID;
 
@@ -409,7 +407,7 @@ public class DAX2CDAG implements Callback {
         }
         mLogger.logEventCompletion();
     }
-    
+
     /**
      * Returns the id for a job
      *

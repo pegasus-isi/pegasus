@@ -115,10 +115,10 @@ public interface Callback {
      *
      * @param child is the IDREF of the child element.
      * @param parents is a list of edjes denoted by PCRelation object.
-     * @deprecated 
+     * @deprecated
      */
     public void cbParents(String child, java.util.List<PCRelation> parents);
-    
+
     /**
      * Callback for child and parent relationships from Section 5: Dependencies that lists Parent
      * Child relationships (can be empty)

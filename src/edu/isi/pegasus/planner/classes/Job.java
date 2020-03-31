@@ -615,13 +615,13 @@ public class Job extends Data implements GraphNodeContent {
     }
 
     /**
-     * Adds a file to the underlying collection of  files associated with the job.
+     * Adds a file to the underlying collection of files associated with the job.
      *
      * @param file the <code>PegasusFile</code> containing the input file.
      */
     public void addFile(PegasusFile file) {
         PegasusFile.LINKAGE link = file.getLinkage();
-        switch(link){
+        switch (link) {
             case input:
                 this.inputFiles.add(file);
                 break;
@@ -634,12 +634,12 @@ public class Job extends Data implements GraphNodeContent {
                 this.inputFiles.add(file);
                 this.outputFiles.add(file);
                 break;
-                
+
             default:
-                throw new RuntimeException("Unsupported linkage " + link + " for file " + file );
+                throw new RuntimeException("Unsupported linkage " + link + " for file " + file);
         }
     }
-    
+
     /**
      * Adds an input file to the underlying collection of input files associated with the job.
      *
@@ -2020,7 +2020,7 @@ public class Job extends Data implements GraphNodeContent {
             this.addProfile(p);
         }
     }
-    
+
     /**
      * Allows you to add one profile at a time to the transformation.
      *
@@ -2038,7 +2038,7 @@ public class Job extends Data implements GraphNodeContent {
             }
         }
     }
-    
+
     /**
      * Adds a profile to the job object
      *
@@ -2185,8 +2185,7 @@ public class Job extends Data implements GraphNodeContent {
     public GraphNode getGraphNodeReference() {
         return this.mGraphNode;
     }
-    
-    
+
     /**
      * Custom deserializer for YAML representation of uses section that designates a job
      *
@@ -2244,19 +2243,19 @@ public class Job extends Data implements GraphNodeContent {
                     case JOB_NAMESPACE:
                         j.setTXNamespace(node.get(key).asText());
                         break;
-                        
+
                     case NAME:
                         j.setTXName(node.get(key).asText());
                         break;
-                        
+
                     case JOB_VERSION:
                         j.setTXVersion(node.get(key).asText());
                         break;
-                        
+
                     case JOB_ID:
                         j.setLogicalID(node.get(key).asText());
                         break;
-                        
+
                     case JOB_ARGUMENTS:
                         JsonNode argsNode = node.get(key);
                         if (argsNode.isArray()) {
@@ -2266,15 +2265,16 @@ public class Job extends Data implements GraphNodeContent {
                             }
                             j.setArguments(args.toString());
                         } else {
-                            throw new RuntimeException( WorkflowKeywords.JOB_ARGUMENTS 
-                                    + ": value should be of type array ");
+                            throw new RuntimeException(
+                                    WorkflowKeywords.JOB_ARGUMENTS
+                                            + ": value should be of type array ");
                         }
                         break;
-                        
+
                     case METADATA:
                         j.addMetadata(this.createMetadata(node.get(key)));
                         break;
-                        
+
                     case PROFILES:
                         JsonNode profilesNode = node.get(key);
                         if (profilesNode != null) {
@@ -2283,7 +2283,7 @@ public class Job extends Data implements GraphNodeContent {
                             j.addProfiles(profiles);
                         }
                         break;
-                        
+
                     case USES:
                         JsonNode usesNode = node.get(key);
                         if (usesNode.isArray()) {
@@ -2294,10 +2294,10 @@ public class Job extends Data implements GraphNodeContent {
                                 j.addFile(pf);
                             }
                         } else {
-                            throw new RuntimeException( WorkflowKeywords.JOB_ARGUMENTS 
-                                    + ": value should be of type array ");
+                            throw new RuntimeException(
+                                    WorkflowKeywords.JOB_ARGUMENTS
+                                            + ": value should be of type array ");
                         }
-
 
                     case HOOKS:
                         JsonNode hooksNode = node.get(key);
