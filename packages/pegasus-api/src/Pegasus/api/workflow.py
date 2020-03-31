@@ -285,9 +285,9 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         return _filter_out_nones(
             {
                 "id": self._id,
-                "stdin": self.stdin if self.stdin is not None else None,
-                "stdout": self.stdout if self.stdout is not None else None,
-                "stderr": self.stderr if self.stderr is not None else None,
+                "stdin": self.stdin.lfn if self.stdin is not None else None,
+                "stdout": self.stdout.lfn if self.stdout is not None else None,
+                "stderr": self.stderr.lfn if self.stderr is not None else None,
                 "nodeLabel": self.node_label,
                 "arguments": [
                     arg.lfn if isinstance(arg, File) else str(arg) for arg in self.args

@@ -55,11 +55,11 @@ $defs:
           type: string
         minItems: 0
       stdin:
-        $ref: "rc-5.0.yml#/$defs/file"
+        type: string
       stdout:
-        $ref: "rc-5.0.yml#/$defs/file"
+        type: string
       stderr:
-        $ref: "rc-5.0.yml#/$defs/file"
+        type: string
       uses:
         type: array
         items:

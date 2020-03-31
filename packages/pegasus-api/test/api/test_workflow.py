@@ -336,9 +336,9 @@ class TestAbstractJob:
             "id": "aj",
             "nodeLabel": "test",
             "arguments": ["-i", "f1"],
-            "stdin": {"lfn": "stdin"},
-            "stdout": {"lfn": "stdout"},
-            "stderr": {"lfn": "stderr"},
+            "stdin": "stdin",
+            "stdout": "stdout",
+            "stderr": "stderr",
             "uses": [
                 {
                     "lfn": "stdin",
@@ -443,9 +443,9 @@ class TestJob:
             "nodeLabel": "label",
             "version": "1",
             "arguments": ["-i", "f1"],
-            "stdin": {"lfn": "stdin"},
-            "stdout": {"lfn": "stdout"},
-            "stderr": {"lfn": "stderr"},
+            "stdin": "stdin",
+            "stdout": "stdout",
+            "stderr": "stderr",
             "uses": [
                 {
                     "lfn": "stdin",
@@ -618,8 +618,29 @@ def expected_json():
                 "type": "job",
                 "id": "a",
                 "name": "t1",
+                "stdin": "stdin",
+                "stdout": "stdout",
+                "stderr": "stderr",
                 "arguments": [],
                 "uses": [
+                    {
+                        "lfn": "stdin",
+                        "type": "input",
+                        "stageOut": False,
+                        "registerReplica": False,
+                    },
+                    {
+                        "lfn": "stdout",
+                        "type": "output",
+                        "stageOut": True,
+                        "registerReplica": False,
+                    },
+                    {
+                        "lfn": "stderr",
+                        "type": "output",
+                        "stageOut": True,
+                        "registerReplica": False,
+                    },
                     {
                         "lfn": "f1",
                         "type": "output",
@@ -724,7 +745,13 @@ def wf():
     wf.add_transformation_catalog(tc)
     wf.add_replica_catalog(rc)
 
-    j1 = Job("t1", _id="a").add_outputs(File("f1"), File("f2"))
+    j1 = (
+        Job("t1", _id="a")
+        .add_outputs(File("f1"), File("f2"))
+        .set_stdin("stdin")
+        .set_stdout("stdout")
+        .set_stderr("stderr")
+    )
     j2 = (
         Job("t1", _id="b")
         .add_inputs(File("f1"), File("f2"))
