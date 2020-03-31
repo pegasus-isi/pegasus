@@ -2293,7 +2293,6 @@ public class Job extends Data implements GraphNodeContent {
                                 PegasusFile pf = parser.readValueAs(PegasusFile.class);
                                 j.addFile(pf);
                             }
-                            j.setArguments(args.toString());
                         } else {
                             throw new RuntimeException( WorkflowKeywords.JOB_ARGUMENTS 
                                     + ": value should be of type array ");
