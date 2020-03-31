@@ -52,15 +52,7 @@ $defs:
       arguments:
         type: array
         items:
-          oneOf:
-            - type: string
-            - type: object
-              properties:
-                lfn:
-                  type: string
-              required:
-                - lfn
-              additionalProperties: false
+          type: string
         minItems: 0
       stdin:
         $ref: "rc-5.0.yml#/$defs/file"

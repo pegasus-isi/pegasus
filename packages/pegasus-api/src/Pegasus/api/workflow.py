@@ -290,7 +290,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
                 "stderr": self.stderr if self.stderr is not None else None,
                 "nodeLabel": self.node_label,
                 "arguments": [
-                    {"lfn": arg.lfn} if isinstance(arg, File) else arg
+                    arg.lfn if isinstance(arg, File) else str(arg)
                     for arg in self.args
                 ],
                 "uses": [use for use in self.uses],

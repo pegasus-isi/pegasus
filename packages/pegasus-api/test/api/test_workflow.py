@@ -335,7 +335,7 @@ class TestAbstractJob:
         expected = {
             "id": "aj",
             "nodeLabel": "test",
-            "arguments": ["-i", {"lfn": "f1"}],
+            "arguments": ["-i", "f1"],
             "stdin": {"lfn": "stdin"},
             "stdout": {"lfn": "stdout"},
             "stderr": {"lfn": "stderr"},
@@ -442,7 +442,7 @@ class TestJob:
             "id": "id",
             "nodeLabel": "label",
             "version": "1",
-            "arguments": ["-i", {"lfn": "f1"}],
+            "arguments": ["-i", "f1"],
             "stdin": {"lfn": "stdin"},
             "stdout": {"lfn": "stdout"},
             "stderr": {"lfn": "stderr"},
