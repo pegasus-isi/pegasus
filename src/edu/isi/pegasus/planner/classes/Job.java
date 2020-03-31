@@ -2298,6 +2298,18 @@ public class Job extends Data implements GraphNodeContent {
                                     WorkflowKeywords.JOB_ARGUMENTS
                                             + ": value should be of type array ");
                         }
+                        
+                    case JOB_STDIN:
+                        j.setStdIn(node.get(key).asText());
+                        break;
+                     
+                    case JOB_STDOUT:
+                        j.setStdOut(node.get(key).asText());
+                        break;
+                        
+                    case JOB_STDERR:
+                        j.setStdErr(node.get(key).asText());
+                        break;
 
                     case HOOKS:
                         JsonNode hooksNode = node.get(key);
