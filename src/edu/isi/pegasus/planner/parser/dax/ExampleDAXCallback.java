@@ -155,4 +155,9 @@ public class ExampleDAXCallback implements Callback {
         System.out.println("TransformationCatalogEntry Entry ");
         System.out.println(tce);
     }
+
+    @Override
+    public void cbChildren(String parent, List<String> children) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }
