@@ -167,7 +167,8 @@ public class DAX2CDAG implements Callback {
                     Parser.makeDAGManCompliant(((DAGJob)job).generateName(this.mJobPrefix)));
         }
         job.setName(constructJobID(job));
-        
+        //all jobs deserialized are of type compute
+        job.setJobType(Job.COMPUTE_JOB);
         
         mJobMap.put(job.logicalId, job.jobName);
         mDag.add(job);

@@ -2309,8 +2309,6 @@ public class Job extends Data implements GraphNodeContent {
                                 WorkflowKeywords.JOBS.getReservedName(), key, node);
                 }
             }
-            //all jobs deserialized are of type compute
-            j.setJobType(Job.COMPUTE_JOB);
             return j;
         }
 
