@@ -2344,7 +2344,7 @@ public class Job extends Data implements GraphNodeContent {
                     if (file == null){
                         throw new RuntimeException( "condorWorkflow job has to have file specified" + node);
                     }
-                    ((DAGJob)j).setDAGFile(file);
+                    ((DAGJob)j).setDAGLFN(file);
                     break;
                     
                 case pegasusWorkflow:
@@ -2352,7 +2352,7 @@ public class Job extends Data implements GraphNodeContent {
                     if (file == null){
                         throw new RuntimeException( "pegasusWorkflow job has to have file specified" + node);
                     }
-                    ((DAXJob)j).setDAXFile(file);
+                    ((DAXJob)j).setDAXLFN(file);
                     break;
             }
             return j;
