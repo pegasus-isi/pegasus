@@ -224,7 +224,7 @@ public class PartitionDAX extends Executable {
             }
 
             state = 1;
-            Parser p = (Parser) DAXParserFactory.loadDAXParser(bag, callback, daxFile);
+            Parser p = (Parser) DAXParserFactory.loadXMLDAXParser(bag, callback, daxFile);
             p.startParser(daxFile);
 
             state = 2;

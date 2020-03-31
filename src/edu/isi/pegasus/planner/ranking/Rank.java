@@ -91,7 +91,7 @@ public class Rank {
 
             mLogger.log("Ranking dax " + dax, LogManager.DEBUG_MESSAGE_LEVEL);
             //            DAXParser2 daxParser = new DAXParser2( dax, mBag, cb );
-            Parser p = (Parser) DAXParserFactory.loadDAXParser(mBag, cb, dax);
+            Parser p = (Parser) DAXParserFactory.loadXMLDAXParser(mBag, cb, dax);
             p.startParser(dax);
 
             ADag dag = (ADag) cb.getConstructedObject();

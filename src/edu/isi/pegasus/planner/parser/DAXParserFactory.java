@@ -60,7 +60,7 @@ public class DAXParserFactory {
      *
      * @param bag bag of Pegasus intialization objects
      * @param callbackClass the dax callback class
-     * @param dax file the dax file
+     * @param daxFile
      * @return the DAXParser loaded.
      * @exception DAXParserFactoryException that nests any error that might occur during the
      *     instantiation
@@ -78,7 +78,7 @@ public class DAXParserFactory {
 
         // load the callback
         Callback c = DAXParserFactory.loadDAXParserCallback(bag, daxFile, callbackClass);
-        return DAXParserFactory.loadDAXParser(bag, c, daxFile);
+        return DAXParserFactory.loadXMLDAXParser(bag, c, daxFile);
     }
 
     /**
@@ -92,7 +92,7 @@ public class DAXParserFactory {
      *     instantiation
      * @see #DEFAULT_CALLBACK_PACKAGE_NAME
      */
-    public static DAXParser loadDAXParser(PegasusBag bag, Callback c, String daxFile)
+    public static DAXParser loadXMLDAXParser(PegasusBag bag, Callback c, String daxFile)
             throws DAXParserFactoryException {
 
         String daxClass = DAXParserFactory.DEFAULT_DAX_PARSER_CLASS;
