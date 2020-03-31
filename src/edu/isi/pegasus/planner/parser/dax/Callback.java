@@ -33,7 +33,7 @@ import edu.isi.pegasus.planner.dax.Invoke;
 public interface Callback {
 
     /** The version of the Callback api */
-    public static final String VERSION = "1.5";
+    public static final String VERSION = "1.6";
 
     /**
      * The overloaded constructor.
@@ -115,8 +115,18 @@ public interface Callback {
      *
      * @param child is the IDREF of the child element.
      * @param parents is a list of edjes denoted by PCRelation object.
+     * @deprecated 
      */
     public void cbParents(String child, java.util.List<PCRelation> parents);
+    
+    /**
+     * Callback for child and parent relationships from Section 5: Dependencies that lists Parent
+     * Child relationships (can be empty)
+     *
+     * @param parent is the IDREF of the child element.
+     * @param children is a list of id's of children nodes.
+     */
+    public void cbChildren(String parent, java.util.List<String> children);
 
     /**
      * Callback when the parsing of the document is done. While this state could also be determined

@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
@@ -187,8 +188,7 @@ public class DAXParser5 implements DAXParser {
                             for (JsonNode dependencyNode : dependenciesNode) {
                                 String jobID = dependencyNode.get(WorkflowKeywords.JOB_ID.getReservedName()).asText();
                                 List<String> children = this.createChildren(dependencyNode.get(WorkflowKeywords.CHILDREN.getReservedName()));
-                                System.err.println(jobID + " -> " + children);
-                                
+                                c.cbChildren(jobID, children);
                             }
                         } else {
                             throw new RuntimeException( WorkflowKeywords.JOB_DEPENDENCIES + ": value should be of type array ");
@@ -234,6 +234,7 @@ public class DAXParser5 implements DAXParser {
         String dax = "/Users/vahi/Pegasus/work/yaml-tc/workflow.yml";
         PegasusBag bag = new PegasusBag();
         bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, LogManager.getInstance("",""));
         c.initialize(bag, dax);
         parser.setDAXCallback(c);
         try {

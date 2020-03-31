@@ -254,6 +254,35 @@ public class DAX2CDAG implements Callback {
             mDag.addEdge(parentID, childID);
         }
     }
+    
+    /**
+     * Callback for child and parent relationships from Section 5: Dependencies that lists Parent
+     * Child relationships (can be empty)
+     *
+     * @param parent is the IDREF of the child element.
+     * @param children is a list of id's of children nodes.
+     */
+    public void cbChildren(String parent, List<String> children){
+        String parentID = (String) mJobMap.get(parent);
+        String childID;
+
+        if (parentID == null) {
+            throw new RuntimeException("Unable to find job in DAX with ID " + parent);
+        }
+        for (String child : children) {
+            childID = (String) mJobMap.get(child);
+            if (childID == null) {
+                // this actually means dax is generated wrong.
+                // probably some one tinkered with it by hand.
+                throw new RuntimeException(
+                        "Unable to find job in DAX with ID "
+                                + child
+                                + " listed as a child for job with ID "
+                                + parent);
+            }
+            mDag.addEdge(parentID, childID);
+        }
+    }
 
     /**
      * Callback when the parsing of the document is done. It sets the flag that the parsing has been

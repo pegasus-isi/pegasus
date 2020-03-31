@@ -165,6 +165,32 @@ public class DAX2Graph implements Callback {
         }
         childNode.setParents(parentList);
     }
+    
+    /**
+     * This updates the internal graph nodes of child with references to it's parents referred to by
+     * the list of parents passed. It gets the handle to the parents graph nodes from it's internal
+     * map.
+     *
+     * @param parent the logical id of the child node.
+     * @param children list containing the logical id's of the childrent of the child nodes.
+     */
+    public void cbChildren(String parent, List children) {
+        GraphNode parentNode = (GraphNode) get(parent);
+        Iterator it = children.iterator();
+        String childId;
+        ArrayList childList = new ArrayList(children.size());
+
+        mLogger.log("Adding children for parent " + parent, LogManager.DEBUG_MESSAGE_LEVEL);
+        // construct the references to the parent nodes
+        while (it.hasNext()) {
+            childId = (String) it.next();
+            GraphNode childNode = (GraphNode) get(childId);
+            childList.add(parentNode);
+
+            childNode.addParent(parentNode);
+        }
+        parentNode.setChildren(childList);
+    }
 
     /**
      * Returns the name of the dax.
