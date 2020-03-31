@@ -2192,6 +2192,8 @@ public class Job extends Data implements GraphNodeContent {
      * @author Karan Vahi
      */
     static class JsonDeserializer extends PegasusJsonDeserializer<Job> {
+        
+        public enum JOB_TYPE {job, pegasusWorkflow, condorWorkflow};
 
         /**
          * Deserializes a YAML representation of a single entry in the uses section of a job
@@ -2231,6 +2233,7 @@ public class Job extends Data implements GraphNodeContent {
             ObjectCodec oc = parser.getCodec();
             JsonNode node = oc.readTree(parser);
             Job j = new Job();
+            JOB_TYPE type = JOB_TYPE.job;
 
             for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
                 Map.Entry<String, JsonNode> e = it.next();
@@ -2239,6 +2242,7 @@ public class Job extends Data implements GraphNodeContent {
                 if (reservedKey == null) {
                     this.complainForIllegalKey(WorkflowKeywords.JOBS.getReservedName(), key, node);
                 }
+                
                 switch (reservedKey) {
                     case JOB_NAMESPACE:
                         j.setTXNamespace(node.get(key).asText());
@@ -2283,11 +2287,14 @@ public class Job extends Data implements GraphNodeContent {
                             j.addProfiles(profiles);
                         }
                         break;
-
+                        
+                    case TYPE:
+                        type = JOB_TYPE.valueOf(node.get(key).asText());
+                        break;  
+                                
                     case USES:
                         JsonNode usesNode = node.get(key);
                         if (usesNode.isArray()) {
-                            StringBuilder args = new StringBuilder();
                             for (JsonNode useNode : usesNode) {
                                 parser = useNode.traverse(oc);
                                 PegasusFile pf = parser.readValueAs(PegasusFile.class);
@@ -2320,6 +2327,21 @@ public class Job extends Data implements GraphNodeContent {
                         this.complainForUnsupportedKey(
                                 WorkflowKeywords.JOBS.getReservedName(), key, node);
                 }
+            }
+            
+            //PM-1509 switch job based on type
+            switch (type) {
+                case job:
+                    //do nothing
+                    break;
+                
+                case condorWorkflow:
+                    j = new DAGJob(j);
+                    break;
+                    
+                case pegasusWorkflow:
+                    j = new DAXJob(j);
+                    break;
             }
             return j;
         }

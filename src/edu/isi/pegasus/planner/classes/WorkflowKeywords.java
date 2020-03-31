@@ -41,6 +41,7 @@ public enum WorkflowKeywords {
     USES("uses"),
     LFN("lfn"),
     METADATA("metadata"),
+    NODE_LABEL("nodeLabel"),
     TYPE("type"),
     STAGE_OUT("stageOut"),
     REGISTER_REPLICA("registerReplica"),
