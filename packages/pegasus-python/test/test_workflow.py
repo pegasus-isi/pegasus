@@ -16,7 +16,7 @@ from Pegasus.workflow import _to_wf, dump, dumps, load, loads
 
 @pytest.fixture(scope="module")
 def wf1():
-    _in = File("in").add_metadata(size=1024)
+    _in = File("in", size=2048).add_metadata(createdBy="ryan")
     stdin = File("stdin").add_metadata(size=1024)
     stdout = File("stdout").add_metadata(size=1024)
     stderr = File("stderr").add_metadata(size=1024)
@@ -111,12 +111,12 @@ def test_to_wf_with_optional_args_set(wf1):
     expected = json.loads(json.dumps(wf1, cls=_CustomEncoder))
 
     for job in expected["jobs"]:
-        job["uses"].sort(key=lambda u: u["file"]["lfn"])
+        job["uses"].sort(key=lambda u: u["lfn"])
 
     result = json.loads(json.dumps(_to_wf(expected), cls=_CustomEncoder))
 
     for job in result["jobs"]:
-        job["uses"].sort(key=lambda u: u["file"]["lfn"])
+        job["uses"].sort(key=lambda u: u["lfn"])
 
     assert result == expected
 
@@ -125,12 +125,12 @@ def test_to_wf_without_optional_args(wf2):
     expected = json.loads(json.dumps(wf2, cls=_CustomEncoder))
 
     for job in expected["jobs"]:
-        job["uses"].sort(key=lambda u: u["file"]["lfn"])
+        job["uses"].sort(key=lambda u: u["lfn"])
 
     result = json.loads(json.dumps(_to_wf(expected), cls=_CustomEncoder))
 
     for job in result["jobs"]:
-        job["uses"].sort(key=lambda u: u["file"]["lfn"])
+        job["uses"].sort(key=lambda u: u["lfn"])
 
     assert result == expected
 
@@ -149,12 +149,12 @@ def test_load(wf1, _format):
     result = json.loads(json.dumps(new_wf, cls=_CustomEncoder))
 
     for job in result["jobs"]:
-        job["uses"].sort(key=lambda u: u["file"]["lfn"])
+        job["uses"].sort(key=lambda u: u["lfn"])
 
     expected = json.loads(json.dumps(wf1, cls=_CustomEncoder))
 
     for job in expected["jobs"]:
-        job["uses"].sort(key=lambda u: u["file"]["lfn"])
+        job["uses"].sort(key=lambda u: u["lfn"])
 
     assert result == expected
 
@@ -167,12 +167,12 @@ def test_loads_json(wf1):
     result = json.loads(json.dumps(new_wf, cls=_CustomEncoder))
 
     for job in result["jobs"]:
-        job["uses"].sort(key=lambda u: u["file"]["lfn"])
+        job["uses"].sort(key=lambda u: u["lfn"])
 
     expected = json.loads(json.dumps(wf1, cls=_CustomEncoder))
 
     for job in expected["jobs"]:
-        job["uses"].sort(key=lambda u: u["file"]["lfn"])
+        job["uses"].sort(key=lambda u: u["lfn"])
 
     assert result == expected
 
@@ -185,12 +185,12 @@ def test_loads_yaml(wf1):
     result = json.loads(json.dumps(new_wf, cls=_CustomEncoder))
 
     for job in result["jobs"]:
-        job["uses"].sort(key=lambda u: u["file"]["lfn"])
+        job["uses"].sort(key=lambda u: u["lfn"])
 
     expected = json.loads(json.dumps(wf1, cls=_CustomEncoder))
 
     for job in expected["jobs"]:
-        job["uses"].sort(key=lambda u: u["file"]["lfn"])
+        job["uses"].sort(key=lambda u: u["lfn"])
 
     assert result == expected
 

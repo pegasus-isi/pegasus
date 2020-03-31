@@ -17,9 +17,9 @@ from Pegasus.api.writable import _CustomEncoder
 
 
 class TestFile:
-    @pytest.mark.parametrize("lfn", [("a"), ("例")])
-    def test_valid_file(self, lfn: str):
-        assert File(lfn)
+    @pytest.mark.parametrize("lfn,size", [("a", None), ("例", 2048)])
+    def test_valid_file(self, lfn: str, size: int):
+        assert File(lfn, size)
 
     @pytest.mark.parametrize("lfn", [(1), (list())])
     def test_invalid_file(self, lfn: str):
@@ -28,8 +28,12 @@ class TestFile:
 
         assert "invalid lfn: {lfn}".format(lfn=lfn) in str(e)
 
-    def test_tojson_no_metadata(self):
-        assert File("lfn").__json__() == {"lfn": "lfn"}
+    @pytest.mark.parametrize(
+        "lfn,size,expected",
+        [("f1", None, {"lfn": "f1"}), ("f2", 2048, {"lfn": "f2", "size": 2048})],
+    )
+    def test_tojson_no_metadata(self, lfn, size, expected):
+        assert File(lfn, size).__json__() == expected
 
     def test_eq(self):
         assert File("a") == File("a")
@@ -37,11 +41,8 @@ class TestFile:
         assert File("a") != 1
 
     def test_tojson_with_metdata(self, convert_yaml_schemas_to_json, load_schema):
-        result = File("lfn").add_metadata(key="value").__json__()
-        expected = {
-            "lfn": "lfn",
-            "metadata": {"key": "value"},
-        }
+        result = File("lfn", size=2048).add_metadata(key="value").__json__()
+        expected = {"lfn": "lfn", "metadata": {"key": "value"}, "size": 2048}
 
         file_schema = load_schema("rc-5.0.json")["$defs"]["file"]
         validate(instance=result, schema=file_schema)

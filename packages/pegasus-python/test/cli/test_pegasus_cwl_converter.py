@@ -909,7 +909,7 @@ def test_build_pegasus_wf():
     result["jobs"] = sorted(result["jobs"], key=lambda job: job["id"])
 
     for job in result["jobs"]:
-        job["uses"] = sorted(job["uses"], key=lambda u: u["file"]["lfn"])
+        job["uses"] = sorted(job["uses"], key=lambda u: u["lfn"])
 
     expected = {
         "jobs": [
@@ -926,19 +926,19 @@ def test_build_pegasus_wf():
                 "type": "job",
                 "uses": [
                     {
-                        "file": {"lfn": "write_file_output1.txt"},
+                        "lfn": "write_file_output1.txt",
                         "registerReplica": False,
                         "stageOut": True,
                         "type": "output",
                     },
                     {
-                        "file": {"lfn": "write_file_output2.txt"},
+                        "lfn": "write_file_output2.txt",
                         "registerReplica": False,
                         "stageOut": True,
                         "type": "output",
                     },
                     {
-                        "file": {"lfn": "input1"},
+                        "lfn": "input1",
                         "registerReplica": False,
                         "stageOut": False,
                         "type": "input",
@@ -957,19 +957,19 @@ def test_build_pegasus_wf():
                 "type": "job",
                 "uses": [
                     {
-                        "file": {"lfn": "write_file_output1.txt"},
+                        "lfn": "write_file_output1.txt",
                         "registerReplica": False,
                         "stageOut": False,
                         "type": "input",
                     },
                     {
-                        "file": {"lfn": "write_file_output2.txt"},
+                        "lfn": "write_file_output2.txt",
                         "registerReplica": False,
                         "stageOut": False,
                         "type": "input",
                     },
                     {
-                        "file": {"lfn": "output_file.txt"},
+                        "lfn": "output_file.txt",
                         "registerReplica": False,
                         "stageOut": True,
                         "type": "output",
@@ -984,7 +984,7 @@ def test_build_pegasus_wf():
     expected["jobs"] = sorted(expected["jobs"], key=lambda job: job["id"])
 
     for job in expected["jobs"]:
-        job["uses"] = sorted(job["uses"], key=lambda u: u["file"]["lfn"])
+        job["uses"] = sorted(job["uses"], key=lambda u: u["lfn"])
 
     assert result == expected
 
@@ -1094,7 +1094,7 @@ def test_main(mocker):
         result = yaml.load(f)
 
     for job in result["jobs"]:
-        job["uses"] = sorted(job["uses"], key=lambda u: u["file"]["lfn"])
+        job["uses"] = sorted(job["uses"], key=lambda u: u["lfn"])
 
     expected = {
         "jobs": [
@@ -1105,13 +1105,13 @@ def test_main(mocker):
                 "type": "job",
                 "uses": [
                     {
-                        "file": {"lfn": "if"},
+                        "lfn": "if",
                         "registerReplica": False,
                         "stageOut": False,
                         "type": "input",
                     },
                     {
-                        "file": {"lfn": "output.txt"},
+                        "lfn": "output.txt",
                         "registerReplica": False,
                         "stageOut": True,
                         "type": "output",
@@ -1137,7 +1137,7 @@ def test_main(mocker):
     }
 
     for job in expected["jobs"]:
-        job["uses"] = sorted(job["uses"], key=lambda u: u["file"]["lfn"])
+        job["uses"] = sorted(job["uses"], key=lambda u: u["lfn"])
 
     assert result == expected
 

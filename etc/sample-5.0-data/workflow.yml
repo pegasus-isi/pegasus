@@ -69,7 +69,7 @@ jobs:
     namespace: diamond
     version: "2.0"
     arguments:
-      ["-a", "preprocess", "-T60", "-i", lfn: f.a, "-o", "f.b1", "f.b2"]
+      ["-a", "preprocess", "-T60", "-i", "f.a", "-o", "f.b1", "f.b2"]
     uses:
       - lfn: f.b2
         type: output

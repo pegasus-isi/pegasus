@@ -447,7 +447,7 @@ def build_pegasus_wf(
 ) -> Workflow:
     log.info("Building Pegasus workflow")
 
-    wf = Workflow("cwl-converted-pegasus-workflow")
+    wf = Workflow("cwl-converted-pegasus-workflow", infer_dependencies=True)
 
     for step in cwl_wf.steps:
         step_name = get_basename(step.id)

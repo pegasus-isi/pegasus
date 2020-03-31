@@ -14,8 +14,10 @@ $defs:
   use:
     type: object
     properties:
-      file:
-        $ref: "rc-5.0.yml#/$defs/file"
+      lfn:
+        type: string
+      metadata:
+        $ref: 'common.yml#/$defs/metadata'
       type:
         $ref: "#/$defs/linkType"
       stageOut:
@@ -34,7 +36,7 @@ $defs:
         type: boolean
     additionalProperties: false
     required:
-      - file
+      - lfn
       - type
 
   # --- workflow job types -----------------------------------------------------
@@ -50,15 +52,7 @@ $defs:
       arguments:
         type: array
         items:
-          oneOf:
-            - type: string
-            - type: object
-              properties:
-                lfn:
-                  type: string
-              required:
-                - lfn
-              additionalProperties: false
+          type: string
         minItems: 0
       stdin:
         $ref: "rc-5.0.yml#/$defs/file"

@@ -65,7 +65,7 @@ class Test_Use:
             (
                 _Use(File("a"), _LinkType.INPUT, stage_out=True, register_replica=True),
                 {
-                    "file": {"lfn": "a"},
+                    "lfn": "a",
                     "type": "input",
                     "stageOut": True,
                     "registerReplica": True,
@@ -73,10 +73,15 @@ class Test_Use:
             ),
             (
                 _Use(
-                    File("a"), _LinkType.OUTPUT, stage_out=False, register_replica=True
+                    File("a", size=2048).add_metadata(createdBy="ryan"),
+                    _LinkType.OUTPUT,
+                    stage_out=False,
+                    register_replica=True,
                 ),
                 {
-                    "file": {"lfn": "a"},
+                    "lfn": "a",
+                    "size": 2048,
+                    "metadata": {"createdBy": "ryan"},
                     "type": "output",
                     "stageOut": False,
                     "registerReplica": True,
@@ -84,13 +89,14 @@ class Test_Use:
             ),
             (
                 _Use(
-                    File("a"),
+                    File("a", size=1024),
                     _LinkType.CHECKPOINT,
                     stage_out=True,
                     register_replica=True,
                 ),
                 {
-                    "file": {"lfn": "a"},
+                    "lfn": "a",
+                    "size": 1024,
                     "type": "checkpoint",
                     "stageOut": True,
                     "registerReplica": True,
@@ -324,60 +330,60 @@ class TestAbstractJob:
         j.add_checkpoint(File("cpf"))
 
         result = json.loads(json.dumps(j, cls=_CustomEncoder))
-        result["uses"] = sorted(result["uses"], key=lambda use: use["file"]["lfn"])
+        result["uses"] = sorted(result["uses"], key=lambda use: use["lfn"])
 
         expected = {
             "id": "aj",
             "nodeLabel": "test",
-            "arguments": ["-i", {"lfn": "f1"}],
+            "arguments": ["-i", "f1"],
             "stdin": {"lfn": "stdin"},
             "stdout": {"lfn": "stdout"},
             "stderr": {"lfn": "stderr"},
             "uses": [
                 {
-                    "file": {"lfn": "stdin"},
+                    "lfn": "stdin",
                     "type": "input",
                     "stageOut": False,
                     "registerReplica": False,
                 },
                 {
-                    "file": {"lfn": "if1"},
+                    "lfn": "if1",
                     "type": "input",
                     "stageOut": False,
                     "registerReplica": False,
                 },
                 {
-                    "file": {"lfn": "if2"},
+                    "lfn": "if2",
                     "type": "input",
                     "stageOut": False,
                     "registerReplica": False,
                 },
                 {
-                    "file": {"lfn": "stdout"},
+                    "lfn": "stdout",
                     "type": "output",
                     "stageOut": True,
                     "registerReplica": False,
                 },
                 {
-                    "file": {"lfn": "stderr"},
+                    "lfn": "stderr",
                     "type": "output",
                     "stageOut": True,
                     "registerReplica": False,
                 },
                 {
-                    "file": {"lfn": "of1"},
+                    "lfn": "of1",
                     "type": "output",
                     "stageOut": True,
                     "registerReplica": False,
                 },
                 {
-                    "file": {"lfn": "of2"},
+                    "lfn": "of2",
                     "type": "output",
                     "stageOut": True,
                     "registerReplica": False,
                 },
                 {
-                    "file": {"lfn": "cpf"},
+                    "lfn": "cpf",
                     "type": "checkpoint",
                     "stageOut": True,
                     "registerReplica": False,
@@ -385,7 +391,7 @@ class TestAbstractJob:
             ],
         }
 
-        expected["uses"] = sorted(expected["uses"], key=lambda use: use["file"]["lfn"])
+        expected["uses"] = sorted(expected["uses"], key=lambda use: use["lfn"])
 
         assert result == expected
 
@@ -427,7 +433,7 @@ class TestJob:
         j.add_outputs(File("of1"), File("of2"))
 
         result = json.loads(json.dumps(j, cls=_CustomEncoder))
-        result["uses"] = sorted(result["uses"], key=lambda use: use["file"]["lfn"])
+        result["uses"] = sorted(result["uses"], key=lambda use: use["lfn"])
 
         expected = {
             "type": "job",
@@ -436,49 +442,49 @@ class TestJob:
             "id": "id",
             "nodeLabel": "label",
             "version": "1",
-            "arguments": ["-i", {"lfn": "f1"}],
+            "arguments": ["-i", "f1"],
             "stdin": {"lfn": "stdin"},
             "stdout": {"lfn": "stdout"},
             "stderr": {"lfn": "stderr"},
             "uses": [
                 {
-                    "file": {"lfn": "stdin"},
+                    "lfn": "stdin",
                     "type": "input",
                     "stageOut": False,
                     "registerReplica": False,
                 },
                 {
-                    "file": {"lfn": "if1"},
+                    "lfn": "if1",
                     "type": "input",
                     "stageOut": False,
                     "registerReplica": False,
                 },
                 {
-                    "file": {"lfn": "if2"},
+                    "lfn": "if2",
                     "type": "input",
                     "stageOut": False,
                     "registerReplica": False,
                 },
                 {
-                    "file": {"lfn": "stdout"},
+                    "lfn": "stdout",
                     "type": "output",
                     "stageOut": True,
                     "registerReplica": False,
                 },
                 {
-                    "file": {"lfn": "stderr"},
+                    "lfn": "stderr",
                     "type": "output",
                     "stageOut": True,
                     "registerReplica": False,
                 },
                 {
-                    "file": {"lfn": "of1"},
+                    "lfn": "of1",
                     "type": "output",
                     "stageOut": True,
                     "registerReplica": False,
                 },
                 {
-                    "file": {"lfn": "of2"},
+                    "lfn": "of2",
                     "type": "output",
                     "stageOut": True,
                     "registerReplica": False,
@@ -486,7 +492,7 @@ class TestJob:
             ],
         }
 
-        expected["uses"] = sorted(expected["uses"], key=lambda use: use["file"]["lfn"])
+        expected["uses"] = sorted(expected["uses"], key=lambda use: use["lfn"])
 
         assert result == expected
 
@@ -556,7 +562,7 @@ class TestSubWorkflow:
                     "arguments": ["--sites", "condorpool"],
                     "uses": [
                         {
-                            "file": {"lfn": "file"},
+                            "lfn": "file",
                             "type": "input",
                             "stageOut": False,
                             "registerReplica": False,
@@ -574,7 +580,7 @@ class TestSubWorkflow:
                     "arguments": [],
                     "uses": [
                         {
-                            "file": {"lfn": "file"},
+                            "lfn": "file",
                             "type": "input",
                             "stageOut": False,
                             "registerReplica": False,
@@ -615,13 +621,13 @@ def expected_json():
                 "arguments": [],
                 "uses": [
                     {
-                        "file": {"lfn": "f1"},
+                        "lfn": "f1",
                         "type": "output",
                         "stageOut": True,
                         "registerReplica": False,
                     },
                     {
-                        "file": {"lfn": "f2"},
+                        "lfn": "f2",
                         "type": "output",
                         "stageOut": True,
                         "registerReplica": False,
@@ -635,19 +641,19 @@ def expected_json():
                 "arguments": [],
                 "uses": [
                     {
-                        "file": {"lfn": "f1"},
+                        "lfn": "f1",
                         "type": "input",
                         "stageOut": False,
                         "registerReplica": False,
                     },
                     {
-                        "file": {"lfn": "f2"},
+                        "lfn": "f2",
                         "type": "input",
                         "stageOut": False,
                         "registerReplica": False,
                     },
                     {
-                        "file": {"lfn": "checkpoint"},
+                        "lfn": "checkpoint",
                         "type": "checkpoint",
                         "stageOut": True,
                         "registerReplica": False,
@@ -661,7 +667,7 @@ def expected_json():
                 "arguments": ["--sites", "condorpool"],
                 "uses": [
                     {
-                        "file": {"lfn": "subworkflow.dag"},
+                        "lfn": "subworkflow.dag",
                         "type": "input",
                         "stageOut": False,
                         "registerReplica": False,
@@ -675,7 +681,7 @@ def expected_json():
                 "arguments": [],
                 "uses": [
                     {
-                        "file": {"lfn": "subworkflow.dax"},
+                        "lfn": "subworkflow.dax",
                         "type": "input",
                         "stageOut": False,
                         "registerReplica": False,
@@ -691,10 +697,10 @@ def expected_json():
 
     expected["jobs"] = sorted(expected["jobs"], key=lambda j: j["id"])
     expected["jobs"][0]["uses"] = sorted(
-        expected["jobs"][0]["uses"], key=lambda u: u["file"]["lfn"]
+        expected["jobs"][0]["uses"], key=lambda u: u["lfn"]
     )
     expected["jobs"][1]["uses"] = sorted(
-        expected["jobs"][1]["uses"], key=lambda u: u["file"]["lfn"]
+        expected["jobs"][1]["uses"], key=lambda u: u["lfn"]
     )
     expected["transformationCatalog"]["transformations"] = sorted(
         expected["transformationCatalog"]["transformations"], key=lambda t: t["name"]
@@ -939,10 +945,10 @@ class TestWorkflow:
 
         result["jobs"] = sorted(result["jobs"], key=lambda j: j["id"])
         result["jobs"][0]["uses"] = sorted(
-            result["jobs"][0]["uses"], key=lambda u: u["file"]["lfn"]
+            result["jobs"][0]["uses"], key=lambda u: u["lfn"]
         )
         result["jobs"][1]["uses"] = sorted(
-            result["jobs"][1]["uses"], key=lambda u: u["file"]["lfn"]
+            result["jobs"][1]["uses"], key=lambda u: u["lfn"]
         )
 
         result["transformationCatalog"]["transformations"] = sorted(
@@ -977,10 +983,10 @@ class TestWorkflow:
 
         result["jobs"] = sorted(result["jobs"], key=lambda j: j["id"])
         result["jobs"][0]["uses"] = sorted(
-            result["jobs"][0]["uses"], key=lambda u: u["file"]["lfn"]
+            result["jobs"][0]["uses"], key=lambda u: u["lfn"]
         )
         result["jobs"][1]["uses"] = sorted(
-            result["jobs"][1]["uses"], key=lambda u: u["file"]["lfn"]
+            result["jobs"][1]["uses"], key=lambda u: u["lfn"]
         )
 
         result["transformationCatalog"]["transformations"] = sorted(
@@ -1004,10 +1010,10 @@ class TestWorkflow:
 
         result["jobs"] = sorted(result["jobs"], key=lambda j: j["id"])
         result["jobs"][0]["uses"] = sorted(
-            result["jobs"][0]["uses"], key=lambda u: u["file"]["lfn"]
+            result["jobs"][0]["uses"], key=lambda u: u["lfn"]
         )
         result["jobs"][1]["uses"] = sorted(
-            result["jobs"][1]["uses"], key=lambda u: u["file"]["lfn"]
+            result["jobs"][1]["uses"], key=lambda u: u["lfn"]
         )
 
         result["transformationCatalog"]["transformations"] = sorted(
@@ -1026,12 +1032,11 @@ class TestWorkflow:
             result = yaml.safe_load(f)
 
         result["jobs"] = sorted(result["jobs"], key=lambda j: j["id"])
-        result["jobs"][0]["uses"] = sorted(
-            result["jobs"][0]["uses"], key=lambda u: u["file"]["lfn"]
-        )
-        result["jobs"][1]["uses"] = sorted(
-            result["jobs"][1]["uses"], key=lambda u: u["file"]["lfn"]
-        )
+
+        for i in range(len(result["jobs"])):
+            result["jobs"][i]["uses"] = sorted(
+                result["jobs"][i]["uses"], key=lambda u: u["lfn"]
+            )
 
         result["transformationCatalog"]["transformations"] = sorted(
             result["transformationCatalog"]["transformations"], key=lambda t: t["name"]
