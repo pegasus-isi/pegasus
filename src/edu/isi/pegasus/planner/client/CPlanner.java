@@ -1814,9 +1814,9 @@ public class CPlanner extends Executable {
      * @return
      */
     private ADag parseDAX(String dax) {
-        XMLParser p = (XMLParser) DAXParserFactory.loadDAXParser(mBag, "DAX2CDAG", dax);
-        Callback cb = ((DAXParser) p).getDAXCallback();
-        p.startParser(dax);
+        DAXParser p = DAXParserFactory.loadDAXParser(mBag, "DAX2CDAG", dax);
+        Callback cb = p.getDAXCallback();
+        p.parse(dax);
         return (ADag) cb.getConstructedObject();
     }
 
