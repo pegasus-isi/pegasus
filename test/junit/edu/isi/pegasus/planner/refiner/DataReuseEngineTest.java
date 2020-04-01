@@ -462,7 +462,10 @@ class DataReuseEngineTestSetup implements TestSetup {
     public ADag loadDAX(PegasusBag bag, String dax) {
         dax = this.getInputDirectory() + File.separator + dax;
         // load the parser and parse the dax
-        XMLParser p = (XMLParser) DAXParserFactory.loadDAXParser(bag, DAXParserFactory.DEFAULT_CALLBACK_CLASS, dax);
+        XMLParser p =
+                (XMLParser)
+                        DAXParserFactory.loadDAXParser(
+                                bag, DAXParserFactory.DEFAULT_CALLBACK_CLASS, dax);
         Callback cb = ((DAXParser) p).getDAXCallback();
         p.startParser(dax);
 

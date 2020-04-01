@@ -51,8 +51,8 @@ import edu.isi.pegasus.planner.dax.MetaData;
 import edu.isi.pegasus.planner.dax.PFN;
 import edu.isi.pegasus.planner.namespace.Hints;
 import edu.isi.pegasus.planner.namespace.Pegasus;
-import edu.isi.pegasus.planner.parser.XMLParser;
 import edu.isi.pegasus.planner.parser.StackBasedXMLParser;
+import edu.isi.pegasus.planner.parser.XMLParser;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -150,13 +150,13 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
     public Callback getDAXCallback() {
         return this.mCallback;
     }
-    
+
     /**
      * Parse the DAX File
-     * 
-     * @param file 
+     *
+     * @param file
      */
-    public void parse(String file){
+    public void parse(String file) {
         this.startParser(file);
     }
 

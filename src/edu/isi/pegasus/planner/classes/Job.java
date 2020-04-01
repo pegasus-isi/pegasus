@@ -2192,8 +2192,12 @@ public class Job extends Data implements GraphNodeContent {
      * @author Karan Vahi
      */
     static class JsonDeserializer extends PegasusJsonDeserializer<Job> {
-        
-        public enum JOB_TYPE {job, pegasusWorkflow, condorWorkflow};
+
+        public enum JOB_TYPE {
+            job,
+            pegasusWorkflow,
+            condorWorkflow
+        };
 
         /**
          * Deserializes a YAML representation of a single entry in the uses section of a job
@@ -2242,7 +2246,7 @@ public class Job extends Data implements GraphNodeContent {
                 if (reservedKey == null) {
                     this.complainForIllegalKey(WorkflowKeywords.JOBS.getReservedName(), key, node);
                 }
-                
+
                 switch (reservedKey) {
                     case JOB_NAMESPACE:
                         j.setTXNamespace(node.get(key).asText());
@@ -2278,7 +2282,7 @@ public class Job extends Data implements GraphNodeContent {
                     case JOB_FILE:
                         file = node.get(key).asText();
                         break;
-                        
+
                     case METADATA:
                         j.addMetadata(this.createMetadata(node.get(key)));
                         break;
@@ -2291,11 +2295,11 @@ public class Job extends Data implements GraphNodeContent {
                             j.addProfiles(profiles);
                         }
                         break;
-                        
+
                     case TYPE:
                         type = JOB_TYPE.valueOf(node.get(key).asText());
-                        break;  
-                                
+                        break;
+
                     case USES:
                         JsonNode usesNode = node.get(key);
                         if (usesNode.isArray()) {
@@ -2309,15 +2313,15 @@ public class Job extends Data implements GraphNodeContent {
                                     WorkflowKeywords.JOB_ARGUMENTS
                                             + ": value should be of type array ");
                         }
-                        
+
                     case JOB_STDIN:
                         j.setStdIn(node.get(key).asText());
                         break;
-                     
+
                     case JOB_STDOUT:
                         j.setStdOut(node.get(key).asText());
                         break;
-                        
+
                     case JOB_STDERR:
                         j.setStdErr(node.get(key).asText());
                         break;
@@ -2332,27 +2336,29 @@ public class Job extends Data implements GraphNodeContent {
                                 WorkflowKeywords.JOBS.getReservedName(), key, node);
                 }
             }
-            
-            //PM-1509 switch job based on type
+
+            // PM-1509 switch job based on type
             switch (type) {
                 case job:
-                    //do nothing
+                    // do nothing
                     break;
-                
+
                 case condorWorkflow:
                     j = new DAGJob(j);
-                    if (file == null){
-                        throw new RuntimeException( "condorWorkflow job has to have file specified" + node);
+                    if (file == null) {
+                        throw new RuntimeException(
+                                "condorWorkflow job has to have file specified" + node);
                     }
-                    ((DAGJob)j).setDAGLFN(file);
+                    ((DAGJob) j).setDAGLFN(file);
                     break;
-                    
+
                 case pegasusWorkflow:
                     j = new DAXJob(j);
-                    if (file == null){
-                        throw new RuntimeException( "pegasusWorkflow job has to have file specified" + node);
+                    if (file == null) {
+                        throw new RuntimeException(
+                                "pegasusWorkflow job has to have file specified" + node);
                     }
-                    ((DAXJob)j).setDAXLFN(file);
+                    ((DAXJob) j).setDAXLFN(file);
                     break;
             }
             return j;

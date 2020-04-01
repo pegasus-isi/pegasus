@@ -44,7 +44,6 @@ import edu.isi.pegasus.planner.common.Shiwa;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.DAXParserFactory;
-import edu.isi.pegasus.planner.parser.XMLParser;
 import edu.isi.pegasus.planner.parser.dax.Callback;
 import edu.isi.pegasus.planner.parser.dax.DAXParser;
 import edu.isi.pegasus.planner.refiner.MainEngine;
@@ -1814,7 +1813,8 @@ public class CPlanner extends Executable {
      * @return
      */
     private ADag parseDAX(String dax) {
-        DAXParser p = DAXParserFactory.loadDAXParser(mBag, DAXParserFactory.DEFAULT_CALLBACK_CLASS, dax);
+        DAXParser p =
+                DAXParserFactory.loadDAXParser(mBag, DAXParserFactory.DEFAULT_CALLBACK_CLASS, dax);
         Callback cb = p.getDAXCallback();
         p.parse(dax);
         return (ADag) cb.getConstructedObject();

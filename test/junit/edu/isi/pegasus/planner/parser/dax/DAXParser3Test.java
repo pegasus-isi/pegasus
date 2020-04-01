@@ -66,7 +66,10 @@ public class DAXParser3Test {
 
         /* instantiate the DAX XMLParser and start parsing */
         String dax = new File(mTestSetup.getInputDirectory(), "blackdiamond.dax").getAbsolutePath();
-        XMLParser p = (XMLParser) DAXParserFactory.loadDAXParser(mBag, DAXParserFactory.DEFAULT_CALLBACK_CLASS, dax);
+        XMLParser p =
+                (XMLParser)
+                        DAXParserFactory.loadDAXParser(
+                                mBag, DAXParserFactory.DEFAULT_CALLBACK_CLASS, dax);
         Callback cb = ((DAXParser) p).getDAXCallback();
         p.startParser(dax);
         mParsedDAX = (ADag) cb.getConstructedObject();

@@ -35,7 +35,6 @@ import edu.isi.pegasus.planner.common.PegasusJsonDeserializer;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import edu.isi.pegasus.planner.dax.Invoke;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -44,8 +43,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /** @author Karan Vahi */
 @JsonDeserialize(using = DAXParser5.YAMLStreamingDeserializer.class)
@@ -53,13 +50,10 @@ public class DAXParser5 implements DAXParser {
 
     /** Handle to the callback */
     protected Callback mCallback;
-    
-    /**
-     * Bag of initialization objects
-     */
+
+    /** Bag of initialization objects */
     private final PegasusBag mBag;
-    
-    
+
     /**
      * The overloaded constructor. The schema version passed is determined in the DAXFactory
      *
@@ -93,12 +87,12 @@ public class DAXParser5 implements DAXParser {
      *
      * @param file the path to the YAML file you want to parse.
      */
-    public void parse(String file){
+    public void parse(String file) {
         Reader reader;
         try {
             reader = new VariableExpansionReader(new FileReader(file));
         } catch (IOException ioe) {
-            throw new RuntimeException( "Exception while reading file " + file);
+            throw new RuntimeException("Exception while reading file " + file);
         }
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
@@ -106,7 +100,7 @@ public class DAXParser5 implements DAXParser {
         try {
             mapper.readValue(reader, DAXParser5.class);
         } catch (IOException ex) {
-            throw new RuntimeException( "Exception while parsing yaml file " + file);
+            throw new RuntimeException("Exception while parsing yaml file " + file);
         }
     }
 
@@ -265,7 +259,7 @@ public class DAXParser5 implements DAXParser {
     }
 
     public static void main(String[] args) {
-        
+
         Callback c = new DAX2CDAG();
         String dax = "/Users/vahi/Pegasus/work/yaml-tc/workflow.yml";
         PegasusBag bag = new PegasusBag();

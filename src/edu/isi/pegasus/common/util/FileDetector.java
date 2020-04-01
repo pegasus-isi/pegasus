@@ -56,7 +56,7 @@ public class FileDetector {
     public static boolean isTypeXML(String file) {
         return FileDetector.isTypeXML(new File(file));
     }
-    
+
     /**
      * Returns whether type of file is XML or not only by inspecting first line and looking for XML
      * prefix <?xml version="1.0" encoding="UTF-8"?>
@@ -67,7 +67,8 @@ public class FileDetector {
     public static boolean isTypeXML(File file) {
         boolean isXML = false;
         if (!(file.exists() && file.canRead())) {
-            throw new RuntimeException( "File does not exist or with read bit set to false " + file.getAbsolutePath());
+            throw new RuntimeException(
+                    "File does not exist or with read bit set to false " + file.getAbsolutePath());
         }
 
         BufferedReader br = null;

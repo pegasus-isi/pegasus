@@ -160,9 +160,11 @@ public class DAX2CDAG implements Callback {
         if (job instanceof DAXJob) {
             // set the internal primary id for job
             // daxJob.setName( constructJobID( daxJob ) );
-            job.setName(XMLParser.makeDAGManCompliant(((DAXJob) job).generateName(this.mJobPrefix)));
+            job.setName(
+                    XMLParser.makeDAGManCompliant(((DAXJob) job).generateName(this.mJobPrefix)));
         } else if (job instanceof DAGJob) {
-            job.setName(XMLParser.makeDAGManCompliant(((DAGJob) job).generateName(this.mJobPrefix)));
+            job.setName(
+                    XMLParser.makeDAGManCompliant(((DAGJob) job).generateName(this.mJobPrefix)));
         }
         job.setName(constructJobID(job));
         // all jobs deserialized are of type compute

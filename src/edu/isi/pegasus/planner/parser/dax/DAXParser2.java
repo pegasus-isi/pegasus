@@ -209,13 +209,13 @@ public class DAXParser2 extends XMLParser implements DAXParser {
     public Callback getDAXCallback() {
         return this.mCallback;
     }
-    
+
     /**
      * Parse the DAX File
-     * 
-     * @param file 
+     *
+     * @param file
      */
-    public void parse(String file){
+    public void parse(String file) {
         this.startParser(file);
     }
 
@@ -804,7 +804,8 @@ public class DAXParser2 extends XMLParser implements DAXParser {
 
         handleJobTagStart(mCurrentJobSubInfo);
 
-        mCurrentJobSubInfo.setName(XMLParser.makeDAGManCompliant(
+        mCurrentJobSubInfo.setName(
+                XMLParser.makeDAGManCompliant(
                         ((DAXJob) mCurrentJobSubInfo).generateName(this.mJobPrefix)));
     }
 

@@ -23,8 +23,8 @@ public interface DAXParser {
 
     /**
      * Parse the DAX File
-     * 
-     * @param file 
+     *
+     * @param file
      */
     public void parse(String file);
 

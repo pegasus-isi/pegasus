@@ -27,8 +27,8 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
 /**
- * A factory class to load the appropriate Site Catalog XMLParser implementations based on version in
- the site catalog element of the XML document
+ * A factory class to load the appropriate Site Catalog XMLParser implementations based on version
+ * in the site catalog element of the XML document
  *
  * @author Karan Vahi
  * @version $Revision$
@@ -161,8 +161,8 @@ public class SiteCatalogXMLParserFactory {
     }
 
     /**
-     * Loads the appropriate Site Catalog XMLParser looking at the dax schema that is specified by the
- user.
+     * Loads the appropriate Site Catalog XMLParser looking at the dax schema that is specified by
+     * the user.
      *
      * @param classname the classname of the parser class that needs to be loaded
      * @param bag bag of Pegasus intialization objects

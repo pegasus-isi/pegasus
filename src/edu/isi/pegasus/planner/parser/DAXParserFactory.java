@@ -17,18 +17,16 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.CondorVersion;
 import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.common.util.FileDetector;
-
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
-
 import edu.isi.pegasus.planner.parser.dax.*;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A factory class to load the appropriate DAX XMLParser and Callback implementations that need to be
- passed to the DAX XMLParser.
+ * A factory class to load the appropriate DAX XMLParser and Callback implementations that need to
+ * be passed to the DAX XMLParser.
  *
  * @author Karan Vahi
  * @version $Revision$
@@ -37,8 +35,8 @@ public class DAXParserFactory {
 
     /** The default callback for label partitioning. */
     public static String LABEL_CALLBACK_CLASS = "DAX2LabelGraph";
-    
-     /** The default callback for planner use. */
+
+    /** The default callback for planner use. */
     public static String DEFAULT_CALLBACK_CLASS = "DAX2CDAG";
 
     /** Package to prefix "just" class names with. */
@@ -60,8 +58,7 @@ public class DAXParserFactory {
 
     /** The DAXParser3 classname */
     public static final String DAX_PARSER3_CLASS = "DAXParser3";
-    
-    
+
     /** The YAML_DAX_PARSER_CLASS classname */
     public static final String YAML_DAX_PARSER_CLASS = "DAXParser5";
 
@@ -89,10 +86,9 @@ public class DAXParserFactory {
         Callback c = DAXParserFactory.loadDAXParserCallback(bag, daxFile, callbackClass);
 
         // PM-1511
-        if (FileDetector.isTypeXML(daxFile)){
-           return DAXParserFactory.loadXMLDAXParser(bag, c, daxFile);
-        }
-        else{
+        if (FileDetector.isTypeXML(daxFile)) {
+            return DAXParserFactory.loadXMLDAXParser(bag, c, daxFile);
+        } else {
             return DAXParserFactory.loadDAXParser(YAML_DAX_PARSER_CLASS, "5.0", bag, c);
         }
     }

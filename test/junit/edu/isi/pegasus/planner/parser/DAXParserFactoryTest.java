@@ -17,6 +17,9 @@
  */
 package edu.isi.pegasus.planner.parser;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.junit.Assert.assertThat;
+
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -25,7 +28,6 @@ import edu.isi.pegasus.planner.parser.dax.DAXParser3;
 import edu.isi.pegasus.planner.parser.dax.DAXParser5;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-
 import java.io.File;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -33,22 +35,15 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.assertThat;
-
-/**
- *
- * @author Karan Vahi
- */
+/** @author Karan Vahi */
 public class DAXParserFactoryTest {
-    
-    
+
     private PegasusBag mBag;
 
     private LogManager mLogger;
 
     private TestSetup mTestSetup;
-    
+
     public DAXParserFactoryTest() {}
 
     @BeforeClass
@@ -73,26 +68,27 @@ public class DAXParserFactoryTest {
     }
 
     @Test
-    public void testXMLDAXLoad(){
-        
+    public void testXMLDAXLoad() {
+
         mLogger.logEventStart("test.planner.parser.DAXParserFactory", "load", "0");
         String dax = new File(mTestSetup.getInputDirectory(), "blackdiamond.dax").getAbsolutePath();
-        DAXParser parser = DAXParserFactory.loadDAXParser(mBag, DAXParserFactory.DEFAULT_CALLBACK_CLASS, dax);
+        DAXParser parser =
+                DAXParserFactory.loadDAXParser(mBag, DAXParserFactory.DEFAULT_CALLBACK_CLASS, dax);
         assertThat(parser, instanceOf(DAXParser3.class));
         mLogger.logEventCompletion();
     }
-    
+
     @Test
-    public void testYAMLDAXLoad(){
-        
+    public void testYAMLDAXLoad() {
+
         mLogger.logEventStart("test.planner.parser.DAXParserFactory", "load", "0");
         String dax = new File(mTestSetup.getInputDirectory(), "workflow.yml").getAbsolutePath();
-        DAXParser parser = DAXParserFactory.loadDAXParser(mBag, DAXParserFactory.DEFAULT_CALLBACK_CLASS, dax);
+        DAXParser parser =
+                DAXParserFactory.loadDAXParser(mBag, DAXParserFactory.DEFAULT_CALLBACK_CLASS, dax);
         assertThat(parser, instanceOf(DAXParser5.class));
         mLogger.logEventCompletion();
     }
-    
+
     @After
     public void tearDown() {}
-    
 }
