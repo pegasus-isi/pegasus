@@ -14,7 +14,6 @@
 package edu.isi.pegasus.planner.refiner;
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
 
 /**
  * A first cut at a separate refiner interface. Right now it only has method required for the PASOA
@@ -35,11 +34,4 @@ public interface Refiner {
      */
     public ADag getWorkflow();
 
-    /**
-     * Returns a reference to the XMLProducer, that generates the XML fragment capturing the actions
-     * of the refiner. This is used for provenace purposes.
-     *
-     * @return XMLProducer
-     */
-    public XMLProducer getXMLProducer();
 }

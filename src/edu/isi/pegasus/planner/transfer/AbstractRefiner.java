@@ -21,8 +21,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.SubmitMapper;
-import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
-import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
+
 import java.util.Collection;
 
 /**
@@ -67,9 +66,6 @@ public abstract class AbstractRefiner implements Refiner {
     /** The handle to the Remote Transfers State machinery. */
     protected RemoteTransfer mRemoteTransfers;
 
-    /** The XML Producer object that records the actions. */
-    protected XMLProducer mXMLStore;
-
     /**
      * Handle to the Submit directory factory, that returns the relative submit directory for a job
      */
@@ -91,7 +87,6 @@ public abstract class AbstractRefiner implements Refiner {
         mRemoteTransfers = new RemoteTransfer(mProps);
         mRemoteTransfers.buildState();
         mSubmitDirFactory = bag.getSubmitMapper();
-        mXMLStore = XMLProducerFactory.loadXMLProducer(mProps);
     }
 
     /**
@@ -136,16 +131,6 @@ public abstract class AbstractRefiner implements Refiner {
 
         throw new UnsupportedOperationException(
                 "Refiner does not implement the function addStageInXFERNodes( SubInfo, Collection<FileTransfer>)");
-    }
-
-    /**
-     * Returns a reference to the XMLProducer, that generates the XML fragment capturing the actions
-     * of the refiner. This is used for provenace purposes.
-     *
-     * @return XMLProducer
-     */
-    public XMLProducer getXMLProducer() {
-        return this.mXMLStore;
     }
 
     /**

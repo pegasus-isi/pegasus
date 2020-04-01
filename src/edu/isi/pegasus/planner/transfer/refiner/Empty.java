@@ -70,10 +70,6 @@ public class Empty extends MultipleFTPerXFERJobRefiner {
                     LogManager.CONFIG_MESSAGE_LEVEL);
         }
 
-        mXMLStore.add("<workflow url=\"" + mPOptions.getDAX() + "\">");
-
-        // clear the XML store
-        mXMLStore.clear();
     }
 
     /**
@@ -185,12 +181,6 @@ public class Empty extends MultipleFTPerXFERJobRefiner {
             String regJobName, Job job, Collection files, ReplicaCatalogBridge rcb) {
 
         Job regJob = rcb.makeRCRegNode(regJobName, job, files);
-
-        // log the registration action for provenance purposes
-        StringBuffer sb = new StringBuffer();
-
-        mXMLStore.add(sb.toString());
-
         return regJob;
     }
 

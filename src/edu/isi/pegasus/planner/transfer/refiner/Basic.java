@@ -87,12 +87,6 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
                     "No Replica Registration Jobs will be created .",
                     LogManager.CONFIG_MESSAGE_LEVEL);
         }
-
-
-        mXMLStore.add("<workflow url=\"" + mPOptions.getDAX() + "\">");
-
-        // clear the XML store
-        mXMLStore.clear();
     }
 
     /**
@@ -237,9 +231,6 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
                         implementation.createTransferJob(
                                 job, site, files, null, newJobName, jobClass);
                 addJob(siJob);
-
-                // record the action in the provenance store.
-                logRefinerAction(job, siJob, files, "stage-in");
             } else {
                 // the dependency to stage in job is added via the
                 // the setup job that does the chmod
@@ -248,8 +239,6 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
                                 job, site, files, stagedFiles, newJobName, jobClass);
 
                 addJob(siJob);
-                // record the action in the provenance store.
-                logRefinerAction(job, siJob, files, "stage-in");
             }
         }
     }
@@ -426,8 +415,6 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
                                 job, site, files, null, newJobName, Job.INTER_POOL_JOB);
 
                 addJob(interJob);
-
-                this.logRefinerAction(job, interJob, files, "inter-site");
             }
         }
         tempSet = null;
@@ -528,8 +515,6 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
                     addRelation(newJobName, regJob);
                 }
 
-                // log the refiner action
-                this.logRefinerAction(job, soJob, txFiles, "stage-out");
             } else if (!makeTNode && makeRNode) {
                 addRelation(jobName, regJob);
             }
@@ -603,7 +588,6 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
         sb.append(indent);
         sb.append("</child>").append("\n");
 
-        mXMLStore.add(sb.toString());
         return regJob;
     }
 
@@ -705,86 +689,6 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
      */
     public String getDescription() {
         return this.DESCRIPTION;
-    }
-
-    /**
-     * Records the refiner action into the Provenace Store as a XML fragment.
-     *
-     * @param computeJob the compute job.
-     * @param txJob the associated transfer job.
-     * @param files list of <code>FileTransfer</code> objects containing file transfers.
-     * @param type the type of transfer job
-     */
-    protected void logRefinerAction(Job computeJob, Job txJob, Collection files, String type) {
-        StringBuffer sb = new StringBuffer();
-        String indent = "\t";
-        sb.append(indent);
-        sb.append("<transfer job=\"")
-                .append(txJob.getName())
-                .append("\" ")
-                .append("type=\"")
-                .append(type)
-                .append("\">");
-        sb.append("\n");
-
-        // traverse through all the files
-        NameValue source;
-        NameValue dest;
-        String newIndent = indent + "\t";
-        for (Iterator it = files.iterator(); it.hasNext(); ) {
-            FileTransfer ft = (FileTransfer) it.next();
-            source = ft.getSourceURL();
-            dest = ft.getDestURL();
-            sb.append(newIndent);
-            sb.append("<from ");
-            appendAttribute(sb, "site", source.getKey());
-            appendAttribute(sb, "lfn", ft.getLFN());
-            appendAttribute(sb, "url", source.getValue());
-            sb.append("/>");
-            sb.append("\n");
-
-            sb.append(newIndent);
-            sb.append("<to ");
-            appendAttribute(sb, "site", dest.getKey());
-            appendAttribute(sb, "lfn", ft.getLFN());
-            appendAttribute(sb, "url", dest.getValue());
-            sb.append("/>");
-            sb.append("\n");
-        }
-        sb.append(indent);
-        sb.append("</transfer>");
-        sb.append("\n");
-
-        // log the graph relationship
-        String parent =
-                (txJob.getJobType() == Job.STAGE_IN_JOB) ? txJob.getName() : computeJob.getName();
-
-        String child =
-                (txJob.getJobType() == Job.STAGE_IN_JOB) ? computeJob.getName() : txJob.getName();
-
-        sb.append(indent);
-        sb.append("<child ");
-        appendAttribute(sb, "ref", child);
-        sb.append(">").append("\n");
-
-        sb.append(newIndent);
-        sb.append("<parent ");
-        appendAttribute(sb, "ref", parent);
-        sb.append("/>").append("\n");
-
-        sb.append(indent);
-        sb.append("</child>").append("\n");
-
-        // log the action for creating the relationship assertions
-        try {
-            List stagingNodes = new java.util.ArrayList(1);
-            stagingNodes.add(txJob.getName());
-        } catch (Exception e) {
-            throw new RuntimeException(
-                    "PASOA Exception while logging relationship assertion for staging ", e);
-        }
-
-        mXMLStore.add(sb.toString());
     }
 
     /**

@@ -26,8 +26,6 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.Partition;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
-import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
-import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
 
 import java.util.*;
 
@@ -88,9 +86,6 @@ public class Horizontal
     /** Replacement table, that identifies the corresponding fat job for a job. */
     private Map mReplacementTable;
 
-    /** The XML Producer object that records the actions. */
-    private XMLProducer mXMLStore;
-
     /** Boolean indicating whether to disallow clustering of single jobs. */
     private boolean mDisallowClusteringOfSingleJobs;
 
@@ -119,16 +114,6 @@ public class Horizontal
     }
 
     /**
-     * Returns a reference to the XMLProducer, that generates the XML fragment capturing the actions
-     * of the refiner. This is used for provenace purposes.
-     *
-     * @return XMLProducer
-     */
-    public XMLProducer getXMLProducer() {
-        return this.mXMLStore;
-    }
-
-    /**
      * Initializes the Clusterer impelementation
      *
      * @param dag the workflow that is being clustered.
@@ -152,14 +137,6 @@ public class Horizontal
             Job job = (Job) node.getContent();
             mSubInfoMap.put(job.getLogicalID(), job);
         }
-
-        // load the PPS implementation
-        mXMLStore = XMLProducerFactory.loadXMLProducer(mProps);
-
-        mXMLStore.add("<workflow url=\"" + null + "\">");
-
-        // clear the XML store
-        mXMLStore.clear();
     }
 
     /**
@@ -404,8 +381,6 @@ public class Horizontal
                     // use the method to add, else add explicitly to DagInfo
                     mScheduledDAG.add(fatJob);
 
-                    // log the refiner action capturing the creation of the job
-                    this.logRefinerAction(fatJob, aggregator);
                 }
                 tempMap = null;
                 return;
@@ -441,8 +416,6 @@ public class Horizontal
                     // use the method to add, else add explicitly to DagInfo
                     mScheduledDAG.add(fatJob);
 
-                    // log the refiner action capturing the creation of the job
-                    this.logRefinerAction(fatJob, aggregator);
                 } else {
                     // do collapsing in chunks of cFactor
                     int increment = 0;
@@ -476,10 +449,6 @@ public class Horizontal
                         // add the fat job to the dag
                         // use the method to add, else add explicitly to DagInfo
                         mScheduledDAG.add(fatJob);
-
-                        // log the refiner action capturing the creation of the
-                        // job
-                        this.logRefinerAction(fatJob, aggregator);
                     }
                 }
             }
@@ -728,40 +697,6 @@ public class Horizontal
      */
     public String description() {
         return this.DESCRIPTION;
-    }
-
-    /**
-     * Records the refiner action into the Provenace Store as a XML fragment.
-     *
-     * @param clusteredJob the clustered job
-     * @param aggregator the aggregator that was used to create this clustered job
-     */
-    protected void logRefinerAction(AggregatedJob clusteredJob, JobAggregator aggregator) {
-        StringBuffer sb = new StringBuffer();
-        String indent = "\t";
-        sb.append(indent);
-        sb.append("<clustered ");
-        appendAttribute(sb, "job", clusteredJob.getName());
-        appendAttribute(sb, "type", aggregator.getClusterExecutableLFN());
-        sb.append(">").append("\n");
-
-        // traverse through all the files
-        String newIndent = indent + "\t";
-        List jobs = new ArrayList();
-        for (Iterator it = clusteredJob.constituentJobsIterator(); it.hasNext(); ) {
-            Job job = (Job) it.next();
-            jobs.add(job.getName());
-            sb.append(newIndent);
-            sb.append("<constitutent ");
-            appendAttribute(sb, "job", job.getName());
-            sb.append("/>");
-            sb.append("\n");
-        }
-        sb.append(indent);
-        sb.append("</clustered>");
-        sb.append("\n");
-
-        mXMLStore.add(sb.toString());
     }
 
     /**

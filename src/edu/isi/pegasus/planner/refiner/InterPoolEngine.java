@@ -37,8 +37,6 @@ import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Hints;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
-import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
-import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
 import edu.isi.pegasus.planner.selector.SiteSelector;
 import edu.isi.pegasus.planner.selector.TransformationSelector;
 import edu.isi.pegasus.planner.selector.site.SiteSelectorFactory;
@@ -86,9 +84,6 @@ public class InterPoolEngine extends Engine implements Refiner {
      */
     private Mapper mTCMapper;
 
-    /** The XML Producer object that records the actions. */
-    private XMLProducer mXMLStore;
-
     /** handle to PegasusConfiguration */
     private PegasusConfiguration mPegasusConfiguration;
 
@@ -114,10 +109,7 @@ public class InterPoolEngine extends Engine implements Refiner {
         // initialize the transformation mapper
         mTCMapper = Mapper.loadTCMapper(mProps.getTCMapperMode(), mBag);
         mBag.add(PegasusBag.TRANSFORMATION_MAPPER, mTCMapper);
-
         mTXSelector = null;
-        mXMLStore = XMLProducerFactory.loadXMLProducer(mProps);
-
         mPegasusConfiguration = new PegasusConfiguration(bag.getLogger());
     }
 
@@ -154,16 +146,6 @@ public class InterPoolEngine extends Engine implements Refiner {
      */
     public ADag getWorkflow() {
         return this.mDag;
-    }
-
-    /**
-     * Returns a reference to the XMLProducer, that generates the XML fragment capturing the actions
-     * of the refiner. This is used for provenace purposes.
-     *
-     * @return XMLProducer
-     */
-    public XMLProducer getXMLProducer() {
-        return this.mXMLStore;
     }
 
     /**
@@ -215,12 +197,7 @@ public class InterPoolEngine extends Engine implements Refiner {
 
         int i = 0;
         StringBuffer error;
-
-        mXMLStore.add("<workflow url=\"" + mPOptions.getDAX() + "\">");
-
-        // clear the XML store
-        mXMLStore.clear();
-
+        
         // Iterate through the jobs and hand them to
         // the site selector if required
         for (Iterator<GraphNode> it = dag.jobIterator(); it.hasNext(); i++) {
@@ -295,13 +272,6 @@ public class InterPoolEngine extends Engine implements Refiner {
             // PM-882 incorporate estimates on runtimes of the jobs
             // after the site selection has been done
             incorporateEstimates(job);
-
-            // log actions as XML fragment
-            try {
-                logRefinerAction(job);
-            } catch (Exception e) {
-                throw new RuntimeException("PASOA Exception", e);
-            }
         } // end of mapping all jobs
 
         // PM-916 write out all the metadata related events for the
@@ -769,23 +739,6 @@ public class InterPoolEngine extends Engine implements Refiner {
         return new java.util.ArrayList(s);
     }
 
-    /**
-     * Logs the action taken by the refiner on a job as a XML fragment in the XML Producer.
-     *
-     * @param job the <code>Job</code> containing the job that was mapped to a site.
-     */
-    protected void logRefinerAction(Job job) {
-        StringBuffer sb = new StringBuffer();
-        sb.append("\t<siteselection job=\"").append(job.getName()).append("\">");
-        sb.append("\n").append("\t\t");
-        sb.append("<logicalsite>").append(job.getSiteHandle()).append("</logicalsite>");
-        sb.append("\n").append("\t\t");
-        sb.append("<jobmanager>").append(job.getJobManager()).append("</jobmanager>");
-        sb.append("\n");
-        sb.append("\t</siteselection>");
-        sb.append("\n");
-        mXMLStore.add(sb.toString());
-    }
 
     /**
      * Generates events for the mapped workflow.

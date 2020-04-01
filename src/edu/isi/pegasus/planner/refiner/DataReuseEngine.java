@@ -24,8 +24,6 @@ import edu.isi.pegasus.planner.partitioner.graph.Bag;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
-import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
-import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -75,9 +73,6 @@ public class DataReuseEngine extends Engine implements Refiner {
     /** List of all deleted jobs during workflow reduction. */
     private List<GraphNode> mAllDeletedNodes;
 
-    /** The XML Producer object that records the actions. */
-    private XMLProducer mXMLStore;
-
     /** The workflow object being worked upon. */
     private ADag mWorkflow;
 
@@ -101,7 +96,6 @@ public class DataReuseEngine extends Engine implements Refiner {
 
         mAllDeletedJobs = new LinkedList();
         mAllDeletedNodes = new LinkedList();
-        mXMLStore = XMLProducerFactory.loadXMLProducer(mProps);
         mWorkflow = orgDag;
         mDataReuseScope = getDataReuseScope(mProps.getDataReuseScope());
         mPartialDataReuse = mDataReuseScope.equals(SCOPE.partial);
@@ -114,16 +108,6 @@ public class DataReuseEngine extends Engine implements Refiner {
      */
     public ADag getWorkflow() {
         return this.mWorkflow;
-    }
-
-    /**
-     * Returns a reference to the XMLProducer, that generates the XML fragment capturing the actions
-     * of the refiner. This is used for provenace purposes.
-     *
-     * @return XMLProducer
-     */
-    public XMLProducer getXMLProducer() {
-        return this.mXMLStore;
     }
 
     /**
@@ -174,14 +158,6 @@ public class DataReuseEngine extends Engine implements Refiner {
                 "Data Reuse Scope for the workflow: " + mDataReuseScope,
                 LogManager.CONFIG_MESSAGE_LEVEL);
 
-        
-        // mXMLStore.add( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" );
-        mXMLStore.add("<workflow url=\"" + mPOptions.getDAX() + "\">");
-
-
-        // clear the XML store
-        mXMLStore.clear();
-
         mLogger.log("Reducing the workflow", LogManager.DEBUG_MESSAGE_LEVEL);
         mLogger.logEventStart(
                 LoggingKeys.EVENT_PEGASUS_REDUCE,
@@ -198,8 +174,6 @@ public class DataReuseEngine extends Engine implements Refiner {
         mLogger.log(mLogMsg, LogManager.INFO_MESSAGE_LEVEL);
         for (GraphNode node : this.mAllDeletedNodes) {
             mLogger.log("\t" + node.getID(), LogManager.INFO_MESSAGE_LEVEL);
-            mXMLStore.add("<removed job = \"" + node.getID() + "\"/>");
-            mXMLStore.add("\n");
         }
         mLogger.log(mLogMsg + " - DONE", LogManager.INFO_MESSAGE_LEVEL);
         mLogger.logEventCompletion();
