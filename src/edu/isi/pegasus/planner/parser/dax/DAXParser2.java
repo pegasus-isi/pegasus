@@ -209,12 +209,22 @@ public class DAXParser2 extends Parser implements DAXParser {
     public Callback getDAXCallback() {
         return this.mCallback;
     }
+    
+    /**
+     * Parse the DAX File
+     * 
+     * @param file 
+     */
+    public void parse(String file){
+        this.startParser(file);
+    }
 
     /**
      * This starts the parsing of the file by the parser.
      *
      * @param daxFileName the path/uri to the XML file you want to parse.
      */
+    @Override
     public void startParser(String daxFileName) {
         try {
             this.testForFile(daxFileName);

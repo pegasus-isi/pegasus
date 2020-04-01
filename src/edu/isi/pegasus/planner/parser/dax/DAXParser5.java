@@ -35,6 +35,7 @@ import edu.isi.pegasus.planner.common.PegasusJsonDeserializer;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import edu.isi.pegasus.planner.dax.Invoke;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -58,7 +59,6 @@ public class DAXParser5 implements DAXParser {
      */
     private final PegasusBag mBag;
     
-   
     
     /**
      * The overloaded constructor. The schema version passed is determined in the DAXFactory
@@ -93,12 +93,21 @@ public class DAXParser5 implements DAXParser {
      *
      * @param file the path to the YAML file you want to parse.
      */
-    public void startParser(String file) throws IOException {
-        Reader reader = new VariableExpansionReader(new FileReader(file));
+    public void parse(String file){
+        Reader reader;
+        try {
+            reader = new VariableExpansionReader(new FileReader(file));
+        } catch (IOException ioe) {
+            throw new RuntimeException( "Exception while reading file " + file);
+        }
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
         mapper.setInjectableValues(injectCallback());
-        mapper.readValue(reader, DAXParser5.class);
+        try {
+            mapper.readValue(reader, DAXParser5.class);
+        } catch (IOException ex) {
+            throw new RuntimeException( "Exception while parsing yaml file " + file);
+        }
     }
 
     /**
@@ -265,10 +274,6 @@ public class DAXParser5 implements DAXParser {
         DAXParser5 parser = new DAXParser5(bag, "5.0");
         c.initialize(bag, dax);
         parser.setDAXCallback(c);
-        try {
-            parser.startParser(dax);
-        } catch (IOException ex) {
-            Logger.getLogger(DAXParser5.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        parser.parse(dax);
     }
 }

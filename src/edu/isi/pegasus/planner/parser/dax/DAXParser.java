@@ -22,6 +22,13 @@ package edu.isi.pegasus.planner.parser.dax;
 public interface DAXParser {
 
     /**
+     * Parse the DAX File
+     * 
+     * @param file 
+     */
+    public void parse(String file);
+
+    /**
      * Set the DAXCallback for the parser to call out to.
      *
      * @param c the callback

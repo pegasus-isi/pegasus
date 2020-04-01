@@ -150,12 +150,22 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
     public Callback getDAXCallback() {
         return this.mCallback;
     }
+    
+    /**
+     * Parse the DAX File
+     * 
+     * @param file 
+     */
+    public void parse(String file){
+        this.startParser(file);
+    }
 
     /**
      * The main method that starts the parsing.
      *
      * @param file the XML file to be parsed.
      */
+    @Override
     public void startParser(String file) {
         mLogger.logEventStart(LoggingKeys.EVENT_PEGASUS_PARSE_DAX, LoggingKeys.DAX_ID, file);
         try {
