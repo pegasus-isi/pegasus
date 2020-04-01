@@ -61,7 +61,7 @@ import org.xml.sax.SAXException;
  * @see org.griphyn.cPlanner.classes.ADag
  * @see org.griphyn.cPlanner.classes.PCRelation
  */
-public class DAXParser2 extends Parser implements DAXParser {
+public class DAXParser2 extends XMLParser implements DAXParser {
 
     /** The "not-so-official" location URL of the DAX schema definition. */
     public static final String SCHEMA_LOCATION = "http://pegasus.isi.edu/schema/dax-3.0.xsd";
@@ -494,7 +494,7 @@ public class DAXParser2 extends Parser implements DAXParser {
             value = attrs.getValue(i);
             if (key.equals("name")) {
                 // PM-1262 make the name dagman compliant
-                value = Parser.makeDAGManCompliant(value);
+                value = XMLParser.makeDAGManCompliant(value);
             }
             // should probably check for valid attributes before setting
             mp.put(key, value);
@@ -804,8 +804,7 @@ public class DAXParser2 extends Parser implements DAXParser {
 
         handleJobTagStart(mCurrentJobSubInfo);
 
-        mCurrentJobSubInfo.setName(
-                Parser.makeDAGManCompliant(
+        mCurrentJobSubInfo.setName(XMLParser.makeDAGManCompliant(
                         ((DAXJob) mCurrentJobSubInfo).generateName(this.mJobPrefix)));
     }
 

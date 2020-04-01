@@ -32,7 +32,7 @@ import org.xml.sax.SAXException;
  * @author Karan Vahi
  * @version $Revision$
  */
-public class PDAXParser extends Parser {
+public class PDAXParser extends XMLParser {
 
     /** The "not-so-official" location URL of the DAX schema definition. */
     public static final String SCHEMA_LOCATION = "http://pegasus.isi.edu/schema/pdax-2.0.xsd";

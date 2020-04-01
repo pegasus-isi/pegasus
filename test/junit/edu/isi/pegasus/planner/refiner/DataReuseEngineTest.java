@@ -24,7 +24,7 @@ import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.parser.DAXParserFactory;
-import edu.isi.pegasus.planner.parser.Parser;
+import edu.isi.pegasus.planner.parser.XMLParser;
 import edu.isi.pegasus.planner.parser.dax.Callback;
 import edu.isi.pegasus.planner.parser.dax.DAXParser;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
@@ -462,7 +462,7 @@ class DataReuseEngineTestSetup implements TestSetup {
     public ADag loadDAX(PegasusBag bag, String dax) {
         dax = this.getInputDirectory() + File.separator + dax;
         // load the parser and parse the dax
-        Parser p = (Parser) DAXParserFactory.loadDAXParser(bag, "DAX2CDAG", dax);
+        XMLParser p = (XMLParser) DAXParserFactory.loadDAXParser(bag, "DAX2CDAG", dax);
         Callback cb = ((DAXParser) p).getDAXCallback();
         p.startParser(dax);
 

@@ -35,7 +35,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * @author Gaurang Mehta
  * @version $Revision$
  */
-public abstract class Parser extends DefaultHandler {
+public abstract class XMLParser extends DefaultHandler {
 
     /** Default parser name. Using Xerces at present. */
     protected final String DEFAULT_PARSER_NAME = "org.apache.xerces.parsers.SAXParser";
@@ -95,7 +95,7 @@ public abstract class Parser extends DefaultHandler {
      *
      * @param bag the bag of objects that is useful for initialization.
      */
-    public Parser(PegasusBag bag) {
+    public XMLParser(PegasusBag bag) {
         mTextContent = new StringBuffer();
         mLogMsg = "";
         mLogger = bag.getLogger();
@@ -112,7 +112,7 @@ public abstract class Parser extends DefaultHandler {
      *
      * @param properties the properties passed at runtime.
      */
-    public Parser(PegasusProperties properties) {
+    public XMLParser(PegasusProperties properties) {
         mTextContent = new StringBuffer();
         mLogMsg = "";
         mLogger = LogManagerFactory.loadSingletonInstance(properties);

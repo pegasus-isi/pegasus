@@ -33,7 +33,7 @@ import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.classes.WorkflowMetrics;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.dax.Invoke;
-import edu.isi.pegasus.planner.parser.Parser;
+import edu.isi.pegasus.planner.parser.XMLParser;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -160,9 +160,9 @@ public class DAX2CDAG implements Callback {
         if (job instanceof DAXJob) {
             // set the internal primary id for job
             // daxJob.setName( constructJobID( daxJob ) );
-            job.setName(Parser.makeDAGManCompliant(((DAXJob) job).generateName(this.mJobPrefix)));
+            job.setName(XMLParser.makeDAGManCompliant(((DAXJob) job).generateName(this.mJobPrefix)));
         } else if (job instanceof DAGJob) {
-            job.setName(Parser.makeDAGManCompliant(((DAGJob) job).generateName(this.mJobPrefix)));
+            job.setName(XMLParser.makeDAGManCompliant(((DAGJob) job).generateName(this.mJobPrefix)));
         }
         job.setName(constructJobID(job));
         // all jobs deserialized are of type compute
@@ -429,6 +429,6 @@ public class DAX2CDAG implements Callback {
         name.append(j.getLogicalID());
 
         // PM-1222 strip out any . from transformation name
-        return Parser.makeDAGManCompliant(name.toString());
+        return XMLParser.makeDAGManCompliant(name.toString());
     }
 }

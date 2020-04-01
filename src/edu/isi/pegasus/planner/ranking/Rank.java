@@ -19,7 +19,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.parser.DAXParserFactory;
-import edu.isi.pegasus.planner.parser.Parser;
+import edu.isi.pegasus.planner.parser.XMLParser;
 import edu.isi.pegasus.planner.parser.dax.Callback;
 import edu.isi.pegasus.planner.selector.site.heft.Algorithm;
 import java.util.Collection;
@@ -91,7 +91,7 @@ public class Rank {
 
             mLogger.log("Ranking dax " + dax, LogManager.DEBUG_MESSAGE_LEVEL);
             //            DAXParser2 daxParser = new DAXParser2( dax, mBag, cb );
-            Parser p = (Parser) DAXParserFactory.loadXMLDAXParser(mBag, cb, dax);
+            XMLParser p = (XMLParser) DAXParserFactory.loadXMLDAXParser(mBag, cb, dax);
             p.startParser(dax);
 
             ADag dag = (ADag) cb.getConstructedObject();

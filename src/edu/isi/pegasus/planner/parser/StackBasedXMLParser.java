@@ -34,7 +34,7 @@ import org.xml.sax.SAXException;
  * @author Karan Vahi vahi@isi.edu
  * @version $Revision$
  */
-public abstract class StackBasedXMLParser extends Parser {
+public abstract class StackBasedXMLParser extends XMLParser {
 
     /** Count the depths of elements in the document */
     protected int mDepth;

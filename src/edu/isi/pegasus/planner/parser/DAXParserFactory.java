@@ -27,8 +27,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A factory class to load the appropriate DAX Parser and Callback implementations that need to be
- * passed to the DAX Parser.
+ * A factory class to load the appropriate DAX XMLParser and Callback implementations that need to be
+ passed to the DAX XMLParser.
  *
  * @author Karan Vahi
  * @version $Revision$
@@ -193,7 +193,7 @@ public class DAXParserFactory {
             String classname, String schemaVersion, PegasusBag bag, Callback c) {
         DAXParser daxParser = null;
         try {
-            // load the DAX Parser class
+            // load the DAX XMLParser class
             // prepend the package name
             String daxClass =
                     (classname.indexOf('.') == -1)
@@ -210,7 +210,7 @@ public class DAXParserFactory {
             argList[1] = schemaVersion;
             daxParser = (DAXParser) dl.instantiate(argList);
 
-            // set the callback for the DAX Parser
+            // set the callback for the DAX XMLParser
             ((DAXParser) daxParser).setDAXCallback(c);
         } catch (Exception e) {
             e.printStackTrace();
@@ -269,8 +269,8 @@ public class DAXParserFactory {
         }
 
         try {
-            Parser p =
-                    (Parser)
+            XMLParser p =
+                    (XMLParser)
                             DAXParserFactory.loadDAXParser(
                                     DAXParserFactory.DAX_PARSER2_CLASS, "2.0", bag, cb);
 

@@ -13,7 +13,7 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.parser.DAXParserFactory;
-import edu.isi.pegasus.planner.parser.Parser;
+import edu.isi.pegasus.planner.parser.XMLParser;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
@@ -64,9 +64,9 @@ public class DAXParser3Test {
         mLogger.logEventStart("test.planner.parser.dax", "setup", "0");
         mBag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
 
-        /* instantiate the DAX Parser and start parsing */
+        /* instantiate the DAX XMLParser and start parsing */
         String dax = new File(mTestSetup.getInputDirectory(), "blackdiamond.dax").getAbsolutePath();
-        Parser p = (Parser) DAXParserFactory.loadDAXParser(mBag, "DAX2CDAG", dax);
+        XMLParser p = (XMLParser) DAXParserFactory.loadDAXParser(mBag, "DAX2CDAG", dax);
         Callback cb = ((DAXParser) p).getDAXCallback();
         p.startParser(dax);
         mParsedDAX = (ADag) cb.getConstructedObject();
@@ -158,7 +158,7 @@ public class DAXParser3Test {
         // test with no deep storage structure enabled
         mLogger.logEventStart("test.planner.parser.dax", "set", Integer.toString(set++));
         String name = "name";
-        assertEquals(name, Parser.makeDAGManCompliant(name));
+        assertEquals(name, XMLParser.makeDAGManCompliant(name));
         mLogger.logEventCompletion();
     }
 
@@ -170,7 +170,7 @@ public class DAXParser3Test {
         // test with no deep storage structure enabled
         mLogger.logEventStart("test.planner.parser.dax", "set", Integer.toString(set++));
         String name = "blackdiamond.dax";
-        assertEquals("blackdiamond_dax", Parser.makeDAGManCompliant(name));
+        assertEquals("blackdiamond_dax", XMLParser.makeDAGManCompliant(name));
         mLogger.logEventCompletion();
     }
 
@@ -182,7 +182,7 @@ public class DAXParser3Test {
         // test with no deep storage structure enabled
         mLogger.logEventStart("test.planner.parser.dax", "set", Integer.toString(set++));
         String name = "blackdiamond+dax";
-        assertEquals("blackdiamond_dax", Parser.makeDAGManCompliant(name));
+        assertEquals("blackdiamond_dax", XMLParser.makeDAGManCompliant(name));
         mLogger.logEventCompletion();
     }
 
@@ -194,7 +194,7 @@ public class DAXParser3Test {
         // test with no deep storage structure enabled
         mLogger.logEventStart("test.planner.parser.dax", "set", Integer.toString(set++));
         String name = "black.diamond+dax";
-        assertEquals("black_diamond_dax", Parser.makeDAGManCompliant(name));
+        assertEquals("black_diamond_dax", XMLParser.makeDAGManCompliant(name));
         mLogger.logEventCompletion();
     }
 
@@ -206,7 +206,7 @@ public class DAXParser3Test {
         // test with no deep storage structure enabled
         mLogger.logEventStart("test.planner.parser.dax", "set", Integer.toString(set++));
         String name = "black.diam.ond+dax++";
-        assertEquals("black_diam_ond_dax__", Parser.makeDAGManCompliant(name));
+        assertEquals("black_diam_ond_dax__", XMLParser.makeDAGManCompliant(name));
         mLogger.logEventCompletion();
     }
 

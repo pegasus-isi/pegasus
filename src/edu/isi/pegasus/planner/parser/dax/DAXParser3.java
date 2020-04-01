@@ -51,7 +51,7 @@ import edu.isi.pegasus.planner.dax.MetaData;
 import edu.isi.pegasus.planner.dax.PFN;
 import edu.isi.pegasus.planner.namespace.Hints;
 import edu.isi.pegasus.planner.namespace.Pegasus;
-import edu.isi.pegasus.planner.parser.Parser;
+import edu.isi.pegasus.planner.parser.XMLParser;
 import edu.isi.pegasus.planner.parser.StackBasedXMLParser;
 import java.io.File;
 import java.io.FileReader;
@@ -73,10 +73,10 @@ import org.xml.sax.SAXException;
  */
 public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
-    /** The "not-so-official" location URL of the DAX Parser Schema. */
+    /** The "not-so-official" location URL of the DAX XMLParser Schema. */
     public static final String DEFAULT_SCHEMA_LOCATION =
             "http://pegasus.isi.edu/schema/dax-3.6.xsd";
-    /** The "not-so-official" location URL of the DAX Parser Schema. */
+    /** The "not-so-official" location URL of the DAX XMLParser Schema. */
     public static final String SCHEMA_LOCATION_DIRECTORY = "http://pegasus.isi.edu/schema/";
 
     /** uri namespace */
@@ -255,7 +255,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         String value = (String) values.get(i);
                         if (name.equals("name")) {
                             // PM-1262 make the name dagman compliant
-                            value = Parser.makeDAGManCompliant(value);
+                            value = XMLParser.makeDAGManCompliant(value);
                         }
                         m.put(name, value);
                     }

@@ -27,8 +27,8 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
 /**
- * A factory class to load the appropriate Site Catalog Parser implementations based on version in
- * the site catalog element of the XML document
+ * A factory class to load the appropriate Site Catalog XMLParser implementations based on version in
+ the site catalog element of the XML document
  *
  * @author Karan Vahi
  * @version $Revision$
@@ -53,10 +53,10 @@ public class SiteCatalogXMLParserFactory {
      */
     public static final long SC_VERSION_4_0_0 = CondorVersion.numericValue("4.0.0");
 
-    /** The default Site Catalog Parser */
+    /** The default Site Catalog XMLParser */
     public static final String DEFAULT_SC_PARSER_CLASS = "SiteCatalogXMLParser4";
 
-    /** The SC Parser classname */
+    /** The SC XMLParser classname */
     public static final String SC_PARSER3_CLASS = "SiteCatalogXMLParser3";
 
     /**
@@ -161,8 +161,8 @@ public class SiteCatalogXMLParserFactory {
     }
 
     /**
-     * Loads the appropriate Site Catalog Parser looking at the dax schema that is specified by the
-     * user.
+     * Loads the appropriate Site Catalog XMLParser looking at the dax schema that is specified by the
+ user.
      *
      * @param classname the classname of the parser class that needs to be loaded
      * @param bag bag of Pegasus intialization objects
@@ -177,7 +177,7 @@ public class SiteCatalogXMLParserFactory {
             String classname, PegasusBag bag, Properties connectProps, List<String> sites) {
         SiteCatalogXMLParser parser = null;
         try {
-            // load the DAX Parser class
+            // load the DAX XMLParser class
             // prepend the package name
             String daxClass =
                     (classname.indexOf('.') == -1)
@@ -236,7 +236,7 @@ public class SiteCatalogXMLParserFactory {
  *
  * @author Karan Vahi
  */
-class SiteCatalogXMLMetadataParser extends Parser {
+class SiteCatalogXMLMetadataParser extends XMLParser {
 
     /** The root element name to look for. */
     private String mElement;
@@ -374,6 +374,6 @@ class SiteCatalogXMLMetadataParser extends Parser {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    /** Private RuntimeException to stop the SAX Parser */
+    /** Private RuntimeException to stop the SAX XMLParser */
     private static class StopParserException extends RuntimeException {}
 }

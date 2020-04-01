@@ -56,12 +56,12 @@ public class TestDAXParser {
         bag.add(PegasusBag.PEGASUS_LOGMANAGER, logger);
         bag.add(PegasusBag.PEGASUS_PROPERTIES, properties);
 
-        /* instantiate the DAX Parser and start parsing */
+        /* instantiate the DAX XMLParser and start parsing */
         try {
             //           DaxParser parser = new DaxParser( daxFile, bag, mycallback );
             // DAXParser3 parser3 = new DAXParser3( daxFile, bag, mycallback );
-            Parser daxParser =
-                    (Parser) DAXParserFactory.loadDAXParser(bag, "ExampleDAXCallback", daxFile);
+            XMLParser daxParser =
+                    (XMLParser) DAXParserFactory.loadDAXParser(bag, "ExampleDAXCallback", daxFile);
             daxParser.startParser(daxFile);
         } catch (Exception e) {
             e.printStackTrace();

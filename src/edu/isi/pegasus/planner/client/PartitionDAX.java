@@ -18,7 +18,7 @@ import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.parser.DAXParserFactory;
-import edu.isi.pegasus.planner.parser.Parser;
+import edu.isi.pegasus.planner.parser.XMLParser;
 import edu.isi.pegasus.planner.parser.dax.Callback;
 import edu.isi.pegasus.planner.parser.dax.DAX2Graph;
 import edu.isi.pegasus.planner.parser.dax.DAX2LabelGraph;
@@ -224,7 +224,7 @@ public class PartitionDAX extends Executable {
             }
 
             state = 1;
-            Parser p = (Parser) DAXParserFactory.loadXMLDAXParser(bag, callback, daxFile);
+            XMLParser p = (XMLParser) DAXParserFactory.loadXMLDAXParser(bag, callback, daxFile);
             p.startParser(daxFile);
 
             state = 2;
