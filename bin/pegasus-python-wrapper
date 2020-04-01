@@ -3,13 +3,10 @@
 # Wrapper for CLI Python tools - main purpose is to select a good
 # Python version to use, then execute the real tool 
 
-# If not already set, determine PEGASUS_HOME base on the path of where
-# this tool was run from
-if [ "x$PEGASUS_HOME" = "x" ]; then
-    PEGASUS_HOME=`dirname $0`"/.."
-    PEGASUS_HOME=`cd $PEGASUS_HOME && pwd`
-    export PEGASUS_HOME
-fi
+# Always set PEGASUS_HOME based on where the tool was run from
+PEGASUS_HOME=`dirname $0`"/.."
+PEGASUS_HOME=`cd $PEGASUS_HOME && pwd`
+export PEGASUS_HOME
 
 # The base name is used to decide what Python tool to invoke
 BASE_NAME=%%BASE_NAME%%
