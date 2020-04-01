@@ -97,7 +97,7 @@ class ServerCommand(LoggingCommand):
         app.run(
             host=self.options.host,
             port=self.options.port,
-            processes=app.config["MAX_PROCESSES"],
+            threaded=True,
             ssl_context=ssl_context,
         )
 

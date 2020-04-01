@@ -42,7 +42,9 @@ class NoAuthentication(BaseAuthentication):
 class PAMAuthentication(BaseAuthentication):
     def authenticate(self):
         try:
-            return pamela.authenticate(self.username, self.password)
+            if not self.username:
+                return False
+            return pamela.authenticate(self.username, self.password) is None
         except Exception as e:
             log.exception(e)
             return False
@@ -111,6 +113,13 @@ def pull_username(endpoint, values):
     """
     if values and "username" in values:
         g.username = values["username"]
+
+
+@app.before_request
+def is_xhr():
+    request.is_xhr = (
+        request.headers.get("X-Requested-With", "False") == "XMLHttpRequest"
+    )
 
 
 @app.before_request
