@@ -23,9 +23,8 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.Bag;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
-import edu.isi.pegasus.planner.provenance.pasoa.PPS;
+
 import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
-import edu.isi.pegasus.planner.provenance.pasoa.pps.PPSFactory;
 import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -175,18 +174,10 @@ public class DataReuseEngine extends Engine implements Refiner {
                 "Data Reuse Scope for the workflow: " + mDataReuseScope,
                 LogManager.CONFIG_MESSAGE_LEVEL);
 
-        // load the PPS implementation
-        PPS pps = PPSFactory.loadPPS(this.mProps);
-
+        
         // mXMLStore.add( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" );
         mXMLStore.add("<workflow url=\"" + mPOptions.getDAX() + "\">");
 
-        // call the begin workflow method
-        try {
-            pps.beginWorkflowRefinementStep(this, PPS.REFINEMENT_REDUCE, true);
-        } catch (Exception e) {
-            throw new RuntimeException("PASOA Exception", e);
-        }
 
         // clear the XML store
         mXMLStore.clear();
@@ -211,19 +202,6 @@ public class DataReuseEngine extends Engine implements Refiner {
             mXMLStore.add("\n");
         }
         mLogger.log(mLogMsg + " - DONE", LogManager.INFO_MESSAGE_LEVEL);
-
-        // call the end workflow method for pasoa interactions
-        try {
-            for (Iterator it = reducedWorkflow.nodeIterator(); it.hasNext(); ) {
-                GraphNode node = (GraphNode) it.next();
-                pps.isIdenticalTo(node.getName(), node.getName());
-            }
-
-            pps.endWorkflowRefinementStep(this);
-        } catch (Exception e) {
-            throw new RuntimeException("PASOA Exception", e);
-        }
-
         mLogger.logEventCompletion();
         return reducedWorkflow;
     }

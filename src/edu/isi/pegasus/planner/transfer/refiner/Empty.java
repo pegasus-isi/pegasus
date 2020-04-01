@@ -17,9 +17,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.provenance.pasoa.PPS;
-import edu.isi.pegasus.planner.provenance.pasoa.pps.PPSFactory;
+import edu.isi.pegasus.planner.classes.PegasusBag; 
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 import edu.isi.pegasus.planner.transfer.Implementation;
 import edu.isi.pegasus.planner.transfer.MultipleFTPerXFERJobRefiner;
@@ -50,9 +48,6 @@ public class Empty extends MultipleFTPerXFERJobRefiner {
      */
     protected Map mFileTable;
 
-    /** The handle to the provenance store implementation. */
-    protected PPS mPPS;
-
     /** Boolean indicating whether to create registration jobs or not. */
     protected Boolean mCreateRegistrationJobs;
 
@@ -75,17 +70,7 @@ public class Empty extends MultipleFTPerXFERJobRefiner {
                     LogManager.CONFIG_MESSAGE_LEVEL);
         }
 
-        // load the PPS implementation
-        mPPS = PPSFactory.loadPPS(this.mProps);
-
         mXMLStore.add("<workflow url=\"" + mPOptions.getDAX() + "\">");
-
-        // call the begin workflow method
-        try {
-            mPPS.beginWorkflowRefinementStep(this, PPS.REFINEMENT_STAGE, false);
-        } catch (Exception e) {
-            throw new RuntimeException("PASOA Exception", e);
-        }
 
         // clear the XML store
         mXMLStore.clear();
@@ -206,28 +191,14 @@ public class Empty extends MultipleFTPerXFERJobRefiner {
 
         mXMLStore.add(sb.toString());
 
-        // log the action for creating the relationship assertions
-        try {
-            mPPS.registrationIntroducedFor(regJob.getName(), job.getName());
-        } catch (Exception e) {
-            throw new RuntimeException(
-                    "PASOA Exception while logging relationship assertion for registration", e);
-        }
-
         return regJob;
     }
 
     /**
-     * Signals that the traversal of the workflow is done. It signals to the Provenace Store, that
-     * refinement is complete.
+     * Signals that the traversal of the workflow is done. 
      */
     public void done() {
 
-        try {
-            mPPS.endWorkflowRefinementStep(this);
-        } catch (Exception e) {
-            throw new RuntimeException("PASOA Exception", e);
-        }
     }
 
     /**

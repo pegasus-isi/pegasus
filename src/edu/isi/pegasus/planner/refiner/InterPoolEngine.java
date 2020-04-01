@@ -37,9 +37,7 @@ import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Hints;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
-import edu.isi.pegasus.planner.provenance.pasoa.PPS;
 import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
-import edu.isi.pegasus.planner.provenance.pasoa.pps.PPSFactory;
 import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
 import edu.isi.pegasus.planner.selector.SiteSelector;
 import edu.isi.pegasus.planner.selector.TransformationSelector;
@@ -218,17 +216,7 @@ public class InterPoolEngine extends Engine implements Refiner {
         int i = 0;
         StringBuffer error;
 
-        // load the PPS implementation
-        PPS pps = PPSFactory.loadPPS(this.mProps);
-
         mXMLStore.add("<workflow url=\"" + mPOptions.getDAX() + "\">");
-
-        // call the begin workflow method
-        try {
-            pps.beginWorkflowRefinementStep(this, PPS.REFINEMENT_SITE_SELECT, false);
-        } catch (Exception e) {
-            throw new RuntimeException("PASOA Exception", e);
-        }
 
         // clear the XML store
         mXMLStore.clear();
@@ -311,7 +299,6 @@ public class InterPoolEngine extends Engine implements Refiner {
             // log actions as XML fragment
             try {
                 logRefinerAction(job);
-                pps.siteSelectionFor(job.getName(), job.getName());
             } catch (Exception e) {
                 throw new RuntimeException("PASOA Exception", e);
             }
@@ -320,12 +307,6 @@ public class InterPoolEngine extends Engine implements Refiner {
         // PM-916 write out all the metadata related events for the
         // mapped workflow
         generateStampedeMetadataEvents(dag);
-
-        try {
-            pps.endWorkflowRefinementStep(this);
-        } catch (Exception e) {
-            throw new RuntimeException("PASOA Exception", e);
-        }
     }
 
     /**

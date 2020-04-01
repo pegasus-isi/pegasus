@@ -25,10 +25,10 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.Partition;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
-import edu.isi.pegasus.planner.provenance.pasoa.PPS;
+
 import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
-import edu.isi.pegasus.planner.provenance.pasoa.pps.PPSFactory;
 import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
+
 import java.util.*;
 
 /**
@@ -90,9 +90,6 @@ public class Horizontal
 
     /** The XML Producer object that records the actions. */
     private XMLProducer mXMLStore;
-
-    /** The handle to the provenance store implementation. */
-    private PPS mPPS;
 
     /** Boolean indicating whether to disallow clustering of single jobs. */
     private boolean mDisallowClusteringOfSingleJobs;
@@ -158,16 +155,8 @@ public class Horizontal
 
         // load the PPS implementation
         mXMLStore = XMLProducerFactory.loadXMLProducer(mProps);
-        mPPS = PPSFactory.loadPPS(this.mProps);
 
         mXMLStore.add("<workflow url=\"" + null + "\">");
-
-        // call the begin workflow method
-        try {
-            mPPS.beginWorkflowRefinementStep(this, PPS.REFINEMENT_CLUSTER, false);
-        } catch (Exception e) {
-            throw new ClustererException("PASOA Exception", e);
-        }
 
         // clear the XML store
         mXMLStore.clear();
@@ -729,16 +718,6 @@ public class Horizontal
         // do all the replacement of jobs in the main data structure
         // that needs to be returned
         replaceJobs();
-
-        // should be in the done method. which is currently not htere in the
-        // Clusterer API
-        try {
-            mPPS.endWorkflowRefinementStep(this);
-        } catch (Exception e) {
-            throw new ClustererException(
-                    "PASOA Exception while logging end of clustering refinement", e);
-        }
-
         return mScheduledDAG;
     }
 
@@ -781,14 +760,6 @@ public class Horizontal
         sb.append(indent);
         sb.append("</clustered>");
         sb.append("\n");
-
-        // log the action for creating the relationship assertions
-        try {
-            mPPS.clusteringOf(clusteredJob.getName(), jobs);
-        } catch (Exception e) {
-            throw new RuntimeException(
-                    "PASOA Exception while logging relationship assertion for clustering ", e);
-        }
 
         mXMLStore.add(sb.toString());
     }

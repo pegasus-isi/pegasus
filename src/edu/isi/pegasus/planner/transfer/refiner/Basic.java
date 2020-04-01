@@ -20,12 +20,12 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Condor;
-import edu.isi.pegasus.planner.provenance.pasoa.PPS;
-import edu.isi.pegasus.planner.provenance.pasoa.pps.PPSFactory;
+
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 import edu.isi.pegasus.planner.transfer.Implementation;
 import edu.isi.pegasus.planner.transfer.MultipleFTPerXFERJobRefiner;
 import edu.isi.pegasus.planner.transfer.Refiner;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -65,9 +65,6 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
     /** The map indexed by a node name, where the associated value is the set of child nodes. */
     protected Map<String, Set<String>> mRelationsMap;
 
-    /** The handle to the provenance store implementation. */
-    protected PPS mPPS;
-
     /** Boolean indicating whether to create registration jobs or not. */
     protected Boolean mCreateRegistrationJobs;
 
@@ -91,17 +88,8 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
                     LogManager.CONFIG_MESSAGE_LEVEL);
         }
 
-        // load the PPS implementation
-        mPPS = PPSFactory.loadPPS(this.mProps);
 
         mXMLStore.add("<workflow url=\"" + mPOptions.getDAX() + "\">");
-
-        // call the begin workflow method
-        try {
-            mPPS.beginWorkflowRefinementStep(this, PPS.REFINEMENT_STAGE, false);
-        } catch (Exception e) {
-            throw new RuntimeException("PASOA Exception", e);
-        }
 
         // clear the XML store
         mXMLStore.clear();
@@ -616,29 +604,14 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
         sb.append("</child>").append("\n");
 
         mXMLStore.add(sb.toString());
-
-        // log the action for creating the relationship assertions
-        try {
-            mPPS.registrationIntroducedFor(regJob.getName(), job.getName());
-        } catch (Exception e) {
-            throw new RuntimeException(
-                    "PASOA Exception while logging relationship assertion for registration", e);
-        }
-
         return regJob;
     }
 
     /**
-     * Signals that the traversal of the workflow is done. It signals to the Provenace Store, that
-     * refinement is complete.
+     * Signals that the traversal of the workflow is done.
+     * 
      */
     public void done() {
-
-        try {
-            mPPS.endWorkflowRefinementStep(this);
-        } catch (Exception e) {
-            throw new RuntimeException("PASOA Exception", e);
-        }
 
         // add all the edges required
         for (Iterator it = mRelationsMap.entrySet().iterator(); it.hasNext(); ) {
@@ -806,7 +779,6 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
         try {
             List stagingNodes = new java.util.ArrayList(1);
             stagingNodes.add(txJob.getName());
-            mPPS.stagingIntroducedFor(stagingNodes, computeJob.getName());
         } catch (Exception e) {
             throw new RuntimeException(
                     "PASOA Exception while logging relationship assertion for staging ", e);
