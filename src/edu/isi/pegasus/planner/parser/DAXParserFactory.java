@@ -37,6 +37,9 @@ public class DAXParserFactory {
 
     /** The default callback for label partitioning. */
     public static String LABEL_CALLBACK_CLASS = "DAX2LabelGraph";
+    
+     /** The default callback for planner use. */
+    public static String DEFAULT_CALLBACK_CLASS = "DAX2CDAG";
 
     /** Package to prefix "just" class names with. */
     public static final String DEFAULT_PARSER_PACKAGE_NAME = "edu.isi.pegasus.planner.parser.dax";

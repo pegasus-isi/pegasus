@@ -77,7 +77,7 @@ public class DAXParserFactoryTest {
         
         mLogger.logEventStart("test.planner.parser.DAXParserFactory", "load", "0");
         String dax = new File(mTestSetup.getInputDirectory(), "blackdiamond.dax").getAbsolutePath();
-        DAXParser parser = DAXParserFactory.loadDAXParser(mBag, "DAX2CDAG", dax);
+        DAXParser parser = DAXParserFactory.loadDAXParser(mBag, DAXParserFactory.DEFAULT_CALLBACK_CLASS, dax);
         assertThat(parser, instanceOf(DAXParser3.class));
         mLogger.logEventCompletion();
     }
@@ -87,7 +87,7 @@ public class DAXParserFactoryTest {
         
         mLogger.logEventStart("test.planner.parser.DAXParserFactory", "load", "0");
         String dax = new File(mTestSetup.getInputDirectory(), "workflow.yml").getAbsolutePath();
-        DAXParser parser = DAXParserFactory.loadDAXParser(mBag, "DAX2CDAG", dax);
+        DAXParser parser = DAXParserFactory.loadDAXParser(mBag, DAXParserFactory.DEFAULT_CALLBACK_CLASS, dax);
         assertThat(parser, instanceOf(DAXParser5.class));
         mLogger.logEventCompletion();
     }
