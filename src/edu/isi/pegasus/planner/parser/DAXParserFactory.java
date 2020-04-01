@@ -90,7 +90,7 @@ public class DAXParserFactory {
            return DAXParserFactory.loadXMLDAXParser(bag, c, daxFile);
         }
         else{
-            return DAXParserFactory.loadDAXParser(YAML_DAX_PARSER_CLASS, null, bag, c);
+            return DAXParserFactory.loadDAXParser(YAML_DAX_PARSER_CLASS, "5.0", bag, c);
         }
     }
 
@@ -213,6 +213,7 @@ public class DAXParserFactory {
             // set the callback for the DAX Parser
             ((DAXParser) daxParser).setDAXCallback(c);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new DAXParserFactoryException("Instantiating DAXParser ", classname, e);
         }
         return daxParser;

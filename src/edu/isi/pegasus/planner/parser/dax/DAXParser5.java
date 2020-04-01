@@ -52,6 +52,23 @@ public class DAXParser5 implements DAXParser {
 
     /** Handle to the callback */
     protected Callback mCallback;
+    
+    /**
+     * Bag of initialization objects
+     */
+    private final PegasusBag mBag;
+    
+   
+    
+    /**
+     * The overloaded constructor. The schema version passed is determined in the DAXFactory
+     *
+     * @param bag
+     * @param schemaVersion the schema version specified in the DAX file.
+     */
+    public DAXParser5(PegasusBag bag, String schemaVersion) {
+        mBag = bag;
+    }
 
     /**
      * Set the DAXCallback for the parser to call out to.
@@ -239,12 +256,13 @@ public class DAXParser5 implements DAXParser {
     }
 
     public static void main(String[] args) {
-        DAXParser5 parser = new DAXParser5();
+        
         Callback c = new DAX2CDAG();
         String dax = "/Users/vahi/Pegasus/work/yaml-tc/workflow.yml";
         PegasusBag bag = new PegasusBag();
         bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
         bag.add(PegasusBag.PEGASUS_LOGMANAGER, LogManager.getInstance("", ""));
+        DAXParser5 parser = new DAXParser5(bag, "5.0");
         c.initialize(bag, dax);
         parser.setDAXCallback(c);
         try {
