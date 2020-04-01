@@ -57,6 +57,10 @@ public class DAXParserFactory {
 
     /** The DAXParser3 classname */
     public static final String DAX_PARSER3_CLASS = "DAXParser3";
+    
+    
+    /** The YAML_DAX_PARSER_CLASS classname */
+    public static final String YAML_DAX_PARSER_CLASS = "DAXParser5";
 
     /**
      * Loads the appropriate DAXParser looking at the dax schema that is specified by the user.
@@ -82,10 +86,12 @@ public class DAXParserFactory {
         Callback c = DAXParserFactory.loadDAXParserCallback(bag, daxFile, callbackClass);
 
         // PM-1511
-        if( FileDetector.isTypeXML(daxFile)){
-            
+        if (FileDetector.isTypeXML(daxFile)){
+           return DAXParserFactory.loadXMLDAXParser(bag, c, daxFile);
         }
-        return DAXParserFactory.loadXMLDAXParser(bag, c, daxFile);
+        else{
+            return DAXParserFactory.loadDAXParser(YAML_DAX_PARSER_CLASS, null, bag, c);
+        }
     }
 
     /**
