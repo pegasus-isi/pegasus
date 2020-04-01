@@ -1,6 +1,7 @@
 import os
 
 from flask import Flask
+from flask_caching import Cache
 
 from Pegasus.service.base import BooleanConverter
 
@@ -36,11 +37,6 @@ def get_pegasus_home():
 
     return None
 
-
-try:
-    from flask_cache import Cache
-except ImportError:
-    from flask_caching import Cache
 
 cache = Cache(app)
 
