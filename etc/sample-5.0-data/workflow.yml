@@ -68,9 +68,14 @@ jobs:
     name: preprocess
     namespace: diamond
     version: "2.0"
+    stdin: stdin_file.txt
     arguments:
       ["-a", "preprocess", "-T60", "-i", "f.a", "-o", "f.b1", "f.b2"]
     uses:
+      - lfn: stdin_file.txt
+        type: input
+        registerReplica: false
+        stageOut: false
       - lfn: f.b2
         type: output
         registerReplica: false

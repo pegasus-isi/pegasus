@@ -91,30 +91,6 @@ def _to_wf(d: dict) -> Workflow:
             else:
                 raise ValueError
 
-            # add stdin
-            if "stdin" in j:
-                f = File(j["stdin"]["lfn"])
-                if "metadata" in j["stdin"]:
-                    f.metadata = j["stdin"]["metadata"]
-
-                job.stdin = f
-
-            # add stdout
-            if "stdout" in j:
-                f = File(j["stdout"]["lfn"])
-                if "metadata" in j["stdout"]:
-                    f.metadata = j["stdout"]["metadata"]
-
-                job.stdout = f
-
-            # add stderr
-            if "stderr" in j:
-                f = File(j["stderr"]["lfn"])
-                if "metadata" in j["stderr"]:
-                    f.metadata = j["stderr"]["metadata"]
-
-                job.stderr = f
-
             # add args
             args = list()
             for a in j["arguments"]:
@@ -149,6 +125,27 @@ def _to_wf(d: dict) -> Workflow:
                 )
 
             job.uses = uses
+
+            # set stdin
+            if "stdin" in j:
+                for u in job.uses:
+                    if u.file.lfn == j["stdin"]:
+                        job.stdin = u.file
+                        break
+
+            # set stdout
+            if "stdout" in j:
+                for u in job.uses:
+                    if u.file.lfn == j["stdout"]:
+                        job.stdout = u.file
+                        break
+
+            # set stderr
+            if "stderr" in j:
+                for u in job.uses:
+                    if u.file.lfn == j["stderr"]:
+                        job.stderr = u.file
+                        break
 
             # add profiles
             if j.get("profiles"):
