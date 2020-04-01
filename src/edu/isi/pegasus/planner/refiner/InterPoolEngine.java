@@ -197,7 +197,7 @@ public class InterPoolEngine extends Engine implements Refiner {
 
         int i = 0;
         StringBuffer error;
-        
+
         // Iterate through the jobs and hand them to
         // the site selector if required
         for (Iterator<GraphNode> it = dag.jobIterator(); it.hasNext(); i++) {
@@ -738,7 +738,6 @@ public class InterPoolEngine extends Engine implements Refiner {
     public List convertToList(Set s) {
         return new java.util.ArrayList(s);
     }
-
 
     /**
      * Generates events for the mapped workflow.

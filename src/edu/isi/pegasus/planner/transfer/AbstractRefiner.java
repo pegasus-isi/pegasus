@@ -21,7 +21,6 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.SubmitMapper;
-
 import java.util.Collection;
 
 /**

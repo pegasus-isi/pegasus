@@ -17,7 +17,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.classes.PegasusBag; 
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 import edu.isi.pegasus.planner.transfer.Implementation;
 import edu.isi.pegasus.planner.transfer.MultipleFTPerXFERJobRefiner;
@@ -69,7 +69,6 @@ public class Empty extends MultipleFTPerXFERJobRefiner {
                     "No Replica Registration Jobs will be created .",
                     LogManager.CONFIG_MESSAGE_LEVEL);
         }
-
     }
 
     /**
@@ -184,12 +183,8 @@ public class Empty extends MultipleFTPerXFERJobRefiner {
         return regJob;
     }
 
-    /**
-     * Signals that the traversal of the workflow is done. 
-     */
-    public void done() {
-
-    }
+    /** Signals that the traversal of the workflow is done. */
+    public void done() {}
 
     /**
      * Add a new job to the workflow being refined.

@@ -25,8 +25,6 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.Partition;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
-
-
 import java.util.*;
 
 /**
@@ -380,7 +378,6 @@ public class Horizontal
                     // add the fat job to the dag
                     // use the method to add, else add explicitly to DagInfo
                     mScheduledDAG.add(fatJob);
-
                 }
                 tempMap = null;
                 return;

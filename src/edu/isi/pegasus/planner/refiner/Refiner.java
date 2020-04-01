@@ -33,5 +33,4 @@ public interface Refiner {
      * @return ADAG object.
      */
     public ADag getWorkflow();
-
 }

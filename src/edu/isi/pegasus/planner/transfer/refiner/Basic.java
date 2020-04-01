@@ -20,12 +20,10 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Condor;
-
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 import edu.isi.pegasus.planner.transfer.Implementation;
 import edu.isi.pegasus.planner.transfer.MultipleFTPerXFERJobRefiner;
 import edu.isi.pegasus.planner.transfer.Refiner;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -591,10 +589,7 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
         return regJob;
     }
 
-    /**
-     * Signals that the traversal of the workflow is done.
-     * 
-     */
+    /** Signals that the traversal of the workflow is done. */
     public void done() {
 
         // add all the edges required
