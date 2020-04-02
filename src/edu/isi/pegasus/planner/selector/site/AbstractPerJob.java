@@ -44,28 +44,31 @@ public abstract class AbstractPerJob extends Abstract {
 
             Job job = (Job) node.getContent();
 
-            //System.out.println( "Setting job level for " + job.getID() + " to " + node.getDepth());
-            job.setLevel( node.getDepth() );
-            
-            //only map a job for which execute site hint
-            //is not specified in the DAX
-            if( job.hints.containsKey(Hints.EXECUTION_SITE_KEY ) ){
-                mLogger.log( "Job " + job.getID() + " will be mapped based on hints profile to site " + job.hints.get( Hints.EXECUTION_SITE_KEY),
-                             LogManager.DEBUG_MESSAGE_LEVEL );
-            }
-            else{
-                if( job instanceof DataFlowJob ){
-                    //PM-1205 datalfows are clustered jobs
-                    //we map the constitutent jobs not the datalfow job itself.
-                    for( Iterator consIT = ((DataFlowJob)job).nodeIterator(); consIT.hasNext(); ){
+            // System.out.println( "Setting job level for " + job.getID() + " to " +
+            // node.getDepth());
+            job.setLevel(node.getDepth());
+
+            // only map a job for which execute site hint
+            // is not specified in the DAX
+            if (job.hints.containsKey(Hints.EXECUTION_SITE_KEY)) {
+                mLogger.log(
+                        "Job "
+                                + job.getID()
+                                + " will be mapped based on hints profile to site "
+                                + job.hints.get(Hints.EXECUTION_SITE_KEY),
+                        LogManager.DEBUG_MESSAGE_LEVEL);
+            } else {
+                if (job instanceof DataFlowJob) {
+                    // PM-1205 datalfows are clustered jobs
+                    // we map the constitutent jobs not the datalfow job itself.
+                    for (Iterator consIT = ((DataFlowJob) job).nodeIterator(); consIT.hasNext(); ) {
                         GraphNode n = (GraphNode) consIT.next();
                         Job j = (Job) n.getContent();
-                        mapJob( j, sites );
+                        mapJob(j, sites);
                     }
                 }
-                
-                mapJob( job, sites);
-             
+
+                mapJob(job, sites);
             }
         }
     }
