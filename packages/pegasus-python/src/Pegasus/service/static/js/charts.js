@@ -316,6 +316,11 @@ function getTimeChart(url, container)
         {
             container.children().last().buttonset ();
 
+            for (var i = 0; i < data.length; ++i) {
+                var d = new Date(data[i].date_format * 1000 * 3600);
+                data[i].date_format = d.getFullYear() + "-" + d.getMonth() + "-" +  d.getDay() + " " +  "Hour" + " " +  d.getHours();
+            }
+
             timeChart.data = data;
             timeChart.categories = getTimeChartCategories(data);
             timeChart.jobCount = getTimeChartJobCount(data);

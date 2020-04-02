@@ -333,12 +333,6 @@ class Dashboard:
                 workflow_plots.get_invocation_by_time(),
             )
 
-            for j in job:
-                j.date_format *= 3600
-
-            for i in invocation:
-                i.date_format *= 3600
-
             return job, invocation
 
         finally:

@@ -1,8 +1,8 @@
 {% if time_chart_job %}
 [
-    {% for i in range(0, time_chart_job|count) %}   
+    {% for i in range(0, time_chart_job|count) %}
     {
-        "date_format": {{ time_chart_job [i].date_format|time_to_date_str|tojson|safe }},
+        "date_format": {{ time_chart_job [i].date_format|tojson|safe }},
         "count" : { "job" : {{ time_chart_job [i].count|tojson|safe }}, "invocation" : {{ time_chart_invocation [i].count|tojson|safe }} },
         "total_runtime" : { "job" : {{ time_chart_job [i].total_runtime|dec_to_float|tojson|safe }}, "invocation" : {{ time_chart_invocation [i].total_runtime|dec_to_float|tojson|safe }} }
     }
