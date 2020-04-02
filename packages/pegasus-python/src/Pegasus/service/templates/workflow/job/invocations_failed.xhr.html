@@ -18,7 +18,7 @@
                 {% endif %}
                 </a>
             </td>
-            <td>{{ invocation.remote_duration_formatted }}</td>
+            <td>{{ invocation.remote_duration | time_to_str }}</td>
         </tr>
         {% endfor %}
     </tbody>

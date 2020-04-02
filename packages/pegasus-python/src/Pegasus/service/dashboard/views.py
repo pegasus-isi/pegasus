@@ -251,21 +251,6 @@ def job(username, root_wf_id, wf_id, job_id, job_instance_id):
     job_states = dashboard.get_job_states(wf_id, job_id, job_instance_id)
     job_instances = dashboard.get_job_instances(wf_id, job_id)
 
-    previous = None
-
-    for state in job_states:
-        timestamp = state.timestamp
-        state.timestamp = datetime.fromtimestamp(state.timestamp).strftime(
-            "%a %b %d, %Y %I:%M:%S %p"
-        )
-
-        if previous is None:
-            state.interval = 0.0
-        else:
-            state.interval = timestamp - previous
-
-        previous = timestamp
-
     if not job:
         return "Bad Request", 400
 
@@ -327,9 +312,6 @@ def successful_invocations(username, root_wf_id, wf_id, job_id, job_instance_id)
         wf_id, job_id, job_instance_id
     )
 
-    for item in successful_invocations_list:
-        item.remote_duration_formatted = filters.time_to_str(item.remote_duration)
-
     # is_xhr = True if it is AJAX request.
     if request.is_xhr:
         if len(successful_invocations_list) > 0:
@@ -366,9 +348,6 @@ def failed_invocations(username, root_wf_id, wf_id, job_id, job_instance_id):
     failed_invocations_list = dashboard.get_failed_job_invocation(
         wf_id, job_id, job_instance_id
     )
-
-    for item in failed_invocations_list:
-        item.remote_duration_formatted = filters.time_to_str(item.remote_duration)
 
     # is_xhr = True if it is AJAX request.
     if request.is_xhr:

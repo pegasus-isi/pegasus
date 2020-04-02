@@ -201,12 +201,19 @@
         <hr>
         <div id="job_states">
             <table id="job_states_info">
+                {% set previous = namespace(value=0) %}
                 {% for state in job_states %}
                 <tr>
                     <th class="job_table_width" style="text-transform: capitalize;">{{ state.state|replace('_', '
                         ')|capitalize }}
                     </th>
-                    <td>{{ state.timestamp }} ( {{ state.interval|time_to_str }} ){% if state.reason %} - {{ state.reason }}{% endif %}</td>
+                    {% if not previous.value %}
+                    {% set interval = 0.0 %}
+                    {% else %}
+                    {% set interval = state.timestamp - previous.value %}
+                    {% endif %}
+                    {% set previous.value = state.timestamp %}
+                    <td>{{ state.timestamp }} ( {{ interval|time_to_str }} ){% if state.reason %} - {{ state.reason }}{% endif %}</td>
                 </tr>
                 {% endfor %}
             </table>
