@@ -333,7 +333,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         }
                     }
 
-                    if (file == null) {
+                    if (file == null && !element.equals("dflow")) {
                         this.complain(element, "file", file);
                         return null;
                     }
