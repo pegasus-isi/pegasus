@@ -40,6 +40,7 @@ import edu.isi.pegasus.planner.namespace.Hints;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Selector;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNodeContent;
 import java.io.File;
@@ -315,6 +316,9 @@ public class Job extends Data implements GraphNodeContent {
     @SerializedName("metadata")
     private Metadata mMetadataAttributes;
 
+    /** the selector namespace */
+    private Selector mSelectorProfiles;
+
     /**
      * Identifies the level of the job in the dax. The level is bottom up from the final child node.
      */
@@ -388,6 +392,7 @@ public class Job extends Data implements GraphNodeContent {
         mMetadataAttributes = new Metadata();
         jobClass = UNASSIGNED_JOB;
         level = -1;
+        mSelectorProfiles = new Selector();
         mRuntime = -1;
         mJobExecutablesStaged = false;
         mNotifications = new Notifications();
@@ -432,6 +437,7 @@ public class Job extends Data implements GraphNodeContent {
         hints = job.hints;
         vdsNS = job.vdsNS;
         mMetadataAttributes = job.mMetadataAttributes;
+        mSelectorProfiles = job.mSelectorProfiles;
         jobClass = job.getJobType();
         level = job.level;
         mRuntime = job.mRuntime;
@@ -464,7 +470,6 @@ public class Job extends Data implements GraphNodeContent {
         for (Iterator it = this.outputFiles.iterator(); it.hasNext(); ) {
             newSub.addOutputFile((PegasusFile) ((PegasusFile) it.next()).clone());
         }
-
         newSub.jobName = this.jobName;
         newSub.logicalName = this.logicalName;
         newSub.logicalId = this.logicalId;
@@ -484,6 +489,8 @@ public class Job extends Data implements GraphNodeContent {
                 this.mMetadataAttributes == null
                         ? null
                         : (Metadata) this.mMetadataAttributes.clone();
+        newSub.mSelectorProfiles =
+                this.mSelectorProfiles == null ? null : (Selector) this.mSelectorProfiles.clone();
 
         newSub.hints = (Hints) this.hints.clone();
         newSub.jobID = this.jobID;
@@ -496,6 +503,7 @@ public class Job extends Data implements GraphNodeContent {
         newSub.dvVersion = this.dvVersion;
 
         newSub.level = this.level;
+
         newSub.mRuntime = this.mRuntime;
         //        newSub.submitDirectory = this.submitDirectory == null ? null : new
         // String(this.submitDirectory);
@@ -1582,6 +1590,15 @@ public class Job extends Data implements GraphNodeContent {
     }
 
     /**
+     * Returns the data flow attributes associated with the job
+     *
+     * @return
+     */
+    public Namespace getSelectorProfiles() {
+        return this.mSelectorProfiles;
+    }
+
+    /**
      * Returns whether the job is recursive or not.
      *
      * @return boolean
@@ -1626,6 +1643,7 @@ public class Job extends Data implements GraphNodeContent {
         vdsNS.checkKeyInNS(entry);
         hints.checkKeyInNS(entry);
         mMetadataAttributes.checkKeyInNS(entry);
+        mSelectorProfiles.checkKeyInNS(entry);
     }
 
     /**
@@ -1645,6 +1663,7 @@ public class Job extends Data implements GraphNodeContent {
         vdsNS.checkKeyInNS(properties, executionPool);
         hints.checkKeyInNS(properties, executionPool);
         mMetadataAttributes.checkKeyInNS(properties, executionPool);
+        mSelectorProfiles.checkKeyInNS(properties, executionPool);
     }
 
     /**
@@ -1704,6 +1723,12 @@ public class Job extends Data implements GraphNodeContent {
             key = (String) it.next();
             this.mMetadataAttributes.checkKeyInNS(key, (String) n.get(key));
         }
+
+        n = profiles.get(NAMESPACES.selector);
+        for (Iterator it = n.getProfileKeyIterator(); it.hasNext(); ) {
+            key = (String) it.next();
+            this.mSelectorProfiles.checkKeyInNS(key, (String) n.get(key));
+        }
     }
 
     /**
@@ -1739,6 +1764,8 @@ public class Job extends Data implements GraphNodeContent {
                 hints.checkKeyInNS(profile);
             } else if (profile.getProfileNamespace().equals(Profile.METADATA)) {
                 this.mMetadataAttributes.checkKeyInNS(profile);
+            } else if (profile.getProfileNamespace().equals(Profile.SELECTOR)) {
+                this.mSelectorProfiles.checkKeyInNS(profile);
             } else {
                 // unknown profile.
                 mLogger.log(
@@ -1764,6 +1791,7 @@ public class Job extends Data implements GraphNodeContent {
         this.vdsNS.merge(job.vdsNS);
         this.hints.merge(job.hints);
         this.mMetadataAttributes.merge(job.mMetadataAttributes);
+        this.mSelectorProfiles.merge(job.mSelectorProfiles);
     }
 
     /**
@@ -1825,6 +1853,7 @@ public class Job extends Data implements GraphNodeContent {
         hints = new Hints();
         vdsNS = new Pegasus();
         mMetadataAttributes = new Metadata();
+        mSelectorProfiles = new Selector();
     }
 
     /**
@@ -2075,6 +2104,10 @@ public class Job extends Data implements GraphNodeContent {
 
             case 'm': // metadata
                 this.mMetadataAttributes.checkKeyInNS(key, value);
+                break;
+
+            case 's': // selector for decaf elements
+                this.mSelectorProfiles.checkKeyInNS(p.getProfileKey(), p.getProfileValue());
                 break;
 
             default:

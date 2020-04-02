@@ -71,6 +71,15 @@ public class AggregatedJob extends Job implements Graph {
      * The overloaded constructor.
      *
      * @param job the job whose shallow copy is created, and is the main job.
+     */
+    public AggregatedJob(Job job) {
+        this(job, -1);
+    }
+
+    /**
+     * The overloaded constructor.
+     *
+     * @param job the job whose shallow copy is created, and is the main job.
      * @param num the number of constituent jobs.
      */
     public AggregatedJob(Job job, int num) {

@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.selector.site;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.DataFlowJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.namespace.Hints;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
@@ -42,6 +43,7 @@ public abstract class AbstractPerJob extends Abstract {
             GraphNode node = (GraphNode) it.next();
 
             Job job = (Job) node.getContent();
+
             // System.out.println( "Setting job level for " + job.getID() + " to " +
             // node.getDepth());
             job.setLevel(node.getDepth());
@@ -56,6 +58,16 @@ public abstract class AbstractPerJob extends Abstract {
                                 + job.hints.get(Hints.EXECUTION_SITE_KEY),
                         LogManager.DEBUG_MESSAGE_LEVEL);
             } else {
+                if (job instanceof DataFlowJob) {
+                    // PM-1205 datalfows are clustered jobs
+                    // we map the constitutent jobs not the datalfow job itself.
+                    for (Iterator consIT = ((DataFlowJob) job).nodeIterator(); consIT.hasNext(); ) {
+                        GraphNode n = (GraphNode) consIT.next();
+                        Job j = (Job) n.getContent();
+                        mapJob(j, sites);
+                    }
+                }
+
                 mapJob(job, sites);
             }
         }

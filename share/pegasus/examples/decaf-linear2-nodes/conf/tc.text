@@ -1,0 +1,125 @@
+tr pegasus::prepare-input-data:4.0 { 
+
+#specify profiles that apply for all the sites for the transformation 
+#in each site entry the profile can be overriden 
+
+  profile env "APP_HOME" "/tmp/myscratch"
+  profile env "JAVA_HOME" "/opt/java/1.6"
+
+  site condorpool {
+    profile env "HELLo" "WORLD"
+    profile condor "FOO" "bar"
+    profile env "JAVA_HOME" "/bin/java.1.6"
+    pfn "/usr/bin/pegasus-keg"
+    arch "x86_64"
+    os "linux"
+
+      
+    # installed means pfn refers to path in the container.
+    # stageable means the executable can be staged into the container
+    type "INSTALLED" 
+
+   
+  }
+}
+
+tr dataflow::decaf { 
+
+#specify profiles that apply for all the sites for the transformation 
+#in each site entry the profile can be overriden 
+
+  profile env "APP_HOME" "/tmp/myscratch"
+  profile env "JAVA_HOME" "/opt/java/1.6"
+
+  site condorpool {
+    profile env "HELLo" "WORLD"
+    profile condor "FOO" "bar"
+    profile env "JAVA_HOME" "/bin/java.1.6"
+    pfn "linear2.json"
+    arch "x86_64"
+    os "linux"
+
+      
+    # installed means pfn refers to path in the container.
+    # stageable means the executable can be staged into the container
+    type "INSTALLED" 
+
+   
+  }
+}
+
+tr linear_2nodes_link { 
+
+#specify profiles that apply for all the sites for the transformation 
+#in each site entry the profile can be overriden 
+
+  profile env "APP_HOME" "/tmp/myscratch"
+  profile env "JAVA_HOME" "/opt/java/1.6"
+
+  site condorpool {
+    profile env "HELLo" "WORLD"
+    profile condor "FOO" "bar"
+    profile env "JAVA_HOME" "/bin/java.1.6"
+    pfn "${DECAF_PREFIX}/examples/direct/linear_2nodes"
+    arch "x86_64"
+    os "linux"
+
+      
+    # installed means pfn refers to path in the container.
+    # stageable means the executable can be staged into the container
+    type "INSTALLED" 
+
+   
+  }
+}
+
+tr linear_2nodes_consumer { 
+
+#specify profiles that apply for all the sites for the transformation 
+#in each site entry the profile can be overriden 
+
+  profile env "APP_HOME" "/tmp/myscratch"
+  profile env "JAVA_HOME" "/opt/java/1.6"
+
+  site condorpool {
+    profile env "HELLo" "WORLD"
+    profile condor "FOO" "bar"
+    profile env "JAVA_HOME" "/bin/java.1.6"
+    pfn "${DECAF_PREFIX}/examples/direct/linear_2nodes"	
+    arch "x86_64"
+    os "linux"
+
+      
+    # installed means pfn refers to path in the container.
+    # stageable means the executable can be staged into the container
+    type "INSTALLED" 
+
+   
+  }
+}
+
+tr linear_2nodes_producer { 
+
+#specify profiles that apply for all the sites for the transformation 
+#in each site entry the profile can be overriden 
+
+  profile env "APP_HOME" "/tmp/myscratch"
+  profile env "JAVA_HOME" "/opt/java/1.6"
+
+  site condorpool {
+    profile env "HELLo" "WORLD"
+    profile condor "FOO" "bar"
+    profile env "JAVA_HOME" "/bin/java.1.6"
+    pfn "${DECAF_PREFIX}/examples/direct/linear_2nodes"
+    arch "x86_64"
+    os "linux"
+
+      
+    # installed means pfn refers to path in the container.
+    # stageable means the executable can be staged into the container
+    type "INSTALLED" 
+
+   
+  }
+}
+

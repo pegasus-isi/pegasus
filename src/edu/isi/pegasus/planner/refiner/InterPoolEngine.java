@@ -23,10 +23,13 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.DataFlowJob;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.cluster.JobAggregator;
+import edu.isi.pegasus.planner.cluster.aggregator.Decaf;
 import edu.isi.pegasus.planner.code.CodeGeneratorFactory;
 import edu.isi.pegasus.planner.code.generator.Stampede;
 import edu.isi.pegasus.planner.common.PegRandom;
@@ -196,7 +199,6 @@ public class InterPoolEngine extends Engine implements Refiner {
         mSiteSelector.mapWorkflow(dag, sites);
 
         int i = 0;
-        StringBuffer error;
 
         // Iterate through the jobs and hand them to
         // the site selector if required
@@ -204,79 +206,105 @@ public class InterPoolEngine extends Engine implements Refiner {
             GraphNode node = it.next();
             Job job = (Job) node.getContent();
 
-            // check if the user has specified any hints in the dax
-            incorporateHint(job, Hints.EXECUTION_SITE_KEY);
+            if (job instanceof DataFlowJob) {
+                // associate the job with decaf job aggregator
+                // hardcoded for time being
+                DataFlowJob dflow = (DataFlowJob) job;
+                JobAggregator decaf = new Decaf();
+                decaf.initialize(dag, mBag);
+                dflow.setJobAggregator(decaf);
 
-            String site = job.getSiteHandle();
-            mLogger.log(
-                    "Setting up site mapping for job " + job.getName(),
-                    LogManager.DEBUG_MESSAGE_LEVEL);
-
-            if (site == null) {
-                error = new StringBuffer();
-                error.append("Site Selector could not map the job ")
-                        .append(job.getCompleteTCName())
-                        .append(" with id ")
-                        .append(job.getID())
-                        .append(" to any of the execution sites ")
-                        .append(sites)
-                        .append(" using the Transformation Mapper (")
-                        .append(this.mTCMapper.getMode())
-                        .append(")")
-                        .append("\n\n")
-                        .append(
-                                "This error is most likely due to an error in the transformation catalog.")
-                        .append(" Please verify that the '")
-                        .append(job.getCompleteTCName())
-                        .append(" transformation")
-                        .append("' exists with matching system information for the sites ")
-                        .append(sites)
-                        .append(" you are planning against: ")
-                        .append(mSiteStore.getSysInfos(sites))
-                        .append("\n\n");
-                mLogger.log(error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
-                throw new RuntimeException(error.toString());
+                // PM-1205 datalfows are clustered jobs
+                // we map the constitutent jobs not the datalfow job itself.
+                for (Iterator consIT = dflow.nodeIterator(); consIT.hasNext(); ) {
+                    GraphNode n = (GraphNode) consIT.next();
+                    Job j = (Job) n.getContent();
+                    incorporateSiteMapping(j, sites);
+                }
             }
-
-            if (site.length() == 0 || site.equalsIgnoreCase(SiteSelector.SITE_NOT_FOUND)) {
-                error = new StringBuffer();
-                error.append("Site Selector (")
-                        .append(mSiteSelector.description())
-                        .append(") could not map job ")
-                        .append(job.getCompleteTCName())
-                        .append(" with id ")
-                        .append(job.getID())
-                        .append(" to any site");
-                mLogger.log(error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
-                throw new RuntimeException(error.toString());
-            }
-
-            mLogger.log(
-                    "Job was mapped to " + job.jobName + " to site " + site,
-                    LogManager.DEBUG_MESSAGE_LEVEL);
-
-            // incorporate the profiles and
-            // do transformation selection
-            // set the staging site for the job
-            TransformationCatalogEntry entry = lookupTC(job);
-            incorporateProfiles(job, entry);
-
-            // PM-810 assign data configuration for the job if
-            // not already incorporated from profiles and properites
-            if (!job.vdsNS.containsKey(Pegasus.DATA_CONFIGURATION_KEY)) {
-                job.setDataConfiguration(PegasusConfiguration.DEFAULT_DATA_CONFIGURATION_VALUE);
-            }
-            job.setStagingSiteHandle(determineStagingSite(job));
-            handleExecutableFileTransfers(job, entry);
-
-            // PM-882 incorporate estimates on runtimes of the jobs
-            // after the site selection has been done
-            incorporateEstimates(job);
+            incorporateSiteMapping(job, sites);
         } // end of mapping all jobs
 
         // PM-916 write out all the metadata related events for the
         // mapped workflow
         generateStampedeMetadataEvents(dag);
+    }
+
+    /**
+     * Incorporates hints and checks to ensure a job has been mapped correctly.
+     *
+     * @param job
+     * @param sites
+     */
+    protected void incorporateSiteMapping(Job job, List<String> sites) {
+        StringBuilder error = null;
+        // check if the user has specified any hints in the dax
+        incorporateHint(job, Hints.EXECUTION_SITE_KEY);
+
+        String site = job.getSiteHandle();
+        mLogger.log(
+                "Setting up site mapping for job " + job.getName(), LogManager.DEBUG_MESSAGE_LEVEL);
+
+        if (site == null) {
+            error = new StringBuilder();
+            error.append("Site Selector could not map the job ")
+                    .append(job.getCompleteTCName())
+                    .append(" with id ")
+                    .append(job.getID())
+                    .append(" to any of the execution sites ")
+                    .append(sites)
+                    .append(" using the Transformation Mapper (")
+                    .append(this.mTCMapper.getMode())
+                    .append(")")
+                    .append("\n")
+                    .append(
+                            "\nThis error is most likely due to an error in the transformation catalog.")
+                    .append("\nMake sure that the ")
+                    .append(job.getCompleteTCName())
+                    .append(" transformation")
+                    .append("\nexists with matching system information  for sites ")
+                    .append(sites)
+                    .append(" you are trying to plan for ")
+                    .append(mSiteStore.getSysInfos(sites))
+                    .append("\n");
+            mLogger.log(error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
+            throw new RuntimeException(error.toString());
+        }
+
+        if (site.length() == 0 || site.equalsIgnoreCase(SiteSelector.SITE_NOT_FOUND)) {
+            error = new StringBuilder();
+            error.append("Site Selector (")
+                    .append(mSiteSelector.description())
+                    .append(") could not map job ")
+                    .append(job.getCompleteTCName())
+                    .append(" with id ")
+                    .append(job.getID())
+                    .append(" to any site");
+            mLogger.log(error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
+            throw new RuntimeException(error.toString());
+        }
+
+        mLogger.log(
+                "Job was mapped to " + job.jobName + " to site " + site,
+                LogManager.DEBUG_MESSAGE_LEVEL);
+
+        // incorporate the profiles and
+        // do transformation selection
+        // set the staging site for the job
+        TransformationCatalogEntry entry = lookupTC(job);
+        incorporateProfiles(job, entry);
+
+        // PM-810 assign data configuration for the job if
+        // not already incorporated from profiles and properites
+        if (!job.vdsNS.containsKey(Pegasus.DATA_CONFIGURATION_KEY)) {
+            job.setDataConfiguration(PegasusConfiguration.DEFAULT_DATA_CONFIGURATION_VALUE);
+        }
+        job.setStagingSiteHandle(determineStagingSite(job));
+        handleExecutableFileTransfers(job, entry);
+
+        // PM-882 incorporate estimates on runtimes of the jobs
+        // after the site selection has been done
+        incorporateEstimates(job);
     }
 
     /**

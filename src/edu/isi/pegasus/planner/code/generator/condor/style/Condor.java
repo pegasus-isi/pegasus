@@ -26,6 +26,7 @@ import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -267,7 +268,7 @@ public class Condor extends Abstract {
 
         // PM-962 handle resource requirements expressed as pegasus profiles
         // and populate them as globus profiles if required
-        handleResourceRequirements(job);
+        handleResourceRequirements(job, universe);
     }
 
     /**
@@ -277,8 +278,7 @@ public class Condor extends Abstract {
      *
      * @param job
      */
-    private void handleResourceRequirements(Job job) {
-
+    private void handleResourceRequirements(Job job, String universe) {
         Pegasus profiles = job.vdsNS;
         edu.isi.pegasus.planner.namespace.Condor classAdKeys = job.condorVariables;
 
@@ -298,6 +298,22 @@ public class Condor extends Abstract {
             if (!classAdKeys.containsKey(classAdKey) && profiles.containsKey(pegasusKey)) {
                 // one to one mapping
                 classAdKeys.construct(classAdKey, profiles.getStringValue(pegasusKey));
+            }
+        }
+        if (universe.equalsIgnoreCase(Condor.SCHEDULER_UNIVERSE)
+                || universe.equalsIgnoreCase(Condor.LOCAL_UNIVERSE)) {
+            // remove request_ keys as they are not handled in local universe
+            for (Iterator it = job.condorVariables.getProfileKeyIterator(); it.hasNext(); ) {
+                String key = (String) it.next();
+                if (key.startsWith("request_")) {
+                    mLogger.log(
+                            "Removing unsupported key "
+                                    + key
+                                    + " in local universe for job "
+                                    + job.getID(),
+                            LogManager.WARNING_MESSAGE_LEVEL);
+                    it.remove();
+                }
             }
         }
     }
