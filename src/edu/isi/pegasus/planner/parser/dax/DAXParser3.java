@@ -32,6 +32,8 @@ import edu.isi.pegasus.planner.catalog.transformation.impl.Abstract;
 import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
+import edu.isi.pegasus.planner.classes.DataFlowJob;
+import edu.isi.pegasus.planner.classes.DataFlowJob.Link;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PCRelation;
@@ -300,18 +302,19 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }
                 return null;
 
-                // d dag dax
-            case 'd':
-                if (element.equals("dag") || element.equals("dax")) {
-                    Job j = new Job();
-                    // all jobs in the DAX are of type compute
-                    j.setUniverse(GridGateway.JOB_TYPE.compute.toString());
-                    j.setJobType(Job.COMPUTE_JOB);
 
+            //d dag dax job decaf
+            case 'd':
+                if( element.equals( "dag" ) || element.equals( "dax" ) || element.equals( "dflow")  ){
+                    Job j = new Job( );
+                    //all jobs in the DAX are of type compute
+                    j.setUniverse( GridGateway.JOB_TYPE.compute.toString() );
+                    j.setJobType( Job.COMPUTE_JOB );
+                    
                     String file = null;
-                    for (int i = 0; i < names.size(); ++i) {
-                        String name = (String) names.get(i);
-                        String value = (String) values.get(i);
+                    for ( int i=0; i < names.size(); ++i ) {
+                        String name = (String) names.get( i );
+                        String value = (String) values.get( i );
 
                         if (name.equals("namespace")) {
                             j.setTXNamespace(value);
@@ -358,8 +361,6 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
                         dagJob.setDerivation("condor", "dagman", null);
 
-                        dagJob.level = -1;
-
                         // dagman jobs are always launched without a gridstart
                         dagJob.vdsNS.construct(
                                 Pegasus.GRIDSTART_KEY,
@@ -399,10 +400,45 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         daxJob.level = -1;
                         return daxJob;
                     }
-                } // end of element job
-                return null; // end of j
+                    else  if( element.equals( "dflow" ) ){
+                        DataFlowJob dflowJob = new DataFlowJob( j );
+                        //add default name and namespace information
+                        dflowJob.setTransformation( "dataflow",
+                                                  "decaf",
+                                                  null );
+                        
+                        //set the internal primary id for job
+                        //PM-1513 no longer set in parser per master branch
+                        //dflowJob.setName( constructJobID( dflowJob ) );
+                        return dflowJob;
+                    }
+                }//end of element  dag, dax, job
+                else if ( element.equals( "decaf") ){
+                    Profile p = new Profile(); 
+                    //retroffited decaf element into unused selector profile space
+                    p.setProfileNamespace(  "selector" );
+                    for ( int i=0; i < names.size(); ++i ) {
+                        String name = (String) names.get( i );
+                        String value = (String) values.get( i );
+                        if ( name.equals( "namespace" ) ) {
+                            p.setProfileNamespace( value );
+                            this.log( element, name, value );
+                        }
+                        else if ( name.equals( "key" ) ) {
+                            p.setProfileKey( value );
+                 	    this.log( element, name, value );
+                        }
+                        else {
+                	    this.complain( element, name, value );
+                        }
+                    }
+                    return p;
 
-                // e executable
+                }//end of element decaf
+                return null;//end of d
+
+                
+            //e executable edge
             case 'e':
                 if (element.equals("executable")) {
                     String namespace = null;
@@ -446,8 +482,27 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                     executable.setGlibc(os_glibc);
                     executable.setInstalled(os_installed);
                     return executable;
-                } // end of element executable
+              }//end of element executable
+                /* disabled for decaf v4 dax
+                else if ( element.equals( "edge") ){
+                   
+                   String parent = null, child = null;
+                   for ( int i=0; i < names.size(); ++i ) {
+                        String name = (String) names.get( i );
+                        String value = (String) values.get( i );
 
+                        if ( name.equals( "parent" ) ) {
+                            parent = value;
+                        }
+                        else if( name.equals( "child" ) ){
+                            child = value;
+                        }
+                   }
+                   Link edge = new Link( parent, child );
+                   
+                   return edge;
+                }
+                */
                 return null; // end of e
 
                 // f file
@@ -506,8 +561,8 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                     return new Invoke(WHEN.valueOf(when));
                 } // end of element invoke
                 return null;
-
-                // j job
+                
+            //j job
             case 'j':
                 if (element.equals("job")) {
                     Job j = new Job();
@@ -538,7 +593,46 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 } // end of element job
                 return null; // end of j
 
-                // m metadata
+            //l link job for a dataflow
+            case 'l':
+                if ( element.equals( "link") ){
+                   
+                   Link l = new Link( );
+                    //all jobs in the DAX are of type compute
+                    l.setUniverse( GridGateway.JOB_TYPE.compute.toString() ); 
+                    l.setJobType( Job.COMPUTE_JOB );
+                    
+                    for ( int i=0; i < names.size(); ++i ) {
+                        String name = (String) names.get( i );
+                        String value = (String) values.get( i );
+
+                        if ( name.equals( "namespace" ) ) {
+                            l.setTXNamespace( value );
+                        }
+                        else if( name.equals( "name" ) ){
+                            l.setTXName( value );
+                        }
+                        else if( name.equals( "version" ) ){
+                            l.setTXVersion( value );
+                        }
+                        else if( name.equals( "id"  ) ){
+                            l.setLogicalID( value );
+                        }
+                        else if( name.equals( "node-label"  ) ){
+                            l.setNodeLabel( value );
+                        }
+                        else {
+                	    this.complain( element, name, value );
+                        }
+                    }
+                    //set the internal primary id for job
+                    //PM-1513 no longer set in parser per master branch
+                    //l.setName( constructJobID( l ) );
+                   return l;
+                }
+                return null;
+                
+            //m metadata
             case 'm':
                 if (element.equals("metadata")) {
                     Profile p = new Profile();
@@ -800,17 +894,25 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
                 // c child
             case 'c':
-                if (parent instanceof Map) {
-                    if (child instanceof PCRelation) {
-                        PCRelation pc = (PCRelation) child;
-                        // call the callback
-                        this.mCallback.cbParents(pc.getChild(), mParents);
+                if( child instanceof PCRelation ){
+                    PCRelation pc = (PCRelation)child;
+                    if( parent instanceof Map ){
+                        //call the callback
+                        this.mCallback.cbParents( pc.getChild(), mParents);
+                        return true;
+                    }
+                    else if ( parent instanceof Link ){
+                        Link link = (Link)parent;
+                        //not clear so far if decaf allows multiple parents 
+                        //or just a single edge.
+                        PCRelation parentJob = mParents.get(0);
+                        link.setLink( parentJob.getParent(), parentJob.getChild());
                         return true;
                     }
                 }
                 return false;
 
-                // d dax dag
+            //d dax dag job decaf
             case 'd':
                 if (parent instanceof Map) {
 
@@ -829,7 +931,45 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         this.mCallback.cbJob(daxJob);
                         return true;
                     }
+                    else if( child instanceof DataFlowJob ){
+                        //dflow appears in adag element
+                        DataFlowJob dflowJob = ( DataFlowJob )child;
+
+                        
+                        //call the callback function
+                        this.mCallback.cbJob( dflowJob );
+                        return true;
+                    }
                 }
+                else if ( parent instanceof DataFlowJob ){
+                    DataFlowJob dflow = (DataFlowJob) parent;
+                    if( child instanceof Profile ){//decaf appears as selector profile
+                        Profile decaf = ( Profile )child;
+                        decaf.setProfileValue( mTextContent.toString().trim() );
+                        dflow.addProfile(decaf);
+                        return true;
+                    }
+                }
+                else if ( parent instanceof Job ){
+                    Job job = (Job) parent;
+                    if( child instanceof Profile ){//decaf appears as selector profile
+                        Profile decaf = ( Profile )child;
+                        decaf.setProfileValue( mTextContent.toString().trim() );
+                        job.addProfile(decaf);
+                        return true;
+                    }
+                }
+                /* disabled for decaf v4 dax
+                else if ( parent instanceof Link ){
+                    Link edge = (Link) parent;
+                    if( child instanceof Profile ){//decaf appears as selector profile
+                        Profile decaf = ( Profile )child;
+                        decaf.setProfileValue( mTextContent.toString().trim() );
+                        edge.addProfile(decaf);
+                        return true;
+                    }
+                }
+                */
                 return false;
 
                 // f file
@@ -851,7 +991,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }
                 return false;
 
-                // e executable
+            //e executable edge
             case 'e':
                 if (child instanceof Executable) {
                     if (parent instanceof Map) {
@@ -865,6 +1005,14 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         // each new pfn is a new transformation
                         // catalog entry
                         // this.mCallback.cbExecutable( tce );
+                        return true;
+                    }
+                }
+                else if( child instanceof Link ){
+                    //edge appears in job
+                    if( parent instanceof DataFlowJob ){
+                        DataFlowJob dflow = ( DataFlowJob )parent;
+                        dflow.addEdge((Link) child);
                         return true;
                     }
                 }
@@ -909,14 +1057,33 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
                 // j job
             case 'j':
-                if (child instanceof Job && parent instanceof Map) {
-                    // callback for Job
-                    this.mCallback.cbJob((Job) child);
-                    return true;
+                if( child instanceof Job ){ 
+                    if ( parent instanceof Map ){
+                        //callback for Job
+                        this.mCallback.cbJob( (Job)child );
+                        return true;
+                    }
+                    else if( parent instanceof DataFlowJob ){
+                        DataFlowJob dflow = (DataFlowJob) parent;
+                        dflow.add( (Job)child );
+                        return true;
+                    }
+                    return false;
                 }
                 return false;
 
-                // m metadata
+            //l link job
+            case 'l':
+                if( child instanceof Link ){
+                    if( parent instanceof DataFlowJob ){
+                        DataFlowJob dflow = (DataFlowJob) parent;
+                        dflow.add( (Job)child );
+                        return true;
+                    }
+                }
+                return false;
+             
+            //m metadata
             case 'm':
                 if (child instanceof Profile) {
                     Profile md = (Profile) child;
