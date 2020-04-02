@@ -213,7 +213,7 @@
                     {% set interval = state.timestamp - previous.value %}
                     {% endif %}
                     {% set previous.value = state.timestamp %}
-                    <td>{{ state.timestamp }} ( {{ interval|time_to_str }} ){% if state.reason %} - {{ state.reason }}{% endif %}</td>
+                    <td>{{ state.timestamp|time_to_date_str("%a %b %d, %Y %I:%M:%S %p") }} ( {{ interval|time_to_str }} ){% if state.reason %} - {{ state.reason }}{% endif %}</td>
                 </tr>
                 {% endfor %}
             </table>
