@@ -620,9 +620,6 @@ class Dashboard:
             invocation = workflow.get_invocation_information(
                 job_id, job_instance_id, invocation_id
             )
-            invocation.start_time = strftime(
-                "%a, %d %b %Y %H:%M:%S", localtime(invocation.start_time)
-            )
             return invocation
         finally:
             Dashboard.close(workflow)

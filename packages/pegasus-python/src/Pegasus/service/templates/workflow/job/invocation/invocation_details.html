@@ -103,7 +103,7 @@ $(document).ready (function ()
             </tr>
             <tr>
                 <th>Start Time</th>
-                <td>{{ invocation.start_time }}</td>
+                <td>{{ invocation.start_time | time_to_date_str("%a, %d %b %Y %H:%M:%S") }}</td>
             </tr>
             <tr>
                 <th>Remote Duration</th>

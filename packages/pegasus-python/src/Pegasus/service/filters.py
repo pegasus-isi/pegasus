@@ -24,11 +24,11 @@ def dec_to_float(dec):
         return None
 
 
-def time_to_date_str(ts):
+def time_to_date_str(ts, fmt="%Y-%m-%d Hour %H"):
     """
-    Change an integer duration to be represented as a data string
+    Change an integer duration to be represented as a date string
     """
-    return time.strftime("%Y-%m-%d Hour %H", time.localtime(ts))
+    return time.strftime(fmt, time.localtime(ts))
 
 
 def to_lower_case(str):
