@@ -174,6 +174,9 @@ $(document).ready(function () {
                 },
                 activate: function (event, ui) {
                     var tabIndex = ui.newTab.index();
+                    var urlTmpl = "{{ url_for('.job', root_wf_id='-11-', wf_id='-22-', job_id='-33-', job_instance_id='-44-') }}";
+                    var stdOutTmpl = "{{ url_for('.stdout', root_wf_id='-11-', wf_id='-22-', job_id='-33-', job_instance_id='-44-') }}";
+                    var stdErrTmpl = "{{ url_for('.stderr', root_wf_id='-11-', wf_id='-22-', job_id='-33-', job_instance_id='-44-') }}";
 
                     if (tabIndex == 1 && !tablesInitialized [tabIndex]) {
                         tablesInitialized [tabIndex] = true;
@@ -183,7 +186,36 @@ $(document).ready(function () {
                             "pagingType": "full_numbers",
                             "processing": true,
                             "serverSide": true,
-                            "ajax": "{{ url_for ('.failed_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                            "ajax": {
+                                "url": "{{ url_for ('.failed_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                                "dataSrc": function (json) {
+                                    var data = json.data;
+
+                                    for(var i = 0; i < data.length; i++) {
+                                        data[i].DT_RowClass = "failed";
+                                        data[i].exec_job_id = $("<a>" + data[i].exec_job_id + "</a>").attr("href",
+                                            urlTmpl
+                                                .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                                .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
+                                        )[0].outerHTML;
+                                        data[i].stdout = $("<a>" + data[i].exec_job_id + "</a>")
+                                            .attr("href",
+                                                stdOutTmpl
+                                                    .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                                    .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
+                                            )
+                                            .attr("target", "_blank")[0].outerHTML;
+                                        data[i].stderr = $("<a>" + data[i].exec_job_id + "</a>")
+                                            .attr("href",
+                                                stdErrTmpl
+                                                    .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                                    .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
+                                            )
+                                            .attr("target", "_blank")[0].outerHTML;
+                                    }
+                                    return data;
+                                }
+                            },
                             "autoWidth": false,
                             "columns": [
                                 {"data": "exec_job_id"},
@@ -201,7 +233,22 @@ $(document).ready(function () {
                             "pagingType": "full_numbers",
                             "processing": true,
                             "serverSide": true,
-                            "ajax": "{{ url_for ('.running_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                            "ajax": {
+                                "url": "{{ url_for ('.running_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                                "dataSrc": function (json) {
+                                    var data = json.data;
+
+                                    for(var i = 0; i < data.length; i++) {
+                                        data[i].DT_RowClass = "running";
+                                        data[i].exec_job_id = $("<a>" + data[i].exec_job_id + "</a>").attr("href",
+                                            urlTmpl
+                                                .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                                .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
+                                        )[0].outerHTML;
+                                    }
+                                    return data;
+                                }
+                            },
                             "autoWidth": false,
                             "columns": [
                                 {"data": "exec_job_id"}
@@ -216,7 +263,21 @@ $(document).ready(function () {
                             "pagingType": "full_numbers",
                             "processing": true,
                             "serverSide": true,
-                            "ajax": "{{ url_for ('.successful_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                            "ajax": {
+                                "url": "{{ url_for ('.successful_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                                "dataSrc": function (json) {
+                                    var data = json.data;
+                                    for(var i = 0; i < data.length; i++) {
+                                        data[i].DT_RowClass = "succesfull";
+                                        data[i].exec_job_id = $("<a>" + data[i].exec_job_id + "</a>").attr("href",
+                                            urlTmpl
+                                                .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                                .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
+                                        )[0].outerHTML;
+                                    }
+                                    return data;
+                                }
+                            },
                             "autoWidth": false,
                             "columns": [
                                 {"data": "exec_job_id"},
@@ -232,7 +293,36 @@ $(document).ready(function () {
                             "pagingType": "full_numbers",
                             "processing": true,
                             "serverSide": true,
-                            "ajax": "{{ url_for ('.failing_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                            "ajax": {
+                                "url": "{{ url_for ('.failing_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                                "dataSrc": function (json) {
+                                    var data = json.data;
+
+                                    for(var i = 0; i < data.length; i++) {
+                                        data[i].DT_RowClass = "failing";
+                                        data[i].exec_job_id = $("<a>" + data[i].exec_job_id + "</a>").attr("href",
+                                            urlTmpl
+                                                .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                                .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
+                                        )[0].outerHTML;
+                                        data[i].stdout = $("<a>" + data[i].exec_job_id + "</a>")
+                                            .attr("href",
+                                                stdOutTmpl
+                                                    .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                                    .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
+                                            )
+                                            .attr("target", "_blank")[0].outerHTML;
+                                        data[i].stderr = $("<a>" + data[i].exec_job_id + "</a>")
+                                            .attr("href",
+                                                stdErrTmpl
+                                                    .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                                    .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
+                                            )
+                                            .attr("target", "_blank")[0].outerHTML;
+                                    }
+                                    return data;
+                                }
+                            },
                             "autoWidth": false,
                             "columns": [
                                 {"data": "exec_job_id"},

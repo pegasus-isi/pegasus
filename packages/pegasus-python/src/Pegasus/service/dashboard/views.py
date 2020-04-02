@@ -17,7 +17,6 @@ __author__ = "Rajiv Mayani"
 import logging
 import os
 from datetime import datetime
-from time import localtime, strftime
 
 from flask import (
     g,
@@ -157,47 +156,12 @@ def failed_jobs(username, root_wf_id, wf_id):
         wf_id, **args
     )
 
-    for job in failed_jobs_list:
-        job.exec_job_id = (
-            '<a href="'
-            + url_for(
-                ".job",
-                root_wf_id=root_wf_id,
-                wf_id=wf_id,
-                job_id=job.job_id,
-                job_instance_id=job.job_instance_id,
-            )
-            + '">'
-            + job.exec_job_id
-            + "</a>"
-        )
-        job.stdout = (
-            '<a target="_blank" href="'
-            + url_for(
-                ".stdout",
-                root_wf_id=root_wf_id,
-                wf_id=wf_id,
-                job_id=job.job_id,
-                job_instance_id=job.job_instance_id,
-            )
-            + '">Application Stdout/Stderr</a>'
-        )
-        job.stderr = (
-            '<a target="_blank" href="'
-            + url_for(
-                ".stderr",
-                root_wf_id=root_wf_id,
-                wf_id=wf_id,
-                job_id=job.job_id,
-                job_instance_id=job.job_instance_id,
-            )
-            + '">Condor Stderr/Pegasus Lite Log</a>'
-        )
-
     return render_template(
         "workflow/jobs_failed.xhr.json",
         count=total_count,
         filtered=filtered_count,
+        root_wf_id=root_wf_id,
+        wf_id=wf_id,
         jobs=failed_jobs_list,
         table_args=args,
     )
@@ -215,25 +179,12 @@ def running_jobs(username, root_wf_id, wf_id):
         wf_id, **args
     )
 
-    for job in running_jobs_list:
-        job.exec_job_id = (
-            '<a href="'
-            + url_for(
-                ".job",
-                root_wf_id=root_wf_id,
-                wf_id=wf_id,
-                job_id=job.job_id,
-                job_instance_id=job.job_instance_id,
-            )
-            + '">'
-            + job.exec_job_id
-            + "</a>"
-        )
-
     return render_template(
         "workflow/jobs_running.xhr.json",
         count=total_count,
         filtered=filtered_count,
+        root_wf_id=root_wf_id,
+        wf_id=wf_id,
         jobs=running_jobs_list,
         table_args=args,
     )
@@ -253,26 +204,12 @@ def successful_jobs(username, root_wf_id, wf_id):
         wf_id, **args
     )
 
-    for job in successful_jobs_list:
-        job.duration_formatted = filters.time_to_str(job.duration)
-        job.exec_job_id = (
-            '<a href="'
-            + url_for(
-                ".job",
-                root_wf_id=root_wf_id,
-                wf_id=wf_id,
-                job_id=job.job_id,
-                job_instance_id=job.job_instance_id,
-            )
-            + '">'
-            + job.exec_job_id
-            + "</a>"
-        )
-
     return render_template(
         "workflow/jobs_successful.xhr.json",
         count=total_count,
         filtered=filtered_count,
+        root_wf_id=root_wf_id,
+        wf_id=wf_id,
         jobs=successful_jobs_list,
         table_args=args,
     )
@@ -290,47 +227,12 @@ def failing_jobs(username, root_wf_id, wf_id):
         wf_id, **args
     )
 
-    for job in failing_jobs_list:
-        job.exec_job_id = (
-            '<a href="'
-            + url_for(
-                ".job",
-                root_wf_id=root_wf_id,
-                wf_id=wf_id,
-                job_id=job.job_id,
-                job_instance_id=job.job_instance_id,
-            )
-            + '">'
-            + job.exec_job_id
-            + "</a>"
-        )
-        job.stdout = (
-            '<a target="_blank" href="'
-            + url_for(
-                ".stdout",
-                root_wf_id=root_wf_id,
-                wf_id=wf_id,
-                job_id=job.job_id,
-                job_instance_id=job.job_instance_id,
-            )
-            + '">Application Stdout/Stderr</a>'
-        )
-        job.stderr = (
-            '<a target="_blank" href="'
-            + url_for(
-                ".stderr",
-                root_wf_id=root_wf_id,
-                wf_id=wf_id,
-                job_id=job.job_id,
-                job_instance_id=job.job_instance_id,
-            )
-            + '">Condor Stderr/Pegasus Lite Log</a>'
-        )
-
     return render_template(
         "workflow/jobs_failing.xhr.json",
         count=total_count,
         filtered=filtered_count,
+        root_wf_id=root_wf_id,
+        wf_id=wf_id,
         jobs=failing_jobs_list,
         table_args=args,
     )
