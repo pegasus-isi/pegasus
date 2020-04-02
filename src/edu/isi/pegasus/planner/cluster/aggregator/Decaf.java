@@ -168,7 +168,7 @@ public class Decaf implements JobAggregator {
     public void setAbortOnFirstJobFailure(boolean fail) {
         throw new UnsupportedOperationException(
                 "Not supported yet."); // To change body of generated methods, choose Tools |
-                                       // Templates.
+        // Templates.
     }
 
     /**
@@ -180,7 +180,7 @@ public class Decaf implements JobAggregator {
     public boolean abortOnFristJobFailure() {
         throw new UnsupportedOperationException(
                 "Not supported yet."); // To change body of generated methods, choose Tools |
-                                       // Templates.
+        // Templates.
     }
 
     /**
@@ -193,7 +193,7 @@ public class Decaf implements JobAggregator {
     public boolean entryNotInTC(String site) {
         throw new UnsupportedOperationException(
                 "Not supported yet."); // To change body of generated methods, choose Tools |
-                                       // Templates.
+        // Templates.
     }
 
     /**
@@ -204,7 +204,7 @@ public class Decaf implements JobAggregator {
     public String getClusterExecutableLFN() {
         throw new UnsupportedOperationException(
                 "Not supported yet."); // To change body of generated methods, choose Tools |
-                                       // Templates.
+        // Templates.
     }
 
     /**
@@ -215,7 +215,7 @@ public class Decaf implements JobAggregator {
     public String getClusterExecutableBasename() {
         throw new UnsupportedOperationException(
                 "Not supported yet."); // To change body of generated methods, choose Tools |
-                                       // Templates.
+        // Templates.
     }
 
     /**
