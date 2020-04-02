@@ -8,7 +8,7 @@
 function loadMetadata() {
     var ajaxOpt =
     {
-        url     : '{{ url_for('monitoring_routes.get_task_meta', m_wf_id=root_wf_id, wf_id=wf_id, task_id=invocation.task_id) }}',
+        url     : '{{ url_for('monitoring.get_task_meta', m_wf_id=root_wf_id, wf_id=wf_id, task_id=invocation.task_id) }}',
         dataType: 'json',
         error   : function (xhr, textStatus, errorThrown)
         {

@@ -41,7 +41,7 @@ var chartData =
 function loadMetadata() {
     var ajaxOpt =
     {
-        url     : '{{ url_for('monitoring_routes.get_workflow_meta', m_wf_id=root_wf_id, wf_id=wf_id) }}',
+        url     : '{{ url_for('monitoring.get_workflow_meta', m_wf_id=root_wf_id, wf_id=wf_id) }}',
         dataType: 'json',
         error   : function (xhr, textStatus, errorThrown)
         {
@@ -79,7 +79,7 @@ function loadMetadata() {
 function loadFiles() {
     var ajaxOpt =
     {
-        url     : '{{ url_for('monitoring_routes.get_workflow_files', m_wf_id=root_wf_id, wf_id=wf_id) }}',
+        url     : '{{ url_for('monitoring.get_workflow_files', m_wf_id=root_wf_id, wf_id=wf_id) }}',
         data: {
             order: 'l.lfn'
         },
