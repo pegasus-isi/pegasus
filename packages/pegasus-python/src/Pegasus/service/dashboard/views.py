@@ -34,7 +34,7 @@ from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.db.errors import StampedeDBNotFoundError
 from Pegasus.service import filters
 from Pegasus.service.base import ErrorResponse, ServiceError
-from Pegasus.service.dashboard import dashboard_routes
+from Pegasus.service.dashboard import blueprint
 from Pegasus.service.dashboard.dashboard import Dashboard, NoWorkflowsFoundError
 from Pegasus.service.dashboard.queries import MasterDBNotFoundError
 from Pegasus.tools import utils
@@ -42,12 +42,12 @@ from Pegasus.tools import utils
 log = logging.getLogger(__name__)
 
 
-@dashboard_routes.route("/")
+@blueprint.route("/")
 def redirect_to_index():
     return redirect(url_for(".index"))
 
 
-@dashboard_routes.route("/u/<username>/")
+@blueprint.route("/u/<username>/")
 def index(username):
     """
     List all workflows from the master database.
@@ -96,8 +96,8 @@ def index(username):
     return render_template("workflow.html", counts=totals)
 
 
-@dashboard_routes.route("/u/<username>/r/<root_wf_id>/w")
-@dashboard_routes.route("/u/<username>/r/<root_wf_id>/w/<wf_id>")
+@blueprint.route("/u/<username>/r/<root_wf_id>/w")
+@blueprint.route("/u/<username>/r/<root_wf_id>/w/<wf_id>")
 def workflow(username, root_wf_id, wf_id=None):
     """
     Get details for a specific workflow.
@@ -127,7 +127,7 @@ def workflow(username, root_wf_id, wf_id=None):
     )
 
 
-@dashboard_routes.route("/u/<username>/r/<root_wf_id>/w/<wf_id>/sw/", methods=["GET"])
+@blueprint.route("/u/<username>/r/<root_wf_id>/w/<wf_id>/sw/", methods=["GET"])
 def sub_workflows(username, root_wf_id, wf_id):
     """
     Get a list of all sub-workflow of a given workflow.
@@ -155,9 +155,7 @@ def sub_workflows(username, root_wf_id, wf_id):
         )
 
 
-@dashboard_routes.route(
-    "/u/<username>/r/<root_wf_id>/w/<wf_id>/j/failed/", methods=["GET"]
-)
+@blueprint.route("/u/<username>/r/<root_wf_id>/w/<wf_id>/j/failed/", methods=["GET"])
 def failed_jobs(username, root_wf_id, wf_id):
     """
     Get a list of all failed jobs of the latest instance for a given workflow.
@@ -215,9 +213,7 @@ def failed_jobs(username, root_wf_id, wf_id):
     )
 
 
-@dashboard_routes.route(
-    "/u/<username>/r/<root_wf_id>/w/<wf_id>/j/running/", methods=["GET"]
-)
+@blueprint.route("/u/<username>/r/<root_wf_id>/w/<wf_id>/j/running/", methods=["GET"])
 def running_jobs(username, root_wf_id, wf_id):
     """
     Get a list of all running jobs of the latest instance for a given workflow.
@@ -253,7 +249,7 @@ def running_jobs(username, root_wf_id, wf_id):
     )
 
 
-@dashboard_routes.route(
+@blueprint.route(
     "/u/<username>/r/<root_wf_id>/w/<wf_id>/j/successful/", methods=["GET"]
 )
 def successful_jobs(username, root_wf_id, wf_id):
@@ -292,9 +288,7 @@ def successful_jobs(username, root_wf_id, wf_id):
     )
 
 
-@dashboard_routes.route(
-    "/u/<username>/r/<root_wf_id>/w/<wf_id>/j/failing/", methods=["GET"]
-)
+@blueprint.route("/u/<username>/r/<root_wf_id>/w/<wf_id>/j/failing/", methods=["GET"])
 def failing_jobs(username, root_wf_id, wf_id):
     """
     Get a list of failing jobs of the latest instance for a given workflow.
@@ -352,7 +346,7 @@ def failing_jobs(username, root_wf_id, wf_id):
     )
 
 
-@dashboard_routes.route(
+@blueprint.route(
     "/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>",
     methods=["GET"],
 )
@@ -394,7 +388,7 @@ def job(username, root_wf_id, wf_id, job_id, job_instance_id):
     )
 
 
-@dashboard_routes.route(
+@blueprint.route(
     "/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/stdout",
     methods=["GET"],
 )
@@ -411,7 +405,7 @@ def stdout(username, root_wf_id, wf_id, job_id, job_instance_id):
         return "<pre>%s</pre>" % utils.unquote(text.stdout_text)
 
 
-@dashboard_routes.route(
+@blueprint.route(
     "/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/stderr",
     methods=["GET"],
 )
@@ -428,7 +422,7 @@ def stderr(username, root_wf_id, wf_id, job_id, job_instance_id):
         return "<pre>%s</pre>" % utils.unquote(text.stderr_text)
 
 
-@dashboard_routes.route(
+@blueprint.route(
     "/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/i/successful",
     methods=["GET"],
 )
@@ -468,7 +462,7 @@ def successful_invocations(username, root_wf_id, wf_id, job_id, job_instance_id)
         )
 
 
-@dashboard_routes.route(
+@blueprint.route(
     "/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/i/failed",
     methods=["GET"],
 )
@@ -508,11 +502,11 @@ def failed_invocations(username, root_wf_id, wf_id, job_id, job_instance_id):
         )
 
 
-@dashboard_routes.route(
+@blueprint.route(
     "/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/i/",
     methods=["GET"],
 )
-@dashboard_routes.route(
+@blueprint.route(
     "/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/i/<invocation_id>",
     methods=["GET"],
 )
@@ -536,9 +530,7 @@ def invocation(username, root_wf_id, wf_id, job_id, job_instance_id, invocation_
     )
 
 
-@dashboard_routes.route(
-    "/u/<username>/r/<root_wf_id>/w/<wf_id>/charts", methods=["GET"]
-)
+@blueprint.route("/u/<username>/r/<root_wf_id>/w/<wf_id>/charts", methods=["GET"])
 def charts(username, root_wf_id, wf_id):
     """
     Get job-distribution information
@@ -551,7 +543,7 @@ def charts(username, root_wf_id, wf_id):
     )
 
 
-@dashboard_routes.route(
+@blueprint.route(
     "/u/<username>/r/<root_wf_id>/w/<wf_id>/charts/time_chart", methods=["GET"]
 )
 def time_chart(username, root_wf_id, wf_id):
@@ -570,7 +562,7 @@ def time_chart(username, root_wf_id, wf_id):
     )
 
 
-@dashboard_routes.route(
+@blueprint.route(
     "/u/<username>/r/<root_wf_id>/w/<wf_id>/charts/gantt_chart", methods=["GET"]
 )
 def gantt_chart(username, root_wf_id, wf_id):
@@ -587,9 +579,7 @@ def gantt_chart(username, root_wf_id, wf_id):
     )
 
 
-@dashboard_routes.route(
-    "/u/<username>/r/<root_wf_id>/w/<wf_id>/statistics", methods=["GET"]
-)
+@blueprint.route("/u/<username>/r/<root_wf_id>/w/<wf_id>/statistics", methods=["GET"])
 def statistics(username, root_wf_id, wf_id):
     """
     Get workflow statistics information
@@ -611,7 +601,7 @@ def statistics(username, root_wf_id, wf_id):
     )
 
 
-@dashboard_routes.route(
+@blueprint.route(
     "/u/<username>/r/<root_wf_id>/w/<wf_id>/statistics/summary", methods=["GET"]
 )
 def workflow_summary_stats(username, root_wf_id, wf_id):
@@ -624,7 +614,7 @@ def workflow_summary_stats(username, root_wf_id, wf_id):
     return json.dumps(summary_times)
 
 
-@dashboard_routes.route(
+@blueprint.route(
     "/u/<username>/r/<root_wf_id>/w/<wf_id>/statistics/workflow", methods=["GET"]
 )
 def workflow_stats(username, root_wf_id, wf_id):
@@ -632,7 +622,7 @@ def workflow_stats(username, root_wf_id, wf_id):
     return json.dumps(dashboard.workflow_stats())
 
 
-@dashboard_routes.route(
+@blueprint.route(
     "/u/<username>/r/<root_wf_id>/w/<wf_id>/statistics/job_breakdown", methods=["GET"]
 )
 def job_breakdown_stats(username, root_wf_id, wf_id):
@@ -640,7 +630,7 @@ def job_breakdown_stats(username, root_wf_id, wf_id):
     return json.dumps(dashboard.job_breakdown_stats())
 
 
-@dashboard_routes.route(
+@blueprint.route(
     "/u/<username>/r/<root_wf_id>/w/<wf_id>/statistics/job", methods=["GET"]
 )
 def job_stats(username, root_wf_id, wf_id):
@@ -648,7 +638,7 @@ def job_stats(username, root_wf_id, wf_id):
     return json.dumps(dashboard.job_stats())
 
 
-@dashboard_routes.route(
+@blueprint.route(
     "/u/<username>/r/<root_wf_id>/w/<wf_id>/statistics/integrity", methods=["GET"]
 )
 def integrity_stats(username, root_wf_id, wf_id):
@@ -656,7 +646,7 @@ def integrity_stats(username, root_wf_id, wf_id):
     return json.dumps(dashboard.integrity_stats())
 
 
-@dashboard_routes.route(
+@blueprint.route(
     "/u/<username>/r/<root_wf_id>/w/<wf_id>/statistics/time", methods=["GET"]
 )
 def time_stats(username, root_wf_id, wf_id):
@@ -665,9 +655,7 @@ def time_stats(username, root_wf_id, wf_id):
     return "{}"
 
 
-@dashboard_routes.route(
-    "/u/<username>/r/<root_wf_id>/w/<wf_id>/browser", methods=["GET"]
-)
+@blueprint.route("/u/<username>/r/<root_wf_id>/w/<wf_id>/browser", methods=["GET"])
 def file_browser(username, root_wf_id, wf_id):
     try:
         dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id=wf_id)
@@ -696,10 +684,8 @@ def file_browser(username, root_wf_id, wf_id):
     return "Error", 500
 
 
-@dashboard_routes.route(
-    "/u/<username>/r/<root_wf_id>/w/<wf_id>/files/", methods=["GET"]
-)
-@dashboard_routes.route(
+@blueprint.route("/u/<username>/r/<root_wf_id>/w/<wf_id>/files/", methods=["GET"])
+@blueprint.route(
     "/u/<username>/r/<root_wf_id>/w/<wf_id>/files/<path:path>", methods=["GET"]
 )
 def file_list(username, root_wf_id, wf_id, path=""):
@@ -738,7 +724,7 @@ def file_list(username, root_wf_id, wf_id, path=""):
     return "Error", 500
 
 
-@dashboard_routes.route(
+@blueprint.route(
     "/u/<username>/r/<root_wf_id>/w/<wf_id>/file/<path:path>", methods=["GET"]
 )
 def file_view(username, root_wf_id, wf_id, path):
@@ -758,7 +744,7 @@ def file_view(username, root_wf_id, wf_id, path):
     return "Error", 500
 
 
-@dashboard_routes.route("/u/<username>/info")
+@blueprint.route("/u/<username>/info")
 def info(username):
     return render_template("info.html")
 
@@ -867,30 +853,30 @@ def __get_datatables_args():
     return table_args
 
 
-@dashboard_routes.errorhandler(404)
+@blueprint.errorhandler(404)
 def page_not_found(error):
     return render_template("error/404.html")
 
 
-@dashboard_routes.errorhandler(MasterDBNotFoundError)
+@blueprint.errorhandler(MasterDBNotFoundError)
 def master_database_missing(error):
     log.exception(error)
     return render_template("error/master_database_missing.html")
 
 
-@dashboard_routes.errorhandler(StampedeDBNotFoundError)
+@blueprint.errorhandler(StampedeDBNotFoundError)
 def stampede_database_missing(error):
     log.exception(error)
     return render_template("error/stampede_database_missing.html")
 
 
-@dashboard_routes.errorhandler(DBAdminError)
+@blueprint.errorhandler(DBAdminError)
 def database_migration_error(error):
     log.exception(error)
     return render_template("error/database_migration_error.html", e=error)
 
 
-@dashboard_routes.errorhandler(ServiceError)
+@blueprint.errorhandler(ServiceError)
 def error_response(error):
     log.exception(error)
     if request.is_xhr:
@@ -903,7 +889,7 @@ def error_response(error):
         return render_template("error/error_response.html", error=error.message)
 
 
-@dashboard_routes.errorhandler(Exception)
+@blueprint.errorhandler(Exception)
 def catch_all(error):
     log.exception(error)
     return render_template("error/catch_all.html")

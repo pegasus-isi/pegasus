@@ -1,17 +1,3 @@
-#  Copyright 2007-2014 University Of Southern California
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#  http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing,
-#  software distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-
 import hashlib
 import json
 import logging
@@ -20,20 +6,20 @@ from io import StringIO
 from flask import current_app, g, make_response, request
 
 from Pegasus.service import cache
+from Pegasus.service._serialize import jsonify
 from Pegasus.service.base import InvalidJSONError, OrderedDict
-from Pegasus.service.monitoring import monitoring_routes
+from Pegasus.service.monitoring import monitoring as blueprint
 from Pegasus.service.monitoring.queries import (
     MasterWorkflowQueries,
     StampedeWorkflowQueries,
 )
-from Pegasus.service.monitoring.utils import jsonify
 
 log = logging.getLogger(__name__)
 
 JSON_HEADER = {"Content-Type": "application/json"}
 
 
-@monitoring_routes.url_value_preprocessor
+@blueprint.url_value_preprocessor
 def pull_m_wf_id(endpoint, values):
     """
     If the requested endpoint contains a value for m_wf_id variable then extract it and set it in g.m_wf_id.
@@ -42,7 +28,7 @@ def pull_m_wf_id(endpoint, values):
         g.m_wf_id = values["m_wf_id"]
 
 
-@monitoring_routes.url_defaults
+@blueprint.url_defaults
 def add_m_wf_id(endpoint, values):
     """
     If the endpoint expects m_wf_id, then set it's value to g.url_m_wf_id.
@@ -55,7 +41,7 @@ def add_m_wf_id(endpoint, values):
         values.setdefault("m_wf_id", g.url_m_wf_id)
 
 
-@monitoring_routes.url_value_preprocessor
+@blueprint.url_value_preprocessor
 def pull_url_context(endpoint, values):
     """
     Create a context which can be used when generating url in link section of the responses.
@@ -73,7 +59,7 @@ def pull_url_context(endpoint, values):
                 g.url_context = url_context
 
 
-@monitoring_routes.url_defaults
+@blueprint.url_defaults
 def add_url_context(endpoint, values):
     """
     If there is a URL context, gene
@@ -84,7 +70,7 @@ def add_url_context(endpoint, values):
                 values.setdefault(key, value)
 
 
-@monitoring_routes.before_request
+@blueprint.before_request
 def compute_stampede_db_url():
     """
     If the requested endpoint requires connecting to a STAMPEDE database, then determine STAMPEDE DB URL and store it
@@ -120,7 +106,7 @@ def compute_stampede_db_url():
     g.stampede_db_url = root_workflow.db_url
 
 
-@monitoring_routes.before_request
+@blueprint.before_request
 def get_query_args():
     g.query_args = {}
 
@@ -209,8 +195,8 @@ Root Workflow
 """
 
 
-@monitoring_routes.route("/root")
-@monitoring_routes.route("/root/query", methods=["POST"])
+@blueprint.route("/root")
+@blueprint.route("/root/query", methods=["POST"])
 def get_root_workflows(username):
     """
     Returns a collection of root level workflows.
@@ -245,7 +231,7 @@ def get_root_workflows(username):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route("/root/<string:m_wf_id>")
+@blueprint.route("/root/<string:m_wf_id>")
 def get_root_workflow(username, m_wf_id):
     """
     Returns root level workflow identified by m_wf_id.
@@ -302,8 +288,8 @@ Workflow
 """
 
 
-@monitoring_routes.route("/root/<string:m_wf_id>/workflow")
-@monitoring_routes.route("/root/<string:m_wf_id>/workflow/query", methods=["POST"])
+@blueprint.route("/root/<string:m_wf_id>/workflow")
+@blueprint.route("/root/<string:m_wf_id>/workflow/query", methods=["POST"])
 def get_workflows(username, m_wf_id):
     """
     Returns a collection of workflows.
@@ -339,7 +325,7 @@ def get_workflows(username, m_wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route("/root/<string:m_wf_id>/workflow/<string:wf_id>")
+@blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>")
 def get_workflow(username, m_wf_id, wf_id):
     """
     Returns workflow identified by m_wf_id, wf_id.
@@ -379,8 +365,8 @@ Workflow Meta
 """
 
 
-@monitoring_routes.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/meta")
-@monitoring_routes.route(
+@blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/meta")
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/meta/query", methods=["POST"]
 )
 def get_workflow_meta(username, m_wf_id, wf_id):
@@ -446,8 +432,8 @@ Workflow Files
 """
 
 
-@monitoring_routes.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/files")
-@monitoring_routes.route(
+@blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/files")
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/files/query", methods=["POST"]
 )
 def get_workflow_files(username, m_wf_id, wf_id):
@@ -501,14 +487,14 @@ Workflow State
 """
 
 
-@monitoring_routes.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/state")
-@monitoring_routes.route(
+@blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/state")
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/state;recent=<boolean:recent>"
 )
-@monitoring_routes.route(
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/state/query", methods=["POST"]
 )
-@monitoring_routes.route(
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/state;recent=<boolean:recent>/query",
     methods=["POST"],
 )
@@ -571,8 +557,8 @@ Job
 """
 
 
-@monitoring_routes.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/job")
-@monitoring_routes.route(
+@blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/job")
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/query", methods=["POST"]
 )
 def get_workflow_jobs(username, m_wf_id, wf_id):
@@ -610,9 +596,7 @@ def get_workflow_jobs(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>"
-)
+@blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>")
 def get_job(username, m_wf_id, wf_id, job_id):
     """
     Returns job identified by m_wf_id, wf_id, job_id.
@@ -656,8 +640,8 @@ Host
 """
 
 
-@monitoring_routes.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/host")
-@monitoring_routes.route(
+@blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/host")
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/host/query", methods=["POST"]
 )
 def get_workflow_hosts(username, m_wf_id, wf_id):
@@ -695,9 +679,7 @@ def get_workflow_hosts(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/host/<int:host_id>"
-)
+@blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/host/<int:host_id>")
 def get_host(username, m_wf_id, wf_id, host_id):
     """
     Returns host identified by m_wf_id, wf_id, host_id.
@@ -739,17 +721,17 @@ Job State
 """
 
 
-@monitoring_routes.route(
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state"
 )
-@monitoring_routes.route(
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state;recent=<boolean:recent>"
 )
-@monitoring_routes.route(
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state/query",
     methods=["POST"],
 )
-@monitoring_routes.route(
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state;recent=<boolean:recent>/query",
     methods=["POST"],
 )
@@ -812,8 +794,8 @@ Task
 """
 
 
-@monitoring_routes.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/task")
-@monitoring_routes.route(
+@blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/task")
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/task/query", methods=["POST"]
 )
 def get_workflow_tasks(username, m_wf_id, wf_id):
@@ -851,10 +833,8 @@ def get_workflow_tasks(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/task"
-)
-@monitoring_routes.route(
+@blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/task")
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/task/query",
     methods=["POST"],
 )
@@ -893,9 +873,7 @@ def get_job_tasks(username, m_wf_id, wf_id, job_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/task/<int:task_id>"
-)
+@blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/task/<int:task_id>")
 def get_task(username, m_wf_id, wf_id, task_id):
     """
     Returns task identified by m_wf_id, wf_id, task_id.
@@ -935,10 +913,10 @@ Task Meta
 """
 
 
-@monitoring_routes.route(
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/task/<int:task_id>/meta"
 )
-@monitoring_routes.route(
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/task/<int:task_id>/meta/query",
     methods=["POST"],
 )
@@ -1009,17 +987,17 @@ Job Instance
 """
 
 
-@monitoring_routes.route(
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance"
 )
-@monitoring_routes.route(
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance;recent=<boolean:recent>"
 )
-@monitoring_routes.route(
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/query",
     methods=["POST"],
 )
-@monitoring_routes.route(
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance;recent=<boolean:recent>/query",
     methods=["POST"],
 )
@@ -1060,7 +1038,7 @@ def get_job_instances(username, m_wf_id, wf_id, job_id, recent=False):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route(
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/job-instance/<int:job_instance_id>"
 )
 def get_job_instance(username, m_wf_id, wf_id, job_instance_id):
@@ -1112,8 +1090,8 @@ Invocation
 """
 
 
-@monitoring_routes.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/invocation")
-@monitoring_routes.route(
+@blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/invocation")
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/invocation/query", methods=["POST"]
 )
 def get_workflow_invocations(username, m_wf_id, wf_id):
@@ -1151,10 +1129,10 @@ def get_workflow_invocations(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route(
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/invocation"
 )
-@monitoring_routes.route(
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/invocation/query",
     methods=["POST"],
 )
@@ -1177,7 +1155,7 @@ def get_job_instance_invocations(username, m_wf_id, wf_id, job_id, job_instance_
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route(
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/invocation/<int:invocation_id>"
 )
 def get_invocation(username, m_wf_id, wf_id, invocation_id):
@@ -1250,7 +1228,7 @@ def _read_response(response):
         output.close()
 
 
-@monitoring_routes.route("/batch", methods=["POST"])
+@blueprint.route("/batch", methods=["POST"])
 def batch(username):
     """
     Execute multiple requests, submitted as a batch.
@@ -1321,8 +1299,8 @@ Views
 """
 
 
-@monitoring_routes.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/job/running")
-@monitoring_routes.route(
+@blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/job/running")
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/running/query", methods=["POST"]
 )
 def get_running_jobs(username, m_wf_id, wf_id):
@@ -1360,10 +1338,8 @@ def get_running_jobs(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/successful"
-)
-@monitoring_routes.route(
+@blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/job/successful")
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/successful/query",
     methods=["POST"],
 )
@@ -1402,8 +1378,8 @@ def get_successful_jobs(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failed")
-@monitoring_routes.route(
+@blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failed")
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failed/query", methods=["POST"]
 )
 def get_failed_jobs(username, m_wf_id, wf_id):
@@ -1441,8 +1417,8 @@ def get_failed_jobs(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failing")
-@monitoring_routes.route(
+@blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failing")
+@blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failing/query", methods=["POST"]
 )
 def get_failing_jobs(username, m_wf_id, wf_id):

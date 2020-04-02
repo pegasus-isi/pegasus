@@ -1,25 +1,19 @@
 import decimal
 import time
 
-from Pegasus.service import app
 
-
-@app.template_filter("lstrip")
 def lstrip(value, chars=" "):
     value.lstrip(chars)
 
 
-@app.template_filter("rstrip")
 def rstrip(value, chars=" "):
     value.rstrip(chars)
 
 
-@app.template_filter("strip")
 def strip(value, chars=" "):
     value.strip(chars)
 
 
-@app.template_filter("dec_to_float")
 def dec_to_float(dec):
     """
     Decimal to Float
@@ -30,7 +24,6 @@ def dec_to_float(dec):
         return None
 
 
-@app.template_filter("time_to_date_str")
 def time_to_date_str(ts):
     """
     Change an integer duration to be represented as a data string
@@ -38,7 +31,6 @@ def time_to_date_str(ts):
     return time.strftime("%Y-%m-%d Hour %H", time.localtime(ts))
 
 
-@app.template_filter("to_lower_case")
 def to_lower_case(str):
     """
     Convert string to lower case
@@ -46,7 +38,6 @@ def to_lower_case(str):
     return str.lower()
 
 
-@app.template_filter("to_upper_case")
 def to_upper_case(str):
     """
     Convert string to upper case
@@ -54,7 +45,6 @@ def to_upper_case(str):
     return str.upper()
 
 
-@app.template_filter("capitalize")
 def capitalize(str):
     """
     Capitalizes first character of the String
@@ -62,7 +52,6 @@ def capitalize(str):
     return str.capitalize()
 
 
-@app.template_filter("time_to_str")
 def time_to_str(time):
     """
     Change an integer duration to be represented as d days h hours m mins s secs
@@ -131,3 +120,15 @@ def time_to_str(time):
         str_time = "0 secs"
 
     return str_time.strip()
+
+
+def register_jinja2_filters(app):
+    app.add_template_filter(lstrip, "lstrip")
+    app.add_template_filter(rstrip, "rstrip")
+    app.add_template_filter(strip, "strip")
+    app.add_template_filter(dec_to_float, "dec_to_float")
+    app.add_template_filter(time_to_date_str, "time_to_date_str")
+    app.add_template_filter(to_lower_case, "to_lower_case")
+    app.add_template_filter(to_upper_case, "to_upper_case")
+    app.add_template_filter(capitalize, "capitalize")
+    app.add_template_filter(time_to_str, "time_to_str")

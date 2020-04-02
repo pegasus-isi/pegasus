@@ -12,6 +12,11 @@ class FlaskTestClient:
     def __init__(self, app):
         self.app = app
         self.client = app.test_client()
+        self.get_context = self.get_with_context
+        self.post_context = self.post_with_context
+        self.put_context = self.put_with_context
+        self.patch_context = self.patch_with_context
+        self.delete_context = self.delete_with_context
 
     def get(self, *a, headers={"Accept": "application/json"}, **kw):
         return self.client.get(*a, headers=headers, **kw)
@@ -84,13 +89,13 @@ class FlaskTestClient:
             uri, method=method, data=data, headers=_headers, **kwargs
         ):
             try:
-                if pre_callable is not None:
-                    pre_callable()
-
                 self.app.try_trigger_before_first_request_functions()
 
                 # Pre process Request
                 rv = self.app.preprocess_request()
+
+                if pre_callable is not None:
+                    pre_callable()
 
                 if rv is None:
                     # Main Dispatch
@@ -109,8 +114,9 @@ class FlaskTestClient:
 
 @pytest.fixture(scope="session")
 def app():
-    # TODO: Replace with use of factory_method
-    from Pegasus.service import app
+    from Pegasus.service.server import create_app
+
+    app = create_app(env="testing")
 
     with app.app_context():
         yield app

@@ -16,11 +16,6 @@ __author__ = "Rajiv Mayani"
 
 from flask import Blueprint
 
-from Pegasus.service import app
-
-monitoring_routes = Blueprint("monitoring_routes", __name__)
+monitoring = Blueprint("monitoring", __name__)
 
 from Pegasus.service.monitoring import views, errors  # noqa: E402,F401 isort:skip
-
-
-app.register_blueprint(monitoring_routes, url_prefix="/api/v1/user/<string:username>")

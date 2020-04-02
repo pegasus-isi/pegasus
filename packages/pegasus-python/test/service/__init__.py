@@ -11,8 +11,6 @@ from flask import json
 from six import StringIO
 from werkzeug.serving import make_server
 
-from Pegasus.service import app
-
 
 class TestCase(unittest.TestCase):
     def setUp(self):
