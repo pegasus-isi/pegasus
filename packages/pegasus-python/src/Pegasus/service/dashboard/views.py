@@ -59,16 +59,6 @@ def index(username):
             count, filtered, workflows, totals = dashboard.get_root_workflow_list(
                 **args
             )
-
-            __update_label_link(workflows)
-            __update_timestamp(workflows)
-
-            for workflow in workflows:
-                workflow.state = (
-                    (workflow.state + " (%s)" % workflow.reason)
-                    if workflow.status > 0 and workflow.reason
-                    else workflow.state
-                )
         else:
             totals = dashboard.get_root_workflow_list(counts_only=True, **args)
 
@@ -747,24 +737,6 @@ def file_view(username, root_wf_id, wf_id, path):
 @blueprint.route("/u/<username>/info")
 def info(username):
     return render_template("info.html")
-
-
-def __update_timestamp(workflows):
-    for workflow in workflows:
-        workflow.timestamp = strftime(
-            "%a, %d %b %Y %H:%M:%S", localtime(workflow.timestamp)
-        )
-
-
-def __update_label_link(workflows):
-    for workflow in workflows:
-        workflow.dax_label = (
-            '<a href="'
-            + url_for(".workflow", root_wf_id=workflow.wf_id, wf_uuid=workflow.wf_uuid)
-            + '">'
-            + workflow.dax_label
-            + "</a>"
-        )
 
 
 def __get_datatables_args():

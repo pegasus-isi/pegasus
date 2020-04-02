@@ -6,8 +6,13 @@
 {% if workflows %}
 {% for i in range(0, workflows|count) %}
 {
-    "DT_RowClass" : "{% if workflows[i].archived %}archived{% else %}{{ workflows[i].state | to_lower_case }}{% endif %}",
+
     "dax_label" : {{ workflows[i].dax_label|tojson|safe  }},
+    "wf_id" : {{ workflows[i].wf_id|tojson|safe  }},
+    "wf_uuid" : {{ workflows[i].wf_uuid|tojson|safe  }},
+    "state" : {{ workflows[i].state|tojson|safe  }},
+    "reason" : {{ workflows[i].reason|tojson|safe  }},
+    "archived" : {{ workflows[i].archived|tojson|safe  }},
     "submit_hostname" : {{ workflows[i].submit_hostname|tojson|safe }},
     "submit_dir" : {{ workflows[i].submit_dir|tojson|safe }},
     "state" : {{ workflows[i].state|tojson|safe }},

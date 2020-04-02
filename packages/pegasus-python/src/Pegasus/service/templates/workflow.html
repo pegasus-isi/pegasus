@@ -20,6 +20,27 @@ $(document).ready (function ()
             "url": "{{ url_for ('.index') }}",
             "data": function (aoData) {
                 aoData.time_filter =  $ ('#time_filter').val ();
+            },
+            "dataSrc": function (json) {
+                var data = json.data;
+                var urlTmpl = "{{ url_for('.workflow', root_wf_id='-11-', wf_uuid='-22-') }}";
+                console.log(data[1])
+                for(var i = 0; i < data.length; i++){
+                    data[i].DT_RowClass = data[i].archived ? "archived" : data[i].state.toLowerCase();
+                    data[i].dax_label =  '<a href="'
+                        + urlTmpl.replace("-11-", data[i].wf_id).replace("-22-", data[i].wf_uuid)
+                        + '">'
+                        + data[i].dax_label
+                        + "</a>";
+
+                        var d = new Date(data[i].timestamp* 1000);
+                        data[i].timestamp = d.toDateString() + " " + d.toLocaleTimeString();
+
+                    if (data[i].status > 0 && data[i].reason) {
+                        data[i].state = data[i].state + " (" + data[i].reason + ")"
+                    }
+                }
+                return data;
             }
         },
         "autoWidth"     : false,
