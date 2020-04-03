@@ -14,6 +14,7 @@
 package edu.isi.pegasus.planner.catalog.replica;
 
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntry;
+
 import java.util.*;
 
 /**
@@ -37,7 +38,12 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable {
 
     /** The (reserved) attribute name used for the resource handle. */
     public static final String DEPRECATED_RESOURCE_HANDLE = "pool";
-
+    
+    /**
+     * Whether the entry is regex or not
+     */
+    public static final String REGEX_KEY = "regex";
+    
     /** The physical filename. */
     private String m_pfn;
 
@@ -300,6 +306,17 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable {
         m_pfn = pfn;
     }
 
+    /**
+     * Checks if the 'regex' attribute is set to true for the given tuple
+     *
+     * @return true if regex attribute is set to true, false otherwise
+     */
+    public boolean isRegex() {
+        return (this != null
+                && this.getAttribute(REGEX_KEY) != null
+                && ((String) this.getAttribute(REGEX_KEY)).equals("true"));
+    }
+    
     /**
      * Converts the contents into a string.
      *

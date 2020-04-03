@@ -92,8 +92,6 @@ public class YAML implements ReplicaCatalog {
      */
     public static final String READ_ONLY_KEY = "read.only";
 
-    public static final String REGEX_KEY = "regex";
-
     /**
      * Records the quoting mode for LFNs and PFNs. If false, only quote as necessary. If true,
      * always quote all LFNs and PFNs.
@@ -686,17 +684,7 @@ public class YAML implements ReplicaCatalog {
         return result;
     }
 
-    /**
-     * Checks if the 'regex' attribute is set to true for the given tuple
-     *
-     * @param tuple
-     * @return true if regex attribute is set to true, false otherwise
-     */
-    private boolean isRegex(ReplicaCatalogEntry tuple) {
-        return (tuple != null
-                && tuple.getAttribute(REGEX_KEY) != null
-                && ((String) tuple.getAttribute(REGEX_KEY)).equals("true"));
-    }
+    
 
     /**
      * Inserts a new mapping into the replica catalog. Any existing mapping of the same LFN, PFN,
@@ -710,7 +698,7 @@ public class YAML implements ReplicaCatalog {
     public int insert(String lfn, ReplicaCatalogEntry tuple) {
         if (lfn == null || tuple == null) throw new NullPointerException();
 
-        boolean isRegex = isRegex(tuple);
+        boolean isRegex = tuple.isRegex();
         Collection<ReplicaCatalogEntry> c = null;
 
         String pfn = tuple.getPFN();
