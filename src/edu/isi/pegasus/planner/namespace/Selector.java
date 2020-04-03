@@ -159,7 +159,7 @@ public class Selector extends Namespace {
      */
     public void merge(Namespace profiles) {
         // check if we are merging profiles of same type
-        if (!(profiles instanceof ENV)) {
+        if (!(profiles instanceof Selector)) {
             // throw an error
             throw new IllegalArgumentException("Profiles mismatch while merging");
         }
