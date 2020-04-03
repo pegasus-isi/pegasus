@@ -317,7 +317,7 @@ public class ReplicaStore extends Data implements Cloneable {
  *
  * @author Karan Vahi
  */
-class ReplicaStoreDeserializer extends CatalogEntryJsonDeserializer<ReplicaStore> {
+class ReplicaStoreDeserializer extends ReplicaCatalogJsonDeserializer<ReplicaStore> {
 
     /**
      * Deserializes a Transformation YAML description of the type
@@ -384,68 +384,5 @@ class ReplicaStoreDeserializer extends CatalogEntryJsonDeserializer<ReplicaStore
         return store;
     }
 
-    /**
-     * Deserializes a Replica YAML description of the type
-     *
-     * <pre>
-     *  # matches faa, f.a, f0a, etc.
-     *  - lfn: "f.a"
-     *    pfn: "file:///Volumes/data/input/f.a"
-     *    site: "local"
-     *    regex: true
-     * </pre>
-     *
-     * @param node the json node
-     * @return ReplicaLocation
-     */
-    private ReplicaLocation createReplicaLocation(JsonNode node) {
-
-        String lfn = null;
-        ReplicaCatalogEntry rce = new ReplicaCatalogEntry();
-        for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
-            Map.Entry<String, JsonNode> e = it.next();
-            String key = e.getKey();
-            ReplicaCatalogKeywords reservedKey = ReplicaCatalogKeywords.getReservedKey(key);
-            if (reservedKey == null) {
-                this.complainForIllegalKey(
-                        ReplicaCatalogKeywords.REPLICAS.getReservedName(), key, node);
-            }
-
-            String keyValue = node.get(key).asText();
-            switch (reservedKey) {
-                case LFN:
-                    lfn = keyValue;
-                    break;
-
-                case PFN:
-                    rce.setPFN(keyValue);
-                    break;
-
-                case SITE:
-                    rce.setResourceHandle(keyValue);
-                    break;
-
-                case REGEX:
-                case CHECKSUM_TYPE:
-                case CHECKSUM_VALUE:
-                    rce.addAttribute(key, keyValue);
-                    break;
-
-                default:
-                    this.complainForUnsupportedKey(
-                            ReplicaCatalogKeywords.REPLICAS.getReservedName(), key, node);
-            }
-        }
-        if (lfn == null) {
-            throw new ReplicaCatalogException("Replica needs to be defined with a lfn " + rce);
-        }
-        if (rce.getPFN() == null) {
-            throw new ReplicaCatalogException(
-                    "Replica needs to be defined with a pfn for replica " + lfn + " " + rce);
-        }
-        ReplicaLocation rl = new ReplicaLocation();
-        rl.setLFN(lfn);
-        rl.addPFN(rce);
-        return rl;
-    }
+    
 }
