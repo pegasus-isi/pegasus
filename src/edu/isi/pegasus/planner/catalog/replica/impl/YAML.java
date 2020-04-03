@@ -16,8 +16,15 @@
 
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.InjectableValues;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.Escape;
@@ -25,7 +32,9 @@ import edu.isi.pegasus.common.util.VariableExpander;
 import edu.isi.pegasus.planner.catalog.CatalogException;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
-import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
+import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaCatalogJsonDeserializer;
+import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaCatalogKeywords;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import java.io.FileReader;
@@ -85,6 +94,8 @@ import java.util.regex.Pattern;
  * @author Karan Vahi
  * @version $Revision: 5402 $
  */
+
+@JsonDeserialize(using = YAML.CallbackJsonDeserializer.class)
 public class YAML implements ReplicaCatalog {
     /**
      * The name of the key that disables writing back to the cache file. Designates a static file.
@@ -113,6 +124,9 @@ public class YAML implements ReplicaCatalog {
 
     /** Handle to pegasus variable expander */
     private VariableExpander mVariableExpander;
+    
+    /** The version for the Replica Catalog */
+    private String mVersion;
 
     /**
      * Default empty constructor creates an object that is not yet connected to any database. You
@@ -128,6 +142,7 @@ public class YAML implements ReplicaCatalog {
         mFilename = null;
         m_readonly = false;
         mVariableExpander = new VariableExpander();
+        mVersion = null;
     }
 
 
@@ -151,17 +166,9 @@ public class YAML implements ReplicaCatalog {
             reader = new VariableExpansionReader(new FileReader(filename));
             ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
             mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
-            ReplicaStore store = mapper.readValue(reader, ReplicaStore.class);
-            //insert the entries into the replica catalog
-            //for performance reasons we may not deserialize directly
-            //to ReplicaCatalog instead of ReplicaStore
-            for (Iterator<ReplicaLocation> it = store.replicaLocationIterator(); it.hasNext(); ) {
-                ReplicaLocation rl = it.next();
-                String lfn = rl.getLFN();
-                for (ReplicaCatalogEntry rce: rl.getPFNList()){
-                    this.insert(lfn, rce);
-                }
-            }
+            //inject instance of this class to be used for deserialization
+            mapper.setInjectableValues(injectCallback());
+            mapper.readValue(reader, YAML.class);
         } catch (IOException ioe) {
             mLFN = null;
             mLFNRegex = null;
@@ -970,6 +977,24 @@ public class YAML implements ReplicaCatalog {
         throw new java.lang.UnsupportedOperationException(
                 "removeByAttribute (String handle) not implemented as yet");
     }
+    
+    /**
+     * Set the Catalog version
+     *
+     * @param version
+     */
+    public void setVersion(String version) {
+        this.mVersion = version;
+    }
+
+    /**
+     * Get the Catalog version
+     *
+     * @return version
+     */
+    public String getVersion() {
+        return this.mVersion;
+    }
 
     /**
      * Removes everything. Use with caution!
@@ -1002,4 +1027,100 @@ public class YAML implements ReplicaCatalog {
     public void setReadOnly(boolean readonly) {
         this.m_readonly = readonly;
     }
+    
+    /**
+     * Set the Callback as an injectable value to insert into the Deserializer via Jackson.
+     *
+     * @return
+     */
+    private InjectableValues injectCallback() {
+        return new InjectableValues.Std().addValue("callback", this);
+    }
+    
+    /**
+     * Custom deserializer for YAML representation of Replica Catalog that calls
+     * back to the class that invoked the serializer. The deserialized object
+     * returned is the callback itself
+     *
+     * @author Karan Vahi
+     */
+    static class CallbackJsonDeserializer extends ReplicaCatalogJsonDeserializer<ReplicaCatalog> {
+
+        /**
+         * Deserializes a Transformation YAML description of the type
+         *
+         * <pre>
+         *  pegasus: 5.0
+         *  replicas:
+         *    # matches "f.a"
+         *    - lfn: "f.a"
+         *      pfn: "file:///Volumes/data/input/f.a"
+         *      site: "local"
+         *
+         *    # matches faa, f.a, f0a, etc.
+         *    - lfn: "f.a"
+         *    pfn: "file:///Volumes/data/input/f.a"
+         *    site: "local"
+         *    regex: true
+         * </pre>
+         *
+         * @param parser
+         * @param dc
+         * @return
+         * @throws IOException
+         * @throws JsonProcessingException
+         */
+        @Override
+        public ReplicaCatalog deserialize(JsonParser parser, DeserializationContext dc)
+                throws IOException, JsonProcessingException {
+            ObjectCodec oc = parser.getCodec();
+            JsonNode node = oc.readTree(parser);
+            YAML yamlRC = (YAML) dc.findInjectableValue("callback", null, null);
+            if (yamlRC == null) {
+                throw new RuntimeException("Callback not initialized when parsing inititated");
+            }
+            for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext();) {
+                Map.Entry<String, JsonNode> e = it.next();
+                String key = e.getKey();
+                ReplicaCatalogKeywords reservedKey = ReplicaCatalogKeywords.getReservedKey(key);
+                if (reservedKey == null) {
+                    this.complainForIllegalKey(
+                            ReplicaCatalogKeywords.REPLICAS.getReservedName(), key, node);
+                }
+
+                String keyValue = node.get(key).asText();
+                switch (reservedKey) {
+                    case PEGASUS:
+                        yamlRC.setVersion(keyValue);
+                        break;
+
+                    case REPLICAS:
+                        JsonNode replicaNodes = node.get(key);
+                        if (replicaNodes != null) {
+                            if (replicaNodes.isArray()) {
+                                for (JsonNode replicaNode : replicaNodes) {
+                                    ReplicaLocation rl = this.createReplicaLocation(replicaNode);
+                                    int count = rl.getPFNCount();
+                                    if (count == 0 || count > 1) {
+                                        throw new ReplicaCatalogException("ReplicaLocation for ReplicaLocation " + rl
+                                                + " can only have one pfn. Found " + count);
+                                    }
+                                    ReplicaCatalogEntry rce = rl.getPFNList().get(0);
+                                    yamlRC.insert(rl.getLFN(), rce);
+                                }
+                            }
+                        }
+                        break;
+
+                    default:
+                        this.complainForUnsupportedKey(
+                                ReplicaCatalogKeywords.REPLICAS.getReservedName(), key, node);
+                }
+            }
+
+            return yamlRC;
+        }
+
+    }
+
 }
