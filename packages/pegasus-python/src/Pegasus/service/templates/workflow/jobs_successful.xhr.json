@@ -6,8 +6,8 @@
 {% if jobs %}
 {% for i in range(0, jobs|count) %}
 {
-    "root_wf_id": {{ root_wf_id }},
-    "wf_id": {{ wf_id }},
+    "root_wf_id": {{ root_wf_id|tojson|safe }},
+    "wf_id": {{ wf_id|tojson|safe }},
     "job_id": {{ jobs[i].job_id|tojson|safe }},
     "job_instance_id": {{ jobs[i].job_instance_id|tojson|safe }},
     "exec_job_id" : {{ jobs[i].exec_job_id|tojson|safe }},

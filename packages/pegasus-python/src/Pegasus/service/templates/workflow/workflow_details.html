@@ -198,14 +198,14 @@ $(document).ready(function () {
                                                 .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
                                                 .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
                                         )[0].outerHTML;
-                                        data[i].stdout = $("<a>" + data[i].exec_job_id + "</a>")
+                                        data[i].stdout = $("<a>Application Stdout/Stderr    </a>")
                                             .attr("href",
                                                 stdOutTmpl
                                                     .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
                                                     .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
                                             )
                                             .attr("target", "_blank")[0].outerHTML;
-                                        data[i].stderr = $("<a>" + data[i].exec_job_id + "</a>")
+                                        data[i].stderr = $("<a>Condor Stderr/Pegasus Lite Log</a>")
                                             .attr("href",
                                                 stdErrTmpl
                                                     .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
@@ -305,14 +305,14 @@ $(document).ready(function () {
                                                 .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
                                                 .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
                                         )[0].outerHTML;
-                                        data[i].stdout = $("<a>" + data[i].exec_job_id + "</a>")
+                                        data[i].stdout = $("<a>Application Stdout/Stderr</a>")
                                             .attr("href",
                                                 stdOutTmpl
                                                     .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
                                                     .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
                                             )
                                             .attr("target", "_blank")[0].outerHTML;
-                                        data[i].stderr = $("<a>" + data[i].exec_job_id + "</a>")
+                                        data[i].stderr = $("<a>Condor Stderr/Pegasus Lite Log</a>")
                                             .attr("href",
                                                 stdErrTmpl
                                                     .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
