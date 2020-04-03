@@ -13,8 +13,7 @@ python -m virtualenv -p python3.6 $VIRTUAL_ENV_DIR
 
 source cwl_venv/bin/activate
 
-# pip install pegasus-wms[cwl]
-pip install "cwl-utils==0.3" "jsonschema==3.2.0"
+pip install "cwl-utils==0.3" "jsonschema==3.2.0" "PyYAML"
 
 echo
 echo "Creating input.yml from input.yml.template"
@@ -40,7 +39,7 @@ get_file_sizes.sh:
 EOT
 
 echo
-echo "Converting the cwl workflow to dax"
+echo "Converting the cwl workflow to pegasus yaml format"
 pegasus-cwl-converter --debug ./cwl/workflow.cwl ./cwl/input.yml tr_spec.yml ./workflow.yml
 
 echo
@@ -53,7 +52,7 @@ echo "Setting up work directory"
 TOP_DIR=`pwd`
 WORK_DIR=$TOP_DIR/work
 mkdir -p $WORK_DIR
-export RUN_ID=047-cwl-to-dax-test-workflow-`date +'%s'`
+export RUN_ID=047-cwl-to-pegasus-yaml-test-workflow-`date +'%s'`
 
 echo
 echo "Creating the site catalog..."

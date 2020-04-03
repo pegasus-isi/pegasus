@@ -4243,8 +4243,8 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: false
             - key: T047A
-              name: 047-cwl-to-dax
-              description: CWL workflow converted to DAX, then run on condor pool
+              name: 047-cwl
+              description: CWL workflow converted to pegasus yaml format, then run on condor pool
               tasks:
                 - !script
                   description: Cleanup
