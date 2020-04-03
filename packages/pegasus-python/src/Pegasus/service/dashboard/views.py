@@ -16,7 +16,6 @@ __author__ = "Rajiv Mayani"
 
 import logging
 import os
-from datetime import datetime
 
 from flask import (
     g,

@@ -14,7 +14,6 @@
 
 __author__ = "Rajiv Mayani"
 
-from time import localtime, strftime
 
 from sqlalchemy.orm.exc import NoResultFound
 
