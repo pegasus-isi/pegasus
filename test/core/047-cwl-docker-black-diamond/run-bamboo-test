@@ -4,16 +4,17 @@ set -e
 
 echo
 echo "Setting up virtualenv with cwl-utils and yaml packages for pegasus-cwl-converter"
-command -v virtualenv >/dev/null 2>&1 || { 
+command -v virtualenv >/dev/null 2>&1 || {
     echo >&2 "virtualenv is required for this test but it is not installed. Aborting."
-    exit 1; 
+    exit 1;
 }
 VIRTUAL_ENV_DIR=cwl_venv
-virtualenv -p python3.7 $VIRTUAL_ENV_DIR 
+python -m virtualenv -p python3.7 $VIRTUAL_ENV_DIR
 
 source cwl_venv/bin/activate
 
-pip install pegasus-wms[cwl]
+# pip install pegasus-wms[cwl]
+pip install "cwl-utils==0.3" "jsonschema==3.2.0"
 
 echo
 echo "Creating input.yml from input.yml.template"
