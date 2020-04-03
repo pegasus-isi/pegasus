@@ -176,9 +176,10 @@
                 <th class="job_table_width">Condor Submit File</th>
                 <td class="text-nowrap">
                     <span class="pe-7s-link"> </span>
-                    <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ job.exec_job_id }}.sub"
+                    {% set sub_file = (job.stderr_file[:job.stderr_file.rfind("/") + 1] if job.stderr_file and "/" in job.stderr_file  else "") ~ job.exec_job_id ~ ".sub" %}
+                    <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ sub_file }}"
                        data-toggle="tooltip" data-placement="top" title="View in file browser">
-                        {{ job.exec_job_id }}.sub
+                       {{ sub_file }}
                     </a>
                 </td>
             </tr>
