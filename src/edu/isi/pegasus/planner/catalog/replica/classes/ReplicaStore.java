@@ -369,7 +369,22 @@ class ReplicaStoreDeserializer extends ReplicaCatalogJsonDeserializer<ReplicaSto
                     if (replicaNodes != null) {
                         if (replicaNodes.isArray()) {
                             for (JsonNode replicaNode : replicaNodes) {
-                                store.add(this.createReplicaLocation(replicaNode));
+                                ReplicaLocation rl = this.createReplicaLocation(replicaNode);
+                                int count = rl.getPFNCount();
+                                if (count == 0 || count > 1) {
+                                    throw new ReplicaCatalogException("ReplicaLocation for ReplicaLocation " + rl +
+                                                " can only have one pfn. Found " + count);
+                                }
+                                ReplicaCatalogEntry rce = rl.getPFNList().get(0);
+                                if (rce.isRegex()) {
+                                    StringBuffer error = new StringBuffer();
+                                    error.append("Unable to deserialize into Replica Store an entry")
+                                            .append(" ").append("for lfn")
+                                            .append(" ").append(rl).append(" ")
+                                            .append("as it has regex attribute set to true. Please specify such entries in a replica catalog file.");
+                                    throw new ReplicaCatalogException(error.toString());
+                                }
+                                store.add(rl);
                             }
                         }
                     }

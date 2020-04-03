@@ -139,6 +139,22 @@ public class ReplicaStoreTest {
         String test =
                 "pegasus: \"5.0\"\n"
                         + "replicas:\n"
+                        + "  - lfn: \"f.a\"\n"
+                        + "    regex: true\n"
+                        + "    pfn: \"file:///Volumes/data/input/f.a\"\n"
+                        + "    site: \"local\"";
+
+        ReplicaStore store = mapper.readValue(test, ReplicaStore.class);
+    }
+    
+    @Test(expected = ReplicaCatalogException.class)
+    public void replicaWithRegexTrue() throws IOException {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+
+        String test =
+                "pegasus: \"5.0\"\n"
+                        + "replicas:\n"
                         + "  - pfn: \"file:///Volumes/data/input/f.a\"\n"
                         + "    site: \"local\"";
 
