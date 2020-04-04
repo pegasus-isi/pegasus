@@ -12,7 +12,7 @@ skip                   = "Pegasus/cli"
 
 [tool.black]
 
-target-version = ["py35"]
+target-version = ["py27"]
 
 exclude       = '''
 /(

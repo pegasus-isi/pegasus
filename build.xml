@@ -189,6 +189,11 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <arg line="--recreate"/>
       <arg line="-e lint"/>
     </exec>
+    <exec executable="tox" dir="packages/pegasus-worker" resultproperty="python-worker.format.error">
+      <env key="CI" value="${CI}"/>
+      <arg line="--recreate"/>
+      <arg line="-e lint"/>
+    </exec>
     <exec executable="tox" dir="packages/pegasus-python" resultproperty="python.format.error">
       <env key="CI" value="${CI}"/>
       <arg line="--recreate"/>
@@ -210,6 +215,9 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
           </not>
           <not>
             <equals arg1="${python-dax.format.error}" arg2="0"></equals>
+          </not>
+          <not>
+            <equals arg1="${python-worker.format.error}" arg2="0"></equals>
           </not>
           <not>
             <equals arg1="${python.format.error}" arg2="0"></equals>
