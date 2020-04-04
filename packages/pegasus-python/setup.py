@@ -13,8 +13,6 @@ install_requires = [
     # 'dataclasses;python_version=="3.6"',
     # DAX/Workflow
     "PyYAML",
-    # Python 2 compatibility
-    "six>=1.9.0",
     # pegasus-init
     "Jinja2",
     "Flask-SQLAlchemy",
