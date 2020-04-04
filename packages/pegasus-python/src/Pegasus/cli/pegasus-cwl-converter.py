@@ -164,14 +164,14 @@ def load_tr_specs(tr_specs_file_path: str) -> dict:
         validate(instance=specs, schema=schema)
     except ValidationError:
         log.exception(
-                "Invalid transformation spec file. File should be in the following format:\n"
-                "\t\t\t<tr name1>:\n"
-                "\t\t\t    site: <site name>\n"
-                "\t\t\t    is_stageable: <boolean>\n"
-                "\t\t\t<tr name2>:\n"
-                "\t\t\t    site: <site name>\n"
-                "\t\t\t    is_stageable: <boolean>\n"
-                "\t\t\t...\n"
+            "Invalid transformation spec file. File should be in the following format:\n"
+            "\t\t\t<tr name1>:\n"
+            "\t\t\t    site: <site name>\n"
+            "\t\t\t    is_stageable: <boolean>\n"
+            "\t\t\t<tr name2>:\n"
+            "\t\t\t    site: <site name>\n"
+            "\t\t\t    is_stageable: <boolean>\n"
+            "\t\t\t...\n"
         )
         sys.exit(1)
     except FileNotFoundError:

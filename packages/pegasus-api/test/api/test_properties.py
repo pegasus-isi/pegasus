@@ -67,7 +67,7 @@ class TestProperties:
         props.write()
 
         EXPECTED_DEFAULT_FILE = "pegasus.properties"
-        with open(EXPECTED_DEFAULT_FILE, "r") as f:
+        with open(EXPECTED_DEFAULT_FILE) as f:
             assert f.read() == "a = b\n\n"
 
         os.remove(EXPECTED_DEFAULT_FILE)

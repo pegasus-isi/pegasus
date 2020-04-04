@@ -50,7 +50,7 @@ class Test_CustomEncoder:
 class TestWritable:
     def test_write_using_defaults(self, writable_obj, expected, mocker):
         writable_obj.write()
-        with open("container.yml", "r") as f:
+        with open("container.yml") as f:
             assert expected == yaml.safe_load(f)
 
         os.remove("container.yml")
