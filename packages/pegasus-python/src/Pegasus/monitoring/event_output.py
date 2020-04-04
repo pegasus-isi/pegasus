@@ -68,7 +68,7 @@ def purge_wf_uuid_from_database(rundir, output_db):
     wfparams = utils.slurp_braindb(rundir)
 
     wf_uuid = wfparams.get("wf_uuid", None)
-    if "wf_uuid" is None:
+    if wf_uuid is None:
         return
 
     expunge.delete_workflow(output_db, wf_uuid)
@@ -83,7 +83,7 @@ def purge_wf_uuid_from_dashboard_database(rundir, output_db):
     wfparams = utils.slurp_braindb(rundir)
 
     wf_uuid = wfparams.get("wf_uuid", None)
-    if "wf_uuid" is None:
+    if wf_uuid is None:
         return
 
     expunge.delete_dashboard_workflow(output_db, wf_uuid)
