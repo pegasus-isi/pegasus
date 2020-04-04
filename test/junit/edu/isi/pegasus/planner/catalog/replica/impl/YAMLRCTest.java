@@ -28,9 +28,8 @@ import java.util.HashMap;
 import org.junit.*;
 
 /**
- * Test class to test YAML based  RC with Regex Support
+ * Test class to test YAML based RC with Regex Support
  *
- * 
  * @author Karan Vahi
  * @author Rajiv Mayani
  */

@@ -14,7 +14,6 @@
 package edu.isi.pegasus.planner.catalog.replica;
 
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntry;
-
 import java.util.*;
 
 /**
@@ -38,12 +37,10 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable {
 
     /** The (reserved) attribute name used for the resource handle. */
     public static final String DEPRECATED_RESOURCE_HANDLE = "pool";
-    
-    /**
-     * Whether the entry is regex or not
-     */
+
+    /** Whether the entry is regex or not */
     public static final String REGEX_KEY = "regex";
-    
+
     /** The physical filename. */
     private String m_pfn;
 
@@ -316,7 +313,7 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable {
                 && this.getAttribute(REGEX_KEY) != null
                 && ((String) this.getAttribute(REGEX_KEY)).equals("true"));
     }
-    
+
     /**
      * Converts the contents into a string.
      *

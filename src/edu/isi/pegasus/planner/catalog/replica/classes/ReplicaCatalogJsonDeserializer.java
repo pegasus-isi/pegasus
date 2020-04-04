@@ -44,7 +44,7 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
     public RuntimeException getException(String message) {
         return new CatalogException(message);
     }
-    
+
     /**
      * Deserializes a Replica YAML description of the type
      *
@@ -110,4 +110,3 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
         return rl;
     }
 }
-

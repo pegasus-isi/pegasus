@@ -146,7 +146,7 @@ public class ReplicaStoreTest {
 
         ReplicaStore store = mapper.readValue(test, ReplicaStore.class);
     }
-    
+
     @Test(expected = ReplicaCatalogException.class)
     public void replicaWithRegexTrue() throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());

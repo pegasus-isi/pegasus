@@ -67,10 +67,10 @@ import java.util.regex.Pattern;
  *
  * <p>The class is permissive in what inputs it accepts. The LFN may or may not be quoted. If it
  * contains linear whitespace, quotes, backslash or an equality sign, it must be quoted and escaped.
- * Ditto for the PFN.  
+ * Ditto for the PFN.
  *
- * <p>
- * A sample replica catalog description is indicated below.
+ * <p>A sample replica catalog description is indicated below.
+ *
  * <p>
  *
  * <pre>
@@ -94,7 +94,6 @@ import java.util.regex.Pattern;
  * @author Karan Vahi
  * @version $Revision: 5402 $
  */
-
 @JsonDeserialize(using = YAML.CallbackJsonDeserializer.class)
 public class YAML implements ReplicaCatalog {
     /**
@@ -124,7 +123,7 @@ public class YAML implements ReplicaCatalog {
 
     /** Handle to pegasus variable expander */
     private VariableExpander mVariableExpander;
-    
+
     /** The version for the Replica Catalog */
     private String mVersion;
 
@@ -144,7 +143,6 @@ public class YAML implements ReplicaCatalog {
         mVariableExpander = new VariableExpander();
         mVersion = null;
     }
-
 
     /**
      * Reads the on-disk map file into memory.
@@ -166,7 +164,7 @@ public class YAML implements ReplicaCatalog {
             reader = new VariableExpansionReader(new FileReader(filename));
             ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
             mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
-            //inject instance of this class to be used for deserialization
+            // inject instance of this class to be used for deserialization
             mapper.setInjectableValues(injectCallback());
             mapper.readValue(reader, YAML.class);
         } catch (IOException ioe) {
@@ -264,37 +262,25 @@ public class YAML implements ReplicaCatalog {
             mFilename = null;
             return;
         }
-        /** Commented out for time being till we write out the serializer
-        try {
-            
-            // open
-            Writer out = new BufferedWriter(new FileWriter(mFilename));
-            // write header
-            out.write(
-                    "# file-based replica catalog: "
-                            + Currently.iso8601(false, true, true, new Date()));
-            out.write(newline);
-            // write data
-            write(out, mLFN);
-            write(out, mLFNRegex);
-            // close
-            out.close();
-        } catch (IOException ioe) {
-            // FIXME: blurt message somewhere sane
-            System.err.println(ioe.getMessage());
-        } 
-        finally {*/
-        
-            if (mLFN != null) mLFN.clear();
-            mLFN = null;
-            if (mLFNRegex != null) {
-                mLFNRegex.clear();
-                mLFNPattern.clear();
-            }
-            mLFNRegex = null;
-            mLFNPattern = null;
-            mFilename = null;
-        //} end of finally block
+        /**
+         * Commented out for time being till we write out the serializer try {
+         *
+         * <p>// open Writer out = new BufferedWriter(new FileWriter(mFilename)); // write header
+         * out.write( "# file-based replica catalog: " + Currently.iso8601(false, true, true, new
+         * Date())); out.write(newline); // write data write(out, mLFN); write(out, mLFNRegex); //
+         * close out.close(); } catch (IOException ioe) { // FIXME: blurt message somewhere sane
+         * System.err.println(ioe.getMessage()); } finally {
+         */
+        if (mLFN != null) mLFN.clear();
+        mLFN = null;
+        if (mLFNRegex != null) {
+            mLFNRegex.clear();
+            mLFNPattern.clear();
+        }
+        mLFNRegex = null;
+        mLFNPattern = null;
+        mFilename = null;
+        // } end of finally block
     }
 
     private void write(Writer out, Map<String, Collection<ReplicaCatalogEntry>> m)
@@ -691,8 +677,6 @@ public class YAML implements ReplicaCatalog {
         return result;
     }
 
-    
-
     /**
      * Inserts a new mapping into the replica catalog. Any existing mapping of the same LFN, PFN,
      * and HANDLE will be replaced, including all of its attributes.
@@ -977,7 +961,7 @@ public class YAML implements ReplicaCatalog {
         throw new java.lang.UnsupportedOperationException(
                 "removeByAttribute (String handle) not implemented as yet");
     }
-    
+
     /**
      * Set the Catalog version
      *
@@ -1027,7 +1011,7 @@ public class YAML implements ReplicaCatalog {
     public void setReadOnly(boolean readonly) {
         this.m_readonly = readonly;
     }
-    
+
     /**
      * Set the Callback as an injectable value to insert into the Deserializer via Jackson.
      *
@@ -1036,11 +1020,10 @@ public class YAML implements ReplicaCatalog {
     private InjectableValues injectCallback() {
         return new InjectableValues.Std().addValue("callback", this);
     }
-    
+
     /**
-     * Custom deserializer for YAML representation of Replica Catalog that calls
-     * back to the class that invoked the serializer. The deserialized object
-     * returned is the callback itself
+     * Custom deserializer for YAML representation of Replica Catalog that calls back to the class
+     * that invoked the serializer. The deserialized object returned is the callback itself
      *
      * @author Karan Vahi
      */
@@ -1079,7 +1062,7 @@ public class YAML implements ReplicaCatalog {
             if (yamlRC == null) {
                 throw new RuntimeException("Callback not initialized when parsing inititated");
             }
-            for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext();) {
+            for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
                 Map.Entry<String, JsonNode> e = it.next();
                 String key = e.getKey();
                 ReplicaCatalogKeywords reservedKey = ReplicaCatalogKeywords.getReservedKey(key);
@@ -1102,8 +1085,11 @@ public class YAML implements ReplicaCatalog {
                                     ReplicaLocation rl = this.createReplicaLocation(replicaNode);
                                     int count = rl.getPFNCount();
                                     if (count == 0 || count > 1) {
-                                        throw new ReplicaCatalogException("ReplicaLocation for ReplicaLocation " + rl
-                                                + " can only have one pfn. Found " + count);
+                                        throw new ReplicaCatalogException(
+                                                "ReplicaLocation for ReplicaLocation "
+                                                        + rl
+                                                        + " can only have one pfn. Found "
+                                                        + count);
                                     }
                                     ReplicaCatalogEntry rce = rl.getPFNList().get(0);
                                     yamlRC.insert(rl.getLFN(), rce);
@@ -1120,7 +1106,5 @@ public class YAML implements ReplicaCatalog {
 
             return yamlRC;
         }
-
     }
-
 }
