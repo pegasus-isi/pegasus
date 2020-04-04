@@ -185,7 +185,7 @@ class StampedeStatistics:
         self._wfs = []
 
     def initialize(self, root_wf_uuid=None, root_wf_id=None):
-        if root_wf_uuid == None and root_wf_id is None:
+        if root_wf_uuid is None and root_wf_id is None:
             self.log.error("Either root_wf_uuid or root_wf_id is required")
             raise ValueError("Either root_wf_uuid or root_wf_id is required")
 
@@ -258,7 +258,7 @@ class StampedeStatistics:
         @wf_node The node for which to determine descendants.
         """
 
-        if tree == None or wf_node is None:
+        if tree is None or wf_node is None:
             raise ValueError("Tree, or node cannot be None")
 
         if wf_node in tree:
@@ -519,7 +519,9 @@ class StampedeStatistics:
         q = self.session.query(JobInstance.job_instance_id.label("last_job_instance"))
         q = q.filter(JobInstance.job_id == sq_1.c.jobid)
         q = q.filter(JobInstance.job_submit_seq == sq_1.c.jss)
-        q = q.filter(JobInstance.exitcode == 0).filter(JobInstance.exitcode != None)
+        q = q.filter(JobInstance.exitcode == 0).filter(
+            JobInstance.exitcode != None
+        )  # noqa: E711
         return q.count()
 
     def _get_total_failed_jobs_status(self):
@@ -547,7 +549,9 @@ class StampedeStatistics:
         q = self.session.query(JobInstance.job_instance_id.label("last_job_instance"))
         q = q.filter(JobInstance.job_id == sq_1.c.jobid)
         q = q.filter(JobInstance.job_submit_seq == sq_1.c.jss)
-        q = q.filter(JobInstance.exitcode != 0).filter(JobInstance.exitcode != None)
+        q = q.filter(JobInstance.exitcode != 0).filter(
+            JobInstance.exitcode != None
+        )  # noqa: E711
 
         return q
 
@@ -572,7 +576,7 @@ class StampedeStatistics:
         q = self.session.query(JobInstance.job_instance_id.label("last_job_instance"))
         q = q.filter(JobInstance.job_id == sq_1.c.jobid)
         q = q.filter(JobInstance.job_submit_seq == sq_1.c.jss)
-        q = q.filter(JobInstance.exitcode == None)
+        q = q.filter(JobInstance.exitcode == None)  # noqa: E711
         return q.count()
 
     def get_total_failed_jobs_status(self):
@@ -691,7 +695,7 @@ class StampedeStatistics:
         sq_2 = sq_2.subquery()
 
         q = self.session.query(Invocation.invocation_id)
-        q = q.filter(Invocation.abs_task_id != None)
+        q = q.filter(Invocation.abs_task_id != None)  # noqa: E711
         q = q.filter(Invocation.job_instance_id == sq_2.c.last_job_instance_id)
         q = q.filter(Invocation.wf_id == sq_2.c.wf_id)
 
@@ -746,7 +750,7 @@ class StampedeStatistics:
         if not pmc:
             sq_2 = sq_2.filter(sq_1.c.jss == sq_1.c.maxjss)
 
-        sq_2 = sq_2.filter(Invocation.abs_task_id != None)
+        sq_2 = sq_2.filter(Invocation.abs_task_id != None)  # noqa: E711
         if success:
             sq_2 = sq_2.filter(Invocation.exitcode == 0)
         else:
@@ -791,7 +795,7 @@ class StampedeStatistics:
         if self._get_job_filter() is not None:
             sq_1 = sq_1.filter(self._get_job_filter())
         sq_1 = sq_1.filter(JobInstance.job_instance_id == Invocation.job_instance_id)
-        sq_1 = sq_1.filter(Invocation.abs_task_id != None)
+        sq_1 = sq_1.filter(Invocation.abs_task_id != None)  # noqa: E711
 
         i = 0
         f = {}
@@ -1023,7 +1027,9 @@ class StampedeStatistics:
 
         if self._expand:
             d_or_d = self._dax_or_dag_cond()
-            q = q.filter(or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None)))
+            q = q.filter(
+                or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None))
+            )  # noqa: E711
 
         return q.first()
 
@@ -1360,8 +1366,12 @@ class StampedeStatistics:
         q = q.filter(Job.wf_id.in_(self._wfs))
         q = q.filter(Job.job_id == JobInstance.job_id)
         if not all_jobs:
-            q = q.filter(or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None)))
-        q = q.filter(JobInstance.exitcode != 0).filter(JobInstance.exitcode != None)
+            q = q.filter(
+                or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None))
+            )  # noqa: E711
+        q = q.filter(JobInstance.exitcode != 0).filter(
+            JobInstance.exitcode != None
+        )  # noqa: E711
         if final:
             q = q.group_by(JobInstance.job_id)
         q = q.order_by(JobInstance.job_submit_seq)
@@ -1762,26 +1772,26 @@ class StampedeStatistics:
 
     def _get_xform_filter(self):
         if (
-            self._xform_filter["include"] != None
-            and self._xform_filter["exclude"] != None
+            self._xform_filter["include"] is not None
+            and self._xform_filter["exclude"] is not None
         ):
             self.log.error(
                 "Can't set both transform include and exclude - reset s.set_transformation_filter()"
             )
             return None
         elif (
-            self._xform_filter["include"] == None
-            and self._xform_filter["exclude"] == None
+            self._xform_filter["include"] is None
+            and self._xform_filter["exclude"] is None
         ):
             return None
-        elif self._xform_filter["include"] != None:
+        elif self._xform_filter["include"] is not None:
             if isinstance(self._xform_filter["include"], type("str")):
                 return Invocation.transformation == self._xform_filter["include"]
             elif isinstance(self._xform_filter["include"], type([])):
                 return Invocation.transformation.in_(self._xform_filter["include"])
             else:
                 return None
-        elif self._xform_filter["exclude"] != None:
+        elif self._xform_filter["exclude"] is not None:
             if isinstance(self._xform_filter["exclude"], type("str")):
                 return Invocation.transformation != self._xform_filter["exclude"]
             elif isinstance(self._xform_filter["exclude"], type([])):
@@ -1828,7 +1838,7 @@ class StampedeStatistics:
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(Jobstate.job_instance_id == JobInstance.job_instance_id)
         q = q.filter(Jobstate.state == "EXECUTE")
-        q = q.filter(JobInstance.local_duration != None)
+        q = q.filter(JobInstance.local_duration != None)  # noqa: E711
 
         if self._get_job_filter() is not None:
             q = q.filter(self._get_job_filter())

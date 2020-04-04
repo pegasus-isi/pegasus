@@ -491,7 +491,7 @@ class Transfer(TransferBase):
 
 class TransferHandlerBase(object):
     """
-    Base class for all transfer handlers. Derived classes should set the 
+    Base class for all transfer handlers. Derived classes should set the
     protocol map (for example ["http->file"]) and implement the following
     methods:
       do_mkdirs()
@@ -516,7 +516,7 @@ class TransferHandlerBase(object):
         """
         Handles a list of transfers - all derived classes should override this
         method
-        
+
         The method should return 2 lists, one with successful transfer and one
         with failed transfers
         """
@@ -648,7 +648,7 @@ class TransferHandlerBase(object):
     def _check_similar(self, a, b):
         """
         compares two transfers, and determines if they are similar enough to be
-        grouped together in one transfer input file - this is used by some 
+        grouped together in one transfer input file - this is used by some
         protocols who can run grouped transfers as a set with a single command
         """
         if isinstance(a, Transfer) and isinstance(b, Transfer):
@@ -681,8 +681,8 @@ class TransferHandlerBase(object):
     def _similar_groups(self, in_list, max_transfers_in_group=None):
         """
         returns a list of lists of grouped transfers according to the
-        _check_similar() function       
-        
+        _check_similar() function
+
         """
         out_lists = []
         curr_list = []
@@ -1026,7 +1026,7 @@ class GridFtpHandler(TransferHandlerBase):
 
     def do_removes(self, removes_l):
         """
-        use gfal is available, otherwise use guc which is 
+        use gfal is available, otherwise use guc which is
         implemented as copy of /dev/null over the file we want to delete
         """
 
@@ -4520,7 +4520,7 @@ class SimilarWorkSet:
         do checksumming
         """
         # only worry about checksumming now
-        if transfer.generate_checksum is None or transfer.generate_checksum == False:
+        if transfer.generate_checksum is None or transfer.generate_checksum is False:
             return False
 
         if (

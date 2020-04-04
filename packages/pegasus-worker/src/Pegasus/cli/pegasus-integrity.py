@@ -510,12 +510,12 @@ def main():
     if (
         sum(
             [
-                options.generate_files != None,
-                options.generate_yaml != None,
-                options.generate_fullstat_yaml != None,
-                options.generate_xmls != None,
-                options.generate_fullstat_xmls != None,
-                options.verify_files != None,
+                options.generate_files is not None,
+                options.generate_yaml is not None,
+                options.generate_fullstat_yaml is not None,
+                options.generate_xmls is not None,
+                options.generate_fullstat_xmls is not None,
+                options.verify_files is not None,
             ]
         )
         != 1

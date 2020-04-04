@@ -114,7 +114,7 @@ class MasterDatabase:
 
         state = case(
             [
-                (ws.status == None, "Running"),
+                (ws.status == None, "Running"),  # noqa: E711
                 (ws.status == 0, "Successful"),
                 (ws.status != 0, "Failed"),
             ],
@@ -244,7 +244,9 @@ class MasterDatabase:
             func.count(w.wf_id).label("total"),
             func.sum(case([(ws.status == 0, 1)], else_=0)).label("success"),
             func.sum(case([(ws.status != 0, 1)], else_=0)).label("fail"),
-            func.sum(case([(ws.status == None, 1)], else_=0)).label("others"),
+            func.sum(case([(ws.status == None, 1)], else_=0)).label(
+                "others"
+            ),  # noqa: E711
         )
 
         q = q.filter(w.wf_id == ws.wf_id)
@@ -318,7 +320,7 @@ class WorkflowInfo:
             w.dax_version,
             case(
                 [
-                    (ws.status == None, "Running"),
+                    (ws.status == None, "Running"),  # noqa: E711
                     (ws.status == 0, "Successful"),
                     (ws.status != 0, "Failed"),
                 ],
@@ -398,7 +400,9 @@ class WorkflowInfo:
         )
 
         q = q.add_column(
-            func.sum(case([(JobInstance.exitcode == None, 1)], else_=0)).label(
+            func.sum(
+                case([(JobInstance.exitcode == None, 1)], else_=0)
+            ).label(  # noqa: E711
                 "running"
             )
         )
@@ -407,7 +411,7 @@ class WorkflowInfo:
                 case(
                     [
                         (
-                            JobInstance.exitcode == None,
+                            JobInstance.exitcode == None,  # noqa: E711
                             case(
                                 [
                                     (Job.type_desc == "dag", 1),
@@ -538,7 +542,9 @@ class WorkflowInfo:
     def get_failed_jobs(self, **table_args):
 
         q = self._jobs_by_type()
-        q = q.filter(JobInstance.exitcode != 0).filter(JobInstance.exitcode != None)
+        q = q.filter(JobInstance.exitcode != 0).filter(
+            JobInstance.exitcode != None
+        )  # noqa: E711
 
         # Get Total Count. Need this to pass to jQuery Datatable.
         count = q.count()
@@ -608,7 +614,9 @@ class WorkflowInfo:
         ).label("duration")
         q = q.add_column(duration)
 
-        q = q.filter(JobInstance.exitcode == 0).filter(JobInstance.exitcode != None)
+        q = q.filter(JobInstance.exitcode == 0).filter(
+            JobInstance.exitcode != None
+        )  # noqa: E711
 
         # Get Total Count. Need this to pass to jQuery Datatable.
         count = q.count()
@@ -672,7 +680,7 @@ class WorkflowInfo:
             ).label("duration")
         )
 
-        q = q.filter(JobInstance.exitcode == None)
+        q = q.filter(JobInstance.exitcode == None)  # noqa: E711
 
         # Get Total Count. Need this to pass to jQuery Datatable.
         count = q.count()
@@ -763,7 +771,7 @@ class WorkflowInfo:
 
         q_sub = q_sub.filter(j1.job_id == ji1.job_id)
 
-        q_sub = q_sub.filter(ji1.exitcode == None)
+        q_sub = q_sub.filter(ji1.exitcode == None)  # noqa: E711
 
         q_sub = q_sub.subquery()
 
@@ -773,7 +781,7 @@ class WorkflowInfo:
         qmax = self.__get_jobs_maxjss_q()
         qmax = qmax.filter(JobInstance.exitcode != None).filter(
             JobInstance.exitcode != 0
-        )
+        )  # noqa: E711
         qmax = qmax.subquery("allmaxjss")
 
         #
@@ -792,7 +800,9 @@ class WorkflowInfo:
 
         q = q.filter(Job.job_id == JobInstance.job_id)
 
-        q = q.filter(JobInstance.exitcode != 0).filter(JobInstance.exitcode != None)
+        q = q.filter(JobInstance.exitcode != 0).filter(
+            JobInstance.exitcode != None
+        )  # noqa: E711
 
         q = q.filter(Job.job_id == qmax.c.job_id)
         q = q.filter(JobInstance.job_submit_seq == qmax.c.max_jss)
@@ -889,7 +899,7 @@ class WorkflowInfo:
             w.dax_label,
             case(
                 [
-                    (ws.status == None, "Running"),
+                    (ws.status == None, "Running"),  # noqa: E711
                     (ws.status == 0, "Successful"),
                     (ws.status != 0, "Failed"),
                 ],
@@ -933,7 +943,9 @@ class WorkflowInfo:
         q = q.filter(Invocation.exitcode == 0)
 
         q = q.filter(
-            or_(Invocation.abs_task_id != None, Invocation.task_submit_seq == 1)
+            or_(
+                Invocation.abs_task_id != None, Invocation.task_submit_seq == 1
+            )  # noqa: E711
         )
 
         return q.all()
@@ -955,7 +967,9 @@ class WorkflowInfo:
         q = q.filter(Invocation.exitcode != 0)
 
         q = q.filter(
-            or_(Invocation.abs_task_id != None, Invocation.task_submit_seq == 1)
+            or_(
+                Invocation.abs_task_id != None, Invocation.task_submit_seq == 1
+            )  # noqa: E711
         )
 
         return q.all()
@@ -1002,9 +1016,9 @@ class WorkflowInfo:
                 JobInstance.job_instance_id == Invocation.job_instance_id,
                 and_(
                     or_(
-                        Task.abs_task_id == None,
+                        Task.abs_task_id == None,  # noqa: E711
                         and_(
-                            Task.abs_task_id != None,
+                            Task.abs_task_id != None,  # noqa: E711
                             Task.abs_task_id == Invocation.abs_task_id,
                         ),
                     )

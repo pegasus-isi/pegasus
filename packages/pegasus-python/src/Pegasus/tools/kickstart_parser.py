@@ -137,7 +137,7 @@ class Parser:
         self._keys = {}
 
         # Check if we have an invocation record
-        if self.is_clustered_record(buffer) == False:
+        if self.is_clustered_record(buffer) is False:
             return self._keys
 
         # Add clustered key to our response
@@ -160,7 +160,7 @@ class Parser:
         self._keys = {}
 
         # Check if we have an invocation record
-        if self.is_task_record(buffer) == False:
+        if self.is_task_record(buffer) is False:
             return self._keys
 
         # Add task key to our response
@@ -191,7 +191,7 @@ class Parser:
         my_reply = []
 
         # Try to open the file
-        if self.open() == False:
+        if self.open() is False:
             return my_reply
 
         logger.debug(
@@ -303,7 +303,7 @@ class YAMLParser(Parser):
         self._ks_elements = keys_dict
 
         # Try to open the file
-        if self.open() == False:
+        if self.open() is False:
             return my_reply
 
         logger.debug(
@@ -380,7 +380,7 @@ class YAMLParser(Parser):
         my_reply = []
 
         # Try to open the file
-        if self.open() == False:
+        if self.open() is False:
             return my_reply
 
         logger.debug(
@@ -717,7 +717,7 @@ class YAMLParser(Parser):
         entry = {}
 
         # Check if we have an invocation record
-        if self.is_invocation_record(buffer) == False:
+        if self.is_invocation_record(buffer) is False:
             return entry
 
         try:
@@ -803,7 +803,7 @@ class XMLParser(Parser):
         self._ks_elements = keys_dict
 
         # Try to open the file
-        if self.open() == False:
+        if self.open() is False:
             return my_reply
 
         logger.debug(
@@ -877,7 +877,7 @@ class XMLParser(Parser):
         self._keys = {}
 
         # Check if we have an invocation record
-        if self.is_invocation_record(buffer) == False:
+        if self.is_invocation_record(buffer) is False:
             return self._keys
 
         # Add invocation key to our response

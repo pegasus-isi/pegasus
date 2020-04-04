@@ -863,7 +863,7 @@ def print_job_info(job):
         return
 
     sub_wf_cmd = None
-    if jobs[job].sub_file_parsed == False:
+    if jobs[job].sub_file_parsed is False:
         print_console("       site: submit file not available")
     else:
         print_console("       site: %s" % (jobs[job].site or "-"))

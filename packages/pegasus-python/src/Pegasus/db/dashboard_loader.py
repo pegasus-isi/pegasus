@@ -140,7 +140,7 @@ class DashboardLoader(BaseLoader):
 
             # sanitize argv input
             if attr == "argv":
-                if v != None:
+                if v is not None:
                     v = v.replace("\\", "\\\\")
                     v = v.replace("'", "\\'")
 
@@ -153,7 +153,7 @@ class DashboardLoader(BaseLoader):
         if hasattr(o, "ts"):
             # make all timestamp values floats
             o.ts = float(o.ts)
-        if hasattr(o, "restart_count") and o.restart_count != None:
+        if hasattr(o, "restart_count") and o.restart_count is not None:
             o.restart_count = int(o.restart_count)
         return o
 

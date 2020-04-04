@@ -243,7 +243,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         self.metadata = dict()
 
         # add site if site if given
-        if site != None and pfn != None and is_stageable != None:
+        if site is not None and pfn is not None and is_stageable is not None:
             self.add_sites(
                 TransformationSite(
                     site,

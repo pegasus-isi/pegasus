@@ -1142,7 +1142,7 @@ def PartialDownload(bucketname, keyname, fname, part, parts, start, end):
         attempt = 0
         done = False
         saved_ex = None
-        while attempt < 3 and done == False:
+        while attempt < 3 and done is False:
             attempt += 1
             try:
                 f.seek(start, os.SEEK_SET)
@@ -1154,7 +1154,7 @@ def PartialDownload(bucketname, keyname, fname, part, parts, start, end):
             except Exception as e:
                 saved_ex = e
                 debug("Attempt %d failed for part %d" % (attempt, part))
-        if done == False:
+        if done is False:
             raise saved_ex
 
         info("Part %d finished" % (part))

@@ -82,7 +82,7 @@ monitord_shutdown_time = 0
 def dagman_launch(dagman_bin, arguments=[]):
     """Launches the condor_dagman program with all
        the arguments passed to pegasus-dagman"""
-    if dagman_bin != None:
+    if dagman_bin is not None:
         arguments.insert(0, "condor_scheduniv_exec." + os.getenv("CONDOR_ID"))
         try:
             dagman_proc = subprocess.Popen(
@@ -101,7 +101,7 @@ def dagman_launch(dagman_bin, arguments=[]):
 
 def monitord_launch(monitord_bin, arguments=[]):
     """Launches Monitord in condor daemon mode"""
-    if monitord_bin != None:
+    if monitord_bin is not None:
         try:
             # Rotate log file, if it exists
             # PM-688
@@ -143,10 +143,10 @@ def sighandler(signum, frame):
     """ Signal handler to catch and pass SIGTERM, SIGABRT, SIGUSR1, SIGTERM """
     #   global dagman, monitord
     logger.info("pegasus-dagman caught SIGNAL %s" % signum)
-    if dagman != None:
+    if dagman is not None:
         os.kill(dagman.pid, signum)
 
-    if monitord != None:
+    if monitord is not None:
         # PM-767 when pegasus-remove is called, internally condor_rm is called
         # that sends a SIGUSR1 to pegasus-dagman.
         # we pass that signal to condor_dagman. But for monitord, we don't, as
@@ -187,7 +187,7 @@ if __name__ == "__main__":
     # Find dagman Binary
     dagman_bin = find_prog("condor_dagman")
 
-    if dagman_bin != None:
+    if dagman_bin is not None:
         # If copy_to_spool is set copy dagman binary to dag submit directory
         if copy_to_spool:
             old_dagman_bin = dagman_bin
@@ -211,8 +211,8 @@ if __name__ == "__main__":
     dagman.poll()
     monitord.poll()
 
-    while monitord.returncode == None or dagman.returncode is None:
-        if dagman.returncode == None and monitord.returncode != None:
+    while monitord.returncode is None or dagman.returncode is None:
+        if dagman.returncode is None and monitord.returncode is not None:
             # monitord is not running
             t = time.time()
             if monitord_next_start == 0:

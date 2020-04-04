@@ -208,25 +208,25 @@ class Dashboard:
 
             for job in workflow.get_job_statistics():
 
-                kickstart = "0" if job.kickstart == None else float(job.kickstart)
+                kickstart = "0" if job.kickstart is None else float(job.kickstart)
                 multiplier_factor = (
-                    "0" if job.multiplier_factor == None else int(job.multiplier_factor)
+                    "0" if job.multiplier_factor is None else int(job.multiplier_factor)
                 )
                 kickstart_multi = (
-                    "0" if job.kickstart_multi == None else float(job.kickstart_multi)
+                    "0" if job.kickstart_multi is None else float(job.kickstart_multi)
                 )
                 remote_cpu_time = (
-                    "0" if job.remote_cpu_time == None else float(job.remote_cpu_time)
+                    "0" if job.remote_cpu_time is None else float(job.remote_cpu_time)
                 )
-                post_time = "0" if job.post_time == None else float(job.post_time)
+                post_time = "0" if job.post_time is None else float(job.post_time)
                 condor_q_time = (
-                    "0" if job.condor_q_time == None else float(job.condor_q_time)
+                    "0" if job.condor_q_time is None else float(job.condor_q_time)
                 )
                 resource_delay = (
-                    "0" if job.resource_delay == None else float(job.resource_delay)
+                    "0" if job.resource_delay is None else float(job.resource_delay)
                 )
-                runtime = "0" if job.runtime == None else float(job.runtime)
-                seqexec = "-" if job.seqexec == None else float(job.seqexec)
+                runtime = "0" if job.runtime is None else float(job.runtime)
+                seqexec = "-" if job.seqexec is None else float(job.seqexec)
 
                 seqexec_delay = "-"
                 if job.seqexec is not None and job.kickstart is not None:
@@ -443,17 +443,17 @@ class Dashboard:
         workflow_states_list = workflow.get_workflow_states()
 
         wall_time = stats_utils.get_workflow_wall_time(workflow_states_list)
-        if wall_time != None:
+        if wall_time is not None:
             wall_time = float(wall_time)
 
         cum_time = workflow.get_workflow_cum_job_wall_time()
         cum_time = [float(v) if v is not None else v for v in cum_time]
-        # if cum_time != None:
+        # if cum_time is not None:
         #    cum_time = float(cum_time)
 
         job_cum_time = workflow.get_submit_side_job_wall_time()
         job_cum_time = [float(v) if v is not None else v for v in job_cum_time]
-        # if job_cum_time != None:
+        # if job_cum_time is not None:
         #    job_cum_time = float(job_cum_time)
 
         statistics["wall-time"] = wall_time

@@ -209,7 +209,7 @@ class LevelConfig:
         return self._level
 
 
-if os.getenv(CFG_ENV) != None:
+if os.getenv(CFG_ENV) is not None:
     g_level_cfg = LevelConfig(os.getenv(CFG_ENV))
 else:
     g_level_cfg = None

@@ -235,7 +235,7 @@ class WorkflowLoader(BaseLoader):
 
             # sanitize argv input
             if attr == "argv":
-                if v != None:
+                if v is not None:
                     v = v.replace("\\", "\\\\")
                     v = v.replace("'", "\\'")
 
@@ -248,13 +248,13 @@ class WorkflowLoader(BaseLoader):
         if hasattr(o, "ts"):
             # make all timestamp values floats
             o.ts = float(o.ts)
-        if hasattr(o, "start_time") and o.start_time != None:
+        if hasattr(o, "start_time") and o.start_time is not None:
             o.start_time = float(o.start_time)
-        if hasattr(o, "cluster_start_time") and o.cluster_start_time != None:
+        if hasattr(o, "cluster_start_time") and o.cluster_start_time is not None:
             o.cluster_start_time = float(o.cluster_start_time)
-        if hasattr(o, "duration") and o.duration != None:
+        if hasattr(o, "duration") and o.duration is not None:
             o.duration = float(o.duration)
-        if hasattr(o, "restart_count") and o.restart_count != None:
+        if hasattr(o, "restart_count") and o.restart_count is not None:
             o.restart_count = int(o.restart_count)
         return o
 

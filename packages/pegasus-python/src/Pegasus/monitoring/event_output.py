@@ -373,7 +373,7 @@ class AMQPEventSink(EventSink):
                         self._params.virtual_host,
                         self._exch,
                         self._params.credentials.username,
-                        not self._params.ssl_options == None,
+                        not self._params.ssl_options is None,
                     )
                 )
 

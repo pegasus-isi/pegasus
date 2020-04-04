@@ -1448,11 +1448,11 @@ class StampedeWorkflowQueries(WorkflowQueries):
         q = q.filter(Job.job_id == JobInstance.job_id)
 
         q = q.filter(Job.wf_id == wf_id)
-        q = q.filter(JobInstance.exitcode == None)
+        q = q.filter(JobInstance.exitcode == None)  # noqa: E711
 
         # Recent
         qjss = self._get_recent_job_instance()
-        qjss = qjss.filter(JobInstance.exitcode != None)
+        qjss = qjss.filter(JobInstance.exitcode != None)  # noqa: E711
         qjss = qjss.subquery("max_jss")
 
         q = q.join(
@@ -1528,13 +1528,15 @@ class StampedeWorkflowQueries(WorkflowQueries):
         q = q.filter(Job.job_id == JobInstance.job_id)
 
         q = q.filter(Job.wf_id == wf_id)
-        q = q.filter(JobInstance.exitcode != None).filter(JobInstance.exitcode == 0)
+        q = q.filter(JobInstance.exitcode != None).filter(
+            JobInstance.exitcode == 0
+        )  # noqa: E711
 
         # Recent
         qjss = self._get_recent_job_instance()
         qjss = qjss.filter(JobInstance.exitcode != None).filter(
             JobInstance.exitcode == 0
-        )
+        )  # noqa: E711
         qjss = qjss.subquery("max_jss")
 
         q = q.join(
@@ -1610,13 +1612,15 @@ class StampedeWorkflowQueries(WorkflowQueries):
         q = q.filter(Job.job_id == JobInstance.job_id)
 
         q = q.filter(Job.wf_id == wf_id)
-        q = q.filter(JobInstance.exitcode != None).filter(JobInstance.exitcode != 0)
+        q = q.filter(JobInstance.exitcode != None).filter(
+            JobInstance.exitcode != 0
+        )  # noqa: E711
 
         # Recent
         qjss = self._get_recent_job_instance()
         qjss = qjss.filter(JobInstance.exitcode != None).filter(
             JobInstance.exitcode != 0
-        )
+        )  # noqa: E711
         qjss = qjss.subquery("max_jss")
 
         q = q.join(
@@ -1691,7 +1695,9 @@ class StampedeWorkflowQueries(WorkflowQueries):
         )
 
         q = q.filter(Job.wf_id == wf_id)
-        q = q.filter(JobInstance.exitcode != None).filter(JobInstance.exitcode != 0)
+        q = q.filter(JobInstance.exitcode != None).filter(
+            JobInstance.exitcode != 0
+        )  # noqa: E711
 
         q = q.filter(Job.job_id == JobInstance.job_id)
 
@@ -1702,7 +1708,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         qr = self.session.query(distinct(j.job_id))
 
         qr = qr.filter(j.wf_id == wf_id)
-        qr = qr.filter(ji.exitcode == None)
+        qr = qr.filter(ji.exitcode == None)  # noqa: E711
 
         qr = qr.filter(j.job_id == ji.job_id)
         qr = qr.subquery()
@@ -1714,7 +1720,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         qjss = qjss.filter(Job.wf_id == wf_id)
         qjss = qjss.filter(JobInstance.exitcode != None).filter(
             JobInstance.exitcode != 0
-        )
+        )  # noqa: E711
 
         qjss = qjss.filter(Job.job_id == JobInstance.job_id)
         qjss = qjss.subquery("allmaxjss")

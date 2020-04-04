@@ -206,7 +206,7 @@ class StampedeWorkflowStatistics:
         if not pmc:
             sq_2 = sq_2.filter(sq_1.c.jss == sq_1.c.maxjss)
 
-        sq_2 = sq_2.filter(Invocation.abs_task_id != None)
+        sq_2 = sq_2.filter(Invocation.abs_task_id != None)  # noqa: E711
         if success:
             sq_2 = sq_2.filter(Invocation.exitcode == 0)
         else:
@@ -245,7 +245,7 @@ class StampedeWorkflowStatistics:
         if self._get_job_filter() is not None:
             sq_1 = sq_1.filter(self._get_job_filter())
         sq_1 = sq_1.filter(JobInstance.job_instance_id == Invocation.job_instance_id)
-        sq_1 = sq_1.filter(Invocation.abs_task_id != None)
+        sq_1 = sq_1.filter(Invocation.abs_task_id != None)  # noqa: E711
 
         i = 0
         f = {}
@@ -590,7 +590,9 @@ class StampedeWorkflowStatistics:
 
         if self._expand:
             d_or_d = self._dax_or_dag_cond()
-            q = q.filter(or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None)))
+            q = q.filter(
+                or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None))
+            )  # noqa: E711
 
         return q.first()
 
@@ -748,7 +750,7 @@ class StampedeWorkflowStatistics:
 
         q = self.__filter_all(q)
         q = q.filter(Jobstate.state == "EXECUTE")
-        q = q.filter(JobInstance.local_duration != None)
+        q = q.filter(JobInstance.local_duration != None)  # noqa: E711
 
         if self._get_job_filter() is not None:
             q = q.filter(self._get_job_filter())
