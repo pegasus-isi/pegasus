@@ -23,8 +23,7 @@ import json
 import logging
 import os
 import tempfile
-
-from six import StringIO
+from io import StringIO
 
 __author__ = "Karan Vahi <vahi@isi.edu>"
 

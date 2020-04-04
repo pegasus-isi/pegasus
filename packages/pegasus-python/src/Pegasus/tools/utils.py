@@ -27,12 +27,10 @@ import shutil
 import sys
 import time
 import traceback
+import urllib
 from pathlib import Path
 
 import attr
-
-from six.moves import urllib
-from six.moves.builtins import int
 
 from Pegasus import braindump
 

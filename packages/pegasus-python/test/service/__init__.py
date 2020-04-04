@@ -6,9 +6,9 @@ import sys
 import tempfile
 import threading
 import unittest
+from io import StringIO
 
 from flask import json
-from six import StringIO
 from werkzeug.serving import make_server
 
 

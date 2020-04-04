@@ -129,7 +129,7 @@ def get_name(parent_id: str, _id: str) -> str:
 
 def load_wf_inputs(input_spec_file_path: str) -> dict:
     try:
-        with open(input_spec_file_path, "r") as f:
+        with open(input_spec_file_path) as f:
             wf_inputs = yaml.load(f)
 
         log.info("Loaded workflow inputs file: {}".format(input_spec_file_path))
@@ -164,7 +164,6 @@ def load_tr_specs(tr_specs_file_path: str) -> dict:
         validate(instance=specs, schema=schema)
     except ValidationError:
         log.exception(
-            (
                 "Invalid transformation spec file. File should be in the following format:\n"
                 "\t\t\t<tr name1>:\n"
                 "\t\t\t    site: <site name>\n"
@@ -173,7 +172,6 @@ def load_tr_specs(tr_specs_file_path: str) -> dict:
                 "\t\t\t    site: <site name>\n"
                 "\t\t\t    is_stageable: <boolean>\n"
                 "\t\t\t...\n"
-            )
         )
         sys.exit(1)
     except FileNotFoundError:
@@ -219,7 +217,7 @@ def build_pegasus_tc(tr_specs: dict, cwl_wf: cwl.Workflow) -> TransformationCata
             is_stageable = tr_specs[tool_path.name]["is_stageable"]
         except KeyError:
             log.warning(
-                "Unable to look up transformation: {0} in transformation spec file. Using defaults: site='local', is_stageable=True".format(
+                "Unable to look up transformation: {} in transformation spec file. Using defaults: site='local', is_stageable=True".format(
                     tool_path.name
                 )
             )

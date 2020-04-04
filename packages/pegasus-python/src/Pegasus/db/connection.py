@@ -23,8 +23,8 @@ import os
 import subprocess
 from sqlite3 import Connection as SQLite3Connection
 from stat import ST_MODE
+from urllib.parse import urlparse
 
-from six.moves.urllib.parse import urlparse
 from sqlalchemy import create_engine, event, exc, orm
 from sqlalchemy.engine import Engine
 
