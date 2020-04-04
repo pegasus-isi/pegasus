@@ -39,7 +39,7 @@ class EnsembleClientCommand(Command):
         try:
             result = response.json()
             print("ERROR:", result["message"])
-        except:
+        except Exception:
             print("ERROR:", response.text)
 
         exit(1)

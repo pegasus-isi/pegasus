@@ -167,7 +167,7 @@ def getHost():
         return _g_hostip
     try:
         ip = socket.gethostbyname(socket.getfqdn())
-    except:
+    except Exception:
         ip = "127.0.0.1"
     _g_hostip = ip
     return ip
@@ -536,7 +536,7 @@ def get_host():
         return _g_hostip
     try:
         ip = socket.gethostbyname(socket.getfqdn())
-    except:
+    except Exception:
         ip = "127.0.0.1"
     _g_hostip = ip
     return ip

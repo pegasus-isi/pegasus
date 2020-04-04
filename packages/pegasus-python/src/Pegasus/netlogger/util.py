@@ -814,7 +814,7 @@ except ImportError:
         r = int(random.random() * 100000000000000000)
         try:
             a = socket.gethostbyname(socket.gethostname())
-        except:
+        except Exception:
             # if we can't get a network address, just imagine one
             a = random.random() * 100000000000000000
         data = str(t) + " " + str(r) + " " + str(a)

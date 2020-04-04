@@ -1016,7 +1016,7 @@ def print_workflow_summary(
 
     summary_str = ""
 
-    if wf_summary == True:
+    if wf_summary is True:
         # status
         workflow_stats.set_job_filter("nonsub")
 
@@ -1136,7 +1136,7 @@ def print_workflow_summary(
         if output_format == "text":
             summary_str += "".center(sum(workflow_summary_col_size), "-") + "\n\n"
 
-    if time_summary == True:
+    if time_summary is True:
         states = workflow_stats.get_workflow_states()
         wwt = stats_utils.get_workflow_wall_time(states)
         wcjwt, wcgpt, wcbpt = workflow_stats.get_workflow_cum_job_wall_time()
@@ -1645,7 +1645,7 @@ def print_statistics_by_time_and_host(stats, fmt, combined=True, per_host=True):
     stats.set_time_filter("hour")
     stats.set_transformation_filter(exclude=["condor::dagman"])
 
-    if combined == True:
+    if combined is True:
         col_names = time_stats_col_name_text
         if fmt == "csv":
             col_names = time_stats_col_name_csv
@@ -1670,7 +1670,7 @@ def print_statistics_by_time_and_host(stats, fmt, combined=True, per_host=True):
                 content.insert(0, "invocations/" + time_filter)
             report.append(print_row(content, time_stats_col_size, fmt))
 
-    if per_host == True:
+    if per_host is True:
         col_names = time_host_stats_col_name_text
         if fmt == "csv":
             col_names = time_host_stats_col_name_csv

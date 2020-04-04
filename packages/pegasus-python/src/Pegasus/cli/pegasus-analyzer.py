@@ -147,7 +147,7 @@ def get_jsdl_filename(input_dir):
     """
     try:
         my_wf_params = utils.slurp_braindb(input_dir)
-    except:
+    except Exception:
         logger.error("cannot read braindump.txt file... exiting...")
         sys.exit(1)
 
@@ -165,7 +165,7 @@ def create_temp_logfile(name):
     """
     try:
         tmp_file = tempfile.mkstemp(prefix="%s-" % (name), suffix=".log", dir="/tmp")
-    except:
+    except Exception:
         return None
 
     # Close file, we will use it later
@@ -285,7 +285,7 @@ def get_pegasus_lite_wrapper(my_job):
         # Open submit file
         try:
             SUB = open(pegasus_lite_wrapper)
-        except:
+        except Exception:
             # print "error opening submit file: %s" % (my_job.sub_file)
             # fail silently for now...
             return None
@@ -337,7 +337,7 @@ def generate_pegasus_lite_debug_wrapper(pegasus_lite_wrapper):
 
             DEBUG_WRAPPER.write(line)
 
-    except:
+    except Exception:
         # fail silently for now...
         return None
     else:
@@ -373,7 +373,7 @@ def parse_submit_file(my_job):
         # Open submit file
         try:
             SUB = open(my_job.sub_file)
-        except:
+        except Exception:
             # print "error opening submit file: %s" % (my_job.sub_file)
             # fail silently for now...
             return
@@ -531,7 +531,7 @@ def find_file(input_dir, file_type):
     """
     try:
         file_list = os.listdir(input_dir)
-    except:
+    except Exception:
         logger.error("cannot read directory: %s" % (input_dir))
         sys.exit(1)
 
@@ -551,7 +551,7 @@ def parse_dag_file(dag_fn):
     # Open dag file
     try:
         DAG = open(dag_fn)
-    except:
+    except Exception:
         logger.error("could not open dag file %s: exiting..." % (dag_fn))
         sys.exit(1)
 
@@ -637,7 +637,7 @@ def parse_jobstate_log(jobstate_fn):
     # Open log file
     try:
         JSDL = open(jobstate_fn)
-    except:
+    except Exception:
         logger.error("could not open file %s: exiting..." % (jobstate_fn))
         sys.exit(1)
 
@@ -717,7 +717,7 @@ def invoke_monitord(dagman_out_file, output_dir):
 
     try:
         status, output = commands.getstatusoutput(monitord_cmd)
-    except:
+    except Exception:
         logger.error("could not invoke monitord, exiting...")
         sys.exit(1)
 
@@ -729,7 +729,7 @@ def dump_file(file):
     if file is not None:
         try:
             OUT = open(file)
-        except:
+        except Exception:
             logger.warn("*** Cannot access: %s" % (file))
             print_console()
         else:
@@ -771,7 +771,7 @@ def print_output_error(job):
                     if int(entry["exitcode"]) == 0:
                         # Skip tasks with exitcode equals to zero
                         continue
-                except:
+                except Exception:
                     logger.warn("couldn't convert exitcode to integer!")
                     continue
             else:
@@ -852,7 +852,7 @@ def print_job_info(job):
     parse_submit_file(jobs[job])
 
     # Handle subdag jobs from the dag file
-    if jobs[job].is_subdag == True:
+    if jobs[job].is_subdag is True:
         print_console(" This is a SUBDAG job:")
         print_console(" For more information, please run the following command:")
         user_cmd = " %s -s " % (prog_base)
@@ -1101,13 +1101,13 @@ def analyze_files():
     # Compare timestamps of jsdl_path with dagman_out_path
     try:
         jsdl_stat = os.stat(jsdl_path)
-    except:
+    except Exception:
         logger.error("could not access %s, exiting..." % (jsdl_path))
         sys.exit(1)
 
     try:
         dagman_out_stat = os.stat(dagman_out_path)
-    except:
+    except Exception:
         logger.error("could not access %s, exiting..." % (dagman_out_path))
         sys.exit(1)
 
@@ -1179,7 +1179,7 @@ def analyze_db(config_properties):
         logger.error("Failed to load the database." + output_db_url)
         logger.warning(err)
         sys.exit(1)
-    except:
+    except Exception:
         logger.error("Failed to load the database." + output_db_url)
         logger.warning(traceback.format_exc())
         sys.exit(1)
@@ -1520,7 +1520,7 @@ def debug_condor(my_job):
 
     try:
         debug_script = open(debug_script_name, "w")
-    except:
+    except Exception:
         logger.error("cannot create debug script %s" % (debug_script))
         sys.exit(1)
 
@@ -1632,7 +1632,7 @@ exit $STATUS
         """
         )
 
-    except:
+    except Exception:
         logger.error("cannot write to file %s" % (debug_script))
         sys.exit(1)
 
@@ -1642,7 +1642,7 @@ exit $STATUS
     try:
         # Make our debug script executable
         os.chmod(debug_script_name, 0o755)
-    except:
+    except Exception:
         logger.error(
             "cannot change permissions for the debug script %s" % (debug_script)
         )
@@ -1684,7 +1684,7 @@ def debug_workflow():
         # Create temporary directory
         try:
             debug_dir = tempfile.mkdtemp()
-        except:
+        except Exception:
             logger.error("could not create temporary directory!")
             sys.exit(1)
     else:
@@ -1694,7 +1694,7 @@ def debug_workflow():
             # Create directory if it does not exist
             try:
                 os.mkdir(debug_dir)
-            except:
+            except Exception:
                 logger.error("cannot create debug directory: %s" % (debug_dir))
 
         # Check if we can write to the debug directory

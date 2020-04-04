@@ -150,7 +150,7 @@ def cancel_task(transfer_client, task_id):
     try:
         transfer_client.cancel_task(task_id)
         logger.info("Globus transfer task %s has been canceled" % task_id)
-    except:
+    except Exception:
         pass
 
 

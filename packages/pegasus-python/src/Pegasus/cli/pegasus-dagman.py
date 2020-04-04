@@ -173,7 +173,7 @@ if __name__ == "__main__":
     # will fail - but we can just ignore it as the process group is already set
     try:
         os.setpgid(0, 0)
-    except:
+    except Exception:
         pass
 
     signal.signal(signal.SIGTERM, sighandler)
@@ -211,7 +211,7 @@ if __name__ == "__main__":
     dagman.poll()
     monitord.poll()
 
-    while monitord.returncode == None or dagman.returncode == None:
+    while monitord.returncode == None or dagman.returncode is None:
         if dagman.returncode == None and monitord.returncode != None:
             # monitord is not running
             t = time.time()

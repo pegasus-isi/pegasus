@@ -116,7 +116,7 @@ def forkscript(script, pidfile=None, cwd=None, env=None):
     if pidfile is not None:
         try:
             open(pidfile, "w").close()
-        except:
+        except Exception:
             raise EMError("Unable to write pidfile: %s" % pidfile)
 
     pid1 = os.fork()

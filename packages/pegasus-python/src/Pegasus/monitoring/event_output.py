@@ -41,13 +41,13 @@ log = logging.getLogger(__name__)
 bson = None
 try:
     import bson
-except:
+except Exception:
     log.info("cannot import BSON library, 'bson'")
 
 amqp = None
 try:
     import pika as amqp
-except:
+except Exception:
     log.info("cannot import AMQP library")
 
 # Event name-spaces
@@ -68,7 +68,7 @@ def purge_wf_uuid_from_database(rundir, output_db):
     wfparams = utils.slurp_braindb(rundir)
 
     wf_uuid = wfparams.get("wf_uuid", None)
-    if "wf_uuid" == None:
+    if "wf_uuid" is None:
         return
 
     expunge.delete_workflow(output_db, wf_uuid)
@@ -83,7 +83,7 @@ def purge_wf_uuid_from_dashboard_database(rundir, output_db):
     wfparams = utils.slurp_braindb(rundir)
 
     wf_uuid = wfparams.get("wf_uuid", None)
-    if "wf_uuid" == None:
+    if "wf_uuid" is None:
         return
 
     expunge.delete_dashboard_workflow(output_db, wf_uuid)
@@ -525,7 +525,7 @@ class MultiplexEventSink(EventSink):
                         **kw,
                     )
 
-                except:
+                except Exception:
                     self._log.error(
                         "[multiplex event sender] Unable to connect to endpoint %s with props %s . Disabling"
                         % (sink_name, endpoint_props)
@@ -538,7 +538,7 @@ class MultiplexEventSink(EventSink):
             sink = self._endpoints[key]
             try:
                 sink.send(event, kw)
-            except:
+            except Exception:
                 self._log.error(traceback.format_exc())
                 self._log.error(
                     "[multiplex event sender] error sending event. Disabling endpoint %s"
@@ -559,7 +559,7 @@ class MultiplexEventSink(EventSink):
     def close_sink(self, sink):
         try:
             sink.close()
-        except:
+        except Exception:
             pass
 
     def flush(self):

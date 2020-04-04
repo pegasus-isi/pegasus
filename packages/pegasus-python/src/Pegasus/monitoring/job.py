@@ -850,7 +850,7 @@ class Job:
                 payload = task_output[start + len(MONITORING_EVENT_START_MARKER) : end]
                 try:
                     events.append(json.loads(payload))
-                except:
+                except Exception:
                     logger.error("Unable to convert payload %s to JSON" % payload)
                 start = task_output.find(MONITORING_EVENT_START_MARKER, end)
 

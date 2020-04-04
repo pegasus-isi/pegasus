@@ -8,6 +8,6 @@ if not sys.version_info >= (3, 5):
 
 try:
     import yaml  # noqa
-except:
+except Exception:
     sys.stderr.write("Pegasus requires the Python3 YAML module to be installed\n")
     sys.exit(1)

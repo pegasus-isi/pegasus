@@ -37,7 +37,7 @@ NLSimpleParser = None
 
 try:
     from Pegasus.netlogger.parsers.base import NLSimpleParser
-except:
+except Exception:
     logger.info("cannot import NL parser")
     print(traceback.format_exc())
 
@@ -119,7 +119,7 @@ class Workflow:
             return
 
         # Don't output anything if we have disabled events to the database
-        if self._database_disabled == True:
+        if self._database_disabled is True:
             return
 
         #        # PM-1355 add on the fixed attributes
@@ -158,13 +158,13 @@ class Workflow:
             return
 
         # Don't output anything if we have disabled events to the database
-        if self._database_disabled == True:
+        if self._database_disabled is True:
             return
 
         try:
             # Send event to corresponding sink
             self._dashboard_sink.send(event, kwargs)
-        except:
+        except Exception:
             # Error sending this event... disable the sink from now on...
             logger.warning(
                 "DASHBOARD DB NL-LOAD-ERROR --> %s - %s"
@@ -199,7 +199,7 @@ class Workflow:
 
         try:
             DAG = open(dag_file)
-        except:
+        except Exception:
             logger.warning("unable to read %s!" % (dag_file))
         else:
             logger.info("Parsing DAG file %s" % dag_file)
@@ -340,7 +340,7 @@ class Workflow:
 
             try:
                 DAG.close()
-            except:
+            except Exception:
                 pass
 
         # POST-CONDITION: _job_info contains only submit-files of jobs
@@ -367,7 +367,7 @@ class Workflow:
 
         try:
             IN = open(in_file)
-        except:
+        except Exception:
             logger.warning("unable to read %s!" % (in_file))
             return None
 
@@ -382,13 +382,13 @@ class Workflow:
                 try:
                     my_task_id, my_transformation, my_derivation = line.split(None, 2)
                     my_task_id = int(my_task_id)
-                except:
+                except Exception:
                     # Doesn't look line a proper comment line with embedded info, skipping...
                     continue
                 # Update information in dictionary
                 try:
                     my_task_info = tasks[my_task_id]
-                except:
+                except Exception:
                     logger.warning(
                         "cannot locate task %d in dictionary... skipping this task for job: %s, dag file: %s"
                         % (
@@ -419,7 +419,7 @@ class Workflow:
                 tasks_found = tasks_found + 1
                 try:
                     my_task_info = tasks[tasks_found]
-                except:
+                except Exception:
                     logger.warning(
                         "cannot locate task %d in dictionary... skipping this task for job: %s, dag file: %s"
                         % (
@@ -434,7 +434,7 @@ class Workflow:
 
         try:
             IN.close()
-        except:
+        except Exception:
             pass
 
         return True
@@ -456,7 +456,7 @@ class Workflow:
 
         try:
             INPUT = open(my_fn)
-        except:
+        except Exception:
             logger.info(
                 "cannot open state file %s, continuing without state..." % (my_fn)
             )
@@ -480,13 +480,13 @@ class Workflow:
                 else:
                     # Another job counter
                     self._job_counters[my_job] = my_count
-        except:
+        except Exception:
             logger.error("error processing state file %s" % (my_fn))
 
         # Close the file
         try:
             INPUT.close()
-        except:
+        except Exception:
             pass
 
         # All done!
@@ -510,7 +510,7 @@ class Workflow:
 
         try:
             OUT = open(my_fn, "w")
-        except:
+        except Exception:
             logger.error("cannot open state file %s" % (my_fn))
             return
 
@@ -529,13 +529,13 @@ class Workflow:
             # Finally, write all job_counters
             for my_job in self._job_counters:
                 OUT.write("%s %d\n" % (my_job, self._job_counters[my_job]))
-        except:
+        except Exception:
             logger.error("cannot write state to log file %s" % (my_fn))
 
         # Close the file
         try:
             OUT.close()
-        except:
+        except Exception:
             pass
 
         # All done!
@@ -568,7 +568,7 @@ class Workflow:
                         )
                         break
                 RECOVER.close()
-            except:
+            except Exception:
                 logger.info(
                     "couldn't open/parse recover file information: %s"
                     % (my_recover_file)
@@ -592,14 +592,14 @@ class Workflow:
             )
         try:
             RECOVER = open(my_recover_file, "w")
-        except:
+        except Exception:
             logger.error("cannot open recover file: %s" % (my_recover_file))
             return
 
         try:
             # Write line with information about where we are in the dagman.out file
             RECOVER.write("line_processed %s\n" % (self._line))
-        except:
+        except Exception:
             logger.error(
                 "cannot write recover information to file: %s" % (my_recover_file)
             )
@@ -607,7 +607,7 @@ class Workflow:
         # Close the file
         try:
             RECOVER.close()
-        except:
+        except Exception:
             pass
 
         return
@@ -822,7 +822,7 @@ class Workflow:
 
         # Take care of workflow-level notifications
         if (
-            self.check_notifications() == True
+            self.check_notifications() is True
             and self._notifications_manager is not None
         ):
             self._notifications_manager.process_workflow_notifications(self, state)
@@ -1169,7 +1169,7 @@ class Workflow:
                     % (self._replay_mode, self._previous_processed_line)
                 )
                 self._JSDB = open(self._jsd_file, "wb", 0)
-        except:
+        except Exception:
             logger.critical("error creating/appending to %s!" % (self._jsd_file))
             self._monitord_exit_code = 1
             print(traceback.format_exc())
@@ -1218,7 +1218,7 @@ class Workflow:
 
         try:
             os.unlink(my_touch_file)
-        except:
+        except Exception:
             pass
 
         # Add this workflow to Workflow's class master list
@@ -1245,7 +1245,7 @@ class Workflow:
             # Open static bp file
             try:
                 my_static_file = open(self._static_bp_file)
-            except:
+            except Exception:
                 logger.critical(
                     "cannot find static bp file %s, exiting..." % (self._static_bp_file)
                 )
@@ -1284,7 +1284,7 @@ class Workflow:
 
                     # Send event to database
                     self.output_to_db(my_event, my_keys)
-            except:
+            except Exception:
                 logger.critical(
                     "error processing static bp file %s, exiting..."
                     % (self._static_bp_file)
@@ -1294,7 +1294,7 @@ class Workflow:
             # Close static bp file
             try:
                 my_static_file.close()
-            except:
+            except Exception:
                 logger.warning(
                     "error closing static bp file %s, continuing..."
                     % (self._static_bp_file)
@@ -1375,7 +1375,7 @@ class Workflow:
         try:
             os.unlink(my_recover_file)
             logger.info("recovery file deleted: %s" % (my_recover_file))
-        except:
+        except Exception:
             logger.warning("unable to remove recover file: %s" % (my_recover_file))
 
         # Write monitord.done file
@@ -1395,7 +1395,7 @@ class Workflow:
                 )
             )
             TOUCH.close()
-        except:
+        except Exception:
             logger.error("writing %s" % (my_touch_name))
 
         # Remove our notifications from the notification lists
@@ -1420,12 +1420,12 @@ class Workflow:
                         # Copy successful
                         try:
                             os.unlink(my_log)
-                        except:
+                        except Exception:
                             logger.error("removing %s" % (my_log))
                         else:
                             try:
                                 os.rename("%s.copy" % (my_log), my_log)
-                            except:
+                            except Exception:
                                 logger.error(
                                     "renaming {}.copy to {}".format(my_log, my_log)
                                 )
@@ -1596,7 +1596,7 @@ class Workflow:
             try:
                 my_duration = int(my_job._main_job_done) - int(my_job._main_job_start)
                 kwargs["local__dur"] = my_duration
-            except:
+            except Exception:
                 # Nothing to do, this is not mandatory
                 pass
         if my_job._input_file is not None:
@@ -1826,7 +1826,7 @@ class Workflow:
                 kwargs["remote_cpu_time"] = (
                     my_job._pre_script_done - my_job._pre_script_start
                 )
-            except:
+            except Exception:
                 # Duration cannot be determined, possibly a missing PRE_SCRIPT_START event
                 kwargs["dur"] = 0
             kwargs["exitcode"] = str(my_job._pre_script_exitcode)
@@ -1854,7 +1854,7 @@ class Workflow:
                 kwargs["remote_cpu_time"] = (
                     my_job._post_script_done - my_job._post_script_start
                 )
-            except:
+            except Exception:
                 # Duration cannot be determined, possibly a missing POST_SCRIPT_START event
                 kwargs["dur"] = 0
             kwargs["exitcode"] = str(my_job._post_script_exitcode)
@@ -1883,7 +1883,7 @@ class Workflow:
                 else:
                     if (
                         my_job._exec_job_id in self._job_info
-                        and self._job_info[my_job._exec_job_id][5] == True
+                        and self._job_info[my_job._exec_job_id][5] is True
                     ):
                         kwargs["transformation"] = "condor::dagman"
             if "derivation" in invocation_record:
@@ -1921,7 +1921,7 @@ class Workflow:
                         my_duration = int(my_job._main_job_done) - int(
                             my_job._main_job_start
                         )
-                    except:
+                    except Exception:
                         my_duration = None
                     if my_duration is not None:
                         kwargs["dur"] = my_duration
@@ -1940,7 +1940,7 @@ class Workflow:
                 # Calculate timestamp for when this task finished
                 try:
                     kwargs["ts"] = int(my_start + float(invocation_record["duration"]))
-                except:
+                except Exception:
                     # Something went wrong, just use the time the main job finished
                     kwargs["ts"] = my_job._main_job_done
             else:
@@ -1959,7 +1959,7 @@ class Workflow:
                 else:
                     if (
                         my_job._exec_job_id in self._job_info
-                        and self._job_info[my_job._exec_job_id][5] == True
+                        and self._job_info[my_job._exec_job_id][5] is True
                     ):
                         kwargs["executable"] = condor_dagman_executable
                     else:
@@ -2215,7 +2215,7 @@ class Workflow:
         # Check if this is a subdag job
         if (
             my_job._exec_job_id in self._job_info
-            and self._job_info[my_job._exec_job_id][5] == True
+            and self._job_info[my_job._exec_job_id][5] is True
         ):
             # Disable kickstart_parsing...
             parse_kickstart = False
@@ -2242,7 +2242,7 @@ class Workflow:
             my_output = my_parser.parse_stampede()
 
             # Check if successful
-            if my_parser._open_error == True and not my_job.is_noop_job():
+            if my_parser._open_error is True and not my_job.is_noop_job():
                 logger.error(
                     "unable to read output file %s for job %s"
                     % (my_job_output_fn, my_job._exec_job_id)
@@ -2288,7 +2288,7 @@ class Workflow:
 
                     # Take care of invocation-level notifications
                     if (
-                        self.check_notifications() == True
+                        self.check_notifications() is True
                         and self._notifications_manager is not None
                     ):
                         self._notifications_manager.process_invocation_notifications(
@@ -2345,7 +2345,7 @@ class Workflow:
                             continue
                         try:
                             my_id = int(record["id"])
-                        except:
+                        except Exception:
                             logger.warning(
                                 "task id looks invalid, cannot convert it to int: %s skipping to next"
                                 % (record["id"])
@@ -2384,7 +2384,7 @@ class Workflow:
 
                             # Take care of invocation-level notifications
                             if (
-                                self.check_notifications() == True
+                                self.check_notifications() is True
                                 and self._notifications_manager is not None
                             ):
                                 self._notifications_manager.process_invocation_notifications(
@@ -2410,7 +2410,7 @@ class Workflow:
 
             # Take care of invocation-level notifications
             if (
-                self.check_notifications() == True
+                self.check_notifications() is True
                 and self._notifications_manager is not None
             ):
                 self._notifications_manager.process_invocation_notifications(
@@ -2432,7 +2432,7 @@ class Workflow:
                 record["hostname"] = socket.getfqdn()
                 try:
                     record["hostaddr"] = socket.gethostbyname(socket.getfqdn())
-                except:
+                except Exception:
                     record["hostaddr"] = "unknown"
                 record["resource"] = my_job._site_name
                 # Send event to the database
@@ -2778,7 +2778,7 @@ class Workflow:
         # PM-1176 only send any notifications after we have parsed .out file if required
         # Take care of job-level notifications
         if (
-            self.check_notifications() == True
+            self.check_notifications() is True
             and self._notifications_manager is not None
         ):
             if real_app_exitcode is not None:
@@ -2962,7 +2962,7 @@ class Workflow:
                         (self._original_submit_dir + os.sep), "", 1
                     )
                 )
-        except:
+        except Exception:
             # Something went wrong, let's just keep what we had...
             pass
         try:
@@ -2973,7 +2973,7 @@ class Workflow:
                         (self._original_submit_dir + os.sep), "", 1
                     )
                 )
-        except:
+        except Exception:
             # Something went wrong, let's just keep what we had...
             pass
 
@@ -2985,7 +2985,7 @@ class Workflow:
                         (self._original_submit_dir + os.sep), "", 1
                     )
                 )
-        except:
+        except Exception:
             # Something went wrong, let's just use what we had...
             pass
 
@@ -3003,7 +3003,7 @@ class Workflow:
             return None
 
         # First we take care of SUBDAG jobs
-        if self._job_info[jobid][5] == True:
+        if self._job_info[jobid][5] is True:
             # We cannot go into SUBDAG workflows as they are not
             # planned by Pegasus and do not contain the information
             # needed by the 3.1 Stampede schema.
@@ -3055,7 +3055,7 @@ class Workflow:
 
         #        try:
         #            my_dagman_out = os.path.relpath(my_dagman_out, self._original_submit_dir)
-        #        except:
+        #        except Exception:
         #            pass
 
         # Split filename into dir and base names
@@ -3125,7 +3125,7 @@ class Workflow:
         """
         try:
             self._dagman_version = Workflow.get_numeric_version(major, minor, patch)
-        except:
+        except Exception:
             # failsafe. default to 8.2.8 last stable release that did not report held job reasons
             self._dagman_version = Workflow.CONDOR_VERSION_8_2_8
 

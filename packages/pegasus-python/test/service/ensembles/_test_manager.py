@@ -133,7 +133,7 @@ def RequiresPegasus(f):
     def wrapper(*args, **kwargs):
         try:
             em.get_pegasus_bin()
-        except:
+        except Exception:
             sys.stderr.write(" test requires Pegasus ")
             return None
 
@@ -146,7 +146,7 @@ def RequiresCondor(f):
     def wrapper(*args, **kwargs):
         try:
             em.get_condor_bin()
-        except:
+        except Exception:
             sys.stderr.write(" test requires Condor ")
             return None
 

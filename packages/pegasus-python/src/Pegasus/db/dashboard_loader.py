@@ -146,7 +146,7 @@ class DashboardLoader(BaseLoader):
 
             try:
                 setattr(o, attr, v)
-            except:
+            except Exception:
                 self.log.error("unable to process attribute %s with values: %s", k, v)
 
         # global type re-assignments
@@ -275,7 +275,7 @@ class DashboardLoader(BaseLoader):
         if is_root:
             wf.root_wf_id = self.wf_uuid_to_id(wf.root_xwf_id)
             wf.commit_to_db(self.session)
-        if wf.root_wf_id == None:
+        if wf.root_wf_id is None:
             self.log.warn("Could not determine root_wf_id for event %s", wf)
 
     def workflowstate(self, linedata):

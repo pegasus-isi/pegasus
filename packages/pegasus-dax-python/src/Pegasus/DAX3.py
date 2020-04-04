@@ -2043,13 +2043,13 @@ def parseString(string):
 def parse(infile):
     try:
         import xml.etree.cElementTree as etree
-    except:
+    except Exception:
         try:
             import xml.etree.ElementTree as etree
-        except:
+        except Exception:
             try:
                 import elementtree.ElementTree as etree
-            except:
+            except Exception:
                 raise Exception("Please install elementtree")
 
     NS = "{http://pegasus.isi.edu/schema/DAX}"

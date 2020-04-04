@@ -8,7 +8,7 @@ from optparse import Option, OptionValueError
 def check_magicdate(option, opt, value):
     try:
         return magicdate(value)
-    except:
+    except Exception:
         raise OptionValueError("option {}: invalid date value: {!r}".format(opt, value))
 
 

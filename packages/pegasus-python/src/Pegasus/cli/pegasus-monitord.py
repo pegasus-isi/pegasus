@@ -204,7 +204,7 @@ def finish_stampede_loader():
                     # benchmarking information
                     root_logger.setLevel(logging.INFO)
                 sink.close()
-            except:
+            except Exception:
                 logger.warning(
                     "could not call the finish method "
                     + "in the nl loader class... exiting anyway"
@@ -835,7 +835,7 @@ def process_dagman_out(wf, log_line):
             my_jobid = my_expr.group(2)
             my_sched_id = my_expr.group(3)
             my_job_submit_seq = add(wf, my_jobid, my_event, sched_id=my_sched_id)
-            if my_event == "SUBMIT" and follow_subworkflows == True:
+            if my_event == "SUBMIT" and follow_subworkflows is True:
                 # For SUBMIT ULOG events, check if this is a sub-workflow
                 my_new_dagman_out = wf.has_subworkflow(my_jobid, wf_retry_dict)
                 # Ok, return result to main loop
@@ -975,7 +975,7 @@ def process_dagman_out(wf, log_line):
             )
         elif (
             re_parse_condor_logfile.search(log_line) is not None
-            or wf._multiline_file_flag == True
+            or wf._multiline_file_flag is True
             and re_parse_condor_logfile_insane.search(log_line) is not None
         ):
             # Condor common log file location, DAGMan 6.6
@@ -1190,7 +1190,7 @@ else:
             backup=backup,
         )
         atexit.register(finish_stampede_loader)
-    except:
+    except Exception:
         logger.error(traceback.format_exc())
         logger.error("cannot create events output... disabling event output!")
         wf_event_sink = None
@@ -1218,7 +1218,7 @@ else:
             props=props,
             db_type=connection.DBType.MASTER,
         )
-    except:
+    except Exception:
         logger.error(traceback.format_exc())
         dashboard_event_sink = None
     else:
@@ -1270,7 +1270,7 @@ if restart_logging:
 try:
     wf_retry_dict = shelve.open(wf_retry_fn)
     atexit.register(close_wf_retry_file)
-except:
+except Exception:
     logger.critical(
         "cannot create persistent storage file for sub-workflow retry information... exiting... %s"
         % wf_retry_fn
@@ -1279,7 +1279,7 @@ except:
     sys.exit(1)
 
 # Open notifications' log file
-if do_notifications == True:
+if do_notifications is True:
     monitord_notifications = notifications.Notifications(
         wf_notification_fn_prefix,
         max_parallel_notifications=max_parallel_notifications,
@@ -1383,7 +1383,7 @@ while len(wfs) > 0:
                         workflow_entry.wf.end_workflow()
                     # Go to the next workflow_entry in the for loop
                     continue
-            except:
+            except Exception:
                 # Another exception
                 logger.critical("stat %s" % (workflow_entry.dagman.out))
                 workflow_entry.delete_workflow = True
@@ -1495,7 +1495,7 @@ while len(wfs) > 0:
                 # We have something to read!
                 try:
                     ml_rbuffer = workflow_entry.DMOF.read(DAGMAN_OUT_MAX_READ_SIZE)
-                except:
+                except Exception:
                     # Error while reading
                     logger.critical("while reading %s" % (workflow_entry.dagman_out))
                     workflow_entry.wf._monitord_exit_code = 42
@@ -1661,7 +1661,7 @@ while len(wfs) > 0:
     wf_index = 0
     while wf_index < len(wfs):
         workflow_entry = wfs[wf_index]
-        if workflow_entry.delete_workflow == True:
+        if workflow_entry.delete_workflow is True:
             logger.info("finishing workflow: %s" % (workflow_entry.dagman_out))
             # Close dagman.out file, if any
             if workflow_entry.DMOF is not None:
@@ -1678,7 +1678,7 @@ while len(wfs) > 0:
 
     # Service notifications once per while loop, in the future we can
     # move this into the for loop and service notifications more often
-    if do_notifications == True and monitord_notifications is not None:
+    if do_notifications is True and monitord_notifications is not None:
         monitord_notifications.service_notifications()
 
     # Skip sleeping, if we have no more workflow to track...
@@ -1715,7 +1715,7 @@ while len(wfs) > 0:
 # --- main loop end -----------------------------------------------------------------------
 #
 
-if do_notifications == True and monitord_notifications is not None:
+if do_notifications is True and monitord_notifications is not None:
     logger.info("finishing notifications...")
     while (
         monitord_notifications.has_active_notifications()

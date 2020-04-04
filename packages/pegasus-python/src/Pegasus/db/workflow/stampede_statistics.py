@@ -185,7 +185,7 @@ class StampedeStatistics:
         self._wfs = []
 
     def initialize(self, root_wf_uuid=None, root_wf_id=None):
-        if root_wf_uuid == None and root_wf_id == None:
+        if root_wf_uuid == None and root_wf_id is None:
             self.log.error("Either root_wf_uuid or root_wf_id is required")
             raise ValueError("Either root_wf_uuid or root_wf_id is required")
 
@@ -258,7 +258,7 @@ class StampedeStatistics:
         @wf_node The node for which to determine descendants.
         """
 
-        if tree == None or wf_node == None:
+        if tree == None or wf_node is None:
             raise ValueError("Tree, or node cannot be None")
 
         if wf_node in tree:
@@ -293,7 +293,7 @@ class StampedeStatistics:
             modes.index(filter)
             self._job_filter_mode = filter
             self.log.debug("Setting filter to: %s", filter)
-        except:
+        except Exception:
             self._job_filter_mode = "all"
             self.log.error("Unknown job filter %s - setting to all", filter)
 
@@ -303,7 +303,7 @@ class StampedeStatistics:
             modes.index(filter)
             self._time_filter_mode = filter
             self.log.debug("Setting filter to: %s", filter)
-        except:
+        except Exception:
             self._time_filter_mode = "month"
             self.log.error("Unknown time filter %s - setting to month", filter)
 
@@ -1751,7 +1751,7 @@ class StampedeStatistics:
         return vals[self._time_filter_mode]
 
     def _get_host_filter(self):
-        if self._host_filter == None:
+        if self._host_filter is None:
             return None
         elif isinstance(self._host_filter, type("str")):
             return Host.hostname == self._host_filter

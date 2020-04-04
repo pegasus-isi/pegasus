@@ -54,7 +54,7 @@ if boto_version < (2, 2, 2):
 # set boto config options
 try:
     boto.config.add_section("Boto")
-except:
+except Exception:
     pass
 boto.config.set("Boto", "http_socket_timeout", "60")
 

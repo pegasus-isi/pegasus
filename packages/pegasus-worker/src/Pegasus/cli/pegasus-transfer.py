@@ -45,12 +45,12 @@ from Pegasus.tools import worker_utils as utils
 
 try:
     import configparser
-except:
+except Exception:
     import ConfigParser as configparser
 
 try:
     import queue
-except:
+except Exception:
     import Queue as queue
 
 try:
@@ -87,7 +87,7 @@ else:
 # but not worry if the attempt fails.
 try:
     threading.stack_size(2 * 1024 ** 2)
-except:
+except Exception:
     pass
 
 # panorama real time monitoring
@@ -724,7 +724,7 @@ class TransferHandlerBase(object):
         try:
             s = os.stat(path)
             check_bytes = min(s[stat.ST_SIZE], 1024)
-        except:
+        except Exception:
             return False
 
         try:
@@ -736,7 +736,7 @@ class TransferHandlerBase(object):
                 )
                 f.read(check_bytes)
             f.close()
-        except:
+        except Exception:
             return False
 
         return True
@@ -885,7 +885,7 @@ class GridFtpHandler(TransferHandlerBase):
                 [successful_l, failed_l] = handler.do_mkdirs(mkdirs_l)
                 return [successful_l, failed_l]
 
-            if tools.find("globus-url-copy") == None:
+            if tools.find("globus-url-copy") is None:
                 logger.error(
                     "Unable to do gsiftp mkdir because gfal-mkdir/globus-url-copy could not be found"
                 )
@@ -1090,7 +1090,7 @@ class GridFtpHandler(TransferHandlerBase):
                 prefix="pegasus-transfer-", suffix=".lst"
             )
             tmp_file = io.open(tmp_fd, "w+")
-        except:
+        except Exception:
             raise RuntimeError(
                 "Unable to create tmp file for" + " globus-url-copy transfers"
             )
@@ -1376,7 +1376,7 @@ class HttpHandler(TransferHandlerBase):
                 # make sure those get cleaned up
                 try:
                     os.unlink(transfer.get_dst_path())
-                except:
+                except Exception:
                     pass
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
@@ -1524,7 +1524,7 @@ class HPSSHandler(TransferHandlerBase):
                 prefix="pegasus-transfer-", suffix=".lst"
             )
             tmp_file = io.open(tmp_fd, "w+")
-        except:
+        except Exception:
             raise RuntimeError("Unable to create tmp file for" + " hpss transfers")
 
         tar = self._get_tar_file(transfers[0].get_src_path())
@@ -1837,7 +1837,7 @@ class IRodsHandler(TransferHandlerBase):
                         cmd, env_overrides=env, timeout_secs=10 * 60
                     )
                     tc.run()
-                except:
+                except Exception:
                     # ignore errors from the mkdir command
                     pass
                 cmd = "iput -v -f -T -K -N 4"
@@ -2119,7 +2119,7 @@ class S3Handler(TransferHandlerBase):
                 prefix="pegasus-transfer-", suffix=".lst"
             )
             tmp_file = io.open(tmp_fd, "w+")
-        except:
+        except Exception:
             raise RuntimeError("Unable to create tmp file for pegasus-s3 cleanup")
 
         successful_l = []
@@ -2172,7 +2172,7 @@ class S3Handler(TransferHandlerBase):
 
         try:
             os.unlink(tmp_name)
-        except:
+        except Exception:
             pass
 
         return [successful_l, failed_l]
@@ -2239,7 +2239,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
                 prefix="pegasus-transfer-", suffix=".json"
             )
             tmp_file = io.open(tmp_fd, "w+")
-        except:
+        except Exception:
             raise RuntimeError("Unable to create tmp file for pegasus-globus-online")
         tmp_file.write(json.dumps(spec, indent=2))
         tmp_file.close()
@@ -2300,7 +2300,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
                 prefix="pegasus-transfer-", suffix=".json"
             )
             tmp_file = io.open(tmp_fd, "w+")
-        except:
+        except Exception:
             raise RuntimeError("Unable to create tmp file for pegasus-globus-online")
         tmp_file.write(json.dumps(spec, indent=2))
         tmp_file.close()
@@ -2356,7 +2356,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
                 prefix="pegasus-transfer-", suffix=".json"
             )
             tmp_file = io.open(tmp_fd, "w+")
-        except:
+        except Exception:
             raise RuntimeError("Unable to create tmp file for pegasus-globus-online")
         tmp_file.write(json.dumps(spec, indent=2))
         tmp_file.close()
@@ -2611,7 +2611,7 @@ class GSHandler(TransferHandlerBase):
                 prefix="pegasus-transfer-", suffix=".lst"
             )
             tmp_file = io.open(tmp_fd, "w+")
-        except:
+        except Exception:
             raise RuntimeError("Unable to create tmp file for gs boto file")
         try:
             conf = configparser.SafeConfigParser()
@@ -2630,7 +2630,7 @@ class GSHandler(TransferHandlerBase):
     def _clean_tmp(self):
         try:
             os.unlink(self._clean_tmp())
-        except:
+        except Exception:
             pass
 
 
@@ -3028,7 +3028,7 @@ class ScpHandler(TransferHandlerBase):
         tc = utils.TimedCommand(cmd, log_outerr=False)
         try:
             tc.run()
-        except:
+        except Exception:
             # let the real command show the error
             pass
         self._log_filter_ssh_output(tc.get_outerr())
@@ -3285,7 +3285,7 @@ class GSIScpHandler(TransferHandlerBase):
         tc = utils.TimedCommand(cmd, log_outerr=False)
         try:
             tc.run()
-        except:
+        except Exception:
             # let the real command show the error
             pass
         self._log_filter_ssh_output(tc.get_outerr())
@@ -4569,7 +4569,7 @@ class SimilarWorkSet:
         # the fd to make sure we are not leaving any open fds around
         try:
             os.close(tmp_fd)
-        except:
+        except Exception:
             pass
         return self._tmp_name
 
@@ -4579,7 +4579,7 @@ class SimilarWorkSet:
         """
         try:
             os.unlink(fname)
-        except:
+        except Exception:
             pass
 
 
@@ -4731,7 +4731,7 @@ def max_cmd_length():
         cmd = "echo " + s + " >/dev/null"
         try:
             backticks(cmd)
-        except:
+        except Exception:
             return (2 ** (n - 1)) / 2
 
     # we shouldn't really get here, but if we do, 2^20/2
@@ -4819,7 +4819,7 @@ def verify_local_file(path):
     try:
         f = open(path, "r")
         f.close()
-    except:
+    except Exception:
         logger.error("File is not readable: " + path)
         return False
 

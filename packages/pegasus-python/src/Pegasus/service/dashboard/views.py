@@ -275,7 +275,7 @@ def stdout(username, root_wf_id, wf_id, job_id, job_instance_id):
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     text = dashboard.get_stdout(wf_id, job_id, job_instance_id)
 
-    if text.stdout_text == None:
+    if text.stdout_text is None:
         return "No stdout for workflow " + wf_id + " job-id " + job_id
     else:
         return "<pre>%s</pre>" % utils.unquote(text.stdout_text)
@@ -292,7 +292,7 @@ def stderr(username, root_wf_id, wf_id, job_id, job_instance_id):
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     text = dashboard.get_stderr(wf_id, job_id, job_instance_id)
 
-    if text.stderr_text == None:
+    if text.stderr_text is None:
         return "No Standard error for workflow " + wf_id + " job-id " + job_id
     else:
         return "<pre>%s</pre>" % utils.unquote(text.stderr_text)

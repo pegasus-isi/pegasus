@@ -40,7 +40,7 @@ from Pegasus.tools import worker_utils as utils
 try:
     import pwd
     import grp
-except:
+except Exception:
     pass
 
 
@@ -244,7 +244,7 @@ def generate_yaml(lfn, pfn):
 
     ts_start = time.time()
     sha256 = generate_sha256(pfn)
-    if sha256 == None:
+    if sha256 is None:
         return None
     ts_end = time.time()
 
@@ -261,7 +261,7 @@ def generate_fullstat_yaml(lfn, pfn):
 
     ts_start = time.time()
     sha256 = generate_sha256(pfn)
-    if sha256 == None:
+    if sha256 is None:
         return None
     ts_end = time.time()
 
@@ -272,19 +272,19 @@ def generate_fullstat_yaml(lfn, pfn):
 
     try:
         s = os.stat(pfn)
-    except:
+    except Exception:
         # if we can't stat, just return
         return ""
 
     uname = ""
     try:
         uname = pwd.getpwuid(s.st_uid).pw_name
-    except:
+    except Exception:
         pass
     gname = ""
     try:
         gname = grp.getgrgid(s.st_gid).gr_name
-    except:
+    except Exception:
         pass
     yaml += (
         "      mode: 0o%o\n"
@@ -398,7 +398,7 @@ def multipart_out(s):
     # ready to write
     try:
         multipart_fh.write(s)
-    except:
+    except Exception:
         pass
 
 

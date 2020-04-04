@@ -237,7 +237,7 @@ def epochdate(timestamp):
         # Turn my_time into Epoch format
         return int(calendar.timegm(my_time.timetuple()))
 
-    except:
+    except Exception:
         logger.warn('unable to parse timestamp "%s"' % timestamp)
         return None
 
@@ -254,7 +254,7 @@ def create_directory(dir_name, delete_if_exists=False):
             logger.warning("Deleting existing directory. Deleting... " + dir_name)
             try:
                 shutil.rmtree(dir_name)
-            except:
+            except Exception:
                 logger.error("Unable to remove existing directory." + dir_name)
                 sys.exit(1)
     if not os.path.isdir(dir_name):
@@ -520,7 +520,7 @@ def pid_running(filename):
                             )
                             logger.warning(traceback.format_exc())
                             return True
-                    except:
+                    except Exception:
                         logger.warning(
                             "unknown error while sending signal to pid %d" % (my_pid)
                         )
@@ -536,7 +536,7 @@ def pid_running(filename):
 
             # Don't forget to close file
             PIDFILE.close()
-        except:
+        except Exception:
             logger.warning("error processing file %s. continuing..." % (filename))
             logger.warning(traceback.format_exc())
 
@@ -576,7 +576,7 @@ def loading_completed(run_dir):
     events were successfully processed by pegasus-monitord.
     """
     # Loading is never completed if monitoring is still running
-    if monitoring_running(run_dir) == True:
+    if monitoring_running(run_dir) is True:
         return False
 
     start_file = os.path.join(run_dir, "monitord.started")

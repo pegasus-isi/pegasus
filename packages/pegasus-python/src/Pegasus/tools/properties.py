@@ -106,7 +106,7 @@ if len(sys.argv) > 0:
 
         try:
             k, v = my_arg.split("=", 1)
-        except:
+        except Exception:
             logger.warn(
                 "cannot parse command-line option %s... continuing..." % (my_arg)
             )
@@ -368,7 +368,7 @@ class Properties:
         else:
             try:
                 my_file = open(fn, "w")
-            except:
+            except Exception:
                 logger.warn("error opening %s !" % (fn))
                 return None
 

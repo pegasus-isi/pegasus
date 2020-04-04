@@ -2491,7 +2491,7 @@ def flatten_errors(cfg, res, levels=None, results=None):
             levels.pop()
         return results
     for (key, val) in res.items():
-        if val == True:
+        if val is True:
             continue
         if isinstance(cfg.get(key), dict):
             # Go down one level

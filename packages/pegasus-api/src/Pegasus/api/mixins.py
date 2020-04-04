@@ -201,7 +201,7 @@ def to_mb(value):
             }
 
             return (amt * _bytes[unit]) / _bytes["mb"]
-    except:
+    except Exception:
         raise ValueError(
             "value: {} should be a str formatted as '<int> [MB | GB | TB | PB | EB]'".format(
                 value

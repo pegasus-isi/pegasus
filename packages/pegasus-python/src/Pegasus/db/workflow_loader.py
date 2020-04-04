@@ -241,7 +241,7 @@ class WorkflowLoader(BaseLoader):
 
             try:
                 setattr(o, attr, v)
-            except:
+            except Exception:
                 self.log.error("Unable to process attribute %s with values: %s", k, v)
 
         # global type re-assignments
@@ -398,7 +398,7 @@ class WorkflowLoader(BaseLoader):
         if is_root:
             wf.root_wf_id = self.wf_uuid_to_id(wf.root_xwf_id)
             wf.commit_to_db(self.session)
-        if wf.root_wf_id == None:
+        if wf.root_wf_id is None:
             self.log.warn("Count not determine root_wf_id for event %s", wf)
 
     def workflowstate(self, linedata):
@@ -489,7 +489,7 @@ class WorkflowLoader(BaseLoader):
         self.log.trace("job_instance: %s", job_instance)
 
         job_instance.wf_id = self.wf_uuid_to_id(job_instance.wf_uuid)
-        if job_instance.wf_id == None:
+        if job_instance.wf_id is None:
             self.log.error(
                 "No wf_id associated with wf_uuid %s - can not insert job instance %s",
                 job_instance.wf_uuid,
@@ -615,7 +615,7 @@ class WorkflowLoader(BaseLoader):
         invocation.wf_id = self.wf_uuid_to_id(invocation.wf_uuid)
 
         invocation.job_instance_id = self.get_job_instance_id(invocation)
-        if invocation.job_instance_id == None:
+        if invocation.job_instance_id is None:
             self.log.error(
                 "Could not determine job_instance_id for invocation: %s", invocation
             )
@@ -758,7 +758,7 @@ class WorkflowLoader(BaseLoader):
         int_meta.wf_id = self.wf_uuid_to_id(int_meta.wf_uuid)
 
         int_meta.job_instance_id = self.get_job_instance_id(int_meta)
-        if int_meta.job_instance_id == None:
+        if int_meta.job_instance_id is None:
             self.log.error(
                 "Could not determine job_instance_id for int_meta: %s", int_meta
             )
@@ -782,7 +782,7 @@ class WorkflowLoader(BaseLoader):
         tag.wf_id = self.wf_uuid_to_id(tag.wf_uuid)
 
         tag.job_instance_id = self.get_job_instance_id(tag)
-        if tag.job_instance_id == None:
+        if tag.job_instance_id is None:
             self.log.error("Could not determine job_instance_id for tag: %s", tag)
             return
 
@@ -882,7 +882,7 @@ class WorkflowLoader(BaseLoader):
 
         self.log.trace("host: %s", host)
 
-        if self.hosts_written_cache == None:
+        if self.hosts_written_cache is None:
             self.hosts_written_cache = {}
             query = self.session.query(Host)
             for row in query.all():

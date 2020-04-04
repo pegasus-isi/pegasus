@@ -85,7 +85,7 @@ def optionlist(question, options, default=0):
             optno = int(answer)
             if optno > 0 and optno <= len(options):
                 return options[optno - 1][1]
-        except:
+        except Exception:
             pass
 
 

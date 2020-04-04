@@ -104,7 +104,7 @@ class Writable:
             )
 
         # default file name
-        if file == None:
+        if file is None:
             file = self._DEFAULT_FILENAME
 
         if isinstance(file, str):

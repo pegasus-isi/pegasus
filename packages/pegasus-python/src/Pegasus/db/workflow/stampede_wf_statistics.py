@@ -781,7 +781,7 @@ class StampedeWorkflowStatistics:
             modes.index(filter)
             self._job_filter_mode = filter
             self.log.debug("Setting filter to: %s", filter)
-        except:
+        except Exception:
             self._job_filter_mode = "all"
             self.log.error("Unknown job filter %s - setting to all", filter)
 
@@ -791,7 +791,7 @@ class StampedeWorkflowStatistics:
             modes.index(filter)
             self._time_filter_mode = filter
             self.log.debug("Setting filter to: %s", filter)
-        except:
+        except Exception:
             self._time_filter_mode = "month"
             self.log.error("Unknown time filter %s - setting to month", filter)
 

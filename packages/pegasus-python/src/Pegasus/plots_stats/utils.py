@@ -156,7 +156,7 @@ def copy_files(src, dest):
             try:
                 if not os.path.exists(os.path.join(dest, file)):
                     shutil.copy(os.path.join(src, file), dest)
-            except:
+            except Exception:
                 logger.error("Unable to copy file " + file + " to " + dest)
                 sys.exit(1)
 

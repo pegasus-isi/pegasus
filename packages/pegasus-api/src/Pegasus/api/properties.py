@@ -272,7 +272,7 @@ class Properties:
             props = sio.getvalue()[Properties._cfg_header_len :]
 
         # default file
-        if file == None:
+        if file is None:
             file = "pegasus.properties"
 
         if isinstance(file, str):

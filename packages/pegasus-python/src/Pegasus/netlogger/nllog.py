@@ -349,7 +349,7 @@ def profile(func):
         log.debug("%s.start" % event)
         try:
             v = func(*args, **kw)
-        except:
+        except Exception:
             log.error("%s.end" % event)
             raise
         log.debug("%s.end" % event)
@@ -381,7 +381,7 @@ def profile_result(func):
         log.debug("%s.start" % event)
         try:
             v = func(*args, **kw)
-        except:
+        except Exception:
             log.error("%s.end" % event)
             raise
         log.debug("%s.end" % event, result=v)
@@ -423,7 +423,7 @@ class Profiler(type):
             self._log.debug("%s.start" % event)
             try:
                 v = func(self, *args, **kw)
-            except:
+            except Exception:
                 self._log.error("%s.end" % event)
                 raise
             self._log.debug("%s.end" % event)

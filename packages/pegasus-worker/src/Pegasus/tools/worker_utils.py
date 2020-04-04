@@ -124,7 +124,7 @@ class TimedCommand(object):
                 kp = subprocess.Popen(kill_cmd, shell=True)
                 kp.communicate()
                 self._process.terminate()
-            except:
+            except Exception:
                 pass
             thread.join()
             # log the output
@@ -237,7 +237,7 @@ class Tools(object):
                         break
                     full_path = None
 
-                if full_path == None:
+                if full_path is None:
                     logger.info(
                         "Command '%s' not found in the current environment"
                         % (executable)

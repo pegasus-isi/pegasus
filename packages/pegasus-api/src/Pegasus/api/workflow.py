@@ -806,7 +806,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :return: self
         """
         for job in jobs:
-            if job._id == None:
+            if job._id is None:
                 job._id = self._get_next_job_id()
 
             if job._id in self.jobs:
@@ -1026,7 +1026,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         """
 
         # default file name
-        if file == None:
+        if file is None:
             file = self._DEFAULT_FILENAME
 
         self._infer_dependencies()

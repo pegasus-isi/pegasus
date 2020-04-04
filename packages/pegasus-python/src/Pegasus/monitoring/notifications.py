@@ -363,7 +363,7 @@ class Notifications:
                     continue
                 # Clean up ok, just continue
                 continue
-            except:
+            except Exception:
                 logger.warning(
                     "problem starting notification: %s... skipping..."
                     % (my_notification)

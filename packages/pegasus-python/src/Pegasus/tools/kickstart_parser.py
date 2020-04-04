@@ -70,7 +70,7 @@ class Parser:
         """
         try:
             self._fh = open(self._kickstart_output_file)
-        except:
+        except Exception:
             # Error opening file
             self._fh = None
             self._open_error = True
@@ -86,7 +86,7 @@ class Parser:
         """
         try:
             self._fh.close()
-        except:
+        except Exception:
             return False
 
         return True
@@ -318,11 +318,11 @@ class YAMLParser(Parser):
         # Loop while we still have record to read
         while record is not None:
             logger.debug("Record is \n%s" % record)
-            if self.is_invocation_record(record) == True:
+            if self.is_invocation_record(record) is True:
                 # We have an invocation record, parse it!
                 try:
                     my_record = self.parse_invocation_record(record)
-                except:
+                except Exception:
                     logger.warning(
                         "KICKSTART-PARSE-ERROR --> error parsing YAML invocation record in file %s"
                         % (self._kickstart_output_file)
@@ -333,18 +333,18 @@ class YAMLParser(Parser):
                     # Finish the loop
                     break
                 my_reply.append(my_record)
-            elif self.is_clustered_record(record) == True:
+            elif self.is_clustered_record(record) is True:
                 # Check if we want clustered records too
                 if clustered:
                     # Clustered records are seqexec summary records for clustered jobs
                     # We have a clustered record, parse it!
                     my_reply.append(self.parse_clustered_record(record))
-            elif self.is_task_record(record) == True:
+            elif self.is_task_record(record) is True:
                 # Check if we want task records too
                 if tasks:
                     # We have a clustered record, parse it!
                     my_reply.append(self.parse_task_record(record))
-            elif self.is_multipart_record(record) == True:
+            elif self.is_multipart_record(record) is True:
                 logger.debug(
                     "Multipart Record in file %s" % (self._kickstart_output_file)
                 )
@@ -817,11 +817,11 @@ class XMLParser(Parser):
 
         # Loop while we still have record to read
         while my_buffer is not None:
-            if self.is_invocation_record(my_buffer) == True:
+            if self.is_invocation_record(my_buffer) is True:
                 # We have an invocation record, parse it!
                 try:
                     my_record = self.parse_invocation_record(my_buffer)
-                except:
+                except Exception:
                     logger.warning(
                         "KICKSTART-PARSE-ERROR --> error parsing invocation record in file %s"
                         % (self._kickstart_output_file)
@@ -832,13 +832,13 @@ class XMLParser(Parser):
                     # Finish the loop
                     break
                 my_reply.append(my_record)
-            elif self.is_clustered_record(my_buffer) == True:
+            elif self.is_clustered_record(my_buffer) is True:
                 # Check if we want clustered records too
                 if clustered:
                     # Clustered records are seqexec summary records for clustered jobs
                     # We have a clustered record, parse it!
                     my_reply.append(self.parse_clustered_record(my_buffer))
-            elif self.is_task_record(my_buffer) == True:
+            elif self.is_task_record(my_buffer) is True:
                 # Check if we want task records too
                 if tasks:
                     # We have a clustered record, parse it!
@@ -1070,19 +1070,19 @@ class XMLParser(Parser):
             # Start parsing data for stdout and stderr output
             self._parsing_data = True
         elif name == "file" and name in self._ks_elements:
-            if self._parsing_main_job == True:
+            if self._parsing_main_job is True:
                 # Special case for name inside the mainjob element (will change this later)
                 for my_element in self._ks_elements[name]:
                     if my_element in attrs:
                         self._keys[my_element] = attrs[my_element]
         elif name == "ram" and name in self._ks_elements:
-            if self._parsing_machine == True:
+            if self._parsing_machine is True:
                 # Special case for ram inside the machine element (will change this later)
                 for my_element in self._ks_elements[name]:
                     if my_element in attrs:
                         self._keys[my_element] = attrs[my_element]
         elif name == "uname" and name in self._ks_elements:
-            if self._parsing_machine == True:
+            if self._parsing_machine is True:
                 # Special case for uname inside the machine element (will change this later)
                 for my_element in self._ks_elements[name]:
                     if my_element in attrs:
@@ -1166,11 +1166,11 @@ class XMLParser(Parser):
         elif name == "signalled":
             self._parsing_signalled = False
         elif name == "statcall":
-            if self._parsing_stdout == True:
+            if self._parsing_stdout is True:
                 self._parsing_stdout = False
-            if self._parsing_stderr == True:
+            if self._parsing_stderr is True:
                 self._parsing_stderr = False
-            if self._parsing_final_statcall == True:
+            if self._parsing_final_statcall is True:
                 self._parsing_final_statcall = False
             if "outputs" in self._keys:
                 if self._lfn in self._keys["outputs"]:
@@ -1199,24 +1199,24 @@ class XMLParser(Parser):
         """
         Function called by the parser whenever there's character data in an element
         """
-        if self._parsing_cwd == True:
+        if self._parsing_cwd is True:
             self._cwd += data
 
-        if self._parsing_cpu == True:
+        if self._parsing_cpu is True:
             if "cpu_model" not in self._keys["cpu"]:
                 self._keys["cpu"]["cpu_model"] = ""
             self._keys["cpu"]["cpu_model"] += data
 
-        elif self._parsing_arguments == True:
+        elif self._parsing_arguments is True:
             self._arguments.append(data.strip())
 
-        elif self._parsing_stdout == True and self._parsing_data == True:
+        elif self._parsing_stdout is True and self._parsing_data is True:
             self._stdout += data
 
-        elif self._parsing_stderr == True and self._parsing_data == True:
+        elif self._parsing_stderr is True and self._parsing_data is True:
             self._stderr += data
 
-        elif self._parsing_signalled == True:
+        elif self._parsing_signalled is True:
             self._keys["signalled"]["action"] += data
 
 
