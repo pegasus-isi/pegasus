@@ -42,6 +42,7 @@ public class RegexRCTest {
         mRegex = new Regex();
         mRCFile = File.createTempFile("replica", ".txt");
         mRegex.connect(mRCFile.getName());
+        mRCFile.delete();
     }
 
     @Test
