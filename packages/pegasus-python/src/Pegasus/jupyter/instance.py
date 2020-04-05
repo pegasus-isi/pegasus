@@ -15,12 +15,12 @@
 #  limitations under the License.
 #
 
+from future import standard_library
+
 import os
 import subprocess
 import time
 from datetime import datetime
-
-from future import standard_library
 
 from Pegasus.catalogs.replica_catalog import *
 from Pegasus.catalogs.sites_catalog import *

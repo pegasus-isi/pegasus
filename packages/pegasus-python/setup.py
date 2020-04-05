@@ -15,7 +15,6 @@ install_requires = [
     "PyYAML",
     # pegasus-init
     "Jinja2",
-    "Flask-SQLAlchemy",
     "pamela",
     "pika==1.1.0",
     "Flask",

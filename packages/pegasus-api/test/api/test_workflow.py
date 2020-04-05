@@ -4,8 +4,9 @@ import shutil
 from tempfile import NamedTemporaryFile
 
 import pytest
-import yaml
 from jsonschema import validate
+
+import yaml
 
 import Pegasus
 from Pegasus.api.errors import DuplicateError, NotFoundError

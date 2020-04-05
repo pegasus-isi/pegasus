@@ -1,9 +1,8 @@
 import logging
 from pathlib import Path
 
-from click.testing import CliRunner
-
 import pytest
+from click.testing import CliRunner
 from flask import _request_ctx_stack
 
 log = logging.getLogger(__name__)

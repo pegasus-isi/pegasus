@@ -3,6 +3,7 @@ import os
 from tempfile import TemporaryFile
 
 import pytest
+
 import yaml
 
 from Pegasus.api.writable import Writable, _CustomEncoder, _filter_out_nones

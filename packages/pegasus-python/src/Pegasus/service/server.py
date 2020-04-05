@@ -3,7 +3,6 @@ import os
 import random
 
 import click
-
 import flask
 from OpenSSL import crypto
 
