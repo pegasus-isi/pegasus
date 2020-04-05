@@ -1,3 +1,4 @@
+import json
 import logging
 import re
 import shutil
@@ -6,7 +7,7 @@ import time
 from functools import partial
 from os import path
 
-from Pegasus import json, yaml
+from Pegasus import yaml
 
 
 def from_env(pegasus_home: str = None):
