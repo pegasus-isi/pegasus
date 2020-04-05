@@ -286,7 +286,7 @@ class Client:
         r = Client._make_result(rv)
 
         if r.exit_code != 0:
-            raise ValueError("Pegasus commad failed", r)
+            raise ValueError("Pegasus command failed", r)
 
         return r
 
@@ -295,7 +295,7 @@ class Client:
         if not rv:
             raise ValueError("rv is required")
 
-        r = Result(rv.args, rv.stdout, rv.stderr, rv.returncode)
+        r = Result(rv.args, rv.returncode, rv.stdout, rv.stderr)
         return r
 
     @staticmethod
@@ -347,14 +347,16 @@ class Workflow:
 class Result:
     """An object to store outcome from the execution of a script."""
 
-    def __init__(self, cmd, stdout_bytes, stderr_bytes, exit_code):
+    def __init__(self, cmd, exit_code, stdout_bytes, stderr_bytes):
         self.cmd = cmd
         self.exit_code = exit_code
         self._stdout_bytes = stdout_bytes
         self._stderr_bytes = stderr_bytes
+        self._json = None
+        self._yaml = None
 
     def raise_exit_code(self):
-        if self._exit_code == 0:
+        if self.exit_code == 0:
             return
         raise ValueError("Commad failed", self)
 
@@ -366,43 +368,53 @@ class Result:
     @property
     def stdout(self):
         """Return standard output as str."""
+        if self._stdout_bytes is None:
+            raise ValueError("stdout not captured")
         return self._stdout_bytes.decode().replace("\r\n", "\n")
 
     @property
     def stderr(self):
         """Return standard error as str."""
         if self._stderr_bytes is None:
-            raise ValueError("stderr not separately captured")
+            raise ValueError("stderr not captured")
         return self._stderr_bytes.decode().replace("\r\n", "\n")
 
     @property
     def json(self):
         """Return standard out as JSON."""
-        if self.output_bytes:
-            return json.loads(self.output)
+        if self._stdout_bytes:
+            if not self._json:
+                self._json = json.loads(self.output)
+            return self._json
         else:
             return None
 
-    @property
-    def ndjson(self):
-        """Return standard out as newline delimited JSON."""
-        if self.output_bytes:
-            return json.load_all(self.output)
-        else:
-            return None
+    # @property
+    # def ndjson(self):
+    #     """Return standard out as newline delimited JSON."""
+    #     if self._stdout_bytes:
+    #         if not self._json:
+    #             self._json = json.load_all(self.output)
+    #         return self._json
+    #     else:
+    #         return None
 
     @property
     def yaml(self):
         """Return standard out as YAML."""
-        if self.output_bytes:
-            return yaml.load(self.output)
+        if self._stdout_bytes:
+            if not self._yaml:
+                self._yaml = yaml.load(self.output)
+            return self._yaml
         else:
             return None
 
     @property
     def yaml_all(self):
         """Return standard out as YAML."""
-        if self.output_bytes:
-            return yaml.load_all(self.output)
+        if self._stdout_bytes:
+            if not self._yaml:
+                self._yaml = yaml.load_all(self.output)
+            return self._yaml
         else:
             return None

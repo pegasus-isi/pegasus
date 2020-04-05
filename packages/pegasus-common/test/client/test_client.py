@@ -1,14 +1,11 @@
 import shutil
 import subprocess
-from collections import namedtuple
+from subprocess import CompletedProcess
 from textwrap import dedent
 
 import pytest
 
-from Pegasus.client._client import Client, from_env
-
-# for creating mock subprocess.run return values
-CompletedProcess = namedtuple("CompletedProcess", ["returncode", "stdout", "stderr"])
+from Pegasus.client._client import Client, Result, from_env
 
 
 def test_from_env(mocker):
@@ -30,7 +27,7 @@ def test_from_env_no_pegasus_home(monkeypatch):
 
 @pytest.fixture(scope="function")
 def mock_subprocess(mocker):
-    cp = CompletedProcess(returncode=0, stdout=" ", stderr=" ")
+    cp = CompletedProcess(None, returncode=0, stdout=" ", stderr=" ")
     mocker.patch("subprocess.run", return_value=cp)
 
 
@@ -130,7 +127,7 @@ class TestClient:
         mocker.patch(
             "subprocess.run",
             return_value=CompletedProcess(
-                returncode=0, stdout=pegasus_status_out, stderr=""
+                None, returncode=0, stdout=pegasus_status_out, stderr=""
             ),
         )
         client.wait("submit_dir")
@@ -154,6 +151,19 @@ class TestClient:
         subprocess.run.assert_called_once_with(
             ["/path/bin/pegasus-statistics", "-vvv", "submit_dir"]
         )
+
+    def test__exec(self, mock_subprocess):
+        Client._exec("ls")
+        with pytest.raises(ValueError) as e:
+            Client._exec(None)
+
+        assert str(e.value) == "cmd is required"
+
+    def test__make_result(self):
+        with pytest.raises(ValueError) as e:
+            Client._make_result(None)
+
+        assert str(e.value) == "rv is required"
 
     def test__get_submit_dir(self):
         plan_output_with_direct_submit = dedent(
@@ -223,3 +233,91 @@ class TestClient:
             Client._get_submit_dir(plan_output_without_direct_submit)
             == "/local-scratch/tanaka/workflows/test-workflow-THIS-SHOULD-BE-FOUND-BY-Client._get_submit_dir()"
         )
+
+
+@pytest.fixture(scope="function")
+def make_result():
+    def _make_result(cmd="command", exit_code=0, stdout=b"", stderr=b""):
+        r = Result(cmd, exit_code, stdout, stderr)
+        return r
+
+    return _make_result
+
+
+def test_raise_exit_code(make_result):
+    r = make_result()
+    assert r.raise_exit_code() is None
+
+    with pytest.raises(ValueError) as e:
+        r = make_result(exit_code=1)
+        r.raise_exit_code()
+
+    assert e.value.args[1] == r
+
+
+def test_empty(make_result):
+    r = make_result()
+    assert r.output == ""
+    assert r.stdout == ""
+    assert r.stderr == ""
+    assert r.json is None
+    assert r.yaml is None
+    assert r.yaml_all is None
+
+
+def test_output(make_result):
+    r = make_result(stdout=b"test")
+    assert r.output == "test"
+
+    r = make_result(stdout=None)
+    with pytest.raises(ValueError) as e:
+        r.stdout
+    assert str(e.value) == "stdout not captured"
+
+
+def test_stdout(make_result):
+    r = make_result(stdout=b"test")
+    assert r.stdout == "test"
+
+    r = make_result(stdout=None)
+    with pytest.raises(ValueError) as e:
+        r.stdout
+    assert str(e.value) == "stdout not captured"
+
+
+def test_stderr(make_result):
+    r = make_result(stderr=b"test")
+    assert r.stderr == "test"
+
+    r = make_result(stderr=None)
+    with pytest.raises(ValueError) as e:
+        r.stderr
+    assert str(e.value) == "stderr not captured"
+
+
+def test_json(make_result):
+    r = make_result(stdout=b'{"a": 1}')
+    assert isinstance(r.json, dict)
+    assert r.json["a"] == 1
+
+
+def test_yaml(make_result):
+    r = make_result(stdout=b"a: 1")
+    assert isinstance(r.yaml, dict)
+    assert r.yaml["a"] == 1
+
+
+def test_yaml_all(make_result):
+    r = make_result(
+        stdout=b"""---
+a: 1
+---
+b: 2
+"""
+    )
+
+    d = [y for y in r.yaml_all]
+    assert isinstance(d, list)
+    assert len(d) == 2
+    assert d[0]["a"] == 1
+    assert d[1]["b"] == 2
