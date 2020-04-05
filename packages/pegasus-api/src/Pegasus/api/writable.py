@@ -27,11 +27,11 @@ class _CustomEncoder(json.JSONEncoder):
 
 def _filter_out_nones(_dict):
     """Helper function to remove keys where their values are set to None to avoid cluttering yaml/json files
-    
+
     :param _dict: object represented as a dict
     :type _dict: dict
     :raises ValueError: _dict must be of type dict
-    :return: new dictionary with 'None' values removed 
+    :return: new dictionary with 'None' values removed
     :rtype: dict
     """
     if not isinstance(_dict, dict):
@@ -49,8 +49,8 @@ class Writable:
 
     def _write(self, file, _format):
         """Internal function to dump to file in either yaml or json formats
-        
-        :param file: file object to write to 
+
+        :param file: file object to write to
         :type file: file
         :param _format: file format that can be "yml", "yaml", or "json
         :type _ext: str
@@ -78,7 +78,7 @@ class Writable:
         """Serialize this class as either yaml or json and write to the given
         file. If file==None, this class will be written to a default file. The
         following classes have these defaults:
-        
+
         .. table:: Default Files
             :widths: auto
 
@@ -90,7 +90,7 @@ class Writable:
             TransformationCatalog  transformations.yml
             Workflow               workflow.yml
             =====================  ===================
-                    
+
         :param file: path or file object (opened in "w" mode) to write to, defaults to None
         :type file: str or file, optional
         :param _format: can be either "yml", "yaml" or "json", defaults to "yml"

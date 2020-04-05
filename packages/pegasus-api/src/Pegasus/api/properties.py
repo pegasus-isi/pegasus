@@ -6,7 +6,7 @@ __all__ = "Properties"
 
 class Properties:
     """Write Pegasus properties to a file.
-    
+
     .. code-block:: python
 
         # Example
@@ -207,7 +207,7 @@ class Properties:
 
     @staticmethod
     def ls(prop=None):
-        """List property keys. Refer to 
+        """List property keys. Refer to
         `Configuration docs <https://pegasus.isi.edu/documentation/configuration.php>`_
         for additional information. If prop is given, all properties beginning with
         prop will be printed else all properties will be printed.
@@ -220,7 +220,7 @@ class Properties:
             pegasus.pmc_request_cpus
             pegasus.pmc_request_memory
             pegasus.pmc_task_arguments
-        
+
         :param prop: properties beginning with "prop" will be listed in alphabetical order, defaults to None
         :type prop: str, optional
         """
@@ -249,7 +249,7 @@ class Properties:
         self._conf.remove_option(DEFAULTSECT, k)
 
     def write(self, file=None):
-        """Write these properties to a file. If file is not given, these 
+        """Write these properties to a file. If file is not given, these
         properties are written to 'pegasus.properties'
 
         .. code-block:: python

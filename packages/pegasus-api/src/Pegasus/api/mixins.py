@@ -134,9 +134,9 @@ class Namespace(Enum):
 
 def _profiles(ns, **map_p):
     """Internal decorator that enables the use of kw args in functions like
-    ProfileMixin.add_condor_profile() and ProfileMixin.add_dagman_profile(). 
-    A handful of profile keys contain "." or "-", and so those profile keys cannot 
-    be used for kw args. By providing a mapping of legal key names to actual key names, 
+    ProfileMixin.add_condor_profile() and ProfileMixin.add_dagman_profile().
+    A handful of profile keys contain "." or "-", and so those profile keys cannot
+    be used for kw args. By providing a mapping of legal key names to actual key names,
     adding profiles becomes more natural. For example we can have the following:
 
     .. code-block:: python
@@ -227,9 +227,9 @@ class ProfileMixin:
             # Example 2
             job.add_profiles(Namespace.ENV, JAVA_HOME="/usr/bin/java", USER="ryan")
 
-        For add_globus_profile(), add_condor_profile(), add_dagman_profile(), 
-        add_selector_profile(), and add_pegasus_profile(), if a profile key that 
-        you are trying to use is not listed as a key word argument, use this 
+        For add_globus_profile(), add_condor_profile(), add_dagman_profile(),
+        add_selector_profile(), and add_pegasus_profile(), if a profile key that
+        you are trying to use is not listed as a key word argument, use this
         function to add the profile.
 
         :raises TypeError: namespace must be one of Namespace

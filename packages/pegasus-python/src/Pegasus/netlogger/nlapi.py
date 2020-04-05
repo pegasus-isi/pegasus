@@ -127,7 +127,7 @@ def quotestr(v):
 
 def getGuid(create=True, env=GID_ENV):
     """Return a GUID.
-    If 'create' is True (the default), and if none is found 
+    If 'create' is True (the default), and if none is found
     in the environment then create one.
     """
     gid = os.environ.get(env, None)
@@ -217,15 +217,15 @@ else:
 
 class Log:
     """NetLogger log class.
-    
+
     Name=value pairs for the log are passed as keyword arguments.
     This is mostly good, but one drawback is that a period '.' in the
-    name is confusing to python. As a work-around, use '__' to mean '.', 
+    name is confusing to python. As a work-around, use '__' to mean '.',
     e.g. if you want the result to be "foo.id=bar", then do::
         log.write(.., foo__id='bar')
     Similarly, a leading '__' will be stripped (e.g. to avoid stepping
     on keywords like 'class')
-    
+
     If you instantiate this class without a 'logfile', it will act
     as a formatter, returning a string.
 

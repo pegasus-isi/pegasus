@@ -44,10 +44,10 @@ __all__ = (
 
 def _to_wf(d: dict) -> Workflow:
     """Convert dict to Workflow
-    
+
     :param d: Workflow represented as a dict
     :type d: dict
-    :raises PegasusError: encountered error parsing 
+    :raises PegasusError: encountered error parsing
     :return: a Workflow object based on d
     :rtype: Workflow
     """
@@ -193,7 +193,7 @@ def load(fp: TextIO, *args, **kwargs) -> Workflow:
     """
     Deserialize ``fp`` (a ``.read()``-supporting file-like object containing a Workflow document) to a :py:class:`~Pegasus.api.workflow.Workflow` object.
 
-    :param fp: file like object to load from 
+    :param fp: file like object to load from
     :type fp: TextIO
     :return: deserialized Workflow object
     :rtype: Workflow
@@ -205,7 +205,7 @@ def loads(s: str, *args, **kwargs) -> Workflow:
     """
     Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance containing a Workflow document) to a :py:class:`~Pegasus.api.workflow.Workflow` object.
 
-    :param s: string to load from 
+    :param s: string to load from
     :type s: str
     :return: deserialized Workflow object
     :rtype: Workflow

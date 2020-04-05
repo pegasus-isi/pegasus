@@ -429,7 +429,7 @@ class ThrottleTimer:
     continuously between calls to throttle(), periodically sleep so
     that the program is running for roughly that proportion of time.
 
-    For example, if run_ratio is 0.1 then calling throttle() in a 
+    For example, if run_ratio is 0.1 then calling throttle() in a
     loop will cause it to sleep 90% of the time:
        tt = ThrottleTimer(0.1)
        ...
@@ -869,11 +869,11 @@ def process_kvp(option, all={}, _bool={}, type="AMQP"):
     """Process a name=value option.
 
     Parameters:
-    
+
         - option (str): "name=value" option string
-    
+
     Returns: (key,value)
-    
+
     Raises:  ValueError for bad format or unknown option.
     """
     parts = option.split("=", 1)
@@ -892,7 +892,7 @@ def hash_event(e):
     for event dictionary, 'e'.
 
     Returns: String (hexdigest) representation of the hash value.
-    
+
     """
     return md5(str(e)).hexdigest()
 

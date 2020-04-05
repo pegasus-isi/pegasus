@@ -38,8 +38,8 @@ def getLocaltimeOffsetSec(t=None):
 
 
 def getLocaltimeOffsetParts(t=None):
-    """Return current localtime offset at time 't' (default=now) 
-    from GMT as a triple: 
+    """Return current localtime offset at time 't' (default=now)
+    from GMT as a triple:
        hours, minutes, sign (1 for positive or 0, -1 for negative)
     """
     offs_sec = getLocaltimeOffsetSec(t)
@@ -50,7 +50,7 @@ def getLocaltimeOffsetParts(t=None):
 
 
 def getLocaltimeISO(t):
-    """Get an ISO8601 string for the local timezone at time 't', where 
+    """Get an ISO8601 string for the local timezone at time 't', where
     t is either seconds since the epoch as a float, or a tuple like the one
     returned by time.localtime(), or a string date
 

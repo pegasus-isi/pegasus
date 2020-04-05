@@ -11,8 +11,8 @@ import yaml
 def convert_yaml_schemas_to_json():
     """
     Convert all the yaml schemas into json files.
-    These files will be used whenever schema validation is 
-    needed for the tests. The json files will be cleaned up 
+    These files will be used whenever schema validation is
+    needed for the tests. The json files will be cleaned up
     at the end of the test module.
     """
     # get the path of the schema file with the given name

@@ -44,7 +44,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     def add_inputs(self, *input_files):
         """Add one or more :py:class:`~Pegasus.api.replica_catalog.File`s as input to this job
-        
+
         :param input_files: the :py:class:`~Pegasus.api.replica_catalog.File`s to be added as inputs to this job
         :raises DuplicateError: all input files must be unique
         :raises ValueError: job inputs must be of type :py:class:`~Pegasus.api.replica_catalog.File`
@@ -72,7 +72,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
 
     def get_inputs(self):
         """Get this job's input files
-        
+
         :return: all input files associated with this job
         :rtype: set
         """
@@ -82,14 +82,14 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
     def add_outputs(self, *output_files, stage_out=True, register_replica=False):
         """Add one or more :py:class:`~Pegasus.api.replica_catalog.File`s as outputs to this job. stage_out and register_replica
         will be applied to all files given.
-        
+
         :param output_files: the :py:class:`~Pegasus.api.replica_catalog.File` s to be added as outputs to this job
         :param stage_out: whether or not to send files back to an output directory, defaults to True
         :type stage_out: bool, optional
         :param register_replica: whether or not to register replica with a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog`, defaults to False
         :type register_replica: bool, optional
-        :raises DuplicateError: all output files must be unique 
-        :raises ValueError: a job output must be of type File 
+        :raises DuplicateError: all output files must be unique
+        :raises ValueError: a job output must be of type File
         :return: self
         """
         for file in output_files:
@@ -117,8 +117,8 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
 
     def get_outputs(self):
         """Get this job's output files
-        
-        :return: all output files associated with this job 
+
+        :return: all output files associated with this job
         :rtype: set
         """
         return {use.file for use in self.uses if use._type == "output"}
@@ -126,15 +126,15 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     def add_checkpoint(self, checkpoint_file, stage_out=True, register_replica=False):
         """Add an output file of this job as a checkpoint file
-        
+
         :param checkpoint_file: the :py:class:`~Pegasus.api.replica_catalog.File` to be added as a checkpoint file to this job
         :type checkpoint_file: File
         :param stage_out: whether or not to send files back to an output directory, defaults to True
         :type stage_out: bool, optional
         :param register_replica: whether or not to register replica with a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog`, defaults to False
         :type register_replica: bool, optional
-        :raises DuplicateError: all output files must be unique 
-        :raises ValueError: a job output must be of type File 
+        :raises DuplicateError: all output files must be unique
+        :raises ValueError: a job output must be of type File
         :return: self
         """
 
@@ -164,8 +164,8 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     def add_args(self, *args):
         """Add arguments to this job. Each argument will be separated by a space.
-        Each argument must be either a File or a primitive type. 
-        
+        Each argument must be either a File or a primitive type.
+
         :return: self
         :rtype: AbstractJob
         """
@@ -174,8 +174,8 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     def set_stdin(self, file):
         """Set stdin to a :py:class:`~Pegasus.api.replica_catalog.File`
-        
-        :param file: a file that will be read into stdin  
+
+        :param file: a file that will be read into stdin
         :type file: File or str
         :raises ValueError: file must be of type :py:class:`~Pegasus.api.replica_catalog.File` or str
         :raises DuplicateError: stdin is already set or the given file has already been added as an input to this job
@@ -199,7 +199,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
 
     def get_stdin(self):
         """Get the :py:class:`~Pegasus.api.replica_catalog.File` being used for stdin
-        
+
         :return: the stdin file
         :rtype: File
         """
@@ -208,7 +208,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     def set_stdout(self, file, stage_out=True, register_replica=False):
         """Set stdout to a :py:class:`~Pegasus.api.replica_catalog.File`
-        
+
         :param file: a file that stdout will be written to
         :type file: File or str
         :param stage_out: whether or not to send files back to an output directory, defaults to True
@@ -216,7 +216,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         :param register_replica: whether or not to register replica with a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog`, defaults to False
         :type register_replica: bool, optional
         :raises ValueError: file must be of type :py:class:`~Pegasus.api.replica_catalog.File` or str
-        :raises DuplicateError: stdout is already set or the given file has already been added as an output to this job 
+        :raises DuplicateError: stdout is already set or the given file has already been added as an output to this job
         :return: self
         """
         if not isinstance(file, (File, str)):
@@ -237,7 +237,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
 
     def get_stdout(self):
         """Get the :py:class:`~Pegasus.api.replica_catalog.File` being used for stdout
-        
+
         :return: the stdout file
         :rtype: File
         """
@@ -245,8 +245,8 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
 
     @_chained
     def set_stderr(self, file, stage_out=True, register_replica=False):
-        """Set stderr to a :py:class:`~Pegasus.api.replica_catalog.File` 
-        
+        """Set stderr to a :py:class:`~Pegasus.api.replica_catalog.File`
+
         :param file: a file that stderr will be written to
         :type file: File or str
         :param stage_out: whether or not to send files back to an output directory, defaults to True
@@ -254,7 +254,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         :param register_replica: whether or not to register replica with a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog`, defaults to False
         :type register_replica: bool, optional
         :raises ValueError: file must be of type File or str
-        :raises DuplicateError: stderr is already set or the given file has already been added as an output to this job 
+        :raises DuplicateError: stderr is already set or the given file has already been added as an output to this job
         :return: self
         """
         if not isinstance(file, (File, str)):
@@ -275,8 +275,8 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
 
     def get_stderr(self):
         """Get the :py:class:`~Pegasus.api.replica_catalog.File` being used for stderr
-        
-        :return: the stderr file 
+
+        :return: the stderr file
         :rtype: File
         """
         return self.stderr
@@ -331,7 +331,7 @@ class Job(AbstractJob):
     def __init__(
         self, transformation, _id=None, node_label=None, namespace=None, version=None,
     ):
-        """        
+        """
         :param transformation: :py:class:`~Pegasus.api.transformation_catalog.Transformation` object or name of the transformation that this job uses
         :type transformation: Transformation or str
         :param _id: a unique id; if none is given then one will be assigned when the job is added by a :py:class:`~Pegasus.api.workflow.Workflow`, defaults to None
@@ -512,7 +512,7 @@ def _needs_submit_dir(f):
 class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     """Represents multi-step computational steps as a directed
     acyclic graph.
-    
+
     .. code-block:: python
 
         # Example
@@ -553,7 +553,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
                 ))
 
         # --- Replicas -----------------------------------------------------------------
-        # create initial input file 
+        # create initial input file
         with open("f.a", "w") as f:
             f.write("This is sample input to KEG")
 
@@ -565,30 +565,30 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         preprocess = (Transformation("preprocess", namespace="pegasus", version="4.0")
                         .add_site(
                             TransformationSite(
-                                CONDOR_POOL, 
-                                PEGASUS_LOCATION, 
-                                is_stageable=False, 
-                                arch=Arch.X86_64, 
+                                CONDOR_POOL,
+                                PEGASUS_LOCATION,
+                                is_stageable=False,
+                                arch=Arch.X86_64,
                                 os_type=OS.LINUX)
                         ))
 
         findrage = (Transformation("findrange", namespace="pegasus", version="4.0")
                         .add_site(
                             TransformationSite(
-                                CONDOR_POOL, 
-                                PEGASUS_LOCATION, 
-                                is_stageable=False, 
-                                arch=Arch.X86_64, 
+                                CONDOR_POOL,
+                                PEGASUS_LOCATION,
+                                is_stageable=False,
+                                arch=Arch.X86_64,
                                 os_type=OS.LINUX)
                         ))
 
         analyze = (Transformation("analyze", namespace="pegasus", version="4.0")
                         .add_site(
                             TransformationSite(
-                                CONDOR_POOL, 
-                                PEGASUS_LOCATION, 
-                                is_stageable=False, 
-                                arch=Arch.X86_64, 
+                                CONDOR_POOL,
+                                PEGASUS_LOCATION,
+                                is_stageable=False,
+                                arch=Arch.X86_64,
                                 os_type=OS.LINUX)
                         ))
 
@@ -608,17 +608,17 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
                     .add_args("-a", "preprocess", "-T", "60", "-i", fa, "-o", fb1, fb2)
                     .add_inputs(fa)
                     .add_outputs(fb1, fb2),
-                
+
                 Job(findrage)
                     .add_args("-a", "findrange", "-T", "60", "-i", fb1, "-o", fc1)
                     .add_inputs(fb1)
                     .add_outputs(fc1),
-                
+
                 Job(findrage)
                     .add_args("-a", "findrange", "-T", "60", "-i", fb2, "-o", fc2)
                     .add_inputs(fb2)
                     .add_outputs(fc2),
-                
+
                 Job(analyze)
                     .add_args("-a", "analyze", "-T", "60", "-i", fc1, fc2, "-o", fd)
                     .add_inputs(fc1, fc2)
@@ -627,7 +627,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             .add_replica_catalog(rc)
             .add_transformation_catalog(tc)
             .write())
-            
+
     """
 
     _DEFAULT_FILENAME = "workflow.yml"
@@ -680,7 +680,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         **kwargs
     ):
         """Plan the workflow.
-        
+
         :param conf:  the path to the properties file to use for planning, defaults to None
         :type conf: str, optional
         :param sites: comma separated list of executions sites on which to map the workflow, defaults to "local"
@@ -730,7 +730,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_needs_client
     def run(self, verbose: int = 0):
         """Run the planned workflow.
-        
+
         :param verbose: verbosity, defaults to False
         :type verbose: int, optional
         """
@@ -741,7 +741,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_needs_client
     def status(self, long: bool = False, verbose: int = 0):
         """Monitor the workflow by quering Condor and directories.
-        
+
         :param long: Show all DAG states, including sub-DAGs, default only totals. defaults to False
         :type long: bool, optional
         :param verbose:  verbosity, defaults to False
@@ -756,7 +756,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     def wait(self, delay: int = 2):
         """Displays progress bar to stdout and blocks until the workflow either
         completes or fails.
-        
+
         :param delay: refresh rate in seconds of the progress bar, defaults to 2
         :type delay: int, optional
         """
@@ -768,7 +768,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_needs_client
     def remove(self, verbose: int = 0):
         """Removes this workflow that has been planned and submitted.
-        
+
         :param verbose:  verbosity, defaults to False
         :type verbose: int, optional
         """
@@ -779,7 +779,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_needs_client
     def analyze(self, verbose: int = 0):
         """Debug a workflow.
-        
+
         :param verbose:  verbosity, defaults to False
         :type verbose: int, optional
         """
@@ -792,7 +792,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_needs_client
     def statistics(self, verbose: int = 0):
         """Generate statistics about the workflow run.
-        
+
         :param verbose:  verbosity, defaults to False
         :type verbose: int, optional
         """
@@ -801,8 +801,8 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     def add_jobs(self, *jobs):
         """Add one or more jobs at a time to the Workflow
-        
-        :raises DuplicateError: a job with the same id already exists in this workflow 
+
+        :raises DuplicateError: a job with the same id already exists in this workflow
         :return: self
         """
         for job in jobs:
@@ -818,7 +818,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
     def get_job(self, _id):
         """Retrieve the job with the given id
-        
+
         :param _id: id of the job to be retrieved from the Workflow
         :type _id: str
         :raises NotFoundError: a job with the given id does not exist in this workflow
@@ -834,7 +834,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
     def _get_next_job_id(self):
         """Get the next job id from a sequence specific to this workflow
-        
+
         :return: a new unique job id
         :rtype: str
         """
@@ -850,7 +850,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         """Add a site catalog to this workflow. The contents fo the site catalog
         will be inlined into the same file as this workflow when it is written
         out.
-        
+
         :param sc: the SiteCatalog to be added
         :type sc: SiteCatalog
         :raises TypeError: sc must be of type SiteCatalog
@@ -873,7 +873,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         """Add a replica catalog to this workflow. The contents fo the replica catalog
         will be inlined into the same file as this workflow when it is written
         out.
-        
+
         :param rc: the ReplicaCatalog to be added
         :type rc: ReplicaCatalog
         :raises TypeError: rc must be of type ReplicaCatalog
@@ -893,10 +893,10 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
     @_chained
     def add_transformation_catalog(self, tc):
-        """Add a transformation catalog to this workflow. The contents fo the transformation 
+        """Add a transformation catalog to this workflow. The contents fo the transformation
         catalog will be inlined into the same file as this workflow when it is written
         out.
-        
+
         :param tc: the TransformationCatalog to be added
         :type tc: TransformationCatalog
         :raises TypeError: tc must be of type TransformationCatalog
@@ -919,7 +919,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     def add_dependency(self, parent, *children):
         """Manually specify a dependency between one job to one or more other jobs
-        
+
         :param parent: parent job
         :type parent: AbstractJob
         :param children: one or more child jobs
@@ -943,7 +943,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     def _infer_dependencies(self):
         """Internal function for automatically computing dependencies based on
         Job input and output files. This is called when Workflow.infer_dependencies is
-        set to True. 
+        set to True.
         """
 
         if self.infer_dependencies:
@@ -999,7 +999,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
                     elif io._type == _LinkType.OUTPUT.value:
                         mapping[io.file.lfn][1].add(job)
 
-            """    
+            """
             Go through the mapping and for each file add dependencies between the
             job producing a file and the jobs consuming the file
             """
@@ -1020,7 +1020,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     def write(self, file=None, _format="yml"):
         """Write this workflow to a file. If no file is given,
         it will written to workflow.yml
-        
+
         :param file: path or file object (opened in "w" mode) to write to, defaults to None
         :type file: str or file, optional
         """

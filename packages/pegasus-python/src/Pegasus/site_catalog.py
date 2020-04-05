@@ -44,10 +44,10 @@ __all__ = (
 
 def _to_sc(d: dict) -> SiteCatalog:
     """Convert dict to SiteCatalog
-    
+
     :param d: SiteCatalog represented as a dict
     :type d: dict
-    :raises PegasusError: encountered error parsing 
+    :raises PegasusError: encountered error parsing
     :return: a SiteCatalog object based on d
     :rtype: SiteCatalog
     """
@@ -129,7 +129,7 @@ def load(fp: TextIO, *args, **kwargs) -> SiteCatalog:
     """
     Deserialize ``fp`` (a ``.read()``-supporting file-like object containing a SiteCatalog document) to a :py:class:`~Pegasus.api.site_catalog.SiteCatalog` object.
 
-    :param fp: file like object to load from 
+    :param fp: file like object to load from
     :type fp: TextIO
     :return: deserialized SiteCatalog object
     :rtype: SiteCatalog
@@ -141,7 +141,7 @@ def loads(s: str, *args, **kwargs) -> SiteCatalog:
     """
     Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance containing a SiteCatalog document) to a :py:class:`~Pegasus.api.site_catalog.SiteCatalog` object.
 
-    :param s: string to load from 
+    :param s: string to load from
     :type s: str
     :return: deserialized SiteCatalog object
     :rtype: SiteCatalog

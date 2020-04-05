@@ -7,7 +7,7 @@ __author__ = "Dan Gunter"
 
 
 class BufferedReadline:
-    """Change semantics of file.readline() to return either 
+    """Change semantics of file.readline() to return either
     a complete line with a newline terminator or an empty line.
     Partial lines are buffered between calls until the newline
     is found.

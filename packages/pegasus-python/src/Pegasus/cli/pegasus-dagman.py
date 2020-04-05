@@ -7,7 +7,7 @@ This program is to be run as a replacement for condor_dagman inside
 of a submit file. The dag can be submitted by running the command
 condor_submit_dag -dagman /path/to/pegasus-dagman my.dag
 
-Usage: pegasus-dagman [options] 
+Usage: pegasus-dagman [options]
 """
 
 ##
@@ -126,7 +126,7 @@ def monitord_launch(monitord_bin, arguments=[]):
 
 def is_dagman_copy_to_spool():
     """Checks using condor_config_val if dagman_copy_to_spool is set
-    then copy condor_dagman to the current dir "bin_dir" 
+    then copy condor_dagman to the current dir "bin_dir"
     """
     condor_config_val = find_prog("condor_config_val")
     copy_to_spool = subprocess.Popen(

@@ -138,7 +138,7 @@ class FileServer(ProfileMixin):
 
 class Directory:
     """Information about filesystems Pegasus can use for storing temporary and long-term
-    files. 
+    files.
     """
 
     #: Describes a scratch file systems. Pegasus will use this to store
@@ -185,7 +185,7 @@ class Directory:
     @_chained
     def add_file_servers(self, *file_servers):
         """Add one or more access methods to this directory
-        
+
         :param file_server: a :py:class:`~Pegasus.api.site_catalog.FileServer`
         :raises ValueError: file_server must be of type :py:class:`~Pegasus.api.site_catalog.FileServer`
         :return: self
@@ -280,8 +280,8 @@ class Grid:
         :type idle_nodes: [type], optional
         :param total_nodes: [description], defaults to None
         :type total_nodes: [type], optional
-        :raises ValueError: 
-        :raises ValueError: 
+        :raises ValueError:
+        :raises ValueError:
         :raises ValueError:
         """
         if not isinstance(grid_type, _GridType):
@@ -347,10 +347,10 @@ class Grid:
 
 class Site(ProfileMixin):
     """A compute resource (which is often a cluster) that we indent to run
-    the workflow upon. A site is a homogeneous part of a cluster that has at 
-    least a single GRAM gatekeeper with a jobmanager-fork and jobmanager-<scheduler> 
-    interface and at least one gridftp server along with a shared file system. 
-    The GRAM gatekeeper can be either WS GRAM or Pre-WS GRAM. A site can also 
+    the workflow upon. A site is a homogeneous part of a cluster that has at
+    least a single GRAM gatekeeper with a jobmanager-fork and jobmanager-<scheduler>
+    interface and at least one gridftp server along with a shared file system.
+    The GRAM gatekeeper can be either WS GRAM or Pre-WS GRAM. A site can also
     be a condor pool or glidein pool with a shared file system.
 
     .. code-block:: python
@@ -428,7 +428,7 @@ class Site(ProfileMixin):
     @_chained
     def add_directories(self, *directories):
         """Add one or more :py:class:`~Pegasus.api.site_catalog.Directory` to this :py:class:`~Pegasus.api.site_catalog.Site`
-        
+
         :param directory: the :py:class:`~Pegasus.api.site_catalog.Directory` to be added
         :raises TypeError: directory must be of type :py:class:`~Pegasus.api.site_catalog.Directory`
         :return: self
@@ -446,7 +446,7 @@ class Site(ProfileMixin):
     @_chained
     def add_grids(self, *grids):
         """Add one or more :py:class:`~Pegasus.api.site_catalog.Grid` to this :py:class:`~Pegasus.api.site_catalog.Site`
-        
+
         :param grid: the :py:class:`~Pegasus.api.site_catalog.Grid` to be added
         :raises TypeError: grid must be of type :py:class:`~Pegasus.api.site_catalog.Grid`
         :return: self
@@ -481,7 +481,7 @@ class SiteCatalog(Writable):
 
     .. code-block:: python
 
-        # Example 
+        # Example
         (SiteCatalog()
             .add_sites(
                 Site(LOCAL, arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7")
@@ -498,7 +498,7 @@ class SiteCatalog(Writable):
                     .add_condor_profile(universe="vanilla")
 
             ).write())
-            
+
     """
 
     _DEFAULT_FILENAME = "sites.yml"
@@ -509,7 +509,7 @@ class SiteCatalog(Writable):
     @_chained
     def add_sites(self, *sites):
         """Add one or more sites to this catalog
-        
+
         :param site: the site to be added
         :raises TypeError: site must be of type :py:class:`~Pegasus.api.site_catalog.Site`
         :raises DuplicateError: a site with the same name already exists in this catalog

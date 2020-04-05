@@ -215,9 +215,9 @@ def transfer(request):
       "client_id":       "globus oauth client id",
       "src_endpoint":    "rynge#obelix",
       "dst_endpoint":    "rynge#workflow",
-      "transfer_at":     "secret_auth_token", 
-      "transfer_rt":     "secret_refresh_auth_token", 
-      "transfer_at_exp": "secret_auth_token_expiration", 
+      "transfer_at":     "secret_auth_token",
+      "transfer_rt":     "secret_refresh_auth_token",
+      "transfer_at_exp": "secret_auth_token_expiration",
       "recursive":       [True | False],
       "files":[
          {"src":"/etc/hosts","dst":"/tmp/foobar.txt"},

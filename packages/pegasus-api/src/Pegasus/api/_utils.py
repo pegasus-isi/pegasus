@@ -11,7 +11,7 @@ def _get_class_enum_member_str(_cls, _type):
         class _GridType(Enum):
             GT5 = "gt5"
             PBS = "pbs"
-        
+
         class Grid:
             GT5 = _GridType.GT5
             PBS = _GridType.PBS
@@ -22,11 +22,11 @@ def _get_class_enum_member_str(_cls, _type):
 
             def __json__(self):
                 pass
-    
-    Calling _get_class_enum_member_str(Grid, _GridType) would return the string:
-    "Grid.<GT5 | PBS>" 
 
-    
+    Calling _get_class_enum_member_str(Grid, _GridType) would return the string:
+    "Grid.<GT5 | PBS>"
+
+
     :param _cls: the target class
     :type _cls: type
     :param _type: class variable types to extract
@@ -53,10 +53,10 @@ def _get_enum_str(enum_cls):
         class Scheduler(Enum):
             PBS = "pbs"
             LSF = "lsf"
-    
+
     Calling _get_enum_str(Scheduler) would return the string:
     "Scheduler.<PBS | LSF>"
-    
+
     :param enum_cls: the target class that inherits from Enum
     :type enum_cls: type
     :return: a str formatted as enum_cls.__name__ + ".<member 1 | member 2 | .. | member n>"

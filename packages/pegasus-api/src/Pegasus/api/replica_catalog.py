@@ -10,13 +10,13 @@ __all__ = ["File", "ReplicaCatalog"]
 
 class File(MetadataMixin):
     """
-    A workflow File. This class is used to represent 
+    A workflow File. This class is used to represent
     :py:class:`~Pegasus.api.workflow.Job` inputs and outputs.
     """
 
     def __init__(self, lfn, size=None):
         """
-        :param lfn: a unique logical filename 
+        :param lfn: a unique logical filename
         :type lfn: str
         :param size: size in bytes, defaults to None
         :type size: int
@@ -128,7 +128,7 @@ class _ReplicaCatalogEntry:
 
 class ReplicaCatalog(Writable):
     """Maintains a mapping of logical filenames to physical filenames
-        
+
         .. code-block:: python
 
             # Example
@@ -151,7 +151,7 @@ class ReplicaCatalog(Writable):
         self, site, lfn, pfn, regex=False, checksum_type=None, checksum_value=None
     ):
         """Add an entry to the replica catalog. If regex=True, checksum_type and
-        checksum_value cannot be used. If a checksum of this replica is to be used, 
+        checksum_value cannot be used. If a checksum of this replica is to be used,
         both checksum_type and checksum_value must be specified.
 
         .. code-block:: python
@@ -164,17 +164,17 @@ class ReplicaCatalog(Writable):
             rc.add_replica("local", "f.a", "file:///Volumes/data/input/f.a", regex="true")
 
             # Example 3
-            rc.add_replica("local", 
-                           "f.a", 
-                           "file:///lfs1/input-data/f.a", 
-                           checksum_type="sha256", 
+            rc.add_replica("local",
+                           "f.a",
+                           "file:///lfs1/input-data/f.a",
+                           checksum_type="sha256",
                            checksum_value="ca8ed5988cb4ca0b67c45fd80fd17423aba2a066ca8a63a4e1c6adab067a3e92")
-        
+
         :param site: site at which this file resides
         :type site: str
         :param lfn: logical filename or :py:class:`~Pegasus.api.replica_catalog.File`
         :type lfn: str or File
-        :param pfn: physical file name 
+        :param pfn: physical file name
         :type pfn: str
         :param regex: whether or not the lfn is a regex pattern, defaults to False
         :type regex: bool, optional

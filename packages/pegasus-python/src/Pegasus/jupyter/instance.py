@@ -90,7 +90,7 @@ class Instance:
         Generate a Pegasus tutorial workflow.
         :param env: Execution environment (e.g., TutorialEnv.LOCAL_MACHINE)
         :param example: Example tutorial worklfow (e.g., TutorialExample.SPLIT)
-        :param workflow_dir: Name of the folder where the workflow will be generated 
+        :param workflow_dir: Name of the folder where the workflow will be generated
         """
         if not env:
             raise Exception(
@@ -172,7 +172,7 @@ class Instance:
         The main method, which is used to run a Pegasus workflow.
         :param submit: Plan and submit the executable workflow generated (default: True)
         :param cleanup: The cleanup strategy to use (default: Cleanup.INPLACE)
-        :param site: The sitename of the workflow 
+        :param site: The sitename of the workflow
         :param force: Skip reduction of the workflow, resulting in build style dag (default: False)
         """
         if not self._is_tutorial and (not self.dax or not isinstance(self.dax, ADAG)):
@@ -289,7 +289,7 @@ class Instance:
 
     def submit(self):
         """
-        Run the workflow in case it has only been planned. 
+        Run the workflow in case it has only been planned.
         """
         if self._submit:
             raise Exception("The workfow execution has already been started.")

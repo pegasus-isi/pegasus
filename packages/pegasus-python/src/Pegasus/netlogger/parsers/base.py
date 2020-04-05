@@ -250,7 +250,7 @@ class BaseParser(ProcessInterface, DoesLogging):
     Each read() can return multiple events,
     or multiple read()s can return one event, transparently
     to the caller who only sees one log line per iteration.
-    If 'unparsed_file' is not None, write all lines that returned an 
+    If 'unparsed_file' is not None, write all lines that returned an
     error, or the constant LINE_SKIPPED, to this file.
 
     Parameters:
@@ -497,7 +497,7 @@ class BaseParser(ProcessInterface, DoesLogging):
         return item
 
     def flush(self):
-        """Return a list of all saved items, i.e., of all items 
+        """Return a list of all saved items, i.e., of all items
         that were parsed but not returned yet, and clear this list.
         """
         result = []
@@ -598,7 +598,7 @@ class NLSimpleParser(DoesLogging):
     """Simple, fast, not-too-flexible NL parser.
 
     Does *not* inherit from NLBaseParser.
-    This is important to allow the BaseParser to itself parse 
+    This is important to allow the BaseParser to itself parse
     netlogger input.
     """
 
@@ -691,8 +691,8 @@ else:
 
     class NLPyParser:
         BADNESS = """
-Can't use the NLPyParser class because pyparsing is not installed. 
-You can use NLFastParser instead, run 'easy_install pyparsing', or 
+Can't use the NLPyParser class because pyparsing is not installed.
+You can use NLFastParser instead, run 'easy_install pyparsing', or
 install from http://pyparsing.wikispaces.com/ .
 """
 

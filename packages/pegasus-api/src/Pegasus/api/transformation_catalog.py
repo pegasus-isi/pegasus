@@ -18,9 +18,9 @@ __all__ = [
 
 
 class TransformationSite(ProfileMixin, MetadataMixin):
-    """Site specific information about a :py:class:`~Pegasus.api.transformation_catalog.Transformation`. 
+    """Site specific information about a :py:class:`~Pegasus.api.transformation_catalog.Transformation`.
     A :py:class:`~Pegasus.api.transformation_catalog.Transformation` must contain at least one
-    TransformationSite. 
+    TransformationSite.
     """
 
     def __init__(
@@ -53,7 +53,7 @@ class TransformationSite(ProfileMixin, MetadataMixin):
         :param glibc: version of glibc this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled against, defaults to None
         :type glibc: str, optional
         :param container: specify the name of the container to use, optional
-        :type container: str 
+        :type container: str
         :raises ValueError: arch must be one of :py:class:`~Pegasus.api.site_catalog.Arch`
         :raises ValueError: os_type must be one of :py:class:`~Pegasus.api.site_catalog.OS`
         """
@@ -128,7 +128,7 @@ class Container(ProfileMixin):
 
         # Example
         c = Container("centos-pegasus", Container.DOCKER, "docker:///ryan/centos-pegasus:latest", ["/Volumes/Work/lfs1:/shared-data/:ro"])
-            
+
     """
 
     DOCKER = _ContainerType.DOCKER
@@ -185,19 +185,19 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
     syntax in Example 1 can be used where the args: site, pfn, and is_stageable is
     provided to the constructor. If site, pfn, and is_stageable is specified, then
     the args: arch, os_type, os_release, os_version, glibc, and container, are
-    applied to the site, else they are ignored. When a transformation resides 
-    multiple sites, the syntax in Example 2 can be used where multiple 
-    TransformationSite objects can be added. 
+    applied to the site, else they are ignored. When a transformation resides
+    multiple sites, the syntax in Example 2 can be used where multiple
+    TransformationSite objects can be added.
 
     .. code-block:: python
 
         # Example 1: transformation that resides on a single site
         preprocess = Transformation(
-                "preprocess", 
-                namespace="pegasus", 
-                version="4.0", 
-                site=CONDOR_POOL, 
-                pfn=PEGASUS_LOCATION, 
+                "preprocess",
+                namespace="pegasus",
+                version="4.0",
+                site=CONDOR_POOL,
+                pfn=PEGASUS_LOCATION,
                 is_stageable=False
             )
 
@@ -205,12 +205,12 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         preprocess = (Transformation("preprocess", namespace="pegasus", version="4.0")
                         .add_sites(
                             TransformationSite(
-                                CONDOR_POOL, 
-                                PEGASUS_LOCATION, 
-                                is_stageable=False, 
-                                arch=Arch.X86_64, 
+                                CONDOR_POOL,
+                                PEGASUS_LOCATION,
+                                is_stageable=False,
+                                arch=Arch.X86_64,
                                 os_type=OS.LINUX),
-                            
+
                             ...
                         ))
 
@@ -291,11 +291,11 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
     @_chained
     def add_requirement(self, required_transformation, namespace=None, version=None):
         """Add a requirement to this Transformation. Specify the other
-        transformation, identified by name, namespace, and version, that this 
+        transformation, identified by name, namespace, and version, that this
         transformation depends upon. If a :py:class:`~Pegasus.api.transformation_catalog.Transformation`
         is passed in for *required_transformation*, then namespace and version
-        are ignored. 
-        
+        are ignored.
+
         :param required_transformation: transformation that this transformation requires
         :type required_transformation: str or Transformation
         :raises DuplicateError: this requirement already exists
@@ -369,30 +369,30 @@ class TransformationCatalog(Writable):
         preprocess = (Transformation("preprocess", namespace="pegasus", version="4.0")
                 .add_sites(
                     TransformationSite(
-                        CONDOR_POOL, 
-                        PEGASUS_LOCATION, 
-                        is_stageable=False, 
-                        arch=Arch.X86_64, 
+                        CONDOR_POOL,
+                        PEGASUS_LOCATION,
+                        is_stageable=False,
+                        arch=Arch.X86_64,
                         os_type=OS.LINUX)
                 ))
 
         findrage = (Transformation("findrange", namespace="pegasus", version="4.0")
                         .add_sites(
                             TransformationSite(
-                                CONDOR_POOL, 
-                                PEGASUS_LOCATION, 
-                                is_stageable=False, 
-                                arch=Arch.X86_64, 
+                                CONDOR_POOL,
+                                PEGASUS_LOCATION,
+                                is_stageable=False,
+                                arch=Arch.X86_64,
                                 os_type=OS.LINUX)
                         ))
 
         analyze = (Transformation("analyze", namespace="pegasus", version="4.0")
                         .add_sites(
                             TransformationSite(
-                                CONDOR_POOL, 
-                                PEGASUS_LOCATION, 
-                                is_stageable=False, 
-                                arch=Arch.X86_64, 
+                                CONDOR_POOL,
+                                PEGASUS_LOCATION,
+                                is_stageable=False,
+                                arch=Arch.X86_64,
                                 os_type=OS.LINUX)
                         ))
 
@@ -411,11 +411,11 @@ class TransformationCatalog(Writable):
     @_chained
     def add_transformations(self, *transformations):
         """Add one or more :py:class:`~Pegasus.api.transformation_catalog.Transformation` to this catalog
-        
+
         :param transformations: the :py:class:`~Pegasus.api.transformation_catalog.Transformation` to be added
         :raises TypeError: argument(s) must be of type :py:class:`~Pegasus.api.transformation_catalog.Transformation`
         :raises DuplicateError: Transformation already exists in this catalog
-        :return: self 
+        :return: self
         """
         for tr in transformations:
             if not isinstance(tr, Transformation):
@@ -443,9 +443,9 @@ class TransformationCatalog(Writable):
             # Example
             tc.add_containers(
                 Container(
-                    "centos-pegasus", 
-                    Container.DOCKER, 
-                    "docker:///ryan/centos-pegasus:latest", 
+                    "centos-pegasus",
+                    Container.DOCKER,
+                    "docker:///ryan/centos-pegasus:latest",
                     ["/Volumes/Work/lfs1:/shared-data/:ro"]
                 )
             )
