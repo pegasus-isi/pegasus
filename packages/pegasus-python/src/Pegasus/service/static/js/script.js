@@ -6,18 +6,22 @@ $(function () {
 });
 
 function clipboardTooltipInitialization() {
-    ZeroClipboard.config({hoverClass: "copy-button-hover"});
+    var button = $(".copy-button");
+    button.data("placement", "auto").data("trigger", "hover").attr("title", "Copy to clipboard").tooltip();
+    button.on("click", function (event) {
+        var target = $(event.target);
+        var text = target.data("clipboard-text");
+        var copy = $("<input>");
 
-    var client = new ZeroClipboard(document.getElementsByClassName('copy-button'));
-    client.on('ready', function (event) {
-        var e = $("#global-zeroclipboard-html-bridge");
-        e.data("placement", "auto").data("trigger", "hover").attr("title", "Copy to clipboard").tooltip();
+        $("body").append(copy);
+        copy.val(text).select();
+        document.execCommand("copy");
+        copy.remove();
 
-        client.on('aftercopy', function (event) {
-            e.attr("title", "Copied!").tooltip("fixTitle").tooltip("show").attr("title", "Copy to clipboard").tooltip("fixTitle");
-        });
+        target.attr("title", "Copied!").tooltip("fixTitle").tooltip("show").attr("title", "Copy to clipboard").tooltip("fixTitle");
     });
 }
+
 
 function highChartsInitialization(colors) {
     if (colors == undefined)
