@@ -5,7 +5,23 @@ include_trailing_comma = true
 force_grid_wrap        = 0
 use_parentheses        = true
 line_length            = 88
-known_third_party      = "pytest"
+known_future_library   = "future"
+known_third_party      = [
+  "attr",
+  "click",
+  "cwl_utils",
+  "flask",
+  "flask_caching",
+  "jinja2",
+  "jsonschema",
+  "OpenSSL",
+  "pamela",
+  "requests",
+  "sqlalchemy",
+  "werkzeug",
+  "pytest",
+  "yaml"
+]
 known_first_party      = "Pegasus"
 forced_separate        = "Pegasus"
 skip                   = "Pegasus/cli"
