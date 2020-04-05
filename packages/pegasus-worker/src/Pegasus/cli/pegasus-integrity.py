@@ -381,7 +381,7 @@ def multipart_out(s):
     if "PEGASUS_MULTIPART_DIR" not in os.environ:
         return
 
-    if multipart_fh is -1:
+    if multipart_fh == -1:
         # previous error
         return
     elif multipart_fh is None:

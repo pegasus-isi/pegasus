@@ -4124,7 +4124,7 @@ class Stats:
             )
 
         # standard stats
-        if self._t_end_global is None or self._t_end_global is 0:
+        if self._t_end_global is None or self._t_end_global == 0:
             self.all_transfers_done()
 
         if self._total_count == 0:
