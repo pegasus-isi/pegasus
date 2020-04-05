@@ -6,6 +6,8 @@ import time
 from functools import partial
 from os import path
 
+from Pegasus import json, yaml
+
 
 def from_env(pegasus_home: str = None):
     if not pegasus_home:
@@ -275,6 +277,27 @@ class Client:
         self._log.info("Statistics: {} \n {}".format(rv.stdout, rv.stderr))
 
     @staticmethod
+    def _exec(cmd):
+        if not cmd:
+            raise ValueError("cmd is required")
+
+        rv = subprocess.run(cmd)
+        r = Client._make_result(rv)
+
+        if r.exit_code != 0:
+            raise ValueError("Pegasus commad failed", r)
+
+        return r
+
+    @staticmethod
+    def _make_result(rv: subprocess.CompletedProcess):
+        if not rv:
+            raise ValueError("rv is required")
+
+        r = Result(rv.args, rv.stdout, rv.stderr, rv.returncode)
+        return r
+
+    @staticmethod
     def _get_submit_dir(output: str):
         if not output:
             return
@@ -318,3 +341,67 @@ class Workflow:
         self.remove = partial(self._client.remove, self._submit_dir)
         self.analyze = partial(self._client.analyzer, self._submit_dir)
         self.statistics = partial(self._client.statistics, self._submit_dir)
+
+
+class Result:
+    """An object to store outcome from the execution of a script."""
+
+    def __init__(self, cmd, stdout_bytes, stderr_bytes, exit_code):
+        self.cmd = cmd
+        self.exit_code = exit_code
+        self._stdout_bytes = stdout_bytes
+        self._stderr_bytes = stderr_bytes
+
+    def raise_exit_code(self):
+        if self._exit_code == 0:
+            return
+        raise ValueError("Commad failed", self)
+
+    @property
+    def output(self):
+        """Return standard output as str."""
+        return self.stdout
+
+    @property
+    def stdout(self):
+        """Return standard output as str."""
+        return self._stdout_bytes.decode().replace("\r\n", "\n")
+
+    @property
+    def stderr(self):
+        """Return standard error as str."""
+        if self._stderr_bytes is None:
+            raise ValueError("stderr not separately captured")
+        return self._stderr_bytes.decode().replace("\r\n", "\n")
+
+    @property
+    def json(self):
+        """Return standard out as JSON."""
+        if self.output_bytes:
+            return json.loads(self.output)
+        else:
+            return None
+
+    @property
+    def ndjson(self):
+        """Return standard out as newline delimited JSON."""
+        if self.output_bytes:
+            return json.load_all(self.output)
+        else:
+            return None
+
+    @property
+    def yaml(self):
+        """Return standard out as YAML."""
+        if self.output_bytes:
+            return yaml.load(self.output)
+        else:
+            return None
+
+    @property
+    def yaml_all(self):
+        """Return standard out as YAML."""
+        if self.output_bytes:
+            return yaml.load_all(self.output)
+        else:
+            return None
