@@ -13,7 +13,10 @@
  */
 package edu.isi.pegasus.planner.parser.dax;
 
+import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PCRelation;
@@ -77,12 +80,20 @@ public interface Callback {
      * @param rl the ReplicaLocation object
      */
     public void cbFile(ReplicaLocation rl);
+    
+    /**
+     * Callback when whole Replica Catalog is parsed in the YAML 5.0 format. Files that
+     * lists entries in a Replica Catalog
+     *
+     * @param store the Replica Store
+     */
+    public void cbReplicaStore(ReplicaStore store);
 
     /**
      * Callback when a transformation catalog entry is encountered in the DAX from Section 2:
      * Executables that list entries in a Transformaton Catalog
      *
-     * @param tce the transformationc catalog entry object.
+     * @param tce the transformation catalog entry object.
      */
     public void cbExecutable(TransformationCatalogEntry tce);
 
@@ -93,6 +104,22 @@ public interface Callback {
      * @param compoundTransformation the compound transforamtion
      */
     public void cbCompoundTransformation(CompoundTransformation compoundTransformation);
+    
+    /**
+     * Callback when whole Transformation Catalog is parsed in the YAML 5.0 format. Executables that
+     * lists entries in a Transformation Catalog
+     *
+     * @param store the Transformation Store
+     */
+    public void cbTransformationStore(TransformationStore store);
+    
+    /**
+     * Callback when whole Site Catalog is parsed in the YAML 5.0 format. Site Entries that
+     * lists entries in a Site Catalog
+     *
+     * @param store the Site Store
+     */
+    public void cbSiteStore(SiteStore store);
 
     /**
      * Callback when a metadata element is encountered in the adag element.
@@ -115,6 +142,7 @@ public interface Callback {
      *
      * @param child is the IDREF of the child element.
      * @param parents is a list of edjes denoted by PCRelation object.
+     * 
      * @deprecated
      */
     public void cbParents(String child, java.util.List<PCRelation> parents);

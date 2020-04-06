@@ -14,7 +14,10 @@
 package edu.isi.pegasus.planner.parser.dax;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -277,5 +280,20 @@ public class DAX2Graph implements Callback {
      */
     public void cbExecutable(TransformationCatalogEntry tce) {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void cbReplicaStore(ReplicaStore store) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void cbTransformationStore(TransformationStore store) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void cbSiteStore(SiteStore store) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

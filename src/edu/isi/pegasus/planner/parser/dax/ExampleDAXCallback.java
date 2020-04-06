@@ -13,7 +13,10 @@
  */
 package edu.isi.pegasus.planner.parser.dax;
 
+import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -129,7 +132,7 @@ public class ExampleDAXCallback implements Callback {
      */
     public void cbCompoundTransformation(CompoundTransformation compoundTransformation) {
         System.out.println();
-        System.out.println("CompoundTransformation ");
+        System.out.println("Compound Transformation ");
         System.out.println(compoundTransformation);
     }
 
@@ -143,23 +146,63 @@ public class ExampleDAXCallback implements Callback {
         System.out.println("Replica Catalog Entry ");
         System.out.println(rl);
     }
+    
+    
+    /**
+     * Callback when whole Replica Catalog is parsed in the YAML 5.0 format. Files that
+     * lists entries in a Replica Catalog
+     *
+     * @param store the Replica Store
+     */
+    public void cbReplicaStore(ReplicaStore store){
+        System.out.println();
+        System.out.println("Replica Catalog ");
+        System.out.println(store);
+    }
 
     /**
      * Callback when a transformation catalog entry is encountered in the DAX
      *
-     * @param tce the transformationc catalog entry object.
+     * @param tce the transformation catalog entry object.
      */
     public void cbExecutable(TransformationCatalogEntry tce) {
-
         System.out.println();
-        System.out.println("TransformationCatalogEntry Entry ");
+        System.out.println("Transformation CatalogEntry Entry ");
         System.out.println(tce);
+    }
+    
+    /**
+     * Callback when whole Transformation Catalog is parsed in the YAML 5.0 format. Executables that
+     * lists entries in a Transformation Catalog
+     *
+     * @param store the Transformation Store
+     */
+    public void cbTransformationStore(TransformationStore store){
+        System.out.println();
+        System.out.println("Transformation Catalog ");
+        System.out.println(store);
+    }
+    
+    /**
+     * Callback when whole Site Catalog is parsed in the YAML 5.0 format. Site Entries that
+     * lists entries in a Site Catalog
+     *
+     * @param store the Site Store
+     */
+    public void cbSiteStore(SiteStore store){
+        System.out.println();
+        System.out.println("Site Catalog ");
+        System.out.println(store);
     }
 
     @Override
     public void cbChildren(String parent, List<String> children) {
-        throw new UnsupportedOperationException(
-                "Not supported yet."); // To change body of generated methods, choose Tools |
-        // Templates.
+        System.out.println();
+        System.out.println("Edges in the DAX ");
+        System.out.println("Parent" + " -> " + parent);
+        System.out.println("Children");
+        for (Iterator it = children.iterator(); it.hasNext();) {
+            System.out.println("\t -> " + it.next());
+        }
     }
 }

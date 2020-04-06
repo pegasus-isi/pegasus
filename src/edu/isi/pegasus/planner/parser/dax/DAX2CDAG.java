@@ -16,6 +16,7 @@ package edu.isi.pegasus.planner.parser.dax;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.ADag;
@@ -362,6 +363,16 @@ public class DAX2CDAG implements Callback {
     }
 
     /**
+     * Callback when whole Replica Catalog is parsed in the YAML 5.0 format. Files that
+     * lists entries in a Replica Catalog
+     *
+     * @param store the Replica Store
+     */
+    public void cbReplicaStore(ReplicaStore store){
+        this.mReplicaStore = store;
+    }
+    
+    /**
      * Callback when a transformation catalog entry is encountered in the DAX
      *
      * @param tce the transformation catalog entry object.
@@ -377,6 +388,31 @@ public class DAX2CDAG implements Callback {
                     LogManager.DEBUG_MESSAGE_LEVEL);
         }
     }
+    
+    
+    
+    /**
+     * Callback when whole Transformation Catalog is parsed in the YAML 5.0 format. Executables that
+     * lists entries in a Transformation Catalog
+     *
+     * @param store the Transformation Store
+     */
+    public void cbTransformationStore(TransformationStore store){
+        this.mTransformationStore = store;
+    }
+    
+    /**
+     * Callback when whole Site Catalog is parsed in the YAML 5.0 format. Site Entries that
+     * lists entries in a Site Catalog
+     *
+     * @param store the Site Store
+     */
+    public void cbSiteStore(SiteStore store){
+        System.out.println();
+        System.out.println("Site Catalog ");
+        System.out.println(store);
+    }
+
 
     /**
      * Goes through the ADag and computes any data dependencies.
