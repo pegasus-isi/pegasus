@@ -503,7 +503,7 @@ public class PegasusConfiguration {
      */
     private SiteCatalogEntry constructDefaultLocalSiteEntry(PlannerOptions options) {
         String submitDir = options.getSubmitDirectory();
-        File scratch = new File(new File(submitDir).getParent(), "wf-scratch");
+        File scratch = new File(new File(submitDir).getParent(), "wf-scratch/LOCAL");
         File output = new File(new File(submitDir).getParent(), "wf-output");
 
         SiteCatalogEntry site = new SiteCatalogEntry("local");
@@ -513,6 +513,7 @@ public class PegasusConfiguration {
 
         return site;
     }
+    
 
     /**
      * Construct a file server based directory
