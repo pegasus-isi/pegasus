@@ -69,10 +69,8 @@ public class ADag extends Data implements Graph {
      * the DAX
      */
     protected TransformationStore mTransformationStore;
-    
-    /**
-     * Handle to the Site store that stores the site catalog entries specified in the DAX
-     */
+
+    /** Handle to the Site store that stores the site catalog entries specified in the DAX */
     protected SiteStore mSiteStore;
 
     /** The Root Workflow UUID. */
@@ -607,7 +605,7 @@ public class ADag extends Data implements Graph {
     public TransformationStore getTransformationStore() {
         return this.mTransformationStore;
     }
-    
+
     /**
      * Sets the Site Store
      *

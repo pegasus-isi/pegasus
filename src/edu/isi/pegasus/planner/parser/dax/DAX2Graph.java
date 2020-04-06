@@ -284,16 +284,22 @@ public class DAX2Graph implements Callback {
 
     @Override
     public void cbReplicaStore(ReplicaStore store) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException(
+                "Not supported yet."); // To change body of generated methods, choose Tools |
+                                       // Templates.
     }
 
     @Override
     public void cbTransformationStore(TransformationStore store) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException(
+                "Not supported yet."); // To change body of generated methods, choose Tools |
+                                       // Templates.
     }
 
     @Override
     public void cbSiteStore(SiteStore store) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException(
+                "Not supported yet."); // To change body of generated methods, choose Tools |
+                                       // Templates.
     }
 }

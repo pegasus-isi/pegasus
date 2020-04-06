@@ -363,15 +363,15 @@ public class DAX2CDAG implements Callback {
     }
 
     /**
-     * Callback when whole Replica Catalog is parsed in the YAML 5.0 format. Files that
-     * lists entries in a Replica Catalog
+     * Callback when whole Replica Catalog is parsed in the YAML 5.0 format. Files that lists
+     * entries in a Replica Catalog
      *
      * @param store the Replica Store
      */
-    public void cbReplicaStore(ReplicaStore store){
+    public void cbReplicaStore(ReplicaStore store) {
         this.mReplicaStore = store;
     }
-    
+
     /**
      * Callback when a transformation catalog entry is encountered in the DAX
      *
@@ -388,31 +388,28 @@ public class DAX2CDAG implements Callback {
                     LogManager.DEBUG_MESSAGE_LEVEL);
         }
     }
-    
-    
-    
+
     /**
      * Callback when whole Transformation Catalog is parsed in the YAML 5.0 format. Executables that
      * lists entries in a Transformation Catalog
      *
      * @param store the Transformation Store
      */
-    public void cbTransformationStore(TransformationStore store){
+    public void cbTransformationStore(TransformationStore store) {
         this.mTransformationStore = store;
     }
-    
+
     /**
-     * Callback when whole Site Catalog is parsed in the YAML 5.0 format. Site Entries that
-     * lists entries in a Site Catalog
+     * Callback when whole Site Catalog is parsed in the YAML 5.0 format. Site Entries that lists
+     * entries in a Site Catalog
      *
      * @param store the Site Store
      */
-    public void cbSiteStore(SiteStore store){
+    public void cbSiteStore(SiteStore store) {
         System.out.println();
         System.out.println("Site Catalog ");
         System.out.println(store);
     }
-
 
     /**
      * Goes through the ADag and computes any data dependencies.

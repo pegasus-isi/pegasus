@@ -392,7 +392,7 @@ public class CPlanner extends Executable {
         mLogger.log(
                 "Parsed DAX with following metrics " + orgDag.getWorkflowMetrics().toJson(),
                 LogManager.DEBUG_MESSAGE_LEVEL);
-        
+
         // check if sites set by user. If user has not specified any sites then
         // load all sites from site catalog.
         Collection eSites = mPOptions.getExecutionSites();
@@ -403,7 +403,7 @@ public class CPlanner extends Executable {
             eSites.add("*");
         }
 
-        // load the site catalog 
+        // load the site catalog
         SiteStore s = loadSiteStore(orgDag.getSiteStore());
         s.setForPlannerUse(mProps, mPOptions);
 
@@ -435,7 +435,6 @@ public class CPlanner extends Executable {
                         : dataConfiguration;
         mPMetrics.setDataConfiguration(dataConfiguration);
         mPMetrics.setPlannerOptions(mPOptions.getOriginalArgString());
-
 
         // set some initial workflow metrics
         mPMetrics.setApplicationMetrics(mProps, orgDag.getLabel());
@@ -1592,7 +1591,6 @@ public class CPlanner extends Executable {
      * Loads the sites from the site catalog into the site store
      *
      * @param daxSiteStore the site catalog entries from the DAX
-     * 
      * @return SiteStore object containing the information about the sites.
      */
     private SiteStore loadSiteStore(SiteStore daxSiteStore) {
@@ -1605,13 +1603,13 @@ public class CPlanner extends Executable {
 
         // PM-1047 we want to save the catalogs all around.
         result.setFileSource(catalog.getFileSource());
-        
-        //PM-1515 we prefer entries in the DAX Site Store
-        //so load them first
-        for(Iterator<SiteCatalogEntry> it = daxSiteStore.entryIterator(); it.hasNext();){
+
+        // PM-1515 we prefer entries in the DAX Site Store
+        // so load them first
+        for (Iterator<SiteCatalogEntry> it = daxSiteStore.entryIterator(); it.hasNext(); ) {
             result.addEntry(it.next());
         }
-        
+
         Set<String> toLoad = new HashSet<String>();
         mLogger.log(
                 "All sites will be loaded from the site catalog", LogManager.DEBUG_MESSAGE_LEVEL);
@@ -1632,8 +1630,8 @@ public class CPlanner extends Executable {
             for (Iterator<String> it = toLoad.iterator(); it.hasNext(); ) {
                 SiteCatalogEntry s = catalog.lookup(it.next());
                 if (s != null && result.lookup(s.getSiteHandle()) == null) {
-                    //PM-1515 prefer entries from DAX SiteStore.
-                    //Only load from catalog if not in DAX SiteStore
+                    // PM-1515 prefer entries from DAX SiteStore.
+                    // Only load from catalog if not in DAX SiteStore
                     result.addEntry(s);
                 }
             }
@@ -1805,7 +1803,7 @@ public class CPlanner extends Executable {
      * @return
      */
     private ADag parseDAX(String dax, PlannerOptions options, PegasusProperties properties) {
-        
+
         DAXParser p =
                 DAXParserFactory.loadDAXParser(mBag, DAXParserFactory.DEFAULT_CALLBACK_CLASS, dax);
         Callback cb = p.getDAXCallback();

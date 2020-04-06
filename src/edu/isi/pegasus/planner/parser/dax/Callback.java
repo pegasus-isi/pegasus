@@ -80,10 +80,10 @@ public interface Callback {
      * @param rl the ReplicaLocation object
      */
     public void cbFile(ReplicaLocation rl);
-    
+
     /**
-     * Callback when whole Replica Catalog is parsed in the YAML 5.0 format. Files that
-     * lists entries in a Replica Catalog
+     * Callback when whole Replica Catalog is parsed in the YAML 5.0 format. Files that lists
+     * entries in a Replica Catalog
      *
      * @param store the Replica Store
      */
@@ -104,7 +104,7 @@ public interface Callback {
      * @param compoundTransformation the compound transforamtion
      */
     public void cbCompoundTransformation(CompoundTransformation compoundTransformation);
-    
+
     /**
      * Callback when whole Transformation Catalog is parsed in the YAML 5.0 format. Executables that
      * lists entries in a Transformation Catalog
@@ -112,10 +112,10 @@ public interface Callback {
      * @param store the Transformation Store
      */
     public void cbTransformationStore(TransformationStore store);
-    
+
     /**
-     * Callback when whole Site Catalog is parsed in the YAML 5.0 format. Site Entries that
-     * lists entries in a Site Catalog
+     * Callback when whole Site Catalog is parsed in the YAML 5.0 format. Site Entries that lists
+     * entries in a Site Catalog
      *
      * @param store the Site Store
      */
@@ -142,7 +142,6 @@ public interface Callback {
      *
      * @param child is the IDREF of the child element.
      * @param parents is a list of edjes denoted by PCRelation object.
-     * 
      * @deprecated
      */
     public void cbParents(String child, java.util.List<PCRelation> parents);

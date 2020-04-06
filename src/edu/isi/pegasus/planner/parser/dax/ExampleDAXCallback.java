@@ -146,15 +146,14 @@ public class ExampleDAXCallback implements Callback {
         System.out.println("Replica Catalog Entry ");
         System.out.println(rl);
     }
-    
-    
+
     /**
-     * Callback when whole Replica Catalog is parsed in the YAML 5.0 format. Files that
-     * lists entries in a Replica Catalog
+     * Callback when whole Replica Catalog is parsed in the YAML 5.0 format. Files that lists
+     * entries in a Replica Catalog
      *
      * @param store the Replica Store
      */
-    public void cbReplicaStore(ReplicaStore store){
+    public void cbReplicaStore(ReplicaStore store) {
         System.out.println();
         System.out.println("Replica Catalog ");
         System.out.println(store);
@@ -170,26 +169,26 @@ public class ExampleDAXCallback implements Callback {
         System.out.println("Transformation CatalogEntry Entry ");
         System.out.println(tce);
     }
-    
+
     /**
      * Callback when whole Transformation Catalog is parsed in the YAML 5.0 format. Executables that
      * lists entries in a Transformation Catalog
      *
      * @param store the Transformation Store
      */
-    public void cbTransformationStore(TransformationStore store){
+    public void cbTransformationStore(TransformationStore store) {
         System.out.println();
         System.out.println("Transformation Catalog ");
         System.out.println(store);
     }
-    
+
     /**
-     * Callback when whole Site Catalog is parsed in the YAML 5.0 format. Site Entries that
-     * lists entries in a Site Catalog
+     * Callback when whole Site Catalog is parsed in the YAML 5.0 format. Site Entries that lists
+     * entries in a Site Catalog
      *
      * @param store the Site Store
      */
-    public void cbSiteStore(SiteStore store){
+    public void cbSiteStore(SiteStore store) {
         System.out.println();
         System.out.println("Site Catalog ");
         System.out.println(store);
@@ -201,7 +200,7 @@ public class ExampleDAXCallback implements Callback {
         System.out.println("Edges in the DAX ");
         System.out.println("Parent" + " -> " + parent);
         System.out.println("Children");
-        for (Iterator it = children.iterator(); it.hasNext();) {
+        for (Iterator it = children.iterator(); it.hasNext(); ) {
             System.out.println("\t -> " + it.next());
         }
     }
