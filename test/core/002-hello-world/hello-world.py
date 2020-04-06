@@ -3,7 +3,12 @@
 from Pegasus.api import *
 
 # --- Transformations ----------------------------------------------------------
-echo = Transformation("echo", pfn="/bin/echo", is_stageable=True)
+echo = Transformation(
+        "echo", 
+        pfn="/bin/echo", 
+        is_stageable=False, 
+        site="condorpool"
+    )
   
 tc = TransformationCatalog()\
         .add_transformations(echo)

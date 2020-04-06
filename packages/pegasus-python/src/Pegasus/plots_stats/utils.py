@@ -118,6 +118,26 @@ def get_workflow_wall_time(workflow_states_list):
     return workflow_wall_time
 
 
+def get_date_multiplier(date_filter):
+    """
+    Utility for returning the multiplier for a given date filter
+    @param date filter :  the given date filter
+    @return multiplier for a given filter
+    """
+    vals = {"day": 86400, "hour": 3600}
+    return vals[date_filter]
+
+
+def get_date_format(date_filter):
+    """
+    Utility for returning the date format for a given date filter
+    @param date filter :  the given date filter
+    @return the date format for a given filter
+    """
+    vals = {"day": "%Y-%m-%d", "hour": "%Y-%m-%d : %H"}
+    return vals[date_filter]
+
+
 def get_date_print_format(date_filter):
     """
     Utility for returning the date format for a given date filter in human readable format
