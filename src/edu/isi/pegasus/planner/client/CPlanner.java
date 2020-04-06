@@ -22,6 +22,7 @@ import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.SiteFactory;
+import edu.isi.pegasus.planner.catalog.site.SiteFactoryException;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
@@ -1599,7 +1600,17 @@ public class CPlanner extends Executable {
         SiteCatalog catalog = null;
 
         /* load the catalog using the factory */
-        catalog = SiteFactory.loadInstance(mProps);
+        try {
+            catalog = SiteFactory.loadInstance(mProps);
+        } catch (SiteFactoryException e) {
+            // PM-1515 site catalog exceptions to be ignored, as
+            // we can have entries in the DAX and also the planner
+            // generates default entries
+            mLogger.log(
+                    "Ignoring exception encountered while loading site catalog "
+                            + e.convertException(),
+                    LogManager.DEBUG_MESSAGE_LEVEL);
+        }
 
         // PM-1047 we want to save the catalogs all around.
         result.setFileSource(catalog.getFileSource());
