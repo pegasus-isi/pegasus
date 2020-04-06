@@ -388,20 +388,10 @@ public class CPlanner extends Executable {
         }
 
         // load the parser and parse the dax
-        ADag orgDag = this.parseDAX(dax);
+        ADag orgDag = this.parseDAX(dax, mPOptions, mProps);
         mLogger.log(
                 "Parsed DAX with following metrics " + orgDag.getWorkflowMetrics().toJson(),
                 LogManager.DEBUG_MESSAGE_LEVEL);
-
-        // generate the flow ids for the classads information
-        orgDag.generateFlowName();
-        orgDag.setFlowTimestamp(mPOptions.getDateTime(mProps.useExtendedTimeStamp()));
-        orgDag.setDAXMTime(new File(dax));
-        orgDag.generateFlowID();
-        orgDag.setReleaseVersion();
-
-        // set out the root workflow id
-        orgDag.setRootWorkflowUUID(determineRootWorkflowUUID(orgDag, this.mPOptions, this.mProps));
         
         // check if sites set by user. If user has not specified any sites then
         // load all sites from site catalog.
@@ -1811,14 +1801,27 @@ public class CPlanner extends Executable {
      * Parses the DAX and returns the associated ADag object
      *
      * @param dax path to the DAX file.
+     * @param options the planner options
+     * @param properties the properties file passed
      * @return
      */
-    private ADag parseDAX(String dax) {
+    private ADag parseDAX(String dax, PlannerOptions options, PegasusProperties properties) {
+        
         DAXParser p =
                 DAXParserFactory.loadDAXParser(mBag, DAXParserFactory.DEFAULT_CALLBACK_CLASS, dax);
         Callback cb = p.getDAXCallback();
         p.parse(dax);
-        return (ADag) cb.getConstructedObject();
+        ADag dag = (ADag) cb.getConstructedObject();
+        // generate the flow ids for the classads information
+        dag.generateFlowName();
+        dag.setFlowTimestamp(options.getDateTime(properties.useExtendedTimeStamp()));
+        dag.setDAXMTime(new File(dax));
+        dag.generateFlowID();
+        dag.setReleaseVersion();
+
+        // set out the root workflow id
+        dag.setRootWorkflowUUID(determineRootWorkflowUUID(dag, options, properties));
+        return dag;
     }
 
     /**
