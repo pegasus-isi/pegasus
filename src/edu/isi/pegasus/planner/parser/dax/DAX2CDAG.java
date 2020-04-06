@@ -92,6 +92,9 @@ public class DAX2CDAG implements Callback {
     /** A job prefix specifed at command line. */
     protected String mJobPrefix;
 
+    /** handle to the site store * */
+    private SiteStore mSiteStore;
+
     /**
      * The overloaded constructor.
      *
@@ -110,6 +113,7 @@ public class DAX2CDAG implements Callback {
                         : bag.getPlannerOptions().getJobnamePrefix();
         this.mReplicaStore = new ReplicaStore();
         this.mTransformationStore = new TransformationStore();
+        this.mSiteStore = new SiteStore();
         this.mCompoundTransformations = new HashMap<String, CompoundTransformation>();
         this.mNotifications = new Notifications();
         this.mAddDataDependencies = mProps.addDataDependencies();
@@ -327,6 +331,7 @@ public class DAX2CDAG implements Callback {
 
         mDag.setReplicaStore(mReplicaStore);
         mDag.setTransformationStore(mTransformationStore);
+        mDag.setSiteStore(mSiteStore);
         mDag.addNotifications(mNotifications);
         return mDag;
     }
@@ -406,9 +411,7 @@ public class DAX2CDAG implements Callback {
      * @param store the Site Store
      */
     public void cbSiteStore(SiteStore store) {
-        System.out.println();
-        System.out.println("Site Catalog ");
-        System.out.println(store);
+        this.mSiteStore = store;
     }
 
     /**
