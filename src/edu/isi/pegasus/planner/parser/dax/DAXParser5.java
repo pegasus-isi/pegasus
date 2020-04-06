@@ -135,7 +135,7 @@ public class DAXParser5 implements DAXParser {
                 Map.Entry<String, JsonNode> e = it.next();
                 String key = e.getKey();
                 WorkflowKeywords reservedKey = WorkflowKeywords.getReservedKey(key);
-                System.err.println(reservedKey);
+                
                 if (reservedKey == null) {
                     this.complainForIllegalKey(
                             WorkflowKeywords.WORKFLOW.getReservedName(), key, node);
@@ -156,7 +156,6 @@ public class DAXParser5 implements DAXParser {
                         if (rcNode != null) {
                             parser = rcNode.traverse(oc);
                             ReplicaStore store = parser.readValueAs(ReplicaStore.class);
-                            System.err.println(store);
                         }
                         break;
 
@@ -174,7 +173,6 @@ public class DAXParser5 implements DAXParser {
                             parser = tcNode.traverse(oc);
                             TransformationStore store =
                                     parser.readValueAs(TransformationStore.class);
-                            System.err.println(store);
                         }
                         break;
 
@@ -195,7 +193,6 @@ public class DAXParser5 implements DAXParser {
                                 parser = jobNode.traverse(oc);
                                 Job job = parser.readValueAs(Job.class);
                                 c.cbJob(job);
-                                System.err.println(job);
                             }
                         } else {
                             throw new RuntimeException("jobs: value should be of type array ");
