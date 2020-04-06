@@ -269,6 +269,8 @@ def test_output(make_result):
     r = make_result(stdout=b"test")
     assert r.output == "test"
 
+
+def test_output_fail(make_result):
     r = make_result(stdout=None)
     with pytest.raises(ValueError) as e:
         r.stdout
@@ -279,6 +281,8 @@ def test_stdout(make_result):
     r = make_result(stdout=b"test")
     assert r.stdout == "test"
 
+
+def test_stdout_fail(make_result):
     r = make_result(stdout=None)
     with pytest.raises(ValueError) as e:
         r.stdout
@@ -289,6 +293,8 @@ def test_stderr(make_result):
     r = make_result(stderr=b"test")
     assert r.stderr == "test"
 
+
+def test_stderr_fail(make_result):
     r = make_result(stderr=None)
     with pytest.raises(ValueError) as e:
         r.stderr
