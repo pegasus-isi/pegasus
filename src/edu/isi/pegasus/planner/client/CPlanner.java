@@ -376,6 +376,33 @@ public class CPlanner extends Executable {
             throw new UnsupportedOperationException("The --pdax option is no longer supported ");
         }
 
+        // try to get hold of the vds properties
+        // set in the jvm that user specifed at command line
+        mPOptions.setVDSProperties(mProps.getMatchingProperties("pegasus.", false));
+
+        List allVDSProps = mProps.getMatchingProperties("pegasus.", false);
+        mLogger.log("Pegasus Properties set by the user", LogManager.CONFIG_MESSAGE_LEVEL);
+        for (java.util.Iterator it = allVDSProps.iterator(); it.hasNext(); ) {
+            NameValue nv = (NameValue) it.next();
+            mLogger.log(nv.toString(), LogManager.CONFIG_MESSAGE_LEVEL);
+        }
+
+        // load the parser and parse the dax
+        ADag orgDag = this.parseDAX(dax);
+        mLogger.log(
+                "Parsed DAX with following metrics " + orgDag.getWorkflowMetrics().toJson(),
+                LogManager.DEBUG_MESSAGE_LEVEL);
+
+        // generate the flow ids for the classads information
+        orgDag.generateFlowName();
+        orgDag.setFlowTimestamp(mPOptions.getDateTime(mProps.useExtendedTimeStamp()));
+        orgDag.setDAXMTime(new File(dax));
+        orgDag.generateFlowID();
+        orgDag.setReleaseVersion();
+
+        // set out the root workflow id
+        orgDag.setRootWorkflowUUID(determineRootWorkflowUUID(orgDag, this.mPOptions, this.mProps));
+        
         // check if sites set by user. If user has not specified any sites then
         // load all sites from site catalog.
         Collection eSites = mPOptions.getExecutionSites();
@@ -424,32 +451,6 @@ public class CPlanner extends Executable {
         mPMetrics.setDataConfiguration(dataConfiguration);
         mPMetrics.setPlannerOptions(mPOptions.getOriginalArgString());
 
-        // try to get hold of the vds properties
-        // set in the jvm that user specifed at command line
-        mPOptions.setVDSProperties(mProps.getMatchingProperties("pegasus.", false));
-
-        List allVDSProps = mProps.getMatchingProperties("pegasus.", false);
-        mLogger.log("Pegasus Properties set by the user", LogManager.CONFIG_MESSAGE_LEVEL);
-        for (java.util.Iterator it = allVDSProps.iterator(); it.hasNext(); ) {
-            NameValue nv = (NameValue) it.next();
-            mLogger.log(nv.toString(), LogManager.CONFIG_MESSAGE_LEVEL);
-        }
-
-        // load the parser and parse the dax
-        ADag orgDag = this.parseDAX(dax);
-        mLogger.log(
-                "Parsed DAX with following metrics " + orgDag.getWorkflowMetrics().toJson(),
-                LogManager.DEBUG_MESSAGE_LEVEL);
-
-        // generate the flow ids for the classads information
-        orgDag.generateFlowName();
-        orgDag.setFlowTimestamp(mPOptions.getDateTime(mProps.useExtendedTimeStamp()));
-        orgDag.setDAXMTime(new File(dax));
-        orgDag.generateFlowID();
-        orgDag.setReleaseVersion();
-
-        // set out the root workflow id
-        orgDag.setRootWorkflowUUID(determineRootWorkflowUUID(orgDag, this.mPOptions, this.mProps));
 
         // set some initial workflow metrics
         mPMetrics.setApplicationMetrics(mProps, orgDag.getLabel());
