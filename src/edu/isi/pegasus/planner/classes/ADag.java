@@ -17,6 +17,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.namespace.Metadata;
@@ -68,6 +69,11 @@ public class ADag extends Data implements Graph {
      * the DAX
      */
     protected TransformationStore mTransformationStore;
+    
+    /**
+     * Handle to the Site store that stores the site catalog entries specified in the DAX
+     */
+    protected SiteStore mSiteStore;
 
     /** The Root Workflow UUID. */
     @Expose
@@ -178,6 +184,7 @@ public class ADag extends Data implements Graph {
     public void resetStores() {
         this.mReplicaStore = new ReplicaStore();
         this.mTransformationStore = new TransformationStore();
+        this.mSiteStore = new SiteStore();
     }
 
     /**
@@ -195,6 +202,7 @@ public class ADag extends Data implements Graph {
         // the stores are not a true clone
         newAdag.setReplicaStore(mReplicaStore);
         newAdag.setTransformationStore(mTransformationStore);
+        newAdag.setSiteStore(mSiteStore);
 
         newAdag.setProfiles((Profiles) this.mProfiles.clone());
 
@@ -594,10 +602,28 @@ public class ADag extends Data implements Graph {
     /**
      * Returns the Transformation Store
      *
-     * @return the Replica Store
+     * @return the Transformation Store
      */
     public TransformationStore getTransformationStore() {
         return this.mTransformationStore;
+    }
+    
+    /**
+     * Sets the Site Store
+     *
+     * @param store the Site Store
+     */
+    public void setSiteStore(SiteStore store) {
+        this.mSiteStore = store;
+    }
+
+    /**
+     * Returns the Site Store
+     *
+     * @return the Site Store
+     */
+    public SiteStore getSiteStore() {
+        return this.mSiteStore;
     }
 
     /**
