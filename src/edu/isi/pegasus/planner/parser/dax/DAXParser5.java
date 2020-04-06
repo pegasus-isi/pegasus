@@ -156,6 +156,7 @@ public class DAXParser5 implements DAXParser {
                         if (rcNode != null) {
                             parser = rcNode.traverse(oc);
                             ReplicaStore store = parser.readValueAs(ReplicaStore.class);
+                            c.cbReplicaStore(store);
                         }
                         break;
 
@@ -164,6 +165,7 @@ public class DAXParser5 implements DAXParser {
                         if (scNode != null) {
                             parser = scNode.traverse(oc);
                             SiteStore store = parser.readValueAs(SiteStore.class);
+                            c.cbSiteStore(store);
                         }
                         break;
 
@@ -173,6 +175,7 @@ public class DAXParser5 implements DAXParser {
                             parser = tcNode.traverse(oc);
                             TransformationStore store =
                                     parser.readValueAs(TransformationStore.class);
+                            c.cbTransformationStore(store);
                         }
                         break;
 
