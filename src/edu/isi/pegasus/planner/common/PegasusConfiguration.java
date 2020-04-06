@@ -507,7 +507,6 @@ public class PegasusConfiguration {
         File output = new File(new File(submitDir).getParent(), "wf-output");
 
         SiteCatalogEntry site = new SiteCatalogEntry("local");
-        site.setOS(mVersion.getOS());
         site.setArchitecture(mVersion.getArchitecture());
         site.addDirectory(constructFileServerDirectory(Directory.TYPE.shared_scratch, scratch));
         site.addDirectory(constructFileServerDirectory(Directory.TYPE.shared_storage, output));
