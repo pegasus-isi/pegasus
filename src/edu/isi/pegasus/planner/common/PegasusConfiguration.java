@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.common;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.Version;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.DirectoryLayout;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
@@ -26,6 +27,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactory;
@@ -183,6 +185,14 @@ public class PegasusConfiguration {
             store.addEntry(constructDefaultLocalSiteEntry(options));
             mLogger.log(
                     "Constructed default site catalog entry for local site "
+                            + store.lookup("local"),
+                    LogManager.CONFIG_MESSAGE_LEVEL);
+        }
+        // check for condorpool site or create a default entry
+        if (!store.list().contains("condorpool")) {
+            store.addEntry(constructDefaultCondorPoolSiteEntry(options));
+            mLogger.log(
+                    "Constructed default site catalog entry for condorpool site "
                             + store.lookup("local"),
                     LogManager.CONFIG_MESSAGE_LEVEL);
         }
@@ -514,6 +524,27 @@ public class PegasusConfiguration {
         return site;
     }
     
+    /**
+     * Constructs default SiteCatalogEntry for local site
+     *
+     * @param options
+     * @return
+     */
+    private SiteCatalogEntry constructDefaultCondorPoolSiteEntry(PlannerOptions options) {
+        String submitDir = options.getSubmitDirectory();
+        File scratch = new File(new File(submitDir).getParent(), "wf-scratch/CONDORPOOL");
+
+        SiteCatalogEntry site = new SiteCatalogEntry("condorpool");
+        site.setArchitecture(mVersion.getArchitecture());
+        site.addDirectory(constructFileServerDirectory(Directory.TYPE.shared_scratch, scratch));
+
+        //set the profiles for the site to be treated as a condor pool
+        site.addProfile(new Profile(Profile.CONDOR, "type", "condor"));
+        //condorpool compute sites share a filesystem with the submit host
+        site.addProfile(new Profile(Profile.VDS, Pegasus.LOCAL_VISIBLE_KEY, "true"));
+        
+        return site;
+    }
 
     /**
      * Construct a file server based directory
