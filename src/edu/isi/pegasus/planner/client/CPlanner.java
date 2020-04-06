@@ -396,11 +396,6 @@ public class CPlanner extends Executable {
         // check if sites set by user. If user has not specified any sites then
         // load all sites from site catalog.
         Collection eSites = mPOptions.getExecutionSites();
-
-        Set<String> toLoad = new HashSet<String>();
-        mLogger.log(
-                "All sites will be loaded from the site catalog", LogManager.DEBUG_MESSAGE_LEVEL);
-        toLoad.add("*");
         if (eSites.isEmpty()) {
             mLogger.log(
                     "No sites given by user. Will use sites from the site catalog",
@@ -408,8 +403,8 @@ public class CPlanner extends Executable {
             eSites.add("*");
         }
 
-        // load the site catalog and transformation catalog accordingly
-        SiteStore s = loadSiteStore(toLoad);
+        // load the site catalog 
+        SiteStore s = loadSiteStore(orgDag.getSiteStore());
         s.setForPlannerUse(mProps, mPOptions);
 
         if (eSites.contains("*")) {
@@ -1596,10 +1591,11 @@ public class CPlanner extends Executable {
     /**
      * Loads the sites from the site catalog into the site store
      *
-     * @param sites
+     * @param daxSiteStore the site catalog entries from the DAX
+     * 
      * @return SiteStore object containing the information about the sites.
      */
-    private SiteStore loadSiteStore(Set<String> sites) {
+    private SiteStore loadSiteStore(SiteStore daxSiteStore) {
         SiteStore result = new SiteStore();
 
         SiteCatalog catalog = null;
@@ -1609,16 +1605,17 @@ public class CPlanner extends Executable {
 
         // PM-1047 we want to save the catalogs all around.
         result.setFileSource(catalog.getFileSource());
-
-        Set<String> toLoad = new HashSet<String>(sites);
-
-        /* we want to load the staging sites mentioned for the execution sites */
-        for (String eSite : sites) {
-            String ss = this.mPOptions.getStagingSite(eSite);
-            if (eSite != null) {
-                toLoad.add(ss);
-            }
+        
+        //PM-1515 we prefer entries in the DAX Site Store
+        //so load them first
+        for(Iterator<SiteCatalogEntry> it = daxSiteStore.entryIterator(); it.hasNext();){
+            result.addEntry(it.next());
         }
+        
+        Set<String> toLoad = new HashSet<String>();
+        mLogger.log(
+                "All sites will be loaded from the site catalog", LogManager.DEBUG_MESSAGE_LEVEL);
+        toLoad.add("*");
 
         /* always load local site */
         toLoad.add("local");
@@ -1634,7 +1631,9 @@ public class CPlanner extends Executable {
             }
             for (Iterator<String> it = toLoad.iterator(); it.hasNext(); ) {
                 SiteCatalogEntry s = catalog.lookup(it.next());
-                if (s != null) {
+                if (s != null && result.lookup(s.getSiteHandle()) == null) {
+                    //PM-1515 prefer entries from DAX SiteStore.
+                    //Only load from catalog if not in DAX SiteStore
                     result.addEntry(s);
                 }
             }
