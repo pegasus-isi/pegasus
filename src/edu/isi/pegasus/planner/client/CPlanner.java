@@ -1596,12 +1596,20 @@ public class CPlanner extends Executable {
      */
     private SiteStore loadSiteStore(SiteStore daxSiteStore) {
         SiteStore result = new SiteStore();
+        // PM-1515 we prefer entries in the DAX Site Store
+        // so load them first
+        for (Iterator<SiteCatalogEntry> it = daxSiteStore.entryIterator(); it.hasNext(); ) {
+            result.addEntry(it.next());
+        }
 
         SiteCatalog catalog = null;
 
         /* load the catalog using the factory */
         try {
             catalog = SiteFactory.loadInstance(mProps);
+
+            // PM-1047 we want to save the catalogs all around.
+            result.setFileSource(catalog.getFileSource());
         } catch (SiteFactoryException e) {
             // PM-1515 site catalog exceptions to be ignored, as
             // we can have entries in the DAX and also the planner
@@ -1612,54 +1620,48 @@ public class CPlanner extends Executable {
                     LogManager.DEBUG_MESSAGE_LEVEL);
         }
 
-        // PM-1047 we want to save the catalogs all around.
-        result.setFileSource(catalog.getFileSource());
 
-        // PM-1515 we prefer entries in the DAX Site Store
-        // so load them first
-        for (Iterator<SiteCatalogEntry> it = daxSiteStore.entryIterator(); it.hasNext(); ) {
-            result.addEntry(it.next());
-        }
+        if (catalog != null) {
+            //PM-1515 make sure catalog was instantiated
+            Set<String> toLoad = new HashSet<String>();
+            mLogger.log(
+                    "All sites will be loaded from the site catalog", LogManager.DEBUG_MESSAGE_LEVEL);
+            toLoad.add("*");
 
-        Set<String> toLoad = new HashSet<String>();
-        mLogger.log(
-                "All sites will be loaded from the site catalog", LogManager.DEBUG_MESSAGE_LEVEL);
-        toLoad.add("*");
+            /* always load local site */
+            toLoad.add("local");
 
-        /* always load local site */
-        toLoad.add("local");
+            /* load the sites in site catalog */
+            try {
+                catalog.load(new LinkedList(toLoad));
 
-        /* load the sites in site catalog */
-        try {
-            catalog.load(new LinkedList(toLoad));
+                // load into SiteStore from the catalog.
+                if (toLoad.contains("*")) {
+                    // we need to load all sites into the site store
+                    toLoad.addAll(catalog.list());
+                }
+                for (Iterator<String> it = toLoad.iterator(); it.hasNext();) {
+                    SiteCatalogEntry s = catalog.lookup(it.next());
+                    if (s != null && result.lookup(s.getSiteHandle()) == null) {
+                        // PM-1515 prefer entries from DAX SiteStore.
+                        // Only load from catalog if not in DAX SiteStore
+                        result.addEntry(s);
+                    }
+                }
 
-            // load into SiteStore from the catalog.
-            if (toLoad.contains("*")) {
-                // we need to load all sites into the site store
-                toLoad.addAll(catalog.list());
-            }
-            for (Iterator<String> it = toLoad.iterator(); it.hasNext(); ) {
-                SiteCatalogEntry s = catalog.lookup(it.next());
-                if (s != null && result.lookup(s.getSiteHandle()) == null) {
-                    // PM-1515 prefer entries from DAX SiteStore.
-                    // Only load from catalog if not in DAX SiteStore
-                    result.addEntry(s);
+            } catch (SiteCatalogException e) {
+                throw new RuntimeException("Unable to load from site catalog ", e);
+            } finally {
+                /* close the connection */
+                try {
+                    catalog.close();
+                } catch (Exception e) {
                 }
             }
-
-            /* query for the sites, and print them out */
-            mLogger.log("Sites loaded are " + result.list(), LogManager.DEBUG_MESSAGE_LEVEL);
-
-        } catch (SiteCatalogException e) {
-            throw new RuntimeException("Unable to load from site catalog ", e);
-        } finally {
-            /* close the connection */
-            try {
-                catalog.close();
-            } catch (Exception e) {
-            }
         }
-
+        
+        /* query for the sites, and print them out */
+        mLogger.log("Sites loaded are " + result.list(), LogManager.DEBUG_MESSAGE_LEVEL);
         return result;
     }
 
