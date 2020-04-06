@@ -1648,7 +1648,6 @@ public class CPlanner extends Executable {
                         result.addEntry(s);
                     }
                 }
-
             } catch (SiteCatalogException e) {
                 throw new RuntimeException("Unable to load from site catalog ", e);
             } finally {
