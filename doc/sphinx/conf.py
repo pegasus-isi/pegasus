@@ -51,7 +51,7 @@ extensions = [
     "sphinx.ext.doctest",
     "sphinx.ext.ifconfig",
     "sphinx.ext.viewcode",
-    "javasphinx",
+    # "javasphinx",
     "sphinx_tabs.tabs",
 ]
 
