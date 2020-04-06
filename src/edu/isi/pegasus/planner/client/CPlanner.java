@@ -1620,12 +1620,12 @@ public class CPlanner extends Executable {
                     LogManager.DEBUG_MESSAGE_LEVEL);
         }
 
-
         if (catalog != null) {
-            //PM-1515 make sure catalog was instantiated
+            // PM-1515 make sure catalog was instantiated
             Set<String> toLoad = new HashSet<String>();
             mLogger.log(
-                    "All sites will be loaded from the site catalog", LogManager.DEBUG_MESSAGE_LEVEL);
+                    "All sites will be loaded from the site catalog",
+                    LogManager.DEBUG_MESSAGE_LEVEL);
             toLoad.add("*");
 
             /* always load local site */
@@ -1640,7 +1640,7 @@ public class CPlanner extends Executable {
                     // we need to load all sites into the site store
                     toLoad.addAll(catalog.list());
                 }
-                for (Iterator<String> it = toLoad.iterator(); it.hasNext();) {
+                for (Iterator<String> it = toLoad.iterator(); it.hasNext(); ) {
                     SiteCatalogEntry s = catalog.lookup(it.next());
                     if (s != null && result.lookup(s.getSiteHandle()) == null) {
                         // PM-1515 prefer entries from DAX SiteStore.
@@ -1659,7 +1659,7 @@ public class CPlanner extends Executable {
                 }
             }
         }
-        
+
         /* query for the sites, and print them out */
         mLogger.log("Sites loaded are " + result.list(), LogManager.DEBUG_MESSAGE_LEVEL);
         return result;
