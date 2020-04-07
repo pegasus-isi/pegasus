@@ -1231,9 +1231,12 @@ public class JDBCRC implements ReplicaCatalog {
                 List<ReplicaCatalogEntry> value = (List<ReplicaCatalogEntry>) x.get(lfn);
                 if (value != null) {
                     for (ReplicaCatalogEntry tuple : value) {
-                        String indexID = mUsingSQLiteBackend
-                                ? Integer.toString((Integer.parseInt(generatedKeys.get(0)) - (countInserts-- -1)))
-                                : generatedKeys.get(index);
+                        String indexID =
+                                mUsingSQLiteBackend
+                                        ? Integer.toString(
+                                                (Integer.parseInt(generatedKeys.get(0))
+                                                        - (countInserts-- - 1)))
+                                        : generatedKeys.get(index);
                         String rh =
                                 tuple.getResourceHandle() == null
                                         ? "NULL"
@@ -1257,8 +1260,8 @@ public class JDBCRC implements ReplicaCatalog {
                                     tuple.getAttribute(name) == null
                                             ? "NULL"
                                             : tuple.getAttribute(name) instanceof String
-                                            ? (String) tuple.getAttribute(name)
-                                            : tuple.getAttribute(name).toString();
+                                                    ? (String) tuple.getAttribute(name)
+                                                    : tuple.getAttribute(name).toString();
                             st.addBatch(
                                     "INSERT INTO rc_meta(lfn_id,`key`,value) VALUES('"
                                             + indexID
