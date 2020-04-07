@@ -410,7 +410,7 @@ public class CPlanner extends Executable {
 
         // update the local/output site entry if required
         configurator.updateSiteStoreAndOptions(s, mPOptions);
-        
+
         if (eSites.contains("*")) {
             // set execution sites to all sites that are loaded into site store
             // only if a user passed * option on command line or did not specify
