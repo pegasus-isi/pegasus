@@ -121,45 +121,45 @@ public class JDBCRC implements ReplicaCatalog {
 
     /** The statement to prepare to slurp attributes. */
     private static final String mCStatements[] = { // 0:
-            "SELECT m.key,m.value FROM rc_meta m WHERE lfn_id=?",
-            // 1:
-            "SELECT l.lfn_id,p.pfn,p.site FROM rc_lfn l LEFT JOIN rc_pfn p ON l.lfn_id=p.lfn_id WHERE l.lfn=?",
-            // 2:
-            "SELECT l.lfn_id,p.pfn,p.site FROM rc_lfn l LEFT JOIN rc_pfn p ON l.lfn_id=p.lfn_id WHERE l.lfn=? AND p.site=?",
-            // 3:
-            "DELETE l FROM rc_lfn l INNER JOIN rc_pfn p ON l.lfn_id=p.lfn_id AND l.lfn=? AND p.pfn=?",
-            // 4:
-            "INSERT INTO rc_meta(lfn_id,`key`,value) VALUES(?,?,?)",
-            // 5:
-            "DELETE FROM rc_lfn WHERE lfn=?",
-            // 6:
-            "DELETE FROM rc_lfn WHERE lfn_id IN"
-                    + " ( SELECT lfn_id FROM rc_meta m WHERE m.key=? AND m.value=? )",
-            // 7:
-            "DELETE FROM rc_lfn WHERE lfn_id IN"
-                    + " ( SELECT lfn_id FROM rc_meta m WHERE m.key=? AND m.value IS NULL )",
-            // 8:
-            "DELETE FROM rc_lfn WHERE lfn=? AND id IN"
-                    + " ( SELECT id FROM rc_meta m WHERE m.key=? AND m.value=? )",
-            // 9:
-            "DELETE FROM rc_lfn WHERE lfn=? AND id IN"
-                    + " ( SELECT id FROM rc_meta m WHERE m.key=? AND m.value IS NULL )",
-            // 10:
-            "DELETE l FROM rc_lfn l INNER JOIN rc_pfn p ON l.lfn_id=p.lfn_id WHERE p.site=?",
-            // 11:
-            "DELETE FROM rc_lfn WHERE lfn_id IN (SELECT l.lfn_id FROM rc_lfn l INNER JOIN rc_pfn p ON l.lfn_id=p.lfn_id AND l.lfn=? AND p.pfn=?)",
-            // 12:
-            "INSERT INTO rc_lfn(lfn) VALUES(?)",
-            // 13:
-            "INSERT INTO rc_pfn(lfn_id, pfn, site) VALUES(?, ?, ?)",
-            // 14:
-            "SELECT lfn_id,lfn FROM rc_lfn WHERE lfn=?",
-            // 15:
-            "SELECT lfn_id FROM rc_lfn WHERE lfn=?",
-            // 16:
-            "INSERT INTO rc_pfn(lfn_id, pfn, site) VALUES(?,?,?)",
-            // 17:
-            "INSERT INTO rc_meta(lfn_id,`key`,value) VALUES(?,?,?)"
+        "SELECT m.key,m.value FROM rc_meta m WHERE lfn_id=?",
+        // 1:
+        "SELECT l.lfn_id,p.pfn,p.site FROM rc_lfn l LEFT JOIN rc_pfn p ON l.lfn_id=p.lfn_id WHERE l.lfn=?",
+        // 2:
+        "SELECT l.lfn_id,p.pfn,p.site FROM rc_lfn l LEFT JOIN rc_pfn p ON l.lfn_id=p.lfn_id WHERE l.lfn=? AND p.site=?",
+        // 3:
+        "DELETE l FROM rc_lfn l INNER JOIN rc_pfn p ON l.lfn_id=p.lfn_id AND l.lfn=? AND p.pfn=?",
+        // 4:
+        "INSERT INTO rc_meta(lfn_id,`key`,value) VALUES(?,?,?)",
+        // 5:
+        "DELETE FROM rc_lfn WHERE lfn=?",
+        // 6:
+        "DELETE FROM rc_lfn WHERE lfn_id IN"
+                + " ( SELECT lfn_id FROM rc_meta m WHERE m.key=? AND m.value=? )",
+        // 7:
+        "DELETE FROM rc_lfn WHERE lfn_id IN"
+                + " ( SELECT lfn_id FROM rc_meta m WHERE m.key=? AND m.value IS NULL )",
+        // 8:
+        "DELETE FROM rc_lfn WHERE lfn=? AND id IN"
+                + " ( SELECT id FROM rc_meta m WHERE m.key=? AND m.value=? )",
+        // 9:
+        "DELETE FROM rc_lfn WHERE lfn=? AND id IN"
+                + " ( SELECT id FROM rc_meta m WHERE m.key=? AND m.value IS NULL )",
+        // 10:
+        "DELETE l FROM rc_lfn l INNER JOIN rc_pfn p ON l.lfn_id=p.lfn_id WHERE p.site=?",
+        // 11:
+        "DELETE FROM rc_lfn WHERE lfn_id IN (SELECT l.lfn_id FROM rc_lfn l INNER JOIN rc_pfn p ON l.lfn_id=p.lfn_id AND l.lfn=? AND p.pfn=?)",
+        // 12:
+        "INSERT INTO rc_lfn(lfn) VALUES(?)",
+        // 13:
+        "INSERT INTO rc_pfn(lfn_id, pfn, site) VALUES(?, ?, ?)",
+        // 14:
+        "SELECT lfn_id,lfn FROM rc_lfn WHERE lfn=?",
+        // 15:
+        "SELECT lfn_id FROM rc_lfn WHERE lfn=?",
+        // 16:
+        "INSERT INTO rc_pfn(lfn_id, pfn, site) VALUES(?,?,?)",
+        // 17:
+        "INSERT INTO rc_meta(lfn_id,`key`,value) VALUES(?,?,?)"
     };
 
     /** Remembers if obtaining generated keys will work or not. */
@@ -918,7 +918,7 @@ public class JDBCRC implements ReplicaCatalog {
                     String value = rs.getString("value");
                     if (key != null
                             && (!tuple.hasAttribute(key)
-                            || (value != null && !tuple.getAttribute(key).equals(value)))) {
+                                    || (value != null && !tuple.getAttribute(key).equals(value)))) {
                         st.close();
                         rs.close();
                         return 0;
@@ -984,7 +984,7 @@ public class JDBCRC implements ReplicaCatalog {
                         this.mUsingSQLiteBackend
                                 ? mConnection.prepareStatement(query)
                                 : mConnection.prepareStatement(
-                                query, Statement.RETURN_GENERATED_KEYS);
+                                        query, Statement.RETURN_GENERATED_KEYS);
                 ps.setString(1, quote(lfn));
                 // sqlite driver complains if Statement.RETURN_GENERATED_KEYS is set, even though
                 // the id's are set in the ResultSet
@@ -1180,9 +1180,9 @@ public class JDBCRC implements ReplicaCatalog {
                                 for (ReplicaCatalogEntry tuple : value) {
                                     if (key != null
                                             && (!tuple.hasAttribute(key)
-                                            || (val != null
-                                            && !tuple.getAttribute(key)
-                                            .equals(val)))) {
+                                                    || (val != null
+                                                            && !tuple.getAttribute(key)
+                                                                    .equals(val)))) {
                                         lfnsToDelete.remove(id);
                                     }
                                 }
@@ -1231,9 +1231,12 @@ public class JDBCRC implements ReplicaCatalog {
                 List<ReplicaCatalogEntry> value = (List<ReplicaCatalogEntry>) x.get(lfn);
                 if (value != null) {
                     for (ReplicaCatalogEntry tuple : value) {
-                        String indexID = mUsingSQLiteBackend
-                                ? Integer.toString((Integer.parseInt(generatedKeys.get(0)) - (countInserts-- -1)))
-                                : generatedKeys.get(index);
+                        String indexID =
+                                mUsingSQLiteBackend
+                                        ? Integer.toString(
+                                                (Integer.parseInt(generatedKeys.get(0))
+                                                        - (countInserts-- - 1)))
+                                        : generatedKeys.get(index);
                         String rh =
                                 tuple.getResourceHandle() == null
                                         ? "NULL"
@@ -1257,8 +1260,8 @@ public class JDBCRC implements ReplicaCatalog {
                                     tuple.getAttribute(name) == null
                                             ? "NULL"
                                             : tuple.getAttribute(name) instanceof String
-                                            ? (String) tuple.getAttribute(name)
-                                            : tuple.getAttribute(name).toString();
+                                                    ? (String) tuple.getAttribute(name)
+                                                    : tuple.getAttribute(name).toString();
                             st.addBatch(
                                     "INSERT INTO rc_meta(lfn_id,`key`,value) VALUES('"
                                             + indexID
@@ -1401,7 +1404,7 @@ public class JDBCRC implements ReplicaCatalog {
                 String value = rs.getString("value");
                 if (key != null
                         && (!tuple.hasAttribute(key)
-                        || (value != null && !tuple.getAttribute(key).equals(value)))) {
+                                || (value != null && !tuple.getAttribute(key).equals(value)))) {
                     st.close();
                     rs.close();
                     return result;
