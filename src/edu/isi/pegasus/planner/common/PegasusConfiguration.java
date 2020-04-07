@@ -31,6 +31,7 @@ import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactory;
+import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
 import java.util.HashMap;
@@ -196,7 +197,7 @@ public class PegasusConfiguration {
             store.addEntry(constructDefaultCondorPoolSiteEntry(options, pegasusHome));
             mLogger.log(
                     "Constructed default site catalog entry for condorpool site "
-                            + store.lookup("local"),
+                            + store.lookup("condorpool"),
                     LogManager.CONFIG_MESSAGE_LEVEL);
         }
 
@@ -550,7 +551,7 @@ public class PegasusConfiguration {
         site.addProfile(new Profile(Profile.ENV, "PEGASUS_HOME", pegasusHome));
         
         //set the profiles for the site to be treated as a condor pool
-        site.addProfile(new Profile(Profile.CONDOR, "type", "condor"));
+        site.addProfile(new Profile(Profile.VDS, "style", "condor"));
         //condorpool compute sites share a filesystem with the submit host
         site.addProfile(new Profile(Profile.VDS, Pegasus.LOCAL_VISIBLE_KEY, "true"));
         
