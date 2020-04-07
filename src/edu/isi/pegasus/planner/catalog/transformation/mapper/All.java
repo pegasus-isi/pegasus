@@ -96,7 +96,10 @@ public class All extends Mapper {
             sysinfomap = mSiteStore.getSysInfos(siteids);
         } else {
             throw new RuntimeException(
-                    "There are no entries for the transformation \"" + lfn + "\" in the TC for sites " + siteids);
+                    "There are no entries for the transformation \""
+                            + lfn
+                            + "\" in the TC for sites "
+                            + siteids);
         }
         if (sysinfomap != null) {
             for (Iterator i = siteids.iterator(); i.hasNext(); ) {

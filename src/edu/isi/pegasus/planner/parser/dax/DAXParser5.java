@@ -135,7 +135,7 @@ public class DAXParser5 implements DAXParser {
                 Map.Entry<String, JsonNode> e = it.next();
                 String key = e.getKey();
                 WorkflowKeywords reservedKey = WorkflowKeywords.getReservedKey(key);
-                
+
                 if (reservedKey == null) {
                     this.complainForIllegalKey(
                             WorkflowKeywords.WORKFLOW.getReservedName(), key, node);
