@@ -56,9 +56,6 @@ public class SiteCatalogXMLParserFactory {
     /** The default Site Catalog XMLParser */
     public static final String DEFAULT_SC_PARSER_CLASS = "SiteCatalogXMLParser4";
 
-    /** The SC XMLParser classname */
-    public static final String SC_PARSER3_CLASS = "SiteCatalogXMLParser3";
-
     /**
      * Loads the appropriate DAXParser looking at the dax schema that is specified by the user.
      *
@@ -142,12 +139,10 @@ public class SiteCatalogXMLParserFactory {
         if (schemaVersion != null) {
             long numericValue = CondorVersion.numericValue(schemaVersion);
 
-            if (numericValue < SiteCatalogXMLParserFactory.SC_VERSION_2_0_0) {
+            if (numericValue <= SiteCatalogXMLParserFactory.SC_VERSION_3_0_0) {
                 // log error
                 throw new SiteCatalogXMLParserFactoryException(
-                        "Site Catalog Schema Version2 is no longer supported");
-            } else if (numericValue == SiteCatalogXMLParserFactory.SC_VERSION_3_0_0) {
-                scClass = SiteCatalogXMLParserFactory.SC_PARSER3_CLASS;
+                        "Site Catalog Schema Version 2 and Version 3 are no longer supported");
             } else {
                 scClass = SiteCatalogXMLParserFactory.DEFAULT_SC_PARSER_CLASS;
             }
