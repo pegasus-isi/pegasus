@@ -41,7 +41,6 @@ import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusDBAdmin;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
-import edu.isi.pegasus.planner.common.Shiwa;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.DAXParserFactory;
@@ -342,12 +341,6 @@ public class CPlanner extends Executable {
         } else {
             // set log level to FATAL only
             mLogger.setLevel(LogManager.FATAL_MESSAGE_LEVEL);
-        }
-
-        String shiwaBundle = mPOptions.getShiwaBundle();
-        if (shiwaBundle != null) {
-            Shiwa shiwa = new Shiwa(mLogger);
-            shiwa.readBundle(shiwaBundle, mProps, mPOptions);
         }
 
         PegasusConfiguration configurator = new PegasusConfiguration(mLogger);
@@ -745,7 +738,7 @@ public class CPlanner extends Executable {
                 new Getopt(
                         "pegasus-plan",
                         args,
-                        "vqhfSnzpVr::aD:d:s:o:O:y:P:c:C:b:g:2:j:3:F:X:4:5:6:78:9:B:1:",
+                        "vqhfSnzpVr::aD:d:s:o:O:y:P:c:C:b:g:2:j:3:F:X:4:5:6:78:9:1:",
                         longOptions,
                         false);
         g.setOpterr(false);
@@ -764,10 +757,6 @@ public class CPlanner extends Executable {
 
                 case 'b': // optional basename
                     options.setBasenamePrefix(g.getOptarg());
-                    break;
-
-                case 'B': // bundle
-                    options.setShiwaBundle(g.getOptarg());
                     break;
 
                 case 'c': // cache
@@ -1034,7 +1023,7 @@ public class CPlanner extends Executable {
      * @return array of <code>LongOpt</code> objects , corresponding to the valid options
      */
     public LongOpt[] generateValidOptions() {
-        LongOpt[] longopts = new LongOpt[37];
+        LongOpt[] longopts = new LongOpt[36];
 
         longopts[0] = new LongOpt("dir", LongOpt.REQUIRED_ARGUMENT, null, '8');
         longopts[1] = new LongOpt("dax", LongOpt.REQUIRED_ARGUMENT, null, 'd');
@@ -1071,11 +1060,10 @@ public class CPlanner extends Executable {
         longopts[29] = new LongOpt("inherited-rc-files", LongOpt.REQUIRED_ARGUMENT, null, '5');
         longopts[30] = new LongOpt("force-replan", LongOpt.NO_ARGUMENT, null, '7');
         longopts[31] = new LongOpt("staging-site", LongOpt.REQUIRED_ARGUMENT, null, '9');
-        longopts[32] = new LongOpt("shiwa-bundle", LongOpt.REQUIRED_ARGUMENT, null, 'B');
-        longopts[33] = new LongOpt("input-dir", LongOpt.REQUIRED_ARGUMENT, null, 'I');
-        longopts[34] = new LongOpt("output-dir", LongOpt.REQUIRED_ARGUMENT, null, 'O');
-        longopts[35] = new LongOpt("output-site", LongOpt.REQUIRED_ARGUMENT, null, 'o');
-        longopts[36] = new LongOpt("cleanup", LongOpt.REQUIRED_ARGUMENT, null, '1');
+        longopts[32] = new LongOpt("input-dir", LongOpt.REQUIRED_ARGUMENT, null, 'I');
+        longopts[33] = new LongOpt("output-dir", LongOpt.REQUIRED_ARGUMENT, null, 'O');
+        longopts[34] = new LongOpt("output-site", LongOpt.REQUIRED_ARGUMENT, null, 'o');
+        longopts[35] = new LongOpt("cleanup", LongOpt.REQUIRED_ARGUMENT, null, '1');
         return longopts;
     }
 
@@ -1125,8 +1113,6 @@ public class CPlanner extends Executable {
                 .append("\n Other Options  ")
                 .append(
                         "\n -b |--basename     the basename prefix while constructing the per workflow files like .dag etc.")
-                .append(
-                        "\n -B |--bundle       the shiwa bundle to be used. ( prototypical option )  ")
                 .append("\n -c |--cache        comma separated list of replica cache files.")
                 .append(
                         "\n --inherited-rc-files  comma separated list of replica files. Locations mentioned in these have a lower priority than the locations in the DAX file")
