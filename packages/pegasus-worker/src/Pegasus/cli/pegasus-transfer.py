@@ -3818,7 +3818,7 @@ class WebdavHandler(TransferHandlerBase):
                     + "'"
                 )
 
-            logger.info(cmd)
+            logger.debug(cmd)
 
             self._pre_transfer_attempt(t)
             try:
@@ -3926,7 +3926,7 @@ class WebdavHandler(TransferHandlerBase):
             if not logger.isEnabledFor(logging.DEBUG):
                 cmd += " --silent"
             cmd += (
-                " --user '"
+                " --show-error --location --user '"
                 + username
                 + ":"
                 + password
@@ -3936,6 +3936,7 @@ class WebdavHandler(TransferHandlerBase):
                 + url
                 + "'"
             )
+            logger.debug(cmd)
             tc = utils.TimedCommand(cmd)
             try:
                 tc.run()
