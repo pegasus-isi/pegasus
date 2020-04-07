@@ -667,7 +667,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     def plan(
         self,
         conf: str = None,
-        sites: str = "local",
+        sites: str = None,
         output_site: str = "local",
         input_dir: str = None,
         output_dir: str = None,
@@ -683,7 +683,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
         :param conf:  the path to the properties file to use for planning, defaults to None
         :type conf: str, optional
-        :param sites: comma separated list of executions sites on which to map the workflow, defaults to "local"
+        :param sites: comma separated list of executions sites on which to map the workflow, defaults to None
         :type sites: str, optional
         :param output_site: the output site where the data products during workflow execution are transferred to, defaults to "local"
         :type output_site: str, optional
