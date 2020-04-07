@@ -46,7 +46,7 @@ class Client:
         self,
         dax: str,
         conf: str = None,
-        sites: str = "local",
+        sites: str = None,
         output_site: str = "local",
         input_dir: str = None,
         output_dir: str = None,
