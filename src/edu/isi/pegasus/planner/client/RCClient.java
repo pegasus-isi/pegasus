@@ -64,7 +64,7 @@ public class RCClient extends Toolkit {
     private static final String LFN_DOES_NOT_EXIST_MSG = "LFN doesn't exist:";
 
     /** The default chunk factor that is used for biting off chunks of large files. */
-    private static final int DEFAULT_CHUNK_FACTOR = 1000;
+    private static final int DEFAULT_CHUNK_FACTOR = 500;
 
     /** Maintains the interface to the replica catalog implementation. */
     private ReplicaCatalog m_rc;
