@@ -22,13 +22,11 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationFactoryException;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
-import edu.isi.pegasus.planner.catalog.transformation.impl.CreateTCDatabase;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
 import java.io.File;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -42,14 +40,6 @@ import java.util.StringTokenizer;
  */
 public class TCConverter extends Executable {
 
-    /** The default database . */
-    private static String DEFAULT_DATABASE = "MySQL";
-    /** The database format. */
-    private static String DATABASE_FORMAT = "Database";
-
-    /** The File format. */
-    private static String FILE_FORMAT = "File";
-
     /** The textual format. */
     private static String TEXT_FORMAT = "Text";
 
@@ -57,14 +47,7 @@ public class TCConverter extends Executable {
     private static String YAML_FORMAT = "YAML";
 
     /** The supported transformation formats. */
-    private static final String[] SUPPORTED_TRANSFORMATION_FORMAT = {
-        TEXT_FORMAT, FILE_FORMAT, YAML_FORMAT
-    };
-
-    /** List of sql initialization files */
-    private static final String[] TC_INITIALIZATION_FILES = {
-        "create-my-init.sql", "create-my-tc.sql"
-    };
+    private static final String[] SUPPORTED_TRANSFORMATION_FORMAT = {TEXT_FORMAT, YAML_FORMAT};
 
     /** The input files. */
     private List<String> mInputFiles;
@@ -78,23 +61,6 @@ public class TCConverter extends Executable {
     /** The input format for the transformation catalog. */
     private String mInputFormat;
 
-    /** The database type. */
-    private String mDatabaseURL;
-
-    /** The database type. */
-    private String mDatabase;
-    /** The database name. */
-    private String mDatabaseName;
-
-    /** The database user name. */
-    private String mDatabaseUserName;
-
-    /** The database user password. */
-    private String mDatabasePassword;
-
-    /** The database host . */
-    private String mDatabaseHost;
-
     /** Denotes the logging level that is to be used for logging the messages. */
     private int mLoggingLevel;
 
@@ -106,10 +72,8 @@ public class TCConverter extends Executable {
     protected void initialize(String[] opts) {
         super.initialize(opts);
         // the output format is whatever user specified in the properties
-        mOutputFormat = TCConverter.TEXT_FORMAT;
-        mInputFormat = TCConverter.FILE_FORMAT;
-        mDatabase = TCConverter.DEFAULT_DATABASE;
-        mDatabaseHost = "localhost";
+        mOutputFormat = TCConverter.YAML_FORMAT;
+        mInputFormat = TCConverter.TEXT_FORMAT;
         mInputFiles = null;
         mOutputFile = null;
         mLoggingLevel = LogManager.WARNING_MESSAGE_LEVEL;
@@ -133,20 +97,16 @@ public class TCConverter extends Executable {
      * @return LongOpt[] list of valid options
      */
     public LongOpt[] generateValidOptions() {
-        LongOpt[] longopts = new LongOpt[13];
+        LongOpt[] longopts = new LongOpt[9];
         longopts[0] = new LongOpt("input", LongOpt.REQUIRED_ARGUMENT, null, 'i');
         longopts[1] = new LongOpt("iformat", LongOpt.REQUIRED_ARGUMENT, null, 'I');
         longopts[2] = new LongOpt("output", LongOpt.REQUIRED_ARGUMENT, null, 'o');
         longopts[3] = new LongOpt("oformat", LongOpt.REQUIRED_ARGUMENT, null, 'O');
-        longopts[4] = new LongOpt("db-user-name", LongOpt.REQUIRED_ARGUMENT, null, 'N');
-        longopts[5] = new LongOpt("db-user-password", LongOpt.REQUIRED_ARGUMENT, null, 'P');
-        longopts[6] = new LongOpt("db-url", LongOpt.REQUIRED_ARGUMENT, null, 'U');
-        longopts[7] = new LongOpt("db-host", LongOpt.REQUIRED_ARGUMENT, null, 'H');
-        longopts[8] = new LongOpt("help", LongOpt.NO_ARGUMENT, null, 'h');
-        longopts[9] = new LongOpt("version", LongOpt.NO_ARGUMENT, null, 'V');
-        longopts[10] = new LongOpt("verbose", LongOpt.NO_ARGUMENT, null, 'v');
-        longopts[11] = new LongOpt("quiet", LongOpt.NO_ARGUMENT, null, 'q');
-        longopts[12] = new LongOpt("conf", LongOpt.REQUIRED_ARGUMENT, null, 'c');
+        longopts[4] = new LongOpt("help", LongOpt.NO_ARGUMENT, null, 'h');
+        longopts[5] = new LongOpt("version", LongOpt.NO_ARGUMENT, null, 'V');
+        longopts[6] = new LongOpt("verbose", LongOpt.NO_ARGUMENT, null, 'v');
+        longopts[7] = new LongOpt("quiet", LongOpt.NO_ARGUMENT, null, 'q');
+        longopts[8] = new LongOpt("conf", LongOpt.REQUIRED_ARGUMENT, null, 'c');
 
         return longopts;
     }
@@ -166,7 +126,7 @@ public class TCConverter extends Executable {
 
         LongOpt[] longOptions = generateValidOptions();
 
-        Getopt g = new Getopt("TCConverter", opts, "hVvqI:i:O:o:U:P:N:H:c:", longOptions, false);
+        Getopt g = new Getopt("TCConverter", opts, "hVvqI:i:O:o:c:", longOptions, false);
 
         int option = 0;
         int noOfOptions = 0;
@@ -190,21 +150,6 @@ public class TCConverter extends Executable {
 
                 case 'O': // oformat
                     mOutputFormat = g.getOptarg();
-                    break;
-                case 'N': // name
-                    mDatabaseUserName = g.getOptarg();
-                    break;
-
-                case 'P': // password
-                    mDatabasePassword = g.getOptarg();
-                    break;
-
-                case 'U': // url
-                    mDatabaseURL = g.getOptarg();
-                    break;
-
-                case 'H': // host
-                    mDatabaseHost = g.getOptarg();
                     break;
 
                 case 'h': // help
@@ -317,49 +262,30 @@ public class TCConverter extends Executable {
     private TransformationStore convertTCEntryFrom(List<String> inputFiles, String inputFormat)
             throws IOException {
         // sanity check
-        if (!inputFormat.equals(DATABASE_FORMAT)) {
-            if (inputFiles == null || inputFiles.isEmpty()) {
-                throw new IOException("Input files not specified. Specify the --input option");
-            }
-        } else {
-            // Checks if db values are passed,else take the values from the properties file
-            if (mDatabaseURL != null && mDatabaseUserName != null && mDatabasePassword != null) {
-                mProps.setProperty("pegasus.catalog.transformation.db", mDatabase);
-                mProps.setProperty("pegasus.catalog.transformation.db.driver", mDatabase);
-                mProps.setProperty("pegasus.catalog.transformation.db.url", mDatabaseURL);
-                mProps.setProperty("pegasus.catalog.transformation.db.user", mDatabaseUserName);
-                mProps.setProperty("pegasus.catalog.transformation.db.password", mDatabasePassword);
-            }
+        if (inputFiles == null || inputFiles.isEmpty()) {
+            throw new IOException("Input files not specified. Specify the --input option");
         }
+
         TransformationStore result = new TransformationStore();
         List<TransformationCatalogEntry> entries = null;
         mProps.setProperty("pegasus.catalog.transformation", inputFormat);
 
-        if (inputFormat.equals(DATABASE_FORMAT)) {
+        // Sanity check
+        for (String inputFile : inputFiles) {
+            File input = new File(inputFile);
+            if (!input.canRead()) {
+                throw new IOException("File not found or cannot be read." + inputFile);
+            }
+        }
+        for (String inputFile : inputFiles) {
+            mProps.setProperty("pegasus.catalog.transformation.file", inputFile);
             entries = parseTC(mProps);
             if (entries != null) {
                 for (TransformationCatalogEntry site : entries) {
                     result.addEntry(site);
                 }
             }
-        } else {
-            // Sanity check
-            for (String inputFile : inputFiles) {
-                File input = new File(inputFile);
-                if (!input.canRead()) {
-                    throw new IOException("File not found or cannot be read." + inputFile);
-                }
-            }
-            for (String inputFile : inputFiles) {
-                mProps.setProperty("pegasus.catalog.transformation.file", inputFile);
-                entries = parseTC(mProps);
-                if (entries != null) {
-                    for (TransformationCatalogEntry site : entries) {
-                        result.addEntry(site);
-                    }
-                }
-            } // end of iteration through input files.
-        }
+        } // end of iteration through input files.
 
         return result;
     }
@@ -444,9 +370,7 @@ public class TCConverter extends Executable {
         text.append(
                 "\n Usage: pegasus-tc-converter [-Dprop  [..]]  [--iformat <input format>] [--oformat <output format>]");
         text.append("\n       [--input <list of input files>] [--output <output file to write>] ");
-        /* Disable Database conversion options
-        text.append("\n       [--db-user-name <database user name>] [--db-user-pwd <database user password>] [--db-url <database url>] [--db-host <database host>]");
-        */
+
         text.append(
                 "\n       [--conf <path to property file>] [--verbose] [--quiet][--Version] [--help]");
         text.append("\n");
@@ -464,12 +388,6 @@ public class TCConverter extends Executable {
         text.append("\n");
         text.append("\n Other Options ");
         text.append("\n");
-        /* Disable Database conversion options
-        text.append("\n -N |--db-user-name   the database user name "  );
-        text.append("\n -P |--db-user-pwd    the database user password " );
-        text.append("\n -U |--db-url         the database url "  );
-        text.append("\n -H |--db-host        the database host " );
-        */
         text.append("\n -c |--conf           path to  property file");
         text.append(
                 "\n -v |--verbose        increases the verbosity of messages about what is going on");
@@ -482,12 +400,6 @@ public class TCConverter extends Executable {
         text.append("\n Example Usage ");
         text.append("\n Text to file format conversion :- ");
         text.append("  pegasus-tc-converter  -i tc.data -I File -o tc.text  -O Text -v");
-        /* Disable Database conversion options
-        text.append("\n File to Database(new) format conversion  :- " );
-        text.append("  pegasus-tc-converter  -i tc.data -I File -N mysql_user -P mysql_pwd -U jdbc:mysql://localhost:3306/tc -H localhost  -O Database -v" );
-        text.append("\n Database(existing specified in properties file) to text format conversion  :-" );
-        text.append("  pegasus-tc-converter  -I Database -o tc.txt -O Text -vvvvv");
-        */
 
         System.out.println(text.toString());
     }
@@ -503,83 +415,15 @@ public class TCConverter extends Executable {
     private void convertTCEntryTo(TransformationStore output, String format, String filename)
             throws IOException {
         TransformationCatalog catalog = null;
-        if (format.equals(FILE_FORMAT)
-                || format.equals(TEXT_FORMAT)
-                || format.equals(YAML_FORMAT)) {
+        if (format.equals(TEXT_FORMAT) || format.equals(YAML_FORMAT)) {
 
             if (filename == null) {
                 throw new IOException(
                         "Please specify a file to write the output to using --output option ");
             }
             mProps.setProperty("pegasus.catalog.transformation.file", filename);
-
-        } else {
-            if (mDatabaseURL != null && mDatabaseUserName != null && mDatabasePassword != null) {
-                CreateTCDatabase jdbcTC;
-                try {
-                    jdbcTC =
-                            new CreateTCDatabase(
-                                    mDatabase,
-                                    mDatabaseURL,
-                                    mDatabaseUserName,
-                                    mDatabasePassword,
-                                    mDatabaseHost);
-                } catch (ClassNotFoundException e1) {
-                    throw new RuntimeException("Failed to load driver " + mDatabase);
-                } catch (SQLException e1) {
-                    throw new RuntimeException("Failed to get connection " + mDatabaseURL);
-                }
-                mDatabaseName = jdbcTC.getDatabaseName(mDatabaseURL);
-                if (mDatabaseName != null) {
-                    try {
-                        if (!jdbcTC.checkIfDatabaseExists(mDatabaseName)) {
-                            if (!jdbcTC.createDatabase(mDatabaseName)) {
-                                throw new RuntimeException(
-                                        "Failed to create database " + mDatabaseName);
-                            }
-                            String initFilePath =
-                                    mProps.getSharedDir() + File.separator + "sql" + File.separator;
-                            for (String name : TC_INITIALIZATION_FILES) {
-                                if (!jdbcTC.initializeDatabase(
-                                        mDatabaseName, initFilePath + name)) {
-                                    jdbcTC.deleteDatabase(mDatabaseName);
-                                    throw new RuntimeException(
-                                            "Failed to initialize database " + mDatabaseName);
-                                }
-                            }
-
-                            mProps.setProperty("pegasus.catalog.transformation.db", mDatabase);
-                            mProps.setProperty(
-                                    "pegasus.catalog.transformation.db.driver", mDatabase);
-                            mProps.setProperty(
-                                    "pegasus.catalog.transformation.db.url", mDatabaseURL);
-                            mProps.setProperty(
-                                    "pegasus.catalog.transformation.db.user", mDatabaseUserName);
-                            mProps.setProperty(
-                                    "pegasus.catalog.transformation.db.password",
-                                    mDatabasePassword);
-                        } else {
-                            mLogger.log(
-                                    "Database " + mDatabaseName + " already exists",
-                                    LogManager.ERROR_MESSAGE_LEVEL);
-                            throw new RuntimeException(
-                                    "Cannot over write an existing database " + mDatabaseName);
-                        }
-                    } catch (SQLException e) {
-                        mLogger.log(
-                                "Failed connection with the database " + e.getMessage(),
-                                LogManager.ERROR_MESSAGE_LEVEL);
-                        throw new RuntimeException("Connection Failed " + mDatabaseName);
-                    }
-                } else {
-                    mLogger.log(
-                            "Unable to detect database name in the URL",
-                            LogManager.ERROR_MESSAGE_LEVEL);
-                    throw new RuntimeException(
-                            "Unable to detect database name in the URL" + mDatabaseURL);
-                }
-            }
         }
+
         mProps.setProperty("pegasus.catalog.transformation", format);
         catalog = TransformationFactory.loadInstance(mProps);
         List<TransformationCatalogEntry> entries = output.getEntries(null, (TCType) null);
