@@ -14,8 +14,8 @@
 package edu.isi.pegasus.planner.common;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.FindExecutable;
 import edu.isi.pegasus.common.util.Version;
-import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.DirectoryLayout;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
@@ -179,10 +179,13 @@ public class PegasusConfiguration {
     public void updateSiteStoreAndOptions(SiteStore store, PlannerOptions options) {
         // sanity check to make sure that output outputSite is loaded
         String outputSite = options.getOutputSite();
+        
+        File pegasusBinDir = FindExecutable.findExec("pegasus-version").getParentFile();
+        String pegasusHome = pegasusBinDir.getParent();
 
         // check for local site or create a default entry
         if (!store.list().contains("local")) {
-            store.addEntry(constructDefaultLocalSiteEntry(options));
+            store.addEntry(constructDefaultLocalSiteEntry(options, pegasusHome));
             mLogger.log(
                     "Constructed default site catalog entry for local site "
                             + store.lookup("local"),
@@ -190,7 +193,7 @@ public class PegasusConfiguration {
         }
         // check for condorpool site or create a default entry
         if (!store.list().contains("condorpool")) {
-            store.addEntry(constructDefaultCondorPoolSiteEntry(options));
+            store.addEntry(constructDefaultCondorPoolSiteEntry(options, pegasusHome));
             mLogger.log(
                     "Constructed default site catalog entry for condorpool site "
                             + store.lookup("local"),
@@ -509,9 +512,10 @@ public class PegasusConfiguration {
      * Constructs default SiteCatalogEntry for local site
      *
      * @param options
+     * @param pegasusHome  the pegasus home to be set
      * @return
      */
-    private SiteCatalogEntry constructDefaultLocalSiteEntry(PlannerOptions options) {
+    private SiteCatalogEntry constructDefaultLocalSiteEntry(PlannerOptions options, String pegasusHome) {
         String submitDir = options.getSubmitDirectory();
         File scratch = new File(new File(submitDir).getParent(), "wf-scratch/LOCAL");
         File output = new File(new File(submitDir).getParent(), "wf-output");
@@ -520,6 +524,9 @@ public class PegasusConfiguration {
         site.setArchitecture(mVersion.getArchitecture());
         site.addDirectory(constructFileServerDirectory(Directory.TYPE.shared_scratch, scratch));
         site.addDirectory(constructFileServerDirectory(Directory.TYPE.shared_storage, output));
+        
+        //set path to Pegasus install
+        site.addProfile(new Profile(Profile.ENV, "PEGASUS_HOME", pegasusHome));
 
         return site;
     }
@@ -528,9 +535,10 @@ public class PegasusConfiguration {
      * Constructs default SiteCatalogEntry for local site
      *
      * @param options
+     * @param pegasusHome  the pegasus home to be set
      * @return
      */
-    private SiteCatalogEntry constructDefaultCondorPoolSiteEntry(PlannerOptions options) {
+    private SiteCatalogEntry constructDefaultCondorPoolSiteEntry(PlannerOptions options, String pegasusHome) {
         String submitDir = options.getSubmitDirectory();
         File scratch = new File(new File(submitDir).getParent(), "wf-scratch/CONDORPOOL");
 
@@ -538,6 +546,9 @@ public class PegasusConfiguration {
         site.setArchitecture(mVersion.getArchitecture());
         site.addDirectory(constructFileServerDirectory(Directory.TYPE.shared_scratch, scratch));
 
+        //set path to Pegasus install
+        site.addProfile(new Profile(Profile.ENV, "PEGASUS_HOME", pegasusHome));
+        
         //set the profiles for the site to be treated as a condor pool
         site.addProfile(new Profile(Profile.CONDOR, "type", "condor"));
         //condorpool compute sites share a filesystem with the submit host
