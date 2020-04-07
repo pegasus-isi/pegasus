@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.common;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.FindExecutable;
+import edu.isi.pegasus.common.util.ShellCommand;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.DirectoryLayout;
@@ -31,6 +32,7 @@ import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactory;
+import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
 import java.util.HashMap;
@@ -556,6 +558,12 @@ public class PegasusConfiguration {
         // condorpool compute sites share a filesystem with the submit host
         site.addProfile(new Profile(Profile.VDS, Pegasus.LOCAL_VISIBLE_KEY, "true"));
 
+        // requirements expression to pin it to a matchine
+        String requirements = this.getCondorPoolRequirements();
+        if (requirements != null) {
+            site.addProfile(new Profile(Profile.CONDOR, Condor.REQUIREMENTS_KEY, requirements));
+        }
+
         return site;
     }
 
@@ -573,5 +581,22 @@ public class PegasusConfiguration {
         m.put(FileServerType.OPERATION.all, servers);
         return new Directory(
                 new SharedDirectory(m, new InternalMountPoint(dir.getAbsolutePath())), type);
+    }
+
+    /**
+     * Returns the requirements clause for the default condor pool site entry
+     *
+     * @return
+     */
+    private String getCondorPoolRequirements() {
+        ShellCommand c = ShellCommand.getInstance(mLogger);
+        if (c.execute("condor_config_val", "FULL_HOSNTAME") == 0) {
+            StringBuffer requirements = new StringBuffer();
+            requirements.append("(Machine == \"");
+            requirements.append(c.getSTDOut());
+            requirements.append("\")");
+            return requirements.toString();
+        }
+        return null;
     }
 }
