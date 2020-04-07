@@ -408,6 +408,9 @@ public class CPlanner extends Executable {
         SiteStore s = loadSiteStore(orgDag.getSiteStore());
         s.setForPlannerUse(mProps, mPOptions);
 
+        // update the local/output site entry if required
+        configurator.updateSiteStoreAndOptions(s, mPOptions);
+        
         if (eSites.contains("*")) {
             // set execution sites to all sites that are loaded into site store
             // only if a user passed * option on command line or did not specify
@@ -416,10 +419,7 @@ public class CPlanner extends Executable {
             // PM-1018 remove the local site from list of execution sites
             eSites.remove("local");
         }
-        mLogger.log("Execution sites are         " + eSites, LogManager.DEBUG_MESSAGE_LEVEL);
-
-        // update the local/output site entry if required
-        configurator.updateSiteStoreAndOptions(s, mPOptions);
+        mLogger.log("Execution sites are " + eSites, LogManager.DEBUG_MESSAGE_LEVEL);
 
         mBag.add(PegasusBag.SITE_STORE, s);
         mBag.add(PegasusBag.TRANSFORMATION_CATALOG, TransformationFactory.loadInstance(mBag));
