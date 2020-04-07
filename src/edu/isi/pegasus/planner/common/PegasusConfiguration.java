@@ -590,7 +590,7 @@ public class PegasusConfiguration {
      */
     private String getCondorPoolRequirements() {
         ShellCommand c = ShellCommand.getInstance(mLogger);
-        if (c.execute("condor_config_val", "FULL_HOSNTAME") == 0) {
+        if (c.execute("condor_config_val", "FULL_HOSTNAME") == 0) {
             StringBuffer requirements = new StringBuffer();
             requirements.append("(Machine == \"");
             requirements.append(c.getSTDOut());
