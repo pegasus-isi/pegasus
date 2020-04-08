@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.catalog.replica;
 
 import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.common.util.DynamicLoader;
+import edu.isi.pegasus.common.util.FileDetector;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.io.IOException;
@@ -37,6 +38,15 @@ public class ReplicaFactory {
 
     /** Package to prefix "just" class names with. */
     public static final String DEFAULT_PACKAGE = "edu.isi.pegasus.planner.catalog.replica.impl";
+
+    public static final String DEFAULT_CATALOG_IMPLEMENTOR =
+            edu.isi.pegasus.planner.catalog.replica.impl.YAML.class.getCanonicalName();
+
+    public static final String YAML_CATALOG_IMPLEMENTOR =
+            edu.isi.pegasus.planner.catalog.replica.impl.YAML.class.getCanonicalName();
+
+    public static final String FILE_CATALOG_IMPLEMENTOR =
+            edu.isi.pegasus.planner.catalog.replica.impl.SimpleFile.class.getCanonicalName();
 
     /**
      * Connects the interface with the replica catalog implementation. The choice of backend is
@@ -165,10 +175,23 @@ public class ReplicaFactory {
                     InstantiationException, IllegalAccessException, InvocationTargetException {
         ReplicaCatalog result = null;
 
-        
+        if (catalogImplementor == null) {
+            // check if file is specified in properties
+            if (props.containsKey("file")) {
+                // PM-1518 check for type of file
+                if (FileDetector.isTypeYAML(props.getProperty("file"))) {
+                    catalogImplementor = YAML_CATALOG_IMPLEMENTOR;
+                } else {
+                    catalogImplementor = FILE_CATALOG_IMPLEMENTOR;
+                }
+            } else {
+                catalogImplementor = DEFAULT_CATALOG_IMPLEMENTOR;
+            }
+        }
+
         // File also means SimpleFile
-        if (catalogImplementor == null || catalogImplementor.equalsIgnoreCase("File")) {
-            catalogImplementor = "SimpleFile";
+        if (catalogImplementor.equalsIgnoreCase("File")) {
+            catalogImplementor = FILE_CATALOG_IMPLEMENTOR;
         }
 
         // syntactic sugar adds absolute class prefix
