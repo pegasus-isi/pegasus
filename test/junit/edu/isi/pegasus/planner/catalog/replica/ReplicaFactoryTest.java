@@ -91,7 +91,7 @@ public class ReplicaFactoryTest {
             }
         }
     }
-    
+
     @Test
     public void testWithOnlyPathToFile() throws Exception {
         PegasusProperties props = PegasusProperties.nonSingletonInstance();
@@ -126,7 +126,7 @@ public class ReplicaFactoryTest {
             }
         }
     }
-    
+
     @Test
     public void testWithOnlyPathToYAMLFile() throws Exception {
         PegasusProperties props = PegasusProperties.nonSingletonInstance();
