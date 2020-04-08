@@ -75,7 +75,6 @@ jobs:
       - lfn: stdin_file.txt
         type: input
         registerReplica: false
-        stageOut: false
       - lfn: f.b2
         type: output
         registerReplica: false
