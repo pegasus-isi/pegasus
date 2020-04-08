@@ -48,7 +48,6 @@ public class YAMLRCTest {
         writer.write("pegasus:5.0\n");
         writer.close();
         mYAMLRC.connect(mRCFile.getAbsolutePath());
-        mRCFile.delete();
     }
 
     @Test

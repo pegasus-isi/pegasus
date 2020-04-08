@@ -22,6 +22,7 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
     edu.isi.pegasus.common.util.VersionTest.class,
     edu.isi.pegasus.common.util.PegasusURLTest.class,
+    edu.isi.pegasus.common.util.FileDetectorTest.class,
     edu.isi.pegasus.planner.namespace.PegasusTest.class,
     edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStoreTest.class,
     edu.isi.pegasus.planner.catalog.replica.impl.RegexRCTest.class,
