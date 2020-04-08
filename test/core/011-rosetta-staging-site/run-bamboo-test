@@ -32,7 +32,7 @@ export PEGASUS_BIN_DIR=`pegasus-config --bin`
 if [ "x$PEGASUS_BIN_DIR" = "x" ]; then
     echo "Please make sure pegasus-plan is in your path"
     exit 1
-fi 
+fi
 
 # build the dax generator
 export CLASSPATH=.:`pegasus-config --classpath`
@@ -42,51 +42,67 @@ javac RosettaDAX.java
 java RosettaDAX dax.xml
 
 # site catalog
-cat >sites.xml <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site handle="local" arch="x86_64" os="LINUX" osrelease="rhel" osversion="7">
-        <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
-        <head-fs>
-            <scratch>
-                <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://bamboo.isi.edu" mount-point="$TOP_DIR/scratch"/>
-                    <internal-mount-point mount-point="$TOP_DIR/scratch" />
-                </shared>
-            </scratch>
-            <storage>
-                <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://bamboo.isi.edu" mount-point="$TOP_DIR/outputs"/>
-                    <internal-mount-point mount-point="$TOP_DIR/outputs" />
-                </shared>
-            </storage>
-        </head-fs>
-        <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
-        <profile namespace="env" key="PEGASUS_BIN_DIR" >$PEGASUS_BIN_DIR</profile>
-    </site>
-    <site  handle="CCG" arch="x86_64" os="LINUX">
-        <grid  type="gt5" contact="obelix.isi.edu/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
-        <grid  type="gt5" contact="obelix.isi.edu/jobmanager-condor" scheduler="unknown" jobtype="compute"/>
-        <head-fs>
-            <scratch />
-            <storage />
-        </head-fs>
-        <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
-        <profile namespace="env" key="PEGASUS_FORCE_GUC" >1</profile>
-    </site>
-    <site  handle="CCG_Staging" arch="x86_64" os="LINUX">
-        <head-fs>
-            <scratch>
-                <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://obelix.isi.edu" mount-point="/data/scratch/ptesting"/>
-                    <internal-mount-point mount-point="/data/scratch/ptesting"/>
-                </shared>
-            </scratch>
-            <storage />
-        </head-fs>
-        <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
-    </site>
-</sitecatalog>
+cat > sites.yml <<EOF
+pegasus: "5.0"
+sites:
+ -
+  name: "CCG"
+  arch: "x86_64"
+  os.type: "linux"
+  grids:
+   -
+    type: "gt5"
+    contact: "obelix.isi.edu/jobmanager-fork"
+    scheduler: "fork"
+    jobtype: "auxillary"
+   -
+    type: "gt5"
+    contact: "obelix.isi.edu/jobmanager-condor"
+    scheduler: "unknown"
+    jobtype: "compute"
+  profiles:
+    env:
+      PEGASUS_FORCE_GUC: "1"
+ -
+  name: "local"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedStorage"
+    path: "$TOP_DIR/outputs"
+    fileServers:
+     -
+      operation: "all"
+      url: "gsiftp://bamboo.isi.edu$TOP_DIR/outputs"
+   -
+    type: "sharedScratch"
+    path: "$TOP_DIR/scratch"
+    fileServers:
+     -
+      operation: "all"
+      url: "gsiftp://bamboo.isi.edu$TOP_DIR/scratch"
+  grids:
+   -
+    type: "gt2"
+    contact: "localhost/jobmanager-fork"
+    scheduler: "fork"
+    jobtype: "auxillary"
+  profiles:
+    env:
+      PEGASUS_BIN_DIR: "$PEGASUS_BIN_DIR"
+ -
+  name: "CCG_Staging"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedScratch"
+    path: "/data/scratch/ptesting"
+    fileServers:
+     -
+      operation: "all"
+      url: "gsiftp://obelix.isi.edu/data/scratch/ptesting"
 EOF
 
 echo

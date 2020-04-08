@@ -4,8 +4,6 @@ pegasus.catalog.transformation.file = data/tc.txt
 pegasus.catalog.replica      = File
 pegasus.catalog.replica.file = data/rc.txt
 
-pegasus.catalog.site.file = sites.xml
-
 pegasus.dir.useTimestamp = true
 
 pegasus.data.configuration = nonsharedfs

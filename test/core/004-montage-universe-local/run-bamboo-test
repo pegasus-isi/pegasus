@@ -35,30 +35,37 @@ cat pegasus.properties >> ../pegasusrc
 # site catalog
 echo
 echo "Creating the site catalog..."
-cat >sites.xml <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site handle="local" arch="x86_64">
-        <head-fs>
-            <scratch>
-                <shared>
-                    <file-server protocol="file" url="file://" mount-point="$RUN_DIR/scratch"/>
-                    <internal-mount-point mount-point="$RUN_DIR/scratch"/>
-                </shared>
-            </scratch>
-            <storage>
-                <shared>
-                    <file-server protocol="file" url="file://" mount-point="$RUN_DIR/outputs"/>
-                    <internal-mount-point mount-point="$RUN_DIR/outputs"/>
-                </shared>
-            </storage>
-        </head-fs>
-        <profile namespace="pegasus" key="style">condor</profile>
-        <profile namespace="condor" key="universe">local</profile>
-        <profile namespace="env" key="MONTAGE_HOME" >/ccg/software/montage/current</profile>
-        <profile namespace="env" key="http_proxy" >http://workflow.isi.edu:3128</profile>
-    </site>
-</sitecatalog>
+cat > sites.yml <<EOF
+pegasus: "5.0"
+sites:
+ -
+  name: "local"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedStorage"
+    path: "$RUN_DIR/outputs"
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$RUN_DIR/outputs"
+   -
+    type: "sharedScratch"
+    path: "$RUN_DIR/scratch"
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$RUN_DIR/scratch"
+  profiles:
+    env:
+      MONTAGE_HOME: "/ccg/software/montage/current"
+      http_proxy: "http://workflow.isi.edu:3128"
+    condor:
+      universe: "local"
+    pegasus:
+      style: "condor"
+
 EOF
 
 pegasus-plan \

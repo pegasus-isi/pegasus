@@ -21,46 +21,70 @@ export PYTHONPATH=`pegasus-config --python`
 $testdir/blackdiamond.py /usr > blackdiamond.dax
 
 # create the site catalog
-cat > sites.xml <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site  handle="local" arch="x86_64" os="LINUX" osrelease="rhel" osversion="7">
-         <grid type="condor" contact="ccg-testing1.isi.edu" scheduler="Condor" jobtype="compute" total-nodes="50"/>
-         <grid type="condor" contact="ccg-testing1.isi.edu" scheduler="Condor" jobtype="auxillary" total-nodes="50"/>
-        <head-fs>
-              <scratch>                                                                                                                                                                                                                                    <shared>                                                                                                                                                                                                                                    <file-server protocol="file" url="file://" mount-point="/lizard/scratch-90-days"/>                                                                                                                                                            <internal-mount-point mount-point="/lizard/scratch-90-days"/>                                                                                                                                                                             </shared>                                                                                                                                                                                                                           </scratch>                                                                                                                                                                                                                              <storage>                                                                                                                                                                                                                                   <shared>                                                                                                                                                                                                                                    <file-server protocol="file" url="file://" mount-point="/lizard/scratch-90-days/bamboo/outputs"/>                                                                                                                                             <internal-mount-point mount-point="/lizard/scratch-90-days/bamboo/outputs"/>                                                                                                                                                              </shared>                                                                                                                                                                                                                           </storage> 
-        </head-fs>
-       
-             <profile namespace="pegasus" key="style">condor</profile>
-        <profile namespace="condor" key="getenv">True</profile>
-        <profile namespace="condor" key="requirements">(TARGET.FileSystemDomain =!= &quot;&quot;)</profile>
-    </site>
-
-     <site handle="CCG" arch="x86_64" os="LINUX" osrelease="rhel" osversion="5">
-
-
-        <head-fs>
-            <scratch>
-                <shared>
-                    <file-server protocol="file" url="file://" mount-point="/lizard/scratch-90-days"/>
-                    <internal-mount-point mount-point="/lizard/scratch-90-days"/>
-                </shared>
-            </scratch>
-            <storage>
-                <shared>
-                    <file-server protocol="file" url="file://" mount-point="/lizard/scratch-90-days/bamboo/outputs"/>
-                    <internal-mount-point mount-point="/lizard/scratch-90-days/bamboo/outputs"/>
-                </shared>
-            </storage>
-        </head-fs>
-        <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
-        <profile namespace="pegasus" key="style">condor</profile>
-        <profile namespace="condor" key="getenv">True</profile>
-        <profile namespace="condor" key="requirements">(TARGET.FileSystemDomain =!= &quot;&quot;)</profile>
-
-    </site>
-
-</sitecatalog>
+cat > sites.yml <<EOF
+pegasus: "5.0"
+sites:
+ -
+  name: "CCG"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedStorage"
+    path: "/lizard/scratch-90-days/bamboo/outputs"
+    fileServers:
+     -
+      operation: "all"
+      url: "file:///lizard/scratch-90-days/bamboo/outputs"
+   -
+    type: "sharedScratch"
+    path: "/lizard/scratch-90-days"
+    fileServers:
+     -
+      operation: "all"
+      url: "file:///lizard/scratch-90-days"
+  profiles:
+    condor:
+      getenv: "True"
+      requirements: "(TARGET.FileSystemDomain =!= \"\")"
+    pegasus:
+      style: "condor"
+ -
+  name: "local"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedStorage"
+    path: "/lizard/scratch-90-days/bamboo/outputs"
+    fileServers:
+     -
+      operation: "all"
+      url: "file:///lizard/scratch-90-days/bamboo/outputs"
+   -
+    type: "sharedScratch"
+    path: "/lizard/scratch-90-days"
+    fileServers:
+     -
+      operation: "all"
+      url: "file:///lizard/scratch-90-days"
+  grids:
+   -
+    type: "condor"
+    contact: "ccg-testing1.isi.edu"
+    scheduler: "condor"
+    jobtype: "compute"
+   -
+    type: "condor"
+    contact: "ccg-testing1.isi.edu"
+    scheduler: "condor"
+    jobtype: "auxillary"
+  profiles:
+    condor:
+      getenv: "True"
+      requirements: "(TARGET.FileSystemDomain =!= \"\")"
+    pegasus:
+      style: "condor"
 EOF
 
 # plan and submit the  workflow

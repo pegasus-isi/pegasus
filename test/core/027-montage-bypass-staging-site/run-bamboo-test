@@ -22,48 +22,59 @@ cd montage-workflow-v2
                       --band 2mass:k:red
 
 # override the site catalog
-cat >sites.xml <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site handle="local" arch="x86_64" os="LINUX" osrelease="rhel" osversion="7">
-        <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
-        <head-fs>
-            <scratch>
-                <shared>
-                    <file-server protocol="file" url="file://" mount-point="$RUN_DIR/scratch"/>
-                    <internal-mount-point mount-point="$RUN_DIR/scratch"/>
-                </shared>
-            </scratch>
-            <storage>
-                <shared>
-                    <file-server protocol="file" url="file://" mount-point="$RUN_DIR/outputs"/>
-                    <internal-mount-point mount-point="$RUN_DIR/outputs"/>
-                </shared>
-            </storage>
-        </head-fs>
-        <profile namespace="env" key="http_proxy" >http://workflow.isi.edu:3128</profile>
-    </site>
-    <site handle="CCG" arch="x86_64" os="LINUX">
-        <head-fs>
-            <scratch />
-            <storage />
-        </head-fs>
-        <profile namespace="pegasus" key="style">condor</profile>
-        <profile namespace="env" key="MONTAGE_HOME" >/ccg/software/montage/current</profile>
-        <profile namespace="env" key="http_proxy" >http://workflow.isi.edu:3128</profile>
-    </site>
-    <site handle="CCGData">
-        <head-fs>
-            <scratch>
-                <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://obelix.isi.edu" mount-point="/data/scratch/ptesting"/>
-                    <internal-mount-point mount-point="/data/scratch/ptesting"/>
-                </shared>
-            </scratch>
-            <storage />
-        </head-fs>
-    </site>
-</sitecatalog>
+cat > sites.yml <<EOF
+pegasus: "5.0"
+sites:
+ -
+  name: "CCG"
+  arch: "x86_64"
+  os.type: "linux"
+  profiles:
+    env:
+      MONTAGE_HOME: "/ccg/software/montage/current"
+      http_proxy: "http://workflow.isi.edu:3128"
+    pegasus:
+      style: "condor"
+ -
+  name: "local"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedScratch"
+    path: "$RUN_DIR/scratch"
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$RUN_DIR/scratch"
+   -
+    type: "sharedStorage"
+    path: "$RUN_DIR/outputs"
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$RUN_DIR/outputs"
+  grids:
+   -
+    type: "gt2"
+    contact: "localhost/jobmanager-fork"
+    scheduler: "fork"
+    jobtype: "auxillary"
+  profiles:
+    env:
+      http_proxy: "http://workflow.isi.edu:3128"
+ -
+  name: "CCGData"
+  arch: "x86"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedScratch"
+    path: "/data/scratch/ptesting"
+    fileServers:
+     -
+      operation: "all"
+      url: "gsiftp://obelix.isi.edu/data/scratch/ptesting"
 EOF
 
 pegasus-plan \
@@ -78,7 +89,7 @@ pegasus-plan \
         | tee $TOP_DIR/plan.out
 
 
-WORK_DIR=`cat $TOP_DIR/plan.out | grep pegasus-run | sed -E 's/.*pegasus-run[ ]+//'` 
+WORK_DIR=`cat $TOP_DIR/plan.out | grep pegasus-run | sed -E 's/.*pegasus-run[ ]+//'`
 if [ "x$WORK_DIR" = "x" ]; then
     echo "Unable to determine work directory from the planner output"
     exit 1

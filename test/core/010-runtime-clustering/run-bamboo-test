@@ -47,72 +47,83 @@ export PYTHONPATH=`pegasus-config --python`
 ./cluster.py /usr $CONFIG > ${DAX}
 
 properties local_site_protocol local_site_protocol file://
-properties local_site_url local_site_url 
+properties local_site_url local_site_url
 
 # create the site catalog
-cat > sites.xml << EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site handle="local" arch="x86_64" os="LINUX" osrelease="rhel" osversion="7">
-        <head-fs>
-            <scratch>
-                <shared>
-                    <file-server protocol="${local_site_protocol}" url="${local_site_url}" mount-point="$TOPDIR/work"/>
-                    <internal-mount-point mount-point="$TOPDIR/work"/>
-                </shared>
-            </scratch>
-            <storage>
-                <shared>
-                    <file-server protocol="${local_site_protocol}" url="${local_site_url}" mount-point="$TOPDIR/outputs"/>
-                    <internal-mount-point mount-point="$TOPDIR/outputs"/>
-                </shared>
-            </storage>
-        </head-fs>
-    </site>
-    <site handle="condorpool" arch="x86_64" os="LINUX" >
-        <head-fs>
-            <scratch />
-            <storage />
-        </head-fs>
-        <profile namespace="pegasus" key="style">condor</profile>
-        <profile namespace="condor" key="universe">vanilla</profile>
-    </site>
-    <site handle="sharedfs" arch="x86_64" os="LINUX">
-        <head-fs>
-            <scratch>
-                <shared>
-                    <file-server protocol="file" url="file://" mount-point="/lizard/scratch-90-days/$USER/scratch/$RUN_ID"/>
-                    <internal-mount-point mount-point="/lizard/scratch-90-days/$USER/scratch/$RUN_ID"/>
-                </shared>
-            </scratch>
-            <storage>
-                <shared>
-                    <file-server protocol="file" url="file://" mount-point="/lizard/scratch-90-days/$USER/storage/black-diamond-output/$RUN_ID"/>
-                    <internal-mount-point mount-point="/lizard/scratch-90-days/$USER/storage/black-diamond-output/$RUN_ID"/>
-                </shared>
-            </storage>
-        </head-fs>
-        <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
-        <profile namespace="condor" key="should_transfer_files">Yes</profile>
-        <profile namespace="condor" key="when_to_transfer_output">ON_EXIT</profile>
-        <profile namespace="env" key="PEGASUS_HOME" >$REMOTE_PEGASUS_HOME</profile>
-        <profile namespace="pegasus" key="style">condor</profile>
-        <profile namespace="condor" key="universe">vanilla</profile>
-    </site>
-    <site handle="cartman-data">
-        <head-fs>
-            <scratch>
-                <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://bamboo.isi.edu" mount-point="${TOPDIR}/staging-site/scratch"/>
-                    <internal-mount-point mount-point="${TOPDIR}/staging-site/scratch"/>
-                </shared>
-            </scratch>
-            <storage />
-        </head-fs>
-        <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
-        <profile namespace="env" key="PEGASUS_HOME" >$REMOTE_PEGASUS_HOME</profile>
-    </site>
-</sitecatalog>
+cat > sites.yml << EOF
+pegasus: "5.0"
+sites:
+ -
+  name: "cartman-data"
+  arch: "x86"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedScratch"
+    path: "${TOPDIR}/staging-site/scratch"
+    fileServers:
+     -
+      operation: "all"
+      url: "gsiftp://bamboo.isi.edu${TOPDIR}/staging-site/scratch"
+  profiles:
+    env:
+      PEGASUS_HOME: "$REMOTE_PEGASUS_HOME"
+ -
+  name: "condorpool"
+  arch: "x86_64"
+  os.type: "linux"
+  profiles:
+    condor:
+      universe: "vanilla"
+    pegasus:
+      style: "condor"
+ -
+  name: "sharedfs"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedStorage"
+    path: "/lizard/scratch-90-days/$USER/storage/black-diamond-output/$RUN_ID"
+    fileServers:
+     -
+      operation: "all"
+      url: "file:///lizard/scratch-90-days/$USER/storage/black-diamond-output/$RUN_ID"
+   -
+    type: "sharedScratch"
+    path: "/lizard/scratch-90-days/$USER/scratch/$RUN_ID"
+    fileServers:
+     -
+      operation: "all"
+      url: "file:///lizard/scratch-90-days/$USER/scratch/$RUN_ID"
+  profiles:
+    env:
+      PEGASUS_HOME: "$REMOTE_PEGASUS_HOME"
+    condor:
+      should_transfer_files: "Yes"
+      universe: "vanilla"
+      when_to_transfer_output: "ON_EXIT"
+    pegasus:
+      style: "condor"
+ -
+  name: "local"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedStorage"
+    path: "$TOPDIR/outputs"
+    fileServers:
+     -
+      operation: "all"
+      url: "${local_site_url}$TOPDIR/outputs"
+   -
+    type: "sharedScratch"
+    path: "$TOPDIR/work"
+    fileServers:
+     -
+      operation: "all"
+      url: "${local_site_url}$TOPDIR/work"
 EOF
 
 # plan and submit the workflow

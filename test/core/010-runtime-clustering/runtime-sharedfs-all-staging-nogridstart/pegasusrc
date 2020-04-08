@@ -1,9 +1,6 @@
 pegasus.catalog.replica=SimpleFile
 pegasus.catalog.replica.file=rc
 
-pegasus.catalog.site=XML3
-pegasus.catalog.site.file=sites.xml
-
 pegasus.catalog.transformation=Text
 pegasus.catalog.transformation.file=tc
 

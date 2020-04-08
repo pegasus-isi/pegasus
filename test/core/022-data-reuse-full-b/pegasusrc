@@ -1,6 +1,3 @@
-pegasus.catalog.site=XML3
-pegasus.catalog.site.file=sites.xml
-
 pegasus.catalog.replica = File
 pegasus.catalog.replica.file=rc.data
 

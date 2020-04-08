@@ -1,5 +1,2 @@
-pegasus.catalog.site=XML3
-pegasus.catalog.site.file=sites.xml
-
 pegasus.code.generator=PMC
 
