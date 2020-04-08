@@ -58,9 +58,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
                     )
                 )
 
-            _input = _Use(
-                file, _LinkType.INPUT, register_replica=False, stage_out=False
-            )
+            _input = _Use(file, _LinkType.INPUT, register_replica=False, stage_out=None)
             if _input in self.uses:
                 raise DuplicateError(
                     "file: {file} has already been added as input to this job".format(

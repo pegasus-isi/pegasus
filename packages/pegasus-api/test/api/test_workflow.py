@@ -64,13 +64,14 @@ class Test_Use:
         "use, expected",
         [
             (
-                _Use(File("a"), _LinkType.INPUT, stage_out=True, register_replica=True),
-                {
-                    "lfn": "a",
-                    "type": "input",
-                    "stageOut": True,
-                    "registerReplica": True,
-                },
+                _Use(
+                    File("a"), _LinkType.INPUT, stage_out=None, register_replica=False
+                ),
+                {"lfn": "a", "type": "input", "registerReplica": False,},
+            ),
+            (
+                _Use(File("a"), _LinkType.INPUT, stage_out=None, register_replica=None),
+                {"lfn": "a", "type": "input",},
             ),
             (
                 _Use(
@@ -341,24 +342,9 @@ class TestAbstractJob:
             "stdout": "stdout",
             "stderr": "stderr",
             "uses": [
-                {
-                    "lfn": "stdin",
-                    "type": "input",
-                    "stageOut": False,
-                    "registerReplica": False,
-                },
-                {
-                    "lfn": "if1",
-                    "type": "input",
-                    "stageOut": False,
-                    "registerReplica": False,
-                },
-                {
-                    "lfn": "if2",
-                    "type": "input",
-                    "stageOut": False,
-                    "registerReplica": False,
-                },
+                {"lfn": "stdin", "type": "input", "registerReplica": False,},
+                {"lfn": "if1", "type": "input", "registerReplica": False,},
+                {"lfn": "if2", "type": "input", "registerReplica": False,},
                 {
                     "lfn": "stdout",
                     "type": "output",
@@ -448,24 +434,9 @@ class TestJob:
             "stdout": "stdout",
             "stderr": "stderr",
             "uses": [
-                {
-                    "lfn": "stdin",
-                    "type": "input",
-                    "stageOut": False,
-                    "registerReplica": False,
-                },
-                {
-                    "lfn": "if1",
-                    "type": "input",
-                    "stageOut": False,
-                    "registerReplica": False,
-                },
-                {
-                    "lfn": "if2",
-                    "type": "input",
-                    "stageOut": False,
-                    "registerReplica": False,
-                },
+                {"lfn": "stdin", "type": "input", "registerReplica": False,},
+                {"lfn": "if1", "type": "input", "registerReplica": False,},
+                {"lfn": "if2", "type": "input", "registerReplica": False,},
                 {
                     "lfn": "stdout",
                     "type": "output",
@@ -562,12 +533,7 @@ class TestSubWorkflow:
                     "nodeLabel": "label",
                     "arguments": ["--sites", "condorpool"],
                     "uses": [
-                        {
-                            "lfn": "file",
-                            "type": "input",
-                            "stageOut": False,
-                            "registerReplica": False,
-                        }
+                        {"lfn": "file", "type": "input", "registerReplica": False,}
                     ],
                 },
             ),
@@ -580,12 +546,7 @@ class TestSubWorkflow:
                     "nodeLabel": "label",
                     "arguments": [],
                     "uses": [
-                        {
-                            "lfn": "file",
-                            "type": "input",
-                            "stageOut": False,
-                            "registerReplica": False,
-                        }
+                        {"lfn": "file", "type": "input", "registerReplica": False,}
                     ],
                 },
             ),
@@ -624,12 +585,7 @@ def expected_json():
                 "stderr": "stderr",
                 "arguments": [],
                 "uses": [
-                    {
-                        "lfn": "stdin",
-                        "type": "input",
-                        "stageOut": False,
-                        "registerReplica": False,
-                    },
+                    {"lfn": "stdin", "type": "input", "registerReplica": False,},
                     {
                         "lfn": "stdout",
                         "type": "output",
@@ -662,18 +618,8 @@ def expected_json():
                 "name": "t1",
                 "arguments": [],
                 "uses": [
-                    {
-                        "lfn": "f1",
-                        "type": "input",
-                        "stageOut": False,
-                        "registerReplica": False,
-                    },
-                    {
-                        "lfn": "f2",
-                        "type": "input",
-                        "stageOut": False,
-                        "registerReplica": False,
-                    },
+                    {"lfn": "f1", "type": "input", "registerReplica": False,},
+                    {"lfn": "f2", "type": "input", "registerReplica": False,},
                     {
                         "lfn": "checkpoint",
                         "type": "checkpoint",
@@ -691,7 +637,6 @@ def expected_json():
                     {
                         "lfn": "subworkflow.dag",
                         "type": "input",
-                        "stageOut": False,
                         "registerReplica": False,
                     }
                 ],
@@ -705,7 +650,6 @@ def expected_json():
                     {
                         "lfn": "subworkflow.dax",
                         "type": "input",
-                        "stageOut": False,
                         "registerReplica": False,
                     }
                 ],
