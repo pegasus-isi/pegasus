@@ -137,12 +137,6 @@ public class ReplicaFactory {
             connect.put("db." + key, db.getProperty(key));
         }
 
-        // put the driver property back into the DB property
-        //       String driver = props.getProperty( ReplicaCatalog.DBDRIVER_PREFIX );
-        //      driver = ( driver == null )? driver = props.getProperty(
-        // ReplicaCatalog.DBDRIVER_ALL_PREFIX ): driver;
-        //      connect.put( "db.driver", driver );
-
         // determine the class that implements the work catalog
         return loadInstance(props.getProperty(ReplicaCatalog.c_prefix), connect);
     }
@@ -171,12 +165,7 @@ public class ReplicaFactory {
                     InstantiationException, IllegalAccessException, InvocationTargetException {
         ReplicaCatalog result = null;
 
-        /*// PM-1018 commented , as we want default rc.txt to be picked up
-        if ( catalogImplementor == null )
-          throw new RuntimeException( "You need to specify the " +
-          ReplicaCatalog.c_prefix + " property" );
-        */
-
+        
         // File also means SimpleFile
         if (catalogImplementor == null || catalogImplementor.equalsIgnoreCase("File")) {
             catalogImplementor = "SimpleFile";
