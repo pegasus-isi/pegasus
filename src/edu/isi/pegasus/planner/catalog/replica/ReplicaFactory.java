@@ -152,11 +152,13 @@ public class ReplicaFactory {
     }
 
     /**
-     * Connects the interface with the replica catalog implementation. The choice of backend is
-     * configured through properties. This class is useful for non-singleton instances that may
+     * Connects the interface with the replica catalog implementation.The choice of backend is
+     * configured through properties.This class is useful for non-singleton instances that may
      * require changing properties.
      *
+     * @param catalogImplementor
      * @param props is an instance of properties to use.
+     * @return
      * @exception ClassNotFoundException if the schema for the database cannot be loaded. You might
      *     want to check your CLASSPATH, too.
      * @exception NoSuchMethodException if the schema's constructor interface does not comply with
@@ -167,6 +169,7 @@ public class ReplicaFactory {
      *     accessible to this package.
      * @exception InvocationTargetException if the constructor of the schema throws an exception
      *     while being dynamically loaded.
+     * @throws java.io.IOException
      * @see org.griphyn.common.util.CommonProperties
      * @see #loadInstance()
      */
@@ -204,7 +207,11 @@ public class ReplicaFactory {
         if (result == null) throw new RuntimeException("Unable to load " + catalogImplementor);
 
         if (!result.connect(props))
-            throw new RuntimeException("Unable to connect to replica catalog implementation");
+            throw new RuntimeException(
+                    "Unable to connect to replica catalog implementation "
+                            + catalogImplementor
+                            + " with props "
+                            + props);
 
         // done
         return result;

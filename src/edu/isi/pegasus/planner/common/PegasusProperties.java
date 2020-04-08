@@ -2257,7 +2257,8 @@ public class PegasusProperties implements Cloneable {
      */
     public String getPropertiesInSubmitDirectory() {
         if (mPropsInSubmitDir == null || mPropsInSubmitDir.length() == 0) {
-            throw new RuntimeException("Properties file does not exist in directory ");
+            throw new RuntimeException(
+                    "Properties file does not exist in directory " + mPropsInSubmitDir);
         }
         return mPropsInSubmitDir;
     }
