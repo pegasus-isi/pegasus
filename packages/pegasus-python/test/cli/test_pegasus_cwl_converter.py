@@ -937,12 +937,7 @@ def test_build_pegasus_wf():
                         "stageOut": True,
                         "type": "output",
                     },
-                    {
-                        "lfn": "input1",
-                        "registerReplica": False,
-                        "stageOut": False,
-                        "type": "input",
-                    },
+                    {"lfn": "input1", "registerReplica": False, "type": "input",},
                 ],
             },
             {
@@ -959,13 +954,11 @@ def test_build_pegasus_wf():
                     {
                         "lfn": "write_file_output1.txt",
                         "registerReplica": False,
-                        "stageOut": False,
                         "type": "input",
                     },
                     {
                         "lfn": "write_file_output2.txt",
                         "registerReplica": False,
-                        "stageOut": False,
                         "type": "input",
                     },
                     {
@@ -1104,12 +1097,7 @@ def test_main(mocker):
                 "name": "command",
                 "type": "job",
                 "uses": [
-                    {
-                        "lfn": "if",
-                        "registerReplica": False,
-                        "stageOut": False,
-                        "type": "input",
-                    },
+                    {"lfn": "if", "registerReplica": False, "type": "input",},
                     {
                         "lfn": "output.txt",
                         "registerReplica": False,
