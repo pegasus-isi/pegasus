@@ -24,6 +24,7 @@ import org.junit.runners.Suite;
     edu.isi.pegasus.common.util.PegasusURLTest.class,
     edu.isi.pegasus.common.util.FileDetectorTest.class,
     edu.isi.pegasus.planner.namespace.PegasusTest.class,
+    edu.isi.pegasus.planner.catalog.replica.ReplicaFactoryTest.class,
     edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStoreTest.class,
     edu.isi.pegasus.planner.catalog.replica.impl.RegexRCTest.class,
     edu.isi.pegasus.planner.catalog.replica.impl.YAMLRCTest.class,
