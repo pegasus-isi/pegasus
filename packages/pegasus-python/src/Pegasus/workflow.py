@@ -100,15 +100,7 @@ def _to_wf(d: dict) -> Workflow:
             # add args
             args = list()
             for a in j["arguments"]:
-                # file
-                if isinstance(a, dict):
-                    f = File(a["lfn"])
-                    if a.get("metadata"):
-                        f.metadata = a.get("metadata")
-
-                    args.append(f)
-                else:
-                    args.append(a)
+                args.append(a)
 
             job.args = args
 
