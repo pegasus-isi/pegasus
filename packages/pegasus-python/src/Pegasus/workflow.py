@@ -17,10 +17,6 @@ from Pegasus.replica_catalog import _to_rc
 from Pegasus.site_catalog import _to_sc
 from Pegasus.transformation_catalog import _to_tc
 
-import pprint
-
-pp = pprint.PrettyPrinter(indent=4)
-
 """
 :mod:`workflow` exposes an API to serialize and deserialize Pegasus's workflow file.
 
@@ -55,8 +51,6 @@ def _to_wf(d: dict) -> Workflow:
     :return: a Workflow object based on d
     :rtype: Workflow
     """
-
-    pp.pprint(d)
 
     try:
         #
