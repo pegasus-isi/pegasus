@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.StagingMapper;
 import edu.isi.pegasus.planner.mapper.SubmitMapper;
 import edu.isi.pegasus.planner.partitioner.graph.Bag;
+import java.io.File;
 import java.util.Map;
 
 /**
@@ -121,6 +122,11 @@ public class PegasusBag implements Bag {
      * site
      */
     public static final Integer PEGASUS_STAGING_MAPPER = new Integer(13);
+    
+    /**
+     * The directory from which the planner is invoked
+     */
+    public static final Integer PLANNER_DIRECTORY = new Integer(14);
 
     /** The handle to the <code>PegasusProperties</code>. */
     private PegasusProperties mProps;
@@ -170,10 +176,16 @@ public class PegasusBag implements Bag {
     /** The handle to the staging mapper */
     private StagingMapper mStagingMapper;
 
+    /**
+     * the directory from which the planner is invoked
+     */
+    private File mPlannerDirectory;
+    
     /** The default constructor. */
     public PegasusBag() {
         // by default uses PMC is set to false
-        mUsesPMC = false;
+        mUsesPMC   = false;
+        mPlannerDirectory = new File(System.getProperty("user.dir"));
     }
 
     /**
@@ -266,6 +278,12 @@ public class PegasusBag implements Bag {
                 else valid = false;
                 break;
 
+            case 14: // Planner Directory
+                if (value != null && value instanceof File)
+                    mPlannerDirectory = (File) value;
+                else valid = false;
+                break;
+                
             default:
                 throw new RuntimeException(
                         " Wrong Pegasus Bag key. Please use one of the predefined Integer key types");
@@ -351,6 +369,10 @@ public class PegasusBag implements Bag {
 
             case 13: // Staging Mapper
                 return this.mStagingMapper;
+                
+            case 14: // Staging Mapper
+                return this.mPlannerDirectory;
+
 
             default:
                 throw new RuntimeException(
@@ -467,6 +489,15 @@ public class PegasusBag implements Bag {
         return (StagingMapper) get(PegasusBag.PEGASUS_STAGING_MAPPER);
     }
 
+    /**
+     * A convenience method to get the planner directory
+     *
+     * @return the handle to directory from which planner was invoked
+     */
+    public File getPlannerDirectory() {
+        return (File) get(PegasusBag.PLANNER_DIRECTORY);
+    }
+    
     /**
      * A convenience method to get the intValue for the object passed.
      *
