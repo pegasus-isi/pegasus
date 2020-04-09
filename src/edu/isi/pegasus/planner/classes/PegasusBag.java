@@ -39,7 +39,7 @@ public class PegasusBag implements Bag {
         "pegasus-properties", "planner-options", "replica-catalog", "site-catalog",
         "transformation-catalog", "transformation-mapper", "pegasus-logger", "site-store",
         "planner-cache", "worker-package-map", "uses-pmc", "planner-metrics",
-        "submit-mapper", "staging-mapper"
+        "submit-mapper", "staging-mapper", "planner-directory"
     };
 
     /** The constant to be passed to the accessor functions to get or set the PegasusProperties. */
@@ -292,7 +292,7 @@ public class PegasusBag implements Bag {
         // if object is not null , and valid == false
         // throw exception
         if (!valid && value != null) {
-            throw new RuntimeException("Invalid object passed for key " + PEGASUS_INFO[k]);
+            throw new RuntimeException("Invalid object passed for key " + PEGASUS_INFO[k] + " Passed " + value);
         }
 
         return valid;
