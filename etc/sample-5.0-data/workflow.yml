@@ -70,7 +70,7 @@ jobs:
     version: "2.0"
     stdin: stdin_file.txt
     arguments:
-      ["-a", "preprocess", "-T60", "-i", "f.a", "-o", "f.b1", "f.b2"]
+      ["-a", "preprocess", "-T60", "-i", "f.a", "-o", "f.b1", "f.b2", "-nums", 1, 1.1]
     uses:
       - lfn: stdin_file.txt
         type: input
