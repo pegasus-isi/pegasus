@@ -20,7 +20,7 @@ import java.util.List;
  *
  * @author Mukund Murrali
  */
-class YAMLSchemaValidationResult {
+public class YAMLSchemaValidationResult {
 
     /** This denotes if the yaml validation is successful or not */
     private boolean isSuccess;
@@ -36,11 +36,11 @@ class YAMLSchemaValidationResult {
         this.errorMessage = errorMessage;
     }
 
-    boolean isSuccess() {
+    public boolean isSuccess() {
         return isSuccess;
     }
 
-    List<String> getErrorMessage() {
+    public List<String> getErrorMessage() {
         return errorMessage;
     }
 

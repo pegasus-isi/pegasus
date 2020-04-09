@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.dataformat.yaml.JacksonYAMLParseException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.Escape;
@@ -36,7 +37,11 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaCatalogJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaCatalogKeywords;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
+import edu.isi.pegasus.planner.parser.YAMLSchemaValidationResult;
+import edu.isi.pegasus.planner.parser.YAMLSchemaValidator;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -102,6 +107,12 @@ public class YAML implements ReplicaCatalog {
      */
     public static final String READ_ONLY_KEY = "read.only";
 
+    /** The "not-so-official" location URL of the Replica Catalog Schema. */
+    public static final String SCHEMA_URI = "http://pegasus.isi.edu/schema/rc-5.0.yml";
+
+    /** File object of the schema.. */
+    private final File SCHEMA_FILE;
+
     /**
      * Records the quoting mode for LFNs and PFNs. If false, only quote as necessary. If true,
      * always quote all LFNs and PFNs.
@@ -142,6 +153,11 @@ public class YAML implements ReplicaCatalog {
         m_readonly = false;
         mVariableExpander = new VariableExpander();
         mVersion = null;
+
+        PegasusProperties props = PegasusProperties.getInstance();
+        File schemaDir = props.getSchemaDir();
+        File yamlSchemaDir = new File(schemaDir, "yaml");
+        SCHEMA_FILE = new File(yamlSchemaDir, new File(SCHEMA_URI).getName());
     }
 
     /**
@@ -159,25 +175,29 @@ public class YAML implements ReplicaCatalog {
         mLFN = new LinkedHashMap<String, Collection<ReplicaCatalogEntry>>();
         mLFNRegex = new LinkedHashMap<String, Collection<ReplicaCatalogEntry>>();
         mLFNPattern = new LinkedHashMap<String, Pattern>();
-        Reader reader = null;
-        try {
-            reader = new VariableExpansionReader(new FileReader(filename));
-            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-            mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
-            // inject instance of this class to be used for deserialization
-            mapper.setInjectableValues(injectCallback());
-            mapper.readValue(reader, YAML.class);
-        } catch (IOException ioe) {
-            mLFN = null;
-            mLFNRegex = null;
-            mLFNPattern = null;
-            mFilename = null;
-            throw new CatalogException(ioe); // re-throw
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException ex) {
+
+        // first attempt to validate
+        if (validate(new File(filename), SCHEMA_FILE)) {
+            Reader reader = null;
+            try {
+                reader = new VariableExpansionReader(new FileReader(filename));
+                ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+                mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+                // inject instance of this class to be used for deserialization
+                mapper.setInjectableValues(injectCallback());
+                mapper.readValue(reader, YAML.class);
+            } catch (IOException ioe) {
+                mLFN = null;
+                mLFNRegex = null;
+                mLFNPattern = null;
+                mFilename = null;
+                throw new CatalogException(ioe); // re-throw
+            } finally {
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (IOException ex) {
+                    }
                 }
             }
         }
@@ -206,6 +226,54 @@ public class YAML implements ReplicaCatalog {
         return false;
     }
 
+    /**
+     * Validates a file against the Replica Catalog Schema file
+     *
+     * @param f
+     * @param schemaFile
+     * @return
+     */
+    protected boolean validate(File f, File schemaFile) {
+        boolean validate = true;
+        Reader reader = null;
+        try {
+            reader = new VariableExpansionReader(new FileReader(f));
+        } catch (IOException ioe) {
+            throw new ReplicaCatalogException(ioe);
+        }
+
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+        JsonNode root = null;
+        try {
+            root = mapper.readTree(reader);
+        } catch (JacksonYAMLParseException e) {
+            throw new ReplicaCatalogException("Error on line " + e.getLocation().getLineNr(), e);
+        } catch (Exception e) {
+            throw new ReplicaCatalogException("Error in loading the yaml file " + reader, e);
+        }
+        if (root != null) {
+            YAMLSchemaValidationResult result =
+                    YAMLSchemaValidator.getInstance().validate(root, SCHEMA_FILE, "replica");
+
+            // schema validation is done here.. in case of any validation error we throw the
+            // result..
+            if (!result.isSuccess()) {
+                List<String> errors = result.getErrorMessage();
+                StringBuilder errorResult = new StringBuilder();
+                int i = 1;
+                for (String error : errors) {
+                    if (i > 1) {
+                        errorResult.append(",");
+                    }
+                    errorResult.append("Error ").append(i++).append(":{");
+                    errorResult.append(error).append("}");
+                }
+                throw new ReplicaCatalogException(errorResult.toString());
+            }
+        }
+        return validate;
+    }
     /**
      * Quotes a string only if necessary. This methods first determines, if a strings requires
      * quoting, because it contains whitespace, an equality sign, quotes, or a backslash. If not,
