@@ -28,7 +28,7 @@ def wf1():
 
     j1 = (
         Job("tr", _id="1", node_label="test")
-        .add_args("-i", _in, "-o", out)
+        .add_args("-i", _in, "-o", out, "-n", 1, 1.1)
         .add_inputs(_in)
         .add_outputs(out)
         .set_stdin(stdin)

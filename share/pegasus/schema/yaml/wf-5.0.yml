@@ -52,7 +52,9 @@ $defs:
       arguments:
         type: array
         items:
-          type: string
+          anyOf:
+            - type: string
+            - type: number
         minItems: 0
       stdin:
         type: string

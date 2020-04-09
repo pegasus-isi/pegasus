@@ -415,7 +415,7 @@ class TestJob:
         j.set_stdin("stdin")
         j.set_stdout("stdout")
         j.set_stderr("stderr")
-        j.add_args("-i", File("f1"))
+        j.add_args("-i", File("f1"), "-n", 1, 1.1)
         j.add_inputs(File("if1"), File("if2"))
         j.add_outputs(File("of1"), File("of2"))
 
@@ -429,7 +429,7 @@ class TestJob:
             "id": "id",
             "nodeLabel": "label",
             "version": "1",
-            "arguments": ["-i", "f1"],
+            "arguments": ["-i", "f1", "-n", 1, 1.1],
             "stdin": "stdin",
             "stdout": "stdout",
             "stderr": "stderr",
@@ -583,7 +583,7 @@ def expected_json():
                 "stdin": "stdin",
                 "stdout": "stdout",
                 "stderr": "stderr",
-                "arguments": [],
+                "arguments": ["do-nothing", "-n", 1, 1.1],
                 "uses": [
                     {"lfn": "stdin", "type": "input", "registerReplica": False,},
                     {
@@ -693,6 +693,7 @@ def wf():
     j1 = (
         Job("t1", _id="a")
         .add_outputs(File("f1"), File("f2"))
+        .add_args(File("do-nothing"), "-n", 1, 1.1)
         .set_stdin("stdin")
         .set_stdout("stdout")
         .set_stderr("stderr")
