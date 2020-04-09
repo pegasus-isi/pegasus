@@ -98,7 +98,7 @@ $defs:
       - $ref: "#/$defs/abstractJob"
       - properties:
           type:
-            const: dag
+            const: condorWorkflow
           file:
             type: string
         required:
@@ -110,7 +110,7 @@ $defs:
       - $ref: "#/$defs/abstractJob"
       - properties:
           type:
-            const: dax
+            const: pegasusWorkflow
           file:
             type: string
         required:

@@ -527,7 +527,7 @@ class TestSubWorkflow:
                     "file", False, _id="test-subworkflow", node_label="label"
                 ).add_args("--sites", "condorpool"),
                 {
-                    "type": "dax",
+                    "type": "pegasusWorkflow",
                     "file": "file",
                     "id": "test-subworkflow",
                     "nodeLabel": "label",
@@ -540,7 +540,7 @@ class TestSubWorkflow:
             (
                 SubWorkflow("file", True, _id="test-subworkflow", node_label="label"),
                 {
-                    "type": "dag",
+                    "type": "condorWorkflow",
                     "file": "file",
                     "id": "test-subworkflow",
                     "nodeLabel": "label",
@@ -629,7 +629,7 @@ def expected_json():
                 ],
             },
             {
-                "type": "dag",
+                "type": "condorWorkflow",
                 "file": "subworkflow.dag",
                 "id": "c",
                 "arguments": ["--sites", "condorpool"],
@@ -642,7 +642,7 @@ def expected_json():
                 ],
             },
             {
-                "type": "dax",
+                "type": "pegasusWorkflow",
                 "file": "subworkflow.dax",
                 "id": "d",
                 "arguments": [],

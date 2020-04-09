@@ -46,11 +46,11 @@ def wf1():
         .add_outputs(out2)
     )
 
-    sbwf_dax = SubWorkflow(dax, False, _id="dax", node_label="test").add_args(
+    sbwf_dax = SubWorkflow(dax, False, _id="unplanned", node_label="test").add_args(
         "-flag", "-flag2"
     )
 
-    sbwf_dag = SubWorkflow(dag, True, _id="dag", node_label="test")
+    sbwf_dag = SubWorkflow(dag, True, _id="planned", node_label="test")
 
     return (
         Workflow("test", infer_dependencies=False)
@@ -94,11 +94,11 @@ def wf2():
         .add_outputs(out2)
     )
 
-    sbwf_dax = SubWorkflow(dax, False, _id="dax", node_label="test").add_args(
+    sbwf_dax = SubWorkflow(dax, False, _id="unplanned", node_label="test").add_args(
         "-flag", "-flag2"
     )
 
-    sbwf_dag = SubWorkflow(dag, True, _id="dag", node_label="test")
+    sbwf_dag = SubWorkflow(dag, True, _id="planned", node_label="test")
 
     return (
         Workflow("test", infer_dependencies=False)

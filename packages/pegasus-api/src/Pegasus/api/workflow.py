@@ -396,7 +396,7 @@ class SubWorkflow(AbstractJob):
                 )
             )
 
-        self.type = "dax" if not is_planned else "dag"
+        self.type = "condorWorkflow" if is_planned else "pegasusWorkflow"
         self.file = file if isinstance(file, File) else File(file)
 
         self.add_inputs(self.file)

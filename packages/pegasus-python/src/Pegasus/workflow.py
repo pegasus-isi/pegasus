@@ -79,10 +79,10 @@ def _to_wf(d: dict) -> Workflow:
                     namespace=j.get("namespace"),
                     version=j.get("version"),
                 )
-            elif j["type"] in {"dax", "dag"}:
+            elif j["type"] in {"pegasusWorkflow", "condorWorkflow"}:
                 f = File(j["file"])
 
-                is_planned = False if j["type"] == "dax" else True
+                is_planned = False if j["type"] == "pegasusWorkflow" else True
 
                 job = SubWorkflow(
                     f, is_planned, _id=j["id"], node_label=j.get("nodeLabel")
