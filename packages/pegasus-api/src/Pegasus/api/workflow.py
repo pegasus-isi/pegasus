@@ -162,7 +162,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     def add_args(self, *args):
         """Add arguments to this job. Each argument will be separated by a space.
-        Each argument must be either a File or a primitive type.
+        Each argument must be either a File, scalar, or str.
 
         :return: self
         :rtype: AbstractJob
@@ -288,7 +288,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
                 "stderr": self.stderr.lfn if self.stderr is not None else None,
                 "nodeLabel": self.node_label,
                 "arguments": [
-                    arg.lfn if isinstance(arg, File) else str(arg) for arg in self.args
+                    arg.lfn if isinstance(arg, File) else arg for arg in self.args
                 ],
                 "uses": [use for use in self.uses],
                 "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
