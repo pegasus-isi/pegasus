@@ -54,9 +54,6 @@ import java.util.Set;
  */
 public class XML implements SiteCatalog {
 
-    /** The default basename of the site catalog file. */
-    public static final String DEFAULT_SITE_CATALOG_BASENAME = "sites.xml";
-
     /** The handle to parser instance that will parse the site catalog. */
     private SiteCatalogXMLParser mParser;
 
@@ -98,24 +95,18 @@ public class XML implements SiteCatalog {
         mConnectionProperties = props;
 
         if (props.containsKey("file")) {
-            return connect(props.getProperty("file"));
-        }
-
-        File file = this.getDefaultPathToSC();
-        if (file.exists() && file.canRead()) {
+            String file = props.getProperty("file");
             mLogger.log(
-                    "Picking up default site catalog file " + file,
+                    "Loading site catalog file " + file,
                     LogManager.CONFIG_MESSAGE_LEVEL);
-            return connect(file.getAbsolutePath());
+            return connect(file);
         }
         // complain for the property not set
         throw new SiteCatalogException(
                 "Please specify the property "
                         + SiteCatalog.c_prefix
                         + ".file"
-                        + " in your properties file or have the file "
-                        + XML.DEFAULT_SITE_CATALOG_BASENAME
-                        + " in the current working directory ");
+                        + " in your properties file ");
     }
 
     /**
@@ -260,14 +251,4 @@ public class XML implements SiteCatalog {
         return copiedFile;
     }
 
-    /**
-     * Returns the default path to the site catalog file.
-     *
-     * @return sites.xml in the current working dir
-     */
-    protected File getDefaultPathToSC() {
-        File f = new File(".", XML.DEFAULT_SITE_CATALOG_BASENAME);
-        // System.err.println("Default Path to SC is " + f.getAbsolutePath());
-        return f;
-    }
 }

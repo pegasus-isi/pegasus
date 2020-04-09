@@ -45,24 +45,18 @@ public class SiteFactory {
     /** The default package where all the implementations reside. */
     public static final String DEFAULT_PACKAGE_NAME = "edu.isi.pegasus.planner.catalog.site.impl";
 
-    /**
-     * The name of old XML3 implementation class. It was removed for 4.2 release. We still have to
-     * load the right class in the factory.
-     */
-    private static final String OLD_XML3_IMPLEMENTING_CLASS_BASENAME = "XML3";
-
-    /**
-     * The name of old XML4 implementation class. It was removed for 4.2 release. We still have to
-     * load the right class in the factory.
-     */
-    private static final String XML4_IMPLEMENTING_CLASS_BASENAME = "XML4";
-
     /** For 4.2, the orginal XML3 class was renamed XML and it supports different schemas. */
     private static final String XML_IMPLEMENTING_CLASS_BASENAME = "XML";
 
     private static final String YAML_IMPLEMENTING_CLASS_BASENAME = "YAML";
 
     public static final String DEFAULT_SITE_CATALOG_IMPLEMENTOR = "YAML";
+    
+    /** The default basename of the yaml site catalog file. */
+    public static final String DEFAULT_YAML_SITE_CATALOG_BASENAME = "sites.yml";
+    
+    /** The default basename of the site catalog file. */
+    public static final String DEFAULT_XML_SITE_CATALOG_BASENAME = "sites.xml";
 
     /**
      * @param sites
@@ -81,7 +75,7 @@ public class SiteFactory {
         SiteCatalog catalog = null;
 
         /* load the catalog using the factory */
-        catalog = SiteFactory.loadInstance(bag.getPegasusProperties());
+        catalog = SiteFactory.loadInstance(bag.getPegasusProperties(), bag.getPlannerDirectory());
 
         /* always load local site */
         List<String> toLoad = new ArrayList<String>(sites);
@@ -115,33 +109,22 @@ public class SiteFactory {
     }
 
     /**
-     * Connects the interface with the transformation catalog implementation. The choice of backend
-     * is configured through properties. This method uses default properties from the property
-     * singleton.
-     *
-     * @return handle to the Site Catalog.
-     * @throws SiteFactoryException that nests any error that might occur during the instantiation
-     * @see #DEFAULT_PACKAGE_NAME
-     */
-    public static SiteCatalog loadInstance() throws SiteFactoryException {
-        return loadInstance(PegasusProperties.getInstance());
-    }
-
-    /**
      * Connects the interface with the site catalog implementation.
      *
      * @param properties is an instance of properties to use.
+     * @param directory  the directory from which planner is invoked
+     * 
      * @return handle to the Site Catalog.
      * @throws SiteFactoryException that nests any error that might occur during the instantiation
      * @see #DEFAULT_PACKAGE_NAME
      */
-    public static SiteCatalog loadInstance(PegasusProperties properties)
+    public static SiteCatalog loadInstance(PegasusProperties properties, File dir)
             throws SiteFactoryException {
 
         if (properties == null) {
             throw new SiteFactoryException("Invalid NULL properties passed");
         }
-
+        Properties connect = properties.matchingSubset(SiteCatalog.c_prefix, false);
         /* get the implementor from properties */
         String catalogImplementor = properties.getSiteCatalogImplementor();
         String endpoint = null;
@@ -149,17 +132,25 @@ public class SiteFactory {
             // PM-1448 check if pegasus.catalog.site.file property is specified
             endpoint = properties.getProperty(PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY);
             if (endpoint == null) {
-                // then just set to default implementor and let the implementing class load
-                catalogImplementor = SiteFactory.DEFAULT_SITE_CATALOG_IMPLEMENTOR;
+                //PM-1486 check for default files
+                File defaultYAML = new File(dir, SiteFactory.DEFAULT_YAML_SITE_CATALOG_BASENAME);
+                File defaultXML  = new File(dir, SiteFactory.DEFAULT_XML_SITE_CATALOG_BASENAME);
+                if (exists(defaultYAML)){
+                    catalogImplementor = SiteFactory.YAML_IMPLEMENTING_CLASS_BASENAME;
+                    connect.setProperty("file", defaultYAML.getAbsolutePath());
+                }
+                else if (exists(defaultXML)){
+                    catalogImplementor = SiteFactory.XML_IMPLEMENTING_CLASS_BASENAME;
+                    connect.setProperty("file", defaultXML.getAbsolutePath());
+                }
+                else{
+                    // then just set to default implementor and let the implementing class load
+                    catalogImplementor = SiteFactory.DEFAULT_SITE_CATALOG_IMPLEMENTOR;
+                }
             } else {
                 // detect type based on contents
                 catalogImplementor = detectType(endpoint);
             }
-        }
-
-        if (catalogImplementor.equals(SiteFactory.OLD_XML3_IMPLEMENTING_CLASS_BASENAME)
-                || catalogImplementor.equals(SiteFactory.XML4_IMPLEMENTING_CLASS_BASENAME)) {
-            catalogImplementor = SiteFactory.XML_IMPLEMENTING_CLASS_BASENAME;
         }
 
         /* prepend the package name if required */
@@ -172,8 +163,7 @@ public class SiteFactory {
                         // load directly
                         catalogImplementor;
 
-        Properties connect = properties.matchingSubset(SiteCatalog.c_prefix, false);
-
+        
         // determine the class that implements the site catalog
         return loadInstance(catalogImplementor, connect);
     }
@@ -246,5 +236,16 @@ public class SiteFactory {
             throw new SiteFactoryException("Unable to read file" + file);
         }
         return implementor;
+    }
+
+    /**
+     * Returns whether a file exists or not
+     * 
+     * @param file
+     * @return 
+     */
+    private static boolean exists(File file) {
+        return file == null ? false:
+                file.exists() && file.canRead();
     }
 }

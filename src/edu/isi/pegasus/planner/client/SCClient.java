@@ -26,6 +26,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteDataVisitor;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.site.classes.XML3PrintVisitor;
 import edu.isi.pegasus.planner.catalog.site.classes.XML4PrintVisitor;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
 import java.io.BufferedWriter;
@@ -264,7 +265,10 @@ public class SCClient extends Executable {
                     mProps.setProperty(
                             SiteCatalog.c_prefix + '.' + SiteCatalog.VARIABLE_EXPANSION_KEY,
                             Boolean.toString(mDoVariableExpansion));
-                    catalog = SiteFactory.loadInstance(mProps);
+                    PegasusBag bag = new PegasusBag();
+                    bag.add(PegasusBag.PEGASUS_PROPERTIES, mProps);
+                    
+                    catalog = SiteFactory.loadInstance(mProps, bag.getPlannerDirectory());
 
                     /* load all sites in site catalog */
                     List<String> s = new ArrayList<String>(1);

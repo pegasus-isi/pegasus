@@ -23,6 +23,7 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.util.ArrayList;
 import java.util.List;
@@ -77,9 +78,11 @@ public class TestSiteCatalog {
         Properties siteProperties = properties.matchingSubset("pegasus.catalog.site", true);
         System.out.println("Site Catalog Properties specified are " + siteProperties);
 
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
         /* load the catalog using the factory */
         try {
-            catalog = SiteFactory.loadInstance(PegasusProperties.nonSingletonInstance());
+            catalog = SiteFactory.loadInstance(bag.getPegasusProperties(),bag.getPlannerDirectory());
         } catch (SiteFactoryException e) {
             System.out.println(e.convertException());
             System.exit(2);

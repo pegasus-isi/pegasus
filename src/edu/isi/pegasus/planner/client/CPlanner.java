@@ -325,7 +325,7 @@ public class CPlanner extends Executable {
         mBag.add(PegasusBag.PLANNER_OPTIONS, mPOptions);
         mBag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
         //PM-1486 set the planner directory
-        mBag.add(PegasusBag.PLANNER_DIRECTORY, System.getProperty("user.dir"));
+        mBag.add(PegasusBag.PLANNER_DIRECTORY, new File(System.getProperty("user.dir")));
 
         Collection result = null;
 
@@ -1595,7 +1595,7 @@ public class CPlanner extends Executable {
 
         /* load the catalog using the factory */
         try {
-            catalog = SiteFactory.loadInstance(mProps);
+            catalog = SiteFactory.loadInstance(mProps, mBag.getPlannerDirectory());
 
             // PM-1047 we want to save the catalogs all around.
             result.setFileSource(catalog.getFileSource());
