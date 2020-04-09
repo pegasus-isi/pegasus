@@ -99,8 +99,6 @@ public class PegasusProperties implements Cloneable {
 
     public static final String DEFAULT_STORAGE_DIR = "";
 
-    public static final String DEFAULT_TC_MODE = "Text";
-
     public static final String TC_TEXT_FILE = "tc.txt";
 
     public static final String DEFAULT_CONDOR_BIN_DIR = "";
@@ -773,12 +771,10 @@ public class PegasusProperties implements Cloneable {
      *
      * <p>Referred to by the "pegasus.catalog.transformation" property.
      *
-     * @return the value specified in properties file, else DEFAULT_TC_MODE.
-     * @see #DEFAULT_TC_MODE
+     * @return the value specified in properties file
      */
     public String getTCMode() {
-        return mProps.getProperty(
-                PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_PROPERTY, DEFAULT_TC_MODE);
+        return mProps.getProperty(PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_PROPERTY);
     }
 
     /**

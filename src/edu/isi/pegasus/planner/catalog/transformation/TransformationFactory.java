@@ -16,9 +16,11 @@ package edu.isi.pegasus.planner.catalog.transformation;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.DynamicLoader;
+import edu.isi.pegasus.common.util.FileDetector;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import java.util.Properties;
 
 /**
  * A factory class to load the appropriate implementation of Transformation Catalog as specified by
@@ -29,12 +31,18 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
  */
 public class TransformationFactory {
 
-    /** Some Constants for backward compatibility. */
-    public static final String DEFAULT_TC_CLASS = "File";
-
     /** The default package where all the implementations reside. */
     public static final String DEFAULT_PACKAGE_NAME =
             "edu.isi.pegasus.planner.catalog.transformation.impl";
+
+    public static final String DEFAULT_CATALOG_IMPLEMENTOR =
+            edu.isi.pegasus.planner.catalog.transformation.impl.YAML.class.getCanonicalName();
+
+    public static final String YAML_CATALOG_IMPLEMENTOR =
+            edu.isi.pegasus.planner.catalog.transformation.impl.YAML.class.getCanonicalName();
+
+    public static final String TEXT_CATALOG_IMPLEMENTOR =
+            edu.isi.pegasus.planner.catalog.transformation.impl.Text.class.getCanonicalName();
 
     /**
      * Connects the interface with the transformation catalog implementation. The choice of backend
@@ -111,10 +119,26 @@ public class TransformationFactory {
     public static TransformationCatalog loadInstance(PegasusBag bag)
             throws TransformationFactoryException {
 
-        TransformationCatalog tc = null;
-
         /* get the implementor from properties */
-        String catalogImplementor = bag.getPegasusProperties().getTCMode().trim();
+        String catalogImplementor = bag.getPegasusProperties().getTCMode();
+
+        Properties props =
+                bag.getPegasusProperties()
+                        .matchingSubset(
+                                PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_PROPERTY, false);
+        if (catalogImplementor == null) {
+            // check if file is specified in properties
+            if (props.containsKey("file")) {
+                // PM-1518 check for type of file
+                if (FileDetector.isTypeYAML(props.getProperty("file"))) {
+                    catalogImplementor = YAML_CATALOG_IMPLEMENTOR;
+                } else {
+                    catalogImplementor = TEXT_CATALOG_IMPLEMENTOR;
+                }
+            } else {
+                catalogImplementor = DEFAULT_CATALOG_IMPLEMENTOR;
+            }
+        }
 
         /* prepend the package name if required */
         catalogImplementor =
