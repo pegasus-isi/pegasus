@@ -75,7 +75,7 @@ public class SiteFactory {
         SiteCatalog catalog = null;
 
         /* load the catalog using the factory */
-        catalog = SiteFactory.loadInstance(bag.getPegasusProperties(), bag.getPlannerDirectory());
+        catalog = SiteFactory.loadInstance(bag);
 
         /* always load local site */
         List<String> toLoad = new ArrayList<String>(sites);
@@ -111,18 +111,22 @@ public class SiteFactory {
     /**
      * Connects the interface with the site catalog implementation.
      *
-     * @param properties is an instance of properties to use.
-     * @param directory  the directory from which planner is invoked
+     * @param bag  bag of Pegasus initialization objects
      * 
      * @return handle to the Site Catalog.
      * @throws SiteFactoryException that nests any error that might occur during the instantiation
      * @see #DEFAULT_PACKAGE_NAME
      */
-    public static SiteCatalog loadInstance(PegasusProperties properties, File dir)
+    public static SiteCatalog loadInstance(PegasusBag bag)
             throws SiteFactoryException {
 
+        PegasusProperties properties = bag.getPegasusProperties();
         if (properties == null) {
             throw new SiteFactoryException("Invalid NULL properties passed");
+        }
+        File dir = bag.getPlannerDirectory();
+        if (dir == null){
+            throw new SiteFactoryException("Invalid Directory passed");
         }
         Properties connect = properties.matchingSubset(SiteCatalog.c_prefix, false);
         /* get the implementor from properties */

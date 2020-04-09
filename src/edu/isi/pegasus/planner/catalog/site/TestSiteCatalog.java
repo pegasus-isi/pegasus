@@ -82,7 +82,7 @@ public class TestSiteCatalog {
         bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
         /* load the catalog using the factory */
         try {
-            catalog = SiteFactory.loadInstance(bag.getPegasusProperties(),bag.getPlannerDirectory());
+            catalog = SiteFactory.loadInstance(bag);
         } catch (SiteFactoryException e) {
             System.out.println(e.convertException());
             System.exit(2);
