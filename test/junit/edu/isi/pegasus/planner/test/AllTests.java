@@ -37,6 +37,7 @@ import org.junit.runners.Suite;
     edu.isi.pegasus.planner.catalog.site.classes.FileServerTest.class,
     edu.isi.pegasus.planner.catalog.site.classes.GridGatewayTest.class,
     edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntryTest.class,
+    edu.isi.pegasus.planner.catalog.transformation.TransformationFactoryTest.class,
     edu.isi.pegasus.planner.catalog.transformation.impl.TextTest.class,
     edu.isi.pegasus.planner.catalog.transformation.impl.YAMLTest.class,
     edu.isi.pegasus.planner.classes.PegasusFileTest.class,
