@@ -14,6 +14,16 @@ from Pegasus.api.writable import _CustomEncoder
 from Pegasus.workflow import _to_wf, dump, dumps, load, loads
 
 
+def sort_parts(wf):
+    """Sort jobs and job uses to make test deterministic"""
+    for job in wf["jobs"]:
+        job["uses"].sort(key=lambda u: u["lfn"])
+
+    wf["jobs"].sort(key=lambda j: j["id"])
+
+    return wf
+
+
 @pytest.fixture(scope="module")
 def wf1():
     _in = File("in", size=2048).add_metadata(createdBy="ryan")
@@ -23,8 +33,8 @@ def wf1():
     out = File("out").add_metadata(size=1024)
     out2 = File("out2").add_metadata(size=1024)
 
-    dax = File("dax").add_metadata(size=2048)
-    dag = File("dag").add_metadata(size=2048)
+    pegasus_workflow = File("pegasus_workflow").add_metadata(size=2048)
+    condor_workflow = File("condor_workflow").add_metadata(size=2048)
 
     j1 = (
         Job("tr", _id="1", node_label="test")
@@ -46,18 +56,18 @@ def wf1():
         .add_outputs(out2)
     )
 
-    sbwf_dax = SubWorkflow(dax, False, _id="unplanned", node_label="test").add_args(
-        "-flag", "-flag2"
-    )
+    sbwf_pegasus = SubWorkflow(
+        pegasus_workflow, False, _id="unplanned", node_label="test"
+    ).add_args("-flag", "-flag2")
 
-    sbwf_dag = SubWorkflow(dag, True, _id="planned", node_label="test")
+    sbwf_condor = SubWorkflow(condor_workflow, True, _id="planned", node_label="test")
 
     return (
         Workflow("test", infer_dependencies=False)
         .add_shell_hook(EventType.START, "/cmd")
         .add_dagman_profile(retry=1)
         .add_metadata(author="ryan")
-        .add_jobs(j1, j2, sbwf_dax, sbwf_dag)
+        .add_jobs(j1, j2, sbwf_pegasus, sbwf_condor)
         .add_dependency(j1, j2)
         .add_transformation_catalog(TransformationCatalog())
         .add_site_catalog(SiteCatalog())
@@ -74,8 +84,8 @@ def wf2():
     out = File("out")
     out2 = File("out2")
 
-    dax = File("dax")
-    dag = File("dag")
+    pegasus_workflow = File("pegasus_workflow")
+    condor_workflow = File("condor_workflow")
 
     j1 = (
         Job("tr", _id="1", node_label="test")
@@ -94,45 +104,31 @@ def wf2():
         .add_outputs(out2)
     )
 
-    sbwf_dax = SubWorkflow(dax, False, _id="unplanned", node_label="test").add_args(
-        "-flag", "-flag2"
-    )
+    sbwf_pegasus = SubWorkflow(
+        pegasus_workflow, False, _id="unplanned", node_label="test"
+    ).add_args("-flag", "-flag2")
 
-    sbwf_dag = SubWorkflow(dag, True, _id="planned", node_label="test")
+    sbwf_condor = SubWorkflow(condor_workflow, True, _id="planned", node_label="test")
 
     return (
         Workflow("test", infer_dependencies=False)
-        .add_jobs(j1, j2, sbwf_dax, sbwf_dag)
+        .add_jobs(j1, j2, sbwf_pegasus, sbwf_condor)
         .add_dependency(j1, j2)
     )
 
 
 def test_to_wf_with_optional_args_set(wf1):
     expected = json.loads(json.dumps(wf1, cls=_CustomEncoder))
-
-    for job in expected["jobs"]:
-        job["uses"].sort(key=lambda u: u["lfn"])
-
     result = json.loads(json.dumps(_to_wf(expected), cls=_CustomEncoder))
 
-    for job in result["jobs"]:
-        job["uses"].sort(key=lambda u: u["lfn"])
-
-    assert result == expected
+    assert sort_parts(result) == sort_parts(expected)
 
 
 def test_to_wf_without_optional_args(wf2):
     expected = json.loads(json.dumps(wf2, cls=_CustomEncoder))
-
-    for job in expected["jobs"]:
-        job["uses"].sort(key=lambda u: u["lfn"])
-
     result = json.loads(json.dumps(_to_wf(expected), cls=_CustomEncoder))
 
-    for job in result["jobs"]:
-        job["uses"].sort(key=lambda u: u["lfn"])
-
-    assert result == expected
+    assert sort_parts(result) == sort_parts(expected)
 
 
 @pytest.mark.parametrize("_format", [("yml"), ("json")])
@@ -147,16 +143,9 @@ def test_load(wf1, _format):
 
     # assert that what was loaded is equal to original
     result = json.loads(json.dumps(new_wf, cls=_CustomEncoder))
-
-    for job in result["jobs"]:
-        job["uses"].sort(key=lambda u: u["lfn"])
-
     expected = json.loads(json.dumps(wf1, cls=_CustomEncoder))
 
-    for job in expected["jobs"]:
-        job["uses"].sort(key=lambda u: u["lfn"])
-
-    assert result == expected
+    assert sort_parts(result) == sort_parts(expected)
 
 
 def test_loads_json(wf1):
@@ -165,16 +154,9 @@ def test_loads_json(wf1):
 
     # assert that what was loaded is equal to the original
     result = json.loads(json.dumps(new_wf, cls=_CustomEncoder))
-
-    for job in result["jobs"]:
-        job["uses"].sort(key=lambda u: u["lfn"])
-
     expected = json.loads(json.dumps(wf1, cls=_CustomEncoder))
 
-    for job in expected["jobs"]:
-        job["uses"].sort(key=lambda u: u["lfn"])
-
-    assert result == expected
+    assert sort_parts(result) == sort_parts(expected)
 
 
 def test_loads_yaml(wf1):
@@ -183,16 +165,9 @@ def test_loads_yaml(wf1):
 
     # assert that what was loaded is equal to the original
     result = json.loads(json.dumps(new_wf, cls=_CustomEncoder))
-
-    for job in result["jobs"]:
-        job["uses"].sort(key=lambda u: u["lfn"])
-
     expected = json.loads(json.dumps(wf1, cls=_CustomEncoder))
 
-    for job in expected["jobs"]:
-        job["uses"].sort(key=lambda u: u["lfn"])
-
-    assert result == expected
+    assert sort_parts(result) == sort_parts(expected)
 
 
 def test_dump(mocker, wf1):
