@@ -81,7 +81,8 @@ public class SiteFactoryTest {
         props.setProperty(
                 PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY,
                 new File(mTestSetup.getInputDirectory(), "sites.xml").getAbsolutePath());
-        SiteCatalog s = SiteFactory.loadInstance(props);
+        mBag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        SiteCatalog s = SiteFactory.loadInstance(mBag);
         assertThat(s, instanceOf(XML.class));
     }
 
@@ -91,7 +92,8 @@ public class SiteFactoryTest {
         props.setProperty(
                 PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY,
                 new File(mTestSetup.getInputDirectory(), "sites.xml").getAbsolutePath());
-        SiteCatalog s = SiteFactory.loadInstance(props);
+        mBag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        SiteCatalog s = SiteFactory.loadInstance(mBag);
         assertThat(s, instanceOf(XML.class));
     }
 
@@ -103,7 +105,8 @@ public class SiteFactoryTest {
         props.setProperty(
                 PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY,
                 new File(mTestSetup.getInputDirectory(), "sites.xml").getAbsolutePath());
-        SiteCatalog s = SiteFactory.loadInstance(props);
+        mBag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        SiteCatalog s = SiteFactory.loadInstance(mBag);
         assertThat(s, instanceOf(YAML.class));
     }
 
@@ -115,7 +118,8 @@ public class SiteFactoryTest {
         props.setProperty(
                 PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY,
                 new File(mTestSetup.getInputDirectory(), "sites.yml").getAbsolutePath());
-        SiteCatalog s = SiteFactory.loadInstance(props);
+        mBag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        SiteCatalog s = SiteFactory.loadInstance(mBag);
         assertThat(s, instanceOf(XML.class));
     }
 
@@ -126,7 +130,8 @@ public class SiteFactoryTest {
         props.setProperty(
                 PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY,
                 new File(mTestSetup.getInputDirectory(), "sites.yml").getAbsolutePath());
-        SiteCatalog s = SiteFactory.loadInstance(props);
+        mBag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        SiteCatalog s = SiteFactory.loadInstance(mBag);
         assertThat(s, instanceOf(YAML.class));
     }
 
@@ -136,13 +141,15 @@ public class SiteFactoryTest {
         props.setProperty(
                 PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY,
                 new File(mTestSetup.getInputDirectory(), "sites.yml").getAbsolutePath());
-        SiteCatalog s = SiteFactory.loadInstance(props);
+        mBag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        SiteCatalog s = SiteFactory.loadInstance(mBag);
         assertThat(s, instanceOf(YAML.class));
     }
 
     @Test(expected = SiteFactoryException.class)
     public void testWithEmptyProperties() throws Exception {
         PegasusProperties props = PegasusProperties.nonSingletonInstance();
-        SiteCatalog s = SiteFactory.loadInstance(props);
+        mBag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        SiteCatalog s = SiteFactory.loadInstance(mBag);
     }
 }
