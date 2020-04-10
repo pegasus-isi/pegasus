@@ -586,7 +586,7 @@ class TestSiteCatalog:
 
         EXPECTED_FILE = Path("sites.yml")
 
-        with open(EXPECTED_FILE) as f:
+        with EXPECTED_FILE.open() as f:
             # reading in as str so ordering of keys is not disrupted
             # when loaded into a dict
             result = f.read()

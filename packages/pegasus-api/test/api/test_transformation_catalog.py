@@ -667,7 +667,7 @@ class TestTransformationCatalog:
 
         EXPECTED_FILE = Path("transformations.yml")
 
-        with open(EXPECTED_FILE) as f:
+        with EXPECTED_FILE.open() as f:
             result = f.read()
 
         EXPECTED_FILE.unlink()
