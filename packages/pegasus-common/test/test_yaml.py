@@ -2,6 +2,8 @@ from pathlib import Path
 
 import pytest
 
+from collections import OrderedDict
+
 from Pegasus.yaml import dumps, loads
 
 
@@ -30,6 +32,8 @@ def test_loads(s, expected):
         ({"key": True}, "key: true\n"),
         ({"key": Path("./aaa")}, "key: aaa\n"),
         ({"key": Path("../aaa")}, "key: ../aaa\n"),
+        (OrderedDict([(1, 1), (2, 2)]), "1: 1\n2: 2\n"),
+        (OrderedDict([(1, OrderedDict([(2, 2)])), (3, 3)]), "1:\n  2: 2\n3: 3\n"),
     ],
 )
 def test_dumps(obj, expected):

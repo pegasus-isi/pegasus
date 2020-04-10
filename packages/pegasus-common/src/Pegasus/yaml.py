@@ -5,6 +5,7 @@ Abstract :mod:`yaml` with Pegasus specific defaults.
 """
 
 import io
+from collections import OrderedDict
 from functools import partial
 from pathlib import Path
 from typing import Dict
@@ -70,10 +71,21 @@ def _represent_path(self, data: Path):
     return self.represent_scalar("tag:yaml.org,2002:str", str(data))
 
 
+def _represent_ordered_dict(self, data):
+    """
+    Serialize OrderedDict to a yaml map
+
+    :param data: [description]
+    :type data: collections.OrderedDict
+    """
+    return self.represent_mapping("tag:yaml.org,2002:map", data.items())
+
+
 # Serializing Python `Path` objects to `str`
 # NOTE: Path("./aaa") serializes to "aaa"
 _Dumper.add_multi_representer(Path, _represent_path)
 
+_Dumper.add_representer(OrderedDict, _represent_ordered_dict)
 
 load = partial(_yaml.load, Loader=_Loader)
 
