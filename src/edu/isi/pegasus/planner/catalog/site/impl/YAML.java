@@ -112,9 +112,7 @@ public class YAML implements SiteCatalog {
         mFilename = filename;
         File f = new File(filename);
         if (f.exists() && f.canRead()) {
-            mLogger.log(
-                    "Loading site catalog file " + filename,
-                    LogManager.CONFIG_MESSAGE_LEVEL);
+            mLogger.log("Loading site catalog file " + filename, LogManager.CONFIG_MESSAGE_LEVEL);
             return true;
         } else {
             throw new SiteCatalogException("Cannot read or access file " + filename);

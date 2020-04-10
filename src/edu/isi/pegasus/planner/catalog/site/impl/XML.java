@@ -96,9 +96,7 @@ public class XML implements SiteCatalog {
 
         if (props.containsKey("file")) {
             String file = props.getProperty("file");
-            mLogger.log(
-                    "Loading site catalog file " + file,
-                    LogManager.CONFIG_MESSAGE_LEVEL);
+            mLogger.log("Loading site catalog file " + file, LogManager.CONFIG_MESSAGE_LEVEL);
             return connect(file);
         }
         // complain for the property not set
@@ -250,5 +248,4 @@ public class XML implements SiteCatalog {
         }
         return copiedFile;
     }
-
 }

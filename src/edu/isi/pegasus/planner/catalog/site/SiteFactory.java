@@ -51,10 +51,10 @@ public class SiteFactory {
     private static final String YAML_IMPLEMENTING_CLASS_BASENAME = "YAML";
 
     public static final String DEFAULT_SITE_CATALOG_IMPLEMENTOR = "YAML";
-    
+
     /** The default basename of the yaml site catalog file. */
     public static final String DEFAULT_YAML_SITE_CATALOG_BASENAME = "sites.yml";
-    
+
     /** The default basename of the site catalog file. */
     public static final String DEFAULT_XML_SITE_CATALOG_BASENAME = "sites.xml";
 
@@ -111,21 +111,19 @@ public class SiteFactory {
     /**
      * Connects the interface with the site catalog implementation.
      *
-     * @param bag  bag of Pegasus initialization objects
-     * 
+     * @param bag bag of Pegasus initialization objects
      * @return handle to the Site Catalog.
      * @throws SiteFactoryException that nests any error that might occur during the instantiation
      * @see #DEFAULT_PACKAGE_NAME
      */
-    public static SiteCatalog loadInstance(PegasusBag bag)
-            throws SiteFactoryException {
+    public static SiteCatalog loadInstance(PegasusBag bag) throws SiteFactoryException {
 
         PegasusProperties properties = bag.getPegasusProperties();
         if (properties == null) {
             throw new SiteFactoryException("Invalid NULL properties passed");
         }
         File dir = bag.getPlannerDirectory();
-        if (dir == null){
+        if (dir == null) {
             throw new SiteFactoryException("Invalid Directory passed");
         }
         Properties connect = properties.matchingSubset(SiteCatalog.c_prefix, false);
@@ -136,18 +134,16 @@ public class SiteFactory {
             // PM-1448 check if pegasus.catalog.site.file property is specified
             endpoint = properties.getProperty(PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY);
             if (endpoint == null) {
-                //PM-1486 check for default files
+                // PM-1486 check for default files
                 File defaultYAML = new File(dir, SiteFactory.DEFAULT_YAML_SITE_CATALOG_BASENAME);
-                File defaultXML  = new File(dir, SiteFactory.DEFAULT_XML_SITE_CATALOG_BASENAME);
-                if (exists(defaultYAML)){
+                File defaultXML = new File(dir, SiteFactory.DEFAULT_XML_SITE_CATALOG_BASENAME);
+                if (exists(defaultYAML)) {
                     catalogImplementor = SiteFactory.YAML_IMPLEMENTING_CLASS_BASENAME;
                     connect.setProperty("file", defaultYAML.getAbsolutePath());
-                }
-                else if (exists(defaultXML)){
+                } else if (exists(defaultXML)) {
                     catalogImplementor = SiteFactory.XML_IMPLEMENTING_CLASS_BASENAME;
                     connect.setProperty("file", defaultXML.getAbsolutePath());
-                }
-                else{
+                } else {
                     // then just set to default implementor and let the implementing class load
                     catalogImplementor = SiteFactory.DEFAULT_SITE_CATALOG_IMPLEMENTOR;
                 }
@@ -167,7 +163,6 @@ public class SiteFactory {
                         // load directly
                         catalogImplementor;
 
-        
         // determine the class that implements the site catalog
         return loadInstance(catalogImplementor, connect);
     }
@@ -244,12 +239,11 @@ public class SiteFactory {
 
     /**
      * Returns whether a file exists or not
-     * 
+     *
      * @param file
-     * @return 
+     * @return
      */
     private static boolean exists(File file) {
-        return file == null ? false:
-                file.exists() && file.canRead();
+        return file == null ? false : file.exists() && file.canRead();
     }
 }

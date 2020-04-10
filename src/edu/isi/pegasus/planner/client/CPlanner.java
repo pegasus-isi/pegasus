@@ -324,7 +324,7 @@ public class CPlanner extends Executable {
         mBag.add(PegasusBag.PEGASUS_PROPERTIES, mProps);
         mBag.add(PegasusBag.PLANNER_OPTIONS, mPOptions);
         mBag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
-        //PM-1486 set the planner directory
+        // PM-1486 set the planner directory
         mBag.add(PegasusBag.PLANNER_DIRECTORY, new File(System.getProperty("user.dir")));
 
         Collection result = null;
@@ -344,7 +344,6 @@ public class CPlanner extends Executable {
             // set log level to FATAL only
             mLogger.setLevel(LogManager.FATAL_MESSAGE_LEVEL);
         }
-        
 
         PegasusConfiguration configurator = new PegasusConfiguration(mLogger);
         configurator.loadConfigurationPropertiesAndOptions(mProps, mPOptions);
