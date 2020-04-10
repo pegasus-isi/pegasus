@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from ._utils import _chained
 from .errors import DuplicateError
 from .mixins import MetadataMixin
@@ -212,7 +214,7 @@ class ReplicaCatalog(Writable):
             self.replicas.add(replica)
 
     def __json__(self):
-        return {
-            "pegasus": PEGASUS_VERSION,
-            "replicas": [r for r in self.replicas],
-        }
+        return OrderedDict(
+            [("pegasus", PEGASUS_VERSION), ("replicas", [r for r in self.replicas])]
+        )
+
