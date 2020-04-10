@@ -912,6 +912,7 @@ def test_build_pegasus_wf():
         job["uses"] = sorted(job["uses"], key=lambda u: u["lfn"])
 
     expected = {
+        "jobDependencies": [],
         "jobs": [
             {
                 "arguments": [
@@ -1090,6 +1091,7 @@ def test_main(mocker):
         job["uses"] = sorted(job["uses"], key=lambda u: u["lfn"])
 
     expected = {
+        "jobDependencies": [],
         "jobs": [
             {
                 "arguments": [],

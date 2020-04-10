@@ -1,4 +1,6 @@
 import json
+
+from collections import OrderedDict
 from pathlib import Path
 
 from Pegasus import yaml
@@ -39,7 +41,7 @@ def _filter_out_nones(_dict):
             "invalid _dict: {}; _dict must be of type {}".format(_dict, type(dict))
         )
 
-    return {key: value for key, value in _dict.items() if value is not None}
+    return OrderedDict([(k, v) for k, v in _dict.items() if v is not None])
 
 
 class Writable:
@@ -67,7 +69,9 @@ class Writable:
             # TODO: figure out how to get yaml.dump to recurse down into nested objects
             # yaml.dump(_CustomEncoder().default(self), file, sort_keys=False)
             yaml.dump(
-                json.loads(json.dumps(self, cls=_CustomEncoder)),
+                json.loads(
+                    json.dumps(self, cls=_CustomEncoder), object_pairs_hook=OrderedDict
+                ),
                 file,
                 allow_unicode=True,
             )

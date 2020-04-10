@@ -1019,6 +1019,46 @@ class TestWorkflow:
 
         os.remove(EXPECTED_FILE)
 
+    def test_workflow_key_ordering(self):
+        tc = TransformationCatalog()
+        rc = ReplicaCatalog()
+        sc = SiteCatalog()
+
+        wf = Workflow("wf", infer_dependencies=True)
+        wf.add_transformation_catalog(tc)
+        wf.add_replica_catalog(rc)
+        wf.add_site_catalog(sc)
+
+        wf.add_jobs(Job("t1", _id="a"))
+
+        wf.add_env(JAVA_HOME="/java/home")
+        wf.add_shell_hook(EventType.START, "/bin/echo hi")
+        wf.add_metadata(key="value")
+
+        wf.write()
+        EXPECTED_FILE = "workflow.yml"
+
+        with open(EXPECTED_FILE) as f:
+            result = f.read()
+
+        """
+        Check that wf keys have been ordered as follows:
+        - pegasus,
+        - name,
+        - hooks,
+        - profiles,
+        - metadata,
+        - siteCatalog,
+        - replicaCatalog,
+        - transformationCatalog,
+        - jobDependencies,
+        - jobs
+        """
+        assert (
+            result
+            == "pegasus: '5.0'\nname: wf\nhooks:\n  shell:\n  - _on: start\n    cmd: /bin/echo hi\nprofiles:\n  env:\n    JAVA_HOME: /java/home\nmetadata:\n  key: value\nsiteCatalog:\n  sites: []\nreplicaCatalog:\n  replicas: []\ntransformationCatalog:\n  transformations: []\njobDependencies: []\njobs:\n- type: job\n  name: t1\n  id: a\n  arguments: []\n  uses: []\n"
+        )
+
     def test_plan_workflow_already_written(self, wf, mocker):
         mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
         mocker.patch("Pegasus.client._client.Client.plan")

@@ -1,5 +1,5 @@
 import json
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from enum import Enum
 from functools import wraps
 
@@ -1054,26 +1054,37 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             sc = json.loads(json.dumps(self.site_catalog, cls=_CustomEncoder))
             del sc["pegasus"]
 
-        return _filter_out_nones(
-            {
-                "pegasus": PEGASUS_VERSION,
-                "name": self.name,
-                "replicaCatalog": rc,
-                "transformationCatalog": tc,
-                "siteCatalog": sc,
-                "jobs": [job for _id, job in self.jobs.items()],
-                "jobDependencies": [
-                    dependency for _id, dependency in self.dependencies.items()
-                ]
-                if len(self.dependencies) > 0
-                else None,
-                "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
-                "metadata": self.metadata if len(self.metadata) > 0 else None,
-                "hooks": {
-                    hook_name: [hook for hook in values]
-                    for hook_name, values in self.hooks.items()
-                }
-                if len(self.hooks) > 0
-                else None,
+        hooks = None
+        if len(self.hooks) > 0:
+            hooks = {
+                hook_name: [hook for hook in values]
+                for hook_name, values in self.hooks.items()
             }
+
+        profiles = None
+        if len(self.profiles) > 0:
+            profiles = dict(self.profiles)
+
+        metadata = None
+        if len(self.metadata) > 0:
+            metadata = self.metadata
+
+        return _filter_out_nones(
+            OrderedDict(
+                [
+                    ("pegasus", PEGASUS_VERSION),
+                    ("name", self.name),
+                    ("hooks", hooks),
+                    ("profiles", profiles),
+                    ("metadata", metadata),
+                    ("siteCatalog", sc),
+                    ("replicaCatalog", rc),
+                    ("transformationCatalog", tc),
+                    (
+                        "jobDependencies",
+                        [dependency for _id, dependency in self.dependencies.items()],
+                    ),
+                    ("jobs", [job for _id, job in self.jobs.items()]),
+                ]
+            )
         )
