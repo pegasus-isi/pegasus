@@ -50,6 +50,8 @@ public class SiteFactoryTest {
 
     private TestSetup mTestSetup;
 
+    private static int mTestNumber = 1;
+
     public SiteFactoryTest() {}
 
     @BeforeClass
@@ -76,6 +78,8 @@ public class SiteFactoryTest {
 
     @Test
     public void testWithTypeMentionedXML() throws Exception {
+        mLogger.logEventStart(
+                "test.catalog.site.SiteFactory", "type-xml-test", Integer.toString(mTestNumber++));
         PegasusProperties props = PegasusProperties.nonSingletonInstance();
         props.setProperty(PegasusProperties.PEGASUS_SITE_CATALOG_PROPERTY, XML_SITE_CATALOG_TYPE);
         props.setProperty(
@@ -84,10 +88,13 @@ public class SiteFactoryTest {
         mBag.add(PegasusBag.PEGASUS_PROPERTIES, props);
         SiteCatalog s = SiteFactory.loadInstance(mBag);
         assertThat(s, instanceOf(XML.class));
+        mLogger.logEventCompletion();
     }
 
     @Test
     public void testWithOnlyPathToXML() throws Exception {
+        mLogger.logEventStart(
+                "test.catalog.site.SiteFactory", "path-xml-test", Integer.toString(mTestNumber++));
         PegasusProperties props = PegasusProperties.nonSingletonInstance();
         props.setProperty(
                 PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY,
@@ -95,10 +102,16 @@ public class SiteFactoryTest {
         mBag.add(PegasusBag.PEGASUS_PROPERTIES, props);
         SiteCatalog s = SiteFactory.loadInstance(mBag);
         assertThat(s, instanceOf(XML.class));
+        mLogger.logEventCompletion();
     }
 
     @Test
     public void testWithConflictingPropsXML() throws Exception {
+
+        mLogger.logEventStart(
+                "test.catalog.site.SiteFactory",
+                "conflicting-props-xml",
+                Integer.toString(mTestNumber++));
         PegasusProperties props = PegasusProperties.nonSingletonInstance();
 
         props.setProperty(PegasusProperties.PEGASUS_SITE_CATALOG_PROPERTY, YAML_SITE_CATALOG_TYPE);
@@ -108,10 +121,16 @@ public class SiteFactoryTest {
         mBag.add(PegasusBag.PEGASUS_PROPERTIES, props);
         SiteCatalog s = SiteFactory.loadInstance(mBag);
         assertThat(s, instanceOf(YAML.class));
+        mLogger.logEventCompletion();
     }
 
     @Test
     public void testWithConflictingPropsYAML() throws Exception {
+
+        mLogger.logEventStart(
+                "test.catalog.site.SiteFactory",
+                "conflicting-props-yaml",
+                Integer.toString(mTestNumber++));
         PegasusProperties props = PegasusProperties.nonSingletonInstance();
 
         props.setProperty(PegasusProperties.PEGASUS_SITE_CATALOG_PROPERTY, XML_SITE_CATALOG_TYPE);
@@ -121,10 +140,14 @@ public class SiteFactoryTest {
         mBag.add(PegasusBag.PEGASUS_PROPERTIES, props);
         SiteCatalog s = SiteFactory.loadInstance(mBag);
         assertThat(s, instanceOf(XML.class));
+        mLogger.logEventCompletion();
     }
 
     @Test
     public void testWithTypeMentionedYAML() throws Exception {
+
+        mLogger.logEventStart(
+                "test.catalog.site.SiteFactory", "type-yaml-test", Integer.toString(mTestNumber++));
         PegasusProperties props = PegasusProperties.nonSingletonInstance();
         props.setProperty(PegasusProperties.PEGASUS_SITE_CATALOG_PROPERTY, YAML_SITE_CATALOG_TYPE);
         props.setProperty(
@@ -133,10 +156,14 @@ public class SiteFactoryTest {
         mBag.add(PegasusBag.PEGASUS_PROPERTIES, props);
         SiteCatalog s = SiteFactory.loadInstance(mBag);
         assertThat(s, instanceOf(YAML.class));
+        mLogger.logEventCompletion();
     }
 
     @Test
     public void testWithOnlyPathToYAML() throws Exception {
+
+        mLogger.logEventStart(
+                "test.catalog.site.SiteFactory", "path-yaml-test", Integer.toString(mTestNumber++));
         PegasusProperties props = PegasusProperties.nonSingletonInstance();
         props.setProperty(
                 PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY,
@@ -144,12 +171,19 @@ public class SiteFactoryTest {
         mBag.add(PegasusBag.PEGASUS_PROPERTIES, props);
         SiteCatalog s = SiteFactory.loadInstance(mBag);
         assertThat(s, instanceOf(YAML.class));
+        mLogger.logEventCompletion();
     }
 
     @Test(expected = SiteFactoryException.class)
     public void testWithEmptyProperties() throws Exception {
+
+        mLogger.logEventStart(
+                "test.catalog.site.SiteFactory",
+                "empty-props-test",
+                Integer.toString(mTestNumber++));
         PegasusProperties props = PegasusProperties.nonSingletonInstance();
         mBag.add(PegasusBag.PEGASUS_PROPERTIES, props);
         SiteCatalog s = SiteFactory.loadInstance(mBag);
+        mLogger.logEventCompletion();
     }
 }
