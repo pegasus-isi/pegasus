@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from enum import Enum
 
 from .errors import DuplicateError
@@ -474,12 +474,17 @@ class TransformationCatalog(Writable):
             self.containers[c.name] = c
 
     def __json__(self):
+        containers = None
+        if len(self.containers) > 0:
+            containers = [c for _, c in self.containers.items()]
+
         return _filter_out_nones(
-            {
-                "pegasus": PEGASUS_VERSION,
-                "transformations": [t for _, t in self.transformations.items()],
-                "containers": [c for _, c in self.containers.items()]
-                if len(self.containers) > 0
-                else None,
-            }
+            OrderedDict(
+                [
+                    ("pegasus", PEGASUS_VERSION),
+                    ("transformations", [t for _, t in self.transformations.items()]),
+                    ("containers", containers),
+                ]
+            )
         )
+

@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
@@ -243,3 +244,23 @@ class TestReplicaCatalog:
             expected_file.unlink()
         except FileNotFoundError:
             pytest.fail("could not find {}".format(expected_file))
+
+    def test_replica_catalog_ordering_on_yml_write(self):
+        ReplicaCatalog().write()
+
+        EXPECTED_FILE = Path("replicas.yml")
+
+        with open(EXPECTED_FILE) as f:
+            # reading in as str so ordering of keys is not disrupted
+            # when loaded into a dict
+            result = f.read()
+
+        EXPECTED_FILE.unlink()
+
+        """
+        Check that rc keys have been ordered as follows:
+        - pegasus
+        - replicas
+        """
+        p = re.compile(r"pegasus: '5.0'[\w\W]+replicas:[\w\W]+")
+        assert p.match(result) is not None

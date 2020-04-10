@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
@@ -579,3 +580,23 @@ class TestSiteCatalog:
             expected_file.unlink()
         except FileNotFoundError:
             pytest.fail("could not find {}".format(expected_file))
+
+    def test_site_catalog_key_ordering_on_yml_write(self):
+        SiteCatalog().write()
+
+        EXPECTED_FILE = Path("sites.yml")
+
+        with open(EXPECTED_FILE) as f:
+            # reading in as str so ordering of keys is not disrupted
+            # when loaded into a dict
+            result = f.read()
+
+        EXPECTED_FILE.unlink()
+
+        """
+        Check that sc keys have been ordered as follows:
+        - pegasus
+        - sites
+        """
+        p = re.compile(r"pegasus: '5.0'[\w\W]+sites:[\w\W]")
+        assert p.match(result) is not None

@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
@@ -657,6 +658,28 @@ class TestTransformationCatalog:
         )
 
         assert result == expected
+
+    def test_transformation_catalog_ordering_on_yml_write(self):
+        tc = TransformationCatalog()
+        tc.add_transformations(Transformation("t1"))
+        tc.add_containers(Container("c1", Container.DOCKER, "img"))
+        tc.write()
+
+        EXPECTED_FILE = Path("transformations.yml")
+
+        with open(EXPECTED_FILE) as f:
+            result = f.read()
+
+        EXPECTED_FILE.unlink()
+
+        """
+        Check that tc keys have been ordered as follows:
+        - pegasus
+        - transformations
+        - containers
+        """
+        p = re.compile(r"pegasus: '5.0'[\w\W]+transformations:[\w\W]+containers[\w\W]+")
+        assert p.match(result) is not None
 
     @pytest.mark.parametrize(
         "_format, loader", [("json", json.load), ("yml", yaml.safe_load)]
