@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from enum import Enum
 
 from Pegasus.api._utils import _chained, _get_class_enum_member_str, _get_enum_str
@@ -531,7 +531,9 @@ class SiteCatalog(Writable):
             self.sites[s.name] = s
 
     def __json__(self):
-        return {
-            "pegasus": PEGASUS_VERSION,
-            "sites": [site for _, site in self.sites.items()],
-        }
+        return OrderedDict(
+            [
+                ("pegasus", PEGASUS_VERSION),
+                ("sites", [site for _, site in self.sites.items()]),
+            ]
+        )
