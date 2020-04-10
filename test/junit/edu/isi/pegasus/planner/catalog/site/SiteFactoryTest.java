@@ -25,7 +25,11 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -171,6 +175,88 @@ public class SiteFactoryTest {
         mBag.add(PegasusBag.PEGASUS_PROPERTIES, props);
         SiteCatalog s = SiteFactory.loadInstance(mBag);
         assertThat(s, instanceOf(YAML.class));
+        mLogger.logEventCompletion();
+    }
+
+    @Test
+    public void testWithDefaultXMLFile() throws Exception {
+        mLogger.logEventStart(
+                "test.catalog.site.SiteFactory",
+                "default-xml-file-test",
+                Integer.toString(mTestNumber++));
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+        Path p = Files.createTempDirectory("pegasus");
+        File dir = p.toFile();
+        File xml = new File(dir, "sites.xml");
+        BufferedWriter writer = new BufferedWriter(new FileWriter(xml));
+        writer.write("xml\n");
+        writer.close();
+        bag.add(PegasusBag.PLANNER_DIRECTORY, dir);
+        try {
+            SiteCatalog s = SiteFactory.loadInstance(bag);
+            assertThat(s, instanceOf(XML.class));
+        } finally {
+            dir.delete();
+        }
+        mLogger.logEventCompletion();
+    }
+
+    @Test
+    public void testWithDefaultYAMLFile() throws Exception {
+        mLogger.logEventStart(
+                "test.catalog.site.SiteFactory",
+                "default-yaml-file-test",
+                Integer.toString(mTestNumber++));
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+        Path p = Files.createTempDirectory("pegasus");
+        File dir = p.toFile();
+        File yaml = new File(dir, "sites.yml");
+        BufferedWriter writer = new BufferedWriter(new FileWriter(yaml));
+        writer.write("pegasus:5.0\n");
+        writer.close();
+        bag.add(PegasusBag.PLANNER_DIRECTORY, dir);
+        try {
+            SiteCatalog s = SiteFactory.loadInstance(bag);
+            assertThat(s, instanceOf(YAML.class));
+        } finally {
+            dir.delete();
+        }
+        mLogger.logEventCompletion();
+    }
+
+    @Test
+    public void testWithDefaultYAMLAndXMLFiles() throws Exception {
+        mLogger.logEventStart(
+                "test.catalog.site.SiteFactory",
+                "default-yaml-xml-test",
+                Integer.toString(mTestNumber++));
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+        Path p = Files.createTempDirectory("pegasus");
+        File dir = p.toFile();
+        File yaml = new File(dir, "sites.yml");
+        BufferedWriter writer = new BufferedWriter(new FileWriter(yaml));
+        writer.write("pegasus:5.0\n");
+        writer.close();
+        File xml = new File(dir, "sites.xml");
+        writer = new BufferedWriter(new FileWriter(xml));
+        writer.write("xml\n");
+        writer.close();
+        bag.add(PegasusBag.PLANNER_DIRECTORY, dir);
+        try {
+            SiteCatalog s = SiteFactory.loadInstance(bag);
+            assertThat(s, instanceOf(YAML.class));
+        } finally {
+            dir.delete();
+        }
         mLogger.logEventCompletion();
     }
 
