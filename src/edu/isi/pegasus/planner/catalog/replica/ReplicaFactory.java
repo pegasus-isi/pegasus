@@ -135,7 +135,21 @@ public class ReplicaFactory {
         }
 
         // determine the class that implements the work catalog
-        return loadInstance(properties.getProperty(ReplicaCatalog.c_prefix), bag, connectProps);
+        String catalogImplementor = properties.getProperty(ReplicaCatalog.c_prefix);
+        if (catalogImplementor == null) {
+            // check if file is specified in properties
+            if (connectProps.containsKey("file")) {
+                // PM-1518 check for type of file
+                if (FileDetector.isTypeYAML(connectProps.getProperty("file"))) {
+                    catalogImplementor = YAML_CATALOG_IMPLEMENTOR;
+                } else {
+                    catalogImplementor = FILE_CATALOG_IMPLEMENTOR;
+                }
+            } else {
+                catalogImplementor = DEFAULT_CATALOG_IMPLEMENTOR;
+            }
+        }
+        return loadInstance(catalogImplementor, bag, connectProps);
     }
 
     /**
@@ -165,18 +179,8 @@ public class ReplicaFactory {
                     InstantiationException, IllegalAccessException, InvocationTargetException {
         ReplicaCatalog result = null;
 
-        if (catalogImplementor == null) {
-            // check if file is specified in properties
-            if (connectProps.containsKey("file")) {
-                // PM-1518 check for type of file
-                if (FileDetector.isTypeYAML(connectProps.getProperty("file"))) {
-                    catalogImplementor = YAML_CATALOG_IMPLEMENTOR;
-                } else {
-                    catalogImplementor = FILE_CATALOG_IMPLEMENTOR;
-                }
-            } else {
-                catalogImplementor = DEFAULT_CATALOG_IMPLEMENTOR;
-            }
+        if (catalogImplementor == null){
+            throw new NullPointerException("Invalid catalog implementor passed");
         }
 
         // File also means SimpleFile
