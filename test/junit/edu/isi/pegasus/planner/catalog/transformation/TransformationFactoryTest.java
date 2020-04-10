@@ -73,11 +73,12 @@ public class TransformationFactoryTest {
         mLogger.setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
         mLogger.logEventStart("test.catalog.transformation.TransformationFactory", "setup", "0");
         mBag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
-        mLogger.log("System conf dir " + properties.getSysConfDir(), LogManager.DEBUG_MESSAGE_LEVEL);
+        mLogger.log(
+                "System conf dir " + properties.getSysConfDir(), LogManager.DEBUG_MESSAGE_LEVEL);
         // pick test files from etc dir of the pegasus install
         mTestSetup.setInputDirectory(properties.getSysConfDir().getAbsolutePath());
         System.out.println("Input Test Dir is " + mTestSetup.getInputDirectory());
-        
+
         mLogger.logEventCompletion();
     }
 

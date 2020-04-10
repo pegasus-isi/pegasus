@@ -47,10 +47,11 @@ public class YAMLRCTest {
         BufferedWriter writer = new BufferedWriter(new FileWriter(mRCFile));
         writer.write("pegasus: \"5.0\"\n");
         writer.write("replicas: \n");
-        writer.write("# matches \"f.a\"\n"
-                + "  - lfn: \"f.a\"\n"
-                + "    pfn: \"file:///Volumes/data/input/f.a\"\n"
-                + "    site: \"local\"");
+        writer.write(
+                "# matches \"f.a\"\n"
+                        + "  - lfn: \"f.a\"\n"
+                        + "    pfn: \"file:///Volumes/data/input/f.a\"\n"
+                        + "    site: \"local\"");
         writer.close();
         mYAMLRC.connect(mRCFile.getAbsolutePath());
     }

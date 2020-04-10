@@ -1917,7 +1917,7 @@ public class TransferEngine extends Engine {
         cacheProps.setProperty(WORKFLOW_CACHE_REPLICA_CATALOG_KEY, file);
 
         try {
-            rc = ReplicaFactory.loadInstance(WORKFLOW_CACHE_FILE_IMPLEMENTOR, cacheProps);
+            rc = ReplicaFactory.loadInstance(WORKFLOW_CACHE_FILE_IMPLEMENTOR, mBag, cacheProps);
         } catch (Exception e) {
             throw new RuntimeException(
                     "Unable to initialize Workflow Cache File in the Submit Directory  " + file, e);

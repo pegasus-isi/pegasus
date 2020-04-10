@@ -230,8 +230,14 @@ public class PlannerCache extends Data implements Cloneable {
         // the planner cache is to be never written out
         // PM-677
         cacheProps.setProperty(SimpleFile.READ_ONLY_KEY, "true");
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, mProps);
+
         try {
-            rc = ReplicaFactory.loadInstance(PLANNER_CACHE_REPLICA_CATALOG_IMPLEMENTER, cacheProps);
+            rc =
+                    ReplicaFactory.loadInstance(
+                            PLANNER_CACHE_REPLICA_CATALOG_IMPLEMENTER, bag, cacheProps);
         } catch (Exception e) {
             throw new RuntimeException(
                     "Unable to initialize the replica catalog that acts as planner cache" + file,

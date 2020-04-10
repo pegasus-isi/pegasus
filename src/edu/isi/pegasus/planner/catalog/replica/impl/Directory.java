@@ -13,11 +13,14 @@
  */
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.io.*;
 import java.util.*;
@@ -885,9 +888,13 @@ public class Directory implements ReplicaCatalog {
         // defaults to file://
         props.setProperty(prefix + Directory.URL_PRFIX_PROPERTY_KEY, "gsiftp://myhost.domain.edu");
 
+        LogManager logger = LogManagerFactory.loadSingletonInstance(props);
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, logger);
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
         ReplicaCatalog c = null;
         try {
-            c = ReplicaFactory.loadInstance(props);
+            c = ReplicaFactory.loadInstance(bag);
         } catch (Exception ex) {
             System.err.println(
                     "Unable to connect to the Replica Catlog Backend " + ex.getMessage());

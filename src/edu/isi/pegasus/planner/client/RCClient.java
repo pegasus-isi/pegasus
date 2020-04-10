@@ -21,6 +21,7 @@ import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
@@ -284,7 +285,11 @@ public class RCClient extends Toolkit {
                     InstantiationException, IllegalAccessException, InvocationTargetException,
                     MissingResourceException {
 
-        m_rc = ReplicaFactory.loadInstance(properties, file);
+        PegasusBag bag = new PegasusBag();
+        LogManager logger = LogManagerFactory.loadSingletonInstance(properties);
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, logger);
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, properties);
+        m_rc = ReplicaFactory.loadInstance(bag, file);
 
         // auto-disconnect, should we forget it, or die in an orderly fashion
         Runtime.getRuntime()

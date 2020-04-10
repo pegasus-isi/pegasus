@@ -19,6 +19,8 @@ import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.*;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -207,7 +209,13 @@ public class MRC implements ReplicaCatalog {
         // try and connect
         ReplicaCatalog catalog = null;
         try {
-            catalog = ReplicaFactory.loadInstance(type, properties);
+
+            PegasusBag bag = new PegasusBag();
+            bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+            // PM-1486 to be fixed when we update ReplicaCatalog interface  to take
+            // PegasusBag
+            bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
+            catalog = ReplicaFactory.loadInstance(type, bag, properties);
         } catch (Exception e) {
             // log the connection error
             mLogger.log(

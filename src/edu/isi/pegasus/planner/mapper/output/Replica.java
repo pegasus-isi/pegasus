@@ -112,7 +112,7 @@ public class Replica implements OutputMapper {
         catalogImplementor =
                 (catalogImplementor == null) ? DEFAULT_REPLICA_BACKEND : catalogImplementor;
         try {
-            mRCCatalog = ReplicaFactory.loadInstance(catalogImplementor, props);
+            mRCCatalog = ReplicaFactory.loadInstance(catalogImplementor, bag, props);
         } catch (Exception e) {
             // log the connection error
             throw new MapperException(

@@ -192,7 +192,7 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
      * @param bag the bag of Pegasus initialization objects
      */
     public void initialize(ADag dag, PegasusBag bag) {
-
+        this.mBag = bag;
         this.mDAXReplicaStore = dag.getReplicaStore();
         this.initialize(dag, bag.getPegasusProperties(), bag.getPlannerOptions());
         this.mRegisterDeepLFN = mProps.registerDeepLFN();
@@ -250,7 +250,11 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
                             ReplicaCatalog.c_prefix + "." + ReplicaCatalog.PROXY_KEY, proxy);
                 }
 
-                mReplicaCatalog = ReplicaFactory.loadInstance(props);
+                PegasusBag bag = new PegasusBag();
+                bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+                bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+                bag.add(PegasusBag.PLANNER_DIRECTORY, mBag.getPlannerDirectory());
+                mReplicaCatalog = ReplicaFactory.loadInstance(bag);
 
                 // load all the mappings.
                 mReplicaStore = new ReplicaStore(mReplicaCatalog.lookup(mSearchFiles));
@@ -954,7 +958,9 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
 
         mLogger.log("Loading  file: " + file, LogManager.DEBUG_MESSAGE_LEVEL);
         try {
-            simpleFile = ReplicaFactory.loadInstance(CACHE_REPLICA_CATALOG_IMPLEMENTER, cacheProps);
+            simpleFile =
+                    ReplicaFactory.loadInstance(
+                            CACHE_REPLICA_CATALOG_IMPLEMENTER, this.mBag, cacheProps);
         } catch (Exception e) {
             mLogger.log("Unable to load cache file " + file, e, LogManager.ERROR_MESSAGE_LEVEL);
             return found;
@@ -1005,7 +1011,7 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
             try {
                 catalog =
                         ReplicaFactory.loadInstance(
-                                DIRECTORY_REPLICA_CATALOG_IMPLEMENTER, properties);
+                                DIRECTORY_REPLICA_CATALOG_IMPLEMENTER, this.mBag, properties);
 
                 store.add(catalog.lookup(mSearchFiles));
             } catch (Exception e) {

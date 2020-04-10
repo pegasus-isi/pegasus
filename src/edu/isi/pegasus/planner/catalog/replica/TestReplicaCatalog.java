@@ -22,6 +22,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.util.Collection;
 import java.util.Iterator;
@@ -77,6 +78,10 @@ public class TestReplicaCatalog {
                 "planner.version",
                 Version.instance().toString());
 
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, logger);
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, properties);
+
         // set debug level to maximum
         // set if something is going wrong
         // logger.setLevel( LogManager.DEBUG_MESSAGE_LEVEL );
@@ -87,7 +92,7 @@ public class TestReplicaCatalog {
 
         /* load the catalog using the factory */
         try {
-            catalog = ReplicaFactory.loadInstance(PegasusProperties.nonSingletonInstance());
+            catalog = ReplicaFactory.loadInstance(bag);
         } catch (Exception e) {
             System.out.println(e);
             System.exit(2);

@@ -138,6 +138,7 @@ public class DAXReplicaStore implements CodeGenerator {
             rc =
                     ReplicaFactory.loadInstance(
                             DAXReplicaStore.DAX_REPLICA_STORE_CATALOG_IMPLEMENTER,
+                            mBag,
                             replicaStoreProps);
         } catch (Exception e) {
             throw new RuntimeException(

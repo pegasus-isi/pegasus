@@ -55,7 +55,7 @@ public class ReplicaFactory {
      * configured through properties. This class is useful for non-singleton instances that may
      * require changing properties.
      *
-     * @param bag  bag of Pegasus initialization objects
+     * @param bag bag of Pegasus initialization objects
      * @exception ClassNotFoundException if the schema for the database cannot be loaded. You might
      *     want to check your CLASSPATH, too.
      * @exception NoSuchMethodException if the schema's constructor interface does not comply with
@@ -81,7 +81,7 @@ public class ReplicaFactory {
      * configured through properties. This class is useful for non-singleton instances that may
      * require changing properties.
      *
-     * @param bag  bag of Pegasus initialization objects
+     * @param bag bag of Pegasus initialization objects
      * @param propFile the physical location of the property propFile
      * @exception ClassNotFoundException if the schema for the database cannot be loaded. You might
      *     want to check your CLASSPATH, too.
@@ -109,11 +109,11 @@ public class ReplicaFactory {
         if (dir == null) {
             throw new NullPointerException("Invalid Directory passed");
         }
-        
+
         if (bag.getLogger() == null) {
             throw new NullPointerException("Invalid Logger passed");
         }
-        
+
         Properties connectProps = properties.matchingSubset(ReplicaCatalog.c_prefix, false);
 
         // get the default db driver properties in first pegasus.catalog.*.db.driver.*
@@ -135,16 +135,16 @@ public class ReplicaFactory {
         }
 
         // determine the class that implements the work catalog
-        return loadInstance( properties.getProperty(ReplicaCatalog.c_prefix), bag, connectProps);
+        return loadInstance(properties.getProperty(ReplicaCatalog.c_prefix), bag, connectProps);
     }
-    
+
     /**
      * Connects the interface with the replica catalog implementation.The choice of backend is
- configured through properties.This class is useful for non-singleton instances that may
- require changing properties.
+     * configured through properties.This class is useful for non-singleton instances that may
+     * require changing properties.
      *
-     * @param catalogImplementor  the catalog implementor to invoke
-     * @param bag  bag of Pegasus initialization objects
+     * @param catalogImplementor the catalog implementor to invoke
+     * @param bag bag of Pegasus initialization objects
      * @param connectProps
      * @exception ClassNotFoundException if the schema for the database cannot be loaded. You might
      *     want to check your CLASSPATH, too.
@@ -159,11 +159,12 @@ public class ReplicaFactory {
      * @see org.griphyn.common.util.CommonProperties
      * @see #loadInstance()
      */
-    public static ReplicaCatalog loadInstance(String catalogImplementor, PegasusBag bag, Properties connectProps)
+    public static ReplicaCatalog loadInstance(
+            String catalogImplementor, PegasusBag bag, Properties connectProps)
             throws ClassNotFoundException, IOException, NoSuchMethodException,
                     InstantiationException, IllegalAccessException, InvocationTargetException {
         ReplicaCatalog result = null;
-        
+
         if (catalogImplementor == null) {
             // check if file is specified in properties
             if (connectProps.containsKey("file")) {
