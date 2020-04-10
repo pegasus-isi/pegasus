@@ -19,6 +19,7 @@ import edu.isi.pegasus.common.util.FileDetector;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import java.io.File;
 import java.util.Properties;
 
 /**
@@ -75,6 +76,18 @@ public class TransformationFactory {
     public static TransformationCatalog loadInstance(PegasusBag bag)
             throws TransformationFactoryException {
 
+        PegasusProperties properties = bag.getPegasusProperties();
+        if (properties == null) {
+            throw new TransformationFactoryException("Invalid NULL properties passed");
+        }
+        File dir = bag.getPlannerDirectory();
+        if (dir == null) {
+            throw new TransformationFactoryException("Invalid Directory passed");
+        }
+        if (bag.getLogger() == null){
+            throw new TransformationFactoryException("Invalid Logger passed");
+        }
+        
         /* get the implementor from properties */
         String catalogImplementor = bag.getPegasusProperties().getTCMode();
 

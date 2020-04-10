@@ -126,6 +126,9 @@ public class SiteFactory {
         if (dir == null) {
             throw new SiteFactoryException("Invalid Directory passed");
         }
+        if (bag.getLogger() == null){
+            throw new SiteFactoryException("Invalid Logger passed");
+        }
         Properties connect = properties.matchingSubset(SiteCatalog.c_prefix, false);
         /* get the implementor from properties */
         String catalogImplementor = properties.getSiteCatalogImplementor();
