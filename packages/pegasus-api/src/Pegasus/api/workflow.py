@@ -1,5 +1,5 @@
 import json
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict, defaultdict
 from enum import Enum
 from functools import wraps
 

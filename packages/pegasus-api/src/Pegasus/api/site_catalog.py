@@ -1,4 +1,4 @@
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict, defaultdict
 from enum import Enum
 
 from Pegasus.api._utils import _chained, _get_class_enum_member_str, _get_enum_str
