@@ -135,7 +135,33 @@ public class ReplicaFactory {
         }
 
         // determine the class that implements the work catalog
-        String catalogImplementor = properties.getProperty(ReplicaCatalog.c_prefix);
+        return loadInstance( properties.getProperty(ReplicaCatalog.c_prefix), bag, connectProps);
+    }
+    
+    /**
+     * Connects the interface with the replica catalog implementation.The choice of backend is
+ configured through properties.This class is useful for non-singleton instances that may
+ require changing properties.
+     *
+     * @param catalogImplementor  the catalog implementor to invoke
+     * @param bag  bag of Pegasus initialization objects
+     * @param connectProps
+     * @exception ClassNotFoundException if the schema for the database cannot be loaded. You might
+     *     want to check your CLASSPATH, too.
+     * @exception NoSuchMethodException if the schema's constructor interface does not comply with
+     *     the database driver API.
+     * @exception InstantiationException if the schema class is an abstract class instead of a
+     *     concrete implementation.
+     * @exception IllegalAccessException if the constructor for the schema class it not publicly
+     *     accessible to this package.
+     * @exception InvocationTargetException if the constructor of the schema throws an exception
+     *     while being dynamically loaded.
+     * @see org.griphyn.common.util.CommonProperties
+     * @see #loadInstance()
+     */
+    public static ReplicaCatalog loadInstance(String catalogImplementor, PegasusBag bag, Properties connectProps)
+            throws ClassNotFoundException, IOException, NoSuchMethodException,
+                    InstantiationException, IllegalAccessException, InvocationTargetException {
         ReplicaCatalog result = null;
         
         if (catalogImplementor == null) {
