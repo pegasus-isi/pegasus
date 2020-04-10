@@ -21,6 +21,7 @@ package edu.isi.pegasus.planner.catalog;
 import edu.isi.pegasus.planner.catalog.site.*;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import java.io.File;
 import java.util.List;
 import java.util.Set;
@@ -39,6 +40,13 @@ public interface SiteCatalog extends Catalog {
 
     /** Key name of property to set variable expansion */
     public static final String VARIABLE_EXPANSION_KEY = "expand";
+
+    /**
+     * Initialize the site catalog instance
+     *
+     * @param bag
+     */
+    public void initialize(PegasusBag bag);
 
     /**
      * Loads up the Site Catalog implementation with the sites whose site handles are specified.

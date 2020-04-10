@@ -19,7 +19,6 @@
 package edu.isi.pegasus.planner.catalog.site.impl;
 
 import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.common.util.FileUtils;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
@@ -27,7 +26,6 @@ import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.parser.SiteCatalogXMLParser;
 import edu.isi.pegasus.planner.parser.SiteCatalogXMLParserFactory;
 import edu.isi.pegasus.planner.parser.StackBasedXMLParser;
@@ -74,11 +72,16 @@ public class XML implements SiteCatalog {
     private Properties mConnectionProperties;
 
     /** The default constructor. */
-    public XML() {
-        mLogger = LogManagerFactory.loadSingletonInstance();
-        mBag = new PegasusBag();
-        mBag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
-        mBag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
+    public XML() {}
+
+    /**
+     * Initialize the site catalog instance
+     *
+     * @param bag
+     */
+    public void initialize(PegasusBag bag) {
+        mBag = bag;
+        mLogger = bag.getLogger();
         mConnectionProperties = new Properties();
     }
 

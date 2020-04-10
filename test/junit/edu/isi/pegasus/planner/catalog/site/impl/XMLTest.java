@@ -120,7 +120,7 @@ public class XMLTest {
         // mBag.add( PegasusBag.PLANNER_OPTIONS, mTestSetup.loadPlannerOptions() );
 
         // load the site catalog backend
-        mCatalog = SiteFactory.loadInstance(mProps);
+        mCatalog = SiteFactory.loadInstance(mBag);
         List l = new LinkedList();
         l.add("*");
         mCatalog.load(l);

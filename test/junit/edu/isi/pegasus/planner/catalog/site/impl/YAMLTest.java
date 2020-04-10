@@ -120,7 +120,7 @@ public class YAMLTest {
 
         // mBag.add( PegasusBag.PLANNER_OPTIONS, mTestSetup.loadPlannerOptions() );
         // load the site catalog backend
-        mCatalog = SiteFactory.loadInstance(mProps);
+        mCatalog = SiteFactory.loadInstance(mBag);
         List l = new LinkedList();
         l.add("*");
         mCatalog.load(l);
@@ -327,7 +327,7 @@ public class YAMLTest {
 
         // mBag.add( PegasusBag.PLANNER_OPTIONS, mTestSetup.loadPlannerOptions() );
         // load the site catalog backend
-        SiteCatalog mCatalog = SiteFactory.loadInstance(mProps);
+        SiteCatalog mCatalog = SiteFactory.loadInstance(mBag);
         List l = new LinkedList();
         l.add("*");
         try {
@@ -360,7 +360,7 @@ public class YAMLTest {
 
         // mBag.add( PegasusBag.PLANNER_OPTIONS, mTestSetup.loadPlannerOptions() );
         // load the site catalog backend
-        SiteCatalog mCatalog = SiteFactory.loadInstance(mProps);
+        SiteCatalog mCatalog = SiteFactory.loadInstance(mBag);
         List l = new LinkedList();
         l.add("*");
         try {

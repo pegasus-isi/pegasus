@@ -164,7 +164,7 @@ public class SiteFactory {
                         catalogImplementor;
 
         // determine the class that implements the site catalog
-        return loadInstance(catalogImplementor, connect);
+        return loadInstance(catalogImplementor, bag, connect);
     }
 
     /**
@@ -172,12 +172,14 @@ public class SiteFactory {
      * configured through properties.
      *
      * @param catalogImplementor the name of the class implementing catalog
+     * @param bag bag of initalization objects
      * @param properties the connection properties.
      * @return handle to the Site Catalog.
      * @throws SiteFactoryException that nests any error that might occur during the instantiation
      * @see #DEFAULT_PACKAGE_NAME
      */
-    private static SiteCatalog loadInstance(String catalogImplementor, Properties properties) {
+    private static SiteCatalog loadInstance(
+            String catalogImplementor, PegasusBag bag, Properties properties) {
         if (properties == null) {
             throw new SiteFactoryException("Invalid NULL properties passed");
         }
@@ -205,6 +207,7 @@ public class SiteFactory {
             if (catalog == null) {
                 throw new RuntimeException("Unable to load " + catalogImplementor);
             }
+            catalog.initialize(bag);
 
             if (!catalog.connect(properties))
                 throw new RuntimeException("Unable to connect to site catalog implementation");

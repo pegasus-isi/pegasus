@@ -19,7 +19,6 @@
 package edu.isi.pegasus.planner.catalog.site.impl;
 
 import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.common.util.FileUtils;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
@@ -27,7 +26,6 @@ import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.parser.SiteCatalogYAMLParser;
 import java.io.File;
 import java.io.IOException;
@@ -64,11 +62,16 @@ public class YAML implements SiteCatalog {
     private PegasusBag mBag;
 
     /** The default constructor. */
-    public YAML() {
-        mLogger = LogManagerFactory.loadSingletonInstance();
-        mBag = new PegasusBag();
-        mBag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
-        mBag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
+    public YAML() {}
+
+    /**
+     * Initialize the site catalog instance
+     *
+     * @param bag
+     */
+    public void initialize(PegasusBag bag) {
+        mBag = bag;
+        mLogger = bag.getLogger();
     }
 
     /**
