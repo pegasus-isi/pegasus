@@ -749,8 +749,9 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <junit printsummary="yes" haltonfailure="yes" fork="true" forkmode="once">
       <sysproperty key="externals.python.path" value="${dist.lib}/pegasus/externals/python"/>
       <sysproperty key="pegasus.home.schemadir" value="${dist.schema}"/>
-      <sysproperty key="pegasus.home.bindir"   value="${dist.bin}"/>
-
+      <sysproperty key="pegasus.home.bindir" value="${dist.bin}"/>
+      <sysproperty key="pegasus.home.sysconfdir" value="${dist.etc}"/>
+      <sysproperty key="pegasus.home.sharedstatedir" value="${dist.share}"/>
       <classpath>
         <path refid="build.classpath"/>
         <path refid="build.aws.classpath"/>
