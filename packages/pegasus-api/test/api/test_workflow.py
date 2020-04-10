@@ -1,11 +1,13 @@
 import json
 import os
 import shutil
+import re
+from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 import pytest
 from jsonschema import validate
-import re
+
 import yaml
 
 import Pegasus
@@ -1019,7 +1021,7 @@ class TestWorkflow:
 
         os.remove(EXPECTED_FILE)
 
-    def test_workflow_key_ordering(self):
+    def test_workflow_key_ordering_on_yml_write(self):
         tc = TransformationCatalog()
         rc = ReplicaCatalog()
         sc = SiteCatalog()
@@ -1036,10 +1038,14 @@ class TestWorkflow:
         wf.add_metadata(key="value")
 
         wf.write()
-        EXPECTED_FILE = "workflow.yml"
+        EXPECTED_FILE = Path("workflow.yml")
 
         with open(EXPECTED_FILE) as f:
+            # reading in as str so ordering of keys is not disrupted
+            # when loaded into a dict
             result = f.read()
+
+        EXPECTED_FILE.unlink()
 
         """
         Check that wf keys have been ordered as follows (while ignoring nested keys):
