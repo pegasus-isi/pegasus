@@ -98,31 +98,6 @@ public class ReplicaFactory {
             throws ClassNotFoundException, IOException, NoSuchMethodException,
                     InstantiationException, IllegalAccessException, InvocationTargetException {
 
-        return loadInstance(props.getVDSProperties(), file);
-    }
-
-    /**
-     * Connects the interface with the replica catalog implementation. The choice of backend is
-     * configured through properties. This class is useful for non-singleton instances that may
-     * require changing properties.
-     *
-     * @param props is an instance of properties to use.
-     * @exception ClassNotFoundException if the schema for the database cannot be loaded. You might
-     *     want to check your CLASSPATH, too.
-     * @exception NoSuchMethodException if the schema's constructor interface does not comply with
-     *     the database driver API.
-     * @exception InstantiationException if the schema class is an abstract class instead of a
-     *     concrete implementation.
-     * @exception IllegalAccessException if the constructor for the schema class it not publicly
-     *     accessible to this package.
-     * @exception InvocationTargetException if the constructor of the schema throws an exception
-     *     while being dynamically loaded.
-     * @see org.griphyn.common.util.CommonProperties
-     * @see #loadInstance()
-     */
-    private static ReplicaCatalog loadInstance(CommonProperties props, String file)
-            throws ClassNotFoundException, IOException, NoSuchMethodException,
-                    InstantiationException, IllegalAccessException, InvocationTargetException {
         // sanity check
 
         if (props == null) throw new NullPointerException("invalid properties");
