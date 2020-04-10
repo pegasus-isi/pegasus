@@ -83,7 +83,7 @@ public class ReplicaFactoryTest {
                 new File(mTestSetup.getInputDirectory(), "rc.data").getAbsolutePath());
         File tempFile = new File(props.writeOutProperties(mTestSetup.getInputDirectory()));
         try {
-            ReplicaCatalog rc = ReplicaFactory.loadInstance(props);
+            ReplicaCatalog rc = ReplicaFactory.loadInstance(getPegasusBag(props));
             assertThat(rc, instanceOf(SimpleFile.class));
         } finally {
             if (tempFile != null) {
@@ -100,7 +100,7 @@ public class ReplicaFactoryTest {
                 new File(mTestSetup.getInputDirectory(), "rc.data").getAbsolutePath());
         File tempFile = new File(props.writeOutProperties(mTestSetup.getInputDirectory()));
         try {
-            ReplicaCatalog rc = ReplicaFactory.loadInstance(props);
+            ReplicaCatalog rc = ReplicaFactory.loadInstance(getPegasusBag(props));
             assertThat(rc, instanceOf(SimpleFile.class));
         } finally {
             if (tempFile != null) {
@@ -118,7 +118,7 @@ public class ReplicaFactoryTest {
                 new File(mTestSetup.getInputDirectory(), "rc.yml").getAbsolutePath());
         File tempFile = new File(props.writeOutProperties(mTestSetup.getInputDirectory()));
         try {
-            ReplicaCatalog rc = ReplicaFactory.loadInstance(props);
+            ReplicaCatalog rc = ReplicaFactory.loadInstance(getPegasusBag(props));
             assertThat(rc, instanceOf(YAML.class));
         } finally {
             if (tempFile != null) {
@@ -135,12 +135,19 @@ public class ReplicaFactoryTest {
                 new File(mTestSetup.getInputDirectory(), "rc.yml").getAbsolutePath());
         File tempFile = new File(props.writeOutProperties(mTestSetup.getInputDirectory()));
         try {
-            ReplicaCatalog rc = ReplicaFactory.loadInstance(props);
+            ReplicaCatalog rc = ReplicaFactory.loadInstance(getPegasusBag(props));
             assertThat(rc, instanceOf(YAML.class));
         } finally {
             if (tempFile != null) {
                 tempFile.delete();
             }
         }
+    }
+   
+    private PegasusBag getPegasusBag(PegasusProperties props) {
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+        return bag;
     }
 }
