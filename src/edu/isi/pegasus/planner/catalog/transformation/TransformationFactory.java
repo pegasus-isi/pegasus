@@ -44,6 +44,12 @@ public class TransformationFactory {
     public static final String TEXT_CATALOG_IMPLEMENTOR =
             edu.isi.pegasus.planner.catalog.transformation.impl.Text.class.getCanonicalName();
 
+    /** The default basename of the yaml transformation catalog file. */
+    public static final String DEFAULT_YAML_TRANSFORMATION_CATALOG_BASENAME = "transformations.yml";
+
+    /** The default basename of the transformation catalog file. */
+    public static final String DEFAULT_TEXT_TRANSFORMATION_CATALOG_BASENAME = "tc.txt";
+
     /**
      * Connects the interface with the transformation catalog implementation. The choice of backend
      * is configured through properties. This method uses default properties from the property
@@ -84,10 +90,10 @@ public class TransformationFactory {
         if (dir == null) {
             throw new TransformationFactoryException("Invalid Directory passed");
         }
-        if (bag.getLogger() == null){
+        if (bag.getLogger() == null) {
             throw new TransformationFactoryException("Invalid Logger passed");
         }
-        
+
         /* get the implementor from properties */
         String catalogImplementor = bag.getPegasusProperties().getTCMode();
 
@@ -105,7 +111,26 @@ public class TransformationFactory {
                     catalogImplementor = TEXT_CATALOG_IMPLEMENTOR;
                 }
             } else {
-                catalogImplementor = DEFAULT_CATALOG_IMPLEMENTOR;
+                // catalogImplementor = DEFAULT_CATALOG_IMPLEMENTOR;
+                // PM-1486 check for default files
+                File defaultYAML =
+                        new File(
+                                dir,
+                                TransformationFactory.DEFAULT_YAML_TRANSFORMATION_CATALOG_BASENAME);
+                File defaultText =
+                        new File(
+                                dir,
+                                TransformationFactory.DEFAULT_TEXT_TRANSFORMATION_CATALOG_BASENAME);
+                if (exists(defaultYAML)) {
+                    catalogImplementor = TransformationFactory.YAML_CATALOG_IMPLEMENTOR;
+                    props.setProperty("file", defaultYAML.getAbsolutePath());
+                } else if (exists(defaultText)) {
+                    catalogImplementor = TransformationFactory.TEXT_CATALOG_IMPLEMENTOR;
+                    props.setProperty("file", defaultText.getAbsolutePath());
+                } else {
+                    // then just set to default implementor and let the implementing class load
+                    catalogImplementor = TransformationFactory.DEFAULT_CATALOG_IMPLEMENTOR;
+                }
             }
         }
 
@@ -140,5 +165,15 @@ public class TransformationFactory {
                     " Unable to instantiate Transformation Catalog ", catalogImplementor);
         }
         return catalog;
+    }
+
+    /**
+     * Returns whether a file exists or not
+     *
+     * @param file
+     * @return
+     */
+    private static boolean exists(File file) {
+        return file == null ? false : file.exists() && file.canRead();
     }
 }
