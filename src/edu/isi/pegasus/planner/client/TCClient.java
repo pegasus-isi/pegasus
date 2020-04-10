@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
 import edu.isi.pegasus.planner.catalog.transformation.client.TCAdd;
 import edu.isi.pegasus.planner.catalog.transformation.client.TCDelete;
 import edu.isi.pegasus.planner.catalog.transformation.client.TCQuery;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
 import java.util.HashMap;
@@ -265,7 +266,11 @@ public class TCClient extends Executable {
         try {
             if (operationcase == 1 || operationcase == 4 || operationcase == 2) {
                 this.mProps.setProperty(TransformationCatalog.MODIFY_FOR_FILE_URLS_KEY, "false");
-                tc = TransformationFactory.loadInstance(this.mProps);
+
+                PegasusBag bag = new PegasusBag();
+                bag.add(PegasusBag.PEGASUS_PROPERTIES, mProps);
+                bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+                tc = TransformationFactory.loadInstance(bag);
             }
         } catch (FactoryException fe) {
             mLogger.log(convertException(fe, mLogger.getLevel()), LogManager.FATAL_MESSAGE_LEVEL);

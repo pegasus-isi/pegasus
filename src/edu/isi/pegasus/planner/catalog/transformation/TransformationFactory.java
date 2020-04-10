@@ -13,7 +13,6 @@
  */
 package edu.isi.pegasus.planner.catalog.transformation;
 
-import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.common.util.FileDetector;
@@ -58,49 +57,6 @@ public class TransformationFactory {
         PegasusBag bag = new PegasusBag();
         bag.add(PegasusBag.PEGASUS_LOGMANAGER, LogManagerFactory.loadSingletonInstance());
         bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
-
-        return loadInstance(bag);
-    }
-
-    /**
-     * Connects the interface with the transformation catalog implementation. The choice of backend
-     * is configured through properties. This class is useful for non-singleton instances that may
-     * require changing properties.
-     *
-     * @param properties is an instance of properties to use.
-     * @return handle to the Transformation Catalog.
-     * @throws TransformationFactoryException that nests any error that might occur during the
-     *     instantiation
-     * @see #DEFAULT_PACKAGE_NAME
-     */
-    public static TransformationCatalog loadInstance(PegasusProperties properties)
-            throws TransformationFactoryException {
-
-        PegasusBag bag = new PegasusBag();
-        bag.add(PegasusBag.PEGASUS_LOGMANAGER, LogManagerFactory.loadSingletonInstance(properties));
-        bag.add(PegasusBag.PEGASUS_PROPERTIES, properties);
-
-        return loadInstance(bag);
-    }
-
-    /**
-     * Connects the interface with the transformation catalog implementation. The choice of backend
-     * is configured through properties. This class is useful for non-singleton instances that may
-     * require changing properties.
-     *
-     * @param properties is an instance of properties to use.
-     * @param logger handle to the logging.
-     * @return handle to the Transformation Catalog.
-     * @throws TransformationFactoryException that nests any error that might occur during the
-     *     instantiation
-     * @see #DEFAULT_PACKAGE_NAME
-     */
-    public static TransformationCatalog loadInstance(
-            PegasusProperties properties, LogManager logger) throws TransformationFactoryException {
-
-        PegasusBag bag = new PegasusBag();
-        bag.add(PegasusBag.PEGASUS_LOGMANAGER, logger);
-        bag.add(PegasusBag.PEGASUS_PROPERTIES, properties);
 
         return loadInstance(bag);
     }

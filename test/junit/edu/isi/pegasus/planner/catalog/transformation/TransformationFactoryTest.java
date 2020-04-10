@@ -91,7 +91,7 @@ public class TransformationFactoryTest {
         props.setProperty(
                 PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
                 new File(mTestSetup.getInputDirectory(), "sample.tc.text").getAbsolutePath());
-        TransformationCatalog tc = TransformationFactory.loadInstance(props);
+        TransformationCatalog tc = TransformationFactory.loadInstance(getPegasusBag(props));
         assertThat(tc, instanceOf(Text.class));
         mLogger.logEventCompletion();
     }
@@ -106,7 +106,7 @@ public class TransformationFactoryTest {
         props.setProperty(
                 PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
                 new File(mTestSetup.getInputDirectory(), "sample.tc.text").getAbsolutePath());
-        TransformationCatalog tc = TransformationFactory.loadInstance(props);
+        TransformationCatalog tc = TransformationFactory.loadInstance(getPegasusBag(props));
         assertThat(tc, instanceOf(Text.class));
         mLogger.logEventCompletion();
     }
@@ -124,7 +124,7 @@ public class TransformationFactoryTest {
                 PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
                 new File(mTestSetup.getInputDirectory() + "/sample-5.0-data/", "tc.yml")
                         .getAbsolutePath());
-        TransformationCatalog tc = TransformationFactory.loadInstance(props);
+        TransformationCatalog tc = TransformationFactory.loadInstance(getPegasusBag(props));
         assertThat(tc, instanceOf(YAML.class));
         mLogger.logEventCompletion();
     }
@@ -140,8 +140,15 @@ public class TransformationFactoryTest {
                 PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
                 new File(mTestSetup.getInputDirectory() + "/sample-5.0-data/", "tc.yml")
                         .getAbsolutePath());
-        TransformationCatalog tc = TransformationFactory.loadInstance(props);
+        TransformationCatalog tc = TransformationFactory.loadInstance(getPegasusBag(props));
         assertThat(tc, instanceOf(YAML.class));
         mLogger.logEventCompletion();
+    }
+
+    private PegasusBag getPegasusBag(PegasusProperties props) {
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+        return bag;
     }
 }

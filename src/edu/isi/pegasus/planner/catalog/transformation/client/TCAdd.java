@@ -25,6 +25,7 @@ import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.util.List;
 import java.util.Map;
@@ -178,12 +179,15 @@ public class TCAdd extends Client {
      */
     private boolean addBulk() {
         List<TransformationCatalogEntry> entries = null;
-        PegasusProperties mBag = PegasusProperties.getInstance();
+        PegasusProperties props = PegasusProperties.getInstance();
 
-        mBag.setProperty("pegasus.catalog.transformation", "File");
-        mBag.setProperty("pegasus.catalog.transformation.file", file);
+        props.setProperty("pegasus.catalog.transformation", "File");
+        props.setProperty("pegasus.catalog.transformation.file", file);
 
-        TransformationCatalog catalog = TransformationFactory.loadInstance(mBag);
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+        TransformationCatalog catalog = TransformationFactory.loadInstance(bag);
 
         try {
             entries = catalog.getContents();

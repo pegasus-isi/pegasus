@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationFactoryException;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
@@ -302,8 +303,11 @@ public class TCConverter extends Executable {
         TransformationCatalog catalog = null;
         List<TransformationCatalogEntry> entries = null;
         try {
+            PegasusBag bag = new PegasusBag();
+            bag.add(PegasusBag.PEGASUS_PROPERTIES, pegasusProperties);
+            bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
             /* load the catalog using the factory */
-            catalog = TransformationFactory.loadInstance(pegasusProperties);
+            catalog = TransformationFactory.loadInstance(bag);
 
             /* load all sites in transformation catalog */
             entries = (List<TransformationCatalogEntry>) catalog.getContents();
@@ -425,7 +429,11 @@ public class TCConverter extends Executable {
         }
 
         mProps.setProperty("pegasus.catalog.transformation", format);
-        catalog = TransformationFactory.loadInstance(mProps);
+
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, mProps);
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+        catalog = TransformationFactory.loadInstance(bag);
         List<TransformationCatalogEntry> entries = output.getEntries(null, (TCType) null);
         for (TransformationCatalogEntry tcentry : entries) {
             try {

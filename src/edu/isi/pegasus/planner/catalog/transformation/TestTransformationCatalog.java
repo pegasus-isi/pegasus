@@ -26,6 +26,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.Arch;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Os;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.util.List;
@@ -87,9 +88,13 @@ public class TestTransformationCatalog {
                 properties.matchingSubset("pegasus.catalog.transformation", true);
         System.out.println("Transformation Catalog Properties specified are " + replicaProperties);
 
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, logger);
+
         /* load the catalog using the factory */
         try {
-            catalog = TransformationFactory.loadInstance(PegasusProperties.nonSingletonInstance());
+            catalog = TransformationFactory.loadInstance();
         } catch (TransformationFactoryException e) {
             System.out.println(e.convertException());
             System.exit(2);
