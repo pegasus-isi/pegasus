@@ -6,6 +6,13 @@ hooks:
     - _on: error
       cmd: /bin/mailx -s &apos;diamond failed&apos; use@some.domain
 
+profiles:
+  env:
+      JAVA_HOME: /opt/java/1.6
+
+metadata:
+    createdBy: ryan
+
 siteCatalog:
   $ref: "https://pegasus.isi.edu/hosted/site/catalog"
 
@@ -62,6 +69,18 @@ transformationCatalog:
       profiles:
         env:
           JAVA_HOME: /opt/java/1.6
+
+jobDependencies:
+  - id: ID000001
+    children:
+      - ID000002
+      - ID000003
+  - id: ID000002
+    children:
+      - ID000004
+  - id: ID000003
+    children:
+      - ID000004
 
 jobs:
   - id: ID000001
@@ -129,14 +148,3 @@ jobs:
         registerReplica: false
         stageOut: true
 
-jobDependencies:
-  - id: ID000001
-    children:
-      - ID000002
-      - ID000003
-  - id: ID000002
-    children:
-      - ID000004
-  - id: ID000003
-    children:
-      - ID000004
