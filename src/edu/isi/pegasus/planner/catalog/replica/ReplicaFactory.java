@@ -17,7 +17,9 @@ import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.common.util.FileDetector;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.*;
 import java.util.Enumeration;
@@ -53,7 +55,7 @@ public class ReplicaFactory {
      * configured through properties. This class is useful for non-singleton instances that may
      * require changing properties.
      *
-     * @param props is an instance of properties to use.
+     * @param bag  bag of Pegasus initialization objects
      * @exception ClassNotFoundException if the schema for the database cannot be loaded. You might
      *     want to check your CLASSPATH, too.
      * @exception NoSuchMethodException if the schema's constructor interface does not comply with
@@ -67,11 +69,11 @@ public class ReplicaFactory {
      * @see org.griphyn.common.util.CommonProperties
      * @see #loadInstance()
      */
-    public static ReplicaCatalog loadInstance(PegasusProperties props)
+    public static ReplicaCatalog loadInstance(PegasusBag bag)
             throws ClassNotFoundException, IOException, NoSuchMethodException,
                     InstantiationException, IllegalAccessException, InvocationTargetException {
 
-        return loadInstance(props, props.getPropertiesInSubmitDirectory());
+        return loadInstance(bag, bag.getPegasusProperties().getPropertiesInSubmitDirectory());
     }
 
     /**
@@ -79,8 +81,8 @@ public class ReplicaFactory {
      * configured through properties. This class is useful for non-singleton instances that may
      * require changing properties.
      *
-     * @param props is an instance of properties to use.
-     * @param file the physical location of the property file
+     * @param bag  bag of Pegasus initialization objects
+     * @param propFile the physical location of the property propFile
      * @exception ClassNotFoundException if the schema for the database cannot be loaded. You might
      *     want to check your CLASSPATH, too.
      * @exception NoSuchMethodException if the schema's constructor interface does not comply with
@@ -94,70 +96,53 @@ public class ReplicaFactory {
      * @see org.griphyn.common.util.CommonProperties
      * @see #loadInstance()
      */
-    public static ReplicaCatalog loadInstance(PegasusProperties props, String file)
+    public static ReplicaCatalog loadInstance(PegasusBag bag, String propFile)
             throws ClassNotFoundException, IOException, NoSuchMethodException,
                     InstantiationException, IllegalAccessException, InvocationTargetException {
 
         // sanity check
-
-        if (props == null) throw new NullPointerException("invalid properties");
-
-        Properties connect = props.matchingSubset(ReplicaCatalog.c_prefix, false);
+        PegasusProperties properties = bag.getPegasusProperties();
+        if (properties == null) {
+            throw new NullPointerException("Invalid NULL properties passed");
+        }
+        File dir = bag.getPlannerDirectory();
+        if (dir == null) {
+            throw new NullPointerException("Invalid Directory passed");
+        }
+        
+        if (bag.getLogger() == null) {
+            throw new NullPointerException("Invalid Logger passed");
+        }
+        
+        Properties connectProps = properties.matchingSubset(ReplicaCatalog.c_prefix, false);
 
         // get the default db driver properties in first pegasus.catalog.*.db.driver.*
-        Properties db = props.matchingSubset(ReplicaCatalog.DB_ALL_PREFIX, false);
+        Properties db = properties.matchingSubset(ReplicaCatalog.DB_ALL_PREFIX, false);
         // now overload with the work catalog specific db properties.
         // pegasus.catalog.work.db.driver.*
-        db.putAll(props.matchingSubset(ReplicaCatalog.DB_PREFIX, false));
+        db.putAll(properties.matchingSubset(ReplicaCatalog.DB_PREFIX, false));
 
-        // PM-778 properties file location requried for pegasus-db-admin
-        if (file != null) {
-            connect.put("properties.file", file);
+        // PM-778 properties propFile location requried for pegasus-db-admin
+        if (propFile != null) {
+            connectProps.put("properties.file", propFile);
         }
 
         // to make sure that no confusion happens.
         // add the db prefix to all the db properties
         for (Enumeration e = db.propertyNames(); e.hasMoreElements(); ) {
             String key = (String) e.nextElement();
-            connect.put("db." + key, db.getProperty(key));
+            connectProps.put("db." + key, db.getProperty(key));
         }
 
         // determine the class that implements the work catalog
-        return loadInstance(props.getProperty(ReplicaCatalog.c_prefix), connect);
-    }
-
-    /**
-     * Connects the interface with the replica catalog implementation.The choice of backend is
-     * configured through properties.This class is useful for non-singleton instances that may
-     * require changing properties.
-     *
-     * @param catalogImplementor
-     * @param props is an instance of properties to use.
-     * @return
-     * @exception ClassNotFoundException if the schema for the database cannot be loaded. You might
-     *     want to check your CLASSPATH, too.
-     * @exception NoSuchMethodException if the schema's constructor interface does not comply with
-     *     the database driver API.
-     * @exception InstantiationException if the schema class is an abstract class instead of a
-     *     concrete implementation.
-     * @exception IllegalAccessException if the constructor for the schema class it not publicly
-     *     accessible to this package.
-     * @exception InvocationTargetException if the constructor of the schema throws an exception
-     *     while being dynamically loaded.
-     * @throws java.io.IOException
-     * @see org.griphyn.common.util.CommonProperties
-     * @see #loadInstance()
-     */
-    public static ReplicaCatalog loadInstance(String catalogImplementor, Properties props)
-            throws ClassNotFoundException, IOException, NoSuchMethodException,
-                    InstantiationException, IllegalAccessException, InvocationTargetException {
+        String catalogImplementor = properties.getProperty(ReplicaCatalog.c_prefix);
         ReplicaCatalog result = null;
-
+        
         if (catalogImplementor == null) {
             // check if file is specified in properties
-            if (props.containsKey("file")) {
+            if (connectProps.containsKey("file")) {
                 // PM-1518 check for type of file
-                if (FileDetector.isTypeYAML(props.getProperty("file"))) {
+                if (FileDetector.isTypeYAML(connectProps.getProperty("file"))) {
                     catalogImplementor = YAML_CATALOG_IMPLEMENTOR;
                 } else {
                     catalogImplementor = FILE_CATALOG_IMPLEMENTOR;
@@ -181,12 +166,12 @@ public class ReplicaFactory {
         result = (ReplicaCatalog) dl.instantiate(new Object[0]);
         if (result == null) throw new RuntimeException("Unable to load " + catalogImplementor);
 
-        if (!result.connect(props))
+        if (!result.connect(connectProps))
             throw new RuntimeException(
                     "Unable to connect to replica catalog implementation "
                             + catalogImplementor
                             + " with props "
-                            + props);
+                            + connectProps);
 
         // done
         return result;
