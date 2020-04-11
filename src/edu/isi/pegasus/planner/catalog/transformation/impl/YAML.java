@@ -115,17 +115,25 @@ public class YAML extends Abstract implements TransformationCatalog {
         mLogger = bag.getLogger();
         mFlushOnClose = false;
         modifyFileURL = Boolean.parse(mProps.getProperty(MODIFY_FOR_FILE_URLS_KEY), true);
-        mTCFile = mProps.getTCPath();
         mLogger.log(
                 "Transformation Catalog Type used " + this.getDescription(),
                 LogManager.CONFIG_MESSAGE_LEVEL);
-        mLogger.log("Transformation Catalog File used " + mTCFile, LogManager.CONFIG_MESSAGE_LEVEL);
+    }
 
+    /**
+     * Empty for the time being. The factory still calls out to the initialize method.
+     *
+     * @param props the connection properties.
+     * @return
+     */
+    public boolean connect(Properties props) {
+        this.mTCFile = props.getProperty("file");
         if (mTCFile == null) {
             throw new RuntimeException(
                     "The File to be used as TC should be "
                             + "defined with the property pegasus.catalog.transformation.file");
         }
+        mLogger.log("Transformation Catalog File used " + mTCFile, LogManager.CONFIG_MESSAGE_LEVEL);
 
         try {
             java.io.File f = new java.io.File(mTCFile);
@@ -149,16 +157,6 @@ public class YAML extends Abstract implements TransformationCatalog {
         } catch (ScannerException e) {
             throw new RuntimeException("ScannerException while parsing transformation catalog", e);
         }
-    }
-
-    /**
-     * Empty for the time being. The factory still calls out to the initialize method.
-     *
-     * @param props the connection properties.
-     * @return
-     */
-    public boolean connect(Properties props) {
-        // not implemented
         return true;
     }
 

@@ -154,8 +154,12 @@ public class TransformationFactory {
             if (catalog == null) {
                 throw new RuntimeException("Unable to load " + catalogImplementor);
             }
-
             catalog.initialize(bag);
+            if (!catalog.connect(props)) {
+                throw new TransformationFactoryException(
+                        " Unable to connect to Transformation Catalog with properties" + props,
+                        catalogImplementor);
+            }
         } catch (Exception e) {
             throw new TransformationFactoryException(
                     " Unable to instantiate Transformation Catalog ", catalogImplementor, e);
