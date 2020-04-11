@@ -1,8 +1,7 @@
+from collections import OrderedDict
 from pathlib import Path
 
 import pytest
-
-from collections import OrderedDict
 
 from Pegasus.yaml import dumps, loads
 

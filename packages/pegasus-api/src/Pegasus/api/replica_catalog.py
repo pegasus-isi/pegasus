@@ -217,4 +217,3 @@ class ReplicaCatalog(Writable):
         return OrderedDict(
             [("pegasus", PEGASUS_VERSION), ("replicas", [r for r in self.replicas])]
         )
-
