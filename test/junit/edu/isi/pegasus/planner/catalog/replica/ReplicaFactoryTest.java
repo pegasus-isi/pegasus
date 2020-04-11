@@ -25,7 +25,11 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -49,6 +53,8 @@ public class ReplicaFactoryTest {
     private LogManager mLogger;
 
     private TestSetup mTestSetup;
+
+    private static int mTestNumber = 1;
 
     public ReplicaFactoryTest() {}
 
@@ -143,7 +149,105 @@ public class ReplicaFactoryTest {
             }
         }
     }
-   
+
+    @Test
+    public void testWithDefaultTextFile() throws Exception {
+        mLogger.logEventStart(
+                "test.catalog.replica.factory",
+                "default-text-file-test",
+                Integer.toString(mTestNumber++));
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+        Path p = Files.createTempDirectory("pegasus");
+        File dir = p.toFile();
+        File tempFile = new File(props.writeOutProperties(dir.getAbsolutePath()));
+        File text = new File(dir, ReplicaFactory.DEFAULT_FILE_REPLICA_CATALOG_BASENAME);
+        BufferedWriter writer = new BufferedWriter(new FileWriter(text));
+        writer.write("text\n");
+        writer.close();
+        bag.add(PegasusBag.PLANNER_DIRECTORY, dir);
+        try {
+            ReplicaCatalog c = ReplicaFactory.loadInstance(bag);
+            assertThat(c, instanceOf(SimpleFile.class));
+        } finally {
+            dir.delete();
+        }
+        mLogger.logEventCompletion();
+    }
+
+    @Test
+    public void testWithDefaultYAMLFile() throws Exception {
+        mLogger.logEventStart(
+                "test.catalog.replica.factory",
+                "default-yaml-file-test",
+                Integer.toString(mTestNumber++));
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+        Path p = Files.createTempDirectory("pegasus");
+        File dir = p.toFile();
+        File tempFile = new File(props.writeOutProperties(dir.getAbsolutePath()));
+        File yaml = new File(dir, ReplicaFactory.DEFAULT_YAML_REPLICA_CATALOG_BASENAME);
+        BufferedWriter writer = new BufferedWriter(new FileWriter(yaml));
+        writer.write("pegasus: \"5.0\"\n");
+        writer.write("replicas: \n");
+        writer.write(
+                "# matches \"f.a\"\n"
+                        + "  - lfn: \"f.a\"\n"
+                        + "    pfn: \"file:///Volumes/data/input/f.a\"\n"
+                        + "    site: \"local\"");
+        writer.close();
+        bag.add(PegasusBag.PLANNER_DIRECTORY, dir);
+        try {
+            ReplicaCatalog c = ReplicaFactory.loadInstance(bag);
+            assertThat(c, instanceOf(YAML.class));
+        } finally {
+            dir.delete();
+        }
+        mLogger.logEventCompletion();
+    }
+
+    @Test
+    public void testWithDefaultYAMLAndTextFiles() throws Exception {
+        mLogger.logEventStart(
+                "test.catalog.replica.factory",
+                "default-yaml-file-test",
+                Integer.toString(mTestNumber++));
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+        Path p = Files.createTempDirectory("pegasus");
+        File dir = p.toFile();
+        File tempFile = new File(props.writeOutProperties(dir.getAbsolutePath()));
+        File yaml = new File(dir, ReplicaFactory.DEFAULT_YAML_REPLICA_CATALOG_BASENAME);
+        BufferedWriter writer = new BufferedWriter(new FileWriter(yaml));
+        writer.write("pegasus: \"5.0\"\n");
+        writer.write("replicas: \n");
+        writer.write(
+                "# matches \"f.a\"\n"
+                        + "  - lfn: \"f.a\"\n"
+                        + "    pfn: \"file:///Volumes/data/input/f.a\"\n"
+                        + "    site: \"local\"");
+        writer.close();
+
+        File text = new File(dir, ReplicaFactory.DEFAULT_FILE_REPLICA_CATALOG_BASENAME);
+        writer = new BufferedWriter(new FileWriter(text));
+        writer.write("text\n");
+        writer.close();
+        bag.add(PegasusBag.PLANNER_DIRECTORY, dir);
+        try {
+            ReplicaCatalog c = ReplicaFactory.loadInstance(bag);
+            assertThat(c, instanceOf(YAML.class));
+        } finally {
+            dir.delete();
+        }
+        mLogger.logEventCompletion();
+    }
+
     private PegasusBag getPegasusBag(PegasusProperties props) {
         PegasusBag bag = new PegasusBag();
         bag.add(PegasusBag.PEGASUS_PROPERTIES, props);

@@ -207,7 +207,7 @@ public class TransformationFactoryTest {
     }
 
     @Test
-    public void testWithDefaultYAMLAndXMLFiles() throws Exception {
+    public void testWithDefaultYAMLAndTextFiles() throws Exception {
         mLogger.logEventStart(
                 "test.catalog.transformation.factory",
                 "default-yaml-xml-test",

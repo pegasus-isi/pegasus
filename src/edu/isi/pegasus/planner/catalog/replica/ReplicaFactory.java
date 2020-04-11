@@ -50,6 +50,12 @@ public class ReplicaFactory {
     public static final String FILE_CATALOG_IMPLEMENTOR =
             edu.isi.pegasus.planner.catalog.replica.impl.SimpleFile.class.getCanonicalName();
 
+    /** The default basename of the yaml transformation catalog file. */
+    public static final String DEFAULT_YAML_REPLICA_CATALOG_BASENAME = "replicas.yml";
+
+    /** The default basename of the transformation catalog file. */
+    public static final String DEFAULT_FILE_REPLICA_CATALOG_BASENAME = "rc.txt";
+
     /**
      * Connects the interface with the replica catalog implementation. The choice of backend is
      * configured through properties. This class is useful for non-singleton instances that may
@@ -146,7 +152,22 @@ public class ReplicaFactory {
                     catalogImplementor = FILE_CATALOG_IMPLEMENTOR;
                 }
             } else {
-                catalogImplementor = DEFAULT_CATALOG_IMPLEMENTOR;
+                // catalogImplementor = DEFAULT_CATALOG_IMPLEMENTOR;
+                // PM-1486 check for default files
+                File defaultYAML =
+                        new File(dir, ReplicaFactory.DEFAULT_YAML_REPLICA_CATALOG_BASENAME);
+                File defaultText =
+                        new File(dir, ReplicaFactory.DEFAULT_FILE_REPLICA_CATALOG_BASENAME);
+                if (exists(defaultYAML)) {
+                    catalogImplementor = ReplicaFactory.YAML_CATALOG_IMPLEMENTOR;
+                    connectProps.setProperty("file", defaultYAML.getAbsolutePath());
+                } else if (exists(defaultText)) {
+                    catalogImplementor = ReplicaFactory.FILE_CATALOG_IMPLEMENTOR;
+                    connectProps.setProperty("file", defaultText.getAbsolutePath());
+                } else {
+                    // then just set to default implementor and let the implementing class load
+                    catalogImplementor = ReplicaFactory.DEFAULT_CATALOG_IMPLEMENTOR;
+                }
             }
         }
         return loadInstance(catalogImplementor, bag, connectProps);
@@ -179,7 +200,7 @@ public class ReplicaFactory {
                     InstantiationException, IllegalAccessException, InvocationTargetException {
         ReplicaCatalog result = null;
 
-        if (catalogImplementor == null){
+        if (catalogImplementor == null) {
             throw new NullPointerException("Invalid catalog implementor passed");
         }
 
@@ -212,5 +233,15 @@ public class ReplicaFactory {
         throw new UnsupportedOperationException(
                 "Not supported yet."); // To change body of generated methods, choose Tools |
         // Templates.
+    }
+
+    /**
+     * Returns whether a file exists or not
+     *
+     * @param file
+     * @return
+     */
+    private static boolean exists(File file) {
+        return file == null ? false : file.exists() && file.canRead();
     }
 }
