@@ -99,7 +99,6 @@ public class PegasusProperties implements Cloneable {
 
     public static final String DEFAULT_STORAGE_DIR = "";
 
-    public static final String TC_TEXT_FILE = "tc.txt";
 
     public static final String DEFAULT_CONDOR_BIN_DIR = "";
 
@@ -175,9 +174,6 @@ public class PegasusProperties implements Cloneable {
 
     /** The object holding all the properties pertaining to the VDS system. */
     private CommonProperties mProps;
-
-    /** The default path to the transformation catalog. */
-    private String mDefaultTC;
 
     /** The default transfer priority that needs to be applied to the transfer jobs. */
     private String mDefaultTransferPriority;
@@ -270,7 +266,6 @@ public class PegasusProperties implements Cloneable {
         mDeprecatedProperties = new HashSet(5);
         initializePropertyFile(confProperties);
 
-        mDefaultTC = getDefaultPathToTC();
         mDefaultTransferPriority = getDefaultTransferPriority();
     }
 
@@ -367,17 +362,6 @@ public class PegasusProperties implements Cloneable {
      */
     public Namespace getProfiles(Profiles.NAMESPACES ns) {
         return this.retrieveProfilesFromProperties().get(ns);
-    }
-
-    /**
-     * Returns the default path to the transformation catalog.
-     *
-     * @return tc.txt in the current working directory
-     */
-    public String getDefaultPathToTC() {
-        File f = new File(".", PegasusProperties.TC_TEXT_FILE);
-        // System.err.println("Default Path to SC is " + f.getAbsolutePath());
-        return f.getAbsolutePath();
     }
 
     /**
@@ -782,13 +766,11 @@ public class PegasusProperties implements Cloneable {
      *
      * <p>Referred to by "pegasus.catalog.transformation.file" property.
      *
-     * @return the value specified in the properties file, else default path specified by
-     *     mDefaultTC.
-     * @see #mDefaultTC
+     * @return the value specified in the properties file null
      */
     public String getTCPath() {
         return mProps.getProperty(
-                PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY, mDefaultTC);
+                PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY);
     }
 
     /**
