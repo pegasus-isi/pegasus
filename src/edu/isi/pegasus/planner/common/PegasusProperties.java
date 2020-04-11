@@ -99,7 +99,6 @@ public class PegasusProperties implements Cloneable {
 
     public static final String DEFAULT_STORAGE_DIR = "";
 
-
     public static final String DEFAULT_CONDOR_BIN_DIR = "";
 
     public static final String DEFAULT_CONDOR_CONFIG_DIR = "";
@@ -769,8 +768,7 @@ public class PegasusProperties implements Cloneable {
      * @return the value specified in the properties file null
      */
     public String getTCPath() {
-        return mProps.getProperty(
-                PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY);
+        return mProps.getProperty(PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY);
     }
 
     /**
