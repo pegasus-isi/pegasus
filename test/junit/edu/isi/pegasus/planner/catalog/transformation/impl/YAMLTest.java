@@ -23,6 +23,7 @@ import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo.Architecture;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo.OS;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
@@ -61,7 +62,7 @@ public class YAMLTest {
 
     private static int mTestNumber = 1;
 
-    private YAML mCorrectCatalog;
+    private YAML mCatalog;
 
     private static final String PROPERTIES_BASENAME = "properties";
 
@@ -113,8 +114,11 @@ public class YAMLTest {
         mProps.setProperty(
                 PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
                 new File(mTestSetup.getInputDirectory(), CORRECT_FILE).getAbsolutePath());
-        mCorrectCatalog = new YAML();
-        mCorrectCatalog.initialize(mBag);
+        mProps.setProperty(
+                PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_PROPERTY,
+                TransformationFactory.YAML_CATALOG_IMPLEMENTOR);
+        mCatalog = (YAML) TransformationFactory.loadInstance(mBag);
+
         mLogger.logEventCompletion();
     }
 
@@ -124,10 +128,10 @@ public class YAMLTest {
                 "test.catalog.transformation.impl.YAML",
                 "whole-count-test",
                 Integer.toString(mTestNumber++));
-        List<TransformationCatalogEntry> entries = mCorrectCatalog.getContents();
+        List<TransformationCatalogEntry> entries = mCatalog.getContents();
         assertEquals("Expected total number of entries", 4, entries.size());
         List<TransformationCatalogEntry> kegEntries =
-                mCorrectCatalog.lookup("example", "keg", "1.0", (String) null, null);
+                mCatalog.lookup("example", "keg", "1.0", (String) null, null);
         assertEquals("Expected total number of keg entries", 2, kegEntries.size());
         mLogger.logEventCompletion();
     }
@@ -139,7 +143,7 @@ public class YAMLTest {
                 "keg-count-test",
                 Integer.toString(mTestNumber++));
         List<TransformationCatalogEntry> kegEntries =
-                mCorrectCatalog.lookup("example", "keg", "1.0", (String) null, null);
+                mCatalog.lookup("example", "keg", "1.0", (String) null, null);
         assertEquals("Expected total number of keg entries", 2, kegEntries.size());
         mLogger.logEventCompletion();
     }
@@ -151,7 +155,7 @@ public class YAMLTest {
                 "keg-site-test",
                 Integer.toString(mTestNumber++));
         List<TransformationCatalogEntry> kegEntries =
-                mCorrectCatalog.lookup(null, "myxform", null, "condorpool", null);
+                mCatalog.lookup(null, "myxform", null, "condorpool", null);
         TransformationCatalogEntry entry = kegEntries.get(0);
         Container containerInfo = entry.getContainer();
         assertEquals("centos-pegasus", containerInfo.getName());
@@ -174,7 +178,7 @@ public class YAMLTest {
                 "metadata-keyword",
                 Integer.toString(mTestNumber++));
         List<TransformationCatalogEntry> entries =
-                mCorrectCatalog.lookup(null, "myxform", null, "condorpool", null);
+                mCatalog.lookup(null, "myxform", null, "condorpool", null);
         TransformationCatalogEntry entry = entries.get(0);
         SysInfo info = entry.getSysInfo();
         assertEquals("Expected attribute ", "INSTALLED", entry.getType().name());
@@ -244,7 +248,7 @@ public class YAMLTest {
                 "parameter-expansion-contents",
                 Integer.toString(mTestNumber++));
         List<TransformationCatalogEntry> kegEntries =
-                mCorrectCatalog.lookup(
+                mCatalog.lookup(
                         EXPANDED_NAMESPACE, EXPANDED_NAME, EXPECTED_VERSION, EXPANDED_SITE, null);
         TransformationCatalogEntry expanded = kegEntries.get(0);
         SysInfo info = expanded.getSysInfo();

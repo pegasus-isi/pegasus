@@ -22,6 +22,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo.*;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -102,11 +103,13 @@ public class TextTest {
         // mBag.add( PegasusBag.PLANNER_OPTIONS, mTestSetup.loadPlannerOptions() );
 
         // load the transformation catalog backend
-        mCatalog = new Text();
         mProps.setProperty(
                 PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
                 new File(mTestSetup.getInputDirectory(), "tc.text").getAbsolutePath());
-        mCatalog.initialize(mBag);
+        mProps.setProperty(
+                PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_PROPERTY,
+                TransformationFactory.TEXT_CATALOG_IMPLEMENTOR);
+        mCatalog = (Text) TransformationFactory.loadInstance(mBag);
         mLogger.logEventCompletion();
     }
 
