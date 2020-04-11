@@ -167,7 +167,15 @@ public class TransformationFactoryTest {
         File text =
                 new File(dir, TransformationFactory.DEFAULT_TEXT_TRANSFORMATION_CATALOG_BASENAME);
         BufferedWriter writer = new BufferedWriter(new FileWriter(text));
-        writer.write("text\n");
+        writer.write(
+                "tr black::analyze:1.0 {\n"
+                        + "        site isi {\n"
+                        + "                pfn \"/home/pegasus/2.0/bin/keg\"\n"
+                        + "                arch \"x86\"\n"
+                        + "                os \"LINUX\"\n"
+                        + "                type \"INSTALLED\"\n"
+                        + "        }\n"
+                        + "}");
         writer.close();
         bag.add(PegasusBag.PLANNER_DIRECTORY, dir);
         try {
@@ -194,7 +202,18 @@ public class TransformationFactoryTest {
         File yaml =
                 new File(dir, TransformationFactory.DEFAULT_YAML_TRANSFORMATION_CATALOG_BASENAME);
         BufferedWriter writer = new BufferedWriter(new FileWriter(yaml));
-        writer.write("pegasus: 5.0\n");
+        writer.write(
+                "pegasus: \"5.0\"\n"
+                        + "transformations:\n"
+                        + "  - name: foo\n"
+                        + "    requires:\n"
+                        + "      - bar\n"
+                        + "    sites:\n"
+                        + "      - name: local\n"
+                        + "        pfn: /nfs/u2/ryan/bin/foo\n"
+                        + "        type: stageable\n"
+                        + "        arch: x86_64\n"
+                        + "        os.type: linux");
         writer.close();
         bag.add(PegasusBag.PLANNER_DIRECTORY, dir);
         try {
@@ -221,12 +240,31 @@ public class TransformationFactoryTest {
         File yaml =
                 new File(dir, TransformationFactory.DEFAULT_YAML_TRANSFORMATION_CATALOG_BASENAME);
         BufferedWriter writer = new BufferedWriter(new FileWriter(yaml));
-        writer.write("pegasus:5.0\n");
+        writer.write(
+                "pegasus: \"5.0\"\n"
+                        + "transformations:\n"
+                        + "  - name: foo\n"
+                        + "    requires:\n"
+                        + "      - bar\n"
+                        + "    sites:\n"
+                        + "      - name: local\n"
+                        + "        pfn: /nfs/u2/ryan/bin/foo\n"
+                        + "        type: stageable\n"
+                        + "        arch: x86_64\n"
+                        + "        os.type: linux");
         writer.close();
         File xml =
                 new File(dir, TransformationFactory.DEFAULT_TEXT_TRANSFORMATION_CATALOG_BASENAME);
         writer = new BufferedWriter(new FileWriter(xml));
-        writer.write("text\n");
+        writer.write(
+                "tr black::analyze:1.0 {\n"
+                        + "        site isi {\n"
+                        + "                pfn \"/home/pegasus/2.0/bin/keg\"\n"
+                        + "                arch \"x86\"\n"
+                        + "                os \"LINUX\"\n"
+                        + "                type \"INSTALLED\"\n"
+                        + "        }\n"
+                        + "}");
         writer.close();
         bag.add(PegasusBag.PLANNER_DIRECTORY, dir);
         try {
