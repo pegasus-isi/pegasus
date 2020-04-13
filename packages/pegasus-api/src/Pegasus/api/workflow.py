@@ -1080,11 +1080,11 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
                     ("siteCatalog", sc),
                     ("replicaCatalog", rc),
                     ("transformationCatalog", tc),
+                    ("jobs", [job for _id, job in self.jobs.items()]),
                     (
                         "jobDependencies",
                         [dependency for _id, dependency in self.dependencies.items()],
                     ),
-                    ("jobs", [job for _id, job in self.jobs.items()]),
                 ]
             )
         )

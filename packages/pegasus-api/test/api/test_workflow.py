@@ -1057,11 +1057,11 @@ class TestWorkflow:
         - siteCatalog,
         - replicaCatalog,
         - transformationCatalog,
-        - jobDependencies,
         - jobs
+        - jobDependencies
         """
         p = re.compile(
-            r"pegasus: '5.0'[\w\W]+name:[\w\W]+hooks:[\w\W]+profiles:[\w\W]+metadata:[\w\W]+siteCatalog:[\w\W]+replicaCatalog:[\w\W]+transformationCatalog:[\w\W]+jobDependencies:[\w\W]+jobs:[\w\W]+"
+            r"pegasus: '5.0'[\w\W]+name:[\w\W]+hooks:[\w\W]+profiles:[\w\W]+metadata:[\w\W]+siteCatalog:[\w\W]+replicaCatalog:[\w\W]+transformationCatalog:[\w\W]+jobs:[\w\W]+jobDependencies:[\w\W]+"
         )
         assert p.match(result) is not None
 
