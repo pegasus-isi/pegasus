@@ -151,6 +151,18 @@ public class FileDetectorTest {
         assertFalse(FileDetector.isTypeYAML(mTestFile));
     }
 
+    @Test
+    public void checkForYAMLAgainstEmptyFile() {
+        BufferedWriter writer;
+        try {
+            mTestFile = File.createTempFile("pegasus", ".txt");
+            writer = new BufferedWriter(new FileWriter(mTestFile));
+            writer.close();
+        } catch (IOException ex) {
+        }
+        assertFalse(FileDetector.isTypeYAML(mTestFile));
+    }
+
     @After
     public void tearDown() {
         mTestFile.delete();

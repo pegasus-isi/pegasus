@@ -167,7 +167,7 @@ public class FileDetector {
                 throw new RuntimeException("Unable to read from file " + file);
             }
             // match against regex
-            isYAML = mYAMLPattern.matcher(line).matches();
+            isYAML = line == null ? false : mYAMLPattern.matcher(line).matches();
         }
 
         return isYAML;
