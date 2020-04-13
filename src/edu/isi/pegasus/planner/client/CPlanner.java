@@ -1859,6 +1859,11 @@ public class CPlanner extends Executable {
             if (daxStore == null || daxStore.isEmpty()) {
                 throw e;
             }
+            // log the error nevertheless
+            mLogger.log(
+                    "Ignoring error encountered while loading Transformation Catalog ",
+                    e,
+                    LogManager.DEBUG_MESSAGE_LEVEL);
         }
         return store;
     }
