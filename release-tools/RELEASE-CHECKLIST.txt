@@ -1,9 +1,9 @@
 
 
 NOTE: Do not copy and paste the commands below without double checking.
-      The commands contain version numbers which are probably not 
+      The commands contain version numbers which are probably not
       correct for what you are trying to do!
-      
+
 
 1.  Clone and move to the specific branch. For example:
 
@@ -36,7 +36,7 @@ NOTE: Do not copy and paste the commands below without double checking.
 
 7.  Build with Bamboo
 
-8.  Build APT repo. First copy the debs into their final place in 
+8.  Build APT repo. First copy the debs into their final place in
     the apt trees (Debian and Ubuntu). Then run
     update-pegasus-apt-repo on a Debian machine. Do this on
     download.pegasus.isi.edu (/opt/release-tools)
@@ -44,20 +44,40 @@ NOTE: Do not copy and paste the commands below without double checking.
 9.  Build Yum repo. Similar to Apt repo, but the step has to be
     done on a RHEL machine. Do this on workflow.
 
-10. Update Homebrew formula in repo https://github.com/pegasus-isi/homebrew-tools.git. 
+10. Publish Python packages to PypI
 
-11. Build deplot Docker tutorial. 
+```bash
+# Install Twine (Once)
+pip install twine
+
+# Create .pypirc (Once)
+$ cat ~/.pypirc
+[distutils]
+  index-servers=
+    pypi
+    test-pypi
+
+[pypi]
+  username: <pypi-username>
+  password: <pypi-password>
+
+# WARNING: PyPi only allows uploading of files for a version once.
+$ twine upload <python-package>
+```
+
+11. Update Homebrew formula in repo https://github.com/pegasus-isi/homebrew-tools.git.
+
+12. Build deplot Docker tutorial.
 
 ```bash
 ssh admin@pegasus-tutorial.isi.edu "cd /lfs1/pegasus-docker-tutorial ; ./build.sh"
 ```
 
-12. Create and deploy the tutorial VMs.
+13. Create and deploy the tutorial VMs.
 
-13. Change the symbolic link for the latest documentation to point 
+14. Change the symbolic link for the latest documentation to point
     to latest stable release
     https://pegasus.isi.edu/documentation/
 
-14. Send annouce email to pegasus-announce@mailman.isi.edu
+15. Send annouce email to pegasus-announce@mailman.isi.edu
     (Karan has to do this step)
-
