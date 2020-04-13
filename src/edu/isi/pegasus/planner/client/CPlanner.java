@@ -20,6 +20,7 @@ import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.SiteFactory;
 import edu.isi.pegasus.planner.catalog.site.SiteFactoryException;
@@ -27,6 +28,8 @@ import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationFactoryException;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.NameValue;
@@ -417,7 +420,9 @@ public class CPlanner extends Executable {
         mLogger.log("Execution sites are " + eSites, LogManager.DEBUG_MESSAGE_LEVEL);
 
         mBag.add(PegasusBag.SITE_STORE, s);
-        mBag.add(PegasusBag.TRANSFORMATION_CATALOG, TransformationFactory.loadInstance(mBag));
+        mBag.add(
+                PegasusBag.TRANSFORMATION_CATALOG,
+                loadTransformationCatalog(mBag, orgDag.getTransformationStore()));
 
         // populate planner metrics
         mPMetrics.setVOGroup(mPOptions.getVOGroup());
@@ -1829,6 +1834,28 @@ public class CPlanner extends Executable {
     private void checkMasterDatabaseForVersionCompatibility() {
         PegasusDBAdmin dbCheck = new PegasusDBAdmin(mBag.getLogger());
         dbCheck.checkMasterDatabaseForVersionCompatibility(mProps.getPropertiesInSubmitDirectory());
+    }
+
+    /**
+     * Loads the transformation catalog. Throws an exception encountered while loading only if the
+     * daxStore is null or empty
+     *
+     * @param bag
+     * @param daxStore
+     * @return
+     */
+    private TransformationCatalog loadTransformationCatalog(
+            PegasusBag bag, TransformationStore daxStore) {
+
+        TransformationCatalog store = null;
+        try {
+            store = TransformationFactory.loadInstance(bag);
+        } catch (TransformationFactoryException e) {
+            if (daxStore == null || daxStore.isEmpty()) {
+                throw e;
+            }
+        }
+        return store;
     }
 }
 /**

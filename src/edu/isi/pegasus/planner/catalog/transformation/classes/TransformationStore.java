@@ -379,6 +379,15 @@ public class TransformationStore {
     public Container getContainer(String name) {
         return this.mContainers.get(name);
     }
+
+    /**
+     * Returns if the store is empty or not
+     *
+     * @return
+     */
+    public boolean isEmpty() {
+        return mTCStore.isEmpty();
+    }
 }
 
 /**
