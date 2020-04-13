@@ -141,6 +141,7 @@ public class DAXParser5 implements DAXParser {
                             WorkflowKeywords.WORKFLOW.getReservedName(), key, node);
                 }
                 Map attrs = new HashMap();
+                attrs.put("index", "0");
                 switch (reservedKey) {
                     case PEGASUS:
                         attrs.put("version", node.get(key).asText());
