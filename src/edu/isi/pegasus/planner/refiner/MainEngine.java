@@ -316,12 +316,14 @@ public class MainEngine extends Engine {
             ReplicaCatalogBridge replicaBridge,
             File directory) {
         Set<File> sources = new LinkedHashSet();
-        sources.addAll(replicaBridge.getReplicaFileSources());
-        File tc = transformationCatalog.getFileSource();
+        if (replicaBridge != null) {
+            sources.addAll(replicaBridge.getReplicaFileSources());
+        }
+        File tc = transformationCatalog == null ? null : transformationCatalog.getFileSource();
         if (tc != null) {
             sources.add(tc);
         }
-        File sc = siteStore.getFileSource();
+        File sc = siteStore == null ? null : siteStore.getFileSource();
         if (sc != null) {
             sources.add(sc);
         }
