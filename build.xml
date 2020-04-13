@@ -721,9 +721,35 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
   </target>
 
   <target name="dist-python-source" description="Build source tarball for Pegasus Python Modules">
-    <exec executable="release-tools/create-python-source-tar" failonerror="true">
-      <arg line="${pegasus.version}"/>
+    <replace file="packages/pegasus-common/setup.py" token="version=read_version()" value="version=&quot;${pegasus.version}&quot;" />
+    <exec executable="${dist.python}" dir="packages/pegasus-common" failonerror="true">
+      <arg line="setup.py sdist --dist-dir ../../dist"/>
     </exec>
+    <replace file="packages/pegasus-common/setup.py" value="version=read_version()" token="version=&quot;${pegasus.version}&quot;"/>
+
+    <replace file="packages/pegasus-api/setup.py" token="version=read_version()" value="version=&quot;${pegasus.version}&quot;"/>
+    <exec executable="${dist.python}" dir="packages/pegasus-api" failonerror="true">
+      <arg line="setup.py sdist --dist-dir ../../dist"/>
+    </exec>
+    <replace file="packages/pegasus-api/setup.py" value="version=read_version()" token="version=&quot;${pegasus.version}&quot;"/>
+
+    <replace file="packages/pegasus-dax-python/setup.py" token="version=read_version()" value="version=&quot;${pegasus.version}&quot;"/>
+    <exec executable="${dist.python}" dir="packages/pegasus-dax-python" failonerror="true">
+      <arg line="setup.py sdist --dist-dir ../../dist"/>
+    </exec>
+    <replace file="packages/pegasus-dax-python/setup.py" value="version=read_version()" token="version=&quot;${pegasus.version}&quot;"/>
+
+    <replace file="packages/pegasus-python/setup.py" token="version=read_version()" value="version=&quot;${pegasus.version}&quot;"/>
+    <exec executable="${dist.python}" dir="packages/pegasus-python" failonerror="true">
+      <arg line="setup.py sdist --dist-dir ../../dist"/>
+    </exec>
+    <replace file="packages/pegasus-python/setup.py" value="version=read_version()" token="version=&quot;${pegasus.version}&quot;"/>
+
+    <replace file="packages/pegasus-worker/setup.py" token="version=read_version()" value="version=&quot;${pegasus.version}&quot;"/>
+    <exec executable="${dist.python}" dir="packages/pegasus-worker" failonerror="true">
+      <arg line="setup.py sdist --dist-dir ../../dist"/>
+    </exec>
+    <replace file="packages/pegasus-worker/setup.py" value="version=read_version()" token="version=&quot;${pegasus.version}&quot;"/>
   </target>
 
   <target name="dist-rpm" depends="dist-source,setup" description="Build RPM package">

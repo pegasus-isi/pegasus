@@ -48,11 +48,11 @@ project:
                       (cd pegasus-source/dist && tar xzf ../../pegasus-$VERSION.tar.gz && mv pegasus-$VERSION pegasus-source && tar -czf ../../pegasus-source.tar.gz pegasus-source && rm -rf pegasus-source)
 
                       # Create the source tarball for python source files using setup.py
-                      (cd pegasus-source && ant dist-python-source && mv dist/pegasus-python-source-$VERSION.tar.gz ..)
+                      (cd pegasus-source && ant dist-python-source && mv dist/pegasus-wms*-$VERSION.tar.gz ..)
 
               artifactDefinitions:
                 - name: pegasus-python-source-versioned
-                  copyPattern: "pegasus-python-source-*.tar.gz"
+                  copyPattern: "pegasus-wms*-*.tar.gz"
                   isShared: true
                 - name: pegasus-source-versioned
                   copyPattern: "pegasus-?.*.tar.gz"
