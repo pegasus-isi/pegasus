@@ -103,6 +103,9 @@ public class CPlanner extends Executable {
     /** The name of the property key that determines whether pegasus-run should monitord or not. */
     public static final String PEGASUS_MONITORD_LAUNCH_PROPERTY_KEY = "pegasus.monitord";
 
+    /** default dax file to parse if user does not specify one * */
+    public static final String DEFAULT_WORKFLOW_DAX_FILE = "workflow.yml";
+
     /**
      * The regex used to match against a java property that is set using -Dpropertyname=value in the
      * argument string
@@ -359,10 +362,11 @@ public class CPlanner extends Executable {
         String dax = mPOptions.getDAX();
         String pdax = mPOptions.getPDAX();
         String baseDir = mPOptions.getBaseSubmitDirectory();
-
+        dax = (dax == null) ? CPlanner.DEFAULT_WORKFLOW_DAX_FILE : dax;
         if (dax == null) {
             mLogger.log(
-                    "\nNeed to specify  a dax file ( using --dax ) to plan a workflow",
+                    "\nNeed to specify  a dax file ( using --dax ) to plan a workflow or have file named in the current working directory"
+                            + CPlanner.DEFAULT_WORKFLOW_DAX_FILE,
                     LogManager.CONSOLE_MESSAGE_LEVEL);
             this.printShortVersion();
             return result;
@@ -1104,7 +1108,7 @@ public class CPlanner extends Executable {
                 .append("\n " + getGVDSVersion())
                 .append("\n pegasus-plan - The main class which is used to run  Pegasus. ")
                 .append(
-                        "\n Usage: pegasus-plan [-Dprop  [..]] --dax|--pdax <file> [--sites <execution sites>] ")
+                        "\n Usage: pegasus-plan [-Dprop  [..]] --dax <file> [--sites <execution sites>] ")
                 .append(
                         "\n [--staging-site s1=ss1[,s2=ss2[..]] [--basename prefix] [--cache f1[,f2[..]] [--cluster t1[,t2[..]] [--conf <path to property file>]")
                 .append(
@@ -1114,9 +1118,10 @@ public class CPlanner extends Executable {
                 .append(
                         "\n [--input-dir dir1[,dir2[..]]] [--output-dir <output dir>] [--output output site] [--randomdir=[dir name]]   [--verbose] [--version][--help] ")
                 .append("\n")
-                .append("\n Mandatory Options ")
+                .append("\n Options ")
                 .append("\n -d  fn ")
-                .append("\n --dax       the path to the dax file containing the abstract workflow ")
+                .append(
+                        "\n --dax       the path to the dax file containing the abstract workflow, else will look for a file workflow.yml in the curent directory ")
                 .append("\n Other Options  ")
                 .append(
                         "\n -b |--basename     the basename prefix while constructing the per workflow files like .dag etc.")
