@@ -1860,10 +1860,40 @@ public class CPlanner extends Executable {
                 throw e;
             }
             // log the error nevertheless
-            mLogger.log(
-                    "Ignoring error encountered while loading Transformation Catalog ",
-                    e,
-                    LogManager.DEBUG_MESSAGE_LEVEL);
+            bag.getLogger()
+                    .log(
+                            "Ignoring error encountered while loading Transformation Catalog ",
+                            e,
+                            LogManager.DEBUG_MESSAGE_LEVEL);
+        }
+        // create a temp file as a TC backend for planning purposes
+        if (store == null) {
+            File f = null;
+            try {
+                f =
+                        File.createTempFile(
+                                "tc.",
+                                ".txt",
+                                new File(bag.getPlannerOptions().getSubmitDirectory()));
+                bag.getLogger()
+                        .log(
+                                "Created a temporary transformation catalog backend " + f,
+                                LogManager.DEBUG_MESSAGE_LEVEL);
+            } catch (IOException ex) {
+                throw new RuntimeException(
+                        "Unable to create a temporary transformation catalog backend " + f, ex);
+            }
+            PegasusBag b = new PegasusBag();
+            b.add(PegasusBag.PEGASUS_LOGMANAGER, bag.getLogger());
+            PegasusProperties props = PegasusProperties.nonSingletonInstance();
+            props.setProperty(
+                    PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_PROPERTY,
+                    TransformationFactory.TEXT_CATALOG_IMPLEMENTOR);
+            props.setProperty(
+                    PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
+                    f.getAbsolutePath());
+            b.add(PegasusBag.PEGASUS_PROPERTIES, props);
+            return loadTransformationCatalog(b, daxStore);
         }
         return store;
     }
