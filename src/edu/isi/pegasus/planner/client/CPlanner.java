@@ -1870,11 +1870,7 @@ public class CPlanner extends Executable {
         if (store == null) {
             File f = null;
             try {
-                f =
-                        File.createTempFile(
-                                "tc.",
-                                ".txt",
-                                new File(bag.getPlannerOptions().getSubmitDirectory()));
+                f = File.createTempFile("tc.", ".txt");
                 bag.getLogger()
                         .log(
                                 "Created a temporary transformation catalog backend " + f,
