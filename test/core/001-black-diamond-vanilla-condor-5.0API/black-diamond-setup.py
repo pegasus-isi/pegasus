@@ -32,7 +32,7 @@ conf["pegasus.data.configuration"] = "condorio"
 conf.write()
 
 # --- Sites --------------------------------------------------------------------
-LOCAL = "locäl"
+LOCAL = "local"
 CONDOR_POOL = "⿔condor-pool⼤"
 
 shared_scratch_dir = str(WORK_DIR / RUN_ID)
@@ -53,6 +53,7 @@ SiteCatalog().add_sites(
     ),
     Site(CONDOR_POOL, arch=Arch.X86_64, os_type=OS.LINUX)
     .add_pegasus_profile(style="condor")
+    .add_pegasus_profile(auxillary_local="true")
     .add_condor_profile(universe="vanilla"),
 ).write()
 
