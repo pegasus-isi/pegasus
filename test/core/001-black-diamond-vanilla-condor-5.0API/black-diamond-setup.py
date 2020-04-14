@@ -16,21 +16,20 @@ except FileExistsError:
     pass
 
 # --- Configuration ------------------------------------------------------------
-CONF_FILENAME = "pegasus.conf"
 
-print("Generating pegasus.conf at: {}".format(TOP_DIR / CONF_FILENAME))
+print("Generating pegasus.conf at: {}".format(TOP_DIR / "pegasus.properties"))
 
 conf = Properties()
+
 conf["pegasus.catalog.site"] = "YAML"
-conf["pegasus.catalog.site.file"] = "SiteCatalog.yml"
+conf["pegasus.catalog.site.file"] = "sites.yml"
 conf["pegasus.catalog.transformation"] = "YAML"
-conf["pegasus.catalog.transformation.file"] = "TransformationCatalog.yml"
+conf["pegasus.catalog.transformation.file"] = "transformations.yml"
 conf["pegasus.catalog.replica"] = "YAML"
-conf["pegasus.catalog.replica.file"] = "ReplicaCatalog.yml"
+conf["pegasus.catalog.replica.file"] = "replicas.yml"
 conf["pegasus.data.configuration"] = "condorio"
 
-with open(CONF_FILENAME, "w") as f:
-    conf.write(f)
+conf.write()
 
 # --- Sites --------------------------------------------------------------------
 LOCAL = "locäl"
@@ -38,9 +37,8 @@ CONDOR_POOL = "⿔condor-pool⼤"
 
 shared_scratch_dir = str(WORK_DIR / RUN_ID)
 local_storage_dir = str(WORK_DIR / "outputs" / RUN_ID)
-SC_FILENAME = "SiteCatalog.yml"
 
-print("Generating site catalog at: {}".format(TOP_DIR / SC_FILENAME))
+print("Generating site catalog at: {}".format(TOP_DIR / "sites.yml"))
 
 SiteCatalog().add_sites(
     Site(
@@ -56,26 +54,22 @@ SiteCatalog().add_sites(
     Site(CONDOR_POOL, arch=Arch.X86_64, os_type=OS.LINUX)
     .add_pegasus_profile(style="condor")
     .add_condor_profile(universe="vanilla"),
-).write(SC_FILENAME)
+).write()
 
 # --- Replicas -----------------------------------------------------------------
-RC_FILENAME = "ReplicaCatalog.yml"
 
-print("Generating replica catalog at: {}".format(TOP_DIR / RC_FILENAME))
+print("Generating replica catalog at: {}".format(TOP_DIR / "replicas.yml"))
 
 # create initial input file
 with open("f.å", "w") as f:
     f.write("This is sample input to KEG\n")
 
 fa = File("f.å").add_metadata({"㐦": "㒦"})
-ReplicaCatalog().add_replica(fa, "file://" + str(TOP_DIR / fa.lfn), LOCAL).write(
-    RC_FILENAME
-)
+ReplicaCatalog().add_replica(LOCAL, fa, "file://" + str(TOP_DIR / fa.lfn)).write()
 
 # --- Transformations ----------------------------------------------------------
-TC_FILENAME = "TransformationCatalog.yml"
 
-print("Generating transformation catalog at: {}".format(TOP_DIR / TC_FILENAME))
+print("Generating transformation catalog at: {}".format(TOP_DIR / "transformations.yml"))
 
 preprocess = Transformation("pЯёprocess", namespace="pέgasuζ", version="4.0").add_sites(
     TransformationSite(
@@ -107,9 +101,7 @@ analyze = Transformation("analyze", namespace="pέgasuζ", version="4.0").add_si
     )
 )
 
-TransformationCatalog().add_transformations(preprocess, findrage, analyze).write(
-    TC_FILENAME
-)
+TransformationCatalog().add_transformations(preprocess, findrage, analyze).write()
 
 # --- Workflow -----------------------------------------------------------------
 print("Generating workflow")
@@ -139,8 +131,8 @@ Workflow("blÅckƊiamond㒀㑖", infer_dependencies=True).add_jobs(
     .add_outputs(fd),
 ).plan(
     dir=str(WORK_DIR),
+    verbose=3,
     relative_dir=RUN_ID,
-    conf=CONF_FILENAME,
     sites=CONDOR_POOL,
     output_site=LOCAL,
     force=True,
