@@ -190,15 +190,17 @@ public class ContainerTest {
         c.addProfile(new Profile(Profiles.NAMESPACES.env.toString(), "JAVA_HOME", "/opt/java/1.6"));
 
         String expected =
-                "name: centos-pegasus\n"
-                        + "type: docker\n"
-                        + "image: docker:///rynge/montage:latest\n"
-                        + "mounts: \n"
-                        + "  - /Volumes/Work/lfs1:/shared-data/:ro\n"
-                        + "  - /Volumes/Work/lfs12:/shared-data1/:ro\n"
+                "---\n"
+                        + "name: \"centos-pegasus\"\n"
+                        + "type: \"docker\"\n"
+                        + "image: \"docker:///rynge/montage:latest\"\n"
+                        + "image.site: \"dockerhub\"\n"
+                        + "mounts:\n"
+                        + " - \"/Volumes/Work/lfs1:/shared-data/:ro\"\n"
+                        + " - \"/Volumes/Work/lfs12:/shared-data1/:ro\"\n"
                         + "profiles:\n"
                         + "  env:\n"
-                        + "    JAVA_HOME: /opt/java/1.6";
+                        + "    JAVA_HOME: \"/opt/java/1.6\"\n";
 
         String actual = mapper.writeValueAsString(c);
         assertEquals(expected, actual);
