@@ -13,16 +13,21 @@
  */
 package edu.isi.pegasus.planner.catalog.transformation.classes;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -38,6 +43,7 @@ import java.util.TreeMap;
  * @version $Revision$
  */
 @JsonDeserialize(using = TransformationStore.JsonDeserializer.class)
+@JsonSerialize(using = TransformationStore.JsonSerializer.class)
 public class TransformationStore {
 
     /**
@@ -381,6 +387,15 @@ public class TransformationStore {
     }
 
     /**
+     * Returns all the containers in the Transformation Store
+     *
+     * @return all entries.
+     */
+    public Collection<Container> getAllContainers() {
+        return this.mContainers.values();
+    }
+
+    /**
      * Returns if the store is empty or not
      *
      * @return
@@ -517,6 +532,51 @@ public class TransformationStore {
             }
             store.resolveContainerReferences();
             return store;
+        }
+    }
+
+    /**
+     * Custom serializer for YAML representation of TransformationStore
+     *
+     * @author Karan Vahi
+     */
+    class JsonSerializer extends PegasusJsonSerializer<TransformationStore> {
+
+        public JsonSerializer() {}
+
+        /**
+         * Serializes contents into YAML representation
+         *
+         * @param store
+         * @param gen
+         * @param sp
+         * @throws IOException
+         */
+        public void serialize(TransformationStore store, JsonGenerator gen, SerializerProvider sp)
+                throws IOException {
+            if (store.isEmpty()) {
+                return;
+            }
+            gen.writeStartObject();
+            writeStringField(
+                    gen,
+                    TransformationCatalogKeywords.PEGASUS.getReservedName(),
+                    store.getVersion());
+
+            gen.writeArrayFieldStart(
+                    TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName());
+            for (TransformationCatalogEntry entry : store.getAllEntries()) {
+                gen.writeObject(entry);
+            }
+            gen.writeEndArray();
+
+            gen.writeArrayFieldStart(TransformationCatalogKeywords.CONTAINERS.getReservedName());
+            for (Container c : store.getAllContainers()) {
+                gen.writeObject(c);
+            }
+            gen.writeEndArray();
+
+            gen.writeEndObject();
         }
     }
 }
