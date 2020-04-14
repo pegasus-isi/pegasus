@@ -705,7 +705,11 @@ public class Container implements Cloneable {
      *
      * @author Karan Vahi
      */
-    class JsonDeserializer extends CatalogEntryJsonDeserializer<Container> {
+    static class JsonDeserializer extends CatalogEntryJsonDeserializer<Container> {
+        
+        public JsonDeserializer(){
+            
+        }
 
         /**
          * Deserializes a Transformation YAML description of the type
