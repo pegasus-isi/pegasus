@@ -13,16 +13,21 @@
  */
 package edu.isi.pegasus.planner.catalog.transformation.classes;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogKeywords;
 import edu.isi.pegasus.planner.classes.Profile;
+import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.ScannerException;
 import java.io.File;
@@ -43,6 +48,7 @@ import java.util.regex.Pattern;
  * @author Karan Vahi
  */
 @JsonDeserialize(using = Container.JsonDeserializer.class)
+@JsonSerialize(using = Container.JsonSerializer.class)
 public class Container implements Cloneable {
 
     /** The types of container supported. */
@@ -819,6 +825,59 @@ public class Container implements Cloneable {
                 throw new ScannerException("containers.mount: value should be of type array ");
             }
             return mps;
+        }
+    }
+
+    /**
+     * Custom serializer for YAML representation of Container
+     *
+     * @author Karan Vahi
+     */
+    static class JsonSerializer extends PegasusJsonSerializer<Container> {
+
+        public JsonSerializer() {}
+
+        /**
+         * Serializes contents into YAML representation
+         *
+         * @param container
+         * @param gen
+         * @param sp
+         * @throws IOException
+         */
+        public void serialize(Container container, JsonGenerator gen, SerializerProvider sp)
+                throws IOException {
+            gen.writeStartObject();
+            writeStringField(
+                    gen, TransformationCatalogKeywords.NAME.getReservedName(), container.getName());
+            writeStringField(
+                    gen,
+                    TransformationCatalogKeywords.TYPE.getReservedName(),
+                    container.getType().toString());
+            writeStringField(
+                    gen,
+                    TransformationCatalogKeywords.CONTAINER_IMAGE.getReservedName(),
+                    container.getImageURL().toString());
+            writeStringField(
+                    gen,
+                    TransformationCatalogKeywords.CONTAINER_IMAGE_SITE.getReservedName(),
+                    container.getImageSite().toString());
+
+            if (!container.getMountPoints().isEmpty()) {
+                gen.writeArrayFieldStart(
+                        TransformationCatalogKeywords.CONTAINER_MOUNT.getReservedName());
+                for (MountPoint mp : container.getMountPoints()) {
+                    gen.writeObject(mp.toString());
+                }
+                gen.writeEndArray();
+            }
+
+            if (!container.getProfiles().isEmpty()) {
+                gen.writeFieldName(SiteCatalogKeywords.PROFILES.getReservedName());
+                gen.writeObject(container.getProfiles());
+            }
+
+            gen.writeEndObject();
         }
     }
 }
