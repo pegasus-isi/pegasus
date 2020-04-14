@@ -309,6 +309,15 @@ public class Container implements Cloneable {
             }
         }
     }
+    
+    /**
+     * Returns the list of all profiles associated with the container.
+     *
+     * @return List Returns null if no profiles associated.
+     */
+    public Profiles getAllProfiles() {
+        return this.mProfiles;
+    }
 
     /**
      * Returns the list of profiles associated with the transformation.
@@ -874,9 +883,9 @@ public class Container implements Cloneable {
                 gen.writeEndArray();
             }
 
-            if (!container.getProfiles().isEmpty()) {
+            if (container.getAllProfiles() != null) {
                 gen.writeFieldName(SiteCatalogKeywords.PROFILES.getReservedName());
-                gen.writeObject(container.getProfiles());
+                gen.writeObject(container.getAllProfiles());
             }
 
             gen.writeEndObject();

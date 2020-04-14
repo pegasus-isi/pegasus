@@ -11,7 +11,9 @@ import static org.junit.Assert.*;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import edu.isi.pegasus.common.util.PegasusURL;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container.MountPoint;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
@@ -170,5 +172,35 @@ public class ContainerTest {
 
         List<Profile> profiles = c.getProfiles("env");
         assertThat(profiles, hasItem(new Profile("env", "JAVA_HOME", "/opt/java/1.6")));
+    }
+
+    @Test
+    public void testContainerSerialization() throws IOException {
+        ObjectMapper mapper =
+                new ObjectMapper(
+                        new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+        Container c = new Container();
+        c.setName("centos-pegasus");
+        c.setImageSite("dockerhub");
+        c.setImageURL("docker:///rynge/montage:latest");
+        c.setType(Container.TYPE.docker);
+        c.addMountPoint("/Volumes/Work/lfs1:/shared-data/:ro");
+        c.addMountPoint("/Volumes/Work/lfs12:/shared-data1/:ro");
+        c.addProfile(new Profile(Profiles.NAMESPACES.env.toString(), "JAVA_HOME", "/opt/java/1.6"));
+
+        String expected =
+                "name: centos-pegasus\n"
+                        + "type: docker\n"
+                        + "image: docker:///rynge/montage:latest\n"
+                        + "mounts: \n"
+                        + "  - /Volumes/Work/lfs1:/shared-data/:ro\n"
+                        + "  - /Volumes/Work/lfs12:/shared-data1/:ro\n"
+                        + "profiles:\n"
+                        + "  env:\n"
+                        + "    JAVA_HOME: /opt/java/1.6";
+
+        String actual = mapper.writeValueAsString(c);
+        assertEquals(expected, actual);
     }
 }
