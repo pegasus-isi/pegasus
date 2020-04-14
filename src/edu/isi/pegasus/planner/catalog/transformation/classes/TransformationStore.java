@@ -37,7 +37,7 @@ import java.util.TreeMap;
  * @author Karan Vahi
  * @version $Revision$
  */
-@JsonDeserialize(using = TransformationStoreDeserializer.class)
+@JsonDeserialize(using = TransformationStore.JsonDeserializer.class)
 public class TransformationStore {
 
     /**
@@ -388,133 +388,135 @@ public class TransformationStore {
     public boolean isEmpty() {
         return mTCStore.isEmpty();
     }
-}
-
-/**
- * Custom deserializer for YAML representation of TransformationCatalog
- *
- * @author Karan Vahi
- */
-class TransformationStoreDeserializer extends CatalogEntryJsonDeserializer<TransformationStore> {
 
     /**
-     * Deserializes a Transformation Catalog YAML description of the type
+     * Custom deserializer for YAML representation of TransformationCatalog
      *
-     * <pre>
-     * pegasus: "5.0"
-     * transformations:
-     *    - namespace: "example"
-     *      name: "keg"
-     *      version: "1.0"
-     *      profiles:
-     *          env:
-     *              APP_HOME: "/tmp/myscratch"
-     *              JAVA_HOME: "/opt/java/1.6"
-     *          pegasus:
-     *              clusters.num: "1"
-     *
-     *      requires:
-     *          - anotherTr
-     *
-     *      sites:
-     *       - name: "isi"
-     *          type: "installed"
-     *          pfn: "/path/to/keg"
-     *          arch: "x86_64"
-     *          os.type: "linux"
-     *          os.release: "fc"
-     *          os.version: "1.0"
-     *          profiles:
-     *            env:
-     *                Hello: World
-     *                JAVA_HOME: /bin/java.1.6
-     *            condor:
-     *                FOO: bar
-     *          container: centos-pegasus
-     *
-     *    - namespace: example
-     *      name: anotherTr
-     *      version: "1.2.3"
-     *
-     *      sites:
-     *          - name: isi
-     *            type: installed
-     *            pfn: /path/to/anotherTr
-     *
-     * containers:
-     *    - name: centos-pegasus
-     *      type: docker
-     *      image: docker:///rynge/montage:latest
-     *      mount: /Volumes/Work/lfs1:/shared-data/:ro
-     *      mount: /Volumes/Work/lfs12:/shared-data1/:ro
-     *      profiles:
-     *          env:
-     *              JAVA_HOME: /opt/java/1.6
-     * </pre>
-     *
-     * @param parser
-     * @param dc
-     * @return
-     * @throws IOException
-     * @throws JsonProcessingException
+     * @author Karan Vahi
      */
-    @Override
-    public TransformationStore deserialize(JsonParser parser, DeserializationContext dc)
-            throws IOException, JsonProcessingException {
-        ObjectCodec oc = parser.getCodec();
-        JsonNode node = oc.readTree(parser);
-        TransformationStore store = new TransformationStore();
+    static class JsonDeserializer extends CatalogEntryJsonDeserializer<TransformationStore> {
 
-        for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
-            Map.Entry<String, JsonNode> e = it.next();
-            String key = e.getKey();
-            TransformationCatalogKeywords reservedKey =
-                    TransformationCatalogKeywords.getReservedKey(key);
-            if (reservedKey == null) {
-                this.complainForIllegalKey(
-                        TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName(), key, node);
-            }
+        /**
+         * Deserializes a Transformation Catalog YAML description of the type
+         *
+         * <pre>
+         * pegasus: "5.0"
+         * transformations:
+         *    - namespace: "example"
+         *      name: "keg"
+         *      version: "1.0"
+         *      profiles:
+         *          env:
+         *              APP_HOME: "/tmp/myscratch"
+         *              JAVA_HOME: "/opt/java/1.6"
+         *          pegasus:
+         *              clusters.num: "1"
+         *
+         *      requires:
+         *          - anotherTr
+         *
+         *      sites:
+         *       - name: "isi"
+         *          type: "installed"
+         *          pfn: "/path/to/keg"
+         *          arch: "x86_64"
+         *          os.type: "linux"
+         *          os.release: "fc"
+         *          os.version: "1.0"
+         *          profiles:
+         *            env:
+         *                Hello: World
+         *                JAVA_HOME: /bin/java.1.6
+         *            condor:
+         *                FOO: bar
+         *          container: centos-pegasus
+         *
+         *    - namespace: example
+         *      name: anotherTr
+         *      version: "1.2.3"
+         *
+         *      sites:
+         *          - name: isi
+         *            type: installed
+         *            pfn: /path/to/anotherTr
+         *
+         * containers:
+         *    - name: centos-pegasus
+         *      type: docker
+         *      image: docker:///rynge/montage:latest
+         *      mount: /Volumes/Work/lfs1:/shared-data/:ro
+         *      mount: /Volumes/Work/lfs12:/shared-data1/:ro
+         *      profiles:
+         *          env:
+         *              JAVA_HOME: /opt/java/1.6
+         * </pre>
+         *
+         * @param parser
+         * @param dc
+         * @return
+         * @throws IOException
+         * @throws JsonProcessingException
+         */
+        @Override
+        public TransformationStore deserialize(JsonParser parser, DeserializationContext dc)
+                throws IOException, JsonProcessingException {
+            ObjectCodec oc = parser.getCodec();
+            JsonNode node = oc.readTree(parser);
+            TransformationStore store = new TransformationStore();
 
-            switch (reservedKey) {
-                case PEGASUS:
-                    store.setVersion(e.getValue().asText());
-                    break;
+            for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
+                Map.Entry<String, JsonNode> e = it.next();
+                String key = e.getKey();
+                TransformationCatalogKeywords reservedKey =
+                        TransformationCatalogKeywords.getReservedKey(key);
+                if (reservedKey == null) {
+                    this.complainForIllegalKey(
+                            TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName(),
+                            key,
+                            node);
+                }
 
-                case TRANSFORMATIONS:
-                    JsonNode transformationNodes = node.get(key);
-                    if (transformationNodes != null) {
-                        if (transformationNodes.isArray()) {
-                            for (JsonNode transformationNode : transformationNodes) {
-                                parser = transformationNode.traverse(oc);
-                                Transformation tx = parser.readValueAs(Transformation.class);
-                                for (TransformationCatalogEntry entry :
-                                        tx.getTransformationCatalogEntries()) {
-                                    store.addEntry(entry);
+                switch (reservedKey) {
+                    case PEGASUS:
+                        store.setVersion(e.getValue().asText());
+                        break;
+
+                    case TRANSFORMATIONS:
+                        JsonNode transformationNodes = node.get(key);
+                        if (transformationNodes != null) {
+                            if (transformationNodes.isArray()) {
+                                for (JsonNode transformationNode : transformationNodes) {
+                                    parser = transformationNode.traverse(oc);
+                                    Transformation tx = parser.readValueAs(Transformation.class);
+                                    for (TransformationCatalogEntry entry :
+                                            tx.getTransformationCatalogEntries()) {
+                                        store.addEntry(entry);
+                                    }
                                 }
                             }
                         }
-                    }
-                    break;
+                        break;
 
-                case CONTAINERS:
-                    JsonNode containerNodes = node.get(key);
-                    if (containerNodes != null) {
-                        if (containerNodes.isArray()) {
-                            for (JsonNode containerNode : containerNodes) {
-                                parser = containerNode.traverse(oc);
-                                Container cont = parser.readValueAs(Container.class);
-                                store.addContainer(cont);
+                    case CONTAINERS:
+                        JsonNode containerNodes = node.get(key);
+                        if (containerNodes != null) {
+                            if (containerNodes.isArray()) {
+                                for (JsonNode containerNode : containerNodes) {
+                                    parser = containerNode.traverse(oc);
+                                    Container cont = parser.readValueAs(Container.class);
+                                    store.addContainer(cont);
+                                }
                             }
                         }
-                    }
-                    break;
+                        break;
 
-                default:
-                    this.complainForUnsupportedKey(
-                            TransformationCatalogKeywords.SITES.getReservedName(), key, node);
+                    default:
+                        this.complainForUnsupportedKey(
+                                TransformationCatalogKeywords.SITES.getReservedName(), key, node);
+                }
             }
+            store.resolveContainerReferences();
+            return store;
         }
-        store.resolveContainerReferences();
-        return store;
     }
 }
