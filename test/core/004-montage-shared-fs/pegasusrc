@@ -1,5 +1,5 @@
 
-pegasus.catalog.site.file=sites.xml
+pegasus.catalog.site.file=sites.yml
 
 pegasus.catalog.transformation      = Text
 pegasus.catalog.transformation.file = data/tc.txt
