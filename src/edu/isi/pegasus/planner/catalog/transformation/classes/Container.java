@@ -706,10 +706,8 @@ public class Container implements Cloneable {
      * @author Karan Vahi
      */
     static class JsonDeserializer extends CatalogEntryJsonDeserializer<Container> {
-        
-        public JsonDeserializer(){
-            
-        }
+
+        public JsonDeserializer() {}
 
         /**
          * Deserializes a Transformation YAML description of the type
@@ -861,11 +859,11 @@ public class Container implements Cloneable {
             writeStringField(
                     gen,
                     TransformationCatalogKeywords.CONTAINER_IMAGE.getReservedName(),
-                    container.getImageURL().toString());
+                    container.getImageURL());
             writeStringField(
                     gen,
                     TransformationCatalogKeywords.CONTAINER_IMAGE_SITE.getReservedName(),
-                    container.getImageSite().toString());
+                    container.getImageSite());
 
             if (!container.getMountPoints().isEmpty()) {
                 gen.writeArrayFieldStart(

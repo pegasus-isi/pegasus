@@ -26,6 +26,20 @@ public abstract class PegasusJsonSerializer<T> extends JsonSerializer<T> {
      * @param value
      * @throws java.io.IOException
      */
+    public void writeStringField(JsonGenerator gen, String key, Object value) throws IOException {
+        if (value != null) {
+            this.writeStringField(gen, key, value.toString());
+        }
+    }
+
+    /**
+     * Writes out only if value is not null and non empty
+     *
+     * @param gen
+     * @param key
+     * @param value
+     * @throws java.io.IOException
+     */
     public void writeStringField(JsonGenerator gen, String key, String value) throws IOException {
         if (value != null && value.length() > 0) {
             gen.writeStringField(key, value);
