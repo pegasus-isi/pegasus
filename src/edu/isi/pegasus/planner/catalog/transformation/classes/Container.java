@@ -309,7 +309,7 @@ public class Container implements Cloneable {
             }
         }
     }
-    
+
     /**
      * Returns the list of all profiles associated with the container.
      *
@@ -865,10 +865,13 @@ public class Container implements Cloneable {
                     gen,
                     TransformationCatalogKeywords.TYPE.getReservedName(),
                     container.getType().toString());
-            writeStringField(
-                    gen,
-                    TransformationCatalogKeywords.CONTAINER_IMAGE.getReservedName(),
-                    container.getImageURL());
+
+            if (container.getImageURL() != null) {
+                writeStringField(
+                        gen,
+                        TransformationCatalogKeywords.CONTAINER_IMAGE.getReservedName(),
+                        container.getImageURL().getURL());
+            }
             writeStringField(
                     gen,
                     TransformationCatalogKeywords.CONTAINER_IMAGE_SITE.getReservedName(),
