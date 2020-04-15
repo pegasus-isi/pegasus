@@ -570,11 +570,14 @@ public class TransformationStore {
             }
             gen.writeEndArray();
 
-            gen.writeArrayFieldStart(TransformationCatalogKeywords.CONTAINERS.getReservedName());
-            for (Container c : store.getAllContainers()) {
-                gen.writeObject(c);
+            if (!store.getAllContainers().isEmpty()) {
+                gen.writeArrayFieldStart(
+                        TransformationCatalogKeywords.CONTAINERS.getReservedName());
+                for (Container c : store.getAllContainers()) {
+                    gen.writeObject(c);
+                }
+                gen.writeEndArray();
             }
-            gen.writeEndArray();
 
             gen.writeEndObject();
         }
