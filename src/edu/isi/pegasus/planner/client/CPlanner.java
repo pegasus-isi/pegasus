@@ -1862,8 +1862,8 @@ public class CPlanner extends Executable {
             // log the error nevertheless
             bag.getLogger()
                     .log(
-                            "Ignoring error encountered while loading Transformation Catalog ",
-                            e,
+                            "Ignoring error encountered while loading Transformation Catalog " +
+                            e.convertException(),
                             LogManager.DEBUG_MESSAGE_LEVEL);
         }
         // create a temp file as a TC backend for planning purposes
