@@ -13,19 +13,25 @@
  */
 package edu.isi.pegasus.planner.catalog.transformation;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import edu.isi.pegasus.common.util.ProfileParser;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntry;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.classes.VDSSysInfo2NMI;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogKeywords;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2VDSSysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationCatalogKeywords;
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.Profile;
+import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -39,6 +45,7 @@ import java.util.List;
  * @author Gaurang Mehta @$Revision$
  * @author Karan Vahi
  */
+@JsonSerialize(using = TransformationCatalogEntry.JsonSerializer.class)
 public class TransformationCatalogEntry implements CatalogEntry {
 
     /** The logical mNamespace of the transformation */
@@ -665,5 +672,84 @@ public class TransformationCatalogEntry implements CatalogEntry {
         throw new UnsupportedOperationException(
                 "Not supported yet."); // To change body of generated methods, choose Tools |
         // Templates.
+    }
+
+    /**
+     * Custom serializer for YAML representation of Container
+     *
+     * @author Karan Vahi
+     */
+    static class JsonSerializer extends PegasusJsonSerializer<TransformationCatalogEntry> {
+
+        public JsonSerializer() {}
+
+        /**
+         * Serializes contents into YAML representation
+         *
+         * @param entry
+         * @param gen
+         * @param sp
+         * @throws IOException
+         */
+        public void serialize(
+                TransformationCatalogEntry entry, JsonGenerator gen, SerializerProvider sp)
+                throws IOException {
+            gen.writeStartObject();
+
+            writeStringField(
+                    gen,
+                    TransformationCatalogKeywords.NAMESPACE.getReservedName(),
+                    entry.getLogicalNamespace());
+            writeStringField(
+                    gen,
+                    TransformationCatalogKeywords.NAME.getReservedName(),
+                    entry.getLogicalName());
+            writeStringField(
+                    gen,
+                    TransformationCatalogKeywords.VERSION.getReservedName(),
+                    entry.getLogicalVersion());
+
+            if (entry.getResourceId() != null) {
+                //we only have one site associated
+                gen.writeArrayFieldStart(TransformationCatalogKeywords.SITES.getReservedName());
+                writeStringField(
+                        gen,
+                        TransformationCatalogKeywords.NAME.getReservedName(),
+                        entry.getResourceId());
+                writeStringField(
+                        gen, TransformationCatalogKeywords.TYPE.getReservedName(), entry.getType());
+                writeStringField(
+                        gen,
+                        TransformationCatalogKeywords.SITE_PFN.getReservedName(),
+                        entry.getPhysicalTransformation());
+
+                SysInfo sys = entry.getSysInfo();
+                writeStringField(
+                        gen,
+                        TransformationCatalogKeywords.SITE_ARCHITECTURE.getReservedName(),
+                        sys.getArchitecture().toString());
+                writeStringField(
+                        gen,
+                        TransformationCatalogKeywords.SITE_OS_TYPE.getReservedName(),
+                        sys.getOS().toString());
+                writeStringField(
+                        gen,
+                        TransformationCatalogKeywords.SITE_OS_RELEASE.getReservedName(),
+                        sys.getOSRelease());
+                writeStringField(
+                        gen,
+                        TransformationCatalogKeywords.SITE_OS_VERSION.getReservedName(),
+                        sys.getOSVersion());
+                /*
+                if (entry.getAllProfiles() != null) {
+                    gen.writeFieldName(SiteCatalogKeywords.PROFILES.getReservedName());
+                    gen.writeObject(entry.getAllProfiles());
+                }
+                */
+                gen.writeEndArray();
+            }
+
+            gen.writeEndObject();
+        }
     }
 }
