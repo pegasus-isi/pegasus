@@ -65,6 +65,9 @@ public class TCConverter extends Executable {
     /** Denotes the logging level that is to be used for logging the messages. */
     private int mLoggingLevel;
 
+    /** Boolean indicating whether to do variable expansion or not */
+    private boolean mDoVariableExpansion;
+
     /** The default constructor. */
     public TCConverter() {
         super();
@@ -78,6 +81,8 @@ public class TCConverter extends Executable {
         mInputFiles = null;
         mOutputFile = null;
         mLoggingLevel = LogManager.WARNING_MESSAGE_LEVEL;
+        // PM-1491 by default have variable expansion disabled
+        mDoVariableExpansion = false;
     }
 
     /**
@@ -127,12 +132,16 @@ public class TCConverter extends Executable {
 
         LongOpt[] longOptions = generateValidOptions();
 
-        Getopt g = new Getopt("TCConverter", opts, "hVvqI:i:O:o:c:", longOptions, false);
+        Getopt g = new Getopt("TCConverter", opts, "ehVvqI:i:O:o:c:", longOptions, false);
 
         int option = 0;
         int noOfOptions = 0;
         while ((option = g.getopt()) != -1) {
             switch (option) {
+                case 'e': // expand
+                    mDoVariableExpansion = true;
+                    break;
+
                 case 'i': // input
                     StringTokenizer str = new StringTokenizer(g.getOptarg(), ",");
                     mInputFiles = new ArrayList(str.countTokens());
@@ -310,6 +319,11 @@ public class TCConverter extends Executable {
             PegasusBag bag = new PegasusBag();
             bag.add(PegasusBag.PEGASUS_PROPERTIES, pegasusProperties);
             bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+            mProps.setProperty(
+                    TransformationCatalog.c_prefix
+                            + '.'
+                            + TransformationCatalog.VARIABLE_EXPANSION_KEY,
+                    Boolean.toString(mDoVariableExpansion));
             /* load the catalog using the factory */
             catalog = TransformationFactory.loadInstance(bag);
 
@@ -397,6 +411,10 @@ public class TCConverter extends Executable {
         text.append("\n Other Options ");
         text.append("\n");
         text.append("\n -c |--conf           path to  property file");
+        text.append(
+                "\n -e |--expand     sets variable expansion on. Any variables in input files "
+                        + "\n                  will be expanded and their values will be written out to "
+                        + "\n                  output transformation catalog. ");
         text.append(
                 "\n -v |--verbose        increases the verbosity of messages about what is going on");
         text.append(

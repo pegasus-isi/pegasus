@@ -126,6 +126,9 @@ public class Text extends Abstract implements TransformationCatalog {
     /** Boolean indicating whether to modify the file URL or not */
     private boolean modifyFileURL = true;
 
+    /** Boolean indicating whether to do variable expansion or not */
+    private boolean mDoVariableExpansion;
+
     /** Default constructor. */
     public Text() {}
 
@@ -140,6 +143,8 @@ public class Text extends Abstract implements TransformationCatalog {
         mLogger = bag.getLogger();
         mFlushOnClose = false;
         modifyFileURL = Boolean.parse(mProps.getProperty(MODIFY_FOR_FILE_URLS_KEY), true);
+        // by default is always turned on
+        mDoVariableExpansion = true;
         mLogger.log(
                 "Transformation Catalog Type used " + this.getDescription(),
                 LogManager.CONFIG_MESSAGE_LEVEL);
@@ -164,7 +169,13 @@ public class Text extends Abstract implements TransformationCatalog {
             java.io.File f = new java.io.File(mTCFile);
 
             if (f.exists()) {
-                mTextParser = new TransformationCatalogTextParser(new FileReader(f), mLogger);
+                boolean variableExpansion =
+                        Boolean.parse(
+                                props.getProperty(TransformationCatalog.VARIABLE_EXPANSION_KEY),
+                                true);
+                mTextParser =
+                        new TransformationCatalogTextParser(
+                                new FileReader(f), mLogger, variableExpansion);
                 mTCStore = mTextParser.parse(modifyFileURL);
             } else {
                 // empty TCStore

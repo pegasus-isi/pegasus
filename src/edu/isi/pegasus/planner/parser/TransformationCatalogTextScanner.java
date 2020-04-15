@@ -46,9 +46,11 @@ public class TransformationCatalogTextScanner {
      * Starts to scan the given stream.
      *
      * @param reader the reader stream from which we are reading the site catalog.
+     * @param doVariableExpansion whether to expand variables or not
      */
-    public TransformationCatalogTextScanner(Reader reader) throws IOException {
-        this.mInputReader = new ExpanderLineNumberReader(reader, "#");
+    public TransformationCatalogTextScanner(Reader reader, boolean doVariableExpansion)
+            throws IOException {
+        this.mInputReader = new ExpanderLineNumberReader(reader, "#", doVariableExpansion);
         this.mLookAhead = mInputReader.read();
         // skipWhitespace();
     }
@@ -247,11 +249,17 @@ public class TransformationCatalogTextScanner {
         /** Character indicating start of comment line */
         private String mCommentPrefix;
 
+        /** Boolean indicating whether to do variable expansion or not */
+        private boolean mDoVariableExpansion;
+
         /** @param reader */
-        public ExpanderLineNumberReader(Reader reader, String commentPrefix) throws IOException {
+        public ExpanderLineNumberReader(
+                Reader reader, String commentPrefix, boolean doVariableExpansion)
+                throws IOException {
             mReader = new LineNumberReader(reader);
             mVariableExpander = new VariableExpander();
             mCommentPrefix = commentPrefix;
+            mDoVariableExpansion = doVariableExpansion;
             setBufferToNextLine();
         }
 
@@ -297,7 +305,7 @@ public class TransformationCatalogTextScanner {
             mCurrentLineNumber = mReader.getLineNumber();
             // we don't want expand anything in the comment string
             if (mBuffer != null && !mBuffer.startsWith(mCommentPrefix)) {
-                mBuffer = mVariableExpander.expand(mBuffer);
+                mBuffer = mDoVariableExpansion ? mVariableExpander.expand(mBuffer) : mBuffer;
             }
 
             // always add \n to ensure consistent semantics for read function

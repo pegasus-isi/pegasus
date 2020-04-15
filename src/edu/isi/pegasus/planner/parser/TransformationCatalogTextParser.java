@@ -112,13 +112,14 @@ public class TransformationCatalogTextParser {
      *
      * @param r is the stream opened for reading.
      * @param logger the transformation to the logger.
+     * @param doVariableExpansion whether to expand variables or not
      * @throws IOException
      * @throws ScannerException
      */
-    public TransformationCatalogTextParser(Reader r, LogManager logger)
+    public TransformationCatalogTextParser(Reader r, LogManager logger, boolean doVariableExpansion)
             throws IOException, ScannerException {
         mLogger = logger;
-        mScanner = new TransformationCatalogTextScanner(r);
+        mScanner = new TransformationCatalogTextScanner(r, doVariableExpansion);
         mLookAhead = mScanner.nextToken();
     }
 
@@ -646,7 +647,8 @@ public class TransformationCatalogTextParser {
                     "planner.version",
                     Version.instance().toString());
 
-            TransformationCatalogTextParser p = new TransformationCatalogTextParser(r, logger);
+            TransformationCatalogTextParser p =
+                    new TransformationCatalogTextParser(r, logger, true);
             p.parse(true);
 
         } catch (FileNotFoundException ex) {
