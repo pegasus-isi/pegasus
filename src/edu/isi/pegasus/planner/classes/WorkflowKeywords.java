@@ -29,6 +29,7 @@ public enum WorkflowKeywords {
     SITE_CATALOG("siteCatalog"),
     TRANSFORMATION_CATALOG("transformationCatalog"),
     HOOKS("hooks"),
+    HOOKS_SHELL_TYPE("shell"),
     JOBS("jobs"),
     JOB_NAMESPACE("namespace"),
     JOB_VERSION("version"),

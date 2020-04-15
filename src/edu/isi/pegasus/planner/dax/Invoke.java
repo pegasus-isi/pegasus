@@ -152,4 +152,25 @@ public class Invoke {
                 .append("\"]");
         return sb.toString();
     }
+
+    /**
+     * Matches two Invoke objects
+     *
+     * @return true if the pfn and all the attributes match, false otherwise.
+     */
+    @Override
+    public boolean equals(Object obj) {
+        // null check
+        if (obj == null) {
+            return false;
+        }
+
+        // see if type of objects match
+        if (!(obj instanceof Invoke)) {
+            return false;
+        }
+
+        Invoke i = (Invoke) obj;
+        return this.toString().equals(i.toString());
+    }
 }
