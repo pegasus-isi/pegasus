@@ -540,7 +540,7 @@ public class TransformationStore {
      *
      * @author Karan Vahi
      */
-    class JsonSerializer extends PegasusJsonSerializer<TransformationStore> {
+    static class JsonSerializer extends PegasusJsonSerializer<TransformationStore> {
 
         public JsonSerializer() {}
 
