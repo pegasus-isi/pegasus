@@ -728,6 +728,9 @@ public class YAML extends Abstract implements TransformationCatalog {
 
         if (add) {
             mTCStore.addEntry(entry);
+            if (containterInfo != null) {
+                mTCStore.addContainer(containterInfo);
+            }
         } else {
             mLogger.log("TC Entry already exists. Skipping", LogManager.DEBUG_MESSAGE_LEVEL);
         }

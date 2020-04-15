@@ -386,8 +386,8 @@ public class TCConverter extends Executable {
         text.append("\n Mandatory Options ");
         text.append("\n");
         text.append(
-                "\n -I |--iformat        the input format for the files . Can be [Text ,File] ");
-        text.append("\n -O |--oformat        the output format of the file. Can be [Text ,File ] ");
+                "\n -I |--iformat        the input format for the files . Can be [Text, YAML] ");
+        text.append("\n -O |--oformat        the output format of the file. Can be [Text, YAML] ");
         text.append(
                 "\n -i |--input          comma separated list of input files to convert.This option is mandatory when input format is Text or file ");
         text.append(
@@ -407,7 +407,7 @@ public class TCConverter extends Executable {
         text.append("\n");
         text.append("\n Example Usage ");
         text.append("\n Text to file format conversion :- ");
-        text.append("  pegasus-tc-converter  -i tc.data -I File -o tc.text  -O Text -v");
+        text.append("  pegasus-tc-converter  -i tc.text -I File -o tc.yml -v");
 
         System.out.println(text.toString());
     }
