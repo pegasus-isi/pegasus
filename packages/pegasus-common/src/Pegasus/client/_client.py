@@ -105,7 +105,7 @@ class Client:
 
         self._log.info("Plan: {} \n {}".format(rv.stdout, rv.stderr))
 
-        submit_dir = self._get_submit_dir(rv.stdout)
+        submit_dir = self._get_submit_dir(rv.stdout.decode())
         workflow = Workflow(submit_dir, self)
         return workflow
 
@@ -171,7 +171,8 @@ class Client:
         blue = lambda s: "\x1b[1;36m" + s + "\x1b[0m"
         red = lambda s: "\x1b[1;31m" + s + "\x1b[0m"
 
-        while True:
+        can_continue = True
+        while can_continue:
             rv = subprocess.run(
                 ["pegasus-status", "-l", submit_dir],
                 stdout=subprocess.PIPE,
@@ -221,14 +222,21 @@ class Client:
 
                     if v[PCNT_DONE] < 100:
                         print(bar, end=("" if v[STATE] != "Failure" else "\n"))
+
+                        if v[STATE] != "Failure":
+                            print(bar, end="")
+                        else:
+                            # failure
+                            can_continue = False
+                            print(bar, end="\n")
                     else:
+                        # percent done >= 100 means STATE = success
+                        can_continue = False
                         print(bar)
+
 
                     # skip the rest of the lines
                     break
-
-            if v[PCNT_DONE] >= 100 or v[STATE] in {"Success", "Failure"}:
-                break
 
             time.sleep(delay)
 
