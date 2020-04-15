@@ -562,6 +562,10 @@ public class TransformationStore {
                     gen,
                     TransformationCatalogKeywords.PEGASUS.getReservedName(),
                     store.getVersion());
+            writeStringField(
+                    gen,
+                    TransformationCatalogKeywords.PEGASUS.getReservedName(),
+                    store.getVersion());
 
             gen.writeArrayFieldStart(
                     TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName());
