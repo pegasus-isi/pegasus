@@ -155,6 +155,15 @@ public class YAML extends Abstract implements TransformationCatalog {
     /** Closes the connection to the back end. */
     public void close() {
         if (mFlushOnClose) {
+            // PM-1491 in case of tc-converter, the containers may not be resolved
+            // in the TC Store. So just add them again as failsafe
+            for (TransformationCatalogEntry entry : this.mTCStore.getAllEntries()) {
+                Container c = entry.getContainer();
+                if (c != null && !this.mTCStore.containsContainer(c)) {
+                    this.mTCStore.addContainer(c);
+                }
+            }
+
             // we flush back the contents of the internal store to the file.
             String newline = System.getProperty("line.separator", "\r\n");
             String indent = "";
@@ -728,9 +737,14 @@ public class YAML extends Abstract implements TransformationCatalog {
 
         if (add) {
             mTCStore.addEntry(entry);
-            if (containterInfo != null) {
+            /* PM-1491 for tc-converter we need this. but this triggers error in planner because
+               of PM-1214, where env profiles from job are stored in the container object.
+               So different jobs referring to same container name don't match because of
+               differing profiles
+            if (containterInfo != null && !mTCStore.containsContainer(containterInfo)) {
                 mTCStore.addContainer(containterInfo);
             }
+            */
         } else {
             mLogger.log("TC Entry already exists. Skipping", LogManager.DEBUG_MESSAGE_LEVEL);
         }
