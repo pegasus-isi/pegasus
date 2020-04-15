@@ -52,17 +52,13 @@ import java.util.Set;
 /**
  * A YAML based Transformation Catalog
  *
- *
  * @author Karan Vahi
  */
 public class YAML extends Abstract implements TransformationCatalog {
 
     /** Describes the transformation catalog mode. */
     public static final String DESCRIPTION = "YAML TC";
-    
-    /** The default transformation Catalog version to which this maps to */
-    public static final String DEFAULT_TRANSFORMATION_CATALOG_VERSION = "5.0";
-    
+
     /**
      * The LogManager object which is used to log all the messages. It's values are set in the
      * CPlanner (the main toolkit) class.
@@ -101,7 +97,6 @@ public class YAML extends Abstract implements TransformationCatalog {
         mLogger = bag.getLogger();
         mFlushOnClose = false;
         modifyFileURL = Boolean.parse(mProps.getProperty(MODIFY_FOR_FILE_URLS_KEY), true);
-        mTCStore.setVersion(DEFAULT_TRANSFORMATION_CATALOG_VERSION);
         mLogger.log(
                 "Transformation Catalog Type used " + this.getDescription(),
                 LogManager.CONFIG_MESSAGE_LEVEL);

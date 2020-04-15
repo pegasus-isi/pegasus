@@ -46,6 +46,9 @@ import java.util.TreeMap;
 @JsonSerialize(using = TransformationStore.JsonSerializer.class)
 public class TransformationStore {
 
+    /** The default transformation Catalog version to which this maps to */
+    public static final String DEFAULT_TRANSFORMATION_CATALOG_VERSION = "5.0";
+
     /**
      * The internal store map. The Map is indexed by transformation names. The corresponding value
      * is a Map that contains entries for all sites for a particular transformation . This map is
@@ -68,6 +71,7 @@ public class TransformationStore {
     /** Intializes the store. */
     private void initialize() {
         mTCStore = new TreeMap<String, Map<String, List<TransformationCatalogEntry>>>();
+        this.setVersion(DEFAULT_TRANSFORMATION_CATALOG_VERSION);
         mContainers = new TreeMap<String, Container>();
     }
 
@@ -558,10 +562,6 @@ public class TransformationStore {
                 return;
             }
             gen.writeStartObject();
-            writeStringField(
-                    gen,
-                    TransformationCatalogKeywords.PEGASUS.getReservedName(),
-                    store.getVersion());
             writeStringField(
                     gen,
                     TransformationCatalogKeywords.PEGASUS.getReservedName(),
