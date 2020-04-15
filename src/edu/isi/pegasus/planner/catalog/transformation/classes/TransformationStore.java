@@ -379,7 +379,7 @@ public class TransformationStore {
     public boolean containsContainer(String name) {
         return this.mContainers.containsKey(name);
     }
-    
+
     /**
      * Whether store contains a container or not.
      *
@@ -393,7 +393,6 @@ public class TransformationStore {
         }
         return contains;
     }
-
 
     /**
      * Return a container.
