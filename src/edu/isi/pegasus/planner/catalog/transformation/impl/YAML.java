@@ -13,6 +13,10 @@
  */
 package edu.isi.pegasus.planner.catalog.transformation.impl;
 
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.Separator;
@@ -22,7 +26,6 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
-import edu.isi.pegasus.planner.catalog.transformation.client.TCFormatUtility;
 import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
@@ -49,34 +52,17 @@ import java.util.Set;
 /**
  * A YAML based Transformation Catalog
  *
- * <p>The implementation refers to the following same format for specifying a transformation catalog
- * entry. - namespace: "ls" name: "keg" version: 1.0
  *
- * <p>profile: - environment: "APP_HOME": "/tmp/myscratch" "JAVA_HOME": "/opt/java/1.6"
- *
- * <p>site: - name: "isi" profile: environment: "HELLo": "WORLD" "JAVA_HOME": "/opt/java/1.6"
- * condor: "FOO": "bar" pfn: /usr/bin/ls arch: x86 osrelease: fc osversion: 4 os_type: INSTALLED
- *
- * <p>- name: "ads" profile: environment: "HELLo": "WORLD" "JAVA_HOME": "/opt/java/1.6" condor:
- * "FOO": "bar" pfn: /path/to/keg arch: x86 os: linux osrelease: fc osversion: 4 os_type: INSTALLED
- * container: "centos-pegasus"
- *
- * <p>cont: - name: "centos-pegasus" image: docker:///rynge/montage:latest image_site: optional site
- * mount: /Volumes/Work/lfs1:/shared-data/:ro profile: environment: "JAVA_HOME": "/opt/java/1.6"
- *
- * <p>- namespace: "cat" name: "keg" version: 1.0
- *
- * <p>site: - name: "ads" profile: environment: "HELLo": "WORLD" "JAVA_HOME": "/opt/java/1.6"
- * condor: "FOO": "bar" pfn: /usr/bin/cat arch: x86 os: linux osrelease: fc osversion: 4 os_type:
- * INSTALLED
- *
- * @author Mukund Murrali
+ * @author Karan Vahi
  */
 public class YAML extends Abstract implements TransformationCatalog {
 
     /** Describes the transformation catalog mode. */
     public static final String DESCRIPTION = "YAML TC";
-
+    
+    /** The default transformation Catalog version to which this maps to */
+    public static final String DEFAULT_TRANSFORMATION_CATALOG_VERSION = "5.0";
+    
     /**
      * The LogManager object which is used to log all the messages. It's values are set in the
      * CPlanner (the main toolkit) class.
@@ -115,6 +101,7 @@ public class YAML extends Abstract implements TransformationCatalog {
         mLogger = bag.getLogger();
         mFlushOnClose = false;
         modifyFileURL = Boolean.parse(mProps.getProperty(MODIFY_FOR_FILE_URLS_KEY), true);
+        mTCStore.setVersion(DEFAULT_TRANSFORMATION_CATALOG_VERSION);
         mLogger.log(
                 "Transformation Catalog Type used " + this.getDescription(),
                 LogManager.CONFIG_MESSAGE_LEVEL);
@@ -179,7 +166,14 @@ public class YAML extends Abstract implements TransformationCatalog {
             try {
                 // open
                 Writer out = new BufferedWriter(new FileWriter(mTCFile));
-                TCFormatUtility.toYAMLFormat(mTCStore, out);
+                // in case of yaml we write it directly to the output file so we are
+                // returning null..
+                ObjectMapper mapper =
+                        new ObjectMapper(
+                                new YAMLFactory()
+                                        .configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
+                mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+                out.write(mapper.writeValueAsString(mTCStore));
                 // close
                 out.close();
                 this.mFlushOnClose = false;
