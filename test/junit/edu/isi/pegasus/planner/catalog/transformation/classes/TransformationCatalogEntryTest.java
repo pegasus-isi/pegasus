@@ -123,7 +123,7 @@ public class TransformationCatalogEntryTest {
         // System.err.println(actual);
         assertEquals(expected, actual);
     }
-    
+
     @Test
     public void testEntryWithContainerReferenceSerialization() throws IOException {
         ObjectMapper mapper =

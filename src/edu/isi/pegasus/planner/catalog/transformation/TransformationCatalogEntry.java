@@ -770,16 +770,16 @@ public class TransformationCatalogEntry implements CatalogEntry {
                     gen.writeFieldName(TransformationCatalogKeywords.PROFILES.getReservedName());
                     gen.writeObject(entry.getAllProfiles());
                 }
-                
-                //write out container reference if set
+
+                // write out container reference if set
                 Container c = entry.getContainer();
-                if (c != null){
-                   writeStringField(
-                        gen,
-                        TransformationCatalogKeywords.SITE_CONTAINER_NAME.getReservedName(),
-                        c.getName()); 
+                if (c != null) {
+                    writeStringField(
+                            gen,
+                            TransformationCatalogKeywords.SITE_CONTAINER_NAME.getReservedName(),
+                            c.getName());
                 }
-                
+
                 gen.writeEndObject();
                 gen.writeEndArray();
             }
