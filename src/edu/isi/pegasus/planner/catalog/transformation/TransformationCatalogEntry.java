@@ -716,21 +716,21 @@ public class TransformationCatalogEntry implements CatalogEntry {
                     gen,
                     TransformationCatalogKeywords.VERSION.getReservedName(),
                     entry.getLogicalVersion());
-            
+
             if (!entry.getNotifications().isEmpty()) {
+                gen.writeFieldName(TransformationCatalogKeywords.HOOKS.getReservedName());
                 gen.writeObject(entry.getNotifications());
             }
 
             if (entry.getResourceId() == null) {
-                //write out profiles if specified
-                //we normally do them in the sites array
+                // write out profiles if specified
+                // we normally do them in the sites array
                 // for serialization profiles are associated at site level
                 if (entry.getAllProfiles() != null) {
                     gen.writeFieldName(TransformationCatalogKeywords.PROFILES.getReservedName());
                     gen.writeObject(entry.getAllProfiles());
                 }
-            }
-            else{
+            } else {
                 // we only have one site associated
                 gen.writeArrayFieldStart(TransformationCatalogKeywords.SITES.getReservedName());
 
