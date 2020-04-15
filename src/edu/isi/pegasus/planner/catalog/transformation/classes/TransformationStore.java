@@ -379,6 +379,21 @@ public class TransformationStore {
     public boolean containsContainer(String name) {
         return this.mContainers.containsKey(name);
     }
+    
+    /**
+     * Whether store contains a container or not.
+     *
+     * @param c
+     * @return
+     */
+    public boolean containsContainer(Container c) {
+        boolean contains = false;
+        if (c != null && this.containsContainer(c.getName())) {
+            return this.getContainer(c.getName()).equals(c);
+        }
+        return contains;
+    }
+
 
     /**
      * Return a container.

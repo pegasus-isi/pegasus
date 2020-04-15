@@ -471,6 +471,26 @@ public class Container implements Cloneable {
     }
 
     /**
+     * Matches two Container objects
+     *
+     * @return true if the string representation matches else false
+     */
+    @Override
+    public boolean equals(Object obj) {
+        // null check
+        if (obj == null) {
+            return false;
+        }
+
+        // see if type of objects match
+        if (!(obj instanceof Container)) {
+            return false;
+        }
+
+        Container c = (Container) obj;
+        return this.toString().equals(c.toString());
+    }
+    /**
      * Returns textual description of object
      *
      * @return
