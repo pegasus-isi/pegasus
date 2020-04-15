@@ -10,7 +10,7 @@
 {% block javascript_init %}
 <script type="text/javascript" charset="utf-8">
 
-    jobDistribution.data = {% include 'workflow/charts/job_dist_chart.json' %};
+    jobDistribution.data = {{ job_dist | tojson | safe }};
 
     function accordianCreate (event, ui)
     {

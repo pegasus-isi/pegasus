@@ -1,19 +1,3 @@
-#  Copyright 2007-2014 University Of Southern California
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#  http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing,
-#  software distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-
-__author__ = "Rajiv Mayani"
-
 import logging
 import os
 
@@ -31,6 +15,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.db.errors import StampedeDBNotFoundError
 from Pegasus.service import filters
+from Pegasus.service._serialize import serialize
 from Pegasus.service.base import ErrorResponse, ServiceError
 from Pegasus.service.dashboard import blueprint
 from Pegasus.service.dashboard.dashboard import Dashboard, NoWorkflowsFoundError
@@ -62,24 +47,29 @@ def index(username):
 
     except NoWorkflowsFoundError as e:
         if request.is_xhr:
-            return render_template(
-                "workflow.xhr.json",
-                count=e.count,
-                filtered=e.filtered,
-                workflows=[],
-                table_args=args,
-            )
+            workflows = []
+            d = {
+                "draw": args["sequence"] if args["sequence"] else 0,
+                "recordsTotal": e.count if e.count is not None else len(workflows),
+                "data": workflows,
+            }
+            if args["limit"]:
+                d["recordsFiltered"] = e.filtered
+
+            return serialize(d)
 
         return render_template("workflow.html", counts=(0, 0, 0, 0))
 
     if request.is_xhr:
-        return render_template(
-            "workflow.xhr.json",
-            count=count,
-            filtered=filtered,
-            workflows=workflows,
-            table_args=args,
-        )
+        d = {
+            "draw": args["sequence"] if args["sequence"] else 0,
+            "recordsTotal": count if count is not None else len(workflows),
+            "data": [w._asdict() for w in workflows],
+        }
+        if args["limit"]:
+            d["recordsFiltered"] = filtered
+
+        return serialize(d)
 
     return render_template("workflow.html", counts=totals)
 
@@ -123,24 +113,10 @@ def sub_workflows(username, root_wf_id, wf_id):
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     sub_workflows = dashboard.get_sub_workflows(wf_id)
 
-    # is_xhr = True if it is AJAX request.
-    if request.is_xhr:
-        if len(sub_workflows) > 0:
-            return render_template(
-                "workflow/sub_workflows.xhr.html",
-                root_wf_id=root_wf_id,
-                wf_id=wf_id,
-                workflows=sub_workflows,
-            )
-        else:
-            return "", 204
-    else:
-        return render_template(
-            "workflow/sub_workflows.html",
-            root_wf_id=root_wf_id,
-            wf_id=wf_id,
-            workflows=sub_workflows,
-        )
+    for i in range(len(sub_workflows)):
+        sub_workflows[i] = sub_workflows[i]._asdict()
+
+    return serialize(sub_workflows)
 
 
 @blueprint.route("/u/<username>/r/<root_wf_id>/w/<wf_id>/j/failed/", methods=["GET"])
@@ -155,15 +131,21 @@ def failed_jobs(username, root_wf_id, wf_id):
         wf_id, **args
     )
 
-    return render_template(
-        "workflow/jobs_failed.xhr.json",
-        count=total_count,
-        filtered=filtered_count,
-        root_wf_id=root_wf_id,
-        wf_id=wf_id,
-        jobs=failed_jobs_list,
-        table_args=args,
-    )
+    for i in range(len(failed_jobs_list)):
+        failed_jobs_list[i] = failed_jobs_list[i]._asdict()
+        failed_jobs_list[i]["DT_RowClass"] = "failing"
+
+    d = {
+        "draw": args["sequence"] if args["sequence"] else 0,
+        "recordsTotal": total_count
+        if total_count is not None
+        else len(failed_jobs_list),
+        "data": failed_jobs_list,
+    }
+    if args["limit"]:
+        d["recordsFiltered"] = filtered_count
+
+    return serialize(d)
 
 
 @blueprint.route("/u/<username>/r/<root_wf_id>/w/<wf_id>/j/running/", methods=["GET"])
@@ -178,15 +160,21 @@ def running_jobs(username, root_wf_id, wf_id):
         wf_id, **args
     )
 
-    return render_template(
-        "workflow/jobs_running.xhr.json",
-        count=total_count,
-        filtered=filtered_count,
-        root_wf_id=root_wf_id,
-        wf_id=wf_id,
-        jobs=running_jobs_list,
-        table_args=args,
-    )
+    for i in range(len(running_jobs_list)):
+        running_jobs_list[i] = running_jobs_list[i]._asdict()
+        running_jobs_list[i]["DT_RowClass"] = "running"
+
+    d = {
+        "draw": args["sequence"] if args["sequence"] else 0,
+        "recordsTotal": total_count
+        if total_count is not None
+        else len(running_jobs_list),
+        "data": running_jobs_list,
+    }
+    if args["limit"]:
+        d["recordsFiltered"] = filtered_count
+
+    return serialize(d)
 
 
 @blueprint.route(
@@ -203,15 +191,26 @@ def successful_jobs(username, root_wf_id, wf_id):
         wf_id, **args
     )
 
-    return render_template(
-        "workflow/jobs_successful.xhr.json",
-        count=total_count,
-        filtered=filtered_count,
-        root_wf_id=root_wf_id,
-        wf_id=wf_id,
-        jobs=successful_jobs_list,
-        table_args=args,
-    )
+    for i in range(len(successful_jobs_list)):
+        successful_jobs_list[i] = successful_jobs_list[i]._asdict()
+        successful_jobs_list[i]["DT_RowClass"] = "successful"
+        successful_jobs_list[i]["root_wf_id"] = root_wf_id
+        successful_jobs_list[i]["wf_id"] = wf_id
+        successful_jobs_list[i]["duration_formatted"] = filters.time_to_str(
+            successful_jobs_list[i]["duration"]
+        )
+
+    d = {
+        "draw": args["sequence"] if args["sequence"] else 0,
+        "recordsTotal": total_count
+        if total_count is not None
+        else len(successful_jobs_list),
+        "data": successful_jobs_list,
+    }
+    if args["limit"]:
+        d["recordsFiltered"] = filtered_count
+
+    return serialize(d)
 
 
 @blueprint.route("/u/<username>/r/<root_wf_id>/w/<wf_id>/j/failing/", methods=["GET"])
@@ -226,15 +225,21 @@ def failing_jobs(username, root_wf_id, wf_id):
         wf_id, **args
     )
 
-    return render_template(
-        "workflow/jobs_failing.xhr.json",
-        count=total_count,
-        filtered=filtered_count,
-        root_wf_id=root_wf_id,
-        wf_id=wf_id,
-        jobs=failing_jobs_list,
-        table_args=args,
-    )
+    for i in range(len(failing_jobs_list)):
+        failing_jobs_list[i] = failing_jobs_list[i]._asdict()
+        failing_jobs_list[i]["DT_RowClass"] = "failing"
+
+    d = {
+        "draw": args["sequence"] if args["sequence"] else 0,
+        "recordsTotal": total_count
+        if total_count is not None
+        else len(failing_jobs_list),
+        "data": failing_jobs_list,
+    }
+    if args["limit"]:
+        d["recordsFiltered"] = filtered_count
+
+    return serialize(d)
 
 
 @blueprint.route(
@@ -311,28 +316,13 @@ def successful_invocations(username, root_wf_id, wf_id, job_id, job_instance_id)
         wf_id, job_id, job_instance_id
     )
 
-    # is_xhr = True if it is AJAX request.
-    if request.is_xhr:
-        if len(successful_invocations_list) > 0:
-            return render_template(
-                "workflow/job/invocations_successful.xhr.html",
-                root_wf_id=root_wf_id,
-                wf_id=wf_id,
-                job_id=job_id,
-                job_instance_id=job_instance_id,
-                invocations=successful_invocations_list,
-            )
-        else:
-            return "", 204
-    else:
-        return render_template(
-            "workflow/job/invocations_successful.html",
-            root_wf_id=root_wf_id,
-            wf_id=wf_id,
-            job_id=job_id,
-            job_instance_id=job_instance_id,
-            invocations=successful_invocations_list,
+    for i in range(len(successful_invocations_list)):
+        successful_invocations_list[i] = successful_invocations_list[i]._asdict()
+        successful_invocations_list[i]["remote_duration"] = filters.time_to_str(
+            successful_invocations_list[i]["remote_duration"]
         )
+
+    return serialize(successful_invocations_list)
 
 
 @blueprint.route(
@@ -348,28 +338,13 @@ def failed_invocations(username, root_wf_id, wf_id, job_id, job_instance_id):
         wf_id, job_id, job_instance_id
     )
 
-    # is_xhr = True if it is AJAX request.
-    if request.is_xhr:
-        if len(failed_invocations_list) > 0:
-            return render_template(
-                "workflow/job/invocations_failed.xhr.html",
-                root_wf_id=root_wf_id,
-                wf_id=wf_id,
-                job_id=job_id,
-                job_instance_id=job_instance_id,
-                invocations=failed_invocations_list,
-            )
-        else:
-            return "", 204
-    else:
-        return render_template(
-            "workflow/job/invocations_failed.html",
-            root_wf_id=root_wf_id,
-            wf_id=wf_id,
-            job_id=job_id,
-            job_instance_id=job_instance_id,
-            invocations=failed_invocations_list,
+    for i in range(len(failed_invocations_list)):
+        failed_invocations_list[i] = failed_invocations_list[i]._asdict()
+        failed_invocations_list[i]["remote_duration"] = filters.time_to_str(
+            failed_invocations_list[i]["remote_duration"]
         )
+
+    return serialize(failed_invocations_list)
 
 
 @blueprint.route(
@@ -408,8 +383,27 @@ def charts(username, root_wf_id, wf_id):
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     job_dist = dashboard.plots_transformation_statistics(wf_id)
 
+    d = []
+    for i in range(len(job_dist)):
+        d.append(
+            {
+                "name": job_dist[i].transformation,
+                "count": {
+                    "total": job_dist[i].count,
+                    "success": job_dist[i].success,
+                    "failure": job_dist[i].failure,
+                },
+                "time": {
+                    "total": job_dist[i].sum,
+                    "min": job_dist[i].min,
+                    "max": job_dist[i].max,
+                    "avg": job_dist[i].avg,
+                },
+            }
+        )
+
     return render_template(
-        "workflow/charts.html", root_wf_id=root_wf_id, wf_id=wf_id, job_dist=job_dist
+        "workflow/charts.html", root_wf_id=root_wf_id, wf_id=wf_id, job_dist=d
     )
 
 
@@ -423,13 +417,23 @@ def time_chart(username, root_wf_id, wf_id):
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     time_chart_job, time_chart_invocation = dashboard.plots_time_chart(wf_id)
 
-    return render_template(
-        "workflow/charts/time_chart.json",
-        root_wf_id=root_wf_id,
-        wf_id=wf_id,
-        time_chart_job=time_chart_job,
-        time_chart_invocation=time_chart_invocation,
-    )
+    d = []
+    for i in range(len(time_chart_job)):
+        d.append(
+            {
+                "date_format": time_chart_job[i].date_format,
+                "count": {
+                    "job": time_chart_job[i].count,
+                    "invocation": time_chart_invocation[i].count,
+                },
+                "total_runtime": {
+                    "job": time_chart_job[i].total_runtime,
+                    "invocation": time_chart_invocation[i].total_runtime,
+                },
+            }
+        )
+
+    return serialize(d)
 
 
 @blueprint.route(
@@ -441,12 +445,34 @@ def gantt_chart(username, root_wf_id, wf_id):
     """
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     gantt_chart = dashboard.plots_gantt_chart()
-    return render_template(
-        "workflow/charts/gantt_chart.json",
-        root_wf_id=root_wf_id,
-        wf_id=wf_id,
-        gantt_chart=gantt_chart,
-    )
+
+    d = []
+    for i in range(len(gantt_chart)):
+        d.append(
+            {
+                "job_id": gantt_chart[i].job_id,
+                "job_instance_id": gantt_chart[i].job_instance_id,
+                "job_submit_seq": gantt_chart[i].job_submit_seq,
+                "job_name": gantt_chart[i].job_name,
+                "transformation": gantt_chart[i].transformation,
+                "jobS": gantt_chart[i].jobS,
+                "jobDuration": gantt_chart[i].jobDuration,
+                "pre_start": gantt_chart[i].pre_start,
+                "pre_duration": gantt_chart[i].pre_duration,
+                "condor_start": gantt_chart[i].condor_start,
+                "condor_duration": gantt_chart[i].condor_duration,
+                "grid_start": gantt_chart[i].grid_start,
+                "grid_duration": gantt_chart[i].grid_duration,
+                "exec_start": gantt_chart[i].exec_start,
+                "exec_duration": gantt_chart[i].exec_duration,
+                "kickstart_start": gantt_chart[i].kickstart_start,
+                "kickstart_duration": gantt_chart[i].kickstart_duration,
+                "post_start": gantt_chart[i].post_start,
+                "post_duration": gantt_chart[i].post_duration,
+            }
+        )
+
+    return serialize(d)
 
 
 @blueprint.route("/u/<username>/r/<root_wf_id>/w/<wf_id>/statistics", methods=["GET"])
@@ -481,7 +507,7 @@ def workflow_summary_stats(username, root_wf_id, wf_id):
     for key, value in summary_times.items():
         summary_times[key] = filters.time_to_str(value)
 
-    return json.dumps(summary_times)
+    return serialize(summary_times)
 
 
 @blueprint.route(
@@ -489,7 +515,7 @@ def workflow_summary_stats(username, root_wf_id, wf_id):
 )
 def workflow_stats(username, root_wf_id, wf_id):
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
-    return json.dumps(dashboard.workflow_stats())
+    return serialize(dashboard.workflow_stats())
 
 
 @blueprint.route(
@@ -497,7 +523,7 @@ def workflow_stats(username, root_wf_id, wf_id):
 )
 def job_breakdown_stats(username, root_wf_id, wf_id):
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
-    return json.dumps(dashboard.job_breakdown_stats())
+    return serialize(dashboard.job_breakdown_stats())
 
 
 @blueprint.route(
@@ -505,7 +531,7 @@ def job_breakdown_stats(username, root_wf_id, wf_id):
 )
 def job_stats(username, root_wf_id, wf_id):
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
-    return json.dumps(dashboard.job_stats())
+    return serialize(dashboard.job_stats())
 
 
 @blueprint.route(
@@ -513,16 +539,7 @@ def job_stats(username, root_wf_id, wf_id):
 )
 def integrity_stats(username, root_wf_id, wf_id):
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
-    return json.dumps(dashboard.integrity_stats())
-
-
-@blueprint.route(
-    "/u/<username>/r/<root_wf_id>/w/<wf_id>/statistics/time", methods=["GET"]
-)
-def time_stats(username, root_wf_id, wf_id):
-    Dashboard(g.master_db_url, root_wf_id, wf_id)
-
-    return "{}"
+    return serialize(dashboard.integrity_stats())
 
 
 @blueprint.route("/u/<username>/r/<root_wf_id>/w/<wf_id>/browser", methods=["GET"])
@@ -578,7 +595,7 @@ def file_list(username, root_wf_id, wf_id, path=""):
                 else:
                     folders["files"].append(os.path.normpath(os.path.join(path, entry)))
 
-            return json.dumps(folders), 200, {"Content-Type": "application/json"}
+            return serialize(folders), 200, {"Content-Type": "application/json"}
 
         else:
             raise ServiceError(
@@ -733,7 +750,7 @@ def error_response(error):
     log.exception(error)
     if request.is_xhr:
         return (
-            json.dumps({"code": error.message.code, "message": error.message.message}),
+            serialize({"code": error.message.code, "message": error.message.message}),
             400,
             {"Content-Type": "application/json"},
         )
