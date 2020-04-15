@@ -123,4 +123,34 @@ public class TransformationCatalogEntryTest {
         // System.err.println(actual);
         assertEquals(expected, actual);
     }
+    
+    @Test
+    public void testEntryWithContainerReferenceSerialization() throws IOException {
+        ObjectMapper mapper =
+                new ObjectMapper(
+                        new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+
+        TransformationCatalogEntry entry = new TransformationCatalogEntry("example", "keg", "1.0");
+        entry.setPhysicalTransformation("/usr/bin/keg");
+        entry.setResourceId("isi");
+        entry.setContainer(new Container("centos-pegasus"));
+
+        String expected =
+                "---\n"
+                        + "namespace: \"example\"\n"
+                        + "name: \"keg\"\n"
+                        + "version: \"1.0\"\n"
+                        + "sites:\n"
+                        + " -\n"
+                        + "  name: \"isi\"\n"
+                        + "  type: \"INSTALLED\"\n"
+                        + "  pfn: \"/usr/bin/keg\"\n"
+                        + "  arch: \"x86_64\"\n"
+                        + "  os.type: \"linux\"\n"
+                        + "  container: \"centos-pegasus\"\n";
+        String actual = mapper.writeValueAsString(entry);
+        // System.err.println(actual);
+        assertEquals(expected, actual);
+    }
 }
