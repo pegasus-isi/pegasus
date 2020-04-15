@@ -38,6 +38,9 @@ import org.junit.runners.Suite;
     edu.isi.pegasus.planner.catalog.site.classes.GridGatewayTest.class,
     edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntryTest.class,
     edu.isi.pegasus.planner.catalog.transformation.TransformationFactoryTest.class,
+    edu.isi.pegasus.planner.catalog.transformation.classes.TransformationCatalogEntryTest.class,
+    edu.isi.pegasus.planner.catalog.transformation.classes.ContainerTest.class,
+    edu.isi.pegasus.planner.catalog.transformation.classes.TransformationTest.class,
     edu.isi.pegasus.planner.catalog.transformation.impl.TextTest.class,
     edu.isi.pegasus.planner.catalog.transformation.impl.YAMLTest.class,
     edu.isi.pegasus.planner.classes.PegasusFileTest.class,
@@ -56,8 +59,6 @@ import org.junit.runners.Suite;
     edu.isi.pegasus.common.util.GLiteEscapeTest.class,
     edu.isi.pegasus.common.util.VariableExpanderTest.class,
     edu.isi.pegasus.planner.partitioner.graph.CycleCheckerTest.class,
-    edu.isi.pegasus.planner.catalog.transformation.classes.ContainerTest.class,
-    edu.isi.pegasus.planner.catalog.transformation.classes.TransformationTest.class,
     edu.isi.pegasus.planner.parser.DAXParserFactoryTest.class,
     edu.isi.pegasus.planner.parser.dax.DAXParser3Test.class,
     edu.isi.pegasus.planner.parser.TransformationCatalogYAMLParserTest.class
