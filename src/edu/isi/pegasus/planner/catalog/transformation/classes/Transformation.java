@@ -24,6 +24,7 @@ import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.classes.Notifications;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -110,10 +111,8 @@ class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transforma
      *     JAVA_HOME: "/opt/java/1.6"
      *   pegasus:
      *     clusters.num: "1"
-     *
      * requires:
      *   - anotherTr
-     *
      * sites:
      *   name: "isi"
      *   type: "installed"
@@ -178,7 +177,11 @@ class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transforma
 
                 case HOOKS:
                     JsonNode hooksNode = node.get(key);
-                    base.addNotifications(this.createNotifications(hooksNode));
+                    if (hooksNode != null) {
+                        parser = hooksNode.traverse(oc);
+                        Notifications n = parser.readValueAs(Notifications.class);
+                        base.addNotifications(n);
+                    }
                     break;
 
                 case REQUIRES:

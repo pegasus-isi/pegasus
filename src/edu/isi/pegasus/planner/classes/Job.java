@@ -2361,7 +2361,11 @@ public class Job extends Data implements GraphNodeContent {
 
                     case HOOKS:
                         JsonNode hooksNode = node.get(key);
-                        j.addNotifications(this.createNotifications(hooksNode));
+                        if (hooksNode != null) {
+                            parser = hooksNode.traverse(oc);
+                            Notifications n = parser.readValueAs(Notifications.class);
+                            j.addNotifications(n);
+                        }
                         break;
 
                     default:

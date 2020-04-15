@@ -182,10 +182,13 @@ public class DAXParser5 implements DAXParser {
 
                     case HOOKS:
                         JsonNode hooksNode = node.get(key);
-                        Notifications notifications = this.createNotifications(hooksNode);
-                        for (Invoke.WHEN when : Invoke.WHEN.values()) {
-                            for (Invoke i : notifications.getNotifications(when)) {
-                                c.cbWfInvoke(i);
+                        if (hooksNode != null) {
+                            parser = hooksNode.traverse(oc);
+                            Notifications notifications = parser.readValueAs(Notifications.class);
+                            for (Invoke.WHEN when : Invoke.WHEN.values()) {
+                                for (Invoke i : notifications.getNotifications(when)) {
+                                    c.cbWfInvoke(i);
+                                }
                             }
                         }
                         break;

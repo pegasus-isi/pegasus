@@ -139,7 +139,7 @@ public abstract class PegasusJsonDeserializer<T> extends JsonDeserializer<T> {
      * @param node
      * @return
      */
-    protected Notifications createNotifications(JsonNode node) {
+    private Notifications createNotifications(JsonNode node) {
         Notifications n = new Notifications();
         for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
             Map.Entry<String, JsonNode> entry = it.next();
@@ -157,7 +157,7 @@ public abstract class PegasusJsonDeserializer<T> extends JsonDeserializer<T> {
      * @param node
      * @return
      */
-    protected Notifications createNotifications(String type, JsonNode node) {
+    private Notifications createNotifications(String type, JsonNode node) {
         Notifications notifications = new Notifications();
         if (type.equals("shell")) {
             if (node.isArray()) {
