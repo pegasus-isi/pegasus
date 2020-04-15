@@ -31,7 +31,7 @@ $defs:
   genericProfilePropertyType:
     type: object
     patternProperties:
-      '^(?!x-)[\_\.\-a-zA-Z0-9_]+$':
+      '^(?!x-)[+.a-zA-Z0-9_-]+$':
         oneOf:
           - type: string
           - type: number
