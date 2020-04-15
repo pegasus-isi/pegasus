@@ -63,9 +63,31 @@ public class NotificationsTest {
         Notifications n = mapper.readValue(test, Notifications.class);
         assertNotNull(n);
         assertTrue(n.contains(new Invoke(Invoke.WHEN.start, "/bin/date")));
-        /*
-        n.contains(new Invoke(Invoke.WHEN.end, "/bin/echo \"Finished\""));
-        assertEquals(expected.toString(), actual.toString());
-        */
+        assertTrue(n.contains(new Invoke(Invoke.WHEN.end, "/bin/echo \"Finished\"")));
+    }
+
+    @Test
+    public void testNotificationsSerialization() throws IOException {
+        ObjectMapper mapper =
+                new ObjectMapper(
+                        new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+
+        Notifications n = new Notifications();
+        n.add(new Invoke(Invoke.WHEN.start, "/bin/date"));
+        n.add(new Invoke(Invoke.WHEN.end, "/bin/echo \"Finished\""));
+
+        String expected =
+                "---\n"
+                        + "shell:\n"
+                        + " -\n"
+                        + "  _on: \"start\"\n"
+                        + "  cmd: \"/bin/date\"\n"
+                        + "  _on: \"end\"\n"
+                        + "  cmd: \"/bin/echo \\\"Finished\\\"\"\n"
+                        + "";
+        String actual = mapper.writeValueAsString(n);
+        System.out.println(actual);
+        assertEquals(expected, actual);
     }
 }

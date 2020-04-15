@@ -23,7 +23,6 @@ import edu.isi.pegasus.planner.catalog.classes.CatalogEntry;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.classes.VDSSysInfo2NMI;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogKeywords;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2VDSSysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
@@ -684,7 +683,7 @@ public class TransformationCatalogEntry implements CatalogEntry {
     }
 
     /**
-     * Custom serializer for YAML representation of Container
+     * Custom serializer for YAML representation of Transformation Catalog Entry
      *
      * @author Karan Vahi
      */
@@ -755,7 +754,7 @@ public class TransformationCatalogEntry implements CatalogEntry {
 
                 // for serialization profiles are associated at site level
                 if (entry.getAllProfiles() != null) {
-                    gen.writeFieldName(SiteCatalogKeywords.PROFILES.getReservedName());
+                    gen.writeFieldName(TransformationCatalogKeywords.PROFILES.getReservedName());
                     gen.writeObject(entry.getAllProfiles());
                 }
                 gen.writeEndObject();

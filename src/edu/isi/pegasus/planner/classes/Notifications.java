@@ -13,13 +13,17 @@
  */
 package edu.isi.pegasus.planner.classes;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import edu.isi.pegasus.planner.common.PegasusJsonDeserializer;
+import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.dax.Invoke.WHEN;
 import java.io.IOException;
@@ -38,6 +42,7 @@ import java.util.Map;
  * @version $Revision$
  */
 @JsonDeserialize(using = Notifications.JsonDeserializer.class)
+@JsonSerialize(using = Notifications.JsonSerializer.class)
 public class Notifications extends Data {
 
     /**
@@ -266,6 +271,60 @@ public class Notifications extends Data {
         @Override
         public RuntimeException getException(String message) {
             return new RuntimeException(message);
+        }
+    }
+
+    /**
+     * Custom serializer for YAML representation of Notifications
+     *
+     * @author Karan Vahi
+     */
+    static class JsonSerializer extends PegasusJsonSerializer<Notifications> {
+
+        public JsonSerializer() {}
+
+        /**
+         * Serializes contents into YAML representation Sample serialization
+         *
+         * <pre>
+         * shell:
+         *      - _on: start
+         *        cmd: /bin/date
+         *      - _on: end
+         *        cmd: /bin/echo "Finished"
+         * </pre>
+         *
+         * @param notifications
+         * @param gen
+         * @param sp
+         * @throws IOException
+         */
+        public void serialize(Notifications notifications, JsonGenerator gen, SerializerProvider sp)
+                throws IOException {
+
+            if (notifications == null) {
+                return;
+            }
+            gen.writeStartObject();
+
+            // we only have one site associated
+            // only type of hooks supported so far
+            gen.writeFieldName("shell");
+            gen.writeStartArray();
+
+            gen.writeStartObject();
+            // traverse through all the enum keys
+            for (Invoke.WHEN when : Invoke.WHEN.values()) {
+                Collection<Invoke> c = notifications.getNotifications(when);
+                for (Invoke iv : c) {
+                    writeStringField(gen, "_on", iv.getWhen());
+                    writeStringField(gen, "cmd", iv.getWhat());
+                }
+            }
+            gen.writeEndObject();
+            gen.writeEndArray();
+
+            gen.writeEndObject();
         }
     }
 }
