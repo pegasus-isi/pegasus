@@ -221,8 +221,6 @@ class Client:
                     )
 
                     if v[PCNT_DONE] < 100:
-                        print(bar, end=("" if v[STATE] != "Failure" else "\n"))
-
                         if v[STATE] != "Failure":
                             print(bar, end="")
                         else:
@@ -233,7 +231,6 @@ class Client:
                         # percent done >= 100 means STATE = success
                         can_continue = False
                         print(bar)
-
 
                     # skip the rest of the lines
                     break

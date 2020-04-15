@@ -27,7 +27,7 @@ def test_from_env_no_pegasus_home(monkeypatch):
 
 @pytest.fixture(scope="function")
 def mock_subprocess(mocker):
-    cp = CompletedProcess(None, returncode=0, stdout=" ", stderr=" ")
+    cp = CompletedProcess(None, returncode=0, stdout=b" ", stderr=b" ")
     mocker.patch("subprocess.run", return_value=cp)
 
 
