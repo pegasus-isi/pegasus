@@ -607,6 +607,15 @@ public class TransformationCatalogEntry implements CatalogEntry {
     }
 
     /**
+     * Returns the list of all profiles associated with the transformation as a Profiles object.
+     *
+     * @return List Returns null if no profiles associated.
+     */
+    public Profiles getAllProfiles() {
+        return this.mProfiles;
+    }
+
+    /**
      * Returns the profiles for a particular Namespace.
      *
      * @param namespace String The mNamespace of the profile
@@ -710,7 +719,7 @@ public class TransformationCatalogEntry implements CatalogEntry {
                     entry.getLogicalVersion());
 
             if (entry.getResourceId() != null) {
-                //we only have one site associated
+                // we only have one site associated
                 gen.writeArrayFieldStart(TransformationCatalogKeywords.SITES.getReservedName());
                 writeStringField(
                         gen,
@@ -740,12 +749,13 @@ public class TransformationCatalogEntry implements CatalogEntry {
                         gen,
                         TransformationCatalogKeywords.SITE_OS_VERSION.getReservedName(),
                         sys.getOSVersion());
-                /*
+
+                // for serialization profiles are associated at site level
                 if (entry.getAllProfiles() != null) {
                     gen.writeFieldName(SiteCatalogKeywords.PROFILES.getReservedName());
                     gen.writeObject(entry.getAllProfiles());
                 }
-                */
+
                 gen.writeEndArray();
             }
 
