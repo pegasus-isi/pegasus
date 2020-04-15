@@ -721,10 +721,13 @@ public class TransformationCatalogEntry implements CatalogEntry {
             if (entry.getResourceId() != null) {
                 // we only have one site associated
                 gen.writeArrayFieldStart(TransformationCatalogKeywords.SITES.getReservedName());
+
+                gen.writeStartObject();
                 writeStringField(
                         gen,
                         TransformationCatalogKeywords.NAME.getReservedName(),
                         entry.getResourceId());
+
                 writeStringField(
                         gen, TransformationCatalogKeywords.TYPE.getReservedName(), entry.getType());
                 writeStringField(
@@ -755,7 +758,7 @@ public class TransformationCatalogEntry implements CatalogEntry {
                     gen.writeFieldName(SiteCatalogKeywords.PROFILES.getReservedName());
                     gen.writeObject(entry.getAllProfiles());
                 }
-
+                gen.writeEndObject();
                 gen.writeEndArray();
             }
 
