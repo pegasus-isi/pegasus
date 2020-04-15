@@ -5,6 +5,8 @@
 {% block title %}Job Details{% endblock %}
 {% block javascript_init %}
 <script type="text/javascript" charset="utf-8">
+    var tablesInitialized = [false, false];
+
     //
     // http://stackoverflow.com/questions/1899500/sorting-column-with-anchor-tags-in-jquery-datatables
     //
@@ -26,6 +28,8 @@
 
     $(document).ready (function ()
     {
+        var invTmpl = "{{ url_for ('.invocation', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id, invocation_id = '-55-') }}";
+
         $('#invocations_tabs').tabs (
         {
             beforeLoad: function (event, ui)
@@ -42,43 +46,72 @@
                     ui.panel.html ('Error loading contents of this tab.');
                 })
             },
-            load: function (event, ui)
-            {
-                var index = ui.tab.index ();
-                var panel = ui.panel;
+            create: function (event, ui) {
+                var tabIndex = ui.tab.index();
 
-                if (index == 0)
-                {
-                    panel.data ('initialized', true);
+                if (tabIndex == 0 && !tablesInitialized [tabIndex]) {
+                    tablesInitialized [tabIndex] = true;
 
-                    if (panel.html () == '')
-                    {
-                        panel.html ('No failed invocations.')
-                    }
-                    else
-                    {
-                        $('#failed_invocations_list').dataTable ({
-                            "jQueryUI" : true,
-                            "pagingType": "full_numbers"
-                        });
-                    }
+                    $('#failed_invocations_list').dataTable({
+                        "jQueryUI": true,
+                        "pagingType": "full_numbers",
+                        "ajax": {
+                            "url": "{{ url_for ('.failed_invocations', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}",
+                            "dataSrc": function (json) {
+                                var data = json;
+
+                                for(var i = 0; i < data.length; i++) {
+                                    data[i].DT_RowClass = "failed";
+                                    data[i].invocation = $("<a>" + (data[i].abs_task_id == null ? data[i].exec_job_id : data[i].abs_task_id) + "</a>")
+                                        .attr("href",
+                                            invTmpl.replace("-55-", data[i].invocation_id)
+                                        )[0].outerHTML;
+                                }
+
+                                return data;
+                            }
+                        },
+                        "autoWidth": false,
+                        "columns": [
+                            {"data": "invocation"},
+                            {"data": "remote_duration"},
+                        ]
+                    });
                 }
-                else if (index == 1)
-                {
-                    panel.data ('initialized', true);
+            },
+            activate: function (event, ui) {
+                var tabIndex = ui.newTab.index();
 
-                    if (panel.html () == '')
-                    {
-                        panel.html ('No successful invocations.')
-                    }
-                    else
-                    {
-                        $('#successful_invocations_list').dataTable ({
-                            "jQueryUI"   : true,
-                            "pagingType" : "full_numbers",
-                            "processing" : true
-                        });
-                    }
+            if (tabIndex == 1 && !tablesInitialized [tabIndex]) {
+                tablesInitialized [tabIndex] = true;
+
+                    $('#successful_invocations_list').dataTable({
+                        "jQueryUI": true,
+                        "pagingType": "full_numbers",
+                        "processing": true,
+                        "serverSide": true,
+                        "ajax": {
+                            "url": "{{ url_for ('.successful_invocations', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}",
+                            "dataSrc": function (json) {
+                                var data = json;
+
+                                for(var i = 0; i < data.length; i++) {
+                                    console.log(data[i].invocation_id);
+                                    data[i].DT_RowClass = "succesful";
+                                    data[i].invocation = $("<a>" + (data[i].abs_task_id == null ? data[i].exec_job_id : data[i].abs_task_id) + "</a>")
+                                        .attr("href",
+                                            invTmpl.replace("-55-", data[i].invocation_id)
+                                        )[0].outerHTML;
+                                }
+                                return data;
+                            }
+                        },
+                        "autoWidth": false,
+                        "columns": [
+                            {"data": "invocation"},
+                            {"data": "remote_duration"},
+                        ]
+                    });
                 }
             }
         });
@@ -266,16 +299,37 @@
         <div id="invocations_tabs">
             <ul>
                 <li>
-                    <a href="{{ url_for ('.failed_invocations', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}"
-                       title="failed_invocations">Failed</a>
+                    <a href="#failed_invocations" title="failed_invocations">Failed</a>
                 </li>
                 <li>
-                    <a href="{{ url_for ('.successful_invocations', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}"
-                       title="successful_invocations">Successful</a>
+                    <a href="#successful_invocations" title="successful_invocations">Successful</a>
                 </li>
             </ul>
+            <div id="failed_invocations">
+                <table id="failed_invocations_list">
+                    <thead>
+                    <tr>
+                        <th>Invocations</th>
+                        <th>Time Taken</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+            <div id="successful_invocations">
+                <table id="successful_invocations_list">
+                    <thead>
+                    <tr>
+                        <th>Invocations</th>
+                        <th>Time Taken</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
         </div>
-
     </div>
 </section>
 {% endblock %}

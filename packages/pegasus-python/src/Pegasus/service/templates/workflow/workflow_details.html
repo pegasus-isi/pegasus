@@ -157,182 +157,236 @@ $(document).ready(function () {
     highChartsInitialization();
 
     $('#jobs_tabs').tabs(
-            {
-                beforeLoad: function (event, ui) {
-                    ui.jqXHR.error(function () {
-                        ui.panel.html('Error loading contents of this tab.');
-                    })
-                },
-                load: function (event, ui) {
-                    if (ui.panel.html() == '') {
-                        ui.panel.html('No sub-workflows found.')
-                    }
-                    else {
-                        $('#sub_workflows_list').dataTable({"jQueryUI": true, "pagingType": "full_numbers"});
-                    }
-                },
-                activate: function (event, ui) {
-                    var tabIndex = ui.newTab.index();
-                    var urlTmpl = "{{ url_for('.job', root_wf_id='-11-', wf_id='-22-', job_id='-33-', job_instance_id='-44-') }}";
-                    var stdOutTmpl = "{{ url_for('.stdout', root_wf_id='-11-', wf_id='-22-', job_id='-33-', job_instance_id='-44-') }}";
-                    var stdErrTmpl = "{{ url_for('.stderr', root_wf_id='-11-', wf_id='-22-', job_id='-33-', job_instance_id='-44-') }}";
+    {
+        beforeLoad: function (event, ui) {
+            ui.jqXHR.error(function () {
+                ui.panel.html('Error loading contents of this tab.');
+            })
+        },
+        create: function (event, ui) {
+            var tabIndex = ui.tab.index();
 
-                    if (tabIndex == 1 && !tablesInitialized [tabIndex]) {
-                        tablesInitialized [tabIndex] = true;
+            if (tabIndex == 0 && !tablesInitialized [tabIndex]) {
+                tablesInitialized [tabIndex] = true;
 
-                        $('#failed_jobs_list').dataTable({
-                            "jQueryUI": true,
-                            "pagingType": "full_numbers",
-                            "processing": true,
-                            "serverSide": true,
-                            "ajax": {
-                                "url": "{{ url_for ('.failed_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
-                                "dataSrc": function (json) {
-                                    var data = json.data;
+                $('#sub_workflows_list').dataTable({
+                    "jQueryUI": true,
+                    "pagingType": "full_numbers",
+                    "ajax": {
+                        "url": "{{ url_for ('.sub_workflows', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                        "dataSrc": function (json) {
+                            var wfTmpl = "{{ url_for('.workflow', root_wf_id='-11-', wf_id='-22-') }}";
+                            var data = json;
 
-                                    for(var i = 0; i < data.length; i++) {
-                                        data[i].DT_RowClass = "failed";
-                                        data[i].exec_job_id = $("<a>" + data[i].exec_job_id + "</a>").attr("href",
-                                            urlTmpl
-                                                .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
-                                                .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
-                                        )[0].outerHTML;
-                                        data[i].stdout = $("<a>Application Stdout/Stderr    </a>")
-                                            .attr("href",
-                                                stdOutTmpl
-                                                    .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
-                                                    .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
-                                            )
-                                            .attr("target", "_blank")[0].outerHTML;
-                                        data[i].stderr = $("<a>Condor Stderr/Pegasus Lite Log</a>")
-                                            .attr("href",
-                                                stdErrTmpl
-                                                    .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
-                                                    .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
-                                            )
-                                            .attr("target", "_blank")[0].outerHTML;
-                                    }
-                                    return data;
-                                }
-                            },
-                            "autoWidth": false,
-                            "columns": [
-                                {"data": "exec_job_id"},
-                                {"data": "exitcode"},
-                                {"data": "stdout"},
-                                {"data": "stderr"}
-                            ]
-                        });
-                    }
-                    else if (tabIndex == 2 && !tablesInitialized [tabIndex]) {
-                        tablesInitialized [tabIndex] = true;
+                            for(var i = 0; i < data.length; i++) {
+                                data[i].DT_RowClass = data[i].state.toLowerCase();
+                                data[i].dax_label = $("<a>" + data[i].dax_label + "</a>").attr("href",
+                                    wfTmpl
+                                        .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                )[0].outerHTML;
+                            }
+                            return data;
+                        }
+                    },
+                    "autoWidth": false,
+                    "columns": [
+                        {"data": "dax_label"},
+                        {"data": "state"},
+                    ]
+                });
+            }
+        },
+        activate: function (event, ui) {
+            var tabIndex = ui.newTab.index();
+            var urlTmpl = "{{ url_for('.job', root_wf_id='-11-', wf_id='-22-', job_id='-33-', job_instance_id='-44-') }}";
+            var stdOutTmpl = "{{ url_for('.stdout', root_wf_id='-11-', wf_id='-22-', job_id='-33-', job_instance_id='-44-') }}";
+            var stdErrTmpl = "{{ url_for('.stderr', root_wf_id='-11-', wf_id='-22-', job_id='-33-', job_instance_id='-44-') }}";
 
-                        $('#running_jobs_list').dataTable({
-                            "jQueryUI": true,
-                            "pagingType": "full_numbers",
-                            "processing": true,
-                            "serverSide": true,
-                            "ajax": {
-                                "url": "{{ url_for ('.running_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
-                                "dataSrc": function (json) {
-                                    var data = json.data;
+            if (tabIndex == 0 && !tablesInitialized [tabIndex]) {
+                tablesInitialized [tabIndex] = true;
 
-                                    for(var i = 0; i < data.length; i++) {
-                                        data[i].DT_RowClass = "running";
-                                        data[i].exec_job_id = $("<a>" + data[i].exec_job_id + "</a>").attr("href",
-                                            urlTmpl
-                                                .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
-                                                .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
-                                        )[0].outerHTML;
-                                    }
-                                    return data;
-                                }
-                            },
-                            "autoWidth": false,
-                            "columns": [
-                                {"data": "exec_job_id"}
-                            ]
-                        });
-                    }
-                    else if (tabIndex == 3 && !tablesInitialized [tabIndex]) {
-                        tablesInitialized [tabIndex] = true;
+                $('#sub_workflows_list').dataTable({
+                    "jQueryUI": true,
+                    "pagingType": "full_numbers",
+                    "ajax": {
+                        "url": "{{ url_for ('.sub_workflows', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                        "dataSrc": function (json) {
+                            var wfTmpl = "{{ url_for('.workflow', root_wf_id='-11-', wf_id='-22-') }}";
+                            var data = json.data;
 
-                        $('#successful_jobs_list').dataTable({
-                            "jQueryUI": true,
-                            "pagingType": "full_numbers",
-                            "processing": true,
-                            "serverSide": true,
-                            "ajax": {
-                                "url": "{{ url_for ('.successful_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
-                                "dataSrc": function (json) {
-                                    var data = json.data;
-                                    for(var i = 0; i < data.length; i++) {
-                                        data[i].DT_RowClass = "succesfull";
-                                        data[i].exec_job_id = $("<a>" + data[i].exec_job_id + "</a>").attr("href",
-                                            urlTmpl
-                                                .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
-                                                .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
-                                        )[0].outerHTML;
-                                    }
-                                    return data;
-                                }
-                            },
-                            "autoWidth": false,
-                            "columns": [
-                                {"data": "exec_job_id"},
-                                {"data": "duration_formatted"}
-                            ]
-                        });
-                    }
-                    else if (tabIndex == 4 && !tablesInitialized [tabIndex]) {
-                        tablesInitialized [tabIndex] = true;
+                            for(var i = 0; i < data.length; i++) {
+                                data[i].DT_RowClass = data[i].state.toLowerCase();
+                                data[i].dax_label = $("<a>" + data[i].dax_label + "</a>").attr("href",
+                                    wfTmpl
+                                        .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                )[0].outerHTML;
+                            }
+                            return data;
+                        }
+                    },
+                    "autoWidth": false,
+                    "columns": [
+                        {"data": "dax_label"},
+                        {"data": "state"},
+                    ]
+                });
+            }
+            else if (tabIndex == 1 && !tablesInitialized [tabIndex]) {
+                tablesInitialized [tabIndex] = true;
 
-                        $('#failing_jobs_list').dataTable({
-                            "jQueryUI": true,
-                            "pagingType": "full_numbers",
-                            "processing": true,
-                            "serverSide": true,
-                            "ajax": {
-                                "url": "{{ url_for ('.failing_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
-                                "dataSrc": function (json) {
-                                    var data = json.data;
+                $('#failed_jobs_list').dataTable({
+                    "jQueryUI": true,
+                    "pagingType": "full_numbers",
+                    "processing": true,
+                    "serverSide": true,
+                    "ajax": {
+                        "url": "{{ url_for ('.failed_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                        "dataSrc": function (json) {
+                            var data = json.data;
 
-                                    for(var i = 0; i < data.length; i++) {
-                                        data[i].DT_RowClass = "failing";
-                                        data[i].exec_job_id = $("<a>" + data[i].exec_job_id + "</a>").attr("href",
-                                            urlTmpl
-                                                .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
-                                                .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
-                                        )[0].outerHTML;
-                                        data[i].stdout = $("<a>Application Stdout/Stderr</a>")
-                                            .attr("href",
-                                                stdOutTmpl
-                                                    .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
-                                                    .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
-                                            )
-                                            .attr("target", "_blank")[0].outerHTML;
-                                        data[i].stderr = $("<a>Condor Stderr/Pegasus Lite Log</a>")
-                                            .attr("href",
-                                                stdErrTmpl
-                                                    .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
-                                                    .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
-                                            )
-                                            .attr("target", "_blank")[0].outerHTML;
-                                    }
-                                    return data;
-                                }
-                            },
-                            "autoWidth": false,
-                            "columns": [
-                                {"data": "exec_job_id"},
-                                {"data": "exitcode"},
-                                {"data": "stdout"},
-                                {"data": "stderr"}
-                            ]
-                        });
-                    }
-                }
-            });
+                            for(var i = 0; i < data.length; i++) {
+                                data[i].DT_RowClass = "failed";
+                                data[i].exec_job_id = $("<a>" + data[i].exec_job_id + "</a>").attr("href",
+                                    urlTmpl
+                                        .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                        .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
+                                )[0].outerHTML;
+                                data[i].stdout = $("<a>Application Stdout/Stderr    </a>")
+                                    .attr("href",
+                                        stdOutTmpl
+                                            .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                            .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
+                                    )
+                                    .attr("target", "_blank")[0].outerHTML;
+                                data[i].stderr = $("<a>Condor Stderr/Pegasus Lite Log</a>")
+                                    .attr("href",
+                                        stdErrTmpl
+                                            .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                            .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
+                                    )
+                                    .attr("target", "_blank")[0].outerHTML;
+                            }
+                            return data;
+                        }
+                    },
+                    "autoWidth": false,
+                    "columns": [
+                        {"data": "exec_job_id"},
+                        {"data": "exitcode"},
+                        {"data": "stdout"},
+                        {"data": "stderr"}
+                    ]
+                });
+            }
+            else if (tabIndex == 2 && !tablesInitialized [tabIndex]) {
+                tablesInitialized [tabIndex] = true;
+
+                $('#running_jobs_list').dataTable({
+                    "jQueryUI": true,
+                    "pagingType": "full_numbers",
+                    "processing": true,
+                    "serverSide": true,
+                    "ajax": {
+                        "url": "{{ url_for ('.running_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                        "dataSrc": function (json) {
+                            var data = json.data;
+
+                            for(var i = 0; i < data.length; i++) {
+                                data[i].DT_RowClass = "running";
+                                data[i].exec_job_id = $("<a>" + data[i].exec_job_id + "</a>").attr("href",
+                                    urlTmpl
+                                        .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                        .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
+                                )[0].outerHTML;
+                            }
+                            return data;
+                        }
+                    },
+                    "autoWidth": false,
+                    "columns": [
+                        {"data": "exec_job_id"}
+                    ]
+                });
+            }
+            else if (tabIndex == 3 && !tablesInitialized [tabIndex]) {
+                tablesInitialized [tabIndex] = true;
+
+                $('#successful_jobs_list').dataTable({
+                    "jQueryUI": true,
+                    "pagingType": "full_numbers",
+                    "processing": true,
+                    "serverSide": true,
+                    "ajax": {
+                        "url": "{{ url_for ('.successful_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                        "dataSrc": function (json) {
+                            var data = json.data;
+                            for(var i = 0; i < data.length; i++) {
+                                data[i].DT_RowClass = "succesfull";
+                                data[i].exec_job_id = $("<a>" + data[i].exec_job_id + "</a>").attr("href",
+                                    urlTmpl
+                                        .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                        .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
+                                )[0].outerHTML;
+                            }
+                            return data;
+                        }
+                    },
+                    "autoWidth": false,
+                    "columns": [
+                        {"data": "exec_job_id"},
+                        {"data": "duration_formatted"}
+                    ]
+                });
+            }
+            else if (tabIndex == 4 && !tablesInitialized [tabIndex]) {
+                tablesInitialized [tabIndex] = true;
+
+                $('#failing_jobs_list').dataTable({
+                    "jQueryUI": true,
+                    "pagingType": "full_numbers",
+                    "processing": true,
+                    "serverSide": true,
+                    "ajax": {
+                        "url": "{{ url_for ('.failing_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                        "dataSrc": function (json) {
+                            var data = json.data;
+
+                            for(var i = 0; i < data.length; i++) {
+                                data[i].DT_RowClass = "failing";
+                                data[i].exec_job_id = $("<a>" + data[i].exec_job_id + "</a>").attr("href",
+                                    urlTmpl
+                                        .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                        .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
+                                )[0].outerHTML;
+                                data[i].stdout = $("<a>Application Stdout/Stderr</a>")
+                                    .attr("href",
+                                        stdOutTmpl
+                                            .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                            .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
+                                    )
+                                    .attr("target", "_blank")[0].outerHTML;
+                                data[i].stderr = $("<a>Condor Stderr/Pegasus Lite Log</a>")
+                                    .attr("href",
+                                        stdErrTmpl
+                                            .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                            .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
+                                    )
+                                    .attr("target", "_blank")[0].outerHTML;
+                            }
+                            return data;
+                        }
+                    },
+                    "autoWidth": false,
+                    "columns": [
+                        {"data": "exec_job_id"},
+                        {"data": "exitcode"},
+                        {"data": "stdout"},
+                        {"data": "stderr"}
+                    ]
+                });
+            }
+        }
+    });
 
     chartOptions =
     {
@@ -464,6 +518,7 @@ $(document).ready(function () {
     clipboardTooltipInitialization();
     loadMetadata();
     loadFiles();
+    $("#job_tabs").tabs("load", 0);
 });
 </script>
 {% endblock %}
@@ -575,8 +630,7 @@ $(document).ready(function () {
             <div id="jobs_tabs">
                 <ul>
                     <li>
-                        <a href="{{ url_for ('.sub_workflows', root_wf_id = root_wf_id, wf_id = wf_id) }}"
-                           title="sub_workflows">Sub Workflows</a>
+                        <a href="#sub_workflows" title="sub_workflows">Sub Workflows</a>
                     </li>
                     <li>
                         <a href="#failed_jobs" title="failed_jobs">Failed</a>
@@ -591,7 +645,18 @@ $(document).ready(function () {
                         <a href="#failing_jobs" title="failing_jobs">Failing</a>
                     </li>
                 </ul>
-                <div id="sub_workflows"></div>
+                <div id="sub_workflows">
+                    <table id="sub_workflows_list">
+                        <thead>
+                        <tr>
+                            <th>Workflow Label</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
                 <div id="failed_jobs">
                     <table id="failed_jobs_list">
                         <thead>
