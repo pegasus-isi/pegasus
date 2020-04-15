@@ -741,7 +741,9 @@ public class TransformationCatalogEntry implements CatalogEntry {
                         entry.getResourceId());
 
                 writeStringField(
-                        gen, TransformationCatalogKeywords.TYPE.getReservedName(), entry.getType());
+                        gen,
+                        TransformationCatalogKeywords.TYPE.getReservedName(),
+                        entry.getType().toString().toLowerCase());
                 writeStringField(
                         gen,
                         TransformationCatalogKeywords.SITE_PFN.getReservedName(),
