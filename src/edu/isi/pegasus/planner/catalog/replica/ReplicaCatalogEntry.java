@@ -396,8 +396,12 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable {
                     "Clone not implemented in the base class of " + this.getClass().getName(), e);
         }
         r.m_attributeMap = new TreeMap();
-        r.setPFN(getPFN());
-        r.setResourceHandle(getResourceHandle());
+        if (this.getPFN() != null) {
+            r.setPFN(getPFN());
+        }
+        if (this.getResourceHandle() != null) {
+            r.setResourceHandle(getResourceHandle());
+        }
         r.addAttribute(this.m_attributeMap);
 
         return r;
