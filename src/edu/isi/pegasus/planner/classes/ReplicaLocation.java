@@ -331,7 +331,8 @@ public class ReplicaLocation extends Data implements Cloneable {
             for (Iterator<String> it = rce.getAttributeIterator(); it.hasNext(); ) {
                 String attribute = it.next();
                 if (attribute.equals(ReplicaCatalogEntry.RESOURCE_HANDLE)
-                        || attribute.equals(ReplicaCatalogEntry.DEPRECATED_RESOURCE_HANDLE)) {
+                        || attribute.equals(ReplicaCatalogEntry.DEPRECATED_RESOURCE_HANDLE)
+                        || attribute.equals(ReplicaCatalogEntry.REGEX_KEY)) {
                     // skip
                     continue;
                 }
