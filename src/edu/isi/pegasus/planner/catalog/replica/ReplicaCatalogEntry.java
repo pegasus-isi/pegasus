@@ -280,7 +280,9 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable {
      * @see #getResourceHandle()
      */
     public void setResourceHandle(String handle) {
-        this.m_attributeMap.put(RESOURCE_HANDLE, handle);
+        if (handle != null ) {  
+            this.m_attributeMap.put(RESOURCE_HANDLE, handle);
+        }
     }
 
     /**
