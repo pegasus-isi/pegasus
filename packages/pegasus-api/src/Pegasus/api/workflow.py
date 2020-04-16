@@ -915,28 +915,80 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         self.transformation_catalog = tc
 
     @_chained
-    def add_dependency(self, parent, *children):
-        """Manually specify a dependency between one job to one or more other jobs
+    def add_dependency(self, job, *, parents=[], children=[]):
+        """Add parent, child dependencies for a given job. 
+        
+        .. code-block::python
 
-        :param parent: parent job
-        :type parent: AbstractJob
-        :param children: one or more child jobs
-        :raises DuplicateError: a dependency has already been added between the parent job and one of the child jobs
-        :return: self
+            # Example 1: set parents of a given job
+            wf.add_dependency(job3, parents=[job1, job2])
+
+            # Example 2: set children of a given job
+            wf.add_dependency(job1, children=[job2, job3])
+
+            # Example 2 equivalent:
+            wf.add_dependency(job1, children=[job2])
+            wf.add_dependency(job1, children=[job3])
+
+            # Example 3: set parents and children of a given job
+            wf.add_dependency(job3, parents=[job1, job2], children=[job4, job5])
+
+
+        :param job: the job to which parents and children will be assigned
+        :type job: AbstractJob
+        :param parents: jobs to be added as parents to this job, defaults to []
+        :type parents: list, optional
+        :param children: jobs to be added as children of this job, defaults to []
+        :type children: list, optional
+        :raises ValueError: the given job(s) do not have ids assigned to them
+        :raises DuplicateError: a dependency between two jobs already has been added
         """
-        children_ids = {child._id for child in children}
-        parent_id = parent._id
-        if parent_id in self.dependencies:
-            if not self.dependencies[parent_id].children_ids.isdisjoint(children_ids):
-                raise DuplicateError(
-                    "A dependency already exists between parent_id: {} and children_ids: {}".format(
-                        parent_id, children_ids
-                    )
+        # ensure that job, parents, and children are all valid and have ids
+        if job._id is None:
+            raise ValueError(
+                "The given job does not have an id. Either assign one to it upon creation or add the job to this workflow before manually adding its dependencies."
+            )
+
+        for parent in parents:
+            if parent._id is None:
+                raise ValueError(
+                    "One of the given parents does not have an id. Either assign one to it upon creation or add the parent job to this workflow before manually adding its dependencies."
                 )
 
-            self.dependencies[parent_id].children_ids.update(children_ids)
-        else:
-            self.dependencies[parent_id] = _JobDependency(parent_id, children_ids)
+        for child in children:
+            if child._id is None:
+                raise ValueError(
+                    "One of the given children does not have an id. Either assign one to it upon creation or add the child job to this workflow before manually adding its dependencies."
+                )
+
+        # for each parent, add job as a child
+        for parent in parents:
+            if parent._id not in self.dependencies:
+                self.dependencies[parent._id] = _JobDependency(parent._id, {job._id})
+            else:
+                if job._id in self.dependencies[parent._id].children_ids:
+                    raise DuplicateError(
+                        "A dependency already exists between parent id: {} and job id: {}".format(
+                            parent._id, job._id
+                        )
+                    )
+
+                self.dependencies[parent._id].children_ids.add(job._id)
+
+        # for each child, add job as a parent
+        if len(children) > 0:
+            if job._id not in self.dependencies:
+                self.dependencies[job._id] = _JobDependency(job._id, set())
+
+            for child in children:
+                if child._id in self.dependencies[job._id].children_ids:
+                    raise DuplicateError(
+                        "A dependency already exists between job id: {} and child id: {}".format(
+                            job._id, child._id
+                        )
+                    )
+                else:
+                    self.dependencies[job._id].children_ids.add(child._id)
 
     def _infer_dependencies(self):
         """Internal function for automatically computing dependencies based on
@@ -1010,7 +1062,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
                     for _input in inputs:
                         try:
-                            self.add_dependency(output, _input)
+                            self.add_dependency(output, children=[_input])
                         except DuplicateError:
                             pass
 
