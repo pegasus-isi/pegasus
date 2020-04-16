@@ -352,8 +352,7 @@ public class YAML implements ReplicaCatalog {
         // } end of finally block
     }
 
-    private void write(Writer out, Map<String, ReplicaLocation> m)
-            throws IOException {
+    private void write(Writer out, Map<String, ReplicaLocation> m) throws IOException {
         String newline = System.getProperty("line.separator", "\r\n");
         Escape e = new Escape("\"\\", '\\');
         if (m != null) {
@@ -692,16 +691,16 @@ public class YAML implements ReplicaCatalog {
     public Map lookup(Map constraints) {
         if (constraints == null || constraints.size() == 0) {
             // return everything
-            //Map<String, Collection<ReplicaCatalogEntry>> result =
+            // Map<String, Collection<ReplicaCatalogEntry>> result =
             //        new HashMap<String, Collection<ReplicaCatalogEntry>>(mLFN);
-            //result.putAll(mLFNRegex);
+            // result.putAll(mLFNRegex);
             Map<String, Collection<ReplicaCatalogEntry>> result =
                     new HashMap<String, Collection<ReplicaCatalogEntry>>();
-            for(Map.Entry<String,ReplicaLocation> entry: mLFN.entrySet()){
+            for (Map.Entry<String, ReplicaLocation> entry : mLFN.entrySet()) {
                 ReplicaLocation rl = entry.getValue();
                 result.put(entry.getKey(), rl.getPFNList());
             }
-            for(Map.Entry<String,ReplicaLocation> entry: mLFNRegex.entrySet()){
+            for (Map.Entry<String, ReplicaLocation> entry : mLFNRegex.entrySet()) {
                 ReplicaLocation rl = entry.getValue();
                 result.put(entry.getKey(), rl.getPFNList());
             }
@@ -711,8 +710,7 @@ public class YAML implements ReplicaCatalog {
             Pattern p = Pattern.compile((String) constraints.get("lfn"));
             Map<String, Collection<ReplicaCatalogEntry>> result =
                     new HashMap<String, Collection<ReplicaCatalogEntry>>();
-            for (Iterator<Entry<String, ReplicaLocation>> i =
-                            mLFN.entrySet().iterator();
+            for (Iterator<Entry<String, ReplicaLocation>> i = mLFN.entrySet().iterator();
                     i.hasNext(); ) {
                 Entry<String, ReplicaLocation> e = i.next();
                 String lfn = e.getKey();
@@ -812,20 +810,21 @@ public class YAML implements ReplicaCatalog {
             }
         }
 
-        c = isRegex ? mLFNRegex.get(lfn).getPFNList() : mLFN.get(lfn).getPFNList();
-
-        if (c == null) {
-            c = new ArrayList<ReplicaCatalogEntry>();
-
-            if (isRegex) {
-                mLFNRegex.put(lfn, new ReplicaLocation(lfn,c));
-                mLFNPattern.put(lfn, Pattern.compile(lfn));
-            } else {
-                mLFN.put(lfn, new ReplicaLocation(lfn,c));
-            }
+        ReplicaLocation rl = isRegex ? mLFNRegex.get(lfn) : mLFN.get(lfn);
+        if (rl != null) {
+            c = rl.getPFNList();
         }
+        // c = isRegex ? mLFNRegex.get(lfn).getPFNList():mLFN.get(lfn).getPFNList();
+
+        c = (c == null) ? new ArrayList<ReplicaCatalogEntry>() : c;
 
         c.add(tuple);
+        if (isRegex) {
+            mLFNRegex.put(lfn, new ReplicaLocation(lfn, c, false));
+            mLFNPattern.put(lfn, Pattern.compile(lfn));
+        } else {
+            mLFN.put(lfn, new ReplicaLocation(lfn, c, false));
+        }
 
         return 1;
     }

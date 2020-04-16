@@ -70,14 +70,27 @@ public class ReplicaLocation extends Data implements Cloneable {
      * @param pfns the list of <code>ReplicaCatalogEntry</code> objects.
      */
     public ReplicaLocation(String lfn, Collection<ReplicaCatalogEntry> pfns) {
+        this(lfn, pfns, true);
+    }
+
+    /**
+     * Overloaded constructor. Initializes the member variables to the values passed.
+     *
+     * @param lfn the logical filename.
+     * @param pfns the list of <code>ReplicaCatalogEntry</code> objects.
+     * @param sanitize add site handle if not specified
+     */
+    public ReplicaLocation(String lfn, Collection<ReplicaCatalogEntry> pfns, boolean sanitize) {
         mLFN = lfn;
         mMetadata = this.removeMetadata(pfns);
 
         // PM-1001 always create a separate list only if required
         mPFNList = new ArrayList(pfns);
 
-        // sanitize pfns. add a default resource handle if not specified
-        sanitize(mPFNList);
+        if (sanitize) {
+            // sanitize pfns. add a default resource handle if not specified
+            sanitize(mPFNList);
+        }
     }
 
     /**
