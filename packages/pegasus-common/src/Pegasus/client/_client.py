@@ -105,7 +105,7 @@ class Client:
 
         self._log.info("Plan: {} \n {}".format(rv.stdout, rv.stderr))
 
-        submit_dir = self._get_submit_dir(rv.stdout.decode())
+        submit_dir = self._get_submit_dir(rv.stdout)
         workflow = Workflow(submit_dir, self)
         return workflow
 
@@ -287,6 +287,7 @@ class Client:
         if not cmd:
             raise ValueError("cmd is required")
 
+        # add stdout, stderr PIPE stuff here
         rv = subprocess.run(cmd)
         r = Client._make_result(rv)
 
