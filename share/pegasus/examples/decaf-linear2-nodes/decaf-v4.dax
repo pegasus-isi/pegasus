@@ -17,8 +17,8 @@
 	<dflow id="ID0000002"  name="decaf">
 	  <!-- to indicate the input and output file that a decaf
 	       dataflow requires -->
-	  <uses name="f.b1" link="input"/>
-
+      <uses name="f.b1" link="input"/>
+    
 	  <!-- this example does not generate any output file
 	  <uses name="f.out" link="output" register="true" transfer="true"/>
 	  -->
@@ -42,6 +42,10 @@
 
 		<decaf key="start_proc">4</decaf>
 		<decaf key="nprocs">2</decaf>
+        <decaf key="name">prod_con</decaf>
+        <decaf key="transport">mpi</decaf>
+        <decaf key="sourcePort">out</decaf>
+        <decaf key="targetPort">in</decaf>
 		<decaf key="func">dflow</decaf>
 		<decaf key="prod_dflow_redist">count</decaf>
 		<decaf key="path">${DECAF_PREFIX}/examples/direct/mod_linear_2nodes.so</decaf>
