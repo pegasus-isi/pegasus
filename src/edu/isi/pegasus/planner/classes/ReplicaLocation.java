@@ -82,12 +82,15 @@ public class ReplicaLocation extends Data implements Cloneable {
      */
     public ReplicaLocation(String lfn, Collection<ReplicaCatalogEntry> pfns, boolean sanitize) {
         mLFN = lfn;
-        mMetadata = this.removeMetadata(pfns);
 
         // PM-1001 always create a separate list only if required
         mPFNList = new ArrayList(pfns);
 
         if (sanitize) {
+            mMetadata = this.removeMetadata(pfns);
+            // only remove metadata if sanitize on.
+            // we need to ensure metadata is not removed when ReplicaLocation
+            // is used in the YAML backed replica catalog store.
             // sanitize pfns. add a default resource handle if not specified
             sanitize(mPFNList);
         }
