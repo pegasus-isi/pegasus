@@ -123,9 +123,10 @@ public class YAML implements ReplicaCatalog {
     protected String mFilename = null;
 
     /** Maintains a memory slurp of the file representation. */
-    protected Map<String, Collection<ReplicaCatalogEntry>> mLFN = null;
+    /** Maintains a memory slurp of the file representation. */
+    protected Map<String, ReplicaLocation> mLFN = null;
 
-    protected Map<String, Collection<ReplicaCatalogEntry>> mLFNRegex = null;
+    protected Map<String, ReplicaLocation> mLFNRegex = null;
 
     protected Map<String, Pattern> mLFNPattern = null;
 
@@ -172,8 +173,8 @@ public class YAML implements ReplicaCatalog {
             return false;
         }
         mFilename = filename;
-        mLFN = new LinkedHashMap<String, Collection<ReplicaCatalogEntry>>();
-        mLFNRegex = new LinkedHashMap<String, Collection<ReplicaCatalogEntry>>();
+        mLFN = new LinkedHashMap<String, ReplicaLocation>();
+        mLFNRegex = new LinkedHashMap<String, ReplicaLocation>();
         mLFNPattern = new LinkedHashMap<String, Pattern>();
 
         // first attempt to validate
@@ -351,16 +352,16 @@ public class YAML implements ReplicaCatalog {
         // } end of finally block
     }
 
-    private void write(Writer out, Map<String, Collection<ReplicaCatalogEntry>> m)
+    private void write(Writer out, Map<String, ReplicaLocation> m)
             throws IOException {
         String newline = System.getProperty("line.separator", "\r\n");
         Escape e = new Escape("\"\\", '\\');
         if (m != null) {
             for (Iterator<String> i = m.keySet().iterator(); i.hasNext(); ) {
                 String lfn = i.next();
-                Collection<ReplicaCatalogEntry> c = m.get(lfn);
+                ReplicaLocation c = m.get(lfn);
                 if (c != null) {
-                    for (Iterator<ReplicaCatalogEntry> j = c.iterator(); j.hasNext(); ) {
+                    for (Iterator<ReplicaCatalogEntry> j = c.pfnIterator(); j.hasNext(); ) {
                         ReplicaCatalogEntry rce = j.next();
                         out.write(quote(e, lfn));
                         out.write(' ');
@@ -413,9 +414,9 @@ public class YAML implements ReplicaCatalog {
         Collection<ReplicaCatalogEntry> c = new ArrayList<ReplicaCatalogEntry>();
 
         // Lookup regular LFN's
-        Collection<ReplicaCatalogEntry> tmp = mLFN.get(lfn);
+        ReplicaLocation tmp = mLFN.get(lfn);
         if (tmp != null) {
-            for (ReplicaCatalogEntry rce : tmp) {
+            for (ReplicaCatalogEntry rce : tmp.getPFNList()) {
                 String pool = rce.getResourceHandle();
                 if (pool == null && handle == null
                         || pool != null && handle != null && pool.equals(handle)) c.add(rce);
@@ -431,8 +432,8 @@ public class YAML implements ReplicaCatalog {
             p = mLFNPattern.get(l);
             m = p.matcher(lfn);
             if (m.matches()) {
-                Collection<ReplicaCatalogEntry> entries = mLFNRegex.get(l);
-                for (ReplicaCatalogEntry entry : entries) {
+                ReplicaLocation entries = mLFNRegex.get(l);
+                for (ReplicaCatalogEntry entry : entries.getPFNList()) {
                     pool = entry.getResourceHandle();
                     if (pool == null && handle == null
                             || pool != null && handle != null && pool.equals(handle)) {
@@ -466,10 +467,10 @@ public class YAML implements ReplicaCatalog {
      */
     public Collection<ReplicaCatalogEntry> lookup(String lfn) {
         Collection<ReplicaCatalogEntry> c = new ArrayList<ReplicaCatalogEntry>();
-        Collection<ReplicaCatalogEntry> tmp;
+        ReplicaLocation tmp;
         // Lookup regular LFN's
         tmp = mLFN.get(lfn);
-        if (tmp != null) c.addAll(tmp);
+        if (tmp != null) c.addAll(tmp.getPFNList());
         // Lookup regex LFN's
         ReplicaCatalogEntry rce = null;
         Pattern p = null;
@@ -478,10 +479,10 @@ public class YAML implements ReplicaCatalog {
             p = mLFNPattern.get(l);
             m = p.matcher(lfn);
             if (m.matches()) {
-                Collection<ReplicaCatalogEntry> entries = mLFNRegex.get(l);
+                ReplicaLocation entries = mLFNRegex.get(l);
                 Collection<ReplicaCatalogEntry> entriesResult =
                         new ArrayList<ReplicaCatalogEntry>();
-                for (ReplicaCatalogEntry entry : entries) {
+                for (ReplicaCatalogEntry entry : entries.getPFNList()) {
                     String tmpPFN = entry.getPFN();
                     for (int k = 0, j = m.groupCount(); k <= j; ++k) {
                         tmpPFN = tmpPFN.replaceAll("\\[" + k + "\\]", m.group(k));
@@ -588,7 +589,7 @@ public class YAML implements ReplicaCatalog {
      * @see ReplicaCatalogEntry
      */
     public Map lookup(Set lfns, String handle) {
-        Collection<ReplicaCatalogEntry> c = null;
+        ReplicaLocation rl = null;
         Pattern p = null;
         Matcher m = null;
         String lfn = null;
@@ -600,9 +601,9 @@ public class YAML implements ReplicaCatalog {
             lfn = i.next(); // f.a - String file name
             List<ReplicaCatalogEntry> value = new ArrayList<ReplicaCatalogEntry>();
             // Lookup regular LFN's
-            c = mLFN.get(lfn);
-            if (c != null) {
-                for (Iterator j = c.iterator(); j.hasNext(); ) {
+            rl = mLFN.get(lfn);
+            if (rl != null) {
+                for (Iterator j = rl.pfnIterator(); j.hasNext(); ) {
                     rce = (ReplicaCatalogEntry) j.next();
                     pool = rce.getResourceHandle();
                     if (pool == null && handle == null
@@ -616,9 +617,9 @@ public class YAML implements ReplicaCatalog {
                 m = p.matcher(lfn); // See if f.a matches pattern
                 if (m.matches()) // Pattern matches?
                 {
-                    Collection<ReplicaCatalogEntry> entries = mLFNRegex.get(l);
+                    ReplicaLocation entries = mLFNRegex.get(l);
                     // Get all RCE entries for the matched pattern.
-                    for (ReplicaCatalogEntry entry : entries) {
+                    for (ReplicaCatalogEntry entry : entries.getPFNList()) {
                         pool = entry.getResourceHandle();
                         // Entry matches handle requirement?
                         if (pool == null && handle == null
@@ -691,21 +692,31 @@ public class YAML implements ReplicaCatalog {
     public Map lookup(Map constraints) {
         if (constraints == null || constraints.size() == 0) {
             // return everything
+            //Map<String, Collection<ReplicaCatalogEntry>> result =
+            //        new HashMap<String, Collection<ReplicaCatalogEntry>>(mLFN);
+            //result.putAll(mLFNRegex);
             Map<String, Collection<ReplicaCatalogEntry>> result =
-                    new HashMap<String, Collection<ReplicaCatalogEntry>>(mLFN);
-            result.putAll(mLFNRegex);
+                    new HashMap<String, Collection<ReplicaCatalogEntry>>();
+            for(Map.Entry<String,ReplicaLocation> entry: mLFN.entrySet()){
+                ReplicaLocation rl = entry.getValue();
+                result.put(entry.getKey(), rl.getPFNList());
+            }
+            for(Map.Entry<String,ReplicaLocation> entry: mLFNRegex.entrySet()){
+                ReplicaLocation rl = entry.getValue();
+                result.put(entry.getKey(), rl.getPFNList());
+            }
             return Collections.unmodifiableMap(result);
         } else if (constraints.size() == 1 && constraints.containsKey("lfn")) {
             // return matching LFNs
             Pattern p = Pattern.compile((String) constraints.get("lfn"));
             Map<String, Collection<ReplicaCatalogEntry>> result =
                     new HashMap<String, Collection<ReplicaCatalogEntry>>();
-            for (Iterator<Entry<String, Collection<ReplicaCatalogEntry>>> i =
+            for (Iterator<Entry<String, ReplicaLocation>> i =
                             mLFN.entrySet().iterator();
                     i.hasNext(); ) {
-                Entry<String, Collection<ReplicaCatalogEntry>> e = i.next();
+                Entry<String, ReplicaLocation> e = i.next();
                 String lfn = e.getKey();
-                if (p.matcher(lfn).matches()) result.put(lfn, e.getValue());
+                if (p.matcher(lfn).matches()) result.put(lfn, e.getValue().getPFNList());
             }
 
             return result;
@@ -764,7 +775,7 @@ public class YAML implements ReplicaCatalog {
         String handle = tuple.getResourceHandle();
 
         if (mLFN.containsKey(lfn)) {
-            c = mLFN.get(lfn);
+            c = mLFN.get(lfn).getPFNList();
 
             for (Iterator<ReplicaCatalogEntry> i = c.iterator(); i.hasNext(); ) {
                 ReplicaCatalogEntry rce = i.next();
@@ -783,7 +794,7 @@ public class YAML implements ReplicaCatalog {
         }
 
         if (mLFNRegex.containsKey(lfn)) {
-            c = mLFNRegex.get(lfn);
+            c = mLFNRegex.get(lfn).getPFNList();
 
             for (Iterator<ReplicaCatalogEntry> i = c.iterator(); i.hasNext(); ) {
                 ReplicaCatalogEntry rce = i.next();
@@ -801,16 +812,16 @@ public class YAML implements ReplicaCatalog {
             }
         }
 
-        c = isRegex ? mLFNRegex.get(lfn) : mLFN.get(lfn);
+        c = isRegex ? mLFNRegex.get(lfn).getPFNList() : mLFN.get(lfn).getPFNList();
 
         if (c == null) {
             c = new ArrayList<ReplicaCatalogEntry>();
 
             if (isRegex) {
-                mLFNRegex.put(lfn, c);
+                mLFNRegex.put(lfn, new ReplicaLocation(lfn,c));
                 mLFNPattern.put(lfn, Pattern.compile(lfn));
             } else {
-                mLFN.put(lfn, c);
+                mLFN.put(lfn, new ReplicaLocation(lfn,c));
             }
         }
 
