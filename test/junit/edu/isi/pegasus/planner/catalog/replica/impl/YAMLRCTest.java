@@ -64,6 +64,20 @@ public class YAMLRCTest {
     }
 
     @Test
+    public void simpleInsertWithMetadata() {
+        ReplicaCatalogEntry rc = new ReplicaCatalogEntry("b");
+        rc.addAttribute("user", "bamboo");
+        rc.addAttribute("size", "100GB");
+        // because of references create a new one
+        mYAMLRC.insert("a", (ReplicaCatalogEntry) rc.clone());
+        rc.addAttribute("user", "bamboo");
+        rc.addAttribute("size", "100GB");
+        Collection<ReplicaCatalogEntry> c = mYAMLRC.lookup("a");
+        // System.err.println(c);
+        assertTrue(c.contains(rc));
+    }
+
+    @Test
     public void lookupWithSubstitutionsTest() {
         HashMap attr = new HashMap();
         attr.put("regex", "true");
