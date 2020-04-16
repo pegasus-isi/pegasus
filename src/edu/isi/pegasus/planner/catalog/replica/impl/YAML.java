@@ -767,13 +767,16 @@ public class YAML implements ReplicaCatalog {
         if (lfn == null || tuple == null) throw new NullPointerException();
 
         boolean isRegex = tuple.isRegex();
-        Collection<ReplicaCatalogEntry> c = null;
+        ReplicaLocation rl = null;
+
+        // Collection<ReplicaCatalogEntry> c = null;
 
         String pfn = tuple.getPFN();
         String handle = tuple.getResourceHandle();
 
         if (mLFN.containsKey(lfn)) {
-            c = mLFN.get(lfn).getPFNList();
+            rl = mLFN.get(lfn);
+            Collection<ReplicaCatalogEntry> c = rl.getPFNList();
 
             for (Iterator<ReplicaCatalogEntry> i = c.iterator(); i.hasNext(); ) {
                 ReplicaCatalogEntry rce = i.next();
@@ -792,7 +795,8 @@ public class YAML implements ReplicaCatalog {
         }
 
         if (mLFNRegex.containsKey(lfn)) {
-            c = mLFNRegex.get(lfn).getPFNList();
+            rl = mLFNRegex.get(lfn);
+            Collection<ReplicaCatalogEntry> c = rl.getPFNList();
 
             for (Iterator<ReplicaCatalogEntry> i = c.iterator(); i.hasNext(); ) {
                 ReplicaCatalogEntry rce = i.next();
@@ -810,7 +814,8 @@ public class YAML implements ReplicaCatalog {
             }
         }
 
-        ReplicaLocation rl = isRegex ? mLFNRegex.get(lfn) : mLFN.get(lfn);
+        rl = isRegex ? mLFNRegex.get(lfn) : mLFN.get(lfn);
+        Collection<ReplicaCatalogEntry> c = null;
         if (rl != null) {
             c = rl.getPFNList();
         }
