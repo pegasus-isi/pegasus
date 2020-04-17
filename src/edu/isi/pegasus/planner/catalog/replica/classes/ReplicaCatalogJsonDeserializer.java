@@ -24,6 +24,7 @@ import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
+import edu.isi.pegasus.planner.namespace.Metadata;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -134,11 +135,11 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
                 String keyValue = node.get(key).asText();
                 switch (reservedKey) {
                     case TYPE:
-                        rce.addAttribute(key, keyValue);
+                        rce.addAttribute(Metadata.CHECKSUM_TYPE_KEY, keyValue);
                         break;
 
                     case VALUE:
-                        rce.addAttribute(key, keyValue);
+                        rce.addAttribute(Metadata.CHECKSUM_VALUE_KEY, keyValue);
                         break;
 
                     default:

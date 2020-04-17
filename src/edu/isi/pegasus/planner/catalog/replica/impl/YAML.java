@@ -1274,12 +1274,19 @@ public class YAML implements ReplicaCatalog {
 
             for (ReplicaCatalogEntry rce : rl.getPFNList()) {
                 gen.writeStartObject();
+                
                 writeStringField(gen, ReplicaCatalogKeywords.LFN.getReservedName(), rl.getLFN());
                 writeStringField(gen, ReplicaCatalogKeywords.PFN.getReservedName(), rce.getPFN());
                 writeStringField(
                         gen,
                         ReplicaCatalogKeywords.SITE.getReservedName(),
                         rce.getResourceHandle());
+                if(rce.isRegex()){
+                    writeStringField(gen, ReplicaCatalogKeywords.REGEX.getReservedName(), "true");
+                }
+                //if(rce.hasAttribute(ReplicaCatalog.))
+               // gen.writeFieldName(TransformationCatalogKeywords.PROFILES.getReservedName());
+                //    gen.writeObject(entry.getAllProfiles());
                 gen.writeEndObject();
             }
         }
