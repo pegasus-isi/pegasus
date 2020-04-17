@@ -16,6 +16,7 @@
 
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
@@ -24,10 +25,14 @@ import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.yaml.JacksonYAMLParseException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import edu.isi.pegasus.common.util.Boolean;
+import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.common.util.Escape;
 import edu.isi.pegasus.common.util.VariableExpander;
 import edu.isi.pegasus.planner.catalog.CatalogException;
@@ -37,18 +42,22 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaCatalogJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaCatalogKeywords;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
+import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import edu.isi.pegasus.planner.parser.YAMLSchemaValidationResult;
 import edu.isi.pegasus.planner.parser.YAMLSchemaValidator;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -100,7 +109,11 @@ import java.util.regex.Pattern;
  * @version $Revision: 5402 $
  */
 @JsonDeserialize(using = YAML.CallbackJsonDeserializer.class)
+@JsonSerialize(using = YAML.JsonSerializer.class)
 public class YAML implements ReplicaCatalog {
+    /** The default transformation Catalog version to which this maps to */
+    public static final String DEFAULT_REPLICA_CATALOG_VERSION = "5.0";
+
     /**
      * The name of the key that disables writing back to the cache file. Designates a static file.
      * i.e. read only
@@ -153,7 +166,7 @@ public class YAML implements ReplicaCatalog {
         mFilename = null;
         m_readonly = false;
         mVariableExpander = new VariableExpander();
-        mVersion = null;
+        mVersion = YAML.DEFAULT_REPLICA_CATALOG_VERSION;
 
         PegasusProperties props = PegasusProperties.getInstance();
         File schemaDir = props.getSchemaDir();
@@ -331,25 +344,43 @@ public class YAML implements ReplicaCatalog {
             mFilename = null;
             return;
         }
-        /**
-         * Commented out for time being till we write out the serializer try {
-         *
-         * <p>// open Writer out = new BufferedWriter(new FileWriter(mFilename)); // write header
-         * out.write( "# file-based replica catalog: " + Currently.iso8601(false, true, true, new
-         * Date())); out.write(newline); // write data write(out, mLFN); write(out, mLFNRegex); //
-         * close out.close(); } catch (IOException ioe) { // FIXME: blurt message somewhere sane
-         * System.err.println(ioe.getMessage()); } finally {
-         */
-        if (mLFN != null) mLFN.clear();
-        mLFN = null;
-        if (mLFNRegex != null) {
-            mLFNRegex.clear();
-            mLFNPattern.clear();
+
+        try {
+            Writer out = new BufferedWriter(new FileWriter(mFilename));
+            // write header
+            out.write(
+                    "# file-based replica catalog: "
+                            + Currently.iso8601(false, true, true, new Date()));
+            out.write(newline);
+
+            // in case of yaml we write it directly to the output file so we are
+            // returning null..
+            ObjectMapper mapper =
+                    new ObjectMapper(
+                            new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
+            mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+            out.write(mapper.writeValueAsString(this));
+            // close
+            out.close();
+            // this.mFlushOnClose = false;
+
+        } catch (IOException ioe) { // FIXME: blurt message somewhere sane
+            throw new ReplicaCatalogException(
+                    "Unable to write contents of Replica Catalog to " + mFilename, ioe);
+        } finally {
+
+            if (mLFN != null) {
+                mLFN.clear();
+            }
+            mLFN = null;
+            if (mLFNRegex != null) {
+                mLFNRegex.clear();
+                mLFNPattern.clear();
+            }
+            mLFNRegex = null;
+            mLFNPattern = null;
+            mFilename = null;
         }
-        mLFNRegex = null;
-        mLFNPattern = null;
-        mFilename = null;
-        // } end of finally block
     }
 
     private void write(Writer out, Map<String, ReplicaLocation> m) throws IOException {
@@ -1188,6 +1219,70 @@ public class YAML implements ReplicaCatalog {
             }
 
             return yamlRC;
+        }
+    }
+
+    /**
+     * Custom serializer for YAML representation of Transformation Catalog Entry
+     *
+     * @author Karan Vahi
+     */
+    static class JsonSerializer extends PegasusJsonSerializer<YAML> {
+
+        public JsonSerializer() {}
+
+        /**
+         * Serializes contents into YAML representation
+         *
+         * @param entry
+         * @param gen
+         * @param sp
+         * @throws IOException
+         */
+        public void serialize(YAML catalog, JsonGenerator gen, SerializerProvider sp)
+                throws IOException {
+
+            gen.writeStartObject();
+            writeStringField(
+                    gen, ReplicaCatalogKeywords.PEGASUS.getReservedName(), catalog.getVersion());
+
+            gen.writeArrayFieldStart(ReplicaCatalogKeywords.REPLICAS.getReservedName());
+
+            // first serialize the non regex entries
+            for (ReplicaLocation rl : catalog.mLFN.values()) {
+                serialize(rl, gen, sp);
+            }
+            // serialize the regex entries
+            for (ReplicaLocation rl : catalog.mLFNRegex.values()) {
+                serialize(rl, gen, sp);
+            }
+
+            gen.writeEndArray();
+            gen.writeEndObject();
+        }
+
+        /**
+         * Serializes contents into YAML representation
+         *
+         * @param entry
+         * @param gen
+         * @param sp
+         * @throws IOException
+         */
+        private void serialize(ReplicaLocation rl, JsonGenerator gen, SerializerProvider sp)
+                throws IOException {
+           
+
+            for (ReplicaCatalogEntry rce : rl.getPFNList()) {
+                gen.writeStartObject();
+                writeStringField(gen, ReplicaCatalogKeywords.LFN.getReservedName(), rl.getLFN());
+                writeStringField(gen, ReplicaCatalogKeywords.PFN.getReservedName(), rce.getPFN());
+                writeStringField(
+                        gen,
+                        ReplicaCatalogKeywords.SITE.getReservedName(),
+                        rce.getResourceHandle());
+                gen.writeEndObject();
+            }
         }
     }
 }
