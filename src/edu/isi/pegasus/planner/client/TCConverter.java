@@ -103,7 +103,7 @@ public class TCConverter extends Executable {
      * @return LongOpt[] list of valid options
      */
     public LongOpt[] generateValidOptions() {
-        LongOpt[] longopts = new LongOpt[9];
+        LongOpt[] longopts = new LongOpt[10];
         longopts[0] = new LongOpt("input", LongOpt.REQUIRED_ARGUMENT, null, 'i');
         longopts[1] = new LongOpt("iformat", LongOpt.REQUIRED_ARGUMENT, null, 'I');
         longopts[2] = new LongOpt("output", LongOpt.REQUIRED_ARGUMENT, null, 'o');
@@ -113,7 +113,7 @@ public class TCConverter extends Executable {
         longopts[6] = new LongOpt("verbose", LongOpt.NO_ARGUMENT, null, 'v');
         longopts[7] = new LongOpt("quiet", LongOpt.NO_ARGUMENT, null, 'q');
         longopts[8] = new LongOpt("conf", LongOpt.REQUIRED_ARGUMENT, null, 'c');
-
+        longopts[10] = new LongOpt("expand", LongOpt.NO_ARGUMENT, null, 'e');
         return longopts;
     }
 
