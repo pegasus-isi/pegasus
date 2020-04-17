@@ -113,7 +113,7 @@ public class TCConverter extends Executable {
         longopts[6] = new LongOpt("verbose", LongOpt.NO_ARGUMENT, null, 'v');
         longopts[7] = new LongOpt("quiet", LongOpt.NO_ARGUMENT, null, 'q');
         longopts[8] = new LongOpt("conf", LongOpt.REQUIRED_ARGUMENT, null, 'c');
-        longopts[10] = new LongOpt("expand", LongOpt.NO_ARGUMENT, null, 'e');
+        longopts[9] = new LongOpt("expand", LongOpt.NO_ARGUMENT, null, 'e');
         return longopts;
     }
 
