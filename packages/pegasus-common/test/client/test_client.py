@@ -78,19 +78,23 @@ class TestClient:
                 "--submit",
                 "--dax",
                 "dax.yml",
-            ]
+            ],
+            stderr=-1,
+            stdout=-1,
         )
 
     def test_run(self, mock_subprocess, client):
         client.run("submit_dir", verbose=3)
         subprocess.run.assert_called_once_with(
-            ["/path/bin/pegasus-run", "-vvv", "submit_dir"]
+            ["/path/bin/pegasus-run", "-vvv", "submit_dir"], stderr=-1, stdout=-1
         )
 
     def test_status(self, mock_subprocess, client):
         client.status("submit_dir", long=True, verbose=3)
         subprocess.run.assert_called_once_with(
-            ["/path/bin/pegasus-status", "--long", "-vvv", "submit_dir"]
+            ["/path/bin/pegasus-status", "--long", "-vvv", "submit_dir"],
+            stderr=-1,
+            stdout=-1,
         )
 
     @pytest.mark.parametrize(
@@ -137,19 +141,19 @@ class TestClient:
     def test_remove(self, mock_subprocess, client):
         client.remove("submit_dir", verbose=3)
         subprocess.run.assert_called_once_with(
-            ["/path/bin/pegasus-remove", "-vvv", "submit_dir"]
+            ["/path/bin/pegasus-remove", "-vvv", "submit_dir"], stderr=-1, stdout=-1
         )
 
     def test_analyzer(self, mock_subprocess, client):
         client.analyzer("submit_dir", verbose=3)
         subprocess.run.assert_called_once_with(
-            ["/path/bin/pegasus-analyzer", "-vvv", "submit_dir"]
+            ["/path/bin/pegasus-analyzer", "-vvv", "submit_dir"], stderr=-1, stdout=-1
         )
 
     def test_statistics(self, mock_subprocess, client):
         client.statistics("submit_dir", verbose=3)
         subprocess.run.assert_called_once_with(
-            ["/path/bin/pegasus-statistics", "-vvv", "submit_dir"]
+            ["/path/bin/pegasus-statistics", "-vvv", "submit_dir"], stderr=-1, stdout=-1
         )
 
     def test__exec(self, mock_subprocess):
