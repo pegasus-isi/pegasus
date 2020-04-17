@@ -191,8 +191,9 @@ public class YAML implements ReplicaCatalog {
         mLFNRegex = new LinkedHashMap<String, ReplicaLocation>();
         mLFNPattern = new LinkedHashMap<String, Pattern>();
 
-        // first attempt to validate
-        if (validate(new File(filename), SCHEMA_FILE)) {
+        File replicaFile = new File(filename);
+        // first attempt to validate only if it exists
+        if (replicaFile.exists() && validate(replicaFile, SCHEMA_FILE)) {
             Reader reader = null;
             try {
                 reader = new VariableExpansionReader(new FileReader(filename));
