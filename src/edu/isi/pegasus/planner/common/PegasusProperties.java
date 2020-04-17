@@ -2226,16 +2226,20 @@ public class PegasusProperties implements Cloneable {
     }
 
     /**
-     * Returns the path to the property file that has been writting out in the submit directory.
+     * Returns the path to the property file that has been writing out in the submit directory.
      *
-     * @return path to the property file
-     * @exception RuntimeException in case of file not being generated.
+     * @return path to the property file, else null
      */
     public String getPropertiesInSubmitDirectory() {
+        /* PM-1523 don't throw exception here. Does not make sense
+           in context of rc-converter
+        */
+        /*
         if (mPropsInSubmitDir == null || mPropsInSubmitDir.length() == 0) {
             throw new RuntimeException(
                     "Properties file does not exist in directory " + mPropsInSubmitDir);
         }
+        */
         return mPropsInSubmitDir;
     }
 
