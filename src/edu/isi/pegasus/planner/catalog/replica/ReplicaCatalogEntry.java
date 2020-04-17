@@ -380,8 +380,7 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable {
                         result = false;
                         break;
                     }
-                }
-                else{
+                } else {
                     result = false;
                 }
             }

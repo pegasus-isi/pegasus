@@ -116,9 +116,9 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
 
     /**
      * Parses checksum information and adds it to the replica catalog entry object
-     * 
+     *
      * @param rce
-     * @param node 
+     * @param node
      */
     private void addChecksum(ReplicaCatalogEntry rce, JsonNode node) {
 
