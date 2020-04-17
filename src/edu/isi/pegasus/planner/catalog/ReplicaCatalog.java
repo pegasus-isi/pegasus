@@ -53,6 +53,9 @@ public interface ReplicaCatalog extends Catalog {
      */
     public static final String BATCH_KEY = "chunk.size";
 
+    /** Key name of property to set variable expansion */
+    public static final String VARIABLE_EXPANSION_KEY = "expand";
+
     /**
      * Retrieves the entry for a given filename and resource handle from the replica catalog.
      *
