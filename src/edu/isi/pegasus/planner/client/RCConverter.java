@@ -289,7 +289,11 @@ public class RCConverter extends Executable {
         }
 
         ReplicaStore result = new ReplicaStore();
-        mProps.setProperty("pegasus.catalog.replica", inputFormat);
+        mProps.setProperty(ReplicaCatalog.c_prefix, inputFormat);
+        
+        //always set readonly property to true for input catalogs
+        String key = ReplicaCatalog.c_prefix + "." + ReplicaCatalog.READ_ONLY_KEY;
+        mProps.setProperty(key,"true");
 
         // Sanity check
         for (String inputFile : inputFiles) {
@@ -493,7 +497,7 @@ public class RCConverter extends Executable {
                 LogManager.CONSOLE_MESSAGE_LEVEL);
         if (filename != null) {
             mLogger.log(
-                    "The output transfomation catalog is in file  "
+                    "The output replica catalog is in file  "
                             + new java.io.File(filename).getAbsolutePath(),
                     LogManager.CONSOLE_MESSAGE_LEVEL);
         }
