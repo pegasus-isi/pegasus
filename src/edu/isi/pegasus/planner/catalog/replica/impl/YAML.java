@@ -314,7 +314,7 @@ public class YAML implements ReplicaCatalog {
             Writer out = new BufferedWriter(new FileWriter(mFilename));
             // write header
             out.write(
-                    "# file-based replica catalog: "
+                    "# file-based replica catalog in yaml : "
                             + Currently.iso8601(false, true, true, new Date()));
             out.write(newline);
 
