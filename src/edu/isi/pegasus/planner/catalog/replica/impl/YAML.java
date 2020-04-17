@@ -45,6 +45,7 @@ import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
+import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.parser.YAMLSchemaValidationResult;
 import edu.isi.pegasus.planner.parser.YAMLSchemaValidator;
 import java.io.BufferedWriter;
@@ -1274,18 +1275,33 @@ public class YAML implements ReplicaCatalog {
 
             for (ReplicaCatalogEntry rce : rl.getPFNList()) {
                 gen.writeStartObject();
-                
+
                 writeStringField(gen, ReplicaCatalogKeywords.LFN.getReservedName(), rl.getLFN());
                 writeStringField(gen, ReplicaCatalogKeywords.PFN.getReservedName(), rce.getPFN());
                 writeStringField(
                         gen,
                         ReplicaCatalogKeywords.SITE.getReservedName(),
                         rce.getResourceHandle());
-                if(rce.isRegex()){
+                if (rce.isRegex()) {
                     writeStringField(gen, ReplicaCatalogKeywords.REGEX.getReservedName(), "true");
                 }
-                //if(rce.hasAttribute(ReplicaCatalog.))
-               // gen.writeFieldName(TransformationCatalogKeywords.PROFILES.getReservedName());
+                String checksumType = (String) rce.getAttribute(Metadata.CHECKSUM_TYPE_KEY);
+                String checksumValue = (String) rce.getAttribute(Metadata.CHECKSUM_VALUE_KEY);
+                boolean hasValue = rce.hasAttribute(Metadata.CHECKSUM_VALUE_KEY);
+                if (checksumType != null || checksumValue != null) {
+                    gen.writeFieldName(ReplicaCatalogKeywords.CHECKSUM.getReservedName());
+                    gen.writeStartObject();
+                    if (checksumType != null) {
+                        writeStringField(
+                                gen, ReplicaCatalogKeywords.TYPE.getReservedName(), checksumType);
+                    }
+                    if (checksumValue != null) {
+                        writeStringField(
+                                gen, ReplicaCatalogKeywords.TYPE.getReservedName(), checksumValue);
+                    }
+                    gen.writeEndObject();
+                }
+                // gen.writeFieldName(TransformationCatalogKeywords.PROFILES.getReservedName());
                 //    gen.writeObject(entry.getAllProfiles());
                 gen.writeEndObject();
             }
