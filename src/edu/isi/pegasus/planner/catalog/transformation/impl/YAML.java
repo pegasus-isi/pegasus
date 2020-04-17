@@ -19,6 +19,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.Boolean;
+import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
@@ -42,6 +43,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -170,6 +172,11 @@ public class YAML extends Abstract implements TransformationCatalog {
             try {
                 // open
                 Writer out = new BufferedWriter(new FileWriter(mTCFile));
+                // write header
+                out.write(
+                        "# file-based transformation catalog in yaml : "
+                                + Currently.iso8601(false, true, true, new Date()));
+                out.write(newline);
                 // in case of yaml we write it directly to the output file so we are
                 // returning null..
                 ObjectMapper mapper =
