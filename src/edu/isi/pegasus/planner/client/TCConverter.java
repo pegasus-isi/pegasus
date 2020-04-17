@@ -282,7 +282,8 @@ public class TCConverter extends Executable {
 
         TransformationStore result = new TransformationStore();
         List<TransformationCatalogEntry> entries = null;
-        mProps.setProperty("pegasus.catalog.transformation", inputFormat);
+        PegasusProperties props = (PegasusProperties) mProps.clone();
+        props.setProperty("pegasus.catalog.transformation", inputFormat);
 
         // Sanity check
         for (String inputFile : inputFiles) {
@@ -293,8 +294,8 @@ public class TCConverter extends Executable {
             }
         }
         for (String inputFile : inputFiles) {
-            mProps.setProperty("pegasus.catalog.transformation.file", inputFile);
-            entries = parseTC(mProps);
+            props.setProperty("pegasus.catalog.transformation.file", inputFile);
+            entries = parseTC(props);
             if (entries != null) {
                 for (TransformationCatalogEntry site : entries) {
                     result.addEntry(site);
@@ -442,19 +443,21 @@ public class TCConverter extends Executable {
     private void convertTCEntryTo(TransformationStore output, String format, String filename)
             throws IOException {
         TransformationCatalog catalog = null;
+        
+        PegasusProperties props = (PegasusProperties) mProps.clone();
         if (format.equals(TEXT_FORMAT) || format.equals(YAML_FORMAT)) {
 
             if (filename == null) {
                 throw new IOException(
                         "Please specify a file to write the output to using --output option ");
             }
-            mProps.setProperty("pegasus.catalog.transformation.file", filename);
+            props.setProperty("pegasus.catalog.transformation.file", filename);
         }
 
-        mProps.setProperty("pegasus.catalog.transformation", format);
+        props.setProperty("pegasus.catalog.transformation", format);
 
         PegasusBag bag = new PegasusBag();
-        bag.add(PegasusBag.PEGASUS_PROPERTIES, mProps);
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
         bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
         catalog = TransformationFactory.loadInstance(bag);
         List<TransformationCatalogEntry> entries = output.getEntries(null, (TCType) null);
