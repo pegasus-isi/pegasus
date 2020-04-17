@@ -290,37 +290,6 @@ public class YAML implements ReplicaCatalog {
         }
         return validate;
     }
-    /**
-     * Quotes a string only if necessary. This methods first determines, if a strings requires
-     * quoting, because it contains whitespace, an equality sign, quotes, or a backslash. If not,
-     * the string is not quoted. If the input contains forbidden characters, it is placed into
-     * quotes and quote and backslash are backslash escaped.
-     *
-     * <p>However, if the property "quote" had a <code>true</code> value when connecting to the
-     * database, output will always be quoted.
-     *
-     * @param e is the Escape instance used to escape strings.
-     * @param s is the string that may require quoting
-     * @return either the original string, or a newly allocated instance to an escaped string.
-     */
-    public String quote(Escape e, String s) {
-        String result = null;
-        if (s == null || s.length() == 0) {
-            // empty string short-cut
-            result = (mQuote ? "\"\"" : s);
-        } else {
-            // string has content
-            boolean flag = mQuote;
-            for (int i = 0; i < s.length() && !flag; ++i) {
-                // Note: loop will never trigger, if mQuote is true
-                char ch = s.charAt(i);
-                flag = (ch == '"' || ch == '\\' || ch == '=' || Character.isWhitespace(ch));
-            }
-            result = (flag ? '"' + e.escape(s) + '"' : s);
-        }
-        // single point of exit
-        return result;
-    }
 
     /**
      * This operation will dump the in-memory representation back onto disk. The store operation is
@@ -382,36 +351,6 @@ public class YAML implements ReplicaCatalog {
             mLFNRegex = null;
             mLFNPattern = null;
             mFilename = null;
-        }
-    }
-
-    private void write(Writer out, Map<String, ReplicaLocation> m) throws IOException {
-        String newline = System.getProperty("line.separator", "\r\n");
-        Escape e = new Escape("\"\\", '\\');
-        if (m != null) {
-            for (Iterator<String> i = m.keySet().iterator(); i.hasNext(); ) {
-                String lfn = i.next();
-                ReplicaLocation c = m.get(lfn);
-                if (c != null) {
-                    for (Iterator<ReplicaCatalogEntry> j = c.pfnIterator(); j.hasNext(); ) {
-                        ReplicaCatalogEntry rce = j.next();
-                        out.write(quote(e, lfn));
-                        out.write(' ');
-                        out.write(quote(e, rce.getPFN()));
-                        for (Iterator<String> k = rce.getAttributeIterator(); k.hasNext(); ) {
-                            String key = k.next();
-                            String value = (String) rce.getAttribute(key);
-                            out.write(' ');
-                            out.write(key);
-                            out.write("=\"");
-                            out.write(e.escape(value));
-                            out.write('"');
-                        }
-                        // finalize record/line
-                        out.write(newline);
-                    }
-                }
-            }
         }
     }
 
@@ -1231,7 +1170,46 @@ public class YAML implements ReplicaCatalog {
      */
     static class JsonSerializer extends PegasusJsonSerializer<YAML> {
 
-        public JsonSerializer() {}
+        private final Escape mEscape;
+
+        private boolean mQuote;
+
+        public JsonSerializer() {
+            mEscape = new Escape("\"\\", '\\');
+            mQuote = true;
+        }
+
+        /**
+         * Quotes a string only if necessary. This methods first determines, if a strings requires
+         * quoting, because it contains whitespace, an equality sign, quotes, or a backslash. If
+         * not, the string is not quoted. If the input contains forbidden characters, it is placed
+         * into quotes and quote and backslash are backslash escaped.
+         *
+         * <p>However, if the property "quote" had a <code>true</code> value when connecting to the
+         * database, output will always be quoted.
+         *
+         * @param e is the Escape instance used to escape strings.
+         * @param s is the string that may require quoting
+         * @return either the original string, or a newly allocated instance to an escaped string.
+         */
+        public String quote(Escape e, String s) {
+            String result = null;
+            if (s == null || s.length() == 0) {
+                // empty string short-cut
+                result = (mQuote ? "\"\"" : s);
+            } else {
+                // string has content
+                boolean flag = mQuote;
+                for (int i = 0; i < s.length() && !flag; ++i) {
+                    // Note: loop will never trigger, if mQuote is true
+                    char ch = s.charAt(i);
+                    flag = (ch == '"' || ch == '\\' || ch == '=' || Character.isWhitespace(ch));
+                }
+                result = (flag ? '"' + e.escape(s) + '"' : s);
+            }
+            // single point of exit
+            return result;
+        }
 
         /**
          * Serializes contents into YAML representation
@@ -1276,7 +1254,8 @@ public class YAML implements ReplicaCatalog {
 
             for (ReplicaCatalogEntry rce : rl.getPFNList()) {
                 gen.writeStartObject();
-
+                // we don't quote or escape anything as serializer
+                // always adds enclosing quotes
                 writeStringField(gen, ReplicaCatalogKeywords.LFN.getReservedName(), rl.getLFN());
                 writeStringField(gen, ReplicaCatalogKeywords.PFN.getReservedName(), rce.getPFN());
                 writeStringField(
