@@ -68,7 +68,7 @@ def wf1():
         .add_dagman_profile(retry=1)
         .add_metadata(author="ryan")
         .add_jobs(j1, j2, sbwf_pegasus, sbwf_condor)
-        .add_dependency(j1, j2)
+        .add_dependency(j1, children=[j2])
         .add_transformation_catalog(TransformationCatalog())
         .add_site_catalog(SiteCatalog())
         .add_replica_catalog(ReplicaCatalog())
@@ -113,7 +113,7 @@ def wf2():
     return (
         Workflow("test", infer_dependencies=False)
         .add_jobs(j1, j2, sbwf_pegasus, sbwf_condor)
-        .add_dependency(j1, j2)
+        .add_dependency(j1, children=[j2])
     )
 
 

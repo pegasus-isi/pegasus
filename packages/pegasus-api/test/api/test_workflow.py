@@ -842,39 +842,122 @@ class TestWorkflow:
 
         assert "a TransformationCatalog has already" in str(e)
 
-    def test_add_dependency(self):
+    def test_add_dependency_parents(self):
         wf = Workflow("wf")
-        parent = Job("t1", _id="parent")
-        child1 = Job("t1", _id="child1")
+        job = Job("t", _id="job")
+        parents = [
+            Job("t", _id="parent1"),
+            Job("t", _id="parent2"),
+            Job("t", _id="parent3"),
+        ]
 
-        wf.add_jobs(parent, child1)
-        wf.add_dependency(parent, child1)
+        wf.add_jobs(job, *parents)
 
-        assert wf.dependencies["parent"] == _JobDependency(parent._id, {child1._id})
+        wf.add_dependency(job, parents=[parents[0]])
+        wf.add_dependency(job, parents=parents[1:])
 
-    def test_add_to_existing_dependencies(self):
+        for parent in parents:
+            assert wf.dependencies[parent._id] == _JobDependency(parent._id, {job._id})
+
+    def test_add_dependency_children(self):
         wf = Workflow("wf")
-        parent = Job("t1", _id="parent")
-        child1 = Job("t1", _id="child1")
-        child2 = Job("t1", _id="child2")
+        job = Job("t", _id="job")
+        children = [
+            Job("t", _id="child1"),
+            Job("t", _id="child2"),
+            Job("t", _id="child3"),
+        ]
 
-        wf.add_jobs(parent, child1, child2)
-        wf.add_dependency(parent, child1, child2)
+        wf.add_jobs(job, *children)
 
-        assert wf.dependencies["parent"] == _JobDependency(
-            parent._id, {child1._id, child2._id}
+        wf.add_dependency(job, children=[children[0]])
+        assert wf.dependencies[job._id] == _JobDependency(job._id, {children[0]._id})
+
+        wf.add_dependency(job, children=children[1:])
+        assert wf.dependencies[job._id] == _JobDependency(
+            job._id, {child._id for child in children}
         )
 
-    def test_add_duplicate_dependency(self):
+    def test_add_dependency_parents_and_children(self):
         wf = Workflow("wf")
-        parent = Job("t1", _id="parent")
-        child1 = Job("t1", _id="child1")
+        job = Job("t", _id="job")
+        parents = [Job("t", _id="parent1"), Job("t", _id="parent2")]
 
-        wf.add_jobs(parent, child1)
-        wf.add_dependency(parent, child1)
+        children = [Job("t", _id="child1"), Job("t", _id="child2")]
 
-        with pytest.raises(DuplicateError):
-            wf.add_dependency(parent, child1)
+        wf.add_jobs(*parents, *children)
+
+        # add nothing
+        wf.add_dependency(job)
+        assert len(wf.dependencies) == 0
+
+        wf.add_dependency(job, parents=parents, children=children)
+
+        for parent in parents:
+            assert wf.dependencies[parent._id] == _JobDependency(parent._id, {job._id})
+
+        assert wf.dependencies[job._id] == _JobDependency(
+            job._id, {child._id for child in children}
+        )
+
+    def test_add_duplicate_parent_dependency(self):
+        wf = Workflow("wf")
+        job = Job("t", _id="job")
+        parent = Job("t", _id="parent")
+
+        wf.add_jobs(job, parent)
+
+        with pytest.raises(DuplicateError) as e:
+            wf.add_dependency(job, parents=[parent, parent])
+
+        assert (
+            "A dependency already exists between parent id: parent and job id: job"
+            in str(e)
+        )
+
+    def test_add_duplicate_child_dependency(self):
+        wf = Workflow("wf")
+        job = Job("t", _id="job")
+        child = Job("t", _id="child")
+
+        wf.add_jobs(job, child)
+
+        with pytest.raises(DuplicateError) as e:
+            wf.add_dependency(job, children=[child, child])
+
+        assert (
+            "A dependency already exists between job id: job and child id: child"
+            in str(e)
+        )
+
+    def test_add_dependency_invalid_job(self):
+        wf = Workflow("wf")
+        job = Job("t")
+
+        with pytest.raises(ValueError) as e:
+            wf.add_dependency(job)
+
+        assert "The given job does not have an id" in str(e)
+
+    def test_add_dependency_invalid_parent(self):
+        wf = Workflow("wf")
+        job = Job("t", _id="job")
+        parent = Job("t")
+
+        with pytest.raises(ValueError) as e:
+            wf.add_dependency(job, parents=[parent])
+
+        assert "One of the given parents does not have an id" in str(e)
+
+    def test_add_dependency_invalid_child(self):
+        wf = Workflow("wf")
+        job = Job("t", _id="job")
+        child = Job("t")
+
+        with pytest.raises(ValueError) as e:
+            wf.add_dependency(job, children=[child])
+
+        assert "One of the given children does not have an id" in str(e)
 
     def test_infer_dependencies_fork_join_wf(self):
         wf = Workflow("wf", infer_dependencies=True)
