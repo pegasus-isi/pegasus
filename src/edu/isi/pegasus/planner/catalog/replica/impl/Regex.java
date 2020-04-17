@@ -77,11 +77,6 @@ import java.util.regex.Pattern;
  * @version $Revision: 5402 $
  */
 public class Regex implements ReplicaCatalog {
-    /**
-     * The name of the key that disables writing back to the cache file. Designates a static file.
-     * i.e. read only
-     */
-    public static final String READ_ONLY_KEY = "read.only";
 
     public static final String REGEX_KEY = "regex";
 

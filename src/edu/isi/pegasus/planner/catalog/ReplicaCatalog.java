@@ -56,6 +56,9 @@ public interface ReplicaCatalog extends Catalog {
     /** Key name of property to set variable expansion */
     public static final String VARIABLE_EXPANSION_KEY = "expand";
 
+    /** The name of the key that disables writing back to the backend on close. */
+    public static final String READ_ONLY_KEY = "read.only";
+
     /**
      * Retrieves the entry for a given filename and resource handle from the replica catalog.
      *

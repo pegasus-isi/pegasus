@@ -115,12 +115,6 @@ public class YAML implements ReplicaCatalog {
     /** The default transformation Catalog version to which this maps to */
     public static final String DEFAULT_REPLICA_CATALOG_VERSION = "5.0";
 
-    /**
-     * The name of the key that disables writing back to the cache file. Designates a static file.
-     * i.e. read only
-     */
-    public static final String READ_ONLY_KEY = "read.only";
-
     /** The "not-so-official" location URL of the Replica Catalog Schema. */
     public static final String SCHEMA_URI = "http://pegasus.isi.edu/schema/rc-5.0.yml";
 
@@ -1267,7 +1261,6 @@ public class YAML implements ReplicaCatalog {
                 }
                 String checksumType = (String) rce.getAttribute(Metadata.CHECKSUM_TYPE_KEY);
                 String checksumValue = (String) rce.getAttribute(Metadata.CHECKSUM_VALUE_KEY);
-                boolean hasValue = rce.hasAttribute(Metadata.CHECKSUM_VALUE_KEY);
                 if (checksumType != null || checksumValue != null) {
                     gen.writeFieldName(ReplicaCatalogKeywords.CHECKSUM.getReservedName());
                     gen.writeStartObject();

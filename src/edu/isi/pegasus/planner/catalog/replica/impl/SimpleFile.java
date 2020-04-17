@@ -82,12 +82,6 @@ import java.util.regex.Pattern;
 public class SimpleFile implements ReplicaCatalog {
 
     /**
-     * The name of the key that disables writing back to the cache file. Designates a static file.
-     * i.e. read only
-     */
-    public static final String READ_ONLY_KEY = "read.only";
-
-    /**
      * Records the quoting mode for LFNs and PFNs. If false, only quote as necessary. If true,
      * always quote all LFNs and PFNs.
      */
