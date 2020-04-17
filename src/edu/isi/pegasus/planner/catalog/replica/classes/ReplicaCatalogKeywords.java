@@ -28,8 +28,9 @@ public enum ReplicaCatalogKeywords {
     PFN("pfn"),
     SITE("site"),
     REGEX("regex"),
-    CHECKSUM_TYPE("checksum.type"),
-    CHECKSUM_VALUE("checksum.value");
+    CHECKSUM("checksum"),
+    TYPE("type"),
+    VALUE("value");
 
     private String mName;
 

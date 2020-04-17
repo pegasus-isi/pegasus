@@ -18,6 +18,7 @@
 package edu.isi.pegasus.planner.catalog.replica.classes;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import edu.isi.pegasus.planner.catalog.CatalogException;
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
@@ -87,9 +88,11 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
                     break;
 
                 case REGEX:
-                case CHECKSUM_TYPE:
-                case CHECKSUM_VALUE:
                     rce.addAttribute(key, keyValue);
+                    break;
+
+                case CHECKSUM:
+                    addChecksum(rce, node.get(key));
                     break;
 
                 default:
@@ -108,5 +111,44 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
         rl.setLFN(lfn);
         rl.addPFN(rce);
         return rl;
+    }
+
+    /**
+     * Parses checksum information and adds it to the replica catalog entry object
+     * 
+     * @param rce
+     * @param node 
+     */
+    private void addChecksum(ReplicaCatalogEntry rce, JsonNode node) {
+
+        if (node instanceof ObjectNode) {
+            for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
+                Map.Entry<String, JsonNode> e = it.next();
+                String key = e.getKey();
+                ReplicaCatalogKeywords reservedKey = ReplicaCatalogKeywords.getReservedKey(key);
+                if (reservedKey == null) {
+                    this.complainForIllegalKey(
+                            ReplicaCatalogKeywords.REPLICAS.getReservedName(), key, node);
+                }
+
+                String keyValue = node.get(key).asText();
+                switch (reservedKey) {
+                    case TYPE:
+                        rce.addAttribute(key, keyValue);
+                        break;
+
+                    case VALUE:
+                        rce.addAttribute(key, keyValue);
+                        break;
+
+                    default:
+                        this.complainForUnsupportedKey(
+                                ReplicaCatalogKeywords.REPLICAS.getReservedName(), key, node);
+                }
+            }
+        } else {
+            throw new RuntimeException(
+                    "Checksum needs to be object node. Found for replica" + node);
+        }
     }
 }

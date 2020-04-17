@@ -114,8 +114,9 @@ public class ReplicaStoreTest {
                         + "  - lfn: \"f.a\"\n"
                         + "    pfn: \"file:///Volumes/data/input/f.a\"\n"
                         + "    site: \"local\"\n"
-                        + "    checksum.type: \"sha256\"\n"
-                        + "    checksum.value: \"a08d9d7769cffb96a910a4b6c2be7bfd85d461c9\"";
+                        + "    checksum:\n"
+                        + "       type: \"sha256\"\n"
+                        + "       value: \"a08d9d7769cffb96a910a4b6c2be7bfd85d461c9\"";
 
         ReplicaStore store = mapper.readValue(test, ReplicaStore.class);
         assertNotNull(store);
@@ -132,7 +133,7 @@ public class ReplicaStoreTest {
     }
 
     @Test(expected = ReplicaCatalogException.class)
-    public void replicaWithoutLFN() throws IOException {
+    public void replicaWithRegexTrue() throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
 
@@ -148,7 +149,7 @@ public class ReplicaStoreTest {
     }
 
     @Test(expected = ReplicaCatalogException.class)
-    public void replicaWithRegexTrue() throws IOException {
+    public void replicaWithoutLFN() throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
 
