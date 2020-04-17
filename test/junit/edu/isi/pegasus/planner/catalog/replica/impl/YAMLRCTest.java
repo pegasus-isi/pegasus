@@ -168,7 +168,7 @@ public class YAMLRCTest {
 
         assertTrue(c.contains(new ReplicaCatalogEntry("b")));
     }
-    
+
     public void serialization() {
         HashMap attr = new HashMap();
         attr.put("regex", "true");
@@ -177,10 +177,9 @@ public class YAMLRCTest {
         mYAMLRC.insert("a", new ReplicaCatalogEntry("file://tmp/file.a", attr));
         mYAMLRC.insert("b", new ReplicaCatalogEntry("file://tmp/b"));
         System.err.println(mYAMLRC.mFilename);
-        mYAMLRC.close(); 
+        mYAMLRC.close();
     }
 
-    
     @After
     public void tearDown() {
         mRCFile.delete();

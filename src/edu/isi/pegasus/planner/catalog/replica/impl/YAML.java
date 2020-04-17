@@ -1271,7 +1271,6 @@ public class YAML implements ReplicaCatalog {
          */
         private void serialize(ReplicaLocation rl, JsonGenerator gen, SerializerProvider sp)
                 throws IOException {
-           
 
             for (ReplicaCatalogEntry rce : rl.getPFNList()) {
                 gen.writeStartObject();
