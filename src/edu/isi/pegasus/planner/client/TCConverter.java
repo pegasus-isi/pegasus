@@ -256,7 +256,7 @@ public class TCConverter extends Executable {
         }
         if (new File(mOutputFile).exists()) {
             throw new IOException(
-                    "The output file specified already exists. Please delete it " + mOutputFile);
+                    "The output file specified already exists. Please delete file " + mOutputFile);
         }
         TransformationStore result = this.convertTCEntryFrom(mInputFiles, mInputFormat);
         // write out the result to the output file

@@ -266,7 +266,7 @@ public class RCConverter extends Executable {
         }
         if (new File(mOutputFile).exists()) {
             throw new IOException(
-                    "The output file specified already exists. Please delete it " + mOutputFile);
+                    "The output file specified already exists. Please delete file " + mOutputFile);
         }
         ReplicaStore result = this.loadFrom(mInputFiles, mInputFormat);
         // write out the result to the output file
