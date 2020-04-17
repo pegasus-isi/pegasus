@@ -381,6 +381,9 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable {
                         break;
                     }
                 }
+                else{
+                    result = false;
+                }
             }
         }
 
