@@ -289,11 +289,12 @@ public class RCConverter extends Executable {
         }
 
         ReplicaStore result = new ReplicaStore();
-        mProps.setProperty(ReplicaCatalog.c_prefix, inputFormat);
+        PegasusProperties props = (PegasusProperties) mProps.clone();
+        props.setProperty(ReplicaCatalog.c_prefix, inputFormat);
         
         //always set readonly property to true for input catalogs
         String key = ReplicaCatalog.c_prefix + "." + ReplicaCatalog.READ_ONLY_KEY;
-        mProps.setProperty(key,"true");
+        props.setProperty(key,"true");
 
         // Sanity check
         for (String inputFile : inputFiles) {
@@ -304,8 +305,8 @@ public class RCConverter extends Executable {
             }
         }
         for (String inputFile : inputFiles) {
-            mProps.setProperty("pegasus.catalog.replica.file", inputFile);
-            ReplicaStore store = parseRC(mProps);
+            props.setProperty("pegasus.catalog.replica.file", inputFile);
+            ReplicaStore store = parseRC(props);
             for (Iterator<ReplicaLocation> it = store.replicaLocationIterator(); it.hasNext(); ) {
                 result.add(it.next());
             }
@@ -318,18 +319,18 @@ public class RCConverter extends Executable {
      * Parses the input format specified in the properties file and returns list of
      * ReplicaCatalogEntry
      *
-     * @param pegasusProperties input format specified in the properties file
+     * @param props input format specified in the properties file
      * @return Replica Store
      */
-    private ReplicaStore parseRC(PegasusProperties pegasusProperties) {
+    private ReplicaStore parseRC(PegasusProperties props) {
         // switch on input format.
         ReplicaCatalog catalog = null;
         ReplicaStore result = new ReplicaStore();
         try {
             PegasusBag bag = new PegasusBag();
-            bag.add(PegasusBag.PEGASUS_PROPERTIES, pegasusProperties);
+            bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
             bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
-            mProps.setProperty(
+            props.setProperty(
                     ReplicaCatalog.c_prefix + '.' + ReplicaCatalog.VARIABLE_EXPANSION_KEY,
                     Boolean.toString(mDoVariableExpansion));
             /* loadFrom the catalog using the factory */
@@ -446,19 +447,20 @@ public class RCConverter extends Executable {
      */
     private void convert(ReplicaStore output, String format, String filename) throws IOException {
         ReplicaCatalog catalog = null;
+        PegasusProperties props = (PegasusProperties) mProps.clone();
         if (format.equals(FILE_FORMAT) || format.equals(YAML_FORMAT)) {
 
             if (filename == null) {
                 throw new IOException(
                         "Please specify a file to write the output to using --output option ");
             }
-            mProps.setProperty("pegasus.catalog.replica.file", filename);
+            props.setProperty("pegasus.catalog.replica.file", filename);
         }
 
-        mProps.setProperty("pegasus.catalog.replica", format);
+        props.setProperty("pegasus.catalog.replica", format);
 
         PegasusBag bag = new PegasusBag();
-        bag.add(PegasusBag.PEGASUS_PROPERTIES, mProps);
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
         bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
         try {
             catalog = ReplicaFactory.loadInstance(bag);
