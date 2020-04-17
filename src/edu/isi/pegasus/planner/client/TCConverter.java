@@ -288,7 +288,8 @@ public class TCConverter extends Executable {
         for (String inputFile : inputFiles) {
             File input = new File(inputFile);
             if (!input.canRead()) {
-                throw new IOException("File not found or cannot be read." + inputFile);
+                throw new IOException(
+                        "File not found or cannot be read. " + input.getAbsolutePath());
             }
         }
         for (String inputFile : inputFiles) {
