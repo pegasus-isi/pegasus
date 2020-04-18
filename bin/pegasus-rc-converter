@@ -1,0 +1,17 @@
+#!/bin/bash
+#
+# Converts transformation catalog from one format to another
+#
+# $Id$
+
+PEGASUS_CONFIG="`dirname $0`/pegasus-config"
+eval `$PEGASUS_CONFIG --sh-dump`
+. $PEGASUS_SHARE_DIR/common.sh
+
+# run java program
+${JAVA} \
+       "-Dpegasus.home.sysconfdir=$PEGASUS_CONF_DIR" \
+       "-Dpegasus.home.bindir=$PEGASUS_BIN_DIR" \
+       "-Dpegasus.home.sharedstatedir=$PEGASUS_SHARE_DIR" \
+       "-Dpegasus.home.schemadir=$PEGASUS_SCHEMA_DIR" \
+       $addon edu.isi.pegasus.planner.client.RCConverter "$@"

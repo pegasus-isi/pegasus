@@ -419,9 +419,9 @@ public class RCConverter extends Executable {
         text.append("\n");
         text.append("\n -c |--conf           path to  property file");
         text.append(
-                "\n -e |--expand     sets variable expansion on. Any variables in input files "
-                        + "\n                  will be expanded and their values will be written out to "
-                        + "\n                  output replica catalog. ");
+                "\n -e |--expand         sets variable expansion on. Any variables in input files "
+                        + "\n                      will be expanded and their values will be written out to "
+                        + "\n                      output replica catalog. ");
         text.append(
                 "\n -v |--verbose        increases the verbosity of messages about what is going on");
         text.append(
