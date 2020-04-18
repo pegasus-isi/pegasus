@@ -98,9 +98,9 @@ class Client:
 
         cmd.extend(("--dax", dax))
 
-        rv = subprocess.run(cmd)
+        rv = self._exec(cmd)
 
-        if rv.returncode:
+        if rv.exit_code:
             self._log.fatal("Plan: {} \n {}".format(rv.stdout, rv.stderr))
 
         self._log.info("Plan: {} \n {}".format(rv.stdout, rv.stderr))
@@ -117,9 +117,9 @@ class Client:
 
         cmd.append(submit_dir)
 
-        rv = subprocess.run(cmd)
+        rv = self._exec(cmd)
 
-        if rv.returncode:
+        if rv.exit_code:
             self._log.fatal("Run: {} \n {}".format(rv.stdout, rv.stderr))
 
         self._log.info("Run: {} \n {}".format(rv.stdout, rv.stderr))
@@ -135,9 +135,9 @@ class Client:
 
         cmd.append(submit_dir)
 
-        rv = subprocess.run(cmd)
+        rv = self._exec(cmd)
 
-        if rv.returncode:
+        if rv.exit_code:
             self._log.fatal("Status: {} \n {}".format(rv.stdout, rv.stderr))
 
         self._log.info("Status: {} \n {}".format(rv.stdout, rv.stderr))
@@ -245,9 +245,9 @@ class Client:
 
         cmd.append(submit_dir)
 
-        rv = subprocess.run(cmd)
+        rv = self._exec(cmd)
 
-        if rv.returncode:
+        if rv.exit_code:
             self._log.fatal("Remove: {} \n {}".format(rv.stdout, rv.stderr))
 
         self._log.info("Remove: {} \n {}".format(rv.stdout, rv.stderr))
@@ -260,9 +260,9 @@ class Client:
 
         cmd.append(submit_dir)
 
-        rv = subprocess.run(cmd)
+        rv = self._exec(cmd)
 
-        if rv.returncode:
+        if rv.exit_code:
             self._log.fatal("Analyzer: {} \n {}".format(rv.stdout, rv.stderr))
 
         self._log.info("Analyzer: {} \n {}".format(rv.stdout, rv.stderr))
@@ -275,9 +275,9 @@ class Client:
 
         cmd.append(submit_dir)
 
-        rv = subprocess.run(cmd)
+        rv = self._exec(cmd)
 
-        if rv.returncode:
+        if rv.exit_code:
             self._log.fatal("Statistics: {} \n {}".format(rv.stdout, rv.stderr))
 
         self._log.info("Statistics: {} \n {}".format(rv.stdout, rv.stderr))
@@ -287,8 +287,7 @@ class Client:
         if not cmd:
             raise ValueError("cmd is required")
 
-        # add stdout, stderr PIPE stuff here
-        rv = subprocess.run(cmd)
+        rv = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         r = Client._make_result(rv)
 
         if r.exit_code != 0:
