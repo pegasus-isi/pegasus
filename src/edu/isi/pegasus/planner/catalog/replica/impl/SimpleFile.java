@@ -99,6 +99,9 @@ public class SimpleFile implements ReplicaCatalog {
     /** A boolean indicating whether the catalog is read only or not. */
     boolean m_readonly;
 
+    /** whether to do any variable expansion or not */
+    private boolean mDoVariableExpansion;
+
     /**
      * Default empty constructor creates an object that is not yet connected to any database. You
      * must use support methods to connect before this instance becomes usable.
@@ -335,7 +338,7 @@ public class SimpleFile implements ReplicaCatalog {
                     }
                     // PM-831 expand the line before parsing
                     try {
-                        line = mVariableExpander.expand(line);
+                        line = this.mDoVariableExpansion ? mVariableExpander.expand(line) : line;
                     } catch (RuntimeException e) {
                         // rethrow again
                         throw new RuntimeException(
@@ -373,9 +376,10 @@ public class SimpleFile implements ReplicaCatalog {
         m_quote = Boolean.parse(props.getProperty("quote"));
 
         // update the m_writeable flag if specified
-        if (props.containsKey(SimpleFile.READ_ONLY_KEY)) {
-            m_readonly = Boolean.parse(props.getProperty(SimpleFile.READ_ONLY_KEY), false);
-        }
+        m_readonly = Boolean.parse(props.getProperty(SimpleFile.READ_ONLY_KEY), false);
+
+        mDoVariableExpansion =
+                Boolean.parse(props.getProperty(ReplicaCatalog.VARIABLE_EXPANSION_KEY), true);
 
         if (props.containsKey("file")) return connect(props.getProperty("file"));
 

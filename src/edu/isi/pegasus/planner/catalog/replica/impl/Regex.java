@@ -102,6 +102,9 @@ public class Regex implements ReplicaCatalog {
     /** Handle to pegasus variable expander */
     private VariableExpander mVariableExpander;
 
+    /** Boolean indicating whether to do variable expansion or not */
+    private boolean mDoVariableExpansion;
+
     /**
      * Default empty constructor creates an object that is not yet connected to any database. You
      * must use support methods to connect before this instance becomes usable.
@@ -116,6 +119,7 @@ public class Regex implements ReplicaCatalog {
         m_filename = null;
         m_readonly = false;
         mVariableExpander = new VariableExpander();
+        mDoVariableExpansion = true;
     }
 
     /**
@@ -338,7 +342,7 @@ public class Regex implements ReplicaCatalog {
                     }
                     // PM-1112 expand the line before parsing
                     try {
-                        line = mVariableExpander.expand(line);
+                        line = mDoVariableExpansion ? mVariableExpander.expand(line) : line;
                     } catch (RuntimeException e) {
                         // rethrow again
                         throw new RuntimeException(
@@ -375,9 +379,11 @@ public class Regex implements ReplicaCatalog {
         // quote mode
         m_quote = Boolean.parse(props.getProperty("quote"));
         // update the m_writeable flag if specified
-        if (props.containsKey(Regex.READ_ONLY_KEY)) {
-            m_readonly = Boolean.parse(props.getProperty(Regex.READ_ONLY_KEY), false);
-        }
+        m_readonly = Boolean.parse(props.getProperty(Regex.READ_ONLY_KEY), false);
+
+        mDoVariableExpansion =
+                Boolean.parse(props.getProperty(ReplicaCatalog.VARIABLE_EXPANSION_KEY), true);
+
         if (props.containsKey("file")) return connect(props.getProperty("file"));
         return false;
     }
