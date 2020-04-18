@@ -443,7 +443,7 @@ public class TCConverter extends Executable {
     private void convertTCEntryTo(TransformationStore output, String format, String filename)
             throws IOException {
         TransformationCatalog catalog = null;
-        
+
         PegasusProperties props = (PegasusProperties) mProps.clone();
         if (format.equals(TEXT_FORMAT) || format.equals(YAML_FORMAT)) {
 

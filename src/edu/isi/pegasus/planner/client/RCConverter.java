@@ -291,10 +291,10 @@ public class RCConverter extends Executable {
         ReplicaStore result = new ReplicaStore();
         PegasusProperties props = (PegasusProperties) mProps.clone();
         props.setProperty(ReplicaCatalog.c_prefix, inputFormat);
-        
-        //always set readonly property to true for input catalogs
+
+        // always set readonly property to true for input catalogs
         String key = ReplicaCatalog.c_prefix + "." + ReplicaCatalog.READ_ONLY_KEY;
-        props.setProperty(key,"true");
+        props.setProperty(key, "true");
 
         // Sanity check
         for (String inputFile : inputFiles) {
