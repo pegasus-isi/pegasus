@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2014 University Of Southern California
+ * Copyright 2007-2020 University Of Southern California
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -214,11 +214,16 @@ public class JDBCRCTest {
 
         HashMap attr2 = new HashMap();
         attr2.put("key", "value");
+        attr2.put("key2", "value2");
         jdbcrc.insert("a", new ReplicaCatalogEntry("d", attr2));
 
         Collection<ReplicaCatalogEntry> c = jdbcrc.lookup("a");
-        assertTrue(c.contains(new ReplicaCatalogEntry("d", attr)));
+        HashMap attr3 = new HashMap();
+        attr3.put("key", "value");
+
+        assertFalse(c.contains(new ReplicaCatalogEntry("d", attr)));
         assertTrue(c.contains(new ReplicaCatalogEntry("d", attr2)));
+        assertFalse(c.contains(new ReplicaCatalogEntry("d", attr3)));
     }
 
     @Test
