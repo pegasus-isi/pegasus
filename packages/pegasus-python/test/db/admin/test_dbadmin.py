@@ -75,7 +75,7 @@ def test_version_operations():
     assert db_current_version(db) == 4
     with pytest.raises(DBAdminError):
         db_verify(db)
-    rc_lfn._set_parent(metadata)
+    RCLFN.__table__._set_parent(metadata)
     db.close()
 
     db = connection.connect(dburi, create=True, verbose=False)
@@ -90,10 +90,10 @@ def test_version_operations():
 def test_partial_database():
     dburi = "sqlite://"
     db = connection.connect(dburi, schema_check=False, create=False, verbose=False)
-    rc_sequences.create(db.get_bind(), checkfirst=True)
-    rc_lfn.create(db.get_bind(), checkfirst=True)
-    rc_pfn.create(db.get_bind(), checkfirst=True)
-    rc_meta.create(db.get_bind(), checkfirst=True)
+    Sequence.__table__.create(db.get_bind(), checkfirst=True)
+    RCLFN.__table__.create(db.get_bind(), checkfirst=True)
+    RCPFN.__table__.create(db.get_bind(), checkfirst=True)
+    RCMeta.__table__.create(db.get_bind(), checkfirst=True)
     with pytest.raises(DBAdminError):
         db_verify(db)
     db.close()
@@ -103,10 +103,10 @@ def test_partial_database():
     db.close()
 
     db = connection.connect(dburi, schema_check=False, create=False, verbose=False)
-    pg_workflow.create(db.get_bind(), checkfirst=True)
-    pg_workflowstate.create(db.get_bind(), checkfirst=True)
-    pg_ensemble.create(db.get_bind(), checkfirst=True)
-    pg_ensemble_workflow.create(db.get_bind(), checkfirst=True)
+    Workflow.__table__.create(db.get_bind(), checkfirst=True)
+    DashboardWorkflowstate.__table__.create(db.get_bind(), checkfirst=True)
+    Ensemble.__table__.create(db.get_bind(), checkfirst=True)
+    EnsembleWorkflow.__table__.create(db.get_bind(), checkfirst=True)
     with pytest.raises(DBAdminError):
         db_verify(db)
     db.close()
@@ -116,16 +116,16 @@ def test_partial_database():
     db.close()
 
     db = connection.connect(dburi, schema_check=False, create=False, verbose=False)
-    st_workflow.create(db.get_bind(), checkfirst=True)
-    st_workflowstate.create(db.get_bind(), checkfirst=True)
-    st_host.create(db.get_bind(), checkfirst=True)
-    st_job.create(db.get_bind(), checkfirst=True)
-    st_job_edge.create(db.get_bind(), checkfirst=True)
-    st_job_instance.create(db.get_bind(), checkfirst=True)
-    st_jobstate.create(db.get_bind(), checkfirst=True)
-    st_task.create(db.get_bind(), checkfirst=True)
-    st_task_edge.create(db.get_bind(), checkfirst=True)
-    st_invocation.create(db.get_bind(), checkfirst=True)
+    Workflow.__table__.create(db.get_bind(), checkfirst=True)
+    Workflowstate.__table__.create(db.get_bind(), checkfirst=True)
+    Host.__table__.create(db.get_bind(), checkfirst=True)
+    Job.__table__.create(db.get_bind(), checkfirst=True)
+    JobEdge.__table__.create(db.get_bind(), checkfirst=True)
+    JobInstance.__table__.create(db.get_bind(), checkfirst=True)
+    Jobstate.__table__.create(db.get_bind(), checkfirst=True)
+    Task.__table__.create(db.get_bind(), checkfirst=True)
+    TaskEdge.__table__.create(db.get_bind(), checkfirst=True)
+    Invocation.__table__.create(db.get_bind(), checkfirst=True)
     with pytest.raises(DBAdminError):
         db_verify(db)
     db.close()

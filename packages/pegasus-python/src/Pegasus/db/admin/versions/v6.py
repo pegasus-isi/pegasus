@@ -1,6 +1,8 @@
 import logging
 
-from sqlalchemy.exc import *
+from sqlalchemy.exc import OperationalError, ProgrammingError
+from sqlalchemy.schema import Column, ForeignKey, Index, Table
+from sqlalchemy.types import Integer, String
 
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions.base_version import BaseVersion
@@ -35,7 +37,7 @@ class Version(BaseVersion):
 
         # check if the migration is required
         try:
-            if check_table_exists(self.db, rc_lfn) and not interrupted:
+            if check_table_exists(self.db, RCLFN) and not interrupted:
                 return
         except (OperationalError, ProgrammingError):
             pass
@@ -66,10 +68,10 @@ class Version(BaseVersion):
 
         # Create new rc_lfn table and populate it
         log.info("Updating tables...")
-        self._create_table(rc_lfn)
+        self._create_table(RCLFN.__table__)
         self.db.commit()
-        self._create_table(rc_pfn)
-        self._create_table(rc_meta)
+        self._create_table(RCPFN.__table__)
+        self._create_table(RCMeta.__table__)
         self.db.commit()
 
         try:
@@ -118,14 +120,14 @@ class Version(BaseVersion):
         log.info("Creating tables...")
         self._drop_index("v4_rc_lfn")
         self._drop_index("v4_rc_attr")
-        metadata.remove(rc_lfn)
+        metadata.remove(RCLFN.__table__)
         v4_rc_lfn = Table(
             "rc_lfn",
             metadata,
             Column("id", KeyInteger, primary_key=True, nullable=False),
-            Column("lfn", VARCHAR(245), nullable=False),
-            Column("pfn", VARCHAR(245), nullable=False),
-            Column("site", VARCHAR(245)),
+            Column("lfn", String(245), nullable=False),
+            Column("pfn", String(245), nullable=False),
+            Column("site", String(245)),
             **table_keywords,
         )
         Index(
@@ -148,8 +150,8 @@ class Version(BaseVersion):
                 primary_key=True,
                 nullable=False,
             ),
-            Column("name", VARCHAR(245), primary_key=True, nullable=False),
-            Column("value", VARCHAR(245), nullable=False),
+            Column("name", String(245), primary_key=True, nullable=False),
+            Column("value", String(245), nullable=False),
             **table_keywords,
         )
         Index("v4_rc_attr", v4_rc_attr.c.name)
@@ -164,15 +166,15 @@ class Version(BaseVersion):
                 ForeignKey("task.task_id", ondelete="CASCADE"),
                 nullable=True,
             ),
-            Column("lfn", VARCHAR(255), nullable=True),
-            Column("estimated_size", INT, nullable=True),
-            Column("md_checksum", VARCHAR(255), nullable=True),
-            Column("type", VARCHAR(255), nullable=True),
+            Column("lfn", String(255), nullable=True),
+            Column("estimated_size", Integer, nullable=True),
+            Column("md_checksum", String(255), nullable=True),
+            Column("type", String(255), nullable=True),
             **table_keywords,
         )
 
         Index("file_id_UNIQUE", v4_st_file.c.file_id, unique=True)
-        Index("FK_FILE_TASK_ID", st_task.c.task_id, unique=False)
+        Index("FK_FILE_TASK_ID", Task.task_id, unique=False)
         v4_st_file.create(self.db.get_bind(), checkfirst=True)
 
         # Migrate entries

@@ -39,14 +39,14 @@ class Version(BaseVersion):
             raise DBAdminError(e)
 
         try:
-            pg_ensemble.create(self.db.get_bind(), checkfirst=True)
+            Ensemble.__table__.create(self.db.get_bind(), checkfirst=True)
         except (OperationalError, ProgrammingError):
             pass
         except Exception as e:
             self.db.rollback()
             raise DBAdminError(e)
         try:
-            pg_ensemble_workflow.create(self.db.get_bind(), checkfirst=True)
+            EnsembleWorkflow.__table__.create(self.db.get_bind(), checkfirst=True)
         except (OperationalError, ProgrammingError):
             pass
         except Exception as e:
