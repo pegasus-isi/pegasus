@@ -26,6 +26,7 @@ import time
 import warnings
 
 from sqlalchemy import func
+from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy.orm.exc import *
 
 from Pegasus.db import connection
@@ -186,6 +187,7 @@ def db_create(dburi, engine, db, pegasus_version=None, force=False, verbose=True
     :param verbose: whether messages should be printed in the prompt
     """
     table_names = engine.table_names(connection=db)
+    db_version = DBVersion.__table__
     db_version.create(engine, checkfirst=True)
 
     v = -1
@@ -268,7 +270,7 @@ def db_downgrade(db, pegasus_version=None, force=False, verbose=True):
     :param force: whether operations should be performed despite conflicts
     :param verbose: whether messages should be printed in the prompt
     """
-    if not check_table_exists(db, db_version):
+    if not check_table_exists(db, DBVersion):
         raise DBAdminError(
             "Unable to determine database version.",
             db=db,

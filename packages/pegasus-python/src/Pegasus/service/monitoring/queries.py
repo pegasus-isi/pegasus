@@ -19,6 +19,7 @@ import logging
 
 from sqlalchemy.orm import aliased, defer
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.sql.expression import and_, desc, distinct, func
 
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import DBAdminError
@@ -316,7 +317,7 @@ class MasterWorkflowQueries(WorkflowQueries):
         self, m_wf_id=None, mws=DashboardWorkflowstate
     ):
         q = self.session.query(mws.wf_id)
-        q = q.add_column(func.max(mws.timestamp).label("max_time"))
+        q = q.add_columns(func.max(mws.timestamp).label("max_time"))
 
         if m_wf_id:
             log.debug("filter on m_wf_id")
@@ -671,7 +672,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
     def _get_recent_workflow_state(self, wf_id=None, ws=Workflowstate):
         q = self.session.query(ws.wf_id)
-        q = q.add_column(func.max(ws.timestamp).label("max_time"))
+        q = q.add_columns(func.max(ws.timestamp).label("max_time"))
 
         if wf_id:
             log.debug("filter on wf_id")
@@ -933,7 +934,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
     def _get_recent_job_state(self, job_instance_id=None, js=Jobstate):
         q = self.session.query(js.job_instance_id)
-        q = q.add_column(func.max(js.jobstate_submit_seq).label("max_jsss"))
+        q = q.add_columns(func.max(js.jobstate_submit_seq).label("max_jsss"))
 
         if job_instance_id:
             log.debug("filter on job_instance_id")
@@ -1254,7 +1255,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
     def _get_recent_job_instance(self, job_id=None, ji=JobInstance):
         q = self.session.query(ji.job_id)
-        q = q.add_column(func.max(ji.job_submit_seq).label("max_jss"))
+        q = q.add_columns(func.max(ji.job_submit_seq).label("max_jss"))
 
         if job_id:
             log.debug("filter on job_id")

@@ -17,7 +17,6 @@
 __author__ = "Rafael Ferreira da Silva"
 
 import getpass
-import imp
 import logging
 import os
 import subprocess
@@ -584,9 +583,9 @@ def _validate(dburi):
     try:
         if dburi:
             if dburi.startswith("postgresql:"):
-                imp.find_module("psycopg2")
+                import psycopg2  # noqa: F401
             if dburi.startswith("mysql:"):
-                imp.find_module("MySQLdb")
+                import MySQLdb  # noqa: F401
 
     except ImportError as e:
         raise ConnectionError("Missing Python module: {} ({})".format(e, dburi))

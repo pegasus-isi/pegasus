@@ -47,7 +47,7 @@ class Version(BaseVersion):
                         self.db.execute(
                             "ALTER TABLE master_workflowstate RENAME TO master_workflowstate_v4"
                         )
-                    pg_workflowstate.create(self.db.get_bind(), checkfirst=True)
+                    Workflowstate.__table__.create(self.db.get_bind(), checkfirst=True)
                     self.db.execute(
                         "INSERT INTO master_workflowstate(wf_id, state, timestamp, restart_count, status) SELECT m4.wf_id, m4.state, m4.timestamp, m4.restart_count, m4.status FROM master_workflowstate_v4 m4 LEFT JOIN master_workflow mw WHERE m4.wf_id=mw.wf_id"
                     )
