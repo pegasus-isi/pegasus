@@ -15,7 +15,7 @@ tr example::keg:1.0 {
     
     profile condor "FOO" "bar"
     
-    pfn "/path/to/keg
+    pfn "/path/to/keg"
     arch "x86"
     os "linux"
     osrelease "fc"
