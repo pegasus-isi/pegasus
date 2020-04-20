@@ -1,7 +1,11 @@
+import logging
+
 from pathlib import Path
 from datetime import date
 
 from Pegasus.api import *
+
+logging.basicConfig(level=logging.DEBUG)
 
 PEGASUS_LOCATION = "file:///usr/bin/pegasus-keg"
 
