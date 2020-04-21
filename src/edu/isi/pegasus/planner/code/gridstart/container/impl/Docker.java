@@ -109,13 +109,16 @@ public class Docker extends Abstract {
 
         sb.append("-w=").append(CONTAINER_WORKING_DIRECTORY).append(" ");
 
+        // PM-1524 set entry point for the container to /bin/sh
+        sb.append("--entrypoint /bin/sh").append(" ");
+
         sb.append("--name $cont_name ");
         sb.append(" $cont_image ");
 
         // track
 
         // invoke the command to run as user who launched the job
-        sb.append("bash -c ")
+        sb.append("-c ")
                 .append("\"")
                 .append("set -e ;")
                 .append("if ! grep -q -E  \"^$cont_group:\" /etc/group ; then ")
