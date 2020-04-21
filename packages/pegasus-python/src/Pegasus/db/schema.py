@@ -483,21 +483,32 @@ class Job(Base):
     task_count = Column("task_count", Integer, nullable=False)
 
     # Relationships
-    # TODO: Add foeign keys, remove primaryjoin, and add passive_deletes=True,
+    # TODO: Add foreign keys, remove primaryjoin and secondaryjoin,
+    # TODO: add passive_deletes=True, and append delete-orphan to cascade
     parents = relation(
-        lambda: JobEdge,
+        lambda: Job,
         backref="parent",
-        cascade="all, delete-orphan",
+        cascade="all",
+        secondary=lambda: JobEdge.__table__,
         primaryjoin=lambda: and_(
+            Job.wf_id == JobEdge.wf_id,
+            Job.exec_job_id == foreign(JobEdge.child_exec_job_id),
+        ),
+        secondaryjoin=lambda: and_(
             Job.wf_id == JobEdge.wf_id,
             Job.exec_job_id == foreign(JobEdge.parent_exec_job_id),
         ),
     )
     children = relation(
-        lambda: JobEdge,
+        lambda: Job,
         backref="child",
-        cascade="all, delete-orphan",
+        cascade="all",
+        secondary=lambda: JobEdge.__table__,
         primaryjoin=lambda: and_(
+            Job.wf_id == JobEdge.wf_id,
+            Job.exec_job_id == foreign(JobEdge.parent_exec_job_id),
+        ),
+        secondaryjoin=lambda: and_(
             Job.wf_id == JobEdge.wf_id,
             Job.exec_job_id == foreign(JobEdge.child_exec_job_id),
         ),
@@ -699,21 +710,32 @@ class Task(Base):
     type_desc = Column("type_desc", String(255), nullable=False)
 
     # Relationships
-    # TODO: Add foeign keys, remove primaryjoin, and add passive_deletes=True,
+    # TODO: Add foreign keys, remove primaryjoin and secondaryjoin,
+    # TODO: add passive_deletes=True, and append delete-orphan to cascade
     parents = relation(
-        lambda: TaskEdge,
+        lambda: Task,
         backref="parent",
-        cascade="all, delete-orphan",
+        cascade="all",
+        secondary=lambda: TaskEdge.__table__,
         primaryjoin=lambda: and_(
+            Task.wf_id == TaskEdge.wf_id,
+            Task.abs_task_id == foreign(TaskEdge.child_abs_task_id),
+        ),
+        secondaryjoin=lambda: and_(
             Task.wf_id == TaskEdge.wf_id,
             Task.abs_task_id == foreign(TaskEdge.parent_abs_task_id),
         ),
     )
     children = relation(
-        lambda: TaskEdge,
+        lambda: Task,
         backref="child",
-        cascade="all, delete-orphan",
+        cascade="all",
+        secondary=lambda: TaskEdge.__table__,
         primaryjoin=lambda: and_(
+            Task.wf_id == TaskEdge.wf_id,
+            Task.abs_task_id == foreign(TaskEdge.parent_abs_task_id),
+        ),
+        secondaryjoin=lambda: and_(
             Task.wf_id == TaskEdge.wf_id,
             Task.abs_task_id == foreign(TaskEdge.child_abs_task_id),
         ),
