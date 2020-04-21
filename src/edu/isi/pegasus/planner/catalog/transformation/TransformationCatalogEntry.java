@@ -38,6 +38,7 @@ import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -207,7 +208,7 @@ public class TransformationCatalogEntry implements CatalogEntry {
         entry.setContainer(this.mContainer == null ? null : (Container) mContainer.clone());
         if (this.mCompoundTX != null) {
             for (PegasusFile pf : this.mCompoundTX.getDependantFiles()) {
-                this.addDependantTransformation(pf);
+                entry.addDependantTransformation(pf);
             }
         }
         return entry;
@@ -349,8 +350,20 @@ public class TransformationCatalogEntry implements CatalogEntry {
                             this.getLogicalNamespace(),
                             this.getLogicalName(),
                             this.getLogicalVersion());
-            this.mCompoundTX.addDependantFile(pf);
         }
+        this.mCompoundTX.addDependantFile(pf);
+    }
+
+    /**
+     * Returns dependent transformations
+     *
+     * @return
+     */
+    public List<PegasusFile> getDependantFiles() {
+        if (this.mCompoundTX == null) {
+            return new LinkedList();
+        }
+        return this.mCompoundTX.getDependantFiles();
     }
 
     /**
