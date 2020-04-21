@@ -306,7 +306,7 @@ class Dashboard:
             workflow = stampede_statistics.StampedeStatistics(
                 self.__get_wf_db_url(), False
             )
-            workflow.initialize(self._root_wf_uuid)
+            workflow.initialize(root_wf_id=self._wf_id)
             gantt_chart = workflow.get_job_states()
 
             return gantt_chart
