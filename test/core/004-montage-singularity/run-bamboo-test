@@ -15,19 +15,16 @@ echo
 cd montage-workflow-v3
 
 singularity exec \
-            --bind $PWD:/srv \
+            --bind $PWD \
             library://rynge/default/montage:latest \
-            /srv/montage-workflow.py \
-                --work-dir /srv \
+            $PWD/montage-workflow.py \
+                --work-dir $PWD \
                 --tc-target container \
                 --center "275.196290 -16.171530" \
                 --degrees 0.5 \
                 --band 2mass:j:green \
                 --band 2mass:h:blue \
                 --band 2mass:k:red
-
-# rc needs to have paths "outside" the image
-#perl -p -i -e "s;/srv/data;$PWD/data;g" data/rc.txt
 
 pegasus-plan \
         --dir work \
