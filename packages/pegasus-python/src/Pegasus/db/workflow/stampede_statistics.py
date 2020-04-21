@@ -155,6 +155,12 @@ https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Ver
 """
 __author__ = "Monte Goode"
 
+import logging
+
+from sqlalchemy import orm
+from sqlalchemy.sql.expression import and_, case, cast, distinct, func, not_, or_
+from sqlalchemy.types import Float, Integer
+
 from Pegasus.db import connection
 from Pegasus.db.errors import StampedeDBNotFoundError
 from Pegasus.db.schema import *

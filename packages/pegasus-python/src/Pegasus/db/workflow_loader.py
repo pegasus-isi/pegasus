@@ -3,7 +3,7 @@ __author__ = "Karan Vahi"
 
 import time
 
-from sqlalchemy import exc
+from sqlalchemy import exc, orm
 
 from Pegasus.db.base_loader import BaseLoader
 from Pegasus.db.schema import *
