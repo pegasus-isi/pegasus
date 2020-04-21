@@ -487,7 +487,7 @@ class Job(Base):
     # TODO: add passive_deletes=True, and append delete-orphan to cascade
     parents = relation(
         lambda: Job,
-        backref="parent",
+        backref="children",
         cascade="all",
         secondary=lambda: JobEdge.__table__,
         primaryjoin=lambda: and_(
@@ -497,20 +497,6 @@ class Job(Base):
         secondaryjoin=lambda: and_(
             Job.wf_id == JobEdge.wf_id,
             Job.exec_job_id == foreign(JobEdge.parent_exec_job_id),
-        ),
-    )
-    children = relation(
-        lambda: Job,
-        backref="child",
-        cascade="all",
-        secondary=lambda: JobEdge.__table__,
-        primaryjoin=lambda: and_(
-            Job.wf_id == JobEdge.wf_id,
-            Job.exec_job_id == foreign(JobEdge.parent_exec_job_id),
-        ),
-        secondaryjoin=lambda: and_(
-            Job.wf_id == JobEdge.wf_id,
-            Job.exec_job_id == foreign(JobEdge.child_exec_job_id),
         ),
     )
     tasks = relation(
@@ -714,7 +700,7 @@ class Task(Base):
     # TODO: add passive_deletes=True, and append delete-orphan to cascade
     parents = relation(
         lambda: Task,
-        backref="parent",
+        backref="children",
         cascade="all",
         secondary=lambda: TaskEdge.__table__,
         primaryjoin=lambda: and_(
@@ -724,20 +710,6 @@ class Task(Base):
         secondaryjoin=lambda: and_(
             Task.wf_id == TaskEdge.wf_id,
             Task.abs_task_id == foreign(TaskEdge.parent_abs_task_id),
-        ),
-    )
-    children = relation(
-        lambda: Task,
-        backref="child",
-        cascade="all",
-        secondary=lambda: TaskEdge.__table__,
-        primaryjoin=lambda: and_(
-            Task.wf_id == TaskEdge.wf_id,
-            Task.abs_task_id == foreign(TaskEdge.parent_abs_task_id),
-        ),
-        secondaryjoin=lambda: and_(
-            Task.wf_id == TaskEdge.wf_id,
-            Task.abs_task_id == foreign(TaskEdge.child_abs_task_id),
         ),
     )
     files = relation(
