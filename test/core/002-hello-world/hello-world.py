@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 import logging
+import sys
 
 from Pegasus.api import *
 
-logging.basicConfig(level=logging.DEBUG)
+# launch-bamboo-test needs these logs to be sent to stdout
+logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
 # --- Transformations ----------------------------------------------------------
 echo = Transformation(
