@@ -26,7 +26,7 @@ import warnings
 from sqlalchemy.dialects import mysql, postgresql, sqlite
 from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relation
+from sqlalchemy.orm import relation, foreign
 from sqlalchemy.schema import Column, ForeignKey, Index, MetaData
 from sqlalchemy.types import (
     BigInteger,
@@ -482,6 +482,19 @@ class Job(Base):
     task_count = Column("task_count", Integer, nullable=False)
 
     # Relationships
+    # TODO: Add foeign keys, remove primaryjoin, and add passive_deletes=True,
+    parents = relation(
+        lambda: JobEdge,
+        backref="parent",
+        cascade="all, delete-orphan",
+        primaryjoin=lambda: Job.exec_job_id == foreign(JobEdge.parent_exec_job_id),
+    )
+    children = relation(
+        lambda: JobEdge,
+        backref="child",
+        cascade="all, delete-orphan",
+        primaryjoin=lambda: Job.exec_job_id == foreign(JobEdge.child_exec_job_id),
+    )
     tasks = relation(
         lambda: Task, backref="job", cascade="all, delete-orphan", passive_deletes=True,
     )
@@ -679,6 +692,19 @@ class Task(Base):
     type_desc = Column("type_desc", String(255), nullable=False)
 
     # Relationships
+    # TODO: Add foeign keys, remove primaryjoin, and add passive_deletes=True,
+    parents = relation(
+        lambda: TaskEdge,
+        backref="parent",
+        cascade="all, delete-orphan",
+        primaryjoin=lambda: Task.abs_task_id == foreign(TaskEdge.parent_abs_task_id),
+    )
+    children = relation(
+        lambda: TaskEdge,
+        backref="child",
+        cascade="all, delete-orphan",
+        primaryjoin=lambda: Task.abs_task_id == foreign(TaskEdge.child_abs_task_id),
+    )
     files = relation(
         lambda: WorkflowFiles,
         backref="task",
