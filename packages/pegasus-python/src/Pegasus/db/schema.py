@@ -332,7 +332,6 @@ class Workflow(Base):
         backref="workflow",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        lazy=True,
     )
     tags = relation(
         lambda: Tag,
@@ -484,18 +483,13 @@ class Job(Base):
 
     # Relationships
     tasks = relation(
-        lambda: Task,
-        backref="job",
-        cascade="all, delete-orphan",
-        passive_deletes=True,
-        lazy=True,
+        lambda: Task, backref="job", cascade="all, delete-orphan", passive_deletes=True,
     )
     job_instances = relation(
         lambda: JobInstance,
         backref="job",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        lazy=True,
     )
 
 
@@ -565,14 +559,12 @@ class JobInstance(Base):
         backref="job_instance",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        lazy=True,
     )
     states = relation(
         lambda: Jobstate,
         backref="job_instance",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        lazy=True,
     )
     sub_workflow = relation(
         lambda: Workflow,
@@ -591,14 +583,12 @@ class JobInstance(Base):
         backref="job_instance",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        lazy=True,
     )
     tag = relation(
         lambda: Tag,
         backref="job_instance",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        lazy=True,
     )
 
 
