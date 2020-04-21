@@ -1917,35 +1917,6 @@ project:
                 - name: tests
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: false
-            - key: T3N1
-              name: 003-montage-v3-condor-io
-              description: Montage V3 CondorIO
-              tasks:
-                - !script
-                  description: Cleanup
-                  enabled: true
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "rm -rf pegasus/ test/"
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xf tests.tar"
-                - !script
-                  description: Run Test
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
-                      test/scripts/launch-bamboo-test ${bamboo_shortJobName}
-              requirements:
-                - capabilityKey: condor
-                  matchType: !exists exists
-              artifactDependencies:
-                - name: tests
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: false
             - key: T4N6
               name: 004-montage-condor-io
               description: TODO
@@ -2093,6 +2064,35 @@ project:
                 cleanWorkingDirectoryAfterEachBuild: false
             - key: T4M2
               name: 004-montage-universe-local
+              description: TODO
+              tasks:
+                - !script
+                  description: Cleanup
+                  enabled: true
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "rm -rf pegasus/ test/"
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xf tests.tar"
+                - !script
+                  description: Run Test
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+                      test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+              requirements:
+                - capabilityKey: condor
+                  matchType: !exists exists
+              artifactDependencies:
+                - name: tests
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: false
+            - key: T4N13
+              name: 004-montage-singularity
               description: TODO
               tasks:
                 - !script
