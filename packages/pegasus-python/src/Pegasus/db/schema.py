@@ -26,8 +26,9 @@ import warnings
 from sqlalchemy.dialects import mysql, postgresql, sqlite
 from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relation, foreign
+from sqlalchemy.orm import foreign, relation
 from sqlalchemy.schema import Column, ForeignKey, Index, MetaData
+from sqlalchemy.sql.expression import and_
 from sqlalchemy.types import (
     BigInteger,
     Boolean,
@@ -487,13 +488,19 @@ class Job(Base):
         lambda: JobEdge,
         backref="parent",
         cascade="all, delete-orphan",
-        primaryjoin=lambda: Job.exec_job_id == foreign(JobEdge.parent_exec_job_id),
+        primaryjoin=lambda: and_(
+            Job.wf_id == JobEdge.wf_id,
+            Job.exec_job_id == foreign(JobEdge.parent_exec_job_id),
+        ),
     )
     children = relation(
         lambda: JobEdge,
         backref="child",
         cascade="all, delete-orphan",
-        primaryjoin=lambda: Job.exec_job_id == foreign(JobEdge.child_exec_job_id),
+        primaryjoin=lambda: and_(
+            Job.wf_id == JobEdge.wf_id,
+            Job.exec_job_id == foreign(JobEdge.child_exec_job_id),
+        ),
     )
     tasks = relation(
         lambda: Task, backref="job", cascade="all, delete-orphan", passive_deletes=True,
@@ -697,13 +704,19 @@ class Task(Base):
         lambda: TaskEdge,
         backref="parent",
         cascade="all, delete-orphan",
-        primaryjoin=lambda: Task.abs_task_id == foreign(TaskEdge.parent_abs_task_id),
+        primaryjoin=lambda: and_(
+            Task.wf_id == TaskEdge.wf_id,
+            Task.abs_task_id == foreign(TaskEdge.parent_abs_task_id),
+        ),
     )
     children = relation(
         lambda: TaskEdge,
         backref="child",
         cascade="all, delete-orphan",
-        primaryjoin=lambda: Task.abs_task_id == foreign(TaskEdge.child_abs_task_id),
+        primaryjoin=lambda: and_(
+            Task.wf_id == TaskEdge.wf_id,
+            Task.abs_task_id == foreign(TaskEdge.child_abs_task_id),
+        ),
     )
     files = relation(
         lambda: WorkflowFiles,
